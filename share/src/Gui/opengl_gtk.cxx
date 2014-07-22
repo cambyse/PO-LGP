@@ -24,6 +24,7 @@
 #undef MAX
 #include <X11/Xlib.h>
 #include <GL/glx.h>
+//#include <GL/glut.h>
 
 #include <Core/geo.h>
 #include "opengl.h"
@@ -107,6 +108,52 @@ void OpenGL::resize(int w,int h){
 
 //int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
 //int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
+
+void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _captureDep){
+  captureImg=_captureImg;
+  captureDep=_captureDep;
+  if(width==-1) width=s->gl->width;
+  if(height==-1) height=s->gl->height;
+  CHECK(width%4==0,"should be devidable by 4!!")
+
+  s->beginGlContext();
+
+#if 0
+  if(!fbo || !render_buf){ //need to initialize
+    glewInit();
+    glGenFramebuffers(1,&fbo);
+    glGenRenderbuffers(1,&render_buf);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buf);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, width, height);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buf);
+  }
+
+  //Before drawing
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+#endif
+
+  s->gl->Draw(width, height);
+
+  //after drawing
+//  std::vector<std::uint8_t> data(width*height*4);
+//  glReadBuffer(GL_COLOR_ATTACHMENT0);
+//  glReadPixels(0,0,width,height,GL_BGRA,GL_UNSIGNED_BYTE,&data[0]);
+
+#if 0
+  captureImage.resize(height, width, 3);
+//  glReadBuffer(GL_BACK);
+//  glReadBuffer(GL_COLOR_ATTACHMENT0);
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, captureImage.p);
+#endif
+
+#if 0
+  // Return to onscreen rendering:
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
+
+  s->endGlContext();
+}
 
 Display* OpenGL::xdisplay(){ return s->xdisplay; }
 Drawable OpenGL::xdraw(){ return s->xdraw; }
@@ -192,6 +239,11 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
 
 sOpenGL::~sOpenGL(){
 //  MT_MSG("destructing sOpenGL sOpenGL=" <<this <<" glArea="<<glArea);
+  if(gl->fbo || gl->render_buf){ //need to destroy offscreen rendering buffers
+    glDeleteFramebuffers(1,&gl->fbo);
+    glDeleteRenderbuffers(1,&gl->render_buf);
+  }
+
   gtkLock();
   gtk_widget_destroy(glArea);
   //if(ownViewport) gtk_widget_destroy(GTK_WIDGET(gtk_container_get_children(GTK_CONTAINER(container))->data));

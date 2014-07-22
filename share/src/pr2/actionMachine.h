@@ -106,7 +106,6 @@ struct ActionMachine : Module {
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   ACCESS(ActionL, A);
-  RosCom *ros;
 
   ActionMachine();
   ~ActionMachine();
@@ -143,14 +142,14 @@ struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
-  RosCom *ros;
   ActionMachine *machine;
-  ActionSystem():ros(NULL), machine(NULL){
+  ActionSystem():machine(NULL){
     //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
-      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
-      machine->ros=ros;
+//      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
     }
     connect();
   }

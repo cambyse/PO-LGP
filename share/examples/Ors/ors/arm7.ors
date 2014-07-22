@@ -9,6 +9,8 @@ body arm5 { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact }
 body arm6 { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact }
 body arm7 { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact }
 
+shape endeff(arm7){ type=5 rel=<T t(0 0 .3)> size=[.1 0 0 0] }
+
 #body fileshape { X=<T t(-0.25 -3 1.8)>  type=3 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] shapefile='c:/home/3dmodel/benchmark/offs/m494.off' swiftfile='c:/home/3dmodel/benchmark/offs/m494.dcp' contact, }
 #body ball  { X=<T t(.0 -1.0 2.1)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact }
 body ball2 { X=<T t(.15 -2.5 1.9)>  type=0 mass=.1 size=[.6 .1 .6 .3] color=[1 0 0] contact }

@@ -113,11 +113,11 @@ struct Access{
   MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
-  Variable *var; ///< which variable does it access
+  Variable *var;   ///< which variable does it access
   Access(const char* _name, Type *_type, Module *_module, Variable *_var):name(_name), type(_type), module(_module), var(_var){}
-  int readAccess(){  CHECK(var,""); return var->readAccess(module); }
-  int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
-  int deAccess(){    CHECK(var,""); return var->deAccess(module); }
+  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess(module); }
+  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess(module); }
+  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess(module); }
 };
 
 

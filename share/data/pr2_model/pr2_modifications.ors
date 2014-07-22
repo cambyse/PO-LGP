@@ -59,26 +59,26 @@ Merge l_gripper_r_finger_tip_link_0 { contact }
 Merge torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
 ## HEAD
-Merge head_pan_joint {    gains=[10 2] }
-Merge head_tilt_joint {   gains=[100 10] }
+Merge head_pan_joint {    gains=[20 2] }
+Merge head_tilt_joint {   gains=[60 4] }
 
 ## RIGHT
 Merge r_shoulder_pan_joint { q=-1   gains=[150 10]  }
 Merge r_shoulder_lift_joint { q=.5   gains=[150 10] }
 Merge r_upper_arm_roll_joint { q=-1   gains=[30 4] }
+Merge r_elbow_flex_joint {  q=-2  gains=[30 4] }
 Merge r_forearm_roll_joint { q=-1.5  gains=[10 2] }
-Merge r_elbow_flex_joint {  q=-2  gains=[30 10] }
 Merge r_wrist_flex_joint { q=0 gains=[6 2] }
 Merge r_wrist_roll_joint { q=-.5  gains=[12 2] }
 
 ## LEFT
-Merge l_shoulder_pan_joint {    q=1   gains=[150 10] }
-Merge l_shoulder_lift_joint {    q=.5   gains=[150 10] }
-Merge l_upper_arm_roll_joint {    q=1  gains=[30 4] }
-Merge l_forearm_roll_joint {     q=1.5  gains=[10 2] }
-Merge l_elbow_flex_joint {    q=-2  gains=[30 10] }
-Merge l_wrist_flex_joint {       gains=[6 2]}
-Merge l_wrist_roll_joint {    q=.5  gains=[12 2]}
+Merge l_shoulder_pan_joint {   q=1   gains=[200 20] }
+Merge l_shoulder_lift_joint {  q=.5   gains=[160 10] }
+Merge l_upper_arm_roll_joint { q=1  gains=[80 4] }
+Merge l_elbow_flex_joint {     q=-2  gains=[70 4] }
+Merge l_forearm_roll_joint {   q=1.5  gains=[10 1] }
+Merge l_wrist_flex_joint {     q=0  gains=[30 1]}
+Merge l_wrist_roll_joint {     q=.5  gains=[15 1]}
 
 ## GRIPPERS
 Merge r_gripper_joint { gains=[1000 1] }

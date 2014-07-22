@@ -87,6 +87,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         case up:     pdt=head;    break;
         case down:   pdt=base;   break;
         case none:   pdt=NULL;  break;
+        case downRot: break;
       }
       if(!pdt) break;
       pdt->active=true;

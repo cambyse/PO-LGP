@@ -49,20 +49,48 @@ void TEST(Kinematics){
   };
 
   //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
-  uint n=G.getJointStateDimension();
-  arr x(n);
-  ors::Vector vec;
+  ors::KinematicWorld G("kinematicTests.kvg");
+  //ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+
   for(uint k=0;k<100;k++){
     ors::Body *b = G.bodies.rndElem();
+    ors::Vector vec;
     vec.setRandom();
+    arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
+//    x/=sqrt(sumOfSqr(x.subRange(0,3)));
 
-    cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
-    cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsPos:  "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsVec:  "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
     cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, b, vec)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
+  }
+}
+
+//===========================================================================
+//
+// Jacobian test
+//
+
+void TEST(QuaternionKinematics){
+  ors::KinematicWorld G("kinematicTestQuat.kvg");
+
+  for(uint k=0;k<10;k++){
+    ors::Quaternion target;
+    target.setRandom();
+    G.getShapeByName("ref")->rel.rot = target;
+    arr x;
+    G.getJointState(x);
+    for(uint t=0;t<100;t++){
+      arr y,J;
+      G.kinematicsQuat(y, J, G.bodies.last());  //get the new endeffector position
+      arr Jinv = pseudoInverse(J, NoArr, 1e-4); //~J*inverse_SymPosDef(J*~J);
+      if(scalarProduct(ARRAY(target),y)<0.) target.flipSign();
+      x += 0.05 * Jinv * (ARRAY(target)-y);                  //simulate a time step (only kinematically)
+      G.setJointState(x);
+      G.watch(false, STRING("follow redundant trajectory -- time " <<t));
+    }
   }
 }
 
@@ -277,7 +305,7 @@ void TEST(FollowRedundantSequence){
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  ors::Vector rel(0,0,.5); //this frame describes the relative position of the endeffector wrt. 7th body
+  ors::Vector rel = G.getShapeByName("endeff")->rel.pos; //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
@@ -332,7 +360,7 @@ void TEST(Dynamics){
     bool friction;
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
-      G.setJointState(x[0], x[1], 0, true);
+      G.setJointState(x[0], x[1], true);
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -487,7 +515,8 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
-  //testBlenderImport();
+  testQuaternionKinematics();
+  return 0;
 
   testLoadSave();
   testCopy();

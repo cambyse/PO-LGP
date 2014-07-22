@@ -8,9 +8,10 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
-#include <unistd.h>  // usleep
+#include <unistd.h>
 
-#include"G4TrackIncl.h"
+#ifdef G4_INSTALLED
+#include "G4TrackIncl.h"
 
 using namespace std;
 
@@ -114,3 +115,11 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+#else //G4_INSTALLED
+
+int main(int argn, char** argv){
+  printf("NICO");
+  return 0;
+}
+
+#endif

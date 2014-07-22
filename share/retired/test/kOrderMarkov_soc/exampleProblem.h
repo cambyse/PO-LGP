@@ -3,7 +3,7 @@
 #define DIM 3
 
 struct ParticleAroundWalls:KOrderMarkovFunction {
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
 
   uint get_T(){ return 100; }
   uint get_k(){ return 2; }
@@ -11,7 +11,7 @@ struct ParticleAroundWalls:KOrderMarkovFunction {
   uint get_m(uint t){ return 2*DIM; }
 };
 
-void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
+void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
   uint T=get_T(), n=get_n(), k=get_k(), m=get_m(t);
 
   //assert some dimensions

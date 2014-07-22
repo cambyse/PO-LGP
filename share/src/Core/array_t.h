@@ -144,7 +144,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0) { nd=1; d0=D0; res
 template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0) { nd=1; d0=D0; resetD(); resizeMEM(d0, true); return *this; }
 
 /// reshape the dimensionality (e.g. from 2D to 1D); throw an error if this actually requires to resize the memory
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0) { CHECK(N==D0, "reshape must preserve total memory size"); nd=1; d0=D0; d1=d2=0; resetD(); return *this; }
+template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0) { CHECK_EQ(N, D0, "reshape must preserve total memory size"); nd=1; d0=D0; d1=d2=0; resetD(); return *this; }
 
 /// same for 2D ...
 template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, false); return *this; }
@@ -722,7 +722,7 @@ template<class T> MT::Array<T> MT::Array<T>::operator[](uint i) const { return A
 template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j) const { return Array(*this, i, j); }
 
 /// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
-template<class T> MT::Array<T> MT::Array<T>::subRange(uint i, int I) const { MT::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
+template<class T> MT::Array<T> MT::Array<T>::subRange(int i, int I) const { MT::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
 
 
 /// convert a subarray into a reference (e.g. a[3]()+=.123)
@@ -1246,13 +1246,14 @@ template<class T> void MT::Array<T>::referTo(const MT::Array<T>& a) {
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, uint i, int I) {
+template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, int i, int I) {
   CHECK(a.nd<=3, "not implemented yet");
   freeMEM();
   resetD();
   reference=true; memMove=a.memMove;
-  if(I==-1) I=a.d0-1;
-  CHECK(i<a.d0 && (uint)I<a.d0, "SubRange range error (" <<i <<"<" <<a.d0 <<", " <<I <<"<" <<a.d0 <<")");
+  if(i<0) i+=a.d0;
+  if(I<0) I+=a.d0;
+  CHECK((uint)i<a.d0 && (uint)I<a.d0, "SubRange range error (" <<i <<"<" <<a.d0 <<", " <<I <<"<" <<a.d0 <<")");
   if(a.nd==1) {
     nd=1;  d0=I+1-i; d1=0; d2=0;  N=d0;
     p=a.p+i;
@@ -1506,6 +1507,10 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     }
     if(nd==2) for(j=0; j<d0; j++) {
         if(j) os <<LINESEP;
+        if(special==RowShiftedPackedMatrixST){
+          RowShiftedPackedMatrix *rs = (RowShiftedPackedMatrix*)aux;
+          cout <<"[row-shift=" <<rs->rowShift(j) <<"] ";
+        }
         for(i=0; i<d1; i++) os <<ELEMSEP <<operator()(j, i);
       }
     if(nd==3) for(k=0; k<d0; k++) {
@@ -2072,7 +2077,7 @@ template<class T> T absMin(const MT::Array<T>& x) {
 
 /// get absolute maximum (using fabs)
 template<class T> T absMax(const MT::Array<T>& x) {
-  CHECK(x.N, "");
+  if(!x.N) return (T)0;
   uint i;
   T t((T)::fabs((double)x.p[0]));
   for(i=1; i<x.N; i++) if(fabs((double)x.p[i])>t) t=(T)::fabs((double)x.p[i]);
@@ -3246,7 +3251,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 }
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to) {
-  for_list(edge,  e,  from->outLinks) if(e->from==to) return e;
+  for_list(edge,  e,  to->inLinks) if(e->from==from) return e;
   return NULL;
 }
 

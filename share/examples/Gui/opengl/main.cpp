@@ -231,6 +231,20 @@ void TEST(Texture) {
   gl.watch();
 }
 
+//===========================================================================
+
+void TEST(OfflineRendering){
+  OpenGL gl;
+  gl.update();
+  gl.add(draw1,0);
+  gl.renderInBack(20, 22);
+
+  write_ppm(gl.captureImage,"z.ppm");
+  OpenGL gl2;
+  gl2.watchImage(gl.captureImage, true, 1);
+  cout <<"returned from watch - watch again" <<endl;
+}
+
 /************ test clicking on and identifying objects in the scene ************/
 
 void draw3(void*){
@@ -277,8 +291,9 @@ void TEST(Image) {
 int MAIN(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  //qtCheckInitialized();
-  
+  testOfflineRendering();
+  return 0;
+
   testTeapot();
   testGrab();
   testMultipleViews();

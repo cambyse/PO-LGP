@@ -11,7 +11,7 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   Simulator *S;
   uint T;
   arr x0, xT;
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr);
 
   uint get_T(){ return T; }
   uint get_k(){ return 2; }
@@ -254,7 +254,7 @@ int main(int argc,char **argv){
 }
 
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;

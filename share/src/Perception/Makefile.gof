@@ -2,6 +2,7 @@ BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
+GL = 1
 LAPACK = 1
 OPENCV = 1
 #PCL = 1

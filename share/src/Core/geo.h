@@ -39,6 +39,7 @@ struct Vector {
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const Vector& v) { set(v.x, v.y, v.z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
+  Vector(const arrf& x) { CHECK(x.N==3, "");  set(x(0), x(1), x(2)); }
   double *p() { return &x; }
   
   double& operator()(uint i);
@@ -121,6 +122,7 @@ struct Quaternion {
   void setDiff(const Vector& from, const Vector& to);
   void setInterpolate(double t, const Quaternion& a, const Quaternion b);
   Quaternion& invert();
+  void flipSign();
   void normalize();
   void multiply(double f);
   void alignWith(const Vector& v);

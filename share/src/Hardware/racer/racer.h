@@ -3,6 +3,18 @@
 
 struct Racer;
 
+struct _RacerBalancingBenchmark:ScalarFunction{
+  uint T;
+  bool display;
+  double noise;
+  double theta0;
+  bool fixRandomSeed;
+  _RacerBalancingBenchmark();
+  virtual double fs(arr& g, arr& H, const arr& x);
+};
+extern _RacerBalancingBenchmark RacerBalancingBenchmark;
+
+
 struct DynFct:VectorFunction{
   Racer& R;
   DynFct(Racer& _R):R(_R){}
@@ -48,4 +60,5 @@ struct Racer{
   static void glStaticDraw(void*);
   OpenGL *_gl;
 };
+
 
