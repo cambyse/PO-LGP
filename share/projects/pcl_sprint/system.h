@@ -10,6 +10,8 @@
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Core/module.h>
+#include <pr2/roscom.h>
+
 
 void operator>>(istream&,pcl::PointCloud<PointT>::Ptr&){ NIY; }
 
@@ -37,7 +39,12 @@ struct PCL_ModuleSystem:System{
   ACCESS(pcl::PointCloud<PointT>::Ptr, pcl_cloud)
 
   PCL_ModuleSystem(){
-    addModule<KinectPoller>(NULL, Module_Thread::loopWithBeat, .1); //this is callback driven...
+    if(MT::getParameter<bool>("useRos", true)){
+      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
+    }else{
+      addModule<KinectPoller>(NULL, Module_Thread::loopWithBeat, .1); //this is callback driven...
+    }
     addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
 //      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
 //      addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);

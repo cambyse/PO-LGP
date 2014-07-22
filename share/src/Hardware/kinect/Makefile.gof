@@ -2,7 +2,7 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-CXXFLAGS += -I/usr/local/include/libfreenect
+CXXFLAGS += -I/usr/local/include/libfreenect -I/usr/include/libusb-1.0
 LIBS += -lfreenect
 DEPEND = Core
 
