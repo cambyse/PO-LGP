@@ -251,6 +251,11 @@ LPATH += /opt/ros/groovy/lib
 FREENECT = 1
 endif
 
+ifeq ($(FREENECT),1)
+CXXFLAGS += -DMLR_FRENECT
+LIBS += -lfreenect -lusb-1.0
+endif
+
 ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp

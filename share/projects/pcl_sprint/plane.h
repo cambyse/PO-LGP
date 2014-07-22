@@ -21,3 +21,5 @@ void normalEstimator(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::N
 
 void planeDetector(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr inCloudNormal, pcl::ModelCoefficients::Ptr outCoefficients, pcl::PointIndices::Ptr outInliersPlane);
 
+void substractPlane(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointIndices::Ptr inInliersPlane, pcl::PointCloud<PoinT2>::Ptr outCloud);
+

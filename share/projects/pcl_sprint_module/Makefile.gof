@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main.o methods.o
+OBJS = main.o methods.o plane.o
 
 PCL = 1
 ROS = 1
