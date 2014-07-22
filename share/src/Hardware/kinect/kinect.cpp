@@ -1,4 +1,7 @@
 #include "kinect.h"
+
+#ifdef MLR_FREENECT
+
 #include <libfreenect.hpp>
 #include <Core/util.h>
 
@@ -145,3 +148,11 @@ void KinectPoller::close() {
   s = NULL;
 }
 
+#else //no MLR_FREENECT
+KinectPoller::KinectPoller() : Module("KinectPoller"), s(NULL){}
+KinectPoller::~KinectPoller() {}
+void KinectPoller::open() { NICO }
+void KinectPoller::step() { NICO }
+void KinectPoller::close() { NICO }
+
+#endif
