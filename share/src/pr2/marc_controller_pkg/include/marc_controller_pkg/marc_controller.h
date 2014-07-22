@@ -11,6 +11,7 @@ namespace marc_controller_ns{
 class TreeControllerClass: public pr2_controller_interface::Controller
 {
 private:
+  Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
   ors::KinematicWorld world;
   pr2_mechanism_model::Tree pr2_tree;
 
@@ -22,15 +23,12 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
-  double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
-
+  arr fL_ref, fR_ref;
+  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
+  arr u_bias;
 
   //force related things
-  ors::Shape *ftL_shape, *ftR_shape;
-  arr fL_obs;
-  arr fL_ref, fR_ref;
-  arr y_fL, J_fL;
-  arr y_fR, J_fR;
+  arr fL_obs, fR_obs;
 
   //matching joint indices
   uintA ROS_qIndex;

@@ -2,24 +2,34 @@
 #include <Optim/benchmarks.h>
 #include <Optim/search.h>
 
-struct sSearchCMA *s;
-#define MT_IMPLEMENTATION
 
-void test(ScalarFunction& f){
+void TEST(CMA){
+  ScalarFunction& f=ChoiceFunction;
   SearchCMA cma;
-  cma.init(2); //,10,30);
+  uint n = MT::getParameter<uint>("dim", 2);
+  arr start(n);
+  start=10.; start(0)=1.;
+  cma.init(n, -1, -1, start, .1); //,10,30);
   arr samples, values;
 
-  for(uint t=0;t<100;t++){
+  MT::arrayBrackets="  ";
+  for(uint t=0;t<500;t++){
     cma.step(samples, values);
     for(uint i=0;i<samples.d0;i++) values(i) = f.fs(NoArr, NoArr, samples[i]);
-    cout <<values.min() <<endl;
+    uint i=values.minIndex();
+    cout <<values(i) <<' ' <<samples[i] <<endl;
   }
 }
 
+void TEST(DisplayBenchmarks){
+  displayFunction(RosenbrockFunction, true, -10., 10.);
+//  displayFunction(RastriginFunction());
+//  displayFunction(SquareFunction());
+}
+
 int main(int argn,char** argv){
-  ChoiceFunction f;
-  test(f);
+  testCMA();
+//  testDisplayBenchmarks();
 
   return 0;
 }

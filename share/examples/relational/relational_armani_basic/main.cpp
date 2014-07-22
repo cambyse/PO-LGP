@@ -158,27 +158,27 @@ void test_box() {
   // -------------------------------------
   // perform actions
   
-  sim.openBox(67, "opening box 67");
+  sim.openBox(boxes(2), "opening box boxes(2)");
   sim.relaxPosition();
-  sim.closeBox(66);
-  sim.relaxPosition();
-
-  sim.grab(70);
-  sim.relaxPosition();
-  sim.dropObjectAbove(67);
+  sim.closeBox(boxes(1));
   sim.relaxPosition();
 
-  sim.grab(71);
+  sim.grab(blocks(2));
+  sim.relaxPosition();
+  sim.dropObjectAbove(boxes(2));
   sim.relaxPosition();
 
-  sim.grab(68);
-  sim.relaxPosition();
-  sim.dropObjectAbove(66);
+  sim.grab(blocks(3));
   sim.relaxPosition();
 
-  sim.grab(69);
+  sim.grab(blocks(0));
   sim.relaxPosition();
-  sim.dropObjectAbove(68);
+  sim.dropObjectAbove(boxes(1));
+  sim.relaxPosition();
+
+  sim.grab(blocks(1));
+  sim.relaxPosition();
+  sim.dropObjectAbove(blocks(0));
   sim.relaxPosition();
 
   cout<<"Please press button to finish."<<endl;

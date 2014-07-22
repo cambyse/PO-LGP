@@ -7,7 +7,7 @@ Singleton<SymbolL> symbols;
 //===========================================================================
 // ActionMachine
 //
-ActionMachine::ActionMachine():Module("ActionMachine"), ros(NULL){
+ActionMachine::ActionMachine():Module("ActionMachine"){
   ActionL::memMove=true;
   s = new sActionMachine();
 }
@@ -24,7 +24,7 @@ void ActionMachine::open(){
 //  s->MP.qitselfPD.setGains(1.,10.);
 
   //-- wait for first q observation!
-  if(ros){
+  if(MT::getParameter<bool>("useRos",false)){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
       ctrl_obs.var->waitForNextRevision();
@@ -54,8 +54,7 @@ void ActionMachine::step(){
 
   //defaults
   s->refs.fR = ARR(0., 0., 0.);
-  s->refs.fR_gainFactor = 0.;
-  s->refs.Kp_gainFactor = 1.;
+  s->refs.Kq_gainFactor = ARR(1.);
 
   arr joypadState = joystickState.get();
   if(stopButtons(joypadState)) engine().shutdown.incrementValue();
@@ -76,8 +75,9 @@ void ActionMachine::step(){
         PushForce* pf = dynamic_cast<PushForce*>(a);
         // cout << pf->forceVec << endl;
         s->refs.fR = pf->forceVec;
-        s->refs.fR_gainFactor = 1.;
-        s->refs.Kp_gainFactor = .2;
+        NIY;
+//        s->refs.fR_gainFactor = 1.;
+//        s->refs.Kp_gainFactor = .2;
       }
     }
     else {
@@ -99,7 +99,6 @@ void ActionMachine::step(){
   s->refs.q=s->q;
   s->refs.qdot=s->zero_qdot;
   ctrl_ref.set() = s->refs;
-  if(ros) ros->publishJointReference();
 }
 
 void ActionMachine::close(){

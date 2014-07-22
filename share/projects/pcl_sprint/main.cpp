@@ -1,5 +1,7 @@
 #include "grab.h"
 #include "plane.cpp"
+//#include "system.h"
+
 #include <pcl/io/pcd_io.h>
 
 void planeDetectionExample()
@@ -24,7 +26,7 @@ int main ()
 {
   planeDetectionExample();
   return 0;
-  SimpleOpenNIViewer v;
-  v.run ();
-  return 0;
+//  SimpleOpenNIViewer v;
+//  v.run ();
+//  return 0;
 }

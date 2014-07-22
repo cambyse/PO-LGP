@@ -16,7 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
 #ifndef system_engine_h
 #define system_engine_h
 
@@ -32,14 +31,14 @@ typedef MT::Array<Access*> AccessL;
 
 //===========================================================================
 
-VariableL createVariables(const ModuleL& ms); ///< same as System::connect();
+VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
 
 //===========================================================================
 /**
  * Implements a Module as a Thread
  */
 struct Module_Thread:Thread{
-  enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull };
+  enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull, dontLoop };
   Module *m;
   uint step_count;
   StepMode mode; double beat;
@@ -89,6 +88,10 @@ struct Variable_SharedMemory : Variable {
 };
 inline void operator<<(ostream& os, const Variable_SharedMemory& v){ os <<"Variable " <<v.name <<' ' <<*v.type; }
 
+template<class T> void connect(Access& acc, T& x){
+  acc.var = new Variable_SharedMemory(acc.name);
+  acc.var->data = &x;
+}
 
 //===========================================================================
 /**

@@ -149,7 +149,7 @@ protected:
 			kinect_gl.update(NULL, false, false, false);
 		}
 	}
-	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
+	void kinect_depth_cb(const uint16A& depth, double timestamp) {
 		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
 			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
 			kinect_depth.addFrame(kinect_depth_repack);

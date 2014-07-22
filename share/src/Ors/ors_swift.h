@@ -35,7 +35,7 @@ struct SwiftInterface {
   intA INDEXswift2shape, INDEXshape2swift;
   double cutoff;
 
-  SwiftInterface(const ors::KinematicWorld& world);
+  SwiftInterface(const ors::KinematicWorld& world, double _cutoff=.2);
   ~SwiftInterface();
 
   void setCutoff(double _cutoff){ cutoff=_cutoff; }

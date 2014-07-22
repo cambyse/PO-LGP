@@ -58,9 +58,15 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || !prec(t)) return 0; return map.dim_phi(G); }
+  uint dim_phi(const ors::KinematicWorld& G, uint t){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   TaskCost(TaskMap* m):map(*m), active(true){}
+
+  enum TaskCostInterpolationType { atTimeOnly, tillTime, fromTime };
+  void setCostSpecs(uint fromTime, uint toTime,
+                    const arr& _target=ARR(0.),
+                    double _prec=1.);
+
 };
 
 
@@ -82,7 +88,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   bool makeContactsAttractive;
   
   //-- transition cost descriptions //TODO: should become a task map just like any other
-  enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
+  enum TransitionType { none=-1, kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
   uint T; ///< number of time steps
@@ -93,6 +99,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
   arr postfix; ///< fixing the set of statex x[T-k]...x[T]
   //TODO: add methods to properly set the prefix given x0,v0?
+
+  //-- stationary parameters
+  arr z0; ///< an initialization of the stationary parameters of the motion problem
 
   //-- return values of an optimizer
   MT::Array<arr> phiMatrix;
@@ -112,12 +121,11 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  uint dim_x() { return x0.N; }
-  uint dim_phi(uint t);
-  uint dim_g(uint t);
+  uint dim_phi(const ors::KinematicWorld& G, uint t);
+  uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_psi();
-  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  void getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
+//  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
+  bool getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v=NoArr);
@@ -143,10 +151,11 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
-  virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-  virtual uint dim_x() { return MP.dim_x(); }
-  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
-  virtual uint dim_g(uint t){ return MP.dim_g(t); }
+  virtual uint get_k() { return 2; }
+  virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_z() { return MP.z0.N; }
+  virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();
 };

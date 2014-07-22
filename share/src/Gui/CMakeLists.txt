@@ -59,6 +59,7 @@ target_link_libraries(Gui LINK_PRIVATE Core
         ${QHULL_LIBRARIES}
         LINK_PUBLIC
         ${GL_LIBRARIES}
+	GLEW
 )
 
 # Python wrappers

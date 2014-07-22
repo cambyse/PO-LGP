@@ -86,6 +86,9 @@ reformatSources:
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
 
+dependPath/%: %
+	+@-$(BASE)/gofMake/make-path.sh $< depend
+
 cleanPath/%: %
 	@echo "                                                ***** clean " $*
 	@-rm -f $*/Makefile.dep

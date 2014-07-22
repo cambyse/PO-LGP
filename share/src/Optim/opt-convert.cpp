@@ -145,7 +145,7 @@ double sConvert::VectorFunction_ScalarFunction::fs(arr& grad, arr& H, const arr&
   return sumOfSqr(y);
 }
 
-void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const arr& x) {
+void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const arr& _x) {
 #if 0 //non-packed Jacobian
   //probing dimensionality
   uint T=f->get_T();
@@ -177,60 +177,110 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint T=f->get_T();
   uint k=f->get_k();
   uint n=f->dim_x();
-  uint M=0;
+  uint dim_z=f->dim_z();
+  uint dim_Phi=0;
   arr x_pre=f->get_prefix();
   arr x_post=f->get_postfix();
-  for(uint t=0; t<=T; t++) M+=f->dim_phi(t);
-  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1)-x_post.d0,"");
+  arr x,z;
+  if(dim_z){
+    x.referTo(_x);
+    x.reshape((T+1-x_post.d0)*n + dim_z);
+    z.referToSubRange(x, -(int)dim_z, -1);
+    x.referToSubRange(_x, 0, -(int)dim_z-1);
+    x.reshape(T+1-x_post.d0, n);
+  }else{
+    x.referTo(_x);
+    x.reshape(T+1-x_post.d0, n);
+  }
+  for(uint t=0; t<=T; t++) dim_Phi+=f->dim_phi(t);
+  CHECK(x.nd==2 && x.d1==n && x.d0==T+1-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
-
   //resizing things:
-  phi.resize(M);   phi.setZero();
-  RowShiftedPackedMatrix* Jaux;
-  if(&J){ Jaux = auxRowShifted(J, M, (k+1)*n, x.N); J.setZero(); }
-  M=0;
-  uint m_t;
+  phi.resize(dim_Phi);   phi.setZero();
+  RowShiftedPackedMatrix *Jaux, *Jzaux;
+  arr *Jz;
+  if(&J){
+    Jaux = auxRowShifted(J, dim_Phi, (k+1)*n, _x.N);
+    J.setZero();
+    if(dim_z){
+      Jz = new arr(dim_Phi, dim_z);
+      Jz->setZero();
+      Jaux->nextInSum = Jz;
+      Jzaux = auxRowShifted(*Jz, dim_Phi, dim_z, _x.N);
+    }
+  }
+
+  //loop over time t
+  uint M=0;
   for(uint t=0; t<=T; t++) {
-    m_t = f->dim_phi(t);
-    if(!m_t) continue;
-    arr x_bar, phi_t, J_t;
+    uint dimf_t = f->dim_phi(t);
+    if(!dimf_t) continue;
+
+    //construct x_bar
+    arr x_bar;
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
         for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else{
-        x_bar.referToSubRange(x, t-k, t);
+        if(!dim_z) x_bar.referToSubRange(x, t-k, t);
+        else x_bar = x.sub(t-k, t, 0, -1); //need to copy as we will augment
       }
     } else { //x_bar includes the prefix
       x_bar.resize(k+1,n);
       for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
     }
-    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
-    CHECK(phi_t.N==m_t,"");
-    phi.setVectorBlock(phi_t, M);
+    if(dim_z){ //append the constant variable to x_bar
+      x_bar.insColumns(x_bar.d1, dim_z);
+      for(uint i=0;i<=k;i++) x_bar[i].subRange(-dim_z, -1)=z;
+    }
+
+    //query
+    arr f_t, J_t, Jz_t;
+    f->phi_t(f_t, (&J?J_t:NoArr), t, x_bar);
+    CHECK(f_t.N==dimf_t,"");
+    phi.setVectorBlock(f_t, M);
     if(&J) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
-      CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
+      if(dim_z){//decompose J_t//TODO: inefficient
+        Jz_t.resize(J_t.d0, dim_z).setZero();
+        J_t.reshape(J_t.d0, (k+1)*(n+dim_z));
+        for(uint i=0;i<=k;i++){
+          J_t.setMatrixBlock(J_t.sub(0, -1, i*(n+dim_z), i*(n+dim_z)+n-1), 0, i*n);
+          Jz_t += J_t.sub(0, -1, i*(n+dim_z)+n, i*(n+dim_z)+n+dim_z-1); //we add up the Jacobians
+        }
+        J_t.delColumns((k+1)*n, (k+1)*dim_z);
+      }
+      CHECK(J_t.d0==dimf_t && J_t.d1==(k+1)*n,"");
       if(t>=k) {
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<J_t.d0; i++) Jaux->rowShift(M+i) = (t-k)*n;
+        for(uint i=0; i<dimf_t; i++) Jaux->rowShift(M+i) = (t-k)*n;
       } else { //cut away the Jacobian w.r.t. the prefix
         J_t.delColumns(0,(k-t)*n);
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<J_t.d0; i++) Jaux->rowShift(M+i) = 0;
+        for(uint i=0; i<dimf_t; i++) Jaux->rowShift(M+i) = 0;
+      }
+      if(dim_z){
+        CHECK(!Jz_t.N || (Jz_t.d0==dimf_t && Jz_t.d1==dim_z),"");
+        Jz->setMatrixBlock(Jz_t, M, 0);
+        for(uint i=0; i<dimf_t; i++) Jzaux->rowShift(M+i) = x.N;
       }
     }
-    M += m_t;
+    M += dimf_t;
   }
-  CHECK(M==phi.N,"");
-  if(&J) Jaux->computeColPatches(true);
-  //if(&J) J=Jaux->unpack();
+
+  CHECK(M==dim_Phi,"");
+  if(&J){
+    Jaux->computeColPatches(true);
+    if(dim_z) Jzaux->computeColPatches(false);
+  }
 #endif
 }
 
 //collect the constraints from a KOrderMarkovFunction
-double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x) {
+double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+#if 0 //old way
   //probing dimensionality
   uint T=f->get_T();
   uint k=f->get_k();
@@ -247,24 +297,24 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   uint meta_gd = dim_g();
   uint meta_yd = meta_phid - meta_gd;
 
-  bool getJ = (&df || &Hf || &meta_Jg);
+  bool getJ = (&df || &Hf || &Jg);
 
   arr meta_y, meta_Jy;
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
   meta_y.resize(meta_yd);
-  if(&meta_g) meta_g.resize(meta_gd);
+  if(&g) g.resize(meta_gd);
   if(getJ){ Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N); meta_Jy.setZero(); }
-  if(&meta_Jg){ Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N); meta_Jg.setZero(); }
+  if(&Jg){ Jg_aux = auxRowShifted(Jg, meta_gd, (k+1)*n, x.N); Jg.setZero(); }
 
   uint y_count=0;
   uint g_count=0;
 
   for(uint t=0; t<=T; t++) {
     uint phid = f->dim_phi(t);
-    uint gd   = f->dim_g(t);
-    uint yd   = phid-gd;
+    uint dimg_t   = f->dim_g(t);
+    uint m_t   = phid-dimg_t;
     if(!phid) continue;
-    arr x_bar, phi, Jphi, y, Jy, g, Jg;
+    arr x_bar, phi_t, J_t, f_t, Jf_t, g_t, Jg_t;
 
     //construct x_bar
     if(t>=k) {
@@ -280,59 +330,134 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     }
 
     //query the phi
-    f->phi_t(phi, (getJ?Jphi:NoArr), t, x_bar);
-    if(getJ) if(Jphi.nd==3) Jphi.reshape(Jphi.d0, Jphi.d1*Jphi.d2);
-    CHECK(phi.N==phid,"");
-    if(getJ) CHECK(Jphi.d0==phid && Jphi.d1==(k+1)*n,"");
+    f->phi_t(phi_t, (getJ?J_t:NoArr), t, x_bar);
+    if(getJ) if(J_t.nd==3) J_t.reshape(J_t.d0, J_t.d1*J_t.d2);
+    CHECK(phi_t.N==phid,"");
+    if(getJ) CHECK(J_t.d0==phid && J_t.d1==(k+1)*n,"");
 
     //insert in meta_y
-    y.referToSubRange(phi, 0, yd-1);
-    CHECK(y.N==yd,"");
-    meta_y.setVectorBlock(y, y_count);
+    f_t.referToSubRange(phi_t, 0, m_t-1);
+    CHECK(f_t.N==m_t,"");
+    meta_y.setVectorBlock(f_t, y_count);
     if(getJ) {
-      Jy.referToSubRange(Jphi, 0, yd-1);
+      Jf_t.referToSubRange(J_t, 0, m_t-1);
       if(t>=k) {
-        meta_Jy.setMatrixBlock(Jy, y_count, 0);
-        for(uint i=0; i<Jy.d0; i++) Jy_aux->rowShift(y_count+i) = (t-k)*n;
+        meta_Jy.setMatrixBlock(Jf_t, y_count, 0);
+        for(uint i=0; i<Jf_t.d0; i++) Jy_aux->rowShift(y_count+i) = (t-k)*n;
       } else { //cut away the Jacobian w.r.t. the prefix
-        Jy.dereference();
-        Jy.delColumns(0,(k-t)*n);
-        meta_Jy.setMatrixBlock(Jy, y_count, 0);
-        for(uint i=0; i<Jy.d0; i++) Jy_aux->rowShift(y_count+i) = 0;
+        Jf_t.dereference();
+        Jf_t.delColumns(0,(k-t)*n);
+        meta_Jy.setMatrixBlock(Jf_t, y_count, 0);
+        for(uint i=0; i<Jf_t.d0; i++) Jy_aux->rowShift(y_count+i) = 0;
       }
     }
-    y_count += yd;
+    y_count += m_t;
 
     //insert in meta_g
-    if(gd){
-      g.referToSubRange(phi, yd, -1);
-      CHECK(g.N==gd,"");
-      if(&meta_g) meta_g.setVectorBlock(g, g_count);
-      if(&meta_Jg) {
-        Jg.referToSubRange(Jphi, yd, -1);
+    if(dimg_t){
+      g_t.referToSubRange(phi_t, m_t, -1);
+      CHECK(g_t.N==dimg_t,"");
+      if(&g) g.setVectorBlock(g_t, g_count);
+      if(&Jg) {
+        Jg_t.referToSubRange(J_t, m_t, -1);
         if(t>=k) {
-          meta_Jg.setMatrixBlock(Jg, g_count, 0);
-          for(uint i=0; i<Jg.d0; i++) Jg_aux->rowShift(g_count+i) = (t-k)*n;
+          Jg.setMatrixBlock(Jg_t, g_count, 0);
+          for(uint i=0; i<Jg_t.d0; i++) Jg_aux->rowShift(g_count+i) = (t-k)*n;
         } else { //cut away the Jacobian w.r.t. the prefix
-          Jg.dereference();
-          Jg.delColumns(0,(k-t)*n);
-          meta_Jg.setMatrixBlock(Jg, g_count, 0);
-          for(uint i=0; i<Jg.d0; i++) Jg_aux->rowShift(g_count+i) = 0;
+          Jg_t.dereference();
+          Jg_t.delColumns(0,(k-t)*n);
+          Jg.setMatrixBlock(Jg_t, g_count, 0);
+          for(uint i=0; i<Jg_t.d0; i++) Jg_aux->rowShift(g_count+i) = 0;
         }
       }
-      g_count += gd;
+      g_count += dimg_t;
     }
   }
   CHECK(y_count==meta_y.N,"");
-  if(&meta_g) CHECK(g_count==meta_g.N,"");
+  if(&g) CHECK(g_count==g.N,"");
   if(getJ) Jy_aux->computeColPatches(true);
-  if(&meta_Jg) Jg_aux->computeColPatches(true);
+  if(&Jg) Jg_aux->computeColPatches(true);
   //if(&J) J=Jaux->unpack();
 
   //finally, compute the scalar function
   if(&df){ df = comp_At_x(meta_Jy, meta_y); df *= 2.; }
   if(&Hf){ Hf = comp_At_A(meta_Jy); Hf *= 2.; }
   return sumOfSqr(meta_y);
+#else
+  sConvert::KOrderMarkovFunction_VectorFunction F(*f);
+  arr phi, J;
+  bool getJ = (&df) || (&Hf) || (&Jg);
+  F.fv(phi, (getJ?J:NoArr), x);
+  RowShiftedPackedMatrix *J_aux = (RowShiftedPackedMatrix*)J.aux;
+
+  //resizing things:
+  uint dimphi = dim_phi();
+  uint dimg = dim_g();
+  uint dimy = dimphi - dimg;
+  CHECK(phi.N==dimphi,"");
+
+  arr y, Jy;
+  RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
+  y.resize(dimy);
+  if(&g) g.resize(dimg);
+  if(getJ) Jy_aux = auxRowShifted(Jy, dimy, J.d1, J_aux->real_d1);
+  if(&Jg)  Jg_aux = auxRowShifted(Jg, dimg, J.d1, J_aux->real_d1);
+
+  //if there is a z
+  uint dimz = f->dim_z();
+  arr *Jz, *Jzy, *Jzg;
+  RowShiftedPackedMatrix *Jz_aux, *Jzy_aux, *Jzg_aux;
+  if(dimz && getJ){
+    Jz = J_aux->nextInSum;
+    Jz_aux = (RowShiftedPackedMatrix*)Jz->aux;
+            { Jzy = new arr(dimy, dimz);  Jy_aux->nextInSum = Jzy;  Jzy_aux = auxRowShifted(*Jzy, dimy, Jz->d1, Jz_aux->real_d1); }
+    if(&Jg) { Jzg = new arr(dimg, dimz);  Jg_aux->nextInSum = Jzg;  Jzg_aux = auxRowShifted(*Jzg, dimg, Jz->d1, Jz_aux->real_d1); }
+  }
+
+  //loop over time t
+  uint M=0, y_count=0, g_count=0;
+  uint T=f->get_T();
+  for(uint t=0; t<=T; t++){
+    uint dimphi_t = f->dim_phi(t);
+    uint dimg_t   = f->dim_g(t);
+    uint dimf_t   = dimphi_t-dimg_t;
+
+    //split up
+    y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
+    if(getJ) {
+      Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
+      for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
+      if(dimz){
+        Jzy->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
+        for(uint i=0; i<dimf_t; i++) Jzy_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+      }
+    }
+    M += dimf_t;
+    y_count += dimf_t;
+
+    if(&g && dimg) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
+    if(&Jg && dimg) {
+      Jg.setMatrixBlock(J.subRange(M, M+dimg_t-1), g_count, 0);
+      for(uint i=0; i<dimg_t; i++) Jg_aux->rowShift(g_count+i) = J_aux->rowShift(M+i);
+      if(dimz){
+        Jzg->setMatrixBlock(Jz->subRange(M, M+dimg_t-1), g_count, 0);
+        for(uint i=0; i<dimg_t; i++) Jzg_aux->rowShift(g_count+i) = Jz_aux->rowShift(M+i);
+      }
+    }
+    M += dimg_t;
+    g_count += dimg_t;
+  }
+  CHECK(M==dimphi,"");
+  CHECK(y_count==dimy,"");
+  if(&g) CHECK(g_count==dimg,"");
+  if(getJ) Jy_aux->computeColPatches(true);
+  if(&Jg) Jg_aux->computeColPatches(true);
+
+  //finally, compute the scalar function
+  if(&df){ df = comp_At_x(Jy, y); df *= 2.; }
+  if(&Hf){ Hf = comp_At_A(Jy); Hf *= 2.; }
+  return sumOfSqr(y);
+#endif
 }
 
 uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_x() {

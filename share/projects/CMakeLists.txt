@@ -4,4 +4,5 @@
 #add_subdirectory(mlr_ros)
 add_subdirectory(data_recording)
 add_subdirectory(pcl_sprint)
+add_subdirectory(pcl_sprint_module)
 

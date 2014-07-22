@@ -8,24 +8,24 @@ using namespace std;
 using namespace std::placeholders;
 
 namespace {
-	void video_cb(OpenGL& gl, const byteA& rgb, double timestamp) {
-		gl.watchImage(rgb, true, 1.0);
-	}
+  void video_cb(OpenGL& gl, const byteA& rgb, double timestamp) {
+    gl.watchImage(rgb, true, 1.0);
+  }
 
 }
 
 int main(int argc, char* argv[])
 {
-	OpenGL gl;
-	MLR::kinect_video_cb cb = std::bind(&video_cb, std::ref(gl), _1, _2);
+  OpenGL gl;
+  MLR::kinect_video_cb cb = std::bind(&video_cb, std::ref(gl), _1, _2);
 
-	MLR::KinectCallbackReceiver receiver(nullptr,
-			[&gl](const byteA& video, double){ gl.watchImage(video, false, 1.0); }, 0);
+  MLR::KinectCallbackReceiver receiver(nullptr,
+                                       [&gl](const byteA& video, double){ gl.watchImage(video, false, 1.0); }, 0);
 
-	receiver.startStreaming();
+  receiver.startStreaming();
+  MT::wait(5.);
+  receiver.stopStreaming();
 
-	gl.watch();
-
-	return 0;
+  return 0;
 }
 

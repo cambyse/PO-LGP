@@ -6,39 +6,38 @@
 #include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
 
-extern double stickyWeight;
-
 VideoEncoder_libav_simple *vid;
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
-  MotionProblem P(world, false);
-  P.loadTransitionParameters();
-  x = P.getInitialization();
-  P.makeContactsAttractive=true;
-  stickyWeight=1.;
+  MotionProblem MP(world, false);
+  MP.loadTransitionParameters();
+  x = MP.getInitialization();
 
   //-- setup the motion problem
-  TaskCost *pos = P.addTask("position",
+  TaskCost *pos = MP.addTask("position",
                             new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  TaskCost *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  vel->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+  TaskCost *cons = MP.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  cons->setCostSpecs(0, MP.T, {0.}, 1.);
+
+  TaskCost *sticky = MP.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+  sticky->setCostSpecs(0, MP.T, {0.}, 1.);
 
   //-- convert
-  MotionProblemFunction MF(P);
+  MotionProblemFunction MF(MP);
   Convert ConstrainedP(MF);
 
   //-- optimize
   MT::timerStart();
   optConstrained(x, dual, Convert(MF));
   cout <<"** optimization time = " <<MT::timerRead() <<endl;
-  P.dualMatrix = dual;
-  P.costReport();
+  MP.dualMatrix = dual;
+  MP.costReport();
 
   if(&y){
     y.resize(x.d0, pos->map.dim_phi(world));
@@ -106,13 +105,17 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 #ifdef USE_DUAL
     //recalibrate the target based on touch
     double d=0.;
-    if(pd_c->desiredApproach.y.N){
-      d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
-      if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
+    if(pd_c->desiredApproach.y.N){ //the constraint-task tries to approach the constrained
+      d = pd_c->desiredApproach.y(0); //d = true distance measured from the simulator via the constraint task map
+      if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){ //on contact
+        est_target->X.pos.z = endeff->X.pos.z+0.1; //est_target position update; 0.1=known distance above table
+      }
+      if(est_target->X.pos.z > endeff->X.pos.z+0.1){ //also on non-contact
         est_target->X.pos.z = endeff->X.pos.z+0.1; //est_target position update
       }
     }
 #endif
+
     //external sinus on the table height
     table->X.pos.z = mean_table_height+sin_jitter*::sin(double(t)/15);
 #ifdef USE_DUAL
@@ -128,10 +131,10 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
     }
 
     //display and record video
-//    world.watch(false, STRING(t));
+    //world.watch(false, STRING(t));
     world.gl().update(STRING(t), true, false, true);
-    //    flip_image(world.gl().captureImage);
-    //    vid->addFrame(world.gl().captureImage);
+    //flip_image(world.gl().captureImage);
+    //vid->addFrame(world.gl().captureImage);
 
     //write data
     MT::arrayBrackets="  ";
@@ -159,7 +162,7 @@ int main(int argc,char** argv){
 //  arr x2 = reverseTrajectory(x);
 //  x.append(x2);
   for(uint i=0;i<1;i++) displayTrajectory(x, 1, world, "planned trajectory");
-//  return 0;
+  return 0;
 
 //  world.getBodyByName("table")->X.pos.z -= .1;
   orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;

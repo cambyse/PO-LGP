@@ -53,8 +53,8 @@ SwiftInterface::~SwiftInterface() {
   cout <<" -- SwiftInterface closed" <<endl;
 }
 
-SwiftInterface::SwiftInterface(const ors::KinematicWorld& world)
-  : scene(NULL), cutoff(.1) {
+SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
+  : scene(NULL), cutoff(_cutoff) {
   bool r, add;
   
   if(scene) delete scene;
@@ -101,7 +101,7 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world)
           s->mesh.V.p, (int*)s->mesh.T.p,
           s->mesh.V.d0, s->mesh.T.d0, INDEXshape2swift(s->index), false,
           DEFAULT_ORIENTATION, DEFAULT_TRANSLATION, DEFAULT_SCALE,
-          DEFAULT_BOX_SETTING, DEFAULT_BOX_ENLARGE_REL, cutoff);
+          DEFAULT_BOX_SETTING, DEFAULT_BOX_ENLARGE_REL, 2.);
       if(!r) HALT("--failed!");
       
       INDEXswift2shape(INDEXshape2swift(s->index)) = s->index;
@@ -134,9 +134,9 @@ void SwiftInterface::reinitShape(const ors::Shape *s) {
 void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint parentLevelsToDeactivate) {
   /* deactivate some collision pairs:
     -- no `cont' -> no collisions with this object at all
-    -- no collisions between shapes of same object
-    -- no collisions between linked objects
-    -- no collisions between objects liked via the tree via 3 links
+    -- no collisions between shapes of same body
+    -- no collisions between linked bodies
+    -- no collisions between bodies liked via the tree via 3 links
   */
   
   //cout <<"collision active shapes: ";
@@ -365,8 +365,6 @@ void SwiftInterface::swiftQueryExactDistance() {
 
 #else
 #include <Core/util.h>
-void setCutoff(double _cutoff){ cutoff=_cutoff; }
-
   void SwiftInterface::step(ors::KinematicWorld &world, bool dumpReport=false){}
   void SwiftInterface::pushToSwift() {}
   void SwiftInterface::pullFromSwift(const KinematicWorld &world, bool dumpReport) {}

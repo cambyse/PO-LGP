@@ -79,4 +79,15 @@ struct PlaneConstraint:public TaskMap {
 
 //===========================================================================
 
+//this is NOT a constraint -- it turns a constraint into stickiness
+struct ConstraintStickiness:public TaskMap {
+  TaskMap& map;
+  ConstraintStickiness(TaskMap& _map):map(_map){ constraint=false; }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
 #endif

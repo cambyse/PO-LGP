@@ -17,9 +17,11 @@ if(PCL_FOUND)
         endif()
     endif()
 
-    add_library(mlr_pcl grab.cpp plane.cpp)
+    add_library(mlr_pcl plane.cpp)
     target_link_libraries(mlr_pcl
         LINK_PRIVATE
+        Core
+        Hardware_kinect
         ${PCL_COMMON_LIBRARIES}
         ${PCL_IO_LIBRARIES}
         ${PCL_VISUALIZATION_LIBRARIES}

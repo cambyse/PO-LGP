@@ -1,3 +1,16 @@
+** PR2 controller
+
+* make everything linear
+* have data stuctures
+  * JointConfigInfo { map index-to-name } ? (Necessary?)
+  * JointControllerRefs { q_ref, Kq_matrix, Kd_factor, u_bias, fL_ref, fR_ref, KfL, KfR }
+  * JointControllerState { q_real, qdot_real, u_cmd, u_real, fL_real, fR_real }
+
+** relative quaterion task variables
+
+* scalar product issues with quaternion distance/difference
+* implement correctly within DefaultTaskMap
+
 ** task & constraints
 
 check the consistency of the constraintProxyVariable with squared
@@ -12,18 +25,6 @@ penelty and old task variables
 * generell: sobald man etwas anfasst: relax, gravity compensation is easier
 * action for pregrasp
 * task variable that allows a target RANGE
-
-** ORS:
-* in phi_t: have a list of k ors copies
-  * on entry, check which are equal to x_{t-k},..,x_t
-  * permute
-  * set the remaining
-
-** traj optim
-
-- mix vel and acc penalties for optimization
-- have k ors copies in converting kOrderMarkov to sqrfunction
-- have psi (transition costs) as normal task variable
 
 **
 

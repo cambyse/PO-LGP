@@ -31,15 +31,13 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
   ROS_INFO("*** ORS model loaded");
-  ftL_shape = world.getShapeByName("endeffForceL");
-  ftR_shape = world.getShapeByName("endeffForceR");
   ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
-  Kp_gainFactor=Kd_gainFactor=1.;
-  fL_gainFactor=fR_gainFactor=0.;
+  Kq_gainFactor=Kd_gainFactor=ARR(1.);
+  Kf_gainFactor=ARR(0.);
   limits.resize(world.q.N,4).setZero();
   for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
@@ -111,23 +109,21 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
-  //-- update ORS to compute Jacobians used in force controller
-  world.setJointState(q, qd);
-  world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
-  world.kinematicsPos(y_fR, J_fR, ftR_shape->body, &ftR_shape->rel.pos);
+  mutex.lock(); //only inside here we use the msg values...
 
   //-- PD on q_ref
-  if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
+  if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
   }else{
-    u = Kp_gainFactor*(Kp % (q_ref - q)) + Kd_gainFactor*(Kd % (qdot_ref - qd));
-
-    if(fL_ref.N==3){
-      u += fL_gainFactor*(~J_fL * fL_ref);
+    u = zeros(q.N);
+    if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
+      u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
+      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
+    }else if(Kq_gainFactor.d0==q.N && Kq_gainFactor.d1==q.N && Kd_gainFactor.N==1){
+      u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
+      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
     }
-    if(fR_ref.N==3){
-      u += fR_gainFactor*(~J_fR * fR_ref);
-    }
+    u += u_bias;
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
@@ -148,23 +144,27 @@ void TreeControllerClass::update() {
       baseCommand_publisher.publish(base_cmd);
     }
   }
+
+  mutex.unlock();
 }
 
 /// Controller stopping in realtime
 void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
+  mutex.lock();
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   fL_ref = ARRAY(msg->fL);
   fR_ref = ARRAY(msg->fR);
-#define CP(x) x=msg->x;  if(x>1.) x=1.;  if(x<0.) x=0.;
-  CP(Kp_gainFactor);
+  u_bias = ARRAY(msg->u_bias);
+#define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
+  CP(Kq_gainFactor);
   CP(Kd_gainFactor);
-  CP(fL_gainFactor);
-  CP(fR_gainFactor);
+  CP(Kf_gainFactor);
 #undef CP
+  mutex.unlock();
 }
 
 void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
