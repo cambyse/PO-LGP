@@ -24,7 +24,7 @@ int main ()
 {
   planeDetectionExample();
   return 0;
-  SimpleOpenNIViewer v;
-  v.run ();
-  return 0;
+//  SimpleOpenNIViewer v;
+//  v.run ();
+//  return 0;
 }
