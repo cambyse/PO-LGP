@@ -1,11 +1,11 @@
 #include "plane.h"
 
-void passthroughFilter(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<PoinT2>::Ptr outCloud,double limit)
+void passthroughFilter(pcl::PointCloud<PoinT2>::Ptr inCloud, pcl::PointCloud<PoinT2>::Ptr outCloud, double minLimit, double maxLimit)
 {
   pcl::PassThrough<PoinT2> pass;
   pass.setInputCloud (inCloud);
   pass.setFilterFieldName ("z");
-  pass.setFilterLimits (0, limit);
+  pass.setFilterLimits (minLimit, maxLimit);
   pass.filter (*outCloud);
   std::cerr << "PointCloud after passthroughFilter: " << outCloud->points.size () << " data points." << std::endl;
 }
@@ -19,6 +19,7 @@ void normalEstimator(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::N
   ne.setInputCloud (inCloud);
   ne.setKSearch (knn);
   ne.compute (*outCloud);
+  std::cerr << "Normal estimation completed" << std::endl;
 }
 
 void planeDetector(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr inCloudNormal, pcl::ModelCoefficients::Ptr outCoefficients, pcl::PointIndices::Ptr outInliersPlane)
