@@ -6,7 +6,7 @@ if(PCL_FOUND)
     link_directories(${PCL_LIBRARY_DIRS})
     add_definitions(${PCL_DEFINITIONS})
 
-	    add_library(mlr_pcl plane.cpp)
+	    add_library(mlr_pcl plane.cpp methods.cpp)
     target_link_libraries(mlr_pcl
         LINK_PRIVATE
         Core

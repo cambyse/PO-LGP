@@ -1,6 +1,7 @@
 #include "roscom.h"
 
 #ifdef MT_ROS
+
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
@@ -209,6 +210,11 @@ void RosCom_ForceSensorSync::close(){
 //===========================================================================
 
 #else //MT_ROS
+
+void RosCom_Spinner::open(){ NICO }
+void RosCom_Spinner::step(){ NICO }
+void RosCom_Spinner::close(){ NICO }
+
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)

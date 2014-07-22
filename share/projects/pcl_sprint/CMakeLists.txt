@@ -6,22 +6,13 @@ if(PCL_FOUND)
     link_directories(${PCL_LIBRARY_DIRS})
     add_definitions(${PCL_DEFINITIONS})
 
-    if(WITH_ROS)
-        pkg_check_modules(ROS_PCL roscpp sensor_msgs)
-        if(ROS_PCL_FOUND)
-            add_definitions(-DHAVE_ROS_PCL ${ROS_PCL_CFLAGS_OTHER})
-            include_directories(${ROS_PCL_INCLUDE_DIRS})
-            link_directories(${ROS_PCL_LIBRARY_DIRS})
-        else()
-            unset(ROS_PCL_LIBRARIES CACHE)
-        endif()
-    endif()
-
-    add_library(mlr_pcl plane.cpp)
+	    add_library(mlr_pcl plane.cpp methods.cpp)
     target_link_libraries(mlr_pcl
         LINK_PRIVATE
         Core
         Hardware_kinect
+	System
+	Perception
         ${PCL_COMMON_LIBRARIES}
         ${PCL_IO_LIBRARIES}
         ${PCL_VISUALIZATION_LIBRARIES}
