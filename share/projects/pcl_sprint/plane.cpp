@@ -1,4 +1,7 @@
-#include "plane.h"
+
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include <pcl/ModelCoefficients.h>
 #include <pcl/io/pcd_io.h>
@@ -10,36 +13,33 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
-PlaneDetector::PlaneDetector(pcl::PointCloud<PointT>::Ptr _cloud) {
-  cloud = _cloud;
-}
+typedef pcl::PointXYZ PointT;
 
-void PlaneDetector::passthroughFilter(double limit)
+
+void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud,double limit)
 {
   pcl::PassThrough<PointT> pass;
-  pass.setInputCloud (cloud);
+  pass.setInputCloud (inCloud);
   pass.setFilterFieldName ("z");
   pass.setFilterLimits (0, limit);
-  pass.filter (*cloud_filtered);
-  std::cerr << "PointCloud after filtering has: " << cloud_filtered->points.size () << " data points." << std::endl;
+  pass.filter (*outCloud);
+  std::cerr << "PointCloud after passthroughFilter: " << outCloud->points.size () << " data points." << std::endl;
 }
 
-void PlaneDetector::estimateNormals(int knn)
+void normalEstimator(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr outCloud,int knn)
 {
   pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT> ());
   pcl::NormalEstimation<PointT, pcl::Normal> ne;
   // Estimate point normals
   ne.setSearchMethod (tree);
-  ne.setInputCloud (cloud_filtered);
+  ne.setInputCloud (inCloud);
   ne.setKSearch (knn);
-  ne.compute (*cloud_normals);
+  ne.compute (*outCloud);
 }
 
-pcl::ModelCoefficients PlaneDetector::detectPlane() {
+void planeDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr inCloudNormal, pcl::ModelCoefficients::Ptr outCoefficients, pcl::PointIndices::Ptr outInliersPlane)
 
-  pcl::ModelCoefficients::Ptr coefficients_plane (new pcl::ModelCoefficients);
-  pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+{
   pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg;
 
   // Create the segmentation object for the planar model and set all the parameters
@@ -49,12 +49,10 @@ pcl::ModelCoefficients PlaneDetector::detectPlane() {
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (100);
   seg.setDistanceThreshold (0.03);
-  seg.setInputCloud (cloud_filtered);
-  seg.setInputNormals (cloud_normals);
+  seg.setInputCloud (inCloud);
+  seg.setInputNormals (inCloudNormal);
   // Obtain the plane inliers and coefficients
-  seg.segment (*inliers_plane, *coefficients_plane);
-  return *coefficients_plane;
+  seg.segment (*outInliersPlane, *outCoefficients);
+  std::cerr << "Plane coefficients: " << *outCoefficients << std::endl;
 }
-
-
 
