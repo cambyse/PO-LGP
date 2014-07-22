@@ -1,20 +1,10 @@
-
 #include <pcl/point_types.h>
 typedef pcl::PointXYZRGB PointT;
 #include "../pcl_sprint/system.h"
 
-#include <System/engine.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
-
-#include <Gui/opengl.h>
-
-#include <Hardware/kinect/kinect.h>
-#include <Perception/perception.h>
-#include <Perception/depth_packing.h>
-#include <Perception/kinect2pointCloud.h>
-#include <Core/module.h>
 
 
 void TEST(KinectModules) {
