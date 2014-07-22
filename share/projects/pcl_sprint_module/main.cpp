@@ -2,6 +2,8 @@
 #include "methods.h"
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include "plane.h"
+
 void TEST(KinectModules) {
   PCL_ModuleSystem S;
 
