@@ -9,6 +9,7 @@
 
 #include "test_method.h"
 #include "generate_cylinder_on_table.h"
+#include "icp.h"
 
 void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void* viewer_void) {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
@@ -38,7 +39,7 @@ ValueArg<string> input_arg(  "i", "input" , "the source of point clouds"        
 ValueArg<string> file_arg(   "f", "file"  , "file to read input from (only for input method 'file')"    , false, ""        , "string");
 ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                , false, "none"    , "string");
 vector<string> input_vector = { "default", "file", "cyl_on_table"};
-vector<string> method_vector = { "none", "test" };
+vector<string> method_vector = { "none", "test", "icp" };
 
 // check if argument value is within given vector and print messessage
 template < typename T>
@@ -143,6 +144,16 @@ int main(int argn, char ** args) {
         output_cloud = input_cloud;
     } else if(method_arg.getValue()=="test") {
         TestMethod::process(input_cloud,output_cloud);
+    } else if(method_arg.getValue()=="icp") {
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cylinder = generate_cylinder_on_table::get_cylinder_model();
+
+        double theta = 2*drand48()*M_PI*0.3;
+        double transl_scale = 5;
+        Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+        transform.translation() = Eigen::Vector3f(transl_scale*2*drand48()-1, transl_scale*2*drand48()-1, transl_scale*2*drand48()-1);
+        transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f(drand48(), drand48(), drand48())));
+        pcl::transformPointCloud(*cylinder, *cylinder, transform);
+        ICP::apply(cylinder, input_cloud, output_cloud);
     } else {
         cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
         return(-1);
@@ -152,13 +163,16 @@ int main(int argn, char ** args) {
     //  display  //
     //-----------//
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    // add point cloud
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(output_cloud);
-    viewer->addPointCloud<pcl::PointXYZRGB> (output_cloud, rgb, "sample cloud");
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+    // add point clouds
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb_input(input_cloud);
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb_output(output_cloud);
+    viewer->addPointCloud<pcl::PointXYZRGB> (input_cloud, rgb_input, "input cloud");
+    viewer->addPointCloud<pcl::PointXYZRGB> (output_cloud, rgb_output, "output cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "input cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "output cloud");
     viewer->addCoordinateSystem (1.0);
     viewer->initCameraParameters ();
-    viewer->setBackgroundColor (0, 0, 0);
+    viewer->setBackgroundColor (0.3, 0.3, 0.3);
     // callbacks
     viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer);
     viewer->registerMouseCallback(mouseEventOccurred, (void*)&viewer);
