@@ -6,13 +6,13 @@
 
 void planeDetectionExample()
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::PCDReader reader;
   reader.read ("table_scene_mug_stereo_textured.pcd", *cloud);
   std::cerr << "PointCloud has: " << cloud->points.size () << " data points." << std::endl;
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  passthroughFilter(cloud,filtered_cloud,1.5);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+  passthroughFilter(cloud,filtered_cloud,1.5,2.5);
 
   pcl::PointCloud<pcl::Normal>::Ptr normal_cloud (new pcl::PointCloud<pcl::Normal>);
   normalEstimator(filtered_cloud,normal_cloud,50);
