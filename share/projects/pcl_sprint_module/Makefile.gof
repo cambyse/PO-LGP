@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main.o methods.o plane.o dataStructures.o
+OBJS = main.o methods.o plane.o dataStructures.o object_detector.o
 
 PCL = 1
 ROS = 1
