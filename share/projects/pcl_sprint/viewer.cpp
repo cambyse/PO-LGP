@@ -239,8 +239,10 @@ int main(int argn, char ** args) {
         };
     } else if(method_arg.getValue()=="cloud_model") {
         cloud_model.setModelSize(10000);
-        cloud_model.setDyingProb(0.01);
-        cloud_model.setPersistence(10);
+        cloud_model.setDyingProb(0.001);
+        cloud_model.setSolDyingProb(0.01);
+        cloud_model.setPersistence(100);
+        cloud_model.setSmoothing(0.1);
         cloud_model.getModelCloud(output_cloud);
         get_output_cloud = [&](){
             cloud_model.update_model(input_cloud);

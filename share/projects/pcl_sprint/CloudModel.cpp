@@ -2,6 +2,10 @@
 
 #include "arithmetic.h"
 
+#include <limits>
+
+#include <pcl/registration/icp.h>
+
 using std::cout;
 using std::endl;
 using std::vector;
@@ -13,6 +17,8 @@ using namespace arithmetic;
 
 CloudModel::CloudModel():
     dying_prob(0),
+    sol_dying_prob(0),
+    persistence(numeric_limits<int>::max()),
     smoothing(1),
     model_size(0),
     model_target_size(0),
@@ -21,6 +27,8 @@ CloudModel::CloudModel():
 
 CloudModel::CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c):
     dying_prob(0),
+    sol_dying_prob(0),
+    persistence(numeric_limits<int>::max()),
     smoothing(1),
     model_size(0),
     model_target_size(0),
@@ -97,6 +105,8 @@ void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
         cout << "Error: empty model" << endl;
         return;
     }
+    // initial ICP step
+    icpUpdate(input_cloud);
     // build kd-tree for model
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree;
     kdtree.setInputCloud(model_cloud);
@@ -119,11 +129,16 @@ void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
         }
     }
     // compute targets
+    int input_size = input_cloud->points.size();
     for(int idx=0; idx<model_size; ++idx) {
         if(target_weights[idx]==0) {
-            //target_points[idx] = PointXYZRGB_to_tuple(input_cloud->points[rand()%input_size]);
-            target_points[idx] = PointXYZRGB_to_tuple(model_cloud->points[idx]);
-            ++persistence_counts[idx];
+            if(rand01()<sol_dying_prob) {
+                target_points[idx] = PointXYZRGB_to_tuple(input_cloud->points[rand()%input_size]);
+                persistence_counts[idx] = 0;
+            } else {
+                target_points[idx] = PointXYZRGB_to_tuple(model_cloud->points[idx]);
+                ++persistence_counts[idx];
+            }
         } else {
             persistence_counts[idx] = 0;
             auto source = PointXYZRGB_to_tuple(model_cloud->points[idx]);
@@ -133,25 +148,60 @@ void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
             target_points[idx] = add_tuples(source,difference);
         }
     }
+    // construct target cloud
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr target_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for(auto target : target_points) {
+        pcl::PointXYZRGB point(get<3>(target),get<4>(target),get<5>(target));
+        //pcl::PointXYZRGB point(0,0,0); // black
+        //pcl::PointXYZRGB point(255,0,0); // red
+        point.x = get<0>(target) + rand11()*1e-5;
+        point.y = get<1>(target) + rand11()*1e-5;
+        point.z = get<2>(target) + rand11()*1e-5;
+        target_cloud->points.push_back(point);
+    }
     // update
-    kMeansUpdate(input_cloud,target_points);
+    kMeansUpdate(input_cloud,target_cloud);
 }
 
 void CloudModel::kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud,
-                              std::vector<std::tuple<double,double,double,double,double,double> > target_points) {
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & target_cloud) {
     int input_size = input_cloud->points.size();
     for(int idx=0; idx<model_size; ++idx) {
         if(rand01()<dying_prob || persistence_counts[idx]>=persistence) {
             model_cloud->points[idx] = input_cloud->points[rand()%input_size];
         } else {
-            auto target = target_points[idx];
-            pcl::PointXYZRGB point(get<3>(target),get<4>(target),get<5>(target));
-            //pcl::PointXYZRGB point(0,0,0); // black
-            //pcl::PointXYZRGB point(255,0,0); // red
-            point.x = get<0>(target) + rand11()*1e-5;
-            point.y = get<1>(target) + rand11()*1e-5;
-            point.z = get<2>(target) + rand11()*1e-5;
-            model_cloud->points[idx] = point;
+            model_cloud->points[idx] = target_cloud->points[idx];
         }
     }
+}
+
+void CloudModel::icpUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
+    pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
+    // set thresholds
+    // cout << "old thresholds (corr.dist./ransac) = (" <<
+    //     icp.getMaxCorrespondenceDistance() << "/" <<
+    //     icp.getRANSACOutlierRejectionThreshold() << ")" << endl;
+    // icp.setRANSACOutlierRejectionThreshold(10);
+    // icp.setMaxCorrespondenceDistance(10);
+    // cout << "new thresholds (corr.dist./ransac) = (" <<
+    //     icp.getMaxCorrespondenceDistance() << "/" <<
+    //     icp.getRANSACOutlierRejectionThreshold() << ")" << endl;
+    // set max iterations
+    // cout << "old iterations (corr.dist./ransac) = (" <<
+    //     icp.getMaximumIterations() << "/" <<
+    //     icp.getRANSACIterations() << ")" << endl;
+    icp.setMaximumIterations(1);
+    icp.setRANSACIterations(0);
+    // cout << "new iterations (corr.dist./ransac) = (" <<
+    //     icp.getMaximumIterations() << "/" <<
+    //     icp.getRANSACIterations() << ")" << endl;
+    // set input and target
+    icp.setInputCloud(model_cloud);
+    icp.setInputTarget(input_cloud);
+    // perform alignment
+    icp.align(*model_cloud);
+    // print some info
+    cout << "has converged:" << icp.hasConverged() << " score: " <<
+        icp.getFitnessScore() << endl;
+    cout << "Final Transform:" << endl << icp.getFinalTransformation() << endl;
 }
