@@ -16,4 +16,25 @@ void conv_ArrCloud_PclCloud(pcl::PointCloud<PointT>::Ptr& pcl_cloud,
     p.b = 255.*kinect_pointColors(i,2);
     i++;
   }
+  CHECK(i==kinect_points.d0,"");
+}
+
+void conv_PclCloud_ArrCloud(arr& kinect_points,
+                            arr& kinect_pointColors,
+                            const pcl::PointCloud<PointT>::Ptr& pcl_cloud){
+  if(!pcl_cloud) return;
+  if(pcl_cloud->size()<640*480) return;
+  kinect_points.resize(640*480,3);
+  kinect_pointColors.resize(640*480,3);
+  uint i=0;
+  for(PointT& p:*pcl_cloud){
+    kinect_points(i,0) = p.x;
+    kinect_points(i,1) = p.y;
+    kinect_points(i,2) = p.z;
+    kinect_pointColors(i,0) = p.r/255.;
+    kinect_pointColors(i,1) = p.g/255.;
+    kinect_pointColors(i,2) = p.b/255.;
+    i++;
+  }
+  CHECK(i==kinect_points.d0,"");
 }

@@ -33,7 +33,7 @@ namespace generate_cylinder_on_table {
 
     void add_cylinder(pcl::PointCloud<pcl::PointXYZRGB>::Ptr & cloud, double noise) {
         for(double phi=0; phi<360; phi+=3) {
-            for(int z=0; z<50; ++z) {
+            for(int z=20; z<50; ++z) {
                 pcl::PointXYZRGB point(0,255,0);
                 point.x = 10 * cosf (pcl::deg2rad(phi)) + (2*drand48()-1)*noise;
                 point.y = 10 * sinf (pcl::deg2rad(phi)) + (2*drand48()-1)*noise;

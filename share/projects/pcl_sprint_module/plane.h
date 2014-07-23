@@ -12,14 +12,15 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
-typedef pcl::PointXYZRGB PoinT2;
+typedef pcl::PointXYZRGB PointT;
 
+void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud, uint numPlanes);
 
-void passthroughFilter(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<PoinT2>::Ptr outCloud,double minLimit, double maxLimit);
+void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud,double minLimit, double maxLimit);
 
-void normalEstimator(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr outCloud,int knn);
+void normalEstimator(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr outCloud,int knn);
 
-void planeDetector(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr inCloudNormal, pcl::ModelCoefficients::Ptr outCoefficients, pcl::PointIndices::Ptr outInliersPlane);
+void planeDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr inCloudNormal, pcl::ModelCoefficients::Ptr outCoefficients, pcl::PointIndices::Ptr outInliersPlane);
 
-void substractPlane(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointIndices::Ptr inInliersPlane, pcl::PointCloud<PoinT2>::Ptr outCloud);
+void substractPlane(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointIndices::Ptr inInliersPlane, pcl::PointCloud<PointT>::Ptr outCloud);
 
