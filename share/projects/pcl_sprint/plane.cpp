@@ -1,6 +1,6 @@
 #include "plane.h"
 
-void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, uint nplanes)
+void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, uint numPlanes )
 {
 //  pcl::PointCloud<pcl::Normal>::Ptr normal_cloud (new pcl::PointCloud<pcl::Normal>);
 //  normalEstimator(inCloud,normal_cloud,50);

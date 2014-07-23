@@ -11,10 +11,10 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
-#include "dataStructures.h"
 
-//typedef pcl::PointXYZRGB PointT;
+typedef pcl::PointXYZRGB PointT;
 
+void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud, uint numPlanes);
 
 void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud,double minLimit, double maxLimit);
 
