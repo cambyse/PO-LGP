@@ -5,6 +5,7 @@
 #include <Core/geo.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
+#include <Core/module.h>
 
 #include "methods.h"
 
@@ -13,7 +14,9 @@ typedef pcl::PointXYZRGB PointT;
 void glDrawPrimitives(void* classP);
 
 struct Primitive{
+  ors::Transformation X;
   virtual void glDraw() = 0;
+  Primitive(){ X.setZero(); }
   virtual ~Primitive(){}
 };
 
@@ -31,12 +34,17 @@ struct PclCloudView:Primitive{
   void glDraw();
 };
 
+struct ArrCloudView:Primitive{
+  Access_typed<arr>& pts;
+  Access_typed<arr>& cols;
+  ArrCloudView(Access_typed<arr>& _pts,  Access_typed<arr>& _cols):pts(_pts), cols(_cols){}
+  void glDraw();
+};
+
 struct DisplayPrimitives{
   MT::Array<Primitive*> P;
   ors::KinematicWorld G;
+  arr pc[2];
 
-  void glDraw(){
-    for(Primitive* p:P) p->glDraw();
-    G.glDraw();
-  }
+  void glDraw();
 };

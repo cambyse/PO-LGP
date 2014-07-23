@@ -25,4 +25,3 @@ struct Gamepad2Tasks{
   bool updateTasks(arr& gamepadState);
 };
 
-bool stopButtons(const arr& gamepadState);

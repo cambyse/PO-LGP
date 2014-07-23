@@ -28,18 +28,18 @@ struct MySystem:System{
     if(MT::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
-//      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-//      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
-//      addModule<RosCom_CamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
-//      addModule<RosCom_ArmCamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_CamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_ArmCamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
     }
 //    addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
     addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
 //    addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftArm"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightArm"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftEye"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightEye"), Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftArm"), Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightArm"), Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftEye"), Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightEye"), Module_Thread::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
     addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
     connect();
@@ -69,6 +69,8 @@ void testSensors(){
     if(q.N==world.q.N && qdot.N==world.qdot.N){
       world.setJointState(q,qdot);
       world.gl().update();
+    }else{
+      cout <<"No joint signals: q.N=" <<q.N <<" world.q.N=" <<world.q.N <<endl;
     }
 
     // force sensors
