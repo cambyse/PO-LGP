@@ -110,11 +110,13 @@ void OpenGL::resize(int w,int h){
 //int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
 void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _captureDep){
-  captureImg=_captureImg;
-  captureDep=_captureDep;
+//  captureImg=_captureImg;
+//  captureDep=_captureDep;
   if(width==-1) width=s->gl->width;
   if(height==-1) height=s->gl->height;
   CHECK(width%4==0,"should be devidable by 4!!")
+
+  isUpdating.waitForValueEq(0);
 
   s->beginGlContext();
 
@@ -135,14 +137,16 @@ void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _capture
 
   s->gl->Draw(width, height);
 
+  glFlush();
+
   //after drawing
 //  std::vector<std::uint8_t> data(width*height*4);
 //  glReadBuffer(GL_COLOR_ATTACHMENT0);
 //  glReadPixels(0,0,width,height,GL_BGRA,GL_UNSIGNED_BYTE,&data[0]);
 
-#if 0
+#if 1
   captureImage.resize(height, width, 3);
-//  glReadBuffer(GL_BACK);
+  glReadBuffer(GL_BACK);
 //  glReadBuffer(GL_COLOR_ATTACHMENT0);
   glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, captureImage.p);
 #endif
@@ -161,6 +165,7 @@ Drawable OpenGL::xdraw(){ return s->xdraw; }
 sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
+  _gl->isUpdating.setValue(2);
   gtkLock();
   container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(container), title);
@@ -277,6 +282,7 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
 
   s->endGlContext();
+  s->gl->isUpdating.setValue(0);
 
   return true;
 }
