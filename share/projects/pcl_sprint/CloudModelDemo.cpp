@@ -84,7 +84,8 @@ void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pc
     vector<tuple<double,double,double,double,double,double> > new_points(model_cloud->points.size(),make_tuple(0,0,0,0,0,0));
     vector<double> point_weights(model_cloud->points.size(),0);
     for(int idx=0; idx<(int)input_cloud->points.size(); ++idx) {
-        int K = model_cloud->points.size();
+        //int K = model_cloud->points.size();
+        int K = 10;
         std::vector<int> pointIdxNKNSearch(K);
         std::vector<float> pointNKNSquaredDistance(K);
         if(kdtree.nearestKSearch(input_cloud->points[idx], K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0 ) {
@@ -111,10 +112,11 @@ void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pc
             auto difference = subtract_tuples(target,source);
             //difference = multiply_tuple(difference,1e-1); // smoothing
             target = add_tuples(source,difference);
-            pcl::PointXYZRGB point(get<3>(target),get<4>(target),get<5>(target));
-            point.x = get<0>(target);
-            point.y = get<1>(target);
-            point.z = get<2>(target);
+            //pcl::PointXYZRGB point(get<3>(target),get<4>(target),get<5>(target));
+            pcl::PointXYZRGB point(0,0,0);
+            point.x = get<0>(target) + rand11()*1e-5;
+            point.y = get<1>(target) + rand11()*1e-5;
+            point.z = get<2>(target) + rand11()*1e-5;
             //cout << "idx=" << idx << " : (" << model_cloud->points[idx].x << "," << model_cloud->points[idx].y << "," << model_cloud->points[idx].z << ") --> (" << point.x << "," << point.y << "," << point.z << ")" << endl;
             model_cloud->points[idx] = point;
         }
