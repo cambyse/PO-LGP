@@ -6,7 +6,7 @@ if(PCL_FOUND)
     link_directories(${PCL_LIBRARY_DIRS})
     add_definitions(${PCL_DEFINITIONS})
 
-	    add_library(mlr_pcl plane.cpp methods.cpp)
+    add_library(mlr_pcl methods.cpp)
     target_link_libraries(mlr_pcl
         LINK_PRIVATE
         Core
@@ -27,7 +27,7 @@ if(PCL_FOUND)
     target_link_libraries(pcl_p_test.exe mlr_pcl)
 
     add_executable(viewer.exe viewer.cpp test_method.cpp generate_cylinder_on_table.cpp)
-    target_link_libraries(viewer.exe ${PCL_LIBRARIES})
+    target_link_libraries(viewer.exe mlr_pcl)
 endif()
 
 

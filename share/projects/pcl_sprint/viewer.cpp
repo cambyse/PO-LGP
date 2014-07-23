@@ -1,6 +1,10 @@
+#include "system.h"
+#include "methods.h"
+
 #include <tclap/CmdLine.h>
 
 #include <vector>
+#include <functional>
 
 #include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
@@ -27,28 +31,11 @@ double rand01() {
     return (double)rand()/RAND_MAX;
 }
 
-// process keyboard events
-void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void* viewer_void) {
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
-    if(event.getKeySym() == "r" && event.keyDown()) {
-        cout << "r was pressed" << endl;
-    }
-}
-
-// process mouse events
-void mouseEventOccurred (const pcl::visualization::MouseEvent &event, void* viewer_void) {
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
-    if (event.getButton() == pcl::visualization::MouseEvent::LeftButton &&
-        event.getType() == pcl::visualization::MouseEvent::MouseButtonRelease) {
-        std::cout << "Left mouse button released at position (" << event.getX () << ", " << event.getY () << ")" << std::endl;
-    }
-}
-
 // the command line arguments
-ValueArg<string> input_arg(  "i", "input" , "the source of point clouds"                                , false, "default" , "string");
-ValueArg<string> file_arg(   "f", "file"  , "file to read input from (only for input method 'file')"    , false, ""        , "string");
-ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                , false, "none"    , "string");
-vector<string> input_vector = { "default", "file", "cyl_on_table"};
+ValueArg<string> input_arg(  "i", "input" , "the source of point clouds"                                ,  true, "" , "string");
+ValueArg<string> file_arg(   "f", "file"  , "file to read input from (only for input method 'file')"    , false, "" , "string");
+ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                ,  true, "" , "string");
+vector<string> input_vector = { "file", "cyl_on_table", "kinect"};
 vector<string> method_vector = { "none", "test", "icp" };
 
 // check if argument value is within given vector and print messessage
@@ -109,126 +96,116 @@ int main(int argn, char ** args) {
     //  set up viewer  //
     //-----------------//
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    viewer->setBackgroundColor (0.3, 0.3, 0.3);
-    // callbacks
-    viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer);
-    viewer->registerMouseCallback(mouseEventOccurred, (void*)&viewer);
+    viewer->addCoordinateSystem(1.0);
+    viewer->initCameraParameters();
+    //viewer->setCameraPosition(100,100,100,-100,-100,100);
+    viewer->setBackgroundColor(0.3, 0.3, 0.3);
 
     //------------------------//
     //  get input point cloud //
     //------------------------//
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
-    {
-        if(input_arg.getValue()=="default") {
-            uint8_t r(255), g(15), b(15);
-            for (float z(-1.0); z <= 1.0; z += 0.05) {
-                for (float angle(0.0); angle <= 360.0; angle += 5.0) {
-                    pcl::PointXYZ basic_point;
-                    basic_point.x = 0.5 * cosf (pcl::deg2rad(angle));
-                    basic_point.y = sinf (pcl::deg2rad(angle));
-                    basic_point.z = z;
-
-                    pcl::PointXYZRGB point;
-                    point.x = basic_point.x;
-                    point.y = basic_point.y;
-                    point.z = basic_point.z;
-                    uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
-                                    static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
-                    point.rgb = *reinterpret_cast<float*>(&rgb);
-                    input_cloud->points.push_back(point);
-                }
-                if(z < 0.0) {
-                    r -= 12;
-                    g += 12;
-                } else {
-                    g -= 12;
-                    b += 12;
-                }
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB>input_cloud_handler(input_cloud);
+    viewer->addPointCloud<pcl::PointXYZRGB>(input_cloud, input_cloud_handler, "input cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "input cloud");
+    std::function<void()> get_input_cloud = [&](){
+        cout << "Error: no input method defined" << endl;
+        input_cloud->clear();
+    };
+    PCL_ModuleSystem S; // for kinect
+    if(input_arg.getValue()=="kinect") {
+        // start
+        engine().open(S);
+        // define get method
+        get_input_cloud = [&](){
+            if(engine().shutdown.getValue()>0) {
+                cout << "Error: no input method defined" << endl;
+                input_cloud->clear();
+            } else {
+                S.kinect_points.var->waitForNextRevision();
+                input_cloud = S.pcl_cloud.get();
             }
-            input_cloud->width = (int)input_cloud->points.size();
-            input_cloud->height = 1;
-        } else if(input_arg.getValue()=="cyl_on_table") {
+        };
+    } else if(input_arg.getValue()=="cyl_on_table") {
+        get_input_cloud = [&](){
             input_cloud = generate_cylinder_on_table::get_point_cloud();
-        } else if(input_arg.getValue()=="file") {
-            if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *input_cloud) == -1) {
-                std::cout << "Could not read file '" << file_arg.getValue() << "'" << std::endl;
-                return(-1);
-            }
-        } else {
-            cout << "input '" << input_arg.getValue() << "' not implemented" << endl;
+        };
+    } else if(input_arg.getValue()=="file") {
+        if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *input_cloud) == -1) {
+            std::cout << "Could not read file '" << file_arg.getValue() << "'" << std::endl;
             return(-1);
         }
-        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB>rgb_input(input_cloud);
-        viewer->addPointCloud<pcl::PointXYZRGB>(input_cloud, rgb_input, "input cloud");
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "input cloud");
+        get_input_cloud = [&](){
+            if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *input_cloud) == -1) {
+                std::cout << "Could not read file '" << file_arg.getValue() << "'" << std::endl;
+            }
+        };
+    } else {
+        cout << "input '" << input_arg.getValue() << "' not implemented" << endl;
+        return(-1);
     }
 
     //----------------//
     //  apply method  //
     //----------------//
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
-    {
-        if(method_arg.getValue()=="none") {
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB>output_cloud_handler(output_cloud);
+    viewer->addPointCloud<pcl::PointXYZRGB>(output_cloud, output_cloud_handler, "output cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "output cloud");
+    std::function<void()> get_output_cloud = [&](){
+        cout << "Error: no method defined" << endl;
+        output_cloud->clear();
+    };
+    pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp; // ICP object
+    if(method_arg.getValue()=="none") {
+        get_output_cloud = [&](){
             output_cloud = input_cloud;
-        } else if(method_arg.getValue()=="test") {
+        };
+    } else if(method_arg.getValue()=="test") {
+        get_output_cloud = [&](){
             TestMethod::process(input_cloud,output_cloud);
-        } else if(method_arg.getValue()=="icp") {
-            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cylinder = generate_cylinder_on_table::get_cylinder_model(); // for "icp" method
-            // random-transform cylinder
-            double theta = 2*rand01()*M_PI;
-            double transl_scale = 10;
-            Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-            transform.translation() = Eigen::Vector3f(transl_scale*rand11(), transl_scale*rand11(), transl_scale*rand11());
-            transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f(rand01(), rand01(), rand01())));
-            cout << "Initial Transform:" << endl << transform.matrix() << endl;
-            pcl::transformPointCloud(*cylinder, *cylinder, transform);
-            pcl::copyPointCloud(*cylinder, *output_cloud);
-        } else {
-            cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
-            return(-1);
-        }
-        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb_output(output_cloud);
-        viewer->addPointCloud<pcl::PointXYZRGB>(output_cloud, rgb_output, "output cloud");
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "output cloud");
-    }
-
-    //----------------//
-    //  display loop  //
-    //----------------//
-    if(method_arg.getValue()=="icp") {
-        //--------------//
-        //  set up ICP  //
-        //--------------//
-        // create icp object
-        pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-        // set thresholds
-        cout << "old thresholds (corr.dist./ransac) = (" <<
+        };
+    } else if(method_arg.getValue()=="icp") {
+        // generate misaligned cylinder model
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cylinder = generate_cylinder_on_table::get_cylinder_model(); // for "icp" method
+        double theta = 2*rand01()*M_PI;
+        double transl_scale = 10;
+        Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+        transform.translation() = Eigen::Vector3f(transl_scale*rand11(), transl_scale*rand11(), transl_scale*rand11());
+        transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f(rand01(), rand01(), rand01())));
+        cout << "Initial Transform:" << endl << transform.matrix() << endl;
+        pcl::transformPointCloud(*cylinder, *cylinder, transform);
+        pcl::copyPointCloud(*cylinder, *output_cloud);
+        // define getter method
+        get_output_cloud = [&](){
+            if(!input_cloud) {
+                cout << "Error: input cloud not defined" << endl;
+                return;
+            }
+            if(!output_cloud) {
+                cout << "Error: input cloud not defined" << endl;
+                output_cloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+                return;
+            }
+            icp = pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>();
+            // set thresholds
+            cout << "old thresholds (corr.dist./ransac) = (" <<
             icp.getMaxCorrespondenceDistance() << "/" <<
             icp.getRANSACOutlierRejectionThreshold() << ")" << endl;
-        icp.setRANSACOutlierRejectionThreshold(10);
-        icp.setMaxCorrespondenceDistance(10);
-        cout << "new thresholds (corr.dist./ransac) = (" <<
+            icp.setRANSACOutlierRejectionThreshold(10);
+            icp.setMaxCorrespondenceDistance(10);
+            cout << "new thresholds (corr.dist./ransac) = (" <<
             icp.getMaxCorrespondenceDistance() << "/" <<
             icp.getRANSACOutlierRejectionThreshold() << ")" << endl;
-        // set max iterations
-        cout << "old iterations (corr.dist./ransac) = (" <<
+            // set max iterations
+            cout << "old iterations (corr.dist./ransac) = (" <<
             icp.getMaximumIterations() << "/" <<
             icp.getRANSACIterations() << ")" << endl;
-        icp.setMaximumIterations(1);
-        icp.setRANSACIterations(0);
-        cout << "new iterations (corr.dist./ransac) = (" <<
+            icp.setMaximumIterations(1);
+            icp.setRANSACIterations(0);
+            cout << "new iterations (corr.dist./ransac) = (" <<
             icp.getMaximumIterations() << "/" <<
             icp.getRANSACIterations() << ")" << endl;
-
-        //---------------//
-        //  viewer loop  //
-        //---------------//
-        while(!viewer->wasStopped()) {
-            //-----------//
-            //  run ICP  //
-            //-----------//
             // set input and target
             icp.setInputCloud(output_cloud);
             icp.setInputTarget(input_cloud);
@@ -236,22 +213,37 @@ int main(int argn, char ** args) {
             icp.align(*output_cloud);
             // print some info
             cout << "has converged:" << icp.hasConverged() << " score: " <<
-                icp.getFitnessScore() << endl;
+            icp.getFitnessScore() << endl;
             cout << "Final Transform:" << endl << icp.getFinalTransformation() << endl;
-
-            //---------------//
-            // update viewer //
-            //---------------//
-            viewer->updatePointCloud(input_cloud, "input cloud");
-            viewer->updatePointCloud(output_cloud, "output cloud");
-            viewer->spinOnce(100);
-            boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-        }
+        };
     } else {
-        while(!viewer->wasStopped()) {
-            viewer->spinOnce (100);
-            boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+        cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
+        return(-1);
+    }
+
+    //----------------//
+    //  display loop  //
+    //----------------//
+    while(!viewer->wasStopped()) {
+        get_input_cloud();
+        if(input_cloud){
+            viewer->updatePointCloud(input_cloud, "input cloud");
         }
+        get_output_cloud();
+        if(output_cloud){
+            viewer->updatePointCloud(output_cloud, "output cloud");
+        }
+        if(input_cloud && output_cloud) {
+            viewer->spinOnce(100);
+        }
+        boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+    }
+
+    //------------//
+    //  clean up  //
+    //------------//
+    if(input_arg.getValue()=="kinect") {
+        engine().close(S);
     }
 
     return 0;
