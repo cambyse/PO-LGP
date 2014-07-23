@@ -7,7 +7,7 @@ bool sphereDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::No
   seg.setOptimizeCoefficients (true);
   seg.setModelType (pcl::SACMODEL_SPHERE);
 //  seg.setNormalDistanceWeight (0.1);
-  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setMethodType (pcl::SAC_PROSAC);
   seg.setMaxIterations (2800);
   seg.setDistanceThreshold (0.01);
   seg.setInputCloud (inCloud);
@@ -16,11 +16,11 @@ bool sphereDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::No
   seg.setInputNormals (inCloudNormal);
   // Obtain the plane inliers and coefficients
   seg.segment (*outInliersPlane, *outCoefficients);
-  std::cerr << "Sphere coefficients: " << *outCoefficients << std::endl;
+  //std::cerr << "Sphere coefficients: " << *outCoefficients << std::endl;
   //std::cerr << "inCloud->points.size()"<<inCloud->points.size() <<"  "<< outInliersPlane->indices.size();
   if(inCloud->points.size()<=0)
       return false;
-  else if((double)outInliersPlane->indices.size()/(double)inCloud->points.size() < 0.5)
+  else if((double)outInliersPlane->indices.size()/(double)inCloud->points.size() < 0.9)
       return false;
   else
       return true;
@@ -34,22 +34,22 @@ bool cylinderDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::
   pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg;
   seg.setOptimizeCoefficients (true);
   seg.setModelType (pcl::SACMODEL_CYLINDER);
-  seg.setNormalDistanceWeight (0.1);
-  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setNormalDistanceWeight (0.001);
+  seg.setMethodType (pcl::SAC_PROSAC);
   seg.setMaxIterations (2800);
-  seg.setDistanceThreshold (0.01);
+  seg.setDistanceThreshold (0.001);
   seg.setInputCloud (inCloud);
   seg.setRadiusLimits(min_radius,max_radius);
   seg.setInputNormals (inCloudNormal);
   // Obtain the plane inliers and coefficients
   seg.segment (*outInliersPlane, *outCoefficients);
-  std::cerr << "Cylinder coefficients: " << *outCoefficients << std::endl;
+  //std::cerr << "Cylinder coefficients: " << *outCoefficients << std::endl;
 
-  //std::cerr << "inCloud->points.size()"<<inCloud->points.size() <<"  "<< outInliersPlane->indices.size();
+  std::cerr << "inCloud->points.size()"<<inCloud->points.size() <<"  "<< outInliersPlane->indices.size();
 
   if(inCloud->points.size()<=0)
       return false;
-  else if((double)outInliersPlane->indices.size()/(double)inCloud->points.size() < 0.1)
+  else if((double)outInliersPlane->indices.size()/(double)inCloud->points.size() < 0.2)
       return false;
   else
       return true;

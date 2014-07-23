@@ -83,7 +83,7 @@ void TEST(KinectModules) {
       cout<< "list_primitives "<<list_primitives.size() <<endl;
 
       //display the fitted models
-//      viewer.removeAllPointClouds();
+/*/      viewer.removeAllPointClouds();
 
       for (int num=0;num < list_primitives.size();num++)
       {
@@ -94,6 +94,8 @@ void TEST(KinectModules) {
           else if(temp.second == 1)
               viewer.addCylinder(*temp.first,s);
       }
+
+      /*/
       //viewer.spin();
 
 
