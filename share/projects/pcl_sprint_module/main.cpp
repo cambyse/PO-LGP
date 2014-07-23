@@ -24,7 +24,7 @@ void TEST(KinectModules) {
   pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>(640,480));
   pcl::visualization::PCLVisualizer viewer("3D Viewer");
   viewer.addPointCloud<PointT>(cloud, "cloud");
-  viewer.addCoordinateSystem(1.0);
+  //viewer.addCoordinateSystem(1.0);
   //  CloudView *cv = new CloudView(S.pcl_cloud.get());
   //  primitives.P.append(cv);
 
@@ -42,9 +42,9 @@ void TEST(KinectModules) {
       // extract background points
       pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
       passthroughFilter(cloud,cloud_filtered,0.,2.);
-      viewer.removeAllPointClouds();
-      viewer.addPointCloud(cloud_filtered);
-      viewer.spin();
+      //viewer.removeAllPointClouds();
+      //viewer.addPointCloud(cloud_filtered);
+      //viewer.spin();
 
 
       // detect planes and remove them from pointcloud
@@ -54,13 +54,13 @@ void TEST(KinectModules) {
       pcl::PointCloud<PointT>::Ptr cloud_extracted(new pcl::PointCloud<PointT>);
       extractPlanes(cloud_filtered,cloud_extracted,planeCoefficients,planeInliers,numPlanes);
 
-      viewer.removeAllPointClouds();
-      viewer.addPointCloud(cloud_extracted);
-      viewer.spin();
+      //viewer.removeAllPointClouds();
+      //viewer.addPointCloud(cloud_extracted);
+      //viewer.spin();
 
       //extract and display some biggest clusters
       std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_cloud;
-      int numCluster = 3;
+      int numCluster = 10;
       clusterObject(cloud_extracted, numCluster, list_extracted_cloud);
       /*/ display the extracted clusters
       viewer.removeAllPointClouds();
@@ -77,8 +77,10 @@ void TEST(KinectModules) {
       std::vector<std::pair<pcl::ModelCoefficients::Ptr,int>> list_primitives;
       extractPrimitives(list_extracted_cloud, list_primitives);
 
+      cout<< "list_primitives "<<list_primitives.size() <<endl;
+
       //display the fitted models
-      viewer.removeAllPointClouds();
+//      viewer.removeAllPointClouds();
 
       for (int num=0;num < list_primitives.size();num++)
       {
@@ -89,7 +91,7 @@ void TEST(KinectModules) {
           else if(temp.second == 1)
               viewer.addCylinder(*temp.first,s);
       }
-      viewer.spin();
+      //viewer.spin();
 
 
 
@@ -112,6 +114,7 @@ void TEST(KinectModules) {
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
 /*/
+      viewer.spin();
     }
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();

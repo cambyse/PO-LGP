@@ -60,14 +60,15 @@ void extractPrimitives(std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_
         // detect sphere
         pcl::ModelCoefficients::Ptr coefficients_sphere (new pcl::ModelCoefficients);
         pcl::PointIndices::Ptr inliers_sphere (new pcl::PointIndices);
-        sphereDetector(list_extracted_cloud[num],normal_extracted,coefficients_sphere,inliers_sphere,0.05,0.12);
-        list_primitives.push_back(std::pair<pcl::ModelCoefficients::Ptr,int>(coefficients_sphere,0));
+        bool exist = sphereDetector(list_extracted_cloud[num],normal_extracted,coefficients_sphere,inliers_sphere,0.05,0.12);
+        if (exist) list_primitives.push_back(std::pair<pcl::ModelCoefficients::Ptr,int>(coefficients_sphere,0));
+
 
         // detect cylinder
         pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
         pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-        cylinderDetector(list_extracted_cloud[num],normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
-        list_primitives.push_back(std::pair<pcl::ModelCoefficients::Ptr,int>(coefficients_cylinder,1));
+        exist = cylinderDetector(list_extracted_cloud[num],normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
+        if (exist) list_primitives.push_back(std::pair<pcl::ModelCoefficients::Ptr,int>(coefficients_cylinder,1));
     }
 }
 
