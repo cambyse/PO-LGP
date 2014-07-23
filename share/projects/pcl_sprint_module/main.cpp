@@ -6,6 +6,7 @@
 #include "plane.h"
 #include "object.h"
 #include "dataStructures.h"
+#include "ros.h"
 #include <vector>
 
 void TEST(KinectModules) {
@@ -20,6 +21,8 @@ void TEST(KinectModules) {
   //  gl.update();
 
   PCL_ModuleSystem S;
+
+  Ros_publishPrimitives rospub;
 
   pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>(640,480));
   pcl::visualization::PCLVisualizer viewer("3D Viewer");
@@ -94,6 +97,8 @@ void TEST(KinectModules) {
       //viewer.spin();
 
 
+      //-- publish to ros
+      rospub.publish(list_primitives);
 
 /*/
       // compute normals
@@ -114,7 +119,7 @@ void TEST(KinectModules) {
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
 /*/
-      viewer.spin();
+      viewer.spinOnce();
     }
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();
