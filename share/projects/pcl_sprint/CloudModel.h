@@ -17,6 +17,8 @@ class CloudModel {
 public:
     CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c = nullptr);
     virtual ~CloudModel() {}
+    virtual void setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
+    virtual const pcl::PointCloud<pcl::PointXYZRGB>::Ptr getModelCloud() const;
 
 protected:
     // uniform random double in [-1:1]
@@ -47,7 +49,7 @@ protected:
 public:
 
     // update
-    virtual void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & model_cloud);
+    virtual void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
 };
 
 #endif /* CLOUDMODEL_H_ */

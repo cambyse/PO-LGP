@@ -15,6 +15,16 @@ CloudModel::CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c):
     }
 }
 
+void CloudModel::setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c) {
+    if(c!=nullptr) {
+        pcl::copyPointCloud(*c,*model_cloud);
+    }
+}
+
+const pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudModel::getModelCloud() const {
+    return model_cloud;
+}
+
 tuple<double,double,double,double,double,double> CloudModel::PointXYZRGB_to_tuple(const pcl::PointXYZRGB & point) {
     tuple<double,double,double,double,double,double> ret;
     get<0>(ret) = point.x;
@@ -72,7 +82,7 @@ double CloudModel::weight_function(int i) {
     // }
 }
 
-void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & model_cloud) {
+void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
     // build tree for model
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree;
     kdtree.setInputCloud(model_cloud);

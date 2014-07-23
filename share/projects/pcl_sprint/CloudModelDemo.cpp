@@ -35,6 +35,7 @@ int main(int argn, char ** args) {
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 15, "model cloud");
 
     // initialize cloud model
+    CloudModel cloud_model;
     int N = 100;         // number of points in model
     for(int i=0; i<N; ++i) {
         pcl::PointXYZRGB point(0,0,0);
@@ -43,10 +44,12 @@ int main(int argn, char ** args) {
         point.z = 0;
         model_cloud->points.push_back(point);
     }
+    cloud_model.setModelCloud(model_cloud);
 
     // display loop
     while(!viewer->wasStopped()) {
-        CloudModel::update_model(input_cloud, model_cloud);
+        cloud_model.update_model(input_cloud);
+        model_cloud = cloud_model.getModelCloud();
         viewer->updatePointCloud(input_cloud, "input cloud");
         viewer->updatePointCloud(model_cloud, "model cloud");
         viewer->spinOnce(100);
