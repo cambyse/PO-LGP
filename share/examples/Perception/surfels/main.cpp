@@ -5,7 +5,7 @@
 void TEST(Surfels) {
   Surfels S;
   S.setRandom(20);
-  S.gl.watch();
+  S.gl.update();
 
   S.recomputeSurfelIndices();
 
