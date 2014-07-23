@@ -5,6 +5,7 @@
 
 #include "plane.h"
 #include "dataStructures.h"
+#include <vector>
 
 void TEST(KinectModules) {
 
@@ -39,6 +40,24 @@ void TEST(KinectModules) {
 
 //       pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
 //       passthroughFilter(cloud,cloud_filtered,2.,3.5);
+
+//       viewer.removeAllPointClouds();
+//       viewer.addPointCloud(cloud_filtered);
+       viewer.spin();
+
+       std::vector<pcl::ModelCoefficients::Ptr> planeCoefficients;
+       std::vector<pcl::PointIndices::Ptr> planeInliers;
+       pcl::PointCloud<PointT>::Ptr cloud_extracted(new pcl::PointCloud<PointT>);
+       extractPlanes(cloud,cloud_extracted,planeCoefficients,planeInliers,3);
+
+//       pcl::ModelCoefficients::Ptr coefficients_plane (new pcl::ModelCoefficients);
+//       pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices);
+//       pcl::PointCloud<PointT>::Ptr cloud_extracted(new pcl::PointCloud<PointT>);
+//       extractPlane(cloud,cloud_extracted,coefficients_plane,inliers_plane);
+
+       viewer.removeAllPointClouds();
+       viewer.addPointCloud(cloud_extracted);
+       viewer.spin();
 
 //       pcl::PointCloud<pcl::Normal>::Ptr normal_cloud (new pcl::PointCloud<pcl::Normal>);
 //       normalEstimator(cloud_filtered,normal_cloud,50);
@@ -79,4 +98,3 @@ int main(int argc,char **argv){
 
   return 0;
 };
-
