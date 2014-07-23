@@ -4,6 +4,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include "plane.h"
+#include "object.h"
 #include "dataStructures.h"
 #include <vector>
 
@@ -57,6 +58,23 @@ void TEST(KinectModules) {
       viewer.addPointCloud(cloud_extracted);
       viewer.spin();
 
+      //extract and display some biggest clusters
+      std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_cloud;
+      int numCluster = 3;
+      clusterObject(cloud_extracted, numCluster, list_extracted_cloud);
+
+      viewer.removeAllPointClouds();
+      cout<< "list_extracted_cloud "<<list_extracted_cloud.size() <<endl;
+
+
+
+      for (int num=0;num < list_extracted_cloud.size();num++)
+      {
+          std::string s = std::to_string(num);
+          viewer.addPointCloud(list_extracted_cloud[num],s);
+      }
+      viewer.spin();
+/*/
       // compute normals
       pcl::PointCloud<pcl::Normal>::Ptr normal_extracted (new pcl::PointCloud<pcl::Normal>);
       normalEstimator(cloud_extracted,normal_extracted,50);
@@ -74,6 +92,7 @@ void TEST(KinectModules) {
       cylinderDetector(cloud_extracted,normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
+/*/
     }
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();
