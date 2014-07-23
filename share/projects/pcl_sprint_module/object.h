@@ -33,4 +33,6 @@ void voxelFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::P
 
 void clusterObject(pcl::PointCloud<PointT>::Ptr cloud, int numCluster, std::vector<pcl::PointCloud<PointT>::Ptr>& list_extracted_cloud, int minPoints = 200, int maxPoints = 25000);
 
+void extractPrimitives(std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_cloud, std::vector<std::pair<pcl::ModelCoefficients::Ptr,int>>& list_primitives);
+
 #endif

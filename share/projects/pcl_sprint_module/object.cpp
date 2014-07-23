@@ -1,4 +1,5 @@
 #include "object.h"
+#include "object_detector.h"
 
 
 void voxelFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud, double leafSize)
@@ -47,5 +48,26 @@ void clusterObject(pcl::PointCloud<PointT>::Ptr cloud_filtered, int numCluster, 
         }
 
 
+}
+
+void extractPrimitives(std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_cloud, std::vector<std::pair<pcl::ModelCoefficients::Ptr,int>>& list_primitives)
+{
+    for (int num=0;num < list_extracted_cloud.size();num++)
+    {
+        pcl::PointCloud<pcl::Normal>::Ptr normal_extracted (new pcl::PointCloud<pcl::Normal>);
+        normalEstimator(list_extracted_cloud[num],normal_extracted,50);
+
+        // detect sphere
+        pcl::ModelCoefficients::Ptr coefficients_sphere (new pcl::ModelCoefficients);
+        pcl::PointIndices::Ptr inliers_sphere (new pcl::PointIndices);
+        sphereDetector(list_extracted_cloud[num],normal_extracted,coefficients_sphere,inliers_sphere,0.05,0.12);
+        list_primitives.push_back( std::make_pair(coefficients_sphere,0));
+
+        // detect cylinder
+        pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
+        pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
+        cylinderDetector(list_extracted_cloud[num],normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
+        list_primitives.push_back( std::make_pair(coefficients_cylinder,1));
+    }
 }
 

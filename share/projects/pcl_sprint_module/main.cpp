@@ -62,11 +62,9 @@ void TEST(KinectModules) {
       std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_cloud;
       int numCluster = 3;
       clusterObject(cloud_extracted, numCluster, list_extracted_cloud);
-
+      /*/ display the extracted clusters
       viewer.removeAllPointClouds();
       cout<< "list_extracted_cloud "<<list_extracted_cloud.size() <<endl;
-
-
 
       for (int num=0;num < list_extracted_cloud.size();num++)
       {
@@ -74,6 +72,27 @@ void TEST(KinectModules) {
           viewer.addPointCloud(list_extracted_cloud[num],s);
       }
       viewer.spin();
+      /*/
+
+      std::vector<std::pair<pcl::ModelCoefficients::Ptr,int>> list_primitives;
+      extractPrimitives(list_extracted_cloud, list_primitives);
+
+      //display the fitted models
+      viewer.removeAllPointClouds();
+
+      for (int num=0;num < list_primitives.size();num++)
+      {
+          std::pair<pcl::ModelCoefficients::Ptr,int> temp = list_primitives[num];
+          std::string s = std::to_string(num);
+          if(temp.second == 0)
+              viewer.addSphere(*temp.first,s);
+          else if(temp.second == 1)
+              viewer.addCylinder(*temp.first,s);
+      }
+      viewer.spin();
+
+
+
 /*/
       // compute normals
       pcl::PointCloud<pcl::Normal>::Ptr normal_extracted (new pcl::PointCloud<pcl::Normal>);
