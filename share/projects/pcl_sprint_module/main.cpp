@@ -23,7 +23,7 @@ void TEST(KinectModules) {
   pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>(640,480));
   pcl::visualization::PCLVisualizer viewer("3D Viewer");
   viewer.addPointCloud<PointT>(cloud, "cloud");
-
+  viewer.addCoordinateSystem(1.0);
   //  CloudView *cv = new CloudView(S.pcl_cloud.get());
   //  primitives.P.append(cv);
 
@@ -74,12 +74,9 @@ void TEST(KinectModules) {
       cylinderDetector(cloud_extracted,normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
-
     }
-
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();
-
   }
 
   engine().close(S);

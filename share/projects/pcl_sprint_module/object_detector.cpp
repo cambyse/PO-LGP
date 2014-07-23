@@ -37,5 +37,4 @@ void cylinderDetector(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::
   // Obtain the plane inliers and coefficients
   seg.segment (*outInliersPlane, *outCoefficients);
   std::cerr << "Cylinder coefficients: " << *outCoefficients << std::endl;
-
 }
