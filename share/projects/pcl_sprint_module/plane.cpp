@@ -28,7 +28,7 @@ void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<Poi
   std::cerr << "PointCloud after passthroughFilter: " << outCloud->points.size () << " data points." << std::endl;
 }
 
-void normalEstimator(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr outCloud,int knn)
+void normalEstimator(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::Normal>::Ptr outNormal,int knn)
 {
   pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT> ());
   pcl::NormalEstimation<PointT, pcl::Normal> ne;
@@ -36,7 +36,7 @@ void normalEstimator(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<pcl::N
   ne.setSearchMethod (tree);
   ne.setInputCloud (inCloud);
   ne.setKSearch (knn);
-  ne.compute (*outCloud);
+  ne.compute (*outNormal);
   std::cerr << "Normal estimation completed" << std::endl;
 }
 
