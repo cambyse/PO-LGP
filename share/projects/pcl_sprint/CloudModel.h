@@ -1,9 +1,6 @@
 #ifndef CLOUDMODEL_H_
 #define CLOUDMODEL_H_
 
-#include <vector>
-#include <tuple>
-
 #include <pcl/common/common_headers.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
@@ -11,14 +8,35 @@ class CloudModel {
     //----typedefs/classes----//
 
     //----members----//
+    double dying_prob;     // in [0:1]
+    int persistence;       // in {0,1,...}
+    double smoothing;      // in [0:1] 0 being infinitely smooth
+    int model_size, model_target_size;
+    std::vector<int> persistence_counts;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr model_cloud;
 
     //----methods----//
 public:
-    CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c = nullptr);
+    CloudModel();
+
+    CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
+
     virtual ~CloudModel() {}
+
     virtual void setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
-    virtual const pcl::PointCloud<pcl::PointXYZRGB>::Ptr getModelCloud() const;
+    virtual void getModelCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) const;
+
+    virtual void setDyingProb(double p) { dying_prob = p; }
+    virtual double getDyingProb() { return dying_prob; }
+
+    virtual void setPersistence(int p) { persistence = p; }
+    virtual int getPersistence() { return persistence; }
+
+    virtual void setSmoothing(double s) { smoothing = s; }
+    virtual double getSmoothing() { return smoothing; }
+
+    virtual void setModelSize(double s) { model_target_size = s; }
+    virtual double getModelSize() { return model_size; }
 
 protected:
     // uniform random double in [-1:1]
@@ -27,29 +45,20 @@ protected:
     // uniform random double in [0:1]
     static double rand01() { return (double)rand()/RAND_MAX; }
 
-    // PointXYZRGB to tuple
-    static std::tuple<double,double,double,double,double,double> PointXYZRGB_to_tuple(const pcl::PointXYZRGB & point);
-
-    // tuple to PointXYZRGB
-    static pcl::PointXYZRGB  PointXYZRGB_to_tuple(const std::tuple<double,double,double,double,double,double> & t);
-
-    // add tuples
-    static std::tuple<double,double,double,double,double,double> add_tuples(const std::tuple<double,double,double,double,double,double> & t1,
-                                                                            const std::tuple<double,double,double,double,double,double> & t2);
-
-    // subtract tuples
-    static std::tuple<double,double,double,double,double,double> subtract_tuples(const std::tuple<double,double,double,double,double,double> & t1,
-                                                                                 const std::tuple<double,double,double,double,double,double> & t2);
-
-    // divide tuple
-    static std::tuple<double,double,double,double,double,double> multiply_tuple(const std::tuple<double,double,double,double,double,double> & t, const double & d);
-
     static double weight_function(int i);
+
+    virtual void check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
 
 public:
 
     // update
     virtual void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
+
+protected:
+
+    // k-means update
+    virtual void kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud,
+                              std::vector<std::tuple<double,double,double,double,double,double> > target_points);
 };
 
 #endif /* CLOUDMODEL_H_ */
