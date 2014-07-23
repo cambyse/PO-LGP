@@ -29,7 +29,7 @@ if(PCL_FOUND)
     add_executable(viewer.exe viewer.cpp test_method.cpp generate_cylinder_on_table.cpp)
     target_link_libraries(viewer.exe ${PCL_LIBRARIES})
 
-    add_executable(CloudModelDemo.exe CloudModelDemo.cpp generate_cylinder_on_table.cpp)
+    add_executable(CloudModelDemo.exe CloudModelDemo.cpp CloudModel.cpp generate_cylinder_on_table.cpp)
     target_link_libraries(CloudModelDemo.exe ${PCL_LIBRARIES})
 
 endif()
