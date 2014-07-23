@@ -213,7 +213,6 @@ float64[] u_bias\n\
 float64[] Kq_gainFactor\n\
 float64[] Kd_gainFactor\n\
 float64[] Kf_gainFactor\n\
-\n\
 ";
   }
 
