@@ -13,6 +13,8 @@ struct JoystickInterface:Module {
   void close();
 };
 
+bool stopButtons(const arr& gamepadState);
+
 #ifdef  MT_IMPLEMENTATION
 #  include "joystick.cpp"
 #endif

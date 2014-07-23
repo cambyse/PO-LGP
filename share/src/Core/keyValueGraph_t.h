@@ -25,7 +25,7 @@ template <typename B, typename D> struct Host {
   operator B*() const;
   operator D*();
 };
-template <typename B, typename D> struct is_base_of {
+template <typename B, typename D> struct MLR_is_base_of {
   template <typename T>
   static yes check(D*, T);
   static no check(B*, int);
@@ -82,7 +82,7 @@ struct Item_typed:Item {
   }
   
   virtual bool is_derived_from_RootType() const {
-    return is_base_of<RootType, T>::value;
+    return MLR_is_base_of<RootType, T>::value;
   }
   
   virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
