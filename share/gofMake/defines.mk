@@ -244,10 +244,16 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
-LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_outofcore -lpcl_people -lpcl_recognition -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/groovy/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
+LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
 CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
+LPATH += /opt/ros/groovy/lib
 FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+CXXFLAGS += -DMLR_FRENECT
+LIBS += -lfreenect -lusb-1.0
 endif
 
 ifeq ($URGLASER),1)

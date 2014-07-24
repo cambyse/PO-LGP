@@ -122,6 +122,16 @@ else(WITH_ROS)
   unset(ROSBUILD CACHE)
 endif(WITH_ROS)
 
+option(WITH_PCL "Use PointCloudLibrary if available" ON)
+if(WITH_PCL)
+	find_package(PCL 1.6 COMPONENTS common io visualization segmentation sample_consensus features filters search)
+	if(PCL_FOUND)
+		add_definitions(-DHAVE_PCL)
+	endif(PCL_FOUND)
+else(WITH_PCL)
+	unset(PCL_FOUND CACHE)
+endif(WITH_PCL)
+
 #find_package(DOXYGEN)
 #if(DOXYGEN_FOUND)
 

@@ -1,1 +1,1 @@
-set(SOURCES ./main.cpp ./gui.h)
+set(SOURCES ./gui.h ./main.cpp)

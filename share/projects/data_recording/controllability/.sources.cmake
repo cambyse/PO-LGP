@@ -1,1 +1,1 @@
-set(SOURCES src/changepoint.h src/main.cpp src/fgplot.h src/fgplot.cpp src/changepoint.cpp)
+set(SOURCES src/fgplot.cpp src/fgplot.h src/changepoint.h src/main.cpp src/changepoint.cpp)

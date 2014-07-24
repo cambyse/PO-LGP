@@ -10,9 +10,9 @@ void TEST(KinectModules) {
   struct MySystem:System{
     MySystem(){
       addModule<KinectPoller>(NULL, Module_Thread::loopWithBeat, .1); //this is callback driven...
-//      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
+      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
       addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
-//      addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
+      addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
       addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
       addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
 //      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);

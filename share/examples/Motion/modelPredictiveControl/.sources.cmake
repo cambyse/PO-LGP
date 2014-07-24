@@ -1,1 +1,1 @@
-set(SOURCES ./mpc.h ./main.cpp ./mpc.cpp)
+set(SOURCES ./mpc.cpp ./mpc.h ./main.cpp)

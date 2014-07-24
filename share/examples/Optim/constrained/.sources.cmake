@@ -1,1 +1,1 @@
-set(SOURCES ./lecture.cpp ./main.cpp)
+set(SOURCES ./main.cpp ./lecture.cpp)

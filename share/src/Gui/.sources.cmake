@@ -1,3 +1,1 @@
-#set(SOURCES ./gtk.cpp ./opengl.cpp ./mesh_lewiner.cpp ./geo_qhull.cpp ./plot.h ./graphview.h ./mesh.h ./opengl.h  ./gtk.h ./plot.cpp ./mesh.cpp ./color.h ./opengl_qt.h ./ors_opengl.cpp graphview.cpp)
-file(GLOB SOURCES *.cpp)
-
+set(SOURCES ./color.h ./graphview.cpp ./graphview.h ./opengl.cpp ./plot.cpp ./geo_qhull.cpp ./gtk.h ./gtk.cpp ./plot.h ./opengl_qt.h ./ors_opengl.cpp ./mesh.cpp ./mesh.h ./mesh_lewiner.cpp ./opengl.h)

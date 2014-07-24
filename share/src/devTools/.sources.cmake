@@ -1,1 +1,1 @@
-set(SOURCES ./logging.cpp ./logging.h)
+set(SOURCES ./logging.h ./logging.cpp)
