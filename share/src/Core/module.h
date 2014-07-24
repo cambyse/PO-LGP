@@ -119,7 +119,7 @@ struct Access{
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess(module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess(module); }
   int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
-  int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev)); }
+  int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
 };
 
 

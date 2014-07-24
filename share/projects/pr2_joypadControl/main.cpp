@@ -72,6 +72,7 @@ void testJoypad(){
     // joint state
     worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
 
+    //compute control
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
@@ -121,7 +122,7 @@ void testJoypad(){
   }
 
   engine().close(S);
-
+  cout <<"bye bye" <<endl;
 }
 
 int main(int argc, char** argv){
