@@ -58,10 +58,10 @@ void Ros_publishPrimitives::publish(std::vector<std::pair<pcl::ModelCoefficients
     //Cylinder
     if(list_primitives[i].second == 1){
         msg.markers[i].type = visualization_msgs::Marker::CYLINDER;
-        tf::Vector3 axis_vector(list_primitives[i].first->values[3], list_primitives[i].first->values[4],
-                list_primitives[i].first->values[5]);
 
         double height = sqrt(list_primitives[i].first->values[3]*list_primitives[i].first->values[3] + list_primitives[i].first->values[4]*list_primitives[i].first->values[4]+ list_primitives[i].first->values[5]*list_primitives[i].first->values[5]);
+        tf::Vector3 axis_vector(list_primitives[i].first->values[3]/height, list_primitives[i].first->values[4]/height,
+                list_primitives[i].first->values[5]/height);
 
         tf::Vector3 up_vector(0.0, 0.0, 1.0);
         tf::Vector3 right_vector = axis_vector.cross(up_vector);

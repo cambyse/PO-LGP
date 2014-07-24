@@ -40,7 +40,7 @@ void TEST(KinectModules) {
     cloud = S.pcl_cloud.get();
 
     if(cloud){
-      viewer.updatePointCloud(cloud, "cloud");
+      //viewer.updatePointCloud(cloud, "cloud");
 
       // extract background points
       pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
@@ -121,7 +121,7 @@ void TEST(KinectModules) {
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
 /*/
-      viewer.spinOnce();
+      //viewer.spinOnce();
     }
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();
