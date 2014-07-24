@@ -20,12 +20,13 @@ class CloudModel {
 public:
     CloudModel();
 
-    CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
+    CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr c);
 
     virtual ~CloudModel() {}
 
-    virtual void setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
+    virtual void setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr c);
     virtual void getModelCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) const;
+    virtual pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr getModelCloud() const;
 
     virtual void setDyingProb(double p) { dying_prob = p; }
     virtual double getDyingProb() { return dying_prob; }
@@ -51,21 +52,21 @@ protected:
 
     static double weight_function(int i);
 
-    virtual void check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
+    virtual void check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud);
 
 public:
 
     // update
-    virtual void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
+    virtual void update_model(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud);
 
 protected:
 
     // k-means update
-    virtual void kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & target_cloud);
+    virtual void kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & target_cloud);
 
     // ICP update
-    virtual void icpUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud);
+    virtual void icpUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud);
 
 };
 

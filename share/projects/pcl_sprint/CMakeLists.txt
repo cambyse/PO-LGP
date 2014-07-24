@@ -23,10 +23,7 @@ if(PCL_FOUND)
         ${PCL_SAMPLE_CONSENSUS_LIBRARY}
     )
 
-    add_executable(pcl_p_test.exe main.cpp)
-    target_link_libraries(pcl_p_test.exe mlr_pcl)
-
-    add_executable(viewer.exe viewer.cpp test_method.cpp generate_cylinder_on_table.cpp CloudModel.cpp PCLMotionFilter.cpp pcl_smoothing.cpp arithmetic.cpp depth_filter.cpp)
+    add_executable(viewer.exe viewer.cpp generate_cylinder_on_table.cpp CloudModel.cpp PCLMotionFilter.cpp pcl_smoothing.cpp arithmetic.cpp depth_filter.cpp)
     target_link_libraries(viewer.exe mlr_pcl)
 
 endif()

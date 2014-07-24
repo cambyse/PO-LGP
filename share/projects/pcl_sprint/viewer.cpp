@@ -12,7 +12,6 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/registration/icp.h>
 
-#include "test_method.h"
 #include "CloudModel.h"
 #include "PCLMotionFilter.h"
 #include "generate_cylinder_on_table.h"
@@ -46,7 +45,7 @@ SwitchArg motion_filter_switch( "", "motion_filter" , "use motion filter"       
 ValueArg<int> smoothing_arg(    "", "smoothing"     , "use smoothing with box with <int> (uneven)"                , false, 0       , "int"   );
 ValueArg<double> depth_arg(     "", "depth"         , "use depth cut-off"                                         , false, -1      , "double");
 vector<string> input_vector = { "file", "cyl_on_table", "kinect"};
-vector<string> method_vector = { "none", "test", "icp", "cloud_model"};
+vector<string> method_vector = { "none", "icp", "cloud_model"};
 
 // check if argument value is within given vector and print messessage
 template < typename T>
@@ -166,25 +165,21 @@ int main(int argn, char ** args) {
     //----------------//
     //  apply method  //
     //----------------//
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB>output_cloud_handler(output_cloud);
     viewer->addPointCloud<pcl::PointXYZRGB>(output_cloud, output_cloud_handler, "output cloud");
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "output cloud");
     std::function<void()> get_output_cloud = [&](){
         cout << "Error: no method defined" << endl;
-        output_cloud->clear();
+        output_cloud = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(new pcl::PointCloud<pcl::PointXYZRGB>);
     };
     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp; // ICP object
     CloudModel cloud_model;                                             // CloudModel object
     if(method_arg.getValue()=="none") {
         get_output_cloud = [&](){
             if(input_cloud) {
-                pcl::copyPointCloud(*input_cloud,*output_cloud);
+                output_cloud = input_cloud;
             }
-        };
-    } else if(method_arg.getValue()=="test") {
-        get_output_cloud = [&](){
-            TestMethod::process(input_cloud,output_cloud);
         };
     } else if(method_arg.getValue()=="icp") {
         // generate misaligned cylinder model
@@ -196,7 +191,7 @@ int main(int argn, char ** args) {
         transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f(rand01(), rand01(), rand01())));
         cout << "Initial Transform:" << endl << transform.matrix() << endl;
         pcl::transformPointCloud(*cylinder, *cylinder, transform);
-        pcl::copyPointCloud(*cylinder, *output_cloud);
+        output_cloud = cylinder;
         // define getter method
         get_output_cloud = [&](){
             if(!input_cloud) {
@@ -231,7 +226,9 @@ int main(int argn, char ** args) {
             icp.setInputCloud(output_cloud);
             icp.setInputTarget(input_cloud);
             // perform alignment
-            icp.align(*output_cloud);
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr out(new pcl::PointCloud<pcl::PointXYZRGB>);
+            icp.align(*out);
+            output_cloud = out;
             // print some info
             cout << "has converged:" << icp.hasConverged() << " score: " <<
             icp.getFitnessScore() << endl;
@@ -243,10 +240,10 @@ int main(int argn, char ** args) {
         cloud_model.setSolDyingProb(0.01);
         cloud_model.setPersistence(100);
         cloud_model.setSmoothing(0.1);
-        cloud_model.getModelCloud(output_cloud);
+        output_cloud = cloud_model.getModelCloud();
         get_output_cloud = [&](){
             cloud_model.update_model(input_cloud);
-            cloud_model.getModelCloud(output_cloud);
+            //cloud_model.getModelCloud(output_cloud);
         };
     } else {
         cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
@@ -274,16 +271,12 @@ int main(int argn, char ** args) {
         // filters
         if(input_cloud && output_cloud) {
             if(depth_arg.getValue()>0) {
-                depth_filter(depth_arg.getValue(),input_cloud,output_cloud);
-                pcl::copyPointCloud(*output_cloud,*input_cloud);
+                depth_filter(depth_arg.getValue(),input_cloud);
             }
             if(smoothing_arg.getValue()>0) {
-                box_smoothing(smoothing_arg.getValue(),input_cloud,output_cloud);
-                pcl::copyPointCloud(*output_cloud,*input_cloud);
-                box_smoothing(smoothing_arg.getValue(),input_cloud,output_cloud);
-                pcl::copyPointCloud(*output_cloud,*input_cloud);
-                box_smoothing(smoothing_arg.getValue(),input_cloud,output_cloud);
-                pcl::copyPointCloud(*output_cloud,*input_cloud);
+                box_smoothing(smoothing_arg.getValue(),input_cloud);
+                box_smoothing(smoothing_arg.getValue(),input_cloud);
+                box_smoothing(smoothing_arg.getValue(),input_cloud);
             }
             if(motion_filter_switch.getValue()) {
                 motion_filter.new_input(input_cloud);
@@ -298,7 +291,7 @@ int main(int argn, char ** args) {
         if(input_cloud && output_cloud) {
             viewer->spinOnce(100);
         }
-        boost::this_thread::sleep(boost::posix_time::microseconds(10000));
+        boost::this_thread::sleep(boost::posix_time::microseconds(1000));
     }
 
     //------------//

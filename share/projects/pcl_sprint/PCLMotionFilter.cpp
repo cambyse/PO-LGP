@@ -13,7 +13,7 @@ PCLMotionFilter::PCLMotionFilter():
     last_input_cloud(new pcl::PointCloud<pcl::PointXYZRGB>)
 {}
 
-void PCLMotionFilter::new_input(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
+void PCLMotionFilter::new_input(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud) {
     if(input_cloud==nullptr) {
         cout << "Error: invalid input cloud" << endl;
     } else if(!input_cloud->isOrganized()) {

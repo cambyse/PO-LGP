@@ -14,27 +14,28 @@ using std::tuple;
 
 using namespace arithmetic;
 
-void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) {
+void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) {
+    pcl::copyPointCloud(*input_cloud,*output_cloud);
+    box_smoothing(width, output_cloud);
+}
+
+void box_smoothing(int width, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & cloud) {
     // sanity checks
-    if(input_cloud==nullptr) {
+    if(cloud==nullptr) {
         cout << "Error: invalid input cloud" << endl;
         return;
-    } else if(!input_cloud->isOrganized()) {
+    } else if(!cloud->isOrganized()) {
         cout << "Error: expecting structured input" << endl;
         return;
     } else if(width%2!=1 || width<=0) {
-        pcl::copyPointCloud(*input_cloud,*output_cloud);
         cout << "Error: width must be an odd larger than zero number" << endl;
         return;
     }
 
-    // copy
-    pcl::copyPointCloud(*input_cloud,*output_cloud);
-
     // perform smoothing
     int margin = (width-1)/2;
-    int in_width = output_cloud->width;
-    int in_height = output_cloud->height;
+    int in_width = cloud->width;
+    int in_height = cloud->height;
     deque<tuple<double,double,double,double,double,double> > value_box;
     deque<double> weight_box;
     // row box
@@ -44,11 +45,11 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
             if(row+margin<in_height) {                                      // XXX
                 // determine weight
                 double weight = 1;
-                if(!pcl_is_valid_point(output_cloud->at(col,row+margin))) {   // XXX
+                if(!pcl_is_valid_point(cloud->at(col,row+margin))) {   // XXX
                     weight = 0;
                 }
                 // determine value
-                auto value = multiply_tuple(PointXYZRGB_to_tuple(output_cloud->at(col,row+margin)),weight); // XXX
+                auto value = multiply_tuple(PointXYZRGB_to_tuple(cloud->at(col,row+margin)),weight); // XXX
                 // increase box
                 value_box.push_back(value);
                 weight_box.push_back(weight);
@@ -60,7 +61,7 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
             }
             // assign value
             if(row>=0) {                                                    // XXX
-                if(pcl_is_valid_point(output_cloud->at(col,row))) {
+                if(pcl_is_valid_point(cloud->at(col,row))) {
                     // calculate mean value
                     double weight_sum = 0;
                     for(double w : weight_box) {
@@ -72,7 +73,7 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
                     }
                     value_sum = multiply_tuple(value_sum,1./weight_sum);
                     // assign
-                    output_cloud->at(col,row) = tuple_to_PointXYZRGB(value_sum);
+                    cloud->at(col,row) = tuple_to_PointXYZRGB(value_sum);
                 }
             }
         }
@@ -86,11 +87,11 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
             if(col+margin<in_width) {                                       // XXX
                 // determine weight
                 double weight = 1;
-                if(!pcl_is_valid_point(output_cloud->at(col+margin,row))) {   // XXX
+                if(!pcl_is_valid_point(cloud->at(col+margin,row))) {   // XXX
                     weight = 0;
                 }
                 // determine value
-                auto value = multiply_tuple(PointXYZRGB_to_tuple(output_cloud->at(col+margin,row)),weight); // XXX
+                auto value = multiply_tuple(PointXYZRGB_to_tuple(cloud->at(col+margin,row)),weight); // XXX
                 // increase box
                 value_box.push_back(value);
                 weight_box.push_back(weight);
@@ -102,7 +103,7 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
             }
             // assign value
             if(col>=0) {                                                    // XXX
-                if(pcl_is_valid_point(output_cloud->at(col,row))) {
+                if(pcl_is_valid_point(cloud->at(col,row))) {
                     // calculate mean value
                     double weight_sum = 0;
                     for(double w : weight_box) {
@@ -114,7 +115,7 @@ void box_smoothing(int width, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
                     }
                     value_sum = multiply_tuple(value_sum,1./weight_sum);
                     // assign
-                    output_cloud->at(col,row) = tuple_to_PointXYZRGB(value_sum);
+                    cloud->at(col,row) = tuple_to_PointXYZRGB(value_sum);
                 }
             }
         }

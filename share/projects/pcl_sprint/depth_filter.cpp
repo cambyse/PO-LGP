@@ -5,7 +5,9 @@
 using std::cout;
 using std::endl;
 
-void depth_filter(double depth, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) {
+void depth_filter(double depth,
+                  const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud,
+                  pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) {
     if(input_cloud==nullptr) {
         cout << "Error: invalid input cloud" << endl;
         return;
@@ -19,4 +21,11 @@ void depth_filter(double depth, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & i
         }
     }
     //cout << "filter: " << counter << " points left" << endl;
+}
+
+void depth_filter(double depth,
+                  pcl::PointCloud<pcl::PointXYZRGB>::Ptr & cloud) {
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+    depth_filter(depth,cloud,output_cloud);
+    cloud = output_cloud;
 }
