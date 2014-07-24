@@ -11,6 +11,7 @@
 #include <Perception/kinect2pointCloud.h>
 
 #include "../pcl_sprint_projections/dataStructures.h"
+#include "pr2GamepadController.h"
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref)
@@ -48,24 +49,13 @@ struct MySystem:System{
     addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightEye"), Module_Thread::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
     addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
+    addModule<Pr2GamepadController>(NULL, Module_Thread::loopWithBeat, .01);
     connect();
   }
 };
 
 void testSensors(){
 
-  ors::KinematicWorld world("model.kvg");
-  makeConvexHulls(world.shapes);
-  world >>FILE("z.ors");
-  arr q, qdot;
-  world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffL");
-
-  FeedbackMotionControl MP(world, true);
-  MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
-  Gamepad2Tasks j2t(MP);
 
   MySystem S;
 
@@ -85,32 +75,11 @@ void testSensors(){
 
   engine().open(S);
 
-  if(MT::getParameter<bool>("useRos", false)){
-    //-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
-      S.ctrl_obs.var->waitForNextRevision();
-      if(S.ctrl_obs.get()->q.N==MP.world.q.N
-         && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
-        break;
-    }
-
-    //-- set current state
-    cout <<"** GO!" <<endl;
-    q = S.ctrl_obs.get()->q;
-    qdot = S.ctrl_obs.get()->qdot;
-    //arr fL_base = S.fL_obs.get();
-    MP.setState(q, qdot);
-  }
-  arr zero_qdot(qdot.N);
-  zero_qdot.setZero();
-  CtrlMsg refs;
-
   for(uint t=0;;t++){
-    S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
-    bool shutdown = j2t.updateTasks(joypadState);
-    if(t>10 && shutdown) engine().shutdown.incrementValue();
+    if(t>10 && stopButtons(joypadState)) engine().shutdown.incrementValue();
+    if(engine().shutdown.getValue()>0) break;
+    S.joystickState.var->waitForNextRevision();
 
     // joint sensors
     arr q_obs    = S.ctrl_obs.get()->q;
@@ -125,7 +94,7 @@ void testSensors(){
     gl.lock.writeLock();
     primitives.P(0)->X = kinShape->X;
     gl.lock.unlock();
-    gl.update();
+    if(!(t%10)) gl.update();
 
     // force sensors
     arr wL = S.wrenchL.get()();
@@ -141,54 +110,6 @@ void testSensors(){
       wrenchDispL->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wL.sub(0,2)));
       wrenchDispL->rel.rot.setVec(-1.*(rot*ors::Vector(wL.sub(3,-1))));;
     }
-
-    //compute control
-    arr a = MP.operationalSpaceControl();
-    q += .01*qdot;
-    qdot += .01*a;
-//    MP.reportCurrentState();
-    MP.setState(q, qdot);
-    //MP.world.reportProxies();
-    if(!(t%4))
-      MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
-
-    //-- force task
-    uint mode = 0;
-    if(joypadState.N) mode = uint(joypadState(0));
-    if(mode==2){
-      arr y_fL, J_fL;
-      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
-      cout <<"FORCE TASK" <<endl;
-      refs.fL = ARR(10., 0., 0.);
-      J_fL = J_fL.sub(0,1,0,-1);
-      arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
-      cout <<J_fL <<gain <<endl;
-//      refs.u_bias = 1.*(~J_fL * refs.fL);
-      refs.Kq_gainFactor = gain;
-//      refs.Kq_gainFactor = ARR(.3);
-      refs.u_bias = zeros(q.N);
-    }else{
-      refs.fL = ARR(0., 0., 0.);
-      refs.Kq_gainFactor = ARR(1.);
-      refs.u_bias = zeros(q.N);
-    }
-
-    refs.Kd_gainFactor = ARR(1.);
-    refs.q=q;
-    refs.qdot=zero_qdot;
-    if(trans && trans->qDim()==3){
-      refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
-      refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
-      refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-      if(true){ //no translations!
-        refs.qdot(trans->qIndex+0) = 0.;
-        refs.qdot(trans->qIndex+1) = 0.;
-        refs.qdot(trans->qIndex+2) = 0.;
-      }
-    }
-    S.ctrl_ref.set() = refs;
-
-    if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
 
   engine().close(S);
