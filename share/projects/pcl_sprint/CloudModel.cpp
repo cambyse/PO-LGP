@@ -25,7 +25,7 @@ CloudModel::CloudModel():
     model_cloud(new pcl::PointCloud<pcl::PointXYZRGB>())
 {}
 
-CloudModel::CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c):
+CloudModel::CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr c):
     dying_prob(0),
     sol_dying_prob(0),
     persistence(numeric_limits<int>::max()),
@@ -39,7 +39,7 @@ CloudModel::CloudModel(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c):
     }
 }
 
-void CloudModel::setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c) {
+void CloudModel::setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr c) {
     if(c!=nullptr) {
         pcl::copyPointCloud(*c,*model_cloud);
         model_size = model_target_size = model_cloud->points.size();
@@ -48,6 +48,10 @@ void CloudModel::setModelCloud(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr c) {
 
 void CloudModel::getModelCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output_cloud) const {
     pcl::copyPointCloud(*model_cloud,*output_cloud);
+}
+
+pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr CloudModel::getModelCloud() const {
+    return model_cloud;
 }
 
 double CloudModel::weight_function(int i) {
@@ -62,7 +66,7 @@ double CloudModel::weight_function(int i) {
     // }
 }
 
-void CloudModel::check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
+void CloudModel::check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud) {
     int input_size = input_cloud->points.size();
     if(!input_cloud || input_size<=0) {
         cout << "Error: invalid or emtpy input cloud" << endl;
@@ -93,7 +97,7 @@ void CloudModel::check_model_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr &
     cout << "model size: " << current_model_size << " --> " << model_size << " (" << model_target_size << ")" << endl;
 }
 
-void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
+void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud) {
     // check for valid input cloud
     if(!input_cloud || input_cloud->points.size()<=0) {
         cout << "Error: invalid or emtpy input cloud" << endl;
@@ -163,8 +167,8 @@ void CloudModel::update_model(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
     kMeansUpdate(input_cloud,target_cloud);
 }
 
-void CloudModel::kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & target_cloud) {
+void CloudModel::kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & target_cloud) {
     int input_size = input_cloud->points.size();
     for(int idx=0; idx<model_size; ++idx) {
         if(rand01()<dying_prob || persistence_counts[idx]>=persistence) {
@@ -175,7 +179,7 @@ void CloudModel::kMeansUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & inp
     }
 }
 
-void CloudModel::icpUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input_cloud) {
+void CloudModel::icpUpdate(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr & input_cloud) {
     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
     // set thresholds
     // cout << "old thresholds (corr.dist./ransac) = (" <<
