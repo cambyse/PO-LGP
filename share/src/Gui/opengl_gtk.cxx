@@ -186,7 +186,6 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "sOpenGL", this);
 
-  
   glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
   GDK_GL_MODE_DEPTH |
   GDK_GL_MODE_DOUBLE));
@@ -278,7 +277,7 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
 
   s->endGlContext();
-  
+
   return true;
 }
 

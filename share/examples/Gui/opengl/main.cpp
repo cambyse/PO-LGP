@@ -235,10 +235,8 @@ void TEST(Texture) {
 
 void TEST(OfflineRendering){
   OpenGL gl;
-  gl.update();
   gl.add(draw1,0);
   gl.renderInBack(20, 22);
-
   write_ppm(gl.captureImage,"z.ppm");
   OpenGL gl2;
   gl2.watchImage(gl.captureImage, true, 1);
