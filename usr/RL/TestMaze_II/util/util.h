@@ -618,7 +618,7 @@ namespace util {
      * temperature \f$T\f$ the return vector \f$v\f$ is computed as \f$v_{i} =
      * \frac{\exp\left[u_{i}/T\right]}{\sum_{j}\exp\left[u_{j}/T\right]}\f$. */
     template < typename Vec >
-        Vec soft_max(const Vec& vec, double temperature = 1) {
+        Vec soft_max(const Vec& vec, double temperature) {
         if(vec.size()==0) {
             Vec ret = vec;
             return ret;
@@ -633,6 +633,26 @@ namespace util {
         Vec ret = vec;
         for(int idx=0; idx<(int)vec.size(); ++idx) {
             ret[idx] = exp(vec[idx]/temperature - log_sum);
+        }
+        return ret;
+    }
+    /** SoftMax function for temperature 1. */
+    template < typename Vec >
+        Vec soft_max(const Vec& vec) {
+        if(vec.size()==0) {
+            Vec ret = vec;
+            return ret;
+        }
+        //---------------//
+        // Use log scale //
+        //---------------//
+        double log_sum = vec[0]; // cannot initialize to log(0)
+        for(int idx=1; idx<(int)vec.size(); ++idx) {
+            log_sum = log_add_exp(log_sum,vec[idx]);
+        }
+        Vec ret = vec;
+        for(int idx=0; idx<(int)vec.size(); ++idx) {
+            ret[idx] = exp(vec[idx] - log_sum);
         }
         return ret;
     }
