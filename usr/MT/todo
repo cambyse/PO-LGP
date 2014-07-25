@@ -1,3 +1,17 @@
+** module system
+
+* check catching of SIGINT when linking to ROS
+* Vars should publish & subscribe automatically!
+  * topic "MLR/name"
+  * by default: they should have a ROS mesage type
+  * otherwise, generic packedData type {string c-type; byte [][]}
+  * Maybe have a look again on shared memory!
+* pr2 controller: check max diff > 0.2 !!
+* Item.read/write, don't use operator<<?
+* joypad, joystick -> gamepad
+* Module -> Process
+
+
 ** PR2 controller
 
 * make everything linear
