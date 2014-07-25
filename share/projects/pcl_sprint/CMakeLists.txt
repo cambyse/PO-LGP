@@ -36,6 +36,10 @@ if(PCL_FOUND)
     plane.cpp)
   target_link_libraries(viewer.exe mlr_pcl)
 
+  add_executable(test.exe
+    test.cpp)
+  target_link_libraries(test.exe mlr_pcl)
+
 endif()
 
 

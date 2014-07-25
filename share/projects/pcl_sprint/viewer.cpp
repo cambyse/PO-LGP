@@ -46,11 +46,13 @@ SwitchArg motion_filter_switch(              "", "motion_filter" , "use motion f
 ValueArg<int> smoothing_arg(                 "", "smoothing"     , "use smoothing with box with <int> (uneven)"                , false, 0       , "int"   );
 ValueArg<double> depth_arg(                  "", "depth"         , "use depth cut-off at depth <double>"                       , false, -1      , "double");
 ValueArg<double> voxel_arg(                  "", "voxel"         , "down-sample at box size <double>"                          , false, -1      , "double");
-ValueArg<int> cloud_model_size_arg(          "", "cloud_size"    , "size of cloud model"                                       , false, 10000   , "int");
-ValueArg<double> cloud_model_dying_prob(     "", "cloud_die"     , "dying probability within cloud model"                      , false, 0.001   , "double");
-ValueArg<double> cloud_model_sol_dying_prob( "", "cloud_sol_die" , "solitude dying probability within cloud model"             , false, 0.01    , "double");
-ValueArg<int> cloud_model_persistence_arg(   "", "cloud_pers"    , "persistence within cloud model"                            , false, 100     , "double");
-ValueArg<double> cloud_model_smoothing_arg(  "", "cloud_smooth"  , "smoothing of cloud model"                                  , false, 0.1     , "double");
+ValueArg<int> cloud_model_size_arg(          "", "cloud_size"    , "size of cloud model [10000]"                               , false, 10000   , "int");
+ValueArg<double> cloud_model_dying_prob(     "", "cloud_die"     , "dying probability within cloud model [0.001]"              , false, 0.001   , "double");
+ValueArg<double> cloud_model_sol_dying_prob( "", "cloud_sol_die" , "solitude dying probability within cloud model [0.01]"      , false, 0.01    , "double");
+ValueArg<int> cloud_model_persistence_arg(   "", "cloud_pers"    , "persistence within cloud model [100]"                      , false, 100     , "int"   );
+ValueArg<double> cloud_model_smoothing_arg(  "", "cloud_smooth"  , "smoothing of cloud model [0.1]"                            , false, 0.1     , "double");
+ValueArg<int> cloud_model_freeze_arg(        "", "cloud_freeze"  , "number of time steps for util k-means switches to ICP [-1]", false, -1      , "int"   );
+ValueArg<double> cloud_model_dist_arg(       "", "cloud_dist"    , "desired distance withing cloud model [-1]"                 , false, -1      , "double");
 
 vector<string> input_vector = { "file", "cyl_on_table", "kinect"};
 vector<string> method_vector = { "none", "icp", "cloud_model"};
@@ -91,6 +93,8 @@ int main(int argn, char ** args) {
     try {
 	TCLAP::CmdLine cmd("A simple viewer...", ' ', "");
 
+        cmd.add(cloud_model_dist_arg);
+        cmd.add(cloud_model_freeze_arg);
         cmd.add(cloud_model_size_arg);
         cmd.add(cloud_model_dying_prob);
         cmd.add(cloud_model_sol_dying_prob);
@@ -254,10 +258,26 @@ int main(int argn, char ** args) {
         cloud_model.setSolDyingProb(cloud_model_sol_dying_prob.getValue());
         cloud_model.setPersistence(cloud_model_persistence_arg.getValue());
         cloud_model.setSmoothing(cloud_model_smoothing_arg.getValue());
+        cloud_model.setNNDist(cloud_model_dist_arg.getValue());
+        cloud_model.setKMeans(true);
+        cloud_model.setICP(true);
         output_cloud = cloud_model.getModelCloud();
         get_output_cloud = [&](){
+            static int cloud_model_freeze = cloud_model_freeze_arg.getValue();
+            if(cloud_model_freeze_arg.getValue()>0) {
+                if(cloud_model_freeze>0) {
+                    cout << "Freezing cloud model in " << cloud_model_freeze << endl;
+                } else if(cloud_model_freeze==0) {
+                    cout << "Freezing cloud model NOW" << endl;
+                    cloud_model.setKMeans(false);
+                    cloud_model.setICP(true);
+                }
+            }
+            --cloud_model_freeze;
             cloud_model.update_model(input_cloud);
-            //cloud_model.getModelCloud(output_cloud);
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+            cloud_model.getModelCloud(cloud);
+            output_cloud = cloud;
         };
     } else {
         cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
@@ -294,7 +314,7 @@ int main(int argn, char ** args) {
             }
             if(voxel_arg.getValue()>0) {
                 voxelFilter(input_cloud,input_cloud,voxel_arg.getValue());
-            } 
+            }
             if(motion_filter_switch.getValue()) {
                 motion_filter.new_input(input_cloud);
                 motion_filter.get_cloud(input_cloud);
