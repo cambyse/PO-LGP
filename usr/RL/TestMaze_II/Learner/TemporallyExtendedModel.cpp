@@ -31,7 +31,7 @@ typedef TemporallyExtendedModel TEM;
 TEM::TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency> N):
     TemporallyExtendedFeatureLearner(N)
 {
-    // include only action features for t=0
+    // include only action, observation, and reward features for t=0
     N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
     // set outcome to "observation-reward"
     set_outcome_type(OUTCOME_TYPE::OBSERVATION_REWARD);
@@ -43,7 +43,8 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
                                        const reward_ptr_t& reward) const {
     int outcome_idx = 0;
     int matching_outcome_idx = -1;
-    f_mat_t F_matrix(feature_set.size(),observation_space->space_size()*reward_space->space_size());
+    f_mat_t F_matrix;
+    F_matrix.zeros(feature_set.size(),observation_space->space_size()*reward_space->space_size());
     for(observation_ptr_t obs : observation_space) {
         for(reward_ptr_t rew : reward_space) {
             int feature_idx = 0;
@@ -72,7 +73,8 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
 TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
                                                const action_ptr_t& action) const {
     // compute feature matrix
-    f_mat_t F_matrix(feature_set.size(),observation_space->space_size()*reward_space->space_size());
+    f_mat_t F_matrix;
+    F_matrix.zeros(feature_set.size(),observation_space->space_size()*reward_space->space_size());
     {
         int outcome_idx = 0;
         for(observation_ptr_t obs : observation_space) {
