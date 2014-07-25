@@ -25,6 +25,7 @@
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 //#include <GL/glut.h>
+//#include <GL/glext.h>
 
 #include <Core/geo.h>
 #include "opengl.h"
@@ -116,24 +117,129 @@ void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _capture
   if(height==-1) height=s->gl->height;
   CHECK(width%4==0,"should be devidable by 4!!")
 
-//      isUpdating.waitForValueEq(0);
-  processEvents();  isUpdating.waitForValueEq(0);  processEvents();
+  isUpdating.waitForValueEq(0);
+  isUpdating.setValue(1);
+//  processEvents();  isUpdating.waitForValueEq(0);  processEvents();
 
   s->beginGlContext();
 
-#if 0
-  if(!fbo || !render_buf){ //need to initialize
+#if 1
+//  if(!fbo || !render_buf){ //need to initialize
+//    glewInit();
+//    glGenFramebuffers(1,&fbo);
+//    glGenRenderbuffers(1,&render_buf);
+//    glBindRenderbuffer(GL_RENDERBUFFER, render_buf);
+//    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, width, height);
+//    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+//    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buf);
+//  }
+
+//  //Before drawing
+//  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+
+
+  if(!rboColor || !rboDepth){ //need to initialize
     glewInit();
-    glGenFramebuffers(1,&fbo);
-    glGenRenderbuffers(1,&render_buf);
-    glBindRenderbuffer(GL_RENDERBUFFER, render_buf);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, width, height);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buf);
+    // Create a new renderbuffer unique name.
+    glGenRenderbuffers(1, &rboColor);
+    // Set it as the current.
+    glBindRenderbuffer(GL_RENDERBUFFER, rboColor);
+    // Sets storage type for currently bound renderbuffer.
+    glRenderbufferStorage(
+          GL_RENDERBUFFER,
+          GL_RGBA8,
+          width,
+          height
+          );
+
+    // Depth renderbuffer.
+
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(
+          GL_RENDERBUFFER,
+          GL_DEPTH_COMPONENT24,
+          width,
+          height
+          );
+
+    // Framebuffer.
+
+    // Create a framebuffer and a renderbuffer object.
+    // You need to delete them when program exits.
+    glGenFramebuffers(1, &fboId);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    //from now on, operate on the given framebuffer
+    //GL_FRAMEBUFFER        read write
+    //GL_READ_FRAMEBUFFER   read
+    //GL_FRAMEBUFFER        write
+
+    // Adds color renderbuffer to currently bound framebuffer.
+    glFramebufferRenderbuffer(
+          GL_FRAMEBUFFER,
+          GL_COLOR_ATTACHMENT0,
+          GL_RENDERBUFFER,
+          rboColor
+          );
+
+    glFramebufferRenderbuffer(
+          GL_FRAMEBUFFER,
+          GL_DEPTH_ATTACHMENT,
+          GL_RENDERBUFFER,
+          rboDepth
+          );
+
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    //glReadBuffer(GL_BACK);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+      cout << "framebuffer error:" << endl;
+      switch (status) {
+        case GL_FRAMEBUFFER_UNDEFINED: {
+          cout << "GL_FRAMEBUFFER_UNDEFINED" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_UNSUPPORTED: {
+          cout << "GL_FRAMEBUFFER_UNSUPPORTED" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS" << endl;
+          break;
+        }
+        case 0: {
+          cout << "0" << endl;
+          break;
+        }
+      }
+      exit(EXIT_FAILURE);
+    }
   }
 
-  //Before drawing
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+
 #endif
 
   s->gl->Draw(width, height);
@@ -152,11 +258,12 @@ void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _capture
   glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, captureImage.p);
 #endif
 
-#if 0
+#if 1
   // Return to onscreen rendering:
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 #endif
 
+  isUpdating.setValue(0);
   s->endGlContext();
 }
 

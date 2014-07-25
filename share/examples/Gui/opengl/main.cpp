@@ -234,12 +234,12 @@ void TEST(Texture) {
 //===========================================================================
 
 void TEST(OfflineRendering){
-  OpenGL gl;
+  OpenGL gl("view", 40,40);
   gl.add(draw1,0);
-//  gl.update();
-  gl.renderInBack(20, 22);
+  gl.update();
+  gl.renderInBack(200, 200);
   write_ppm(gl.captureImage,"z.ppm");
-  OpenGL gl2;
+  OpenGL gl2("captured", gl.captureImage.d1, gl.captureImage.d0);
   gl2.watchImage(gl.captureImage, true, 1);
   cout <<"returned from watch - watch again" <<endl;
 }
