@@ -67,7 +67,7 @@ void extractPrimitives(std::vector<pcl::PointCloud<PointT>::Ptr> list_extracted_
         // detect cylinder
         pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
         pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-        exist = cylinderDetector(list_extracted_cloud[num],normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
+        exist = cylinderDetector(list_extracted_cloud[num],normal_extracted,coefficients_cylinder,inliers_cylinder,0.005,0.05);
         if (exist) list_primitives.push_back(std::pair<pcl::ModelCoefficients::Ptr,int>(coefficients_cylinder,1));
     }
 }

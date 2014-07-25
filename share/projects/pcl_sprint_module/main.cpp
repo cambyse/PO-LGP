@@ -40,7 +40,7 @@ void TEST(KinectModules) {
     cloud = S.pcl_cloud.get();
 
     if(cloud){
-      viewer.updatePointCloud(cloud, "cloud");
+      //viewer.updatePointCloud(cloud, "cloud");
 
       // extract background points
       pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
@@ -83,7 +83,7 @@ void TEST(KinectModules) {
       cout<< "list_primitives "<<list_primitives.size() <<endl;
 
       //display the fitted models
-//      viewer.removeAllPointClouds();
+/*/      viewer.removeAllPointClouds();
 
       for (int num=0;num < list_primitives.size();num++)
       {
@@ -94,6 +94,8 @@ void TEST(KinectModules) {
           else if(temp.second == 1)
               viewer.addCylinder(*temp.first,s);
       }
+
+      /*/
       //viewer.spin();
 
 
@@ -119,7 +121,7 @@ void TEST(KinectModules) {
       viewer.addCylinder(*coefficients_cylinder,"cylinder");
       viewer.spin();
 /*/
-      viewer.spinOnce();
+      //viewer.spinOnce();
     }
     //    cv->cloud = S.pcl_cloud.get();
     //    gl.update();
