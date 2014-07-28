@@ -12,6 +12,7 @@
 #include "../Learner/TemporallyExtendedLinearQ.h"
 #include "../Learner/ConjunctiveAdjacency.h"
 #include "../Representation/DoublyLinkedInstance.h"
+#include "../Planning/LookAheadPolicy.h"
 
 #define DEBUG_LEVEL 1
 #include "../util/debug.h"
@@ -407,6 +408,48 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     TEM->set_l1_factor(0);
     TEM->optimize_weights_LBFGS();
     TEM->print_features();
+
+    //-----------------------------//
+    // do some planned transitions //
+    //-----------------------------//
+
+
+    // initialize environment and planner
+    LookAheadPolicy planner(0.5,TEM,false,10000);
+
+    { // for memory check
+
+        const_instance_ptr_t maze_instance = maze.get_current_instance();
+        instance_ptr_t current_instance = DoublyLinkedInstance::create(
+            maze_instance->action,
+            maze_instance->observation,
+            maze_instance->reward
+            );
+
+        // do several planned steps
+        for(int step_idx=0; step_idx<10; ++step_idx) {
+
+            action_ptr_t action = planner.get_action(current_instance);
+
+            // actually perform transition and print results
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            maze.perform_transition(action,observation_to,reward);
+            current_instance = current_instance->append(action, observation_to, reward);
+
+            // print nice pictures
+            if(DEBUG_LEVEL>=1) {
+                maze.print_transition(action, observation_to, reward);
+            }
+        }
+
+        current_instance->detach_reachable();
+
+    }
+
+    if(AbstractInstance::memory_check_request()) {
+        EXPECT_EQ(0,AbstractInstance::memory_check());
+    }
 }
 
 TEST(LearnerTest, TemporallyExtendedLinearQ) {
