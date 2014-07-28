@@ -48,7 +48,7 @@ TemporallyExtendedLinearQ::TemporallyExtendedLinearQ(std::shared_ptr<Conjunctive
     TemporallyExtendedFeatureLearner(N), discount(d)
 {
     // include only action features for t=0
-    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::ACTION);
     // set outcome to "action"
     set_outcome_type(OUTCOME_TYPE::ACTION);
 }

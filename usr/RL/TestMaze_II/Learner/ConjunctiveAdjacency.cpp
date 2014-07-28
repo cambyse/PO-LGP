@@ -84,10 +84,10 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     f_ptr_t new_feature;
     for(action_ptr_t action : action_space) {
         switch(t_zero_features) {
-        case NONE:
+        case T_ZERO_FEATURES::NONE:
+        case T_ZERO_FEATURES::OBSERVATION_REWARD:
             break;
-        case ACTION:
-        case ACTION_OBSERVATION_REWARD:
+        case T_ZERO_FEATURES::ACTION:
         default:
             new_feature = ActionFeature::create(action,0);
             basis_features.insert(new_feature);
@@ -101,10 +101,10 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     }
     for(observation_ptr_t observation : observation_space) {
         switch(t_zero_features) {
-        case NONE:
-        case ACTION:
+        case T_ZERO_FEATURES::NONE:
+        case T_ZERO_FEATURES::ACTION:
             break;
-        case ACTION_OBSERVATION_REWARD:
+        case T_ZERO_FEATURES::OBSERVATION_REWARD:
         default:
             new_feature = ObservationFeature::create(observation,0);
             basis_features.insert(new_feature);
@@ -118,10 +118,10 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     }
     for(reward_ptr_t reward : reward_space) {
         switch(t_zero_features) {
-        case NONE:
-        case ACTION:
+        case T_ZERO_FEATURES::NONE:
+        case T_ZERO_FEATURES::ACTION:
             break;
-        case ACTION_OBSERVATION_REWARD:
+        case T_ZERO_FEATURES::OBSERVATION_REWARD:
         default:
             new_feature = RewardFeature::create(reward,0);
             basis_features.insert(new_feature);

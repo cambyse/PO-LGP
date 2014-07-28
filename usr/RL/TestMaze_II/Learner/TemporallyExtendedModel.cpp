@@ -34,7 +34,7 @@ TEM::TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency> N):
     TemporallyExtendedFeatureLearner(N)
 {
     // include only action, observation, and reward features for t=0
-    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
     // set outcome to "observation-reward"
     set_outcome_type(OUTCOME_TYPE::OBSERVATION_REWARD);
 }

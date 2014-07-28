@@ -125,13 +125,13 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     N_plus_TEL->set_max_horizon(-1);
     N_plus_TEL->set_min_horizon(-2);
     N_plus_TEL->set_combine_features(false);
-    N_plus_TEL->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+    N_plus_TEL->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::ACTION);
     // set some properties of N+ (TEM)
     N_plus_TEM->set_horizon_extension(2);
-    N_plus_TEM->set_max_horizon(-1);
+    N_plus_TEM->set_max_horizon(0);
     N_plus_TEM->set_min_horizon(-2);
     N_plus_TEM->set_combine_features(false);
-    N_plus_TEM->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
+    N_plus_TEM->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
 
     // set l1 factor for tem
     tem->set_l1_factor(l1_factor);
