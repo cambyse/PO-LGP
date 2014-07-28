@@ -14,7 +14,7 @@
 #include "../Representation/DoublyLinkedInstance.h"
 #include "../Planning/LookAheadPolicy.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 3
 #include "../util/debug.h"
 
 using std::vector;
@@ -22,6 +22,7 @@ using std::shared_ptr;
 using std::make_shared;
 using std::cout;
 using std::endl;
+using std::make_tuple;
 
 using ColorOutput::bold;
 using ColorOutput::reset_all;
@@ -371,7 +372,8 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     N_plus = make_shared<ConjunctiveAdjacency>();
     N_plus->adopt_spaces(maze);
     N_plus->set_horizon_extension(2);
-    N_plus->set_max_horizon(2);
+    N_plus->set_min_horizon(-2);
+    N_plus->set_max_horizon(-1);
     N_plus->set_combine_features(false);
     N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
 
@@ -409,10 +411,32 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     TEM->optimize_weights_LBFGS();
     TEM->print_features();
 
+    //--------------------------------------------//
+    // get likelihood for some random transitions //
+    //--------------------------------------------//
+    {
+        double log_prob = 0;
+        instance_ptr_t current_instance = maze.get_current_instance();
+        int N = 100;
+        repeat(N) {
+            action_ptr_t action = util::random_select(action_vector);
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            maze.perform_transition(action,observation_to,reward);
+            double prob = TEM->get_prediction(current_instance,action,observation_to,reward);
+            DEBUG_OUT(3,current_instance << " (p = " << prob << ")");
+            log_prob += log(prob);
+            // update
+            current_instance = current_instance->append(action,observation_to,reward);
+        }
+        EXPECT_NEAR(log_prob,0,-N*log(0.99)); // expect probabilites around 0.99
+        DEBUG_OUT(1,"Likelihood over " << N << " random transitions: " << exp(log_prob));
+        current_instance->detach_reachable();
+    }
+
     //-----------------------------//
     // do some planned transitions //
     //-----------------------------//
-
 
     // initialize environment and planner
     LookAheadPolicy planner(0.5,TEM,false,10000);
