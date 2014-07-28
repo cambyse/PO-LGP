@@ -69,7 +69,7 @@ HEADERS += \
     \
     ../BatchMaze.h \
     ../testmaze_ii.h \
-    ../ui_testmaze_ii.h
+    ui_testmaze_ii.h
 SOURCES += \
     main.cpp \
     \
