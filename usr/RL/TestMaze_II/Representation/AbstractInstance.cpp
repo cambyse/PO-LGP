@@ -125,8 +125,8 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
     return create(action_ptr_t(),observation_ptr_t(),reward_ptr_t());
 }
 
-int AbstractInstance::memory_check(bool report_entries) {
 #ifdef MEMORY_CHECK
+int AbstractInstance::memory_check(bool report_entries) {
     if(DEBUG_LEVEL > 1 && report_entries) {
         for(weak_ptr_t p : all_instances) {
             if(p.expired()) {
@@ -137,11 +137,13 @@ int AbstractInstance::memory_check(bool report_entries) {
         }
     }
     return all_instances.size();
+}
 #else
+int AbstractInstance::memory_check(bool) {
     DEBUG_ERROR("no memory check possible");
     return -1;
-#endif
 }
+#endif
 
 bool AbstractInstance::memory_check_request() {
 #ifdef MEMORY_CHECK
