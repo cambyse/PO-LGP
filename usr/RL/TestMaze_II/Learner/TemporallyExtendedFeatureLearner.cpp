@@ -410,8 +410,6 @@ bool TEFL::update_basis_features() {
 
 void TEFL::update_basis_feature_maps(bool recompute_all) {
 
-#warning this function is called (and it does work) more often than necessary (even when no new features were added) -- why?
-
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature maps: ");}
 
     // get dimensions
@@ -565,9 +563,7 @@ void TEFL::update_F_matrices() {
 
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update F-matrices:         ");}
 
-    #warning need to clear for correct dimensions -- why? --> write minimal example
-    F_matrices.clear();
-    F_matrices.resize(data_n,zeros<f_mat_t>(feature_n,outcome_n));
+    F_matrices.assign(data_n,zeros<f_mat_t>(feature_n,outcome_n));
 
     // for all data points
 #ifdef USE_OMP

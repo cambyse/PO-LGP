@@ -5,7 +5,6 @@
 #include "../util/QtUtil.h"
 #include "../util/ProgressBar.h"
 
-#warning exclude again
 #include "../Maze/MazeObservation.h"
 #include "../Maze/MazeAction.h"
 

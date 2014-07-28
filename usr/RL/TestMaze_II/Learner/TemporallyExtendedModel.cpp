@@ -65,7 +65,7 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
     }
     if(matching_outcome_idx==-1) { DEBUG_DEAD_LINE; }
     const row_vec_t lin = weights.t()*F_matrix;
-    const row_vec_t exp_lin = arma::trunc_exp(lin);
+    const row_vec_t exp_lin = arma::exp(lin);
     const double z = sum(exp_lin);
     const double l = lin(matching_outcome_idx)-log(z);
     return exp(l);
@@ -95,7 +95,7 @@ TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
 
     // compute normalization
     const row_vec_t lin = weights.t()*F_matrix;
-    const row_vec_t exp_lin = arma::trunc_exp(lin);
+    const row_vec_t exp_lin = arma::exp(lin);
     const double log_z = log(sum(exp_lin));
 
     // fill probability map
@@ -120,13 +120,6 @@ TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
 }
 
 double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
-
-    /** Some issues with armadillo:
-     *
-     * -- simple exp(vector) prodoces 1x1 matrix, trunc_exp does not -- don't
-     * know why */
-
-#warning todo: write a minimal example for this behavior
 
     DEBUG_OUT(3,"Compute neg-log-likelihood");
 
@@ -164,7 +157,7 @@ double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
 
         // interim variables
         const row_vec_t lin = w.t()*F;
-        const row_vec_t exp_lin = arma::trunc_exp(lin);
+        const row_vec_t exp_lin = arma::exp(lin);
         const double z = sum(exp_lin);
 
         // debug output
