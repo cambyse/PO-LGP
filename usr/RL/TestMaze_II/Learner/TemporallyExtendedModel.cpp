@@ -21,6 +21,8 @@
 using util::Range;
 using util::INVALID;
 
+using std::cout;
+using std::endl;
 using std::vector;
 using std::map;
 using std::make_tuple;
@@ -214,23 +216,42 @@ lbfgsfloatval_t TEM::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t
     return neg_log_like;
 }
 
-int TEM::LBFGS_progress(const lbfgsfloatval_t */*x*/,
+int TEM::LBFGS_progress(const lbfgsfloatval_t * x,
                         const lbfgsfloatval_t */*g*/,
                         const lbfgsfloatval_t fx,
                         const lbfgsfloatval_t /*xnorm*/,
                         const lbfgsfloatval_t /*gnorm*/,
                         const lbfgsfloatval_t /*step*/,
-                        int /*nr_variables*/,
+                        int nr_variables,
                         int iteration_nr,
                         int /*ls*/) const {
-    DEBUG_OUT(1,"Iteration " << iteration_nr << " (" << objective_evaluations << "), Likelihood = " << exp(-fx));
-    //for(int x_idx : Range(nr_variables)) {
-        //DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
-    //}
-    //DEBUG_OUT(1,"Iteration " << iteration_nr << " (Likelihood = " << exp(-fx) << ")" );
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = 0;
+        for(int idx=0; idx<nr_variables; ++idx) {
+            xnorm += fabs(x[idx]);
+        }
+        cout <<
+            QString("    Iteration %1 (%2), Likelihood + L1 = %3 + %4")
+            .arg(iteration_nr)
+            .arg(objective_evaluations)
+            .arg(exp(-(fx-xnorm*l1_factor)),7,'f',5)
+            .arg(xnorm*l1_factor,7,'f',5)
+             << endl;
+    }
+    // DEBUG_OUT(1,"Iteration " << iteration_nr << " (" << objective_evaluations << "), Likelihood = " << exp(-fx));
     return 0;
 }
 
 void TEM::LBFGS_final_message(double obj_val) const {
-    DEBUG_OUT(0,"Likelihood = " << exp(-obj_val));
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
+        cout <<
+            QString("    Likelihood + L1 = %1 + %2")
+            .arg(exp(-(obj_val-xnorm*l1_factor)),7,'f',5)
+            .arg(xnorm*l1_factor,7,'f',5)
+             << endl;
+    }
+    // DEBUG_OUT(0,"Likelihood = " << exp(-obj_val));
 }
