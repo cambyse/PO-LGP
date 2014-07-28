@@ -25,6 +25,8 @@ using std::dynamic_pointer_cast;
 using std::cout;
 using std::endl;
 
+using arma::zeros;
+
 typedef TemporallyExtendedFeatureLearner TEFL;
 
 TEFL::TemporallyExtendedFeatureLearner(std::shared_ptr<ConjunctiveAdjacency> N):
@@ -565,7 +567,7 @@ void TEFL::update_F_matrices() {
 
     #warning need to clear for correct dimensions -- why? --> write minimal example
     F_matrices.clear();
-    F_matrices.resize(data_n,f_mat_t(feature_n,outcome_n));
+    F_matrices.resize(data_n,zeros<f_mat_t>(feature_n,outcome_n));
 
     // for all data points
 #ifdef USE_OMP

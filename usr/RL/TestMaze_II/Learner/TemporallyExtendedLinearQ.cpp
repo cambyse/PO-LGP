@@ -61,7 +61,7 @@ TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
         return zeros<row_vec_t>(action_n);
     }
     // get feature matrix
-    f_mat_t feature_matrix(feature_set.size(),action_n);
+    f_mat_t feature_matrix = zeros<f_mat_t>(feature_set.size(),action_n);
     int feature_idx = 0;
     for(f_ptr_t feature : feature_set) {
         int action_idx = 0;

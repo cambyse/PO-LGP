@@ -26,6 +26,8 @@ using std::map;
 using std::make_tuple;
 using std::dynamic_pointer_cast;
 
+using arma::zeros;
+
 typedef TemporallyExtendedModel TEM;
 
 TEM::TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency> N):
@@ -43,8 +45,7 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
                                        const reward_ptr_t& reward) const {
     int outcome_idx = 0;
     int matching_outcome_idx = -1;
-    f_mat_t F_matrix;
-    F_matrix.zeros(feature_set.size(),observation_space->space_size()*reward_space->space_size());
+    f_mat_t F_matrix = zeros<f_mat_t>(feature_set.size(),observation_space->space_size()*reward_space->space_size());
     for(observation_ptr_t obs : observation_space) {
         for(reward_ptr_t rew : reward_space) {
             int feature_idx = 0;
@@ -73,8 +74,7 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
 TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
                                                const action_ptr_t& action) const {
     // compute feature matrix
-    f_mat_t F_matrix;
-    F_matrix.zeros(feature_set.size(),observation_space->space_size()*reward_space->space_size());
+    f_mat_t F_matrix = zeros<f_mat_t>(feature_set.size(),observation_space->space_size()*reward_space->space_size());
     {
         int outcome_idx = 0;
         for(observation_ptr_t obs : observation_space) {
