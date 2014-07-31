@@ -105,7 +105,10 @@ void testSliding() {
   ors::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
-  MotionProblem MP(world,false);
+  makeConvexHulls(world.shapes);
+  world.swift();
+
+  MotionProblem MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
   arr refGoal1 = ARRAY(MP.world.getShapeByName("target")->X.pos);
@@ -145,11 +148,16 @@ void testSliding() {
 
   c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
   c->map.order=1; //make this a velocity variable!
-  c->setCostSpecs(MP.T, MP.T, ARR(0.), 1e1);
+  c->setCostSpecs(MP.T, MP.T, ARR(0.), 1e2);
 
 
-  c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table"));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"table","obj1",0.01));
+  MP.setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+
+  TaskMap *tm_contact = new PairCollisionConstraint(MP.world,"obj1","table",0.01);
+  TaskCost *c4 = MP.addTask("contact_endeff",tm_contact);
+  c4->map.constraint = false;
+  c4->setCostSpecs(MP.T/2,MP.T, ARR(0.) ,1e3);
 
   MP.x0 = zeros(world.getJointStateDimension(),1);MP.x0.flatten();
   MP.x0(0) = M_PI_2;
@@ -159,11 +167,12 @@ void testSliding() {
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();arr lambda(T+1); lambda.setZero();
+  x = repmat(MP.x0,T+1,1);
 //  optConstrained(x,lambda,Convert(MPF),OPT(verbose=1,stopTolerance=1e-3, maxStep=1.));
-  optConstrained(x, NoArr, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
-  optConstrained(x, NoArr, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
   MP.costReport(true);
-
+  cout << lambda << endl;
   for(;;)
     displayTrajectory(x,T,world,"world");
 }

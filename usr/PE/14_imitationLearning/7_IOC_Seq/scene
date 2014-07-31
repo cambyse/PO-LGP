@@ -52,12 +52,10 @@ joint R_RF (R_HAND_R_FINGER_KNUCKLE_1 R_HAND_R_FINGER_KNUCKLE_2){ from=<T 0.05 0
 joint R_RF2 (R_HAND_R_FINGER_KNUCKLE_2 R_HAND_R_FINGER_KNUCKLE_3){ from=<T 0.07 0 0 0.707107 0 0.707107 0 > to=<T 0 0 0 -0.707107 0 0.707107 0 >  type=10  q=2}
 joint R_FR (R_LOWER_WRIST R_HAND_L_FINGER_KNUCKLE_1){ from=<T -0.02497 -5.16437e-15 0.10798 -0.5 -0.5 -0.5 0.5 > to=<T 0 0 0 -0.707107 0 0.707107 0 >  type=10 q=0 }
 joint R_FR2 (R_LOWER_WRIST R_HAND_R_FINGER_KNUCKLE_1){ from=<T 0.02497 5.16437e-15 0.10798 -0.5 0.5 0.5 0.5 > to=<T 0 0 0 -0.707107 0 -0.707107 0 >  type=10 }
-body endeff { type=2 size=[0 0 0 .001] }
-#joint (R_HAND_R_FINGER_KNUCKLE_1 endeff){ A=<T t(0 0 .15) d(0 0 0 0)> B=<T t(0 0 0)>  Q=<T d(1 0 0 0)> type=10  }
+body endeff { type=2 size=[0 0 0 .001] contact}
 joint (R_HAND_M_FINGER_KNUCKLE_3 endeff){ A=<T t(0.06 0 0) d(0 0 0 0)> B=<T t(0 0 0)>  Q=<T d(1 0 0 0)> type=10  }
 
 body glCamera { X=<T 5.37831 -7.10912 5.96183 0.825669 0.461015 0.163458 0.281104>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }
-
 
 body table{ type=0, X=<T t(0 -1 .6)>, size=[1. 1. .04 .0], color=[.8 .5 .3] fixed, contact }
 shape leg1(table) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
@@ -65,8 +63,8 @@ shape leg2(table) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5
 shape leg3(table) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 shape leg4(table) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 
-shape target(){ type=5 rel=<T t(.5 .5 1.)> size=[.3 0 0 0] color=[1 1 0]}
-body obj1 { size=[.1 .1 .2 0] type=0 contact }
+shape target(){ type=5 rel=<T t(.3 -.7 .7)> size=[.3 0 0 0] color=[1 1 0]}
+body obj1 { size=[.1 .1 .2 0] type=0 contact  }
 body graspRef { type=5 size=[.1 0 0 0.01] }
 joint (endeff graspRef){ A=<T t(0.05 0 0 )> type=10 }
-joint (table obj1) { from=<T t(-.1 .1 0)> to=<T t(0 0 .1)> type=10 }
+joint (table obj1) { from=<T t(-.1 .1 0.04)> to=<T t(0 0 .1)> type=10 }
