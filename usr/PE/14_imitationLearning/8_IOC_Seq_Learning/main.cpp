@@ -11,7 +11,10 @@
 #include <Ors/ors_swift.h>
 #include <Motion/taskMap_proxy.h>
 
+#include "ioc.h"
+
 void testSliding() {
+
   ors::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
@@ -43,31 +46,26 @@ void testSliding() {
   ors::Shape *tar = world.getShapeByName("target");
 
   TaskCost *c;
-  c = MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(obj->X.pos), 1e4);
+//  c = MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+//  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(obj->X.pos), 1e4);
 
-  c = MP.addTask("quat", new DefaultTaskMap(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
-  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(0.,0.,-1.), 1e3);
+//  c = MP.addTask("quat", new DefaultTaskMap(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
+//  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(0.,0.,-1.), 1e3);
 
   c = MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
   c->setCostSpecs(MP.T, MP.T, ARRAY(tar->X.pos), 1e3);
 
-  c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, world));
-  c->map.order=1; //make this a velocity variable!
-  c->setCostSpecs(MP.T/2, MP.T/2, ARR(0.), 1e2);
+//  c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, world));
+//  c->map.order=1; //make this a velocity variable!
+//  c->setCostSpecs(MP.T/2, MP.T/2, ARR(0.), 1e2);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
-  c->map.order=1; //make this a velocity variable!
-  c->setCostSpecs(MP.T, MP.T, ARR(0.), 1e2);
-
+//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
+//  c->map.order=1; //make this a velocity variable!
+//  c->setCostSpecs(MP.T, MP.T, ARR(0.), 1e2);
 
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"table","obj1",0.01));
   MP.setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
 
-  TaskMap *tm_contact = new PairCollisionConstraint(MP.world,"obj1","table",0.01);
-  TaskCost *c4 = MP.addTask("contact_endeff",tm_contact);
-  c4->map.constraint = false;
-  c4->setCostSpecs(MP.T/2,MP.T, ARR(0.) ,1e3);
 
   MP.x0 = zeros(world.getJointStateDimension(),1);MP.x0.flatten();
   MP.x0(0) = M_PI_2;
@@ -83,8 +81,34 @@ void testSliding() {
   optConstrained(x, lambda, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
   MP.costReport(true);
   cout << lambda << endl;
-  for(;;)
-    displayTrajectory(x,T,world,"world");
+//  for(;;)
+//    displayTrajectory(x,T,world,"world");
+
+  MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
+  MP.taskCosts(0)->prec(MP.T) = 1.;
+  cout << MP.taskCosts(0)->prec << endl;
+
+  MT::Array<Demonstration*> demos;
+  Demonstration* d = new Demonstration(MP);
+
+  d->x = x;
+  d->lambda = lambda; d->lambda.flatten();
+  demos.append(d);
+
+  uint numParam = MP.H_rate_diag.N+1;
+
+  IOC ioc(demos,numParam);
+
+  arr w = ones(numParam,1);w.flatten();
+//  checkAllGradients(ioc,w,1e-3);
+
+  arr dual;
+  optConstrained(w,dual,ioc,OPT(verbose=1,stopIters=500,stopEvals=500,allowOverstep=true,constrainedMethod=squaredPenalty));
+  w = fabs(w);
+  w = w/sqrt(sumOfSqr(w));
+  cout << w << endl;
+//  ioc.printOptSolution();
+
 }
 
 int main(int argc,char **argv){
