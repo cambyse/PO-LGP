@@ -8,5 +8,5 @@ if(LIBFREENECT_FOUND AND FLYCAPTURE_LIBRARY)
     add_executable(x_${NAME} ${SOURCES})
 
     target_link_libraries(x_${NAME} Core Perception Gui Hardware_kinect Hardware_flycap)
-
+	file(COPY MT.cfg DESTINATION .)
 endif()
