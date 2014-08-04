@@ -111,5 +111,16 @@ void init_image_publishers(int argc, char* argv[], const char* name) {
 	ros::init(argc, argv, name);
 #endif
 }
-
+bool process_image_callbacks() {
+#ifdef HAVE_ROS_IMAGE_TRANSPORT
+	ros::spinOnce();
+	return ros::ok();
+#endif
+	return true;
+}
+void ros_shutdown() {
+#ifdef HAVE_ROS_IMAGE_TRANSPORT
+	ros::shutdown();
+#endif
+}
 }

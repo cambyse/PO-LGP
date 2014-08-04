@@ -32,6 +32,8 @@ namespace MLR {
 	};
 
 	void init_image_publishers(int argc, char* argv[], const char* name);
+	bool process_image_callbacks();
+	void ros_shutdown();
 }
 
 
