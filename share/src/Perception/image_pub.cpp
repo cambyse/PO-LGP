@@ -27,21 +27,24 @@ struct sImagePublisher {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 	ros::NodeHandle n;
 	ImageTransport t;
-	Publisher p;
+	Publisher p_img;
+	ros::Publisher p_info;
 	CameraInfoManager cim;
 	sensor_msgs::Image msg;
+	sensor_msgs::CameraInfo cinfo;
 #endif
 	uint32_t seq, bypp;
-	std::string camera_name, link_name, encoding;
+	std::string link_name, encoding;
 	double epoch_offset;
 	PixelFormat pix_fmt;
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		n(base_topic), t(n), p(t.advertise(camera_name, 1)), 
+		n(base_topic), t(n), p_img(t.advertise("image_raw", 1)),
+		p_info(n.advertise<sensor_msgs::CameraInfo>("camera_info", 1)),
 		cim(n, camera_name),
 #endif
-		seq(0), camera_name(camera_name), pix_fmt(pix_fmt)
+		seq(0), pix_fmt(pix_fmt)
 	{
 		std::ostringstream str;
 		str << camera_name << "_link";
@@ -76,13 +79,16 @@ struct sImagePublisher {
 
 	void publish(const byteA& image, double timestamp) {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		sensor_msgs::fillImage(msg, encoding, image.d0, image.d1, bypp * image.d1,
-				image.p);
+		sensor_msgs::fillImage(msg, encoding, image.d0, image.d1, bypp * image.d1, image.p);
 		msg.header.seq 		= seq++;
 		msg.header.stamp	= ros::Time(timestamp + epoch_offset);
 		msg.header.frame_id	= link_name;
 
-		p.publish(msg);
+		cinfo = cim.getCameraInfo();
+		cinfo.header = msg.header;
+
+		p_img.publish(msg);
+		p_info.publish(cinfo);
 #endif
 	}
 };
