@@ -151,7 +151,7 @@ class RecordingSystem {
 private:
 	MT::String created;
 	FlycapGrabAndSave cam1, cam2, cam3;
-	KinectGrabAndSave front_kinect;
+	KinectGrabAndSave front_kinect, side_kinect;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
 	byteA audio_buf;
@@ -161,7 +161,7 @@ protected:
 
 	void openmp_run() {
 		front_kinect.startStreaming();
-		//side_kinect.startStreaming();
+		side_kinect.startStreaming();
 		bool ready = false;
 
 		// make sure everything is running smoothly before starting to record
@@ -191,6 +191,7 @@ protected:
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
 					front_kinect.setActiveTime(start_time);
+					side_kinect.setActiveTime(start_time);
 					ready = true;
 				}
 			}
@@ -205,6 +206,7 @@ public:
 		cam2(id2, STRING("pg_cam_" << id2).p, created, terminated),
 		cam3(id3, STRING("pg_cam_" << id3).p, created, terminated),
 		front_kinect(kinID1, "front_kinect", created, terminated),
+		side_kinect(kinID2, "side_kinect", created, terminated),
 		audio_writer(STRING("z.mike." << created << ".wav")),
 		audio_buf(8192),
 		start_time(ULONG_MAX) {
