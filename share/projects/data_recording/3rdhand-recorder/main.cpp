@@ -63,7 +63,7 @@ public:
 	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
 		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
-		name(name), terminated(terminated), ready(false) {
+		name(name), terminated(terminated), ready(false), gl(name) {
 	}
 
 	bool isReady() const {
