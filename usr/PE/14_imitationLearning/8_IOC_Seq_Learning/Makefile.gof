@@ -1,6 +1,6 @@
 BASE = ../../../../share
 
-OBJS = main.o
+OBJS = main.o motion_factory.o
 DEPEND = Core Motion Gui Optim Algo Ors
 PTHREAD = 1
 PHYSX = 1

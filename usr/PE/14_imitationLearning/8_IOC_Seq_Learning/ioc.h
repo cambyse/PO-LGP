@@ -14,12 +14,17 @@
 #include <GL/glu.h>
 #include <Gui/opengl.h>
 
+//#include "scene.h"
+
+
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
   arr lambda0; // Demonstrated constrains
   arr lambda; // Current lambda estimate
   arr Dwdx; // Matrix mapping x to w
   uint numParam; // number of x parameter
+
+  bool constrainsActive; // constrained or unconstrained variant
 
   // task vars
   arr J_Jt,PHI,J,JP;
@@ -35,45 +40,59 @@ struct IOC_DemoCost {
     // precompute some terms
     MotionProblemFunction MPF(_MP);
     ConstrainedProblem & v = Convert(MPF);
-    v.fc(NoArr,NoArr,g,JgP,_x0);
+    v.fc(NoArr,NoArr,g,JgP,x0);
     cout << g << endl;
 
     MT::timerStart();
-    // reduce Jg to only active part (lambda !=0)
-    MT::Array<uint> idx;
-    lambda0.findValues(idx,0.);
-    lambda0.removeAllValues(0.);
-    Jg = unpack(JgP);
-    arr Jgr;
-    uint j = 0;
-    for (uint i =0;i<Jg.d0;i++) {
-      if(!idx.contains(i)) {
-        Jgr.append(~Jg[i]);
-      }
-      if(idx.contains(i)) {
-        JgP.delRows(j);
-        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
-        j--;
-      }
-      j++;
-    }
-    Jg = Jgr;
 
-    Jg_JgtP = comp_A_At(JgP);
-    Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
-    Jgt_JgJgtI_Jg = ~Jg*inverse_SymPosDef(Jg_Jgt)*Jg;
     PHI = v.y;
     JP = v.Jy;
-
     arr J_JtP = comp_A_At(JP);
     J = unpack(JP); J.special = arr::noneST;
     dPHI_J_Jt_dPHI = (PHI*~PHI)%unpack(J_JtP);
-    cout << MT::timerRead(true) << endl;
-    dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
-    cout << MT::timerRead(true) << endl;
+
+    if (lambda0.N==0 || max(lambda0) == 0.) {
+      /// Unconstrained case
+      constrainsActive = false;
+      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI;
+
+
+    } else {
+      /// Constrained case
+      constrainsActive = true;
+      // reduce Jg to only active part (lambda !=0)
+      MT::Array<uint> idx;
+      lambda0.findValues(idx,0.);
+      lambda0.removeAllValues(0.);
+      Jg = unpack(JgP);
+      arr Jgr;
+      uint j = 0;
+      for (uint i =0;i<Jg.d0;i++) {
+        if(!idx.contains(i)) {
+          Jgr.append(~Jg[i]);
+        }
+        if(idx.contains(i)) {
+          JgP.delRows(j);
+          ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+          j--;
+        }
+        j++;
+      }
+
+      Jg = Jgr;
+      Jg_JgtP = comp_A_At(JgP);
+      Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
+      Jgt_JgJgtI_Jg = ~Jg*inverse_SymPosDef(Jg_Jgt)*Jg;
+
+      cout << MT::timerRead(true) << endl;
+      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
+      cout << MT::timerRead(true) << endl;
+      JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~J*diag(PHI);
+      J_Jgt = J*~Jg;
+    }
+
     dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
-    JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~J*diag(PHI);
-    J_Jgt = J*~Jg;
+
   }
 
   double eval(arr& df, arr& Hf,arr& gLambda, arr& JgLambda, const arr& x) {
@@ -82,10 +101,14 @@ struct IOC_DemoCost {
     arr PHIw = PHI%w;
     arr JP_PHIw = comp_At_x(JP,PHIw);
     arr J_Jt_PHIw = comp_A_x(JP,JP_PHIw);
-    arr JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
-    arr J_G_Jt_PHIw = J_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
+    arr J_G_Jt_PHIw = J_Jt_PHIw;
 
-    lambda = -JgJgtI_Jg_Jt_PHIw;
+    arr JgJgtI_Jg_Jt_PHIw;
+    if (constrainsActive) {
+      J_G_Jt_PHIw = J_G_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
+      JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
+      lambda = -JgJgtI_Jg_Jt_PHIw;
+    }
 
     arr f = 4.*(~PHIw)*J_G_Jt_PHIw;
     double y = f(0);
@@ -98,10 +121,10 @@ struct IOC_DemoCost {
     if (&Hf) {
       Hf = 8.*(dWdx_dPHI_J_G_Jt_dPHI_dWdx);
     }
-    if (&gLambda) {
+    if (&gLambda && constrainsActive) {
       gLambda = 2.*JgJgtI_Jg_Jt_PHIw;
     }
-    if (&JgLambda) {
+    if (&JgLambda && constrainsActive) {
       JgLambda = 2.*JgJgtI_Jg_J_dPHI ;
     }
     return y;
@@ -109,19 +132,21 @@ struct IOC_DemoCost {
 };
 
 
-struct Demonstration {
-  MotionProblem& MP; // MP containing the world state,
-  arr x;             // joint trajectory
-  arr lambda;        // constraint trajectory
+
+struct Scene {
+  arr xRef; // reference solution
+  arr lambdaRef; // constraint trajectory
+  arr paramRef;
+  MotionProblem* MP;
+  ors::KinematicWorld* world;
   IOC_DemoCost* cost;// cost function for this demonstrations
 
-  Demonstration (MotionProblem &_MP):MP(_MP) {
-  }
+  Scene () { }
 };
 
 
 struct IOC:ConstrainedProblem {
-  MT::Array<Demonstration*> &demos;
+  MT::Array<Scene> scenes;
   arr xOpt;
   uint numParam;
   uint numLambda;
@@ -130,11 +155,11 @@ struct IOC:ConstrainedProblem {
   uint T;
 
   virtual uint dim_x() { return numParam;}
-  virtual uint dim_g() { return numParam+numLambda+1;}
+  virtual uint dim_g() { return numParam+numLambda;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam):demos(_demos),numParam(_numParam) {
-    n = demos(0)->MP.world.getJointStateDimension();
-    T = demos(0)->MP.T;
+  IOC(MT::Array<Scene> &_scenes,uint _numParam):scenes(_scenes),numParam(_numParam) {
+    n = scenes(0).MP->world.getJointStateDimension();
+    T = scenes(0).MP->T;
 
     // precompute DWdx
     for (uint t=0;t<= T;t++) {
@@ -142,14 +167,14 @@ struct IOC:ConstrainedProblem {
       Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
 
       // add task cost elements
-      for (uint c=0;c<demos(0)->MP.taskCosts.N;c++) {
-        if ( demos(0)->MP.taskCosts(c)->prec.N >t && (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active && !demos(0)->MP.taskCosts(c)->map.constraint) {
+      for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) {
+        if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && !scenes(0).MP->taskCosts(c)->map.constraint) {
 
           uint m;
-          if ((demos(0)->MP.taskCosts(c)->target.N-1) == T) {
-            m = demos(0)->MP.taskCosts(c)->target.d1;
+          if ((scenes(0).MP->taskCosts(c)->target.N-1) == T) {
+            m = scenes(0).MP->taskCosts(c)->target.d1;
           } else {
-            m = demos(0)->MP.taskCosts(c)->target.N;
+            m = scenes(0).MP->taskCosts(c)->target.N;
           }
 
           arr tmp = zeros(m,n);
@@ -160,13 +185,13 @@ struct IOC:ConstrainedProblem {
         }
       }
     }
-    cout << "Dwdx: " << Dwdx << endl;
+    //    cout << "Dwdx: " << Dwdx << endl;
 
     numLambda = 0;
     // initialize cost functions for demonstrations
-    for (uint i=0;i<demos.d0;i++) {
-      demos(i)->cost = new IOC_DemoCost(demos(i)->MP,demos(i)->x,demos(i)->lambda,Dwdx,numParam);
-      numLambda += demos(i)->cost->lambda0.d0;
+    for (uint i=0;i<scenes.d0;i++) {
+      scenes(i).cost = new IOC_DemoCost(*scenes(i).MP,scenes(i).xRef,scenes(i).lambdaRef,Dwdx,numParam);
+      numLambda += scenes(i).cost->lambda0.d0;
     }
   }
 
@@ -182,25 +207,24 @@ struct IOC:ConstrainedProblem {
       Hf.resize(numParam,numParam);Hf.setZero();
     }
 
-
     if (&g) {
       g.clear();
-      g.append((sumOfSqr(x)-1)*(sumOfSqr(x)-1)); // ||w|| = 1
+//      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
       g.append(-x); // w > 0
     }
     if (&Jg) {
       Jg.clear();
-      Jg=4.*~x*(sumOfSqr(x)-1);
+//      Jg=4.*~x*(sumOfSqr(x)-1e3);
       Jg.append(-eye(numParam));
     }
 
     // iterate over demonstrations
-    for (uint i=0;i<demos.d0;i++) {
+    for (uint i=0;i<scenes.d0;i++) {
       arr dfi,Hfi,gi,Jgi;
-      y += demos(i)->cost->eval(dfi, Hfi, &g?gi:NoArr, &Jg?Jgi:NoArr, x);
+      y += scenes(i).cost->eval(dfi, Hfi, &g?gi:NoArr, &Jg?Jgi:NoArr, x);
 
       if (&df) {
-        df = df + dfi;
+        df += dfi;
       }
       if (&Hf) {
         Hf += Hfi;
@@ -208,7 +232,7 @@ struct IOC:ConstrainedProblem {
       if (&g) {
         g.append(gi);
       }
-      if (&Jg) {
+      if (&Jg && Jgi.N>0) {
         Jg.append(Jgi*Dwdx);
       }
     }
@@ -216,12 +240,16 @@ struct IOC:ConstrainedProblem {
   }
 
   void costReport() {
-    cout << "\n \n The solution is " <<xOpt << endl;
-    for (uint i=0;i<demos.d0;i++) {
-      cout << "\nDemonstration " << i << endl;
-      cout << "Costs: " << demos(i)->cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;
-      cout << "Lambda: " << demos(i)->cost->lambda/sqrt(sumOfSqr(demos(i)->cost->lambda)) << endl;
-      cout << "Lambda GT: " << demos(i)->cost->lambda0/sqrt(sumOfSqr(demos(i)->cost->lambda0)) << endl;
+    cout << "\n*****************************************************" << endl;
+    cout << "******************** COST REPORT ********************" << endl;
+    cout << "*****************************************************" << endl;
+    cout << "Found parameter: " <<xOpt/sqrt(sumOfSqr(xOpt))*1e1 << endl;
+    cout << "Reference parameter: " << scenes(0).paramRef/sqrt(sumOfSqr(scenes(0).paramRef))*1e1 << endl;
+    for (uint i=0;i<scenes.d0;i++) {
+      cout << "\nDemonstration: " << i << endl;
+      cout << "IOC costs: " << scenes(i).cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;
+      cout << "Lambda: " << scenes(i).cost->lambda/sqrt(sumOfSqr(scenes(i).cost->lambda)) << endl;
+      cout << "Lambda Ground Truth: " << scenes(i).cost->lambda0/sqrt(sumOfSqr(scenes(i).cost->lambda0)) << "\n\n"<< endl;
     }
   }
 };
