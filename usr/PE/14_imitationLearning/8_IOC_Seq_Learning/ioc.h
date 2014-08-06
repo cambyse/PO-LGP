@@ -56,7 +56,6 @@ struct IOC_DemoCost {
       constrainsActive = false;
       dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI;
 
-
     } else {
       /// Constrained case
       constrainsActive = true;
@@ -78,21 +77,19 @@ struct IOC_DemoCost {
         }
         j++;
       }
-
       Jg = Jgr;
+
       Jg_JgtP = comp_A_At(JgP);
       Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
       Jgt_JgJgtI_Jg = ~Jg*inverse_SymPosDef(Jg_Jgt)*Jg;
-
-      cout << MT::timerRead(true) << endl;
-      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
-      cout << MT::timerRead(true) << endl;
+//      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
+      arr tmp = ~J*(diag(PHI)*Dwdx);
+      dWdx_dPHI_J_G_Jt_dPHI_dWdx = ~Dwdx*dPHI_J_Jt_dPHI*Dwdx - (~tmp*Jgt_JgJgtI_Jg*tmp);
       JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~J*diag(PHI);
       J_Jgt = J*~Jg;
     }
 
-    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
-
+//    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
   }
 
   double eval(arr& df, arr& Hf,arr& gLambda, arr& JgLambda, const arr& x) {
@@ -105,8 +102,8 @@ struct IOC_DemoCost {
 
     arr JgJgtI_Jg_Jt_PHIw;
     if (constrainsActive) {
-      J_G_Jt_PHIw = J_G_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
       JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
+      J_G_Jt_PHIw = J_G_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
       lambda = -JgJgtI_Jg_Jt_PHIw;
     }
 
@@ -191,7 +188,8 @@ struct IOC:ConstrainedProblem {
     // initialize cost functions for demonstrations
     for (uint i=0;i<scenes.d0;i++) {
       scenes(i).cost = new IOC_DemoCost(*scenes(i).MP,scenes(i).xRef,scenes(i).lambdaRef,Dwdx,numParam);
-      numLambda += scenes(i).cost->lambda0.d0;
+      if ( scenes(i).cost->constrainsActive )
+        numLambda += scenes(i).cost->lambda0.N;
     }
   }
 
@@ -209,12 +207,12 @@ struct IOC:ConstrainedProblem {
 
     if (&g) {
       g.clear();
-//      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
+      //      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
       g.append(-x); // w > 0
     }
     if (&Jg) {
       Jg.clear();
-//      Jg=4.*~x*(sumOfSqr(x)-1e3);
+      //      Jg=4.*~x*(sumOfSqr(x)-1e3);
       Jg.append(-eye(numParam));
     }
 
