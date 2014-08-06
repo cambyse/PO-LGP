@@ -15,23 +15,23 @@
 #include "motion_factory.h"
 
 
-void testSliding() {
+void run() {
 
   /// 1. Create training and test scenarios
   MotionFactory* mf = new MotionFactory();
   MT::Array<Scene > trainScenes;
   MT::Array<Scene > testScenes;
-  mf->createScenes(1,trainScenes,testScenes,1,false);
+  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,1,false);
+
 
   /// 2. Optimize the parameters
-  arr w = ones(mf->numParam,1)*1e2;w.flatten(); arr dual;
-  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,false);
+  arr w = ones(mf->numParam,1)*1e1;w.flatten(); arr dual;
+  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,true);
   //  w =  trainScenes(0).paramRef;
   IOC ioc(trainScenes,mf->numParam);
   checkAllGradients(ioc,w,1e-3);
-
-  optConstrained(w,dual,ioc,OPT(verbose=1,stopIters=500,stopEvals=500,allowOverstep=true,constrainedMethod=squaredPenalty));
-  optConstrained(w,dual,ioc,OPT(verbose=1, stopTolerance=1e-12,stopIters=500,stopEvals=500,allowOverstep=true,constrainedMethod=squaredPenalty));
+  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-7));
+  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-9));
   ioc.costReport();
 
   /// 3. Evaluate code on test scenarios
@@ -46,6 +46,6 @@ void testSliding() {
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
-  testSliding();
+  run();
   return 0;
 }

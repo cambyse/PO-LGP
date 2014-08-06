@@ -152,6 +152,7 @@ struct IOC:ConstrainedProblem {
   uint T;
 
   virtual uint dim_x() { return numParam;}
+//  virtual uint dim_g() { return numParam+numLambda+1;}
   virtual uint dim_g() { return numParam+numLambda;}
 
   IOC(MT::Array<Scene> &_scenes,uint _numParam):scenes(_scenes),numParam(_numParam) {
@@ -182,7 +183,7 @@ struct IOC:ConstrainedProblem {
         }
       }
     }
-    //    cout << "Dwdx: " << Dwdx << endl;
+    cout << "Dwdx: " << Dwdx << endl;
 
     numLambda = 0;
     // initialize cost functions for demonstrations
@@ -207,12 +208,12 @@ struct IOC:ConstrainedProblem {
 
     if (&g) {
       g.clear();
-      //      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
+//      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
       g.append(-x); // w > 0
     }
     if (&Jg) {
       Jg.clear();
-      //      Jg=4.*~x*(sumOfSqr(x)-1e3);
+//      Jg=4.*~x*(sumOfSqr(x)-1e3);
       Jg.append(-eye(numParam));
     }
 
