@@ -1,0 +1,15 @@
+<package>
+  <description brief="amex_controller_pkg">
+
+     amex_controller_pkg
+
+  </description>
+  <author>englerpr</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/amex_controller_pkg</url>
+  <depend package="roscpp"/>
+  <depend package="tree_controller_pkg"/>
+</package>
+
+
