@@ -19,8 +19,13 @@ GPControl::GPControl() {
   }
 }
 
-void GPControl::predict(const arr &state, arr &pred) {
+void GPControl::predict(arr &state, arr &pred) {
   pred.clear();
+
+  // map roll joints to range [-PI,PI]
+  state(4) = fmod(state(4)+M_PI, 2.*M_PI) - M_PI;
+  state(6) = fmod(state(6)+M_PI, 2.*M_PI) - M_PI;
+
   for (uint i = 0; i<n ; i++){
     arr y ;
     y = x_subsets(i) - repmat(~state,x_subsets(i).d0,1);

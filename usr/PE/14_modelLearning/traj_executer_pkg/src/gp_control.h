@@ -15,7 +15,7 @@ struct GPControl {
   uint n;
 
   GPControl();
-  void predict(const arr &state, arr &pred);
+  void predict(arr &state, arr &pred);
 };
 
 #endif // GP_CONTROL
