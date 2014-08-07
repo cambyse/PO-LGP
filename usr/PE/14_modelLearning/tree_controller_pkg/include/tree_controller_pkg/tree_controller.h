@@ -45,6 +45,7 @@ private:
   arr controlIdx;
   arr p_effort, d_effort,gp_effort;
   arr measured_effort;
+  double qd_filt;
 
   ros::Publisher joint_pub;
   tree_controller_pkg::JointState joint_pub_state;

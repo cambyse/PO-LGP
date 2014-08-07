@@ -39,6 +39,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   /// init ORS
   tau_control = 0.001;
   controlIdx = {30,31,32,33,34,35,36};
+  qd_filt = 0.;
 
   q = arr(controlIdx.d0);
   qd = arr(controlIdx.d0);       qd.setZero();
@@ -109,6 +110,7 @@ void TreeControllerClass::starting()
     q(i) = jnt_pos_(controlIdx(i));
     des_q(i) = jnt_pos_(controlIdx(i));
   }
+  qd.setZero();
   qdd.setZero();
 
   /// init filter param 
@@ -126,7 +128,7 @@ void TreeControllerClass::update()
   /// Convert KDL to ORS
   for (uint i =0;i<controlIdx.d0;i++) {
     q(i) = jnt_pos_(controlIdx(i));
-    qd(i) = jnt_vel_.qdot(controlIdx(i));
+    qd(i) = qd_filt*qd(i)  + (1.-qd_filt)*jnt_vel_.qdot(controlIdx(i));
     measured_effort(i) = jnt_efforts_(controlIdx(i));
   }
 
@@ -176,6 +178,7 @@ bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Requ
     Kp(i) = req.pos_gains[i];
     Kd(i) = req.vel_gains[i];
   }
+  qd_filt = req.qd_filt;
   return true;
 }
 bool TreeControllerClass::getJointGains(tree_controller_pkg::GetJointGains::Request &req, tree_controller_pkg::GetJointGains::Response &resp){
@@ -185,6 +188,7 @@ bool TreeControllerClass::getJointGains(tree_controller_pkg::GetJointGains::Requ
     resp.pos_gains[i] = Kp(i);
     resp.vel_gains[i] = Kd(i);
   }
+  resp.qd_filt = qd_filt;
   return true;
 }
 bool TreeControllerClass::getJointState(tree_controller_pkg::GetJointState::Request &req, tree_controller_pkg::GetJointState::Response &resp){
