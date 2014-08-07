@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <Core/array.h>
 #include <Core/array-vector.h>
+#include <Algo/spline.h>
 #include "traj_optimizer.h"
 #include <tree_controller_pkg/GetJointState.h>
 #include <tree_controller_pkg/StartLogging.h>
@@ -46,19 +47,39 @@ int main(int argc, char** argv)
   tree_controller_pkg::SetCommand setCommandSrv;
 
 
-  double dt = 0.01;
-  TrajOptimizer* to = new TrajOptimizer(world);
   arr x,xd,xdd,goal;
+  TrajOptimizer* to = new TrajOptimizer(world);
+
   to->sampleGoal(goal,q0);
-  cout << "q0: " << q0 << endl;
-  cout << "goal: " << goal << endl;
+
+  // 30: r_shoulder_pan_joint,
+  // 31: r_shoulder_lift_joint,
+  // 32: r_upper_arm_roll_joint,
+  // 33: r_elbow_flex_joint,
+  // 34: r_forearm_roll_joint,
+  // 35: r_wrist_flex_joint,
+  // 36: r_wrist_roll_joint,
+//  double qLowerLimit[7] = {-2.2854, -0.5236, -3.9, -1.7, _q0(4)-M_PI, -2. ,_q0(6)-M_PI};
+//  double qUpperLimit[7] = {0.714602, 0.6,     0.8,   0., _q0(4)+M_PI,  0., _q0(6)+M_PI};
+//  goal = ARR(-0.0167554, 0.246322, 0.27938, -0.166749, -0.237116, -0.0891157, 5.3637 );
+
   to->optimizeTrajectory(goal,q0,x);
 
+  cout << "q0: " << q0 << endl;
+  cout << "goal: " << goal << endl;
+
+  double dt = to->dt;
   getVel(xd,x,dt);
   getAcc(xdd,x,dt);
 
+  /// create spline
+  MT::Spline s(x.d0,x);
+  MT::Spline sd(xd.d0,xd);
+  MT::Spline sdd(xdd.d0,xdd);
 
-  cout <<"Duration: " <<  x.d0*dt << endl;
+  double dur = (x.d0-1)*dt;
+  cout <<"Duration: " << dur << endl;
+
   /// Start trajectory execution
   cout << "Start Trajectory [Enter]" << endl;
   MT::wait();
@@ -69,7 +90,6 @@ int main(int argc, char** argv)
   startLoggingClient.call(startLoggingSrv);
 
   ros::Rate loop_rate(1./dt);
-
   cout << "Send Initial Command" << endl;
   arr u;
   GPControl* gp = new GPControl();
@@ -86,7 +106,6 @@ int main(int argc, char** argv)
     setCommandSrv.request.uGP = VECTOR(u);
     setCommandClient.call(setCommandSrv);
     loop_rate.sleep();
-
   }
 
 
@@ -94,11 +113,11 @@ int main(int argc, char** argv)
   arr q,qd,qdd;
 
   MT::timerStart(true);
-
-  for (uint t =0;t<x.d0;t++) {
-    q = x[t];
-    qd = xd[t];
-    qdd = xdd[t];
+  double t = 0.;
+  while ( t < dur ) {
+    q = s.eval( t/dur );
+    qd = sd.eval( t/dur );
+    qdd = sdd.eval( t/dur );
 
     arr state;
     state.append(q);
@@ -106,28 +125,17 @@ int main(int argc, char** argv)
     state.append(qdd);
 
     gp->predict(state,u);
-//    u = q*0.;
-    double timeOff = MT::timerRead(true);
-
     setCommandSrv.request.q = VECTOR(q);
     setCommandSrv.request.qd = VECTOR(qd);
-    setCommandSrv.request.uGP = VECTOR(u);
+    setCommandSrv.request.uGP = VECTOR(u*0.);
     setCommandClient.call(setCommandSrv);
-    cout << timeOff << endl;
-    cout << "max(ARR(0.01-timeOff,0.001)): " << max(ARR(0.01-timeOff,0.001)) << endl;
-//    MT::wait(max(ARR(0.01-timeOff,0.001)));
-    ros::Rate loop_rate2(1./(max(ARR(0.01-timeOff,0.001))));
-    loop_rate2.sleep();
-    cout << t*dt << endl;
-    cout << "sleep time: " << MT::timerRead(true) << endl;
+
+    double timeDiff = MT::timerRead(true);
+    t = t + timeDiff;
+
   }
 
   cout << "Trajectory finished!" << endl;
-
-  // send zero torques
-  /*
-  setCommandSrv.request.uGP = VECTOR(u*0.);
-  setCommandClient.call(setCommandSrv);*/
 
   // stop logging
   stopLoggingClient.call(stopLoggingSrv);

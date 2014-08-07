@@ -33,7 +33,7 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0, arr &x) {
   uint T=MPF.get_T();
   uint k=MPF.get_k();
   uint n=MPF.dim_x();
-  double dt = MP.tau;
+  dt = MP.tau;
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   x = repmat(~MP.x0,T+1,1);

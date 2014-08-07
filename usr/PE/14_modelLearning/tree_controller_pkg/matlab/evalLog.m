@@ -1,12 +1,14 @@
 clear
 
+% logs ab 29/
+
 subplot = @(m,n,p) subtightplot (m, n, p, [0.02 0.05]);
 figure = @(i) myfig(i);
 % copy log files from .ros/ to local folder
-NEW = 1
-SIM = 1
+NEW = 0
+SIM = 0
 [a, b] = unix('ls logs'); id = max(max(str2num(b)))+NEW;
-% id = 34
+id = 48
 
 folder = ['logs/',num2str(id)];
 if NEW
@@ -14,8 +16,8 @@ if NEW
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
-    %unix(['sshpass -p scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
-    unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    unix(['sshpass -p scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    %unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end
 
@@ -26,7 +28,6 @@ d_effort_bk = load([folder,'/d_effort_bk.output']);
 des_qd_bk   = load([folder,'/des_qd_bk.output']);
 p_effort_bk = load([folder,'/p_effort_bk.output']);
 gp_effort_bk = load([folder,'/gp_effort_bk.output']);
-i_effort_bk = load([folder,'/i_effort_bk.output']);
 measured_effort_bk = load([folder,'/measured_effort_bk.output']);
 qd_bk	      = load([folder,'/qd_bk.output']);
 u_bk        = load([folder,'/u_bk.output']);
@@ -45,19 +46,19 @@ figure(1);clf;hold on;
 for i=1:nq
   subplot (pl,pc,i);hold on;
    plot(t,q_bk(1:ni,i));
-  plot(t,q_filt_bk(1:ni,i),'k');
+   %plot(t,q_filt_bk(1:ni,i),'k');
    plot(t,des_q_bk(1:ni,i),'r');
 end 
-legend('position','filtered position','desired_position');
+legend('position','desired_position');
 
 figure(2);clf;hold on;
 for i=1:nq
   subplot (pl,pc,i);hold on;
   plot(t,gradient(q_bk(1:ni,i),0.001),'k');
-  plot(t,qd_filt_bk(1:ni,i));
+  %plot(t,qd_filt_bk(1:ni,i));
   plot(t,des_qd_bk(1:ni,i),'r');
 end
-legend('velocity','filtered velocity','desired_velocity');
+legend('velocity','desired_velocity');
 
 figure(3);clf;hold on;
 for i=1:nq
@@ -65,9 +66,10 @@ for i=1:nq
 %  plot(t,measured_effort_bk(1:ni,i),'c');
   plot(t,p_effort_bk(1:ni,i),'r');
   plot(t,d_effort_bk(1:ni,i),'m');
-  plot(t,gp_effort_bk(1:ni,i),'g');
+  plot(t,gp_effort_bk(1:ni,i),'g','LineWidth',2);
   plot(t,u_bk(1:ni,i));
 
 end
 legend('pos u','vel u','gp u','total u');
-
+myexportfig(1,'position2.pdf')
+myexportfig(3,'torques2.pdf')

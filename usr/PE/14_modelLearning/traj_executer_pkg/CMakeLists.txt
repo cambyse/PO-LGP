@@ -24,5 +24,6 @@ target_link_libraries(traj_executer
 ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
 ${MLR_PATH}/share/lib/libCore.so
-${MLR_PATH}/share/lib/libOptim.so)
+${MLR_PATH}/share/lib/libOptim.so
+${MLR_PATH}/share/lib/libAlgo.so)
 

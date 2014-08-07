@@ -1,0 +1,1 @@
+rosservice call /tree_rt_controller/set_joint_gains -- [150.0,150.0,30.,30.,10.,6.,6.] [5.0,5.0,1.,2.,1.,1.,1.] 0.9
