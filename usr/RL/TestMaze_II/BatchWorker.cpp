@@ -260,10 +260,10 @@ void BatchWorker::collect_data() {
                     N_plus->set_common_delay(true);
                 }
                 if(mode=="TEM") {
-                    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
+                    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
                 }
                 if(mode=="TEL") {
-                    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+                    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::ACTION);
                 }
 
                 // initialize learner
