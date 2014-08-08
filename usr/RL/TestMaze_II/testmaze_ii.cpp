@@ -10,6 +10,7 @@
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
+#include "ButtonWorld/ButtonWorld.h"
 #include "Planning/LookAheadPolicy.h"
 #include "Planning/RandomPolicy.h"
 #include "Planning/GoalIteration.h"
@@ -119,6 +120,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     change_environment(make_shared<Maze>(epsilon,"Default"));
     // change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
+    change_environment(make_shared<ButtonWorld>(5));
 
     // set some properties of N+ (TEL)
     N_plus_TEL->set_horizon_extension(2);
@@ -213,6 +215,10 @@ void TestMaze_II::initialize_commands() {
                 }
                 return {true,""};
             }, "display available maze names");
+        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size)->ret_t{
+                change_environment(make_shared<ButtonWorld>(size));
+                return {true,"set button world"};
+            }, "set button world with <int> buttons");
         command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
                 shared_ptr<Maze> maze(new Maze(epsilon));
                 bool success = maze->set_maze(name);

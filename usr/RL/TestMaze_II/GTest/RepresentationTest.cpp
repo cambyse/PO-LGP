@@ -6,6 +6,7 @@
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
 #include "../CheeseMaze/CheeseMazeAction.h"
+#include "../ButtonWorld/ButtonAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 
 #include "../Representation/AbstractObservation.h"
@@ -99,6 +100,7 @@ namespace {
         action_vector.push_back(new MazeAction(MazeAction::ACTION::DOWN));
         action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::LEFT,AugmentedMazeAction::TAG::TAG_2));
         action_vector.push_back(new CheeseMazeAction(CheeseMazeAction::ACTION::EAST));
+        action_vector.push_back(new ButtonAction(4, {0,1,1,1}));
 
         int action_type_idx = 0;
         // for all action types (represented by one specific action of each type)
