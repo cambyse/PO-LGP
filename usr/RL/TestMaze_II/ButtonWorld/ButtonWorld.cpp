@@ -30,11 +30,13 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
 
-    // Render action line and circle
+    // Render buttons
     QPen action_line_pen(QColor(0,0,0,50),0.1,Qt::SolidLine,Qt::RoundCap);
     QPen action_point_pen(QColor(0,0,0),0.01,Qt::SolidLine,Qt::RoundCap);
     QBrush action_point_brush(QColor(0,0,0,30));
-    scene->addEllipse(-1, -1, 2, 2, action_point_pen, action_point_brush);
+    for(probability_t prob : reward_probs) {
+        scene->addEllipse(-1, -1, 2, 2, action_point_pen, action_point_brush);
+    }
 
     rescale_scene(view);
 }

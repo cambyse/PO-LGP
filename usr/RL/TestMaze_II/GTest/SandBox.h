@@ -1,22 +1,58 @@
-class A;
-class Notifier;
+#ifndef ENUMERATE_H_
+#define ENUMERATE_H_
 
-class Notifier {
+#include <utility>
+
+template<typename T,
+    template <typename, typename = std::allocator<T>> class Container>
+class Enumerate {
+    //----typedefs/classes----//
 public:
-    Notifier();
-    ~Notifier();
-    void set_to_be_notified(A * p);
+
+    class Iterator {
+        //----typedefs/classes----//
+        //          NONE          //
+        //----members----//
+    private:
+        typename Container<T>::iterator iter;
+        int counter;
+
+        //----methods----//
+    public:
+        Iterator(typename Container<T>::iterator i, int c = 0): iter(i), counter(c) {}
+        virtual ~Iterator() = default;
+        std::pair<int, T> operator*() {
+            return std::make_pair(counter, *iter);
+        }
+        Iterator operator++() {
+            ++counter;
+            return Iterator(++iter, counter);
+        }
+        bool operator!=(const Iterator& it) {
+            return this->iter!=it.iter;
+        }
+    };
+
+    //----members----//
 private:
-    A * to_be_notified;
+    Container<T> & container;
+
+    //----methods----//
+public:
+    Enumerate(Container<T> & c): container(c){}
+    virtual ~Enumerate() = default;
+    Iterator begin() {
+        return Iterator(container.begin());
+    }
+    Iterator end() {
+        return Iterator(container.end());
+    }
 };
 
-class A {
-public:
-    A();
-    ~A();
-    void set_to_be_notified(A * p) const;
-    void notify_me();
-private:
-    Notifier * notifier;
-    bool got_notified = false;
-};
+template<typename T,
+    template <typename, typename = std::allocator<T>> class Container>
+    Enumerate<T, Container> enumerate(Container<T> c) {
+    return Enumerate<T, Container>(c);
+}
+
+#endif /* ENUMERATE_H_ */
