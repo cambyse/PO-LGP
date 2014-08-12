@@ -3,6 +3,8 @@
 #include "../Representation/DoublyLinkedInstance.h"
 
 #include <algorithm> // std::next_permutation, std::sort
+#include <gsl/gsl_rng.h> // random generator
+#include <gsl/gsl_randist.h> // Dirichlet distribution
 
 #define DEBUG_LEVEL 1
 #include "../util/debug.h"
@@ -46,6 +48,9 @@ ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
 }
 
+ButtonWorld::ButtonWorld(int s, double alpha):
+    ButtonWorld(s, ButtonWorld::probs_from_beta(s, alpha)) {}
+
 void ButtonWorld::render_initialize(QGraphicsView * v) {
     // intitialize view
     Visualizer::render_initialize(v);
@@ -81,7 +86,7 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
                                                  reward_brush_NONE));
         // texts
         QGraphicsTextItem * txt = scene->addText(
-            QString("%1").arg(idx_prob.second),
+            QString("%1").arg(idx_prob.second, 5, 'f', 3),
             text_font
             );
         QRectF box = txt->boundingRect();
@@ -214,4 +219,20 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
 
     #warning To be implemented...
 
+}
+
+std::vector<ButtonWorld::probability_t> ButtonWorld::probs_from_beta(const int& s,
+                                                                     const double& alpha) {
+    // set up random generator
+    gsl_rng * rand_gen = gsl_rng_alloc(gsl_rng_default);
+    gsl_rng_set(rand_gen, time(nullptr));
+    // draw
+    vector<double> probs;
+    repeat(s) {
+        probs.push_back(gsl_ran_beta(rand_gen, alpha, alpha));
+    }
+    // clean up
+    gsl_rng_free(rand_gen);
+    // return
+    return probs;
 }

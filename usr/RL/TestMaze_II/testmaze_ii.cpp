@@ -220,6 +220,15 @@ void TestMaze_II::initialize_commands() {
                 change_environment(make_shared<ButtonWorld>(size));
                 return {true,"set button world"};
             }, "set button world with <int> buttons");
+
+        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size, double alpha)->ret_t{
+                if(alpha<=0) {
+                    return {false,"alpha <double> must be greater than zero"};
+                } else {
+                    change_environment(make_shared<ButtonWorld>(size, alpha));
+                    return {true,"set button world"};
+                }
+            }, "set button world with <int> buttons and probabilites drawn independently from a Beta with a=b=<double>");
         command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
                 shared_ptr<Maze> maze(new Maze(epsilon));
                 bool success = maze->set_maze(name);

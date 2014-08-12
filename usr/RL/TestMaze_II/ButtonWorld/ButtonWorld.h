@@ -36,6 +36,7 @@ protected:
     //----methods----//
 public:
     ButtonWorld(int s = 1, std::vector<probability_t> p = std::vector<probability_t>());
+    ButtonWorld(int s, double alpha);
     virtual ~ButtonWorld() override = default;
     virtual void render_initialize(QGraphicsView * v) override;
     virtual void render_update() override;
@@ -47,6 +48,8 @@ public:
                                  const reward_ptr_t&) const override;
     virtual void get_features(std::vector<f_ptr_t> & basis_features,
                               FeatureLearner::LEARNER_TYPE type) const override;
+private:
+    static std::vector<probability_t> probs_from_beta(const int& s, const double& alpha);
 };
 
 #endif /* BUTTONWORLD_H_ */

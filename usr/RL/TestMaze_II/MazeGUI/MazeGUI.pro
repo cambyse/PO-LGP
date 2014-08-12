@@ -136,7 +136,9 @@ SOURCES += \
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
-    -lgomp
+    -lgomp \
+    -lgsl \
+    -lcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS += ../testmaze_ii.ui
