@@ -12,6 +12,7 @@
 #include "../Representation/ListedReward.h"
 #include "../Representation/AbstractObservation.h"
 #include "ButtonAction.h"
+#include "ButtonObservation.h"
 
 class ButtonWorld: public PredictiveEnvironment, public Visualizer  {
 
@@ -19,7 +20,7 @@ class ButtonWorld: public PredictiveEnvironment, public Visualizer  {
 public:
     USE_CONFIG_TYPEDEFS;
     typedef ButtonAction action_t;
-    typedef AbstractObservation observation_t;
+    typedef ButtonObservation observation_t;
     typedef ListedReward reward_t;
 
     //----members----//
@@ -28,6 +29,9 @@ public:
 protected:
     std::vector<probability_t> reward_probs;
     action_t last_action;
+    std::vector<QGraphicsRectItem*> button_array;
+    std::vector<QGraphicsEllipseItem*> reward_array;
+    std::vector<int> last_reward;
 
     //----methods----//
 public:

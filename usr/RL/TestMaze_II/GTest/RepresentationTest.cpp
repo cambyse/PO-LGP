@@ -13,6 +13,7 @@
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
+#include "../ButtonWorld/ButtonObservation.h"
 
 #include "../Representation/AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
@@ -23,7 +24,7 @@
 #include <vector>
 #include <list>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using std::vector;
@@ -152,6 +153,7 @@ namespace {
         observation_vector.push_back(new MinimalObservation(MinimalObservation::OBSERVATION::RED));
         observation_vector.push_back(new MazeObservation(10,10,3,4));
         observation_vector.push_back(new CheeseMazeObservation("N"));
+        observation_vector.push_back(new ButtonObservation());
 
         int observation_type_idx = 0;
         // for all observation types (represented by one specific observation of each type)

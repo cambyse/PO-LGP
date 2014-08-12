@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "../util/util.h"
 
 #define DEBUG_LEVEL 1
@@ -8,6 +10,7 @@
 using std::vector;
 using std::cout;
 using std::endl;
+using std::string;
 
 using util::log_add_exp;
 
@@ -104,5 +107,41 @@ TEST(UtilTest, SoftMax) {
                 DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
             }
         }
+    }
+}
+
+TEST(UtilTest, Enumerate) {
+    vector<string> vec = {"1st elem", "2nd elem", "3rd elem", "4th elem"};
+    int counter;
+    // simple form
+    counter = 0;
+    for(auto idx_elem : util::enumerate(vec)) {
+        EXPECT_EQ(idx_elem.first, counter);
+        EXPECT_EQ(idx_elem.second, vec[counter]);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
+        ++counter;
+    }
+    // with specific value for start and increment
+    counter = -10;
+    for(auto idx_elem : util::enumerate(vec, counter, 2)) {
+        EXPECT_EQ(idx_elem.first, counter);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
+        counter += 2;
+    }
+    // assigning
+    for(auto idx_elem : util::enumerate(vec)) {
+        string new_elem;
+        repeat(idx_elem.first) {
+            new_elem += "X";
+        }
+        idx_elem.second = new_elem;
+    }
+    for(auto idx_elem : util::enumerate(vec)) {
+        string new_elem;
+        repeat(idx_elem.first) {
+            new_elem += "X";
+        }
+        EXPECT_EQ(idx_elem.second, new_elem);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
     }
 }

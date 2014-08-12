@@ -52,6 +52,7 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeObservation.h \
     ../ButtonWorld/ButtonWorld.h \
     ../ButtonWorld/ButtonAction.h \
+    ../ButtonWorld/ButtonObservation.h \
     \
     ../Planning/Policy.h \
     ../Planning/RandomPolicy.h \
@@ -115,6 +116,7 @@ SOURCES += \
     ../CheeseMaze/CheeseMazeObservation.cpp \
     ../ButtonWorld/ButtonWorld.cpp \
     ../ButtonWorld/ButtonAction.cpp \
+    ../ButtonWorld/ButtonObservation.cpp \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \

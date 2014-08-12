@@ -6,13 +6,12 @@
 #include <vector>
 
 class ButtonAction: public AbstractAction {
-
     //----typedefs/classes----//
 
     //     NONE      //
 
     //----members----//
-
+protected:
     int size;
     std::vector<bool> action;
 
@@ -27,6 +26,7 @@ public:
     virtual bool operator!=(const AbstractAction &other) const override;
     virtual bool operator<(const AbstractAction &other) const override;
     virtual const std::string print() const override;
+    std::vector<bool> get_array() const { return action; }
 };
 
 #endif /* BUTTONACTION_H_ */
