@@ -6,6 +6,7 @@
 #include "../Predictor.h"
 #include "../HistoryObserver.h"
 #include "../CheeseMaze/CheeseMaze.h"
+#include "../ButtonWorld/ButtonWorld.h"
 #include "../Maze/Maze.h"
 #include "../HistoryObserver.h"
 #include "../Learner/TemporallyExtendedModel.h"
@@ -71,12 +72,16 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     delta_arg(         "D", "delta"        , "minimum change of data likelihood/TD-error"   ,false,     0.001,  "double"),
     maxCycles_arg(      "", "maxCycles"    , "maximum number of grow-shrinc cycles"         ,false,         0,     "int"),
     minCycles_arg(      "", "minCycles"    , "minimum number of grow-shrinc cycles"         ,false,         0,     "int"),
-    epsilon_arg(        "", "eps"          , "epsilon / randomness of transitions"          ,false,         0,  "double")
+    epsilon_arg(        "", "eps"          , "epsilon / randomness of transitions"          ,false,         0,  "double"),
+    button_n_arg(       "", "button_n"     , "number of buttons in button world"            ,false,         3,     "int"),
+    button_alpha_arg(   "", "button_alpha" , "for beta dist. per button in button world"    ,false,      0.01,  "double")
 
 {
     try {
 	TCLAP::CmdLine cmd("This program is BatchWorker. It collects data.", ' ', "");
 
+        cmd.add(button_alpha_arg);
+        cmd.add(button_n_arg);
         cmd.add(epsilon_arg);
         cmd.add(minCycles_arg);
         cmd.add(maxCycles_arg);
@@ -112,77 +117,91 @@ BatchWorker::BatchWorker(int argc, char ** argv):
 }
 
 bool BatchWorker::post_process_args() {
+    bool args_ok = true;
+
     // check mode
-    bool mode_ok = false;
-    for(string s : mode_vector) {
-        if(mode_arg.getValue()==s) {
-            mode = mode_arg.getValue();
-            mode_ok = true;
-            break;
-        }
-    }
-    if(!mode_ok) {
-        DEBUG_OUT(0,"Argument value for '" << mode_arg.getName() << "' must be one of:");
+    {
+        bool mode_ok = false;
         for(string s : mode_vector) {
-            DEBUG_OUT(0,"    " << s);
+            if(mode_arg.getValue()==s) {
+                mode = mode_arg.getValue();
+                mode_ok = true;
+                break;
+            }
         }
-    } else {
-        if(mode!="DRY" && mode!="RANDOM" && mode!="TEM" && mode!="TEL" && mode!="MODEL_BASED_UTREE" && mode!="VALUE_BASED_UTREE") {
-            DEBUG_OUT(0,"mode '" << mode << "' currently not supported");
-            mode_ok = false;
+        if(!mode_ok) {
+            DEBUG_WARNING("Argument value for '" << mode_arg.getName() << "' must be one of:");
+            for(string s : mode_vector) {
+                DEBUG_WARNING("    " << s);
+            }
+        } else {
+            if(mode!="DRY" && mode!="RANDOM" && mode!="TEM" && mode!="TEL" && mode!="MODEL_BASED_UTREE" && mode!="VALUE_BASED_UTREE") {
+                DEBUG_WARNING("mode '" << mode << "' currently not supported");
+                mode_ok = false;
+            }
         }
+        args_ok = args_ok && mode_ok;
     }
 
     // check number of training samples
-    bool samples_ok = true;
-    if(minT_arg.getValue()<=0) {
-        DEBUG_OUT(0,"Argument '" << minT_arg.getName() << "' requires a value grater than zero");
-        samples_ok = false;
-    } else {
-        minT = minT_arg.getValue();
-    }
-    if(maxT_arg.getValue()!=-1 && maxT_arg.getValue()<minT) {
-        DEBUG_OUT(0,"Argument '" << maxT_arg.getName() << "' requires a value greater that that of '" << minT_arg.getName() << "'");
-        samples_ok = false;
-    } else {
-        maxT = maxT_arg.getValue();
-        maxT = maxT==-1?minT:maxT;
-    }
-    if(incT_arg.getValue()!=-1 && incT_arg.getValue()<0) {
-        DEBUG_OUT(0,"Argument '" << incT_arg.getName() << "' requires a value greater that zero");
-        samples_ok = false;
-    } else {
-        incT = incT_arg.getValue();
-        incT = incT==-1?(maxT-minT):incT;
-        incT = incT==0?1:incT;
+    {
+        bool samples_ok = true;
+        if(minT_arg.getValue()<=0) {
+            DEBUG_WARNING("Argument '" << minT_arg.getName() << "' requires a value grater than zero");
+            samples_ok = false;
+        } else {
+            minT = minT_arg.getValue();
+        }
+        if(maxT_arg.getValue()!=-1 && maxT_arg.getValue()<minT) {
+            DEBUG_WARNING("Argument '" << maxT_arg.getName() << "' requires a value greater that that of '" << minT_arg.getName() << "'");
+            samples_ok = false;
+        } else {
+            maxT = maxT_arg.getValue();
+            maxT = maxT==-1?minT:maxT;
+        }
+        if(incT_arg.getValue()!=-1 && incT_arg.getValue()<0) {
+            DEBUG_WARNING("Argument '" << incT_arg.getName() << "' requires a value greater that zero");
+            samples_ok = false;
+        } else {
+            incT = incT_arg.getValue();
+            incT = incT==-1?(maxT-minT):incT;
+            incT = incT==0?1:incT;
+        }
+        args_ok = args_ok && samples_ok;
     }
 
     // check evaluation length
-    bool eval_ok = true;
     if(eval_arg.getValue()<=0) {
-        DEBUG_OUT(0,"Argument '" << eval_arg.getName() << "' requires a value grater than zero");
-        eval_ok = false;
+        DEBUG_WARNING("Argument '" << eval_arg.getName() << "' requires a value grater than zero");
+        args_ok = false;
     }
 
     // check environment
-    bool environment_ok = true;
-    if(environment_arg.getValue()=="cheese") {
+    if(environment_arg.getValue()=="cheese" || environment_arg.getValue()=="button") {
         // ok
     } else {
         auto maze = make_shared<Maze>();
         if(!maze->set_maze(QString(environment_arg.getValue().c_str()))) {
-            DEBUG_OUT(0,"Argument value for '" << environment_arg.getName() << "' must be one of:");
-            DEBUG_OUT(0,"--- Cheese Maze ---");
-            DEBUG_OUT(0,"    cheese");
-            DEBUG_OUT(0,"--- Other Mazes ---");
+            DEBUG_WARNING("Argument value for '" << environment_arg.getName() << "' must be one of:");
+            DEBUG_WARNING("--- Cheese Maze ---");
+            DEBUG_WARNING("    cheese");
+            DEBUG_WARNING("--- Cheese World ---");
+            DEBUG_WARNING("    button");
+            DEBUG_WARNING("--- Other Mazes ---");
             for(auto s : maze->get_maze_list()) {
-                DEBUG_OUT(0,"    " << s);
+                DEBUG_WARNING("    " << s);
             }
-            environment_ok = false;
+            args_ok = false;
         }
     }
 
-    return (mode_ok && samples_ok && eval_ok && environment_ok);
+    // check alpha for button world
+    if(button_alpha_arg.getValue()<=0) {
+        DEBUG_WARNING("Argument for '" << button_alpha_arg.getName() << "' must be greater than zero");
+        args_ok = false;
+    }
+
+    return args_ok;
 }
 
 void BatchWorker::collect_data() {
@@ -244,6 +263,8 @@ void BatchWorker::collect_data() {
                 // initialize environment and get spaces
                 if(environment_arg.getValue()=="cheese") {
                     environment = make_shared<CheeseMaze>();
+                } else if(environment_arg.getValue()=="button") {
+                    environment = make_shared<ButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
                 } else {
                     environment = make_shared<Maze>(epsilon_arg.getValue(),environment_arg.getValue().c_str());
                 }
@@ -589,6 +610,10 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     }
     if(mode=="TEL") {
         LOG_COMMENT("TD-error Delta: " << delta_arg.getValue());
+    }
+    if(environment_arg.getValue() == "button") {
+        LOG_COMMENT("Nr. Buttons: " << button_n_arg.getValue());
+        LOG_COMMENT("Alpha for buttons: " << button_alpha_arg.getValue());
     }
 
     LOG_COMMENT("");

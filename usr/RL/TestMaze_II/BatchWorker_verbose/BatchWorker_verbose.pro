@@ -44,6 +44,9 @@ HEADERS += \
     ../CheeseMaze/CheeseMaze.h \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
+    ../ButtonWorld/ButtonWorld.h \
+    ../ButtonWorld/ButtonAction.h \
+    ../ButtonWorld/ButtonObservation.h \
     \
     ../Planning/Policy.h \
     ../Planning/RandomPolicy.h \
@@ -96,6 +99,9 @@ SOURCES += \
     ../CheeseMaze/CheeseMaze.cpp \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
+    ../ButtonWorld/ButtonWorld.cpp \
+    ../ButtonWorld/ButtonAction.cpp \
+    ../ButtonWorld/ButtonObservation.cpp \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
@@ -112,7 +118,9 @@ LIBS += -llbfgs \
     -lemon \
     -larmadillo \
     -llapack \
-    -lgomp
+    -lgomp \
+    -lgsl \
+    -lcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS +=

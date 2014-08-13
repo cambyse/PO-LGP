@@ -52,6 +52,8 @@ private:
     TCLAP::ValueArg<int> maxCycles_arg;
     TCLAP::ValueArg<int> minCycles_arg;
     TCLAP::ValueArg<double> epsilon_arg;
+    TCLAP::ValueArg<int> button_n_arg;
+    TCLAP::ValueArg<double> button_alpha_arg;
 
     bool args_ok = false;
 
