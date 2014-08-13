@@ -143,7 +143,7 @@ LIBS += -llbfgs \
     -lgomp \
     -lgtest \
     -lgsl \
-    -lcblas
+    -lgslcblas
 LIBPATH += /usr/share/lib
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp

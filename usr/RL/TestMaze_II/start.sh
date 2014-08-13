@@ -7,7 +7,7 @@
 start_string="-m TEM --minT 50 --maxT 150 --incT 50 --minH -2 --maxH 0 --extH 2 --minCycles 2 -e 32 -r 75 --l1 0.001 --delta 1e-5"
 
 ## Button World
-start_string="--env button -m TEM --minT 1000 --maxT 1000 --incT 0 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 32 -r 75 --l1 0.001 --delta 1e-5"
+start_string="--env button -m TEM --minT 50 --maxT 150 --incT 50 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r 25 --l1 0.001 --delta 1e-5"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then

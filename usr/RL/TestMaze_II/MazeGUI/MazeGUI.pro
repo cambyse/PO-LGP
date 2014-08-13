@@ -138,7 +138,7 @@ LIBS += -llbfgs \
     -larmadillo \
     -lgomp \
     -lgsl \
-    -lcblas
+    -lgslcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS += ../testmaze_ii.ui

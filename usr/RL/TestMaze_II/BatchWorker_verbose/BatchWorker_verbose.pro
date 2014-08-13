@@ -120,7 +120,7 @@ LIBS += -llbfgs \
     -llapack \
     -lgomp \
     -lgsl \
-    -lcblas
+    -lgslcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS +=
