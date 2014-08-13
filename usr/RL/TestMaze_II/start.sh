@@ -7,8 +7,10 @@
 #start_string="-m TEM --minT 50 --maxT 150 --incT 50 --minH -2 --maxH 0 --extH 2 --minCycles 2 -e 32 -r 75 --l1 0.001 --delta 1e-5"
 
 ## Button World
-start_string="--env button -m TEM --minT 20 --maxT 80 --incT 20 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r 25 --l1 0.001 --delta 1e-5"
-start_string="--env button -m VALUE_BASED_UTREE --minT 20 --maxT 80 --incT 20 -e 10 -r 25"
+start_string="--env button -m TEM --minT 4 --maxT 16 --incT 4 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r 25 --l1 0.001 --delta 1e-5"
+#start_string="--env button -m VALUE_BASED_UTREE --minT 20 --maxT 80 --incT 20 -e 10 -r 25"
+#start_string="--env button -m RANDOM --minT 1 --maxT 1 --incT 0 -e 10 -r 500"
+#start_string="--env button -m OPTIMAL --minT 1 --maxT 1 --incT 0 -e 10 -r 100 -t 20000"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
