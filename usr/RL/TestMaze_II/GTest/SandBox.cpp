@@ -1,92 +1,43 @@
-#include <gtest/gtest.h>
-
 #include "SandBox.h"
 
-#include <memory> // for shared_ptr
+#include <gtest/gtest.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <vector>
+#include <QString>
 
-#define DEBUG_LEVEL 1
+#include "../util/util.h"
+#include "../util/QtUtil.h"
+
 #include "../util/debug.h"
 
-using std::shared_ptr;
+using std::vector;
+using std::cout;
+using std::endl;
 
-Notifier::Notifier(): to_be_notified(nullptr) {}
-Notifier::~Notifier() { to_be_notified->notify_me(); }
-void Notifier::set_to_be_notified(A * p) { to_be_notified = p; }
+TEST(SandBox, SomeTest) {
 
-A::A(): notifier(new Notifier()) {}
-A::~A() { delete notifier; }
-void A::set_to_be_notified(A * p) const { notifier->set_to_be_notified(p); }
-void A::notify_me() {
-    got_notified = true;
-    DEBUG_OUT(1,"I got notified");
-}
+    int i, n = 10;
 
-TEST(SandBox, CharStream) {
-    unsigned short s = 3;
-    unsigned short c = 3;
-    DEBUG_OUT(1,"This is a short: " << s);
-    DEBUG_OUT(1,"This is a char: " << c);
-}
+    // set up random generator
+    gsl_rng * rand_gen = gsl_rng_alloc(gsl_rng_default);
+    gsl_rng_set(rand_gen, time(nullptr));
 
-TEST(SandBox, SharedPtr) {
-    shared_ptr<int> i1(new int(0));
-    shared_ptr<int> i2(new int(0));
-    shared_ptr<int> i3(i1);
-    DEBUG_OUT(1,"i1 (" << i1 << "): " << *i1);
-    DEBUG_OUT(1,"i2 (" << i2 << "): " << *i2);
-    DEBUG_OUT(1,"i3 (" << i3 << "): " << *i3);
-    DEBUG_OUT(1,"i1" << (i1==i2?"==":"!=") << "i2");
-    DEBUG_OUT(1,"i1" << (i1==i3?"==":"!=") << "i3");
-    DEBUG_OUT(1,"i3" << (i3==i2?"==":"!=") << "i2");
-}
-
-TEST(SandBox, Inheritance) {
-    class A {
-    public:
-        virtual void f(int) = 0;
-        virtual void f(int, int, int) = 0;
-    };
-    class AA {
-    public:
-        virtual void f(int, double) {
-            DEBUG_OUT(1,"AA::f(int, double)");
-        }
-    };
-    class B: public A, public AA {
-    public:
-        //========================//
-        // Needed for name lookup //
-        using AA::f;
-        //========================//
-        virtual void f(int) override {
-            f(0,0.);
-        }
-        virtual void f(int, int, int) override {
-            f(0);
-        }
-    };
-    class C: public B {
-    public:
-        virtual void f(int, double) {
-            DEBUG_OUT(1,"C::f(int, double)");
-        }
-        virtual void f(int) override {
-            f(0,0.);
-        }
-    };
-    A * a = new C();
-    a->f(0);
-    a->f(0,0,0);
-}
-
-TEST(SandBox, ConstPtrMember) {
-    // Problem: How can I "subscribe" to a const object A to be notified?
-    // Solution: The const object A holds a pointer to a Notifyer object. In
-    // that way A remains unchanged and only its Notifyer object "remembers" to
-    // other object to be notified.
-    A * a_ptr = new A();
-    {
-        const A a;
-        a.set_to_be_notified(a_ptr);
+    static const int N = 3;
+    double alpha[N];
+    double theta[N];
+    for(int idx : util::Range(N)) {
+        alpha[idx] = 0.01;
     }
+
+    for (i = 0; i < n; i++) {
+        gsl_ran_dirichlet(rand_gen, N, alpha, theta);
+        for(int idx : util::Range(N)) {
+            cout << QString("%1 ").arg(theta[idx],7,'f',4);
+        }
+        cout << endl;
+    }
+
+    // clean up
+    gsl_rng_free(rand_gen);
 }

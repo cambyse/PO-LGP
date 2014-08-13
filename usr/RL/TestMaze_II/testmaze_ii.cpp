@@ -10,6 +10,7 @@
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
+#include "ButtonWorld/ButtonWorld.h"
 #include "Planning/LookAheadPolicy.h"
 #include "Planning/RandomPolicy.h"
 #include "Planning/GoalIteration.h"
@@ -50,7 +51,7 @@ static TestMaze_II::instance_ptr_t learning_episode_end;
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
-    planner_type(GOAL_ITERATION),
+    planner_type(RANDOM),
     environment(nullptr),
     current_instance(INVALID),
     record(false), plot(false), start_new_episode(false), save_png_on_transition(false), color_maze(true),
@@ -115,11 +116,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     MoveByKeys *moveByKeys = new MoveByKeys(this);
     ui.graphicsView->installEventFilter(moveByKeys);
 
-    // select environment
+    // preliminarily set an environment
     change_environment(make_shared<Maze>(epsilon,"Default"));
-    // change_environment(make_shared<Maze>(epsilon,"Markov"));
-    // change_environment(make_shared<CheeseMaze>());
-
     // set some properties of N+ (TEL)
     N_plus_TEL->set_horizon_extension(2);
     N_plus_TEL->set_max_horizon(-1);
@@ -132,6 +130,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     N_plus_TEM->set_min_horizon(-2);
     N_plus_TEM->set_combine_features(false);
     N_plus_TEM->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
+
+    // select final environmen
+    // change_environment(make_shared<Maze>(epsilon,"Markov"));
+    // change_environment(make_shared<CheeseMaze>());
+    // change_environment(make_shared<ButtonWorld>(5));
 
     // set l1 factor for tem
     tem->set_l1_factor(l1_factor);
@@ -213,6 +216,19 @@ void TestMaze_II::initialize_commands() {
                 }
                 return {true,""};
             }, "display available maze names");
+        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size)->ret_t{
+                change_environment(make_shared<ButtonWorld>(size));
+                return {true,"set button world"};
+            }, "set button world with <int> buttons");
+
+        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size, double alpha)->ret_t{
+                if(alpha<=0) {
+                    return {false,"alpha <double> must be greater than zero"};
+                } else {
+                    change_environment(make_shared<ButtonWorld>(size, alpha));
+                    return {true,"set button world"};
+                }
+            }, "set button world with <int> buttons and probabilites drawn independently from a Beta with a=b=<double>");
         command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
                 shared_ptr<Maze> maze(new Maze(epsilon));
                 bool success = maze->set_maze(name);

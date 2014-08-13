@@ -518,6 +518,51 @@ namespace util {
         iRange(int n);
     };
 
+    /** Enumerate allows for python-like for loops. */
+    /* The code is taken from
+     * http://stackoverflow.com/questions/11328264/python-like-loop-enumeration-in-c
+     * and only slightly modified. */
+
+    template<typename Iterable>
+        class EnumerateObject
+    {
+    private:
+        Iterable _iterable;
+        int _counter;
+        int _inc;
+        decltype(_iterable.begin()) _begin;
+
+    public:
+        template<class Iterable2>
+            EnumerateObject(Iterable2&& iterable, int counter, int inc):
+            _iterable(std::forward<Iterable2>(iterable)),
+            _counter(counter),
+            _inc(inc),
+            _begin(iterable.begin())
+            {}
+
+        const EnumerateObject& begin() const { return *this; }
+        const EnumerateObject& end()   const { return *this; }
+
+        bool operator!=(const EnumerateObject& other) const {
+            return this->_begin != other._iterable.end();
+        }
+
+        void operator++() {
+            ++_begin;
+            _counter += _inc;
+        }
+
+        std::pair<int&, decltype(*_begin)> operator*() {
+            return std::pair<int&, decltype(*_begin)>(_counter, *_begin);
+        }
+    };
+
+    template<typename Iterable>
+        EnumerateObject<Iterable> enumerate(Iterable&& iter, int counter = 0, int inc = 1) {
+        return EnumerateObject<Iterable>(std::forward<Iterable>(iter), counter, inc);
+    }
+
     //========================================================//
     //                  Global Variables                      //
     //========================================================//
