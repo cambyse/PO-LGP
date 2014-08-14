@@ -5,10 +5,10 @@ clear
 subplot = @(m,n,p) subtightplot (m, n, p, [0.02 0.05]);
 figure = @(i) myfig(i);
 % copy log files from .ros/ to local folder
-NEW = 0
+NEW = 1
 SIM = 0
-[a, b] = unix('ls logs'); id = max(max(str2num(b)))+NEW;
-id = 48
+[a, b] = unix('ls -l logs'); id = str2num(b(end-2:end-1))+NEW
+% id = 57
 
 folder = ['logs/',num2str(id)];
 if NEW
@@ -16,7 +16,7 @@ if NEW
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
-    unix(['sshpass -p scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    unix(['sshpass -p  scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
     %unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end
@@ -71,5 +71,27 @@ for i=1:nq
 
 end
 legend('pos u','vel u','gp u','total u');
-myexportfig(1,'position2.pdf')
-myexportfig(3,'torques2.pdf')
+
+
+% task space logs
+unix(['cp ../../traj_executer_pkg/bin/traj_ref ',folder,'/'])
+unix(['cp ../../traj_executer_pkg/bin/traj_act ',folder,'/'])
+
+traj_ref = load([folder,'/traj_ref']);
+traj_act = load([folder,'/traj_act']);
+figure(4);clf;hold on;
+plot3(traj_ref(:,1),traj_ref(:,2),traj_ref(:,3),'r-');
+plot3(traj_act(:,1),traj_act(:,2),traj_act(:,3),'b-');
+axis equal; axis tight;
+view(90,0)
+legend('reference','actual')
+% myexportfig(4,'circle.pdf')
+
+% effort statistics
+total_abs_u = sum(abs(d_effort_bk))+sum(abs(p_effort_bk))+sum(abs(gp_effort_bk))
+display('gp_effort [%]: ');
+sum(abs(gp_effort_bk))*100./total_abs_u
+display('p_effort [%]: ');
+sum(abs(p_effort_bk))*100./total_abs_u
+display('d_effort [%]: ');
+sum(abs(d_effort_bk))*100./total_abs_u

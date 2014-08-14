@@ -25,5 +25,6 @@ ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
 ${MLR_PATH}/share/lib/libCore.so
 ${MLR_PATH}/share/lib/libOptim.so
-${MLR_PATH}/share/lib/libAlgo.so)
+${MLR_PATH}/share/lib/libAlgo.so
+${MLR_PATH}/share/lib/libGui.so)
 
