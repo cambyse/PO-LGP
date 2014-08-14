@@ -118,7 +118,7 @@ double TELQ::run_policy_iteration(bool final_L1) {
             cout << "    Iteration: " << counter << ", TD-error: " << TD_error << " ( delta = " << old_TD_error-TD_error << ")" << endl;
         }
         // update policy (and break?)
-        if(!update_policy() || old_TD_error<TD_error) {
+        if(!update_policy() || old_TD_error<=TD_error) {
             break;
         }
         // remember old TD-error
