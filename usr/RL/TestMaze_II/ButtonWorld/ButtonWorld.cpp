@@ -217,8 +217,46 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
     // clear first
     basis_features.clear();
 
-    #warning To be implemented...
-
+    // add features
+    int k = 1;
+    for(int k_idx = 0; k_idx>=-k; --k_idx) {
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION)) {
+            // actions
+            for(action_ptr_t action : action_space) {
+                f_ptr_t action_feature = ActionFeature::create(action,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *action_feature);
+                basis_features.push_back(action_feature);
+            }
+        }
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && k_idx<0)) {
+            // observations
+            for(observation_ptr_t observation : observation_space) {
+                f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *observation_feature);
+                basis_features.push_back(observation_feature);
+            }
+        }
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && k_idx<0)) {
+            // reward
+            for(reward_ptr_t reward : reward_space) {
+                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *reward_feature);
+                basis_features.push_back(reward_feature);
+            }
+        }
+    }
+    if(type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
+        // also add a unit feature
+        f_ptr_t const_feature = ConstFeature::create(1);
+        DEBUG_OUT(2,"Adding feature: " << *const_feature);
+        basis_features.push_back(const_feature);
+    }
 }
 
 std::vector<ButtonWorld::probability_t> ButtonWorld::probs_from_beta(const int& s,
