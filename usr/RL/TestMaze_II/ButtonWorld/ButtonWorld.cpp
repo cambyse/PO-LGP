@@ -21,9 +21,10 @@ static const QPen reward_pen(QColor(0,0,0),0.03,Qt::SolidLine,Qt::RoundCap,Qt::R
 static const double text_scale = 0.008;
 static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);
 
-ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
+ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p, bool factored_action_features):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()),
     size(s),
+    use_factored_action_features(factored_action_features),
     reward_probs(p),
     last_action(size),
     last_reward(size, 0)
@@ -48,8 +49,8 @@ ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
 }
 
-ButtonWorld::ButtonWorld(int s, double alpha):
-    ButtonWorld(s, ButtonWorld::probs_from_beta(s, alpha)) {}
+ButtonWorld::ButtonWorld(int s, double alpha, bool factored_action_features):
+    ButtonWorld(s, ButtonWorld::probs_from_beta(s, alpha, factored_action_features)) {}
 
 void ButtonWorld::render_initialize(QGraphicsView * v) {
     // intitialize view
@@ -228,6 +229,13 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *action_feature);
                 basis_features.push_back(action_feature);
+                if(use_factored_action_features) {
+                    for(int idx : util::Range(action_space.size())) {
+                        f_ptr_t action_feature = ButtonActionFeature::create(idx,k_idx);
+                        DEBUG_OUT(2,"Adding feature: " << *action_feature);
+                        basis_features.push_back(action_feature);
+                    }
+                }
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||

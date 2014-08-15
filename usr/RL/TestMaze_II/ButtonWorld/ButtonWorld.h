@@ -26,6 +26,7 @@ public:
     //----members----//
 public:
     const int size;
+    static const bool use_factored_action_features = true;
 protected:
     std::vector<probability_t> reward_probs;
     action_t last_action;

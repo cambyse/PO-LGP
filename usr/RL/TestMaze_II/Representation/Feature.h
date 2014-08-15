@@ -17,7 +17,7 @@ public:
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
     typedef unsigned short feature_return_t;
     USE_CONFIG_TYPEDEFS;
-    enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
+    enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, BUTTON_ACTION, AND };
     //class look_up_map_t: public std::unordered_map<const_feature_ptr_t, feature_return_t> { // derive from map
     class look_up_map_t: public f_ptr_set_t {                                               // derive from set
     public:
@@ -122,6 +122,25 @@ public:
     virtual int get_delay() const final { return delay; }
 protected:
     action_ptr_t action;
+    int delay;
+};
+
+/** Is active if a specific button was pressed by an action. */
+class ButtonActionFeature: public BasisFeature {
+private:
+    ButtonActionFeature(const int& idx, const int& d);
+public:
+    virtual ~ButtonActionFeature();
+    static const_feature_ptr_t create(const int& idx, const int& d);
+    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
+    virtual std::string identifier() const override;
+    static bool features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2);
+    bool contradicts(const ButtonActionFeature& f) const { return features_contradict(*this,f); }
+    virtual bool operator==(const Feature& other) const override;
+    virtual bool operator<(const Feature& other) const override;
+    virtual int get_delay() const final { return delay; }
+protected:
+    int button_idx;
     int delay;
 };
 

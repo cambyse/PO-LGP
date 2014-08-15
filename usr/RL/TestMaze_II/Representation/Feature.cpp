@@ -2,6 +2,8 @@
 
 #include "DoublyLinkedInstance.h"
 
+#include "../ButtonWorld/ButtonAction.h"
+
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
@@ -274,6 +276,76 @@ bool ActionFeature::operator<(const Feature& other) const {
         } else {
             return this->delay<f_ptr->delay ||
                 ( this->delay==f_ptr->delay && this->action<f_ptr->action);
+        }
+    }
+}
+
+ButtonActionFeature::ButtonActionFeature(const int& idx, const int& d): button_idx(idx), delay(d) {
+    feature_type = BUTTON_ACTION;
+    complexity = 1;
+}
+
+ButtonActionFeature::~ButtonActionFeature() {
+    erase_from_unique();
+}
+
+Feature::const_feature_ptr_t ButtonActionFeature::create(const int& idx, const int& d) {
+    return BasisFeature::create(new ButtonActionFeature(idx,d));
+}
+
+Feature::feature_return_t ButtonActionFeature::evaluate(const_instance_ptr_t ins) const {
+    ins = ins->const_next(delay);
+    if(ins==INVALID) {
+        return return_function(0);
+    }
+    auto button_action = ins->action.get_derived<ButtonAction>();
+    if(button_action==nullptr) {
+        DEBUG_WARNING("Action type is not ButtonAction");
+        return return_function(0);
+    }
+    auto array = button_action->get_array();
+    if(button_idx >= (int)array.size()) {
+        DEBUG_WARNING("Too large button index");
+        return return_function(0);
+    }
+    if(array[button_idx]) {
+        return return_function(1);
+    }
+    return return_function(0);
+}
+
+string ButtonActionFeature::identifier() const {
+    return QString("b(%1,%2)").arg(button_idx).arg(delay).toStdString()+Feature::identifier();
+}
+
+bool ButtonActionFeature::features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2) {
+    if(f1.delay==f2.delay && f1.button_idx!=f2.button_idx) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ButtonActionFeature::operator==(const Feature& other) const {
+    const ButtonActionFeature * pt = dynamic_cast<const ButtonActionFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->button_idx==pt->button_idx && this->delay==pt->delay);
+    }
+}
+
+bool ButtonActionFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const ButtonActionFeature * f_ptr = dynamic_cast<const ButtonActionFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return this->delay < f_ptr->delay ||
+                ( this->delay == f_ptr->delay && this->button_idx < f_ptr->button_idx);
         }
     }
 }
