@@ -229,11 +229,7 @@ void ButtonWorld::get_features(f_set_t & basis_features,
                 DEBUG_OUT(2,"Adding feature: " << *action_feature);
                 basis_features.insert(action_feature);
                 if(use_factored_action_features) {
-                    for(int idx : util::Range(action_space.size())) {
-                        f_ptr_t action_feature = ButtonActionFeature::create(idx,k_idx);
-                        DEBUG_OUT(2,"Adding feature: " << *action_feature);
-                        basis_features.push_back(action_feature);
-                    }
+                    construct_factored_action_features(basis_features, action_space, k_idx);
                 }
             }
         }
@@ -263,6 +259,17 @@ void ButtonWorld::get_features(f_set_t & basis_features,
         f_ptr_t const_feature = ConstFeature::create(1);
         DEBUG_OUT(2,"Adding feature: " << *const_feature);
         basis_features.insert(const_feature);
+    }
+}
+
+void ButtonWorld::construct_factored_action_features(f_set_t & basis_features,
+                                                     action_ptr_t action,
+                                                     int delay) {
+    auto button_action = action.get_derived<ButtonAction>();
+    for(int idx : util::Range(button_action->get_array().size())) {
+        f_ptr_t action_feature = ButtonActionFeature::create(idx,delay);
+        DEBUG_OUT(2,"Adding feature: " << *action_feature);
+        basis_features.insert(action_feature);
     }
 }
 

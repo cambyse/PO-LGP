@@ -1,6 +1,7 @@
 #include "ConjunctiveAdjacency.h"
 
 #include "../Representation/Feature.h"
+#include "../ButtonWorld/ButtonWorld.h"
 
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
@@ -44,7 +45,9 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     const f_set_t& current_features
     ) const {
 
-    // find delays for current action, observation, and reward features
+    //------------------------------------------------------------------//
+    // find delays for current action, observation, and reward features //
+    //------------------------------------------------------------------//
     DEBUG_OUT(2,"Finding delays");
     set<int> action_delays, observation_delays, reward_delays;
     for(f_ptr_t f : current_features) {
@@ -78,61 +81,91 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
             }
         }
     }
-    // construct basis features (include zero order according to settings)
+    //---------------------------------------------------------------------//
+    // construct basis features (include zero order according to settings) //
+    //---------------------------------------------------------------------//
     DEBUG_OUT(2,"Constructing basis features");
     f_set_t basis_features;
     f_ptr_t new_feature;
+    // action features
     for(action_ptr_t action : action_space) {
+        // t=0 features
         switch(t_zero_features) {
         case T_ZERO_FEATURES::NONE:
         case T_ZERO_FEATURES::OBSERVATION_REWARD:
             break;
         case T_ZERO_FEATURES::ACTION:
-        default:
             new_feature = ActionFeature::create(action,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
+            if(ButtonWorld::use_factored_action_features &&
+                action.get_derived<ButtonAction>(false)!=nullptr) {
+                ButtonWorld::construct_factored_action_features(basis_features,
+                                                                action,
+                                                                0);
+            }
+            break;
+        default:
+            DEBUG_DEAD_LINE;
         }
+        // other features
         for(int delay : new_action_delays) {
             new_feature = ActionFeature::create(action,delay);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
+            if(ButtonWorld::use_factored_action_features &&
+               action.get_derived<ButtonAction>(false)!=nullptr) {
+                ButtonWorld::construct_factored_action_features(basis_features,
+                                                                action,
+                                                                delay);
+            }
         }
     }
+    // observation features
     for(observation_ptr_t observation : observation_space) {
+        // t=0 features
         switch(t_zero_features) {
         case T_ZERO_FEATURES::NONE:
         case T_ZERO_FEATURES::ACTION:
             break;
         case T_ZERO_FEATURES::OBSERVATION_REWARD:
-        default:
             new_feature = ObservationFeature::create(observation,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
+            break;
+        default:
+            DEBUG_DEAD_LINE;
         }
+        // other features
         for(int delay : new_observation_delays) {
             new_feature = ObservationFeature::create(observation,delay);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
         }
     }
+    // reward features
     for(reward_ptr_t reward : reward_space) {
+        // t=0 features
         switch(t_zero_features) {
         case T_ZERO_FEATURES::NONE:
         case T_ZERO_FEATURES::ACTION:
             break;
         case T_ZERO_FEATURES::OBSERVATION_REWARD:
-        default:
             new_feature = RewardFeature::create(reward,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
+            break;
+        default:
+            DEBUG_DEAD_LINE;
         }
+        // other features
         for(int delay : new_reward_delays) {
             new_feature = RewardFeature::create(reward,delay);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
         }
     }
+    // now expand with this basis feature set
     return this->expand_with_basis_features(current_features,basis_features);
 }
 
