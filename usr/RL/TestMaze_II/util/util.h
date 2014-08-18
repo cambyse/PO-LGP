@@ -74,6 +74,30 @@ namespace util {
     //                      Classes                           //
     //========================================================//
 
+    /** Grabs a stream like std::cout. The stream is redirected to as
+     * std::stringstream and reset on destruction of the GrabStream object. The
+     * content can be accessed using the get_text() method.*/
+    class GrabStream {
+    public:
+    GrabStream(std::ostream & s = std::cout):
+        stream(s),
+            buffer(),
+            old(stream.rdbuf(buffer.rdbuf()))
+            {}
+        ~GrabStream() {
+            stream.rdbuf(old);
+        }
+        std::string get_text() { return buffer.str(); }
+    private:
+        /** The stream that was grabbed. */
+        std::ostream & stream;
+        /** The std::stringstream buffer the stream is redirected to. */
+        std::stringstream buffer;
+        /** The old buffer the stream is reset to on destruction of this
+         * object. */
+        std::streambuf * old;
+    };
+
     /** \brief Comparison of pointers via their pointed-to objects. */
     template<class A, class B = A>
         class deref_less {
