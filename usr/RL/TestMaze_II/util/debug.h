@@ -48,5 +48,16 @@
         DEBUG_ERROR("This line should never be reached");       \
     }
 
+#define assert_error(call, msg) {                                       \
+        util::GrabStream stream(std::cerr);                             \
+        {call;}                                                         \
+        EXPECT_EQ("[31m[1m" msg "[0m\n", stream.get_text());      \
+    }
+
+#define assert_warning(call, msg) {                             \
+        util::GrabStream stream(std::cerr);                     \
+        {call;}                                                 \
+        EXPECT_EQ("[35m" msg "[0m\n", stream.get_text());   \
+    }
 
 #endif /* DEBUG_H_ */

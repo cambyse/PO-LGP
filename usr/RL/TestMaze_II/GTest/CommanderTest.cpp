@@ -49,7 +49,8 @@ TEST(Commander, TMP) {
         );
     //c.add_command({"wrong"}, [](){}, "Wrong return type");
     c.add_command({"aaa bbb","blub"}, []()->ReturnType{return{true,"Yeah 1"};}, "multicommand 1");
-    c.add_command({"aaa bbb","blub bla"}, []()->ReturnType{return{true,"Yeah 1"};}, "multicommand 1.1");
+    assert_warning(c.add_command({"aaa bbb","blub bla"}, []()->ReturnType{return{true,"Yeah 1"};}, "multicommand 1.1"),
+                   "Warning(../util/Commander.h:323): A command with same name and same signature already exists [aaa bbb | blub bla ()]");
     c.add_command({"aaa bbb aaa"}, []()->ReturnType{return{true,"Yeah 2"};}, "multicommand 2");
     c.add_command({"aaa ccc aaa"}, []()->ReturnType{return{true,"Yeah 3"};}, "multicommand 3");
     c.add_command({"aaa ccc aaa"}, [](int)->ReturnType{return{true,"Yeah 4"};}, "multicommand 4");
@@ -60,7 +61,8 @@ TEST(Commander, TMP) {
     c.add_command({"bbb ccc ddd"}, []()->ReturnType{return{true,"Yeah 8"};}, "multicommand 8");
     c.add_command({"bbb ccc ddd eee"}, []()->ReturnType{return{true,"Yeah 9"};}, "multicommand 9");
     c.add_command("duplicate", []()->ReturnType{return{true,""};}, "Same command name same signature");
-    c.add_command("duplicate", []()->ReturnType{return{true,""};}, "Same command name same signature");
+    assert_warning(c.add_command("duplicate", []()->ReturnType{return{true,""};}, "Same command name same signature"),
+                   "Warning(../util/Commander.h:323): A command with same name and same signature already exists [duplicate ()]");
     c.add_command("duplicate", [](int)->ReturnType{return{true,""};}, "Same command name different signature");
     c.add_command("duplicate", [](double)->ReturnType{return{true,""};}, "Same command name different signature (but redundant)");
     c.add_command({"help","h"}, [&]()->ReturnType{DEBUG_OUT(0,"\n\n" << c.get_help_string() << "\n");return{true,""};}, "Print help");
