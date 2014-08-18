@@ -54,9 +54,7 @@ HEADERS += \
     ../Planning/LookAheadPolicy.h \
     \
     ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
     ../Learner/TemporallyExtendedFeatureLearner.h \
     ../Learner/TemporallyExtendedLinearQ.h \
@@ -113,9 +111,7 @@ SOURCES += \
     ../Planning/LookAheadPolicy.cpp \
     \
     ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
     ../Learner/TemporallyExtendedFeatureLearner.cpp \
     ../Learner/TemporallyExtendedLinearQ.cpp \

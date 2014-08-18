@@ -63,9 +63,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     discount(0.7),
     epsilon(0.0),
     l1_factor(0),
-    crf(new KMarkovCRF()),
     utree(new UTree(discount)),
-    linQ(new LinearQ(discount)),
     N_plus_TEL(new ConjunctiveAdjacency()),
     tel(new TemporallyExtendedLinearQ(N_plus_TEL,discount)),
     N_plus_TEM(new ConjunctiveAdjacency()),
@@ -408,13 +406,6 @@ void TestMaze_II::initialize_commands() {
                     return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*tem))};
                 }
             }, "validate TEM on length <int> random episode");
-        command_center.add_command(top_model_learn,{"validate crf random"}, [this](int n)->ret_t{
-                if(n<=0) {
-                    return {false,"expecting positive integer"};
-                } else {
-                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*crf))};
-                }
-            }, "validate CRF on length <int> random episode");
         command_center.add_command(top_model_learn,{"validate utree random"}, [this](int n)->ret_t{
                 if(n<=0) {
                     return {false,"expecting positive integer"};
@@ -425,79 +416,9 @@ void TestMaze_II::initialize_commands() {
         command_center.add_command(top_model_learn,{"validate tem episode"}, [this]()->ret_t{
                 return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*tem))};
             }, "validate TEM on training episode");
-        command_center.add_command(top_model_learn,{"validate crf episode"}, [this]()->ret_t{
-                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*crf))};
-            }, "validate CRF on training episode");
         command_center.add_command(top_model_learn,{"validate utree episode"}, [this]()->ret_t{
                 return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*utree))};
             }, "validate UTree on training episode");
-    }
-    {
-        pair<double,QString> top_model_learn_crf(3.1,"CRF ----------------------------------------------------");
-        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this]()->ret_t{
-                crf->optimize_model(l1_factor, 0);
-                return {true,"optimized CRF"};
-            }, "optimize CRF");
-        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this](int n)->ret_t{
-                crf->optimize_model(l1_factor, n);
-                return {true,QString("optimized CRF (max %1 iterations)").arg(n)};
-            }, "optimize CRF with a maximum of <int> iterations");
-        command_center.add_command(top_model_learn_crf,{"crf check"}, [this]()->ret_t{
-                crf->check_derivatives(3,10,1e-6,1e-3);
-                return {true,"checked derivatives for CRF"};
-            }, "check derivatives for CRF");
-        command_center.add_command(top_model_learn_crf,{"crf score","crfs"}, [this](int n)->ret_t{
-                if(n>=0) {
-                    crf->construct_candidate_features(n);
-                    crf->score_candidates_by_gradient();
-                    crf->print_scores();
-                    return {true,QString("scored candidate features with distance %1").arg(n)};
-                } else {
-                    return {false,"expecting non-negative integer"};
-                }
-            }, "score candidate features with distance <int> by gradient");
-        command_center.add_command(top_model_learn_crf,{"crf score1D"}, [this](int n)->ret_t{
-                if(n>=0) {
-                    crf->construct_candidate_features(n);
-                    crf->score_candidates_by_1D_optimization();
-                    return {true,QString("scored candidate features with distance %1 (1D optimization)").arg(n)};
-                } else {
-                    return {false,"expecting non-negative integer"};
-                }
-            }, "score candidate features with distance <int> by 1D optimization");
-        command_center.add_command(top_model_learn_crf,{"crf add","crfa"}, [this](int n)->ret_t{
-                if(n>=0 ) {
-                    crf->add_candidate_features_to_active(n);
-                    return {true,QString("added top %1 candidates").arg(n)};
-                } else {
-                    return {false,"expecting non-negative integer"};
-                }
-            }, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
-        command_center.add_command(top_model_learn_crf,{"crf erase","crfe"}, [this]()->ret_t{
-                crf->erase_zero_features();
-                return {true,"erased zero-weighted features"};
-            }, "erase features with zero weight");
-        command_center.add_command(top_model_learn_crf,{"crf evaluate"}, [this]()->ret_t{
-                crf->evaluate_features();
-                return {true,"evaluated CRF features"};
-            }, "evaluate features at current point");
-        command_center.add_command(top_model_learn_crf,{"crf features","crff"}, [this]()->ret_t{
-                crf->print_all_features();
-                return {true,"printed all CRF features"};
-            }, "print CRF features and weights");
-        command_center.add_command(top_model_learn_crf,{"crf cycle","crfc"}, [this]()->ret_t{
-                crf->construct_candidate_features(1);
-                crf->score_candidates_by_gradient();
-                crf->add_candidate_features_to_active(0);
-                crf->optimize_model(l1_factor, 0);
-                crf->erase_zero_features();
-                crf->print_all_features();
-                return {true,"did one learning cycle of CRF"};
-            }, "do a complete score-add-optimize-erase cycle of CRF and print features afterwards");
-        command_center.add_command(top_model_learn_crf,{"crf apply-old","crfao"}, [this]()->ret_t{
-                crf->apply_features();
-                return {true,"applied old CRF featues"};
-            }, "re-apply the old featues stored at the last erase");
     }
     {
         pair<double,QString> top_model_learn_utree(3.2,"UTree --------------------------------------------------");
@@ -575,74 +496,6 @@ void TestMaze_II::initialize_commands() {
                 utree->print_features();
                 return {true,"printed UTree features"};
             }, "print UTree features");
-    }
-    {
-        pair<double,QString> top_model_learn_linq(3.3, "Linear-Q -----------------------------------------------");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize-ridge","lqor"}, [this](double d)->ret_t{
-                if(d<0) {
-                    return {false,"Expecting non-negative value"};
-                } else {
-                    linQ->set_optimization_type_TD_RIDGE()
-                        .set_regularization(d)
-                        .optimize();
-                }
-                return {true,QString("Optimized Linear-Q (TD, ridge=%1)").arg(d)};
-            }, "optimize Linear-Q (TD Error) with L2-regularization coefficient <double>");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d)->ret_t{
-                linQ->set_optimization_type_TD_L1()
-                    .set_regularization(d)
-                    .optimize();
-                return {true,QString("optimized Linear-Q (TD, l1=%1)").arg(d)};
-            }, "optimize Linear-Q (TD Error) with L1-regularization coefficient <double>");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d, int n)->ret_t{
-                linQ->set_optimization_type_TD_L1()
-                    .set_regularization(d)
-                    .set_maximum_iterations(n)
-                    .optimize();
-                return {true,QString("optimized Linear-Q (TD, l1=%1, max %2 iterations)").arg(d).arg(n)};
-            }, "maximum of <int> iterations");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1-check","lqol1-c"}, [this]()->ret_t{
-                linQ->set_optimization_type_TD_L1()
-                    .check_derivatives(3,10,1e-6,1e-3);
-                return {true,"checked derivatives for Linear-Q (TD)"};
-            }, "check derivatives");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d)->ret_t{
-                linQ->set_optimization_type_BELLMAN()
-                    .set_regularization(d)
-                    .set_maximum_iterations(0)
-                    .optimize();
-                return {true,QString("optimized Linear-Q (Bellman, l1=%1)").arg(d)};
-            }, "optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double>");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d, int n)->ret_t{
-                linQ->set_optimization_type_BELLMAN()
-                    .set_regularization(d)
-                    .set_maximum_iterations(n)
-                    .optimize();
-                return {true,QString("optimized Linear-Q (Bellman, l1=%1, max %2 iterations)").arg(d).arg(n)};
-            }, "maximum of <int> iterations");
-        command_center.add_command(top_model_learn_linq,{"lq-optimize-check","lqo-c"}, [this]()->ret_t{
-                linQ->set_optimization_type_BELLMAN()
-                    .check_derivatives(10,10,1e-6,1e-3);
-                return {true,"checked derivatives for Linear-Q (Bellman)"};
-            }, "check derivatives");
-        command_center.add_command(top_todo,{"construct","con"}, [this](int)->ret_t{return {true,"...to be ported"};}, "construct candidate features with distance <int>");
-        command_center.add_command(top_todo,{"score-lq","slq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "score candidate features with distance <int> by gradient");
-        command_center.add_command(top_todo,{"add-lq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
-        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this]()->ret_t{
-                linQ->erase_features_by_weight();
-                return {true,"erased zero-weight Linear-Q features"};
-            }, "erase features with zero weight");
-        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this](double d)->ret_t{
-                linQ->erase_features_by_weight(d);
-                return {true,QString("erased Linear-Q features with weight above %1").arg(d)};
-            }, "erase features with weight below or equal to <double>");
-        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this]()->ret_t{
-                return {true,QString("alpha = %1").arg(linQ->get_alpha())};
-            }, "get alpha for Soft-Max");
-        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this](double d)->ret_t{
-                linQ->set_alpha(d);
-                return {true,""};
-            }, "set alpha for Soft-Max");
     }
     {
         pair<double,QString> top_model_learn_tem(3.5,"TEM ----------------------------------------------------");
@@ -775,11 +628,6 @@ void TestMaze_II::initialize_commands() {
                 set_policy();
                 return {true,"using optimal planner" };
             }, "use optimal predictions (give by maze)");
-        command_center.add_command(top_planning,{"set planner s","s p s"}, [this]()->ret_t{
-                planner_type = SPARSE_LOOK_AHEAD;
-                set_policy();
-                return {true,"using sparse planner" };
-            }, "use sparse predictions (given by CRF)");
         command_center.add_command(top_planning,{"set planner mu","s p mu"}, [this]()->ret_t{
                 planner_type = UTREE_LOOK_AHEAD;
                 set_policy();
@@ -790,11 +638,6 @@ void TestMaze_II::initialize_commands() {
                 set_policy();
                 return {true,"using value-based UTree for action selection" };
             }, "use UTree as value function");
-        command_center.add_command(top_planning,{"set planner lq","s p lq"}, [this]()->ret_t{
-                planner_type = LINEAR_Q_VALUE;
-                set_policy();
-                return {true,"using linear Q-approximation for action selection" };
-            }, "use linear Q-function approximation");
         command_center.add_command(top_planning,{"set planner tel","s p l"}, [this]()->ret_t{
                 planner_type = TEL_VALUE;
                 set_policy();
@@ -894,7 +737,6 @@ void TestMaze_II::initialize_commands() {
                 if(0<=d && d<=1) {
                     discount = d;
                     utree->set_discount(discount);
-                    linQ->set_discount(discount);
                     tel->set_discount(discount);
                     shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
                     if(look_ahead_policy!=nullptr) {
@@ -1615,9 +1457,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
     const observation_ptr_t& observation,
     const reward_ptr_t& reward
     ) {
-           crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
-          linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           tel->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
@@ -1627,9 +1467,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
 }
 
 void TestMaze_II::clear_data() {
-    crf->clear_data();
     utree->clear_data();
-    linQ->clear_data();
     tel->clear_data();
     tem->clear_data();
     delay_dist.clear_data();
@@ -1697,10 +1535,6 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         environment->get_spaces(action_space,observation_space,reward_space);
         utree->adopt_spaces(*environment);
         utree->set_features(*environment);
-        crf->adopt_spaces(*environment);
-        crf->set_features(*environment);
-        linQ->adopt_spaces(*environment);
-        linQ->set_features(*environment);
         tel->adopt_spaces(*environment);
         N_plus_TEL->adopt_spaces(*environment);
         tem->adopt_spaces(*environment);
@@ -1720,9 +1554,7 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
 }
 
 void TestMaze_II::clear_all_learners() {
-    crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
-    linQ.reset(new LinearQ(discount));
     tel.reset(new TemporallyExtendedLinearQ(N_plus_TEL,discount));
     tem.reset(new TemporallyExtendedModel(N_plus_TEM));
     tem->set_l1_factor(l1_factor);
@@ -1740,15 +1572,6 @@ void TestMaze_II::set_policy() {
             policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
         } else {
             DEBUG_ERROR("No optimal look-ahead planning possible because environment does not provide predictions.");
-        }
-        break;
-    }
-    case SPARSE_LOOK_AHEAD: {
-        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(crf);
-        if(pred!=nullptr) {
-            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
-        } else {
-            DEBUG_DEAD_LINE;
         }
         break;
     }
@@ -1776,12 +1599,6 @@ void TestMaze_II::set_policy() {
         policy = p;
         break;
     }
-    case LINEAR_Q_VALUE: {
-        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(linQ);
-        if(p==nullptr) { DEBUG_DEAD_LINE; }
-        policy = p;
-        break;
-    }
     case TEL_VALUE: {
         shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(tel);
         if(p==nullptr) { DEBUG_DEAD_LINE; }
@@ -1802,7 +1619,6 @@ void TestMaze_II::set_policy() {
         break;
     }
     case NONE:
-    case KMDP_LOOK_AHEAD:
     default:
         policy.reset();
     }
