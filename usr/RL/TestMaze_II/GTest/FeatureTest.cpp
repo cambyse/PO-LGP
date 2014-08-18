@@ -378,12 +378,12 @@ TEST(FeatureTest, IdenticalBasisFeatures) {
     }
     // intentional (and random) duplicates are not stored because objects
     // compare equal
-    EXPECT_LE(f_set.size(), number_of_basis_features);
+    EXPECT_GE(number_of_basis_features, f_set.size());
     // intentional (and random) duplicates are not stored because object-address
     // compares equal
-    EXPECT_LE(f_ptr_set.size(), number_of_basis_features);
+    EXPECT_GE(number_of_basis_features, f_ptr_set.size());
     // identical objects have identical addresses (for basis features only)
-    EXPECT_EQ(f_set.size(), f_ptr_set.size());
+    EXPECT_EQ(f_ptr_set.size(), f_set.size());
 
     // clear sets
     f_set.clear();
@@ -402,12 +402,12 @@ TEST(FeatureTest, IdenticalBasisFeatures) {
     }
     // intentional (and random) duplicates are not stored because objects
     // compare equal
-    EXPECT_LE(f_set.size(), number_of_and_features);
+    EXPECT_GE(number_of_and_features, f_set.size());
     // intentional (and random) duplicates ARE stored because object-address are
     // not equal
-    EXPECT_EQ(f_ptr_set.size(), 2*number_of_and_features);
+    EXPECT_EQ(2*number_of_and_features, f_ptr_set.size());
     // identical objects do have NON_identical addresses (for AND features)
-    EXPECT_NE(f_set.size(), f_ptr_set.size());
+    EXPECT_NE(f_ptr_set.size(), f_set.size());
 
     // print
     DEBUG_OUT(1,"Checked " << number_of_basis_features << "+" << number_of_and_features << " pairs of features");
@@ -682,7 +682,7 @@ f_ptr_t get_and_feature(bool reuse) {
             f_vector[idx] = get_basis_feature();
         }
     }
-    f_ptr_t and_feature(f_vector[0]);
+    f_ptr_t and_feature(new AndFeature(f_vector[0]));
     for(auto idx_f : util::enumerate(f_vector)) {
         if(idx_f.first==0) {
             continue;

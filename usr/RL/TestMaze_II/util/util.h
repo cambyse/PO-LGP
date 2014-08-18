@@ -157,11 +157,17 @@ namespace util {
             virtual bool operator!=(const PointerType& other) const final {
                 return *(this->ptr)!=*(other.ptr);
             }
+            virtual bool operator!=(const nullptr_t) const final {
+                return *(this->ptr)!=DerivedSpace();
+            }
             virtual bool operator==(const DerivedSpace& other) const final {
                 return !(*this!=other);
             }
             virtual bool operator==(const PointerType& other) const final {
                 return !(*this!=other);
+            }
+            virtual bool operator==(const nullptr_t) const final {
+                return !(this->operator!=(nullptr));
             }
             virtual bool operator<(const PointerType& other) const final {
                 return *(this->ptr)<*(other.ptr);
