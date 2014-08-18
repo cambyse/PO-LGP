@@ -159,128 +159,126 @@ TEST(LearnerTest, UTree) {
 }
 
 TEST(LearnerTest, TemporallyExtendedModel) {
-    USE_CONFIG_TYPEDEFS;
-
-    // initialize environment and learner
-    Maze maze;
-    shared_ptr<TemporallyExtendedModel> TEM;
-    shared_ptr<ConjunctiveAdjacency> N_plus;
-
-    // use the minimal maze
-    maze.set_maze("Minimal");
-
-    // get spaces
-    action_ptr_t action_space;
-    observation_ptr_t observation_space;
-    reward_ptr_t reward_space;
-    maze.get_spaces(action_space,observation_space,reward_space);
-
-    // initialize N+, set horizon extension
-    N_plus = make_shared<ConjunctiveAdjacency>();
-    N_plus->adopt_spaces(maze);
-    N_plus->set_horizon_extension(2);
-    N_plus->set_min_horizon(-2);
-    N_plus->set_max_horizon(0);
-    N_plus->set_combine_features(false);
-    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
-
-    // initialize TEM using N+
-    TEM = make_shared<TemporallyExtendedModel>(N_plus);
-    TEM->adopt_spaces(maze);
-    TEM->set_l1_factor(0.001);
-
-    // get all actions for random selection
-    vector<action_ptr_t> action_vector;
-    for(action_ptr_t a : action_space) {
-        action_vector.push_back(a);
-    }
-
-    // do some random actions to collect data
-    repeat(1000) {
-        action_ptr_t action = util::random_select(action_vector);
-        observation_ptr_t observation_to;
-        reward_ptr_t reward;
-        maze.perform_transition(action,observation_to,reward);
-        TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
-    }
-
-    //EXPECT_TRUE(TEM->check_derivatives(10,1));
-
-    // try to learn something
-    repeat(2) {
-        TEM->grow_feature_set();
-        TEM->optimize_weights_LBFGS();
-        TEM->shrink_feature_set();
-        TEM->print_features();
-    }
-
-    TEM->set_l1_factor(0);
-    TEM->optimize_weights_LBFGS();
-    TEM->print_features();
-
-    //--------------------------------------------//
-    // get likelihood for some random transitions //
-    //--------------------------------------------//
     {
-        double log_prob = 0;
-        instance_ptr_t current_instance = maze.get_current_instance();
-        int N = 100;
-        repeat(N) {
+        USE_CONFIG_TYPEDEFS;
+
+        // initialize environment and learner
+        Maze maze;
+        shared_ptr<TemporallyExtendedModel> TEM;
+        shared_ptr<ConjunctiveAdjacency> N_plus;
+
+        // use the minimal maze
+        maze.set_maze("Minimal");
+
+        // get spaces
+        action_ptr_t action_space;
+        observation_ptr_t observation_space;
+        reward_ptr_t reward_space;
+        maze.get_spaces(action_space,observation_space,reward_space);
+
+        // initialize N+, set horizon extension
+        N_plus = make_shared<ConjunctiveAdjacency>();
+        N_plus->adopt_spaces(maze);
+        N_plus->set_horizon_extension(2);
+        N_plus->set_min_horizon(-2);
+        N_plus->set_max_horizon(0);
+        N_plus->set_combine_features(false);
+        N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::OBSERVATION_REWARD);
+
+        // initialize TEM using N+
+        TEM = make_shared<TemporallyExtendedModel>(N_plus);
+        TEM->adopt_spaces(maze);
+        TEM->set_l1_factor(0.001);
+
+        // get all actions for random selection
+        vector<action_ptr_t> action_vector;
+        for(action_ptr_t a : action_space) {
+            action_vector.push_back(a);
+        }
+
+        // do some random actions to collect data
+        repeat(1000) {
             action_ptr_t action = util::random_select(action_vector);
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action,observation_to,reward);
-            double prob = TEM->get_prediction(current_instance,action,observation_to,reward);
-            DEBUG_OUT(3,current_instance << " (p = " << prob << ")");
-            log_prob += log(prob);
-            // update
-            current_instance = current_instance->append(action,observation_to,reward);
+            TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
         }
-        EXPECT_NEAR(log_prob,0,-N*log(0.99)); // expect probabilites around 0.99
-        DEBUG_OUT(1,"Likelihood over " << N << " random transitions: " << exp(log_prob));
-        current_instance->detach_reachable();
-    }
 
-    //-----------------------------//
-    // do some planned transitions //
-    //-----------------------------//
+        //EXPECT_TRUE(TEM->check_derivatives(10,1));
 
-    // initialize environment and planner
-    LookAheadPolicy planner(0.5,TEM,false,10000);
+        // try to learn something
+        repeat(2) {
+            TEM->grow_feature_set();
+            TEM->optimize_weights_LBFGS();
+            TEM->shrink_feature_set();
+            TEM->print_features();
+        }
 
-    { // for memory check
+        TEM->set_l1_factor(0);
+        TEM->optimize_weights_LBFGS();
+        TEM->print_features();
 
-        const_instance_ptr_t maze_instance = maze.get_current_instance();
-        instance_ptr_t current_instance = DoublyLinkedInstance::create(
-            maze_instance->action,
-            maze_instance->observation,
-            maze_instance->reward
-            );
-
-        // do several planned steps
-        for(int step_idx=0; step_idx<10; ++step_idx) {
-
-            action_ptr_t action = planner.get_action(current_instance);
-
-            // actually perform transition and print results
-            observation_ptr_t observation_to;
-            reward_ptr_t reward;
-            maze.perform_transition(action,observation_to,reward);
-            current_instance = current_instance->append(action, observation_to, reward);
-
-            // print nice pictures
-            if(DEBUG_LEVEL>=1) {
-                maze.print_transition(action, observation_to, reward);
+        //--------------------------------------------//
+        // get likelihood for some random transitions //
+        //--------------------------------------------//
+        {
+            double log_prob = 0;
+            instance_ptr_t current_instance = maze.get_current_instance();
+            int N = 100;
+            repeat(N) {
+                action_ptr_t action = util::random_select(action_vector);
+                observation_ptr_t observation_to;
+                reward_ptr_t reward;
+                maze.perform_transition(action,observation_to,reward);
+                double prob = TEM->get_prediction(current_instance,action,observation_to,reward);
+                DEBUG_OUT(3,current_instance << " (p = " << prob << ")");
+                log_prob += log(prob);
+                // update
+                current_instance = current_instance->append(action,observation_to,reward);
             }
+            EXPECT_NEAR(log_prob,0,-N*log(0.99)); // expect probabilites around 0.99
+            DEBUG_OUT(1,"Likelihood over " << N << " random transitions: " << exp(log_prob));
+            current_instance->detach_reachable();
         }
 
-        current_instance->detach_reachable();
+        //-----------------------------//
+        // do some planned transitions //
+        //-----------------------------//
 
-    }
+        // initialize environment and planner
+        LookAheadPolicy planner(0.5,TEM,false,10000);
 
-    if(AbstractInstance::memory_check_request()) {
-        EXPECT_EQ(0,AbstractInstance::memory_check());
+        { // for memory check
+
+            const_instance_ptr_t maze_instance = maze.get_current_instance();
+            instance_ptr_t current_instance = DoublyLinkedInstance::create(
+                maze_instance->action,
+                maze_instance->observation,
+                maze_instance->reward
+                );
+
+            // do several planned steps
+            for(int step_idx=0; step_idx<10; ++step_idx) {
+
+                action_ptr_t action = planner.get_action(current_instance);
+
+                // actually perform transition and print results
+                observation_ptr_t observation_to;
+                reward_ptr_t reward;
+                maze.perform_transition(action,observation_to,reward);
+                current_instance = current_instance->append(action, observation_to, reward);
+
+                // print nice pictures
+                if(DEBUG_LEVEL>=1) {
+                    maze.print_transition(action, observation_to, reward);
+                }
+            }
+
+            current_instance->detach_reachable();
+        }
     }
+    EXPECT_TRUE(AbstractInstance::empty_memory_check());
 }
 
 TEST(LearnerTest, TemporallyExtendedLinearQ) {
