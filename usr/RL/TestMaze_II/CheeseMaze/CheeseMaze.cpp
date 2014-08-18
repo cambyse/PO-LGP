@@ -419,7 +419,7 @@ void CheeseMaze::perform_transition(const action_ptr_t & a, observation_ptr_t & 
     o = observation_ptr_t(new CheeseMazeObservation(last_observation));
 }
 
-void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const {
+void CheeseMaze::get_features(f_set_t & basis_features, FeatureLearner::LEARNER_TYPE type) const {
 
     // clear first
     basis_features.clear();
@@ -437,7 +437,7 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
             for(action_ptr_t action : action_space) {
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *action_feature);
-                basis_features.push_back(action_feature);
+                basis_features.insert(action_feature);
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
@@ -447,7 +447,7 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
             for(observation_ptr_t observation : observation_space) {
                 f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *observation_feature);
-                basis_features.push_back(observation_feature);
+                basis_features.insert(observation_feature);
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
@@ -457,7 +457,7 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
             for(reward_ptr_t reward : reward_space) {
                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *reward_feature);
-                basis_features.push_back(reward_feature);
+                basis_features.insert(reward_feature);
             }
         }
     }
@@ -466,21 +466,21 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
     //     // relative observation features
     //     f_ptr_t relative_observation_feature;
     //     relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
-    //     basis_features.push_back(relative_observation_feature);
+    //     basis_features.insert(relative_observation_feature);
     //     relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
-    //     basis_features.push_back(relative_observation_feature);
+    //     basis_features.insert(relative_observation_feature);
     //     relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
-    //     basis_features.push_back(relative_observation_feature);
+    //     basis_features.insert(relative_observation_feature);
     //     relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
-    //     basis_features.push_back(relative_observation_feature);
+    //     basis_features.insert(relative_observation_feature);
     //     relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
-    //     basis_features.push_back(relative_observation_feature);
+    //     basis_features.insert(relative_observation_feature);
     // }
     if(type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
         // also add a unit feature
         f_ptr_t const_feature = ConstFeature::create(1);
         DEBUG_OUT(2,"Adding feature: " << *const_feature);
-        basis_features.push_back(const_feature);
+        basis_features.insert(const_feature);
     }
 }
 

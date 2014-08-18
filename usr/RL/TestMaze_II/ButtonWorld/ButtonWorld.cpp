@@ -21,10 +21,9 @@ static const QPen reward_pen(QColor(0,0,0),0.03,Qt::SolidLine,Qt::RoundCap,Qt::R
 static const double text_scale = 0.008;
 static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);
 
-ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p, bool factored_action_features):
+ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()),
     size(s),
-    use_factored_action_features(factored_action_features),
     reward_probs(p),
     last_action(size),
     last_reward(size, 0)
@@ -49,8 +48,8 @@ ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p, bool factored_acti
     current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
 }
 
-ButtonWorld::ButtonWorld(int s, double alpha, bool factored_action_features):
-    ButtonWorld(s, ButtonWorld::probs_from_beta(s, alpha, factored_action_features)) {}
+ButtonWorld::ButtonWorld(int s, double alpha):
+    ButtonWorld(s, ButtonWorld::probs_from_beta(s, alpha)) {}
 
 void ButtonWorld::render_initialize(QGraphicsView * v) {
     // intitialize view
@@ -212,7 +211,7 @@ ButtonWorld::probability_t ButtonWorld::get_prediction(const_instance_ptr_t ins,
     return prob;
 }
 
-void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
+void ButtonWorld::get_features(f_set_t & basis_features,
                                FeatureLearner::LEARNER_TYPE type) const {
 
     // clear first
@@ -228,7 +227,7 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
             for(action_ptr_t action : action_space) {
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *action_feature);
-                basis_features.push_back(action_feature);
+                basis_features.insert(action_feature);
                 if(use_factored_action_features) {
                     for(int idx : util::Range(action_space.size())) {
                         f_ptr_t action_feature = ButtonActionFeature::create(idx,k_idx);
@@ -245,7 +244,7 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
             for(observation_ptr_t observation : observation_space) {
                 f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *observation_feature);
-                basis_features.push_back(observation_feature);
+                basis_features.insert(observation_feature);
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
@@ -255,7 +254,7 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
             for(reward_ptr_t reward : reward_space) {
                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 DEBUG_OUT(2,"Adding feature: " << *reward_feature);
-                basis_features.push_back(reward_feature);
+                basis_features.insert(reward_feature);
             }
         }
     }
@@ -263,7 +262,7 @@ void ButtonWorld::get_features(std::vector<f_ptr_t> & basis_features,
         // also add a unit feature
         f_ptr_t const_feature = ConstFeature::create(1);
         DEBUG_OUT(2,"Adding feature: " << *const_feature);
-        basis_features.push_back(const_feature);
+        basis_features.insert(const_feature);
     }
 }
 

@@ -64,35 +64,35 @@ public:
         return p/(HIGH + MEDIUM_HIGH + MEDIUM_LOW + LOW);
     }
 
-    virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override {
+    virtual void get_features(f_set_t & basis_features, FeatureLearner::LEARNER_TYPE type) const override {
         // all get current action
         if(type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE ||
            type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY ||
            type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
-            basis_features.push_back(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), 0));
-            basis_features.push_back(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::CHANGE)), 0));
+            basis_features.insert(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), 0));
+            basis_features.insert(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::CHANGE)), 0));
         }
         // all but Linear-Q get current observation and reward
         if(type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE ||
            type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY) {
-            basis_features.push_back(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)), 0));
-            basis_features.push_back(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::GREEN)), 0));
-            basis_features.push_back(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)), 0));
-            basis_features.push_back(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::SOME_REWARD)), 0));
+            basis_features.insert(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)), 0));
+            basis_features.insert(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::GREEN)), 0));
+            basis_features.insert(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)), 0));
+            basis_features.insert(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::SOME_REWARD)), 0));
         }
         // all but U-Tree get last data
         if(type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE ||
            type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
-            basis_features.push_back(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), -1));
-            basis_features.push_back(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), -1));
-            basis_features.push_back(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)), -1));
-            basis_features.push_back(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::GREEN)), -1));
-            basis_features.push_back(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)), -1));
-            basis_features.push_back(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::SOME_REWARD)), -1));
+            basis_features.insert(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), -1));
+            basis_features.insert(ActionFeature::create(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)), -1));
+            basis_features.insert(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)), -1));
+            basis_features.insert(ObservationFeature::create(observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::GREEN)), -1));
+            basis_features.insert(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)), -1));
+            basis_features.insert(RewardFeature::create(reward_ptr_t(new MinimalReward(MinimalReward::REWARD::SOME_REWARD)), -1));
         }
         // Linear-Q also gets a unit feature
         if(type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
-            basis_features.push_back(ConstFeature::create(1));
+            basis_features.insert(ConstFeature::create(1));
         }
     }
 

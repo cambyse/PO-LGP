@@ -147,8 +147,8 @@ private:
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
 
-    std::vector<f_ptr_t> basis_features_value;    ///< Basis features for value-based U-Tree.
-    std::vector<f_ptr_t> basis_features_model;    ///< Basis features for model-based U-Tree.
+    f_set_t basis_features_value;    ///< Basis features for value-based U-Tree.
+    f_set_t basis_features_model;    ///< Basis features for model-based U-Tree.
     node_container_t leaf_nodes;
     graph_t graph;
     node_t root_node;

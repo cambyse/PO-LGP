@@ -47,8 +47,11 @@ public:
                                  const action_ptr_t&,
                                  const observation_ptr_t&,
                                  const reward_ptr_t&) const override;
-    virtual void get_features(std::vector<f_ptr_t> & basis_features,
+    virtual void get_features(f_set_t & basis_features,
                               FeatureLearner::LEARNER_TYPE type) const override;
+    static void construct_factored_action_features(f_set_t & basis_features,
+                                                   action_ptr_t action,
+                                                   int delay);
 private:
     static std::vector<probability_t> probs_from_beta(const int& s, const double& alpha);
 };
