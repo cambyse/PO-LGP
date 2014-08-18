@@ -41,13 +41,13 @@ using util::random_select;
 
 USE_CONFIG_TYPEDEFS;
 
-int get_time_delay();
-f_ptr_t get_basis_feature();
-f_ptr_t get_const_feature();
-f_ptr_t get_action_feature();
-f_ptr_t get_observation_feature();
-f_ptr_t get_reward_feature();
-f_ptr_t get_and_feature();
+int get_time_delay(bool reuse = false);
+f_ptr_t get_basis_feature(bool reuse = false);
+f_ptr_t get_const_feature(bool reuse = false);
+f_ptr_t get_action_feature(bool reuse = false);
+f_ptr_t get_observation_feature(bool reuse = false);
+f_ptr_t get_reward_feature(bool reuse = false);
+f_ptr_t get_and_feature(bool reuse = false);
 
 TEST(FeatureTest, Evaluation) {
 
@@ -353,6 +353,66 @@ TEST(FeatureTest, SharedPtr) {
     EXPECT_EQ(1, a3.use_count()) << "only a3 itself";
 }
 
+TEST(FeatureTest, IdenticalBasisFeatures) {
+    // Check if identical BasisFeatures are actually identical in memory but
+    // identical AndFeatures are not AND f_set_t and f_ptr_set_t treat them
+    // correspondingly.
+    //
+    // f_set_t should not store duplicates at all while f_ptr_set_t should store
+    // duplicate AndFeatures but not duplicate BasisFeatures
+
+    // the sets
+    f_set_t f_set;
+    f_ptr_set_t f_ptr_set;
+
+    // construct and check basis features
+    int number_of_basis_features = 250;
+    repeat(number_of_basis_features) {
+        // use basis features only
+        f_ptr_t f = get_basis_feature(false); // new feature
+        f_ptr_t f_copy = get_basis_feature(true); // identical feature
+        f_set.insert(f);
+        f_set.insert(f_copy);
+        f_ptr_set.insert(f);
+        f_ptr_set.insert(f_copy);
+    }
+    // intentional (and random) duplicates are not stored because objects
+    // compare equal
+    EXPECT_LE(f_set.size(), number_of_basis_features);
+    // intentional (and random) duplicates are not stored because object-address
+    // compares equal
+    EXPECT_LE(f_ptr_set.size(), number_of_basis_features);
+    // identical objects have identical addresses (for basis features only)
+    EXPECT_EQ(f_set.size(), f_ptr_set.size());
+
+    // clear sets
+    f_set.clear();
+    f_ptr_set.clear();
+
+    // construct and check AND features
+    int number_of_and_features = 250;
+    repeat(number_of_and_features) {
+        // use and features only
+        f_ptr_t f = get_and_feature(false); // new feature
+        f_ptr_t f_copy = get_and_feature(true); // identical feature
+        f_set.insert(f);
+        f_set.insert(f_copy);
+        f_ptr_set.insert(f);
+        f_ptr_set.insert(f_copy);
+    }
+    // intentional (and random) duplicates are not stored because objects
+    // compare equal
+    EXPECT_LE(f_set.size(), number_of_and_features);
+    // intentional (and random) duplicates ARE stored because object-address are
+    // not equal
+    EXPECT_EQ(f_ptr_set.size(), 2*number_of_and_features);
+    // identical objects do have NON_identical addresses (for AND features)
+    EXPECT_NE(f_set.size(), f_ptr_set.size());
+
+    // print
+    DEBUG_OUT(1,"Checked " << number_of_basis_features << "+" << number_of_and_features << " pairs of features");
+}
+
 TEST(FeatureTest, ComparisonAndOrdering) {
 
     /** Purpose: Some basic tests for comparison and ordering of features. A set
@@ -366,8 +426,8 @@ TEST(FeatureTest, ComparisonAndOrdering) {
      *
      * Inequality should be the negation of equality.
      *
-     * For BasisFeature pointers to (semantically) identical objects should
-     * actually point to the same object.
+     * BasisFeature pointers to (semantically) identical objects should actually
+     * point to the same object in memory.
      *
      * Ordering is checked as follows: If two features 'A' and 'B' are equal
      * neither A<B nor B<A should hold true; if A and B are not equal either A<B
@@ -377,12 +437,12 @@ TEST(FeatureTest, ComparisonAndOrdering) {
      * consecutively inserting features (details below) and sorting is checked.
      *
      * f_set_t and f_ptr_set_t is compared against the sorted list. We expect
-     * (1) f_ptr_set_t to contain a different number of features as the sorted
-     * list in a possibly different order since addresses are compared but
-     * identical BasisFeature objects are shared (same address) (2) f_set_t to
-     * contain a different number of features but in the same order (when
-     * ignoring duplicates in the list) since the actual objects are
-     * compared. */
+     * (1) f_ptr_set_t to contain (a) a possibly different number of features
+     * than the sorted list in (b) a different order since f_ptr_set_t uses
+     * addresses but identical BasisFeature objects are shared (same address)
+     * (2) f_set_t to (a) contain a different number of features than the sorted
+     * list but (b) in the same order (when ignoring duplicates in the list)
+     * since the actual objects are compared. */
 
     // vector holding pointers to features
     vector<f_ptr_t> feature_vector;
@@ -544,41 +604,47 @@ TEST(FeatureTest, ComparisonAndOrdering) {
             }
 
             // generally feature_list will have a greater size than f_set and
-            // f_ptr_set (which also have different size) but the same as the
+            // f_ptr_set (which may have a different size) but the same as the
             // unordered feature_vector
             EXPECT_GT(feature_list.size(),f_set.size());
             EXPECT_GT(feature_list.size(),f_ptr_set.size());
-            EXPECT_NE(f_set.size(),f_ptr_set.size());
             EXPECT_EQ(feature_list.size(),feature_vector.size());
         }
-
-
     }
 }
 
-int get_time_delay() {
-    return rand()%11-5;
+int get_time_delay(bool reuse) {
+    static int delay = rand()%11-5;
+    if(!reuse) {
+        delay = rand()%11-5;
+    }
+    return delay;
 }
 
-f_ptr_t get_basis_feature() {
+f_ptr_t get_basis_feature(bool reuse) {
     // choose feature type at random
-    switch(random_select<Feature::FEATURE_TYPE>({
-                    Feature::FEATURE_TYPE::CONST_FEATURE,
-                    Feature::FEATURE_TYPE::ACTION,
-                    Feature::FEATURE_TYPE::OBSERVATION,
-                    Feature::FEATURE_TYPE::REWARD
-                    })) {
+    vector<Feature::FEATURE_TYPE> feature_types({
+                Feature::FEATURE_TYPE::CONST_FEATURE,
+                Feature::FEATURE_TYPE::ACTION,
+                Feature::FEATURE_TYPE::OBSERVATION,
+                Feature::FEATURE_TYPE::REWARD
+                });
+    static Feature::FEATURE_TYPE type = random_select<Feature::FEATURE_TYPE>(feature_types);
+    if(!reuse) {
+        type = random_select<Feature::FEATURE_TYPE>(feature_types);
+    }
+    switch(type) {
     case Feature::FEATURE_TYPE::CONST_FEATURE: {
-        return get_const_feature();
+        return get_const_feature(reuse);
     }
     case Feature::FEATURE_TYPE::ACTION: {
-        return get_action_feature();
+        return get_action_feature(reuse);
     }
     case Feature::FEATURE_TYPE::OBSERVATION: {
-        return get_observation_feature();
+        return get_observation_feature(reuse);
     }
     case Feature::FEATURE_TYPE::REWARD: {
-        return get_reward_feature();
+        return get_reward_feature(reuse);
     }
     default:
         DEBUG_ERROR("Unexpected type");
@@ -587,27 +653,41 @@ f_ptr_t get_basis_feature() {
     }
 }
 
-f_ptr_t get_const_feature() {
-    return ConstFeature::create(drand48());
+f_ptr_t get_const_feature(bool reuse) {
+    static double d = drand48();
+    if(!reuse) {
+        d = drand48();
+    }
+    return ConstFeature::create(d);
 }
 
-f_ptr_t get_action_feature() {
-    return ActionFeature::create(get_random_action(),get_time_delay());
+f_ptr_t get_action_feature(bool reuse) {
+    return ActionFeature::create(get_random_action(reuse),get_time_delay(reuse));
 }
 
-f_ptr_t get_observation_feature() {
-    return ObservationFeature::create(get_random_observation(),get_time_delay());
+f_ptr_t get_observation_feature(bool reuse) {
+    return ObservationFeature::create(get_random_observation(reuse),get_time_delay(reuse));
 }
 
-f_ptr_t get_reward_feature() {
-    return RewardFeature::create(get_random_reward(),get_time_delay());
+f_ptr_t get_reward_feature(bool reuse) {
+    return RewardFeature::create(get_random_reward(reuse),get_time_delay(reuse));
 }
 
-f_ptr_t get_and_feature() {
-    int number_of_subfeatures = rand()%5 + 1;
-    f_ptr_t and_feature(get_basis_feature());
-    for(int idx=1; idx<number_of_subfeatures; ++idx) {
-        and_feature = f_ptr_t(new AndFeature(and_feature,get_basis_feature()));
+f_ptr_t get_and_feature(bool reuse) {
+    static vector<f_ptr_t> f_vector;
+    if(!reuse || f_vector.size()==0) {
+        int number_of_subfeatures = rand()%5 + 1;
+        f_vector.resize(number_of_subfeatures);
+        for(int idx : util::Range(number_of_subfeatures)) {
+            f_vector[idx] = get_basis_feature();
+        }
+    }
+    f_ptr_t and_feature(f_vector[0]);
+    for(auto idx_f : util::enumerate(f_vector)) {
+        if(idx_f.first==0) {
+            continue;
+        }
+        and_feature = f_ptr_t(new AndFeature(and_feature, idx_f.second));
     }
     return and_feature;
 }

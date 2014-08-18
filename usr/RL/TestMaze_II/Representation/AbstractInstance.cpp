@@ -6,8 +6,10 @@
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
-// Define MEMORY_CHECK to use memory_check() function (is automatically defined
-// for DEBUG_LEVEL > 0).
+// Define MEMORY_CHECK to use memory_check() function
+#ifdef UNIT_TESTS
+    #define MEMORY_CHECK
+#endif
 #if DEBUG_LEVEL > 0
     #ifndef MEMORY_CHECK
         #define MEMORY_CHECK

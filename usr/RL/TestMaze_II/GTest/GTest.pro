@@ -1,5 +1,6 @@
 CONFIG += debug
 TARGET = GTest
+DEFINES += UNIT_TESTS
 QT += core \
     gui \
     svg \
