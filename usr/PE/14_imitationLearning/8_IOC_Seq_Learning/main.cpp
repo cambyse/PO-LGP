@@ -25,19 +25,24 @@ void run() {
 
 
   /// 2. Optimize the parameters
-  arr w = ones(mf->numParam,1)*1e1;w.flatten(); arr dual;
-  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,true);
-  //  w =  trainScenes(0).paramRef;
+  arr w = ones(mf->numParam,1)*1e0;w.flatten();
+//  arr w = fabs(randn(mf->numParam,1))*1e0; w.flatten();
+//  arr w =  trainScenes(0).paramRef;
+  arr dual;
+  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,false);
+
   IOC ioc(trainScenes,mf->numParam);
-  checkAllGradients(ioc,w,1e-3);
+//  checkAllGradients(ioc,w,1e-3);
   optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-7));
-  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-9));
+//  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-9));
   ioc.costReport();
+
 
   /// 3. Evaluate code on test scenarios
   w = fabs(w);
   for (;;) {
-    for (uint i = 0; i<trainScenes.d0; i++) {
+    for (uint i = 0; i<testScenes.d0; i++) {
+      mf->execMotion(testScenes(i),w,true);
       mf->execMotion(trainScenes(i),w,true);
     }
   }

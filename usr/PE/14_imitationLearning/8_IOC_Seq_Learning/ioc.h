@@ -111,7 +111,7 @@ struct IOC_DemoCost {
     double y = f(0);
 
     if (&df) {
-      arr h = 8.*(PHI%(J_G_Jt_PHIw));
+      arr h = 8.*(PHI%J_G_Jt_PHIw);
       df = ~h*Dwdx ;
       df.flatten();
     }
@@ -134,6 +134,7 @@ struct Scene {
   arr xRef; // reference solution
   arr lambdaRef; // constraint trajectory
   arr paramRef;
+  arr xInit; // init solution for optimization
   MotionProblem* MP;
   ors::KinematicWorld* world;
   IOC_DemoCost* cost;// cost function for this demonstrations
@@ -183,7 +184,7 @@ struct IOC:ConstrainedProblem {
         }
       }
     }
-    cout << "Dwdx: " << Dwdx << endl;
+//    cout << "Dwdx: " << Dwdx << endl;
 
     numLambda = 0;
     // initialize cost functions for demonstrations
@@ -242,8 +243,9 @@ struct IOC:ConstrainedProblem {
     cout << "\n*****************************************************" << endl;
     cout << "******************** COST REPORT ********************" << endl;
     cout << "*****************************************************" << endl;
-    cout << "Found parameter: " <<xOpt/sqrt(sumOfSqr(xOpt))*1e1 << endl;
-    cout << "Reference parameter: " << scenes(0).paramRef/sqrt(sumOfSqr(scenes(0).paramRef))*1e1 << endl;
+    cout << "Found parameter: " <<xOpt << endl;
+    cout << "Found parameter (scaled): " <<xOpt/sqrt(sumOfSqr(xOpt))*1e1 << endl;
+    cout << "Reference parameter (scaled): " << scenes(0).paramRef/sqrt(sumOfSqr(scenes(0).paramRef))*1e1 << endl;
     for (uint i=0;i<scenes.d0;i++) {
       cout << "\nDemonstration: " << i << endl;
       cout << "IOC costs: " << scenes(i).cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;

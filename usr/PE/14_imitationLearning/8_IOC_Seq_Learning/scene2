@@ -1,19 +1,19 @@
 body BASE { mass=3.6  }
-body R_SHOULDER { pose=<T -0.138997 0.11975 1.305 0.612372 0.612372 -0.353553 -0.353553 > contact }
-body R_UPPER_ARM_IN_SHOULDER { pose=<T -0.304841 0.024 1.303 -0.353583 -0.612389 0.353524 -0.612355 > contact }
-body R_UPPER_ARM { pose=<T -0.304858 0.02399 1.0945 2.40816e-05 1 1.2244e-06 -4.17108e-05 > contact }
-body R_FOREARM { pose=<T -0.304874 0.0219807 0.903 -1.78941e-05 -0.707077 1.61625e-05 0.707136 > contact }
-body R_UPPER_WRIST_YAW { pose=<T -0.304892 0.0219707 0.6945 4.65217e-05 0.707142 -0.707072 -1.24679e-05 > contact }
-body R_UPPER_WRIST_PITCH { pose=<T -0.304911 0.067962 0.512998 5.42778e-06 -6.44172e-05 0.707088 -0.707125 > contact }
-body R_LOWER_WRIST { pose=<T -0.304912 0.022459 0.456 1.11692e-05 -0.707072 -0.707142 4.78203e-05 > contact }
-body R_HAND_M_FINGER_KNUCKLE_2 { pose=<T -0.254922 0.0224572 0.326616 0.706962 0.706924 0.0152427 -0.0151737 > contact  }
-body R_HAND_M_FINGER_KNUCKLE_3 { pose=<T -0.184987 0.022464 0.323606 -0.706962 -0.706924 -0.0152427 0.0151737 > contact }
-body R_HAND_L_FINGER_KNUCKLE_1 { pose=<T -0.304918 -0.0025166 0.348022 4.17118e-05 4.93879e-05 -1 2.59162e-05 > contact }
-body R_HAND_L_FINGER_KNUCKLE_2 { pose=<T -0.35492 -0.00252265 0.326626 0.0151139 -0.0151845 0.706962 0.706927 > contact }
-body R_HAND_L_FINGER_KNUCKLE_3 { pose=<T -0.424856 -0.00252971 0.323627 -0.0151139 0.0151845 -0.706962 -0.706927 > contact }
-body R_HAND_R_FINGER_KNUCKLE_1 { pose=<T -0.304923 0.0474234 0.348019 4.17118e-05 4.93879e-05 -1 2.59162e-05 > contact }
-body R_HAND_R_FINGER_KNUCKLE_2 { pose=<T -0.354925 0.0474174 0.326623 0.0151139 -0.0151845 0.706962 0.706927 > contact }
-body R_HAND_R_FINGER_KNUCKLE_3 { pose=<T -0.424861 0.0474103 0.323624 -0.0151139 0.0151845 -0.706962 -0.706927 > contact }
+body R_SHOULDER { pose=<T -0.138997 0.11975 1.305 0.612372 0.612372 -0.353553 -0.353553 >  }
+body R_UPPER_ARM_IN_SHOULDER { pose=<T -0.304841 0.024 1.303 -0.353583 -0.612389 0.353524 -0.612355 >  }
+body R_UPPER_ARM { pose=<T -0.304858 0.02399 1.0945 2.40816e-05 1 1.2244e-06 -4.17108e-05 >  }
+body R_FOREARM { pose=<T -0.304874 0.0219807 0.903 -1.78941e-05 -0.707077 1.61625e-05 0.707136 >  }
+body R_UPPER_WRIST_YAW { pose=<T -0.304892 0.0219707 0.6945 4.65217e-05 0.707142 -0.707072 -1.24679e-05 >  }
+body R_UPPER_WRIST_PITCH { pose=<T -0.304911 0.067962 0.512998 5.42778e-06 -6.44172e-05 0.707088 -0.707125 >  }
+body R_LOWER_WRIST { pose=<T -0.304912 0.022459 0.456 1.11692e-05 -0.707072 -0.707142 4.78203e-05 >  }
+body R_HAND_M_FINGER_KNUCKLE_2 { pose=<T -0.254922 0.0224572 0.326616 0.706962 0.706924 0.0152427 -0.0151737 >  }
+body R_HAND_M_FINGER_KNUCKLE_3 { pose=<T -0.184987 0.022464 0.323606 -0.706962 -0.706924 -0.0152427 0.0151737 >  }
+body R_HAND_L_FINGER_KNUCKLE_1 { pose=<T -0.304918 -0.0025166 0.348022 4.17118e-05 4.93879e-05 -1 2.59162e-05 >  }
+body R_HAND_L_FINGER_KNUCKLE_2 { pose=<T -0.35492 -0.00252265 0.326626 0.0151139 -0.0151845 0.706962 0.706927 >  }
+body R_HAND_L_FINGER_KNUCKLE_3 { pose=<T -0.424856 -0.00252971 0.323627 -0.0151139 0.0151845 -0.706962 -0.706927 >  }
+body R_HAND_R_FINGER_KNUCKLE_1 { pose=<T -0.304923 0.0474234 0.348019 4.17118e-05 4.93879e-05 -1 2.59162e-05 >  }
+body R_HAND_R_FINGER_KNUCKLE_2 { pose=<T -0.354925 0.0474174 0.326623 0.0151139 -0.0151845 0.706962 0.706927 >  }
+body R_HAND_R_FINGER_KNUCKLE_3 { pose=<T -0.424861 0.0474103 0.323624 -0.0151139 0.0151845 -0.706962 -0.706927 >  }
 
 shape (BASE){ type=3 rel=<T -0.0909555 0.144709 1.30748 -5.17058e-14 -0.866025 0.5 -8.9557e-14 >  mass=1  mesh='apollo_model/meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  color=[.7 .0 .0]}
 shape (R_SHOULDER){ type=3 rel=<T -0.0199055 -0.0017974 0.0995275 0.707107 0 0 0.707107 >  mass=5.9907  mesh='apollo_model/meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  color=[.0 .0 .0] }
@@ -23,7 +23,7 @@ shape (R_FOREARM){ type=3 rel=<T 0.0425368 0.000349607 0.0176778 0.707107 0 0 0.
 shape (R_UPPER_WRIST_YAW){ type=3 rel=<T -0.0209316 -0.00175102 0.082441 0.707107 0 0 0.707107 >  mass=2.31327  mesh='apollo_model/meshes/collision/lbr5_smpl.stl'  rel_includes_mesh_center=true  color=[.0 .0 .0] }
 shape (R_UPPER_WRIST_PITCH){ type=3 rel=<T -0.000547712 -8.05224e-06 0.0567044 1 0 0 0 >  mass=2.05786  mesh='apollo_model/meshes/collision/lbr6_smpl.stl'  rel_includes_mesh_center=true  color=[.7 .0 .0] }
 shape (R_LOWER_WRIST){ type=3 rel=<T 0.00146598 -0.00300832 0.00375371 1 0 0 0 >  mass=1.1202  mesh='apollo_model/meshes/collision/lbr7_smpl.stl'  rel_includes_mesh_center=true  color=[.0 .0 .0] }
-shape R_LOWER_WRIST (R_LOWER_WRIST){ type=3 rel=<T -0.00126913 0.00753743 0.0889307 -7.3123e-14 -7.3123e-14 0.707107 0.707107 >  mass=1e-08  mesh='apollo_model/meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  color=[1 1 1] contact}
+shape (R_LOWER_WRIST){ type=3 rel=<T -0.00126913 0.00753743 0.0889307 -7.3123e-14 -7.3123e-14 0.707107 0.707107 >  mass=1e-08  mesh='apollo_model/meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  color=[1 1 1] }
 shape (R_HAND_M_FINGER_KNUCKLE_2){ type=3 rel=<T 0.0336375 -0.00148109 -0.00167533 -7.3123e-14 0.707107 -7.3123e-14 -0.707107 >  mass=0.057957  mesh='apollo_model/meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true color=[1 1 1] }
 shape (R_HAND_M_FINGER_KNUCKLE_3){ type=3 rel=<T 0.0258747 -0.00167072 -0.000307256 0.707107 0 0.707107 0 >  mass=0.0342178  mesh='apollo_model/meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  color=[1 1 1] contact }
 shape (R_HAND_L_FINGER_KNUCKLE_1){ type=3 rel=<T 0.0311825 -3.06227e-05 0.00932083 0.5 0.5 -0.5 -0.5 >  mass=0.162527  mesh='apollo_model/meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  color=[1 1 1] }
@@ -58,10 +58,8 @@ joint (R_HAND_M_FINGER_KNUCKLE_3 endeff){ A=<T t(0.11 0 0) d(0 0 0 0)> B=<T t(0 
 
 body glCamera { X=<T 5.37831 -7.10912 5.96183 0.825669 0.461015 0.163458 0.281104>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }
 
-body table{ type=0, X=<T t(0 -0.5 .5)>, size=[1. 1. .1 .1], color=[.8 .5 .3] fixed, contact }
-#shape leg1(table) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-#shape leg2(table) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-#shape leg3(table) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-#shape leg4(table) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-
-body target(){ type=1 X=<T t(.3 -.7 .65)> size=[.3 0 0 0.03] color=[1 1 0]}
+body table{ type=0, X=<T t(.0 -0.25 .45)>, size=[1. 1. .1 .1], color=[.8 .5 .3] fixed, contact }
+body obj1 { size=[.1 .1 .2 0] type=0 contact  }
+body target { size=[.1 .1 .2 0] color=[0 1 0] type=0 contact }
+joint (table obj1) { from=<T t(-.2 .0 0.0)> to=<T t(0 0 .17)> type=10 }
+joint table_target(table target) { from=<T t(.1 .0 0.0)> to=<T t(0 0 .17)> type=10 }
