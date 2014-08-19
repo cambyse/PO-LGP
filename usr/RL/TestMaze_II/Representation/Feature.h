@@ -12,10 +12,12 @@
 #include "../Config.h"
 
 class Feature {
-public:
+    friend class AndFeature;
+
     //----types/classes----/
+public:
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
-    typedef unsigned short feature_return_t;
+    typedef double feature_return_t;
     USE_CONFIG_TYPEDEFS;
     enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, BUTTON_ACTION, AND };
     //class look_up_map_t: public std::unordered_map<const_feature_ptr_t, feature_return_t> { // derive from map
@@ -25,12 +27,16 @@ public:
         virtual void erase_feature(f_ptr_t);
         virtual std::vector<f_ptr_t> get_list_of_features() const;
     };
+protected:
+    typedef unsigned short intern_feature_return_t;
+
     //----methods----//
+public:
     Feature();
     virtual ~Feature();
     /** Evaluate feature on instance. @param ins Instance to evaluate feature
      * on. */
-    virtual feature_return_t evaluate(const_instance_ptr_t ins) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t ins) const final;
     /** Evaluate feature on instance with appended action-observation-reward
      * triplet. If the basis-instance is
      * \f$(\ldots,(a_{-1},o_{-1},r_{-1}),(a_{0},o_{0},r_{0}))\f$ the feature is
@@ -38,8 +44,8 @@ public:
      * \f$(\ldots,(a_{-1},o_{-1},r_{-1}),(a_{0},o_{0},r_{0}),(a,o,r))\f$ @param
      * ins Basis-instance the new triplet is appended to @param a action @param
      * o observation @param r reward.  */
-    virtual feature_return_t evaluate(const_instance_ptr_t ins, action_ptr_t a, observation_ptr_t o, reward_ptr_t r) const;
-    virtual feature_return_t evaluate(const look_up_map_t&) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t ins, action_ptr_t a, observation_ptr_t o, reward_ptr_t r) const final;
+    virtual feature_return_t evaluate(const look_up_map_t&) const final;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
     virtual operator std::string() const final {return util::string_from_ostream(*this);}
@@ -51,15 +57,21 @@ public:
     virtual unsigned int get_complexity() const final;
     virtual bool is_const_feature() const final { return const_feature; }
     virtual bool contradicts(const Feature&) const { return false; }
+    virtual feature_return_t return_function(const intern_feature_return_t& ret) const final;
 protected:
-    // member variables
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t ins) const;
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t ins, action_ptr_t a, observation_ptr_t o, reward_ptr_t r) const;
+    virtual intern_feature_return_t intern_evaluate(const look_up_map_t&) const;
+private:
+
+    //----variables----//
+protected:
     FEATURE_TYPE feature_type;
     unsigned int complexity;
     bool const_feature;
-    feature_return_t const_return_value;
-    // member functions
-    virtual inline feature_return_t return_function(const feature_return_t& ret) const final;
+    intern_feature_return_t const_return_value;
 };
+
 
 class BasisFeature: public Feature {
     friend class AndFeature;
@@ -87,33 +99,37 @@ private:
     //----methods----//
 public:
     ~BasisFeature();
-    virtual feature_return_t evaluate(const look_up_map_t&) const override final;
 protected:
+    virtual intern_feature_return_t intern_evaluate(const look_up_map_t&) const override final;
     BasisFeature() {}
     static const_feature_ptr_t create(BasisFeature * f);
     virtual void erase_from_unique() final;
 };
 
+
 class ConstFeature: public BasisFeature {
 private:
-    ConstFeature(const feature_return_t& v);
+    ConstFeature(const intern_feature_return_t& v);
+protected:
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const override;
 public:
     virtual ~ConstFeature();
-    static const_feature_ptr_t create(const feature_return_t& v = 0);
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
-    virtual feature_return_t evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const override;
+    static const_feature_ptr_t create(const intern_feature_return_t& v = 0);
     virtual std::string identifier() const override;
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
 };
 
+
 class ActionFeature: public BasisFeature {
 private:
     ActionFeature(const action_ptr_t& a, const int& d);
+protected:
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
 public:
     virtual ~ActionFeature();
     static const_feature_ptr_t create(const action_ptr_t& a, const int& d);
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
     virtual std::string identifier() const override;
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
     bool contradicts(const ActionFeature& f) const { return features_contradict(*this,f); }
@@ -125,14 +141,16 @@ protected:
     int delay;
 };
 
+
 /** Is active if a specific button was pressed by an action. */
 class ButtonActionFeature: public BasisFeature {
 private:
     ButtonActionFeature(const int& idx, const int& d);
+protected:
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
 public:
     virtual ~ButtonActionFeature();
     static const_feature_ptr_t create(const int& idx, const int& d);
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
     virtual std::string identifier() const override;
     static bool features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2);
     bool contradicts(const ButtonActionFeature& f) const { return features_contradict(*this,f); }
@@ -144,13 +162,15 @@ protected:
     int delay;
 };
 
+
 class ObservationFeature: public BasisFeature {
 private:
     ObservationFeature(const observation_ptr_t& s, const int& d);
+protected:
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
 public:
     virtual ~ObservationFeature();
     static const_feature_ptr_t create(const observation_ptr_t& s, const int& d);
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
     virtual std::string identifier() const override;
     static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
     bool contradicts(const ObservationFeature& f) const { return features_contradict(*this,f); }
@@ -162,13 +182,15 @@ protected:
     int delay;
 };
 
+
 class RewardFeature: public BasisFeature {
 private:
     RewardFeature(const reward_ptr_t& r, const int& d);
+protected:
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
 public:
     virtual ~RewardFeature();
     static const_feature_ptr_t create(const reward_ptr_t& r, const int& d);
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
     virtual std::string identifier() const override;
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
     bool contradicts(const RewardFeature& f) const { return features_contradict(*this,f); }
@@ -181,17 +203,18 @@ protected:
     int delay;
 };
 
+
 class AndFeature: public Feature {
 public:
     typedef f_set_t subfeature_set_t;
-    using Feature::evaluate; // so the compiler finds them
+    using Feature::intern_evaluate; // so the compiler finds them
     AndFeature();
     AndFeature(const_feature_ptr_t f);
     AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2);
     AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2, const_feature_ptr_t f3);
     virtual ~AndFeature();
-    virtual feature_return_t evaluate(const_instance_ptr_t) const override;
-    virtual feature_return_t evaluate(const look_up_map_t&) const override;
+    virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
+    virtual intern_feature_return_t intern_evaluate(const look_up_map_t&) const override;
     virtual std::string identifier() const override;
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;

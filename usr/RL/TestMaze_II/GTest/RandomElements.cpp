@@ -21,35 +21,33 @@
 using util::random_select;
 using std::vector;
 
-AbstractAction::ptr_t get_random_action(bool reuse) {
-    static AbstractAction::ptr_t action;
-    if(!reuse || action==nullptr) {
-        switch(random_select<AbstractAction::ACTION_TYPE>({
-                        AbstractAction::ACTION_TYPE::MINIMAL,
-                        AbstractAction::ACTION_TYPE::MAZE_ACTION,
-                        AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION,
-                        AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION,
-                        AbstractAction::ACTION_TYPE::BUTTON_ACTION
-                        })) {
-        case AbstractAction::ACTION_TYPE::MINIMAL:
-            action = get_random_minimal_action();
-            break;
-        case AbstractAction::ACTION_TYPE::MAZE_ACTION:
-            action = get_random_maze_action();
-            break;
-        case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
-            action = get_random_augmented_maze_action();
-            break;
-        case AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION:
-            action = get_random_cheese_maze_action();
-            break;
-        case AbstractAction::ACTION_TYPE::BUTTON_ACTION:
-            action = get_random_button_action();
-            break;
-        default:
-            DEBUG_ERROR("Unexpected type");
-            action = AbstractAction::ptr_t();
-        }
+AbstractAction::ptr_t get_random_action() {
+    AbstractAction::ptr_t action;
+    switch(random_select<AbstractAction::ACTION_TYPE>({
+                AbstractAction::ACTION_TYPE::MINIMAL,
+                    AbstractAction::ACTION_TYPE::MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::BUTTON_ACTION
+                    })) {
+    case AbstractAction::ACTION_TYPE::MINIMAL:
+        action = get_random_minimal_action();
+        break;
+    case AbstractAction::ACTION_TYPE::MAZE_ACTION:
+        action = get_random_maze_action();
+        break;
+    case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
+        action = get_random_augmented_maze_action();
+        break;
+    case AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION:
+        action = get_random_cheese_maze_action();
+        break;
+    case AbstractAction::ACTION_TYPE::BUTTON_ACTION:
+        action = get_random_button_action();
+        break;
+    default:
+        DEBUG_ERROR("Unexpected type");
+        action = AbstractAction::ptr_t();
     }
     return action;
 }
@@ -104,31 +102,29 @@ AbstractAction::ptr_t get_random_button_action() {
     return AbstractAction::ptr_t(new ButtonAction(array_length, action_array));
 }
 
-AbstractObservation::ptr_t get_random_observation(bool reuse) {
-    static AbstractObservation::ptr_t observation;
-    if(!reuse || observation==nullptr) {
-        switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
-                    AbstractObservation::OBSERVATION_TYPE::MINIMAL,
-                        AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION,
-                        AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION,
-                        AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION
-                        })) {
-        case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
-            observation = get_random_minimal_observation();
-            break;
-        case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
-            observation = get_random_maze_observation();
-            break;
-        case AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION:
-            observation = get_random_cheese_maze_observation();
-            break;
-        case AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION:
-            observation = get_random_button_observation();
-            break;
-        default:
-            DEBUG_ERROR("Unexpected type");
-            observation = AbstractObservation::ptr_t();
-        }
+AbstractObservation::ptr_t get_random_observation() {
+    AbstractObservation::ptr_t observation;
+    switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
+                AbstractObservation::OBSERVATION_TYPE::MINIMAL,
+                    AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION,
+                    AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION,
+                    AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION
+                    })) {
+    case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
+        observation = get_random_minimal_observation();
+        break;
+    case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
+        observation = get_random_maze_observation();
+        break;
+    case AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION:
+        observation = get_random_cheese_maze_observation();
+        break;
+    case AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION:
+        observation = get_random_button_observation();
+        break;
+    default:
+        DEBUG_ERROR("Unexpected type");
+        observation = AbstractObservation::ptr_t();
     }
     return observation;
 }
@@ -163,23 +159,21 @@ AbstractObservation::ptr_t get_random_button_observation() {
     return AbstractObservation::ptr_t(new ButtonObservation());
 }
 
-AbstractReward::ptr_t get_random_reward(bool reuse) {
-    static AbstractReward::ptr_t reward;
-    if(!reuse || reward==nullptr) {
-        switch(random_select<AbstractReward::REWARD_TYPE>({
+AbstractReward::ptr_t get_random_reward() {
+    AbstractReward::ptr_t reward;
+    switch(random_select<AbstractReward::REWARD_TYPE>({
                     AbstractReward::REWARD_TYPE::MINIMAL,
-                        AbstractReward::REWARD_TYPE::LISTED_REWARD
-                        })) {
-        case AbstractReward::REWARD_TYPE::MINIMAL:
-            reward = get_random_minimal_reward();
-            break;
-        case AbstractReward::REWARD_TYPE::LISTED_REWARD:
-            reward = get_random_listed_reward();
-            break;
-        default:
-            DEBUG_ERROR("Unexpected type");
-            reward = AbstractReward::ptr_t();
-        }
+                    AbstractReward::REWARD_TYPE::LISTED_REWARD
+                    })) {
+    case AbstractReward::REWARD_TYPE::MINIMAL:
+        reward = get_random_minimal_reward();
+        break;
+    case AbstractReward::REWARD_TYPE::LISTED_REWARD:
+        reward = get_random_listed_reward();
+        break;
+    default:
+        DEBUG_ERROR("Unexpected type");
+        reward = AbstractReward::ptr_t();
     }
     return reward;
 }

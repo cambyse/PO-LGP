@@ -68,8 +68,8 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
     if(matching_outcome_idx==-1) { DEBUG_DEAD_LINE; }
     const row_vec_t lin = weights.t()*F_matrix;
     const row_vec_t exp_lin = arma::exp(lin);
-    const double z = sum(exp_lin);
-    const double l = lin(matching_outcome_idx)-log(z);
+    const probability_t z = sum(exp_lin);
+    const probability_t l = lin(matching_outcome_idx)-log(z);
     return exp(l);
 }
 
@@ -98,7 +98,7 @@ TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
     // compute normalization
     const row_vec_t lin = weights.t()*F_matrix;
     const row_vec_t exp_lin = arma::exp(lin);
-    const double log_z = log(sum(exp_lin));
+    const probability_t log_z = log(sum(exp_lin));
 
     // fill probability map
     DEBUG_OUT(3,"Predictions for " << ins << " / " << action);
@@ -108,7 +108,7 @@ TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
         for(observation_ptr_t obs : observation_space) {
             for(reward_ptr_t rew : reward_space) {
                 // compute probability
-                const double l = lin(outcome_idx)-log_z;
+                const probability_t l = lin(outcome_idx)-log_z;
                 return_map[make_tuple(obs,rew)] = exp(l);
                 DEBUG_OUT(3,"    p(" << obs << "," << rew << "): " << exp(l));
                 // increment
@@ -121,7 +121,7 @@ TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
     return return_map;
 }
 
-double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
+TEM::probability_t TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
 
     DEBUG_OUT(3,"Compute neg-log-likelihood");
 
@@ -136,7 +136,7 @@ double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
     }
 
     // initialize objective and gradient
-    double obj = 0;
+    probability_t obj = 0;
     grad.zeros(feature_set.size());
 
 #ifdef USE_OMP
@@ -160,7 +160,7 @@ double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
         // interim variables
         const row_vec_t lin = w.t()*F;
         const row_vec_t exp_lin = arma::exp(lin);
-        const double z = sum(exp_lin);
+        const probability_t z = sum(exp_lin);
 
         // debug output
         if(DEBUG_LEVEL>=3) {
@@ -169,7 +169,7 @@ double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
         }
 
         // compute objective and gradient
-        double obj_comp = lin(outcome_idx)-log(z);
+        probability_t obj_comp = lin(outcome_idx)-log(z);
         col_vec_t grad_comp = F.col(outcome_idx) - F*exp_lin.t()/z;
 
 #ifdef USE_OMP
@@ -212,7 +212,7 @@ lbfgsfloatval_t TEM::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t
     int nr_vars = weights.size();
     col_vec_t w(par,nr_vars);
     col_vec_t g(grad,nr_vars,false);
-    double neg_log_like = neg_log_likelihood(g,w);
+    probability_t neg_log_like = neg_log_likelihood(g,w);
     return neg_log_like;
 }
 
@@ -227,7 +227,7 @@ int TEM::LBFGS_progress(const lbfgsfloatval_t * x,
                         int /*ls*/) const {
     IF_DEBUG(1) {
         // L1 norm //
-        double xnorm = 0;
+        lbfgsfloatval_t xnorm = 0;
         for(int idx=0; idx<nr_variables; ++idx) {
             xnorm += fabs(x[idx]);
         }
@@ -243,10 +243,10 @@ int TEM::LBFGS_progress(const lbfgsfloatval_t * x,
     return 0;
 }
 
-void TEM::LBFGS_final_message(double obj_val) const {
+void TEM::LBFGS_final_message(probability_t obj_val) const {
     IF_DEBUG(1) {
         // L1 norm //
-        double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
+        lbfgsfloatval_t xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
         cout <<
             QString("    Likelihood + L1 = %1 + %2")
             .arg(exp(-(obj_val-xnorm*l1_factor)),7,'f',5)

@@ -9,6 +9,7 @@
 #include "../Representation/AbstractAction.h"
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
+#include "../ButtonWorld/ButtonAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 #include "../Representation/AbstractObservation.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
@@ -22,10 +23,13 @@
 #include "RandomElements.h"
 
 #include <vector>
+#include <utility>
+#include <set>
 #include <set>
 #include <list>
 #include <memory> // shared_ptr
 #include <sstream>
+#include <string>
 
 #define DEBUG_LEVEL 2
 #include "../util/debug.h"
@@ -34,6 +38,9 @@ using std::vector;
 using std::list;
 using std::set;
 using std::string;
+using std::pair;
+using std::make_pair;
+using std::string;
 using std::stringstream;
 using std::shared_ptr;
 using std::dynamic_pointer_cast;
@@ -41,13 +48,17 @@ using util::random_select;
 
 USE_CONFIG_TYPEDEFS;
 
-int get_time_delay(bool reuse = false);
-f_ptr_t get_basis_feature(bool reuse = false);
-f_ptr_t get_const_feature(bool reuse = false);
-f_ptr_t get_action_feature(bool reuse = false);
-f_ptr_t get_observation_feature(bool reuse = false);
-f_ptr_t get_reward_feature(bool reuse = false);
-f_ptr_t get_and_feature(bool reuse = false);
+enum class MODE { RANDOM, REUSE, UNIQUE, PRINT };
+
+int get_time_delay();
+f_ptr_t get_basis_feature(MODE mode, bool clear = true);
+f_ptr_t get_const_feature(MODE mode);
+f_ptr_t get_action_feature(MODE mode);
+f_ptr_t get_button_action_feature(MODE mode);
+f_ptr_t get_observation_feature(MODE mode);
+f_ptr_t get_reward_feature(MODE mode);
+set<pair<f_ptr_t, string> > get_random_basis_feature_set();
+f_ptr_t get_and_feature(MODE mode);
 
 TEST(FeatureTest, Evaluation) {
 
@@ -116,188 +127,188 @@ TEST(FeatureTest, Evaluation) {
                 );
             switch(ins_counter) {
             case 0:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(0,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(0,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(0,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 1:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(0,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(0,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 2:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(1,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(1,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(0,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 3:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(0,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(0,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(0,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(1),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 4:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(1, observation_f->evaluate(ins));
-                EXPECT_EQ(1,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(1,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(1, observation_f->evaluate(map));
-                EXPECT_EQ(1,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(1,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(0,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(1),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(1),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 5:
-                EXPECT_EQ(0,      action_f->evaluate(ins));
-                EXPECT_EQ(1, observation_f->evaluate(ins));
-                EXPECT_EQ(0,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(0,      action_f->evaluate(map));
-                EXPECT_EQ(1, observation_f->evaluate(map));
-                EXPECT_EQ(0,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(1,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(0),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(1),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 6:
-                EXPECT_EQ(1,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(1,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(1,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(1,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(1,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(1,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(1,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(0,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(1),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(1),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             case 7:
-                EXPECT_EQ(1,      action_f->evaluate(ins));
-                EXPECT_EQ(0, observation_f->evaluate(ins));
-                EXPECT_EQ(0,      reward_f->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ao->evaluate(ins));
-                EXPECT_EQ(0,      and_f_or->evaluate(ins));
-                EXPECT_EQ(0,      and_f_ar->evaluate(ins));
-                EXPECT_EQ(0,       and_all->evaluate(ins));
-                EXPECT_EQ(1,      action_f->evaluate(map));
-                EXPECT_EQ(0, observation_f->evaluate(map));
-                EXPECT_EQ(0,      reward_f->evaluate(map));
-                EXPECT_EQ(0,      and_f_ao->evaluate(map));
-                EXPECT_EQ(0,      and_f_or->evaluate(map));
-                EXPECT_EQ(0,      and_f_ar->evaluate(map));
-                EXPECT_EQ(0,       and_all->evaluate(map));
-                EXPECT_EQ(1,      action_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1, observation_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      reward_f->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      and_f_ao->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      and_f_or->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,      and_f_ar->evaluate(ins,stay,red,some_reward));
-                EXPECT_EQ(1,       and_all->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(ins));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(ins));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(ins));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(ins));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(ins));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(ins));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(ins));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(map));
+                EXPECT_EQ( observation_f->return_function(0), observation_f->evaluate(map));
+                EXPECT_EQ(      reward_f->return_function(0),      reward_f->evaluate(map));
+                EXPECT_EQ(      and_f_ao->return_function(0),      and_f_ao->evaluate(map));
+                EXPECT_EQ(      and_f_or->return_function(0),      and_f_or->evaluate(map));
+                EXPECT_EQ(      and_f_ar->return_function(0),      and_f_ar->evaluate(map));
+                EXPECT_EQ(       and_all->return_function(0),       and_all->evaluate(map));
+                EXPECT_EQ(      action_f->return_function(1),      action_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ( observation_f->return_function(1), observation_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      reward_f->return_function(1),      reward_f->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ao->return_function(1),      and_f_ao->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_or->return_function(1),      and_f_or->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(      and_f_ar->return_function(1),      and_f_ar->evaluate(ins,stay,red,some_reward));
+                EXPECT_EQ(       and_all->return_function(1),       and_all->evaluate(ins,stay,red,some_reward));
                 break;
             default:
                 DEBUG_DEAD_LINE;
@@ -353,7 +364,7 @@ TEST(FeatureTest, SharedPtr) {
     EXPECT_EQ(1, a3.use_count()) << "only a3 itself";
 }
 
-TEST(FeatureTest, IdenticalBasisFeatures) {
+TEST(FeatureTest, RandomAndUniqueFeatures) {
     // Check if identical BasisFeatures are actually identical in memory but
     // identical AndFeatures are not AND f_set_t and f_ptr_set_t treat them
     // correspondingly.
@@ -361,56 +372,149 @@ TEST(FeatureTest, IdenticalBasisFeatures) {
     // f_set_t should not store duplicates at all while f_ptr_set_t should store
     // duplicate AndFeatures but not duplicate BasisFeatures
 
-    // the sets
-    f_set_t f_set;
-    f_ptr_set_t f_ptr_set;
+    int number_of_features = 1000;
 
-    // construct and check basis features
-    int number_of_basis_features = 250;
-    repeat(number_of_basis_features) {
-        // use basis features only
-        f_ptr_t f = get_basis_feature(false); // new feature
-        f_ptr_t f_copy = get_basis_feature(true); // identical feature
-        f_set.insert(f);
-        f_set.insert(f_copy);
-        f_ptr_set.insert(f);
-        f_ptr_set.insert(f_copy);
+    // random basis features
+    {
+        // the sets
+        f_set_t f_set;
+        f_ptr_set_t f_ptr_set;
+
+        // construct and check basis features
+        repeat(number_of_features) {
+            // use basis features only
+            f_ptr_t f = get_basis_feature(MODE::RANDOM); // new feature
+            f_ptr_t f_copy = get_basis_feature(MODE::REUSE); // identical feature
+            EXPECT_EQ(f, f_copy);
+            f_set.insert(f);
+            f_set.insert(f_copy);
+            f_ptr_set.insert(f);
+            f_ptr_set.insert(f_copy);
+        }
+        // intentional (and random) duplicates are not stored because objects
+        // compare equal
+        EXPECT_GE(number_of_features, f_set.size());
+        // intentional (and random) duplicates are not stored because
+        // object-addresses are equal
+        EXPECT_GE(number_of_features, f_ptr_set.size());
+        // identical objects have identical addresses thus sizes must be equal,
+        // too
+        EXPECT_EQ(f_ptr_set.size(), f_set.size());
+
+        // print
+        DEBUG_OUT(1,"Checked " << number_of_features << " pairs of random basis features");
     }
-    // intentional (and random) duplicates are not stored because objects
-    // compare equal
-    EXPECT_GE(number_of_basis_features, f_set.size());
-    // intentional (and random) duplicates are not stored because object-address
-    // compares equal
-    EXPECT_GE(number_of_basis_features, f_ptr_set.size());
-    // identical objects have identical addresses (for basis features only)
-    EXPECT_EQ(f_ptr_set.size(), f_set.size());
 
-    // clear sets
-    f_set.clear();
-    f_ptr_set.clear();
+    // unique basis features (same as above but no random duplicates)
+    {
+        // the sets
+        f_set_t f_set;
+        f_ptr_set_t f_ptr_set;
 
-    // construct and check AND features
-    int number_of_and_features = 250;
-    repeat(number_of_and_features) {
-        // use and features only
-        f_ptr_t f = get_and_feature(false); // new feature
-        f_ptr_t f_copy = get_and_feature(true); // identical feature
-        f_set.insert(f);
-        f_set.insert(f_copy);
-        f_ptr_set.insert(f);
-        f_ptr_set.insert(f_copy);
+        // construct and check basis features
+        repeat(number_of_features) {
+            // use basis features only
+            f_ptr_t f = get_basis_feature(MODE::UNIQUE); // new feature
+            f_ptr_t f_copy = get_basis_feature(MODE::REUSE); // identical feature
+            EXPECT_EQ(f, f_copy);
+            if(f_set.find(f)!=f_set.end()) {
+                DEBUG_ERROR(*f << " found in f_set: " << **(f_set.find(f)));
+                get_basis_feature(MODE::PRINT);
+                EXPECT_TRUE(false) << "Feature OBJECT should be unique";
+            }
+            if(f_ptr_set.find(f)!=f_ptr_set.end()) {
+                DEBUG_ERROR(*f << " found in f_ptr_set: " << **(f_ptr_set.find(f)));
+                get_basis_feature(MODE::PRINT);
+                EXPECT_TRUE(false) << "Feature ADDRESS should be unique";
+            }
+            f_set.insert(f);
+            f_set.insert(f_copy);
+            f_ptr_set.insert(f);
+            f_ptr_set.insert(f_copy);
+        }
+        // intentional duplicates are not stored because objects compare equal
+        EXPECT_EQ(number_of_features, f_set.size());
+        // intentional duplicates are not stored because object-addresses are
+        // equal
+        EXPECT_EQ(number_of_features, f_ptr_set.size());
+        // identical objects have identical addresses thus sizes must be equal,
+        // too
+        EXPECT_EQ(f_ptr_set.size(), f_set.size());
+
+        // print
+        DEBUG_OUT(1,"Checked " << number_of_features << " pairs of unique basis features");
     }
-    // intentional (and random) duplicates are not stored because objects
-    // compare equal
-    EXPECT_GE(number_of_and_features, f_set.size());
-    // intentional (and random) duplicates ARE stored because object-address are
-    // not equal
-    EXPECT_EQ(2*number_of_and_features, f_ptr_set.size());
-    // identical objects do have NON_identical addresses (for AND features)
-    EXPECT_NE(f_ptr_set.size(), f_set.size());
 
-    // print
-    DEBUG_OUT(1,"Checked " << number_of_basis_features << "+" << number_of_and_features << " pairs of features");
+    // random AND features
+    {
+        // the sets
+        f_set_t f_set;
+        f_ptr_set_t f_ptr_set;
+
+        // construct and check AND features
+        repeat(number_of_features) {
+            // use and features only
+            f_ptr_t f = get_and_feature(MODE::RANDOM); // new feature
+            f_ptr_t f_copy = get_and_feature(MODE::REUSE); // identical feature
+            EXPECT_NE(f, f_copy);
+            f_set.insert(f);
+            f_set.insert(f_copy);
+            f_ptr_set.insert(f);
+            f_ptr_set.insert(f_copy);
+        }
+        // intentional (and random) duplicates are not stored because objects
+        // compare equal
+        EXPECT_GE(number_of_features, f_set.size());
+        // intentional (and random) duplicates ARE stored because
+        // object-addresses are NOT equal
+        EXPECT_EQ(2*number_of_features, f_ptr_set.size());
+        // identical objects do have NON-identical addresses, thus sizes must be
+        // different
+        EXPECT_GE(f_ptr_set.size(), 2*f_set.size());
+
+        // print
+        DEBUG_OUT(1,"Checked " << number_of_features << " pairs of random AND features");
+    }
+
+    // unique AND features (same as above but no random duplicates)
+    {
+        // the sets
+        f_set_t f_set;
+        f_ptr_set_t f_ptr_set;
+
+        // construct and check AND features
+        repeat(number_of_features) {
+            // use and features only
+            f_ptr_t f = get_and_feature(MODE::UNIQUE); // new feature
+            f_ptr_t f_copy = get_and_feature(MODE::REUSE); // identical feature
+            EXPECT_NE(f, f_copy);
+            if(f_set.find(f)!=f_set.end()) {
+                DEBUG_ERROR(*f << " found in f_set: " << **(f_set.find(f)));
+                get_and_feature(MODE::PRINT);
+                EXPECT_TRUE(false) << "Feature OBJECT should be unique";
+            }
+            if(f_ptr_set.find(f)!=f_ptr_set.end()) {
+                DEBUG_ERROR(*f << " found in f_ptr_set: " << **(f_ptr_set.find(f)));
+                get_and_feature(MODE::PRINT);
+                EXPECT_TRUE(false) << "Feature ADDRESS should be unique";
+            }
+            f_set.insert(f);
+            f_set.insert(f_copy);
+            f_ptr_set.insert(f);
+            f_ptr_set.insert(f_copy);
+        }
+        // intentional duplicates are not stored because objects compare equal
+        EXPECT_EQ(number_of_features, f_set.size());
+        // intentional duplicates ARE stored because object-addresses are NOT
+        // equal
+        EXPECT_EQ(2*number_of_features, f_ptr_set.size());
+        // identical objects do have NON-identical addresses, thus sizes must be
+        // different
+        EXPECT_EQ(f_ptr_set.size(), 2*f_set.size());
+
+        // print
+        DEBUG_OUT(1,"Checked " << number_of_features << " pairs of unique AND features");
+    }
 }
 
 TEST(FeatureTest, ComparisonAndOrdering) {
@@ -425,6 +529,8 @@ TEST(FeatureTest, ComparisonAndOrdering) {
      * string description).
      *
      * Inequality should be the negation of equality.
+     *
+     * Inequality of A and B should imply A<B or B<A.
      *
      * BasisFeature pointers to (semantically) identical objects should actually
      * point to the same object in memory.
@@ -450,13 +556,14 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     // Construct a random set of features
     int number_of_features = 500;
     repeat(number_of_features) {
-        if(drand48()<0.8) {
+        if(true) {
             // use basis feature
-            feature_vector.push_back(get_basis_feature());
+            feature_vector.push_back(get_basis_feature(MODE::RANDOM));
         } else {
             // use 'and' feature
-            feature_vector.push_back(get_and_feature());
+            feature_vector.push_back(get_and_feature(MODE::RANDOM));
         }
+        DEBUG_OUT(3, *feature_vector.back());
     }
     DEBUG_OUT(1,"Created " << number_of_features << " random features");
 
@@ -522,6 +629,7 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                 } else {
                     EXPECT_TRUE((*f1<*f2 || *f2<*f1) && !(*f1<*f2 && *f2<*f1)) << *f1 << "!=" << *f2 << " violated by ordering operator";
                 }
+                DEBUG_OUT(3, *f1 << " / " << *f2 << " ==:" << (*f1==*f2?"true":"false") << " !=:" << (*f1!=*f2?"true":"false") << " <:" << (*f1<*f2?"true":"false") << " >:" << (*f2<*f1?"true":"false"));
             }
             ProgressBar::print(counter++, number_of_features);
         }
@@ -613,38 +721,59 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     }
 }
 
-int get_time_delay(bool reuse) {
-    static int delay = rand()%11-5;
-    if(!reuse) {
-        delay = rand()%11-5;
-    }
-    return delay;
+int get_time_delay() {
+    return rand()%11-5;
 }
 
-f_ptr_t get_basis_feature(bool reuse) {
-    // choose feature type at random
+f_ptr_t get_basis_feature(MODE mode, bool clear) {
+    // vector of feature types
     vector<Feature::FEATURE_TYPE> feature_types({
-                Feature::FEATURE_TYPE::CONST_FEATURE,
+                // Feature::FEATURE_TYPE::CONST_FEATURE,
                 Feature::FEATURE_TYPE::ACTION,
                 Feature::FEATURE_TYPE::OBSERVATION,
-                Feature::FEATURE_TYPE::REWARD
+                Feature::FEATURE_TYPE::REWARD,
+                Feature::FEATURE_TYPE::BUTTON_ACTION
                 });
+    // initialize at random
     static Feature::FEATURE_TYPE type = random_select<Feature::FEATURE_TYPE>(feature_types);
-    if(!reuse) {
+    // modes
+    switch(mode) {
+    case MODE::RANDOM:
+    case MODE::UNIQUE:
+        if(clear) {
+            // to clear the unique sets
+            get_const_feature(MODE::RANDOM);
+            get_action_feature(MODE::RANDOM);
+            get_button_action_feature(MODE::RANDOM);
+            get_observation_feature(MODE::RANDOM);
+            get_reward_feature(MODE::RANDOM);
+        }
+        // use random type
         type = random_select<Feature::FEATURE_TYPE>(feature_types);
+        break;
+    case MODE::REUSE:
+        // just use the same type as in last call
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+        EXPECT_TRUE(false);
     }
+    // return corresponding type (pass on mode)
     switch(type) {
     case Feature::FEATURE_TYPE::CONST_FEATURE: {
-        return get_const_feature(reuse);
+        return get_const_feature(mode);
     }
     case Feature::FEATURE_TYPE::ACTION: {
-        return get_action_feature(reuse);
+        return get_action_feature(mode);
+    }
+    case Feature::FEATURE_TYPE::BUTTON_ACTION: {
+        return get_button_action_feature(mode);
     }
     case Feature::FEATURE_TYPE::OBSERVATION: {
-        return get_observation_feature(reuse);
+        return get_observation_feature(mode);
     }
     case Feature::FEATURE_TYPE::REWARD: {
-        return get_reward_feature(reuse);
+        return get_reward_feature(mode);
     }
     default:
         DEBUG_ERROR("Unexpected type");
@@ -653,41 +782,134 @@ f_ptr_t get_basis_feature(bool reuse) {
     }
 }
 
-f_ptr_t get_const_feature(bool reuse) {
-    static double d = drand48();
-    if(!reuse) {
-        d = drand48();
+#define RANDOM_REUSE_UNIQUE(type, value, generator, recursion, printer) \
+    static type value = generator;                                      \
+    static set<type> unique_set;                                        \
+    switch(mode) {                                                      \
+    case MODE::RANDOM:                                                  \
+        /* random */                                                    \
+        value = generator;                                              \
+        break;                                                          \
+    case MODE::REUSE:                                                   \
+        /* just reuse old value */                                      \
+        break;                                                          \
+    case MODE::UNIQUE:                                                  \
+        /* random */                                                    \
+        value = generator;                                              \
+        /* reject if non-unique */                                      \
+        if(unique_set.find(value)==unique_set.end()) {                  \
+            /* not found --> accept: remember value */                  \
+            unique_set.insert(value);                                   \
+        } else {                                                        \
+            /* found --> reject: recursive call */                      \
+            return recursion;                                           \
+        }                                                               \
+        break;                                                          \
+    case MODE::PRINT:                                                   \
+        printer(value);                                                 \
+        /* just reuse old value */                                      \
+        break;                                                          \
+    default:                                                            \
+        DEBUG_DEAD_LINE;                                                \
+        EXPECT_TRUE(false);                                             \
     }
-    return ConstFeature::create(d);
+
+f_ptr_t get_const_feature(MODE mode) {
+    RANDOM_REUSE_UNIQUE(int,
+                        i,
+                        rand()%1000,
+                        get_basis_feature(mode),
+                        [](int j) { DEBUG_OUT(0, "Used: " << j); }
+                        // get_const_feature(mode)
+        );
+    return ConstFeature::create(i);
 }
 
-f_ptr_t get_action_feature(bool reuse) {
-    return ActionFeature::create(get_random_action(reuse),get_time_delay(reuse));
+f_ptr_t get_action_feature(MODE mode) {
+    typedef pair<action_ptr_t, int> type;
+    RANDOM_REUSE_UNIQUE(type,
+                        action_delay,
+                        make_pair(get_random_action(), get_time_delay()),
+                        get_basis_feature(mode),
+                        [](type p) { DEBUG_OUT(0, "Used: " << p.first << " / " << p.second); }
+                        // get_action_feature(mode)
+        );
+    return ActionFeature::create(action_delay.first, action_delay.second);
 }
 
-f_ptr_t get_observation_feature(bool reuse) {
-    return ObservationFeature::create(get_random_observation(reuse),get_time_delay(reuse));
+f_ptr_t get_button_action_feature(MODE mode) {
+    typedef pair<int, int> type;
+    RANDOM_REUSE_UNIQUE(type,
+                        idx_delay,
+                        make_pair((rand()%5+1), get_time_delay()),
+                        get_basis_feature(mode),
+                        [](type p) { DEBUG_OUT(0, "Used: " << p.first << " / " << p.second); }
+                        // get_button_action_feature(mode)
+        );
+    return ButtonActionFeature::create(idx_delay.first, idx_delay.second);
 }
 
-f_ptr_t get_reward_feature(bool reuse) {
-    return RewardFeature::create(get_random_reward(reuse),get_time_delay(reuse));
+f_ptr_t get_observation_feature(MODE mode) {
+    typedef pair<observation_ptr_t, int> type;
+    RANDOM_REUSE_UNIQUE(type,
+                        observation_delay,
+                        make_pair(get_random_observation(), get_time_delay()),
+                        get_basis_feature(mode),
+                        [](type p) { DEBUG_OUT(0, "Used: " << p.first << " / " << p.second); }
+                        // get_observation_feature(mode)
+        );
+    return ObservationFeature::create(observation_delay.first, observation_delay.second);
 }
 
-f_ptr_t get_and_feature(bool reuse) {
-    static vector<f_ptr_t> f_vector;
-    if(!reuse || f_vector.size()==0) {
-        int number_of_subfeatures = rand()%5 + 1;
-        f_vector.resize(number_of_subfeatures);
-        for(int idx : util::Range(number_of_subfeatures)) {
-            f_vector[idx] = get_basis_feature();
+f_ptr_t get_reward_feature(MODE mode) {
+    typedef pair<reward_ptr_t, int> type;
+    RANDOM_REUSE_UNIQUE(type,
+                        reward_delay,
+                        make_pair(get_random_reward(), get_time_delay()),
+                        get_basis_feature(mode),
+                        [](type p) { DEBUG_OUT(0, "Used: " << p.first << " / " << p.second); }
+                        // get_reward_feature(mode)
+        );
+    return RewardFeature::create(reward_delay.first, reward_delay.second);
+}
+
+set<pair<f_ptr_t, string> > get_random_basis_feature_set() {
+    set<pair<f_ptr_t, string> > f_set;
+    repeat(rand()%5 + 1) {
+        // add random basis feature but don't clear their unique sets
+        f_ptr_t f = get_basis_feature(MODE::RANDOM, false);
+        string s = (string)(*f);
+        auto p = make_pair(f,s);
+        while(f_set.find(p)!=f_set.end()) {
+            f = get_basis_feature(MODE::RANDOM, false);
+            s = (string)(*f);
+            p = make_pair(f,s);
         }
+        f_set.insert(p);
     }
-    f_ptr_t and_feature(new AndFeature(f_vector[0]));
-    for(auto idx_f : util::enumerate(f_vector)) {
+    return f_set;
+}
+
+f_ptr_t get_and_feature(MODE mode) {
+    typedef set<pair<f_ptr_t, string> > type;
+    RANDOM_REUSE_UNIQUE(type,
+                        f_set,
+                        get_random_basis_feature_set(),
+                        get_and_feature(mode),
+                        [](type vec) {
+                            DEBUG_OUT(0, "Used:");
+                            for(auto feature_string : vec) {
+                                DEBUG_OUT(0, "    " << *(feature_string.first) << " / " <<
+                                          feature_string.second);
+                            }
+                        }
+        );
+    f_ptr_t and_feature(new AndFeature(f_set.begin()->first));
+    for(auto idx_f : util::enumerate(f_set)) {
         if(idx_f.first==0) {
             continue;
         }
-        and_feature = f_ptr_t(new AndFeature(and_feature, idx_f.second));
+        and_feature = f_ptr_t(new AndFeature(and_feature, idx_f.second.first));
     }
     return and_feature;
 }

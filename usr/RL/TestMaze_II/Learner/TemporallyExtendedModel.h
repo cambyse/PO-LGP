@@ -33,7 +33,7 @@ public:
 
 protected:
 
-    virtual double neg_log_likelihood(col_vec_t& grad, const col_vec_t& weights);
+    virtual probability_t neg_log_likelihood(col_vec_t& grad, const col_vec_t& weights);
     lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*) override;
     int LBFGS_progress(const lbfgsfloatval_t *x,
                        const lbfgsfloatval_t *g,
@@ -44,7 +44,7 @@ protected:
                        int nr_variables,
                        int iteration_nr,
                        int ls) const override;
-    virtual void LBFGS_final_message(double) const override;
+    virtual void LBFGS_final_message(probability_t) const override;
 };
 
 #endif /* TEMPORALLYEXTENDEDMODEL_H_ */

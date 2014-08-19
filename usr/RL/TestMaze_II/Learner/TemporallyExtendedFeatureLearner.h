@@ -19,9 +19,9 @@ class TemporallyExtendedFeatureLearner: public HistoryObserver, public virtual S
     //----typedefs/classes----//
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
-    typedef arma::Mat<double> f_mat_t; // using double for compatibility to vec_t
-    typedef arma::Col<double> col_vec_t;
-    typedef arma::Row<double> row_vec_t;
+    typedef arma::Mat<f_ret_t> f_mat_t;
+    typedef arma::Col<f_ret_t> col_vec_t;
+    typedef arma::Row<f_ret_t> row_vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
     typedef Feature::look_up_map_t basis_feature_map_t;
     enum class OUTCOME_TYPE { ACTION, OBSERVATION_REWARD };
