@@ -200,10 +200,14 @@ void ConjunctiveAdjacency::add_delay(f_ptr_t f,
     case Feature::CONST_FEATURE:
         break;
     case Feature::ACTION:
+    case Feature::BUTTON_ACTION:
     {
         auto af = dynamic_pointer_cast<const ActionFeature>(f);
+        auto baf = dynamic_pointer_cast<const ButtonActionFeature>(f);
         if(af!=nullptr) {
             action_delays.insert(af->get_delay());
+        } else if(baf!=nullptr) {
+            action_delays.insert(baf->get_delay());
         } else {
             DEBUG_DEAD_LINE;
         }
