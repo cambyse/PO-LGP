@@ -28,11 +28,11 @@ public:
     const int size;
     static const bool use_factored_action_features = true;
 protected:
-    std::vector<probability_t> reward_probs;
+    std::vector<probability_t> button_probs;
     action_t last_action;
     std::vector<QGraphicsRectItem*> button_array;
-    std::vector<QGraphicsEllipseItem*> reward_array;
-    std::vector<int> last_reward;
+    QGraphicsEllipseItem* reward_item;
+    reward_t last_reward;
 
     //----methods----//
 public:
@@ -53,6 +53,8 @@ public:
                                                    action_ptr_t action,
                                                    int delay);
 private:
+    virtual probability_t prob_from_arrays(const std::vector<bool> & last_pushed,
+                                           const std::vector<bool> & this_pushed) const final;
     static std::vector<probability_t> probs_from_beta(const int& s, const double& alpha);
 };
 

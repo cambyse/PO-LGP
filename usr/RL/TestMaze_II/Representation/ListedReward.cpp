@@ -115,6 +115,10 @@ ListedReward::value_t ListedReward::max_reward() const {
     return max_val;
 }
 
+ListedReward::ptr_t ListedReward::new_reward() const {
+    return ptr_t(new ListedReward(reward_list,reward_index));
+}
+
 ListedReward::ptr_t ListedReward::new_reward(const int& idx) const {
     return ptr_t(new ListedReward(reward_list,idx));
 }

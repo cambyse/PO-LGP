@@ -24,15 +24,15 @@ static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);
 ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()),
     size(s),
-    reward_probs(p),
+    button_probs(p),
     last_action(size),
-    last_reward(size, 0)
+    last_reward({0,1}, 0.)
 {
     // set probabilities
-    if(reward_probs.size() == 0) {
+    if(button_probs.size() == 0) {
         DEBUG_OUT(2, "Empty probabilities, initializing randomly");
-        reward_probs.resize(size);
-        for(auto& elem : reward_probs) {
+        button_probs.resize(size);
+        for(auto& elem : button_probs) {
             elem = drand48();
             DEBUG_OUT(2, elem);
         }
@@ -58,10 +58,9 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
 
-    // Render buttons/rewards/text
+    // Render buttons/text
     button_array.clear();
-    reward_array.clear();
-    for(auto idx_prob : util::enumerate(reward_probs)) {
+    for(auto idx_prob : util::enumerate(button_probs)) {
         // buttons
         QBrush button_brush;
         if(idx_prob.second>=0.5) {
@@ -77,13 +76,6 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
                                               button_size,
                                               button_pen_OFF,
                                               button_brush));
-        // rewards
-        reward_array.push_back(scene->addEllipse(idx_prob.first,
-                                                 1,
-                                                 button_size,
-                                                 button_size,
-                                                 reward_pen,
-                                                 reward_brush_NONE));
         // texts
         QGraphicsTextItem * txt = scene->addText(
             QString("%1").arg(idx_prob.second, 5, 'f', 3),
@@ -96,6 +88,13 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
             );
         txt->setScale(text_scale);
     }
+    // reward
+    reward_item = scene->addEllipse((double)button_array.size()/2,
+                                    1,
+                                    button_size,
+                                    button_size,
+                                    reward_pen,
+                                    reward_brush_NONE);
 
     // put frame around everything
     scene->addRect(-0.5, -1.5, size+1, 4, button_pen_OFF );
@@ -110,19 +109,11 @@ void ButtonWorld::render_update() {
         } else {
             button_array[idx]->setPen(button_pen_OFF);
         }
-        switch(last_reward[idx]) {
-        case 1:
-            reward_array[idx]->setBrush(reward_brush_PLUS);
-            break;
-        case -1:
-            reward_array[idx]->setBrush(reward_brush_MINUS);
-            break;
-        case 0:
-            reward_array[idx]->setBrush(reward_brush_NONE);
-            break;
-        default:
-            DEBUG_DEAD_LINE;
-        }
+    }
+    if((int)last_reward.get_value()==1) {
+        reward_item->setBrush(reward_brush_PLUS);
+    } else {
+        reward_item->setBrush(reward_brush_NONE);
     }
     rescale_scene(view);
 }
@@ -130,30 +121,21 @@ void ButtonWorld::render_update() {
 void ButtonWorld::render_tear_down() {
     Visualizer::render_tear_down();
     button_array.assign(0, nullptr);
-    reward_array.assign(0, nullptr);
+    reward_item = nullptr;
 }
 
 void ButtonWorld::perform_transition(const action_ptr_t& action) {
     action_t this_button_action = *(action.get_derived<action_t>());
-    for(auto idx_rew : util::enumerate(last_reward)) {
-        if(last_action.get_array()[idx_rew.first] && this_button_action.get_array()[idx_rew.first]) {
-            if(drand48() < reward_probs[idx_rew.first]) {
-                idx_rew.second = 1;
-            } else {
-                idx_rew.second = -1;
-            }
-        } else {
-            idx_rew.second = 0;
-        }
+    auto last_pushed = last_action.get_array();
+    auto this_pushed = this_button_action.get_array();
+    probability_t prob = prob_from_arrays(last_pushed, this_pushed);
+    if(drand48() < prob) {
+        last_reward.set_value(1.);
+    } else {
+        last_reward.set_value(0.);
     }
     last_action = this_button_action;
-
-    reward_t::value_t sum = 0;
-    for(auto rew : last_reward) {
-        sum += rew;
-    }
-
-    current_instance = current_instance->append(action, observation_space, reward_space.get_derived<reward_t>()->new_reward(sum));
+    current_instance = current_instance->append(action, observation_space, last_reward.new_reward());
 }
 
 ButtonWorld::probability_t ButtonWorld::get_prediction(const_instance_ptr_t ins,
@@ -166,49 +148,23 @@ ButtonWorld::probability_t ButtonWorld::get_prediction(const_instance_ptr_t ins,
         last_button_action = *(ins->action.get_derived<action_t>());
     }
     action_t next_button_action = *(action.get_derived<action_t>());
-    // get array of probs for buttons pushed twice in a row
-    vector<probability_t> active_probs;
-    for(auto idx_prob : util::enumerate(reward_probs)) {
-        if(last_button_action.get_array()[idx_prob.first] &&
-           last_button_action.get_array()[idx_prob.first]) {
-            active_probs.push_back(idx_prob.second);
-        }
-    }
-    // get reward
-    int rew = reward->get_value();
-    if(abs(rew)>(int)active_probs.size() || abs(rew)%2 != (int)active_probs.size()%2) {
-        // return if impossible to achieve
+
+    // get arrays of pushed buttons
+    auto last_pushed = last_button_action.get_array();
+    auto next_pushed = next_button_action.get_array();
+
+    // get prob from arrays of pushed buttons
+    probability_t prob = prob_from_arrays(last_pushed, next_pushed);
+
+    // return
+    if(reward->get_value()==1) {
+        return prob;
+    } else if(reward->get_value()==0) {
+        return 1-prob;
+    } else {
+        DEBUG_DEAD_LINE;
         return 0;
     }
-    // get number of PLUS/MINUS rewards
-    int n_plus = 0, n_minus = 0;
-    if(rew>0) {
-        n_plus += rew;
-        n_plus += (active_probs.size()-rew)/2;
-        n_minus = active_probs.size() - n_plus;
-    } else {
-        n_minus += abs(rew);
-        n_minus += (active_probs.size()-abs(rew))/2;
-        n_plus = active_probs.size() - n_minus;
-    }
-    // construct vector of bool indicating which buttons return PLUS and which MINUS
-    vector<bool> plus_minus(n_plus, true);
-    plus_minus.resize(n_plus+n_minus, false);
-    // go through all possible orderings
-    std::sort(plus_minus.begin(), plus_minus.end());
-    probability_t prob = 0;
-    do {
-        probability_t this_prob = 1;
-        for(auto idx_prob : util::enumerate(active_probs)) {
-            if(plus_minus[idx_prob.first]) {
-                this_prob *= idx_prob.second;
-            } else {
-                this_prob *= 1 - idx_prob.second;
-            }
-        }
-        prob += this_prob;
-    } while(std::next_permutation(plus_minus.begin(), plus_minus.end()));
-    return prob;
 }
 
 void ButtonWorld::get_features(f_set_t & basis_features,
@@ -271,6 +227,19 @@ void ButtonWorld::construct_factored_action_features(f_set_t & basis_features,
         DEBUG_OUT(2,"Adding feature: " << *action_feature);
         basis_features.insert(action_feature);
     }
+}
+
+ButtonWorld::probability_t ButtonWorld::prob_from_arrays(const vector<bool> & last_pushed,
+                                                         const vector<bool> & this_pushed) const {
+    probability_t prob = 1;
+    for(int idx : util::Range(size)) {
+        if(last_pushed[idx]==this_pushed[idx]) {
+            prob *= button_probs[idx];
+        } else {
+            prob *= 1 - button_probs[idx];
+        }
+    }
+    return prob;
 }
 
 std::vector<ButtonWorld::probability_t> ButtonWorld::probs_from_beta(const int& s,
