@@ -234,9 +234,16 @@ void ButtonWorld::construct_factored_action_features(f_set_t & basis_features,
                                                      int delay) {
     auto button_action = action.get_derived<ButtonAction>();
     for(int idx : util::Range(button_action->get_array().size())) {
-        f_ptr_t action_feature = ButtonActionFeature::create(idx,delay);
-        DEBUG_OUT(2,"Adding feature: " << *action_feature);
-        basis_features.insert(action_feature);
+        {
+            f_ptr_t action_feature = ButtonActionFeature::create(idx,delay, true);
+            DEBUG_OUT(2,"Adding feature: " << *action_feature);
+            basis_features.insert(action_feature);
+        }
+        {
+            f_ptr_t action_feature = ButtonActionFeature::create(idx,delay, false);
+            DEBUG_OUT(2,"Adding feature: " << *action_feature);
+            basis_features.insert(action_feature);
+        }
     }
 }
 

@@ -4,10 +4,15 @@
 
 #include "../ButtonWorld/ButtonAction.h"
 
+#include <tuple>
+#include <vector>
+
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
+using std::vector;
 using std::get;
+using std::make_tuple;
 using std::string;
 using std::shared_ptr;
 using std::dynamic_pointer_cast;
@@ -293,7 +298,7 @@ bool ActionFeature::operator<(const Feature& other) const {
     }
 }
 
-ButtonActionFeature::ButtonActionFeature(const int& idx, const int& d): button_idx(idx), delay(d) {
+ButtonActionFeature::ButtonActionFeature(const int& idx, const int& d, const bool& n): negation(n), button_idx(idx), delay(d) {
     feature_type = BUTTON_ACTION;
     complexity = 1;
 }
@@ -302,8 +307,8 @@ ButtonActionFeature::~ButtonActionFeature() {
     erase_from_unique();
 }
 
-Feature::const_feature_ptr_t ButtonActionFeature::create(const int& idx, const int& d) {
-    return BasisFeature::create(new ButtonActionFeature(idx,d));
+Feature::const_feature_ptr_t ButtonActionFeature::create(const int& idx, const int& d, const bool& n) {
+    return BasisFeature::create(new ButtonActionFeature(idx,d,n));
 }
 
 Feature::intern_feature_return_t ButtonActionFeature::intern_evaluate(const_instance_ptr_t ins) const {
@@ -322,17 +327,18 @@ Feature::intern_feature_return_t ButtonActionFeature::intern_evaluate(const_inst
         return 0;
     }
     if(array[button_idx]) {
-        return 1;
+        return negation?0:1;
+    } else {
+        return negation?1:0;
     }
-    return 0;
 }
 
 string ButtonActionFeature::identifier() const {
-    return QString("b(%1,%2)").arg(button_idx).arg(delay).toStdString()+Feature::identifier();
+    return QString("b(%1,%2,%3)").arg(button_idx).arg(delay).arg(negation?"no":"yes").toStdString()+Feature::identifier();
 }
 
 bool ButtonActionFeature::features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2) {
-    if(f1.delay==f2.delay && f1.button_idx!=f2.button_idx) {
+    if(f1.delay==f2.delay && f1.button_idx==f2.button_idx && f1.negation!=f2.negation) {
         return true;
     } else {
         return false;
@@ -344,7 +350,9 @@ bool ButtonActionFeature::operator==(const Feature& other) const {
     if(pt==nullptr) {
         return false;
     } else {
-        return (this->button_idx==pt->button_idx && this->delay==pt->delay);
+        return (this->button_idx==pt->button_idx &&
+                this->delay==pt->delay &&
+                this->negation==pt->negation);
     }
 }
 
@@ -357,8 +365,7 @@ bool ButtonActionFeature::operator<(const Feature& other) const {
             DEBUG_DEAD_LINE;
             return false;
         } else {
-            return this->delay < f_ptr->delay ||
-                ( this->delay == f_ptr->delay && this->button_idx < f_ptr->button_idx);
+            return make_tuple(this->delay, this->button_idx, this->negation) < make_tuple(f_ptr->delay, f_ptr->button_idx, f_ptr->negation);
         }
     }
 }
@@ -618,7 +625,10 @@ void AndFeature::add_feature(const_feature_ptr_t f) {
 
 void AndFeature::finalize_construction() {
     feature_type = AND;
-    complexity = subfeatures.size();
+    complexity = 0;
+    for(auto f : subfeatures) {
+        complexity += f->complexity;
+    }
     check_for_contradicting_subfeatures();
 }
 

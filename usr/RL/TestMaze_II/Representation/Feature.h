@@ -145,12 +145,12 @@ protected:
 /** Is active if a specific button was pressed by an action. */
 class ButtonActionFeature: public BasisFeature {
 private:
-    ButtonActionFeature(const int& idx, const int& d);
+    ButtonActionFeature(const int& idx, const int& d, const bool& n);
 protected:
     virtual intern_feature_return_t intern_evaluate(const_instance_ptr_t) const override;
 public:
     virtual ~ButtonActionFeature();
-    static const_feature_ptr_t create(const int& idx, const int& d);
+    static const_feature_ptr_t create(const int& idx, const int& d, const bool& n);
     virtual std::string identifier() const override;
     static bool features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2);
     bool contradicts(const ButtonActionFeature& f) const { return features_contradict(*this,f); }
@@ -158,6 +158,7 @@ public:
     virtual bool operator<(const Feature& other) const override;
     virtual int get_delay() const final { return delay; }
 protected:
+    bool negation;
     int button_idx;
     int delay;
 };
