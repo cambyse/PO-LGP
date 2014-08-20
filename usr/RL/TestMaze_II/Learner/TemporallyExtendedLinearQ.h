@@ -53,7 +53,7 @@ public:
 
     virtual double get_TD_error();
 
-    virtual void print_training_data() const override;
+    virtual void print_training_data(bool feat = false) const override;
 
     virtual bool update_policy();
 

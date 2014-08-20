@@ -138,13 +138,25 @@ double TELQ::get_TD_error() {
     return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
 }
 
-void TELQ::print_training_data() const {
+void TELQ::print_training_data(bool feat) const {
     int data_idx = 0;
     int episode_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
         cout << "Episode " << episode_idx << endl;
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+            // print instance
             cout << ins << endl;
+            // print features
+            if(feat) {
+                QString f_vals;
+                for(auto idx_f : util::enumerate(feature_set)) {
+                    f_vals += QString("	%1:%2")
+                        .arg(idx_f.first, 3)
+                        .arg(idx_f.second->evaluate(ins), 4, 'f', 2);
+                }
+                cout << f_vals << endl;
+            }
+            // print action values
             int action_idx = 0;
             for(action_ptr_t act : action_space) {
                 cout << "    " << act << " --> " << get_action_values(ins)(action_idx) << endl;
@@ -490,10 +502,7 @@ int TELQ::LBFGS_progress(const lbfgsfloatval_t * x,
                          int /*ls*/) const {
     IF_DEBUG(1) {
         // L1 norm //
-        double xnorm = 0;
-        for(int idx=0; idx<nr_variables; ++idx) {
-            xnorm += fabs(x[idx]);
-        }
+        double xnorm = L1_norm(x, nr_variables);
         cout <<
             QString("    Iteration %1 (%2), TD-error + L1 = %3 + %4")
             .arg(iteration_nr)

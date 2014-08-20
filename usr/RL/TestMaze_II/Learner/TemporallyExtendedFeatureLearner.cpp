@@ -88,6 +88,10 @@ void TEFL::set_l1_factor(const double& l1) {
     l1_factor = l1;
 }
 
+void TEFL::log_regularization(const bool& use) {
+    use_log_regularization = use;
+}
+
 void TEFL::print_features() const {
     cout << "Feature Set:" << endl;
     int f_idx = 0;
@@ -100,15 +104,24 @@ void TEFL::print_features() const {
     }
 }
 
-void TEFL::print_training_data() const {
+void TEFL::print_training_data(bool feat) const {
     int data_idx = 0;
     int episode_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
-        DEBUG_OUT(0,"Episode " << episode_idx);
-        int instance_idx = 0;
+        cout << "Episode " << episode_idx << endl;
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
-            DEBUG_OUT(0,data_idx << "    Instance " << instance_idx << ": " << ins);
-            ++instance_idx;
+            // print instance
+            cout << ins << endl;
+            // print features
+            if(feat) {
+                QString f_vals;
+                for(auto idx_f : util::enumerate(feature_set)) {
+                    f_vals += QString("	%1:%2")
+                        .arg(idx_f.first, 3)
+                        .arg(idx_f.second->evaluate(ins), 4, 'f', 2);
+                }
+                cout << f_vals << endl;
+            }
             ++data_idx;
         }
         ++episode_idx;
@@ -590,10 +603,11 @@ void TEFL::update_F_matrices() {
                         int feature_idx = 0;
                         for(f_ptr_t feature : feature_set) {
                             // set entry to 1 for non-zero features
-                            //if(feature->evaluate(ins->const_prev(),act,ins->observation,ins->reward)!=0) { // directly evaluate feature
-                            if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
+                            // f_ret_t f_ret_val = feature->evaluate(ins->const_prev(),act,ins->observation,ins->reward); // directly evaluate feature
+                            f_ret_t f_ret_val = feature->evaluate(bf_map);                                                // evaluate feature via basis feature map
+                            if(f_ret_val!=0) {
                                 DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
-                                F_matrix(feature_idx,outcome_idx) = 1;
+                                F_matrix(feature_idx,outcome_idx) = f_ret_val;
                             }
                             // increment
                             ++feature_idx;
@@ -612,10 +626,11 @@ void TEFL::update_F_matrices() {
                             int feature_idx = 0;
                             for(f_ptr_t feature : feature_set) {
                                 // set entry to 1 for non-zero features
-                                //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) { // directly evaluate feature
-                                if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
+                                // f_ret_t f_ret_val = feature->evaluate(ins->const_prev(),ins->action,obs,rew); // directly evaluate feature
+                                f_ret_t f_ret_val = feature->evaluate(bf_map);                                   // evaluate feature via basis feature map
+                                if(f_ret_val!=0) {
                                     DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
-                                    F_matrix(feature_idx,outcome_idx) = 1;
+                                    F_matrix(feature_idx,outcome_idx) = f_ret_val;
                                 }
                                 // increment
                                 ++feature_idx;
@@ -720,11 +735,11 @@ void TEFL::update_outcome_indices() {
 
 bool TEFL::pick_non_const_features() {
 
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-    // Caution: basis_feature_maps must be up to date //
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    //  Caution: basis_feature_maps must be up to date  //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
 
     if(DEBUG_LEVEL>0) {ProgressBar::init("Pick non-const features:   ");}
 
@@ -899,8 +914,21 @@ bool TEFL::pick_non_const_features() {
     return false;
 }
 
+lbfgsfloatval_t TEFL::regularized_LBFGS_objective(const lbfgsfloatval_t* x,
+                                                  lbfgsfloatval_t* g) {
+    auto xnorm = L1_norm(x, weights.size());
+    if(use_log_regularization) {
+        return LBFGS_objective(x,g) + log(xnorm+1) - xnorm;
+    } else {
+        return LBFGS_objective(x,g);
+    }
+}
+
 LBFGS_Object::objective_t TEFL::get_LBFGS_objective() {
-    return std::bind(&TEFL::LBFGS_objective, this, std::placeholders::_1, std::placeholders::_2);
+    return std::bind(&TEFL::regularized_LBFGS_objective,
+                     this,
+                     std::placeholders::_1,
+                     std::placeholders::_2);
 }
 
 LBFGS_Object::progress_t TEFL::get_LBFGS_progress() const {
@@ -915,4 +943,12 @@ LBFGS_Object::progress_t TEFL::get_LBFGS_progress() const {
                      std::placeholders::_8,
                      std::placeholders::_9
         );
+}
+
+lbfgsfloatval_t TEFL::L1_norm(const lbfgsfloatval_t * x, int nr_vars) const {
+    lbfgsfloatval_t xnorm = 0;
+    for(int idx=0; idx<nr_vars; ++idx) {
+        xnorm += fabs(x[idx]);
+    }
+    return xnorm;
 }

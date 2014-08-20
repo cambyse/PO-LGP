@@ -227,10 +227,7 @@ int TEM::LBFGS_progress(const lbfgsfloatval_t * x,
                         int /*ls*/) const {
     IF_DEBUG(1) {
         // L1 norm //
-        lbfgsfloatval_t xnorm = 0;
-        for(int idx=0; idx<nr_variables; ++idx) {
-            xnorm += fabs(x[idx]);
-        }
+        lbfgsfloatval_t xnorm = L1_norm(x, nr_variables);
         cout <<
             QString("    Iteration %1 (%2), Likelihood + L1 = %3 + %4")
             .arg(iteration_nr)

@@ -114,7 +114,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     MoveByKeys *moveByKeys = new MoveByKeys(this);
     ui.graphicsView->installEventFilter(moveByKeys);
 
-    // preliminarily set an environment
+    // preliminarily set an environment so N+ does not complain
     change_environment(make_shared<Maze>(epsilon,"Default"));
     // set some properties of N+ (TEL)
     N_plus_TEL->set_horizon_extension(2);
@@ -377,6 +377,16 @@ void TestMaze_II::initialize_commands() {
         command_center.add_command(top_model_learn,{"l1"}, [this]()->ret_t{
                 return {true,QString("L1 coefficient is %1").arg(l1_factor)};
             }, "print current coefficient for L1 regularization");
+        command_center.add_command(top_model_learn,{"log"}, [this](bool use)->ret_t{
+                tem->log_regularization(use);
+                tel->log_regularization(use);
+                return {true, (use?"use log regularization":"don't use log regularization")};
+            }, "set/unset log-regularization for TEM/TEL");
+        command_center.add_command(top_model_learn,{"log"}, [this]()->ret_t{
+                bool use = tem->log_regularization();
+                if(use!=tel->log_regularization()) { DEBUG_DEAD_LINE; }
+                return {true, (use?"using log regularization":"NOT using log regularization")};
+            }, "print whether log-regularization for TEM/TEL is used");
         command_center.add_command(top_model_learn,{"l1"}, [this](double d)->ret_t{
                 if(d>=0) {
                     l1_factor = d;
@@ -515,6 +525,10 @@ void TestMaze_II::initialize_commands() {
                 tem->print_features();
                 return {true,"printed TEM features"};
             }, "print TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem print data"}, [this](bool feat)->ret_t{
+                tem->print_training_data(feat);
+                return {true,"printed TEM training data"};
+            }, "print TEM training data (if <bool> including features)");
         command_center.add_command(top_model_learn_tem,{"tem cycle","temc"}, [this]()->ret_t{
                 tem->grow_feature_set();
                 tem->optimize_weights_LBFGS();
@@ -577,6 +591,10 @@ void TestMaze_II::initialize_commands() {
                 tel->print_features();
                 return {true,"printed TEL features"};
             }, "print TEL features");
+        command_center.add_command(top_model_learn_tel,{"tel print data"}, [this](bool feat)->ret_t{
+                tel->print_training_data(feat);
+                return {true,"printed TEL training data"};
+            }, "print TEL training data and action values (if <bool> including features)");
         command_center.add_command(top_model_learn_tel,{"tel cycle","telc"}, [this]()->ret_t{
                 tel->grow_feature_set();
                 tel->run_policy_iteration();
@@ -724,12 +742,22 @@ void TestMaze_II::initialize_commands() {
                     return {true,"deactivated goal" };
                 }
             }, "deactivate goal state");
-        command_center.add_command(top_todo,{"set prune tree"}, [this]()->ret_t{
-                return {true,"...to be ported"};
-            }, "prune search tree");
-        command_center.add_command(top_todo,{"unset prune tree"}, [this]()->ret_t{
-                return {true,"...to be ported"};
-            }, "don't prune search tree");
+        command_center.add_command(top_planning,{"prune"}, [this](bool prune)->ret_t{
+                if(prune) {
+                    prune_search_tree = true;
+                } else {
+                    prune_search_tree=false;
+               }
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_pruning(prune_search_tree);
+                    look_ahead_policy->invalidate_search_tree();
+                }
+                return {true , (prune_search_tree?"prune search tree":"don't prune search tree")};
+            }, "set whether to prune search tree");
+        command_center.add_command(top_todo,{"prune"}, [this]()->ret_t{
+                return {true , (prune_search_tree?"search tree IS pruned":"search tree is NOT pruned")};
+            }, "print whether search tree is pruned");
         command_center.add_command(top_planning,{"discount"}, [this]()->ret_t{
                 return {true,QString("discount is %1").arg(discount)};
             }, "get discount");
@@ -1138,19 +1166,6 @@ void TestMaze_II::initialize_commands() {
 
 //        } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
 
-//            } else if(str_args[1]=="prune-tree") {
-//                if(str_args[0]=="set") {
-//                    prune_search_tree=true;
-//                    return {, "    prune search tree" };
-//                } else {
-//                    prune_search_tree=false;
-//                    return {, "    don't prune search tree" };
-//                }
-//                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
-//                if(look_ahead_policy!=nullptr) {
-//                    look_ahead_policy->set_pruning(prune_search_tree);
-//                    look_ahead_policy->invalidate_search_tree();
-//                }
 //            } else if(str_args[1]=="png") {
 //                if(str_args[0]=="set") {
 //                    save_png_on_transition=true;
