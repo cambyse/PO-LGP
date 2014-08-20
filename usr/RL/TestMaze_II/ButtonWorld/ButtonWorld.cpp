@@ -25,8 +25,8 @@ ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()),
     size(s),
     button_probs(p),
-    last_action(size),
-    last_reward({0,1}, 0.)
+    last_action(new action_t(size)),
+    last_reward(new reward_t({-1,1}, 0))
 {
     // set probabilities
     if(button_probs.size() == 0) {
@@ -37,14 +37,11 @@ ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
             DEBUG_OUT(2, elem);
         }
     }
-    // set rewards
-    vector<double> reward_list;
-    for(int rew : util::Range(-size, size)) {
-        reward_list.push_back(rew);
-    }
-    set_spaces(action_ptr_t(new action_t(s)),
+    // set action, observation, reward space
+    set_spaces(last_action,
                observation_ptr_t(new observation_t),
-               reward_ptr_t(new reward_t(reward_list, 0.)));
+               last_reward);
+    // init current instance
     current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
 }
 
@@ -89,7 +86,7 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
         txt->setScale(text_scale);
     }
     // reward
-    reward_item = scene->addEllipse((double)button_array.size()/2,
+    reward_item = scene->addEllipse((double)(button_array.size()-1)/2,
                                     1,
                                     button_size,
                                     button_size,
@@ -103,17 +100,26 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
 }
 
 void ButtonWorld::render_update() {
-    for(int idx = 0; idx < (int)last_action.get_array().size(); ++idx) {
-        if(last_action.get_array()[idx]) {
+    auto action_array = last_action.get_derived<action_t>()->get_array();
+    for(int idx = 0; idx < (int)action_array.size(); ++idx) {
+        if(action_array[idx]) {
             button_array[idx]->setPen(button_pen_ON);
         } else {
             button_array[idx]->setPen(button_pen_OFF);
         }
     }
-    if((int)last_reward.get_value()==1) {
+    switch((int)last_reward->get_value()) {
+    case 1:
         reward_item->setBrush(reward_brush_PLUS);
-    } else {
+        break;
+    case -1:
+        reward_item->setBrush(reward_brush_MINUS);
+        break;
+    case 0:
         reward_item->setBrush(reward_brush_NONE);
+        break;
+    default:
+        DEBUG_DEAD_LINE;
     }
     rescale_scene(view);
 }
@@ -124,18 +130,23 @@ void ButtonWorld::render_tear_down() {
     reward_item = nullptr;
 }
 
-void ButtonWorld::perform_transition(const action_ptr_t& action) {
-    action_t this_button_action = *(action.get_derived<action_t>());
-    auto last_pushed = last_action.get_array();
+void ButtonWorld::perform_transition(const action_ptr_t& this_action) {
+    // get button actions
+    action_t this_button_action = *(this_action.get_derived<action_t>());
+    action_t last_button_action = *(last_action.get_derived<action_t>());
     auto this_pushed = this_button_action.get_array();
+    auto last_pushed = last_button_action.get_array();
+    // get prob and select reward
     probability_t prob = prob_from_arrays(last_pushed, this_pushed);
     if(drand48() < prob) {
-        last_reward.set_value(1.);
+        last_reward = *++reward_space.begin(); // second elem from reward space
     } else {
-        last_reward.set_value(0.);
+        last_reward = *reward_space.begin(); // first elem from reward space
     }
-    last_action = this_button_action;
-    current_instance = current_instance->append(action, observation_space, last_reward.new_reward());
+    // update action
+    last_action = this_action;
+    // update current instance
+    current_instance = current_instance->append(last_action, observation_space, last_reward);
 }
 
 ButtonWorld::probability_t ButtonWorld::get_prediction(const_instance_ptr_t ins,
@@ -157,9 +168,9 @@ ButtonWorld::probability_t ButtonWorld::get_prediction(const_instance_ptr_t ins,
     probability_t prob = prob_from_arrays(last_pushed, next_pushed);
 
     // return
-    if(reward->get_value()==1) {
+    if(reward==*++reward_space.begin()) { // second elem from reward space
         return prob;
-    } else if(reward->get_value()==0) {
+    } else if(reward==*reward_space.begin()) { // first elem from reward space
         return 1-prob;
     } else {
         DEBUG_DEAD_LINE;

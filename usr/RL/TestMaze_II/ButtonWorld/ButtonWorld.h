@@ -29,10 +29,10 @@ public:
     static const bool use_factored_action_features = true;
 protected:
     std::vector<probability_t> button_probs;
-    action_t last_action;
+    action_ptr_t last_action;
     std::vector<QGraphicsRectItem*> button_array;
     QGraphicsEllipseItem* reward_item;
-    reward_t last_reward;
+    reward_ptr_t last_reward;
 
     //----methods----//
 public:
