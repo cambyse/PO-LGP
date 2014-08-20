@@ -633,6 +633,17 @@ namespace util {
         return value;
     }
 
+    /** Sum of container. */
+    template < class C >
+        typename C::value_type sum(const C & c) {
+        typename C::value_type ret = *c.begin();
+        for(auto idx_elem : enumerate(c)) {
+            if(idx_elem.first==0) continue;
+            ret += idx_elem.second;
+        }
+        return ret;
+    }
+
     /** \brief Select a random element from a vector. */
     template < typename T >
         T random_select(const std::vector<T> vec) {
