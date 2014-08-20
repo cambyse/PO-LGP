@@ -232,6 +232,11 @@ namespace util {
                 return object;
             }
 
+            /** Member access operator. */
+            virtual const ptr_t * operator->() const final {
+                return &object;
+            }
+
             /** \brief Increment operator.
              *
              * Calls the next() function of the underlying object. */
