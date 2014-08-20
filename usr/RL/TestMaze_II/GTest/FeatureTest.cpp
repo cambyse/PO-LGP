@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <utility>
+#include <tuple>
 #include <set>
 #include <set>
 #include <list>
@@ -40,6 +41,9 @@ using std::set;
 using std::string;
 using std::pair;
 using std::make_pair;
+using std::tuple;
+using std::make_tuple;
+using std::get;
 using std::string;
 using std::stringstream;
 using std::shared_ptr;
@@ -362,6 +366,10 @@ TEST(FeatureTest, SharedPtr) {
     EXPECT_EQ(1, a1.use_count()) << "only a1 itself";
     EXPECT_EQ(1, a2.use_count()) << "only a2 itself";
     EXPECT_EQ(1, a3.use_count()) << "only a3 itself";
+}
+
+TEST(FeatureTest, Contradiction) {
+    #warning TODO
 }
 
 TEST(FeatureTest, RandomAndUniqueFeatures) {
@@ -754,6 +762,9 @@ f_ptr_t get_basis_feature(MODE mode, bool clear) {
     case MODE::REUSE:
         // just use the same type as in last call
         break;
+    case MODE::PRINT:
+        // don't do anything (as REUSE) and pass on
+        break;
     default:
         DEBUG_DEAD_LINE;
         EXPECT_TRUE(false);
@@ -838,15 +849,20 @@ f_ptr_t get_action_feature(MODE mode) {
 }
 
 f_ptr_t get_button_action_feature(MODE mode) {
-    typedef pair<int, int> type;
+    typedef tuple<int, int, bool> type;
     RANDOM_REUSE_UNIQUE(type,
-                        idx_delay,
-                        make_pair((rand()%5+1), get_time_delay()),
+                        idx_delay_not,
+                        make_tuple((rand()%5+1), get_time_delay(), rand()%2==0),
                         get_basis_feature(mode),
-                        [](type p) { DEBUG_OUT(0, "Used: " << p.first << " / " << p.second); }
+                        [](type p) { DEBUG_OUT(0, "Used: "
+                                               << get<0>(p) << " / "
+                                               << get<1>(p) << " / "
+                                               << get<2>(p) ); }
                         // get_button_action_feature(mode)
         );
-    return ButtonActionFeature::create(idx_delay.first, idx_delay.second);
+    return ButtonActionFeature::create(get<0>(idx_delay_not),
+                                       get<1>(idx_delay_not),
+                                       get<2>(idx_delay_not));
 }
 
 f_ptr_t get_observation_feature(MODE mode) {
