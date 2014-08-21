@@ -89,21 +89,24 @@ void testJoypad(){
       arr y_fL, J_fL;
       MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
+#if 0 // set a feew fwd force task
       refs.fL = ARR(10., 0., 0.);
+      refs.u_bias = 1.*(~J_fL * refs.fL);
+      refs.Kq_gainFactor = ARR(.3);
+#else // change stiffness of endeff
       J_fL = J_fL.sub(0,1,0,-1);
       arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
       cout <<J_fL <<gain <<endl;
-//      refs.u_bias = 1.*(~J_fL * refs.fL);
       refs.Kq_gainFactor = gain;
-//      refs.Kq_gainFactor = ARR(.3);
       refs.u_bias = zeros(q.N);
+#endif
     }else{
       refs.fL = ARR(0., 0., 0.);
       refs.Kq_gainFactor = ARR(1.);
       refs.u_bias = zeros(q.N);
     }
 
-    refs.Kd_gainFactor = ARR(1.);
+    refs.Kd_gainFactor = ARR(1.); //???????????????????
     refs.q=q;
     refs.qdot=zero_qdot;
     if(trans && trans->qDim()==3){
