@@ -16,6 +16,9 @@
 //#define NO_RANDOM
 #endif
 
+// OpenMP
+//#define USE_OMP
+
 //===================================================================
 
 #include "Representation/AbstractAction.h"

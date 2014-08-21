@@ -175,7 +175,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         scene->addItem(normal_punish);
     }
 
-    rescale_scene(view);
+    rescale_scene();
 }
 
 
@@ -237,7 +237,7 @@ void CheeseMaze::render_update() {
         DEBUG_ERROR("Unknown reward value");
     }
 
-    rescale_scene(view);
+    rescale_scene();
 }
 
 void CheeseMaze::render_tear_down() {

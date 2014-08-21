@@ -52,6 +52,7 @@ static TestMaze_II::instance_ptr_t learning_episode_end;
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(RANDOM),
+    move_by_keys(new MoveByKeys(this)),
     environment(nullptr),
     current_instance(INVALID),
     record(false), plot(false), start_new_episode(false), save_png_on_transition(false), color_maze(true),
@@ -111,8 +112,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     QTimer::singleShot(0, this, SLOT(render_update()));
 
     // install event filter
-    MoveByKeys *moveByKeys = new MoveByKeys(this);
-    ui.graphicsView->installEventFilter(moveByKeys);
+    ui.graphicsView->installEventFilter(move_by_keys);
 
     // preliminarily set an environment so N+ does not complain
     change_environment(make_shared<Maze>(epsilon,"Default"));
@@ -1425,6 +1425,7 @@ void TestMaze_II::to_console(QString x, TEXT_STYLE style, int indentation) {
 
 TestMaze_II::~TestMaze_II() {
     delete action_timer;
+    delete move_by_keys;
     current_instance->detach_reachable();
     plot_file.close();
 }

@@ -28,6 +28,7 @@
 #include <map>
 
 class Environment;
+class MoveByKeys;
 
 class TestMaze_II : public QWidget
 {
@@ -78,6 +79,7 @@ private:
     // the user interface
     Ui::TestMaze_IIClass ui;
     Commander::CommandCenter command_center;
+    MoveByKeys * move_by_keys;
 
     // the environment
     std::shared_ptr<Environment> environment;

@@ -96,7 +96,7 @@ void ButtonWorld::render_initialize(QGraphicsView * v) {
     // put frame around everything
     scene->addRect(-0.5, -1.5, size+1, 4, button_pen_OFF );
 
-    rescale_scene(view);
+    rescale_scene();
 }
 
 void ButtonWorld::render_update() {
@@ -121,7 +121,7 @@ void ButtonWorld::render_update() {
     default:
         DEBUG_DEAD_LINE;
     }
-    rescale_scene(view);
+    rescale_scene();
 }
 
 void ButtonWorld::render_tear_down() {

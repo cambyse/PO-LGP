@@ -9,7 +9,7 @@
 #include "../Maze/MazeAction.h"
 
 #include <omp.h>
-#define USE_OMP
+//#define USE_OMP
 
 #include <iomanip>
 
@@ -426,14 +426,12 @@ void TELQ::update_c_rho_L() {
     for(auto reward_and_idx : rewards_and_data_indices) {
         double r_t = get<0>(reward_and_idx);
         int t_idx = get<1>(reward_and_idx);
-        //DEBUG_OUT(0,"T-idx: " << t_idx << " (" << policy_indices.size() << "/" << outcome_indices.size() << "/" << F_matrices.size() << ")");
-        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx].col(policy_indices[t_idx]) -
+        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx]*policy[t_idx] -
                                     F_matrices[t_idx-1].col(outcome_indices[t_idx]));
         c = c + pow(r_t,2);
         rho = rho + r_t * phi;
         L = L + kron(phi,phi.t());
         ++progress_counter;
-        ++t_idx;
         IF_DEBUG(1) { ProgressBar::print(progress_counter,number_of_data_points); }
     }
 

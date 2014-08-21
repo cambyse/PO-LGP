@@ -6,7 +6,7 @@
 #include "../util/ProgressBar.h"
 
 #include <omp.h>
-#define USE_OMP
+//#define USE_OMP
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0

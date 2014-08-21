@@ -174,7 +174,7 @@ void Maze::render_initialize(QGraphicsView * v) {
         scene->addItem(agent);
     }
 
-    rescale_scene(view);
+    rescale_scene();
 }
 
 
@@ -233,7 +233,7 @@ void Maze::render_update() {
         ++col_idx;
     }
 
-    rescale_scene(view);
+    rescale_scene();
 }
 
 void Maze::render_tear_down() {
