@@ -25,7 +25,6 @@ struct MySystem:System{
   ACCESS(byteA, rgb_leftArm)
   ACCESS(byteA, rgb_rightArm)
 
-
   MySystem(){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", true)){
@@ -52,6 +51,10 @@ struct MySystem:System{
 
 void testProjections(){
 
+
+
+  MySystem S;
+
   DisplayPrimitives primitives;
   OpenGL gl;
   gl.camera = kinectCam;
@@ -60,12 +63,7 @@ void testProjections(){
   ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
-
-
-  MySystem S;
-
   gl.lock.writeLock();
-
   primitives.P.append(new ArrCloudView(S.kinect_points, S.kinect_pointColors));
   gl.lock.unlock();
 
@@ -83,12 +81,14 @@ void testProjections(){
     if(q.N==primitives.G.q.N && qdot.N==primitives.G.qdot.N){
       gl.lock.writeLock();
       primitives.G.setJointState(q,qdot);
-      primitives.P(0)->X = kinShape->X;
       gl.lock.unlock();
     }else{
       cout <<"No joint signals: q.N=" <<q.N <<" G.q.N=" <<primitives.G.q.N <<endl;
     }
 
+    gl.lock.writeLock();
+    primitives.P(0)->X = kinShape->X;
+    gl.lock.unlock();
     gl.update();
 
   }
@@ -99,6 +99,7 @@ void testProjections(){
 
 
 int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
   testProjections();
 
   return 0;
