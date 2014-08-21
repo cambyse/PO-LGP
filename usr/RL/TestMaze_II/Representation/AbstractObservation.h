@@ -11,7 +11,7 @@ public:
             ,MINIMAL
             ,MAZE_OBSERVATION
             ,CHEESE_MAZE_OBSERVATION
-            ,BUTTON_OBSERVATION
+            ,UNIQUE_OBSERVATION
             };
     AbstractObservation(OBSERVATION_TYPE t = OBSERVATION_TYPE::NONE);
     virtual ~AbstractObservation() override {}

@@ -10,7 +10,7 @@
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
-#include "../ButtonWorld/ButtonObservation.h"
+#include "../Representation/UniqueObservation.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../Representation/ListedReward.h"
 
@@ -108,7 +108,7 @@ AbstractObservation::ptr_t get_random_observation() {
                 AbstractObservation::OBSERVATION_TYPE::MINIMAL,
                     AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION,
                     AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION,
-                    AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION
+                    AbstractObservation::OBSERVATION_TYPE::UNIQUE_OBSERVATION
                     })) {
     case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
         observation = get_random_minimal_observation();
@@ -119,8 +119,8 @@ AbstractObservation::ptr_t get_random_observation() {
     case AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION:
         observation = get_random_cheese_maze_observation();
         break;
-    case AbstractObservation::OBSERVATION_TYPE::BUTTON_OBSERVATION:
-        observation = get_random_button_observation();
+    case AbstractObservation::OBSERVATION_TYPE::UNIQUE_OBSERVATION:
+        observation = get_unique_observation();
         break;
     default:
         DEBUG_ERROR("Unexpected type");
@@ -155,8 +155,8 @@ AbstractObservation::ptr_t get_random_cheese_maze_observation() {
                         })));
 }
 
-AbstractObservation::ptr_t get_random_button_observation() {
-    return AbstractObservation::ptr_t(new ButtonObservation());
+AbstractObservation::ptr_t get_unique_observation() {
+    return AbstractObservation::ptr_t(new UniqueObservation());
 }
 
 AbstractReward::ptr_t get_random_reward() {

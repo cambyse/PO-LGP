@@ -13,7 +13,7 @@
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
-#include "../ButtonWorld/ButtonObservation.h"
+#include "../Representation/UniqueObservation.h"
 
 #include "../Representation/AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
@@ -153,7 +153,7 @@ namespace {
         observation_vector.push_back(new MinimalObservation(MinimalObservation::OBSERVATION::RED));
         observation_vector.push_back(new MazeObservation(10,10,3,4));
         observation_vector.push_back(new CheeseMazeObservation("N"));
-        observation_vector.push_back(new ButtonObservation());
+        observation_vector.push_back(new UniqueObservation());
 
         int observation_type_idx = 0;
         // for all observation types (represented by one specific observation of each type)

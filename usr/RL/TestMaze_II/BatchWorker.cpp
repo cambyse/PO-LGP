@@ -6,7 +6,8 @@
 #include "../Predictor.h"
 #include "../HistoryObserver.h"
 #include "../CheeseMaze/CheeseMaze.h"
-#include "../ButtonWorld/ButtonWorld.h"
+#include "../ButtonWorld/SeparateButtonWorld.h"
+#include "../ButtonWorld/JointButtonWorld.h"
 #include "../Maze/Maze.h"
 #include "../HistoryObserver.h"
 #include "../Learner/TemporallyExtendedModel.h"
@@ -177,7 +178,7 @@ bool BatchWorker::post_process_args() {
     }
 
     // check environment
-    if(environment_arg.getValue()=="cheese" || environment_arg.getValue()=="button") {
+    if(environment_arg.getValue()=="cheese" || environment_arg.getValue()=="sep-button" || environment_arg.getValue()=="joint-button") {
         // ok
     } else {
         auto maze = make_shared<Maze>();
@@ -186,7 +187,8 @@ bool BatchWorker::post_process_args() {
             DEBUG_WARNING("--- Cheese Maze ---");
             DEBUG_WARNING("    cheese");
             DEBUG_WARNING("--- Cheese World ---");
-            DEBUG_WARNING("    button");
+            DEBUG_WARNING("    sep-button");
+            DEBUG_WARNING("    joint-button");
             DEBUG_WARNING("--- Other Mazes ---");
             for(auto s : maze->get_maze_list()) {
                 DEBUG_WARNING("    " << s);
@@ -263,8 +265,10 @@ void BatchWorker::collect_data() {
                 // initialize environment and get spaces
                 if(environment_arg.getValue()=="cheese") {
                     environment = make_shared<CheeseMaze>();
-                } else if(environment_arg.getValue()=="button") {
-                    environment = make_shared<ButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                } else if(environment_arg.getValue()=="sep-button") {
+                    environment = make_shared<SeparateButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                } else if(environment_arg.getValue()=="joint-button") {
+                    environment = make_shared<JointButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
                 } else {
                     environment = make_shared<Maze>(epsilon_arg.getValue(),environment_arg.getValue().c_str());
                 }

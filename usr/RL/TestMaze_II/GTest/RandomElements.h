@@ -25,7 +25,7 @@ AbstractObservation::ptr_t get_random_maze_observation();
 
 AbstractObservation::ptr_t get_random_cheese_maze_observation();
 
-AbstractObservation::ptr_t get_random_button_observation();
+AbstractObservation::ptr_t get_unique_observation();
 
 AbstractReward::ptr_t get_random_reward();
 

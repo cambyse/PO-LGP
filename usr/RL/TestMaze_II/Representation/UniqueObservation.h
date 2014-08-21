@@ -1,9 +1,9 @@
-#ifndef BUTTONOBSERVATION_H_
-#define BUTTONOBSERVATION_H_
+#ifndef UNIQUEOBSERVATION_H_
+#define UNIQUEOBSERVATION_H_
 
 #include "../Representation/AbstractObservation.h"
 
-class ButtonObservation: public AbstractObservation {
+class UniqueObservation: public AbstractObservation {
     //----typedefs/classes----//
     //          NONE          //
 
@@ -12,13 +12,13 @@ class ButtonObservation: public AbstractObservation {
 
     //----methods----//
 public:
-    ButtonObservation();
-    virtual ~ButtonObservation() override = default;
-    ABSTRACT_ITERATABLE_SPACE_BEGIN(ButtonObservation);
+    UniqueObservation();
+    virtual ~UniqueObservation() override = default;
+    ABSTRACT_ITERATABLE_SPACE_BEGIN(UniqueObservation);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractObservation &other) const override;
     virtual bool operator<(const AbstractObservation &other) const override;
     virtual const std::string print() const override;
 };
 
-#endif /* BUTTONOBSERVATION_H_ */
+#endif /* UNIQUEOBSERVATION_H_ */

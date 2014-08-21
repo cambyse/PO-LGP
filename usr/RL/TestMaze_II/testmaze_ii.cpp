@@ -10,7 +10,8 @@
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
-#include "ButtonWorld/ButtonWorld.h"
+#include "ButtonWorld/SeparateButtonWorld.h"
+#include "ButtonWorld/JointButtonWorld.h"
 #include "Planning/LookAheadPolicy.h"
 #include "Planning/RandomPolicy.h"
 #include "Planning/GoalIteration.h"
@@ -214,19 +215,32 @@ void TestMaze_II::initialize_commands() {
                 }
                 return {true,""};
             }, "display available maze names");
-        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size)->ret_t{
-                change_environment(make_shared<ButtonWorld>(size));
-                return {true,"set button world"};
-            }, "set button world with <int> buttons");
+        command_center.add_command(top_maze,{"set joint button world", "set jbw"}, [this](int size)->ret_t{
+                change_environment(make_shared<JointButtonWorld>(size));
+                return {true,"set joint button world"};
+            }, "set joint button world with <int> buttons");
 
-        command_center.add_command(top_maze,{"set button world", "set bw"}, [this](int size, double alpha)->ret_t{
+        command_center.add_command(top_maze,{"set joint button world", "set jbw"}, [this](int size, double alpha)->ret_t{
                 if(alpha<=0) {
                     return {false,"alpha <double> must be greater than zero"};
                 } else {
-                    change_environment(make_shared<ButtonWorld>(size, alpha));
-                    return {true,"set button world"};
+                    change_environment(make_shared<JointButtonWorld>(size, alpha));
+                    return {true,"set joint button world"};
                 }
-            }, "set button world with <int> buttons and probabilites drawn independently from a Beta with a=b=<double>");
+            }, "set joint button world with <int> buttons and probabilites drawn independently from a Beta with a=b=<double>");
+        command_center.add_command(top_maze,{"set separate button world", "set sbw"}, [this](int size)->ret_t{
+                change_environment(make_shared<SeparateButtonWorld>(size));
+                return {true,"set separate button world"};
+            }, "set separate button world with <int> buttons");
+
+        command_center.add_command(top_maze,{"set separate button world", "set sbw"}, [this](int size, double alpha)->ret_t{
+                if(alpha<=0) {
+                    return {false,"alpha <double> must be greater than zero"};
+                } else {
+                    change_environment(make_shared<SeparateButtonWorld>(size, alpha));
+                    return {true,"set separate button world"};
+                }
+            }, "set separate button world with <int> buttons and probabilites drawn independently from a Beta with a=b=<double>");
         command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
                 shared_ptr<Maze> maze(new Maze(epsilon));
                 bool success = maze->set_maze(name);
