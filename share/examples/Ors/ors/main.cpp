@@ -75,11 +75,13 @@ void TEST(Kinematics){
 
 void TEST(QuaternionKinematics){
   ors::KinematicWorld G("kinematicTestQuat.kvg");
+  orsDrawJoints=false;
 
   for(uint k=0;k<10;k++){
     ors::Quaternion target;
     target.setRandom();
     G.getShapeByName("ref")->rel.rot = target;
+    G.getShapeByName("marker")->rel.rot = target;
     arr x;
     G.getJointState(x);
     for(uint t=0;t<100;t++){
@@ -92,6 +94,8 @@ void TEST(QuaternionKinematics){
       G.watch(false, STRING("follow redundant trajectory -- time " <<t));
     }
   }
+
+  orsDrawJoints=true;
 }
 
 //===========================================================================
@@ -515,13 +519,11 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
-  testQuaternionKinematics();
-  return 0;
-
   testLoadSave();
   testCopy();
   testPlayStateSequence();
   testKinematics();
+  testQuaternionKinematics();
   testKinematicSpeed();
   testFollowRedundantSequence();
   testDynamics();

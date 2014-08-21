@@ -25,7 +25,7 @@ void TEST(ModuleSorter){
   for(uint i=0;i<N;i++) S.addVariable<int>(STRING("int"<<i));
   for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), ARRAY<uint>(i-1, i));
 #else
-  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), ARRAY<MT::String>(STRING("int"<<i-1), STRING("int"<<i)));
+  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), STRINGS_2("int"<<i-1, "int"<<i));
   S.connect();
 #endif
 

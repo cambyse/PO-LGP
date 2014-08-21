@@ -868,7 +868,7 @@ Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation));
   rot.w = 1.;
   pos.isZero = rot.isZero = vel.isZero = angvel.isZero = true;
-  zero = zeroVels = true;
+  zeroVels = true;
   return *this;
 }
 

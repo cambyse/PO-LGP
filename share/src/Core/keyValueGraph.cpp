@@ -187,7 +187,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
             Item *e=containingKvg.getItem(str);
             if(!e && containingKvg.parentKvg) e=containingKvg.parentKvg->getItem(str);
             if(e) { //sucessfully found
-              refs.append(e);
+              refs.appendItem(e);
             } else { //this element is not known!!
               HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
                    <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
@@ -216,7 +216,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   
   if(item){
     for(Item *it:item->parents) it->parentOf.append(item);
-    containingKvg.append(item);
+    containingKvg.appendItem(item);
   }else {
     cout <<"FAILED reading item with keys ";
     keys.write(cout, " ", NULL, "()");
@@ -269,7 +269,7 @@ Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
 KeyValueGraph KeyValueGraph::getItems(const char* key) {
   KeyValueGraph ret;
   for(Item *it: (*this)) {
-    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.append(it); break; }
+    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.appendItem(it); break; }
   }
   return ret;
 }
@@ -277,9 +277,9 @@ KeyValueGraph KeyValueGraph::getItems(const char* key) {
 KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info& type) {
   KeyValueGraph ret;
   for(Item *it: (*this)) if(it->getValueType()==type) {
-    if(!key) ret.append(it);
+    if(!key) ret.appendItem(it);
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-          ret.append(it);
+          ret.appendItem(it);
           break;
         }
   }
@@ -301,7 +301,7 @@ Item* KeyValueGraph::merge(Item *m){
     }
     if(mIsMember) ItemL::removeValue(m);
   }else{ //nothing to merge, append
-    if(!mIsMember) return append(m);
+    if(!mIsMember) return appendItem(m);
     else return m;
   }
   return NULL;

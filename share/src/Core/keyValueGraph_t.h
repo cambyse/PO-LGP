@@ -43,20 +43,25 @@ struct Item_typed:Item {
   T *value;
   
   Item_typed():value(NULL) {}
-  Item_typed(T *_value):value(_value) {}
-  //copy value
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *container=NULL):value(NULL) {
+
+  /// directly store pointer to value
+  Item_typed(T *_value, KeyValueGraph *appendToContainer=NULL):value(_value) {
+    if(appendToContainer) appendToContainer->appendItem(this);
+  }
+
+  /// directly store pointer to value
+  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *appendToContainer=NULL):value(_value) {
+    keys=_keys;
+    parents=_parents;
+    if(appendToContainer) appendToContainer->appendItem(this);
+  }
+
+  /// copy value
+  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *appendToContainer=NULL):value(NULL) {
     value = new T(_value);
     keys=_keys;
     parents=_parents;
-    if(container) container->append(this);
-  }
-  
-  //directly store pointer to value
-  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *container=NULL):value(_value) {
-    keys=_keys;
-    parents=_parents;
-    if(container) container->append(this);
+    if(appendToContainer) appendToContainer->appendItem(this);
   }
 
   virtual bool hasValue() const {
@@ -138,9 +143,12 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   return ret;
 }
 
-template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
-  Item *it = append(new Item_typed<T>(keys, parents, x, NULL));
+template<class T> Item *KeyValueGraph::append(T *x) {
+  return appendItem(new Item_typed<T>(x, NULL));
+}
 
+template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
+  Item *it = appendItem(new Item_typed<T>(keys, parents, x, NULL));
   for(Item *par: parents) par->parentOf.append(it);
   return it;
 }

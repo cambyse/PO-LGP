@@ -104,7 +104,6 @@ Item *reg_findType() {
 //
 
 inline Item* readTypeIntoItem(const char* key, std::istream& is) {
-  TypeInfoL types = registry().getDerivedValues<Type>();
   Item *ti = reg_findType(key);
   if(ti) return ti->getValue<Type>()->readItem(is);
   return NULL;
@@ -129,9 +128,17 @@ struct Type_typed:Type {
     }
   }
   virtual const std::type_info& typeId() const { return typeid(T); }
-  virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
+  //virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
   virtual void* newInstance() const { return new T(); }
   virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
+};
+
+template<class T, class Base>
+struct Type_typed_readable:Type_typed<T,Base> {
+  Type_typed_readable() {}
+  Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
+  virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
+  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 
 
@@ -142,13 +149,13 @@ struct Type_typed:Type {
 
 #define KO ,
 #define REGISTER_TYPE(T) \
-  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO void>(NULL,NULL));
 
 #define REGISTER_TYPE_Key(Key, T) \
-  REGISTER_ITEM2(Type, Decl_Type, Key, new Type_typed<T KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, Key, new Type_typed_readable<T KO void>(NULL,NULL));
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
-  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO Base>(#Base,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO Base>(#Base,NULL));
 
 
 #endif

@@ -154,10 +154,10 @@ struct Transformation {
   Quaternion rot; ///< orientation
   Vector vel;     ///< linear velocity
   Vector angvel;  ///< angular velocity
-  bool zero,zeroVels;    ///< velocities are identically zero
+  bool zeroVels;    ///< velocities are identically zero
   
   Transformation() {}
-  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {}
+  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zeroVels(t.zeroVels) {}
   
   Transformation& setZero();
   Transformation& setText(const char* txt);
