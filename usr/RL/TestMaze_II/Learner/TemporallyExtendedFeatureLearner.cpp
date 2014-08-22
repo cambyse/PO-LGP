@@ -315,6 +315,10 @@ bool TEFL::update() {
             DEBUG_ERROR("Weights and feature set have different size (" << weights.size() << "/" << feature_set.size() << ")");
             weights.zeros(feature_set.size());
         }
+        if(weights.size()==0) {
+            DEBUG_WARNING("Empty feature set --> cannot update");
+            return false;
+        }
         // check matching number of data points
         if(!data_changed &&
            (F_matrices.size()!=number_of_data_points || outcome_indices.size()!=number_of_data_points )) {

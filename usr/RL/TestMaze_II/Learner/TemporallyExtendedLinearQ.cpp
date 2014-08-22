@@ -356,6 +356,11 @@ void TELQ::update_c_rho_L() {
     // first update everything else
     update();
 
+    if(weights.size()==0) {
+        DEBUG_WARNING("Empty feature set --> cannot update");
+        return;
+    }
+
     // only update if necessary
     if(!need_to_update_c_rho_L) {
         return;
