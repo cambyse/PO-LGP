@@ -67,12 +67,13 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     tree_arg(          "t", "tree"         , "maximum size of search tree"                  ,false,     10000,     "int"),
     l1_arg(             "", "l1"           , "L1-regularization factor"                     ,false,     0.001,  "double"),
     pruningOff_arg(    "p", "pruningOff"   , "whether to turn off pruning the search tree"  ,           false           ),
-    minH_arg(           "", "minH"         , "minimum horizon"                              ,false,         0,     "int"),
+    minH_arg(           "", "minH"         , "minimum horizon"                              ,false,        -1,     "int"),
     maxH_arg(           "", "maxH"         , "maximum horizon"                              ,false,        -1,     "int"),
     extH_arg(           "", "extH"         , "horizon extension"                            ,false,         1,     "int"),
     delta_arg(         "D", "delta"        , "minimum change of data likelihood/TD-error"   ,false,     0.001,  "double"),
     maxCycles_arg(      "", "maxCycles"    , "maximum number of grow-shrinc cycles"         ,false,         0,     "int"),
-    minCycles_arg(      "", "minCycles"    , "minimum number of grow-shrinc cycles"         ,false,         0,     "int"),
+    minCycles_arg(      "", "minCycles"    , "minimum number of grow-shrinc cycles (negative"
+                                             "values to force immediate full expansion"     ,false,         0,     "int"),
     epsilon_arg(        "", "eps"          , "epsilon / randomness of transitions"          ,false,         0,  "double"),
     button_n_arg(       "", "button_n"     , "number of buttons in button world"            ,false,         3,     "int"),
     button_alpha_arg(   "", "button_alpha" , "for beta dist. per button in button world"    ,false,      0.01,  "double")
@@ -454,12 +455,12 @@ void BatchWorker::collect_data() {
                         eval_arg.getValue()	<< "	" <<
                         mean_reward	<< "	" <<
                         data_likelihood	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
                         nr_features	<< "	" <<
                         l1_arg.getValue()	<< "	" <<
                         cycles	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
                         button_prob_sum
                         );
                 } else if(mode=="TEL") {
@@ -467,13 +468,13 @@ void BatchWorker::collect_data() {
                         training_length	<< "	" <<
                         eval_arg.getValue()	<< "	" <<
                         mean_reward	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
                         TD_error	<< "	" <<
                         nr_features	<< "	" <<
                         l1_arg.getValue()	<< "	" <<
                         cycles	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
                         button_prob_sum
                         );
                 } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
@@ -481,11 +482,11 @@ void BatchWorker::collect_data() {
                         training_length	<< "	" <<
                         eval_arg.getValue()	<< "	" <<
                         mean_reward	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
                         utree_score	<< "	" <<
                         utree_size	<< "	" <<
                         button_prob_sum
@@ -495,13 +496,13 @@ void BatchWorker::collect_data() {
                         training_length	<< "	" <<
                         eval_arg.getValue()	<< "	" <<
                         mean_reward	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
-                        "nan"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
+                        "NaN"	<< "	" <<
                         button_prob_sum
                         );
                 } else {
@@ -553,13 +554,21 @@ void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& li
     double old_likelihood = -DBL_MAX, new_likelihood = 0;
     int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tem->set_l1_factor(l1_arg.getValue());
-    while(new_likelihood-old_likelihood>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
-        old_likelihood = new_likelihood;
-        tem->grow_feature_set();
+    bool first_loop_iter = true;
+    while(new_likelihood-old_likelihood>delta_arg.getValue() || abs(minCycles_arg.getValue())>cycle_counter) {
+        if(first_loop_iter) {
+            first_loop_iter = false;
+        } else {
+            old_likelihood = new_likelihood;
+        }
+        do {
+            // multiple times for for negative min-cycle
+            tem->grow_feature_set();
+            ++cycle_counter;
+        } while(-minCycles_arg.getValue()>cycle_counter);
         double neg_log_like = tem->optimize_weights_LBFGS();
         new_likelihood = exp(-neg_log_like);
         tem->shrink_feature_set();
-        ++cycle_counter;
         if(max_cycles>0 && cycle_counter>=max_cycles) {
             break;
         }
@@ -584,12 +593,20 @@ void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD
     double old_TD_error = -DBL_MAX, new_TD_error = 0;
     int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tel->set_l1_factor(l1_arg.getValue());
-    while(old_TD_error-new_TD_error>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
-        old_TD_error = new_TD_error;
-        tel->grow_feature_set();
+    bool first_loop_iter = true;
+    while(old_TD_error-new_TD_error>delta_arg.getValue() || abs(minCycles_arg.getValue())>cycle_counter) {
+        if(first_loop_iter) {
+            first_loop_iter = false;
+        } else {
+            old_TD_error = new_TD_error;
+        }
+        do {
+            // multiple times for for negative min-cycle
+            tel->grow_feature_set();
+            ++cycle_counter;
+        } while(-minCycles_arg.getValue()>cycle_counter);
         new_TD_error = tel->run_policy_iteration();
         tel->shrink_feature_set();
-        ++cycle_counter;
         if(max_cycles>0 && cycle_counter>=max_cycles) {
             break;
         }
