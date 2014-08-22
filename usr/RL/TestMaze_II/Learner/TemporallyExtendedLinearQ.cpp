@@ -135,7 +135,11 @@ double TELQ::run_policy_iteration(bool final_L1) {
 
 double TELQ::get_TD_error() {
     update_c_rho_L();
-    return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+    if(weights.size()==0) {
+        return nan("");
+    } else {
+        return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+    }
 }
 
 void TELQ::print_training_data(bool feat) const {
@@ -173,7 +177,7 @@ bool TELQ::update() {
         update_rewards_and_data_indices();
     }
     bool performed_update = TemporallyExtendedFeatureLearner::update();
-    if(performed_update) {
+    if(performed_update || feature_set.size()==0) {
         need_to_update_c_rho_L = true;
     }
     return performed_update;
@@ -356,11 +360,6 @@ void TELQ::update_c_rho_L() {
     // first update everything else
     update();
 
-    if(weights.size()==0) {
-        DEBUG_WARNING("Empty feature set --> cannot update");
-        return;
-    }
-
     // only update if necessary
     if(!need_to_update_c_rho_L) {
         return;
@@ -372,6 +371,15 @@ void TELQ::update_c_rho_L() {
     rho.zeros(feature_n);
     L.zeros(feature_n,feature_n);
     int progress_counter = 0;
+
+    // abort for empty feature set
+    if(weights.size()==0) {
+        IF_DEBUG(1) {
+            DEBUG_WARNING("Empty feature set --> cannot update");
+        }
+        return;
+    }
+
     IF_DEBUG(1) { ProgressBar::init("Updating c-rho-L:          "); }
 
 #ifdef USE_OMP
