@@ -104,6 +104,10 @@ void ButtonWorld::construct_factored_action_features(f_set_t & basis_features,
     }
 }
 
+double ButtonWorld::get_p_sum() const {
+    return util::sum(prob_array);
+}
+
 std::vector<ButtonWorld::probability_t> ButtonWorld::probs_from_beta(const int& s,
                                                                      const double& alpha) {
     // set up random generator

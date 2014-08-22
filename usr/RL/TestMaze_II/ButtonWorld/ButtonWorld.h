@@ -38,6 +38,7 @@ public:
     static void construct_factored_action_features(f_set_t & basis_features,
                                                    action_ptr_t action,
                                                    int delay);
+    double get_p_sum() const;
 protected:
     ButtonWorld(int s = 1, std::vector<probability_t> p = std::vector<probability_t>());
     static std::vector<probability_t> probs_from_beta(const int& s, const double& alpha);

@@ -250,6 +250,7 @@ void BatchWorker::collect_data() {
             int cycles;              // for TEM/TEL
             int utree_size;          // for UTree
             double utree_score;      // for UTree
+            QString button_prob_sum("NaN");// for button-worlds
 
             //------------//
             // initialize //
@@ -266,9 +267,13 @@ void BatchWorker::collect_data() {
                 if(environment_arg.getValue()=="cheese") {
                     environment = make_shared<CheeseMaze>();
                 } else if(environment_arg.getValue()=="sep-button") {
-                    environment = make_shared<SeparateButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                    auto but = make_shared<SeparateButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                    environment = but;
+                    button_prob_sum = QString("%1").arg(but->get_p_sum(), 5, 'f', 3);
                 } else if(environment_arg.getValue()=="joint-button") {
-                    environment = make_shared<JointButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                    auto but = make_shared<JointButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
+                    environment = but;
+                    button_prob_sum = QString("%1").arg(but->get_p_sum(), 5, 'f', 3);
                 } else {
                     environment = make_shared<Maze>(epsilon_arg.getValue(),environment_arg.getValue().c_str());
                 }
@@ -442,14 +447,63 @@ void BatchWorker::collect_data() {
 #pragma omp critical
 #endif
             {
+                LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	TD-error	nr_features	l1_factor	cycles	utree_score	utree_size	button_p_sum");
                 if(mode=="TEM") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue() << "	" << cycles);
+                    LOG(this_episode_counter	<< "	" <<
+                        training_length	<< "	" <<
+                        eval_arg.getValue()	<< "	" <<
+                        mean_reward	<< "	" <<
+                        data_likelihood	<< "	" <<
+                        "nan"	<< "	" <<
+                        nr_features	<< "	" <<
+                        l1_arg.getValue()	<< "	" <<
+                        cycles	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        button_prob_sum
+                        );
                 } else if(mode=="TEL") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << TD_error << "	" << nr_features << "	" << l1_arg.getValue() << "	" << cycles);
+                    LOG(this_episode_counter	<< "	" <<
+                        training_length	<< "	" <<
+                        eval_arg.getValue()	<< "	" <<
+                        mean_reward	<< "	" <<
+                        "nan"	<< "	" <<
+                        TD_error	<< "	" <<
+                        nr_features	<< "	" <<
+                        l1_arg.getValue()	<< "	" <<
+                        cycles	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        button_prob_sum
+                        );
                 } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << utree_score << "	" << utree_size);
+                    LOG(this_episode_counter	<< "	" <<
+                        training_length	<< "	" <<
+                        eval_arg.getValue()	<< "	" <<
+                        mean_reward	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        utree_score	<< "	" <<
+                        utree_size	<< "	" <<
+                        button_prob_sum
+                        );
                 } else if(mode=="DRY" || mode=="RANDOM") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward);
+                    LOG(this_episode_counter	<< "	" <<
+                        training_length	<< "	" <<
+                        eval_arg.getValue()	<< "	" <<
+                        mean_reward	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        "nan"	<< "	" <<
+                        button_prob_sum
+                        );
                 } else {
                     DEBUG_DEAD_LINE;
                 }
@@ -621,18 +675,6 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     }
 
     LOG_COMMENT("");
-
-    if(mode=="TEM") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor	cycles");
-    } else if(mode=="TEL") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	TD-error	nr_features	l1_factor	cycles");
-    } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	utree_score	utree_size");
-    } else if(mode=="DRY" || mode=="RANDOM") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward");
-    } else {
-        DEBUG_DEAD_LINE;
-    }
-
+    LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	TD-error	nr_features	l1_factor	cycles	utree_score	utree_size	button_p_sum");
     LOG_COMMENT("");
 }
