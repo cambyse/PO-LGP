@@ -5,6 +5,8 @@
 #include "../util/QtUtil.h"
 #include "../util/ProgressBar.h"
 
+#include <unordered_map>
+
 #include <omp.h>
 //#define USE_OMP
 
@@ -748,7 +750,7 @@ bool TEFL::pick_non_const_features() {
     if(DEBUG_LEVEL>0) {ProgressBar::init("Pick non-const features:   ");}
 
     // map for storing the first return-value for every outcome and feature
-    typedef map<f_ptr_t,f_ret_t> f_ret_map_t;
+    typedef std::unordered_map<f_ptr_t,f_ret_t> f_ret_map_t;
     f_ret_map_t f_ret_map;
 
     // set of features that may be const

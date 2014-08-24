@@ -1,0 +1,17 @@
+# Mode: TEL
+# Environment: 4x4_III
+# Training Length: 1000--1000 (step size: 1)
+# Evaluation Length: 22
+# Repetitions: 10
+# Discount: 0.5
+# Complexity Penalty: no
+# L1-factor: 1e-05
+# Minimum Horizon: -3
+# Maximum Horizon: -1
+# Horizon Extension: 1
+# Max Cycles: 4
+# Min Cycles: 0
+# TD-error Delta: 1e-10
+# 
+# Episode	training_length	evaluation_length	mean_reward	data_likelihood	TD-error	nr_features	l1_factor	cycles	utree_score	utree_size	button_p_sum
+# 
