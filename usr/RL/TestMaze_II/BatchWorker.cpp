@@ -448,7 +448,6 @@ void BatchWorker::collect_data() {
 #pragma omp critical
 #endif
             {
-                LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	TD-error	nr_features	l1_factor	cycles	utree_score	utree_size	button_p_sum");
                 if(mode=="TEM") {
                     LOG(this_episode_counter	<< "	" <<
                         training_length	<< "	" <<
