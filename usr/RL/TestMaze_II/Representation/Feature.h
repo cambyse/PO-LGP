@@ -30,6 +30,10 @@ public:
 protected:
     typedef unsigned short intern_feature_return_t;
 
+    //----members----//
+public:
+    static const bool use_complexity_penalty;
+
     //----methods----//
 public:
     Feature();

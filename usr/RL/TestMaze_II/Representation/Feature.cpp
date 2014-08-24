@@ -23,6 +23,8 @@ using util::INVALID;
 // features only
 #define LOOK_UP_MAP_IS_SET
 
+const bool Feature::use_complexity_penalty = false;
+
 void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
 #ifdef LOOK_UP_MAP_IS_SET
     if(r!=0) {
@@ -123,9 +125,12 @@ Feature::intern_feature_return_t Feature::intern_evaluate(const look_up_map_t&) 
 }
 
 Feature::feature_return_t Feature::return_function(const intern_feature_return_t& ret) const {
-    static_assert(std::is_same<feature_return_t,double>(), "Return type must be double");
-    return (feature_return_t)ret/(complexity+1);
-    // return ret;
+    static_assert(!use_complexity_penalty || std::is_same<feature_return_t,double>(), "Return type must be double");
+    if(use_complexity_penalty) {
+        return (feature_return_t)ret/(complexity+1);
+    } else {
+        return ret;
+    }
 }
 
 BasisFeature::unique_feature_set_t BasisFeature::unique_feature_set;

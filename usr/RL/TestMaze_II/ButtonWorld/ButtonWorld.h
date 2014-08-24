@@ -25,7 +25,7 @@ public:
     //----members----//
 public:
     const int size;
-    static const bool use_factored_action_features = true;
+    static const bool use_factored_action_features;
 protected:
     std::vector<probability_t> prob_array;
     std::vector<QGraphicsRectItem*> button_array;

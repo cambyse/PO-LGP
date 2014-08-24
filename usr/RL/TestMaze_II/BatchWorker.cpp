@@ -668,6 +668,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     LOG_COMMENT("Evaluation Length: " << eval_arg.getValue());
     LOG_COMMENT("Repetitions: " << repeat_arg.getValue());
     LOG_COMMENT("Discount: " << discount_arg.getValue());
+    LOG_COMMENT("Complexity Penalty: " << (Feature::use_complexity_penalty?"yes":"no"));
     if(mode=="TEM" || mode=="MODEL_BASED_UTREE") {
         LOG_COMMENT("Max Look-Ahead Tree Size: " << tree_arg.getValue());
         LOG_COMMENT("Pruning: " << (pruningOff_arg.getValue()?"off":"on"));

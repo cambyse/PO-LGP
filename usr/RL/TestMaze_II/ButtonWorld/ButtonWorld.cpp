@@ -19,6 +19,8 @@ static const QPen reward_pen(QColor(0,0,0),0.03,Qt::SolidLine,Qt::RoundCap,Qt::R
 static const double text_scale = 0.008;
 static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);
 
+const bool ButtonWorld::use_factored_action_features = true;
+
 ButtonWorld::ButtonWorld(int s, std::vector<probability_t> p):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()),
     size(s),
