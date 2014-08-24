@@ -550,7 +550,7 @@ void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& li
         return;
     }
     // optimize tem
-    double old_likelihood = -DBL_MAX, new_likelihood = 0;
+    double old_likelihood = 0, new_likelihood = 1;
     int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tem->set_l1_factor(l1_arg.getValue());
     bool first_loop_iter = true;
@@ -589,7 +589,7 @@ void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD
         return;
     }
     // optimize tel
-    double old_TD_error = -DBL_MAX, new_TD_error = 0;
+    double old_TD_error = DBL_MAX, new_TD_error = 0;
     int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tel->set_l1_factor(l1_arg.getValue());
     bool first_loop_iter = true;
