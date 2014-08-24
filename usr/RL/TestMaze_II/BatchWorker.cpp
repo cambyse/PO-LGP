@@ -29,7 +29,9 @@
 #define DEBUG_STRING "BatchWorker: "
 #include "util/debug.h"
 
-//#define USE_OMP
+// #ifdef USE_OMP
+//     #undef USE_OMP
+// #endif
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
