@@ -7,7 +7,7 @@ start_string="--env Minimal -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --ma
 
 ## 4x4_III Maze
 start_string="--env 4x4_III -m TEL --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH -1 --extH 1 --minCycles 0 --maxCycles 4 -e 22 -r 10 --l1 1e-5 --delta 1e-10"
-start_string="--env 4x4_III -m TEM --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH  0 --extH 1 --minCycles 0 --maxCycles 3 -e 22 -r 25 --l1 1e-5 --delta 1e-5"
+start_string="--env 4x4_III -m TEM --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH  0 --extH 1 --minCycles 0 --maxCycles 3 -e 22 -r 100 --l1 1e-5 --delta 1e-5"
 
 ## Button World
 # start_string="--env sep-button --button_n 3 -m               TEM --minT  2 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r  25 --l1 0.0001 --delta 1e-5 -t 20000"
