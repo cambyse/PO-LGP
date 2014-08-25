@@ -7,13 +7,17 @@ start_string="--env Minimal -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --ma
 
 ## 4x4_III Maze
 start_string="--env 4x4_III -m TEL --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH -1 --extH 1 --minCycles 0 --maxCycles 4 -e 22 -r 10 --l1 1e-5 --delta 1e-10"
-start_string="--env 4x4_III -m TEM --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH  0 --extH 1 --minCycles 0 --maxCycles 3 -e 22 -r 10 --l1 1e-3 --delta 1e-5"
+start_string="--env 4x4_III -m TEM --minT 1000 --maxT 1000 --incT 0 --minH -3 --maxH  0 --extH 1 --minCycles 0 --maxCycles 3 -e 22 -r 25 --l1 1e-5 --delta 1e-5"
 
 ## Button World
 # start_string="--env sep-button --button_n 3 -m               TEM --minT  2 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r  25 --l1 0.0001 --delta 1e-5 -t 20000"
 # start_string="--env sep-button --button_n 3 -m               TEL --minT  10 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 3 -e 10 -r  100 --l1  1e-9 --delta 1e-10"
 # start_string="--env sep-button --button_n 3 -m VALUE_BASED_UTREE --minT  20 --maxT  100 --incT  10                                           -e 10 -r 500                          "
 # start_string="--env joint-button --button_n 3 -m            RANDOM --minT 1 --maxT 1  --incT 0                                           -e 10 -r 500                        "
+
+## Cheese Maze
+# start_string="--env cheese -m TEM --minT 100 --maxT 100 -incT 0 --minH -100 --maxH  0 --extH 1 -e 100 -r 100 --l1 1e-3 --delta 1e-5"
+# start_string="--env cheese -m TEL --minT 100 --maxT 100 -incT 0 --minH -100 --maxH -1 --extH 1 -e 100 -r 100 --l1 1e-3 --delta 1e-10"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
