@@ -754,7 +754,7 @@ bool TEFL::pick_non_const_features() {
     f_ret_map_t f_ret_map;
 
     // set of features that may be const
-    f_set_t maybe_const_set = feature_set; // why f_set_t and not faster f_ptr_set_t?
+    f_ptr_set_t maybe_const_set(feature_set.begin(), feature_set.end());
 
     // initialize
     {
@@ -792,103 +792,231 @@ bool TEFL::pick_non_const_features() {
         }
     }
 
+#ifdef USE_OMP
+    // MULTI THREADED IMPLEMENTATION
+    //
+    // Trade-off: Identifying non-const features early on saves time since they
+    // don't need to be checked any more. However, keeping the sets in sync
+    // between different threads ist costly, especially for large numbers of
+    // features. Also, if most features ARE const there is not much to sync
+    // since this cannot be known until the very end. Solution: If a thread
+    // eliminated 10% of the features (identified them as non-const) it sets a
+    // flag so all threads can sync. This flag must of course be checked
+    // regularly but this is a minimal overhead. For syncing all threads erase
+    // their non-const from the original map and (when all are done with that)
+    // erase from their local copy those that are not in the original map
+    // anymore (found non-const by another thread). Separate flags are needen to
+    // coordinate all that. Last one turns the light off (resets all flags).
+
     // for all data points
-#ifdef USE_OMP
+    bool sync_flag = false;
+    vector<bool> erased_from_original;
+    vector<bool> erased_from_local_copy;
+    int n_features = maybe_const_set.size();
     int progress_idx = 0;
-#pragma omp parallel for schedule(static) collapse(1)
-    for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
-#else
-        int data_idx = 0;
-        int& progress_idx = data_idx;
-        for(const_instance_ptr_t episode : instance_data) {
-            for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
-#endif
-
-                // non-const features
-                f_set_t non_const_set;
-
-                // for all outcomes
-                for(int outcome_idx : Range(outcome_n)) {
-                    // for all features that may be const
-#ifdef USE_OMP
-                    f_set_t maybe_const_set_copy;
-                    f_ret_map_t f_ret_map_copy;
+#pragma omp parallel
+    {
+        int thread_nr = omp_get_thread_num();
+        int nr_threads = omp_get_num_threads();
+        int newly_erased = 0;
+        f_ptr_set_t maybe_const_set_copy;
+        f_ret_map_t f_ret_map_copy;
 #pragma omp critical
-                    {
-                        maybe_const_set_copy = maybe_const_set;
-                        f_ret_map_copy = f_ret_map;
+        {
+            // resize/assign flags
+            erased_from_original.assign(nr_threads, false);
+            erased_from_local_copy.assign(nr_threads, false);
+            // copy sets
+            maybe_const_set_copy = maybe_const_set;
+            f_ret_map_copy = f_ret_map;
+        } // end OMP critical
+#pragma omp barrier // wait so initialization is done before work starts
+#pragma omp for
+        for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
 
-                    } // critical
-                    for(f_ptr_t feature : maybe_const_set_copy) {
-#else
-                        f_set_t& maybe_const_set_copy = maybe_const_set;
-                        f_ret_map_t& f_ret_map_copy = f_ret_map;
-                        for(f_ptr_t feature : maybe_const_set) {
-#endif
+            //----------------------------------//
+            // find non-const for this data idx //
+            //----------------------------------//
 
-                            // get return-value
-                            f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+            // non-const features
+            f_set_t non_const_set;
 
-                            // compare
-                            if(f_ret_map_copy[feature]!=f_ret) {
-                                DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
-                                non_const_set.insert(feature);
-                            } else {
-                                DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
-                            }
-#ifdef USE_OMP
-                        }
-#else
+            // for all outcomes
+            for(int outcome_idx : Range(outcome_n)) {
+                // for all features that may be const
+                for(f_ptr_t feature : maybe_const_set_copy) {
+                    // get return-value
+                    f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+                    // compare
+                    if(f_ret_map_copy[feature]!=f_ret) {
+                        DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
+                        non_const_set.insert(feature);
+                    } else {
+                        DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
                     }
-#endif
+                }
+            }
+
+            //-------------------------------------------------------------//
+            // erase non-const features from (copy of) maybe-const set and //
+            // return-value map                                            //
+            //-------------------------------------------------------------//
+
+            for(f_ptr_t feature : non_const_set) {
+                DEBUG_OUT(3,"    non-const: " << *feature);
+                auto it_maybe = maybe_const_set_copy.find(feature);
+                auto it_ret = f_ret_map_copy.find(feature);
+                if(it_maybe!=maybe_const_set_copy.end() && it_ret!=f_ret_map_copy.end()) {
+                    maybe_const_set_copy.erase(it_maybe);
+                    f_ret_map_copy.erase(it_ret);
+                    ++newly_erased;
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+            }
+
+            //-----------------------------------------------//
+            // syncronize non-const sets / return-value maps //
+            //-----------------------------------------------//
+
+#pragma omp critical
+            {
+                // set sync flag if needed
+                if(!sync_flag && (float)newly_erased/n_features > 0.001) {
+                    DEBUG_OUT(2, "SYNC on (" << thread_nr << ") : " <<
+                              newly_erased << "/" << n_features << " new/all");
+                    sync_flag = true;
+                }
+                // sync
+                if(sync_flag) {
+                    // erase from original
+                    if(!erased_from_original[thread_nr]) {
+                        DEBUG_OUT(2, "ERASE_FROM_ORIG (" << thread_nr << ")");
+                        // iterate over a const copy
+                        const f_ptr_set_t maybe_const_set_const_copy = maybe_const_set;
+                        for(f_ptr_t feature : maybe_const_set_const_copy) {
+                            // try to find feature from ORIGINAL SET in LOCAL
+                            // COPY, erase in ORIGINAL if not found
+                            if(maybe_const_set_copy.find(feature)==maybe_const_set_copy.end()) {
+                                maybe_const_set.erase(feature);
+                                f_ret_map.erase(feature);
+                            }
+                        }
+                        erased_from_original[thread_nr] = true;
+                    }
+                    // erase from local copy
+                    if(util::all(erased_from_original) && !erased_from_local_copy[thread_nr]) {
+                        DEBUG_OUT(2, "ERASE_FROM_LOCAL (" << thread_nr << ")");
+                        // iterate over a const copy
+                        const f_ptr_set_t maybe_const_set_copy_const_copy = maybe_const_set_copy;
+                        for(f_ptr_t feature : maybe_const_set_copy_const_copy) {
+                            // try to find feature from LOCAL COPY in ORIGINAL
+                            // MAP, erase in LOCAL if not found
+                            if(maybe_const_set.find(feature)==maybe_const_set.end()) {
+                                maybe_const_set_copy.erase(feature);
+                                f_ret_map_copy.erase(feature);
+                            }
+                        }
+                        newly_erased = 0;
+                        erased_from_local_copy[thread_nr] = true;
+                    }
+                    // reset flags
+                    if(util::all(erased_from_local_copy)) {
+                        DEBUG_OUT(2, "SYNC off");
+                        DEBUG_OUT(2, "VECTOR_FLAGS off");
+                        sync_flag = false;
+                        erased_from_original.assign(nr_threads, false);
+                        erased_from_local_copy.assign(nr_threads, false);
+                    }
+                }
+                // print progress
+                IF_DEBUG(1) {
+                    ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                    ProgressBar::print(progress_idx,number_of_data_points);
+                }
+            } // critical
+            ++progress_idx;
+        } // end for
+#pragma omp critical
+        {
+            // final sync: erasing from original
+            DEBUG_OUT(2, "FINAL_ERASE_FROM_ORIG (" << thread_nr << ")");
+            // iterate over a const copy
+            const f_ptr_set_t maybe_const_set_const_copy = maybe_const_set;
+            for(f_ptr_t feature : maybe_const_set_const_copy) {
+                // try to find feature from ORIGINAL SET in LOCAL
+                // COPY, erase in original if not found
+                if(maybe_const_set_copy.find(feature)==maybe_const_set_copy.end()) {
+                    maybe_const_set.erase(feature);
+                }
+            }
+        } // critical
+    } // end parallel
+
+#else
+    // SINGLE THREADED IMPLEMENTATION
+    // for all data points
+    int data_idx = 0;
+    int& progress_idx = data_idx;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+
+            // non-const features
+            f_set_t non_const_set;
+
+            // for all outcomes
+            for(int outcome_idx : Range(outcome_n)) {
+                // for all features that may be const
+
+                f_ptr_set_t& maybe_const_set_copy = maybe_const_set;
+                f_ret_map_t& f_ret_map_copy = f_ret_map;
+                for(f_ptr_t feature : maybe_const_set) {
+
+                    // get return-value
+                    f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+
+                    // compare
+                    if(f_ret_map_copy[feature]!=f_ret) {
+                        DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
+                        non_const_set.insert(feature);
+                    } else {
+                        DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
+                    }
+                }
+            }
+
+            {
+                // erase non-const features from maybe-const set and return-value
+                // maps
+                for(f_ptr_t feature : non_const_set) {
+                    DEBUG_OUT(3,"    non-const: " << *feature);
+                    auto it_maybe = maybe_const_set.find(feature);
+                    if(it_maybe!=maybe_const_set.end()) {
+                        maybe_const_set.erase(it_maybe);
+                    } else {
+                        // in single threaded version this else case should
+                        // never be visited (same thing below)
+                        DEBUG_DEAD_LINE;
+                    }
+                    auto it = f_ret_map.find(feature);
+                    if(it!=f_ret_map.end()) {
+                        f_ret_map.erase(it);
+                    } else {
+                        // see above for explanation
+                        DEBUG_DEAD_LINE;
+                    }
                 }
 
-#ifdef USE_OMP
-#pragma omp critical
-#endif
-                {
-                    // erase non-const features from maybe-const set and return-value
-                    // maps
-                    for(f_ptr_t feature : non_const_set) {
-                        DEBUG_OUT(3,"    non-const: " << *feature);
-                        auto it_maybe = maybe_const_set.find(feature);
-                        if(it_maybe!=maybe_const_set.end()) {
-                            maybe_const_set.erase(it_maybe);
-                        } else {
-#ifndef USE_OMP
-                            // in parallel evaluation two differend threads may
-                            // try to remove the same feature so that it cannot
-                            // be found by the second thread, this should not
-                            // happen in non-parallel (same thing below)
-                            DEBUG_DEAD_LINE;
-#endif
-                        }
-                        auto it = f_ret_map.find(feature);
-                        if(it!=f_ret_map.end()) {
-                            f_ret_map.erase(it);
-                        } else {
-#ifndef USE_OMP
-                            // see above for explanation
-                            DEBUG_DEAD_LINE;
-#endif
-                        }
-                    }
+                // print progress
+                if(DEBUG_LEVEL>0) {
+                    ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                    ProgressBar::print(progress_idx,number_of_data_points);
+                }
+            } // critical
 
-                    // print progress
-                    if(DEBUG_LEVEL>0) {
-                        ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
-                        ProgressBar::print(progress_idx,number_of_data_points);
-                    }
-                } // critical
-
-
-#ifndef USE_OMP
-                // increment
-                ++data_idx;
-            }
+            // increment
+            ++data_idx;
         }
-#else
-        ++progress_idx;
     }
 #endif
 
