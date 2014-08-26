@@ -644,6 +644,24 @@ namespace util {
         return ret;
     }
 
+    /** True if all elements are true. */
+    template < class C >
+        bool all(const C & c) {
+        for(auto elem : c) {
+            if(!elem) { return false; }
+        }
+        return true;
+    }
+
+    /** True if any element is true. */
+    template < class C >
+        bool any(const C & c) {
+        for(auto elem : c) {
+            if(elem) { return true; }
+        }
+        return false;
+    }
+
     /** \brief Select a random element from a vector. */
     template < typename T >
         T random_select(const std::vector<T> vec) {
