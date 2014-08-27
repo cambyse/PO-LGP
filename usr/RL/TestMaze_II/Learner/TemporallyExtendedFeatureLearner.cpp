@@ -808,6 +808,10 @@ bool TEFL::pick_non_const_features() {
     // anymore (found non-const by another thread). Separate flags are needen to
     // coordinate all that. Last one turns the light off (resets all flags).
 
+    // max number of times threads synchronize (i.e. they syncronize whenever
+    // one thread identified a fraction of 1/n_sync features as non-const)
+    int n_sync = 100;
+
     // for all data points
     bool sync_flag = false;
     vector<bool> erased_from_original;
@@ -882,7 +886,7 @@ bool TEFL::pick_non_const_features() {
 #pragma omp critical
             {
                 // set sync flag if needed
-                if(!sync_flag && (float)newly_erased/n_features > 0.001) {
+                if(!sync_flag && (float)newly_erased/n_features > 1./n_sync) {
                     DEBUG_OUT(2, "SYNC on (" << thread_nr << ") : " <<
                               newly_erased << "/" << n_features << " new/all");
                     sync_flag = true;
