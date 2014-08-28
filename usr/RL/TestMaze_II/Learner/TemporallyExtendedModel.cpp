@@ -173,7 +173,7 @@ TEM::probability_t TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) 
         col_vec_t grad_comp = F.col(outcome_idx) - F*exp_lin.t()/z;
 
 #ifdef USE_OMP
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedModel_neg_log_likelihood)
 #endif
         {
             // update

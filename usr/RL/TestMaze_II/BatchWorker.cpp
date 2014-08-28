@@ -260,7 +260,7 @@ void BatchWorker::collect_data() {
             //------------//
 
 #ifdef USE_OMP
-#pragma omp critical
+#pragma omp critical (BatchWorker_Initialization)
 #endif
             {
                 this_episode_counter = episode_counter++;
@@ -337,9 +337,19 @@ void BatchWorker::collect_data() {
                 }
                 // train learner
                 if(mode=="TEM") {
-                    train_TEM(learner, data_likelihood, nr_features, cycles);
+#ifdef USE_OMP
+//#pragma omp critical (BatchWorker_Learn)
+#endif
+                    {
+                        train_TEM(learner, data_likelihood, nr_features, cycles);
+                    } // end critical
                 } else if(mode=="TEL") {
-                    train_TEL(learner, TD_error, nr_features, cycles);
+#ifdef USE_OMP
+//#pragma omp critical (BatchWorker_Learn)
+#endif
+                    {
+                        train_TEL(learner, TD_error, nr_features, cycles);
+                    } // end critical
                 } else if(mode=="MODEL_BASED_UTREE") {
                     train_model_based_UTree(learner, utree_size, utree_score);
                 } else if(mode=="VALUE_BASED_UTREE") {
@@ -447,7 +457,7 @@ void BatchWorker::collect_data() {
             //--------------//
 
 #ifdef USE_OMP
-#pragma omp critical
+#pragma omp critical (BatchWorker_WriteOutput)
 #endif
             {
                 if(mode=="TEM") {

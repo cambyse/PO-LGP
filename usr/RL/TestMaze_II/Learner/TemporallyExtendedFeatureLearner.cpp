@@ -651,7 +651,7 @@ void TEFL::update_F_matrices() {
 
                 // print progress
 #ifdef USE_OMP
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedFeatureLearner_update_F_matrices)
 #endif
                 {if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}}
 
@@ -825,7 +825,7 @@ bool TEFL::pick_non_const_features() {
         int newly_erased = 0;
         f_ptr_set_t maybe_const_set_copy;
         f_ret_map_t f_ret_map_copy;
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
         {
             // resize/assign flags
             erased_from_original.assign(nr_threads, false);
@@ -883,7 +883,7 @@ bool TEFL::pick_non_const_features() {
             // syncronize non-const sets / return-value maps //
             //-----------------------------------------------//
 
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
             {
                 // set sync flag if needed
                 if(!sync_flag && (float)newly_erased/n_features > 1./n_sync) {
@@ -931,17 +931,22 @@ bool TEFL::pick_non_const_features() {
                         sync_flag = false;
                         erased_from_original.assign(nr_threads, false);
                         erased_from_local_copy.assign(nr_threads, false);
+                        // update progress message and force re-print
+                        IF_DEBUG(1) {
+                            ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                            ProgressBar::print_forced(progress_idx,number_of_data_points);
+                        }
                     }
                 }
                 // print progress
                 IF_DEBUG(1) {
-                    ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
                     ProgressBar::print(progress_idx,number_of_data_points);
                 }
+
             } // critical
             ++progress_idx;
         } // end for
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
         {
             // final sync: erasing from original
             DEBUG_OUT(2, "FINAL_ERASE_FROM_ORIG (" << thread_nr << ")");
@@ -989,35 +994,32 @@ bool TEFL::pick_non_const_features() {
                 }
             }
 
-            {
-                // erase non-const features from maybe-const set and return-value
-                // maps
-                for(f_ptr_t feature : non_const_set) {
-                    DEBUG_OUT(3,"    non-const: " << *feature);
-                    auto it_maybe = maybe_const_set.find(feature);
-                    if(it_maybe!=maybe_const_set.end()) {
-                        maybe_const_set.erase(it_maybe);
-                    } else {
-                        // in single threaded version this else case should
-                        // never be visited (same thing below)
-                        DEBUG_DEAD_LINE;
-                    }
-                    auto it = f_ret_map.find(feature);
-                    if(it!=f_ret_map.end()) {
-                        f_ret_map.erase(it);
-                    } else {
-                        // see above for explanation
-                        DEBUG_DEAD_LINE;
-                    }
+            // erase non-const features from maybe-const set and return-value
+            // maps
+            for(f_ptr_t feature : non_const_set) {
+                DEBUG_OUT(3,"    non-const: " << *feature);
+                auto it_maybe = maybe_const_set.find(feature);
+                if(it_maybe!=maybe_const_set.end()) {
+                    maybe_const_set.erase(it_maybe);
+                } else {
+                    // in single threaded version this else case should
+                    // never be visited (same thing below)
+                    DEBUG_DEAD_LINE;
                 }
-
-                // print progress
-                if(DEBUG_LEVEL>0) {
-                    ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
-                    ProgressBar::print(progress_idx,number_of_data_points);
+                auto it = f_ret_map.find(feature);
+                if(it!=f_ret_map.end()) {
+                    f_ret_map.erase(it);
+                } else {
+                    // see above for explanation
+                    DEBUG_DEAD_LINE;
                 }
-            } // critical
+            }
 
+            // print progress
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                ProgressBar::print(progress_idx,number_of_data_points);
+            }
             // increment
             ++data_idx;
         }

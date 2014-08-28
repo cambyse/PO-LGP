@@ -390,7 +390,7 @@ void TELQ::update_c_rho_L() {
     {
         // compute updates in multiple threads
         int nr_threads = omp_get_num_threads();
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedLinearQ_update_c_rho_L)
         {
             c_update.resize(nr_threads,0);
             rho_update.resize(nr_threads,zeros<col_vec_t>(rho.size()));
@@ -413,7 +413,7 @@ void TELQ::update_c_rho_L() {
             c_update[thread_nr] = c_update[thread_nr] + pow(r_t,2);
             rho_update[thread_nr] = rho_update[thread_nr] + r_t * phi;
             L_update[thread_nr] = L_update[thread_nr] + kron(phi,phi.t());
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedLinearQ_update_c_rho_L)
             {
                 ++progress_counter;
                 IF_DEBUG(1) { ProgressBar::print(progress_counter,number_of_data_points); }
