@@ -53,10 +53,4 @@ void JoystickInterface::step(){ }
 void JoystickInterface::close(){ }
 #endif
 
-bool stopButtons(const arr& gamepadState){
-  if(!gamepadState.N) return false;
-  uint mode = uint(gamepadState(0));
-  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
-  return false;
-}
 

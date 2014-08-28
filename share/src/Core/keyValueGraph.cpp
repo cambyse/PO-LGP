@@ -250,6 +250,13 @@ KeyValueGraph::~KeyValueGraph() {
 //  delete s;
 }
 
+Item *KeyValueGraph::append(const uintA& parentIdxs) {
+  ItemL parents(parentIdxs.N);
+  for(uint i=0;i<parentIdxs.N; i++) parents(i) = ItemL::elem(parentIdxs(i));
+  return append<int>(STRINGS_1(ItemL::N), parents, NULL);
+}
+
+
 Item* KeyValueGraph::getItem(const char *key) {
   for(Item *it: (*this))
   for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) return it;

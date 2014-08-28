@@ -1,14 +1,8 @@
 #pragma once
 
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
-#include <System/engine.h>
-#include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-
 #include "actionMachine.h"
 
+#include <Motion/feedbackControl.h>
 
 struct sActionMachine{
   ors::KinematicWorld world;

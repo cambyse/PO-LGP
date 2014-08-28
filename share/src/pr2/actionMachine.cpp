@@ -1,10 +1,15 @@
 #include "actions.h"
 #include "actionMachine_internal.h"
 
+#include <Hardware/joystick/joystick.h>
+#include <Motion/pr2_heuristics.h>
+#include <Gui/opengl.h>
+
 //===========================================================================
 Singleton<SymbolL> symbols;
 
 //===========================================================================
+//
 // ActionMachine
 //
 ActionMachine::ActionMachine():Module("ActionMachine"){
@@ -189,6 +194,10 @@ void ActionMachine::waitForActionCompletion() {
 //===========================================================================
 // GroundedAction
 //
+
+GroundedAction::GroundedAction(const char* name, uint nargs):Symbol(name, nargs){
+}
+
 const char* GroundedAction::GroundActionValueString[7] = {
  "trueLV", "falseLV", "inactive", "queued", "active", "failed", "success"
 };
@@ -203,7 +212,7 @@ void GroundedAction::deinitYourself(ActionMachine& actionMachine) {
 //
 void reportExistingSymbols(){
   for(Symbol *s:symbols()){
-    cout <<"Symbol '" <<s->name <<"' nargs=" <<s->nargs;
+    cout <<"Symbol '" <<s->name <<"' [" <<s->ID <<"] nargs=" <<s->nargs;
     cout <<endl;
   }
 }

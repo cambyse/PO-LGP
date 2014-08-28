@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Hardware/joystick/joystick.h>
 #include <System/engine.h>
 #include <pr2/roscom.h>
 
@@ -30,6 +29,10 @@ struct Symbol{
   uint ID;
   MT::String name;
   uint nargs;  //instead, it should have a list of ArgTypes; each ArgType = {type\in{String, arr}, name}
+  Symbol(const char* _name, uint _nargs):name(_name), nargs(_nargs){
+    ID = symbols().N;
+    symbols().append(this);
+  }
   virtual uint argType(uint i){ NIY; return 0; }
   // bool operator==(const Symbol& s) const {
   //   return name == s.name; // comparing the IDs does not work.
@@ -59,7 +62,7 @@ struct GroundedAction : Symbol{
   //-- ActionState of the GroundedAction
   ActionState actionState;
   static const char* GroundActionValueString[7];
-  const char* getActionStateString() { return GroundActionValueString[actionState]; };
+  const char* getActionStateString() { return GroundActionValueString[actionState]; }
 
   /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
@@ -67,6 +70,8 @@ struct GroundedAction : Symbol{
 
   //-- not nice: list PDtasks that this action added to the OSC
   PDtaskL tasks;
+
+  GroundedAction(const char* name, uint nargs);
 
   /// @name manage common functions to manage GroundedSymbols
   virtual void initYourself(ActionMachine&) = 0;

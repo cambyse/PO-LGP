@@ -1298,6 +1298,7 @@ void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const {
   }
 }
 
+//* This Jacobian directly gives the implied rotation vector: multiplied with \dot q it gives the angular velocity of body b */
 void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
   Joint *j;
   uint j_idx;

@@ -2,11 +2,7 @@
 
 // ============================================================================
 // CoreTasks
-CoreTasks::CoreTasks() {
-  ID=symbols().N;
-  symbols().append(this);
-  name="CoreTasks";
-  nargs=0;
+CoreTasks::CoreTasks():GroundedAction("CoreTasks",0) {
 }
 
 void CoreTasks::initYourself(ActionMachine& actionMachine) {
@@ -35,15 +31,12 @@ void CoreTasks::initYourself(ActionMachine& actionMachine) {
 // ============================================================================
 // MoveEffTo
 MoveEffTo::MoveEffTo(const char* effName, const arr& effPos)
-    : effName(effName)
-    , effPos(effPos)
+    : GroundedAction("MoveEffTo",2),
+      effName(effName),
+      effPos(effPos)
 {
   SymbolL::memMove=true;
   PDtaskL::memMove=true;
-  ID=symbols().N;
-  symbols().append(this);
-  name="MoveEffTo";
-  nargs=2;
 }
 
 void MoveEffTo::initYourself(ActionMachine& actionMachine) {
@@ -64,15 +57,11 @@ bool MoveEffTo::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 // AlignEffTo
 AlignEffTo::AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos)
-    : effName(effName)
-    , effPos(effPos)
-    , alginPos(alignPos)
-{
-  ID=symbols().N;
-  symbols().append(this);
-  name="AlignEffTo";
-  nargs=2;
-}
+    : GroundedAction("AlignEffTo", 2),
+      effName(effName),
+      effPos(effPos),
+      alginPos(alignPos)
+{}
 
 void AlignEffTo::initYourself(ActionMachine& actionMachine) {
   PDtask *task;
@@ -92,15 +81,11 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 // PushForce
 PushForce::PushForce(const char* effName, arr forceVec)
-    : effName(effName)
-    , forceVec(forceVec)
+    : GroundedAction("PushForce", 2),
+      effName(effName),
+      forceVec(forceVec)
 //    , poseArg2(poseArg2)
-{
-  ID=symbols().N;
-  symbols().append(this);
-  name="PushForce";
-  nargs=2;
-}
+{}
 
 void PushForce::initYourself(ActionMachine& actionMachine) {
   // Note that the pushtask is kinda seperate to the normal PDTasks. I does not

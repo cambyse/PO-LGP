@@ -94,6 +94,7 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
   template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
   template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+  Item *append(const uintA& parentIdxs);
 
   //-- merging items
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item

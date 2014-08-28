@@ -1,5 +1,5 @@
-#include <MT/keyValueGraph.h>
-#include <MT/graphview.h>
+#include <Core/keyValueGraph.h>
+#include <Gui/graphview.h>
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
   KeyValueGraph H;
@@ -18,26 +18,21 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 
 void testBasic(){
   KeyValueGraph G;
-  G.add(TUP());
-  G.write(cout);
-  cout <<"--------------------------" <<endl;
-  G.add(TUP());
-  G.write(cout);
-  cout <<"--------------------------" <<endl;
-  G.add(TUP(1,1));
-  G.write(cout);
-  cout <<"--------------------------" <<endl;
-  G.add(TUP(1,1));
-  G.write(cout);
-  cout <<"--------------------------" <<endl;
-  G.add(TUP(0,1));
-  G.write(cout);
-  cout <<"--------------------------" <<endl;
+  G.append(TUP());
+  cout <<G <<"\n--------------------------" <<endl;
+  G.append(TUP());
+  cout <<G <<"\n--------------------------" <<endl;
+  G.append(TUP(1,1));
+  cout <<G <<"\n--------------------------" <<endl;
+  G.append(TUP(1,1));
+  cout <<G <<"\n--------------------------" <<endl;
+  G.append(TUP(0,1));
+  cout <<G <<"\n--------------------------" <<endl;
 
-  listWrite(G.getParents(0),cout);
-  cout <<"--------------------------" <<endl;
-  listWrite(G.getParents(1),cout);
-  cout <<"--------------------------" <<endl;
+  listWrite(G(0)->parentOf,cout);
+  cout <<"\n--------------------------" <<endl;
+  listWrite(G(1)->parentOf,cout);
+  cout <<"\n--------------------------" <<endl;
 }
 
 int main(int argc,char** argv){
