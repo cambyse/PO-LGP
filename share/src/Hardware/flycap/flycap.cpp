@@ -63,7 +63,7 @@ namespace {
 	struct ImageCapture {
 		Image image;
 		double timestamp;
-		ImageCapture(Image im, double timestamp) : image(im), timestamp(timestamp) {}
+		ImageCapture(const Image& im, double timestamp) : image(im), timestamp(timestamp) {}
 		ImageCapture() : timestamp(0) {};
 	};
 }
@@ -89,7 +89,7 @@ struct sFlycapInterface {
 		FC2Config conf;
 		conf.grabMode = BUFFER_FRAMES;
 		conf.highPerformanceRetrieveBuffer = true;
-		conf.numBuffers = 1;
+		conf.numBuffers = 30;
 		conf.isochBusSpeed = BUSSPEED_S_FASTEST;
 		CHECK_ERROR(cam.SetConfiguration(&conf));
 
@@ -123,7 +123,7 @@ struct sFlycapInterface {
 		double timestamp = clockTime();
 		unique_lock<mutex> lck(list_access);
 		captured_images.push_back(ImageCapture(*pImage, timestamp));
-		if(captured_images.size() > 25) {
+		if(captured_images.size() > 50) {
 			WARN(flycap, STRING("Capture queue growing, currently size " << captured_images.size()));
 		}
 
@@ -148,7 +148,6 @@ struct sFlycapInterface {
 			ic = captured_images.front();
 			captured_images.pop_front();
 		}
-
 
 		image.resize(c_flycap_height, c_flycap_width, 3);
 		targetImage.SetData(image.p, c_flycap_size);
