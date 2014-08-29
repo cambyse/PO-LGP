@@ -8,6 +8,8 @@
 #include <memory> // for shared_ptr
 #include <fstream> // for ofstream
 
+#include <omp.h>
+
 class HistoryObserver;
 class Environment;
 class HistoryObserver;
@@ -72,6 +74,13 @@ private:
 
     /** \brief Set the log file name and write the header with general information. */
     void initialize_log_file(std::ofstream& log_file);
+
+    void init_all_learn_locks(std::vector<omp_lock_t> & locks);
+    void set_all_learn_locks(std::vector<omp_lock_t> & locks);
+    void unset_all_learn_locks(std::vector<omp_lock_t> & locks);
+    void set_this_learn_lock(std::vector<omp_lock_t> & locks);
+    void unset_this_learn_lock(std::vector<omp_lock_t> & locks);
+    void destroy_all_learn_locks(std::vector<omp_lock_t> & locks);
 };
 
 #endif /* BATCHWORKER_H_ */

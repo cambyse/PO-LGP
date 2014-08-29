@@ -651,7 +651,7 @@ void TEFL::update_F_matrices() {
 
                 // print progress
 #ifdef USE_OMP
-#pragma omp critical (TemporallyExtendedFeatureLearner_update_F_matrices)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
 #endif
                 {if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}}
 
@@ -825,7 +825,7 @@ bool TEFL::pick_non_const_features() {
         int newly_erased = 0;
         f_ptr_set_t maybe_const_set_copy;
         f_ret_map_t f_ret_map_copy;
-#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
         {
             // resize/assign flags
             erased_from_original.assign(nr_threads, false);
@@ -883,7 +883,7 @@ bool TEFL::pick_non_const_features() {
             // syncronize non-const sets / return-value maps //
             //-----------------------------------------------//
 
-#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
             {
                 // set sync flag if needed
                 if(!sync_flag && (float)newly_erased/n_features > 1./n_sync) {
@@ -946,7 +946,7 @@ bool TEFL::pick_non_const_features() {
             } // critical
             ++progress_idx;
         } // end for
-#pragma omp critical (TemporallyExtendedFeatureLearner_pick_non_const_features)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
         {
             // final sync: erasing from original
             DEBUG_OUT(2, "FINAL_ERASE_FROM_ORIG (" << thread_nr << ")");

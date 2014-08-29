@@ -19,8 +19,6 @@
 
 #include <QDateTime>
 
-#include <omp.h>
-
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
@@ -28,10 +26,6 @@
 #endif
 #define DEBUG_STRING "BatchWorker: "
 #include "util/debug.h"
-
-#ifdef USE_OMP
-    #undef USE_OMP
-#endif
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
@@ -220,6 +214,10 @@ void BatchWorker::collect_data() {
 
     int repeat_n = repeat_arg.getValue();
     int episode_counter = 1;
+
+    // to coordinate learning and planning between threads
+    std::vector<omp_lock_t> learn_locks;
+
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
@@ -260,11 +258,13 @@ void BatchWorker::collect_data() {
             //------------//
 
 #ifdef USE_OMP
-#pragma omp critical (BatchWorker_Initialization)
+#pragma omp critical (BatchWorker)
 #endif
             {
                 this_episode_counter = episode_counter++;
 
+                // init locks
+                init_all_learn_locks(learn_locks);
 
                 // initialize environment and get spaces
                 if(environment_arg.getValue()=="cheese") {
@@ -337,19 +337,17 @@ void BatchWorker::collect_data() {
                 }
                 // train learner
                 if(mode=="TEM") {
-#ifdef USE_OMP
-//#pragma omp critical (BatchWorker_Learn)
-#endif
-                    {
-                        train_TEM(learner, data_likelihood, nr_features, cycles);
-                    } // end critical
+                    // no parallel learning because it's memory intensive and
+                    // internally parallel
+                    set_all_learn_locks(learn_locks);
+                    train_TEM(learner, data_likelihood, nr_features, cycles);
+                    unset_all_learn_locks(learn_locks);
                 } else if(mode=="TEL") {
-#ifdef USE_OMP
-//#pragma omp critical (BatchWorker_Learn)
-#endif
-                    {
-                        train_TEL(learner, TD_error, nr_features, cycles);
-                    } // end critical
+                    // no parallel learning because it's memory intensive and
+                    // internally parallel
+                    set_all_learn_locks(learn_locks);
+                    train_TEL(learner, TD_error, nr_features, cycles);
+                    unset_all_learn_locks(learn_locks);
                 } else if(mode=="MODEL_BASED_UTREE") {
                     train_model_based_UTree(learner, utree_size, utree_score);
                 } else if(mode=="VALUE_BASED_UTREE") {
@@ -391,6 +389,9 @@ void BatchWorker::collect_data() {
                 planner.set_spaces(action_space, observation_space, reward_space);
                 // do planned steps
                 for(int step_idx=0; step_idx<eval_arg.getValue(); ++step_idx) {
+                    // don't do planning and learning in parallel so all threads
+                    // can be used to pass the "learning bottelneck" quickly
+                    set_this_learn_lock(learn_locks);
                     // do planning
                     action_ptr_t action;
                     if(pruningOff_arg.getValue() || step_idx==0) {
@@ -412,6 +413,8 @@ void BatchWorker::collect_data() {
                     if(!pruningOff_arg.getValue()) {
                         planner.prune_tree(action,current_instance,*pred);
                     }
+                    // unset lock
+                    unset_this_learn_lock(learn_locks);
                 }
             } else if(mode=="TEL"){
                 // cast to policy
@@ -457,7 +460,7 @@ void BatchWorker::collect_data() {
             //--------------//
 
 #ifdef USE_OMP
-#pragma omp critical (BatchWorker_WriteOutput)
+#pragma omp critical (BatchWorker)
 #endif
             {
                 if(mode=="TEM") {
@@ -524,6 +527,9 @@ void BatchWorker::collect_data() {
             current_instance->detach_reachable();
         }
     } // end omp parallel for
+
+    // destroy locks
+    destroy_all_learn_locks(learn_locks);
 }
 
 void BatchWorker::collect_random_data(std::shared_ptr<Environment> env,
@@ -706,4 +712,50 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     LOG_COMMENT("");
     LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	TD-error	nr_features	l1_factor	cycles	utree_score	utree_size	button_p_sum");
     LOG_COMMENT("");
+}
+
+void BatchWorker::init_all_learn_locks(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "Init locks in thread " << omp_get_thread_num());
+    locks.clear();
+    repeat(omp_get_num_threads()) {
+        locks.push_back(omp_lock_t());
+        omp_init_lock(&(locks.back()));
+    }
+    DEBUG_OUT(3, "    " << locks.size() << " locks");
+}
+
+void BatchWorker::set_all_learn_locks(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "TRY set all locks in thread " << omp_get_thread_num());
+    for(auto & l : locks) {
+        omp_set_lock(&l);
+    }
+    DEBUG_OUT(3, "set all locks in thread " << omp_get_thread_num());
+}
+
+void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "TRY unset all locks in thread " << omp_get_thread_num());
+    for(auto & l : locks) {
+        omp_unset_lock(&l);
+    }
+    DEBUG_OUT(3, "unset all locks in thread " << omp_get_thread_num());
+}
+
+void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "TRY set lock for thread " << omp_get_thread_num());
+    omp_set_lock(&(locks[omp_get_thread_num()]));
+    DEBUG_OUT(3, "set lock for thread " << omp_get_thread_num());
+}
+
+void BatchWorker::unset_this_learn_lock(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "TRY unset lock for thread " << omp_get_thread_num());
+    omp_unset_lock(&(locks[omp_get_thread_num()]));
+    DEBUG_OUT(3, "unset lock for thread " << omp_get_thread_num());
+}
+
+void BatchWorker::destroy_all_learn_locks(std::vector<omp_lock_t> & locks) {
+    DEBUG_OUT(3, "Destroy locks in thread " << omp_get_thread_num());
+    for(auto & l : locks) {
+        omp_destroy_lock(&l);
+    }
+    locks.clear();
 }
