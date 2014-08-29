@@ -6,6 +6,8 @@
 #include <vector>
 #include <QString>
 
+#include <omp.h>
+
 #include "../util/util.h"
 #include "../util/QtUtil.h"
 
@@ -17,27 +19,31 @@ using std::endl;
 
 TEST(SandBox, SomeTest) {
 
-    int i, n = 10;
-
-    // set up random generator
-    gsl_rng * rand_gen = gsl_rng_alloc(gsl_rng_default);
-    gsl_rng_set(rand_gen, time(nullptr));
-
-    static const int N = 3;
-    double alpha[N];
-    double theta[N];
-    for(int idx : util::Range(N)) {
-        alpha[idx] = 0.01;
-    }
-
-    for (i = 0; i < n; i++) {
-        gsl_ran_dirichlet(rand_gen, N, alpha, theta);
-        for(int idx : util::Range(N)) {
-            cout << QString("%1 ").arg(theta[idx],7,'f',4);
+    //omp_set_num_threads(10);
+    //omp_set_nested(1);
+    int counter = 0;
+#pragma omp parallel
+    {
+        int first_thread_num = omp_get_thread_num();
+        int first_num_threads = omp_get_num_threads();
+#pragma omp parallel
+        {
+            int second_thread_num = omp_get_thread_num();
+            int second_num_threads = omp_get_num_threads();
+#pragma omp parallel
+            {
+                int third_thread_num = omp_get_thread_num();
+                int third_num_threads = omp_get_num_threads();
+#pragma omp critical
+                {
+                    cout << "count: " << counter
+                         << "	first: " << first_thread_num << "/" << first_num_threads
+                         << "	second: " << second_thread_num << "/" << second_num_threads
+                         << "	third: " << third_thread_num << "/" << third_num_threads << endl;
+                    ++counter;
+                }
+            }
         }
-        cout << endl;
     }
 
-    // clean up
-    gsl_rng_free(rand_gen);
 }
