@@ -56,14 +56,13 @@ protected:
 	MT::String name;
 	const bool& terminated;
 	bool ready;
-	//byteA buffer;
-	OpenGL gl;
+	byteA buffer;
 
 public:
 	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
 		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
-		name(name), terminated(terminated), ready(false), gl(name) {
+		name(name), terminated(terminated), ready(false) {
 	}
 
 	bool isReady() const {
@@ -78,12 +77,6 @@ public:
 			enc.addFrame(frame);
 			times.add_stamp(timestamp);
 		}
-		double w_ratio = (double)gl.width / (double)gl.background.d0;
-		double h_ratio = (double)gl.height / (double)gl.background.d1;
-		gl.backgroundZoom = min(w_ratio, h_ratio);
-		if(copy_gl)
-			gl.background = frame;
-		gl.update(NULL, false, false, false);
 		pub.publish(frame, timestamp);
 	}
 
@@ -104,8 +97,8 @@ public:
 
 	void step() {
 		double timestamp;
-		if((ready = cam.grab(gl.background, timestamp, 500))) {
-			add_frame(gl.background, timestamp);
+		if((ready = cam.grab(buffer, timestamp, 500))) {
+			add_frame(buffer, timestamp);
 		} else {
 			cerr << "grab " << name << " failed" << endl;
 		}
@@ -188,7 +181,7 @@ protected:
 			}
 #pragma omp section
 			while(!terminated && !ready) {
-				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
+				if(cam1.isReady() && cam2.isReady() && cam3.isReady() && cam4.isReady()) {
 					start_time = MT::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
