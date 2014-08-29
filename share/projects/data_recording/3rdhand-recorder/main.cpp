@@ -150,8 +150,8 @@ public:
 class RecordingSystem {
 private:
 	MT::String created;
-	FlycapGrabAndSave cam1, cam2, cam3;
-	KinectGrabAndSave front_kinect, side_kinect;
+	FlycapGrabAndSave cam1, cam2, cam3, cam4;
+	KinectGrabAndSave front_kinect/*, side_kinect*/;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
 	byteA audio_buf;
@@ -161,11 +161,11 @@ protected:
 
 	void openmp_run() {
 		front_kinect.startStreaming();
-		side_kinect.startStreaming();
+		//side_kinect.startStreaming();
 		bool ready = false;
 
 		// make sure everything is running smoothly before starting to record
-#pragma omp parallel sections num_threads(5)
+#pragma omp parallel sections num_threads(6)
 		{
 #pragma omp section
 			while(!terminated)
@@ -176,6 +176,9 @@ protected:
 #pragma omp section
 			while(!terminated)
 				cam3.step();
+#pragma omp section
+			while(!terminated)
+				cam4.step();
 #pragma omp section
 			while(!terminated) {
 				audio_poller.read(audio_buf);
@@ -190,8 +193,9 @@ protected:
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
+					cam4.setActiveTime(start_time);
 					front_kinect.setActiveTime(start_time);
-					side_kinect.setActiveTime(start_time);
+					//side_kinect.setActiveTime(start_time);
 					ready = true;
 				}
 			}
@@ -200,13 +204,14 @@ protected:
 
 
 public:
-	RecordingSystem(int id1, int id2, int id3, int kinID1, int kinID2) :
+	RecordingSystem(int id1, int id2, int id3, int id4, int kinID1, int kinID2) :
 		created(MT::getNowString()),
 		cam1(id1, STRING("pg_cam_" << id1).p, created, terminated),
 		cam2(id2, STRING("pg_cam_" << id2).p, created, terminated),
 		cam3(id3, STRING("pg_cam_" << id3).p, created, terminated),
+		cam4(id4, STRING("pg_cam_" << id4).p, created, terminated),
 		front_kinect(kinID1, "front_kinect", created, terminated),
-		side_kinect(kinID2, "side_kinect", created, terminated),
+		//side_kinect(kinID2, "side_kinect", created, terminated),
 		audio_writer(STRING("z.mike." << created << ".wav")),
 		audio_buf(8192),
 		start_time(ULONG_MAX) {
@@ -258,6 +263,7 @@ int main(int argc,char **argv){
 		RecordingSystem s(MT::getParameter<int>("camID1"),
 			MT::getParameter<int>("camID2"),
 			MT::getParameter<int>("camID3"),
+			MT::getParameter<int>("camID4"),
 			MT::getParameter<int>("kinectID1"),
 			MT::getParameter<int>("kinectID2"));
 		s.run();
