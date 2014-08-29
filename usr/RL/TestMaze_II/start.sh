@@ -25,7 +25,7 @@ start_string="--env 4x4_III -m MODEL_BASED_UTREE --minT 3000 --maxT 5000 --incT 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
     echo "expecting at least one argument"
-    echo "    { verbose | quiet } [ OMP_NUM_THREADS ]"
+    echo "    { verbose | quiet } [ OMP_NUM_THREADS ] [ OMP_NESTED=FALSE ]"
     exit 0
 fi
 
@@ -46,6 +46,19 @@ if [ $# -gt 1 ]; then
     fi
 else
     unset OMP_NUM_THREADS
+fi
+
+## print error message if third argument is not TRUE or FALSE
+## enable/disable nested parallelism otherwise
+if [ $# -gt 2 ]; then
+    if [ "$3" = "TRUE" -o "$3" = "FALSE" ]; then
+	export OMP_NESTED="$3"
+    else
+	echo "third argument must be 'TRUE' or 'FALSE'"
+	exit 0
+    fi
+else
+    export OMP_NESTED="FALSE"
 fi
 
 ## call the program
