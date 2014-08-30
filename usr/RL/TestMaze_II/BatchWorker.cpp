@@ -27,6 +27,10 @@
 #define DEBUG_STRING "BatchWorker: "
 #include "util/debug.h"
 
+#ifdef USE_OMP
+    #undef USE_OMP
+#endif
+
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
 
@@ -715,6 +719,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
 }
 
 void BatchWorker::init_all_learn_locks(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "Init locks in thread " << omp_get_thread_num());
     locks.clear();
     repeat(omp_get_num_threads()) {
@@ -722,40 +727,51 @@ void BatchWorker::init_all_learn_locks(std::vector<omp_lock_t> & locks) {
         omp_init_lock(&(locks.back()));
     }
     DEBUG_OUT(3, "    " << locks.size() << " locks");
+#endif
 }
 
 void BatchWorker::set_all_learn_locks(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "TRY set all locks in thread " << omp_get_thread_num());
     for(auto & l : locks) {
         omp_set_lock(&l);
     }
     DEBUG_OUT(3, "set all locks in thread " << omp_get_thread_num());
+#endif
 }
 
 void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "TRY unset all locks in thread " << omp_get_thread_num());
     for(auto & l : locks) {
         omp_unset_lock(&l);
     }
     DEBUG_OUT(3, "unset all locks in thread " << omp_get_thread_num());
+#endif
 }
 
 void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "TRY set lock for thread " << omp_get_thread_num());
     omp_set_lock(&(locks[omp_get_thread_num()]));
     DEBUG_OUT(3, "set lock for thread " << omp_get_thread_num());
+#endif
 }
 
 void BatchWorker::unset_this_learn_lock(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "TRY unset lock for thread " << omp_get_thread_num());
     omp_unset_lock(&(locks[omp_get_thread_num()]));
     DEBUG_OUT(3, "unset lock for thread " << omp_get_thread_num());
+#endif
 }
 
 void BatchWorker::destroy_all_learn_locks(std::vector<omp_lock_t> & locks) {
+#ifdef USE_OMP
     DEBUG_OUT(3, "Destroy locks in thread " << omp_get_thread_num());
     for(auto & l : locks) {
         omp_destroy_lock(&l);
     }
     locks.clear();
+#endif
 }
