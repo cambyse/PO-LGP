@@ -356,6 +356,15 @@ void TELQ::set_optimal_2x2_policy() {
     }
 }
 
+void TELQ::free_memory_after_learning() {
+    TemporallyExtendedFeatureLearner::free_memory_after_learning();
+    rho.clear();
+    L.clear();
+    need_to_update_c_rho_L = true;
+    policy.clear();
+    rewards_and_data_indices.clear();
+}
+
 void TELQ::update_c_rho_L() {
     // first update everything else
     update();

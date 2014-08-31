@@ -139,6 +139,8 @@ public:
      * outcomes for all training data. @param n gives the number of previous
      * action-observation-reward triplets to be printed. */
     virtual void print_F_matrices(int n = 0);
+    /** Free memory after learning is done. */
+    virtual void free_memory_after_learning();
 
 protected:
 

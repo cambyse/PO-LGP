@@ -62,6 +62,8 @@ public:
     /** Just for debugging. */
     virtual void set_optimal_2x2_policy();
 
+    virtual void free_memory_after_learning() override;
+
 protected:
 
     virtual bool update() override;

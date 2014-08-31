@@ -17,6 +17,8 @@
 #include "../Planning/LookAheadSearch.h"
 #include "../Representation/DoublyLinkedInstance.h"
 
+#include <unistd.h>
+
 #include <QDateTime>
 
 #ifdef BATCH_MODE_QUIET
@@ -27,9 +29,9 @@
 #define DEBUG_STRING "BatchWorker: "
 #include "util/debug.h"
 
-#ifdef USE_OMP
-    #undef USE_OMP
-#endif
+// #ifdef USE_OMP
+//     #undef USE_OMP
+// #endif
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
@@ -265,6 +267,7 @@ void BatchWorker::collect_data() {
 #pragma omp critical (BatchWorker)
 #endif
             {
+
                 this_episode_counter = episode_counter++;
 
                 // init locks
@@ -600,6 +603,8 @@ void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& li
     likelihood = exp(-neg_log_like);
     cycles = cycle_counter;
     features = tem->get_feature_set().size();
+    // free memory
+    tem->free_memory_after_learning();
 }
 
 void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features, int& cycles) {
@@ -636,6 +641,8 @@ void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD
     TD_error = tel->run_policy_iteration(false);
     cycles = cycle_counter;
     features = tel->get_feature_set().size();
+    // free memory
+    tel->free_memory_after_learning();
 }
 
 void BatchWorker::train_value_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score) {
@@ -718,60 +725,72 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     LOG_COMMENT("");
 }
 
+#ifdef USE_OMP
 void BatchWorker::init_all_learn_locks(std::vector<omp_lock_t> & locks) {
-#ifdef USE_OMP
-    DEBUG_OUT(3, "Init locks in thread " << omp_get_thread_num());
-    locks.clear();
-    repeat(omp_get_num_threads()) {
-        locks.push_back(omp_lock_t());
-        omp_init_lock(&(locks.back()));
+    if(locks.size()==0) {
+        DEBUG_OUT(3, "Init locks in thread " << omp_get_thread_num());
+        repeat(omp_get_num_threads()) {
+            locks.push_back(omp_lock_t());
+            omp_init_lock(&(locks.back()));
+        }
+        DEBUG_OUT(3, "    " << locks.size() << " locks");
     }
-    DEBUG_OUT(3, "    " << locks.size() << " locks");
-#endif
 }
+#else
+void BatchWorker::init_all_learn_locks(std::vector<omp_lock_t> &, omp_lock_t &) {}
+#endif
 
-void BatchWorker::set_all_learn_locks(std::vector<omp_lock_t> & locks) {
 #ifdef USE_OMP
+void BatchWorker::set_all_learn_locks(std::vector<omp_lock_t> & locks) {
     DEBUG_OUT(3, "TRY set all locks in thread " << omp_get_thread_num());
     for(auto & l : locks) {
         omp_set_lock(&l);
     }
     DEBUG_OUT(3, "set all locks in thread " << omp_get_thread_num());
-#endif
 }
+#else
+void BatchWorker::set_all_learn_locks(std::vector<omp_lock_t> &, omp_lock_t &) {}
+#endif
 
-void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> & locks) {
 #ifdef USE_OMP
-    DEBUG_OUT(3, "TRY unset all locks in thread " << omp_get_thread_num());
+void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> & locks) {
     for(auto & l : locks) {
         omp_unset_lock(&l);
     }
     DEBUG_OUT(3, "unset all locks in thread " << omp_get_thread_num());
-#endif
 }
+#else
+void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> &, omp_lock_t &) {}
+#endif
 
-void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> & locks) {
 #ifdef USE_OMP
+void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> & locks) {
     DEBUG_OUT(3, "TRY set lock for thread " << omp_get_thread_num());
+    usleep(100000); // wait 10ms so a learner can acquire the lock
     omp_set_lock(&(locks[omp_get_thread_num()]));
     DEBUG_OUT(3, "set lock for thread " << omp_get_thread_num());
-#endif
 }
+#else
+void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> &) {}
+#endif
 
-void BatchWorker::unset_this_learn_lock(std::vector<omp_lock_t> & locks) {
 #ifdef USE_OMP
-    DEBUG_OUT(3, "TRY unset lock for thread " << omp_get_thread_num());
+void BatchWorker::unset_this_learn_lock(std::vector<omp_lock_t> & locks) {
     omp_unset_lock(&(locks[omp_get_thread_num()]));
     DEBUG_OUT(3, "unset lock for thread " << omp_get_thread_num());
-#endif
 }
+#else
+void BatchWorker::unset_this_learn_lock(std::vector<omp_lock_t> &) {}
+#endif
 
-void BatchWorker::destroy_all_learn_locks(std::vector<omp_lock_t> & locks) {
 #ifdef USE_OMP
+void BatchWorker::destroy_all_learn_locks(std::vector<omp_lock_t> & locks) {
     DEBUG_OUT(3, "Destroy locks in thread " << omp_get_thread_num());
     for(auto & l : locks) {
         omp_destroy_lock(&l);
     }
     locks.clear();
-#endif
 }
+#else
+void BatchWorker::destroy_all_learn_locks(std::vector<omp_lock_t> &, omp_lock_t &) {}
+#endif

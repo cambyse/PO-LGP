@@ -265,6 +265,16 @@ void TEFL::print_F_matrices(int n) {
     }
 }
 
+void TEFL::free_memory_after_learning() {
+    F_matrices.clear();
+    outcome_indices.clear();
+    basis_features.clear();
+    basis_feature_maps.clear();
+    data_changed = true;
+    feature_set_changed = true;
+    basis_features_changed = true;
+}
+
 void TEFL::set_outcome_type(OUTCOME_TYPE t) {
     outcome_type = t;
     update_outcome_n();
