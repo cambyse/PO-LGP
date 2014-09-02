@@ -57,12 +57,13 @@ protected:
 	const bool& terminated;
 	bool ready;
 	byteA buffer;
+	bool do_encode;
 
 public:
 	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
 		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
-		name(name), terminated(terminated), ready(false) {
+		name(name), terminated(terminated), ready(false), do_encode(true) {
 	}
 
 	bool isReady() const {
@@ -71,9 +72,12 @@ public:
 	void setActiveTime(double start_time) {
 		this->start_time = start_time;
 	}
+	void setDoEncode(bool do_encode) {
+		this->do_encode = do_encode;
+	}
 
 	void add_frame(const byteA& frame, double timestamp, bool copy_gl = false) {
-		if(timestamp >= start_time) {
+		if(do_encode && timestamp >= start_time) {
 			enc.addFrame(frame);
 			times.add_stamp(timestamp);
 		}
@@ -210,6 +214,13 @@ public:
 		start_time(ULONG_MAX) {
 	}
 
+	void setDoEncode(bool encode) {
+		cam1.setDoEncode(encode);
+		cam2.setDoEncode(encode);
+		cam3.setDoEncode(encode);
+		cam4.setDoEncode(encode);
+	}
+
 	void run() {
 		std::thread runner(std::bind(&RecordingSystem::openmp_run, this));
 		while(!terminated && process_image_callbacks()) {
@@ -259,6 +270,7 @@ int main(int argc,char **argv){
 			MT::getParameter<int>("camID4"),
 			MT::getParameter<int>("kinectID1"),
 			MT::getParameter<int>("kinectID2"));
+		s.setDoEncode(MT::getParameter<bool>("encode", true));
 		s.run();
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;
