@@ -12,9 +12,9 @@ REGISTER_MODULE(G4Publisher)
 struct sG4Publisher{
 	unsigned int max_sensors;
 	double time_offset;
+	static bool initialized;
 #ifdef HAVE_ROS_G4
 	tf::TransformBroadcaster br;
-	static bool initialized;
 #endif
 	sG4Publisher() : max_sensors(3 * MT::getParameter<uint>("g4_numHubs")) {
 		time_offset = time(NULL);
@@ -22,14 +22,14 @@ struct sG4Publisher{
 
 #ifdef HAVE_ROS_G4
 		if(!initialized) {
-			ros::init(MT::argc, MT::argv);
+			ros::init(MT::argc, MT::argv, "g4_publisher");
 			initialized = true;
 		}
 #endif
 	}
 };
 
-sG4Publisher::initialized = false;
+bool sG4Publisher::initialized = false;
 
 G4Publisher::G4Publisher() : Module("G4Publisher"), s(NULL) {
 }
