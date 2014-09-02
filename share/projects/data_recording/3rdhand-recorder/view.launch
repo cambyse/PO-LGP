@@ -1,17 +1,33 @@
 <launch>
+  <arg name="cam1" default="/pg_cam_13400115"/>
+  <arg name="cam2" default="/pg_cam_13332472"/>
+  <arg name="cam3" default="/pg_cam_13400136"/>
+  <arg name="cam4" default="/pg_cam_14212563"/>
+  <arg name="cam5" default="/front_kinect_rgb"/>
+
+  <arg name="throttle" default="true"/>
+  <arg if="$(arg throttle)" name="t" value="_throttle"/>
+  <arg unless="$(arg throttle)" name="t" value=""/>
+
+  <node if="$(arg throttle)" pkg="topic_tools" type="throttle" args="messages $(arg cam1)/image_raw 15" name="t1"/>
+  <node if="$(arg throttle)" pkg="topic_tools" type="throttle" args="messages $(arg cam2)/image_raw 15" name="t2"/>
+  <node if="$(arg throttle)" pkg="topic_tools" type="throttle" args="messages $(arg cam3)/image_raw 15" name="t3"/>
+  <node if="$(arg throttle)" pkg="topic_tools" type="throttle" args="messages $(arg cam4)/image_raw 15" name="t4"/>
+  <node if="$(arg throttle)" pkg="topic_tools" type="throttle" args="messages $(arg cam5)/image_raw 15" name="t5"/>
+
  <node pkg="image_view" type="image_view" name="view_cam_1">
-   <remap from="image" to="/pg_cam_13332472/image_raw"/>
+   <remap from="image" to="$(arg cam1)/image_raw$(arg t)"/>
  </node>
  <node pkg="image_view" type="image_view" name="view_cam_2">
-   <remap from="image" to="/pg_cam_13400115/image_raw"/>
+   <remap from="image" to="$(arg cam2)/image_raw$(arg t)"/>
  </node>
  <node pkg="image_view" type="image_view" name="view_cam_3">
-   <remap from="image" to="/pg_cam_13400136/image_raw"/>
+   <remap from="image" to="$(arg cam3)/image_raw$(arg t)"/>
  </node>
  <node pkg="image_view" type="image_view" name="view_cam_4">
-   <remap from="image" to="/pg_cam_14212563/image_raw"/>
+   <remap from="image" to="$(arg cam4)/image_raw$(arg t)"/>
  </node>
  <node pkg="image_view" type="image_view" name="view_cam_5">
-   <remap from="image" to="/front_kinect_rgb/image_raw"/>
+   <remap from="image" to="$(arg cam5)/image_raw$(arg t)"/>
  </node>
 </launch>
