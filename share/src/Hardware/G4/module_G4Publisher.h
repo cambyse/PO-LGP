@@ -7,7 +7,6 @@ public:
 	ACCESS(floatA, poses);
 
 	G4Publisher();
-	~G4Publisher();
 
 	virtual void open();
 	virtual void close();
