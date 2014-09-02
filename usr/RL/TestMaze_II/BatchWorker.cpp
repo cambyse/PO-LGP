@@ -78,12 +78,14 @@ BatchWorker::BatchWorker(int argc, char ** argv):
                                              "values to force immediate full expansion"     ,false,         0,     "int"),
     epsilon_arg(        "", "eps"          , "epsilon / randomness of transitions"          ,false,         0,  "double"),
     button_n_arg(       "", "button_n"     , "number of buttons in button world"            ,false,         3,     "int"),
-    button_alpha_arg(   "", "button_alpha" , "for beta dist. per button in button world"    ,false,      0.01,  "double")
+    button_alpha_arg(   "", "button_alpha" , "for beta dist. per button in button world"    ,false,      0.01,  "double"),
+    utree_threshold_arg("u", "utree_threshold", "threshold for expansion of UTree", false, -1, "double")
 
 {
     try {
 	TCLAP::CmdLine cmd("This program is BatchWorker. It collects data.", ' ', "");
 
+        cmd.add(utree_threshold_arg);
         cmd.add(button_alpha_arg);
         cmd.add(button_n_arg);
         cmd.add(epsilon_arg);
@@ -172,6 +174,21 @@ bool BatchWorker::post_process_args() {
             incT = incT==0?1:incT;
         }
         args_ok = args_ok && samples_ok;
+    }
+
+    // check UTree threshold
+    {
+        utree_threshold = utree_threshold_arg.getValue();
+        if(utree_threshold==-1) {
+            if(mode=="MODEL_BASED_UTREE") {
+                utree_threshold = 1;
+            } else if(mode=="VALUE_BASED_UTREE") {
+                utree_threshold = 1e-5;
+            }
+        } else if(utree_threshold<0) {
+            DEBUG_WARNING("Argument '" << utree_threshold_arg.getName() << "' requires a non-negative value");
+            args_ok = false;
+        }
     }
 
     // check evaluation length
@@ -655,10 +672,9 @@ void BatchWorker::train_value_based_UTree(std::shared_ptr<HistoryObserver> learn
     }
     // expand utree
     utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-    double score_threshold = 1e-5;
     score = DBL_MAX;
-    while(score >= score_threshold) {
-        score = utree->expand_leaf_node(score_threshold);
+    while(score >= utree_threshold) {
+        score = utree->expand_leaf_node(utree_threshold);
     }
     // get tree size
     size = utree->get_tree_size();
@@ -674,10 +690,9 @@ void BatchWorker::train_model_based_UTree(std::shared_ptr<HistoryObserver> learn
     }
     // expand utree
     utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
-    double score_threshold = 1;
     score = DBL_MAX;
-    while(score >= score_threshold ) {
-        score = utree->expand_leaf_node(score_threshold);
+    while(score >= utree_threshold ) {
+        score = utree->expand_leaf_node(utree_threshold);
     }
     // get tree size
     size = utree->get_tree_size();
@@ -700,6 +715,9 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     if(mode=="TEM" || mode=="MODEL_BASED_UTREE") {
         LOG_COMMENT("Max Look-Ahead Tree Size: " << tree_arg.getValue());
         LOG_COMMENT("Pruning: " << (pruningOff_arg.getValue()?"off":"on"));
+    }
+    if(mode=="VALUE_BASED_UTREE" || mode=="MODEL_BASED_UTREE") {
+        LOG_COMMENT("UTree Threshold: " << utree_threshold);
     }
     if(mode=="TEM" || mode=="TEL") {
         LOG_COMMENT("L1-factor: " << l1_arg.getValue());

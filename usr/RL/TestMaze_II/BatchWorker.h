@@ -56,6 +56,8 @@ private:
     TCLAP::ValueArg<double> epsilon_arg;
     TCLAP::ValueArg<int> button_n_arg;
     TCLAP::ValueArg<double> button_alpha_arg;
+    TCLAP::ValueArg<double> utree_threshold_arg;
+    double utree_threshold;
 
     bool args_ok = false;
 

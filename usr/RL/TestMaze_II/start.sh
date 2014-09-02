@@ -22,7 +22,7 @@ start_string="--env 4x4_III -m MODEL_BASED_UTREE --minT 3000 --maxT 5000 --incT 
 start_string="--env cheese -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --maxH -1 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-1 --delta 1e-10"
 start_string="--env cheese -m TEM --minT 200 --maxT 200 --incT 0 --minH -2 --maxH  0 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-2 --delta 1e-5"
 start_string="--env cheese -m VALUE_BASED_UTREE --minT 800 --maxT 1000 --incT 200 -e 100 -r 1000"
-start_string="--env cheese -m MODEL_BASED_UTREE --minT 900 --maxT 900 --incT 0 -e 100 -r 100 -t 30000"
+start_string="--env cheese -m MODEL_BASED_UTREE --minT 2000 --maxT 2000 --incT 0 -e 100 -r 100 -u 1e-10"
 #start_string="--env cheese -m RANDOM --minT 1 --maxT 1 --incT 0 -e 100 -r 1000"
 
 ## print kind of help if no arguments are given
