@@ -20,6 +20,7 @@ using namespace camera_info_manager;
 #include <Core/array.h>
 #include <Core/util.h>
 #include <sstream>
+#include <time.h>
 
 namespace MLR {
 
@@ -35,7 +36,7 @@ struct sImagePublisher {
 #endif
 	uint32_t seq, bypp;
 	std::string link_name, encoding;
-	double epoch_offset;
+	double time_offset;
 	PixelFormat pix_fmt;
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
@@ -50,7 +51,9 @@ struct sImagePublisher {
 		str << camera_name << "_link";
 		link_name = str.str();
 
-		epoch_offset = 0; // FIXME
+		// get seconds since epoch for 00:00 today (to offsets marc's %86400 stuff)
+		time_offset = time(NULL);
+		time_offset -= (((time_t)time_offset)%86400);
 
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 		switch(pix_fmt) {
@@ -81,7 +84,7 @@ struct sImagePublisher {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 		sensor_msgs::fillImage(msg, encoding, image.d0, image.d1, bypp * image.d1, image.p);
 		msg.header.seq 		= seq++;
-		msg.header.stamp	= ros::Time(timestamp + epoch_offset);
+		msg.header.stamp	= ros::Time(timestamp + time_offset);
 		msg.header.frame_id	= link_name;
 
 		cinfo = cim.getCameraInfo();
