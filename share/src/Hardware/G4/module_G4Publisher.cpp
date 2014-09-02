@@ -1,5 +1,6 @@
 #include "module_G4Publisher.h"
 #include <time.h>
+#include <Core/util.h>
 
 REGISTER_MODULE(G4Publisher)
 
@@ -13,17 +14,27 @@ struct sG4Publisher{
 	double time_offset;
 #ifdef HAVE_ROS_G4
 	tf::TransformBroadcaster br;
+	static bool initialized;
 #endif
 	sG4Publisher() : max_sensors(3 * MT::getParameter<uint>("g4_numHubs")) {
 		time_offset = time(NULL);
 		time_offset -= (((time_t)time_offset)%86400);
+
+#ifdef HAVE_ROS_G4
+		if(!initialized) {
+			ros::init(MT::argc, MT::argv);
+			initialized = true;
+		}
+#endif
 	}
 };
+
+sG4Publisher::initialized = false;
 
 G4Publisher::G4Publisher() : Module("G4Publisher"), s(NULL) {
 }
 
-void G4Publisher::open(){
+void G4Publisher::open() {
   s = new sG4Publisher;
 }
 
@@ -40,6 +51,8 @@ void G4Publisher::step(){
   floatA p = poses();
   double tstamp = poses.tstamp();
   poses.deAccess();
+
+  ros::spinOnce();
 
   ros::Time timestamp = ros::Time(tstamp + s->time_offset);
 
