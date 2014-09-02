@@ -2,12 +2,11 @@
 
 #include <Core/module.h>
 
-class G4Publisher : Module{
+class G4Publisher : public Module{
 public:
 	ACCESS(floatA, poses);
 
 	G4Publisher();
-	~G4Publisher();
 
 	virtual void open();
 	virtual void close();
