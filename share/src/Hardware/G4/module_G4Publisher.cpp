@@ -12,6 +12,7 @@ REGISTER_MODULE(G4Publisher)
 struct sG4Publisher{
 	double time_offset;
 	static bool initialized;
+	std::string frame_id;
 #ifdef HAVE_ROS_G4
 	tf::TransformBroadcaster br;
 #endif
@@ -21,6 +22,7 @@ struct sG4Publisher{
 		time_offset -= (((time_t)time_offset)%86400);
 
 #ifdef HAVE_ROS_G4
+		frame_id = MT::getParameter<MT::String>("g4_pub_frame").p;
 		if(!initialized) {
 			ros::init(MT::argc, MT::argv, "g4_publisher");
 			initialized = true;
@@ -63,7 +65,7 @@ void G4Publisher::step(){
 	  tf::Quaternion q(p(i, 4), p(i, 5), p(i, 6), p(i, 3));
 	  t.setRotation(q);
 
-	  s->br.sendTransform(tf::StampedTransform(t, timestamp, "g4", 
+	  s->br->sendTransform(tf::StampedTransform(t, timestamp, s->frame_id, 
 		name.str()));
   }
 #endif
