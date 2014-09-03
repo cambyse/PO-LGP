@@ -10,13 +10,13 @@ REGISTER_MODULE(G4Publisher)
 #endif
 
 struct sG4Publisher{
-	unsigned int max_sensors;
 	double time_offset;
 	static bool initialized;
 #ifdef HAVE_ROS_G4
 	tf::TransformBroadcaster br;
 #endif
-	sG4Publisher() : max_sensors(3 * MT::getParameter<uint>("g4_numHubs")) {
+
+	sG4Publisher()  {
 		time_offset = time(NULL);
 		time_offset -= (((time_t)time_offset)%86400);
 
@@ -47,12 +47,10 @@ void G4Publisher::close(){
 
 void G4Publisher::step(){
 #ifdef HAVE_ROS_G4
-  uint rev = poses.readAccess();
+  poses.readAccess();
   floatA p = poses();
   double tstamp = poses.tstamp();
   poses.deAccess();
-
-  ros::spinOnce();
 
   ros::Time timestamp = ros::Time(tstamp + s->time_offset);
 
