@@ -49,7 +49,7 @@ struct sImagePublisher {
 	{
 		std::ostringstream str;
 		str << camera_name << "_link";
-		link_name = str.str();
+		link_name = ros::names::resolve(str.str());
 
 		// get seconds since epoch for 00:00 today (to offsets marc's %86400 stuff)
 		time_offset = time(NULL);

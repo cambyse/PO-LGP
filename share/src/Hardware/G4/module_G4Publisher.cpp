@@ -10,21 +10,30 @@ REGISTER_MODULE(G4Publisher)
 #endif
 
 struct sG4Publisher{
-	unsigned int max_sensors;
 	double time_offset;
 	static bool initialized;
+	std::string frame_id;
 #ifdef HAVE_ROS_G4
-	tf::TransformBroadcaster br;
+	tf::TransformBroadcaster *br;
 #endif
-	sG4Publisher() : max_sensors(3 * MT::getParameter<uint>("g4_numHubs")) {
+
+	sG4Publisher()  {
 		time_offset = time(NULL);
 		time_offset -= (((time_t)time_offset)%86400);
-
+		
 #ifdef HAVE_ROS_G4
+		frame_id = MT::getParameter<MT::String>("g4_pub_frame", MT::String("world")).p;
 		if(!initialized) {
 			ros::init(MT::argc, MT::argv, "g4_publisher");
 			initialized = true;
 		}
+		br = new tf::TransformBroadcaster;
+#endif
+	}
+
+	~sG4Publisher() {
+#ifdef HAVE_ROS_G4
+	delete br;
 #endif
 	}
 };
@@ -47,12 +56,10 @@ void G4Publisher::close(){
 
 void G4Publisher::step(){
 #ifdef HAVE_ROS_G4
-  uint rev = poses.readAccess();
+  poses.readAccess();
   floatA p = poses();
   double tstamp = poses.tstamp();
   poses.deAccess();
-
-  ros::spinOnce();
 
   ros::Time timestamp = ros::Time(tstamp + s->time_offset);
 
@@ -62,11 +69,12 @@ void G4Publisher::step(){
 	  name << "g4_marker_" << i;
 
 	  t.setOrigin(tf::Vector3(p(i, 0), p(i, 1), p(i, 2)));
-	  tf::Quaternion q(p(i, 4), p(i, 5), p(i, 6), p(i, 3));
-	  t.setRotation(q);
+	  t.setRotation(tf::Quaternion(p(i, 4), p(i, 5), p(i, 6), p(i, 3)));
 
-	  s->br.sendTransform(tf::StampedTransform(t, timestamp, "g4", 
+	  s->br->sendTransform(tf::StampedTransform(t, timestamp, s->frame_id, 
 		name.str()));
   }
+
+  ros::spinOnce();
 #endif
 }
