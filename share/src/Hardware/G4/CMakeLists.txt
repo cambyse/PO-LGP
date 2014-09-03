@@ -25,7 +25,7 @@ if(WITH_G4)
     include_directories(${G4ROOT}/include ${G4ROOT}/Inc)
     add_definitions(-DG4_INSTALLED)
     target_link_libraries(${TARGET} 
-        LINK_PRIVATE Core Gui Ors ${ROS_G4_LIBRARIES}
+        LINK_PRIVATE Core Gui Ors Perception ${ROS_G4_LIBRARIES}
         LINK_PUBLIC ${G4TRACK}
     )
 

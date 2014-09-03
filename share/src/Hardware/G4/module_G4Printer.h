@@ -3,15 +3,13 @@
 #include <Core/module.h>
 #include <Hardware/G4/G4.h>
 
-struct G4Display: Module{
+struct G4Printer: Module{
   ACCESS(floatA, poses);
 
-  G4Display();
+  G4Printer();
 
   virtual void open();
   virtual void close();
   virtual void step();
-
-  struct sG4Display *s;
 };
 
