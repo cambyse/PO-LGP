@@ -14,19 +14,26 @@ struct sG4Publisher{
 	static bool initialized;
 	std::string frame_id;
 #ifdef HAVE_ROS_G4
-	tf::TransformBroadcaster br;
+	tf::TransformBroadcaster *br;
 #endif
 
 	sG4Publisher()  {
 		time_offset = time(NULL);
 		time_offset -= (((time_t)time_offset)%86400);
-
+		
 #ifdef HAVE_ROS_G4
 		frame_id = MT::getParameter<MT::String>("g4_pub_frame").p;
 		if(!initialized) {
 			ros::init(MT::argc, MT::argv, "g4_publisher");
 			initialized = true;
 		}
+		br = new tf::TransformBroadcaster;
+#endif
+	}
+
+	~sG4Publisher() {
+#ifdef HAVE_ROS_G4
+	delete br;
 #endif
 	}
 };
