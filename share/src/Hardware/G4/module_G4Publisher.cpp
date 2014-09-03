@@ -22,7 +22,7 @@ struct sG4Publisher{
 		time_offset -= (((time_t)time_offset)%86400);
 		
 #ifdef HAVE_ROS_G4
-		frame_id = MT::getParameter<MT::String>("g4_pub_frame").p;
+		frame_id = MT::getParameter<MT::String>("g4_pub_frame", "world").p;
 		if(!initialized) {
 			ros::init(MT::argc, MT::argv, "g4_publisher");
 			initialized = true;
