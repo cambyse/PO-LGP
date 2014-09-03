@@ -74,5 +74,7 @@ void G4Publisher::step(){
 	  s->br->sendTransform(tf::StampedTransform(t, timestamp, s->frame_id, 
 		name.str()));
   }
+
+  ros::spinOnce();
 #endif
 }
