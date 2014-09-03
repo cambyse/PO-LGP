@@ -126,6 +126,12 @@ template<class T> T* KeyValueGraph::getValue(const char *key) {
   return it->getValue<T>();
 }
 
+template<class T> T* KeyValueGraph::getValue(const StringA &keys) {
+  Item *it = getItem(keys);
+  if(!it) return NULL;
+  return it->getValue<T>();
+}
+
 template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   MT::Array<T*> ret;
   for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {

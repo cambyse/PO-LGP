@@ -70,7 +70,9 @@ struct KeyValueGraph:ItemL {
   
   //-- get values directly
   template<class T> T* getValue(const char *key);
+  template<class T> T* getValue(const StringA &keys);
   template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
+  template<class T> bool getValue(T& x, const StringA &keys) { T* y=getValue<T>(keys); if(y) { x=*y; return true; } return false; }
 
   //-- get items
   Item* getItem(const char *key);
