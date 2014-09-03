@@ -69,8 +69,7 @@ void G4Publisher::step(){
 	  name << "g4_marker_" << i;
 
 	  t.setOrigin(tf::Vector3(p(i, 0), p(i, 1), p(i, 2)));
-	  tf::Quaternion q(p(i, 4), p(i, 5), p(i, 6), p(i, 3));
-	  t.setRotation(q);
+	  t.setRotation(tf::Quaternion(p(i, 4), p(i, 5), p(i, 6), p(i, 3)));
 
 	  s->br->sendTransform(tf::StampedTransform(t, timestamp, s->frame_id, 
 		name.str()));
