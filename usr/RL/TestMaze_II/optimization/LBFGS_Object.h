@@ -10,8 +10,25 @@ class LBFGS_Object {
 
 public:
 
-    typedef std::function<lbfgsfloatval_t(const lbfgsfloatval_t*,
-                                          lbfgsfloatval_t*)> objective_t;
+    /** \brief Type for objective function.
+     *
+     * Computes objective and gradient. Value of objective is returned.
+     * @param x current parameters
+     * @param g gradient (to be filled) */
+    typedef std::function<lbfgsfloatval_t(const lbfgsfloatval_t* x,
+                                          lbfgsfloatval_t* g)> objective_t;
+
+    /** \brief Type for progress function.
+     *
+     * @param x current parameters
+     * @param g gradient
+     * @param fx objective value
+     * @param norm of current parameters
+     * @param norm of gradient
+     * @param step ???
+     * @param nr_variables number of parameters
+     * @param iteration_nr current number of iterations
+     * @param ls ??? */
     typedef std::function<int(const lbfgsfloatval_t *x,
                               const lbfgsfloatval_t *g,
                               const lbfgsfloatval_t fx,
@@ -70,6 +87,9 @@ public:
 
     /** \brief Set the objective function. */
     virtual LBFGS_Object& set_objective(objective_t objective);
+
+    /** \brief Set values of the variables. */
+    virtual LBFGS_Object& set_variables(const std::vector<lbfgsfloatval_t> & values);
 
     /** \brief Set the objective function. */
     virtual LBFGS_Object& set_progress(progress_t progress);

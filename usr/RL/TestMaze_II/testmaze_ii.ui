@@ -21,18 +21,6 @@
        <item row="1" column="0" rowspan="2">
         <widget class="QLineEdit" name="_wConsoleInput"/>
        </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QPlainTextEdit" name="_wConsoleOutput">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-          </font>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QPushButton" name="_wBackInHistory">
          <property name="maximumSize">
@@ -56,6 +44,18 @@
          </property>
          <property name="text">
           <string>&amp;next</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QTextEdit" name="_wConsoleOutput">
+         <property name="font">
+          <font>
+           <family>Monospace</family>
+          </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

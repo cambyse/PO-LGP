@@ -40,11 +40,14 @@
 #include <physx/extensions/PxDefaultCpuDispatcher.h>
 #include <physx/extensions/PxShapeExt.h>
 #include <physx/foundation/PxMat33.h>
+#include <physx/pvd/PxVisualDebugger.h>
+#include <physx/physxvisualdebuggersdk/PvdConnectionFlags.h>
 //#include <PxMat33Legacy.h>
 #include <physx/extensions/PxSimpleFactory.h>
 #pragma GCC diagnostic pop
 
 #include "ors_physx.h"
+#include "ors_locker.h"
 #include <Gui/opengl.h>
 
 using namespace physx;
@@ -141,6 +144,8 @@ struct sPhysXInterface {
   PxScene* gScene;
   MT::Array<PxRigidActor*> actors;
   MT::Array<PxD6Joint*> joints;
+
+  debugger::comm::PvdConnection* connection;
   
   sPhysXInterface():gScene(NULL) {}
 
@@ -213,9 +218,20 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
 
   /// ADD joints here!
   for(ors::Joint *jj : world.joints) s->addJoint(jj);
+
+  /// save data for the PVD
+  if(MT::getParameter<bool>("physx_debugger", false)) {
+    const char* filename = "pvd_capture.pxd2";
+    PxVisualDebuggerConnectionFlags connectionFlags = PxVisualDebuggerExt::getAllConnectionFlags();
+
+    s->connection = PxVisualDebuggerExt::createConnection(mPhysics->getPvdConnectionManager(), filename, connectionFlags);
+    mPhysics->getVisualDebugger()->setVisualDebuggerFlags(PxVisualDebuggerFlag::eTRANSMIT_CONTACTS | PxVisualDebuggerFlag::eTRANSMIT_CONSTRAINTS);
+  }
 }
 
 PhysXInterface::~PhysXInterface() {
+  if(s->connection)
+    s->connection->release();
   delete s;
 }
 
@@ -225,29 +241,37 @@ void PhysXInterface::step(double tau) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
 
+  MT::Array<PxTransform> goal_poses(world.joints.N);
   for_list(ors::Joint, j, world.joints) {
-    bool lock = j->locked_func((void*) j->locked_data);
-    if(lock and !j->locked) {
-      j->locked = true;
-      cout << "Lock joint" << endl;
-      s->lockJoint(s->joints(j_COUNT), j);
+    PxD6Joint *px_joint = s->joints(j_COUNT);
+    if(j->locker and j->locker->lock()) {
+      s->lockJoint(px_joint, j);
     }
-    else if(!lock and j->locked) {
-      j->locked = false;
-      cout << "Unlock joint" << endl;
-      s->unlockJoint(s->joints(j_COUNT), j);  
+    else if(j->locker and j->locker->unlock()) {
+      s->unlockJoint(px_joint, j);  
     }
+    //if(px_joint) { 
+      //PxRigidActor *actor0 = s->actors(j->ito);
+      ////PxTransform goal_pose = actor0->getGlobalPose();
+      //goal_poses(j_COUNT) = actor0->getGlobalPose();
+    //}
   }
   
   //-- dynamic simulation
   s->gScene->simulate(tau);
   
+  //for_list(ors::Joint, jj, world.joints) {
+    //PxD6Joint *px_joint = s->joints(jj_COUNT);
+    //if(px_joint) { 
+      //px_joint->setDrivePosition(goal_poses(jj_COUNT));
+    //}
+  //}
   //...perform useful work here using previous frame's state data
   while(!s->gScene->fetchResults()) {
   }
   
   //-- pull state of all objects
-  pullFromPhysx();
+  pullFromPhysx(tau);
   
 }
 
@@ -274,16 +298,17 @@ void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
  */
 
 void sPhysXInterface::addJoint(ors::Joint *jj) {
-  if(joints.N <= jj->index)
-    joints.resize(jj->index+1);
-  joints(jj->index) = NULL;
+  while(joints.N <= jj->index+1)
+    joints.append(NULL);
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
     case ors::JT_hingeX: 
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
+
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
+      CHECK(desc, "PhysX joint creation failed.");
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -305,6 +330,13 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       else {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
       }
+
+      if(jj->ats.getValue<arr>("drive")) {
+        arr drive_values = *jj->ats.getValue<arr>("drive");
+        PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, false);
+        desc->setDrive(PxD6Drive::eTWIST, drive);
+        //desc->setDriveVelocity(PxVec3(0, 0, 0), PxVec3(5e-1, 0, 0));
+      }
       joints(jj->index) = desc;
     }
     break;
@@ -323,6 +355,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transZ:
     {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
+      CHECK(desc, "PhysX joint creation failed.");
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -461,15 +494,20 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
   // TODO: we could use the data void pointer of an actor instead?
 }
 
-void PhysXInterface::pullFromPhysx() {
+void PhysXInterface::pullFromPhysx(double tau) {
   for_list(PxRigidActor, a, s->actors) {
     PxTrans2OrsTrans(world.bodies(a_COUNT)->X, a->getGlobalPose());
     if(a->getType() == PxActorType::eRIGID_DYNAMIC) {
       PxRigidBody *px_body = (PxRigidBody*) a;
       PxVec3 vel = px_body->getLinearVelocity();
       PxVec3 angvel = px_body->getAngularVelocity();
-      world.bodies(a_COUNT)->X.vel = ors::Vector(vel[0], vel[1], vel[2]);
-      world.bodies(a_COUNT)->X.angvel = ors::Vector(angvel[0], angvel[1], angvel[2]);
+      ors::Vector newvel(vel[0], vel[1], vel[2]);
+      ors::Vector newangvel(angvel[0], angvel[1], angvel[2]);
+      ors::Body *b = world.bodies(a_COUNT);
+      b->force = b->mass * ((b->X.vel - newvel)/tau);
+      b->torque = b->mass * ((b->X.angvel - newangvel)/tau);
+      b->X.vel = newvel;
+      b->X.angvel = newangvel;
     }
   }
   world.calc_fwdPropagateShapeFrames();
@@ -587,7 +625,7 @@ PhysXInterface::~PhysXInterface() { NICO }
   
 void PhysXInterface::step(double tau) { NICO }
 void PhysXInterface::pushToPhysx() { NICO }
-void PhysXInterface::pullFromPhysx() { NICO }
+void PhysXInterface::pullFromPhysx(double tau) { NICO }
 void PhysXInterface::setArticulatedBodiesKinematic(uint agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }

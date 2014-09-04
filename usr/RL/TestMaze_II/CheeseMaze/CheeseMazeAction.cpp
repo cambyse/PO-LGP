@@ -1,7 +1,5 @@
 #include "CheeseMazeAction.h"
 
-#include "../util/Macro.h"
-
 #include "../util/debug.h"
 
 using std::string;
@@ -52,7 +50,10 @@ bool CheeseMazeAction::operator<(const AbstractAction &other) const {
 }
 
 const string CheeseMazeAction::print() const {
-    string ret("CheeseMazeAction(");
+    string ret;
+    if(!print_short_name) {
+        ret += "CheeseMazeAction(";
+    }
     switch(action) {
 #ifdef USE_UTF8
     case ACTION::NORTH:
@@ -86,7 +87,9 @@ const string CheeseMazeAction::print() const {
         ret+="INVALID";
         break;
     }
-    ret+=")";
+    if(!print_short_name) {
+        ret+=")";
+    }
     return ret;
 }
 

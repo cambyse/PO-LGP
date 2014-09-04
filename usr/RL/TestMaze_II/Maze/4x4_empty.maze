@@ -1,0 +1,10 @@
+maze_t(
+    QString("4x4_empty"),
+    1,
+    action_ptr_t(new action_t("stay")),
+    observation_ptr_t(new observation_t(4,4,1,1)),
+    reward_ptr_t(new reward_t({0},0)),
+    vector<wall_t>({ }),
+    vector<maze_reward_t>({ }),
+    vector<door_t>({ })
+    )

@@ -1,6 +1,5 @@
 #include "kinect.h"
 #include <libfreenect.hpp>
-#include <libfreenect/libfreenect_sync.h>
 #include <Core/util.h>
 
 void lib_hardware_kinect(){ MT_MSG("loading"); }

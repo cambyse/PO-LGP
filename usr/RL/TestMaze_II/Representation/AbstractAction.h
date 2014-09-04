@@ -22,6 +22,7 @@ public:
     }
     virtual ACTION_TYPE get_type() const;
 protected:
+    bool print_short_name = true;
     virtual void set_type(ACTION_TYPE t);
 private:
     ACTION_TYPE action_type;
