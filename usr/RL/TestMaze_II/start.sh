@@ -1,9 +1,9 @@
 
 ## Minimal Maze
-# start_string="--env Minimal -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --maxH -1 --extH 2 --minCycles -3 --maxCycles 3 -e 32 -r 50 --l1 1e-4 --delta 1e-10"
-# start_string="--env Minimal -m VALUE_BASED_UTREE --minT 600 --maxT 1000 --incT 200 -e 32 -r 500"
-# start_string="--env Minimal -m MODEL_BASED_UTREE --minT 400 --maxT 400 --incT 0 -e 32 -r 25"
-# start_string="--env Minimal -m TEM --minT 600 --maxT 1000 --incT 200 --minH -2 --maxH 0 --extH 2 --minCycles -2 --maxCycles 2 -e 32 -r 50 --l1 1e-5 --delta 1e-5"
+start_string="--env Minimal -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --maxH -1 --extH 2 --minCycles -3 --maxCycles 3 -e 32 -r 50 --l1 1e-4 --delta 1e-10"
+start_string="--env Minimal -m VALUE_BASED_UTREE --minT 600 --maxT 1000 --incT 200 -e 32 -r 500"
+start_string="--env Minimal -m MODEL_BASED_UTREE --minT 400 --maxT 400 --incT 0 -e 32 -r 25"
+start_string="--env Minimal -m TEM --minT 600 --maxT 1000 --incT 200 --minH -2 --maxH 0 --extH 2 --minCycles -2 --maxCycles 2 -e 32 -r 50 --l1 1e-5 --delta 1e-5"
 
 ## 4x4_III Maze
 start_string="--env 4x4_III -m TEL --minT 3000 --maxT 5000 --incT 1000 --minH -3 --maxH -1 --extH 1 --minCycles 0 --maxCycles 4 -e 22 -r 10 --l1 1e-4 --delta 1e-10"
@@ -13,17 +13,17 @@ start_string="--env 4x4_III -m MODEL_BASED_UTREE --minT 3000 --maxT 5000 --incT 
 
 
 ## Button World
-# start_string="--env sep-button --button_n 3 -m               TEM --minT  2 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r  25 --l1 0.0001 --delta 1e-5 -t 20000"
-# start_string="--env sep-button --button_n 3 -m               TEL --minT  10 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 3 -e 10 -r  100 --l1  1e-9 --delta 1e-10"
-# start_string="--env sep-button --button_n 3 -m VALUE_BASED_UTREE --minT  20 --maxT  100 --incT  10                                           -e 10 -r 500                          "
-# start_string="--env joint-button --button_n 3 -m            RANDOM --minT 1 --maxT 1  --incT 0                                           -e 10 -r 500                        "
+start_string="--env sep-button --button_n 3 -m TEM --minT  2 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 2 -e 10 -r  25 --l1 0.0001 --delta 1e-5 -t 20000"
+start_string="--env sep-button --button_n 3 -m TEL --minT 10 --maxT  10 --incT  1 --minH -1 --maxH 0 --extH 1 --minCycles 3 -e 10 -r  100 --l1  1e-9 --delta 1e-10"
+start_string="--env sep-button --button_n 3 -m VALUE_BASED_UTREE --minT  20 --maxT  100 --incT  10 -e 10 -r 500"
+start_string="--env joint-button --button_n 3 -m RANDOM --minT 1 --maxT 1  --incT 0 -e 10 -r 500"
 
 ## Cheese Maze
-start_string="--env cheese -m TEL --minT 200 --maxT 200 --incT 0 --minH -2 --maxH -1 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-1 --delta 1e-10"
-start_string="--env cheese -m TEM --minT 200 --maxT 200 --incT 0 --minH -2 --maxH  0 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-2 --delta 1e-5"
-start_string="--env cheese -m VALUE_BASED_UTREE --minT 800 --maxT 1000 --incT 200 -e 100 -r 1000"
-start_string="--env cheese -m MODEL_BASED_UTREE --minT 2000 --maxT 2000 --incT 0 -e 100 -r 100 -u 1e-10"
-#start_string="--env cheese -m RANDOM --minT 1 --maxT 1 --incT 0 -e 100 -r 1000"
+start_string="--env cheese -m TEL --minT 10000 --maxT 10000 --incT 0 --minH -2 --maxH -1 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-3 --delta 1e-10"
+start_string="--env cheese -m TEM --minT 10000 --maxT 10000 --incT 0 --minH -2 --maxH  0 --extH 1 --maxCycles 3 -e 100 -r 100 --l1 1e-3 --delta 1e-5"
+start_string="--env cheese -m VALUE_BASED_UTREE --minT 1500 --maxT 1500 --incT 0 -e 100 -r 1000"
+start_string="--env cheese -m MODEL_BASED_UTREE --minT 500 --maxT 500 --incT 0 -e 100 -r 100 -u 1e-10"
+start_string="--env cheese -m RANDOM --minT 1 --maxT 1 --incT 0 -e 100 -r 1000"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
