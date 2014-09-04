@@ -8,7 +8,6 @@ HEADERS += \
     ../Config.h \
     \
     ../util/util.h \
-    ../util/Macro.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
@@ -17,12 +16,14 @@ HEADERS += \
     ../util/KolmogorovSmirnovTest.h \
     ../util/debug.h \
     ../util/debug_exclude.h \
+    ../util/Commander.h \
+    ../util/function_signature.h \
     \
     ../optimization/LBFGS_Optimizer.h \
     ../optimization/LBFGS_Object.h \
     \
     ../Representation/Feature.h \
-    ../Instance.h \
+    \
     ../Representation/AbstractInstance.h \
     ../Representation/DoublyLinkedInstance.h \
     ../Representation/AbstractAction.h \
@@ -34,6 +35,9 @@ HEADERS += \
     ../Environment.h \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
+    ../HistoryObserver.h \
+    ../SpaceManager.h \
+    \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
@@ -46,13 +50,15 @@ HEADERS += \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
     \
-    ../HistoryObserver.h \
-    ../SpaceManager.h \
-    \
     ../Learner/FeatureLearner.h \
     ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
     ../Learner/LinearQ.h \
+    ../Learner/TemporallyExtendedModel.h \
+    ../Learner/TemporallyExtendedFeatureLearner.h \
+    ../Learner/TemporallyExtendedLinearQ.h \
+    ../Learner/AdjacencyOperator.h \
+    ../Learner/ConjunctiveAdjacency.h \
     \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
@@ -69,12 +75,13 @@ SOURCES += \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
+    ../util/Commander.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
     ../optimization/LBFGS_Object.cpp \
     \
     ../Representation/Feature.cpp \
-    ../Instance.cpp \
+    \
     ../Representation/AbstractInstance.cpp \
     ../Representation/DoublyLinkedInstance.cpp \
     ../Representation/AbstractAction.cpp \
@@ -82,8 +89,12 @@ SOURCES += \
     ../Representation/AbstractReward.cpp \
     ../Representation/ListedReward.cpp \
     \
+    ../Predictor.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
+    ../HistoryObserver.cpp \
+    ../SpaceManager.cpp \
+    \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
@@ -95,13 +106,14 @@ SOURCES += \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
     \
-    ../HistoryObserver.cpp \
-    ../SpaceManager.cpp \
-    \
     ../Learner/FeatureLearner.cpp \
     ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
     ../Learner/LinearQ.cpp \
+    ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/TemporallyExtendedFeatureLearner.cpp \
+    ../Learner/TemporallyExtendedLinearQ.cpp \
+    ../Learner/ConjunctiveAdjacency.cpp \
     \
     MinimalEnvironmentExample/MinimalAction.cpp \
     MinimalEnvironmentExample/MinimalObservation.cpp \
@@ -115,8 +127,9 @@ SOURCES += \
     PlannerTest.cpp \
     LearnerTest.cpp \
     LBFGSTest.cpp \
-    \
-#    TemplateTest.cpp \
+    CommanderTest.cpp \
+    UtilTest.cpp \
+    TemplateTest.cpp \
     SandBox.cpp
 LIBS += -llbfgs \
     -lemon \

@@ -1,6 +1,8 @@
 #include "Feature.h"
 
-#define DEBUG_LEVEL 1
+#include "DoublyLinkedInstance.h"
+
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 using std::get;
@@ -10,6 +12,36 @@ using std::dynamic_pointer_cast;
 
 using util::INVALID;
 
+// for binary features the "map" may be a set containing the active ('true')
+// features only
+#define LOOK_UP_MAP_IS_SET
+
+void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
+#ifdef LOOK_UP_MAP_IS_SET
+    if(r!=0) {
+        this->insert(f);
+    }
+#else
+    (*this)[f] = r;
+#endif
+}
+
+void Feature::look_up_map_t::erase_feature(f_ptr_t f) {
+    erase(f);
+}
+
+std::vector<Feature::f_ptr_t> Feature::look_up_map_t::get_list_of_features() const {
+    std::vector<f_ptr_t> ret;
+    for(auto f : *this) {
+#ifdef LOOK_UP_MAP_IS_SET
+        ret.push_back(f);
+#else
+        ret.push_back(f.first);
+#endif
+    }
+    return ret;
+}
+
 Feature::Feature():
     feature_type(ABSTRACT),
     complexity(0),
@@ -18,25 +50,21 @@ Feature::Feature():
 
 Feature::~Feature() {}
 
-Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
+Feature::feature_return_t Feature::evaluate(const_instance_ptr_t) const {
     DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
 
-Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward) const {
-    const instance_t * new_ins;
-    if(insIt!=INVALID) {
-        new_ins = instance_t::create(action,observation,reward,insIt);
-    } else {
-        new_ins = instance_t::create(action,observation,reward,nullptr);
-    }
-    const_instanceIt_t new_insIt(new_ins);
-    Feature::feature_return_value ret = this->evaluate(new_insIt);
-    delete new_ins;
-    return return_function(ret);
+Feature::feature_return_t Feature::evaluate(const_instance_ptr_t ins,
+                                                action_ptr_t action,
+                                                observation_ptr_t observation,
+                                                reward_ptr_t reward) const {
+    return this->evaluate(
+        DoublyLinkedInstance::create(action,observation,reward,ins,INVALID)
+        );
 }
 
-Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
+Feature::feature_return_t Feature::evaluate(const look_up_map_t&) const {
     DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
@@ -63,6 +91,7 @@ bool Feature::operator!=(const Feature& other) const {
 
 bool Feature::operator<(const Feature&) const {
     // sould never be used and will produce an error in unit tests
+    DEBUG_ERROR("Comparing to abstract type Feature");
     return false;
 }
 
@@ -74,34 +103,94 @@ unsigned int Feature::get_complexity() const{
     return complexity;
 }
 
-Feature::feature_return_value Feature::return_function(const feature_return_value& ret) const {
+Feature::feature_return_t Feature::return_function(const feature_return_t& ret) const {
     return ret;
     //return (complexity+1) * ret;
 }
 
-ConstFeature::ConstFeature(const feature_return_value& v) {
+BasisFeature::unique_feature_set_t BasisFeature::unique_feature_set;
+
+BasisFeature::~BasisFeature() {
+    erase_from_unique();
+}
+
+Feature::feature_return_t BasisFeature::evaluate(const look_up_map_t& look_up_map) const {
+    auto it = look_up_map.find(self_ptr.lock());
+    if(it!=look_up_map.end()) {
+#ifdef LOOK_UP_MAP_IS_SET
+        return 1;
+#else
+        return it->second;
+#endif
+    } else {
+#ifdef LOOK_UP_MAP_IS_SET
+        return 0;
+#else
+        DEBUG_ERROR("Subfeature not in look-up map");
+        return 0;
+#endif
+    }
+}
+
+Feature::const_feature_ptr_t BasisFeature::create(BasisFeature * f) {
+    // try to find identical object in unique_feature_set
+    auto unique_it = unique_feature_set.find(f);
+    if(unique_it==unique_feature_set.end()) { // identical object does not exist
+        DEBUG_OUT(3,"Insert (" << f << ") --> " << *f);
+        // insert into unique_feature_set
+        unique_feature_set.insert(f);
+        // make sure it erases itself on destruction
+        f->erase_from_unique_feature_set = true;
+        // create shared pointer to return
+        const_feature_ptr_t return_ptr(f);
+        // set self pointer
+        f->self_ptr = return_ptr;
+        // return
+        return return_ptr;
+    } else { // identical object DOES exist
+        DEBUG_OUT(3,"Found identical object (" << *unique_it << ") --> " << **unique_it);
+        // destroy f and use identical object instead
+        delete f;
+        // return already existing object
+        return (*unique_it)->self_ptr.lock();
+    }
+}
+
+void BasisFeature::erase_from_unique() {
+    if(erase_from_unique_feature_set) {
+        auto unique_it = unique_feature_set.find(this);
+        if(unique_it==unique_feature_set.end()) {
+            DEBUG_ERROR("Cannot erase from unique_feature_set (not found)");
+        } else {
+            DEBUG_OUT(3,"Erase from unique: (" << *unique_it << ") --> " << **unique_it);
+            unique_feature_set.erase(unique_it);
+        }
+        erase_from_unique_feature_set = false;
+    }
+}
+
+ConstFeature::ConstFeature(const feature_return_t& v) {
     feature_type = CONST_FEATURE;
     complexity = 0;
     const_feature = true;
     const_return_value = v;
 }
 
-Feature::const_feature_ptr_t ConstFeature::create(const feature_return_value& v) {
-    ConstFeature * new_feature = new ConstFeature(v);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+Feature::const_feature_ptr_t ConstFeature::create(const feature_return_t& v) {
+    return BasisFeature::create(new ConstFeature(v));
 }
 
-ConstFeature::~ConstFeature() {}
-
-Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt) const {
-    return return_function(insIt==INVALID ? 0 : const_return_value);
+ConstFeature::~ConstFeature() {
+    erase_from_unique();
 }
 
-Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
+Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins) const {
+    return return_function(ins==INVALID ? 0 : const_return_value);
+}
+
+Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
     // re-implement because it's more efficient
-    return return_function(insIt==INVALID ? 0 : const_return_value);
+    return return_function(ins==INVALID ? 0 : const_return_value);
 }
 
 string ConstFeature::identifier() const {
@@ -136,17 +225,17 @@ ActionFeature::ActionFeature(const action_ptr_t& a, const int& d): action(a), de
     complexity = 1;
 }
 
-ActionFeature::~ActionFeature() {}
-
-Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const int& d) {
-    ActionFeature * new_feature = new ActionFeature(a,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+ActionFeature::~ActionFeature() {
+    erase_from_unique();
 }
 
-Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->action)==*action ) {
+Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const int& d) {
+    return BasisFeature::create(new ActionFeature(a,d));
+}
+
+Feature::feature_return_t ActionFeature::evaluate(const_instance_ptr_t ins) const {
+    ins = ins->const_next(delay);
+    if(ins!=INVALID && ins->action==action) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -183,8 +272,8 @@ bool ActionFeature::operator<(const Feature& other) const {
             DEBUG_DEAD_LINE;
             return false;
         } else {
-            return this->action<f_ptr->action ||
-                ( this->action==f_ptr->action && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->action<f_ptr->action);
         }
     }
 }
@@ -194,17 +283,17 @@ ObservationFeature::ObservationFeature(const observation_ptr_t& s, const int& d)
     complexity = 1;
 }
 
-ObservationFeature::~ObservationFeature() {}
-
-Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t& s, const int& d) {
-    ObservationFeature * new_feature = new ObservationFeature(s,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+ObservationFeature::~ObservationFeature() {
+    erase_from_unique();
 }
 
-Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->observation)==*observation ) {
+Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t& s, const int& d) {
+    return BasisFeature::create(new ObservationFeature(s,d));
+}
+
+Feature::feature_return_t ObservationFeature::evaluate(const_instance_ptr_t ins) const {
+    ins = ins->const_next(delay);
+    if(ins!=INVALID && ins->observation==observation ) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -239,10 +328,12 @@ bool ObservationFeature::operator<(const Feature& other) const {
         const ObservationFeature * f_ptr = dynamic_cast<const ObservationFeature *>(&other);
         if(f_ptr==nullptr) {
             DEBUG_DEAD_LINE;
+            DEBUG_WARNING(this->get_feature_type() << " == " << other.get_feature_type());
+            DEBUG_WARNING(*this << " // " << other);
             return false;
         } else {
-            return this->observation<f_ptr->observation ||
-                ( this->observation==f_ptr->observation && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->observation<f_ptr->observation);
         }
     }
 }
@@ -252,17 +343,17 @@ RewardFeature::RewardFeature(const reward_ptr_t& r, const int& d): reward(r), de
     complexity = 1;
 }
 
-RewardFeature::~RewardFeature() {}
-
-Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const int& d) {
-    RewardFeature * new_feature = new RewardFeature(r,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+RewardFeature::~RewardFeature() {
+    erase_from_unique();
 }
 
-Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->reward)==*reward ) {
+Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const int& d) {
+    return BasisFeature::create(new RewardFeature(r,d));
+}
+
+Feature::feature_return_t RewardFeature::evaluate(const_instance_ptr_t ins) const {
+    ins = ins->const_next(delay);
+    if(ins!=INVALID && ins->reward==reward ) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -299,8 +390,8 @@ bool RewardFeature::operator<(const Feature& other) const {
             DEBUG_DEAD_LINE;
             return false;
         } else {
-            return this->reward<f_ptr->reward ||
-                ( this->reward==f_ptr->reward && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->reward<f_ptr->reward);
         }
     }
 }
@@ -320,16 +411,23 @@ AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2) {
     finalize_construction();
 }
 
+AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2, const_feature_ptr_t f3) {
+    add_feature(f1);
+    add_feature(f2);
+    add_feature(f3);
+    finalize_construction();
+}
+
 AndFeature::~AndFeature() {}
 
-Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) const {
-    if(insIt!=INVALID) {
+Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
+    if(ins!=INVALID) {
         if(const_feature) {
             return return_function(const_return_value);
         } else {
-            Feature::feature_return_value prod = 1;
+            Feature::feature_return_t prod = 1;
             for(auto feature_iterator : subfeatures) {
-                prod *= feature_iterator->evaluate(insIt);
+                prod *= feature_iterator->evaluate(ins);
                 if(prod==0) {
                     break;
                 }
@@ -341,15 +439,10 @@ Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) con
     }
 }
 
-AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_up_map) const {
-    Feature::feature_return_value prod = 1;
-    for(auto feature_iterator : subfeatures) {
-        auto it = look_up_map.find(feature_iterator);
-        DEBUG_IF(it==look_up_map.end()) {
-            DEBUG_ERROR("Subfeature not in look-up map");
-            return return_function(0);
-        }
-        prod *= it->second;
+AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_map) const {
+    Feature::feature_return_t prod = 1;
+    for(auto sub_f : subfeatures) {
+        prod *= sub_f->evaluate(look_up_map);
         if(prod==0) {
             break;
         }
@@ -360,14 +453,14 @@ AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_
 string AndFeature::identifier() const {
     string id_string("^(");
     bool first = true;
-    for(auto feature_iterator=subfeatures.begin();
-            feature_iterator!=subfeatures.end();
-            ++feature_iterator) {
+    for(auto sub_f=subfeatures.begin();
+            sub_f!=subfeatures.end();
+            ++sub_f) {
         if(!first) {
             id_string += " + ";
         }
         first = false;
-        id_string += (*feature_iterator)->identifier();
+        id_string += (*sub_f)->identifier();
     }
     return id_string+")"+Feature::identifier();
 };
@@ -423,18 +516,17 @@ void AndFeature::add_feature(const_feature_ptr_t f) {
     typedef shared_ptr<const AndFeature> const_and_f_ptr_t;
     typedef shared_ptr<const BasisFeature> const_basis_f_ptr_t;
     const_and_f_ptr_t and_feature = dynamic_pointer_cast<const AndFeature>(f);
-    if(and_feature!=const_and_f_ptr_t()) {
+    if(and_feature!=nullptr) {
         subfeatures.insert(
             and_feature->subfeatures.begin(),
             and_feature->subfeatures.end()
             );
     } else {
         const_basis_f_ptr_t basis_feature = dynamic_pointer_cast<const BasisFeature>(f);
-        if(basis_feature!=const_basis_f_ptr_t()) {
-            subfeatures.insert(const_feature_ptr_t(basis_feature->get_this_ptr()));
+        if(basis_feature!=nullptr) {
+            subfeatures.insert(f);
         } else {
             DEBUG_ERROR("Unsupported feature type");
-            DEBUG_DEAD_LINE;
         }
     }
 }
@@ -455,9 +547,4 @@ void AndFeature::check_for_contradicting_subfeatures() {
             }
         }
     }
-}
-
-AndFeature::feature_return_value AndFeature::return_function(const feature_return_value& ret) const {
-    return ret;
-    //return ret/(complexity+1);
 }

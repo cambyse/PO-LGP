@@ -1,0 +1,43 @@
+<launch>
+  <arg name="cam1" default="/pg_cam_13400115"/>
+  <arg name="cam2" default="/pg_cam_13332472"/>
+  <arg name="cam3" default="/pg_cam_13400136"/>
+  <arg name="cam4" default="/pg_cam_14212563"/>
+  <arg name="cam5" default="/front_kinect_rgb"/>
+
+  <node type="static_transform_publisher" pkg="tf" name="cam1_world_transform" 
+  	args="-0.5268 0.8200 0.6931  -0.02412 0.9541 -0.2984 -0.0040 world $(arg cam1)_link 100"/>
+
+  <group ns="$(arg cam1)">
+     <node pkg="nodelet" type="nodelet" args="manager" name="cam1_manager"/>
+     <include file="$(find image_proc)/launch/image_proc.launch">
+       <arg name="manager" value="cam1_manager"/>
+     </include>
+  </group>
+  <group ns="$(arg cam2)">
+     <node pkg="nodelet" type="nodelet" args="manager" name="cam2_manager"/>
+     <include file="$(find image_proc)/launch/image_proc.launch">
+       <arg name="manager" value="cam2_manager"/>
+     </include>
+  </group>
+  <group ns="$(arg cam3)">
+     <node pkg="nodelet" type="nodelet" args="manager" name="cam3_manager"/>
+     <include file="$(find image_proc)/launch/image_proc.launch">
+       <arg name="manager" value="cam3_manager"/>
+     </include>
+  </group>
+  <group ns="$(arg cam4)">
+     <node pkg="nodelet" type="nodelet" args="manager" name="cam4_manager"/>
+     <include file="$(find image_proc)/launch/image_proc.launch">
+       <arg name="manager" value="cam4_manager"/>
+     </include>
+  </group>
+  <group ns="$(arg cam5)">
+     <node pkg="nodelet" type="nodelet" args="manager" name="cam5_manager"/>
+     <include file="$(find image_proc)/launch/image_proc.launch">
+       <arg name="manager" value="cam5_manager"/>
+     </include>
+  </group>
+
+
+</launch>

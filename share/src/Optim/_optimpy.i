@@ -21,7 +21,7 @@ author: Johannes kulick
 %{
   #include <Core/geo.h>
   #include "optimization.h"
-  #include "constrained.h"
+  #include "opt-constrained.h"
 %}
 
 //===========================================================================
@@ -40,5 +40,5 @@ author: Johannes kulick
 %rename(asKOrderMarkovFunction) Convert::operator KOrderMarkovFunction&();
 
 %include "optimization.h"
-%include "constrained.h"
+%include "opt-constrained.h"
 

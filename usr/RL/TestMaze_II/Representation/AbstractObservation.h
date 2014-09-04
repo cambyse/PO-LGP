@@ -22,6 +22,7 @@ public:
     }
     virtual OBSERVATION_TYPE get_type() const;
 protected:
+    bool print_short_name = true;
     virtual void set_type(OBSERVATION_TYPE t);
 private:
     OBSERVATION_TYPE observation_type;

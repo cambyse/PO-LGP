@@ -7,10 +7,12 @@
 #define UTIL_H_
 
 #include <math.h>
-#include <float.h> // DBL_MAX
+#include <float.h> // for DBL_MAX
+#include <limits> // e.g. std::numeric_limits<double>::max()
 #include <QString>
 #include <vector>
 #include <sstream>
+#include <algorithm> // for std::max
 #include <memory> // for shared_ptr
 
 #define DEBUG_LEVEL 0
@@ -24,16 +26,15 @@
 /** \brief Shortcut to replace for loop where the index does not play a role. */
 #define repeat(n) for(unsigned long int repeat_index=0; repeat_index<(unsigned long int)n; ++repeat_index)
 
-/** \brief Shortcut to define a print() function for a class that has defined
- * the outstream operator <<.
- *
- * Use this macro inside the cpp file to prevent inlining the function (which
- * prevents it being used in a debugger). */
-#define PRINT_FROM_OSTREAM                      \
-    {                                           \
-        std::stringstream s;                    \
-        s << *this;                             \
-        return s.str().c_str();                 \
+/** \brief Simplify comparison in hierarchies of abstract classes. */
+#define COMPARE_ABSTRACT_TYPE_AND_CAST(comp,type_getter,type_for_cast)  \
+    auto ptr = dynamic_cast<type_for_cast>(&other);                     \
+    if(this->type_getter()!=other.type_getter()) {                      \
+        return this->type_getter() comp other.type_getter();            \
+    }                                                                   \
+    if(ptr==nullptr) {                                                  \
+        DEBUG_ERROR("Dynamic cast failed");                             \
+        return true;                                                    \
     }
 
 /** All utility functions etc are included in the util namespace. */
@@ -61,19 +62,37 @@ namespace util {
     /** \brief Tolerance for approximate comparison. */
     double approx_equal_tolerance();
 
-    /** \brief Return true if x compares equal to itself. */
-    inline bool is_number(double x) {
-        return (x == x);
-    }
-
-    /** \brief Return true if x<=DBL_MAX and x>=-DBL_MAX. */
-    inline bool is_finite_number(double x) {
-        return (x <= DBL_MAX && x >= -DBL_MAX);
+    /** \brief Get a std::string if operator<< is defined. */
+    template<class T>
+    std::string string_from_ostream(const T& t) {
+        std::stringstream s;
+        s << t;
+        return s.str();
     }
 
     //========================================================//
     //                      Classes                           //
     //========================================================//
+
+    /** \brief Comparison of pointers via their pointed-to objects. */
+    template<class A, class B = A>
+        class deref_less {
+    public:
+        bool operator()(const A& a, const B& b) { return *a<*b; }
+    };
+    template<>
+        template<class P>
+        class deref_less<std::weak_ptr<P> > {
+    public:
+        bool operator()(const std::weak_ptr<P>& a, const std::weak_ptr<P>& b) {
+            if(a.expired() || b.expired()) {
+                DEBUG_ERROR("Pointer expired");
+                return false;
+            } else {
+                return *(a.lock())<*(b.lock());
+            }
+        }
+    };
 
     /** \brief Base class for polymorphic iteratable spaces.
      *
@@ -395,6 +414,8 @@ namespace util {
     InvalidBase(const bool& b = true): invalid(b) {}
         /** \brief Returns whether the object is invalid. */
         bool is_invalid() const { return invalid; }
+        bool operator!=(const InvalidBase& other) const { return invalid!=other.invalid; }
+        bool operator==(const InvalidBase& other) const { return !(*this!=other); }
     protected:
         /** \brief Holds whether the object is invalid. */
         bool invalid;
@@ -541,6 +562,96 @@ namespace util {
         return vec[rand()%vec.size()];
     }
 
+    /** \brief Return index draw from normalized (or unnormalized) vector. */
+    template < typename T >
+        int draw_idx(const T& vec, bool normalized = true) {
+        if(vec.size()==0) {
+            DEBUG_ERROR("Cannot draw from an empty vector");
+            return -1;
+        }
+        if(!normalized) {
+            double sum = 0;
+            for(auto& elem : vec) {
+                sum += elem;
+            }
+            double prob = drand48();
+            int idx = 0;
+            for(auto& elem : vec) {
+                prob -= elem/sum;
+                if(prob<0) {
+                    return idx;
+                }
+                ++idx;
+            }
+            DEBUG_DEAD_LINE;
+        } else {
+            double prob = drand48();
+            int idx = 0;
+            for(auto& elem : vec) {
+                prob -= elem;
+                if(prob<0) {
+                    return idx;
+                }
+                ++idx;
+            }
+            DEBUG_DEAD_LINE;
+        }
+        return -1;
+    }
+
+    /** Add numbers in logarithmic scale while avoiding over flow. Computes
+     * \f$ \log ( \exp t_{1} + \exp t_{2} ) \f$ by decomposing it as
+     * \f$ t^{*} + \log [ \exp (t_{1}-t^{*}) + \exp (t_{2}-t^{*}) ] \f$ with
+     * \f$ t^{*} = \max(t_{1},t_{2}) \f$.*/
+    template < typename T >
+        T log_add_exp(const T & t1, const T & t2) {
+        // get max of t1 and t2
+        T t_max = std::max(t1,t2);
+        // argument of one exp is ==0 the other is <=0, so the sum is between 1
+        // and 2
+        T sum = exp(t1 - t_max) + exp(t2 - t_max);
+        // log(sum) is between 0 and log(2)
+        return t_max + log(sum);
+    }
+
+    /** Implements the SoftMax function. Given input vector \f$u\f$ and
+     * temperature \f$T\f$ the return vector \f$v\f$ is computed as \f$v_{i} =
+     * \frac{\exp\left[u_{i}/T\right]}{\sum_{j}\exp\left[u_{j}/T\right]}\f$. */
+    template < typename Vec >
+        Vec soft_max(const Vec& vec, double temperature = 1) {
+        if(vec.size()==0) {
+            Vec ret = vec;
+            return ret;
+        }
+        //---------------//
+        // Use log scale //
+        //---------------//
+        double log_sum = vec[0]/temperature; // cannot initialize to log(0)
+        for(int idx=1; idx<(int)vec.size(); ++idx) {
+            log_sum = log_add_exp(log_sum,vec[idx]/temperature);
+        }
+        Vec ret = vec;
+        for(int idx=0; idx<(int)vec.size(); ++idx) {
+            ret[idx] = exp(vec[idx]/temperature - log_sum);
+        }
+        return ret;
+    }
+
+    /** \brief Return true if t compares equal to itself. */
+    template < typename T >
+    inline bool is_number(T t) {
+        return (t == t);
+    }
+
+    /** \brief Return true if t is finit. More specifically return true if
+     * @code
+     * t <= std::numeric_limits<T>::max() && t >= std::numeric_limits<T>::lowest()
+     * @endcode. */
+    template < typename T >
+    inline bool is_finite_number(T t) {
+        return (t <= std::numeric_limits<T>::max() && t >= std::numeric_limits<T>::lowest());
+    }
+
     /** \brief Generic sign function.
      *
      * Returns -1 if val is less than T(0), +1 for greater, and 0 for equality. */
@@ -568,6 +679,36 @@ namespace util {
      * util::approx_equal_tolerance(). */
     template < class C >
         bool operator<<(const C& c1, const C& c2) { return c1>c2-approx_equal_tolerance(); }
+
+    //=======================================================================//
+    // Define << operator for tuples (this is just copy pasted from the web) //
+
+    namespace aux{
+        template<std::size_t...> struct seq{};
+
+        template<std::size_t N, std::size_t... Is>
+            struct gen_seq : gen_seq<N-1, N-1, Is...>{};
+
+        template<std::size_t... Is>
+            struct gen_seq<0, Is...> : seq<Is...>{};
+
+        template<class Ch, class Tr, class Tuple, std::size_t... Is>
+            void print_tuple(std::basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){
+            using swallow = int[];
+            (void)swallow{0, (void(os << (Is == 0? "" : ", ") << std::get<Is>(t)), 0)...};
+        }
+    } // aux::
+
+    template<class Ch, class Tr, class... Args>
+        auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t)
+        -> std::basic_ostream<Ch, Tr>&
+    {
+        os << "(";
+        aux::print_tuple(os, t, aux::gen_seq<sizeof...(Args)>());
+        return os << ")";
+    }
+
+    //=======================================================================//
 
 } // end namespace util
 

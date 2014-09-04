@@ -2,7 +2,7 @@ BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-include $(BASE)/gofMake/config.mk
+-include $(BASE)/gofMake/config.mk
 ifeq ($(PURE_RELATIONAL),1)
 DEPEND = Core
 else

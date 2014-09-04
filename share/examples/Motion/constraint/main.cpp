@@ -64,7 +64,7 @@ int main(int argc,char** argv){
   if(con){
     for(uint k=0;k<20;k++){
 //      checkAll(CP, x, 1e-4);
-      optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
+      optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
 //      saveTrajectory(x, G, gl);
@@ -73,7 +73,7 @@ int main(int argc,char** argv){
     }
   }else{
     for(uint k=0;k<10;k++){
-      optNewton(x, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
+      optNewton(x, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
     }
