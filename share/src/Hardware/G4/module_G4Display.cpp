@@ -2,7 +2,7 @@
 
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
-#include <Perception/g4id.h>
+#include <Perception/g4data.h>
 
 REGISTER_MODULE(G4Display)
 
