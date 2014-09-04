@@ -32,7 +32,7 @@ using std::priority_queue;
 
 using lemon::INVALID;
 
-const int UTree::pseudo_counts = 1;
+const double UTree::pseudo_counts = 1;
 
 UTree::NodeInfo::NodeInfo(f_ptr_t f, const f_ret_t& r):
     instance_vector(0),

@@ -153,7 +153,7 @@ private:
     graph_t graph;
     node_t root_node;
     node_info_map_t node_info_map;
-    static const int pseudo_counts;
+    static const double pseudo_counts;
     double discount;
     EXPANSION_TYPE expansion_type;
 
