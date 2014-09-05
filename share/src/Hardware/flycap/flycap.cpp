@@ -160,7 +160,7 @@ public:
 			cv.notify_one();
 		}
 
-		if((count % 100) == 0) {
+		if((count % 1000) == 0) {
 			print_stats();
 			reset_stats(timestamp);
 		}
