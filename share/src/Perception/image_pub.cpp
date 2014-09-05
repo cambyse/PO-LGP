@@ -109,11 +109,15 @@ void ImagePublisher::publish(const MT::Array<unsigned char>& image, double times
 	s->publish(image, timestamp);
 }
 
-void init_image_publishers(int argc, char* argv[], const char* name) {
+void init_image_publishers(int argc, char* argv[], const char* name, bool install_sigint_handler) {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-	ros::init(argc, argv, name);
+	ros::init(argc, argv, name, install_sigint_handler ?  0 : ros::init_options::NoSigintHandler);
 #endif
 }
+void init_image_publishers(int argc, char* argv[], const char* name) {
+	init_image_publishers(argc, argv, name, true);
+}
+
 bool process_image_callbacks() {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 	ros::spinOnce();
