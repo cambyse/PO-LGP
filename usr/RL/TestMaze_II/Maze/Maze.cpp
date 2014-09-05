@@ -43,6 +43,8 @@ const vector<Maze::maze_t> Maze::maze_list = {
     ,
 #include "Minimal.maze"
     ,
+#include "Minimal_2.maze"
+    ,
 #include "3x3.maze"
     ,
 #include "3x3_doorway.maze"

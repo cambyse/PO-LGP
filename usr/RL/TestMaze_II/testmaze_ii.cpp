@@ -162,6 +162,10 @@ void TestMaze_II::initialize_commands() {
                 }
                 return {true,""};
             },"Print help for commands containing <QString>");
+        command_center.add_command(top_general,{"clear learners","c l"},[this]()->ret_t{
+                clear_all_learners();
+                return {true,"Cleared learners"};
+            },"Clear all learner (destroy and reinitialize)");
         command_center.add_command(top_general,{"exit","quit","q"}, [this]()->ret_t{
                 QApplication::quit();
                 return {true,""};
@@ -419,7 +423,7 @@ void TestMaze_II::initialize_commands() {
                 }
                 return {true,QString("collected episode of length %1").arg(n)};
             }, "record length <int> episode");
-        command_center.add_command(top_model_learn,{"episode clear","ec"}, [this]()->ret_t{
+        command_center.add_command(top_model_learn,{"episode clear","e c"}, [this]()->ret_t{
                 clear_data();
                 return {true,"cleared episode data"};
             }, "clear episode data");
@@ -1547,9 +1551,6 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         // destroy current environment
         environment.reset();
     }
-
-    // clear learners
-    clear_all_learners();
 
     // set new environment
     if(new_environment!=nullptr) {
