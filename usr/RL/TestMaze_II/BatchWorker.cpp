@@ -180,11 +180,7 @@ bool BatchWorker::post_process_args() {
     {
         utree_threshold = utree_threshold_arg.getValue();
         if(utree_threshold==-1) {
-            if(mode=="MODEL_BASED_UTREE") {
-                utree_threshold = 1;
-            } else if(mode=="VALUE_BASED_UTREE") {
-                utree_threshold = 1e-5;
-            }
+            utree_threshold = 1e-10;
         } else if(utree_threshold<0) {
             DEBUG_WARNING("Argument '" << utree_threshold_arg.getName() << "' requires a non-negative value");
             args_ok = false;
