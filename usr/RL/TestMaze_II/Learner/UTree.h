@@ -66,6 +66,9 @@ public:
     /** \brief Clear the tree but not the data (instances). */
     void clear_tree();
 
+    /** Prunes the tree until all leaves are non-empty. */
+    void prune_dead_branches();
+
     /** \brief Return the current tree size. */
     int get_tree_size() const;
 

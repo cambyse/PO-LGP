@@ -524,6 +524,10 @@ void TestMaze_II::initialize_commands() {
                 utree->print_features();
                 return {true,"printed UTree features"};
             }, "print UTree features");
+        command_center.add_command(top_model_learn_utree,{"prune dead"}, [this]()->ret_t{
+                utree->prune_dead_branches();
+                return {true,"pruned dead UTree branches"};
+            }, "prune UTree branches without data");
     }
     {
         pair<double,QString> top_model_learn_tem(3.5,"TEM ----------------------------------------------------");

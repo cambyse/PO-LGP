@@ -132,6 +132,75 @@ void UTree::clear_data() {
     HistoryObserver::clear_data();
 }
 
+void UTree::prune_dead_branches() {
+    node_container_t dead_nodes;
+    node_container_t dead_nodes_parents;
+    // find dead nodes (also rememer their parents)
+    for(graph_t::NodeIt current_node(graph); current_node!=INVALID; ++current_node) {
+        // if node does not contain any data
+        if(node_info_map[current_node].instance_vector.size()==0) {
+            // remember dead nodes
+            dead_nodes.insert(current_node);
+            // remember parent
+            arc_t parent_arc = graph_t::InArcIt(graph, current_node);
+            if(parent_arc!=INVALID) {
+                dead_nodes_parents.insert(graph.source(parent_arc));
+            } else {
+                DEBUG_WARNING("Pruning dead branches clears the whole tree");
+                clear_tree();
+                return;
+            }
+        }
+    }
+    // add descendants of parents of dead nodes to dead nodes
+    for(node_t parent_node : dead_nodes_parents) {
+        // perform "death by indirect infection via common parent" chain reaction so to say
+        node_container_t infected_children_nodes;
+        // infect children but parent remains uninfected
+        for(graph_t::OutArcIt out_arc(graph, parent_node); out_arc!=INVALID; ++out_arc) {
+            infected_children_nodes.insert(graph.target(out_arc));
+        }
+        // chain infection and add infected to dead
+        while(infected_children_nodes.size()>0) {
+            // get newly infected
+            node_container_t newly_infected_children_nodes;
+            for(node_t infected_child : infected_children_nodes) {
+                // infect childrens children
+                for(graph_t::OutArcIt out_arc(graph, infected_child); out_arc!=INVALID; ++out_arc) {
+                    newly_infected_children_nodes.insert(graph.target(out_arc));
+                }
+                // kill children
+                dead_nodes.insert(infected_child);
+            }
+            // use newly infected as infected for next iteration
+            infected_children_nodes.swap(newly_infected_children_nodes);
+        }
+    }
+    // actually kill dead nodes
+    for(node_t dead : dead_nodes) {
+        leaf_nodes.erase(dead); // non-leaf nodes don't hurt
+        graph.erase(dead);
+    }
+    // mark parent node's statistics as invalid and make them leaf nodes
+    for(node_t parent : dead_nodes_parents) {
+        node_info_map[parent].feature = nullptr;
+        leaf_nodes.insert(parent);
+        node_info_map[parent].scores.clear();
+        invalidate_statistics(parent);
+    }
+    IF_DEBUG(1) {
+        int node_counter=0;
+        for(graph_t::NodeIt current_node(graph); current_node!=INVALID; ++current_node) {
+            // if node does not contain any data
+            if(node_info_map[current_node].instance_vector.size()==0) {
+                DEBUG_ERROR("Found node without data after pruning dead branches");
+            }
+            ++node_counter;
+        }
+        DEBUG_OUT(1,"UTree has " << node_counter << " nodes after pruning dead branches");
+    }
+}
+
 UTree::probability_t UTree::get_prediction(
         const_instance_ptr_t instance,
         const action_ptr_t& action,
