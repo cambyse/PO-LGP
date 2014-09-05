@@ -194,18 +194,23 @@ bool BatchWorker::post_process_args() {
     }
 
     // check environment
-    if(environment_arg.getValue()=="cheese" || environment_arg.getValue()=="sep-button" || environment_arg.getValue()=="joint-button") {
+    if(environment_arg.getValue()=="cheese" ||
+       environment_arg.getValue()=="sep-button" ||
+       environment_arg.getValue()=="joint-button" ||
+       environment_arg.getValue()=="transfer") {
         // ok
     } else {
         auto maze = make_shared<Maze>();
         if(!maze->set_maze(QString(environment_arg.getValue().c_str()))) {
             DEBUG_WARNING("Argument value for '" << environment_arg.getName() << "' must be one of:");
-            DEBUG_WARNING("--- Cheese Maze ---");
-            DEBUG_WARNING("    cheese");
-            DEBUG_WARNING("--- Cheese World ---");
-            DEBUG_WARNING("    sep-button");
-            DEBUG_WARNING("    joint-button");
-            DEBUG_WARNING("--- Other Mazes ---");
+            DEBUG_WARNING("--- Cheese Maze ---"       );
+            DEBUG_WARNING("    cheese"                );
+            DEBUG_WARNING("--- Button Worlds ---"     );
+            DEBUG_WARNING("    sep-button"            );
+            DEBUG_WARNING("    joint-button"          );
+            DEBUG_WARNING("--- Transfer Learning ---" );
+            DEBUG_WARNING("    transfer"              );
+            DEBUG_WARNING("--- Other Mazes ---"       );
             for(auto s : maze->get_maze_list()) {
                 DEBUG_WARNING("    " << s);
             }
@@ -297,6 +302,8 @@ void BatchWorker::collect_data() {
                     auto but = make_shared<JointButtonWorld>(button_n_arg.getValue(), button_alpha_arg.getValue());
                     environment = but;
                     button_prob_sum = QString("%1").arg(but->get_p_sum(), 5, 'f', 3);
+                } else if(environment_arg.getValue()=="transfer") {
+                    environment = make_shared<Maze>(epsilon_arg.getValue(),"Minimal");
                 } else {
                     environment = make_shared<Maze>(epsilon_arg.getValue(),environment_arg.getValue().c_str());
                 }
@@ -345,39 +352,48 @@ void BatchWorker::collect_data() {
             // collect data and train learner //
             //--------------------------------//
 
-            if(mode=="DRY" || mode=="RANDOM") {
-                // no data to collect, nothing to learn
-            } else if(mode=="TEM" || mode=="TEL" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
-                // collect data
-                auto observer = dynamic_pointer_cast<HistoryObserver>(learner);
-                if(observer==nullptr) {
-                    DEBUG_DEAD_LINE;
+            // repeat twice in case of tranfer learning tasks
+            for(int idx=0; idx<2 && environment_arg.getValue()=="transfer"; ++idx) {
+                if(mode=="DRY" || mode=="RANDOM") {
+                    // no data to collect, nothing to learn
+                } else if(mode=="TEM" || mode=="TEL" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
+                    // cast learner to observer (should always be possible)
+                    auto observer = dynamic_pointer_cast<HistoryObserver>(learner);
+                    if(observer==nullptr) {
+                        DEBUG_DEAD_LINE;
+                    } else {
+                        // clear data (for the case of transfer learning)
+                        observer->clear_data();
+                        // collect data
+                        collect_random_data(environment, observer, training_length, current_instance);
+                    }
+                    // train learner
+                    if(mode=="TEM") {
+                        // no parallel learning because it's memory intensive and
+                        // internally parallel
+                        set_all_learn_locks(learn_locks);
+                        train_TEM(learner, data_likelihood, nr_features, cycles);
+                        unset_all_learn_locks(learn_locks);
+                    } else if(mode=="TEL") {
+                        // no parallel learning because it's memory intensive and
+                        // internally parallel
+                        set_all_learn_locks(learn_locks);
+                        train_TEL(learner, TD_error, nr_features, cycles);
+                        unset_all_learn_locks(learn_locks);
+                    } else if(mode=="MODEL_BASED_UTREE") {
+                        train_model_based_UTree(learner, utree_size, utree_score);
+                    } else if(mode=="VALUE_BASED_UTREE") {
+                        train_value_based_UTree(learner, utree_size, utree_score);
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
                 } else {
-                    collect_random_data(environment, observer, training_length, current_instance);
-                }
-                // train learner
-                if(mode=="TEM") {
-                    // no parallel learning because it's memory intensive and
-                    // internally parallel
-                    set_all_learn_locks(learn_locks);
-                    train_TEM(learner, data_likelihood, nr_features, cycles);
-                    unset_all_learn_locks(learn_locks);
-                } else if(mode=="TEL") {
-                    // no parallel learning because it's memory intensive and
-                    // internally parallel
-                    set_all_learn_locks(learn_locks);
-                    train_TEL(learner, TD_error, nr_features, cycles);
-                    unset_all_learn_locks(learn_locks);
-                } else if(mode=="MODEL_BASED_UTREE") {
-                    train_model_based_UTree(learner, utree_size, utree_score);
-                } else if(mode=="VALUE_BASED_UTREE") {
-                    train_value_based_UTree(learner, utree_size, utree_score);
-                } else {
                     DEBUG_DEAD_LINE;
                 }
-
-            } else {
-                DEBUG_DEAD_LINE;
+                // change environment in case of transfer learning
+                if(environment_arg.getValue()=="transfer") {
+                    environment = make_shared<Maze>(epsilon_arg.getValue(),"Minimal_2");
+                }
             }
 
             //----------//
@@ -780,7 +796,7 @@ void BatchWorker::unset_all_learn_locks(std::vector<omp_lock_t> &, omp_lock_t &)
 #ifdef USE_OMP
 void BatchWorker::set_this_learn_lock(std::vector<omp_lock_t> & locks) {
     DEBUG_OUT(3, "TRY set lock for thread " << omp_get_thread_num());
-    usleep(100000); // wait 10ms so a learner can acquire the lock
+    usleep(100000); // wait 100ms so a learner can acquire the lock
     omp_set_lock(&(locks[omp_get_thread_num()]));
     DEBUG_OUT(3, "set lock for thread " << omp_get_thread_num());
 }
