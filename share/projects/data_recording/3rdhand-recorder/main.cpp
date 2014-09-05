@@ -41,6 +41,7 @@ public:
 
 bool terminated = false;
 void got_signal(int) {
+	cerr << "got shutdown signal" << endl;
 	terminated = true;
 	ros_shutdown();
 }
@@ -197,6 +198,8 @@ protected:
 				}
 			}
 		}
+
+		front_kinect.stopStreaming();
 	}
 
 
@@ -248,7 +251,7 @@ void test_openmp() {
 }
 
 int main(int argc,char **argv){
-	init_image_publishers(argc, argv, "third_hand_recorder");
+	init_image_publishers(argc, argv, "third_hand_recorder", false);
 
 	struct sigaction sa;
 	memset( &sa, 0, sizeof(sa) );
