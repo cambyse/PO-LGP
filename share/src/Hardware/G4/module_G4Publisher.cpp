@@ -24,7 +24,7 @@ struct sG4Publisher{
 #ifdef HAVE_ROS_G4
 		frame_id = MT::getParameter<MT::String>("g4_pub_frame", MT::String("world")).p;
 		if(!initialized) {
-			ros::init(MT::argc, MT::argv, "g4_publisher");
+			ros::init(MT::argc, MT::argv, "g4_publisher", ros::init::NoSigIntHandler);
 			initialized = true;
 		}
 		br = new tf::TransformBroadcaster;
@@ -34,6 +34,7 @@ struct sG4Publisher{
 	~sG4Publisher() {
 #ifdef HAVE_ROS_G4
 	delete br;
+	ros::shutdown();
 #endif
 	}
 };
@@ -51,7 +52,6 @@ void G4Publisher::close(){
 	if(s) {
 		delete s;
 		s = NULL;
-	}
 }
 
 void G4Publisher::step(){
