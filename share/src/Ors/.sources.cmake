@@ -1,1 +1,3 @@
-set(SOURCES ./ors_physx.h ./ors_tutorial.h ./ors_actionInterface.h ./ors_blender.cpp ./ors_swift.h ./ors_swift.cpp ./roboticsCourse.cpp ./ors_physx.cpp ./roboticsCourse.h ./ors.h ./ors_actionInterface.cpp ./ors_oldTaskVariables.h ./ors_ode.h ./ors_featherstone.cpp ./ors_sceneGui.cpp ./ors.cpp ./ors_oldTaskVariables.cpp ./ors_sceneGui.h ./ors_opengl.cpp ./ors_ode.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

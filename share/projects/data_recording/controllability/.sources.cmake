@@ -1,1 +1,3 @@
-set(SOURCES src/main.cpp src/changepoint.h src/changepoint.cpp src/fgplot.h src/fgplot.cpp src/keyframer.cpp src/keyframer.h /home/bais/extern/dlib-18.8/dlib/all/source.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

@@ -22,6 +22,11 @@ namespace MLR {
 	public:
 		sKinectCallbackReceiver(freenect_context *ctx, int index) :
 			Freenect::FreenectDevice(ctx, index), depth_cb(nullptr), video_cb(nullptr), streaming(false) {
+			freenect_device_attributes *attrs = NULL;
+			int num_attrs = freenect_list_device_attributes(ctx, &attrs);
+			for(int i = 0; i < num_attrs; i++, attrs = attrs->next) {
+				std::cout << "Serial " << i << "=" << attrs->camera_serial << std::endl;
+			}
 		}
 		~sKinectCallbackReceiver() {
 			stopStreaming();

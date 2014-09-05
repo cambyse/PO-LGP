@@ -1,1 +1,3 @@
-set(SOURCES ./mdp_tony.cpp ./mdp_EMSolver.cpp ./mdp_pomdpEM_structured.cpp ./mstep.cpp ./mdp_pomdpEM_lev1.cpp ./mdp_EMSolver.h ./mdp.cpp ./mdp_solvers.cpp ./mdp_opengl.cpp ./mdp_pomdpEM_generic.cpp ./mstep.h ./mdp.h ./mdp_pomdpEM_lev2.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
