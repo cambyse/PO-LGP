@@ -3,4 +3,5 @@
 
 #add_subdirectory(mlr_ros)
 add_subdirectory(data_recording)
+add_subdirectory(temporal_segmentation)
 

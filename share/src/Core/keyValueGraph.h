@@ -70,11 +70,14 @@ struct KeyValueGraph:ItemL {
   
   //-- get values directly
   template<class T> T* getValue(const char *key);
+  template<class T> T* getValue(const StringA &keys);
   template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
+  template<class T> bool getValue(T& x, const StringA &keys) { T* y=getValue<T>(keys); if(y) { x=*y; return true; } return false; }
 
   //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
+  Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
   
   //-- get lists of items
@@ -108,6 +111,53 @@ struct KeyValueGraph:ItemL {
 stdPipes(KeyValueGraph);
 
 #include "keyValueGraph_t.h"
+
+//===========================================================================
+//
+// Andrea's util based on KeyValueGraph
+// (would put in util.h, but creates inclusion loop which breaks compilation)
+//
+
+// Params {{{
+#include "keyValueGraph.h"
+struct Params {
+  KeyValueGraph kvg;
+
+  template<class T>
+  void set(const char *key, const T &value) {
+    Item *i = kvg.getItem(key);
+    if(i) *i->getValue<T>() = value;
+    else kvg.append(key, new T(value));
+  }
+
+  template<class T>
+  bool get(const char *key, T &value) { return kvg.getValue(value, key); }
+
+  template<class T>
+  T* get(const char *key) { return kvg.getValue<T>(key); }
+
+  void clear() { kvg.clear(); }
+  bool remove(const char *key) {
+    Item *i = kvg.getItem(key);
+    if(!i) return false;
+    // TODO is list() here necessary?
+    kvg.list().remove(i->index);
+    return true;
+  }
+
+  void write(std::ostream &os = std::cout) const {
+    os << "params = {" << std::endl;
+    for(Item *i: kvg) os << "  " << *i << std::endl;
+    os << "}" << std::endl;
+  }
+};
+stdOutPipe(Params)
+// }}}
+// Parametric {{{
+struct Parametric {
+  Params params;
+};
+// }}}
 
 #endif
 

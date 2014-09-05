@@ -266,6 +266,24 @@ Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
   return NULL;
 }
 
+Item* KeyValueGraph::getItem(const StringA &keys) {
+  bool found;
+  for(Item *it: (*this)) {
+    found = true;
+    for(uint k = 0; k < keys.N && found; k++) {
+      found = false;
+      for(const String &key: it->keys) {
+        if(keys(k) == key) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if(found) return it;
+  }
+  return NULL;
+}
+
 KeyValueGraph KeyValueGraph::getItems(const char* key) {
   KeyValueGraph ret;
   for(Item *it: (*this)) {

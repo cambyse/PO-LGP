@@ -23,7 +23,7 @@ void setup_opengl_for_g4(ors::KinematicWorld& ors, OpenGL& gl, uint hubs){
 
 void display(G4Data &g4d) {
   uint numF = g4d.numFrames();
-  uint numS = g4d.sensors().N;
+  uint numS = g4d.id().sensors().N;
 
   arr pos = g4d.query("pos");
   arr quat = g4d.query("quat");
@@ -59,9 +59,10 @@ int main(int argc, char **argv) {
 
   // load data
   MT::String meta, poses;
+  // TODO remmeber that you changed the g4data load function.. now meta and poses files have specific names
   MT::getParameter(meta, "meta");
   MT::getParameter(poses, "poses");
-  g4d.load(NULL, meta, poses, true);
+  g4d.load("./", true);
 
   display(g4d);
 }
