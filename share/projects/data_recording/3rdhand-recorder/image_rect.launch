@@ -5,9 +5,9 @@
   <arg name="cam4" default="/pg_cam_14212563"/>
   <arg name="cam5" default="/front_kinect_rgb"/>
 
-  <node type="static_transform_publisher" pkg="tf" name="cam1_world_transform" 
-  	args="-0.5268 0.8200 0.6931  -0.02412 0.9541 -0.2984 -0.0040 world $(arg cam1)_link 100"/>
-
+  <!--node type="static_transform_publisher" pkg="tf" name="cam1_world_transform" 
+  	args="-0.5268 0.8200 0.6931 -0.02412 0.9541 -0.2984 -0.0040 world $(arg cam1)_link 100"/-->
+  	
   <group ns="$(arg cam1)">
      <node pkg="nodelet" type="nodelet" args="manager" name="cam1_manager"/>
      <include file="$(find image_proc)/launch/image_proc.launch">
