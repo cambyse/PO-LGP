@@ -503,6 +503,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
     for(uint i=0;i<=k;i++){
       if(t+i>=k && op->timeOfApplication==t-k+i){
         op->apply(*configurations(i));
+        if(MP.useSwift) configurations(i)->swift().initActivations(*configurations(i));
       }
     }
   }

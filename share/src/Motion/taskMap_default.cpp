@@ -152,7 +152,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         J(0, -i) = 1.;
       }
     } break;
-    case qLimitsTMT:   if(!params.N) params=G.getLimits();  G.kinematicsLimitsCost(y, J, params);  break;
+    case qLimitsTMT:   if(!params.N) params=G.getLimits();  G.kinematicsLimitsCost(y, J, params,1e-3);  break;
     case comTMT:       G.getCenterOfMass(y);     y.resizeCopy(2); if(&J) { G.getComGradient(J);  J.resizeCopy(2, J.d1); }  break;
     case collTMT:      G.kinematicsProxyCost(y, J, params(0));  break;
     case colConTMT:    G.kinematicsContactConstraints(y, J);  break;

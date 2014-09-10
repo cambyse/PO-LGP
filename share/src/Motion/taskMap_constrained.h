@@ -52,13 +52,7 @@ struct PairCollisionConstraint:public TaskMap {
   int j;       ///< which shapes does it refer to?
   double margin;
 
-  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName):
-    i(G.getShapeByName(iShapeName)->index),
-    j(G.getShapeByName(jShapeName)->index),
-    margin(.02)
-  {
-    constraint=true;
-  }
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName,double _margin=0.02);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }

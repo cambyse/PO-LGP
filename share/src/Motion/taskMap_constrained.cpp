@@ -35,12 +35,22 @@ void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 
 //===========================================================================
 
+PairCollisionConstraint::PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin){
+  i = G.getShapeByName(iShapeName)->index;
+  j = (G.getShapeByName(jShapeName)->index);
+  margin = _margin;
+  cout << "PairCollisionConstraint Margin: " <<margin << endl;
+  constraint=true;
+}
+
 void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   y.resize(1) = -1.;
   if(&J) J.resize(1,G.q.N).setZero();
   for(ors::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
       G.kinematicsProxyConstraint(y, J, p, margin, false);
+//      cout << p->d << endl;
+//      cout << y << endl;
       break;
     }
   }

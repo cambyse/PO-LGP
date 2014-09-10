@@ -396,7 +396,7 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   uint dimy = dimphi - dimg;
   CHECK(phi.N==dimphi,"");
 
-  arr y, Jy;
+//  arr y, Jy;
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
   y.resize(dimy);
   if(&g) g.resize(dimg);

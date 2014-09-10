@@ -66,10 +66,12 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
     *(gl.camera.X) = glCamera->X;
+    gl.resize(500,500);
   } else {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
+
   }
   gl.update();
 }

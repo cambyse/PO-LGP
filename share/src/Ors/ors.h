@@ -281,7 +281,7 @@ struct KinematicWorld {
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
   void kinematicsContactConstraints(arr& y, arr &J) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
-  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
+  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=0.0) const;
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);

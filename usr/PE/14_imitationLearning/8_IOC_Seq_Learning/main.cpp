@@ -17,26 +17,35 @@
 
 void run() {
 
+  bool visDemo = MT::getParameter<uint>("visDemo");
+  bool visTest = MT::getParameter<uint>("visTest");
+  bool numDem = MT::getParameter<uint>("numDem");
+  uint verbose = MT::getParameter<uint>("verbose");
+
   /// 1. Create training and test scenarios
   MotionFactory* mf = new MotionFactory();
   MT::Array<Scene > trainScenes;
   MT::Array<Scene > testScenes;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,1,true);
+  mf->costScale=1e4;
+  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,numDem,visDemo);
 
+  /// 2. Define parameter and start point
 
-  /// 2. Optimize the parameters
-  arr w = ones(mf->numParam,1)*1e0;w.flatten();
+  arr w = ones(mf->numParam,1)*1e2;w.flatten();
 //  arr w = fabs(randn(mf->numParam,1))*1e0; w.flatten();
 //  arr w =  trainScenes(0).paramRef;
+//  w = w/sqrt(sumOfSqr(w));
   arr dual;
-  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,false);
+  mf->execMotion(trainScenes(0),trainScenes(0).paramRef,visTest);
 
+  /// 2. Optimize the parameters
   IOC ioc(trainScenes,mf->numParam);
-//  checkAllGradients(ioc,w,1e-3);
-  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-7));
-  optConstrained(w,dual,ioc,OPT(verbose=1,stopTolerance=1e-9));
-  ioc.costReport();
+  checkAllGradients(ioc,w,1e-3);
+  optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-7));
+  optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-9));
 
+  if (!MT::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
+  ioc.costReport(w);
 
   /// 3. Evaluate code on test scenarios
   w = fabs(w);

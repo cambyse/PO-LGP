@@ -25,6 +25,7 @@ struct IOC_DemoCost {
   uint numParam; // number of x parameter
 
   bool constrainsActive; // constrained or unconstrained variant
+  bool learnTransitionCosts;
 
   // task vars
   arr J_Jt,PHI,J,JP;
@@ -43,10 +44,16 @@ struct IOC_DemoCost {
     v.fc(NoArr,NoArr,g,JgP,x0);
     cout << g << endl;
 
+    for (uint i =0;i<g.d0;i++){
+      lambda0(i) = g(i)>=0.;
+    }
+    cout << lambda0 << endl;
+
     MT::timerStart();
 
     PHI = v.y;
     JP = v.Jy;
+
     arr J_JtP = comp_A_At(JP);
     J = unpack(JP); J.special = arr::noneST;
     dPHI_J_Jt_dPHI = (PHI*~PHI)%unpack(J_JtP);
@@ -54,7 +61,8 @@ struct IOC_DemoCost {
     if (lambda0.N==0 || max(lambda0) == 0.) {
       /// Unconstrained case
       constrainsActive = false;
-      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI;
+      dWdx_dPHI_J_G_Jt_dPHI_dWdx = ~Dwdx*dPHI_J_Jt_dPHI*Dwdx;
+      //    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
 
     } else {
       /// Constrained case
@@ -64,6 +72,7 @@ struct IOC_DemoCost {
       lambda0.findValues(idx,0.);
       lambda0.removeAllValues(0.);
       Jg = unpack(JgP);
+      cout << lambda0 << endl;
       arr Jgr;
       uint j = 0;
       for (uint i =0;i<Jg.d0;i++) {
@@ -80,21 +89,27 @@ struct IOC_DemoCost {
       Jg = Jgr;
 
       Jg_JgtP = comp_A_At(JgP);
+
       Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
       Jgt_JgJgtI_Jg = ~Jg*inverse_SymPosDef(Jg_Jgt)*Jg;
-//      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
+      //      dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
       arr tmp = ~J*(diag(PHI)*Dwdx);
       dWdx_dPHI_J_G_Jt_dPHI_dWdx = ~Dwdx*dPHI_J_Jt_dPHI*Dwdx - (~tmp*Jgt_JgJgtI_Jg*tmp);
       JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~J*diag(PHI);
       J_Jgt = J*~Jg;
     }
 
-//    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
+    //    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
   }
 
   double eval(arr& df, arr& Hf,arr& gLambda, arr& JgLambda, const arr& x) {
     // compute w vector
-    arr w = Dwdx*x;
+    arr augx = x;
+    if (!learnTransitionCosts) {
+      augx(0) = 0.;
+    }
+
+    arr w = Dwdx*augx;
     arr PHIw = PHI%w;
     arr JP_PHIw = comp_At_x(JP,PHIw);
     arr J_Jt_PHIw = comp_A_x(JP,JP_PHIw);
@@ -109,14 +124,23 @@ struct IOC_DemoCost {
 
     arr f = 4.*(~PHIw)*J_G_Jt_PHIw;
     double y = f(0);
-
+    //    cout << "f: " << f << endl;
     if (&df) {
       arr h = 8.*(PHI%J_G_Jt_PHIw);
       df = ~h*Dwdx ;
       df.flatten();
+//      df.subRange(0,6) = 0.;
+      //      cout << "df: " << df << endl;
     }
     if (&Hf) {
       Hf = 8.*(dWdx_dPHI_J_G_Jt_dPHI_dWdx);
+//      if (learnTransitionCosts) {
+//        Hf.subRange(0,6) = 0.;
+//        Hf = ~Hf;
+//        Hf.subRange(0,6) = 0.;
+//        Hf = ~Hf;
+//      }
+      //      cout <<"Hfa: " << Hf << endl;
     }
     if (&gLambda && constrainsActive) {
       gLambda = 2.*JgJgtI_Jg_Jt_PHIw;
@@ -135,6 +159,7 @@ struct Scene {
   arr lambdaRef; // constraint trajectory
   arr paramRef;
   arr xInit; // init solution for optimization
+  uint contactTime;
   MotionProblem* MP;
   ors::KinematicWorld* world;
   IOC_DemoCost* cost;// cost function for this demonstrations
@@ -151,19 +176,32 @@ struct IOC:ConstrainedProblem {
   arr Dwdx;
   uint n;
   uint T;
+  bool learnTransitionCosts;
+  bool normalizeParam;
 
   virtual uint dim_x() { return numParam;}
-//  virtual uint dim_g() { return numParam+numLambda+1;}
-  virtual uint dim_g() { return numParam+numLambda;}
+  virtual uint dim_g() {
+    if (normalizeParam) return numParam+numLambda+1;
+    return numParam+numLambda;
+  }
+  //    virtual uint dim_g() { return numParam+numLambda+1+7;}
+  //  virtual uint dim_g() { return numParam+numLambda;}
 
   IOC(MT::Array<Scene> &_scenes,uint _numParam):scenes(_scenes),numParam(_numParam) {
     n = scenes(0).MP->world.getJointStateDimension();
     T = scenes(0).MP->T;
 
+    learnTransitionCosts = MT::getParameter<bool>("learnTransitionCost");
+    normalizeParam = MT::getParameter<bool>("normalizeParam");
+
     // precompute DWdx
     for (uint t=0;t<= T;t++) {
       // add transition cost elements
-      Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
+      if (learnTransitionCosts)
+        Dwdx.append(catCol(ones(n,1),zeros(n,numParam-1)));
+      else {
+        Dwdx.append(catCol(ones(n,1)*0.,zeros(n,numParam-1)));
+      }
 
       // add task cost elements
       for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) {
@@ -176,7 +214,7 @@ struct IOC:ConstrainedProblem {
             m = scenes(0).MP->taskCosts(c)->target.N;
           }
 
-          arr tmp = zeros(m,n);
+          arr tmp = zeros(m,1);
           tmp = catCol(tmp,zeros(m,c));
           tmp = catCol(tmp,ones(m,1));
           tmp = catCol(tmp,zeros(m,numParam-tmp.d1));
@@ -190,6 +228,7 @@ struct IOC:ConstrainedProblem {
     // initialize cost functions for demonstrations
     for (uint i=0;i<scenes.d0;i++) {
       scenes(i).cost = new IOC_DemoCost(*scenes(i).MP,scenes(i).xRef,scenes(i).lambdaRef,Dwdx,numParam);
+      scenes(i).cost->learnTransitionCosts = learnTransitionCosts;
       if ( scenes(i).cost->constrainsActive )
         numLambda += scenes(i).cost->lambda0.N;
     }
@@ -209,13 +248,18 @@ struct IOC:ConstrainedProblem {
 
     if (&g) {
       g.clear();
-//      g.append((sumOfSqr(x)-1e3)*(sumOfSqr(x)-1e3)); // ||w|| = 1
+      if (normalizeParam) g.append((sumOfSqr(x)-1e0)*(sumOfSqr(x)-1e0)); // ||w|| = 1
+
       g.append(-x); // w > 0
+      //      g.append(-x.subRange(0,6)+1e-2); // w_trans > 2
+      //      g.append(-x.subRange(7,x.d0-1)+1e-2); // w_trans > 2
     }
     if (&Jg) {
       Jg.clear();
-//      Jg=4.*~x*(sumOfSqr(x)-1e3);
+      if (normalizeParam) Jg=4.*~x*(sumOfSqr(x)-1e0);
       Jg.append(-eye(numParam));
+      //      Jg.append(catCol(-eye(7),zeros(7,numParam-7)));
+      //      Jg.append(catCol(zeros(/*7*/),eye(numParam-7),numParam-7)));
     }
 
     // iterate over demonstrations
@@ -239,7 +283,8 @@ struct IOC:ConstrainedProblem {
     return y;
   }
 
-  void costReport() {
+  void costReport(arr &w) {
+    xOpt = w;
     cout << "\n*****************************************************" << endl;
     cout << "******************** COST REPORT ********************" << endl;
     cout << "*****************************************************" << endl;
@@ -250,7 +295,7 @@ struct IOC:ConstrainedProblem {
       cout << "\nDemonstration: " << i << endl;
       cout << "IOC costs: " << scenes(i).cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;
       cout << "Lambda: " << scenes(i).cost->lambda/sqrt(sumOfSqr(scenes(i).cost->lambda)) << endl;
-      cout << "Lambda Ground Truth: " << scenes(i).cost->lambda0/sqrt(sumOfSqr(scenes(i).cost->lambda0)) << "\n\n"<< endl;
+      cout << "Lambda Ground Truth: " << scenes(i).cost->lambda0/sqrt(sumOfSqr(scenes(i).cost->lambda0+1e-12)) << "\n\n"<< endl;
     }
   }
 };

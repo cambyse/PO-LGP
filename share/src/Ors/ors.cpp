@@ -417,7 +417,7 @@ void ors::Joint::parseAts() {
   arr ctrl_limits;
   ats.getValue<arr>(limits, "limits");
   if(limits.N){
-    CHECK(limits.N==2*qDim(), "parsed limits have wrong dimension");
+//    CHECK(limits.N==2*qDim(), "parsed limits have wrong dimension");
   }
   ats.getValue<arr>(ctrl_limits, "ctrl_limits");
   if(ctrl_limits.N){
@@ -2212,7 +2212,13 @@ void ors::GraphOperator::apply(KinematicWorld& G){
   }
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
-//    j->A.setDifference(from->X, to->X);
+
+    // Keep Object Orientation
+    Transformation A = from->X;
+    Transformation B = to->X;
+    A.pos *= 0.;
+    B.pos *= 0.;
+    j->A.setDifference(A, B);
     j->type=JT_fixed;
 //    j->agent=1;
     G.isLinkTree=false;

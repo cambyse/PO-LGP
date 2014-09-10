@@ -1,0 +1,19 @@
+<package>
+  <description brief="amex_controller_pkg">
+
+     ioc_pr2_exec
+
+  </description>
+  <author>englerpr</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/amex_controller_pkg</url>
+  <depend package="roscpp"/>
+  <depend package="actionlib"/>
+  <depend package="control_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="goal_publisher"/>
+
+</package>
+
+
