@@ -1,31 +1,30 @@
-#include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/feedbackControl.h>
-#include <Optim/optimization.h>
-#include <Core/util.h>
-//#include <Perception/videoEncoder.h>
-#include <Gui/opengl.h>
+﻿
 
-extern double stickyWeight;
+#include "execution.h"
+#include <vector>
 
-//VideoEncoder_libav_simple *vid;
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const double& height, arr& values, uint horizon){
+using namespace std;
+
+
+
+
+
+void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const double& height, bool stickyness, uint horizon){
     /////////////
 
+  //set initial state
+ world.setJointState(x0);
+ world.getBodyByName("table")->X.pos.z = height;
 
-  //set the sampled model's paramter
-  cout<<world.getBodyByName("target")->X.pos.z<<endl;// = height;
 
-  //cout<< "height= "<<world.getBodyByName("table")->X.pos.z<<endl;
-
-  //world.setJointState(ARR(0, -1, -1, 2, -1, 0, 0));
+  /////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////
 
 
   MotionProblem P(world, false);
-  P.loadTransitionParameters(); // can change horizon here
-
+  P.loadTransitionParameters(); // can change horizon hereP
+  P.world.setJointState(x0);
 
 
   P.T = horizon;
@@ -33,36 +32,29 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   x = P.getInitialization();
 
   //-- setup the motion problem
-  /*/
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
-//                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-//  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
 
-//FOUND the plane constraint
-
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
-    P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);/*/
+  //TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
+  //MODIFY the target location relatively to the height +0.12 = 0.1 + 0.02 (0.02 is table width).
   world.getBodyByName("target")->X.pos.z = height + 0.12;
+
   TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
 
 
-    // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
+  // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
   TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+    P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
 
-
-
- //P.addTask("collisionConstraints", new CollisionConstraint());
-  //TaskCost *coll = P.addTask("collisionConstraints", new CollisionConstraint());
-
-  //P.setInterpolatingCosts(coll, MotionProblem::constant, ARRAY(0.), 1.);
-
-  stickyWeight=1.;
-  P.makeContactsAttractive = true;
+    if(stickyness){
+        stickyWeight = 2.;
+        P.makeContactsAttractive = true;
+    }else{
+        stickyWeight = 0.;
+        P.makeContactsAttractive = false;
+    }
 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
@@ -85,20 +77,27 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   if(&y){
     y.resize(x.d0, pos->map.dim_phi(world));
+
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
       pos->map.phi(y[t](), NoArr, world);
     }
   }
 
-
   if(&dual) dual = UnConstrainedP.lambda;
+  //cout<< " x " <<x[0]<<endl;
+//  cout<< dual<<endl;
 }
+
+
 
 
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
 void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::KinematicWorld& world, int num){
+
+
+
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -187,8 +186,6 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 
       if(prev!=index) cout<<" at "<<t<<"; using model # "<<index << " "<<endl;
       //cout<<" at "<<t<<"; size = "<<eligible_counts<<endl;
-
-      index = 0;
       if(t<y.d0){
         pd_y->y_ref = ally[index][t];
         pd_x->y_ref = allx[index][t];
@@ -241,62 +238,4 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 
   FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
 }
-
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief main
-/// \param argc
-/// \param argv
-/// \return
-///////////////////////////////////////////////////////////////////////////////
-int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
-  uint T = 200; //time horizon
-
-  MT::timerStart(true);
-
-  //compute the primal and dual trajectories
-  arr heights;
-  uint numSamples = 3;
-  heights.resize(numSamples);
-  arr allX, allY, allDual;
-  arr values; //2-dim: sample, time
-  values.resize(numSamples,T+1);
-
-  for(uint i=0;i<numSamples;i++){
-      //1. very large variance (1.0)
-      heights(i) = .6 + 0.1*rnd.gauss();
-      //2. trajectory optimization: return primal,dual trajectories, and value functions (at each time slice)
-      arr x, y, dual;
-      getTrajectory(x, y, dual, world, heights(i),values[i](), T);
-
-	cout<< dual<<endl;
-
-      allX.resize(numSamples,x.d0,x.d1);
-      allY.resize(numSamples,y.d0,y.d1);
-      allDual.resize(numSamples,dual.d0);
-
-      //3. store the trajectories
-      allX[i]() = x;
-      allY[i]() = y;
-
-      allDual[i]() = dual;
-  }
-
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
-
-  //TESTING: Online POMDP planning
-  //POMDP
-  orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
-  world.setJointState(allX[0][0]);
-  for(uint i=0;i<10;i++){
-    world.getBodyByName("table")->X.pos.z = .6 + 0.1*rnd.gauss();
-    POMDPExecution(allX, allY, allDual, world, i);
-  }
-
-  return 0;
-}
-
 
