@@ -98,7 +98,7 @@ void Vector::makeColinear(const Vector& b) {
 
 //{ measuring the vector
 
-/// 1-norm to zero
+/// L1-norm to zero
 double Vector::diffZero() const { return fabs(x)+fabs(y)+fabs(z); }
 
 /// is it normalized?
@@ -602,7 +602,7 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
   setRad(phi, axis);
 }
 
-/// 1-norm to zero (i.e., identical rotation)
+/// L1-norm to zero (i.e., identical rotation)
 double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
 
 /// gets rotation angle (in rad [0, 2pi])
@@ -1095,7 +1095,7 @@ bool Transformation::isZero() const {
   return pos.isZero && rot.isZero && vel.isZero && angvel.isZero;
 }
 
-/// 1-norm to zero
+/// L1-norm to zero
 double Transformation::diffZero() const {
   return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.diffZero();
 }

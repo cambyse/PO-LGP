@@ -1,5 +1,7 @@
 BASE = ../../../share
 
+OBJS = main.o manipSim.o
+
 DEPEND = Motion Core Ors Gui Optim pr2
 
 include $(BASE)/gofMake/generic.mk

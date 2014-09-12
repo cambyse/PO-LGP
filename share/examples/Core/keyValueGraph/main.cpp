@@ -1,7 +1,8 @@
 #include <Core/keyValueGraph.h>
 #include <Core/registry.h>
 
-const char *filename=NULL;
+const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
+//const char *filename=NULL;
 
 //===========================================================================
 
@@ -54,8 +55,6 @@ void TEST(Manual){
 //===========================================================================
 
 int MAIN(int argc, char** argv){
-  testManual();
-  return 0;
 
   cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
@@ -63,6 +62,8 @@ int MAIN(int argc, char** argv){
 
   testRead();
   testDot();
+
+  if(!filename) testManual();
 
   return 0;
 }

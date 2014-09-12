@@ -363,22 +363,36 @@ void KeyValueGraph::writeDot(const char *filename) {
   ofstream fil;
   MT::open(fil, filename);
   fil <<"graph G{" <<endl;
-  fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
+  fil <<"graph [ rankdir=\"TD\", ranksep=0.05 ];" <<endl;
   fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
   fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
   for(Item *it: list()) {
-    fil <<it->index <<" [ ";
-    if(it->keys.N) fil <<"label=\"" <<it->keys.last() <<"\", ";
-    if(it->parents.N) fil <<"shape=box";
-    else fil <<"shape=ellipse";
-    fil <<" ];" <<endl;
-    for_list(Item, pa, it->parents) {
-      if(pa->index<it->index)
-        fil <<pa->index <<" -- " <<it->index <<" [ ";
-      else
-        fil <<it->index <<" -- " <<pa->index <<" [ ";
-      fil <<"label=" <<pa_COUNT;
+    if(it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
+      fil <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ ";
+      if(it->keys.N){
+        fil <<"label=\"" <<it->keys(0);
+        for(uint i=1;i<it->keys.N;i++) fil <<'_' <<it->keys(i);
+        fil <<"\" ";
+      }
+      fil <<"];" <<endl;
+    }else{
+      fil <<it->index <<" [ ";
+      if(it->keys.N){
+        fil <<"label=\"" <<it->keys(0);
+        for(uint i=1;i<it->keys.N;i++) fil <<'\n' <<it->keys(i);
+        fil <<"\" ";
+      }
+      if(it->parents.N) fil <<"shape=box";
+      else fil <<"shape=ellipse";
       fil <<" ];" <<endl;
+      for_list(Item, pa, it->parents) {
+        if(pa->index<it->index)
+          fil <<pa->index <<" -- " <<it->index <<" [ ";
+        else
+          fil <<it->index <<" -- " <<pa->index <<" [ ";
+        fil <<"label=" <<pa_COUNT;
+        fil <<" ];" <<endl;
+      }
     }
   }
   fil <<"}" <<endl;
@@ -386,7 +400,8 @@ void KeyValueGraph::writeDot(const char *filename) {
 }
 
 void KeyValueGraph::sortByDotOrder() {
-  uintA perm(N); perm.setZero();
+  uintA perm;
+  perm.setStraightPerm(N);
   for_list(Item, it, list()) {
     if(it->getValueType()==typeid(KeyValueGraph)) {
       double *order = it->getValue<KeyValueGraph>()->getValue<double>("dot_order");

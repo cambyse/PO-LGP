@@ -1,50 +1,71 @@
+//#include <pr2/actionMachine.h>
+#include "manipSim.h"
 #include <Ors/ors.h>
-#include <pr2/actionMachine.h>
 
-void init(){
-  new Symbol("rigid", 2);
-  new Symbol("2DtransPhi", 2);
+ors::KinematicWorld* world=NULL;
+
+
+uint Domain::numObjects(){
+  return world->bodies.N;
 }
 
-//===========================================================================
+bool Domain::isDirectlyControllable(uint i){
+  Item *a = world->bodies(i)->ats["ctrlable"];
+  return a!=NULL;
+}
 
-enum Predicate{ free=0, rigid, trans2DPhi };
+void Domain::getInitialState(State &s){
+  s.R.clear();
+  s.P.clear();
+  s.G.clear();
+//  enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall, JT_glue };
 
-struct Relation{
-  Predicate p;
-  uint i,j;
-};
+  for(ors::Body *b:world->bodies){
+    Pose *p = new Pose;
+    p->mean = b->X;
+    p->max = p->mean.pos;
+    p->min = p->mean.pos;
+    p->rotRange.setZero();
+    s.P.append(p);
+  }
 
-typedef MT::Array<Relation*> RelationL;
+  for(ors::Joint *j:world->joints){
+    if(j->type==ors::JT_fixed) s.R.append(new Relation(rigid, j->from->index, j->to->index));
+    if(j->type==ors::JT_transXYPhi) s.R.append(new Relation(trans2DPhi, j->from->index, j->to->index));
+  }
+}
 
-struct RelationalState{
-  uint N; ///< numberof objects
-  RelationL R;
-};
+void Domain::getNewState(State& new_s, const State& s, const Action& a){
+  new_s = s;
+  new_s.preAction = a;
+}
 
 //===========================================================================
 
 void sample(){
   ors::KinematicWorld W("model.kvg");
-  reportExistingSymbols();
+  world = &W;
 
   //-- fwd expansion
   SearchNodeL T;
+  SearchNode *root=new SearchNode(T);
   SearchNode *goal=NULL;
 
-  for(uint k=0;k<100;k++){
-    SearchNode n = T(k);
-    ActionL A = n.getFeasibleActions();
-    for(Action *a:A){
-      State s = n.getState();
-      s = s.apply(a);
-      s.expandReachable();
-      n.append(s, T);
-      if(checkGoalIsFeasible(s)){
-        goal = T.last();
-        break;
-      }
-    }
+  cout <<*T(0) <<endl;
+
+  for(uint k=0;k<5;k++){
+    SearchNode *n = T(k);
+    Action a = n->getRandomFeasibleAction();
+//    for(Action *a:A){
+    SearchNode *m = new SearchNode(*n, a);
+    m->state.expandReachable();
+    cout <<*m <<endl;
+
+//      if(checkGoalIsFeasible(s)){
+//        goal = T.last();
+//        break;
+//      }
+//    }
   }
 
   //backtracking
@@ -59,7 +80,6 @@ void sample(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  init();
   sample();
   return 0;
 }
