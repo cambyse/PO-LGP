@@ -23,6 +23,10 @@ struct MySystem:System{
 };
 
 void testJoypad(){
+    MySystem S;
+    engine().open(S);
+
+
   ors::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
@@ -39,8 +43,6 @@ void testJoypad(){
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
-  MySystem S;
-  engine().open(S);
 
   if(MT::getParameter<bool>("useRos", false)){
     //-- wait for first q observation!
@@ -121,7 +123,7 @@ void testJoypad(){
     }
     S.ctrl_ref.set() = refs;
 
-    if(engine().shutdown.getValue()/* || !rosOk()*/) break;
+    //if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
 
   engine().close(S);
