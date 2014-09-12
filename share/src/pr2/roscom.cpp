@@ -215,6 +215,14 @@ void RosCom_Spinner::open(){ NICO }
 void RosCom_Spinner::step(){ NICO }
 void RosCom_Spinner::close(){ NICO }
 
+void RosCom_ControllerSync::open(){ NICO }
+void RosCom_ControllerSync::step(){ NICO }
+void RosCom_ControllerSync::close(){ NICO }
+
+void RosCom_ForceSensorSync::open(){ NICO }
+void RosCom_ForceSensorSync::step(){ NICO }
+void RosCom_ForceSensorSync::close(){ NICO }
+
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)

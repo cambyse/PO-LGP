@@ -152,7 +152,6 @@ struct ActionSystem : System{
     //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
-//      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
     }

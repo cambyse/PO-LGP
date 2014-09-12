@@ -43,8 +43,8 @@ void testJoypad(){
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
-
-  if(MT::getParameter<bool>("useRos", false)){
+  bool useRos = MT::getParameter<bool>("useRos", false);
+  if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
@@ -66,13 +66,15 @@ void testJoypad(){
   CtrlMsg refs;
 
   for(uint t=0;;t++){
-    S.joystickState.var->waitForNextRevision();
+//    S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
     bool shutdown = j2t.updateTasks(joypadState);
     if(t>10 && shutdown) engine().shutdown.incrementValue();
 
     // joint state
-    worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
+    if(useRos){
+      worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
+    }
 
     //compute control
     arr a = MP.operationalSpaceControl();

@@ -12,6 +12,7 @@ Singleton<SymbolL> symbols;
 //
 // ActionMachine
 //
+
 ActionMachine::ActionMachine():Module("ActionMachine"){
   ActionL::memMove=true;
   s = new sActionMachine();
@@ -28,8 +29,8 @@ void ActionMachine::open(){
   s->MP.qitselfPD.y_ref = s->q;
 //  s->MP.qitselfPD.setGains(1.,10.);
 
-  //-- wait for first q observation!
   if(MT::getParameter<bool>("useRos",false)){
+	//-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
       ctrl_obs.var->waitForNextRevision();
