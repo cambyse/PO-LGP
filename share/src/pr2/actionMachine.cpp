@@ -45,7 +45,6 @@ void ActionMachine::open(){
     s->qdot = ctrl_obs.get()->qdot;
     s->MP.setState(s->q, s->qdot);
   }
-  s->zero_qdot.resize(s->qdot.N).setZero();
   //arr fL_base = S.fL_obs.get();
 }
 
@@ -103,7 +102,8 @@ void ActionMachine::step(){
   A.deAccess();
 
   s->refs.q=s->q;
-  s->refs.qdot=s->zero_qdot;
+  s->refs.qdot = zeros(s->q.N);
+  s->refs.u_bias = zeros(s->q.N);
   ctrl_ref.set() = s->refs;
 }
 

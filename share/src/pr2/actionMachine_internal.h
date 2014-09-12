@@ -8,7 +8,7 @@ struct sActionMachine{
   ors::KinematicWorld world;
   FeedbackMotionControl MP;
   //  Gamepad2Tasks j2t;
-  arr q, qdot, zero_qdot;
+  arr q, qdot;
   CtrlMsg refs;
   sActionMachine() : world("model.kvg"), MP(world, true) {};
 };
