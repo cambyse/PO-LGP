@@ -352,8 +352,8 @@ void BatchWorker::collect_data() {
             // collect data and train learner //
             //--------------------------------//
 
-            // repeat twice in case of tranfer learning tasks
-            for(int idx=0; idx<2 && environment_arg.getValue()=="transfer"; ++idx) {
+            // do twice in case of tranfer learning tasks
+            for(int n_runs=1;;++n_runs) {
                 if(mode=="DRY" || mode=="RANDOM") {
                     // no data to collect, nothing to learn
                 } else if(mode=="TEM" || mode=="TEL" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
@@ -391,8 +391,10 @@ void BatchWorker::collect_data() {
                     DEBUG_DEAD_LINE;
                 }
                 // change environment in case of transfer learning
-                if(environment_arg.getValue()=="transfer") {
+                if(n_runs==1 && environment_arg.getValue()=="transfer") {
                     environment = make_shared<Maze>(epsilon_arg.getValue(),"Minimal_2");
+                } else {
+                    break;
                 }
             }
 
