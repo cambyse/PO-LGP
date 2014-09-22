@@ -18,20 +18,21 @@ double marginMap(double x, double lo, double hi, double marginRatio=.1){
 
 /// Controller initialization in non-realtime
 bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh){
-  ROS_INFO("*** Starting TreeControllerClass");
+  ROS_INFO("*** Starting TreeControllerClass3");
 
   //-- setup pr2 tree and message buffers
-  if(!pr2_tree.init(robot)) { ROS_ERROR("Could not load robot tree");  return false; }
-  jnt_pos_.resize(pr2_tree.size());
-  jnt_vel_.resize(pr2_tree.size());
-  jnt_efforts_.resize(pr2_tree.size());
-  pr2_tree.getPositions(jnt_pos_);
+  // if(!pr2_tree.init(robot)){ ROS_ERROR("Could not load robot tree");  return false; }
+  // ROS_INFO(STRING("pre_tree.init: found " <<pr2_tree.size() <<" joints"));
+  // jnt_pos_.resize(pr2_tree.size());
+  // jnt_vel_.resize(pr2_tree.size());
+  // jnt_efforts_.resize(pr2_tree.size());
+  // pr2_tree.getPositions(jnt_pos_);
 
   //-- match ROS and ORS joint ids
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
   ROS_INFO("*** ORS model loaded");
-  ROS_qIndex.resize(world.q.N) = UINT_MAX;
+  // ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
   Kp.resize(world.q.N).setZero();
@@ -39,6 +40,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kq_gainFactor=Kd_gainFactor=ARR(1.);
   Kf_gainFactor=ARR(0.);
   limits.resize(world.q.N,4).setZero();
+#if 0
   for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
     ors::Joint *j = world.getJointByName(pr2_tree.getJoint(i)->joint_->name.c_str());
@@ -66,9 +68,37 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       ROS_INFO(STRING("  " <<i <<" not matched " <<j->name));
     }
   }
+#else
+  //read out gain parameters from ors data structure
+  { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
+    arr *info;
+    info = j->ats.getValue<arr>("gains");  if(info){ Kp(j->qIndex)=info->elem(0); Kd(j->qIndex)=info->elem(1); }
+    info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
+    info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
+    } }
+
+  //match joint names with ros joints
+  ROS_joints.resize(world.q.N);
+  ROS_joints = NULL;
+  for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
+    pr2_mechanism_model::JointState *pr2_joint = robot->getJointState(j->name.p);
+    if(pr2_joint){
+      ROS_joints(j->qIndex) = pr2_joint;
+      q(j->qIndex) = pr2_joint->position_;
+      ROS_INFO(STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
+		      <<"' \tq=" <<q(j->qIndex)
+		      <<" \tgains=" <<Kp(j->qIndex) <<' '<<Kd(j->qIndex)
+		      <<" \tlimits=" <<limits[j->qIndex]));
+    }else{
+      ROS_INFO(STRING("Joint '" <<j->name <<"' not matched in pr2"));
+    }
+  }
+#endif
 
   j_worldTranslationRotation = world.getJointByName("worldTranslationRotation");
   ROS_INFO(STRING("*** WorldTranslationRotation found?:" <<j));
+
+  // { ROS_ERROR("Could not load robot tree");  return false; }
 
   ROS_INFO("*** starting publisher and subscriber");
 
@@ -93,14 +123,14 @@ void TreeControllerClass::starting(){
 /// Controller update loop in realtime
 void TreeControllerClass::update() {
   //-- pull pos & vel
-  pr2_tree.getPositions(jnt_pos_);
-  pr2_tree.getVelocities(jnt_vel_);
-  pr2_tree.getEfforts(jnt_efforts_);
+  // pr2_tree.getPositions(jnt_pos_);
+  // pr2_tree.getVelocities(jnt_vel_);
+  // pr2_tree.getEfforts(jnt_efforts_);
 
   //-- get current point pos
-  for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
-    q(i) = jnt_pos_(ROS_qIndex(i));
-    qd(i) = qd_filt*qd(i) + (1.-qd_filt)*jnt_vel_.qdot(ROS_qIndex(i));
+  for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
+      q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
+      qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
   }
 
   //-- publish joint state
@@ -126,13 +156,13 @@ void TreeControllerClass::update() {
     u += u_bias;
 
     //-- command efforts to KDL
-    for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
+    for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
       double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
       clip(u(i), -limits(i,3), limits(i,3));
-      pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
-      pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
+      ROS_joints(i)->commanded_effort_ = u(i);
+      ROS_joints(i)->enforceLimits();
     }
 
     //-- command twist to base
