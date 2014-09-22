@@ -45,23 +45,19 @@ struct Item_typed:Item {
   Item_typed():value(NULL) {}
 
   /// directly store pointer to value
-  Item_typed(T *_value, KeyValueGraph *appendToContainer=NULL):value(_value) {
-    if(appendToContainer) appendToContainer->appendItem(this);
-  }
+  Item_typed(KeyValueGraph& container, T *_value):Item(container), value(_value) {}
 
   /// directly store pointer to value
-  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *appendToContainer=NULL):value(_value) {
+  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, T *_value=NULL)
+    : Item(container, parents), value(_value) {
     keys=_keys;
-    parents=_parents;
-    if(appendToContainer) appendToContainer->appendItem(this);
   }
 
   /// copy value
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *appendToContainer=NULL):value(NULL) {
+  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, const T& _value)
+    : Item(container, parents), value(NULL) {
     value = new T(_value);
     keys=_keys;
-    parents=_parents;
-    if(appendToContainer) appendToContainer->appendItem(this);
   }
 
   virtual bool hasValue() const {
@@ -90,7 +86,7 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
+  virtual Item *newClone(KeyValueGraph& container) const { return new Item_typed<T>(container, keys, parents, value); }
 };
 
 template<class T> T *Item::getValue() {
@@ -144,13 +140,11 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
 }
 
 template<class T> Item *KeyValueGraph::append(T *x) {
-  return appendItem(new Item_typed<T>(x, NULL));
+  return new Item_typed<T>(*this, x, NULL);
 }
 
 template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
-  Item *it = appendItem(new Item_typed<T>(keys, parents, x, NULL));
-  for(Item *par: parents) par->parentOf.append(it);
-  return it;
+  return new Item_typed<T>(*this, keys, parents, x);
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {

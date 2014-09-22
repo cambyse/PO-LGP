@@ -1,8 +1,8 @@
 #include <Core/keyValueGraph.h>
 #include <Core/registry.h>
 
-const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
-//const char *filename=NULL;
+//const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
+const char *filename=NULL;
 
 //===========================================================================
 
@@ -61,9 +61,9 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
   testRead();
-  testDot();
+//  testDot();
 
-  if(!filename) testManual();
+//  if(!filename) testManual();
 
   return 0;
 }

@@ -37,14 +37,18 @@ inline std::istream& operator>>(std::istream&, RootType&) { NIY; }
 inline std::ostream& operator<<(std::ostream&, const RootType&) { NIY; }
 
 struct Item {
+  KeyValueGraph& container;
   StringA keys;
   ItemL parents;
   ItemL parentOf;
   uint index;
-  virtual ~Item() {};
+  Item(KeyValueGraph& _container);
+  Item(KeyValueGraph& _container, const ItemL& _parents);
+  virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
   void write(std::ostream &os) const;
+  KeyValueGraph ParentOf();
 
   //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY};
@@ -52,7 +56,7 @@ struct Item {
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
   virtual void takeoverValue(Item*) {NIY}
-  virtual Item *newClone() const {NIY}
+  virtual Item *newClone(KeyValueGraph& container) const {NIY}
 };
 stdOutPipe(Item);
 
@@ -87,8 +91,11 @@ struct KeyValueGraph:ItemL {
   template<class T> MT::Array<T*> getTypedValues(const char* key);
   template<class T> MT::Array<T*> getDerivedValues();
   
+  //-- removing items
+  Item *appendItem(Item* it) { HALT("the constructor of Item should have done this!"); it->index=ItemL::N;  ItemL::append(it);  return it;}
+  void removeItem(Item* it){ delete it; }
+
   //-- adding items
-  Item *appendItem(Item* it) { it->index=ItemL::N;  ItemL::append(it);  return it;}
   template<class T> Item *append(T *x);
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
@@ -99,6 +106,7 @@ struct KeyValueGraph:ItemL {
   //-- merging items
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
+
 
   //-- I/O
   void sortByDotOrder();
