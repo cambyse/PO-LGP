@@ -79,6 +79,29 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 }
 
 // ============================================================================
+SetQ::SetQ(const char* effName, int jointID, double jointPos)
+    : GroundedAction("SetQ", 0)
+    , effName(effName)
+    , jointID(jointID)
+    , jointPos(jointPos)
+{
+  SymbolL::memMove=true;
+  PDtaskL::memMove=true;
+};
+
+void SetQ::initYourself(ActionMachine& actionMachine) {
+  auto task = actionMachine.s->MP.addPDTask(
+      effName, 2, .8, new DefaultTaskMap(qSingleTMT, jointID));
+  task->setTarget({jointPos});
+  tasks.append(task);
+}
+
+bool SetQ::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N == task->y_ref.N &&
+          maxDiff(task->y, task->y_ref) < 1e-1);
+}
+// ============================================================================
 // PushForce
 PushForce::PushForce(const char* effName, arr forceVec)
     : GroundedAction("PushForce", 2),
