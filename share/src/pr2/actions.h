@@ -36,6 +36,37 @@ struct AlignEffTo : GroundedAction {
 };
 
 //===========================================================================
+struct SetQ : GroundedAction {
+  MT::String effName;
+  int jointID;
+  double jointPos;
+
+  SetQ(const char* effName, int jointID, double jointPos)
+    : GroundedAction("SetQ", 0)
+    , effName(effName)
+    , jointID(jointID)
+    , jointPos(jointPos)
+  {
+    SymbolL::memMove=true;
+    PDtaskL::memMove=true;
+  };
+
+  /// @name Inherited stuff
+  virtual void initYourself(ActionMachine& actionMachine) {
+    auto task = actionMachine.s->MP.addPDTask(
+        effName, 2, .8, new DefaultTaskMap(qSingleTMT, jointID));
+    task->setTarget({jointPos});
+    tasks.append(task);
+  }
+
+  virtual bool finishedSuccess(ActionMachine& M) {
+    PDtask *task=tasks(0);
+    return (task->y.N == task->y_ref.N &&
+            maxDiff(task->y, task->y_ref) < 1e-1);
+  }
+};
+
+//===========================================================================
 struct PushForce : GroundedAction {
   MT::String effName;
   arr forceVec;
