@@ -63,7 +63,6 @@ stdOutPipe(Item);
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
-  KeyValueGraph *parentKvg;
   bool isReference;
   
   KeyValueGraph();

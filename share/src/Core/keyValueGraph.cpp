@@ -106,7 +106,7 @@ KeyValueGraph Item::ParentOf(){
   return G;
 }
 
-Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false) {
+Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false, KeyValueGraph* parentGraph=NULL) {
   MT::String str;
   StringA keys;
   ItemL parents;
@@ -199,7 +199,6 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         } break;
         case '{': { // KeyValueGraph (e.g., attribute list)
           KeyValueGraph *subList = new KeyValueGraph;
-          subList->parentKvg=&containingKvg;
           subList->read(is);
           MT::parse(is, "}");
           item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList);
@@ -211,7 +210,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
             str.read(is, " , ", " , )", false);
             if(!str.N) break;
             Item *e=containingKvg.getItem(str);
-            if(!e && containingKvg.parentKvg) e=containingKvg.parentKvg->getItem(str);
+            if(!e && parentGraph) e=parentGraph->getItem(str);
             if(e) { //sucessfully found
               refs.ItemL::append(e);
             } else { //this element is not known!!
@@ -267,13 +266,14 @@ struct sKeyValueGraph {
 //  std::map<std::string, Item*> keyMap;
 };
 
-KeyValueGraph::KeyValueGraph():s(NULL), parentKvg(NULL), isReference(false) {
+KeyValueGraph::KeyValueGraph():s(NULL), isReference(false) {
   ItemL::memMove=true;
 //  s = new sKeyValueGraph;
 }
 
 KeyValueGraph::~KeyValueGraph() {
 //  delete s;
+  if(!isReference) listDelete(*this);
 }
 
 Item *KeyValueGraph::append(const uintA& parentIdxs) {
@@ -348,7 +348,7 @@ Item* KeyValueGraph::merge(Item *m){
 }
 
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
-  listDelete(*this);
+  if(!isReference) listDelete(*this);
   { for_list(Item, i, G) i->index=i_COUNT; }
   for(Item *it:G) it->newClone(*this);
   //rewire links

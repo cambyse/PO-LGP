@@ -2,9 +2,9 @@
 
 Domain domain;
 
-enum Predicate : uint{ rigid=0, trans2DPhi, _N_Predicate };
+enum Predicate : uint{ rigid=0, support, trans2DPhi, _N_Predicate };
 const char* predicateString(uint p){
-  static const char* bla[]={"rigid", "trans2DPhi", "no"};
+  static const char* bla[]={"rigid", "support", "trans2DPhi", "no"};
   return bla[p];
 }
 
