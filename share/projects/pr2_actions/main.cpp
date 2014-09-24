@@ -116,16 +116,20 @@ void idle2()
   activity.machine->add(new CoreTasks());
   engine().open(activity);
 
-  activity.machine->add_sequence(
-      new MoveEffTo("endeffR", {.95, -.2, .9}),
-      new AlignEffTo("endeffR", {.95, 0, 0.}, {.95, 0, 0})
-  );
-  activity.machine->add_sequence(
-      new MoveEffTo("endeffL", {.95, .2, .9}),
-      new AlignEffTo("endeffL", {.95, 0, 0.}, {.95, 0, 0})
-  );
+  auto t = activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
+  activity.machine->waitForActionCompletion(t);
+  cout << "Done waiting" << endl;
+
+  activity.machine->add(new MoveEffTo("endeffR", {.8, -.2, .9}));
+  activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
 
   activity.machine->waitForActionCompletion();
+  MT::wait(5);
+
+  // activity.machine->add(new MoveEffTo("endeffR", {.6, -.2, .9}));
+  // activity.machine->add(new AlignEffTo("endeffR", {1, 0, 0.}, {1, 0, 0}));
+  // activity.machine->waitForActionCompletion();
+
   engine().close(activity);
 }
 
@@ -190,10 +194,19 @@ public:
 
   void run()
   {
+    // align
+    auto current_pos = activity.machine->s->world.getShapeByName("endeffL")->X.pos.x;
+    move_pris(current_pos);
+    cout << "aligned" << endl;
+
+    // close gripper
+    move_joint(0., "l_gripper_joint");
+    cout << "girpper closed" << endl;
+
     while (true){
       UserInput input = get_input();
 
-      move_rot(input.joint_pos(0));
+      move_joint(input.joint_pos(0));
       move_pris(input.joint_pos(1));
 
       // check
@@ -201,21 +214,22 @@ public:
         // move_pris(current_pos + delta);
       }
       else {
-        // move_rot(current_pos + delta);
+        // move_joint(current_pos + delta);
       }
     }
   }
 
   /// move to the given position
   void move_pris(double joint_value) {
-    GroundedAction* action = activity.machine->add(
+    activity.machine->add(new OrientationQuat("endeffL", {1, 1, 0, 0}));
+    auto action = activity.machine->add(
         new MoveEffTo("endeffL", {joint_value, .3, 1}));
     activity.machine->waitForActionCompletion(action);
   }
 
   /// rotate to the given position
-  void move_rot(double joint_value) {
-    int jointID = - (activity.machine->s->world.getJointByName("l_wrist_roll_joint")->qIndex);
+  void move_joint(double joint_value, char* joint_name="l_wrist_roll_joint") {
+    int jointID = - (activity.machine->s->world.getJointByName(joint_name)->qIndex);
     GroundedAction* action = activity.machine->add(
         new SetQ("XXX", jointID, {joint_value}));
     activity.machine->waitForActionCompletion(action);
@@ -230,11 +244,19 @@ public:
 int main(int argc, char** argv)
 {
   MT::initCmdLine(argc, argv);
-//   test_push();
+  // test_push();
   // idle();
   // idle2();
-//  test_collision();
-   do_the_dance();
+  // return 0;
+  // test_collision();
+  // do_the_dance();
   // testActionMachine();
+
+  IcraExperiment experiment;
+  experiment.run();
+
+  // set_q();
+  // do_the_dance();
+
   return 0;
 }
