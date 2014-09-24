@@ -129,6 +129,102 @@ void idle2()
   engine().close(activity);
 }
 
+void set_q()
+{
+  ActionSystem activity;
+  activity.machine->add(new CoreTasks());
+  engine().open(activity);
+
+//   for (auto joint : activity.machine->s->world.joints)
+//     cout << joint->qIndex << " " << joint->name << endl;
+
+  int jointID = -(activity.machine->s->world.getJointByName("torso_lift_joint")->qIndex);
+  cout << "joint: " << jointID << endl;
+  activity.machine->add(new SetQ("XXX", jointID, 3));
+
+  activity.machine->waitForActionCompletion();
+  cout << "DONE" << endl;
+  engine().close(activity);
+}
+
+// ============================================================================
+struct UserInput {
+  arr joint_pos;
+  int check_joint_id;
+};
+
+UserInput get_input() {
+  UserInput input;
+  double tmp;
+
+  cout << "Enter rot (degrees):" << endl;
+  std::cin >> tmp;
+  input.joint_pos.append((double)tmp * M_PI / 180.);
+
+  cout << "Enter pris (m):" << endl;
+  std::cin >> tmp;
+  input.joint_pos.append((double)tmp);
+
+  cout << "Joint id to check" << endl;
+  std::cin >> input.check_joint_id;
+
+  cout << "done..." << endl;
+
+  return input;
+}
+
+class IcraExperiment
+{
+public:
+  IcraExperiment()
+    :activity()
+  {
+    activity.machine->add(new CoreTasks());
+    engine().open(activity);
+  }
+
+  virtual ~IcraExperiment()
+  {
+    engine().close(activity);
+  }
+
+  void run()
+  {
+    while (true){
+      UserInput input = get_input();
+
+      move_rot(input.joint_pos(0));
+      move_pris(input.joint_pos(1));
+
+      // check
+      if (input.check_joint_id) {
+        // move_pris(current_pos + delta);
+      }
+      else {
+        // move_rot(current_pos + delta);
+      }
+    }
+  }
+
+  /// move to the given position
+  void move_pris(double joint_value) {
+    GroundedAction* action = activity.machine->add(
+        new MoveEffTo("endeffL", {joint_value, .3, 1}));
+    activity.machine->waitForActionCompletion(action);
+  }
+
+  /// rotate to the given position
+  void move_rot(double joint_value) {
+    int jointID = - (activity.machine->s->world.getJointByName("l_wrist_roll_joint")->qIndex);
+    GroundedAction* action = activity.machine->add(
+        new SetQ("XXX", jointID, {joint_value}));
+    activity.machine->waitForActionCompletion(action);
+  }
+
+  // data
+  ActionSystem activity;
+};
+
 
 // ============================================================================
 int main(int argc, char** argv)

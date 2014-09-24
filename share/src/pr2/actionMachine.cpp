@@ -99,6 +99,7 @@ void ActionMachine::step(){
     s->MP.setState(s->q, s->qdot);
   }
 
+  // s->MP.reportCurrentState();
   A.deAccess();
 
   s->refs.q=s->q;

@@ -13,11 +13,11 @@ class TreeControllerClass: public pr2_controller_interface::Controller
 private:
   Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
   ors::KinematicWorld world;
-  pr2_mechanism_model::Tree pr2_tree;
+  //  pr2_mechanism_model::Tree pr2_tree;
 
-  KDL::JntArray jnt_pos_;
-  KDL::JntArrayVel jnt_vel_;
-  KDL::JntArray jnt_efforts_;
+  /* KDL::JntArray jnt_pos_; */
+  /* KDL::JntArrayVel jnt_vel_; */
+  /* KDL::JntArray jnt_efforts_; */
 
   // Ors related variables
   arr u, Kd, Kp;
@@ -31,7 +31,8 @@ private:
   arr fL_obs, fR_obs;
 
   //matching joint indices
-  uintA ROS_qIndex;
+  //  uintA ROS_qIndex;
+  MT::Array<pr2_mechanism_model::JointState*> ROS_joints;
   ors::Joint *j_worldTranslationRotation;
 
   ros::Publisher jointState_publisher;

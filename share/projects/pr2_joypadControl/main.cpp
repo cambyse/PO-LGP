@@ -125,7 +125,7 @@ void testJoypad(){
     }
     S.ctrl_ref.set() = refs;
 
-    //if(engine().shutdown.getValue()/* || !rosOk()*/) break;
+    if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
 
   engine().close(S);

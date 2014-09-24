@@ -36,6 +36,19 @@ struct AlignEffTo : GroundedAction {
 };
 
 //===========================================================================
+struct SetQ : GroundedAction {
+  MT::String effName;
+  int jointID;
+  double jointPos;
+
+  SetQ(const char* effName, int jointID, double jointPos);
+
+  /// @name Inherited stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
 struct PushForce : GroundedAction {
   MT::String effName;
   arr forceVec;
