@@ -79,6 +79,31 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 }
 
 // ============================================================================
+// OrientationQuat
+OrientationQuat::OrientationQuat(const char* effName, const arr& orientation)
+    : GroundedAction("OrientationQuat", 0)
+    , effName(effName)
+    , orientation(orientation)
+{
+  SymbolL::memMove=true;
+  PDtaskL::memMove=true;
+};
+
+void OrientationQuat::initYourself(ActionMachine& actionMachine) {
+  auto task = actionMachine.s->MP.addPDTask(
+      STRING("OrientatationQuat_" << effName), 2, .8, quatTMT, effName, {0, 0, 0});
+  task->setTarget(orientation);
+  task->flipTargetScalarProduct = true;
+  tasks.append(task);
+}
+
+bool OrientationQuat::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N == task->y_ref.N &&
+          maxDiff(task->y, task->y_ref) < .3);
+}
+
+// ============================================================================
 SetQ::SetQ(const char* effName, int jointID, double jointPos)
     : GroundedAction("SetQ", 0)
     , effName(effName)

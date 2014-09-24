@@ -36,6 +36,18 @@ struct AlignEffTo : GroundedAction {
 };
 
 //===========================================================================
+struct OrientationQuat : GroundedAction {
+  MT::String effName;
+  arr orientation;
+
+  OrientationQuat(const char* effName, const arr& orientation);
+
+  /// @name Inherited stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
 struct SetQ : GroundedAction {
   MT::String effName;
   int jointID;
