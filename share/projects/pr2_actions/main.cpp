@@ -1,6 +1,11 @@
 #include <pr2/actionMachine.h>
 #include <pr2/actions.h>
 
+// ROS stuff
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+
+
 void testActionMachine()
 {
   ActionSystem activity;
@@ -38,7 +43,6 @@ void testActionMachine()
   engine().close(activity);
 }
 
-
 void do_the_dance()
 {
   ActionSystem activity;
@@ -60,7 +64,6 @@ void do_the_dance()
   engine().close(activity);
 }
 
-
 void test_push()
 {
   ActionSystem activity;
@@ -76,7 +79,6 @@ void test_push()
 
   engine().close(activity);
 }
-
 
 void idle()
 {
@@ -183,6 +185,8 @@ public:
   IcraExperiment()
     :activity()
   {
+    pub_moving = n.advertise<std_msgs::String>("/moving", 1000);
+
     activity.machine->add(new CoreTasks());
     engine().open(activity);
   }
@@ -202,11 +206,11 @@ public:
     //pose.pos.y += .1;
     //pose.pos.z -= .1;
     //pose.rot.setDeg(90, 1, 0 ,0);
-    
-    cout << "aligne.." << endl;
+
+    cout << "aligning..." << endl;
     auto t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
     activity.machine->waitForActionCompletion(t);
-    cout << "aligned" << endl;
+    cout << "Done" << endl;
 
     int jointID = -(activity.machine->s->MP.world.getJointByName("l_gripper_joint")->qIndex);
     GroundedAction* action = activity.machine->add( new SetQ("XXX", jointID, {.0}));
@@ -215,6 +219,9 @@ public:
     while (true){
       UserInput input = get_input();
 
+      // ROS: manipulating rotation
+      advertise_manipulation_state("rotation start");
+
       pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
       cout << input.joint_pos(0) << endl;
       cout << pose.rot << endl;
@@ -222,20 +229,27 @@ public:
       cout << pose.rot << endl;
       t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
+      // ROS: done rotation
+      advertise_manipulation_state("rotation stop");
+      cout << "Rotation DONE" << endl;
 
-      cout << "rotated" << endl;
-
+      // ROS: manipulating prismatic
+      advertise_manipulation_state("prismatic start");
       pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
       pose.pos.x += input.joint_pos(1);
       t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
+      // ROS: done prismatic
+      advertise_manipulation_state("prismatic stop");
+      cout << "Prismatic DONE" << endl;
+
     }
   }
 
   /// move to the given position
   void move_pris(double joint_value) {
     auto pos = activity.machine->s->world.getShapeByName("endeffL")->X.pos;
-    auto rot = activity.machine->s->world.getShapeByName("endeffL")->X.rot;
+    activity.machine->s->world.getShapeByName("endeffL")->X.rot;
 
     //activity.machine->add(new AlignEffTo("endeffL", {joint_value, pos.y, pos.z}, {1, 0, 0}));
     auto action = activity.machine->add(
@@ -251,10 +265,17 @@ public:
     activity.machine->waitForActionCompletion(action);
   }
 
+  void advertise_manipulation_state(const char* data) {
+    std_msgs::String msg;
+    msg.data = data;
+    pub_moving.publish(msg);
+  }
+
   // data
   ActionSystem activity;
+  ros::NodeHandle n;
+  ros::Publisher pub_moving;
 };
-
 
 // ============================================================================
 int main(int argc, char** argv)
@@ -267,6 +288,8 @@ int main(int argc, char** argv)
   // test_collision();
   // do_the_dance();
   // testActionMachine();
+
+  ros::init(argc, argv, "IcraExperiment");
 
   IcraExperiment experiment;
   experiment.run();
