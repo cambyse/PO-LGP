@@ -407,6 +407,7 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
                 obs.x = x[steps]();
                 obs.y = y[steps]();
                 obs.dual = dual(steps);
+
                 obs.height = heights(0);
 
                 NODE* temp = addNode_SingleParticle(node, x,y,dual, obs, steps, heights(0), horizon);

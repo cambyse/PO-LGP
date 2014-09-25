@@ -44,7 +44,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
     P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);/*/
-  world.getBodyByName("target")->X.pos.z = height + 0.12;
+  world.getBodyByName("target")->X.pos.z = height + 0.42;
   TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
@@ -74,7 +74,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   UnConstrainedP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
+    optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=500, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
     P.costReport(false);
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.aulaUpdate(.9,x);
@@ -159,33 +159,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   // remaining 100 steps is for reaching to the target.
   for(uint t=0;t<x.d0 + 100;t++){
     MC.setState(q, qdot);
-/*/
 
-    // POMDP's online action selection
-    #ifdef USE_DUAL
-    observation = pd_c->infraRed_obs;
-    //cout<<"observation "<<observation<<endl;
-    prev = index;
-   if(t<y.d0){
-        for(uint sample = 0; sample < alldual.d0 ; sample++){
-            //observation: equivalent to touch or not?
-
-            if(particles(sample)){
-                //un-touch: but lambda > 0 (desired touch), then eliminate this particle (sample)
-                if((observation < -1e-2) && (alldual[sample](t) > 0)){
-                    particles(sample) = false;
-                    eligible_counts = eligible_counts - 1;
-                }
-                else if((observation > -1e-2) && (alldual[sample](t) == 0)){
-                    particles(sample) = false;
-                    eligible_counts = eligible_counts - 1;
-                }else
-                    index = sample;
-            }
-        }
-   }
-   #endif
-/*/
    //adapt the PD task references following the plan
 
       if(prev!=index) cout<<" at "<<t<<"; using model # "<<index << " "<<endl;
@@ -206,14 +180,14 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
     if(pd_c->desiredApproach.y.N){
       d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
       if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
-        est_target->X.pos.z = endeff->X.pos.z + 0.1; //est_target position update
+        est_target->X.pos.z = endeff->X.pos.z + 0.4; //est_target position update
       }
     }
 #endif
     //external sinus on the table height
-    table->X.pos.z = mean_table_height+sin_jitter*::sin(double(t)/15);
+//    table->X.pos.z = mean_table_height+sin_jitter*::sin(double(t)/15);
 #ifdef USE_DUAL
-    plane_constraint->planeParams(3) = table->X.pos.z + 0.02;
+//    plane_constraint->planeParams(3) = table->X.pos.z + 0.02;
 #endif
 
     //operational space loop
@@ -262,7 +236,7 @@ int main(int argc,char** argv){
 
   //compute the primal and dual trajectories
   arr heights;
-  uint numSamples = 3;
+  uint numSamples = 2;
   heights.resize(numSamples);
   arr allX, allY, allDual;
   arr values; //2-dim: sample, time
@@ -270,7 +244,7 @@ int main(int argc,char** argv){
 
   for(uint i=0;i<numSamples;i++){
       //1. very large variance (1.0)
-      heights(i) = .6 + 0.1*rnd.gauss();
+      heights(i) = .68;// + 0.1*rnd.gauss();
       //2. trajectory optimization: return primal,dual trajectories, and value functions (at each time slice)
       arr x, y, dual;
       getTrajectory(x, y, dual, world, heights(i),values[i](), T);
@@ -295,7 +269,7 @@ int main(int argc,char** argv){
   orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
   world.setJointState(allX[0][0]);
   for(uint i=0;i<10;i++){
-    world.getBodyByName("table")->X.pos.z = .6 + 0.1*rnd.gauss();
+    world.getBodyByName("table")->X.pos.z = .60;// + 0.1*rnd.gauss();
     POMDPExecution(allX, allY, allDual, world, i);
   }
 

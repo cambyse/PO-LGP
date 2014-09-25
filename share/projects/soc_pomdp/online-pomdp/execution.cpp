@@ -5,6 +5,7 @@
 #include <vector>
 
 
+
 using namespace std;
 
 
@@ -37,7 +38,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
   //MODIFY the target location relatively to the height +0.12 = 0.1 + 0.02 (0.02 is table width).
-  world.getBodyByName("target")->X.pos.z = height + 0.12;
+  world.getBodyByName("target")->X.pos.z = height + 0.42;
 
   TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
@@ -48,11 +49,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e3);
 
+
+
     if(stickyness){
-        stickyWeight = .5;
+
+        TaskCost *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+        sticky->setCostSpecs(0, P.T, {0.}, 1.);
+
         P.makeContactsAttractive = true;
     }else{
-        stickyWeight = .0;
+       // stickyWeight = .0;
         P.makeContactsAttractive = false;
     }
 
@@ -86,13 +92,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
   if(&dual) dual = UnConstrainedP.lambda;
 
-  //heuristic here (I don't want too stickyness)
-  for(int index=0;index<dual.d0;index++)
-      if(dual(index) > 0) dual(index) = 0.5;
-  //cout<< " x " <<x[0]<<endl;
-//  cout<< dual<<endl;
 }
-
 
 
 
@@ -136,13 +136,16 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
   PlaneConstraint *plane_constraint = new PlaneConstraint(world, "endeff", ARR(0,0,-1,table->X.pos.z+0.02));
   ConstraintForceTask *pd_c =
       MC.addConstraintForceTask("planeConstraint", plane_constraint );
+   pd_c->setPrecision(1e4);
+
  // pd_c->desiredApproach.prec = .1;
 //      MC.addConstraintForceTask("touchTable",
 //                                new PairCollisionConstraint(world, "endeff2", "table"));
 #endif
 
 
-  double tau = 0.01; 
+
+  double tau = 0.01;
 
   NODE*Root = fsc.getRoot();
   arr x = Root->AllX();
@@ -222,10 +225,13 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     if(pd_c->desiredApproach.y.N){
       d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
       if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
-        est_target->X.pos.z = endeff->X.pos.z + 0.1; //est_target position update
+        est_target->X.pos.z = endeff->X.pos.z + 0.4; //est_target position update
 
         //UPDATE height;
         estimate_height = est_target->X.pos.z;
+        /// update precision
+        cout<<"setting"<<endl;
+        pd_c->setPrecision(0.0);
       }
     }
 #endif
