@@ -1,5 +1,5 @@
 # kinematic graph
-body stem { X=<T t(0 0 1)>  type=2 mass=.1 size=[0.1 0.1 2 .1] fixed }
+body stem { X=<T t(0 0 1)>  type=2 mass=.1 size=[0.1 0.1 2 .1] fixed}
 
 body arm1 { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact}
 body arm2 { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact}

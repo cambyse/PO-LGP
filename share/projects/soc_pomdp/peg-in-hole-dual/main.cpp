@@ -38,9 +38,21 @@ int main(int argc,char **argv){
 
   getTrajectory(x, y, dual, world, x0, height, stickyness, T);
 
+  x >> FILE("x.dat");
+  y >> FILE("y.dat");
+  dual >> FILE("dual.dat");
 
+  x << FILE("x.dat");
+  y << FILE("y.dat");
+  dual << FILE("dual.dat");
 
   cout<<dual<<endl;
+
+  for(int t=0;t<x.d0;t++){
+      world.setJointState(x[t]);
+      world.gl().update(STRING(t), true, false, true);
+  }
+
 
 
 
@@ -53,8 +65,8 @@ int main(int argc,char **argv){
 
   for(uint i=0;i<10;i++){
       //table with changing heights
-    world.getBodyByName("hole")->X.pos.z = -.4;// .0 + 0.1*rnd.gauss();
-    world.getBodyByName("target")->X.pos.z = -.4;// .0 + 0.1*rnd.gauss();
+    world.getBodyByName("hole")->X.pos.z = .2;// .0 + 0.1*rnd.gauss();
+    world.getBodyByName("target")->X.pos.z = .2;// .0 + 0.1*rnd.gauss();
     //initial state
     world.setJointState(x[0]);
 
