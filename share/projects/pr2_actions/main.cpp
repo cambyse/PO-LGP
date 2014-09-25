@@ -1,6 +1,11 @@
 #include <pr2/actionMachine.h>
 #include <pr2/actions.h>
 
+// ROS stuff
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+
+
 void testActionMachine()
 {
   ActionSystem activity;
@@ -38,7 +43,6 @@ void testActionMachine()
   engine().close(activity);
 }
 
-
 void do_the_dance()
 {
   ActionSystem activity;
@@ -60,7 +64,6 @@ void do_the_dance()
   engine().close(activity);
 }
 
-
 void test_push()
 {
   ActionSystem activity;
@@ -76,7 +79,6 @@ void test_push()
 
   engine().close(activity);
 }
-
 
 void idle()
 {
@@ -116,29 +118,184 @@ void idle2()
   activity.machine->add(new CoreTasks());
   engine().open(activity);
 
-  activity.machine->add_sequence(
-      new MoveEffTo("endeffR", {.95, -.2, .9}),
-      new AlignEffTo("endeffR", {.95, 0, 0.}, {.95, 0, 0})
-  );
-  activity.machine->add_sequence(
-      new MoveEffTo("endeffL", {.95, .2, .9}),
-      new AlignEffTo("endeffL", {.95, 0, 0.}, {.95, 0, 0})
-  );
+  auto t = activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
+  activity.machine->waitForActionCompletion(t);
+  cout << "Done waiting" << endl;
+
+  activity.machine->add(new MoveEffTo("endeffR", {.8, -.2, .9}));
+//  activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
 
   activity.machine->waitForActionCompletion();
+  MT::wait(5);
+
+  // activity.machine->add(new MoveEffTo("endeffR", {.6, -.2, .9}));
+  // activity.machine->add(new AlignEffTo("endeffR", {1, 0, 0.}, {1, 0, 0}));
+  // activity.machine->waitForActionCompletion();
+
   engine().close(activity);
 }
 
+void set_q()
+{
+  ActionSystem activity;
+  activity.machine->add(new CoreTasks());
+  engine().open(activity);
+
+//   for (auto joint : activity.machine->s->world.joints)
+//     cout << joint->qIndex << " " << joint->name << endl;
+
+  int jointID = -(activity.machine->s->world.getJointByName("torso_lift_joint")->qIndex);
+  cout << "joint: " << jointID << endl;
+  activity.machine->add(new SetQ("XXX", jointID, 3));
+
+  activity.machine->waitForActionCompletion();
+  cout << "DONE" << endl;
+  engine().close(activity);
+}
+
+// ============================================================================
+struct UserInput {
+  arr joint_pos;
+  int check_joint_id;
+};
+
+UserInput get_input() {
+  UserInput input;
+  double tmp;
+
+  cout << "Enter rot (degrees):" << endl;
+  std::cin >> tmp;
+  input.joint_pos.append((double)tmp);
+
+  cout << "Enter pris (m):" << endl;
+  std::cin >> tmp;
+  input.joint_pos.append((double)tmp);
+
+  cout << "Joint id to check" << endl;
+  std::cin >> input.check_joint_id;
+
+  cout << "done..." << endl;
+
+  return input;
+}
+
+class IcraExperiment
+{
+public:
+  IcraExperiment()
+    :activity()
+  {
+    pub_moving = n.advertise<std_msgs::String>("/moving", 1000);
+
+    activity.machine->add(new CoreTasks());
+    engine().open(activity);
+  }
+
+  virtual ~IcraExperiment()
+  {
+    engine().close(activity);
+  }
+
+  void run()
+  {
+    ors::Transformation pose; pose.setZero();
+    MT::wait(1.);
+    // align
+    pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+    //pose.pos.x += .2;
+    //pose.pos.y += .1;
+    //pose.pos.z -= .1;
+    //pose.rot.setDeg(90, 1, 0 ,0);
+
+    cout << "aligning..." << endl;
+    auto t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+    activity.machine->waitForActionCompletion(t);
+    cout << "Done" << endl;
+
+    int jointID = -(activity.machine->s->MP.world.getJointByName("l_gripper_joint")->qIndex);
+    GroundedAction* action = activity.machine->add( new SetQ("XXX", jointID, {.0}));
+    action->tasks(0)->setGains(2000, 0);
+
+    while (true){
+      UserInput input = get_input();
+
+      // ROS: manipulating rotation
+      advertise_manipulation_state("rotation start");
+
+      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      cout << input.joint_pos(0) << endl;
+      cout << pose.rot << endl;
+      pose.addRelativeRotationDeg(input.joint_pos(0), 1, 0, 0);
+      cout << pose.rot << endl;
+      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      activity.machine->waitForActionCompletion(t);
+      // ROS: done rotation
+      advertise_manipulation_state("rotation stop");
+      cout << "Rotation DONE" << endl;
+
+      // ROS: manipulating prismatic
+      advertise_manipulation_state("prismatic start");
+      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      pose.pos.x += input.joint_pos(1);
+      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      activity.machine->waitForActionCompletion(t);
+      // ROS: done prismatic
+      advertise_manipulation_state("prismatic stop");
+      cout << "Prismatic DONE" << endl;
+
+    }
+  }
+
+  /// move to the given position
+  void move_pris(double joint_value) {
+    auto pos = activity.machine->s->world.getShapeByName("endeffL")->X.pos;
+    activity.machine->s->world.getShapeByName("endeffL")->X.rot;
+
+    //activity.machine->add(new AlignEffTo("endeffL", {joint_value, pos.y, pos.z}, {1, 0, 0}));
+    auto action = activity.machine->add(
+        new MoveEffTo("endeffL", {joint_value, pos.y, pos.z}));
+    activity.machine->waitForActionCompletion(action);
+  }
+
+  /// rotate to the given position
+  void move_joint(double joint_value, char* joint_name="l_wrist_roll_joint") {
+    int jointID = -(activity.machine->s->MP.world.getJointByName(joint_name)->qIndex);
+    GroundedAction* action = activity.machine->add(
+        new SetQ("XXX", jointID, {joint_value}));
+    activity.machine->waitForActionCompletion(action);
+  }
+
+  void advertise_manipulation_state(const char* data) {
+    std_msgs::String msg;
+    msg.data = data;
+    pub_moving.publish(msg);
+  }
+
+  // data
+  ActionSystem activity;
+  ros::NodeHandle n;
+  ros::Publisher pub_moving;
+};
 
 // ============================================================================
 int main(int argc, char** argv)
 {
   MT::initCmdLine(argc, argv);
-//   test_push();
+  // test_push();
   // idle();
   // idle2();
-//  test_collision();
-   do_the_dance();
+  // return 0;
+  // test_collision();
+  // do_the_dance();
   // testActionMachine();
+
+  ros::init(argc, argv, "IcraExperiment");
+
+  IcraExperiment experiment;
+  experiment.run();
+
+  // set_q();
+  // do_the_dance();
+
   return 0;
 }

@@ -46,6 +46,8 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   this->y = y;
   this->v = ydot;
 //  cout <<" TASK " <<name <<":  \tPterm=(" <<Pgain <<'*' <<length(y_ref-y) <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-ydot) <<')' <<endl;
+  if(flipTargetScalarProduct && scalarProduct(y, y_ref) < 0)
+    y_ref = -y_ref;
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 

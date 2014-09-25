@@ -45,17 +45,20 @@ struct PDtask{
   arr y_ref; ///< position reference
   arr v_ref; ///< velocity reference
   /// @}
-
   /// @{ @name Parameters of the PD controller or attractor dynamics
   double Pgain, Dgain;
   /// @}
 
+  /// @{ @name Conditional flip variable for quaternion targets
+  bool flipTargetScalarProduct;
+  /// @}
+  //
   /// @{ @name The observations when LAST getDesiredAcceleration was called
   /// Use carefully! (in online mode only)
   arr y, v;
   /// @}
 
-  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
+  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){}
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
