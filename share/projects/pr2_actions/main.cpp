@@ -121,7 +121,7 @@ void idle2()
   cout << "Done waiting" << endl;
 
   activity.machine->add(new MoveEffTo("endeffR", {.8, -.2, .9}));
-  activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
+//  activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
 
   activity.machine->waitForActionCompletion();
   MT::wait(5);
@@ -163,7 +163,7 @@ UserInput get_input() {
 
   cout << "Enter rot (degrees):" << endl;
   std::cin >> tmp;
-  input.joint_pos.append((double)tmp * M_PI / 180.);
+  input.joint_pos.append((double)tmp);
 
   cout << "Enter pris (m):" << endl;
   std::cin >> tmp;
@@ -194,42 +194,58 @@ public:
 
   void run()
   {
+    ors::Transformation pose; pose.setZero();
+    MT::wait(1.);
     // align
-    auto current_pos = activity.machine->s->world.getShapeByName("endeffL")->X.pos.x;
-    move_pris(current_pos);
+    pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+    //pose.pos.x += .2;
+    //pose.pos.y += .1;
+    //pose.pos.z -= .1;
+    //pose.rot.setDeg(90, 1, 0 ,0);
+    
+    cout << "aligne.." << endl;
+    auto t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+    activity.machine->waitForActionCompletion(t);
     cout << "aligned" << endl;
 
-    // close gripper
-    move_joint(0., "l_gripper_joint");
-    cout << "girpper closed" << endl;
+    int jointID = -(activity.machine->s->MP.world.getJointByName("l_gripper_joint")->qIndex);
+    GroundedAction* action = activity.machine->add( new SetQ("XXX", jointID, {.0}));
+    action->tasks(0)->setGains(2000, 0);
 
     while (true){
       UserInput input = get_input();
 
-      move_joint(input.joint_pos(0));
-      move_pris(input.joint_pos(1));
+      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      cout << input.joint_pos(0) << endl;
+      cout << pose.rot << endl;
+      pose.addRelativeRotationDeg(input.joint_pos(0), 1, 0, 0);
+      cout << pose.rot << endl;
+      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      activity.machine->waitForActionCompletion(t);
 
-      // check
-      if (input.check_joint_id) {
-        // move_pris(current_pos + delta);
-      }
-      else {
-        // move_joint(current_pos + delta);
-      }
+      cout << "rotated" << endl;
+
+      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      pose.pos.x += input.joint_pos(1);
+      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      activity.machine->waitForActionCompletion(t);
     }
   }
 
   /// move to the given position
   void move_pris(double joint_value) {
-    activity.machine->add(new OrientationQuat("endeffL", {1, 1, 0, 0}));
+    auto pos = activity.machine->s->world.getShapeByName("endeffL")->X.pos;
+    auto rot = activity.machine->s->world.getShapeByName("endeffL")->X.rot;
+
+    //activity.machine->add(new AlignEffTo("endeffL", {joint_value, pos.y, pos.z}, {1, 0, 0}));
     auto action = activity.machine->add(
-        new MoveEffTo("endeffL", {joint_value, .3, 1}));
+        new MoveEffTo("endeffL", {joint_value, pos.y, pos.z}));
     activity.machine->waitForActionCompletion(action);
   }
 
   /// rotate to the given position
   void move_joint(double joint_value, char* joint_name="l_wrist_roll_joint") {
-    int jointID = - (activity.machine->s->world.getJointByName(joint_name)->qIndex);
+    int jointID = -(activity.machine->s->MP.world.getJointByName(joint_name)->qIndex);
     GroundedAction* action = activity.machine->add(
         new SetQ("XXX", jointID, {joint_value}));
     activity.machine->waitForActionCompletion(action);
