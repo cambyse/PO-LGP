@@ -23,6 +23,19 @@ struct MoveEffTo : GroundedAction {
 };
 
 //===========================================================================
+struct PoseTo : GroundedAction {
+  MT::String effName;
+  arr effPos;
+  arr orientation;
+
+  PoseTo(const char* effName, const arr& effPos, const arr& orientation);
+
+  /// @name Inherited/overwritten stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
 struct AlignEffTo : GroundedAction {
   MT::String effName;
   arr effPos;
