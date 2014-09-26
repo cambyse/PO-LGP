@@ -15,6 +15,23 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_8">
+    <item row="1" column="0" colspan="3">
+     <widget class="QTextEdit" name="graph_editor">
+      <property name="readOnly">
+       <bool>false</bool>
+      </property>
+      <property name="acceptRichText">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QLineEdit" name="file_name">
+      <property name="text">
+       <string>/home/robert/MLR/GraphEditor/test_input.txt</string>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="2">
      <widget class="QPushButton" name="open_file">
       <property name="text">
@@ -22,17 +39,10 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="file_name">
+    <item row="2" column="0">
+     <widget class="QRadioButton" name="raw_display">
       <property name="text">
-       <string>/home/robert/MLR/GraphEditor/test_input.txt</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="3">
-     <widget class="QTextBrowser" name="graph_editor">
-      <property name="readOnly">
-       <bool>false</bool>
+       <string>Raw Display</string>
       </property>
      </widget>
     </item>
@@ -44,7 +54,7 @@
      <x>0</x>
      <y>0</y>
      <width>748</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -120,8 +130,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>610</x>
-     <y>318</y>
+     <x>747</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>
@@ -132,8 +142,8 @@
    <slot>setChecked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>610</x>
-     <y>318</y>
+     <x>747</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -189,9 +199,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>raw_display</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>Editor</receiver>
+   <slot>parse_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>64</x>
+     <y>576</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>201</x>
+     <y>597</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>open_file()</slot>
   <slot>parse_file(QString)</slot>
+  <slot>parse_file()</slot>
  </slots>
 </ui>

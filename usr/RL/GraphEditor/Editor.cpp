@@ -26,24 +26,28 @@ void Editor::parse_file(QString file_name)
 {
     // open and parse input file
     QFile input_file(file_name);
-    list<QString> input_lines;
+    QString output = "<font face=\"monospace\">\n";
     if(!input_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         ui->graph_editor->setText(QString("Error: Could not open input file '%1'").arg(file_name));
     } else {
-        // read line by line
+        // parse line by line
         QTextStream input_file_stream(&input_file);
         //input_file_stream.setCodec("UTF-8");
         while(!input_file_stream.atEnd()) {
-            QString line = input_file_stream.readLine();
-            input_lines.push_back(line);
+            parser.parse_input(input_file_stream.readLine());
+            output += parser.get_output()+"<br>\n";
         }
-        // print input file
-        ui->graph_editor->setText("");
-        for(auto line : input_lines) {
-            parser.parse_input(line);
-            ui->graph_editor->append(parser.get_output());
+        if(ui->raw_display->isChecked()) {
+            ui->graph_editor->setPlainText(output.replace("&nbsp;"," "));
+        } else {
+            ui->graph_editor->setHtml(output);
         }
     }
+}
+
+void Editor::parse_file()
+{
+    parse_file(ui->file_name->text());
 }
 
 void Editor::open_file()

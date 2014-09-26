@@ -27,10 +27,11 @@ private:
         const QString name;
     private:
         transition_list_t transitions;
-        transition_t default_transition;
+        transition_function_t error_function;
+        transition_result_t error_result;
         //---methods---//
     public:
-        Node(QString n, transition_t default_trans = transition_t("", [](QString){}, transition_result_t(nullptr, true)));
+        Node(QString n, transition_function_t error_func = [](QString){}, transition_result_t error_res = transition_result_t(nullptr, true));
         ~Node() = default;
         virtual void add_transition(QString, transition_function_t, node_ptr_t, bool);
         virtual transition_result_t transition(QString);
@@ -40,7 +41,8 @@ private:
     //---members---//
 private:
     QString output;
-    node_list_t node_list;
+    node_ptr_t start_node;
+    node_ptr_t error_node;
     QTextEdit * console = nullptr;
     QString toHTML(QString s) const;
 
@@ -48,7 +50,7 @@ private:
 public:
     Parser();
     virtual QString get_output() const { return output; }
-    virtual void parse_input(QString input);
+    virtual bool parse_input(QString input);
     virtual void set_console(QTextEdit * c) { console = c; }
 
 };

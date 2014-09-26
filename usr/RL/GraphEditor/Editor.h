@@ -22,6 +22,7 @@ private:
     Parser parser;
 private slots:
     void parse_file(QString file_name);
+    void parse_file();
     void open_file();
     void quit();
 };

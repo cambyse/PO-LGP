@@ -1,3 +1,6 @@
+## genertic template to define an item
+
+key_string1 key_string2 (parent1 parent2) = value   #value is a string in this case
 
 ## a trivial graph
 x             # key=x, value=true, parents=none
