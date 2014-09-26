@@ -155,35 +155,35 @@ void set_q()
 
 // ============================================================================
 struct UserInput {
-  arr joint_pos;
-  int check_joint_id;
+  double rot;
+  double pris;
 };
 
 UserInput get_input() {
   UserInput input;
   double tmp;
 
-  cout << "Enter rot (degrees):" << endl;
+  cout << "Enter relative pris (cm):" << endl;
   std::cin >> tmp;
-  input.joint_pos.append((double)tmp);
+  input.pris = (double)tmp / 100.;
 
-  cout << "Enter pris (m):" << endl;
+  cout << "Enter relative rot (degrees):" << endl;
   std::cin >> tmp;
-  input.joint_pos.append((double)tmp);
+  input.rot = tmp;
 
-  cout << "Joint id to check" << endl;
-  std::cin >> input.check_joint_id;
-
-  cout << "done..." << endl;
+  // cout << "Joint id to check" << endl;
+  // std::cin >> input.check_joint_id;
+  cout << "---------------------------" << endl;
+  cout << "Input was: (p:" << input.pris << " r:" << input.rot << ")" << endl;
+  cout << "---------------------------" << endl;
 
   return input;
 }
 
-class IcraExperiment
-{
+class IcraExperiment {
 public:
   IcraExperiment()
-    :activity()
+      : activity()
   {
     pub_moving = n.advertise<std_msgs::String>("/moving", 1000);
 
@@ -217,27 +217,29 @@ public:
     action->tasks(0)->setGains(2000, 0);
 
     while (true){
+      cout << "=======================================================" << endl;
       UserInput input = get_input();
 
       // ROS: manipulating rotation
       advertise_manipulation_state("rotation start");
 
       pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
-      cout << input.joint_pos(0) << endl;
-      cout << pose.rot << endl;
-      pose.addRelativeRotationDeg(input.joint_pos(0), 1, 0, 0);
-      cout << pose.rot << endl;
-      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      // cout << input.rot << endl;
+      // cout << pose.rot << endl;
+      pose.addRelativeRotationDeg(input.rot, 1, 0, 0);
+      // cout << pose.rot << endl;
+      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done rotation
       advertise_manipulation_state("rotation stop");
       cout << "Rotation DONE" << endl;
+      MT::wait(2);
 
       // ROS: manipulating prismatic
       advertise_manipulation_state("prismatic start");
       pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
-      pose.pos.x += input.joint_pos(1);
-      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      pose.pos.x += input.pris;
+      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done prismatic
       advertise_manipulation_state("prismatic stop");
