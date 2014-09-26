@@ -5,12 +5,13 @@ void testForManyLPs(){
   ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod",augmentedLag);
   ofstream fil(STRING("z.all."<<MethodName[constrainedMethod]));
 
-  rnd.seed(0);
+  rnd.seed(2);
   uintA LPsizes={ 20, 50, 100, 200, 500 };
   uint K=10;
 
   for(uint s:LPsizes){
     for(uint k=0;k<K;k++){
+      cout <<"testing size " <<s <<" trial " <<k <<endl;
       //-- initial x
       arr x = zeros(s);
 

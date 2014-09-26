@@ -37,7 +37,7 @@ int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
 OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
   x(_x), f(_f), o(_o){
   alpha = o.initStep;
-  lambda = o.damping;
+  beta = o.damping;
   it=0;
   evals=0;
   additionalRegularizer=NULL;
@@ -49,7 +49,7 @@ void OptNewton::reinit(){
   if(additionalRegularizer)  fx += scalarProduct(x,(*additionalRegularizer)*vectorShaped(x));
 
   //startup verbose
-  if(o.verbose>1) cout <<"*** optNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
+  if(o.verbose>1) cout <<"*** optNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" beta=" <<beta <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl;
   if(o.verbose>0) fil.open("z.opt");
   if(o.verbose>0) fil <<0 <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha;
@@ -63,15 +63,15 @@ OptNewton::StopCriterion OptNewton::step(){
   x_changed=false;
 
   it++;
-  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <</*std::setprecision(3) <<*/lambda <<flush;
+  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <</*std::setprecision(3) <<*/beta <<flush;
 
   if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
 
   //compute Delta
   arr R=Hx;
-  if(lambda) { //Levenberg Marquardt damping
-    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += lambda; //(R(i,0) is the diagonal in the packed matrix!!)
-    else for(uint i=0; i<R.d0; i++) R(i,i) += lambda;
+  if(beta) { //Levenberg Marquardt damping
+    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
+    else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
   }
   if(additionalRegularizer) {
     if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
@@ -84,7 +84,7 @@ OptNewton::StopCriterion OptNewton::step(){
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
 
   //lazy stopping criterion: stop without any update
-  if(lambda<2. && absMax(Delta)<1e-1*o.stopTolerance){
+  if(beta<2. && absMax(Delta)<1e-1*o.stopTolerance){
     if(o.verbose>1) cout <<" \t - NO UPDATE" <<endl;
     return stopCrit1;
   }
@@ -105,14 +105,14 @@ OptNewton::StopCriterion OptNewton::step(){
       gx = gy;
       Hx = Hy;
       if(fy<=fx){
-        // if(alpha>.9) lambda = .5*lambda;
-        lambda *= o.dampingDec;
+        // if(alpha>.9) beta = .5*beta;
+        beta *= o.dampingDec;
 //        alpha = pow(alpha, o.stepInc);
 //        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
         alpha *= o.stepInc;
         if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
-        lambda *= o.dampingInc;
+        beta *= o.dampingInc;
         alpha *= o.stepDec;
       }
       break;
@@ -120,7 +120,7 @@ OptNewton::StopCriterion OptNewton::step(){
       if(o.verbose>1) cout <<" - reject" <<std::endl <<"\t\t\t\t";
       //reject new points and adapte stepsize|damping
       if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      lambda = lambda*o.dampingInc;
+      beta = beta*o.dampingInc;
       alpha = alpha*o.stepDec;
       if(o.dampingInc!=1.) break; //we need to recompute Delta
     }
@@ -132,8 +132,8 @@ OptNewton::StopCriterion OptNewton::step(){
 
   //stopping criteria
 #define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return ret; }
-  STOPIF(lambda<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
-  STOPIF(lambda<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
+  STOPIF(beta<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
+  STOPIF(beta<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
   STOPIF(evals>=o.stopEvals, stopCritEvals);
   STOPIF(it>=o.stopIters, stopCritEvals);
 #undef STOPIF

@@ -24,9 +24,14 @@ arr moveTo(ors::KinematicWorld& world,
   MotionProblem MP(world);
   //  MP.loadTransitionParameters(); //->move transition costs to tasks!
   world.swift().initActivations(world);
-  MP.world.watch(true);
+  MP.world.watch(false);
 
   TaskCost *c;
+
+  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c->map.order=2;
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
   c->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
@@ -41,10 +46,6 @@ arr moveTo(ors::KinematicWorld& world,
     c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
   }
   c->setCostSpecs(0, MP.T, {0.}, colPrec);
-
-  c = MP.addTask("transitions", new TransitionTaskMap(world));
-  c->map.order=2;
-  c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
     ors::Vector axis;
