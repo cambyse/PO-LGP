@@ -3,8 +3,8 @@
 
 body table { X=<T t(0 0 .68)>  type=0 size=[2 2 .04 0] color=[.3 .3 .3] contact fixed }
 
-body target { X=<T t(0.2 -0.25 .8)>  type=1 size=[0 0 0 .02] color=[1 .5 0] fixed }
-shape truetarget(table) { rel=<T t(0.2-0.25 .12)>  type=1 size=[0 0 0 .02] color=[1 0 0] fixed }
+body target { X=<T t(0.45 -0.45 .8)>  type=1 size=[0 0 0 .02] color=[1 .5 0] fixed }
+shape truetarget(table) { rel=<T t(0.45 -0.45 .42)>  type=1 size=[0 0 0 .02] color=[1 0 0] fixed }
 #shape miniTarget(table) { rel=<T t(0 -.5 .3)> type=1 size=[0 0 0 .05] color=[0 .5 0] }
 
 shape endeff (R_HAND_M_FINGER_KNUCKLE_3){ type=5 rel=<T t(.058 0 .007)> size=[.02 0 0 .1] }

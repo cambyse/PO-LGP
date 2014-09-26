@@ -53,8 +53,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   P.setInterpolatingCosts(vec, MotionProblem::finalOnly, ARRAY(target.w,target.x,target.y,target.z), 1e3);/*/
 
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.2))); //plane is 0.2 (table's width = 0.4) above the hole->z
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e1);
+  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.2 + 0.05)));//0.2 is table width  //0.05 above table surface to avoid slippery
+  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e2);
 
 
 #if 1  //CONSTRAINT
@@ -67,10 +67,13 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   if(stickyness){
-    stickyWeight = 1.;
+
+    TaskCost *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+    sticky->setCostSpecs(0, P.T, {0.}, 1.);
+
     P.makeContactsAttractive = true;
   }else{
-    stickyWeight = 0.;
+    //stickyWeight = 0.;
     P.makeContactsAttractive = false;
   }
 
@@ -84,7 +87,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   for(uint k=0;k<20;k++){
-   optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=500, damping=1e-3, stopTolerance=1e-5, maxStep=.5));
+   optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.aulaUpdate(.9,x);
@@ -103,8 +106,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
       pos->map.phi(y[t](), NoArr, world);
     }
   }
+  uint index = 0;
+  dual.resize(x.d0);
+  if(&dual) {
+      for(int i=1;i<UnConstrainedP.lambda.d0;i=i+2){
+          dual(index) = UnConstrainedP.lambda(i);
 
-  if(&dual) dual = UnConstrainedP.lambda;
+          index++;
+      }
+  }
+
 }
 
 
@@ -138,7 +149,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   //plane constraint task
 #define USE_DUAL
 #ifdef USE_DUAL
-  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "peg", ARR(0,0,-1, table->X.pos.z + 0.2));
+  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "peg", ARR(0,0,-1, table->X.pos.z + 0.2 + 0.05));  //0.05 above table surface to avoid slippery
   ConstraintForceTask *pd_c = MC.addConstraintForceTask("planeConstraint", plane_constraint );
 
   MC.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
@@ -153,11 +164,13 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
 
    //adapt the PD task references following the plan
 
+   //cout<< pd_y->y_ref <<endl;
+   //cout<<"endeff->X.pos "<< endeff->X.pos <<endl;
 
    if(t<y.d0){
         pd_y->y_ref = y[t];
         pd_x->y_ref = x[t];
-  #ifdef USE_DUAL
+  #ifdef USE_DUAL       
         pd_c->desiredForce = dual(t);
   #endif
     }

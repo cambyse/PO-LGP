@@ -10,6 +10,7 @@
 #include "pomdp.h"
 #include "execution.h"
 
+
 //NOTE:
 // 1. The stickyweight is currently set to 10.0 (high? vs. 1.0 previously)
 
@@ -22,7 +23,7 @@ int main(int argc,char** argv){
 
   ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
   uint T = 200; //time horizon
-  uint numSamples = 70;
+  uint numSamples = 4;
 
 
 
@@ -80,8 +81,6 @@ int main(int argc,char** argv){
 
 
 
-
-
   cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
 
 
@@ -100,10 +99,12 @@ int main(int argc,char** argv){
 
   ors::Body *est_target = world.getBodyByName("target");
 
-  double est = 0.6;
+  double est = 0.6+0.4;
 
-  for(uint i=0;i<3;i++){
-    world.getBodyByName("table")->X.pos.z = 0.75;
+  for(uint i=0;i<10;i++){
+    world.getBodyByName("table")->X.pos.z = 0.65;//+ 0.1*rnd.gauss();
+
+
     world.setJointState(x0);
     POMDPExecution(fsc, world, i,est);
   }

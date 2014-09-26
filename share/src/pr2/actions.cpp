@@ -21,11 +21,11 @@ void CoreTasks::initYourself(ActionMachine& actionMachine) {
   limits->prec=100.;
   tasks.append(limits);
 
-  PDtask* coll = actionMachine.s->MP.addPDTask(
-      "collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
-  coll->y_ref.setZero();
-  coll->v_ref.setZero();
-  tasks.append(coll);
+  //PDtask* coll = actionMachine.s->MP.addPDTask(
+      //"collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  //coll->y_ref.setZero();
+  //coll->v_ref.setZero();
+  //tasks.append(coll);
 }
 
 // ============================================================================
@@ -51,7 +51,42 @@ void MoveEffTo::initYourself(ActionMachine& actionMachine) {
 
 bool MoveEffTo::finishedSuccess(ActionMachine& M) {
   PDtask *task=tasks(0);
+  return false;
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
+}
+
+// ============================================================================
+// PoseTo
+
+PoseTo::PoseTo(const char* effName, const arr& effPos, const arr& orientation)
+    : GroundedAction("PoseTo",2),
+      effName(effName),
+      effPos(effPos),
+      orientation(orientation)
+{
+  SymbolL::memMove=true;
+  PDtaskL::memMove=true;
+}
+
+void PoseTo::initYourself(ActionMachine& actionMachine) {
+  PDtask *task;
+  task = actionMachine.s->MP.addPDTask( 
+      STRING("PosTo_" << effName), 1., .8, posTMT, effName);
+  task->y_ref = effPos;
+  tasks.append(task);
+
+  task = actionMachine.s->MP.addPDTask(
+      STRING("OrientatationQuat_" << effName), 1., .8, quatTMT, effName, {0, 0, 0});
+  task->setTarget(orientation);
+  task->flipTargetScalarProduct = true;
+  tasks.append(task);
+}
+
+bool PoseTo::finishedSuccess(ActionMachine& M) {
+  PDtask *task0=tasks(0);
+  PDtask *task1=tasks(1);
+  return (task0->y.N==task0->y_ref.N && maxDiff(task0->y, task0->y_ref)<1e-2) 
+      && (task1->y.N == task1->y_ref.N && maxDiff(task1->y, task1->y_ref) < 1e-2);
 }
 
 // ============================================================================
@@ -79,6 +114,32 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 }
 
 // ============================================================================
+// OrientationQuat
+OrientationQuat::OrientationQuat(const char* effName, const arr& orientation)
+    : GroundedAction("OrientationQuat", 0)
+    , effName(effName)
+    , orientation(orientation)
+{
+  SymbolL::memMove=true;
+  PDtaskL::memMove=true;
+};
+
+void OrientationQuat::initYourself(ActionMachine& actionMachine) {
+  auto task = actionMachine.s->MP.addPDTask(
+      STRING("OrientatationQuat_" << effName), 2, .8, quatTMT, effName, {0, 0, 0});
+  task->setTarget(orientation);
+  task->flipTargetScalarProduct = true;
+  tasks.append(task);
+}
+
+bool OrientationQuat::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return false;
+  return (task->y.N == task->y_ref.N &&
+          maxDiff(task->y, task->y_ref) < .3);
+}
+
+// ============================================================================
 SetQ::SetQ(const char* effName, int jointID, double jointPos)
     : GroundedAction("SetQ", 0)
     , effName(effName)
@@ -93,13 +154,15 @@ void SetQ::initYourself(ActionMachine& actionMachine) {
   auto task = actionMachine.s->MP.addPDTask(
       effName, 2, .8, new DefaultTaskMap(qSingleTMT, jointID));
   task->setTarget({jointPos});
+  task->active = true;
   tasks.append(task);
 }
 
 bool SetQ::finishedSuccess(ActionMachine& M) {
   PDtask *task=tasks(0);
+  return false;
   return (task->y.N == task->y_ref.N &&
-          maxDiff(task->y, task->y_ref) < 1e-1);
+          maxDiff(task->y, task->y_ref) < 1e-3);
 }
 // ============================================================================
 // PushForce
