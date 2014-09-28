@@ -14,12 +14,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         Editor.cpp \
-        Parser.cpp \
-    QtUtil.cpp
+    ParserOld.cpp \
+    Parser.cpp \
+    util.cpp
 
 HEADERS  += Editor.h \
-        Parser.h \
-    QtUtil.h
+    ParserOld.h \
+    Parser.h \
+    util.h
 
 FORMS    += Editor.ui
 

@@ -19,11 +19,17 @@ public:
 
 private:
     Ui::Editor *ui;
-    Parser parser;
+    int editor_blocked_state;
+    QString editor_content;
+    QString read_file(QString file_name);
+    void parse_content(QString input);
+    void block_editor_signals();
+    void unblock_editor_signals();
 private slots:
-    void parse_file(QString file_name);
-    void parse_file();
+    void raw_display(bool raw);
+    void update_content();
     void open_file();
+    void save_file();
     void quit();
 };
 

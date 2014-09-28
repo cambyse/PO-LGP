@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>748</width>
-    <height>622</height>
+    <width>773</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,27 +15,22 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_8">
-    <item row="1" column="0" colspan="3">
-     <widget class="QTextEdit" name="graph_editor">
-      <property name="readOnly">
-       <bool>false</bool>
-      </property>
-      <property name="acceptRichText">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="2">
-     <widget class="QLineEdit" name="file_name">
-      <property name="text">
-       <string>/home/robert/MLR/GraphEditor/test_input.txt</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
+    <item row="0" column="1">
      <widget class="QPushButton" name="open_file">
+      <property name="minimumSize">
+       <size>
+        <width>65</width>
+        <height>25</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>65</width>
+        <height>25</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Browse...</string>
+       <string>&amp;Open</string>
       </property>
      </widget>
     </item>
@@ -46,6 +41,42 @@
       </property>
      </widget>
     </item>
+    <item row="0" column="2">
+     <widget class="QPushButton" name="pushButton">
+      <property name="minimumSize">
+       <size>
+        <width>65</width>
+        <height>25</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>65</width>
+        <height>25</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>&amp;Save</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="file_name">
+      <property name="text">
+       <string>/home/robert/MLR/GraphEditor/test_input.txt</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="3">
+     <widget class="QTextEdit" name="graph_editor">
+      <property name="readOnly">
+       <bool>false</bool>
+      </property>
+      <property name="acceptRichText">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -53,8 +84,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>748</width>
-     <height>19</height>
+     <width>773</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -82,19 +113,7 @@
    <widget class="QWidget" name="dockWidgetContents_14">
     <layout class="QGridLayout" name="gridLayout_9">
      <item row="0" column="0">
-      <widget class="QGraphicsView" name="graphicsView_3"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QTextEdit" name="console"/>
+      <widget class="QGraphicsView" name="visualization"/>
      </item>
     </layout>
    </widget>
@@ -158,28 +177,12 @@
    <slot>open_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>435</x>
-     <y>49</y>
+     <x>417</x>
+     <y>71</y>
     </hint>
     <hint type="destinationlabel">
      <x>471</x>
      <y>592</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>file_name</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>Editor</receiver>
-   <slot>parse_file(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>298</x>
-     <y>62</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>408</x>
-     <y>598</y>
     </hint>
    </hints>
   </connection>
@@ -203,22 +206,55 @@
    <sender>raw_display</sender>
    <signal>toggled(bool)</signal>
    <receiver>Editor</receiver>
-   <slot>parse_file()</slot>
+   <slot>raw_display(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>64</x>
-     <y>576</y>
+     <x>73</x>
+     <y>627</y>
     </hint>
     <hint type="destinationlabel">
-     <x>201</x>
-     <y>597</y>
+     <x>258</x>
+     <y>633</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Editor</receiver>
+   <slot>save_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>457</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>401</x>
+     <y>624</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>graph_editor</sender>
+   <signal>textChanged()</signal>
+   <receiver>Editor</receiver>
+   <slot>update_content()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>343</x>
+     <y>313</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>470</x>
+     <y>627</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
   <slot>open_file()</slot>
-  <slot>parse_file(QString)</slot>
-  <slot>parse_file()</slot>
+  <slot>save_file()</slot>
+  <slot>update_content()</slot>
+  <slot>raw_display(bool)</slot>
  </slots>
 </ui>

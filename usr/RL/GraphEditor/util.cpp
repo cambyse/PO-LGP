@@ -1,4 +1,4 @@
-#include "QtUtil.h"
+#include "util.h"
 
 #include <QString>
 
