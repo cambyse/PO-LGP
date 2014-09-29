@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
 #include <pr2_mechanism_model/tree.h>
+#include <pr2_mechanism_model/chain.h>
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
 #include <Algo/MLcourse.h>
@@ -28,7 +29,8 @@ class TreeControllerClass: public pr2_controller_interface::Controller
 {
 private:
   pr2_mechanism_model::JointState* joint_state_;
-  pr2_mechanism_model::Tree tree_;
+//  pr2_mechanism_model::Tree tree_;
+  pr2_mechanism_model::Chain chain_;
   pr2_mechanism_model::RobotState* robot_;
 
   KDL::JntArray jnt_pos_;
