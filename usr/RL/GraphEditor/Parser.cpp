@@ -29,7 +29,10 @@ Parser::KeyValueGraph Parser::parse_graph(const QString &input, QString &output)
 {
     // remove errors from end of input
     QString clean_input = input;
-    clean_input.remove(QRegExp(premature_end+"$"));
+    QString input_copy = input;
+    while(input_copy!=clean_input.remove(QRegExp(premature_end+"$"))) {
+        input_copy = clean_input;
+    }
     // hand over to parser
     PosIt in_it(clean_input);
     KeyValueGraph kvg;
@@ -667,4 +670,10 @@ QString Parser::toHtml(QChar c)
     QString s(c);
     toHtml(s);
     return s;
+}
+
+
+QString Parser::KeyValueGraph::dot()
+{
+    return R"(digraph G {compound=true;a -> b;c -> b;subgraph cluster1 {d -> e;}b -> e [lhead=cluster1,];})";
 }

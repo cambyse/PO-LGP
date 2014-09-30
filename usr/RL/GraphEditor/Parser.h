@@ -30,6 +30,7 @@ public:
         };
         std::list<Item> items;
         std::set<QString> keys;
+        QString dot();
     };
 
     /** Iterator for QString that tracks the position. */

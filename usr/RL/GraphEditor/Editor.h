@@ -27,9 +27,11 @@ private:
     void parse_content(QString input);
     void block_editor_signals();
     void unblock_editor_signals();
-    void kvg_to_tree(const Parser::KeyValueGraph & kvg);
     QTreeWidgetItem * item_to_tree_item(const Parser::KeyValueGraph::Item & item);
+    QString random_alpha_num(int n) const;
 private slots:
+    void kvg_to_tree();
+    void kvg_to_visual();
     void raw_display(bool raw);
     void update_content();
     void open_file();

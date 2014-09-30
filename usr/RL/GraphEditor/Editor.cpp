@@ -5,6 +5,7 @@
 
 #include <QtCore>
 #include <QFileDialog>
+#include <QGraphicsSvgItem>
 
 #include <list>
 
@@ -45,21 +46,33 @@ QString Editor::read_file(QString file_name)
 void Editor::parse_content(QString input)
 {
     // highlight
-    editor_content = "";
-    key_value_graph = Parser::parse_graph(input, editor_content);
-    editor_content = R"(<span style="font-family:monospace;font-size:10pt">)" + editor_content + R"(</span>)";
+    QString new_content = "";
+    key_value_graph = Parser::parse_graph(input, new_content);
+    new_content = R"(<span style="font-family:monospace;font-size:10pt">)" + new_content + R"(</span>)";
 
-    // display result (raw/rich text)
-    int old_pos = ui->graph_editor->textCursor().position();
-    block_editor_signals();
-    ui->graph_editor->setHtml(editor_content);
-    unblock_editor_signals();
-    QTextCursor new_cursor = ui->graph_editor->textCursor();
-    new_cursor.setPosition(old_pos);
-    ui->graph_editor->setTextCursor(new_cursor);
+    if(new_content!=editor_content) {
 
-    // display as tree
-    kvg_to_tree(key_value_graph);
+        editor_content = new_content;
+
+        // display result (raw/rich text)
+        int old_pos = ui->graph_editor->textCursor().position();
+        block_editor_signals();
+        ui->graph_editor->setHtml(new_content);
+        unblock_editor_signals();
+        QTextCursor new_cursor = ui->graph_editor->textCursor();
+        new_cursor.setPosition(old_pos);
+        ui->graph_editor->setTextCursor(new_cursor);
+
+        // display as tree
+        if(ui->tree_view_dock->isVisible()) {
+            kvg_to_tree();
+        }
+
+        // visualize
+        if(ui->visualization_dock->isVisible()) {
+            kvg_to_visual();
+        }
+    }
 }
 
 void Editor::block_editor_signals()
@@ -72,13 +85,51 @@ void Editor::unblock_editor_signals()
     ui->graph_editor->blockSignals(editor_blocked_state);
 }
 
-void Editor::kvg_to_tree(const Parser::KeyValueGraph & kvg)
+void Editor::kvg_to_tree()
 {
     auto tree = ui->tree_view;
     tree->clear();
-    for(const auto& item : kvg.items) {
+    for(const auto& item : key_value_graph.items) {
         tree->addTopLevelItem(item_to_tree_item(item));
     }
+}
+
+void Editor::kvg_to_visual()
+{
+    // random file names
+    QString dot_file_name = random_alpha_num(50);
+    QString svg_file_name = random_alpha_num(50);
+
+    // write to file
+    {
+        QFile outfile(dot_file_name);
+        if(!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            ERROR("Could not open file");
+        }
+        QTextStream dot_file_stream(&outfile);
+        dot_file_stream << key_value_graph.dot() << endl;
+    }
+
+    // generate svg
+    system(QString("dot -Tsvg -o %1 %2").arg(svg_file_name).arg(dot_file_name).toLatin1());
+
+    // display
+    QGraphicsScene * scene = ui->visualization->scene();
+    if(scene==nullptr) {
+        scene = new QGraphicsScene();
+        ui->visualization->setScene(scene);
+    }
+    scene->clear();
+    ui->visualization->resetTransform();
+
+    QGraphicsSvgItem * svg_item = new QGraphicsSvgItem(svg_file_name);
+    svg_item->setFlags(QGraphicsItem::ItemClipsToShape);
+    svg_item->setCacheMode(QGraphicsItem::NoCache);
+    svg_item->setZValue(0);
+
+    scene->addItem(svg_item);
+
+    scene->setSceneRect(svg_item->boundingRect().adjusted(-10, -10, 10, 10));
 }
 
 QTreeWidgetItem *Editor::item_to_tree_item(const Parser::KeyValueGraph::Item &item)
@@ -155,6 +206,16 @@ QTreeWidgetItem *Editor::item_to_tree_item(const Parser::KeyValueGraph::Item &it
     }
     // return
     return new_item;
+}
+
+QString Editor::random_alpha_num(int n) const
+{
+    QString alpha_num = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    QString random;
+    for(int i=0; i<n; ++i) {
+        random += alpha_num.at(rand()%alpha_num.length());
+    }
+    return random;
 }
 
 void Editor::raw_display(bool raw)

@@ -85,7 +85,7 @@
      <x>0</x>
      <y>0</y>
      <width>773</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -229,7 +229,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>417</x>
-     <y>71</y>
+     <y>69</y>
     </hint>
     <hint type="destinationlabel">
      <x>471</x>
@@ -349,6 +349,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>tree_view_dock</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>Editor</receiver>
+   <slot>kvg_to_tree()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>536</x>
+     <y>345</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>423</x>
+     <y>612</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tree_view_dock</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>Editor</receiver>
+   <slot>kvg_to_visual()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>551</x>
+     <y>341</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>441</x>
+     <y>618</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>open_file()</slot>
@@ -356,5 +388,7 @@
   <slot>update_content()</slot>
   <slot>raw_display(bool)</slot>
   <slot>tree_item_clicked(QTreeWidgetItem*,int)</slot>
+  <slot>kvg_to_tree()</slot>
+  <slot>kvg_to_visual()</slot>
  </slots>
 </ui>
