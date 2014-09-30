@@ -7,6 +7,8 @@
 
 #include "image_pub.h"
 
+#ifdef MT_ROS
+
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 #include <ros/node_handle.h>
 #include <image_transport/image_transport.h>
@@ -131,3 +133,7 @@ void ros_shutdown() {
 #endif
 }
 }
+
+#else //MT_ROS
+
+#endif

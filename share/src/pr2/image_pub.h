@@ -9,11 +9,12 @@
 #define IMAGE_PUB_H_
 
 #include <string>
-#include "pixel_format.h"
+#include <Perception/pixel_format.h>
 
 namespace MT {
 template<class T> struct Array;
 }
+
 namespace MLR {
 	struct sImagePublisher;
 
