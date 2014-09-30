@@ -762,7 +762,7 @@ BlockDescription blockDescription[nBlocks]={
   {"pids"         , intT, maxClients, 0},
   {"changed"      , boolT, nBlocks, 0},
   {"wheels"       , intT, 2, 0},
-  {"joystick"     , intT, 9, 0},
+  {"gamepad"     , intT, 9, 0},
 };
 
 void initBlockDescription(BlockDescription *b, const RobotShmStructure& shm){
@@ -770,7 +770,7 @@ void initBlockDescription(BlockDescription *b, const RobotShmStructure& shm){
   b[1].p=(void*) shm.pids;
   b[2].p=(void*) shm.changed;
   b[3].p=(void*) shm.wheels;
-  b[4].p=(void*) shm.joystick;
+  b[4].p=(void*) shm.gamepad;
 }
 
 void writeBlock(std::ostream& os, int blockName){

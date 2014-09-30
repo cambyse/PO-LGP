@@ -3,7 +3,7 @@
 #include <MT/robotActionInterface.h>
 #include <signal.h>
 
-const char* joyUsage="\n\
+const char* gamepadUsage="\n\
 \n\
 mountHardware64\n\
 sudo ./x.exe -openArm 1 -openHand 1 -openSkin 1\n\
@@ -18,12 +18,12 @@ start = open hand\n\
 top bottons = STOP\n\
 ";
 
-void testJoy(){
-  cout <<"\n=== joystick demo ===\n" <<joyUsage <<endl;
+void testGamepad(){
+  cout <<"\n=== gamepad demo ===\n" <<gamepadUsage <<endl;
   //MarcsRobotTask R;
   RobotActionInterface R;
   R.open();
-  R.joystick();
+  R.gamepad();
   R.close();
 }
 
@@ -32,14 +32,14 @@ void testActions(){
   R.open();
   cout <<R.ctrl.ors.getBodyByName("m9")->X.pos <<endl;
   R.watch();
-  //R.joystick();
+  //R.gamepad();
   //R.watch();
   //R.localizeObject();
   //R.planGraspTrajectory();
   //R.loadTrajectory();
   //R.followTrajectory();
   //R.closeHand();
-  //R.joystick();
+  //R.gamepad();
   //R.moveUp();
   //R.openHand();
   R.close();
@@ -48,16 +48,16 @@ void testActions(){
 void testVision(){
   MarcsRobotTask R;
   R.open();
-  R.joystick();
+  R.gamepad();
   for(uint k=0;k<100 && !R.signalStop;k++){
     cout <<"loc mode" <<endl; MT::wait(1.);
     R.localizeObject("S3");
-    cout <<"joy mode" <<endl; MT::wait(1.);
-    R.joystick();
+    cout <<"gamepad mode" <<endl; MT::wait(1.);
+    R.gamepad();
     cout <<"reach mode" <<endl; MT::wait(1.);
     R.reachObject();
-    cout <<"joy mode" <<endl; MT::wait(1.);
-    R.joystick();
+    cout <<"gamepad mode" <<endl; MT::wait(1.);
+    R.gamepad();
   }
   R.close();
 }
@@ -65,16 +65,16 @@ void testVision(){
 void testVisionPlan(){
   MarcsRobotTask R;
   R.open();
-  R.joystick();
+  R.gamepad();
   R.localizeObject("S3");
   R.localizeObject("S1");
   R.reactivateCollisions(ARRAY((const char*)"table",(const char*)"S1",(const char*)"S3"));
   R.planGraspTrajectory("S3");
-  R.joystick();
+  R.gamepad();
   R.followTrajectory();
   R.closeHand("S3","table");
   R.planPlaceTrajectory("S3","table","S1");
-  R.joystick();
+  R.gamepad();
   R.followTrajectory();
   R.openHand("S3");
 }
@@ -119,11 +119,11 @@ void testSequence_move(MarcsRobotTask& R,const char *objShape,const char *fromSh
 void testSequence(){
   MarcsRobotTask R;
   R.open();
-  //R.joystick();
+  //R.gamepad();
   testSequence_move(R,"S3","S1","S0");
   testSequence_move(R,"S4","S2","S3");
   testSequence_move(R,"S1","S0","S2");
-  //R.joystick();
+  //R.gamepad();
   R.close();
 }
   
@@ -131,11 +131,11 @@ void replayTrajectory(){
   MT::String file = MT::getParameter<MT::String>("nikolayTrajectory");
   MarcsRobotTask R;
   R.open();
-  R.joystick();
+  R.gamepad();
   R.loadPlainTrajectory(file);
   //R.plan_speed = .3;
   R.followTrajectory();
-  R.joystick();
+  R.gamepad();
   R.close();
 }
 
@@ -144,7 +144,7 @@ int main(int argc,char** argv){
   //signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   switch(MT::getParameter<int>("mode",0)){
-    case 0:  testJoy();  break;
+    case 0:  testGamepad();  break;
     case 1:  testActions();  break;
     case 2:  testReachPlanning();  break;
     //case 3:  testLaserScan();  break;

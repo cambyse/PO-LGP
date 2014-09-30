@@ -2,13 +2,13 @@
 #include <System/engine.h>
 
 #include <Hardware/racer/modules.h>
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 
-void testJoystick(){
+void testGamepad(){
   struct MySystem:System{
-    ACCESS(arr, joystickState);
+    ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<JoystickInterface>("JoystickInterface", Module_Thread::loopWithBeat, 0.01);
+      addModule<GamepadInterface>("GamepadInterface", Module_Thread::loopWithBeat, 0.01);
       connect();
     }
   } S;
@@ -16,9 +16,9 @@ void testJoystick(){
   engine().open(S);
 
   for(int i = 0;; ++i){
-    S.joystickState.var->waitForNextRevision();
-    arr J = S.joystickState.get();
-    cout <<"\r joy=" <<J <<std::flush;
+    S.gamepadState.var->waitForNextRevision();
+    arr J = S.gamepadState.get();
+    cout <<"\r gamepad=" <<J <<std::flush;
     if(engine().shutdown.getValue()) break;
   }
 
@@ -34,13 +34,13 @@ void run(){
     ACCESS(arr, stateEstimate);
     ACCESS(arr, encoderData)
     ACCESS(arr, controls);
-    ACCESS(arr, joystickState);
+    ACCESS(arr, gamepadState);
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
       addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
       //addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
       addModule<Motors>("Motors", Module_Thread::loopFull);
-      addModule<JoystickInterface>("JoystickInterface", Module_Thread::loopWithBeat, 0.01);
+      addModule<GamepadInterface>("GamepadInterface", Module_Thread::loopWithBeat, 0.01);
       connect();
     }
   } S;
@@ -49,8 +49,8 @@ void run(){
   double k_th=MT::getParameter<double>("k_th", 0.);
   double k_thDot=MT::getParameter<double>("k_thDot", 0.);
   double k_acc=MT::getParameter<double>("k_acc", 0.);
-  double joy_gain = MT::getParameter<double>("joy_gain");
-  double joy_gain_vel = MT::getParameter<double>("joy_gain_vel");
+  double gamepad_gain = MT::getParameter<double>("gamepad_gain");
+  double gamepad_gain_vel = MT::getParameter<double>("gamepad_gain_vel");
 
   //    engine().enableAccessLog();
   engine().open(S);
@@ -60,9 +60,9 @@ void run(){
   for(int i = 0;; ++i){
     S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
-    arr J = S.joystickState.get();
+    arr J = S.gamepadState.get();
 
-    x_ref -= joy_gain*J(4);
+    x_ref -= gamepad_gain*J(4);
     double th_ref = 0.1 * (x_ref-x(0)) + 0.1 * (0.-x(2));
     double u = k_th*(th_ref - x(1)) + k_thDot * (0.-x(3));
 
@@ -70,7 +70,7 @@ void run(){
 //    cout <<"\r state = " <<x <<std::flush;
 //    cout <<"enc= " <<enc/MT_2PI <<std::endl;
 
-    double turn = joy_gain_vel*J(1);
+    double turn = gamepad_gain_vel*J(1);
     S.controls.set()() = ARR(motor_vel+turn, motor_vel-turn, 10.);
 
     uint mode = uint(J(0));
@@ -92,7 +92,7 @@ void run(){
 int main(int argc, char **argv) {
   MT::initCmdLine(argc, argv);
 
-  //testJoystick();
+  //testGamepad();
 
   run();
 

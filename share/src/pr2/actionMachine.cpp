@@ -1,7 +1,7 @@
 #include "actions.h"
 #include "actionMachine_internal.h"
 
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
@@ -61,8 +61,8 @@ void ActionMachine::step(){
   s->refs.fR = ARR(0., 0., 0.);
   s->refs.Kq_gainFactor = ARR(1.);
 
-  arr joypadState = joystickState.get();
-  if(stopButtons(joypadState)) engine().shutdown.incrementValue();
+  arr gamepad = gamepadState.get();
+  if(stopButtons(gamepad)) engine().shutdown.incrementValue();
 
   //-- get access
   A.readAccess();

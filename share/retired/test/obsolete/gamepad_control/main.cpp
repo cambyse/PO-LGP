@@ -8,7 +8,7 @@ int main(int argc,char** argv){
 
   RobotActionInterface R;
   R.open();
-  R.joystick();
+  R.gamepad();
   R.close();
    
   cout <<" *** bye bye" <<endl;

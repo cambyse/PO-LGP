@@ -10,16 +10,16 @@ int main(int argc,char** argv){
   MotionPrimitive motionPrimitive;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
-  JoystickState joystickState;
+  GamepadState gamepadState;
 
   // processes
   Process *controller = newMotionController(&hardwareReference, &motionPrimitive, NULL);
-  Process *joystick = newJoystick(joystickState);
+  Process *gamepad = newGamepad(gamepadState);
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
 
-  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, *joystick);
+  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, *gamepad);
 
   ProcessL P=ARRAY(controller);
 
@@ -27,11 +27,11 @@ int main(int argc,char** argv){
 
   new PoseView(hardwareReference.q_reference, NULL); //example for creating views directly from code
 
-  cout <<"** setting controller to joystick mode" <<endl;
-  Joystick_FeedbackControlTask joyTask;
+  cout <<"** setting controller to gamepad mode" <<endl;
+  Gamepad_FeedbackControlTask gamepadTask;
   motionPrimitive.writeAccess(NULL);
   motionPrimitive.mode = MotionPrimitive::feedback;
-  motionPrimitive.feedbackControlTask = &joyTask;
+  motionPrimitive.feedbackControlTask = &gamepadTask;
   motionPrimitive.deAccess(NULL);
   
   loopWithBeat(hardware, .01); // hardware must be started before the controller// WHY??
@@ -40,10 +40,10 @@ int main(int argc,char** argv){
 //   else
     controller->threadLoopWithBeat(.01);
 
-  joystickState.waitForRevisionGreaterThan(10);
+  gamepadState.waitForRevisionGreaterThan(10);
   for(;;){
-    joystickState.waitForNextRevision();
-    if(joystickState.get_exitSignal(NULL)) break;
+    gamepadState.waitForNextRevision();
+    if(gamepadState.get_exitSignal(NULL)) break;
   }
   close(P);
   close(hardware);

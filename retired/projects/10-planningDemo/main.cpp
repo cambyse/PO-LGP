@@ -8,7 +8,7 @@
 
 
 bool breakCondition(RobotProcessGroup & robotProcesses){
-  return robotProcesses.signalStop || robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32;
+  return robotProcesses.signalStop || robotProcesses.gamepad.state(0)==16 || robotProcesses.gamepad.state(0)==32;
 }
 
 void resetPlanner(ReceedingHorizonProcess & planner){
@@ -49,7 +49,7 @@ int main(int argc,char** argv) {
 
   R.getProcessGroup()->gui.planVar  = &planVar;
   R.getProcessGroup()->ctrl.planVar  = &planVar;
-  R.getProcessGroup()->ctrl.joyVar  = &R.getProcessGroup()->joy;
+  R.getProcessGroup()->ctrl.gamepadVar  = &R.getProcessGroup()->gamepad;
 
   if(R.getProcessGroup()->openBumble) perc.threadLoop();
   planner.threadLoop();

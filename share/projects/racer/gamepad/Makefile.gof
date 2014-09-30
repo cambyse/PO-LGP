@@ -2,7 +2,7 @@ BASE = ../../..
 
 OBJS = main.o 
 
-DEPEND = Core Algo Hardware_racer Hardware_joystick System Gui
+DEPEND = Core Algo Hardware_racer Hardware_gamepad System Gui
 
 include $(BASE)/gofMake/generic.mk
 

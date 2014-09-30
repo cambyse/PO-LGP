@@ -1,6 +1,6 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
@@ -10,9 +10,9 @@
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
@@ -22,7 +22,7 @@ struct MySystem:System{
   }
 };
 
-void testJoypad(){
+void testGamepad(){
     MySystem S;
     engine().open(S);
 
@@ -66,9 +66,9 @@ void testJoypad(){
   CtrlMsg refs;
 
   for(uint t=0;;t++){
-//    S.joystickState.var->waitForNextRevision();
-    arr joypadState = S.joystickState.get();
-    bool shutdown = j2t.updateTasks(joypadState);
+//    S.gamepadState.var->waitForNextRevision();
+    arr gamepadState = S.gamepadState.get();
+    bool shutdown = j2t.updateTasks(gamepadState);
     if(t>10 && shutdown) engine().shutdown.incrementValue();
 
     // joint state
@@ -88,7 +88,7 @@ void testJoypad(){
 
     //-- force task
     uint mode = 0;
-    if(joypadState.N) mode = uint(joypadState(0));
+    if(gamepadState.N) mode = uint(gamepadState(0));
     if(mode==2){
       arr y_fL, J_fL;
       MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
@@ -134,6 +134,6 @@ void testJoypad(){
 
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
-  testJoypad();
+  testGamepad();
   return 0;
 }

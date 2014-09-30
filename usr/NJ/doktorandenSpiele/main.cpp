@@ -89,7 +89,7 @@ void MyTask::loop(RobotController& robot){
   for(;!robot.signalStop;){ //catches the ^C key
     robot.step();
 //     if(TV_eff->y(2)>1.2) break;
-    if(robot.joy.state(0)==16 || robot.joy.state(0)==32) break;
+    if(robot.gamepad.state(0)==16 || robot.gamepad.state(0)==32) break;
     data_file <<TV_eff->y <<endl;
 // 		cout << norm(arr(c.v,3) - TV_eff->y) -target_radius<< endl;
   }
@@ -291,7 +291,7 @@ int main(int argc,char** argv){
   }	
 	for(;!robot.signalStop;){ //catches the ^C key
     robot.step();
-    if(robot.joy.state(0)==16 || robot.joy.state(0)==32) break;
+    if(robot.gamepad.state(0)==16 || robot.gamepad.state(0)==32) break;
     //cout <<task.TV_eff->y <<endl;
   }
 	

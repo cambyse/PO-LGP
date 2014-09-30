@@ -1,4 +1,4 @@
-cd ../09-joystickDemo/
+cd ../09-gamepadDemo/
 load joints.dat
 cd ../10-nik-MultiPlan/
 

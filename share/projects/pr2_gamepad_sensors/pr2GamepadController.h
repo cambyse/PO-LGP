@@ -3,7 +3,7 @@
 struct Pr2GamepadController:Module{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(arr, joystickState)
+  ACCESS(arr, gamepadState)
 
   ors::KinematicWorld world;
   arr q, qdot, zero_qdot;
@@ -49,8 +49,8 @@ struct Pr2GamepadController:Module{
     zero_qdot.resize(qdot.N).setZero();
   }
   void step(){
-    arr joypadState = joystickState.get();
-    j2t->updateTasks(joypadState);
+    arr gamepadState = gamepadState.get();
+    j2t->updateTasks(gamepadState);
 
     //compute control
     arr a = MP->operationalSpaceControl();
@@ -63,7 +63,7 @@ struct Pr2GamepadController:Module{
 
     //-- force task
     uint mode = 0;
-    if(joypadState.N) mode = uint(joypadState(0));
+    if(gamepadState.N) mode = uint(gamepadState(0));
     if(mode==2){
       arr y_fL, J_fL;
       MP->world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);

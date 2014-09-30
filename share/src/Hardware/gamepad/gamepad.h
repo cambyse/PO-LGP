@@ -1,13 +1,13 @@
-#ifndef MT_joystick_h
-#define MT_joystick_h
+#ifndef MT_gamepad_h
+#define MT_gamepad_h
 
 #include <Core/array.h>
 #include <Core/module.h>
 
-struct JoystickInterface:Module {
-  struct jsJoystick *joy;
-  ACCESS(arr, joystickState);
-  JoystickInterface();
+struct GamepadInterface:Module {
+  struct jsJoystick *joystick;
+  ACCESS(arr, gamepadState);
+  GamepadInterface();
   void open();
   void step();
   void close();
@@ -21,7 +21,7 @@ inline bool stopButtons(const arr& gamepadState){
 }
 
 #ifdef  MT_IMPLEMENTATION
-#  include "joystick.cpp"
+#  include "gamepad.cpp"
 #endif
 
 #endif

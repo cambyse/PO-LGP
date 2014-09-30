@@ -31,7 +31,7 @@ void basicLoop(){
   //Processes
   ControllerProcess ctrl;  ctrl.q_referenceVar=&q;  ctrl.proxiesVar=&proxies;
   SchunkArmModule  arm (&q);
-  JoystickInterface joy;
+  GamepadInterface gamepad;
   ThreadInfoWin threadWin;
   GuiModule gui;  gui.q_referenceVar = &q;  gui.proxiesVar = &proxies;
 
@@ -51,7 +51,7 @@ void basicLoop(){
   //start looping
   gui.threadLoop();
   threadWin.threadLoopWithBeat(.01);
-  joy.threadLoopWithBeat(.01);
+  gamepad.threadLoopWithBeat(.01);
   if(openArm){
     arm.threadLoopWithBeat(0.01);
     ctrl.threadLoopSyncWithDone(arm);
@@ -62,12 +62,12 @@ void basicLoop(){
   //wait for stop
   for(uint t=0;t<10000 && !schunkShutdown;t++){ //catches the ^C key
     MT::wait(.1);
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
   }
   
   if(openArm) arm.threadClose();
   ctrl.threadClose();
-  joy.threadClose();
+  gamepad.threadClose();
   gui.threadClose();
   threadWin.threadClose();
 }

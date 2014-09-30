@@ -109,7 +109,7 @@ struct ActionMachine : Module {
 
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
 
   ActionMachine();
@@ -146,10 +146,10 @@ struct ActionMachine : Module {
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
-    //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    //addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
@@ -160,7 +160,7 @@ struct ActionSystem : System{
 };
 
 //===========================================================================
-// extern ActionSymbol &joypad,
+// extern ActionSymbol &gamepad,
 // &coreTasks,
 // &amex, //shapeArg=task space, poseArg=reference trajectory
 // &moveEffTo, //shapeArg=body part, poseArg=whereTo

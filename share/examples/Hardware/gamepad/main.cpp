@@ -1,11 +1,11 @@
 #include <System/engine.h>
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 
 void threadedRun() {
   struct MySystem:System{
-    ACCESS(arr, joystickState);
+    ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+      addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
       connect();
     }
   } S;
@@ -13,8 +13,8 @@ void threadedRun() {
   engine().open(S);
 
   for(;;){
-    S.joystickState.var->waitForNextRevision();
-    cout <<"\r" <<S.joystickState.get()() <<std::flush;
+    S.gamepadState.var->waitForNextRevision();
+    cout <<"\r" <<S.gamepadState.get()() <<std::flush;
     if(engine().shutdown.getValue()) break;
   }
 
