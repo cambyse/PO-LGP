@@ -127,7 +127,8 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
 
   // remaining 100 steps is for reaching to the target.
-  for(uint t=0;t<x.d0 + 100;t++){
+  for(uint t=0;t<x.d0 + 100;t++)
+	{MT::wait(0.1);
     activity.machine->s->MP.setState(q, qdot);
 
     cout<< q<<endl;
