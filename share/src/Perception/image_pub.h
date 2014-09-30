@@ -31,7 +31,11 @@ namespace MLR {
 		void publish(const MT::Array<unsigned char>& image, double timestamp);
 	};
 
+	void init_image_publishers(int argc, char* argv[], const char* name, bool install_sigint_handler);
+	/** Calls init_image_publishers(4) with true for the install_signal_handler argument */
 	void init_image_publishers(int argc, char* argv[], const char* name);
+	bool process_image_callbacks();
+	void ros_shutdown();
 }
 
 

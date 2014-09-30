@@ -20,6 +20,7 @@ using namespace camera_info_manager;
 #include <Core/array.h>
 #include <Core/util.h>
 #include <sstream>
+#include <time.h>
 
 namespace MLR {
 
@@ -27,27 +28,32 @@ struct sImagePublisher {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 	ros::NodeHandle n;
 	ImageTransport t;
-	Publisher p;
+	Publisher p_img;
+	ros::Publisher p_info;
 	CameraInfoManager cim;
 	sensor_msgs::Image msg;
+	sensor_msgs::CameraInfo cinfo;
 #endif
 	uint32_t seq, bypp;
-	std::string camera_name, link_name, encoding;
-	double epoch_offset;
+	std::string link_name, encoding;
+	double time_offset;
 	PixelFormat pix_fmt;
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		n(base_topic), t(n), p(t.advertise(camera_name, 1)), 
+		n(base_topic), t(n), p_img(t.advertise("image_raw", 1)),
+		p_info(n.advertise<sensor_msgs::CameraInfo>("camera_info", 1)),
 		cim(n, camera_name),
 #endif
-		seq(0), camera_name(camera_name), pix_fmt(pix_fmt)
+		seq(0), pix_fmt(pix_fmt)
 	{
 		std::ostringstream str;
 		str << camera_name << "_link";
-		link_name = str.str();
+		link_name = ros::names::resolve(str.str());
 
-		epoch_offset = 0; // FIXME
+		// get seconds since epoch for 00:00 today (to offsets marc's %86400 stuff)
+		time_offset = time(NULL);
+		time_offset -= (((time_t)time_offset)%86400);
 
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 		switch(pix_fmt) {
@@ -76,13 +82,16 @@ struct sImagePublisher {
 
 	void publish(const byteA& image, double timestamp) {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		sensor_msgs::fillImage(msg, encoding, image.d0, image.d1, bypp * image.d1,
-				image.p);
+		sensor_msgs::fillImage(msg, encoding, image.d0, image.d1, bypp * image.d1, image.p);
 		msg.header.seq 		= seq++;
-		msg.header.stamp	= ros::Time(timestamp + epoch_offset);
+		msg.header.stamp	= ros::Time(timestamp + time_offset);
 		msg.header.frame_id	= link_name;
 
-		p.publish(msg);
+		cinfo = cim.getCameraInfo();
+		cinfo.header = msg.header;
+
+		p_img.publish(msg);
+		p_info.publish(cinfo);
 #endif
 	}
 };
@@ -100,10 +109,25 @@ void ImagePublisher::publish(const MT::Array<unsigned char>& image, double times
 	s->publish(image, timestamp);
 }
 
-void init_image_publishers(int argc, char* argv[], const char* name) {
+void init_image_publishers(int argc, char* argv[], const char* name, bool install_sigint_handler) {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-	ros::init(argc, argv, name);
+	ros::init(argc, argv, name, install_sigint_handler ?  0 : ros::init_options::NoSigintHandler);
 #endif
 }
+void init_image_publishers(int argc, char* argv[], const char* name) {
+	init_image_publishers(argc, argv, name, true);
+}
 
+bool process_image_callbacks() {
+#ifdef HAVE_ROS_IMAGE_TRANSPORT
+	ros::spinOnce();
+	return ros::ok();
+#endif
+	return true;
+}
+void ros_shutdown() {
+#ifdef HAVE_ROS_IMAGE_TRANSPORT
+	ros::shutdown();
+#endif
+}
 }
