@@ -28,7 +28,7 @@ struct OptNewton{
   OptOptions o;
   arr *additionalRegularizer;
 
-  enum StopCriterion { stopNone=0, stopCrit1, stopCrit2, stopCritEvals };
+  enum StopCriterion { stopNone=0, stopCrit1, stopCrit2, stopCritEvals, stopStepFailed };
   double fx;
   arr gx, Hx;
   double alpha, beta;

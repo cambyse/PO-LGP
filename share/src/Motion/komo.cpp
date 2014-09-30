@@ -19,28 +19,27 @@ arr moveTo(ors::KinematicWorld& world,
   double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
 
   //-- set up the MotionProblem
-  target.cont=false;
+  target.cont=false; //turn off contact penalization with the target
 
   MotionProblem MP(world);
-  //  MP.loadTransitionParameters(); //->move transition costs to tasks!
   world.swift().initActivations(world);
   MP.world.watch(false);
 
   TaskCost *c;
 
   c = MP.addTask("transitions", new TransitionTaskMap(world));
-  c->map.order=2;
+  c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
   c->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
-  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff")); //endeff.index));
+  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff"));
 //  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
   c->setCostSpecs(MP.T, MP.T, {0.}, zeroVelPrec);
-  c->map.order=1; //make this a velocity variable!
+  c->map.order=1; //make this a velocity task!
 
-  if(colPrec<0){ //interpreted as hard constraint
+  if(colPrec<0){ //interpreted as hard constraint (default)
     c = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
   }else{ //cost term
     c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
@@ -58,7 +57,9 @@ arr moveTo(ors::KinematicWorld& world,
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x = replicate(MP.x0, MP.T+1);
+  double rand = MT::getParameter<double>("KOMO/moveTo/randomizeInitialPose", .0);
+  if(rand){ rnd.seed(MT::getParameter<uint>("rndSeed", 0));  rndGauss(MP.x0,rand,true); }
+  arr x = replicate(MP.x0, MP.T+1); //we initialize with a constant trajectory!
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize

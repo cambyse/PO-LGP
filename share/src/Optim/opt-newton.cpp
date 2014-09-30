@@ -63,7 +63,7 @@ OptNewton::StopCriterion OptNewton::step(){
   x_changed=false;
 
   it++;
-  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <</*std::setprecision(3) <<*/beta <<flush;
+  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tbeta=" <</*std::setprecision(3) <<*/beta <<flush;
 
   if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
 
@@ -78,7 +78,13 @@ OptNewton::StopCriterion OptNewton::step(){
     //      cout <<*addRegularizer <<R <<endl;
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
-    Delta = lapack_Ainv_b_sym(R, -gx);
+    try {
+      Delta = lapack_Ainv_b_sym(R, -gx);
+    }catch(...){
+      if(o.verbose>0) cout <<endl <<"** hessian inversion failed ... increasing damping **" <<endl;
+      beta *= 10.;
+      return stopStepFailed;
+    }
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;

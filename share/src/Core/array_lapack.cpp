@@ -148,6 +148,7 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
   }
   if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
+    if(!Aaux->symmetric) HALT("this is not a symmetric matric");
     for(uint i=0; i<A.d0; i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
   }
   x=b;
@@ -160,6 +161,7 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
       HALT("here");
     }
   } else {
+    //assumes symmetric and upper triangle (see check's above)
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }
   if(INFO) {

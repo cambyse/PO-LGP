@@ -5,6 +5,7 @@
 
 void TEST(Easy){
   ors::KinematicWorld G("test.ors");
+  cout <<"configuration space dim=" <<G.q.N <<endl;
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
   for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
 }
@@ -16,6 +17,7 @@ void TEST(EasyPR2){
   ors::KinematicWorld G("model.kvg");
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
+  cout <<"configuration space dim=" <<G.q.N <<endl;
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
   for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
 }
