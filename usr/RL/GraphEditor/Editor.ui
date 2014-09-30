@@ -92,7 +92,8 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <addaction name="actionShow_Graph"/>
+    <addaction name="actionDisplay_Graph"/>
+    <addaction name="actionDisplay_Tree"/>
     <addaction name="actionQuit"/>
    </widget>
    <addaction name="menuView"/>
@@ -106,7 +107,7 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QDockWidget" name="GraphDisplay">
+  <widget class="QDockWidget" name="visualization_dock">
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
@@ -118,7 +119,46 @@
     </layout>
    </widget>
   </widget>
-  <action name="actionShow_Graph">
+  <widget class="QDockWidget" name="tree_view_dock">
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QTreeWidget" name="tree_view">
+       <property name="columnCount">
+        <number>4</number>
+       </property>
+       <attribute name="headerDefaultSectionSize">
+        <number>60</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>Keys</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Parents</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Value</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Value Type</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionDisplay_Graph">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -134,14 +174,25 @@
     <string>Quit</string>
    </property>
   </action>
+  <action name="actionDisplay_Tree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Display Tree</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections>
   <connection>
-   <sender>actionShow_Graph</sender>
+   <sender>actionDisplay_Graph</sender>
    <signal>toggled(bool)</signal>
-   <receiver>GraphDisplay</receiver>
+   <receiver>visualization_dock</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -155,9 +206,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>GraphDisplay</sender>
+   <sender>visualization_dock</sender>
    <signal>visibilityChanged(bool)</signal>
-   <receiver>actionShow_Graph</receiver>
+   <receiver>actionDisplay_Graph</receiver>
    <slot>setChecked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -250,11 +301,60 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDisplay_Tree</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>tree_view_dock</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>635</x>
+     <y>583</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tree_view_dock</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>actionDisplay_Tree</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>635</x>
+     <y>583</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tree_view</sender>
+   <signal>itemDoubleClicked(QTreeWidgetItem*,int)</signal>
+   <receiver>Editor</receiver>
+   <slot>tree_item_clicked(QTreeWidgetItem*,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>597</x>
+     <y>591</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>497</x>
+     <y>536</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>open_file()</slot>
   <slot>save_file()</slot>
   <slot>update_content()</slot>
   <slot>raw_display(bool)</slot>
+  <slot>tree_item_clicked(QTreeWidgetItem*,int)</slot>
  </slots>
 </ui>

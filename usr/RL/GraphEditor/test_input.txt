@@ -50,3 +50,5 @@ trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transf
 ## strange notations
 a()       # key=a, value=true, parents=none
 ()        # key=none, value=true, parents=none
+
+x { x, xx, xxx { x { x { x }}}}
