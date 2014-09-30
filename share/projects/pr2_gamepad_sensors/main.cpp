@@ -1,6 +1,6 @@
 #include <Motion/feedbackControl.h>
 #include <System/engine.h>
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
@@ -16,7 +16,7 @@
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(arr, joystickState)
+  ACCESS(arr, gamepadState)
 
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
@@ -31,7 +31,7 @@ struct MySystem:System{
   ACCESS(byteA, rgb_rightArm)
 
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
@@ -76,10 +76,10 @@ void testSensors(){
   engine().open(S);
 
   for(uint t=0;;t++){
-    arr joypadState = S.joystickState.get();
-    if(t>10 && stopButtons(joypadState)) engine().shutdown.incrementValue();
+    arr gamepadState = S.gamepadState.get();
+    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
     if(engine().shutdown.getValue()>0) break;
-    S.joystickState.var->waitForNextRevision();
+    S.gamepadState.var->waitForNextRevision();
 
     // joint sensors
     arr q_obs    = S.ctrl_obs.get()->q;

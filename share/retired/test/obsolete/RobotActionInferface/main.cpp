@@ -23,17 +23,17 @@ void testPattern(){
   R.close();
 }
 
-void testJoy(){
+void testGamepad(){
   RobotActionInterface R;
   R.open();
-  R.joystick();
+  R.gamepad();
   R.close();
 }
 
 void testActions(){
   RobotActionInterface R;
   R.open();
-  R.joystick();
+  R.gamepad();
   //ors::Mesh mesh;
   //mesh.readOffFile("m494.off");
   //R.setMesh("world",mesh);
@@ -45,7 +45,7 @@ void testActions(){
   R.homing();
   //R.reach("tipNormal1", ARR(0.,-1.,1.), .1);
   //R.homing();
-  R.joystick();
+  R.gamepad();
   R.close();
 }
 
@@ -54,7 +54,7 @@ int main(int argc,char** argv){
   //signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   switch(MT::getParameter<int>("mode")){
-    case 0:  testJoy();  break;
+    case 0:  testGamepad();  break;
     case 1:  testActions();  break;
     case 2:  testPattern();  break;
   }

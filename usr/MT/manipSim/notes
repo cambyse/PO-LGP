@@ -17,3 +17,13 @@ that imply constraints on $X$; we define $X_\G = \{ x\in\X : x\covered
 \G\}$ as the space of configurations conditional to a relational state
 $\G$.
 
+
+
+* check feasibility of a break: only if object is physically supported?
+* On the search tree, store both, the current kinematic state; and the reachability state? OR: store both in one
+
+
+Initial state:
+* support(obj*, table)
+
+

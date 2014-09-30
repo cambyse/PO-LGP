@@ -46,6 +46,8 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   this->y = y;
   this->v = ydot;
 //  cout <<" TASK " <<name <<":  \tPterm=(" <<Pgain <<'*' <<length(y_ref-y) <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-ydot) <<')' <<endl;
+  if(flipTargetScalarProduct && scalarProduct(y, y_ref) < 0)
+    y_ref = -y_ref;
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 
@@ -137,8 +139,16 @@ void FeedbackMotionControl::reportCurrentState(){
   for(PDtask* t: tasks) {
     cout <<"Task " <<t->name;
     if(t->active) {
-      cout <<": \ty_ref=" <<t->y_ref <<" \ty=" <<t->y
-          <<" \tPterm=(" <<t->Pgain <<'*' <<length(t->y_ref-t->y) <<")  \tDterm=(" <<t->Dgain <<'*' <<length(t->v_ref-t->v) <<')' <<endl;
+      if(t->y_ref.N==t->y.N && t->v_ref.N==t->v.N){
+	cout <<": \ty_ref=" <<t->y_ref <<" \ty=" <<t->y
+	     <<" \tPterm=(" <<t->Pgain <<'*' <<length(t->y_ref-t->y)
+	     <<")  \tDterm=(" <<t->Dgain <<'*' <<length(t->v_ref-t->v) <<')'
+	     <<endl;
+      }else{
+	cout <<" -- y_ref.N!=y.N or v_ref.N!=v.N -- not initialized? -- "
+	     <<" Pgain=" <<t->Pgain
+	     <<" Dgain=" <<t->Dgain <<endl;
+      }
     }else{
       cout <<" -- inactive" <<endl;
     }

@@ -23,12 +23,50 @@ struct MoveEffTo : GroundedAction {
 };
 
 //===========================================================================
+struct PoseTo : GroundedAction {
+  MT::String effName;
+  arr effPos;
+  arr orientation;
+
+  PoseTo(const char* effName, const arr& effPos, const arr& orientation);
+
+  /// @name Inherited/overwritten stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
 struct AlignEffTo : GroundedAction {
   MT::String effName;
   arr effPos;
   arr alginPos; // TODO what is this? Find a proper name.
 
   AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos);
+
+  /// @name Inherited stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
+struct OrientationQuat : GroundedAction {
+  MT::String effName;
+  arr orientation;
+
+  OrientationQuat(const char* effName, const arr& orientation);
+
+  /// @name Inherited stuff
+  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
+struct SetQ : GroundedAction {
+  MT::String effName;
+  int jointID;
+  double jointPos;
+
+  SetQ(const char* effName, int jointID, double jointPos);
 
   /// @name Inherited stuff
   virtual void initYourself(ActionMachine& actionMachine);

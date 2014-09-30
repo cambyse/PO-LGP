@@ -252,7 +252,7 @@ FREENECT = 1
 endif
 
 ifeq ($(FREENECT),1)
-CXXFLAGS += -DMLR_FRENECT
+CXXFLAGS += -DMLR_FREENECT
 LIBS += -lfreenect -lusb-1.0
 endif
 

@@ -199,8 +199,8 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
          && target->X.p(0) > -0.5 && target->X.p(0) < 0.5
          && target->X.p(1) > -1.05 && target->X.p(1) < 0.
          && target->X.p(2) > 0.8 && target->X.p(2) < 1.5
-          &&(recho.bwdMsg_count == recho.T || robotProcesses->joy.state(0) == 4)
-          //&& robotProcesses->joy.state(0) == 4
+          &&(recho.bwdMsg_count == recho.T || robotProcesses->gamepad.state(0) == 4)
+          //&& robotProcesses->gamepad.state(0) == 4
           ){//if button 3 pressed
         Change();
         tmpco = 0;//for the fractional bwd msg counter
@@ -322,7 +322,7 @@ int main(int argc,char** argv){
     perc.threadStepOrSkip(0);
     if(demo.bFirstSense && demo.started_track )//
       demo.recho.threadStepOrSkip(100);//why, what is the meaning....max skips, ignore
-    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
+    if(robotProcesses.gamepad.state(0)==16 || robotProcesses.gamepad.state(0)==32) break;
 
     if( robotProcesses.gui.q_trajectory.N == 0 ){
       if(demo.recho. bwdMsg_v.N > 0 )

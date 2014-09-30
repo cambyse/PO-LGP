@@ -14,3 +14,4 @@ struct G4Display: Module{
 
   struct sG4Display *s;
 };
+

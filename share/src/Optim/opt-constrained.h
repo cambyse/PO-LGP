@@ -50,6 +50,7 @@ struct UnconstrainedProblem : ScalarFunction{
 
   void aulaUpdate(double lambdaStepsize=1., arr &x_reeval=NoArr);
   void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
+  bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
 };
 
 

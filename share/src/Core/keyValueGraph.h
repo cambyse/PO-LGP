@@ -37,14 +37,18 @@ inline std::istream& operator>>(std::istream&, RootType&) { NIY; }
 inline std::ostream& operator<<(std::ostream&, const RootType&) { NIY; }
 
 struct Item {
+  KeyValueGraph& container;
   StringA keys;
   ItemL parents;
   ItemL parentOf;
   uint index;
-  virtual ~Item() {};
+  Item(KeyValueGraph& _container);
+  Item(KeyValueGraph& _container, const ItemL& _parents);
+  virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
   void write(std::ostream &os) const;
+  KeyValueGraph ParentOf();
 
   //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY};
@@ -52,14 +56,13 @@ struct Item {
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
   virtual void takeoverValue(Item*) {NIY}
-  virtual Item *newClone() const {NIY}
+  virtual Item *newClone(KeyValueGraph& container) const {NIY}
 };
 stdOutPipe(Item);
 
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
-  KeyValueGraph *parentKvg;
   bool isReference;
   
   KeyValueGraph();
@@ -70,11 +73,14 @@ struct KeyValueGraph:ItemL {
   
   //-- get values directly
   template<class T> T* getValue(const char *key);
+  template<class T> T* getValue(const StringA &keys);
   template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
+  template<class T> bool getValue(T& x, const StringA &keys) { T* y=getValue<T>(keys); if(y) { x=*y; return true; } return false; }
 
   //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
+  Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
   
   //-- get lists of items
@@ -87,8 +93,11 @@ struct KeyValueGraph:ItemL {
   template<class T> MT::Array<T*> getTypedValues(const char* key);
   template<class T> MT::Array<T*> getDerivedValues();
   
+  //-- removing items
+  Item *appendItem(Item* it) { HALT("the constructor of Item should have done this!"); it->index=ItemL::N;  ItemL::append(it);  return it;}
+  void removeItem(Item* it){ delete it; }
+
   //-- adding items
-  Item *appendItem(Item* it) { it->index=ItemL::N;  ItemL::append(it);  return it;}
   template<class T> Item *append(T *x);
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
@@ -100,6 +109,7 @@ struct KeyValueGraph:ItemL {
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
+
   //-- I/O
   void sortByDotOrder();
   
@@ -110,6 +120,53 @@ struct KeyValueGraph:ItemL {
 stdPipes(KeyValueGraph);
 
 #include "keyValueGraph_t.h"
+
+//===========================================================================
+//
+// Andrea's util based on KeyValueGraph
+// (would put in util.h, but creates inclusion loop which breaks compilation)
+//
+
+// Params {{{
+#include "keyValueGraph.h"
+struct Params {
+  KeyValueGraph kvg;
+
+  template<class T>
+  void set(const char *key, const T &value) {
+    Item *i = kvg.getItem(key);
+    if(i) *i->getValue<T>() = value;
+    else kvg.append(key, new T(value));
+  }
+
+  template<class T>
+  bool get(const char *key, T &value) { return kvg.getValue(value, key); }
+
+  template<class T>
+  T* get(const char *key) { return kvg.getValue<T>(key); }
+
+  void clear() { kvg.clear(); }
+  bool remove(const char *key) {
+    Item *i = kvg.getItem(key);
+    if(!i) return false;
+    // TODO is list() here necessary?
+    kvg.list().remove(i->index);
+    return true;
+  }
+
+  void write(std::ostream &os = std::cout) const {
+    os << "params = {" << std::endl;
+    for(Item *i: kvg) os << "  " << *i << std::endl;
+    os << "}" << std::endl;
+  }
+};
+stdOutPipe(Params)
+// }}}
+// Parametric {{{
+struct Parametric {
+  Params params;
+};
+// }}}
 
 #endif
 

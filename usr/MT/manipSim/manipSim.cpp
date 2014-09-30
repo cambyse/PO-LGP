@@ -2,10 +2,12 @@
 
 Domain domain;
 
-const char* predicateString(Predicate p){
-  static const char* bla[]={"isFree", "rigid", "trans2DPhi", "no"};
+enum Predicate : uint{ rigid=0, support, trans2DPhi, _N_Predicate };
+const char* predicateString(uint p){
+  static const char* bla[]={"rigid", "support", "trans2DPhi", "no"};
   return bla[p];
 }
+
 const char* actionPredicateString(ActionPredicate a){
   static const char* bla[]={"create_", "break_", "no_"};
   return bla[a];
@@ -14,26 +16,28 @@ const char* actionPredicateString(ActionPredicate a){
 Action& NoAction = *((Action*)NULL);
 SearchNode& NoSearchNode = *((SearchNode*)NULL);
 
-
-//ActionL_ SearchNode::getFeasibleActions(){
-//  ActionL_ A;
-//  for(uint i=0;i<domain.N;i){
-//    A.append(new Action());
-
-//  }
-
-//}
-
+void Action::setRandom(uint n){
+  i=rnd(n);
+  j=rnd(n-1);  if(j>=i) j++;
+  a=(ActionPredicate)rnd(_N_ActionPredicate);
+  p=predicateString(rnd(_N_Predicate));
+}
 
 void State::compControllable(){
-  ItemL objs = G.getItems("obj");
-  ItemL ctrlables;
-  for(uint i=0;i<=objs.N;i++) if(domain.isDirectlyControllable(i)) ctrlables.append(objs(i));
+//  ItemL objs = G.getItems("body");
 
-  for(uint i=0;i<ctrlables.N;i++){
-    Item *o = ctrlables(i);
+//  cout <<G <<endl;
+  ItemL ctrltags = G.getItems("controllable");
+  for_list_rev(Item, i, ctrltags) delete i;
+
+  ctrltags = G.getItems("canGrasp");
+  ItemL ctrlables;
+
+  for(Item *o:ctrltags) ctrlables.append(o->parents(0));
+
+  for(Item *o:ctrlables){
     for(Item *r:o->parentOf){
-      if(r->keys(0)=="rel" && r->keys(1)=="rigid"){
+      if(r->keys(0)=="rigid"){
         if(r->parents(0)==o)
           ctrlables.setAppend(r->parents(1));
         else
@@ -42,48 +46,91 @@ void State::compControllable(){
     }
   }
 
-  controllable.resize(objs.N);
-  controllable=false;
-  for(Item *o:ctrlables) controllable(o->index)=true;
+  for(Item *o:ctrlables){
+    bool hasTag=false;
+    for(Item *r:o->parentOf) if(r->keys(0)=="controllable"){ hasTag=true; break; }
+    if(!hasTag) G.append<bool>(STRINGS("controllable"), ARRAY(o), NULL);
+  }
+//  cout <<G <<endl;
 }
 
 void State::expandReachable(){
+}
 
+bool State::testAction(const Action& a, bool apply){
+  bool applicable=false;
+  Item *o1 = G(a.i);
+  Item *o2 = G(a.j);
+  if(a.a==create_){
+    if(!o1->ParentOf()["controllable"]) return false;
+    if(a.p=="rigid"){
+      if(!o1->ParentOf()["canGrasp"]) return false;
+    }
+    applicable = true;
+    if(apply) G.append<bool>(STRINGS(a.p), ARRAY(o1,o2), NULL);
+  }
+  if(a.a==break_){
+    Item *toBeBroken=NULL;
+    for(Item *p:o1->parentOf){
+      if(p->keys(0)==a.p){
+        if((p->parents(0)==o1 && p->parents(1)==o2) ||
+           (p->parents(0)==o2 && p->parents(1)==o1)){ toBeBroken=p;  break; }
+      }
+    }
+    if(toBeBroken){
+      bool good=true;
+      if(!o1->parentOf.N || !o2->parentOf.N) good=false; //if it has no relation!
+      for(Item *i:o1->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
+      for(Item *i:o2->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
+      if(!good) toBeBroken=NULL;
+    }
+    if(toBeBroken){
+      applicable = true;
+      CHECK(&toBeBroken->container==&G,"");
+      if(apply) delete toBeBroken;
+    }
+  }
+  return applicable;
 }
 
 void State::write(ostream& os) const{
   os <<"PreAction: " <<preAction <<endl;
-  os <<"Relations: ";
-  for(Relation* r:R) os <<*r <<", ";
-  os <<endl <<"Poses:" <<endl;
-  for(Pose* p:P) os <<*p <<endl;
   os <<"Graph:" <<G <<endl;
   os <<endl;
 }
-
-
 
 SearchNode::SearchNode(SearchNodeL& container_)
   :container(&container_), preNode(NULL){
   container->append(this);
   domain.getInitialState(state);
+  state.compControllable();
 }
 
 SearchNode::SearchNode(const SearchNode& preNode_, const Action& preAction)
   :container(preNode_.container), preNode(&preNode_){
   CHECK(preNode, "");
   container->append(this);
-  domain.getNewState(state, preNode->state, preAction);
+
+  state = preNode->state;
+  state.preAction = preAction;
+  if(!state.testAction(preAction, true)){
+    cout <<"*** can't execute that action" <<endl;
+  }else{
+    state.compControllable();
+  }
+
 }
 
 Action SearchNode::getRandomFeasibleAction(){
   Action a;
-  a.i=rnd(domain.numObjects());
-  a.j=rnd(domain.numObjects());
-  a.a=(ActionPredicate)rnd(_N_ActionPredicate);
-  a.p=(Predicate)rnd(_N_Predicate);
+  for(;;){
+    a.setRandom(domain.numObjects());
+    if(state.testAction(a, false)) break;
+  }
   return a;
 }
+
+
 
 
 

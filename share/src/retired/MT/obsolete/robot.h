@@ -6,7 +6,7 @@
 #include "robot_variables.h"
 
 #include <Ors/ors.h>
-#include "joystick.h"
+#include "gamepad.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>
 #include "schunk.h"
@@ -20,7 +20,7 @@
 
 struct ControllerProcess;
 struct TaskAbstraction;
-enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
+enum CtrlMode { stopCM, gamepadCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
 
 struct TaskGoalUpdater {
   virtual void operator()(TaskAbstraction*, ControllerProcess*) = 0;
@@ -42,7 +42,7 @@ void q_hand_home(arr &);
 
 /** A collection of TaskVariables and their target/precision information */
 struct TaskAbstraction {
-  JoystickInterface *joyVar;
+  GamepadInterface *gamepadVar;
   FutureMotionPlan *planVar;
   
   TaskVariableList TVall;
@@ -52,8 +52,8 @@ struct TaskAbstraction {
   double TV_x_yprec, TV_x_vprec, TV_rot_vprec, TV_q_vprec;
   
   //-- options/parameters
-  double joyRate;      //joystick speed
-  intA joyState;
+  double gamepadRate;      //gamepad speed
+  intA gamepadState;
   arr reachPoint;      //defines the 3D reach point in reachCM
   
   //trajectory messages - output buffers for planners
@@ -82,7 +82,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
   SkinPressureVar *skinPressureVar;
   currentProxiesVar *proxiesVar;
   FutureMotionPlan *planVar;
-  JoystickInterface *joyVar;
+  GamepadInterface *gamepadVar;
  
   //INPUT
   TaskAbstraction *task;
@@ -130,13 +130,13 @@ struct RobotProcessGroup {
 	EarlyVisionOutput evisOutput;
 
   //Processes
-  bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
+  bool openArm, openHand, openSkin, openGamepad, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;
   SchunkArmModule arm;
   SchunkHandModule hand;
   SchunkSkinModule skin;
   
-  JoystickInterface joy;
+  GamepadInterface gamepad;
   UrgInterface urg;
   EarlyVisionModule evis;
   CameraModule bumble;
@@ -180,7 +180,7 @@ _BasicRobotTask(OpenHand)
 _BasicRobotTask(CloseHand)
 _BasicRobotTask(Reach)
 _BasicRobotTask(FollowTrajectory)
-_BasicRobotTask(Joystick)
+_BasicRobotTask(Gamepad)
 
 #ifdef  MT_IMPLEMENTATION
 #  include "robot.cpp"

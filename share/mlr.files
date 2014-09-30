@@ -29,7 +29,7 @@ examples/Hardware/flycap/flycap_serials.cpp
 examples/Hardware/flycap/main.cpp
 examples/Hardware/g4_module/main.cpp
 examples/Hardware/g4_raw/main.cpp
-examples/Hardware/joystick/main.cpp
+examples/Hardware/gamepad/main.cpp
 examples/Hardware/kinect/main.cpp
 examples/Hardware/kinect_module/main.cpp
 examples/Infer/infer/main.cpp
@@ -46,9 +46,9 @@ examples/Motion/constraint/main.cpp
 examples/Motion/dynamicMovementPrimtives/main.cpp
 examples/Motion/feedbackControl/main.cpp
 examples/Motion/feedbackControl_constrained/main.cpp
-examples/Motion/feedbackControl_joystick/main.cpp
-examples/Motion/feedbackControl_joystick/simulator.cpp
-examples/Motion/feedbackControl_joystick/simulator.h
+examples/Motion/feedbackControl_gamepad/main.cpp
+examples/Motion/feedbackControl_gamepad/simulator.cpp
+examples/Motion/feedbackControl_gamepad/simulator.h
 examples/Motion/feedbackControl_PR2/main.cpp
 examples/Motion/grasp/obsolete/obsoleteTries.cpp
 examples/Motion/grasp/obsolete/setNewGraspGoals.cpp
@@ -155,7 +155,7 @@ projects/pcl_sprint/plane.cpp
 projects/pcl_sprint/plane.h
 projects/pr2_actions/main.cpp
 projects/pr2_init_pos/src/pr2_init_pos.cpp
-projects/pr2_joypadControl/main.cpp
+projects/pr2_gamepadControl/main.cpp
 projects/pr2_simple_trajectory/src/main.cpp
 projects/pr2_simple_trajectory/src/pfcontrol.cpp
 projects/pr2_simple_trajectory/src/tmp.cpp
@@ -164,7 +164,7 @@ projects/racer/dynamics/main.cpp
 projects/racer/IMU-module/main-nathanRobert.cpp
 projects/racer/IMU-module/main.cpp
 projects/racer/IMUdata/main.cpp
-projects/racer/joystick/main.cpp
+projects/racer/gamepad/main.cpp
 projects/racer/motorCtrl/main.cpp
 projects/tmp/main.cpp
 projects/tmp/pfcontrol.cpp
@@ -346,8 +346,8 @@ src/Hardware/G4/module_G4Display.cpp
 src/Hardware/G4/module_G4Display.h
 src/Hardware/G4/module_G4Recorder.cpp
 src/Hardware/G4/module_G4Recorder.h
-src/Hardware/joystick/joystick.cpp
-src/Hardware/joystick/joystick.h
+src/Hardware/gamepad/gamepad.cpp
+src/Hardware/gamepad/gamepad.h
 src/Hardware/kinect/depth_packing.cpp
 src/Hardware/kinect/kinect.cpp
 src/Hardware/kinect/kinect.h

@@ -160,7 +160,9 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
-  listDelete(ats);
+  //TODO check if this works! coupled to the listDelete below
+  Item *it=ats["type"]; if(it) ats.removeValue(it);
+  //  listDelete(ats);
 }
 
 void ors::Body::write(std::ostream& os) const {
@@ -1645,7 +1647,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
-//  cout <<"***KVG" <<G <<endl;
+//  cout <<"***KVG:\n" <<G <<endl;
   
   clear();
   
