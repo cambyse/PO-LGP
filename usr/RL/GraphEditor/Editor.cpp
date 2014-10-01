@@ -6,16 +6,24 @@
 #include <QtCore>
 #include <QFileDialog>
 #include <QGraphicsSvgItem>
+#include <QWheelEvent>
 
+#include <stdio.h>
 #include <list>
 
 using namespace std;
 
 Editor::Editor(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::Editor)
+    ui(new Ui::Editor),
+    zoom_view(new ZoomView(this))
 {
     ui->setupUi(this);
+    // install event filter
+    ui->visualization->installEventFilter(zoom_view.get());
+    // allow dragging
+    ui->visualization->setDragMode(QGraphicsView::ScrollHandDrag);
+    // parse default file
     parse_content(read_file(ui->file_name->text()));
 }
 
@@ -119,17 +127,21 @@ void Editor::kvg_to_visual()
         scene = new QGraphicsScene();
         ui->visualization->setScene(scene);
     }
+    // clear scene
     scene->clear();
-    ui->visualization->resetTransform();
-
+    // construct and add svg item
     QGraphicsSvgItem * svg_item = new QGraphicsSvgItem(svg_file_name);
     svg_item->setFlags(QGraphicsItem::ItemClipsToShape);
     svg_item->setCacheMode(QGraphicsItem::NoCache);
     svg_item->setZValue(0);
-
     scene->addItem(svg_item);
-
+    // rescale
+//    ui->visualization->resetTransform();
     scene->setSceneRect(svg_item->boundingRect().adjusted(-10, -10, 10, 10));
+
+    // remove files
+    remove(dot_file_name.toLatin1());
+    remove(svg_file_name.toLatin1());
 }
 
 QTreeWidgetItem *Editor::item_to_tree_item(const Parser::KeyValueGraph::Item &item)
@@ -318,4 +330,22 @@ void Editor::tree_item_clicked(QTreeWidgetItem * item, int column)
     cursor.setPosition(pos);
     ui->graph_editor->setTextCursor(cursor);
     ui->graph_editor->setFocus();
+}
+
+bool ZoomView::eventFilter(QObject *obj, QEvent *event)
+{
+    if(event->type()==QEvent::Wheel) {
+        // process wheel event
+        QWheelEvent * wheel_event = static_cast<QWheelEvent *>(event);
+        if(wheel_event!=nullptr && wheel_event->modifiers()==Qt::ControlModifier) {
+            double s = wheel_event->delta();
+            s /= 8*360;
+            s = 1+s;
+            editor->ui->visualization->scale(s, s);
+            return true;
+        }
+    }
+
+    // standard event processing
+    return QObject::eventFilter(obj, event);
 }

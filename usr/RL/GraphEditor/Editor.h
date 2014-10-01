@@ -10,6 +10,8 @@ namespace Ui {
 class Editor;
 }
 
+class ZoomView;
+
 class Editor : public QMainWindow
 {
     Q_OBJECT
@@ -19,10 +21,14 @@ public:
     ~Editor();
 
 private:
+    friend class ZoomView;
+
     Ui::Editor *ui;
     int editor_blocked_state;
     QString editor_content;
     Parser::KeyValueGraph key_value_graph;
+    std::shared_ptr<ZoomView> zoom_view;
+
     QString read_file(QString file_name);
     void parse_content(QString input);
     void block_editor_signals();
@@ -38,6 +44,16 @@ private slots:
     void save_file();
     void quit();
     void tree_item_clicked(QTreeWidgetItem * item, int column);
+};
+
+// event filter for zooming
+class ZoomView: public QObject {
+    Q_OBJECT
+public:
+    ZoomView(Editor * e): editor(e) {}
+protected:
+    Editor * editor;
+    bool eventFilter(QObject *obj, QEvent *event);
 };
 
 #endif // EDITOR_H

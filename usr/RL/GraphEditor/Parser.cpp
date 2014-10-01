@@ -2,6 +2,16 @@
 
 #include "util.h"
 
+#include <map>
+#include <vector>
+#include <functional>
+
+using std::vector;
+using std::multimap;
+using std::map;
+using std::list;
+using std::shared_ptr;
+
 //static const QString success_string = R"(<span style="color:#aaa; background-color:#eee">&nbsp;</span>&nbsp;)";
 //static const QString error_string =   R"(<span style="color:#a00; background-color:#eee">></span>&nbsp;)";
 
@@ -82,6 +92,11 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
             parse_error(input, output, in_it, kvg);
             state = START;
         } else if(c=='\n') { // append new-line (as HTML)
+            // new-line also starts new item when list of keys is not
+            // terminated
+            if(state==KEYS) {
+                state = START;
+            }
             DEBUG_OUT("new line");
             //DEBUG_OUT("");
             output += "<br>";
@@ -335,11 +350,22 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     }
 
     // set missing values to default (true)
-    for(auto& item : kvg.items) {
-        if(item.value_type==KeyValueGraph::Item::NONE) {
-            item.value = "true";
-            item.value_type = KeyValueGraph::Item::BOOL;
+    list<KeyValueGraph*> kvg_list({&kvg});
+    while(!kvg_list.empty()) {
+        for(auto& item : kvg_list.front()->items) {
+            switch(item.value_type) {
+            case KeyValueGraph::Item::NONE:
+                item.value = "true";
+                item.value_type = KeyValueGraph::Item::BOOL;
+                break;
+            case KeyValueGraph::Item::KVG:
+                kvg_list.push_back(item.sub_graph.get());
+                break;
+            default:
+                break;
+            }
         }
+        kvg_list.pop_front();
     }
 
     // set positions if something is missing
@@ -675,5 +701,96 @@ QString Parser::toHtml(QChar c)
 
 QString Parser::KeyValueGraph::dot()
 {
-    return R"(digraph G {compound=true;a -> b;c -> b;subgraph cluster1 {d -> e;}b -> e [lhead=cluster1,];})";
+    // to find the identifiers of all items with a given key
+    int node_counter = 0;
+    int cluster_level = 0;
+    vector<int> cluster_level_counts({0});
+    bool missing_parents = false;
+    QString output;
+    std::function<void(const KeyValueGraph * kvg, QString cluster_name)> parse_kvg;
+    parse_kvg = [&](const KeyValueGraph * kvg, QString cluster_name) {
+        multimap<QString, QString> key_id_map;
+        QString node_id;
+        QString indentation = QString("    ").repeated(cluster_level+1);
+        bool first_node = true;
+        for(Item item : kvg->items) {
+            QString key_list;
+            bool first_key = true;
+            for(QString key : item.keys) {
+                if(first_key) {
+                    first_key = false;
+                    key_list += key;
+                } else {
+                    key_list += ", " + key;
+                }
+            }
+            switch (item.value_type) {
+            case Item::KVG:
+            {
+                QString next_cluster_name = QString("cluster_%1_%2").arg(cluster_level).arg(cluster_level_counts[cluster_level]);
+                node_id = next_cluster_name;
+                output += indentation + "subgraph " + next_cluster_name + " { label = <<b>" + key_list + "</b>>;\n";
+                ++cluster_level_counts[cluster_level];
+                ++cluster_level;
+                if((int)cluster_level_counts.size()<=cluster_level) {
+                    cluster_level_counts.push_back(0);
+                }
+                parse_kvg(item.sub_graph.get(), next_cluster_name);
+                --cluster_level;
+                output += indentation + "}\n";
+            }
+                break;
+            default:
+            {
+                node_id = QString("node%1").arg(node_counter);
+                if(first_node) {
+                    first_node = false;
+                    output += indentation + cluster_name;
+                } else {
+                    output += indentation + node_id;
+                }
+                ++node_counter;
+                output += " [label=<";
+                if(key_list!="") {
+                    output += "<b>" + key_list + "</b><br/>";
+                }
+                output += "<i>" + item.value + "</i>>];\n";
+            }
+                break;
+            }
+            // key-id pairs to map
+            for(QString key : item.keys) {
+                key_id_map.insert({{key, node_id}});
+            }
+            // make parents
+            for(QString par : item.parents) {
+                auto match_iters = key_id_map.equal_range(par);
+                if(match_iters.first==match_iters.second) {
+                    missing_parents = true;
+                    output += indentation + "missing_parents -> " + node_id;
+                    if(node_id.startsWith("cluster")) {
+                        output += " [lhead=" + node_id + "]";
+                    }
+                    output += ";\n";
+                } else {
+                    for(auto id_it=match_iters.first; id_it!=match_iters.second; ++id_it) {
+                        QString par_id = id_it->second;
+                        output += indentation + par_id + " -> " + node_id;
+                        if(par_id.startsWith("cluster") && node_id.startsWith("cluster")) {
+                            output += " [ltail=" + par_id + ", lhead=" + node_id + "]";
+                        } else if(par_id.startsWith("cluster")) {
+                            output += " [ltail=" + par_id + "]";
+                        } else if(node_id.startsWith("cluster")) {
+                            output += " [lhead=" + node_id + "]";
+                        }
+                        output += ";\n";
+                    }
+                }
+            }
+        }
+    };
+    parse_kvg(this, "node0");
+    output = QString("digraph { compound = true;%1\n%2}").arg((missing_parents?" missing_parents [label=<missing parents>, color=red];":"")).arg(output);
+//    ERROR(output);
+    return output;
 }
