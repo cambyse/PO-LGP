@@ -31,8 +31,10 @@ static const QString begin_error_bg = R"(<span style="background-color:)"+error_
 
 static const QString premature_end =  R"(<premature end>)";
 
-static const QString start_paragraph = R"(<p style="margin:0px;">)";
-static const QString end_paragraph   = R"(</p>)";
+//static const QString start_paragraph = R"(<p style="margin:0px;">)";
+//static const QString end_paragraph   = R"(</p>)";
+static const QString start_paragraph = R"()";
+static const QString end_paragraph   = R"(<br>)";
 
 static const QString key_chars =      R"([a-zA-Z0-9_])";
 static const QString parent_chars =   R"([a-zA-Z0-9_])";
@@ -376,10 +378,13 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
         parse_error(input, output, in_it, kvg);
     }
 
-    // on top-level add very first <p> and very last </p>
-    if(first_level) {
-        output = start_paragraph + output + end_paragraph;
-    }
+//    // on top-level add very first <p> and very last </p>
+//    // also replace empty paragraphs (to circumvent a Qt bug)
+//    if(first_level) {
+//        output = start_paragraph + output + end_paragraph;
+//        output.replace(end_paragraph+"\n"+start_paragraph+end_paragraph,"<br>"+end_paragraph+"\n");
+//        ERROR(output);
+//    }
 }
 
 void Parser::parse_comment(const QString &input, QString &output, PosIt &in_it, KeyValueGraph &)
