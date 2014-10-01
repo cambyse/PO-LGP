@@ -201,12 +201,21 @@ void Mesh::setCylinder(double r, double l, uint fineness) {
   }
 }
 
+void Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
+  setSphere(fineness);
+  scale(r);
+  for(uint i=0;i<V.d0;i++){
+    V(i,0) += .5*MT::sign(V(i,0))*x;
+    V(i,1) += .5*MT::sign(V(i,1))*y;
+    V(i,2) += .5*MT::sign(V(i,2))*z;
+  }
+}
+
 void Mesh::setCappedCylinder(double r, double l, uint fineness) {
   uint i;
   setSphere(fineness);
-  scale(r, r, r);
-  for(i=0; i<V.d0; i++) if(V(i, 2)>0.) V(i, 2)+=l;
-  translate(0, 0, -.5*l);
+  scale(r);
+  for(i=0; i<V.d0; i++) V(i, 2) += .5*MT::sign(V(i, 2))*l;
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D
@@ -1116,7 +1125,7 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 MT::String str;
 
 char *strn(std::istream& is){
-  str.read(is," \n\t"," \n\t",true);
+  str.read(is," \n\t\r\d"," \n\t\r\d",true);
   CHECK(is.good(),"could not read line");
   return str.p;
 }
@@ -1131,12 +1140,13 @@ void Mesh::readObjFile(std::istream& is) {
 
   // we only want to parse the relevant subpart/submesh of the mesh therefore
   // jump to the right position and stop parsing at the right positon.
-  // if (parsing_pos_start > -1) {
-//  fseek(file, parsing_pos_start, SEEK_SET);
+  if (parsing_pos_start > -1)
+    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
 
 //  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
   strn(is);
   for(bool ex=false;!ex;){
+    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
     switch(str.p[0]) {
       case '\0':
         is.clear();
@@ -1202,8 +1212,8 @@ void Mesh::readObjFile(std::istream& is) {
   // rewind to beginning of file and read in the data this pass
   is.seekg(0);
   is.clear();
-  // again, jump to the correct position
-//  fseek(file, parsing_pos_start, SEEK_SET);
+  if (parsing_pos_start > -1)
+    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
   
   /* on the second pass through the file, read all the data into the
      allocated arrays */
@@ -1213,6 +1223,7 @@ void Mesh::readObjFile(std::istream& is) {
 //  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
   strn(is);
   for(bool ex=false;!ex;){
+    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
     switch(str.p[0]) {
       case '\0':
         is.clear();
@@ -1335,6 +1346,50 @@ void Mesh::readObjFile(std::istream& is) {
   //CONVENTION!: start counting vertex indices from 0!!
   T -= T.min();
 }
+
+//===========================================================================
+// Util
+/**
+ * @brief Return the position of the submesh in the obj file in bytes (can be
+ * used by fseek).
+ *
+ * @param filename file to parse.
+ */
+uintA getSubMeshPositions(const char* filename) {
+  CHECK(MT::String(filename).endsWith("obj"),
+        "getSubMeshPositions parses only obj files.");
+  FILE* file;
+  char buf[128];
+  file = fopen(filename, "r");
+  CHECK(file,
+        "can't open data file " << filename << "; cwd is " << getcwd_string());
+
+  int flag = 0;
+  long start_pos = 0;
+  long end_pos = 0;
+
+  uintA result;
+  while(fscanf(file, "%s", buf) != EOF) {
+    switch(buf[0]) {
+      case 'v': {
+        if (flag > 0) {
+          end_pos = ftell(file) - 1;
+          result.append(ARRAY<uint>(start_pos, end_pos));
+          start_pos = end_pos;
+          flag =0; }
+      } break;
+      case 'f': {
+        flag=1;
+      } break;
+    }
+  }
+
+  end_pos = ftell(file) - 1;
+  result.append(ARRAY<uint>(start_pos, end_pos));
+  result.reshape(result.N/2,2);
+  return result;
+}
+
 
 #ifdef MT_GL
 /// static GL routine to draw a ors::Mesh

@@ -5,16 +5,20 @@
 #include "../util/QtUtil.h"
 #include "../util/ProgressBar.h"
 
-#warning exclude again
 #include "../Maze/MazeObservation.h"
 #include "../Maze/MazeAction.h"
 
 #include <omp.h>
-#define USE_OMP
+//#define USE_OMP
 
 #include <iomanip>
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "TEF: "
 #include "../util/debug.h"
 
 using util::Range;
@@ -43,7 +47,7 @@ TemporallyExtendedLinearQ::TemporallyExtendedLinearQ(std::shared_ptr<Conjunctive
     TemporallyExtendedFeatureLearner(N), discount(d)
 {
     // include only action features for t=0
-    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::T_ZERO_FEATURES::ACTION);
     // set outcome to "action"
     set_outcome_type(OUTCOME_TYPE::ACTION);
 }
@@ -52,11 +56,11 @@ TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
     int action_n = action_space->space_size();
     // return zero vector if value cannot be computed
     if(feature_set.size()==0) {
-        DEBUG_WARNING("Cannot compute action (no features)");
+        DEBUG_OUT(1,"Cannot compute action (no features)");
         return zeros<row_vec_t>(action_n);
     }
     // get feature matrix
-    f_mat_t feature_matrix(feature_set.size(),action_n);
+    f_mat_t feature_matrix = zeros<f_mat_t>(feature_set.size(),action_n);
     int feature_idx = 0;
     for(f_ptr_t feature : feature_set) {
         int action_idx = 0;
@@ -114,7 +118,7 @@ double TELQ::run_policy_iteration(bool final_L1) {
             cout << "    Iteration: " << counter << ", TD-error: " << TD_error << " ( delta = " << old_TD_error-TD_error << ")" << endl;
         }
         // update policy (and break?)
-        if(!update_policy() || old_TD_error<TD_error) {
+        if(!update_policy() || old_TD_error<=TD_error) {
             break;
         }
         // remember old TD-error
@@ -131,16 +135,32 @@ double TELQ::run_policy_iteration(bool final_L1) {
 
 double TELQ::get_TD_error() {
     update_c_rho_L();
-    return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+    if(weights.size()==0) {
+        return nan("");
+    } else {
+        return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+    }
 }
 
-void TELQ::print_training_data() const {
+void TELQ::print_training_data(bool feat) const {
     int data_idx = 0;
     int episode_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
         cout << "Episode " << episode_idx << endl;
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+            // print instance
             cout << ins << endl;
+            // print features
+            if(feat) {
+                QString f_vals;
+                for(auto idx_f : util::enumerate(feature_set)) {
+                    f_vals += QString("	%1:%2")
+                        .arg(idx_f.first, 3)
+                        .arg(idx_f.second->evaluate(ins), 4, 'f', 2);
+                }
+                cout << f_vals << endl;
+            }
+            // print action values
             int action_idx = 0;
             for(action_ptr_t act : action_space) {
                 cout << "    " << act << " --> " << get_action_values(ins)(action_idx) << endl;
@@ -157,7 +177,7 @@ bool TELQ::update() {
         update_rewards_and_data_indices();
     }
     bool performed_update = TemporallyExtendedFeatureLearner::update();
-    if(performed_update) {
+    if(performed_update || feature_set.size()==0) {
         need_to_update_c_rho_L = true;
     }
     return performed_update;
@@ -336,6 +356,15 @@ void TELQ::set_optimal_2x2_policy() {
     }
 }
 
+void TELQ::free_memory_after_learning() {
+    TemporallyExtendedFeatureLearner::free_memory_after_learning();
+    rho.clear();
+    L.clear();
+    need_to_update_c_rho_L = true;
+    policy.clear();
+    rewards_and_data_indices.clear();
+}
+
 void TELQ::update_c_rho_L() {
     // first update everything else
     update();
@@ -351,6 +380,15 @@ void TELQ::update_c_rho_L() {
     rho.zeros(feature_n);
     L.zeros(feature_n,feature_n);
     int progress_counter = 0;
+
+    // abort for empty feature set
+    if(weights.size()==0) {
+        IF_DEBUG(1) {
+            DEBUG_WARNING("Empty feature set --> cannot update");
+        }
+        return;
+    }
+
     IF_DEBUG(1) { ProgressBar::init("Updating c-rho-L:          "); }
 
 #ifdef USE_OMP
@@ -361,7 +399,8 @@ void TELQ::update_c_rho_L() {
     {
         // compute updates in multiple threads
         int nr_threads = omp_get_num_threads();
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedLinearQ)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
         {
             c_update.resize(nr_threads,0);
             rho_update.resize(nr_threads,zeros<col_vec_t>(rho.size()));
@@ -384,7 +423,8 @@ void TELQ::update_c_rho_L() {
             c_update[thread_nr] = c_update[thread_nr] + pow(r_t,2);
             rho_update[thread_nr] = rho_update[thread_nr] + r_t * phi;
             L_update[thread_nr] = L_update[thread_nr] + kron(phi,phi.t());
-#pragma omp critical
+#pragma omp critical (TemporallyExtendedLinearQ)
+#pragma omp critical (TemporallyExtendedFeatureLearner)
             {
                 ++progress_counter;
                 IF_DEBUG(1) { ProgressBar::print(progress_counter,number_of_data_points); }
@@ -410,14 +450,12 @@ void TELQ::update_c_rho_L() {
     for(auto reward_and_idx : rewards_and_data_indices) {
         double r_t = get<0>(reward_and_idx);
         int t_idx = get<1>(reward_and_idx);
-        //DEBUG_OUT(0,"T-idx: " << t_idx << " (" << policy_indices.size() << "/" << outcome_indices.size() << "/" << F_matrices.size() << ")");
-        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx].col(policy_indices[t_idx]) -
+        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx]*policy[t_idx] -
                                     F_matrices[t_idx-1].col(outcome_indices[t_idx]));
         c = c + pow(r_t,2);
         rho = rho + r_t * phi;
         L = L + kron(phi,phi.t());
         ++progress_counter;
-        ++t_idx;
         IF_DEBUG(1) { ProgressBar::print(progress_counter,number_of_data_points); }
     }
 
@@ -475,30 +513,37 @@ lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_
     return TD_error;
 }
 
-int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
-                        const lbfgsfloatval_t */*g*/,
-                        const lbfgsfloatval_t fx,
-                        const lbfgsfloatval_t xnorm,
-                        const lbfgsfloatval_t /*gnorm*/,
-                        const lbfgsfloatval_t /*step*/,
-                        int /*nr_variables*/,
-                        int iteration_nr,
-                        int /*ls*/) const {
-    IF_DEBUG(1) { cout <<
+int TELQ::LBFGS_progress(const lbfgsfloatval_t * x,
+                         const lbfgsfloatval_t */*g*/,
+                         const lbfgsfloatval_t fx,
+                         const lbfgsfloatval_t /*xnorm*/,
+                         const lbfgsfloatval_t /*gnorm*/,
+                         const lbfgsfloatval_t /*step*/,
+                         int nr_variables,
+                         int iteration_nr,
+                         int /*ls*/) const {
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = L1_norm(x, nr_variables);
+        cout <<
             QString("    Iteration %1 (%2), TD-error + L1 = %3 + %4")
             .arg(iteration_nr)
             .arg(objective_evaluations)
             .arg(fx-xnorm*l1_factor,11,'e',5)
             .arg(xnorm*l1_factor,11,'e',5)
-                       << endl; }
+             << endl;
+    }
     return 0;
 }
 
 void TELQ::LBFGS_final_message(double obj_val) const {
-    double xnorm = arma::sum(arma::abs(weights));
-    IF_DEBUG(1) { cout <<
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
+        cout <<
             QString("    TD-error + L1 = %1 + %2")
-            .arg(obj_val-xnorm*l1_factor)
-            .arg(xnorm*l1_factor)
-                       << endl; }
+            .arg(obj_val-xnorm*l1_factor,11,'e',5)
+            .arg(xnorm*l1_factor,11,'e',5)
+             << endl;
+    }
 }

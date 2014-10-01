@@ -329,8 +329,8 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const_instance_ptr_t new
         }
     }
     if(arc_to_observation==lemon::INVALID) {
-        DEBUG_ERROR("Could not identify new root node");
-        if(DEBUG_LEVEL>0) {
+        DEBUG_OUT(1, "Could not identify new root node");
+        IF_DEBUG(2) {
             DEBUG_OUT(0,"    Need observation " << observation << ", reward " << reward);
             for(arc_to_observation = graph_t::OutArcIt(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
                 node_t observation_node = graph.target(arc_to_observation);

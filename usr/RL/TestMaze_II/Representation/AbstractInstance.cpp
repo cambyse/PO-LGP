@@ -6,13 +6,14 @@
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
-// Define MEMORY_CHECK to use memory_check() function (is automatically defined
-// for DEBUG_LEVEL > 0).
-#define MEMORY_CHECK
-#if DEBUG_LEVEL > 0
-#ifndef MEMORY_CHECK
-#define MEMORY_CHECK
+// Define MEMORY_CHECK to use memory_check() function
+#ifdef UNIT_TESTS
+    #define MEMORY_CHECK
 #endif
+#if DEBUG_LEVEL > 0
+    #ifndef MEMORY_CHECK
+        #define MEMORY_CHECK
+    #endif
 #endif
 
 using std::string;
@@ -126,8 +127,8 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
     return create(action_ptr_t(),observation_ptr_t(),reward_ptr_t());
 }
 
-int AbstractInstance::memory_check(bool report_entries) {
 #ifdef MEMORY_CHECK
+int AbstractInstance::memory_check(bool report_entries) {
     if(DEBUG_LEVEL > 1 && report_entries) {
         for(weak_ptr_t p : all_instances) {
             if(p.expired()) {
@@ -138,11 +139,13 @@ int AbstractInstance::memory_check(bool report_entries) {
         }
     }
     return all_instances.size();
+}
 #else
+int AbstractInstance::memory_check(bool) {
     DEBUG_ERROR("no memory check possible");
     return -1;
-#endif
 }
+#endif
 
 bool AbstractInstance::memory_check_request() {
 #ifdef MEMORY_CHECK
@@ -219,11 +222,11 @@ int AbstractInstance::detach_all() {
     int detached = 0;
     if(p!=INVALID) {
         set_non_const_predecessor(INVALID);
-        detached += 1;
+        detached = 1;
     }
     if(n!=INVALID) {
         set_non_const_successor(INVALID);
-        detached += 1;
+        detached = 1;
     }
     if(detached>0) {
         if(p!=INVALID) {

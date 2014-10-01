@@ -16,7 +16,7 @@ void TEST(CheatSheet) {
   cout << "\n##### MATLAB FUNCTIONS" << endl;
   A = randn(2);
   A = zeros(3, 5);
-  A = ones(3);
+  A = ones(3,3);
   arr I = eye(4);
   // or fill the matrix manually with an initialization list
   A = {1, 3, 7, 8};

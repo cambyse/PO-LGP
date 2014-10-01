@@ -24,19 +24,7 @@ typedef AbstractInstance::const_ptr_t const_ptr_t;
 typedef std::shared_ptr<AbstractInstance> shared_ptr_t;
 typedef std::shared_ptr<const AbstractInstance> shared_const_ptr_t;
 
-static int do_memory_check = -1;
-
-#define MEMORY_CHECK {                                                  \
-        if(do_memory_check==-1) {                                       \
-            do_memory_check = AbstractInstance::memory_check_request()?1:0; \
-            if(do_memory_check==0) {                                    \
-                DEBUG_WARNING("Memory check disabled");                 \
-            }                                                           \
-        }                                                               \
-        if(do_memory_check==1) {                                        \
-            EXPECT_EQ(0,AbstractInstance::memory_check()) << "Note: This may be caused by other tests"; \
-        }                                                               \
-    }
+#define MEMORY_CHECK EXPECT_EQ(0, AbstractInstance::memory_check()) << "Note: This may be caused by other tests";
 
 reward_ptr_t reward(int n) {
     return reward_ptr_t(new ListedReward({0,1,2,3,4,5,6,7,8,9,10},n));

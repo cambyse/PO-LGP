@@ -66,6 +66,9 @@ public:
     /** \brief Clear the tree but not the data (instances). */
     void clear_tree();
 
+    /** Prunes the tree until all leaves are non-empty. */
+    void prune_dead_branches();
+
     /** \brief Return the current tree size. */
     int get_tree_size() const;
 
@@ -147,13 +150,13 @@ private:
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
 
-    std::vector<f_ptr_t> basis_features_value;    ///< Basis features for value-based U-Tree.
-    std::vector<f_ptr_t> basis_features_model;    ///< Basis features for model-based U-Tree.
+    f_set_t basis_features_value;    ///< Basis features for value-based U-Tree.
+    f_set_t basis_features_model;    ///< Basis features for model-based U-Tree.
     node_container_t leaf_nodes;
     graph_t graph;
     node_t root_node;
     node_info_map_t node_info_map;
-    static const int pseudo_counts = 1;
+    static const double pseudo_counts;
     double discount;
     EXPANSION_TYPE expansion_type;
 

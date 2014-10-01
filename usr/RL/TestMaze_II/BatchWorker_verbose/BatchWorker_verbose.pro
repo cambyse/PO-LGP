@@ -44,17 +44,17 @@ HEADERS += \
     ../CheeseMaze/CheeseMaze.h \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
+    ../ButtonWorld/ButtonWorld.h ../ButtonWorld/JointButtonWorld.h ../ButtonWorld/SeparateButtonWorld.h \
+    ../ButtonWorld/ButtonAction.h \
+    ../Representation/UniqueObservation.h \
     \
     ../Planning/Policy.h \
     ../Planning/RandomPolicy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
-    ../Planning/GoalIteration.h \
     \
     ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
     ../Learner/TemporallyExtendedFeatureLearner.h \
     ../Learner/TemporallyExtendedLinearQ.h \
@@ -99,15 +99,15 @@ SOURCES += \
     ../CheeseMaze/CheeseMaze.cpp \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
+    ../ButtonWorld/ButtonWorld.cpp ../ButtonWorld/JointButtonWorld.cpp ../ButtonWorld/SeparateButtonWorld.cpp \
+    ../ButtonWorld/ButtonAction.cpp \
+    ../Representation/UniqueObservation.cpp \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
-    ../Planning/GoalIteration.cpp \
     \
     ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
     ../Learner/TemporallyExtendedFeatureLearner.cpp \
     ../Learner/TemporallyExtendedLinearQ.cpp \
@@ -117,7 +117,10 @@ SOURCES += \
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
-    -lgomp
+    -llapack \
+    -lgomp \
+    -lgsl \
+    -lgslcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS +=

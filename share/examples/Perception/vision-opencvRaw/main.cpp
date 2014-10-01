@@ -1,9 +1,12 @@
+#include <Core/util.h>
+
+#ifdef MT_OPENCV
+
 #include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 
 #include <Perception/opencv.h>
-#include <Core/util.h>
 
 void testShow(){
   byteA rgbL,rgbR;
@@ -193,3 +196,12 @@ int main(int argc,char** argv){
 
   return 0;
 }
+
+#else //MT_OPENCV
+
+int main(int argc,char** argv){
+  NICO;
+  return 0;
+}
+
+#endif

@@ -26,82 +26,52 @@
 #include <Core/geo.h>
 #include <Gui/mesh.h>
 
-/**
- * @file
- * @ingroup group_ors
- */
-
-/* TODO (marc)
-  -- ors::KinematicWorld should have an 'arr q' or 'arr state'. The config should ALWAYS be in sync with this state!
-  */
-
-//===========================================================================
-// DEFGROUPS
-/**
- * @defgroup ors_basic_math Classe for the basic math (like transformations) of ors.
- * @ingroup group_ors
- */
-
-/**
- * @defgroup ors_basic_data_structures Basic data stuctures of ors.
- * The basic data structures form the graph which represents the world.
- *
- * @ingroup group_ors
- */
-
-/**
- * @defgroup ors_taskvariables  The task variable abstraction
- * @ingroup group_ors
- */
-
-/**
- * @defgroup ors_interfaces Interfaces to external libs.
- * @ingroup group_ors
- */
+/// @file
+/// @ingroup group_ors
 
 struct OpenGL;
 struct PhysXInterface;
 struct SwiftInterface;
 struct OdeInterface;
 
+/// @addtogroup group_ors
+/// @{
+
 //===========================================================================
-/**
-* @addtogroup group_ors
- * @{
- */
+
 namespace ors {
-//===========================================================================
-/**
- * @addtogroup ors_basic_data_structures
- * @{
- */
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_glue };
+/// @addtogroup ors_basic_data_structures
+/// @{
+enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
-/** @} */
+/// @}
 
 struct Joint;
 struct Shape;
 struct Body;
 struct KinematicWorld;
 struct Proxy;
-
-/** @} */ // END of group ors_basic_data_structures
+struct GraphOperator;
 } // END of namespace
 
 //===========================================================================
+
 typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
 typedef MT::Array<ors::Body*>  BodyL;
 typedef MT::Array<ors::Proxy*> ProxyL;
+typedef MT::Array<ors::GraphOperator*> GraphOperatorL;
 typedef MT::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
+
 namespace ors {
+/// @addtogroup ors_basic_data_structures
+/// @{
+
 //===========================================================================
-/** @addtogroup ors_basic_data_structures
- * @{
- */
+
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   KinematicWorld& world;
@@ -121,8 +91,6 @@ struct Body {
   
   ShapeL shapes;
   
-//  Body();
-//  explicit Body(const Body& b);
   Body(KinematicWorld& _world, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
@@ -135,7 +103,10 @@ struct Body {
   void read(std::istream& is);
 };
 
+//===========================================================================
+
 struct JointLocker;
+
 /// a joint
 struct Joint {
   KinematicWorld& world;
@@ -175,7 +146,9 @@ struct Joint {
   Joint &data() { return *this; }
 };
 
-/// a shape (geometric shape like cylinder/mesh, associated to a body)
+//===========================================================================
+
+/// a shape (geometric shape like cylinder/mesh or just marker, associated to a body)
 struct Shape {
   KinematicWorld& world;
   uint index;
@@ -192,8 +165,6 @@ struct Shape {
   bool cont;           ///< are contacts registered (or filtered in the callback)
   KeyValueGraph ats;   ///< list of any-type attributes
   
-//  Shape();
-//  explicit Shape(const Shape& s);
   Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void copy(const Shape& s, bool referenceMeshOnCopy=false);
@@ -203,7 +174,10 @@ struct Shape {
   void read(std::istream& is);
 };
 
-/// proximity information (when two shapes become close)
+//===========================================================================
+
+/// a data structure to store proximity information (when two shapes become close) --
+/// as return value from external collision libs
 struct Proxy {
   //TODO: have a ProxyL& L as above...
   int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
@@ -217,6 +191,7 @@ struct Proxy {
 };
 
 //===========================================================================
+
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct KinematicWorld {
   struct sKinematicWorld *s;
@@ -224,13 +199,15 @@ struct KinematicWorld {
   /// @name data fields
   uintA qdim;  ///< dimensionality depending on the agent number
   arr q, qdot; ///< the current joint configuration vector and velocities
-  int q_agent; ///< the agent index of the current q,qdot
+  uint q_agent; ///< the agent index of the current q,qdot
   BodyL  bodies;
   JointL joints;
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
+  GraphOperatorL operators;
 
   bool isLinkTree;
+  static uint setJointStateCount;
   
   /// @name constructors
   KinematicWorld();
@@ -247,6 +224,7 @@ struct KinematicWorld {
   Body *getBodyByName(const char* name) const;
   Shape *getShapeByName(const char* name) const;
   Joint *getJointByName(const char* name) const;
+  Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;
   void setShapeNames();
@@ -271,8 +249,8 @@ struct KinematicWorld {
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(uint agent=0, bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(uint agent=0, bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_Q_from_q(bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
@@ -280,27 +258,29 @@ struct KinematicWorld {
   void clearJointErrors();
 
   /// @name get state
-  uint getJointStateDimension(uint agent=0) const;
+  uint getJointStateDimension(int agent=-1) const;
   void getJointState(arr &_q, arr& _qdot=NoArr) const {
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
   arr getJointState() const { return q; }
-  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
-  arr getLimits(uint agent=0) const;
+  arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr getLimits() const;
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0, bool calcVels=false);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false);
+  void setAgent(uint agent, bool calcVels=false);
 
   /// @name kinematics
-  void kinematicsPos (arr& y, arr& J, Body *a, ors::Vector *rel=0, uint agent=0) const;
-  void kinematicsVec (arr& y, arr& J, Body *a, ors::Vector *vec=0, uint agent=0) const;
-  void kinematicsQuat(arr& y, arr& J, Body *a, uint agent=0) const;
-  void hessianPos(arr& H, Body *a, ors::Vector *rel=0, uint agent=0) const;
-  void jacobianR(arr& J, Body *a, uint agent=0) const;
+  void kinematicsPos (arr& y, arr& J, Body *b, ors::Vector *rel=0) const;
+  void kinematicsVec (arr& y, arr& J, Body *b, ors::Vector *vec=0) const;
+  void kinematicsQuat(arr& y, arr& J, Body *b) const;
+  void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
+  void jacobianR(arr& J, Body *b) const;
+  void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
-  void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
+  void kinematicsContactConstraints(arr& y, arr &J) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
@@ -345,9 +325,20 @@ struct KinematicWorld {
   void reportProxies(std::ostream *os=&std::cout);
   void writePlyFile(const char* filename) const; //TODO: move outside
 };
-/** @} */ // END of group ors_basic_data_structures
-} // END ors namespace
 
+//===========================================================================
+
+struct GraphOperator{
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid };
+  OperatorSymbol symbol;
+  uint timeOfApplication;
+  uint fromId, toId;
+  GraphOperator();
+  void apply(KinematicWorld& G);
+};
+
+/// @} // END of group ors_basic_data_structures
+} // END ors namespace
 
 //===========================================================================
 //
@@ -404,15 +395,11 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 //===========================================================================
 // routines using external interfaces.
 //===========================================================================
-/**
- * @addtogroup ors_interfaces
- * @{
- */
+/// @addtogroup ors_interfaces
+/// @{
 //===========================================================================
-/**
- * @defgroup ors_interface_opengl Interface to OpenGL.
- * @{
- */
+/// @defgroup ors_interface_opengl Interface to OpenGL.
+/// @{
 // OPENGL interface
 struct OpenGL;
 
@@ -421,28 +408,18 @@ extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawM
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0.);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
-/** @} */ // END of group ors_interface_opengl
-
-
-
-
-
-
-
-
+/// @} // END of group ors_interface_opengl
 
 
 //===========================================================================
-/**
- * @defgroup ors_interface_featherstone FEATHERSTONE Interface.
- * @todo is all the following stuff really featherstone?
- * @{
- */
+/// @defgroup ors_interface_featherstone FEATHERSTONE Interface.
+/// @todo is all the following stuff really featherstone? MT: yes
+/// @{
 namespace ors {
 struct Link {
   int type;
@@ -479,21 +456,19 @@ stdOutPipe(ors::Link);
 
 void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
 void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
-/** @} */
+/// @}
+
 
 //===========================================================================
-/** @defgroup ors_interface_blender Blender interface.
- * @{
- */
+/// @defgroup ors_interface_blender Blender interface.
+/// @{
 void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl);
-/** @} */
-//===========================================================================
-/** @} */ // END of group ors_interfaces
+/// @}
+
+/// @} // END of group ors_interfaces
 //===========================================================================
 #endif //MT_ORS_ONLY_BASICS
 
-MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename);
-
-/** @} */
+/// @}
 
 #endif //MT_ors_h

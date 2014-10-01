@@ -60,6 +60,11 @@ else()
 	message(STATUS "ROSBUILD not found, not building ROS image transport")
 endif(ROSBUILD)
 
+if(PCL_FOUND)
+    include_directories(${PCL_INCLUDE_DIRS})
+    link_directories(${PCL_LIBRAY_DIRS})
+endif(PCL_FOUND)
+
 add_library(Perception SHARED ${SOURCES})
 target_link_libraries(Perception 
 	LINK_PRIVATE 
@@ -75,3 +80,16 @@ target_link_libraries(Perception
 	${PA_LIBRARIES}
 	${ROS_IMG_TRANS_LDFLAGS}
 )
+if(PCL_FOUND)
+target_link_libraries(Perception
+    LINK_PRIVATE
+    ${PCL_COMMON_LIBRARIES}
+    ${PCL_SEGMENTATION_LIBRARIES}
+    ${PCL_IO_LIBRARIES}
+    ${PCL_VISUALIZATION_LIBRARIES}
+    ${PCL_SAMPLE_CONSENSUS_LIBRARIES}
+    ${PCL_FEATURES_LIBRARIES}
+    ${PCL_FILTERS_LIBRARIES}
+    ${PCL_SEARCH_LIBRARIES}
+)
+endif(PCL_FOUND)

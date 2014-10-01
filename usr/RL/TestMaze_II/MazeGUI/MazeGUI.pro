@@ -50,6 +50,9 @@ HEADERS += \
     ../CheeseMaze/CheeseMaze.h \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
+    ../ButtonWorld/ButtonWorld.h ../ButtonWorld/JointButtonWorld.h ../ButtonWorld/SeparateButtonWorld.h \
+    ../ButtonWorld/ButtonAction.h \
+    ../Representation/UniqueObservation.h \
     \
     ../Planning/Policy.h \
     ../Planning/RandomPolicy.h \
@@ -58,17 +61,15 @@ HEADERS += \
     ../Planning/GoalIteration.h \
     \
     ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
     ../Learner/TemporallyExtendedFeatureLearner.h \
     ../Learner/TemporallyExtendedLinearQ.h \
     ../Learner/AdjacencyOperator.h \
     ../Learner/ConjunctiveAdjacency.h \
     \
-    ../BatchMaze.h \
-    ../testmaze_ii.h
+    ../testmaze_ii.h \
+    ui_testmaze_ii.h
 SOURCES += \
     main.cpp \
     \
@@ -110,26 +111,28 @@ SOURCES += \
     ../CheeseMaze/CheeseMaze.cpp \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
+    ../ButtonWorld/ButtonWorld.cpp ../ButtonWorld/JointButtonWorld.cpp ../ButtonWorld/SeparateButtonWorld.cpp \
+    ../ButtonWorld/ButtonAction.cpp \
+    ../Representation/UniqueObservation.cpp \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
     ../Planning/GoalIteration.cpp \
     \
     ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
     ../Learner/TemporallyExtendedFeatureLearner.cpp \
     ../Learner/TemporallyExtendedLinearQ.cpp \
     ../Learner/ConjunctiveAdjacency.cpp \
     \
-    ../BatchMaze.cpp \
     ../testmaze_ii.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
-    -lgomp
+    -lgomp \
+    -lgsl \
+    -lgslcblas
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
 FORMS += ../testmaze_ii.ui

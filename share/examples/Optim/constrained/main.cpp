@@ -12,10 +12,8 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20);
 
 void testConstraint2(ConstrainedProblem& p, arr& x_start=NoArr){
   //-- initial x
-  arr x(p.dim_x());
+  arr x = zeros(p.dim_x());
   if(&x_start) x=x_start;
-  else x.setZero();
-  cout <<"x0=" <<x <<endl;
   rnd.seed(0);
 
   optConstrained(x, NoArr, p);
@@ -49,6 +47,7 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   ChoiceConstraintFunction F;
+//  RandomLPFunction F;
 //  SimpleConstraintFunction F;
 //  testConstraint(F);
   testConstraint2(F);

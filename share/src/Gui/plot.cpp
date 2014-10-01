@@ -664,9 +664,11 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   //surfaces
   for(i=0; i<data.array.N; i++) {
     uint j, k, X=data.array(i).d1, Y=data.array(i).d0;
-    for(j=0; j<Y; j++) for(k=0; k<X; k++) {
+    for(j=0; j<Y; j++){
+      for(k=0; k<X; k++) {
         gnuplotdata <<2.*(double)k/(X-1.)-1. <<' ' <<-2.*(double)j/(Y-1.)+1. <<' ' <<data.array(i)(j, k) <<std::endl;
       }
+    }
     gnuplotdata <<std::endl;
     if(i && block) gnuplotcmd <<", \\\n";
     PLOTEVERY(block, " with l notitle");

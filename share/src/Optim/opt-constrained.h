@@ -20,6 +20,8 @@
 
 #include "optimization.h"
 
+extern const char* MethodName[];
+
 //==============================================================================
 //
 // UnconstrainedProblem
@@ -75,4 +77,18 @@ struct PhaseOneProblem:ConstrainedProblem{
 // Solvers
 //
 
-void optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT);
+uint optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT);
+
+
+//==============================================================================
+//
+// evaluating
+//
+
+inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
+  arr g;
+  double f = P.fc(NoArr, NoArr, g, NoArr, x);
+  os <<"f=" <<f <<" compl="<<sum(elemWiseMax(g,zeros(g.N,1))) <<endl;
+}
+
+

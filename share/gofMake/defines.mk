@@ -66,7 +66,7 @@ endif
 
 ifeq ($(GL),1)
 CXXFLAGS  += -DMT_GL
-LIBS += -lglut -lGLU -lGL -lX11
+LIBS += -lGLEW -lglut -lGLU -lGL -lX11
 endif
 
 ifeq ($(QT),1)
@@ -244,10 +244,16 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
-LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
-CPATH := $(CPATH):/usr/include/pcl-1.6
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/groovy/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
+LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
+CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
+LPATH += /opt/ros/groovy/lib
 FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+CXXFLAGS += -DMLR_FRENECT
+LIBS += -lfreenect -lusb-1.0
 endif
 
 ifeq ($URGLASER),1)
@@ -325,7 +331,13 @@ CXXFLAGS  += -DMT_PORTAUDIO
 LIBS += -lportaudio
 endif
 
+ifeq ($(G4),1)
+CXXFLAGS += -DG4_INSTALLED
+LIBS += -lG4Track -lusb-1.0
+endif
+
 ifeq ($(ROS),1)
+CXXFLAGS  += -DMT_ROS
 ROSP=pr2_mechanism/pr2_controller_interface\
 pr2_mechanism/pr2_mechanism_model\
 pr2_mechanism/pr2_hardware_interface\

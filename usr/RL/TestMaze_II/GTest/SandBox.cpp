@@ -1,92 +1,49 @@
-#include <gtest/gtest.h>
-
 #include "SandBox.h"
 
-#include <memory> // for shared_ptr
+#include <gtest/gtest.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <vector>
+#include <QString>
 
-#define DEBUG_LEVEL 1
+#include <omp.h>
+
+#include "../util/util.h"
+#include "../util/QtUtil.h"
+
 #include "../util/debug.h"
 
-using std::shared_ptr;
+using std::vector;
+using std::cout;
+using std::endl;
 
-Notifier::Notifier(): to_be_notified(nullptr) {}
-Notifier::~Notifier() { to_be_notified->notify_me(); }
-void Notifier::set_to_be_notified(A * p) { to_be_notified = p; }
+TEST(SandBox, SomeTest) {
 
-A::A(): notifier(new Notifier()) {}
-A::~A() { delete notifier; }
-void A::set_to_be_notified(A * p) const { notifier->set_to_be_notified(p); }
-void A::notify_me() {
-    got_notified = true;
-    DEBUG_OUT(1,"I got notified");
-}
-
-TEST(SandBox, CharStream) {
-    unsigned short s = 3;
-    unsigned short c = 3;
-    DEBUG_OUT(1,"This is a short: " << s);
-    DEBUG_OUT(1,"This is a char: " << c);
-}
-
-TEST(SandBox, SharedPtr) {
-    shared_ptr<int> i1(new int(0));
-    shared_ptr<int> i2(new int(0));
-    shared_ptr<int> i3(i1);
-    DEBUG_OUT(1,"i1 (" << i1 << "): " << *i1);
-    DEBUG_OUT(1,"i2 (" << i2 << "): " << *i2);
-    DEBUG_OUT(1,"i3 (" << i3 << "): " << *i3);
-    DEBUG_OUT(1,"i1" << (i1==i2?"==":"!=") << "i2");
-    DEBUG_OUT(1,"i1" << (i1==i3?"==":"!=") << "i3");
-    DEBUG_OUT(1,"i3" << (i3==i2?"==":"!=") << "i2");
-}
-
-TEST(SandBox, Inheritance) {
-    class A {
-    public:
-        virtual void f(int) = 0;
-        virtual void f(int, int, int) = 0;
-    };
-    class AA {
-    public:
-        virtual void f(int, double) {
-            DEBUG_OUT(1,"AA::f(int, double)");
-        }
-    };
-    class B: public A, public AA {
-    public:
-        //========================//
-        // Needed for name lookup //
-        using AA::f;
-        //========================//
-        virtual void f(int) override {
-            f(0,0.);
-        }
-        virtual void f(int, int, int) override {
-            f(0);
-        }
-    };
-    class C: public B {
-    public:
-        virtual void f(int, double) {
-            DEBUG_OUT(1,"C::f(int, double)");
-        }
-        virtual void f(int) override {
-            f(0,0.);
-        }
-    };
-    A * a = new C();
-    a->f(0);
-    a->f(0,0,0);
-}
-
-TEST(SandBox, ConstPtrMember) {
-    // Problem: How can I "subscribe" to a const object A to be notified?
-    // Solution: The const object A holds a pointer to a Notifyer object. In
-    // that way A remains unchanged and only its Notifyer object "remembers" to
-    // other object to be notified.
-    A * a_ptr = new A();
+    //omp_set_num_threads(10);
+    //omp_set_nested(1);
+    int counter = 0;
+#pragma omp parallel
     {
-        const A a;
-        a.set_to_be_notified(a_ptr);
+        int first_thread_num = omp_get_thread_num();
+        int first_num_threads = omp_get_num_threads();
+#pragma omp parallel
+        {
+            int second_thread_num = omp_get_thread_num();
+            int second_num_threads = omp_get_num_threads();
+#pragma omp parallel
+            {
+                int third_thread_num = omp_get_thread_num();
+                int third_num_threads = omp_get_num_threads();
+#pragma omp critical
+                {
+                    cout << "count: " << counter
+                         << "	first: " << first_thread_num << "/" << first_num_threads
+                         << "	second: " << second_thread_num << "/" << second_num_threads
+                         << "	third: " << third_thread_num << "/" << third_num_threads << endl;
+                    ++counter;
+                }
+            }
+        }
     }
+
 }

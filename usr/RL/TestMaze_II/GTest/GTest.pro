@@ -1,5 +1,6 @@
 CONFIG += debug
 TARGET = GTest
+DEFINES += UNIT_TESTS
 QT += core \
     gui \
     svg \
@@ -45,15 +46,16 @@ HEADERS += \
     ../CheeseMaze/CheeseMaze.h \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
+    ../ButtonWorld/ButtonWorld.h ../ButtonWorld/JointButtonWorld.h ../ButtonWorld/SeparateButtonWorld.h \
+    ../ButtonWorld/ButtonAction.h \
+    ../Representation/UniqueObservation.h \
     \
     ../Planning/Policy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
     \
     ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
     ../Learner/TemporallyExtendedFeatureLearner.h \
     ../Learner/TemporallyExtendedLinearQ.h \
@@ -102,14 +104,15 @@ SOURCES += \
     ../CheeseMaze/CheeseMaze.cpp \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
+    ../ButtonWorld/ButtonWorld.cpp ../ButtonWorld/JointButtonWorld.cpp ../ButtonWorld/SeparateButtonWorld.cpp \
+    ../ButtonWorld/ButtonAction.cpp \
+    ../Representation/UniqueObservation.cpp \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
     \
     ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
     ../Learner/TemporallyExtendedFeatureLearner.cpp \
     ../Learner/TemporallyExtendedLinearQ.cpp \
@@ -135,7 +138,9 @@ LIBS += -llbfgs \
     -lemon \
     -larmadillo \
     -lgomp \
-    -lgtest
+    -lgtest \
+    -lgsl \
+    -lgslcblas
 LIBPATH += /usr/share/lib
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp

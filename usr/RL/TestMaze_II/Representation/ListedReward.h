@@ -49,6 +49,8 @@ public:
 
     virtual value_t max_reward() const override;
 
+    virtual ptr_t new_reward() const;
+
     virtual ptr_t new_reward(const int& idx) const;
 
     virtual ptr_t new_reward(const double& value) const;

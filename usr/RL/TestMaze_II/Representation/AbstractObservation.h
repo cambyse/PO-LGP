@@ -7,7 +7,12 @@
 /** \brief Base class for all observations. */
 class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservation> {
 public:
-    enum class OBSERVATION_TYPE { NONE, MINIMAL, MAZE_OBSERVATION, CHEESE_MAZE_OBSERVATION };
+    enum class OBSERVATION_TYPE { NONE
+            ,MINIMAL
+            ,MAZE_OBSERVATION
+            ,CHEESE_MAZE_OBSERVATION
+            ,UNIQUE_OBSERVATION
+            };
     AbstractObservation(OBSERVATION_TYPE t = OBSERVATION_TYPE::NONE);
     virtual ~AbstractObservation() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractObservation);

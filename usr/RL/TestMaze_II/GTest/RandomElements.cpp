@@ -5,10 +5,12 @@
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
 #include "../CheeseMaze/CheeseMazeAction.h"
+#include "../ButtonWorld/ButtonAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
+#include "../Representation/UniqueObservation.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../Representation/ListedReward.h"
 
@@ -20,24 +22,34 @@ using util::random_select;
 using std::vector;
 
 AbstractAction::ptr_t get_random_action() {
+    AbstractAction::ptr_t action;
     switch(random_select<AbstractAction::ACTION_TYPE>({
-                    AbstractAction::ACTION_TYPE::MINIMAL,
+                AbstractAction::ACTION_TYPE::MINIMAL,
                     AbstractAction::ACTION_TYPE::MAZE_ACTION,
                     AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION,
-                    AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION
+                    AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::BUTTON_ACTION
                     })) {
     case AbstractAction::ACTION_TYPE::MINIMAL:
-        return get_random_minimal_action();
+        action = get_random_minimal_action();
+        break;
     case AbstractAction::ACTION_TYPE::MAZE_ACTION:
-        return get_random_maze_action();
+        action = get_random_maze_action();
+        break;
     case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
-        return get_random_augmented_maze_action();
+        action = get_random_augmented_maze_action();
+        break;
     case AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION:
-        return get_random_cheese_maze_action();
+        action = get_random_cheese_maze_action();
+        break;
+    case AbstractAction::ACTION_TYPE::BUTTON_ACTION:
+        action = get_random_button_action();
+        break;
     default:
         DEBUG_ERROR("Unexpected type");
-        return AbstractAction::ptr_t();
+        action = AbstractAction::ptr_t();
     }
+    return action;
 }
 
 AbstractAction::ptr_t get_random_minimal_action() {
@@ -81,22 +93,40 @@ AbstractAction::ptr_t get_random_cheese_maze_action() {
                         })));
 }
 
+AbstractAction::ptr_t get_random_button_action() {
+    int array_length = rand()%5 + 1;
+    vector<bool> action_array(array_length);
+    for(int idx : util::Range(array_length)) {
+        action_array[idx] = rand()%2==0;
+    }
+    return AbstractAction::ptr_t(new ButtonAction(array_length, action_array));
+}
+
 AbstractObservation::ptr_t get_random_observation() {
+    AbstractObservation::ptr_t observation;
     switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
-                    AbstractObservation::OBSERVATION_TYPE::MINIMAL,
+                AbstractObservation::OBSERVATION_TYPE::MINIMAL,
                     AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION,
-                    AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION
+                    AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION,
+                    AbstractObservation::OBSERVATION_TYPE::UNIQUE_OBSERVATION
                     })) {
     case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
-        return get_random_minimal_observation();
+        observation = get_random_minimal_observation();
+        break;
     case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
-        return get_random_maze_observation();
+        observation = get_random_maze_observation();
+        break;
     case AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION:
-        return get_random_cheese_maze_observation();
+        observation = get_random_cheese_maze_observation();
+        break;
+    case AbstractObservation::OBSERVATION_TYPE::UNIQUE_OBSERVATION:
+        observation = get_unique_observation();
+        break;
     default:
         DEBUG_ERROR("Unexpected type");
-        return AbstractObservation::ptr_t();
+        observation = AbstractObservation::ptr_t();
     }
+    return observation;
 }
 
 AbstractObservation::ptr_t get_random_minimal_observation() {
@@ -125,19 +155,27 @@ AbstractObservation::ptr_t get_random_cheese_maze_observation() {
                         })));
 }
 
+AbstractObservation::ptr_t get_unique_observation() {
+    return AbstractObservation::ptr_t(new UniqueObservation());
+}
+
 AbstractReward::ptr_t get_random_reward() {
+    AbstractReward::ptr_t reward;
     switch(random_select<AbstractReward::REWARD_TYPE>({
                     AbstractReward::REWARD_TYPE::MINIMAL,
                     AbstractReward::REWARD_TYPE::LISTED_REWARD
                     })) {
     case AbstractReward::REWARD_TYPE::MINIMAL:
-        return get_random_minimal_reward();
+        reward = get_random_minimal_reward();
+        break;
     case AbstractReward::REWARD_TYPE::LISTED_REWARD:
-        return get_random_listed_reward();
+        reward = get_random_listed_reward();
+        break;
     default:
         DEBUG_ERROR("Unexpected type");
-        return AbstractReward::ptr_t();
+        reward = AbstractReward::ptr_t();
     }
+    return reward;
 }
 
 AbstractReward::ptr_t get_random_minimal_reward() {

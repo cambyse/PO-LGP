@@ -2,7 +2,7 @@
 #include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
 
-void compareModules(){
+void TEST(CollisionTiming){
   ors::KinematicWorld G("../../../configurations/schunk.ors");
 
   G.swift().setCutoff(1.);
@@ -19,12 +19,14 @@ void compareModules(){
 //    G.watch(false);
 //    G.watch(true);
   }
-  cout <<t <<" collision queries: sec=" <<MT::timerRead() <<endl;
+  double time = MT::timerRead();
+  cout <<t <<" collision queries: sec=" <<time <<endl;
+  CHECK(time>0.01 && time<1.,"strange time for collision checking!");
 }
 
 
-int main(int argc,char **argv){
-  compareModules();
+int MAIN(int argc,char **argv){
+  testCollisionTiming();
   
   return 0;
 }

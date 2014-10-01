@@ -23,8 +23,8 @@ public:
 
 protected:
 
-    const LEARNER_TYPE   learner_type;      ///< Characterize the different types of feature learners.
-    std::vector<f_ptr_t> basis_features;    ///< Basis features used to construct new candidates.
+    const LEARNER_TYPE learner_type; ///< Characterize the different types of feature learners.
+    f_set_t basis_features;          ///< Basis features used to construct new candidates.
 };
 
 #endif /* FEATURELEARNER_H_ */

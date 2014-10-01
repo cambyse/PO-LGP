@@ -53,7 +53,7 @@ public:
 
     virtual double get_TD_error();
 
-    virtual void print_training_data() const override;
+    virtual void print_training_data(bool feat = false) const override;
 
     virtual bool update_policy();
 
@@ -62,11 +62,13 @@ public:
     /** Just for debugging. */
     virtual void set_optimal_2x2_policy();
 
+    virtual void free_memory_after_learning() override;
+
 protected:
 
     virtual bool update() override;
     virtual void update_rewards_and_data_indices();
-    /** Just for debugging. */
+    /** For debugging: Optimal policy on minimal maze. */
     virtual col_vec_t optimal_2x2_policy(const_instance_ptr_t) const;
     virtual void update_c_rho_L();
     virtual double objective_and_gradient(col_vec_t& grad, const col_vec_t& weights);

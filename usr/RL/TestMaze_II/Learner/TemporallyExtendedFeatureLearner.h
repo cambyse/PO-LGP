@@ -19,9 +19,9 @@ class TemporallyExtendedFeatureLearner: public HistoryObserver, public virtual S
     //----typedefs/classes----//
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
-    typedef arma::SpMat<double> f_mat_t; // using double for compatibility to vec_t
-    typedef arma::Col<double> col_vec_t;
-    typedef arma::Row<double> row_vec_t;
+    typedef arma::Mat<f_ret_t> f_mat_t;
+    typedef arma::Col<f_ret_t> col_vec_t;
+    typedef arma::Row<f_ret_t> row_vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
     typedef Feature::look_up_map_t basis_feature_map_t;
     enum class OUTCOME_TYPE { ACTION, OBSERVATION_REWARD };
@@ -83,6 +83,10 @@ protected:
     /** The coefficient for L1-regularization. */
     double l1_factor = 0;
 
+    /** Whether to use log-regularization. If true use \f$\log(|x|+1)\f$ instead
+     * of \f$|x|\f$ as regularization */
+    bool use_log_regularization = false;
+
     /** Set of basis features.
      *
      * To be updated on changes of the feature set. */
@@ -108,8 +112,10 @@ public:
     virtual f_set_t get_feature_set();
     virtual void set_feature_set(const f_set_t&);
     virtual void set_l1_factor(const double& l1);
+    virtual void log_regularization(const bool& use);
+    virtual bool log_regularization() const { return use_log_regularization; }
     virtual void print_features() const;
-    virtual void print_training_data() const;
+    virtual void print_training_data(bool feat = false) const;
     virtual void add_action_observation_reward_tripel(
         const action_ptr_t& action,
         const observation_ptr_t& observation,
@@ -133,6 +139,8 @@ public:
      * outcomes for all training data. @param n gives the number of previous
      * action-observation-reward triplets to be printed. */
     virtual void print_F_matrices(int n = 0);
+    /** Free memory after learning is done. */
+    virtual void free_memory_after_learning();
 
 protected:
 
@@ -168,7 +176,14 @@ protected:
      * outcomes. Caution: For efficiency basis_feature_maps are used and must be
      * up to date! */
     virtual bool pick_non_const_features();
-    virtual lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*) = 0;
+    /** Computes the objective value and gradient. */
+    virtual lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*,
+                                            lbfgsfloatval_t*) = 0;
+    /** Adds a regularization to LBFGS_objective(). This function is, e.g., used
+     * to implement log-regularization. */
+    virtual lbfgsfloatval_t regularized_LBFGS_objective(const lbfgsfloatval_t*,
+                                                        lbfgsfloatval_t*);
+    /** Prints a progress message during optimization. */
     virtual int LBFGS_progress(const lbfgsfloatval_t *x,
                                const lbfgsfloatval_t *g,
                                const lbfgsfloatval_t fx,
@@ -178,9 +193,16 @@ protected:
                                int nr_variables,
                                int iteration_nr,
                                int ls) const = 0;
+    /** Prints a final message after the optimization has terminated. */
     virtual void LBFGS_final_message(double) const = 0;
-    virtual LBFGS_Object::objective_t get_LBFGS_objective();
-    virtual LBFGS_Object::progress_t get_LBFGS_progress() const;
+    /** Get regularized_LBFGS_objective() in a suitable type to hand it over to
+     * an LBFGS_Object. */
+    virtual LBFGS_Object::objective_t get_LBFGS_objective() final;
+    /** Get LBFGS_progress() in a suitable type to hand it over to an
+     * LBFGS_Object. */
+    virtual LBFGS_Object::progress_t get_LBFGS_progress() const final;
+    /** Computes the L1-norm. */
+    virtual lbfgsfloatval_t L1_norm(const lbfgsfloatval_t * x, int nr_vars) const final;
 };
 
 #endif /* TEMPORALLYEXTENDEDFEATURELEARNER_H_ */

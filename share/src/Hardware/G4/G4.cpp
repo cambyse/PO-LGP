@@ -1,12 +1,13 @@
-#ifdef G4_INSTALLED
 
 #include "G4.h"
-#include <G4TrackIncl.h>
 #include <string>
 #include <iostream>
 #include <time.h>
 
 REGISTER_MODULE(G4Poller)
+
+#ifdef G4_INSTALLED
+#include <G4TrackIncl.h>
 
 void lib_hardware_G4(){ cout <<"force loading lib/hardware/G4" <<endl; }
 
@@ -289,5 +290,12 @@ void G4Poller::close(){
   usleep(1000000l);
 }
 
-#endif // ifdef G4_INSTALLED
+#else // ifdef G4_INSTALLED
 
+
+G4Poller::G4Poller():Module("G4Tracker"){ NICO }
+void G4Poller::open(){ NICO }
+void G4Poller::step(){ NICO }
+void G4Poller::close(){ NICO }
+
+#endif
