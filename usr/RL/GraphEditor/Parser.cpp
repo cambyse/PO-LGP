@@ -31,6 +31,9 @@ static const QString begin_error_bg = R"(<span style="background-color:)"+error_
 
 static const QString premature_end =  R"(<premature end>)";
 
+static const QString start_paragraph = R"(<p style="margin:0px;">)";
+static const QString end_paragraph   = R"(</p>)";
+
 static const QString key_chars =      R"([a-zA-Z0-9_])";
 static const QString parent_chars =   R"([a-zA-Z0-9_])";
 static const QString value_chars =    R"([a-zA-Z0-9_.])";
@@ -39,10 +42,7 @@ Parser::KeyValueGraph Parser::parse_graph(const QString &input, QString &output)
 {
     // remove errors from end of input
     QString clean_input = input;
-    QString input_copy = input;
-    while(input_copy!=clean_input.remove(QRegExp(premature_end+"$"))) {
-        input_copy = clean_input;
-    }
+    clean_input.remove(QRegExp("("+premature_end+"\\s*)+$"));
     // hand over to parser
     PosIt in_it(clean_input);
     KeyValueGraph kvg;
@@ -99,7 +99,7 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
             }
             DEBUG_OUT("new line");
             //DEBUG_OUT("");
-            output += "<br>";
+            output += end_paragraph + "\n" + start_paragraph;
             ++in_it;
         } else if(c=='#') { // parse comment
             parse_comment(input, output, in_it, kvg);
@@ -374,6 +374,11 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     // unexpected termination of whole graph
     if(state==PARENTS || state==SIMPLE_VALUE || state==GRAPH_VALUE) {
         parse_error(input, output, in_it, kvg);
+    }
+
+    // on top-level add very first <p> and very last </p>
+    if(first_level) {
+        output = start_paragraph + output + end_paragraph;
     }
 }
 
