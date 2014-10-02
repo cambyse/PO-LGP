@@ -12,9 +12,6 @@ using std::map;
 using std::list;
 using std::shared_ptr;
 
-//static const QString success_string = R"(<span style="color:#aaa; background-color:#eee">&nbsp;</span>&nbsp;)";
-//static const QString error_string =   R"(<span style="color:#a00; background-color:#eee">></span>&nbsp;)";
-
 static const QString error_bg_color = "#fcc";
 
 static const QString neutral_color =  R"(<span style="color:#000;">)";
@@ -31,10 +28,8 @@ static const QString begin_error_bg = R"(<span style="background-color:)"+error_
 
 static const QString premature_end =  R"(<premature end>)";
 
-//static const QString start_paragraph = R"(<p style="margin:0px;">)";
-//static const QString end_paragraph   = R"(</p>)";
-static const QString start_paragraph = R"()";
-static const QString end_paragraph   = R"(<br>)";
+static const QString begin_line = R"(<p style="margin:0px;">)";
+static const QString end_line   = "</p>\n";
 
 static const QString key_chars =      R"([a-zA-Z0-9_])";
 static const QString parent_chars =   R"([a-zA-Z0-9_])";
@@ -86,9 +81,9 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     while(in_it!=input.end()) {
         // state independent
         QChar c = *in_it;
-        if(c==' ') { // append space (as HTML)
+        if(is(c,R"(\s)") && c!='\n') { // append space (as HTML)
             DEBUG_OUT("white space");
-            output += "&nbsp;";
+            output += toHtml(c);
             ++in_it;
         } else if(c=='#' && (state==PARENTS || state==SIMPLE_VALUE || state==GRAPH_VALUE)) { // unexpected termination
             parse_error(input, output, in_it, kvg);
@@ -101,7 +96,7 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
             }
             DEBUG_OUT("new line");
             //DEBUG_OUT("");
-            output += end_paragraph + "\n" + start_paragraph;
+            output += end_line + begin_line;
             ++in_it;
         } else if(c=='#') { // parse comment
             parse_comment(input, output, in_it, kvg);
@@ -378,13 +373,38 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
         parse_error(input, output, in_it, kvg);
     }
 
-//    // on top-level add very first <p> and very last </p>
-//    // also replace empty paragraphs (to circumvent a Qt bug)
-//    if(first_level) {
-//        output = start_paragraph + output + end_paragraph;
-//        output.replace(end_paragraph+"\n"+start_paragraph+end_paragraph,"<br>"+end_paragraph+"\n");
-//        ERROR(output);
-//    }
+    // on top-level
+    if(first_level) {
+        // properly start first line and end last line
+        output = begin_line + output + end_line;
+        // add <code> tags
+        output = "<code>\n" + output + "</code>";
+    }
+
+    // convert empty paragraphs to line breaks within preceeding paragraph
+    {
+        QString new_out = output;
+        while(output!=new_out.replace(end_line+begin_line+end_line,"<br>"+end_line)) {
+            output = new_out;
+        }
+        // does not work for empty paragraphs at beginning
+        while(output!=new_out.replace(begin_line+end_line+begin_line,begin_line+"<br>")) {
+            output = new_out;
+        }
+    }
+
+    // circumvent Qt display bug
+    {
+        // from one or more &nbsp; remove the first if it is preceeded
+        // by a </span> and the row is followed by a <br>
+        QRegExp bug_fix("</span>(&nbsp;)+<br>");
+        while(bug_fix.indexIn(output)>=0) {
+            QString match = bug_fix.capturedTexts()[0];
+            QString match_copy = match;
+            match.replace(QRegExp("</span>&nbsp;"),"</span> ");
+            output.replace(match_copy,match);
+        }
+    }
 }
 
 void Parser::parse_comment(const QString &input, QString &output, PosIt &in_it, KeyValueGraph &)

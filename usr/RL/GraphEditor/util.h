@@ -14,7 +14,9 @@
 class QString;
 std::ostream& operator<<(std::ostream &out, const QString& s);
 
-#define ERROR(x) {std::cout << x << std::endl;}
+//#define ERROR(x) {std::cout << x << std::endl;}
+#define ERROR(x)
+
 //#define DEBUG_OUT(x) {std::cout << x << std::endl;}
 #define DEBUG_OUT(x)
 

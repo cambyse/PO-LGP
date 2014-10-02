@@ -56,7 +56,6 @@ void Editor::parse_content(QString input)
     // highlight
     QString new_content = "";
     key_value_graph = Parser::parse_graph(input, new_content);
-    new_content = R"(<span style="font-family:monospace;font-size:10pt">)" + new_content + R"(</span>)";
 
     if(new_content!=editor_content) {
 
