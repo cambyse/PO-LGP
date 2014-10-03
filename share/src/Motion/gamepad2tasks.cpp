@@ -21,16 +21,16 @@
 #include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
-  endeffR = MP.addPDTask("endeffR", .2, .8, posTMT, "endeffR");
-  endeffL = MP.addPDTask("endeffL", .2, .8, posTMT, "endeffL");
-  base = MP.addPDTask("endeffBase", .2, .8, posTMT, "endeffBase");
-  baseQuat = MP.addPDTask("endeffBase", .2, .8, quatTMT, "endeffBase");
-  head = MP.addPDTask("endeffHead", 1., .8, vecTMT, "endeffHead", ors::Vector(1., 0., 0.));
-  limits = MP.addPDTask("limits", .2, .8, qLimitsTMT);
+  endeffR = MP.addPDTask("endeffR", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffR"));
+  endeffL = MP.addPDTask("endeffL", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffL"));
+  base = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffBase"));
+  baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
+  head = MP.addPDTask("endeffHead", 1., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
+  limits = MP.addPDTask("limits", .2, .8, new DefaultTaskMap(qLimitsTMT));
   limits->y_ref.setZero();
   limits->v_ref.setZero();
 
-  coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  coll = MP.addPDTask("collisions", .2, .8, new DefaultTaskMap(collTMT, -1, NoVector, -1, NoVector, {.1}));
   coll->y_ref.setZero();
   coll->v_ref.setZero();
 

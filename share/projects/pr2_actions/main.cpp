@@ -201,7 +201,7 @@ public:
     ors::Transformation pose; pose.setZero();
     MT::wait(1.);
     // align
-    pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+    pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
     //pose.pos.x += .2;
     //pose.pos.y += .1;
     //pose.pos.z -= .1;
@@ -212,7 +212,7 @@ public:
     activity.machine->waitForActionCompletion(t);
     cout << "Done" << endl;
 
-    int jointID = -(activity.machine->s->MP.world.getJointByName("l_gripper_joint")->qIndex);
+    int jointID = -(activity.machine->s->feedbackController.world.getJointByName("l_gripper_joint")->qIndex);
     GroundedAction* action = activity.machine->add( new SetQ("XXX", jointID, {.0}));
     action->tasks(0)->setGains(2000, 0);
 
@@ -223,7 +223,7 @@ public:
       // ROS: manipulating rotation
       advertise_manipulation_state("rotation start");
 
-      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
       // cout << input.rot << endl;
       // cout << pose.rot << endl;
       pose.addRelativeRotationDeg(input.rot, 1, 0, 0);
@@ -237,7 +237,7 @@ public:
 
       // ROS: manipulating prismatic
       advertise_manipulation_state("prismatic start");
-      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+      pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
       pose.pos.x += input.pris;
       t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
@@ -261,7 +261,7 @@ public:
 
   /// rotate to the given position
   void move_joint(double joint_value, char* joint_name="l_wrist_roll_joint") {
-    int jointID = -(activity.machine->s->MP.world.getJointByName(joint_name)->qIndex);
+    int jointID = -(activity.machine->s->feedbackController.world.getJointByName(joint_name)->qIndex);
     GroundedAction* action = activity.machine->add(
         new SetQ("XXX", jointID, {joint_value}));
     activity.machine->waitForActionCompletion(action);

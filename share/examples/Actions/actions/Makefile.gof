@@ -1,0 +1,8 @@
+BASE = ../../..
+
+PLIB = 1
+DEPEND = Core System Ors pr2 Motion Hardware_gamepad
+
+LPATHS += /opt/ros/groovy/lib
+
+include $(BASE)/gofMake/generic.mk

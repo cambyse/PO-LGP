@@ -6,7 +6,13 @@
 #include <Gui/opengl.h>
 
 //===========================================================================
-Singleton<SymbolL> symbols;
+//Singleton<SymbolL> symbols;
+
+const char* ActionStateString[7] = {
+ "trueLV", "falseLV", "inactive", "queued", "active", "failed", "success"
+};
+
+const char* getActionStateString(ActionState actionState){ return ActionStateString[actionState]; }
 
 //===========================================================================
 //
@@ -25,8 +31,8 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->MP.H_rate_diag = pr2_reasonable_W(s->world);
-  s->MP.qitselfPD.y_ref = s->q;
+  s->feedbackController.H_rate_diag = pr2_reasonable_W(s->world);
+  s->feedbackController.qitselfPD.y_ref = s->q;
 //  s->MP.qitselfPD.setGains(1.,10.);
 
   if(MT::getParameter<bool>("useRos",false)){
@@ -34,8 +40,8 @@ void ActionMachine::open(){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
       ctrl_obs.var->waitForNextRevision();
-      if(ctrl_obs.get()->q.N==s->MP.world.q.N
-         && ctrl_obs.get()->qdot.N==s->MP.world.q.N)
+      if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
+         && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N)
         break;
     }
 
@@ -43,7 +49,7 @@ void ActionMachine::open(){
     cout <<"** GO!" <<endl;
     s->q = ctrl_obs.get()->q;
     s->qdot = ctrl_obs.get()->qdot;
-    s->MP.setState(s->q, s->qdot);
+    s->feedbackController.setState(s->q, s->qdot);
   }
   //arr fL_base = S.fL_obs.get();
 }
@@ -53,7 +59,7 @@ void ActionMachine::step(){
   t++;
 
   if(!(t%10))
-    s->MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
+    s->feedbackController.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
   transition();
 
@@ -72,7 +78,6 @@ void ActionMachine::step(){
 
   for(GroundedAction *a : A()) {
     if(a->actionState==ActionState::active){
-      cout << a->name << ": " << a->ID << endl;
       for(PDtask *t:a->tasks) t->active=true;
 
       if(a->name == "PushForce") {
@@ -92,11 +97,16 @@ void ActionMachine::step(){
 
   cout <<"FL=" <<ctrl_obs.get()->fL <<endl;
 
+  //collect all tasks of all actions into the feedback controller:
+  s->feedbackController.tasks.clear();
+  for(GroundedAction *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
+
+
   for(uint tt=0;tt<10;tt++){
-    arr a = s->MP.operationalSpaceControl();
+    arr a = s->feedbackController.operationalSpaceControl();
     s->q += .001*s->qdot;
     s->qdot += .001*a;
-    s->MP.setState(s->q, s->qdot);
+    s->feedbackController.setState(s->q, s->qdot);
   }
 
   // s->MP.reportCurrentState();
@@ -111,42 +121,31 @@ void ActionMachine::step(){
 void ActionMachine::close(){
 }
 
-GroundedAction* ActionMachine::add(GroundedAction *action,
-                                   ActionState actionState)
-{
-  action->initYourself(*this);
-  action->actionState = actionState;
-  A.set()->append(action);
-  return action;
-}
-
 void ActionMachine::add_sequence(GroundedAction *action1,
                                  GroundedAction *action2,
                                  GroundedAction *action3,
                                  GroundedAction *action4)
 {
-  this->add(action1);
-  this->add(action2, ActionState::queued);
+  action2->actionState = ActionState::queued;
   action2->dependsOnCompletion.append(action1);
   if (action3) {
-    this->add(action3, ActionState::queued);
+    action3->actionState = ActionState::queued;
     action3->dependsOnCompletion.append(action2);
   }
   if (action4) {
-    this->add(action4, ActionState::queued);
+    action4->actionState = ActionState::queued;
     action4->dependsOnCompletion.append(action3);
   }
 }
 
 void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
-  a->deinitYourself(*this);
   if(!hasLock) A.set()->removeValue(a);
   else A().removeValue(a);
+  delete a;
 }
 
 void ActionMachine::transition(){
-  Access_typed<ActionL>::WriteToken lock(&A); //kills itself
-  //const auto& lock=A.set();
+  A.writeAccess();
 
   //-- first remove all old successes and fails
   for_list_rev(GroundedAction, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
@@ -171,6 +170,8 @@ void ActionMachine::transition(){
     if(succ) a->actionState=ActionState::active; //if ALL dependences succ -> active
     //in all other cases -> queued
   }
+
+  A.deAccess();
 }
 
 void ActionMachine::waitForActionCompletion(GroundedAction* a){
@@ -197,32 +198,26 @@ void ActionMachine::waitForActionCompletion() {
 // GroundedAction
 //
 
-GroundedAction::GroundedAction(const char* name, uint nargs):Symbol(name, nargs){
+GroundedAction::GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState)
+  : name(name), actionState(actionState){
+  actionMachine.A.set()->append(this);
 }
 
-const char* GroundedAction::GroundActionValueString[7] = {
- "trueLV", "falseLV", "inactive", "queued", "active", "failed", "success"
-};
-
-void GroundedAction::deinitYourself(ActionMachine& actionMachine) {
-  for (PDtask *t : tasks) actionMachine.s->MP.tasks.removeValue(t);
+GroundedAction::~GroundedAction(){
+//  for (PDtask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
   listDelete(tasks);
+}
+
+void GroundedAction::reportState(ostream& os){
+  os <<"Action '" <<name << "':  actionState=" << getActionStateString(actionState) <<"  PDtasks:" <<endl;
+  for(PDtask* t: tasks) t->reportState(os);
 }
 
 //===========================================================================
 // Helper functions
 //
-void reportExistingSymbols(){
-  for(Symbol *s:symbols()){
-    cout <<"Symbol '" <<s->name <<"' [" <<s->ID <<"] nargs=" <<s->nargs;
-    cout <<endl;
-  }
-}
 
 void reportActions(ActionL &A){
-  cout <<"* ActionL" <<endl;
-  for (GroundedAction *a : A){
-    cout << a->name << " actionState=" << a->getActionStateString() << endl;
-    // cout <<a->symbol.name <<" {" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" } { " <<a->poseArg1 <<' ' <<a->poseArg2 <<" }:";
-  }
+  cout <<"** REPORT ON CURRENT STATE OF ACTIONS" <<endl;
+  for (GroundedAction *a : A) a->reportState(cout);
 }
