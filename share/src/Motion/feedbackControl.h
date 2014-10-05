@@ -99,12 +99,12 @@ struct FeedbackMotionControl : MotionProblem {
 
   /// @{ @name adding tasks
   PDtask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
-//  PDtask* addPDTask(const char* name,
-//                    double decayTime, double dampingRatio,
-//                    DefaultTaskMapType type,
-//                    const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-//                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
-//                    const arr& params=NoArr);
+  PDtask* addPDTask(const char* name,
+                    double decayTime, double dampingRatio,
+                    DefaultTaskMapType type,
+                    const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
+                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
+                    const arr& params=NoArr);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
   /// @}
 

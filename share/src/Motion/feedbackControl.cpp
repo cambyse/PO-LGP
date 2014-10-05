@@ -127,15 +127,15 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, dou
   return tasks.append(new PDtask(name, decayTime, dampingRatio, map));
 }
 
-//PDtask* FeedbackMotionControl::addPDTask(const char* name,
-//                                         double decayTime, double dampingRatio,
-//                                         DefaultTaskMapType type,
-//                                         const char* iShapeName, const ors::Vector& ivec,
-//                                         const char* jShapeName, const ors::Vector& jvec,
-//                                         const arr& params){
-//  return tasks.append(new PDtask(name, decayTime, dampingRatio,
-//                                 new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params)));
-//}
+PDtask* FeedbackMotionControl::addPDTask(const char* name,
+                                         double decayTime, double dampingRatio,
+                                         DefaultTaskMapType type,
+                                         const char* iShapeName, const ors::Vector& ivec,
+                                         const char* jShapeName, const ors::Vector& jvec,
+                                         const arr& params){
+  return tasks.append(new PDtask(name, decayTime, dampingRatio,
+                                 new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params)));
+}
 
 ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
   ConstraintForceTask *t = new ConstraintForceTask(map);

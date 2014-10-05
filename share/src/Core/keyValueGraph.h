@@ -64,6 +64,7 @@ stdOutPipe(Item);
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
   bool isReference;
+  KeyValueGraph *isItemOfParentKvg;
   
   KeyValueGraph();
   ~KeyValueGraph();
@@ -115,7 +116,7 @@ struct KeyValueGraph:ItemL {
   
   void read(std::istream& is);
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
-  void writeDot(const char* filename="z.dot");
+  void writeDot(std::ostream& os, bool withoutHeader=false);
 };
 stdPipes(KeyValueGraph);
 

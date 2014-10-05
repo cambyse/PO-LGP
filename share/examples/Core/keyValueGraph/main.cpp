@@ -32,7 +32,7 @@ void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
-  G.writeDot();
+  G.writeDot(FILE("z.dot").getOs());
 }
 
 //===========================================================================
@@ -61,7 +61,7 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
   testRead();
-//  testDot();
+  testDot();
 
 //  if(!filename) testManual();
 

@@ -114,7 +114,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
   
-#define PARSERR(x) { cout <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
+#define PARSERR(x) { cerr <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
                             <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
   //-- read keys
@@ -199,6 +199,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         } break;
         case '{': { // KeyValueGraph (e.g., attribute list)
           KeyValueGraph *subList = new KeyValueGraph;
+          subList->isItemOfParentKvg = &containingKvg;
           subList->read(is);
           MT::parse(is, "}");
           item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList);
@@ -266,7 +267,7 @@ struct sKeyValueGraph {
 //  std::map<std::string, Item*> keyMap;
 };
 
-KeyValueGraph::KeyValueGraph():s(NULL), isReference(false) {
+KeyValueGraph::KeyValueGraph():s(NULL), isReference(false), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
 //  s = new sKeyValueGraph;
 }
@@ -286,6 +287,7 @@ Item *KeyValueGraph::append(const uintA& parentIdxs) {
 Item* KeyValueGraph::getItem(const char *key) {
   for(Item *it: (*this))
     for(const MT::String& k:it->keys) if(k==key) return it;
+  if(isItemOfParentKvg) return isItemOfParentKvg->getItem(key);
   return NULL;
 }
 
@@ -417,45 +419,50 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(const char *filename) {
-  ofstream fil;
-  MT::open(fil, filename);
-  fil <<"graph G{" <<endl;
-  fil <<"graph [ rankdir=\"TD\", ranksep=0.05 ];" <<endl;
-  fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
-  fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader) {
+  if(!withoutHeader){
+    os <<"graph G{" <<endl;
+    os <<"graph [ rankdir=\"TD\", ranksep=0.05 ];" <<endl;
+    os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
+    os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+  }
   for_list(Item, i, list()) i->index = i_COUNT;
   for(Item *it: list()) {
     if(it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
-      fil <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ ";
+      os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ ";
       if(it->keys.N){
-        fil <<"label=\"" <<it->keys(0);
-        for(uint i=1;i<it->keys.N;i++) fil <<'_' <<it->keys(i);
-        fil <<"\" ";
+        os <<"label=\"" <<it->keys(0);
+        for(uint i=1;i<it->keys.N;i++) os <<'_' <<it->keys(i);
+        os <<"\" ";
       }
-      fil <<"];" <<endl;
+      os <<"];" <<endl;
     }else{
-      fil <<it->index <<" [ ";
+      os <<it->index <<" [ ";
       if(it->keys.N){
-        fil <<"label=\"" <<it->keys(0);
-        for(uint i=1;i<it->keys.N;i++) fil <<'\n' <<it->keys(i);
-        fil <<"\" ";
+        os <<"label=\"" <<it->keys(0);
+        for(uint i=1;i<it->keys.N;i++) os <<'\n' <<it->keys(i);
+        os <<"\" ";
       }
-      if(it->parents.N) fil <<"shape=box";
-      else fil <<"shape=ellipse";
-      fil <<" ];" <<endl;
+      if(it->parents.N) os <<"shape=box";
+      else os <<"shape=ellipse";
+      os <<" ];" <<endl;
       for_list(Item, pa, it->parents) {
         if(pa->index<it->index)
-          fil <<pa->index <<" -- " <<it->index <<" [ ";
+          os <<pa->index <<" -- " <<it->index <<" [ ";
         else
-          fil <<it->index <<" -- " <<pa->index <<" [ ";
-        fil <<"label=" <<pa_COUNT;
-        fil <<" ];" <<endl;
+          os <<it->index <<" -- " <<pa->index <<" [ ";
+        os <<"label=" <<pa_COUNT;
+        os <<" ];" <<endl;
       }
     }
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      it->getValue<KeyValueGraph>()->writeDot(os, true);
+    }
   }
-  fil <<"}" <<endl;
-  fil.close();
+  if(!withoutHeader){
+    os <<"}" <<endl;
+    HALT("TODO: counter offset to index items dotlike...")
+  }
 }
 
 void KeyValueGraph::sortByDotOrder() {
