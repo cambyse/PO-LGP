@@ -23,8 +23,9 @@ void draw(void*){
 }
 
 inline void clip(double& x, double r){
-  if(x<-r) x=-r; else if(x>r) x=r;
+  if(x<0.) x=0.; else if(x>r) x=r;
 }
+
 
 double distance_SSPoints(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vector& Pb){
   CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
@@ -45,10 +46,9 @@ double distance_SSLinePoint(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::V
   if(!A.size[0]){ //SSLinePoint
     return distance_SSPoints(A, B, Pa, Pb);
   }
-  ors::Vector tmp;
-  ors::Vector a=A.X.rot.getX(tmp);
+  ors::Vector a=A.X.rot.getX();
   ors::Vector c=B.X.pos - A.X.pos;
-  //get the 'coordinates' along the line segment
+  //get the 'coordinate' along the line segment
   double t = c*a;
   clip(t, A.size[0]);
   //compute closest points
@@ -69,9 +69,8 @@ double distance_SSLines(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
   if(!B.size[0]){ //SSLinePoint
     return distance_SSLinePoint(A, B, Pa, Pb);
   }
-  ors::Vector tmp;
-  ors::Vector a=A.X.rot.getX(tmp);
-  ors::Vector b=B.X.rot.getX(tmp);
+  ors::Vector a=A.X.rot.getX();
+  ors::Vector b=B.X.rot.getX();
   ors::Vector c=B.X.pos - A.X.pos;
   //get the 'coordinates' along the line segments
   double A_dot_B = a*b;
@@ -97,7 +96,7 @@ double distance_SSLines(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
   return d-A.size[3]-B.size[3];
 }
 
-double distance_SSRects(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vector& Pb){
+double distance_SSRects(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb){
   CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
   CHECK(!A.size[2] && !B.size[2], "can only handle spheres, cylinders & rectangles yet - no boxes");
   if(!A.size[1] && !B.size[1]){ //SSLines
@@ -108,11 +107,11 @@ double distance_SSRects(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
   ors::Matrix R = ((f.rot)).getMatrix();
   ors::Vector Asize={A.size[0], A.size[1], 0.};
   ors::Vector Bsize={B.size[0], B.size[1], 0.};
-  ors::Vector trans = Asize + f.pos - R*Bsize;
-  double dist = RectDist(R.p(), trans.p(), (2.*Asize).p(), (2.*Bsize).p(), Pa.p(), Pb.p());
-  Pa = A.X * (Pa-Asize);
-  Pb = A.X * (Pb-Bsize);
-  //distance
+  ors::Vector trans = f.pos; //Asize + f.pos - R*Bsize;
+  double dist = RectDist(R.p(), trans.p(), (Asize).p(), (Bsize).p(), Pa.p(), Pb.p());
+  Pa = A.X * Pa;
+  Pb = A.X * Pb;
+   //distance
   ors::Vector c = Pa-Pb;
   double d = c.length();
   if(dist>0.) CHECK_ZERO(dist-d, 1e-4, "NOT EQUAL!");
@@ -123,16 +122,29 @@ double distance_SSRects(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
   return d-A.size[3]-B.size[3];
 }
 
+
+/* NOTE: All functions above: Internally they assume the shape's not centered, but extended from (0,0,0) to the positive coordinates
+ * That is different to the 'Shape' convention, where shapes are centered and extend (with half length) to negative and positive coordinates
+ * In the code this is transformed back and forth... */
+double distance_(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb){
+  A.X.pos -= 0.5*(A.X.rot*ors::Vector(A.size[0], A.size[1], A.size[2]));
+  B.X.pos -= 0.5*(B.X.rot*ors::Vector(B.size[0], B.size[1], B.size[2]));
+  double d=distance_SSRects(A, B, Pa, Pb);
+  A.X.pos += 0.5*(A.X.rot*ors::Vector(A.size[0], A.size[1], A.size[2]));
+  B.X.pos += 0.5*(B.X.rot*ors::Vector(B.size[0], B.size[1], B.size[2]));
+  return d;
+}
+
 void TEST(Distance){
   ors::KinematicWorld W;
   ors::Shape A(W, NoBody), B(W, NoBody);
   A.type = B.type = ors::SSBoxST;
-  memmove(A.size, ARR(.0, .0, .0, .1).p, 4*sizeof(double));
-  memmove(B.size, ARR(.0, .0, .0, .1).p, 4*sizeof(double));
+  memmove(A.size, ARR(.5, .0, .0, .05).p, 4*sizeof(double));
+  memmove(B.size, ARR(.5, .0, .0, .05).p, 4*sizeof(double));
   for(uint k=0;k<200;k++){
     A.X.setRandom(); A.X.pos(2) += 2.;
     B.X.setRandom(); B.X.pos(2) += 2.;
-    double d=distance_SSRects(A, B, Pa, Pb);
+    double d=distance_(A, B, Pa, Pb);
     double d2=(Pa-Pb).length();
     cout <<"d=" <<d <<' ' <<d2 <<' ' <<Pa <<Pb <<endl;
     if(d>0.) CHECK_ZERO(d-d2, 1e-4, "NOT EQUAL!");

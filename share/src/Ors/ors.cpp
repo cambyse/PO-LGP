@@ -611,10 +611,10 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
       f = b->X;
       f.appendTransformation(j->A);
       j->X = f;
-      if(j->type==JT_hingeX || j->type==JT_transX)  j->X.rot.getX(j->axis);
-      if(j->type==JT_hingeY || j->type==JT_transY)  j->X.rot.getY(j->axis);
-      if(j->type==JT_hingeZ || j->type==JT_transZ)  j->X.rot.getZ(j->axis);
-      if(j->type==JT_transXYPhi)  j->X.rot.getZ(j->axis);
+      if(j->type==JT_hingeX || j->type==JT_transX)  j->axis = j->X.rot.getX();
+      if(j->type==JT_hingeY || j->type==JT_transY)  j->axis = j->X.rot.getY();
+      if(j->type==JT_hingeZ || j->type==JT_transZ)  j->axis = j->X.rot.getZ();
+      if(j->type==JT_transXYPhi)  j->axis = j->X.rot.getZ();
       f.appendTransformation(j->Q);
       if(!isLinkTree) f.appendTransformation(j->B);
       j->to->X=f;
@@ -1190,7 +1190,7 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, ors::Vector *ve
   //get the vectoreference frame
   ors::Vector vec_world;
   if(vec) vec_world = b->X.rot*(*vec);
-  else    b->X.rot.getZ(vec_world);
+  else    vec_world = b->X.rot.getZ();
   if(&y) y = ARRAY(vec_world); //return the vec
   if(!&J) return; //do not return a Jacobian
 
@@ -1370,7 +1370,7 @@ void ors::KinematicWorld::inertia(arr& M) {
       
       Xi = j1->from->X;
       Xi.appendTransformation(j1->A);
-      Xi.rot.getX(ti);
+      ti = Xi.rot.getX();
       
       vi = ti ^(Xa.pos-Xi.pos);
       
@@ -1380,7 +1380,7 @@ void ors::KinematicWorld::inertia(arr& M) {
         
         Xj = j2->from->X;
         Xj.appendTransformation(j2->A);
-        Xj.rot.getX(tj);
+        tj = Xj.rot.getX();
         
         vj = tj ^(Xa.pos-Xj.pos);
         
@@ -1849,7 +1849,7 @@ void ors::KinematicWorld::frictionToForces(double coeff) {
   for_list(Joint,  e,  joints) {
     X = e->from->X;
     X.appendTransformation(e->A);
-    X.rot.getX(a);//rotation axis
+    a = X.rot.getX();//rotation axis
     
     v=e->Q.angvel.length();
     if(e->Q.angvel*Vector_x<0.) v=-v;

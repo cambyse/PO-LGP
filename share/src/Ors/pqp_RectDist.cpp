@@ -48,7 +48,6 @@
 #define PQP_RECTDIST_H
 
 #include <math.h>
-#include <stdio.h>
 
 #define PQP_REAL double
 #define DBG_PRINT(x) //printf(x)
