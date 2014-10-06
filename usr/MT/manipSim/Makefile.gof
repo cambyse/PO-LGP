@@ -1,6 +1,6 @@
 BASE = ../../../share
 
-OBJS = main.o manipSim.o
+OBJS = main.o manipSim.o search.o
 
 DEPEND = Motion Core Ors Gui Optim pr2
 

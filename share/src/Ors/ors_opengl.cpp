@@ -622,7 +622,7 @@ void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
 void ors::KinematicWorld::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
 void editConfiguration(const char* orsfile, ors::KinematicWorld& C) { NICO }
-void animateConfiguration(ors::KinematicWorld& C, OpenGL& gl) { NICO }
+void animateConfiguration(ors::KinematicWorld& C, Inotify*) { NICO }
 void glTransform(const ors::Transformation&) { NICO }
 void displayTrajectory(const arr&, int, ors::KinematicWorld&, const char*, double) { NICO }
 void displayState(const arr&, ors::KinematicWorld&, const char*) { NICO }

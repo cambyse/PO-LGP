@@ -3228,13 +3228,12 @@ template<class T> void listResize(MT::Array<T*>& L, uint N) {
 template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {
   listDelete(L);
   L.resize(M.N);
-  uint i;
-  for(i=0; i<L.N; i++) L(i)=new T(*M(i));
+  for(uint i=0; i<L.N; i++) L(i)=new T(*M(i));
 }
 
 template<class T> void listDelete(MT::Array<T*>& L) {
-  uint i;
-  for(i=L.N; i--;) delete L.elem(i);
+//  while(L.N) delete L.last();
+  for(uint i=L.N; i--;) delete L.elem(i);
   L.clear();
 }
 
