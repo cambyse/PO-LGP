@@ -396,13 +396,13 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     // circumvent Qt display bug
     {
         // from one or more &nbsp; remove the first if it is preceeded
-        // by a </span> and the row is followed by a <br>
-        QRegExp bug_fix("</span>(&nbsp;)+<br>");
-        while(bug_fix.indexIn(output)>=0) {
-            QString match = bug_fix.capturedTexts()[0];
-            QString match_copy = match;
-            match.replace(QRegExp("</span>&nbsp;"),"</span> ");
-            output.replace(match_copy,match);
+        // by a </span> and the last &nbsp; is followed by a <br>
+        QRegExp workaround("</span>(&nbsp;)+<br>");
+        while(workaround.indexIn(output)>=0) {
+            QString match = workaround.capturedTexts()[0];
+            QString match_fixed = match;
+            match_fixed.replace(QRegExp("</span>&nbsp;"),"</span> ");
+            output.replace(match,match_fixed);
         }
     }
 }
