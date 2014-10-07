@@ -1,7 +1,7 @@
 BASE = ../../..
 
-OBJS = main.o lecture.o
+OBJS = main.o
 
-DEPEND = Core Optim
+DEPEND = Core Optim Ors Gui
 
 include $(BASE)/gofMake/generic.mk

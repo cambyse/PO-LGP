@@ -202,7 +202,7 @@ InVoronoi(const PQP_REAL &a,
 // a[2] are the side lengths of A, b[2] are the side lengths of B
 
 PQP_REAL
-RectDist(PQP_REAL Rab[9], PQP_REAL Tab[3],
+pqp_RectDist(PQP_REAL Rab[9], PQP_REAL Tab[3],
           PQP_REAL a[2], PQP_REAL b[2], PQP_REAL Pa[3], PQP_REAL Pb[3])
 {
   PQP_REAL A0_dot_B0, A0_dot_B1, A1_dot_B0, A1_dot_B1;

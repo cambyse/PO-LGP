@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 
 double
-RectDist(double Rab[9], double Tab[3],
+pqp_RectDist(double Rab[9], double Tab[3],
 double a[2], double b[2], double Pa[3], double Pb[3]);
 
 using ors::Shape;
@@ -108,7 +108,7 @@ double distance_SSRects(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vect
   ors::Vector Asize={A.size[0], A.size[1], 0.};
   ors::Vector Bsize={B.size[0], B.size[1], 0.};
   ors::Vector trans = f.pos; //Asize + f.pos - R*Bsize;
-  double dist = RectDist(R.p(), trans.p(), (Asize).p(), (Bsize).p(), Pa.p(), Pb.p());
+  double dist = pqp_RectDist(R.p(), trans.p(), (Asize).p(), (Bsize).p(), Pa.p(), Pb.p());
   Pa = A.X * Pa;
   Pb = A.X * Pb;
    //distance

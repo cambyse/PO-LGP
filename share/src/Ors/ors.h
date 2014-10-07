@@ -405,6 +405,7 @@ struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);

@@ -306,6 +306,7 @@ void ors::Shape::reset() {
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
   listDelete(ats);
+  X.setZero();
   rel.setZero();
   mesh.V.clear();
   mesh_radius=0.;

@@ -292,9 +292,9 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= 1;  break;
+      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= opt.aulaMuInc;  break;
 //      case augmentedLag:   UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  UCP.mu *= 1;  break;
-      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  break;
+      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }
