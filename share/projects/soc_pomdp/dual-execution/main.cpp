@@ -32,19 +32,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   x = P.getInitialization();
 
-  //-- setup the motion problem
-  /*/
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
-//                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-//  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
-
-//FOUND the plane constraint
-
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
-    P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);/*/
-  world.getBodyByName("target")->X.pos.z = height + 0.42;
+  world.getBodyByName("target")->X.pos.z = height + 0.12;
   TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
@@ -135,6 +124,12 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 //      MC.addConstraintForceTask("touchTable",
 //                                new PairCollisionConstraint(world, "endeff2", "table"));
 #endif
+/*/
+  PDtask* coll = MC.addPDTask(
+      "collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  coll->y_ref.setZero();
+  coll->v_ref.setZero();
+/*/
 
 
   double tau = 0.01;
@@ -180,7 +175,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
     if(pd_c->desiredApproach.y.N){
       d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
       if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
-        est_target->X.pos.z = endeff->X.pos.z + 0.4; //est_target position update
+        est_target->X.pos.z = endeff->X.pos.z + 0.1; //est_target position update
       }
     }
 #endif
@@ -236,7 +231,7 @@ int main(int argc,char** argv){
 
   //compute the primal and dual trajectories
   arr heights;
-  uint numSamples = 2;
+  uint numSamples = 1;
   heights.resize(numSamples);
   arr allX, allY, allDual;
   arr values; //2-dim: sample, time
@@ -244,7 +239,7 @@ int main(int argc,char** argv){
 
   for(uint i=0;i<numSamples;i++){
       //1. very large variance (1.0)
-      heights(i) = .68;// + 0.1*rnd.gauss();
+      heights(i) = .65;// + 0.1*rnd.gauss();
       //2. trajectory optimization: return primal,dual trajectories, and value functions (at each time slice)
       arr x, y, dual;
       getTrajectory(x, y, dual, world, heights(i),values[i](), T);
@@ -268,8 +263,15 @@ int main(int argc,char** argv){
   //POMDP
   orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
   world.setJointState(allX[0][0]);
+
+
+  ors::Body *est_target = world.getBodyByName("target");
+
+  //to match with experiment in online-pomdp
+
   for(uint i=0;i<10;i++){
-    world.getBodyByName("table")->X.pos.z = .60;// + 0.1*rnd.gauss();
+    est_target->X.pos.z =  0.55;
+    world.getBodyByName("table")->X.pos.z = .65;// + 0.1*rnd.gauss();
     POMDPExecution(allX, allY, allDual, world, i);
   }
 

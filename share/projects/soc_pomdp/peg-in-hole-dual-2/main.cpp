@@ -27,11 +27,12 @@ int main(int argc,char **argv){
   //initial prior: position 2e2; collision (0.04; 0.5e1)
   //world.setJointState(ARR(-0.130734, 0.200912, -0.0176154, -0.541507, -0.743056, -0.415109, -0.0146599 ));
   //To make the peg close enough to the table
-  world.setJointState(ARR(-0.305148, 0.121278, -0.0600021, -0.638602, -0.87011, -0.490926, -0.0387221));
+  //world.setJointState(ARR(-0.305148, 0.121278, -0.0600021, -0.638602, -0.87011, -0.490926, -0.0387221));
+  world.setJointState(ARR( -0.23225, 0.245013, -0.0470437, -0.691428, -0.869523, -0.368891, 0.0488829));
 
   uint T = 200; //time horizon
   uint numSamples_height = 1; //sampling height
-  uint numSamples_pos    = 2; //each height has 10 sampled pos. In Total, we have 100 samples (hierarchical).
+  uint numSamples_pos    = 3; //each height has 10 sampled pos. In Total, we have 100 samples (hierarchical).
   uint total = numSamples_height*numSamples_pos + numSamples_height; //each height we generate one pseudo-sample (that will help to find the best observation)
 
 
@@ -73,7 +74,7 @@ int main(int argc,char **argv){
 
       for(uint j=0;j<numSamples_pos;j++){
           samples[index](0) = sampled_height;
-          samples[index](1) = .0 + .3*rnd.gauss();
+          samples[index](1) = .0 + .3*rnd.gauss(); //uncertain about x-corr of target (hole)
           if(fabs(samples[index](1)) > fabs(best))
               best = samples[index](1);
           index ++;
@@ -85,7 +86,29 @@ int main(int argc,char **argv){
           samples[index](1) = -1.0; //1.4 is the length (in x-axis) of the table
       index++;
   }
-  //cout <<samples <<endl;
+  //Manually testing the data
+  samples[0](0) = 0.0;
+  samples[0](1) = -.2;
+  //samples[1](0) = 0.0;
+  //samples[1](1) = 0.2;
+  samples[1](0) = 0.0;
+  samples[1](1) = 1.0; //pseudo datum
+
+  samples[2](0) = 0.0;
+  samples[2](1) = -0.5; //pseudo datum
+
+  samples[3](0) = 0.5;
+  samples[3](1) = 1.0;
+
+/*/
+  samples[2](0) = 0.5;
+  samples[2](1) = 0.0;
+  samples[3](0) = 0.5;
+  samples[3](1) = 1.0;
+  /*/
+  //samples[2](0) = 0.5;
+  //samples[2](1) = 1.6; //pseudo datum
+  ////////////////////////////////////////
 
 
   cout<<"samples size = "<< samples.d0 <<endl;
@@ -96,8 +119,6 @@ int main(int argc,char **argv){
   Root->AllDual() = ddual;
   Root->Samples() = samples;
   Root->Model() = samples[0];
-
-
 
   //building a FSC controller;
   FSC::Horizon = T;
@@ -110,6 +131,14 @@ int main(int argc,char **argv){
   cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
 
 
+
+  //write(fsc);
+
+  //exit(1);
+
+
+
+
   //TEST POMDP
     orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
 
@@ -117,12 +146,12 @@ int main(int argc,char **argv){
 
     for(uint i=0;i<10;i++){
         //table with changing heights
-      world.getBodyByName("hole")->X.pos.z   = .2;// .0 + 0.1*rnd.gauss();
-      world.getBodyByName("target")->X.pos.z = .2;// .0 + 0.1*rnd.gauss();
+      world.getBodyByName("hole")->X.pos.z   = 0.0;// .0 + 0.1*rnd.gauss();
+      world.getBodyByName("target")->X.pos.z = 0.5;// .0 + 0.1*rnd.gauss();
 
 
-      world.getBodyByName("hole")->X.pos.x   = 1.0;// .0 + 0.1*rnd.gauss();
-      world.getBodyByName("target")->X.pos.x = 1.0;// .0 + 0.1*rnd.gauss();
+      world.getBodyByName("hole")->X.pos.x   = 0.0;// .0 + 0.1*rnd.gauss();
+      world.getBodyByName("target")->X.pos.x = 0.0;// .0 + 0.1*rnd.gauss();
 
 
       world.setJointState(x0);

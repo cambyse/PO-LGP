@@ -1,7 +1,8 @@
 
 
 #include <boost/config.hpp>
-#include <iostream>
+//#include <iostream>
+#include <fstream>
 #include <utility>
 #include <algorithm>
 #include <boost/graph/adjacency_list.hpp>
@@ -10,6 +11,9 @@
 #include "execution.h"
 #include <vector>
 #include <list>
+
+//width of the table (along x-axis)
+#define WIDTH 1.0
 
 
 using namespace boost;
@@ -163,8 +167,6 @@ void NODE::Add(Observation obs)
 }
 
 
-
-
 //set a specific pose to the robot
 void setInitialPose(const arr x, ors::KinematicWorld& world)
 {
@@ -254,18 +256,25 @@ inline bool check_next_observation (arr sampleDual, double prev)
     return true;
 }
 
+
+//this return true: when the trajectory of the node has not yet passed any partile's x-axis.
+//that means there have been not yet observed change in observations.
+//return false otherwise
 inline bool check_next_observation_edge (NODE *&node, double curr_x)
 {
     //mean that the current x already passed through a specific model's edge
-    for(int i=0;i<node->Samples().d0;i++){
-        if((curr_x<=0)&&(node->Samples()[i](1) > curr_x))
+    // curr_x means current end-eff
+    double x0 = node->AllY()[0](0); //first step
+    double x1 = node->AllY()[1](0); //second step
+
+    for(int i = 0;i < node->Samples().d0;i++){
+        if(((x1-x0) <= 0)&&(node->Samples()[i](1) - WIDTH > curr_x)) //moving left
             return false;
-        if((curr_x>0)&&(node->Samples()[i](1) < curr_x))
+        if(((x1-x0) >  0)&&(node->Samples()[i](1) + WIDTH < curr_x)) //moving right
             return false;
     }
     return true;
 }
-
 
 void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon)
 {
@@ -314,13 +323,13 @@ inline bool distinct(arr distint_heights,double check)
 
 int choose_Next_Obs(arr samples)
 {
-    int best_index;
-    double best_value_1 = 100000; //this 1-d problem, we choose the lowest table (which give best entropy, or one-step look-ahead)
+    int best_index = 0;
+    double best_value_1 = -100000; //this 1-d problem, we choose the lowest table (which give best entropy, or one-step look-ahead)
     double best_value_2 = 0;
     for(int i=0;i<samples.d0;i++){
-        if((samples[i](0)<=best_value_1)||(fabs(samples[i](1))>=fabs(best_value_2))){
-            best_value_1 = samples[i](0);
-            best_value_2 = samples[i](1);
+        if(fabs(samples[i](1))-samples[i](0) <= best_value_1){//&&(fabs(samples[i](1))>=fabs(best_value_2))){
+            best_value_1 = fabs(samples[i](1))-samples[i](0);
+            //best_value_2 = samples[i](1);
             best_index = i;
         }
     }
@@ -435,7 +444,7 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
             }else{
 
             //if changes: add all trajectory into the FSC
-                samples_nev[index_pos]() = samples[i];
+                samples_pos[index_pos]() = samples[i];
                 //sampleDual_pos[index_pos]() = dual;
                 allTraj_X_pos[index_pos]() = x;
                 allTraj_Y_pos[index_pos]() = y;
@@ -455,7 +464,6 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
         allTraj_Y_pos.resize(index_pos, dimy, dimy1);
         allTraj_Dual_pos.resize(index_pos, dim_dual);
         samples_pos.resize(index_pos, 2);
-
 
         if (samples_nev.d0 > 0) {
              int index = choose_Next_Obs(samples_nev);
@@ -511,7 +519,7 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
 
          if (samples_pos.d0 > 0) {
              arr distint_heights;
-             for(ixznt in=0;in<samples_pos.d0;in++){
+             for(int in=0;in<samples_pos.d0;in++){
                  if(!distinct(distint_heights,samples_pos[in](0)))
                      distint_heights.append(samples_pos[in](0));
              }
@@ -567,10 +575,7 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
                      extract4(allTraj_X_temp,temp->getSampleX());
                      extract4(allTraj_Y_temp,temp->getSampleY());
                  }
-
-
              }
-
          }
 
                  //recursively optimize all children
@@ -608,7 +613,6 @@ void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE*& node, int horizon)
 
     if(!node) return;
 
-
     FSC::numNode = FSC::numNode + 1;
     node->setIndex(FSC::numNode);
 
@@ -617,10 +621,10 @@ void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE*& node, int horizon)
     arr y0 = node->Y();
 
 
-    if(check_next_observation_edge(node,y0(0))){
+    if(check_next_observation_edge(node,y0(0))){ //get x-
 
         arr samples = node->Samples();
-        arr x0 = node->X();
+        //arr x0 = node->X();
 
         arr samples_nev;
         samples_nev.resize(samples.d0,2);
@@ -650,14 +654,19 @@ void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE*& node, int horizon)
 
         for(uint i=0;i < samples.d0;i++){
             sampleDual[i]() = node->getSampleDual()[i];
-            if(samples[i](1) > fabs(node->getSampleY()[i][steps](0))){
+            //double x0 = node->getSampleY()[i][0](0);
+            //double x1 = node->getSampleY()[i][steps](0);
+            double x0 = node->AllY()[0](0);
+            double x1 = node->AllY()[steps](0);
+            if ((((x1-x0)<=0) && ((samples[i](1) - WIDTH) <= x1)) || (((x1-x0)>0) && ((samples[i](1) + WIDTH) > x1)))
+            { //this particle has not been yet passed (or not yet observed observation from this particle model)
                 samples_nev[index_nev]() = samples[i];
                 //sampleDual_nev[index_nev]() = dual;
                 allTraj_X_nev[index_nev]() = node->getSampleX()[i];
                 allTraj_Y_nev[index_nev]() = node->getSampleY()[i];
                 allTraj_Dual_nev[index_nev]() = node->getSampleDual()[i];
                 index_nev = index_nev + 1;
-            }else{
+            }else{//when there is particle's observation, just create new branch for this particle, and re-plan for it.
                 arr x, y, dual;
                 arr x0 = node->X();
                 getTrajectory(x, y, dual, world, x0, samples[i], true, FSC::Horizon-horizon);
@@ -698,8 +707,6 @@ void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE*& node, int horizon)
                 temp_sampleY.resize(1, FSC::Horizon-horizon  + 1,3);
                 temp_sampleY[0]() = y;
                 extract4(temp_sampleY,temp->getSampleY());
-
-
             }
         }
 
@@ -763,7 +770,6 @@ void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE*& node, int horizon)
 
         NODE* temp = addNode_MultiParticle(node, obs, steps);
         OptimizeFSC_Edges(world, temp, horizon + steps);
-
     }
 }
 
@@ -819,6 +825,14 @@ void write_to_graphviz(FSC fsc)
                    boost::default_writer(),
                    make_edge_writer(boost::get(&edgepp::x,graph),boost::get(&edgepp::y,graph), boost::get(&edgepp::dual,graph), boost::get(&edgepp::pos,graph)));
 }
+void write(FSC fsc)
+{
+    std::ofstream dotfile ("policy.txt");
+    dotfile << fsc.numNode + 1 <<endl; //number of node
 
 
 
+
+    dotfile.close();
+
+}

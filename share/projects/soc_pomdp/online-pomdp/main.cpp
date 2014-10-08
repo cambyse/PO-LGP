@@ -16,6 +16,20 @@
 
 
 
+int minimum(arr Heights)
+{
+    int best_index=0;
+    double best_value = 100000; //this 1-d problem, we choose the lowest table (which give best entropy, or one-step look-ahead)
+    for(int i=0;i<Heights.d0;i++){
+        if(Heights(i)<best_value){
+            best_value = Heights(i);
+            best_index = i;
+        }
+    }
+    return best_index;
+}
+
+
 
 
 int main(int argc,char** argv){
@@ -23,9 +37,7 @@ int main(int argc,char** argv){
 
   ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
   uint T = 200; //time horizon
-  uint numSamples = 4;
-
-
+  uint numSamples = 100;
 
 
   arr y0;
@@ -56,13 +68,21 @@ int main(int argc,char** argv){
   arr xx, yy, ddual;
 
 
-  xx.resize(numSamples,x0.d0);
-  yy.resize(numSamples,y0.d0);
-  ddual.resize(numSamples,1);
+  xx.resize(T+1,x0.d0);
+  yy.resize(T+1,y0.d0);
+  ddual.resize(T+1,1);
 
   for(uint i=0;i<numSamples;i++){
-      heights(i) = .65 + 0.1*rnd.gauss();  //TABLE INFORMATION
-      //3. store the trajectories
+      heights(i) = .65 + 0.1*rnd.uni();  //TABLE INFORMATION
+      while((heights(i)<0.6)||(heights(i)>0.8))
+          heights(i) = .65 + 0.1*rnd.uni();  //TABLE INFORMATION
+  }
+
+
+
+
+
+  for(uint i=0;i<T+1;i++){
       xx[i]() = x0;
       yy[i]() = y0;
       ddual[i]() = dual;
@@ -71,7 +91,10 @@ int main(int argc,char** argv){
   Root->AllY() = yy;
   Root->AllDual() = ddual;
   Root->Heights() = heights;
-  Root->Height() = heights(0);
+  Root->Height() = heights(minimum(heights));
+
+
+  cout<<"  heights "<<heights<<endl;
 
 
   //building a FSC controller;
@@ -82,8 +105,6 @@ int main(int argc,char** argv){
 
 
   cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
-
-
 
 
 
@@ -99,13 +120,15 @@ int main(int argc,char** argv){
 
   ors::Body *est_target = world.getBodyByName("target");
 
-  double est = 0.6+0.4;
+  double est = 0.55;
 
-  for(uint i=0;i<10;i++){
-    world.getBodyByName("table")->X.pos.z = 0.65;//+ 0.1*rnd.gauss();
+  cout<<heights(minimum(heights)) <<endl;
+
+  for(uint i=0;i<20;i++){
+    world.getBodyByName("table")->X.pos.z = .7;//heights(minimum(heights));//+ 0.1*rnd.gauss();
 
 
-    world.setJointState(x0);
+    world.setJointState(Root->X());
     POMDPExecution(fsc, world, i,est);
   }
 

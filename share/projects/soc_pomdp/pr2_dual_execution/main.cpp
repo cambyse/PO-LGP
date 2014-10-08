@@ -41,14 +41,14 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   x = P.getInitialization();
 
-  world.getBodyByName("target")->X.pos.z = height + 0.12;
+  world.getBodyByName("target")->X.pos.z = height + 0.1;
 
 
   TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height+0.02)));
+  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e4);
 
   TaskCost *collision = P.addTask("collisionConstraint", new CollisionConstraint());
@@ -89,7 +89,15 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   }
 
 
-  if(&dual) dual = UnConstrainedP.lambda;
+  uint index = 0;
+  dual.resize(x.d0);
+  if(&dual) {
+      for(int i=0;i<UnConstrainedP.lambda.d0;i=i+2){
+          dual(index) = UnConstrainedP.lambda(i);
+
+          index++;
+      }
+  }
 }
 
   /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
@@ -179,7 +187,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
       //external sinus on the table height
       table->X.pos.z = mean_table_height+sin_jitter*::sin(double(t)/15);
   #ifdef USE_DUAL
-      plane_constraint->planeParams(3) = table->X.pos.z + 0.02;
+      plane_constraint->planeParams(3) = table->X.pos.z;
   #endif
 
       //operational space loop
@@ -259,7 +267,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   //plane constraint task
 #define USE_DUAL
 #ifdef USE_DUAL
-  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "endeffR", ARR(0,0,-1,table->X.pos.z+0.02));
+  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "endeffR", ARR(0,0,-1,table->X.pos.z));
   ConstraintForceTask *pd_c =
       activity.machine->s->MP.addConstraintForceTask("planeConstraint", plane_constraint );
 //      MC.addConstraintForceTask("touchTable",
@@ -357,6 +365,11 @@ struct MySystem:System{
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
 void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, const arr& dual, int num){
+
+
+   ofstream data(STRING("data-"<<num<<".dat"));
+
+
 
  // ors::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
@@ -473,13 +486,13 @@ bool updated =false;
     double d=0.;
     arr f_r = S.wrenchR.get();// ctrl_obs.get()->fR;
 
-    cout<< f_r<<endl;
+    cout<<"[f_r] = "<< f_r<<endl;
 
-    if((!updated)&&(f_r(1)<4.0)){
+    if((!updated)&&(f_r(1)<5.0)&&(t>40)){
         est_target->X.pos.z = endeff->X.pos.z + 0.1;
         plane_constraint->planeParams(3) = endeff->X.pos.z;
 
-        cout<<"updated"<<endl;
+        cout<<"updated "<<endeff->X.pos.z<<endl;
         updated = true;
     }
 
@@ -524,7 +537,23 @@ bool updated =false;
     S.ctrl_ref.set() = refs;
 
 
-  }
+    //write data
+    MT::arrayBrackets="  ";
+    data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
+        <<table->X.pos.z <<' '
+       <<endeff->X.pos.z <<' '
+      <<endeff->X.pos.z-table->X.pos.z <<' '
+      <<est_target->X.pos.z <<' '
+     <<true_target->X.pos.z <<' '
+    <<endl;
+
+
+}
+data.close();
+
+FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+
+
 
   engine().close(S);
   cout <<"bye bye" <<endl;
@@ -610,27 +639,27 @@ int main(int argc, char** argv)
   //heights.resize(numSamples);
 
 
-  double height = table_height;// + 0.1*rnd.gauss();
+  double height = 0.25;// + 0.1*rnd.gauss();
   //2. trajectory optimization: return primal,dual trajectories, and value functions (at each time slice)
 
   arr x, y, dual;
-  //getTrajectory(x, y, dual, activity.machine->s->world, height, T);
+  getTrajectory(x, y, dual, activity.machine->s->world, height, T);
 
-  //x>>FILE("x.dat");
-  //y>>FILE("y.dat");
-  //dual>>FILE("z.dat");
+  x>>FILE("x.dat");
+  y>>FILE("y.dat");
+  dual>>FILE("z.dat");
 
   x<<FILE("x.dat");
   y<<FILE("y.dat");
   dual<<FILE("z.dat");
 
   cout<<dual<<endl;
-
+/*/
   for(int t=0;t<x.d0;t++){
       activity.machine->s->world.setJointState(x[t]);
       activity.machine->s->world.gl().update(STRING(t), true, false, true);
   }
-
+/*/
   cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
 
 

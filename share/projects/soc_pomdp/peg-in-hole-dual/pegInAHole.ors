@@ -19,9 +19,10 @@ joint (arm6 peg) { A=<T t(0 0 0.2) d(45 0 0 1) > B=<T t(0 0 .4) >  m }
 
 
 ### hole (set of four non-overlapping planes)
-body hole { X = <T t(0 -1 0.0)> type=5 size=[.3 .3 .3 0] }
-shape (hole){ rel = <T t(0 -.2 0)> type=0 size=[2.8 1.2 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <T t(0  1.40 0)> type=0 size=[2.8 1.2 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <T t( .80 0.6 0)> type=0 size=[1.2 2.8 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <T t(-.80 0.6 0)> type=0 size=[1.2 2.8 .4 .05] color=[0 0 .5] contact }
-body target { X = <T t(0 -0.4 0.0)> type=5 size=[.3 .3 .3 0] }
+body hole { X = <T t(0 -1.2 0.0)> type=5 size=[.3 .3 .3 0] }
+shape (hole){ rel = <T t(0 -.2 0)> type=0 size=[2.0 1.2 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <T t(0  1.40 0)> type=0 size=[2.0 1.2 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <T t( .60 0.6 0)> type=0 size=[0.8 2.0 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <T t(-.60 0.6 0)> type=0 size=[0.8 2.0 .4 .05] color=[0 0 .5] contact }
+body target { X = <T t(0 -0.6 0.5)> type=5 size=[.3 .3 .3 0] }
+

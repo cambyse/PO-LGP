@@ -42,23 +42,13 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //P.setInterpolatingCosts(vec, MotionProblem::finalOnly, ARRAY(0.,0.,-1.), 1e3, ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, ARRAY(0.,0.,-1.), 1e3, NoArr, -1., 0.1);
 
-  /*/ors::Quaternion target;
-  target.setRadZ(3.14);
-  target.setRadY(3.14/2.0); target, positionPrec, NoArr, -1., .8);
-  target.setRadX(-3.14/2.0);
 
-  cout<<target<<endl;
-
-  TaskCost *vec = P.addTask("orientation", new DefaultTaskMap(quatTMT, world, "peg"));
-  P.setInterpolatingCosts(vec, MotionProblem::finalOnly, ARRAY(target.w,target.x,target.y,target.z), 1e3);/*/
-
-
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.2 + 0.05)));//0.2 is table width  //0.05 above table surface to avoid slippery
+  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.5)));//0.3 is peg's end_eff 0.2 is table width  //0.05 above table surface to avoid slippery
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e2);
 
 
 #if 1  //CONSTRAINT
-  TaskCost *collision = P.addTask("collisionConstraint", new CollisionConstraint());
+  TaskCost *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.05));
   P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1e3);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
@@ -88,7 +78,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
   for(uint k=0;k<20;k++){
    optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
-    P.costReport();
+    P.costReport(true);
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.aulaUpdate(.9,x);
     P.dualMatrix = UnConstrainedP.lambda;
@@ -96,7 +86,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
  }
 
   //get the final optimal cost at each time slice
-  P.costReport();
+  P.costReport(true);
 
   if(&y){
     y.resize(x.d0, pos->map.dim_phi(world));
@@ -149,10 +139,10 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   //plane constraint task
 #define USE_DUAL
 #ifdef USE_DUAL
-  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "peg", ARR(0,0,-1, table->X.pos.z + 0.2 + 0.05));  //0.05 above table surface to avoid slippery
+  PlaneConstraint *plane_constraint = new PlaneConstraint(world, "peg", ARR(0,0,-1, table->X.pos.z + 0.51));// table's width = 0.2;
   ConstraintForceTask *pd_c = MC.addConstraintForceTask("planeConstraint", plane_constraint );
 
-  MC.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  MC.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.05});
 
 #endif
 
@@ -161,12 +151,6 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   // remaining 100 steps is for reaching to the target.
   for(uint t=0;t<x.d0 + 100;t++){
     MC.setState(q, qdot);
-
-   //adapt the PD task references following the plan
-
-   //cout<< pd_y->y_ref <<endl;
-   //cout<<"endeff->X.pos "<< endeff->X.pos <<endl;
-
    if(t<y.d0){
         pd_y->y_ref = y[t];
         pd_x->y_ref = x[t];
@@ -181,7 +165,12 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
     if(pd_c->desiredApproach.y.N){
       d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
       if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
-        est_target->X.pos.z = endeff->X.pos.z - 0.2; //est_target position update
+        est_target->X.pos.z = endeff->X.pos.z;// - 0.2 - 0.3; //est_target position update
+
+        cout<<"update "<<endl;
+      }
+      if(est_target->X.pos.z > endeff->X.pos.z){
+        est_target->X.pos.z = endeff->X.pos.z;
       }
     }
 #endif
@@ -194,7 +183,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
 #endif
 
     //operational space loop
-    for(uint tt=0;tt<10;tt++){
+  for(uint tt=0;tt<10;tt++){
       MC.updateConstraintControllers();
       arr a = MC.operationalSpaceControl();
       q += .1*tau*qdot;
