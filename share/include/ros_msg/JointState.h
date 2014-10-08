@@ -64,7 +64,9 @@ struct JointState_
     , u_bias()
     , Kq_gainFactor()
     , Kd_gainFactor()
-    , Kf_gainFactor()  {
+    , Kf_gainFactor()
+    , velLimitRatio(0.0)
+    , effLimitRatio(0.0)  {
     }
   JointState_(const ContainerAllocator& _alloc)
     : q(_alloc)
@@ -74,7 +76,9 @@ struct JointState_
     , u_bias(_alloc)
     , Kq_gainFactor(_alloc)
     , Kd_gainFactor(_alloc)
-    , Kf_gainFactor(_alloc)  {
+    , Kf_gainFactor(_alloc)
+    , velLimitRatio(0.0)
+    , effLimitRatio(0.0)  {
     }
 
 
@@ -102,6 +106,12 @@ struct JointState_
 
    typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kf_gainFactor_type;
   _Kf_gainFactor_type Kf_gainFactor;
+
+   typedef double _velLimitRatio_type;
+  _velLimitRatio_type velLimitRatio;
+
+   typedef double _effLimitRatio_type;
+  _effLimitRatio_type effLimitRatio;
 
 
 
@@ -181,12 +191,12 @@ struct MD5Sum< ::marc_controller_pkg::JointState_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "d11554e6fcc1e2b2448fd4d8fdc39425";
+    return "7cbec09dd6e27aced27fed9efe3ac7f7";
   }
 
   static const char* value(const ::marc_controller_pkg::JointState_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xd11554e6fcc1e2b2ULL;
-  static const uint64_t static_value2 = 0x448fd4d8fdc39425ULL;
+  static const uint64_t static_value1 = 0x7cbec09dd6e27aceULL;
+  static const uint64_t static_value2 = 0xd27fed9efe3ac7f7ULL;
 };
 
 template<class ContainerAllocator>
@@ -213,6 +223,8 @@ float64[] u_bias\n\
 float64[] Kq_gainFactor\n\
 float64[] Kd_gainFactor\n\
 float64[] Kf_gainFactor\n\
+float64 velLimitRatio\n\
+float64 effLimitRatio\n\
 ";
   }
 
@@ -239,6 +251,8 @@ namespace serialization
       stream.next(m.Kq_gainFactor);
       stream.next(m.Kd_gainFactor);
       stream.next(m.Kf_gainFactor);
+      stream.next(m.velLimitRatio);
+      stream.next(m.effLimitRatio);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -305,6 +319,10 @@ struct Printer< ::marc_controller_pkg::JointState_<ContainerAllocator> >
       s << indent << "  Kf_gainFactor[" << i << "]: ";
       Printer<double>::stream(s, indent + "  ", v.Kf_gainFactor[i]);
     }
+    s << indent << "velLimitRatio: ";
+    Printer<double>::stream(s, indent + "  ", v.velLimitRatio);
+    s << indent << "effLimitRatio: ";
+    Printer<double>::stream(s, indent + "  ", v.effLimitRatio);
   }
 };
 

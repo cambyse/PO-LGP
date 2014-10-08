@@ -6,3 +6,5 @@ float64[] u_bias
 float64[] Kq_gainFactor
 float64[] Kd_gainFactor
 float64[] Kf_gainFactor
+float64 velLimitRatio
+float64 effLimitRatio

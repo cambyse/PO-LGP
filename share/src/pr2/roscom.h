@@ -20,7 +20,8 @@ void rosCheckInit();
 struct CtrlMsg{
   arr q, qdot, fL, fR, u_bias;
   arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
-  CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), Kf_gainFactor(ARR(0.)){}
+  double velLimitRatio, effLimitRatio;
+  CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), Kf_gainFactor(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
   CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias):q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias){}
 };
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
