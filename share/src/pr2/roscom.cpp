@@ -11,7 +11,7 @@
 //===========================================================================
 
 void rosCheckInit(){
-  ros::init(MT::argc, MT::argv, "pr2_module");
+  ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
 }
 
 bool rosOk(){

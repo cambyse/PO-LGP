@@ -99,7 +99,7 @@ void testSensors(){
     // force sensors
     arr wL = S.wrenchL.get()();
     arr wR = S.wrenchR.get()();
-//    cout <<wL <<wR  <<endl;
+    cout <<"WRENCHES= " <<wL <<wR  <<endl;
     if(wL.N==6 && wR.N==6){
       ors::Quaternion rot, tmp;
       rot.setDeg(-90, 0, 1, 0);
