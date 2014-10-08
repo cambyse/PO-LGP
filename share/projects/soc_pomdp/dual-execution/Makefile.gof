@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Algo Core Gui Ors Optim pr2 Hardware_joystick Motion
+DEPEND = Algo Core Gui Ors Optim pr2 Hardware_gamepad Motion
 
 include $(BASE)/gofMake/generic.mk
 

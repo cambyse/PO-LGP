@@ -3,7 +3,7 @@
 #include <MT/ors.h>
 
 #include <MT/motion_planning.h>
-#include <MT/joystick.h>
+#include <MT/gamepad.h>
 
 
 void testTracking(){
@@ -185,8 +185,8 @@ void testControl(){
   arr q,dq;
   ors.getJointState(q);
   
-  JoystickInterface joy;
-  joy.open();
+  GamepadInterface gamepad;
+  gamepad.open();
 
   arr qm(7);
   schunk.getPos(qm);
@@ -206,11 +206,11 @@ void testControl(){
   ors.computeNaturalQmetric(W);
   
   for(t=0;t<100000;t++){
-    joy.step();
+    gamepad.step();
     
-    x.y_target(0)-=0.005*((double)(joy.state(3)/2))/128.;
-    x.y_target(1)+=0.005*((double)(joy.state(6)/2))/128.;
-    x.y_target(2)-=0.005*((double)(joy.state(2)/2))/128.;
+    x.y_target(0)-=0.005*((double)(gamepad.state(3)/2))/128.;
+    x.y_target(1)+=0.005*((double)(gamepad.state(6)/2))/128.;
+    x.y_target(2)-=0.005*((double)(gamepad.state(2)/2))/128.;
     cout <<t <<" target=" <<x.y_target <<flush;
     
     updateState(globalSpace);

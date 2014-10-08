@@ -1,6 +1,0 @@
-BASE = ../../..
-
-PLIB = 1
-DEPEND = Core System Hardware_joystick
-
-include $(BASE)/gofMake/generic.mk

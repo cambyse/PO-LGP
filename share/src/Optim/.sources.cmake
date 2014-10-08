@@ -1,1 +1,3 @@
-set(SOURCES ./opt-constrained.h ./opt-newton.cpp ./search_CMA.cpp ./cmaes.c ./opt-convert.cpp ./cmaes.h ./opt-rprop.h ./benchmarks.h ./optimization.h ./optimization.cpp ./benchmarks.cpp ./cmaes_interface.h ./opt-constrained.cpp ./opt-newton.h ./search.h ./opt-rprop.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

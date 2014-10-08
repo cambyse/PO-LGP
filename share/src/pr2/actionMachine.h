@@ -5,46 +5,23 @@
 #include <pr2/roscom.h>
 
 //===========================================================================
-struct Symbol;
 struct GroundedAction;
 struct PDtask;
 struct ActionMachine;
-typedef MT::Array<Symbol*> SymbolL;
 typedef MT::Array<GroundedAction*> ActionL;
 typedef MT::Array<PDtask*> PDtaskL;
 
-extern Singleton<SymbolL> symbols;
 inline void operator<<(ostream& os, const ActionL& A){ listWrite(A, os); }
 inline void operator>>(istream& is, ActionL& A){ NIY; }
 inline void operator<<(ostream& os, const GroundedAction& a){ }
 //void operator=(istream& is, ActionL& A){ listRead(A, is); }
 
-//===========================================================================
-/** A Symbol denotes is a generic predicate that, when associated to specific
- * arguments (for a grounding of the variables), defines a literal (a factor)
- * of the state.
- * Symbols can refer to state or action predicates. This relates to Tobias'
- * code on relational state representations */
-struct Symbol{
-  uint ID;
-  MT::String name;
-  uint nargs;  //instead, it should have a list of ArgTypes; each ArgType = {type\in{String, arr}, name}
-  Symbol(const char* _name, uint _nargs):name(_name), nargs(_nargs){
-    ID = symbols().N;
-    symbols().append(this);
-  }
-  virtual uint argType(uint i){ NIY; return 0; }
-  // bool operator==(const Symbol& s) const {
-  //   return name == s.name; // comparing the IDs does not work.
-  //   // return ID == s.ID; // comparing the IDs does not work.
-  //   // return this == &s;
-  // }
-};
 
 //===========================================================================
 //GroundedAction
 //True, False refer to state symbols, the rest to action symbols
 enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
+const char* getActionStateString(ActionState actionState);
 
 /** A GroundedAction is an instantiation/grounding of an Symbol (for example
  * a motor primitive type.
@@ -58,11 +35,9 @@ enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
  * annotated by dependencies, telling the ActionMachine how to transition the
  * action state.
  */
-struct GroundedAction : Symbol{
-  //-- ActionState of the GroundedAction
+struct GroundedAction {
+  MT::String name;
   ActionState actionState;
-  static const char* GroundActionValueString[7];
-  const char* getActionStateString() { return GroundActionValueString[actionState]; }
 
   /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
@@ -71,11 +46,10 @@ struct GroundedAction : Symbol{
   //-- not nice: list PDtasks that this action added to the OSC
   PDtaskL tasks;
 
-  GroundedAction(const char* name, uint nargs);
+  GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
+  virtual ~GroundedAction();
 
   /// @name manage common functions to manage GroundedSymbols
-  virtual void initYourself(ActionMachine&) = 0;
-  virtual void deinitYourself(ActionMachine& actionMachine);
   /// default: always feasible
   virtual bool isFeasible(ActionMachine& actionMachine) { return true; }
   /// default: never finish
@@ -86,6 +60,8 @@ struct GroundedAction : Symbol{
   virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
   /// default: always time to go //neg-log success likelihood?
   virtual double expCostToGo(ActionMachine& actionMachine) { return 0.; }
+
+  void reportState(ostream& os);
 };
 
 //===========================================================================
@@ -109,15 +85,13 @@ struct ActionMachine : Module {
 
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
 
   ActionMachine();
   ~ActionMachine();
 
   //-- user methods
-  GroundedAction* add(GroundedAction *action,
-                      ActionState actionState=ActionState::active);
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on
@@ -146,10 +120,10 @@ struct ActionMachine : Module {
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
-    //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    //addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
@@ -160,7 +134,7 @@ struct ActionSystem : System{
 };
 
 //===========================================================================
-// extern ActionSymbol &joypad,
+// extern ActionSymbol &gamepad,
 // &coreTasks,
 // &amex, //shapeArg=task space, poseArg=reference trajectory
 // &moveEffTo, //shapeArg=body part, poseArg=whereTo

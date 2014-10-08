@@ -405,12 +405,13 @@ struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
-void animateConfiguration(ors::KinematicWorld& G);
+void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /// @} // END of group ors_interface_opengl

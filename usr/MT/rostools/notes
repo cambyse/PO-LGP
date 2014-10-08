@@ -1,5 +1,5 @@
 symbolic links to config files in ~/.ros
-model.kvg -> /home/mtoussai/git/mlr/share/projects/pr2_joypadControl/model.kvg
+model.kvg -> /home/mtoussai/git/mlr/share/projects/pr2_gamepadControl/model.kvg
 pr2_model -> /home/mtoussai/git/mlr/share/data/pr2_model/
 
 echo $ROS_PACKAGE_PATH

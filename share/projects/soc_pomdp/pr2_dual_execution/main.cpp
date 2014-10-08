@@ -1,6 +1,6 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
@@ -279,7 +279,8 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   cout<<"target "<<est_target->X.pos.z <<endl;
 
   // remaining 100 steps is for reaching to the target.
-  for(uint t=0;t<x.d0 + 100;t++){
+  for(uint t=0;t<x.d0 + 100;t++)
+	{MT::wait(0.1);
     activity.machine->s->MP.setState(q, qdot);
 
    // cout<< q<<endl;
@@ -349,11 +350,11 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
+  ACCESS(arr, gamepadState);
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);

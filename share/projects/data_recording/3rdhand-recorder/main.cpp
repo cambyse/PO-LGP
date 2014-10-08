@@ -7,6 +7,8 @@
 #include <iostream>
 #include <iomanip>
 #include <omp.h>
+#include <mutex>
+#include <condition_variable>
 
 #include <Core/util.h>
 #include <Perception/audio.h>
@@ -39,29 +41,30 @@ public:
 
 bool terminated = false;
 void got_signal(int) {
+	cerr << "got shutdown signal" << endl;
 	terminated = true;
+	ros_shutdown();
 }
 
-class GrabAndSave {
+class VideoSave {
 private:
-	const bool& terminated;
-	bool ready;
-	int id;
-	MT::String name;
-	FlycapInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
-	//byteA buffer;
-	OpenGL gl;
 	double start_time;
 	ImagePublisher pub;
 
+protected:
+	MT::String name;
+	const bool& terminated;
+	bool ready;
+	byteA buffer;
+	bool do_encode;
+
 public:
-	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
-		terminated(terminated), ready(false), id(camID), name(name),
-		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8),
+	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX), pub(STRING(name << "/id" << camID).p, "image_raw", MLR::PIXEL_FORMAT_RGB8) {
+		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
+		name(name), terminated(terminated), ready(false), do_encode(true) {
 	}
 
 	bool isReady() const {
@@ -70,47 +73,97 @@ public:
 	void setActiveTime(double start_time) {
 		this->start_time = start_time;
 	}
+	void setDoEncode(bool do_encode) {
+		this->do_encode = do_encode;
+	}
+
+	void add_frame(const byteA& frame, double timestamp, bool copy_gl = false) {
+		if(do_encode && timestamp >= start_time) {
+			enc.addFrame(frame);
+			times.add_stamp(timestamp);
+		}
+		pub.publish(frame, timestamp);
+	}
+
+};
+
+class FlycapGrabAndSave : public VideoSave {
+private:
+	FlycapInterface cam;
+
+public:
+	FlycapGrabAndSave(int id, const char* name, const MT::String& created, const bool& terminated) :
+		VideoSave(name, created, terminated),
+		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8) {
+	}
+	virtual ~FlycapGrabAndSave() {
+
+	}
 
 	void step() {
 		double timestamp;
-		if((ready = cam.grab(gl.background, timestamp, 500))) {
-			if(timestamp >= start_time) {
-				enc.addFrame(gl.background);
-				times.add_stamp(timestamp);
-			}
-			double w_ratio = (double)gl.width / (double)gl.background.d0;
-			double h_ratio = (double)gl.height / (double)gl.background.d1;
-			gl.backgroundZoom = min(w_ratio, h_ratio);
-			gl.update(NULL, false, false, false);
-			pub.publish(gl.background, timestamp);
+		if((ready = cam.grab(buffer, timestamp, 500))) {
+			add_frame(buffer, timestamp);
 		} else {
-			cerr << "grab " << id << " failed" << endl;
+			cerr << "grab " << name << " failed" << endl;
 		}
+	}
+};
+class KinectGrabAndSave {
+private:
+	KinectCallbackReceiver kinect;
+	VideoSave vs_rgb, vs_depth;
+	byteA depth_image;
+
+protected:
+	void kinect_video_cb(const byteA& rgb, double timestamp) {
+		vs_rgb.add_frame(rgb, timestamp, true);
+	}
+
+	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
+		MLR::pack_kindepth2rgb(depth, depth_image);
+		vs_depth.add_frame(depth_image, timestamp, true);
+	}
+
+public:
+	KinectGrabAndSave(int id, const char* name, const MT::String& created, const bool& terminated) :
+		kinect(std::bind(&KinectGrabAndSave::kinect_depth_cb, this, _1, _2),
+			   std::bind(&KinectGrabAndSave::kinect_video_cb, this, _1, _2), id),
+	    vs_rgb(STRING(name << "_rgb").p, created, terminated),
+	    vs_depth(STRING(name << "_depth").p, created, terminated) {
+	}
+
+	void setActiveTime(double start_time) {
+		vs_rgb.setActiveTime(start_time - .016);
+		vs_depth.setActiveTime(start_time - .016);
+	}
+	void startStreaming() {
+		kinect.startStreaming();
+	}
+	void stopStreaming() {
+		kinect.stopStreaming();
 	}
 };
 
 class RecordingSystem {
 private:
 	MT::String created;
-	GrabAndSave cam1, cam2, cam3;
-	VideoEncoder_x264_simple kinect_video, kinect_depth;
-	TimeTagFile kinect_video_times, kinect_depth_times;
+	FlycapGrabAndSave cam1, cam2, cam3, cam4;
+	KinectGrabAndSave front_kinect/*, side_kinect*/;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
-	byteA audio_buf, kinect_depth_repack;
-	KinectCallbackReceiver kinect;
-	int kin_video_count, kin_depth_count;
-	OpenGL kinect_gl;
+	byteA audio_buf;
 	double start_time;
 
 protected:
 
 	void openmp_run() {
-		kinect.startStreaming();
+		front_kinect.startStreaming();
+		//side_kinect.startStreaming();
 		bool ready = false;
 
 		// make sure everything is running smoothly before starting to record
-#pragma omp parallel sections num_threads(5)
+#pragma omp parallel sections num_threads(6)
 		{
 #pragma omp section
 			while(!terminated)
@@ -122,6 +175,9 @@ protected:
 			while(!terminated)
 				cam3.step();
 #pragma omp section
+			while(!terminated)
+				cam4.step();
+#pragma omp section
 			while(!terminated) {
 				audio_poller.read(audio_buf);
 				if(ready) {
@@ -130,50 +186,48 @@ protected:
 			}
 #pragma omp section
 			while(!terminated && !ready) {
-				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
+				if(cam1.isReady() && cam2.isReady() && cam3.isReady() && cam4.isReady()) {
 					start_time = MT::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
+					cam4.setActiveTime(start_time);
+					front_kinect.setActiveTime(start_time);
+					//side_kinect.setActiveTime(start_time);
 					ready = true;
 				}
 			}
 		}
+
+		front_kinect.stopStreaming();
 	}
 
-	void kinect_video_cb(const byteA& rgb, double timestamp) {
-		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
-			kinect_video.addFrame(rgb);
-			kinect_video_times.add_stamp(timestamp);
-			kinect_gl.background = rgb;
-			kinect_gl.update(NULL, false, false, false);
-		}
-	}
-	void kinect_depth_cb(const uint16A& depth, double timestamp) {
-		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
-			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
-			kinect_depth.addFrame(kinect_depth_repack);
-			kinect_depth_times.add_stamp(timestamp);
-		}
-	}
 
 public:
-	RecordingSystem(int id1, int id2, int id3) :
-		created(MT::getNowString()), cam1(id1, "cam1", created, terminated),
-		cam2(id2, "cam2", created, terminated), cam3(id3, "cam3", created, terminated),
-		kinect_video(STRING("z.kinect_rgb." << created <<".264"), 30, 0, MLR::PIXEL_FORMAT_RGB8),
-		kinect_depth(STRING("z.kinect_depthRgb." << created <<".264"), 30, 0, MLR::PIXEL_FORMAT_RGB8),
-		kinect_video_times(kinect_video.name()), kinect_depth_times(kinect_depth.name()),
+	RecordingSystem(int id1, int id2, int id3, int id4, int kinID1, int kinID2) :
+		created(MT::getNowString()),
+		cam1(id1, STRING("pg_cam_" << id1).p, created, terminated),
+		cam2(id2, STRING("pg_cam_" << id2).p, created, terminated),
+		cam3(id3, STRING("pg_cam_" << id3).p, created, terminated),
+		cam4(id4, STRING("pg_cam_" << id4).p, created, terminated),
+		front_kinect(kinID1, "front_kinect", created, terminated),
+		//side_kinect(kinID2, "side_kinect", created, terminated),
 		audio_writer(STRING("z.mike." << created << ".wav")),
-		audio_buf(8192), kinect(std::bind(&RecordingSystem::kinect_depth_cb, this, _1, _2),
-				std::bind(&RecordingSystem::kinect_video_cb, this, _1, _2)),
-		kin_video_count(0), kin_depth_count(0), start_time(ULONG_MAX) {
+		audio_buf(8192),
+		start_time(ULONG_MAX) {
+	}
+
+	void setDoEncode(bool encode) {
+		cam1.setDoEncode(encode);
+		cam2.setDoEncode(encode);
+		cam3.setDoEncode(encode);
+		cam4.setDoEncode(encode);
 	}
 
 	void run() {
 		std::thread runner(std::bind(&RecordingSystem::openmp_run, this));
-		while(!terminated) {
-			std::this_thread::sleep_for (std::chrono::milliseconds(100));
+		while(!terminated && process_image_callbacks()) {
+			std::this_thread::sleep_for (std::chrono::milliseconds(50));
 		}
 		runner.join();
 	}
@@ -197,7 +251,7 @@ void test_openmp() {
 }
 
 int main(int argc,char **argv){
-	init_image_publishers(argc, argv, "third_hand_recorder");
+	init_image_publishers(argc, argv, "third_hand_recorder", false);
 
 	struct sigaction sa;
 	memset( &sa, 0, sizeof(sa) );
@@ -215,7 +269,11 @@ int main(int argc,char **argv){
 	try {
 		RecordingSystem s(MT::getParameter<int>("camID1"),
 			MT::getParameter<int>("camID2"),
-			MT::getParameter<int>("camID3"));
+			MT::getParameter<int>("camID3"),
+			MT::getParameter<int>("camID4"),
+			MT::getParameter<int>("kinectID1"),
+			MT::getParameter<int>("kinectID2"));
+		s.setDoEncode(MT::getParameter<bool>("encode", true));
 		s.run();
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;

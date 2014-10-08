@@ -155,35 +155,35 @@ void set_q()
 
 // ============================================================================
 struct UserInput {
-  arr joint_pos;
-  int check_joint_id;
+  double rot;
+  double pris;
 };
 
 UserInput get_input() {
   UserInput input;
   double tmp;
 
-  cout << "Enter rot (degrees):" << endl;
+  cout << "Enter relative pris (cm):" << endl;
   std::cin >> tmp;
-  input.joint_pos.append((double)tmp);
+  input.pris = (double)tmp / 100.;
 
-  cout << "Enter pris (m):" << endl;
+  cout << "Enter relative rot (degrees):" << endl;
   std::cin >> tmp;
-  input.joint_pos.append((double)tmp);
+  input.rot = tmp;
 
-  cout << "Joint id to check" << endl;
-  std::cin >> input.check_joint_id;
-
-  cout << "done..." << endl;
+  // cout << "Joint id to check" << endl;
+  // std::cin >> input.check_joint_id;
+  cout << "---------------------------" << endl;
+  cout << "Input was: (p:" << input.pris << " r:" << input.rot << ")" << endl;
+  cout << "---------------------------" << endl;
 
   return input;
 }
 
-class IcraExperiment
-{
+class IcraExperiment {
 public:
   IcraExperiment()
-    :activity()
+      : activity()
   {
     pub_moving = n.advertise<std_msgs::String>("/moving", 1000);
 
@@ -201,7 +201,7 @@ public:
     ors::Transformation pose; pose.setZero();
     MT::wait(1.);
     // align
-    pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
+    pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
     //pose.pos.x += .2;
     //pose.pos.y += .1;
     //pose.pos.z -= .1;
@@ -212,32 +212,34 @@ public:
     activity.machine->waitForActionCompletion(t);
     cout << "Done" << endl;
 
-    int jointID = -(activity.machine->s->MP.world.getJointByName("l_gripper_joint")->qIndex);
+    int jointID = -(activity.machine->s->feedbackController.world.getJointByName("l_gripper_joint")->qIndex);
     GroundedAction* action = activity.machine->add( new SetQ("XXX", jointID, {.0}));
     action->tasks(0)->setGains(2000, 0);
 
     while (true){
+      cout << "=======================================================" << endl;
       UserInput input = get_input();
 
       // ROS: manipulating rotation
       advertise_manipulation_state("rotation start");
 
-      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
-      cout << input.joint_pos(0) << endl;
-      cout << pose.rot << endl;
-      pose.addRelativeRotationDeg(input.joint_pos(0), 1, 0, 0);
-      cout << pose.rot << endl;
-      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
+      // cout << input.rot << endl;
+      // cout << pose.rot << endl;
+      pose.addRelativeRotationDeg(input.rot, 1, 0, 0);
+      // cout << pose.rot << endl;
+      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done rotation
       advertise_manipulation_state("rotation stop");
       cout << "Rotation DONE" << endl;
+      MT::wait(2);
 
       // ROS: manipulating prismatic
       advertise_manipulation_state("prismatic start");
-      pose = activity.machine->s->MP.world.getShapeByName("endeffL")->X;
-      pose.pos.x += input.joint_pos(1);
-      t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
+      pose.pos.x += input.pris;
+      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done prismatic
       advertise_manipulation_state("prismatic stop");
@@ -259,7 +261,7 @@ public:
 
   /// rotate to the given position
   void move_joint(double joint_value, char* joint_name="l_wrist_roll_joint") {
-    int jointID = -(activity.machine->s->MP.world.getJointByName(joint_name)->qIndex);
+    int jointID = -(activity.machine->s->feedbackController.world.getJointByName(joint_name)->qIndex);
     GroundedAction* action = activity.machine->add(
         new SetQ("XXX", jointID, {joint_value}));
     activity.machine->waitForActionCompletion(action);

@@ -53,7 +53,7 @@ int main(int argc,char** argv){
   x.setZero();
 
   Convert CP(MF);
-#if 0
+#if 1
   optConstrained(x, P.dualMatrix, CP);
   P.costReport();
   for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");

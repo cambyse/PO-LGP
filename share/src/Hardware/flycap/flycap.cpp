@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <deque>
 #include <condition_variable>
+#include <array>
 
 REGISTER_MODULE(FlycapPoller)
 
@@ -63,7 +64,7 @@ namespace {
 	struct ImageCapture {
 		Image image;
 		double timestamp;
-		ImageCapture(Image im, double timestamp) : image(im), timestamp(timestamp) {}
+		ImageCapture(const Image& im, double timestamp) : image(im), timestamp(timestamp) {}
 		ImageCapture() : timestamp(0) {};
 	};
 }
@@ -73,14 +74,19 @@ namespace MLR {
 void image_callback(Image *pImage, const void* callbackData);
 
 struct sFlycapInterface {
+	int id;
 	GigECamera cam;
 	Image targetImage;
 	FlyCapture2::PixelFormat output_format;
 	deque<ImageCapture> captured_images;
 	mutex list_access;
 	condition_variable cv;
+	bool started;
+	double first_capture_time, last_capture_time, capture_diffs;
+	int count;
 
-	sFlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) {
+	sFlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) : id(cameraID),
+			started(false), first_capture_time(-1), last_capture_time(0), capture_diffs(0), count(0) {
 		BusManager bm;
 		PGRGuid id;
 		CHECK_ERROR(bm.GetCameraFromSerialNumber(cameraID, &id));
@@ -89,9 +95,11 @@ struct sFlycapInterface {
 		FC2Config conf;
 		conf.grabMode = BUFFER_FRAMES;
 		conf.highPerformanceRetrieveBuffer = true;
-		conf.numBuffers = 1;
+		conf.numBuffers = 10;
 		conf.isochBusSpeed = BUSSPEED_S_FASTEST;
 		CHECK_ERROR(cam.SetConfiguration(&conf));
+
+		cam.SetGigEImagingMode(MODE_0);
 
 		GigEImageSettings settings;
 
@@ -119,25 +127,75 @@ struct sFlycapInterface {
 		cam.Disconnect();
 	}
 
+protected:
+	void update_stats(double timestamp) {
+		if(!started) {
+			first_capture_time = timestamp;
+			started = true;
+		}
+		++count;
+		capture_diffs+=timestamp-last_capture_time;
+		last_capture_time = timestamp;
+	}
+	void reset_stats(double timestamp) {
+		count = 0;
+		capture_diffs = 0;
+		last_capture_time = timestamp;
+		first_capture_time = timestamp;
+	}
+
+
+public:
 	void add_image(Image* pImage) {
 		double timestamp = clockTime();
-		unique_lock<mutex> lck(list_access);
-		captured_images.push_back(ImageCapture(*pImage, timestamp));
-		if(captured_images.size() > 25) {
-			WARN(flycap, STRING("Capture queue growing, currently size " << captured_images.size()));
+		{
+			unique_lock<mutex> lck(list_access);
+			update_stats(timestamp);
+
+			captured_images.push_back(ImageCapture(*pImage, timestamp));
+			if(captured_images.size() > 50) {
+				WARN(flycap, STRING("Capture queue growing, currently size " << captured_images.size()));
+			}
+
+			cv.notify_one();
 		}
 
-		cv.notify_one();
+		if((count % 1000) == 0) {
+			print_stats();
+			reset_stats(timestamp);
+		}
+
+	}
+
+	void print_stats() {
+		CameraStats stats;
+		cam.GetStats(&stats);
+		double elapsed = last_capture_time - first_capture_time;
+		double fps = count / elapsed;
+		cout << id << " running at " << fps << "fps, "
+				<< " dropped " << stats.imageDriverDropped << "+" << stats.imageDropped
+				<< ", xmit failed" << stats.imageXmitFailed << ", resend "
+				<< stats.numResendPacketsReceived << "/" << stats.numResendPacketsRequested << endl;
 	}
 
 	void start() {
 		cam.StartCapture(&image_callback, this);
+		//cam.StartCapture();
 	}
 	void stop() {
 		cam.StopCapture();
 	}
 
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
+//		Image img;
+//		cam.RetrieveBuffer(&img);
+//		update_stats(clockTime());
+//
+//		if((count % 100) == 0) {
+//			print_stats();
+//		}
+//		return true;
+
 		ImageCapture ic;
 		{
 			unique_lock<mutex> lck(list_access);
@@ -148,14 +206,13 @@ struct sFlycapInterface {
 			ic = captured_images.front();
 			captured_images.pop_front();
 		}
-
+		timestamp = ic.timestamp;
+//		return true;
 
 		image.resize(c_flycap_height, c_flycap_width, 3);
 		targetImage.SetData(image.p, c_flycap_size);
 		ic.image.Convert(output_format, &targetImage);
 
-		// TODO: figure out how to use the timestamp synchronization method of PtGrey TAN2014003 (ticket currently open) */
-		timestamp = ic.timestamp;
 		return true;
 	}
 };

@@ -93,6 +93,9 @@ template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i) { init(); r
 /// reference constructor
 template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j) { init(); referToSubDim(a, i, j); }
 
+/// reference constructor
+template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j, uint k) { init(); referToSubDim(a, i, j, k); }
+
 /// constructor with resize
 template<class T> MT::Array<T>::Array(uint i) { init(); resize(i); }
 
@@ -722,6 +725,9 @@ template<class T> MT::Array<T> MT::Array<T>::operator[](uint i) const { return A
 template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j) const { return Array(*this, i, j); }
 
 /// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
+template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j, uint k) const { return Array(*this, i, j, k); }
+
+/// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
 template<class T> MT::Array<T> MT::Array<T>::subRange(int i, int I) const { MT::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
 
 
@@ -1298,8 +1304,28 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
     nd=1; d0=a.d2; d1=0; d2=0; N=d0;
     p=&a(i, j, 0);
   } else {
-    NIY;
+    NIY // TODO
   }
+}
+
+/// make this array a subarray reference to \c a
+template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i, uint j, uint k) {
+  CHECK(a.nd>3, "can't create subsubarray of array less than 3 dimensions");
+  CHECK(i<a.d0 && j<a.d1 && k<a.d2, "SubDim range error (" <<i <<"<" <<a.d0 <<", " <<j <<"<" <<a.d1 <<", " <<k <<"<" <<a.d2 << ")");
+  freeMEM();
+  reference=true; memMove=a.memMove;
+  if(a.nd==4) {
+    nd=1; d0=a.d[3]; d1=d2=0; N=d0;
+  }
+  if(a.nd==5) {
+    nd=2; d0=a.d[3]; d1=a.d[4]; d2=0; N=d0*d1;
+  }
+  if(a.nd>5) {
+    nd=a.nd-3; d0=a.d[3]; d1=a.d[4]; d2=a.d[5]; N=a.N/(a.d0*a.d1*a.d2);
+    resetD();
+    if(nd>3) { d=new uint[nd];  memmove(d, a.d+3, nd*sizeof(uint)); }
+  }
+  p=a.p+(i*a.N+(j*a.N+(k*a.N/a.d2))/a.d1)/a.d0;
 }
 
 /** @brief takes over the memory buffer from a; afterwards, this is a
@@ -3202,13 +3228,12 @@ template<class T> void listResize(MT::Array<T*>& L, uint N) {
 template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {
   listDelete(L);
   L.resize(M.N);
-  uint i;
-  for(i=0; i<L.N; i++) L(i)=new T(*M(i));
+  for(uint i=0; i<L.N; i++) L(i)=new T(*M(i));
 }
 
 template<class T> void listDelete(MT::Array<T*>& L) {
-  uint i;
-  for(i=L.N; i--;) delete L.elem(i);
+//  while(L.N) delete L.last();
+  for(uint i=L.N; i--;) delete L.elem(i);
   L.clear();
 }
 

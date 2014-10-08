@@ -1,8 +1,7 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Perception/g4data.h>
-#include <Perception/keyframer.h>
-//#include <Perception/symbolizer.h>
+#include "keyframer.h"
 #include "fgplot.h"
 #include "changepoint.h"
 #include <unistd.h>
@@ -109,27 +108,23 @@ int main(int argc, char **argv) {
   KeyValueGraph kvg, *plot;
   arr vit, vit2;
   kvgL ctrls, deltas;
-  //Symbolizer symb;
   FGPlots fgp;
   arr query;
   uint n, d;
 
-  MT::String data, meta, poses, train, test, world;
-  MT::getParameter(data, "data");
-  data = NULL; // TODO skip saved files for now
-  MT::getParameter(meta, "meta");
-  MT::getParameter(poses, "poses");
-  MT::getParameter(train, "train");
-  MT::getParameter(test, "test");
-  MT::getParameter(world, "world");
+  String basedir, segdir, traindirlist;
+  MT::getParameter(basedir, "basedir");
+  MT::getParameter(segdir, "segdir");
+  MT::getParameter(traindirlist, "traindirlist");
 
-  kf.kw().init(world);
+  kf.kw().init(STRING(basedir << segdir << "world.ors"));
 
   String subj, obj;
   StringA subjs, objs;
 
-  subj = "human";
-  obj = "bbox:body";
+  /* subj = "human"; */
+  subj = "rh:thumb";
+  obj = "sbox";
 
   subjs.append(STRING("rh"));
   subjs.append(STRING("lh"));
@@ -138,10 +133,17 @@ int main(int argc, char **argv) {
   objs.append(STRING("ball"));
 
   init_gl(kf.kw().gl());
-  kf.g4d().load(data, meta, poses, true);
-  kf.process(kvg, subjs, objs);
-  kf.playScene(kvg, subjs);
 
+  uint wlen = 10;
+  kf.dlib_train(basedir, traindirlist, wlen);
+
+  kf.g4d().load(STRING(basedir << segdir), true);
+  kf.load_ann(STRING(basedir << segdir));
+  kf.dlib_test(kvg, subj, obj, wlen);
+
+  /* kf.process(kvg, subjs, objs); */
+  /* kf.playScene(kvg, subjs); */
+  /* kf.dlib_test(kvg, subj, obj, 1000); */
   // TODO
   // kf.model() // returns the state space model
   // kf.model().train(nodes);

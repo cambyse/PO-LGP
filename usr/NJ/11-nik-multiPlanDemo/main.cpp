@@ -368,7 +368,7 @@ int main(int argc,char** argv){
     if(demo.bFirstSense && demo.started_track &&demo.recho.bReady){//
       demo.recho.threadStepOrSkip(200);//why, what is the meaning....max skips, ignore			//   demo.recho.threadWait();
     }
-    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
+    if(robotProcesses.gamepad.state(0)==16 || robotProcesses.gamepad.state(0)==32) break;
     if( robotProcesses.gui.q_trajectory.N == 0 && demo.recho.bwdMsg_v.N > 0 && !demo.recho.bUnsetInit &&!demo.recho.bShiftAll && demo.recho.bReady && demo.recho.lastCost < 1)
     {
       robotProcesses.gui.dispSteps = -1;

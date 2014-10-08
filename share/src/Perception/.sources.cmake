@@ -1,1 +1,3 @@
-set(SOURCES ./keyframer.h ./depth_packing.cpp ./vision.h ./videoEncoder.cpp ./avutil.cpp ./depth_packing.h ./g4data.h ./opencv.h ./pixel_format.h ./image_pub.h ./perception_views.cpp ./videoEncoder.h ./shapeFitter.cpp ./pointcloud_io.cpp ./perception.h ./opencv.cpp ./avutil.h ./surfels.h ./pointcloud.cpp ./shapeFitter.h ./audio.h ./libcolorseg.h ./perception.cpp ./kinect2pointCloud.cpp ./videoEncoderX264.cpp ./surfels.cpp ./video_opencv.cpp ./colorspace.h ./audio.cpp ./colorspace.cpp ./libcolorseg.cpp ./pointcloud.h ./keyframer.cpp ./kinect2pointCloud.h ./g4data.cpp ./image_pub.cpp ./pointcloud_io.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

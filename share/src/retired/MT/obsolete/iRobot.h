@@ -6,7 +6,7 @@
 #include <Gui/opengl.h>
 
 #include <Ors/ors.h>
-#include <MT/joystick.h>
+#include <MT/gamepad.h>
 #include <MT/soc.h>
 #include <NJ/UrgInterface.h>
 #include <NP/camera.h>
@@ -18,7 +18,7 @@
 struct ControllerProcess;
 //struct RobotActionInterfaceWS;
 struct RevelInterface;
-enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM };
+enum CtrlMode { stopCM, gamepadCM, reachCM, followTrajCM, closeHandCM, openHandCM };
 
 
 //===========================================================================
@@ -46,7 +46,7 @@ struct TaskAbstraction{
   uint controlMode;
 
   //-- options/parameters
-  double joyRate;      //joystick speed
+  double gamepadRate;      //gamepad speed
   arr reachPoint;      //defines the 3D reach point in reachCM
 
   //trajectory messages - output buffers for planners
@@ -73,7 +73,7 @@ struct ControllerProcess{ //--non-threaded!!
   bool useBwdMsg, forceColLimTVs;
   arr bwdMsg_v, bwdMsg_Vinv; //optional: backward messages from a planner
   double maxJointStep; //computeMotionFromTaskVariables will generate a null-step if this limit is exceeded
-  intA joyState;
+  intA gamepadState;
   arr skinState;
 
   //OUTPUT
@@ -104,12 +104,12 @@ struct ControllerProcess{ //--non-threaded!!
        
 struct RobotProcessGroup{
   //modules
-  bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
+  bool openArm, openHand, openSkin, openGamepad, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;
   SchunkArmModule arm;
   SchunkHandModule hand;
   SchunkSkinModule skin;
-  JoystickInterface joy;
+  GamepadInterface gamepad;
   UrgInterface urg;
   EarlyVisionModule evis;
   BumblebeeModule bumble;
