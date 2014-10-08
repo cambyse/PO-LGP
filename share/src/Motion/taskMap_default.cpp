@@ -166,7 +166,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         for(uint k=0; k<params.N; k++) {
           uint l=(uint)params(k);
           G.kinematicsPos(NoArr, Ji, G.bodies(l), NULL);
-          G.bodies(l)->X.rot.getY(vi);
+          vi = G.bodies(l)->X.rot.getY();
           vi *= -1.;
           zi = ARRAY(vi);
           J.append(~zi*Ji);

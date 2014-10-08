@@ -22,10 +22,12 @@ struct MySystem:System{
   }
 };
 
-void testGamepad(){
-    MySystem S;
-    engine().open(S);
+void changeColor(void*){  orsDrawAlpha = .7; }
+void changeColor2(void*){  orsDrawAlpha = 1.; }
 
+void testGamepad(){
+  MySystem S;
+  engine().open(S);
 
   ors::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
@@ -35,8 +37,10 @@ void testGamepad(){
   ors::Joint *trans=world.getJointByName("worldTranslationRotation");
   ors::Shape *ftL_shape=world.getShapeByName("endeffL");
 
-  ors::KinematicWorld worldCopy = world;
-  world.gl().add(ors::glDrawGraph, &worldCopy);
+  ors::KinematicWorld world_pr2 = world;
+  world.gl().add(changeColor);
+//  world.gl().add(ors::glDrawGraph, &world_pr2);
+  world.gl().add(changeColor2);
 
   FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
@@ -73,14 +77,15 @@ void testGamepad(){
 
     // joint state
     if(useRos){
-      worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
+      world_pr2.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
     }
 
     //compute control
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
-//    MP.reportCurrentState();
+    cout <<t <<endl;
+    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
     if(!(t%4))
@@ -110,7 +115,6 @@ void testGamepad(){
       refs.u_bias = zeros(q.N);
     }
 
-    refs.Kd_gainFactor = ARR(1.); //???????????????????
     refs.q=q;
     refs.qdot=zero_qdot;
     if(trans && trans->qDim()==3){

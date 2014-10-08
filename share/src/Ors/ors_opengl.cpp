@@ -87,15 +87,14 @@ void glDrawShape(ors::Shape *s) {
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
 
-  double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
-  if(!scale) scale=1.;
-  scale*=.3;
-
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
 
   if(!orsDrawShapes) {
+    double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
+    if(!scale) scale=1.;
+    scale*=.3;
     glDrawAxes(scale);
     glColor(0, 0, .5);
     glDrawSphere(.1*scale);
@@ -150,8 +149,10 @@ void glDrawShape(ors::Shape *s) {
     glEnd();
   }
 
-  glColor(1,1,1);
-  if(orsDrawBodyNames && s->body) glDrawText(s->body->name, 0, 0, 0);
+  if(orsDrawBodyNames && s->body){
+    glColor(1,1,1);
+    glDrawText(s->body->name, 0, 0, 0);
+  }
 
   glPopName();
 }
