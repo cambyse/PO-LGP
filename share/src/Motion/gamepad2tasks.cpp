@@ -27,13 +27,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
   head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
   limits = MP.addPDTask("limits", .2, .8, new DefaultTaskMap(qLimitsTMT));
-  limits->y_ref.setZero();
-  limits->v_ref.setZero();
-
   coll = MP.addPDTask("collisions", .2, .8, new DefaultTaskMap(collTMT, -1, NoVector, -1, NoVector, {.1}));
-  coll->y_ref.setZero();
-  coll->v_ref.setZero();
-
   gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_joint")->qIndex));
   gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_joint")->qIndex));
 }
@@ -49,7 +43,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
 
-//  limits->active=true;
+  limits->active=true;
   coll->active=true;
 
   if(gamepadState.N<6) return false;
