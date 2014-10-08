@@ -1,8 +1,9 @@
 headache -h insertIncludePathInCreatorProjects.header -c insertIncludePathInCreatorProjects.conf \
-../examples/*/*/.*.includes \
-../projects/*/.*.includes \
+../examples/Core/keyValueGraph/.*.includes
+
+#../examples/*/*/.*.includes \
+#../projects/*/.*.includes \
 
 
-#../examples/Core/keyValueGraph/.*.includes
-
+sed 's/----\*\/\n\n/----\*\/\n/m' ../src/Core/array.h > ../src/Core/z.h
 

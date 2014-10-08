@@ -12,7 +12,7 @@
 //#include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
 
-extern double stickyWeight;
+//extern double stickyWeight;
 
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr y0, const double& height, bool stickyness, uint horizon);

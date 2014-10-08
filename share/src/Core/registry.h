@@ -39,10 +39,10 @@ KeyValueGraph& registry();
 //macros to be used in *.cpp files
 
 #define REGISTER_ITEM(T, key, value) \
-  Item_typed<T > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
+  Item_typed<T > key##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key)), ItemL(), value);
 
 #define REGISTER_ITEM2(T, key1, key2, value) \
-  Item_typed<T > key1##_##key2##_RegistryEntry(ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, &registry());
+  Item_typed<T > key1##_##key2##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value);
 
 
 //===========================================================================
@@ -53,7 +53,7 @@ KeyValueGraph& registry();
 struct Type:RootType {
   MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
-  virtual struct Item* readItem(istream&) const {NIY}; //TODO -> readIntoNewItem
+  virtual struct Item* readItem(KeyValueGraph& container, istream&) const {NIY}; //TODO -> readIntoNewItem
   virtual void* newInstance() const {NIY}
   virtual Type* clone() const {NIY}
   void write(std::ostream& os) const {
@@ -103,9 +103,9 @@ Item *reg_findType() {
 // read a value from a stream by looking up available registered types
 //
 
-inline Item* readTypeIntoItem(const char* key, std::istream& is) {
+inline Item* readTypeIntoItem(KeyValueGraph& container, const char* key, std::istream& is) {
   Item *ti = reg_findType(key);
-  if(ti) return ti->getValue<Type>()->readItem(is);
+  if(ti) return ti->getValue<Type>()->readItem(container, is);
   return NULL;
 }
 
@@ -128,7 +128,6 @@ struct Type_typed:Type {
     }
   }
   virtual const std::type_info& typeId() const { return typeid(T); }
-  //virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
   virtual void* newInstance() const { return new T(); }
   virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
 };
@@ -137,7 +136,7 @@ template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
   Type_typed_readable() {}
   Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
-  virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
+  virtual Item* readItem(KeyValueGraph& container, istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(container, x); }
   virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 

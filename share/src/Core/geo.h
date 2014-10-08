@@ -133,10 +133,10 @@ struct Quaternion {
   double getRad() const;
   void getDeg(double& degree, Vector& axis) const;
   void getRad(double& angle , Vector& axis) const;
-  Vector& getVec(Vector& v) const;
-  Vector& getX(Vector& Rx) const;
-  Vector& getY(Vector& Ry) const;
-  Vector& getZ(Vector& Rz) const;
+  Vector getVec() const;
+  Vector getX() const;
+  Vector getY() const;
+  Vector getZ() const;
   Matrix getMatrix() const;
   arr    getArr() const;
   double* getMatrix(double* m) const;

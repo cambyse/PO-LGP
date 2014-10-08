@@ -1,1 +1,3 @@
-set(SOURCES ./MPU9150.h ./Constants.h ./racer.cpp ./MD25Controller.h ./Connection.h ./racer-balancingBenchmark.cpp ./MPU9150Controller.h ./Controller.h ./MotorInterface.h ./Connection.cpp ./MD25Controller.cpp ./IMUInterface.h ./modules.h ./modules.cpp ./MD25.cpp ./MD25.h ./MPU9150.cpp ./Controller.cpp ./MPU9150Controller.cpp ./racer.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

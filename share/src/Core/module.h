@@ -178,7 +178,7 @@ struct __##name##__Access:Access_typed<type>{ \
     instantiate the module just by referring to its string name. */
 
 #define REGISTER_MODULE(name) \
-  Item_typed<Type> name##_ModuleRegistryItem(ARRAY<MT::String>(MT::String("Decl_Module"), MT::String(#name)), ItemL(), new Type_typed<name, void>(NULL,NULL), &registry());
+  Item_typed<Type> name##_ModuleRegistryItem(registry(), ARRAY<MT::String>(MT::String("Decl_Module"), MT::String(#name)), ItemL(), new Type_typed<name, void>(NULL,NULL));
 
 
 //===========================================================================

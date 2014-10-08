@@ -12,10 +12,10 @@ hyperedge(B C) = 5   		# keys=hyperedge, value=5, parents=B C
 
 ## standard value types
 a=string	# MT::String (except for keywords 'true' and 'false' and 'Mod' and 'Include')
-b="STRING"	# MT::String
-c='file.txt'	# MT::FileToken
+b="STRING"	# MT::String (does not require a '=')
+c='file.txt'	# MT::FileToken (does not require a '=')
 d=-0.1234	# double
-e=[1 2 3 0.5]	# MT::arr
+e=[1 2 3 0.5]	# MT::arr (does not require a '=')
 f=(c d e)	# MT::Array<*Item> (list of other items in the KVG)
 g      		# bool (default: true)
 h=true		# bool
@@ -35,7 +35,7 @@ k={ a, b=0.2 x="hallo"	  # KeyValueGraph with 6 items
 Merge k { y=false, z=otherString, b=7, c=newAttribute }
 
 ## including
-Include = 'example_include.kvg'   # first creates a normal FileToken item (see below) then opens and includes the file directly
+Include = 'example_include.kvg'   # first creates a normal FileToken item then opens and includes the file directly
 
 ## referring to items (constants/macros)
 macro = 5
@@ -43,9 +43,11 @@ val=(macro) # *G["val"]->getValue<double>() will return 5
 
 ## any types
 trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transformation) which was registered somewhere in the code using the registry()
+                     # (does not require a '=')
 
 ## strange notations
 a()	   # key=a, value=true, parents=none
-()	   # key=none, value=true, parents=none
-
-
+();	   # key=none, value=true, parents=none
+[1 2 3 4]  # key=none, value=MT::arr, parents=none
+[2 3 4]
+[4 6]

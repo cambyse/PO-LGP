@@ -630,22 +630,24 @@ void Quaternion::getDeg(double& degree, Vector& vec) const {
 void Quaternion::getRad(double& angle, Vector& vec) const {
   if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { angle=0.; vec.set(0., 0., 1.); return; }
   angle=acos(w);
-  double s=sin(angle);
+  double s=1./sin(angle);
   angle*=2;
-  vec.x=x/s; vec.y=y/s; vec.z=z/s;
+  vec.x=s*x; vec.y=s*y; vec.z=s*z;
   CHECK(angle>=0. && angle<=MT_2PI, "");
 }
 
 /// gets the axis rotation vector with length equal to the rotation angle in rad
-Vector& Quaternion::getVec(Vector& v) const {
-  if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { v.setZero(); return v; }
+Vector Quaternion::getVec() const {
+  Vector vec;
+  if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { vec.setZero(); return vec; }
   double phi=acos(w);
   double s=2.*phi/sin(phi);
-  v.x=s*x; v.y=s*y; v.z=s*z;
-  return v;
+  vec.x=s*x; vec.y=s*y; vec.z=s*z;
+  return vec;
 }
 
-Vector& Quaternion::getX(Vector& Rx) const {
+Vector Quaternion::getX() const {
+  Vector Rx;
   double q22 = 2.*y*y;
   double q33 = 2.*z*z;
   double q12 = 2.*x*y;
@@ -657,8 +659,8 @@ Vector& Quaternion::getX(Vector& Rx) const {
   Rx.z=q13-q02;
   return Rx;
 }
-Vector& Quaternion::getY(Vector& Ry) const { Ry = (*this)*Vector(0, 1, 0);  return Ry; }
-Vector& Quaternion::getZ(Vector& Rz) const { Rz = (*this)*Vector(0, 0, 1);  return Rz; }
+Vector Quaternion::getY() const { return (*this)*Vector_y; }
+Vector Quaternion::getZ() const { return (*this)*Vector_z; }
 
 void Quaternion::setMatrix(double* m) {
   w = .5*sqrt(1.+m[0]+m[4]+m[8]); //sqrt(1.-(3.-(m[0]+m[4]+m[8]))/4.);
@@ -751,7 +753,7 @@ double* Quaternion::getMatrixGL(double* m) const {
   return m;
 }
 
-void Quaternion::writeNice(std::ostream& os) const { Vector v; os <<"Quaternion: " <<getDeg() <<" around " <<getVec(v) <<"\n"; }
+void Quaternion::writeNice(std::ostream& os) const { os <<"Quaternion: " <<getDeg() <<" around " <<getVec() <<"\n"; }
 void Quaternion::write(std::ostream& os) const {
   if(!MT::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';
   else os <<' ' <<w <<' ' <<x <<' ' <<y <<' ' <<z;
@@ -1207,8 +1209,7 @@ double DistanceFunction_Sphere::fs(arr& g, arr& H, const arr& x){
 //===========================================================================
 
 double DistanceFunction_Cylinder::fs(arr& g, arr& H, const arr& x){
-  ors::Vector bla;
-  arr z = ARRAY(t.rot.getZ(bla));
+  arr z = ARRAY(t.rot.getZ());
   arr c = ARRAY(t.pos);
   arr b = scalarProduct(x-c, z) * z;
   arr a = (x-c) - b;

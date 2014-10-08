@@ -58,7 +58,8 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
   bool r, add;
   
   if(scene) delete scene;
-  scene=new SWIFT_Scene(true, false);
+
+  scene=new SWIFT_Scene(false, false);
 
   INDEXswift2shape.resize(world.shapes.N);  INDEXswift2shape=-1;
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;

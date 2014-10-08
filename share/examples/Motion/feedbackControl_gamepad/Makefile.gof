@@ -1,0 +1,6 @@
+BASE = ../../..
+
+OBJS = main.o simulator.o
+DEPEND = Core Ors Motion System Gui Hardware_gamepad
+
+include $(BASE)/gofMake/generic.mk

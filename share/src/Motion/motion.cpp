@@ -300,18 +300,11 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<"Size of cost matrix:" <<phiMatrix.getDim() <<endl;
   uint T=phiMatrix.d0-1;
 
-  arr plotData(T+1,taskCosts.N+1); plotData.setZero();
-  double totalT=0., a;
-  cout <<" * transition costs:" <<endl;
-  if(dim_psi()){
-    for(uint t=0;t<=T;t++){
-      totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
-      plotData(t,0) = a;
-    }
-  }
-  cout <<"\t total=" <<totalT <<endl;
+  if(dim_psi()) HALT("using psi is deprecated!");
+  arr plotData(T+1,taskCosts.N); plotData.setZero();
 
   //-- collect all task costs and constraints
+  double a;
   arr taskC(taskCosts.N); taskC.setZero();
   arr taskG(taskCosts.N); taskG.setZero();
   for(uint t=0; t<=T; t++){
@@ -321,7 +314,7 @@ void MotionProblem::costReport(bool gnuplt) {
       uint d=c->dim_phi(world, t);
       if(d && !c->map.constraint){
         taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
-        plotData(t,i+1) = a;
+        plotData(t,i) = a;
         m += d;
       }
       if(d && c->map.constraint){
@@ -331,7 +324,7 @@ void MotionProblem::costReport(bool gnuplt) {
           if(g>0.) gpos+=g;
         }
         taskG(i) += gpos;
-        plotData(t,i+1) = gpos;
+        plotData(t,i) = gpos;
         m += d;
       }
     }
@@ -348,16 +341,12 @@ void MotionProblem::costReport(bool gnuplt) {
     totalG += taskG(i);
   }
 
-  cout <<"\t total trans       = " <<totalT <<endl;
   cout <<"\t total task        = " <<totalC <<endl;
   cout <<"\t total constraints = " <<totalG <<endl;
-  cout <<"\t total task+trans  = " <<totalC+totalT <<endl;
-
 
   //-- write a nice gnuplot file
   ofstream fil("z.costReport");
   //first line: legend
-  fil <<"trans[" <<dim_psi() <<"] ";
   for(auto c:taskCosts){
     uint d=c->map.dim_phi(world);
     fil <<c->name <<'[' <<d <<"] ";
@@ -380,10 +369,9 @@ void MotionProblem::costReport(bool gnuplt) {
   ofstream fil2("z.costReport.plt");
   fil2 <<"set key autotitle columnheader" <<endl;
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
-  fil2 <<"plot 'z.costReport' u 0:1 w l \\" <<endl;
-  uint i=1;
-  for(uint tmp=0;tmp<taskCosts.N;tmp++){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
-  if(dualMatrix.N) for(uint tmp=0;tmp<taskCosts.N;tmp++){  i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
+  fil2 <<"plot 'z.costReport' \\" <<endl;
+  for(uint i=1;i<=taskCosts.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l \\" <<endl;
+  if(dualMatrix.N) for(uint i=0;i<taskCosts.N;i++) fil2 <<"  ,'' u 0:"<<1+taskCosts.N+i<<" w l \\" <<endl;
   fil2 <<endl;
   fil2.close();
 
@@ -478,7 +466,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   CHECK(t<=T,"");
 
   //-- manage configurations
-  if(configurations.N!=k+1 || t==0){
+  if(configurations.N!=k+1 || (MP.world.operators.N && t==0)){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
@@ -516,6 +504,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
 
   //-- transition costs
   if(MP.transitionType!=MotionProblem::none){
+    MT_MSG("deprecated: try to set transition costs as a task, not separately");
     double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
     arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
     if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity

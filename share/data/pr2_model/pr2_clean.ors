@@ -113,5 +113,5 @@ joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_t
 joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  mimic="r_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint l_gripper_l_finger_tip_joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=0  mimic="l_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint l_gripper_r_finger_tip_joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  mimic="l_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
-joint r_gripper_joint (r_gripper_r_finger_tip_link r_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3  limits=[ 0 0.09 ]  ctrl_limits=[ 0.2 1000 ]  }
-joint l_gripper_joint (l_gripper_r_finger_tip_link l_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3  limits=[ 0 0.09 ]  ctrl_limits=[ 0.2 1000 ]  }
+joint r_gripper_joint (r_gripper_r_finger_tip_link r_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3 limits=[ 0 0.001 ]  ctrl_limits=[ 0.0 1000 ]  }
+joint l_gripper_joint (l_gripper_r_finger_tip_link l_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3 limits=[ 0 0.001 ]  ctrl_limits=[ 0.0 1000 ]  }

@@ -25,9 +25,9 @@ struct DummyTask:public TaskAbstraction{//do nothing
 
 
 int
-get_joy_state(RobotProcessGroup& robot){
-	if (!robot.openJoystick) return 0;
-	return robot.joy.state(0);
+get_gamepad_state(RobotProcessGroup& robot){
+	if (!robot.openGamepad) return 0;
+	return robot.gamepad.state(0);
 }
 
 PotentialField *
@@ -354,7 +354,7 @@ int main(int argc,char** argv){
 		arr q;robot.ctrl.ors.getJointState(q);
 		joints[i]=q;
 		cout << " step " << i << " taskcost " << robot.ctrl.sys.taskCost(NULL,0,-1);
-		if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
+		if(get_gamepad_state(robot)==16 || get_gamepad_state(robot)==32) break;
 	}
 	f << joints << endl;
 

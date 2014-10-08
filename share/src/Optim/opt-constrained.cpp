@@ -93,72 +93,55 @@ void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
 //  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
 }
 
+bool UnconstrainedProblem::anyTimeAulaUpdateStopCriterion(const arr& dL_x){
+//  cout <<"checking gradient norms: dL_x =" <<length(dL_x) <<" df_x=" <<length(df_x) <<endl;
+  if(length(dL_x) < .1 * length(df_x)) return true;
+  return false;
+}
+
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
   arr lambdaOld = lambda;
 
+  lambda += lambdaStepsize * (2.*mu*g_x);
+  //bound clipping
+  for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+
   //collect gradients of active constraints
+  arr A;
+  RowShiftedPackedMatrix *Aaux, *Jgaux;
   if(Jg_x.special==arr::RowShiftedPackedMatrixST){
-#if 0
-    arr A = Jg_x;
-    for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)) A[i].setZero();
-
-    arr tmp = comp_A_At(A);
-    CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
-    for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
-
-    arr AF = comp_A_x(A, dF_x);
-    arr beta;
-    beta = lapack_Ainv_b_sym(tmp, AF);
-
-    lambda += lambdaStepsize * (2.*mu*g_x - beta);
-#else
-    arr A;
-    RowShiftedPackedMatrix *Aaux = auxRowShifted(A, 0, Jg_x.d1, x.N);
-    RowShiftedPackedMatrix *Jgaux = &castRowShiftedPackedMatrix(Jg_x);
-    //remove zero rows
-    for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
-      A.append(Jg_x[i]);
-      A.reshape(A.N/Jg_x.d1,Jg_x.d1);
+    Aaux = auxRowShifted(A, 0, Jg_x.d1, x.N);
+    Jgaux = &castRowShiftedPackedMatrix(Jg_x);
+  }
+  //append rows of Jg_x to A if constraint is active
+  for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
+    A.append(Jg_x[i]);
+    A.reshape(A.N/Jg_x.d1,Jg_x.d1);
+    if(Jg_x.special==arr::RowShiftedPackedMatrixST)
       Aaux->rowShift.append(Jgaux->rowShift(i));
-    }
-    if(A.d0>0){
-      arr tmp = comp_A_At(A);
+  }
+  if(A.d0>0){
+    arr tmp = comp_A_At(A);
+    if(Jg_x.special==arr::RowShiftedPackedMatrixST){
       CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
       for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
-
-      arr AF = comp_A_x(A, dL_x);
-      arr beta;
-      beta = lapack_Ainv_b_sym(tmp, AF);
-      //reinsert zero rows
-      for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
-        beta.insert(i,0.);
-      }
-      lambda += lambdaStepsize * (2.*mu*g_x - beta);
     }else{
-      lambda += lambdaStepsize * (2.*mu*g_x);
+      for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
     }
-#endif
-  }else{
-    arr A;
-    //remove zero rows
-    for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
-      A.append(Jg_x[i]);
-      A.reshape(A.N/x.N,x.N);
-    }
-    arr tmp = comp_A_At(A);
-    for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
+
+    arr AdL = comp_A_x(A, dL_x);
     arr beta;
-    beta = lapack_Ainv_b_sym(tmp, comp_A_x(A, dL_x));
+    beta = lapack_Ainv_b_sym(tmp, AdL);
     //reinsert zero rows
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
       beta.insert(i,0.);
     }
-    lambda += lambdaStepsize * (2.*mu*g_x - beta);
+    lambda -= lambdaStepsize * beta;
+    //bound clipping
+    for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
   }
-
-  for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
   //-- adapt mu as well
   //double muOld=mu;
@@ -275,15 +258,18 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
     arr x_old = x;
     if(opt.constrainedMethod==anyTimeAula){
+      //decide yourselve on when to stop iterating Newton steps
       double stopTol = newton.o.stopTolerance;
-      newton.o.stopTolerance*=10.;
+      newton.o.stopTolerance*=stopTolInc;
       for(uint l=0;l<20; l++){
         OptNewton::StopCriterion res = newton.step();
         if(res>=OptNewton::stopCrit1) break;
+        if(UCP.anyTimeAulaUpdateStopCriterion(newton.gx)) break;
         newton.o.stopTolerance*=stopTolInc;
       }
       newton.o.stopTolerance = stopTol;
     }else{
+      //use standard 'run()' to iterate Newton steps
       double stopTol = newton.o.stopTolerance;
       newton.o.stopTolerance*=10.;
       if(k) newton.reinit();
@@ -306,9 +292,9 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= 1;  break;
+      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= opt.aulaMuInc;  break;
 //      case augmentedLag:   UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  UCP.mu *= 1;  break;
-      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  break;
+      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }

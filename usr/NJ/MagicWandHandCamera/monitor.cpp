@@ -83,7 +83,7 @@ void Monitor::step(){
       ui->cycleTimeMonitor->setText(FORMATPM(ctrl->gui->threadStepTime));
       ui->collisionCost->setText(FORMAT(ctrl->CV_col->x(0)));
       ui->limitCost->setText(FORMAT(ctrl->CV_lim->x(0)));
-      ui->joyState->setText(STRING(ctrl->joyState));
+      ui->gamepadState->setText(STRING(ctrl->gamepadState));
     }
     
     /*if(arm.readPositions){

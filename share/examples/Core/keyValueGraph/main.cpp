@@ -1,8 +1,8 @@
 #include <Core/keyValueGraph.h>
 #include <Core/registry.h>
 
-const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
-//const char *filename=NULL;
+//const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
+const char *filename=NULL;
 
 //===========================================================================
 
@@ -32,7 +32,7 @@ void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
-  G.writeDot();
+  G.writeDot(FILE("z.dot").getOs());
 }
 
 //===========================================================================
@@ -63,7 +63,7 @@ int MAIN(int argc, char** argv){
   testRead();
   testDot();
 
-  if(!filename) testManual();
+//  if(!filename) testManual();
 
   return 0;
 }

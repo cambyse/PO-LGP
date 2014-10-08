@@ -4,10 +4,7 @@
 
 //===========================================================================
 struct CoreTasks : GroundedAction {
-  CoreTasks();
-
-  /// @name Inherited stuff
-  virtual void initYourself(ActionMachine& actionMachine);
+  CoreTasks(ActionMachine& actionMachine);
 };
 
 //===========================================================================
@@ -15,10 +12,21 @@ struct MoveEffTo : GroundedAction {
   MT::String effName;
   arr effPos;
 
-  MoveEffTo(const char* effName, const arr& effPos);
+  MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos);
 
   /// @name Inherited/overwritten stuff
-  virtual void initYourself(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
+struct PoseTo : GroundedAction {
+  MT::String effName;
+  arr effPos;
+  arr orientation;
+
+  PoseTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& orientation);
+
+  /// @name Inherited/overwritten stuff
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
@@ -28,10 +36,9 @@ struct AlignEffTo : GroundedAction {
   arr effPos;
   arr alginPos; // TODO what is this? Find a proper name.
 
-  AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos);
+  AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& alignPos);
 
   /// @name Inherited stuff
-  virtual void initYourself(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
@@ -40,10 +47,9 @@ struct OrientationQuat : GroundedAction {
   MT::String effName;
   arr orientation;
 
-  OrientationQuat(const char* effName, const arr& orientation);
+  OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientation);
 
   /// @name Inherited stuff
-  virtual void initYourself(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
@@ -53,10 +59,9 @@ struct SetQ : GroundedAction {
   int jointID;
   double jointPos;
 
-  SetQ(const char* effName, int jointID, double jointPos);
+  SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos);
 
   /// @name Inherited stuff
-  virtual void initYourself(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
@@ -66,9 +71,8 @@ struct PushForce : GroundedAction {
   arr forceVec;
 //  arr poseArg2; // TODO what is this? Find a proper name.
 
-  PushForce(const char* effName, arr forceVec/*, arr poseArg2*/);
+  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec/*, arr poseArg2*/);
 
   /// @name Inherited stuff
-  virtual void initYourself(ActionMachine& actionMachine);
   bool finishedSuccess(ActionMachine& M);
 };

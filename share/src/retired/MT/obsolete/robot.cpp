@@ -48,7 +48,7 @@ ControllerProcess::ControllerProcess():Process("ControllerProcess"), timer("RobC
   skinPressureVar=NULL;
   task=NULL;
   planVar= NULL;
-  joyVar= NULL;
+  gamepadVar= NULL;
   useBwdMsg=false;
   forceColLimTVs=true;
   fixFingers=false;
@@ -119,10 +119,10 @@ void ControllerProcess::step(){
     q_referenceVar->deAccess(this);
   }
   
-  if(joyVar){
-    joyVar->readAccess(this);
-    task->joyState = joyVar->state;
-    joyVar->deAccess(this);
+  if(gamepadVar){
+    gamepadVar->readAccess(this);
+    task->gamepadState = gamepadVar->state;
+    gamepadVar->deAccess(this);
   }
   
   //syncronize the ors/soc system with the true state q_ors and v_ors
@@ -212,7 +212,7 @@ RobotProcessGroup::RobotProcessGroup(){
   openArm=MT::Parameter<bool>("openArm", false);
   openHand=MT::Parameter<bool>("openHand", false);
   openSkin=MT::Parameter<bool>("openSkin", false);
-  openJoystick=MT::Parameter<bool>("openJoystick", true);
+  openGamepad=MT::Parameter<bool>("openGamepad", true);
   openLaser=MT::Parameter<bool>("openLaser", false);
   openBumble=MT::Parameter<bool>("openBumble", false);
   openEarlyVision=MT::Parameter<bool>("openEarlyVision", false);
@@ -232,7 +232,7 @@ void RobotProcessGroup::open(){
   ctrl.q_referenceVar = &q_currentReference;
   ctrl.skinPressureVar = &skinPressureVar;
   ctrl.proxiesVar = &currentProxies;
-  ctrl.joyVar = &joy;
+  ctrl.gamepadVar = &gamepad;
   ctrl.threadOpen();
   ctrl.waitForIdle();
   motorIndex.resize(7);
@@ -257,10 +257,10 @@ void RobotProcessGroup::open(){
     gui.threadLoop();
   }
   
-  if(openJoystick){
-    joy.threadLoopWithBeat(.01);
+  if(openGamepad){
+    gamepad.threadLoopWithBeat(.01);
     //open();
-    //do{ joy.step(); }while(joy.state(0)); //poll until buttons are clear
+    //do{ gamepad.step(); }while(gamepad.state(0)); //poll until buttons are clear
   }
   
   if(openBumble){
@@ -331,7 +331,7 @@ void RobotProcessGroup::close(){
   if(openHand)   hand.threadClose();
   if(openSkin)   skin.threadClose();
   if(openEarlyVision) evis.threadClose();
-  if(openJoystick) joy.threadClose();
+  if(openGamepad) gamepad.threadClose();
   ctrl.threadClose();
   if(openGui) gui.threadClose();
 }
@@ -344,9 +344,9 @@ void RobotProcessGroup::close(){
 
 TaskAbstraction::TaskAbstraction(){
   plan_count=0.;
-  joyVar = NULL;
+  gamepadVar = NULL;
   planVar= NULL;
-  joyRate = MT::Parameter<double>("joyRate", .1);
+  gamepadRate = MT::Parameter<double>("gamepadRate", .1);
   //-- planned trajectory
   if(MT::getParameter<bool>("loadPlanned", false)){
     ifstream fil;
@@ -364,9 +364,9 @@ TaskAbstraction::TaskAbstraction(){
 void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   ors::KinematicWorld &ors=ctrl->ors;
   
-  // get refs to joystick and plan from controller (SSD)
+  // get refs to gamepad and plan from controller (SSD)
   planVar = ctrl->planVar;
-  joyVar  = ctrl->joyVar;
+  gamepadVar  = ctrl->gamepadVar;
   
   //define explicit control variables
   arr limits;
@@ -433,7 +433,7 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
 DoNothing *DoNothing::p=NULL;
 Homing *Homing::p=NULL;
 Stop *Stop::p=NULL;
-Joystick *Joystick::p=NULL;
+Gamepad *Gamepad::p=NULL;
 CloseHand *CloseHand::p=NULL;
 FollowTrajectory *FollowTrajectory::p=NULL;
 OpenHand *OpenHand::p=NULL;
@@ -564,8 +564,8 @@ FollowTrajectory::updateTaskGoals(ControllerProcess *ctrl){
   }
 }
 void
-Joystick::updateTaskGoals(ControllerProcess *ctrl){
-  prepare_skin(ctrl, joyState(0)!=2);
+Gamepad::updateTaskGoals(ControllerProcess *ctrl){
+  prepare_skin(ctrl, gamepadState(0)!=2);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   
@@ -575,7 +575,7 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
   TV_q->active=true;
   TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero(); //damping on joint velocities
   
-  switch(joyState(0)){
+  switch(gamepadState(0)){
     case 1: { //(1) homing
       TV_q->v_target = ctrl->q_home - TV_q->y;
       double vmax=.5, v=length(TV_q->v_target);
@@ -618,9 +618,9 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
       TV_eff ->active=true;
       TV_eff->y_target = TV_eff->y;
       TV_eff->y_prec=0.;  TV_eff->v_prec=TV_x_vprec;
-      TV_eff->v_target(0) = -joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-      TV_eff->v_target(1) = +joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-      TV_eff->v_target(2) = -joyRate*MT::sign(joyState(2))*(.25*(exp(MT::sqr(joyState(2))/10000.)-1.));
+      TV_eff->v_target(0) = -gamepadRate*MT::sign(gamepadState(3))*(.25*(exp(MT::sqr(gamepadState(3))/10000.)-1.));
+      TV_eff->v_target(1) = +gamepadRate*MT::sign(gamepadState(6))*(.25*(exp(MT::sqr(gamepadState(6))/10000.)-1.));
+      TV_eff->v_target(2) = -gamepadRate*MT::sign(gamepadState(2))*(.25*(exp(MT::sqr(gamepadState(2))/10000.)-1.));
       break;
     }
     case 4: { //(3) controlling the rotation rate
@@ -628,9 +628,9 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
       TV_rot->active=true;
       TV_eff->y_prec=TV_x_yprec;  TV_eff->v_prec=0.;
       TV_rot->y_prec=0.; TV_rot->v_prec=TV_rot_vprec;
-      TV_rot->v_target(0) = -3.*joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-      TV_rot->v_target(1) = +3.*joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-      TV_rot->v_target(2) = -3.*joyRate*MT::sign(joyState(1))*(.25*(exp(MT::sqr(joyState(1))/10000.)-1.));
+      TV_rot->v_target(0) = -3.*gamepadRate*MT::sign(gamepadState(3))*(.25*(exp(MT::sqr(gamepadState(3))/10000.)-1.));
+      TV_rot->v_target(1) = +3.*gamepadRate*MT::sign(gamepadState(6))*(.25*(exp(MT::sqr(gamepadState(6))/10000.)-1.));
+      TV_rot->v_target(2) = -3.*gamepadRate*MT::sign(gamepadState(1))*(.25*(exp(MT::sqr(gamepadState(1))/10000.)-1.));
       break;
     }
     /*
@@ -643,7 +643,7 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
     bwdMsgs=true;
     break;
     }*/
-    //grip_target = ((double)(joyState(7)/4))/5.;
+    //grip_target = ((double)(gamepadState(7)/4))/5.;
   }
 }
 

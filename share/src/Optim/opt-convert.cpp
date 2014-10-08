@@ -384,6 +384,13 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   if(&Hf){ Hf = comp_At_A(meta_Jy); Hf *= 2.; }
   return sumOfSqr(meta_y);
 #else
+
+  /* Basically: first get (phi, J, Jz) as VectorFunction; then loop through all elements of the vector phi
+   * and 'sort' it either into a cost or a constraint. This sorting has to be done for both, the vector
+   * and its Jacobian, to give (y, Jy, Jyz) for the costs, and (g, Jg, Jgz) for the constraints
+   * The 'z' Jacobians complicate only a bit: they are perfectly parallel to the ordinary 'x'-Jacobians
+   * -> everything done with the 'x'-Jacobians is also done for the 'z'-Jacobians */
+
   sConvert::KOrderMarkovFunction_VectorFunction F(*f);
   arr phi, J;
   bool getJ = (&df) || (&Hf) || (&Jg);
@@ -405,13 +412,13 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
 
   //if there is a z
   uint dimz = f->dim_z();
-  arr *Jz, *Jzy, *Jzg;
-  RowShiftedPackedMatrix *Jz_aux, *Jzy_aux, *Jzg_aux;
+  arr *Jz, *Jyz, *Jgz;
+  RowShiftedPackedMatrix *Jz_aux, *Jyz_aux, *Jgz_aux;
   if(dimz && getJ){
     Jz = J_aux->nextInSum;
     Jz_aux = (RowShiftedPackedMatrix*)Jz->aux;
-            { Jzy = new arr(dimy, dimz);  Jy_aux->nextInSum = Jzy;  Jzy_aux = auxRowShifted(*Jzy, dimy, Jz->d1, Jz_aux->real_d1); }
-    if(&Jg) { Jzg = new arr(dimg, dimz);  Jg_aux->nextInSum = Jzg;  Jzg_aux = auxRowShifted(*Jzg, dimg, Jz->d1, Jz_aux->real_d1); }
+            { Jyz = new arr(dimy, dimz);  Jy_aux->nextInSum = Jyz;  Jyz_aux = auxRowShifted(*Jyz, dimy, Jz->d1, Jz_aux->real_d1); }
+    if(&Jg) { Jgz = new arr(dimg, dimz);  Jg_aux->nextInSum = Jgz;  Jgz_aux = auxRowShifted(*Jgz, dimg, Jz->d1, Jz_aux->real_d1); }
   }
 
   //loop over time t
@@ -428,8 +435,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
       Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
       for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
       if(dimz){
-        Jzy->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
-        for(uint i=0; i<dimf_t; i++) Jzy_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+        Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
+        for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
       }
     }
     M += dimf_t;
@@ -440,8 +447,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
       Jg.setMatrixBlock(J.subRange(M, M+dimg_t-1), g_count, 0);
       for(uint i=0; i<dimg_t; i++) Jg_aux->rowShift(g_count+i) = J_aux->rowShift(M+i);
       if(dimz){
-        Jzg->setMatrixBlock(Jz->subRange(M, M+dimg_t-1), g_count, 0);
-        for(uint i=0; i<dimg_t; i++) Jzg_aux->rowShift(g_count+i) = Jz_aux->rowShift(M+i);
+        Jgz->setMatrixBlock(Jz->subRange(M, M+dimg_t-1), g_count, 0);
+        for(uint i=0; i<dimg_t; i++) Jgz_aux->rowShift(g_count+i) = Jz_aux->rowShift(M+i);
       }
     }
     M += dimg_t;

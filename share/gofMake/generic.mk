@@ -29,6 +29,10 @@ ifndef OUTPUT
 OUTPUT = x.exe
 endif
 
+ifndef SRCS
+SRCS = $(OBJS:%.o=%.cpp)
+endif
+
 
 ################################################################################
 #

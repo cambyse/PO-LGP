@@ -21,7 +21,7 @@ typedef struct edgepp{
    arr x;
    arr y;
    double dual;
-   //double weight;
+   double height;
  };
 
 //////////////////////////////////////////
@@ -34,10 +34,10 @@ typedef adjacency_list<listS, vecS, bidirectionalS, VertexProperty, edgepp> Grap
 
 
 
-template <class X, class Y, class Dual>
+template <class X, class Y, class Dual, class Height>
 class edge_writer {
 public:
-    edge_writer(X x,Y y,Dual dual) : cx(x), cy(y), cdual(dual) {}
+    edge_writer(X x,Y y,Dual dual, Height height) : cx(x), cy(y), cdual(dual), cheight(height) {}
   template <class Edge>
   void operator()(ostream &out, const Edge& e) const {
       //out << "[label=\"dual = " << cdual[e] <<"  x= "<<cx[e] <<"  y= "<<cy[e] << "\"]";
@@ -47,11 +47,12 @@ private:
   X cx;
   Y cy;
   Dual cdual;
+  Height cheight;
 };
 
-template  <class X, class Y, class Dual>
-inline edge_writer<X,Y,Dual> make_edge_writer(X x,Y y,Dual dual) {
-  return edge_writer<X,Y,Dual>(x,y,dual);
+template  <class X, class Y, class Dual, class Height>
+inline edge_writer<X,Y,Dual,Height> make_edge_writer(X x,Y y,Dual dual, Height height) {
+  return edge_writer<X,Y,Dual,Height>(x,y,dual,height);
 }
 
 
@@ -250,6 +251,7 @@ inline bool check_next_observation (arr sampleDual, double prev)
 
     return true;
 }
+
 void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon)
 {
     arr x, y, dual;
@@ -263,69 +265,33 @@ void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon)
 
 }
 
-///
-
-NODE* addNode_SingleParticle(NODE*& node,Observation obs, int steps, double height, int  horizon)
+inline bool trajectory_pass_pos (double pos, arr y, double z_target)
 {
-    node->Add(obs);
-    NODE*temp = node->Child(obs);
+    //arr curr_target = ARR(0.45, -0.45, z_target + 0.12);
 
-    temp->X() = node->AllX()[steps]();
-    temp->Y() = node->AllY()[steps]();
-    temp->Dual() = node->AllDual()(steps);
-    temp->Heights().append(height);
-    temp->Height() = height;
+    arr end_eff = y[1];// + curr_target; //y[1] means next step; curr_target of the current followed model (in the node)
 
+    //0.5 is the width: pos + WIDTH means the left edge
 
-    extract(node->AllX(),temp->AllX());
-    extract(node->AllY(),temp->AllY());
-    extract2(node->AllDual(),temp->AllDual());
+    //cout<<"pso "<<pos <<"  "<<end_eff <<endl;
 
-    arr temp_sampleDual;
-    temp_sampleDual.resize(1, FSC::Horizon-horizon  + 1);
-    temp_sampleDual[0]() = node->AllDual();
-    extract3(temp_sampleDual,temp->getSampleDual());
+    if(pos + 0.02 > end_eff(2)) //comparing table's height and z_eff
+        return true; // the trajectory pass this heigth at the next step [STRICTLY]
+    else return false; //not yet pass
 
-    if(node->certainty)
-        temp->certainty = true;
-    else if(temp->Dual() > 0)
-        temp->certainty = true;
-    else
-        temp->certainty = false;
-
-    return temp;
 }
 
-NODE* addNode_SingleParticle(NODE*& node, arr x, arr y, arr dual, Observation obs, int steps, double height, int  horizon)
+inline bool trajectory_not_pass_models (arr heights, arr y, double z_target)
 {
-    node->Add(obs);
-    NODE*temp = node->Child(obs);
+    //cout<<x_target <<z_target <<endl;
+    for(int i = 0;i<heights.d0; i++){
+        if(trajectory_pass_pos(heights(i),y,z_target))
+            return false;
+    }
 
-    temp->X() = x[steps]();
-    temp->Y() = y[steps]();
-    temp->Dual() = dual(steps);
-    temp->Heights().append(height);
-    temp->Height() = height;
-
-
-    extract(x,temp->AllX());
-    extract(y,temp->AllY());
-    extract2(dual,temp->AllDual());
-
-    arr temp_sampleDual;
-    temp_sampleDual.resize(1, FSC::Horizon-horizon  + 1);
-    temp_sampleDual[0]() = dual;
-    extract3(temp_sampleDual,temp->getSampleDual());
-
-    if(node->certainty)
-        temp->certainty = true;
-    else if(temp->Dual() > 0)
-        temp->certainty = true;
-    else
-        temp->certainty = false;
-
-    return temp;
+    return true;
 }
+
 
 NODE* addNode_MultiParticle(NODE*& node,Observation obs, int steps)
 {
@@ -338,32 +304,28 @@ NODE* addNode_MultiParticle(NODE*& node,Observation obs, int steps)
     temp->Heights() = node->Heights();
     temp->Height() = node->Height();
 
-    if(node->certainty)
-        temp->certainty = true;
-    else if(temp->Dual() > 0)
-        temp->certainty = true;
-    else
-        temp->certainty = false;
+    temp->certainty = node->certainty;
+
+    //cout<< " multi "<<temp->Model() <<endl;
+
 
     extract(node->AllX(),temp->AllX());
     extract(node->AllY(),temp->AllY());
     extract2(node->AllDual(),temp->AllDual());
 
-    extract3(node->getSampleDual(),temp->getSampleDual());
-
     return temp;
 }
 
+
 int choose_Next_Obs(arr Heights)
 {
-    int best_index;
+    int best_index=0;
     double best_value = 100000; //this 1-d problem, we choose the lowest table (which give best entropy, or one-step look-ahead)
     for(int i=0;i<Heights.d0;i++){
         if(Heights(i)<best_value){
             best_value = Heights(i);
             best_index = i;
         }
-
     }
     return best_index;
 }
@@ -375,245 +337,133 @@ void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
 
     if(!node) return;
 
+    FSC::numNode = FSC::numNode + 1; //static variable to count the number of generated nodes
+    node->setIndex(FSC::numNode);   //indexing the node
 
-    FSC::numNode = FSC::numNode + 1;
-    node->setIndex(FSC::numNode);
+    if(horizon >= FSC::Horizon) return;
 
-    if(horizon >= FSC::Horizon - 1) return;
+    arr samples = node->Heights();
 
-    double current_obs = node->Dual();
+    if(((node->Heights().d0 > 1) && ((horizon==0)||(!trajectory_not_pass_models(samples,node->AllY(),node->Height())))) || ((node->Heights().d0 == 1)&&(!node->certainty))){
+        //CHECK Again: if the best model is still in the node, then don't need replanning
+        arr x0 = node->X();
+        int best_obs = choose_Next_Obs(samples);
+        arr x, y, dual;
 
-    arr heights = node->Heights();
-    //this is certainty case: Just add all trajectory into FSC
-    if(heights.d0 == 1){
-        if(node->certainty){
-            if(!node->sticky){
-                Observation obs;
-                obs.x = node->AllX()[steps]();
-                obs.y = node->AllY()[steps]();
-                obs.dual = node->AllDual()(steps);
-                obs.height = heights(0);
-                NODE* temp = addNode_SingleParticle(node, obs, steps, heights(0), horizon);
-                temp->sticky = false;
-                //recursively add the next node.
-                OptimizeFSC(world, temp, horizon + steps);
-
-            }else{ //wolve whithout sticky (means that already certainty, then ignore contacts with constraints)
-                arr x, y, dual;
-                arr x0 = node->X();
-                getTrajectory(x, y, dual, world, x0, heights(0), false, FSC::Horizon-horizon);
-
-                Observation obs;
-                obs.x = x[steps]();
-                obs.y = y[steps]();
-                obs.dual = dual(steps);
-                obs.height = heights(0);
-
-                NODE* temp = addNode_SingleParticle(node, x,y,dual, obs, steps, heights(0), horizon);
-                temp->sticky = false;
-
-                //recursively add the next node.
-                OptimizeFSC(world, temp, horizon + steps);
-
-            }
-
-        }else{
-            //check if no change in observation: current and the next (if does not change, then don't have to solve the trajectory again: see else)
-            if(!check_next_observation(node->getSampleDual(),current_obs))
-            {
-                arr x, y, dual;
-                arr x0 = node->X();
-                getTrajectory(x, y, dual, world, x0, heights(0), true, FSC::Horizon-horizon);
-
-                Observation obs;
-                obs.x = x[steps]();
-                obs.y = y[steps]();
-                obs.dual = dual(steps);
-                obs.height = heights(0);
-
-                NODE* temp = addNode_SingleParticle(node, x,y,dual,obs, steps, heights(0), horizon);
-
-                //recursively add the next node.
-                OptimizeFSC(world, temp, horizon + steps);
-
-            }else{
-
-                Observation obs;
-                obs.x = node->AllX()[steps]();
-                obs.y = node->AllY()[steps]();
-                obs.dual = node->AllDual()(steps);
-                obs.height = node->Height();
-
-                NODE* temp = addNode_MultiParticle(node, obs, steps);
-                OptimizeFSC(world, temp, horizon + steps);
-            }
+        if(node->Heights().d0 == 1){
+            node->certainty = true;
         }
-    }else{//node has more than 1 particle
-        if((horizon==0) || (!check_next_observation(node->getSampleDual(),current_obs))){
-            //this mean: only has change of observation (0->1; 1->0) then re-plan.
-
-            arr heights = node->Heights();
-            arr x0 = node->X();
-            arr allX, allY, allDual; //trajectory for this node
-
-            //for creating new nodes
-            //std::list<double> newObs;
-            arr x_nev;
-            arr y_nev;
-            double height_nev;
-            double dual_nev;
-            arr heights_nev;
-
-            ///////////////////////////////////////
-            /// \brief num_obs
-            ///
-
-            //Compute
-
-            arr sampleDual, sampleDual_nev, sampleDual_pos;
-            sampleDual.resize(heights.d0, FSC::Horizon-horizon + 1);
-            sampleDual_nev.resize(heights.d0, FSC::Horizon-horizon + 1);
-
-            arr allTraj_X;
-            arr allTraj_Y;
-            arr allTraj_Dual;
 
 
 
-            arr allDual_nev;
-            arr allX_nev;
-            arr allY_nev;
+        if(node->certainty)
+            getTrajectory(x, y, dual, world, x0, samples(best_obs), false, FSC::Horizon-horizon);
+        else
+            getTrajectory(x, y, dual, world, x0, samples(best_obs), true, FSC::Horizon-horizon);
 
 
-            int index_nev=0;
-            bool set=false;
-            int dimx=0;
-            int dimy=0;
-            int dim_dual=0;
+/*/
+        cout<<dual<<endl;
+        for(int t=0;t<x.d0;t++){
+            world.setJointState(x[t]);
+            world.gl().update(STRING(t), true, false, true);
+        }
+/*/
+
+        //re-update this node
+        node->X() = x[0];
+        node->Y() = y[0];
+        node->Dual() = dual(0);
+        node->AllX() = x;
+        node->AllY() = y;
+        node->AllDual() = dual;
+        node->Height() = samples(best_obs);
 
 
-            for(uint i=0;i < heights.d0;i++){
-                arr x, y, dual;
-                getTrajectory(x, y, dual, world, x0, heights(i), true, FSC::Horizon-horizon);
 
 
-                if(!set){
-                    allTraj_X.resize(heights.d0,x.d0,x.d1);
-                    allTraj_Y.resize(heights.d0,y.d0,y.d1);
-                    allTraj_Dual.resize(heights.d0,dual().d0);
-                    set = true;
-                    dimx = x.d0;
-                    dimy = y.d0;
-                    dim_dual = dual.d0;
-                }
-                sampleDual[i]() = dual;
 
+        arr samples_nev;
 
-                if(dual(steps)<=0){
-                    heights_nev.append(heights(i));
-                    sampleDual_nev[index_nev]() = dual;
-                    allTraj_X[index_nev]() = x;
-                    allTraj_Y[index_nev]() = y;
-                    allTraj_Dual[index_nev]() = dual;
-                    index_nev = index_nev + 1;
-                }else{
-
-                //if changes: add all trajectory into the FSC
-                    Observation obs;
-                    obs.x = x[steps]();
-                    obs.y = y[steps]();
-                    obs.dual = dual(steps);
-                    obs.height = heights(i);
-
-                    addNode_SingleParticle(node, x, y, dual, obs, steps, heights(i), horizon);
-
-                }
-            }
-
-            ////////for the case in [NOTE]
-
-            sampleDual_nev.resize(heights_nev.d0, FSC::Horizon-horizon  + 1);
-            allTraj_X.resize(heights_nev.d0, dimx,7);
-            allTraj_Y.resize(heights_nev.d0, dimy, 3);
-            allTraj_Dual.resize(heights_nev.d0, dim_dual);
-
-
-            /////////////////////////////////////
-
-            //add Child: with obs = 0 (no force sensing)
-
-
-            if (heights_nev.d0 > 0) {
-                 int index = choose_Next_Obs(heights_nev);
-
-                 Observation obs;
-                 obs.x = allTraj_X[index][steps]();
-                 obs.y = allTraj_Y[index][steps]();
-                 obs.dual = allTraj_Dual[index](steps);
-                 obs.height = heights_nev(index);
-
-
-                 //trajectory of the root node
-                 if(horizon==0)
-                 {
-                     node->AllX() = allTraj_X[index]();
-                     node->AllY() = allTraj_Y[index]();
-                     node->AllDual() = allTraj_Dual[index]();
-                     node->getSampleDual() = sampleDual; //dual traj from all samples
-                     node->Height() = heights_nev(index);
-                 }
+         for(uint i=0;i < samples.d0;i++){
+            if(!trajectory_pass_pos(samples(i),y,samples(best_obs))){
+                samples_nev.append(samples(i));
+            }else{ //create new branch
+                Observation obs;
+                obs.x = x[steps]();
+                obs.y = y[steps]();
+                obs.dual = dual(steps);
+                obs.height = samples(i);
 
                 node->Add(obs);
                 NODE*temp = node->Child(obs);
-                if(current_obs <= 0){
-                    //same observation with parent, then use the next state in its parent's traj
-                    temp->X() = node->AllX()[steps]();
-                    temp->Y() = node->AllY()[steps]();
-                    temp->Dual() = node->AllDual()(steps);
-                    temp->Heights() = heights_nev;
-                    temp->Height()  = node->Height();
-                    extract(node->AllX(),temp->AllX());
-                    extract(node->AllY(),temp->AllY());
-                    extract2(node->AllDual(),temp->AllDual());
 
-                }else{
-                    extract(allTraj_X[index](),temp->AllX());
-                    extract(allTraj_Y[index](),temp->AllY());
-                    extract2(allTraj_Dual[index](),temp->AllDual());
-                    temp->Heights() = heights_nev;
-                    temp->Height() = heights_nev(index);
-                    temp->X() = temp->AllX()[index]();
-                    temp->Y() = temp->AllY()[index]();
-                    temp->Dual() = temp->AllDual()(index);
-                }
+                extract(x,temp->AllX());
+                extract(y,temp->AllY());
+                extract2(dual,temp->AllDual());
+                temp->Heights().resize(1);
+                temp->Heights()(0) = samples(i);
+                temp->Height() = samples(i);
+                temp->X() = x[steps]();
+                temp->Y() = y[steps]();
+                temp->Dual() = dual(steps);
 
-                extract3(sampleDual_nev,temp->getSampleDual());
+                temp->certainty = node->certainty;
             }
-
-                     //recursively optimize all children
-            for(int no=0; no < node->Childrens.size();no++){
-                NODE* child = node->Child(node->Obss[no]);
-                OptimizeFSC(world, child, horizon + steps);
-            }
-
-        }else{ //if there is no change in observation (then continue following the parent's traj
-
-            Observation obs;
-            obs.x = node->AllX()[steps]();
-            obs.y = node->AllY()[steps]();
-            obs.dual = node->AllDual()(steps);
-            obs.height = node->Height();
-
-            NODE* temp = addNode_MultiParticle(node, obs, steps);
-            OptimizeFSC(world, temp, horizon + steps);
-
         }
 
 
+        if (samples_nev.d0 > 0) {
+             int best_o = choose_Next_Obs(samples_nev);
+
+             Observation obs;
+             obs.x = x[steps]();
+             obs.y = y[steps]();
+             obs.dual = dual(steps);
+             obs.height = samples_nev(best_o);
+             //obs.pos    = samples_nev[best_o](1);
+
+
+            node->Add(obs);
+            NODE*temp = node->Child(obs);
+
+
+            extract(x,temp->AllX());
+            extract(y,temp->AllY());
+            extract2(dual,temp->AllDual());
+            temp->Heights() = samples_nev;
+            temp->Height() = samples_nev(best_o);
+            temp->X() = x[steps]();
+            temp->Y() = y[steps]();
+            temp->Dual() = dual(steps);
+
+            temp->certainty = node->certainty;
+
+            //cout<<"  temp->Model() "<<temp->Model() <<endl;
+
+        }
+
+        for(int no=0; no < node->Childrens.size();no++){
+            NODE* child = node->Child(node->Obss[no]);
+            OptimizeFSC(world, child, horizon + steps);
+        }
+
+    }else{ //if there is no change in observation (then continue following the parent's traj
+
+        Observation obs;
+        obs.x = node->AllX()[steps]();
+        obs.y = node->AllY()[steps]();
+        obs.dual = node->AllDual()(steps);
+        obs.height = node->Height();
+        //obs.pos = node->Model()(1);
+
+        NODE* temp = addNode_MultiParticle(node, obs, steps);
+        OptimizeFSC(world, temp, horizon + steps);
+    }
 }
 
 
-}
+
 inline void add_node_to_graph(NODE*& root, Graph& graph)
 {
     for(int i=0;i<root->Obss.size();i++){     
@@ -622,6 +472,7 @@ inline void add_node_to_graph(NODE*& root, Graph& graph)
             prop.x = root->Childrens[i]->X();
             prop.y = root->Childrens[i]->Y();
             prop.dual = root->Childrens[i]->Dual();
+            prop.height = root->Childrens[i]->Height();
             long node1 = root->getIndex();
             long node2 = root->Childrens[i]->getIndex();
             add_edge(node1, node2, prop, graph);
@@ -661,5 +512,5 @@ void write_to_graphviz(FSC fsc)
    std::ofstream dotfile ("policy.dot");
    write_graphviz (dotfile, graph,
                    boost::default_writer(),
-                   make_edge_writer(boost::get(&edgepp::x,graph),boost::get(&edgepp::y,graph), boost::get(&edgepp::dual,graph)));
+                   make_edge_writer(boost::get(&edgepp::x,graph),boost::get(&edgepp::y,graph), boost::get(&edgepp::dual,graph), boost::get(&edgepp::height,graph)));
 }

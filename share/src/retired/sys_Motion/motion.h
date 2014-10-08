@@ -14,7 +14,7 @@ struct MotionPrimitive;
 struct HardwareReference;
 struct MotionFuture;
 struct SkinPressure;
-struct JoystickState;
+struct GamepadState;
 
 //-- Process creators
 //either MotionFuture or MotionPrimitive must be set, one can be zero;

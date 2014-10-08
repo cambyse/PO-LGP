@@ -1,6 +1,6 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-
+#include "problems.h"
 
 //lecture.cpp:
 void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20);
@@ -43,14 +43,34 @@ void testPhaseOne(ConstrainedProblem& f){
 
 //==============================================================================
 
+void testCoveringSphere(){
+  uint n=100, s=10;
+  arr x(n,3); rndGauss(x);
+  CoveringSpheresProblem F(x,s);
+
+  //-- initial x
+  arr cr = F.initialization(x);
+  rndGauss(cr, .01);
+
+  cout <<"point = " <<x <<endl;
+  cout <<"cr_init=" <<cr <<endl;
+  checkAllGradients(F, cr, 1e-4);
+  optConstrained(cr, NoArr, F);
+  cout <<"cr_opt=" <<cr <<endl;
+}
+
+//==============================================================================
+
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-  ChoiceConstraintFunction F;
+//  ChoiceConstraintFunction F;
 //  RandomLPFunction F;
 //  SimpleConstraintFunction F;
 //  testConstraint(F);
-  testConstraint2(F);
+//  testConstraint2(F);
+
+  testCoveringSphere();
 
   return 0;
 }

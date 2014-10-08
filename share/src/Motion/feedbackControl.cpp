@@ -20,6 +20,20 @@
 
 //===========================================================================
 
+PDtask::PDtask(const char* name, double decayTime, double dampingRatio, TaskMap* map)
+  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
+  setGainsAsNatural(decayTime, dampingRatio);
+}
+
+//PDtask::PDtask(const char* name, double decayTime, double dampingRatio,
+//               DefaultTaskMapType type, const ors::KinematicWorld& G,
+//               const char* iShapeName, const ors::Vector& ivec,
+//               const char* jShapeName, const ors::Vector& jvec,
+//               const arr& params)
+//  : map(*new DefaultTaskMap(type, G, iShapeName, ivec, jShapeName, jvec, params)), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
+//  setGainsAsNatural(decayTime, dampingRatio);
+//}
+
 void PDtask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
   if(&vref) v_ref=vref; else v_ref.resizeAs(y_ref).setZero();
@@ -49,6 +63,24 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(flipTargetScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
+}
+
+void PDtask::reportState(ostream& os){
+  os <<"  PDtask " <<name;
+  if(active) {
+    if(y_ref.N==y.N && v_ref.N==v.N){
+      os <<": \ty_ref=" <<y_ref <<" \ty=" <<y
+           <<" \tPterm=(" <<Pgain <<'*' <<length(y_ref-y)
+           <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-v) <<')'
+           <<endl;
+    }else{
+      os <<" -- y_ref.N!=y.N or v_ref.N!=v.N -- not initialized? -- "
+           <<" Pgain=" <<Pgain
+           <<" Dgain=" <<Dgain <<endl;
+    }
+  }else{
+    os <<" -- inactive" <<endl;
+  }
 }
 
 //===========================================================================
@@ -92,11 +124,7 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
 }
 
 PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
-  PDtask *t = new PDtask(map);
-  t->name=name;
-  tasks.append(t);
-  t->setGainsAsNatural(decayTime, dampingRatio);
-  return t;
+  return tasks.append(new PDtask(name, decayTime, dampingRatio, map));
 }
 
 PDtask* FeedbackMotionControl::addPDTask(const char* name,
@@ -105,9 +133,8 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec,
                                          const arr& params){
-  PDtask *t = addPDTask(name, decayTime, dampingRatio,
-                        new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
-  return t;
+  return tasks.append(new PDtask(name, decayTime, dampingRatio,
+                                 new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params)));
 }
 
 ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
@@ -136,15 +163,7 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
 }
 
 void FeedbackMotionControl::reportCurrentState(){
-  for(PDtask* t: tasks) {
-    cout <<"Task " <<t->name;
-    if(t->active) {
-      cout <<": \ty_ref=" <<t->y_ref <<" \ty=" <<t->y
-          <<" \tPterm=(" <<t->Pgain <<'*' <<length(t->y_ref-t->y) <<")  \tDterm=(" <<t->Dgain <<'*' <<length(t->v_ref-t->v) <<')' <<endl;
-    }else{
-      cout <<" -- inactive" <<endl;
-    }
-  }
+  for(PDtask* t: tasks) t->reportState(cout);
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){

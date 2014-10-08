@@ -151,7 +151,6 @@ FGPlots::FGPlots() {
 }
 
 FGPlots::~FGPlots() {
-  cout << "DELETING" << endl;
   delete s;
 }
 
