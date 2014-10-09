@@ -48,7 +48,7 @@ struct UnconstrainedProblem : ScalarFunction{
 
   virtual double fs(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
 
-  void aulaUpdate(double lambdaStepsize=1., arr &x_reeval=NoArr);
+  void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
   void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
   bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
 };

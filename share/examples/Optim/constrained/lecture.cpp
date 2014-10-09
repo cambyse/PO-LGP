@@ -85,7 +85,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
     case squaredPenalty: UCP.mu *= 10;  break;
     case augmentedLag:
       //        UCP.anyTimeAulaUpdate(1., 2.0, &opt.fx, opt.gx, opt.Hx);
-      UCP.aulaUpdate(1., x);//   UCP.mu *= 2.;
+      UCP.aulaUpdate(1.);//   UCP.mu *= 2.;
         break;
     case logBarrier:     UCP.muLB *=.5;  break;
     }

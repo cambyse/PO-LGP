@@ -79,18 +79,20 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
   return L;
 }
 
-void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
-  if(&x_reeval){
-    x=x_reeval;
-    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
-  }
-
+void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr &dL_x, arr &HL_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
   lambda += (lambdaStepsize * 2.*mu)*g_x;
   for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-//  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
+  //-- adapt mu as well
+  if(muInc>1.) mu *= muInc;
+
+  //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
+  if(L_x || &dL_x || &HL_x){
+    double L = fs(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
+    if(L_x) *L_x = L;
+  }
 }
 
 bool UnconstrainedProblem::anyTimeAulaUpdateStopCriterion(const arr& dL_x){
@@ -102,9 +104,7 @@ bool UnconstrainedProblem::anyTimeAulaUpdateStopCriterion(const arr& dL_x){
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
-  arr lambdaOld = lambda;
-
-  lambda += lambdaStepsize * (2.*mu*g_x);
+  lambda += (lambdaStepsize * 2.*mu)*g_x;
   //bound clipping
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
@@ -144,52 +144,13 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
   }
 
   //-- adapt mu as well
-  //double muOld=mu;
   if(muInc>1.) mu *= muInc;
 
-#if 0 //this is too inefficient. Simple recomputing the Lagrangian (based on the buffered f df Hf g Jg) is much more efficient
-  //modify the buffered vallues L_x, dL_x, HL_x
-  if(L_x){ //L value
-    double coeff=0.;
-    coeff += scalarProduct(lambda - lambdaOld, g_x);
-    for(uint i=0;i<g_x.N;i++) coeff += (mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x)) * MT::sqr(g_x(i));
-    *L_x += coeff;
-  }
-  if(&dL_x){ //L gradient
-    arr coeff(Jg_x.d0); coeff.setZero();
-    coeff += lambda-lambdaOld;
-    for(uint i=0;i<g_x.N;i++) coeff(i) += 2.*(mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x)) * g_x(i);
-    dL_x += comp_At_x(Jg_x, coeff);
-  }
-  if(&HL_x){ //L hessian
-    arr coeff(Jg_x.d0); coeff.setZero();
-    for(uint i=0;i<g_x.N;i++) coeff(i) += 2.*(mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x));
-    arr A, B;
-    RowShiftedPackedMatrix *Aaux = auxRowShifted(A, 0, Jg_x.d1, x.N);
-    RowShiftedPackedMatrix *Baux = auxRowShifted(B, 0, Jg_x.d1, x.N);
-    RowShiftedPackedMatrix *Jgaux = &castRowShiftedPackedMatrix(Jg_x);
-    for(uint i=0;i<g_x.N;i++){
-      if(coeff(i)>0.){ A.append(Jg_x[i]*sqrt(coeff(i)));   A.reshape(A.N/Jg_x.d1,Jg_x.d1);  Aaux->rowShift.append(Jgaux->rowShift(i)); }
-      if(coeff(i)<0.){ B.append(Jg_x[i]*sqrt(-coeff(i)));  B.reshape(B.N/Jg_x.d1,Jg_x.d1);  Baux->rowShift.append(Jgaux->rowShift(i)); }
-    }
-    if(A.d0) HL_x += comp_At_A(A);
-    if(B.d0) HL_x -= comp_At_A(B);
-  }
-
-  //--test!!
-//  if(L_x || &dL_x || &HL_x){
-//    arr dL, HL;
-//    double L = fs(dL, HL, x); //reevaluate gradients and hessian (using buffered info)
-//    if(L_x)   CHECK_ZERO(fabs(L-*L_x), 1e-10, "");
-//    if(&dL_x) CHECK_ZERO(maxDiff(dL,dL_x), 1e-10, "");
-//    if(&HL_x) CHECK_ZERO(maxDiff(HL,HL_x), 1e-10, "");
-//  }
-#else
+  //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
   if(L_x || &dL_x || &HL_x){
     double L = fs(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
     if(L_x) *L_x = L;
   }
-#endif
 }
 
 //==============================================================================
@@ -260,19 +221,22 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     if(opt.constrainedMethod==anyTimeAula){
       //decide yourselve on when to stop iterating Newton steps
       double stopTol = newton.o.stopTolerance;
-      newton.o.stopTolerance*=stopTolInc;
+      newton.o.stopTolerance*=10.;
+#if 0
       for(uint l=0;l<20; l++){
         OptNewton::StopCriterion res = newton.step();
         if(res>=OptNewton::stopCrit1) break;
-        if(UCP.anyTimeAulaUpdateStopCriterion(newton.gx)) break;
+//        if(UCP.anyTimeAulaUpdateStopCriterion(newton.gx)) break;
         newton.o.stopTolerance*=stopTolInc;
       }
+#else
+      newton.run();
+#endif
       newton.o.stopTolerance = stopTol;
     }else{
       //use standard 'run()' to iterate Newton steps
       double stopTol = newton.o.stopTolerance;
       newton.o.stopTolerance*=10.;
-      if(k) newton.reinit();
       newton.run();
       newton.o.stopTolerance = stopTol;
     }
@@ -292,8 +256,7 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= opt.aulaMuInc;  break;
-//      case augmentedLag:   UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  UCP.mu *= 1;  break;
+      case augmentedLag:   UCP.aulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
       case anyTimeAula:    UCP.anyTimeAulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;

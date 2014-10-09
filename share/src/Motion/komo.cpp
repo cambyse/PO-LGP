@@ -54,8 +54,6 @@ arr moveTo(ors::KinematicWorld& world,
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  double rand = MT::getParameter<double>("KOMO/moveTo/randomizeInitialPose", .0);
-  if(rand){ rnd.seed(MT::getParameter<uint>("rndSeed", 0));  rndGauss(MP.x0,rand,true); }
   arr x = replicate(MP.x0, MP.T+1); //we initialize with a constant trajectory!
   rndGauss(x,.01,true); //don't initialize at a singular config
 

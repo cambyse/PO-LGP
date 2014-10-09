@@ -64,13 +64,13 @@ void testCoveringSphere(){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-//  ChoiceConstraintFunction F;
+  ChoiceConstraintFunction F;
 //  RandomLPFunction F;
 //  SimpleConstraintFunction F;
 //  testConstraint(F);
-//  testConstraint2(F);
+  testConstraint2(F);
 
-  testCoveringSphere();
+//  testCoveringSphere();
 
   return 0;
 }
