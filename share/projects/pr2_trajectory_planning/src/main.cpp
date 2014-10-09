@@ -7,8 +7,8 @@
 #include <Motion/motion.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <ctime>

@@ -4,8 +4,8 @@
 #include <Core/array.h>
 #include <vector>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 #include <Core/util.h>

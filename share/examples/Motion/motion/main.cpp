@@ -1,8 +1,6 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -18,15 +16,19 @@ void TEST(PR2reach){
   cout <<"loaded model: n=" <<G.q.N <<endl;
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
 
   //-- setup the motion problem
   TaskCost *c;
+
+  c = MP.addTask("transitions", new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, G, "endeff"));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, G, "endeff"));
-//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+//  c = MP.addTask("q_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
   c->map.order=1; //make this a velocity variable!
 
@@ -75,7 +77,7 @@ void TEST(Basics){
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
   c->map.order=1; //make this a velocity variable!
 

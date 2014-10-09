@@ -1,4 +1,4 @@
-#include "taskMap_transition.h"
+#include "taskMaps.h"
 
 TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
   velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/vecCoeff",.0);

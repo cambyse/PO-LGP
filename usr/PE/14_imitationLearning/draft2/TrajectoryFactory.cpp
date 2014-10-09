@@ -1,6 +1,6 @@
 #include "TrajectoryFactory.h"
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 
 void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
@@ -20,7 +20,7 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     TaskCost *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
     MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
-    c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
+    c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e3);
     c->map.order=1;
     MP.x0 = {0.,0.,0.,0.,0.};

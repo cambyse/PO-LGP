@@ -110,7 +110,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
 
 
   //joint space PD task
-  PDtask *pd_x = MC.addPDTask("pose", .1, .8, new DefaultTaskMap(qItselfTMT, world));
+  PDtask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

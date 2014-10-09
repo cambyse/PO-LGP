@@ -1,7 +1,7 @@
 #include <Ors/roboticsCourse.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 //#include <Perception/videoEncoder.h>
@@ -216,7 +216,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   //joint space PD task
   PDtask *pd_x=
       MC.addPDTask("pose", .1, .8,
-                    new DefaultTaskMap(qItselfTMT, world));
+                    new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

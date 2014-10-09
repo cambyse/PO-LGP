@@ -9,8 +9,8 @@
 #include <pr2/actionMachine.h>
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Optim/optimization.h>
 #include <Core/util.h>
@@ -134,7 +134,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     pd_y->prec = 10.;
 
     //joint space PD task
-    PDtask *pd_x = MP.addPDTask("pose", .1, .8, new DefaultTaskMap(qItselfTMT, world));
+    PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
     pd_x->prec = .1;
 
 
@@ -255,7 +255,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new DefaultTaskMap(qItselfTMT, world));
+  PDtask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
@@ -435,13 +435,13 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = MP.addPDTask("pose", .1, .8, new DefaultTaskMap(qItselfTMT, world));
+  PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
 /*/
 
-  PDtask* limits = MP.addPDTask("limits", .1, .8, qLimitsTMT);
+  PDtask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();

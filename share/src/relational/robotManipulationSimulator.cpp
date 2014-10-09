@@ -1222,9 +1222,9 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   uint t;
   FeedbackMotionControl MP(*this, false);
   PDtask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
-  PDtask *c = MP.addPDTask("collision", .5, 2., collTMT, NULL, NoVector, NULL, NoVector, ARR(.02));
+  PDtask *c = MP.addPDTask("collision", .5, 2., new ProxyTaskMap(allPTMT, {}, {.02}));
   c->prec = 1.;
-//  PDtask *r =  MP.addPDTask("q-pose", .5, 1., qItselfTMT);
+//  PDtask *r =  MP.addPDTask("q-pose", .5, 1., new TaskMap_qItself());
 //  r->prec = 1.;
 //  r->y_ref = q0;
 
@@ -1570,7 +1570,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   
 #ifdef NEW_FEEDBACK_CONTROL
   FeedbackMotionControl MP(*this, false);
-  PDtask *x =  MP.addPDTask("q-pose", .2, 1., qItselfTMT);
+  PDtask *x =  MP.addPDTask("q-pose", .2, 1., new TaskMap_qItself());
   x->y_ref = q0;
   uint t;
   for(t=0; t<Tabort; t++) {

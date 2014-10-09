@@ -3,8 +3,8 @@
 
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Ors/ors_swift.h>
 
@@ -100,7 +100,7 @@ void testPickAndPlace(){
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
@@ -130,7 +130,7 @@ void testPickAndPlace(){
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 

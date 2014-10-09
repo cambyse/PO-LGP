@@ -1,6 +1,6 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
@@ -42,7 +42,7 @@ int main(int argc,char** argv){
     c = P.addTask("collisionConstraints", new CollisionConstraint());
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
   }else{
-    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+    c = P.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }
 

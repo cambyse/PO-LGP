@@ -10,7 +10,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
     c2->name = "vec_right_hand";
     taskCosts.append(c2);
 
-    TaskMap *tm3 = new DefaultTaskMap(qItselfTMT,world);
+    TaskMap *tm3 = new TaskMap_qItself();
     TaskCost *c3 = new TaskCost(tm3);
     c3->name = "qItself";
     taskCosts.append(c3);
@@ -48,7 +48,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 //    //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, param(0));
 //    //  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
 //    //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(0.,1.,0.), param(1));
-//    //  c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
+//    //  c = MP.addTask("final_vel", new TaskMap_qItself());
 //    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),param(2));
 //    //  c->map.order=1;
 //  }

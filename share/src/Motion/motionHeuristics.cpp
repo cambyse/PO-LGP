@@ -17,8 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "motionHeuristics.h"
-#include "taskMap_default.h"
-#include "taskMap_proxy.h"
+#include "taskMaps.h"
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>
 
@@ -129,7 +128,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                   new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+                   new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
@@ -191,13 +190,13 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = MP.addTask("limits",
-                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
+                    new TaskMap_qLimits(limits));
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
   c = MP.addTask("qitself",
-                    new DefaultTaskMap(qItselfTMT));
+                    new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
@@ -257,7 +256,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                    new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+                    new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
@@ -302,7 +301,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   //-- homing
   c = MP.addTask("qitself",
-                    new DefaultTaskMap(qItselfTMT));
+                    new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 
   return;
@@ -314,7 +313,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = MP.addTask("limits",
-                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
+                    new TaskMap_qLimits(limits));
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 

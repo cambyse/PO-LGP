@@ -1,6 +1,6 @@
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>

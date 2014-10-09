@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include "taskMap_proxy.h"
+#include "taskMaps.h"
 
 ProxyTaskMap::ProxyTaskMap(PTMtype _type,
                            uintA _shapes,

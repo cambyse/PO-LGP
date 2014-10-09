@@ -3,6 +3,7 @@
 
 // ============================================================================
 // helper function to execute the motion problem
+
 void run(FeedbackMotionControl& MP, ors::KinematicWorld& world) {
   arr q, qdot;
   world.getJointState(q, qdot);
@@ -10,7 +11,7 @@ void run(FeedbackMotionControl& MP, ors::KinematicWorld& world) {
   double tau=0.01;
   for(uint i=0;i<1000;i++){
     MP.setState(q, qdot);
-    world.stepPhysx(tau);
+//    world.stepPhysx(tau);
 
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
@@ -22,8 +23,8 @@ void run(FeedbackMotionControl& MP, ors::KinematicWorld& world) {
 }
 
 // ============================================================================
-void test_reach()
-{
+
+void test_reach() {
   ors::KinematicWorld world("man.ors");
   FeedbackMotionControl MP(world, false);
 
@@ -33,8 +34,9 @@ void test_reach()
   run(MP, world);
 }
 
-void test_quatTMT()
-{
+// ============================================================================
+
+void test_quatTMT() {
   ors::KinematicWorld world("man.ors");
   FeedbackMotionControl MP(world, false);
 
@@ -49,23 +51,25 @@ void test_quatTMT()
   run(MP, world);
 }
 
-void test_qSingleTMT()
-{
+// ============================================================================
+
+void test_qSingleTMT() {
   ors::KinematicWorld world("man.ors");
   FeedbackMotionControl MP(world, false);
 
-  int jointID = -world.getJointByBodyNames("waist", "back")->qIndex;
-  auto task = MP.addPDTask("rotateArm", .3, .8, new DefaultTaskMap(qSingleTMT, jointID));
+  int jointID = world.getJointByBodyNames("waist", "back")->qIndex;
+  auto task = MP.addPDTask("rotateArm", .3, .8, new TaskMap_qItself(jointID, world.q.N));
   task->setTarget({.8});
 
-  jointID = -world.getJointByBodyNames("lhip", "lup")->qIndex;
-  auto task2 = MP.addPDTask("rotateArm", .3, .8, new DefaultTaskMap(qSingleTMT, jointID));
+  jointID = world.getJointByBodyNames("lhip", "lup")->qIndex;
+  auto task2 = MP.addPDTask("rotateArm", .3, .8, new TaskMap_qItself(jointID, world.q.N));
   task2->setTarget({-1.8});
 
   run(MP, world);
 }
 
 // ============================================================================
+
 void checkAnalytics(){
   ors::KinematicWorld world("man.ors");
   arr q, qdot;

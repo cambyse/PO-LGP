@@ -6,7 +6,7 @@ void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
-  G.writeDot();
+  G.writeDot(cout);
   GraphView gv(G);
   gv.watch();
 }

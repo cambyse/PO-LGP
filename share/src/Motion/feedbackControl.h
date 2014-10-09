@@ -20,7 +20,7 @@
 #pragma once
 
 #include "motion.h"
-#include "taskMap_default.h"
+#include "taskMaps.h"
 
 /**
  * @file
@@ -103,8 +103,7 @@ struct FeedbackMotionControl : MotionProblem {
                     double decayTime, double dampingRatio,
                     DefaultTaskMapType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
-                    const arr& params=NoArr);
+                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
   /// @}
 

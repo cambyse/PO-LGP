@@ -1,6 +1,6 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 
@@ -61,7 +61,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   PDtask *pd_x=
       MC.addPDTask("pose", .1, .8,
-                    new DefaultTaskMap(qItselfTMT, world));
+                    new TaskMap_qItself());
   pd_x->prec = .1;
 
   ConstraintForceTask *pd_c =

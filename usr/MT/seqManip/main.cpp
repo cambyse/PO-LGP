@@ -3,13 +3,13 @@
 
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Ors/ors_swift.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
 
 //===========================================================================
 
@@ -66,11 +66,11 @@ void testPickAndPlace(){
                  new DefaultTaskMap(posTMT, grasp->index) );
   c->setCostSpecs(MP.T, MP.T, ARRAY(tar->X.pos), 1e3);
 
-  c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel2", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T/2, MP.T/2, {0.}, 1e1);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 

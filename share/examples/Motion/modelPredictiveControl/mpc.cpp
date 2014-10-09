@@ -53,7 +53,7 @@ void MPC::replan(arr &_goal, arr &_q) {
   c2->map.order=1;
   P.setInterpolatingCosts(c2,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  c2 = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+  c2 = P.addTask("contact", new ProxyTaskMap(allPTMT, {}, {0.1}));
   P.setInterpolatingCosts(c2, MotionProblem::constant, ARRAY(0.), 1e0);
 
   x = x.rows(1,x.d0);

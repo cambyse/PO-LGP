@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "gamepad2tasks.h"
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
@@ -26,10 +26,10 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   base = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffBase"));
   baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
   head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
-  limits = MP.addPDTask("limits", .2, .8, new DefaultTaskMap(qLimitsTMT));
-  coll = MP.addPDTask("collisions", .2, .8, new DefaultTaskMap(collTMT, -1, NoVector, -1, NoVector, {.1}));
-  gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_joint")->qIndex));
-  gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_joint")->qIndex));
+  limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
+  coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
+  gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
+  gripperR = MP.addPDTask("gripperR", 2., .8, new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
 }
 
 double gamepadSignalMap(double x){

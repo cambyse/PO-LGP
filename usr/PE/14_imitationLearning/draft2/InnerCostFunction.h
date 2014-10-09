@@ -1,7 +1,7 @@
 #ifndef INNERCOSTFUNCTION_H
 #define INNERCOSTFUNCTION_H
 #include <Ors/ors.h>
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
 
 
 struct InnerCostFunction{

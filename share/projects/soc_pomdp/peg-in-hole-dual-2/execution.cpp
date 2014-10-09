@@ -1,6 +1,6 @@
 #include "execution.h"
 #include "pomdp.h"
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 #include <Core/geo.h>
 #include <vector>
@@ -143,7 +143,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     pd_y->prec = 10.;
 
     //joint space PD task
-    PDtask *pd_x = MC.addPDTask("pose", .1, .8, new DefaultTaskMap(qItselfTMT, world));
+    PDtask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
     pd_x->prec = .1;
 
     //plane constraint task

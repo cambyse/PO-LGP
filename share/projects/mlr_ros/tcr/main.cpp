@@ -2,8 +2,8 @@
 #include <Motion/motion.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Core/array_t.h>
 #include <Core/util_t.h>
 #include <Ors/ors.h>

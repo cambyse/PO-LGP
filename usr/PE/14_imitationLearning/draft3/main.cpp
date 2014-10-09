@@ -1,8 +1,8 @@
 #include <Ors/ors.h>
 #include <Optim/search.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <vector>
 #include <future>

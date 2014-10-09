@@ -5,7 +5,7 @@
 CoreTasks::CoreTasks(ActionMachine& actionMachine)
   : GroundedAction(actionMachine, "CoreTasks") {
   // PDtask *qitself;
-  // qitself = new PDtask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, P.s->MP.H_rate_diag);
+  // qitself = new PDtask("DampMotion_qitself", .1, 1., new TaskMap_qItself(P.s->MP.H_rate_diag));
   // qitself->setGains(0.,10.);
   // qitself->y_ref = P.s->MP.qitselfPD.y_ref;
   // qitself->v_ref.setZero();
@@ -13,7 +13,7 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
   // tasks.append(qitself);
 
   PDtask* limits = new PDtask("limits", .1, .8,
-                              new DefaultTaskMap(qLimitsTMT, actionMachine.s->world));
+                              new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
@@ -139,7 +139,7 @@ SetQ::SetQ(ActionMachine& actionMachine, const char* effName, int jointID, doubl
   PDtaskL::memMove=true;
 
   auto task = new PDtask(
-      effName, 2, .8, new DefaultTaskMap(qSingleTMT, jointID));
+      effName, 2, .8, new TaskMap_qItself(jointID, actionMachine.s->world.q.N));
   task->setTarget({jointPos});
   task->active = true;
   tasks.append(task);

@@ -1,10 +1,7 @@
 #include "komo.h"
 #include "motion.h"
 #include <Ors/ors_swift.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Motion/taskMaps.h>
 
 arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
@@ -35,7 +32,7 @@ arr moveTo(ors::KinematicWorld& world,
   c->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
   c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff"));
-//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
+//  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->setCostSpecs(MP.T, MP.T, {0.}, zeroVelPrec);
   c->map.order=1; //make this a velocity task!
 

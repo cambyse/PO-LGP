@@ -16,8 +16,8 @@
 #include <Core/util.h>
 #include <Ors/ors.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <GL/glu.h>
 #include <Optim/optimization.h>
