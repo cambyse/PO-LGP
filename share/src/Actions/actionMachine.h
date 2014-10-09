@@ -11,11 +11,6 @@ struct ActionMachine;
 typedef MT::Array<GroundedAction*> ActionL;
 typedef MT::Array<PDtask*> PDtaskL;
 
-inline void operator<<(ostream& os, const ActionL& A){ listWrite(A, os); }
-inline void operator>>(istream& is, ActionL& A){ NIY; }
-inline void operator<<(ostream& os, const GroundedAction& a){ }
-//void operator=(istream& is, ActionL& A){ listRead(A, is); }
-
 
 //===========================================================================
 //GroundedAction
@@ -66,7 +61,6 @@ struct GroundedAction {
 
 //===========================================================================
 // Helper functions
-void reportExistingSymbols();
 void reportActions(ActionL& A);
 
 //===========================================================================
@@ -133,16 +127,3 @@ struct ActionSystem : System{
   }
 };
 
-//===========================================================================
-// extern ActionSymbol &gamepad,
-// &coreTasks,
-// &amex, //shapeArg=task space, poseArg=reference trajectory
-// &moveEffTo, //shapeArg=body part, poseArg=whereTo
-// &alignEffTo, //shapeArg=body part, poseArg=whereTo
-// &pushForce, //shapeArg=body part, poseArg=orientation
-// &grasp, //shapeArg=object, shapeArg1=hand selection
-// &gazeAt, //poseArg=whereTo
-// &headShakeNo, //no args
-// &headShakeYes, //no args
-// &closeHand, //shapeArg=ehand selection
-// &fullStop; //no args

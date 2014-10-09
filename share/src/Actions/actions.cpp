@@ -29,17 +29,14 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 
 // ============================================================================
 // MoveEffTo
-MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos)
-    : GroundedAction(actionMachine, "MoveEffTo"),
-      effName(effName),
-      effPos(effPos)
-{
+MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget)
+    : GroundedAction(actionMachine, "MoveEffTo") {
   PDtaskL::memMove=true;
   PDtask *task = new PDtask(
                    STRING("MoveEffTo_" << effName), 1., .8,
                    new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
   // task->setGains(200.,0.);
-  task->y_ref = effPos;
+  task->y_ref = positionTarget;
   tasks.append(task);
 }
 
@@ -53,23 +50,19 @@ bool MoveEffTo::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 // PoseTo
 
-PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& orientation)
-    : GroundedAction(actionMachine, "PoseTo"),
-      effName(effName),
-      effPos(effPos),
-      orientation(orientation)
-{
+PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget, const arr& orientationTarget)
+    : GroundedAction(actionMachine, "PoseTo"){
   PDtaskL::memMove=true;
   PDtask *task = new PDtask(
                    STRING("PosTo_" << effName), 1., .8,
                    new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
-  task->y_ref = effPos;
+  task->y_ref = positionTarget;
   tasks.append(task);
 
   task = new PDtask(
            STRING("OrientatationQuat_" << effName), 1., .8,
            new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
-  task->setTarget(orientation);
+  task->setTarget(orientationTarget);
   task->flipTargetScalarProduct = true;
   tasks.append(task);
 }
@@ -84,17 +77,13 @@ bool PoseTo::finishedSuccess(ActionMachine& M) {
 
 // ============================================================================
 // AlignEffTo
-AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& alignPos)
-    : GroundedAction(actionMachine, "AlignEffTo"),
-      effName(effName),
-      effPos(effPos),
-      alginPos(alignPos)
-{
+AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effVector, const arr& vectorTarget)
+    : GroundedAction(actionMachine, "AlignEffTo") {
   PDtask *task = new PDtask(
                    STRING("AlignEffTo_" << effName), 2., .8,
-                   new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effPos)));
+                   new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)));
   // task->setGains(100.,0.);
-  task->y_ref = alginPos;
+  task->y_ref = vectorTarget;
   tasks.append(task);
 }
 
@@ -106,17 +95,14 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 
 // ============================================================================
 // OrientationQuat
-OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientation)
-    : GroundedAction(actionMachine, "OrientationQuat")
-    , effName(effName)
-    , orientation(orientation)
-{
+OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientationTarget)
+    : GroundedAction(actionMachine, "OrientationQuat") {
   PDtaskL::memMove=true;
 
   auto task = new PDtask(
                 STRING("OrientatationQuat_" << effName), 2, .8,
                 new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
-  task->setTarget(orientation);
+  task->setTarget(orientationTarget);
   task->flipTargetScalarProduct = true;
   tasks.append(task);
 }
@@ -131,11 +117,7 @@ bool OrientationQuat::finishedSuccess(ActionMachine& M) {
 
 // ============================================================================
 SetQ::SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos)
-    : GroundedAction(actionMachine, "SetQ")
-    , effName(effName)
-    , jointID(jointID)
-    , jointPos(jointPos)
-{
+    : GroundedAction(actionMachine, "SetQ") {
   PDtaskL::memMove=true;
 
   auto task = new PDtask(
@@ -155,11 +137,7 @@ bool SetQ::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 // PushForce
 PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec)
-    : GroundedAction(actionMachine, "PushForce"),
-      effName(effName),
-      forceVec(forceVec)
-//    , poseArg2(poseArg2)
-{
+    : GroundedAction(actionMachine, "PushForce") {
   // Note that the pushtask is kinda seperate to the normal PDTasks. I does not
   // add a PDTask to the ActionMachine
 }

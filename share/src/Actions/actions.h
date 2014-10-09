@@ -9,70 +9,55 @@ struct CoreTasks : GroundedAction {
 
 //===========================================================================
 struct MoveEffTo : GroundedAction {
-  MT::String effName;
-  arr effPos;
-
-  MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos);
-
-  /// @name Inherited/overwritten stuff
+  MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct PoseTo : GroundedAction {
-  MT::String effName;
-  arr effPos;
-  arr orientation;
-
-  PoseTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& orientation);
-
-  /// @name Inherited/overwritten stuff
+  PoseTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget, const arr& orientationTarget);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct AlignEffTo : GroundedAction {
-  MT::String effName;
-  arr effPos;
-  arr alginPos; // TODO what is this? Find a proper name.
-
-  AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effPos, const arr& alignPos);
-
-  /// @name Inherited stuff
+  AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effVector, const arr& alignPos);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct OrientationQuat : GroundedAction {
-  MT::String effName;
-  arr orientation;
-
   OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientation);
-
-  /// @name Inherited stuff
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct SetQ : GroundedAction {
-  MT::String effName;
-  int jointID;
-  double jointPos;
-
   SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos);
-
-  /// @name Inherited stuff
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct PushForce : GroundedAction {
-  MT::String effName;
   arr forceVec;
-//  arr poseArg2; // TODO what is this? Find a proper name.
-
-  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec/*, arr poseArg2*/);
-
-  /// @name Inherited stuff
+  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
   bool finishedSuccess(ActionMachine& M);
 };
+
+//===========================================================================
+
+// TODO:
+// extern ActionSymbol &gamepad,
+// &coreTasks,
+// &amex, //shapeArg=task space, poseArg=reference trajectory
+// &moveEffTo, //shapeArg=body part, poseArg=whereTo
+// &alignEffTo, //shapeArg=body part, poseArg=whereTo
+// &pushForce, //shapeArg=body part, poseArg=orientation
+// &grasp, //shapeArg=object, shapeArg1=hand selection
+// &gazeAt, //poseArg=whereTo
+// &headShakeNo, //no args
+// &headShakeYes, //no args
+// &closeHand, //shapeArg=ehand selection
+// &fullStop; //no args
+// moveToUntilTouch
+// slideAlong

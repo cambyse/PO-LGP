@@ -1,5 +1,5 @@
-#include <pr2/actionMachine.h>
-#include <pr2/actions.h>
+#include <Actions/actionMachine.h>
+#include <Actions/actions.h>
 
 
 void testActionMachine() {
