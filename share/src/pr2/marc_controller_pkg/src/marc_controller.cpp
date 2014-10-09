@@ -47,17 +47,17 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
     if(pr2_joint){
       ROS_joints(j->qIndex) = pr2_joint;
       q(j->qIndex) = pr2_joint->position_;
-      ROS_INFO(STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
+      ROS_INFO("%s",STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
 		      <<"' \tq=" <<q(j->qIndex)
 		      <<" \tgains=" <<Kp(j->qIndex) <<' '<<Kd(j->qIndex)
-		      <<" \tlimits=" <<limits[j->qIndex]));
+		      <<" \tlimits=" <<limits[j->qIndex]).p);
     }else{
-      ROS_INFO(STRING("Joint '" <<j->name <<"' not matched in pr2"));
+      ROS_INFO("%s",STRING("Joint '" <<j->name <<"' not matched in pr2").p);
     }
   }
 
   j_worldTranslationRotation = world.getJointByName("worldTranslationRotation");
-  ROS_INFO(STRING("*** WorldTranslationRotation found?:" <<j));
+  ROS_INFO("%s",STRING("*** WorldTranslationRotation found?:" <<j).p);
 
   ROS_INFO("*** starting publisher and subscriber");
 
@@ -76,9 +76,11 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 /// Controller startup in realtime
 void TreeControllerClass::starting(){
   q_ref = q;
-  qdot_ref = qd;
+  qdot_ref = zeros(q.N);
+  u_bias = zeros(q.N);
   q_filt = 0.;
   qd_filt = 0.95;
+  velLimitRatio = effLimitRatio = 1.;
 }
 
 /// Controller update loop in realtime
@@ -98,17 +100,20 @@ void TreeControllerClass::update() {
   mutex.lock(); //only inside here we use the msg values...
 
   //-- PD on q_ref
-  if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
+  if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
+     || velLimitRatio<=0. || velLimitRatio>1.01
+     || effLimitRatio<=0. || effLimitRatio>1.01){
     //cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
     if(!msgBlock){
-      ROS_INFO("*** q_ref, qdot_ref or u_bias have wrong dimension");
+      ROS_INFO("%s",STRING("*** q_ref, qdot_ref or u_bias have wrong dimension, or vel/eff limit ratios outside (0,1]"
+			   <<q.N <<' ' <<q_ref.N <<' ' <<qdot_ref.N <<' ' <<u_bias.N <<' ' <<velLimitRatio <<' ' <<effLimitRatio).p);
       msgBlock=1000;
     }else{
       msgBlock--;
     }
   }else{
     if(msgBlock){
-      ROS_INFO("*** all is good");
+      ROS_INFO("%s",STRING("*** all is good: vel/eff ratios=" <<velLimitRatio <<' ' <<effLimitRatio).p);
       msgBlock=0;
     }
 
@@ -124,10 +129,12 @@ void TreeControllerClass::update() {
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
-      double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
+	/*double velM = marginMap(qd(i), -velLimitRatio*limits(i,2), velLimitRatio*limits(i,2), .1);
+	  //clip(velM, -1., 1.)
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
-      clip(u(i), -limits(i,3), limits(i,3));
+	*/
+      clip(u(i), -effLimitRatio*limits(i,3), effLimitRatio*limits(i,3));
       ROS_joints(i)->commanded_effort_ = u(i);
       ROS_joints(i)->enforceLimits();
     }
