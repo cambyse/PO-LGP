@@ -127,6 +127,9 @@ void testGamepad(){
         refs.qdot(trans->qIndex+2) = 0.;
       }
     }
+    refs.velLimitRatio = .1;
+    refs.effLimitRatio = 1.;
+    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
     S.ctrl_ref.set() = refs;
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;

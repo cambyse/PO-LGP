@@ -42,7 +42,7 @@ struct sRosCom_ControllerSync{
   ros::Publisher pub_jointReference;
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   //  cout <<"** joinstState_callback" <<endl;
-    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias));
+    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), msg->velLimitRatio, msg->effLimitRatio);
     base->ctrl_obs.set() = m;
   }
 };
@@ -69,6 +69,8 @@ void RosCom_ControllerSync::step(){
   jointRef.Kq_gainFactor = VECTOR(m.Kq_gainFactor);
   jointRef.Kd_gainFactor = VECTOR(m.Kd_gainFactor);
   jointRef.Kf_gainFactor = VECTOR(m.Kf_gainFactor);
+  jointRef.velLimitRatio = m.velLimitRatio;
+  jointRef.effLimitRatio = m.effLimitRatio;
   s->pub_jointReference.publish(jointRef);
 }
 

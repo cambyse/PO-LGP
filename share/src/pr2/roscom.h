@@ -22,7 +22,8 @@ struct CtrlMsg{
   arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
   double velLimitRatio, effLimitRatio;
   CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), Kf_gainFactor(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
-  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias):q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias){}
+  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias, double _velLimitRatio, double _effLimitRatio)
+    :q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias), velLimitRatio(_velLimitRatio), effLimitRatio(_effLimitRatio){}
 };
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 inline void operator>>(istream& os, CtrlMsg& m){  }
