@@ -111,10 +111,10 @@ void TreeControllerClass::update() {
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
-      double velM = marginMap(qd(i), -velLimitRatio*limits(i,2), velLimitRatio*limits(i,2), .1);
+      double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
-      clip(u(i), -effLimitRatio*limits(i,3), effLimitRatio*limits(i,3));
+      clip(u(i), -limits(i,3), limits(i,3));
       ROS_joints(i)->commanded_effort_ = u(i);
       ROS_joints(i)->enforceLimits();
     }
@@ -140,8 +140,6 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
-  fL_ref = ARRAY(msg->fL);
-  fR_ref = ARRAY(msg->fR);
   u_bias = ARRAY(msg->u_bias);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kq_gainFactor);
@@ -150,7 +148,6 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
 #undef CP
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
-
   mutex.unlock();
 }
 
