@@ -244,10 +244,10 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/groovy/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/$(ROS_VERSION)/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
 LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
 CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
-LPATH += /opt/ros/groovy/lib
+LPATH += /opt/ros/$(ROS_VERSION)/lib
 FREENECT = 1
 endif
 
@@ -344,9 +344,15 @@ pr2_mechanism/pr2_hardware_interface\
 ros_control/hardware_interface\
 ros_control/controller_interface
 
-CPATHS += /opt/ros/groovy/include $(ROSP:%=/opt/ros/groovy/stacks/%/include)
+CPATHS += /opt/ros/$(ROS_VERSION)/include $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/include)
 
-LPATHS += /opt/ros/groovy/lib $(ROSP:%=/opt/ros/groovy/stacks/%/lib)
+LPATHS += /opt/ros/$(ROS_VERSION)/lib $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/lib)
 
+ifeq ($(ROS_VERSION),groovy)
 LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lboost_signals-mt -lxmlrpcpp -ltinyxml -lboost_filesystem-mt -lclass_loader -lPocoFoundation -ldl -lrosconsole -lboost_regex-mt -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lboost_date_time-mt -lboost_system-mt -lboost_thread-mt -lpthread -lcpp_common -lorocos-kdl
+endif
+ifeq ($(ROS_VERSION),indigo)
+LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl
+endif
+
 endif
