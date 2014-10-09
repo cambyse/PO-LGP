@@ -68,6 +68,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   ROS_INFO("*** TreeControllerClass Started");
 
+  msgBlock=1;
+
   return true;
 }
 
@@ -97,8 +99,19 @@ void TreeControllerClass::update() {
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
-    cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
+    //cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
+    if(!msgBlock){
+      ROS_INFO("*** q_ref, qdot_ref or u_bias have wrong dimension");
+      msgBlock=1000;
+    }else{
+      msgBlock--;
+    }
   }else{
+    if(msgBlock){
+      ROS_INFO("*** all is good");
+      msgBlock=0;
+    }
+
     u = zeros(q.N);
     if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
       u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
@@ -137,9 +150,10 @@ void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   mutex.lock();
-//  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
+  //  fL_ref = ARRAY(msg->fL);
+  //  fR_ref = ARRAY(msg->fR);
   u_bias = ARRAY(msg->u_bias);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kq_gainFactor);
@@ -152,11 +166,9 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
 }
 
 void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
-//  cout <<"subscriber callback" <<endl;
   const geometry_msgs::Vector3 &f=msg->wrench.force;
-  //const geometry_msgs::Vector3 &t=msg->wrench.torque;
-  fL_obs = ARR(f.x, f.y, f.z);
-  //ef = ARR(t.x, t.y, t.z);
+  const geometry_msgs::Vector3 &t=msg->wrench.torque;
+  fL_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
 }
 
 } // namespace

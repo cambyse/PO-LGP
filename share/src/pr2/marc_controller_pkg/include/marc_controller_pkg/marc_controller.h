@@ -29,6 +29,7 @@ private:
   MT::Array<pr2_mechanism_model::JointState*> ROS_joints;
   ors::Joint *j_worldTranslationRotation;
 
+  //subscriber and publishers
   ros::Publisher jointState_publisher;
   ros::Publisher baseCommand_publisher;
   ros::Subscriber jointReference_subscriber;
@@ -41,6 +42,9 @@ private:
   // Filter
   double q_filt;
   double qd_filt;
+
+  // internal: counter for sparse messages
+  uint msgBlock;
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh);
