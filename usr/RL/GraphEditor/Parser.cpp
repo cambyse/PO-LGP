@@ -740,7 +740,6 @@ QString Parser::KeyValueGraph::dot()
     std::function<void(const KeyValueGraph * kvg, QString cluster_name)> parse_kvg;
     parse_kvg = [&](const KeyValueGraph * kvg, QString cluster_name) {
         multimap<QString, QString> key_id_map;
-        QString node_id;
         QString indentation = QString("    ").repeated(cluster_level+1);
         bool first_node = true;
         for(Item item : kvg->items) {
@@ -754,6 +753,7 @@ QString Parser::KeyValueGraph::dot()
                     key_list += ", " + key;
                 }
             }
+            QString node_id;
             switch (item.value_type) {
             case Item::KVG:
             {
@@ -775,10 +775,9 @@ QString Parser::KeyValueGraph::dot()
                 node_id = QString("node%1").arg(node_counter);
                 if(first_node) {
                     first_node = false;
-                    output += indentation + cluster_name;
-                } else {
-                    output += indentation + node_id;
+                    node_id = cluster_name;
                 }
+                output += indentation + node_id;
                 ++node_counter;
                 output += " [label=<";
                 if(key_list!="") {
@@ -808,7 +807,7 @@ QString Parser::KeyValueGraph::dot()
                         output += indentation + par_id + " -> " + node_id;
                         if(par_id.startsWith("cluster") && node_id.startsWith("cluster")) {
                             output += " [ltail=" + par_id + ", lhead=" + node_id + "]";
-                        } else if(par_id.startsWith("cluster")) {
+                        } else if(par_id.startsWith("cluster") && par_id!=cluster_name) {
                             output += " [ltail=" + par_id + "]";
                         } else if(node_id.startsWith("cluster")) {
                             output += " [lhead=" + node_id + "]";
