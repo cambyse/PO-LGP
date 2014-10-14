@@ -291,8 +291,8 @@ void MotionFactory::createScene2(Scene &s, uint i, bool vis) {
 //  uint N = s.world->getJointStateDimension();
 
   arr param = ARR(s.MP->H_rate_diag(0));
-  param.append(ARR(1e2,1e2,1e0,1e0,1e0,1e0,1e0,1e0));
-  param = param/sqrt(sumOfSqr(param))*1e4;
+  param.append(ARR(1e3,1e2,1e0,1e3,1e1,1e1));
+  param = param/sqrt(sumOfSqr(param))*costScale;
   s.MP->H_rate_diag = param(0);//param.subRange(0,s.MP->H_rate_diag.d0-1);
   cout << "Parameter: " << param << endl;
   uint N = 1;//s.world->getJointStateDimension();
@@ -323,6 +323,9 @@ void MotionFactory::createScene2(Scene &s, uint i, bool vis) {
   c = s.MP->addTask("collisionConstraints", new PairCollisionConstraint(*s.world,"obj1","table",0.01));
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
 
+//  c = s.MP->addTask("collisionAvoidConstraints", new PairCollisionConstraint(*s.world,"R_HAND_R_FINGER_KNUCKLE_3","table",0.01));
+//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+
   s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
   s.MP->x0 = ARR( 0.188712, -0.866221, 0.447127, 0.387585, -0.471564, -4.3981, -0.689431);
 
@@ -332,12 +335,12 @@ void MotionFactory::createScene2(Scene &s, uint i, bool vis) {
   arr x(T+1,n); x.setZero();arr lambda(T+1); lambda.setZero();
   x = repmat(~s.MP->x0,T+1,1);
   optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4, allowOverstep=true));
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,  allowOverstep=true));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-7,  allowOverstep=true));
 
   if (vis) {
     cout << "Lambda" << lambda << endl;
-    s.MP->costReport(true);
-    displayTrajectory(x,s.MP->T/2.,s.MP->world,"t");
+//    s.MP->costReport(true);
+    displayTrajectory(x,s.MP->T,s.MP->world,"t");
   }
 
   // set all costs equal to 1 or 0

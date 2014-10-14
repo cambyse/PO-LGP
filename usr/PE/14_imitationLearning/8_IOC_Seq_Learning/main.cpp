@@ -31,8 +31,8 @@ void run() {
 
   /// 2. Define parameter and start point
 
-  arr w = ones(mf->numParam,1)*1e2;w.flatten();
-//  arr w = fabs(randn(mf->numParam,1))*1e0; w.flatten();
+//  arr w = ones(mf->numParam,1)*1e2;w.flatten();
+  arr w = fabs(randn(mf->numParam,1))*1e0; w.flatten();
 //  arr w =  trainScenes(0).paramRef;
 //  w = w/sqrt(sumOfSqr(w));
   arr dual;

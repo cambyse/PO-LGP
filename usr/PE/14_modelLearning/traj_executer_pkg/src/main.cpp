@@ -66,9 +66,8 @@ int main(int argc, char** argv)
     case 0:
 
 //      goal = ARR(0.0902771, 0.453495, 0.310329, -1.0775, -0.357554, -1.03557, 6.47796 ); // circle
-//      goal = ARR(0.0656538, 0.472021, 0.321393, -1.22169 ,-0.353447, -0.814975, 6.48104); // eight
-      goal = ARR(0.215881, 0.257827, 0.544928, -0.869321, -0.336787, -1.25407, 6.47457); // star
-
+      goal = ARR(0.0656538, 0.472021, 0.321393, -1.22169 ,-0.353447, -0.814975, 6.48104); // eight
+//      goal = ARR(0.215881, 0.257827, 0.544928, -0.869321, -0.336787, -1.25407, 6.47457); // star
       to->optimizeTrajectory(goal,q0,x);
       break;
     case 1:
@@ -78,7 +77,7 @@ int main(int argc, char** argv)
       break;
     case 2:
       // move a benchmark motion
-      to->optimizeBenchmarkMotion(BM_TYPE::STAR,q0,x);
+      to->optimizeBenchmarkMotion(BM_TYPE::EIGHT,q0,x);
       break;
   }
 

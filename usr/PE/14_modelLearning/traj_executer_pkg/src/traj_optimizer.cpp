@@ -178,6 +178,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
       traj.shift(round(l1.d0*0.5)*3);
 
       traj.append(traj);
+//      traj.append(traj);
 
       MP.T = traj.d0-1;
       MP.tau = MT::getParameter<double>("duration") / double(MP.T);
@@ -201,7 +202,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
   c = MP.addTask("pos", new DefaultTaskMap(posTMT,world,"endeffR"));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e4);
   c->target = traj; // set traj
-//  c->prec.subRange(0,20)=0.;
+  c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
