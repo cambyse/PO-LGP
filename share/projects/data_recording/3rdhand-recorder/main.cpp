@@ -120,7 +120,7 @@ protected:
 		vs_rgb.add_frame(rgb, timestamp, true);
 	}
 
-	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
+	void kinect_depth_cb(const uint16A& depth, double timestamp) {
 		MLR::pack_kindepth2rgb(depth, depth_image);
 		vs_depth.add_frame(depth_image, timestamp, true);
 	}

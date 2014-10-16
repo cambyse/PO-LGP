@@ -1091,7 +1091,7 @@ void Mesh::readStlFile(std::istream& is) {
     T.resize(ntri,3);
     floatA Vfloat(3*ntri,3);
     float normal[3];
-    uint16 att;
+    uint16_t att;
     for(uint i=0; i<ntri; i++) {
       is.read((char*)&normal, 3*Vfloat.sizeT);
       is.read((char*)&Vfloat(3*i,0), 9*Vfloat.sizeT);

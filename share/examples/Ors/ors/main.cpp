@@ -77,7 +77,7 @@ void TEST(QuaternionKinematics){
   ors::KinematicWorld G("kinematicTestQuat.kvg");
   orsDrawJoints=false;
 
-  for(uint k=0;k<10;k++){
+  for(uint k=0;k<3;k++){
     ors::Quaternion target;
     target.setRandom();
     G.getShapeByName("ref")->rel.rot = target;
@@ -91,7 +91,7 @@ void TEST(QuaternionKinematics){
       if(scalarProduct(ARRAY(target),y)<0.) target.flipSign();
       x += 0.05 * Jinv * (ARRAY(target)-y);                  //simulate a time step (only kinematically)
       G.setJointState(x);
-      G.watch(false, STRING("follow redundant trajectory -- time " <<t));
+      G.watch(false, STRING("test quaternion task spaces -- time " <<t));
     }
   }
 
@@ -104,7 +104,8 @@ void TEST(QuaternionKinematics){
 //
 
 void TEST(Copy){
-  ors::KinematicWorld G1("../../../data/pr2_model/pr2_model.ors");
+  ors::KinematicWorld G1("kinematicTests.kvg");
+  //ors::KinematicWorld G1("../../../data/pr2_model/pr2_model.ors");
   ors::KinematicWorld G2(G1);
 
   G1.checkConsistency();

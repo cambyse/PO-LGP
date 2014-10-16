@@ -495,8 +495,8 @@ void SchunkSkinModule::close(){
   cout <<" done" <<endl;
 }
 
-void SchunkSkinModule::getFrame(MT::Array<uint16>& x){
-  uint16* f;
+void SchunkSkinModule::getFrame(uint16A& x){
+  uint16_t* f;
   
   if(isEmulation){
     f = emul_data.p;
@@ -514,16 +514,16 @@ void SchunkSkinModule::getFrame(MT::Array<uint16>& x){
   uint M=6, X=6, Y=14;
   x.resize(M, Y, X);
   x.setZero();
-  memmove(&x(1, 0, 0), f+ 0*6, 6*14*sizeof(uint16));
-  memmove(&x(0, 1, 0), f+14*6, 6*13*sizeof(uint16));
-  memmove(&x(3, 0, 0), f+27*6, 6*14*sizeof(uint16));
-  memmove(&x(2, 1, 0), f+41*6, 6*13*sizeof(uint16));
-  memmove(&x(5, 0, 0), f+54*6, 6*14*sizeof(uint16));
-  memmove(&x(4, 1, 0), f+68*6, 6*13*sizeof(uint16));
+  memmove(&x(1, 0, 0), f+ 0*6, 6*14*sizeof(uint16_t));
+  memmove(&x(0, 1, 0), f+14*6, 6*13*sizeof(uint16_t));
+  memmove(&x(3, 0, 0), f+27*6, 6*14*sizeof(uint16_t));
+  memmove(&x(2, 1, 0), f+41*6, 6*13*sizeof(uint16_t));
+  memmove(&x(5, 0, 0), f+54*6, 6*14*sizeof(uint16_t));
+  memmove(&x(4, 1, 0), f+68*6, 6*13*sizeof(uint16_t));
 }
 
 void SchunkSkinModule::getImage(byteA& img){
-  MT::Array<uint16> x, display;
+  uint16A x, display;
   getFrame(x);
   display.resize(29, 20);
   display.setZero();
@@ -539,7 +539,7 @@ void SchunkSkinModule::getImage(byteA& img){
 }
 
 void SchunkSkinModule::getIntegrals(arr& y){
-  MT::Array<uint16> x;
+  uint16A x;
   getFrame(x);
   x.reshape(6, x.N/6);
   y.resize(6);

@@ -611,8 +611,6 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  testRowShiftedPackedMatrix();
-  return 0;
   testBasics();
   testCheatSheet();
   testInitializationList();
