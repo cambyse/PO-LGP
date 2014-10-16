@@ -34,12 +34,10 @@ void TEST(String){
 }
 
 void TEST(Parameter){
-  String p1;
-  MT::getParameter(p1, "par", String("default1"));
+  String p1 = MT::getParameter<String>("par", String("default1"));
   CHECK(p1=="default1","");
 
-  String p2;
-  MT::getParameter(p2, "h", String("def2"));
+  String p2 = MT::getParameter<String>("h", String("def2"));
   CHECK(p2=="def2","");
 
   cout <<p1 <<endl <<p2 <<endl;
