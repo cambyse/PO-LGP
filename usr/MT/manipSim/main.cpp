@@ -2,6 +2,8 @@
 //#include "manipSim.h"
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
+#include <Ors/ors.h>
+#include <Optim/optimization.h>
 
 void sample();
 
@@ -14,9 +16,9 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
   W.isLinkTree=false;
   W.checkConsistency();
 
-  for(Item *i:G){
+//  for(Item *i:G){
 
-  }
+//  }
 
 //  //do this first to ensure they have the same indexing
 //  for(ors::Body *b:world->bodies){
@@ -77,9 +79,76 @@ void testReachable() {
 
 //===========================================================================
 
+struct GoalFunction:ConstrainedProblem{
+  ors::KinematicWorld& world;
+  ors::Body *b, *b2;
+  arr target;
+  GoalFunction(ors::KinematicWorld& world):world(world){
+    b = world.getBodyByName("obj1");
+    b2 = world.getBodyByName("table1");
+    target = {-2.,-2.,1.};
+  }
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x){
+    world.setJointState(x);
+    arr y,J;
+    world.kinematicsPos(y, J, b);
+//    cout <<"QUERY: pos=" <<y <<endl;
+    world.gl().update();
+
+    //-- cost
+    double f = sumOfSqr(y-target);
+    if(&df) df = 2. * ~(y-target) * J;
+    if(&Hf) Hf = 2. * ~J * J;
+
+    //-- constraints
+    arr base;
+    world.kinematicsPos(base, NoArr, b2);
+    if(&g){
+      g.resize(4);
+      g(0) =  y(0) - (base(0)+.5*b2->shapes(0)->size[0]);
+      g(1) = -y(0) + (base(0)-.5*b2->shapes(0)->size[0]);
+      g(2) =  y(1) - (base(1)+.5*b2->shapes(0)->size[1]);
+      g(3) = -y(1) + (base(1)-.5*b2->shapes(0)->size[1]);
+//      cout <<"g=" <<g <<endl;  world.gl().watch();
+    }
+    if(&Jg){
+      Jg.resize(4, J.d1);
+      Jg[0]() =  J[0];
+      Jg[1]() = -J[0];
+      Jg[2]() =  J[1];
+      Jg[3]() = -J[1];
+    }
+
+    return f;
+  }
+  virtual uint dim_x(){ return world.getJointStateDimension(); }
+  virtual uint dim_g(){ return 4; }
+};
+
+void optimizeConfig(){
+  ors::KinematicWorld world("model.kvg");
+
+  GoalFunction f(world);
+
+  arr x = world.getJointState();
+
+  checkAllGradients(f, x, 1e-4);
+  optConstrained(x, NoArr, f, OPT(verbose=1));
+  f.world.gl().watch();
+
+//  for(;;){
+//    newton.step();
+//    f.world.gl().watch();
+//    if(newton.stopCriterion) break;
+//  }
+}
+
+//===========================================================================
+
 int main(int argc,char **argv){
 
-  testReachable();
+  optimizeConfig();
+//  testReachable();
 //  sample();
 
   return 0;

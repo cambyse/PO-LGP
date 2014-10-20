@@ -32,37 +32,45 @@ void TEST(LoadSave){
 
 void TEST(Kinematics){
   struct MyFct:VectorFunction{
-    enum Mode {Pos, Vec, Quat} mode;
+    enum Mode {Pos, Vec, Quat, RelPos, RelVec} mode;
     ors::KinematicWorld& W;
-    ors::Body *b;
-    ors::Vector& vec;
-    MyFct(Mode _mode, ors::KinematicWorld &_W, ors::Body *_b, ors::Vector &_vec): mode(_mode), W(_W), b(_b), vec(_vec){}
+    ors::Body *b, *b2;
+    ors::Vector& vec, &vec2;
+    MyFct(Mode _mode, ors::KinematicWorld &_W,
+          ors::Body *_b, ors::Vector &_vec, ors::Body *b2, ors::Vector &vec2)
+      : mode(_mode), W(_W), b(_b), vec(_vec), b2(b2), vec2(vec2){}
     virtual void fv(arr& y, arr& J, const arr& x){
       W.setJointState(x);
       switch(mode){
-        case Pos:  W.kinematicsPos(y,J,b,&vec); break;
-        case Vec:  W.kinematicsVec(y,J,b,&vec); break;
-        case Quat: W.kinematicsQuat(y,J,b); break;
+        case Pos:    W.kinematicsPos(y,J,b,&vec); break;
+        case Vec:    W.kinematicsVec(y,J,b,&vec); break;
+        case Quat:   W.kinematicsQuat(y,J,b); break;
+        case RelPos: W.kinematicsRelPos(y,J,b,&vec,b2,&vec2); break;
+        case RelVec: W.kinematicsRelVec(y,J,b,&vec,b2); break;
       }
     }
     VectorFunction& operator()(){ return *this; }
   };
 
-  //ors::KinematicWorld G("test.ors");
+//  ors::KinematicWorld G("arm7.ors");
   ors::KinematicWorld G("kinematicTests.kvg");
   //ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
 
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<10;k++){
     ors::Body *b = G.bodies.rndElem();
-    ors::Vector vec;
+    ors::Body *b2 = G.bodies.rndElem();
+    ors::Vector vec, vec2;
     vec.setRandom();
+    vec2.setRandom();
     arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
 //    x/=sqrt(sumOfSqr(x.subRange(0,3)));
 
-    cout <<"kinematicsPos:  "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
-    cout <<"kinematicsVec:  "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
-    cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsPos:   "; checkJacobian(MyFct(MyFct::Pos   , G, b, vec, b2, vec2)(), x, 1e-5);
+    cout <<"kinematicsRelPos:"; checkJacobian(MyFct(MyFct::RelPos, G, b, vec, b2, vec2)(), x, 1e-5);
+    cout <<"kinematicsVec:   "; checkJacobian(MyFct(MyFct::Vec   , G, b, vec, b2, vec2)(), x, 1e-5);
+    cout <<"kinematicsRelVec:"; checkJacobian(MyFct(MyFct::RelVec, G, b, vec, b2, vec2)(), x, 1e-5);
+    cout <<"kinematicsQuat:  "; checkJacobian(MyFct(MyFct::Quat  , G, b, vec, b2, vec2)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
   }
@@ -521,9 +529,10 @@ void TEST(BlenderImport){
 int MAIN(int argc,char **argv){
   
   testLoadSave();
+  testKinematics();
+  return 0;
   testCopy();
   testPlayStateSequence();
-  testKinematics();
   testQuaternionKinematics();
   testKinematicSpeed();
   testFollowRedundantSequence();

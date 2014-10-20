@@ -33,6 +33,7 @@ struct OptNewton{
   arr gx, Hx;
   double alpha, beta;
   uint it, evals;
+  StopCriterion stopCriterion;
   bool x_changed;
   ofstream fil;
 

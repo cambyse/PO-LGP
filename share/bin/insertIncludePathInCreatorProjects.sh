@@ -1,7 +1,6 @@
 headache -h insertIncludePathInCreatorProjects.header -c insertIncludePathInCreatorProjects.conf \
-../examples/Core/keyValueGraph/.*.includes
+../examples/*/*/.*.includes \
 
-#../examples/*/*/.*.includes \
 #../projects/*/.*.includes \
 
 

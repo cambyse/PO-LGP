@@ -1065,12 +1065,12 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
         }
         else if(j->type==JT_transXY) {
           if(j->mimic) NIY;
-          arr R(3,3); j->X.rot.getMatrix(R.p);
+          arr R = j->X.rot.getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
         }
         else if(j->type==JT_transXYPhi) {
           if(j->mimic) NIY;
-          arr R(3,3); j->X.rot.getMatrix(R.p);
+          arr R = j->X.rot.getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
           ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->Q.pos));
           J(0, j_idx+2) += tmp.x;
@@ -1079,7 +1079,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
         }
         else if(j->type==JT_trans3) {
           if(j->mimic) NIY;
-          arr R(3,3); j->X.rot.getMatrix(R.p);
+          arr R = j->X.rot.getArr();
           J.setMatrixBlock(R, 0, j_idx);
         }
         else if(j->type==JT_quatBall) {
@@ -1189,13 +1189,41 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
 /// Jacobian of the i-th body's z-orientation vector
 void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, ors::Vector *vec) const {
   //get the vectoreference frame
-  ors::Vector vec_world;
-  if(vec) vec_world = b->X.rot*(*vec);
-  else    vec_world = b->X.rot.getZ();
-  if(&y) y = ARRAY(vec_world); //return the vec
-  if(!&J) return; //do not return a Jacobian
+  ors::Vector vec_referene;
+  if(vec) vec_referene = b->X.rot*(*vec);
+  else    vec_referene = b->X.rot.getZ();
+  if(&y) y = ARRAY(vec_referene); //return the vec
+  if(&J){
+    arr A;
+    jacobianR(A, b);
+    J = crossProduct(A, ARRAY(vec_referene));
+  }
+}
 
-  //get Jacobian
+/* takes the joint state x and returns the jacobian dz of
+   the position of the ith body (w.r.t. all joints) -> 2D array */
+/// Jacobian of the i-th body's z-orientation vector
+void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const { //TODO: allow for relative quat
+  ors::Quaternion rot_b = b->X.rot;
+  if(&y) y = ARRAY(rot_b); //return the vec
+  if(&J){
+    arr A;
+    jacobianR(A, b);
+    J.resize(4, A.d1);
+    for(uint i=0;i<J.d1;i++){
+      ors::Quaternion tmp(0., 0.5*A(0,i), 0.5*A(1,i), 0.5*A(2,i) ); //this is unnormalized!!
+      tmp = tmp * rot_b;
+      J(0, i) = tmp.w;
+      J(1, i) = tmp.x;
+      J(2, i) = tmp.y;
+      J(3, i) = tmp.z;
+    }
+  }
+}
+
+//* This Jacobian directly gives the implied rotation vector: multiplied with \dot q it gives the angular velocity of body b */
+void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
+
   uint N = getJointStateDimension();
   J.resize(3, N).setZero();
   if(b->inLinks.N) {
@@ -1206,120 +1234,9 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, ors::Vector *ve
       if(j->agent==q_agent && j_idx<N){
         if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi) {
           if(j->type==JT_transXYPhi) j_idx += 2; //refer to the phi only
-          ors::Vector tmp = j->axis ^ vec_world;
-          J(0, j_idx) += tmp.x;
-          J(1, j_idx) += tmp.y;
-          J(2, j_idx) += tmp.z;
-        }
-        else if(j->type==JT_quatBall) {
-          ors::Quaternion e;
-          ors::Vector axis, tmp;
-          for(uint i=0;i<4;i++){
-            if(i==0) e.set(1.,0.,0.,0.);
-            if(i==1) e.set(0.,1.,0.,0.);
-            if(i==2) e.set(0.,0.,1.,0.);
-            if(i==3) e.set(0.,0.,0.,1.);//TODO: the following could be simplified/compressed/made more efficient
-            e = e / j->Q.rot;
-            axis.set(e.x, e.y, e.z);
-            axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
-            axis = j->X.rot*axis;
-            tmp = axis ^ vec_world;
-            J(0, j_idx+i) += tmp.x;
-            J(1, j_idx+i) += tmp.y;
-            J(2, j_idx+i) += tmp.z;
-          }
-        }
-        //all other joints: J=0 !!
-      }
-      if(!j->from->inLinks.N) break;
-      j=j->from->inLinks(0);
-    }
-  }
-}
-
-/* takes the joint state x and returns the jacobian dz of
-   the position of the ith body (w.r.t. all joints) -> 2D array */
-/// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const {
-  Joint *j;
-  uint j_idx;
-
-  uint N=getJointStateDimension();
-
-  //get reference frame
-  ors::Quaternion rot_b = b->X.rot;
-
-  if(&y) y = ARRAY(rot_b); //return the vec
-  if(!&J) return; //do not return a Jacobian
-
-  //initialize Jacobian
-  J.resize(4, N);
-  J.setZero();
-
-  if(b->inLinks.N) {
-    j=b->inLinks(0);
-    while(j) { //loop backward down the kinematic tree
-      j_idx=j->qIndex;
-      if(j->agent==q_agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
-      if(j->agent==q_agent && j_idx<N){
-        if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi) {
-          if(j->type==JT_transXYPhi) j_idx += 2; //refer to the phi only
-          ors::Quaternion tmp(0., 0.5*j->axis.x, 0.5*j->axis.y, 0.5*j->axis.z ); //this is unnormalized!!
-          tmp = tmp * rot_b;
-          J(0, j_idx) += tmp.w;
-          J(1, j_idx) += tmp.x;
-          J(2, j_idx) += tmp.y;
-          J(3, j_idx) += tmp.z;
-        }
-        else if(j->type==JT_quatBall) {
-          ors::Quaternion e;
-          ors::Vector axis, tmp;
-          for(uint i=0;i<4;i++){
-            if(i==0) e.set(1.,0.,0.,0.);
-            if(i==1) e.set(0.,1.,0.,0.);
-            if(i==2) e.set(0.,0.,1.,0.);
-            if(i==3) e.set(0.,0.,0.,1.);//TODO: the following could be simplified/compressed/made more efficient
-            e = e / j->Q.rot;
-            axis.set(e.x, e.y, e.z);
-            axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
-            axis = j->X.rot*axis;
-            ors::Quaternion tmp(0., 0.5*axis.x, 0.5*axis.y, 0.5*axis.z ); //this is unnormalized!!
-            tmp = tmp * rot_b;
-            J(0, j_idx+i) += tmp.w;
-            J(1, j_idx+i) += tmp.x;
-            J(2, j_idx+i) += tmp.y;
-            J(3, j_idx+i) += tmp.z;
-          }
-        }
-        //all other joints: J=0 !!
-      }
-      if(!j->from->inLinks.N) break;
-      j=j->from->inLinks(0);
-    }
-  }
-}
-
-//* This Jacobian directly gives the implied rotation vector: multiplied with \dot q it gives the angular velocity of body b */
-void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
-  Joint *j;
-  uint j_idx;
-  
-  uint N=getJointStateDimension();
-  
-  J.resize(3, N).setZero();
-  
-  if(b->inLinks.N) {
-    j=b->inLinks(0);
-    while(j) {
-      j_idx=j->qIndex;
-      if(j->agent==q_agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
-      if(j->agent==q_agent && j_idx<N){
-        if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi) {
-          J(0, j_idx) = j->axis.x;
-          J(1, j_idx) = j->axis.y;
-          J(2, j_idx) = j->axis.z;
+          J(0, j_idx) += j->axis.x;
+          J(1, j_idx) += j->axis.y;
+          J(2, j_idx) += j->axis.z;
         }
         else if(j->type==JT_quatBall) {
           ors::Quaternion e;
@@ -1331,9 +1248,9 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
             if(i==3) e.set(0.,0.,0.,1.);//TODO: the following could be simplified/compressed/made more efficient
             e = e / j->Q.rot;
             axis.set(e.x, e.y, e.z);
-            axis = j->X.rot*axis;
             axis *= -2.;
             axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
+            axis = j->X.rot*axis;
             J(0, j_idx+i) += axis.x;
             J(1, j_idx+i) += axis.y;
             J(2, j_idx+i) += axis.z;
@@ -1344,6 +1261,34 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
       if(!j->from->inLinks.N) break;
       j=j->from->inLinks(0);
     }
+  }
+}
+
+/// The position vec1, attached to b1, relative to the frame of b2 (plus vec2)
+void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const {
+  arr y1,y2,J1,J2;
+  kinematicsPos(y1, J1, b1, vec1);
+  kinematicsPos(y2, J2, b2, vec2);
+  arr Rinv = ~(b2->X.rot.getArr());
+  y = Rinv * (y1 - y2);
+  if(&J){
+    arr A;
+    jacobianR(A, b2);
+    J = Rinv * (J1 - J2 - crossProduct(A, y1 - y2));
+  }
+}
+
+/// The vector vec1, attached to b1, relative to the frame of b2
+void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const {
+  arr y1,J1;
+  kinematicsVec(y1, J1, b1, vec1);
+//  kinematicsVec(y2, J2, b2, vec2);
+  arr Rinv = ~(b2->X.rot.getArr());
+  y = Rinv * y1;
+  if(&J){
+    arr A;
+    jacobianR(A, b2);
+    J = Rinv * (J1 - crossProduct(A, y1));
   }
 }
 

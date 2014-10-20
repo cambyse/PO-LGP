@@ -2289,6 +2289,31 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
   HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
 }
 
+/** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
+  x_{ijk} = v_{ij}\, w_{k}\f$ */
+template<class T>
+MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
+  if(y.nd==1 && z.nd==1) {
+    CHECK(y.N==3 && z.N==3,"cross product only works for 3D vectors!");
+    MT::Array<T> x(3);
+    x(0)=y(1)*z(2)-y(2)*z(1);
+    x(1)=y(2)*z(0)-y(0)*z(2);
+    x(2)=y(0)*z(1)-y(1)*z(0);
+    return x;
+  }
+  if(y.nd==2 && z.nd==1) { //every COLUMN of y is cross-product'd with z!
+    CHECK(y.d0==3 && z.N==3,"cross product only works for 3D vectors!");
+    MT::Array<T> x(3, y.d1);
+    for(uint i=0;i<y.d1;i++){
+      x(0,i)=y(1,i)*z(2)-y(2,i)*z(1);
+      x(1,i)=y(2,i)*z(0)-y(0,i)*z(2);
+      x(2,i)=y(0,i)*z(1)-y(1,i)*z(0);
+    }
+    return x;
+  }
+  HALT("cross product - not yet implemented for these dimensions");
+}
+
 /// \f$\sum_i v_i\, w_i\f$, or \f$\sum_{ij} v_{ij}\, w_{ij}\f$, etc.
 template<class T>
 T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {

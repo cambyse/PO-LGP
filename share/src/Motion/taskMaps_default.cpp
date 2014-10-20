@@ -64,9 +64,11 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         ors::Vector vi(Ji(0, k), Ji(1, k), Ji(2, k));
         ors::Vector vj(Jj(0, k), Jj(1, k), Jj(2, k));
         ors::Vector r (JRj(0, k), JRj(1, k), JRj(2, k));
-        ors::Vector jk =  body_j->X.rot / (vi - vj);
-        jk -= body_j->X.rot / (r ^(pi - pj));
-        J(0, k)=jk.x; J(1, k)=jk.y; J(2, k)=jk.z;
+        ors::Vector jk =  body_j->X.rot / (vi-vj);
+        jk -= body_j->X.rot / (r ^ (pi-pj));
+        J(0, k)=jk.x;
+        J(1, k)=jk.y;
+        J(2, k)=jk.z;
       }
     }
     return;

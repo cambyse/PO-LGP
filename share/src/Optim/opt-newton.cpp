@@ -83,7 +83,7 @@ OptNewton::StopCriterion OptNewton::step(){
     }catch(...){
       if(o.verbose>0) cout <<endl <<"** hessian inversion failed ... increasing damping **" <<endl;
       beta *= 10.;
-      return stopStepFailed;
+      return stopCriterion=stopStepFailed;
     }
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
@@ -92,7 +92,7 @@ OptNewton::StopCriterion OptNewton::step(){
   //lazy stopping criterion: stop without any update
   if(beta<2. && absMax(Delta)<1e-1*o.stopTolerance){
     if(o.verbose>1) cout <<" \t - NO UPDATE" <<endl;
-    return stopCrit1;
+    return stopCriterion=stopCrit1;
   }
 
   for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
@@ -137,15 +137,16 @@ OptNewton::StopCriterion OptNewton::step(){
   if(o.verbose>0) fil <<endl;
 
   //stopping criteria
-#define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return ret; }
+#define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return stopCriterion=ret; }
   STOPIF(beta<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
   STOPIF(beta<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
   STOPIF(evals>=o.stopEvals, stopCritEvals);
   STOPIF(it>=o.stopIters, stopCritEvals);
 #undef STOPIF
 
-  return stopNone;
+  return stopCriterion=stopNone;
 }
+
 
 OptNewton::~OptNewton(){
   if(o.fmin_return) *o.fmin_return=fx;
@@ -158,10 +159,9 @@ OptNewton::~OptNewton(){
 
 
 OptNewton::StopCriterion OptNewton::run(){
-  StopCriterion res;
   for(;;){
-    res = step();
-    if(res>=stopCrit1) break;
+    step();
+    if(stopCriterion>=stopCrit1) break;
   }
-  return res;
+  return stopCriterion;
 }
