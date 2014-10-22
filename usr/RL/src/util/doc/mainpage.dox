@@ -1,0 +1,7 @@
+/*! \mainpage
+
+    The Utility Library contains a collection of helper tools. These are mostly
+    small functions and classes collected in the util.h file. But there are also
+    some classes just too small for an own library.
+
+    */

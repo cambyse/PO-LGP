@@ -1,7 +1,7 @@
 #include "ChiSquareTest.h"
 
 // #define DEBUG_STRING "Chi-Square: "
-#include "../debug.h"
+#include "debug.h"
 
 using std::vector;
 
