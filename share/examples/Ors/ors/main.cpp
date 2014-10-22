@@ -530,7 +530,7 @@ int MAIN(int argc,char **argv){
   
   testLoadSave();
   testKinematics();
-  return 0;
+  //  return 0;
   testCopy();
   testPlayStateSequence();
   testQuaternionKinematics();

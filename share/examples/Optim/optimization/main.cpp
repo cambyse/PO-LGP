@@ -1,12 +1,12 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
+#include <functional>
 
 void TEST(SqrProblem) {
   ScalarFunction &f = ChoiceFunction;
 
   displayFunction(f, true);
 
-  uint d=MT::getParameter<uint>("dim",10);
   arr x(10),x0;
   rndUniform(x,1.,10.,false);
   x0=x;
@@ -28,9 +28,20 @@ void TEST(SqrProblem) {
   gnuplot("set log y; plot 'z.newton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",false,true);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void TEST(LambdaFunction){
+  std::function<double (double)> f = [](double x)->double{ return 2.*x; };
+
+  cout <<f(3.) <<endl;
+
+}
+
 
 int MAIN(int argc,char** argv){
-  testSqrProblem();
-  
+  //testSqrProblem();
+
+  testLambdaFunction();
+
   return 0;
 }

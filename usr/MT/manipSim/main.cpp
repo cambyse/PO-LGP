@@ -81,17 +81,17 @@ void testReachable() {
 
 struct GoalFunction:ConstrainedProblem{
   ors::KinematicWorld& world;
-  ors::Body *b, *b2;
+  ors::Body *obj, *table;
   arr target;
   GoalFunction(ors::KinematicWorld& world):world(world){
-    b = world.getBodyByName("obj1");
-    b2 = world.getBodyByName("table1");
+    obj = world.getBodyByName("obj1");
+    table = world.getBodyByName("table1");
     target = {-2.,-2.,1.};
   }
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x){
     world.setJointState(x);
     arr y,J;
-    world.kinematicsPos(y, J, b);
+    world.kinematicsPos(y, J, obj);
 //    cout <<"QUERY: pos=" <<y <<endl;
     world.gl().update();
 
@@ -101,14 +101,14 @@ struct GoalFunction:ConstrainedProblem{
     if(&Hf) Hf = 2. * ~J * J;
 
     //-- constraints
-    arr base;
-    world.kinematicsPos(base, NoArr, b2);
+    arr rel;
+    world.kinematicsRelPos(rel, J, obj, NULL, table, NULL);
     if(&g){
       g.resize(4);
-      g(0) =  y(0) - (base(0)+.5*b2->shapes(0)->size[0]);
-      g(1) = -y(0) + (base(0)-.5*b2->shapes(0)->size[0]);
-      g(2) =  y(1) - (base(1)+.5*b2->shapes(0)->size[1]);
-      g(3) = -y(1) + (base(1)-.5*b2->shapes(0)->size[1]);
+      g(0) =  rel(0) - (+.5*table->shapes(0)->size[0]-0.05);
+      g(1) = -rel(0) + (-.5*table->shapes(0)->size[0]+0.05);
+      g(2) =  rel(1) - (+.5*table->shapes(0)->size[1]-0.05);
+      g(3) = -rel(1) + (-.5*table->shapes(0)->size[1]+0.05);
 //      cout <<"g=" <<g <<endl;  world.gl().watch();
     }
     if(&Jg){
