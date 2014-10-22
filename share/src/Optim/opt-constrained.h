@@ -30,11 +30,11 @@ extern const char* MethodName[];
 // that can include penalties, log barriers, and augmented lagrangian terms
 //
 
-struct UnconstrainedProblem : ScalarFunction{
+struct UnconstrainedProblem{
   /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
       concatenated to one vector:
       phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  ConstrainedProblem &P;
+  const ConstrainedProblem &P;
   //-- parameters of the unconstrained meta function F
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight
@@ -44,9 +44,17 @@ struct UnconstrainedProblem : ScalarFunction{
   arr x, df_x, Hf_x, g_x, Jg_x;
   double f_x;
 
-  UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {}
+  UnconstrainedProblem(const ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {
+    SF = [this](arr& dL, arr& HL, const arr& x) -> double {
+      return this->fs(dL, HL, x);
+    };
+  }
 
-  virtual double fs(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
+  double fs(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
+  ScalarFunction SF;
+  operator const ScalarFunction&(){
+    return SF;
+  }
 
   void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
   void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
@@ -62,14 +70,19 @@ struct UnconstrainedProblem : ScalarFunction{
 // to the phase one problem of another constraint problem
 //
 
-struct PhaseOneProblem:ConstrainedProblem{
-  ConstrainedProblem &f;
+struct PhaseOneProblem{
+  const ConstrainedProblem &f_orig;
+  ConstrainedProblem f_phaseOne;
 
-  PhaseOneProblem(ConstrainedProblem &_f):f(_f) {}
-
-  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
-  virtual uint dim_x(){ return f.dim_x()+1; }
-  virtual uint dim_g(){ return f.dim_g()+1; }
+  PhaseOneProblem(const ConstrainedProblem &f_orig):f_orig(f_orig) {
+    f_phaseOne.dim_x=f_orig.dim_x+1;
+    f_phaseOne.dim_g=f_orig.dim_g+1;
+    f_phaseOne.f = [this](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
+      return this->phase_one(df, Hf, g, Jg, x);
+    };
+  }
+  operator const ConstrainedProblem&(){ return f_phaseOne; }
+  double phase_one(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
 };
 
 
@@ -78,7 +91,7 @@ struct PhaseOneProblem:ConstrainedProblem{
 // Solvers
 //
 
-uint optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT);
+uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
 
 
 //==============================================================================
@@ -88,7 +101,7 @@ uint optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOO
 
 inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
   arr g;
-  double f = P.fc(NoArr, NoArr, g, NoArr, x);
+  double f = P.f(NoArr, NoArr, g, NoArr, x);
   os <<"f=" <<f <<" compl="<<sum(elemWiseMax(g,zeros(g.N,1))) <<endl;
 }
 

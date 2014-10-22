@@ -25,7 +25,7 @@ bool sanityCheck=false; //true;
 /** @brief Minimizes \f$f(x) = A(x)^T x A^T(x) - 2 a(x)^T x + c(x)\f$. The optional _user arguments specify,
  * if f has already been evaluated at x (another initial evaluation is then omitted
  * to increase performance) and the evaluation of the returned x is also returned */
-int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
+int optNewton(arr& x, const ScalarFunction& f,  OptOptions o) {
   return OptNewton(x, f, o).run();
 }
 
@@ -34,7 +34,7 @@ int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
 // OptNewton
 //
 
-OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
+OptNewton::OptNewton(arr& _x, const ScalarFunction& _f,  OptOptions _o):
   x(_x), f(_f), o(_o){
   alpha = o.initStep;
   beta = o.damping;
@@ -45,7 +45,7 @@ OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
 }
 
 void OptNewton::reinit(){
-  fx = f.fs(gx, Hx, x);  evals++;
+  fx = f(gx, Hx, x);  evals++;
   if(additionalRegularizer)  fx += scalarProduct(x,(*additionalRegularizer)*vectorShaped(x));
 
   //startup verbose
@@ -97,7 +97,7 @@ OptNewton::StopCriterion OptNewton::step(){
 
   for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
     y = x + alpha*Delta;
-    fy = f.fs(gy, Hy, y);  evals++;
+    fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  /*<<" \tf(y)-f(x)=" <<fy-fx */<<flush;

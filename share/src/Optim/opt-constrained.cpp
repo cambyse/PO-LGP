@@ -33,8 +33,8 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
-    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
-    CHECK(P.dim_g()==g_x.N,"this conversion requires phi.N to be m-dimensional");
+    f_x = P.f(df_x, Hf_x, g_x, Jg_x, x);
+    CHECK(P.dim_g==g_x.N,"this conversion requires phi.N to be m-dimensional");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
     if(&dL) CHECK(df_x.N && Jg_x.nd,"");
     if(&HL) CHECK(Hf_x.N && Jg_x.nd,"");
@@ -159,10 +159,10 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 //
 
 
-double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x){
+double PhaseOneProblem::phase_one(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x){
   NIY;
   arr g, Jg;
-  f.fc(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
+  f_orig.f(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
 
   meta_g.resize(g.N+1);
   meta_g(0) = x.last();                                       //cost
@@ -186,19 +186,19 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
 
 const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian" };
 
-uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
+uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
 
   UnconstrainedProblem UCP(P);
 
-  uint stopTolInc;
+  //uint stopTolInc;
 
   //switch on penalty terms
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
-    case anyTimeAula:    UCP.mu=1.;  stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.); break;
+    case anyTimeAula:    UCP.mu=1.;  /*stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.);*/ break;
     case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;
   }

@@ -95,7 +95,7 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
 
 bool Rprop::step(arr& x, ScalarFunction& f) {
   arr grad;
-  f.fs(grad, NoArr, x);
+  f(grad, NoArr, x);
   return s->step(x, grad, NULL);
 }
 
@@ -123,7 +123,7 @@ uint Rprop::loop(arr& _x,
   for(;;) {
     //checkGradient(p, x, stoppingTolerance);
     //compute value and gradient at x
-    fx = f.fs(J, NoArr, x);  evals++;
+    fx = f(J, NoArr, x);  evals++;
 
     if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<' ' <<x <<endl;
     if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<x <<endl;

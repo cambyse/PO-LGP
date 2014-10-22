@@ -3,7 +3,7 @@
 #include <functional>
 
 void TEST(SqrProblem) {
-  ScalarFunction &f = ChoiceFunction;
+  ScalarFunction f = ChoiceFunction();
 
   displayFunction(f, true);
 
@@ -39,9 +39,9 @@ void TEST(LambdaFunction){
 
 
 int MAIN(int argc,char** argv){
-  //testSqrProblem();
+  testSqrProblem();
 
-  testLambdaFunction();
+//  testLambdaFunction();
 
   return 0;
 }

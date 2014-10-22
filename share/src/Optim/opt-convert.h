@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2014 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -20,26 +20,20 @@
 
 #include "optimization.h"
 
-int optNewton(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT);
-
-struct OptNewton{
-  arr& x;
-  const ScalarFunction& f;
-  OptOptions o;
-  arr *additionalRegularizer;
-
-  enum StopCriterion { stopNone=0, stopCrit1, stopCrit2, stopCritEvals, stopStepFailed };
-  double fx;
-  arr gx, Hx;
-  double alpha, beta;
-  uint it, evals;
-  StopCriterion stopCriterion;
-  bool x_changed;
-  ofstream fil;
-
-  OptNewton(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);
-  ~OptNewton();
-  StopCriterion step();
-  StopCriterion run();
-  void reinit();
+/// A struct that allows to convert one function type into another, even when given as argument
+struct Convert {
+  struct sConvert* s;
+  ScalarFunction sf;
+  VectorFunction vf;
+  ConstrainedProblem cp;
+  Convert(const ScalarFunction&);
+  Convert(const VectorFunction&);
+  Convert(KOrderMarkovFunction&);
+  Convert(double(*fs)(arr*, const arr&, void*),void *data);
+  Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data);
+  ~Convert();
+  operator ScalarFunction();
+  operator VectorFunction();
+  operator ConstrainedProblem();
+  operator KOrderMarkovFunction&();
 };

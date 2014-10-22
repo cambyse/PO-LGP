@@ -1125,7 +1125,7 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 MT::String str;
 
 char *strn(std::istream& is){
-  str.read(is," \n\t\r\d"," \n\t\r\d",true);
+  str.read(is," \n\t\r"," \n\t\r",true); //we once had a character '\d' in there -- for Windows?
   CHECK(is.good(),"could not read line");
   return str.p;
 }

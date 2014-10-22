@@ -23,7 +23,7 @@
 #  include <extern/Lewiner/MarchingCubes.h>
 
 
-void ors::Mesh::setImplicitSurface(ScalarFunction& f, double lo, double hi, uint res) {
+void ors::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint res) {
   MarchingCubes mc(res, res, res);
   mc.init_all() ;
   
@@ -36,7 +36,7 @@ void ors::Mesh::setImplicitSurface(ScalarFunction& f, double lo, double hi, uint
       y = lo+j*(hi-lo)/res;
       for(i=0; i<res; i++) {
         x = lo+i*(hi-lo)/res;
-        mc.set_data(f.fs(NoArr, NoArr, ARR(x, y, z)), i, j, k) ;
+        mc.set_data(f(NoArr, NoArr, ARR(x, y, z)), i, j, k) ;
       }
     }
   }
