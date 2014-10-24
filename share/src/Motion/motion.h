@@ -35,7 +35,7 @@
 //
 
 struct TaskMap {
-  bool constraint;  ///< whether this is a hard constraint (implementing a constraint function g)
+  bool constraint;  ///< TODO: make element of {cost_feature, inequality, equality} MAYBE: move this to TaskCost?    whether this is a hard constraint (implementing a constraint function g)
   uint order;       ///< 0=position, 1=vel, etc
   //Actually, the right way would be to give phi a list of $k+1$ graphs -- and retrieve the velocities/accs from that...
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
@@ -49,16 +49,18 @@ struct TaskMap {
 
 //===========================================================================
 //
-// the costs in a task space
+/// A k-order cost_feature, inequality or equality constraint,
+/// optionally rescaled using 'target' and 'prec'
 //
 
-struct TaskCost {
+struct TaskCost { //TODO: Rename as Task (meaning 'cost_feature, ineq or eq', 
   TaskMap& map;
   MT::String name;
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
-  double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  uint dim_phi(const ors::KinematicWorld& G, uint t){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
+  double threshold;  ///< threshold for feasibility checks (e.g. in RRTs) TODO: remove
+  uint dim_phi(const ors::KinematicWorld& G, uint t){
+    if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   TaskCost(TaskMap* m):map(*m), active(true){}
 
@@ -87,7 +89,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   MT::Array<TaskCost*> taskCosts;
   bool makeContactsAttractive;
   
-  //-- transition cost descriptions //TODO: should become a task map just like any other
+  //-- transition cost descriptions //TODO: remove! should become a task map just like any other
   enum TransitionType { none=-1, kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
