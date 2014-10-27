@@ -1,6 +1,18 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0.2)
 
 project (RL)
 
-add_subdirectory (util)
-add_subdirectory (exe)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(ButtonWorld)
+add_subdirectory(CheeseMaze)
+add_subdirectory(config)
+add_subdirectory(environment)
+add_subdirectory(gui)
+add_subdirectory(learner)
+add_subdirectory(Maze)
+add_subdirectory(optimization)
+add_subdirectory(planning)
+add_subdirectory(qcustomplot)
+add_subdirectory(representation)
+add_subdirectory(util)

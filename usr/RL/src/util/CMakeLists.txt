@@ -2,7 +2,7 @@ find_package(Qt5Core)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
-add_library (util
+add_library(util
     ChiSquareTest.cpp
     ChiSquareTest.h
     ColorOutput.cpp
@@ -29,4 +29,3 @@ add_library (util
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(util PUBLIC Qt5::Core)
-
