@@ -21,11 +21,11 @@
 
 //===================================================================
 
-#include "../representation/AbstractAction.h"
-#include "../representation/AbstractObservation.h"
-#include "../representation/AbstractReward.h"
-#include "../representation/AbstractInstance.h"
-#include "../representation/Feature.h"
+#include <representation/AbstractAction.h>
+#include <representation/AbstractObservation.h>
+#include <representation/AbstractReward.h>
+#include <representation/AbstractInstance.h>
+#include <representation/Feature.h>
 #include <util/util.h>
 #include <unordered_set>
 #include <tuple>
