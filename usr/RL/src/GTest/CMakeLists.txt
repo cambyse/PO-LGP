@@ -6,8 +6,6 @@ find_package(Qt5Svg)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
-add_definitions(-DUNIT_TESTS)
-
 add_executable(GTest
     CommanderTest.cpp
     EnvironmentTest.cpp
