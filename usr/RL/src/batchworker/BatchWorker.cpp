@@ -1,21 +1,20 @@
 #include "BatchWorker.h"
 
-#include "../util/util.h"
-#include "../util/QtUtil.h"
-#include "../Environment.h"
-#include "../Predictor.h"
-#include "../HistoryObserver.h"
-#include "../CheeseMaze/CheeseMaze.h"
-#include "../ButtonWorld/SeparateButtonWorld.h"
-#include "../ButtonWorld/JointButtonWorld.h"
-#include "../Maze/Maze.h"
-#include "../HistoryObserver.h"
-#include "../Learner/TemporallyExtendedModel.h"
-#include "../Learner/TemporallyExtendedLinearQ.h"
-#include "../Learner/UTree.h"
-#include "../Learner/ConjunctiveAdjacency.h"
-#include "../Planning/LookAheadSearch.h"
-#include "../Representation/DoublyLinkedInstance.h"
+#include <util/util.h>
+#include <util/QtUtil.h>
+#include <environment/Environment.h>
+#include <environment/Predictor.h>
+#include <environment/HistoryObserver.h>
+#include <CheeseMaze/CheeseMaze.h>
+#include <ButtonWorld/SeparateButtonWorld.h>
+#include <ButtonWorld/JointButtonWorld.h>
+#include <Maze/Maze.h>
+#include <learner/TemporallyExtendedModel.h>
+#include <learner/TemporallyExtendedLinearQ.h>
+#include <learner/UTree.h>
+#include <learner/ConjunctiveAdjacency.h>
+#include <planning/LookAheadSearch.h>
+#include <representation/DoublyLinkedInstance.h>
 
 #include <unistd.h>
 
@@ -27,7 +26,7 @@
 #define DEBUG_LEVEL 2
 #endif
 #define DEBUG_STRING "BatchWorker: "
-#include "util/debug.h"
+#include <util/debug.h>
 
 // #ifdef USE_OMP
 //     #undef USE_OMP

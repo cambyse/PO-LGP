@@ -86,7 +86,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         if(!cheese) {
             delete cheese;
         }
-        cheese = new QGraphicsSvgItem("Images/cheese.svg");
+        cheese = new QGraphicsSvgItem("images/cheese.svg");
         double scale = 0.3;
         cheese->setScale(scale);
         QSizeF s = cheese->boundingRect().size()*scale;
@@ -99,7 +99,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         if(!mouse) {
             delete mouse;
         }
-        mouse = new QGraphicsSvgItem("Images/mouse.svg");
+        mouse = new QGraphicsSvgItem("images/mouse.svg");
         double scale = 0.3;
         mouse->setScale(scale);
         QSizeF s = mouse->boundingRect().size()*scale;
@@ -112,13 +112,13 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
     double observation_y_pos = 4;
     {
         double scale = 0.6;
-        CheeseMazeObservation_N = new QGraphicsSvgItem("Images/CheeseMazeObservation_N.svg");
+        CheeseMazeObservation_N = new QGraphicsSvgItem("images/CheeseMazeObservation_N.svg");
         QSizeF s = CheeseMazeObservation_N->boundingRect().size()*scale;
-        CheeseMazeObservation_NS = new QGraphicsSvgItem("Images/CheeseMazeObservation_NS.svg");
-        CheeseMazeObservation_NE = new QGraphicsSvgItem("Images/CheeseMazeObservation_NE.svg");
-        CheeseMazeObservation_NW = new QGraphicsSvgItem("Images/CheeseMazeObservation_NW.svg");
-        CheeseMazeObservation_EW = new QGraphicsSvgItem("Images/CheeseMazeObservation_EW.svg");
-        CheeseMazeObservation_ESW = new QGraphicsSvgItem("Images/CheeseMazeObservation_ESW.svg");
+        CheeseMazeObservation_NS = new QGraphicsSvgItem("images/CheeseMazeObservation_NS.svg");
+        CheeseMazeObservation_NE = new QGraphicsSvgItem("images/CheeseMazeObservation_NE.svg");
+        CheeseMazeObservation_NW = new QGraphicsSvgItem("images/CheeseMazeObservation_NW.svg");
+        CheeseMazeObservation_EW = new QGraphicsSvgItem("images/CheeseMazeObservation_EW.svg");
+        CheeseMazeObservation_ESW = new QGraphicsSvgItem("images/CheeseMazeObservation_ESW.svg");
         CheeseMazeObservation_N->setScale(scale);
         CheeseMazeObservation_NS->setScale(scale);
         CheeseMazeObservation_NE->setScale(scale);
@@ -143,7 +143,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         if(!cheese_reward) {
             delete cheese_reward;
         }
-        cheese_reward = new QGraphicsSvgItem("Images/cheese.svg");
+        cheese_reward = new QGraphicsSvgItem("images/cheese.svg");
         double scale = 0.2;
         cheese_reward->setScale(scale);
         QSizeF s = cheese_reward->boundingRect().size()*scale;
@@ -155,7 +155,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         if(!wall_punish) {
             delete wall_punish;
         }
-        wall_punish = new QGraphicsSvgItem("Images/blitz.svg");
+        wall_punish = new QGraphicsSvgItem("images/blitz.svg");
         double scale = 0.3;
         wall_punish->setScale(scale);
         QSizeF s = wall_punish->boundingRect().size()*scale;
@@ -167,7 +167,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         if(!normal_punish) {
             delete normal_punish;
         }
-        normal_punish = new QGraphicsSvgItem("Images/blitz.svg");
+        normal_punish = new QGraphicsSvgItem("images/blitz.svg");
         double scale = 0.1;
         normal_punish->setScale(scale);
         QSizeF s = normal_punish->boundingRect().size()*scale;

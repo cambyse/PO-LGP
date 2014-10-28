@@ -3,19 +3,19 @@
 #include <vector>
 #include <memory> // for shared_ptr
 
-#include "../util/util.h"
-#include "../util/QtUtil.h"
-#include "../util/ColorOutput.h"
+#include <util/util.h>
+#include <util/QtUtil.h>
+#include <util/ColorOutput.h>
 
-#include "../PredictiveEnvironment.h"
+#include <environment/PredictiveEnvironment.h>
 #include "MinimalEnvironmentExample/MinimalEnvironment.h"
-#include "../Maze/Maze.h"
-#include "../ButtonWorld/JointButtonWorld.h"
-#include "../ButtonWorld/SeparateButtonWorld.h"
-#include "../CheeseMaze/CheeseMaze.h"
+#include <Maze/Maze.h>
+#include <ButtonWorld/JointButtonWorld.h>
+#include <ButtonWorld/SeparateButtonWorld.h>
+#include <CheeseMaze/CheeseMaze.h>
 
 #define DEBUG_LEVEL 1
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using std::vector;
 using std::shared_ptr;

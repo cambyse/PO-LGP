@@ -1,7 +1,7 @@
 #ifndef BATCHWORKER_H_
 #define BATCHWORKER_H_
 
-#include "../Config.h"
+#include <config/Config.h>
 
 #include <tclap/CmdLine.h>
 

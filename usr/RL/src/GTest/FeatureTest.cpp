@@ -1,24 +1,24 @@
 #include <gtest/gtest.h>
 
-#include "../Config.h"
+#include <config/Config.h>
 
-#include "../util/util.h"
-#include "../util/ProgressBar.h"
+#include <util/util.h>
+#include <util/ProgressBar.h>
 
-#include "../Representation/Feature.h"
-#include "../Representation/AbstractAction.h"
+#include <representation/Feature.h>
+#include <representation/AbstractAction.h>
 #include "MinimalEnvironmentExample/MinimalAction.h"
-#include "../Maze/MazeAction.h"
-#include "../ButtonWorld/ButtonAction.h"
-#include "../Maze/AugmentedMazeAction.h"
-#include "../Representation/AbstractObservation.h"
+#include <Maze/MazeAction.h>
+#include <ButtonWorld/ButtonAction.h>
+#include <Maze/AugmentedMazeAction.h>
+#include <representation/AbstractObservation.h>
 #include "MinimalEnvironmentExample/MinimalObservation.h"
-#include "../Maze/MazeObservation.h"
-#include "../Representation/AbstractReward.h"
+#include <Maze/MazeObservation.h>
+#include <representation/AbstractReward.h>
 #include "MinimalEnvironmentExample/MinimalReward.h"
-#include "../Representation/ListedReward.h"
-#include "../Representation/AbstractInstance.h"
-#include "../Representation/DoublyLinkedInstance.h"
+#include <representation/ListedReward.h>
+#include <representation/AbstractInstance.h>
+#include <representation/DoublyLinkedInstance.h>
 
 #include "RandomElements.h"
 
@@ -33,7 +33,7 @@
 #include <string>
 
 #define DEBUG_LEVEL 2
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using std::vector;
 using std::list;

@@ -1,19 +1,19 @@
 #include <gtest/gtest.h>
 
-#include "../Config.h"
-#include "../util/ColorOutput.h"
-#include "../Maze/Maze.h"
-#include "../PredictiveEnvironment.h"
-#include "../Planning/LookAheadSearch.h"
-#include "../Learner/UTree.h"
-#include "../Learner/TemporallyExtendedModel.h"
-#include "../Learner/TemporallyExtendedLinearQ.h"
-#include "../Learner/ConjunctiveAdjacency.h"
-#include "../Representation/DoublyLinkedInstance.h"
-#include "../Planning/LookAheadPolicy.h"
+#include <config/Config.h>
+#include <util/ColorOutput.h>
+#include <Maze/Maze.h>
+#include <environment/PredictiveEnvironment.h>
+#include <planning/LookAheadSearch.h>
+#include <learner/UTree.h>
+#include <learner/TemporallyExtendedModel.h>
+#include <learner/TemporallyExtendedLinearQ.h>
+#include <learner/ConjunctiveAdjacency.h>
+#include <representation/DoublyLinkedInstance.h>
+#include <planning/LookAheadPolicy.h>
 
 #define DEBUG_LEVEL 0
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using std::vector;
 using std::shared_ptr;

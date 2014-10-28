@@ -1,15 +1,15 @@
 #include <gtest/gtest.h>
 
-#include "../Representation/DoublyLinkedInstance.h"
-#include "../Representation/ListedReward.h"
+#include <representation/DoublyLinkedInstance.h>
+#include <representation/ListedReward.h>
 
-#include "../util/util.h"
+#include <util/util.h>
 
 #include <vector>
 #include <set>
 
 #define DEBUG_LEVEL 0
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using std::vector;
 using std::set;

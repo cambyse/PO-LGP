@@ -1,7 +1,7 @@
 #ifndef MINIMALOBSERVATION_H_
 #define MINIMALOBSERVATION_H_
 
-#include "../../Representation/AbstractObservation.h"
+#include <representation/AbstractObservation.h>
 
 
 class MinimalObservation: public AbstractObservation {

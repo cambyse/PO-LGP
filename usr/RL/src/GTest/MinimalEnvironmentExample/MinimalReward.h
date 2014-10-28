@@ -1,7 +1,7 @@
 #ifndef MINIMALREWARD_H_
 #define MINIMALREWARD_H_
 
-#include "../../Representation/AbstractReward.h"
+#include <representation/AbstractReward.h>
 
 class MinimalReward: public AbstractReward {
 public:

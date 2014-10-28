@@ -169,7 +169,7 @@ void Maze::render_initialize(QGraphicsView * v) {
         if(!agent) {
             delete agent;
         }
-        agent = new QGraphicsSvgItem("Images/agent.svg");
+        agent = new QGraphicsSvgItem("images/agent.svg");
         double scale = 0.2;
         agent->setScale(scale);
         QSizeF s = agent->boundingRect().size()*scale;

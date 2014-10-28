@@ -1,6 +1,7 @@
 
 libname=${PWD##*/}
 
+echo "cmake_minimum_required(VERSION 3.0)" >> CMakeLists.txt
 echo "find_package(Qt5Core)" >> CMakeLists.txt
 echo "" >> CMakeLists.txt
 echo 'set(CMAKE_CXX_FLAGS "-std=c++0x")' >> CMakeLists.txt

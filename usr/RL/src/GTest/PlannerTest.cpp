@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
-#include "../util/QtUtil.h"
-#include "../util/ColorOutput.h"
+#include <util/QtUtil.h>
+#include <util/ColorOutput.h>
 
-#include "../Maze/Maze.h"
-#include "../Planning/LookAheadPolicy.h"
-#include "../Representation/DoublyLinkedInstance.h"
+#include <Maze/Maze.h>
+#include <planning/LookAheadPolicy.h>
+#include <representation/DoublyLinkedInstance.h>
 
 #define DEBUG_LEVEL 2
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using std::vector;
 using std::shared_ptr;

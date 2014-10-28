@@ -1,13 +1,13 @@
 #ifndef MINIMALENVIRONMENT_H_
 #define MINIMALENVIRONMENT_H_
 
-#include "../../PredictiveEnvironment.h"
-#include "../../Representation/DoublyLinkedInstance.h"
+#include <environment/PredictiveEnvironment.h>
+#include <representation/DoublyLinkedInstance.h>
 #include "MinimalAction.h"
 #include "MinimalObservation.h"
 #include "MinimalReward.h"
 
-#include "../util/ColorOutput.h"
+#include <util/ColorOutput.h>
 
 class MinimalEnvironment: public PredictiveEnvironment {
 public:

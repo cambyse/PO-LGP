@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+
 find_package(Qt5Core)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")

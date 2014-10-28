@@ -12,7 +12,7 @@
 #include <planning/Policy.h>
 #include <util/Commander.h>
 
-#include <qcustomplot/qcustomplot.h>
+#include "qcustomplot.h"
 
 //#define ARMA_NO_DEBUG
 #include <armadillo>

@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.0)
 find_package(Qt5Widgets)
 find_package(Qt5Svg)
 

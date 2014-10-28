@@ -1,5 +1,5 @@
 #include "ProgressBar.h"
-#include <util/util.h>
+#include "util.h"
 
 #include <algorithm>
 

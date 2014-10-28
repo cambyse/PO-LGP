@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -7,6 +9,7 @@ set(CMAKE_AUTOMOC ON)
 # Create Qt user interfaces Wrappers
 set(CMAKE_AUTOUIC ON)
 
+find_package(Qt5Core)
 find_package(Qt5Widgets)
 find_package(Qt5PrintSupport)
 find_package(Qt5Svg)
@@ -17,6 +20,8 @@ add_executable(MazeGUI
     main.cpp
     testmaze_ii.h
     testmaze_ii.cpp
+    qcustomplot.h
+    qcustomplot.cpp
 )
 
 target_include_directories(MazeGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -29,9 +34,9 @@ target_link_libraries(MazeGUI
     Maze
     optimization
     planning
-    qcustomplot
     representation
     util
+    Qt5::Core
     Qt5::Widgets
     Qt5::PrintSupport
     Qt5::Svg
@@ -41,6 +46,4 @@ target_link_libraries(MazeGUI
     -lgomp
     -lgsl
     -lgslcblas
-    -lgsl
-#    -cblas
 )

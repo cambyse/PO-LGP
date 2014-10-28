@@ -1,9 +1,9 @@
 #ifndef RANDOMELEMENTS_H_
 #define RANDOMELEMENTS_H_
 
-#include "../Representation/AbstractAction.h"
-#include "../Representation/AbstractObservation.h"
-#include "../Representation/AbstractReward.h"
+#include <representation/AbstractAction.h>
+#include <representation/AbstractObservation.h>
+#include <representation/AbstractReward.h>
 
 AbstractAction::ptr_t get_random_action();
 

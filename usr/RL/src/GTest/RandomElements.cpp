@@ -1,22 +1,22 @@
 #include "RandomElements.h"
 
-#include "../util/util.h"
+#include <util/util.h>
 
 #include "MinimalEnvironmentExample/MinimalAction.h"
-#include "../Maze/MazeAction.h"
-#include "../CheeseMaze/CheeseMazeAction.h"
-#include "../ButtonWorld/ButtonAction.h"
-#include "../Maze/AugmentedMazeAction.h"
+#include <Maze/MazeAction.h>
+#include <CheeseMaze/CheeseMazeAction.h>
+#include <ButtonWorld/ButtonAction.h>
+#include <Maze/AugmentedMazeAction.h>
 #include "MinimalEnvironmentExample/MinimalObservation.h"
-#include "../Maze/MazeObservation.h"
-#include "../CheeseMaze/CheeseMazeObservation.h"
-#include "../Representation/UniqueObservation.h"
+#include <Maze/MazeObservation.h>
+#include <CheeseMaze/CheeseMazeObservation.h>
+#include <representation/UniqueObservation.h>
 #include "MinimalEnvironmentExample/MinimalReward.h"
-#include "../Representation/ListedReward.h"
+#include <representation/ListedReward.h>
 
 #include <vector>
 
-#include "../util/debug.h"
+#include <util/debug.h>
 
 using util::random_select;
 using std::vector;
