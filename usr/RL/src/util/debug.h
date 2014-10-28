@@ -16,9 +16,10 @@
 #include <iostream>
 #include <assert.h>
 #include "ColorOutput.h"
+#include "file_name.h"
 
 #ifndef DEBUG_STRING
-#define DEBUG_STRING __FILE__ << ": "
+#define DEBUG_STRING __FILENAME__ << ": "
 #endif
 
 #ifndef DEBUG_LEVEL
@@ -31,11 +32,11 @@
 #define IF_DEBUG(level) if(level<=FORCE_DEBUG_LEVEL || (FORCE_DEBUG_LEVEL==0 && level<=DEBUG_LEVEL))
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cerr << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILENAME__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cerr << ColorOutput::fg_magenta() << "Warning(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_magenta() << "Warning(" << __FILENAME__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                                      \
@@ -47,6 +48,8 @@
 #define DEBUG_DEAD_LINE {                                       \
         DEBUG_ERROR("This line should never be reached");       \
     }
+
+// assert of errors and warnings for unit tests
 
 #define assert_error(call, msg) {                                       \
         util::GrabStream stream(std::cerr);                             \

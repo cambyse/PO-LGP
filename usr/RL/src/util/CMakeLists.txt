@@ -13,6 +13,7 @@ add_library(util
     Commander.h
     debug_exclude.h
     debug.h
+    file_name.h
     function_signature.h
     KolmogorovSmirnovDist.cpp
     KolmogorovSmirnovDist.h
