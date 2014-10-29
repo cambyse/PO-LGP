@@ -33,8 +33,8 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
-    f_x = P.f(df_x, Hf_x, g_x, Jg_x, x);
-    CHECK(P.dim_g==g_x.N,"this conversion requires phi.N to be m-dimensional");
+    f_x = P(df_x, Hf_x, g_x, Jg_x, x);
+//    CHECK(P.dim_g==g_x.N,"this conversion requires phi.N to be m-dimensional");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
     if(&dL) CHECK(df_x.N && Jg_x.nd,"");
     if(&HL) CHECK(Hf_x.N && Jg_x.nd,"");
@@ -162,7 +162,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 double PhaseOneProblem::phase_one(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x){
   NIY;
   arr g, Jg;
-  f_orig.f(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
+  f_orig(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
 
   meta_g.resize(g.N+1);
   meta_g(0) = x.last();                                       //cost

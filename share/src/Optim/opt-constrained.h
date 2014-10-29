@@ -75,9 +75,7 @@ struct PhaseOneProblem{
   ConstrainedProblem f_phaseOne;
 
   PhaseOneProblem(const ConstrainedProblem &f_orig):f_orig(f_orig) {
-    f_phaseOne.dim_x=f_orig.dim_x+1;
-    f_phaseOne.dim_g=f_orig.dim_g+1;
-    f_phaseOne.f = [this](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
+    f_phaseOne = [this](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
       return this->phase_one(df, Hf, g, Jg, x);
     };
   }
@@ -101,7 +99,7 @@ uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions o
 
 inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
   arr g;
-  double f = P.f(NoArr, NoArr, g, NoArr, x);
+  double f = P(NoArr, NoArr, g, NoArr, x);
   os <<"f=" <<f <<" compl="<<sum(elemWiseMax(g,zeros(g.N,1))) <<endl;
 }
 

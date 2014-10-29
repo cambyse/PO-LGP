@@ -18,58 +18,21 @@
 
 #include "opt-convert.h"
 
-//-- core convertion methods
-void convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi, arr& J, const arr& _x);
-double convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
-
-struct sConvert {
-  KOrderMarkovFunction *kom;
-  double(*cstyle_fs)(arr*, const arr&, void*);
-  void (*cstyle_fv)(arr&, arr*, const arr&, void*);
-  void *data;
-  sConvert():kom(NULL),cstyle_fs(NULL),cstyle_fv(NULL),data(NULL)/*,cs(NULL)*/ {};
-  
-  struct KOrderMarkovFunction_ConstrainedProblem:ConstrainedProblem {
-    KOrderMarkovFunction *f;
-    KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& _f):f(&_f) {}
-    virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
-    virtual uint dim_x();
-    virtual uint dim_g();
-    uint dim_phi();
-  };
-
-  struct cfunc_ScalarFunction:ScalarFunction { //actual converter objects
-    double (*f)(arr*, const arr&, void*);
-    void *data;
-    cfunc_ScalarFunction(double (*_f)(arr*, const arr&, void*),void *_data):f(_f), data(_data) {}
-    virtual double fs(arr& grad, arr& H, const arr& x){  if(&H) NIY;    return f(&grad, x, data); }
-  };
-
-  struct cfunc_VectorFunction:VectorFunction { //actual converter objects
-    void (*f)(arr&, arr*, const arr&, void*);
-    void *data;
-    cfunc_VectorFunction(void (*_f)(arr&, arr*, const arr&, void*),void *_data):f(_f), data(_data) {}
-    virtual void fv(arr& y, arr& J, const arr& x){  f(y, &J, x, data);  }
-  };
-  
-};
-
 //the Convert is essentially only a ``garbage collector'', creating all the necessary conversion objects and then deleting them on destruction
-Convert::Convert(const ScalarFunction& p) { s=new sConvert(); sf=p; }
-Convert::Convert(const VectorFunction& p) { s=new sConvert(); vf=p; }
-//Convert::Convert(QuadraticFunction& p){ s=new sConvert(); sf=&p; }
-//Convert::Convert(VectorChainFunction& p) { s=new sConvert(); s->vcf=&p; }
-//Convert::Convert(QuadraticChainFunction& p) { s=new sConvert(); s->qcf=&p; }
-Convert::Convert(KOrderMarkovFunction& p) { s=new sConvert(); s->kom=&p; }
-Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) {  s=new sConvert(); s->cstyle_fs=fs; s->data=data; }
-Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) {  s=new sConvert(); s->cstyle_fv=fv; s->data=data; }
+Convert::Convert(const ScalarFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { sf=p; }
+Convert::Convert(const VectorFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { vf=p; }
+//Convert::Convert(QuadraticFunction& p){ sf=&p; }
+//Convert::Convert(VectorChainFunction& p) { vcf=&p; }
+//Convert::Convert(QuadraticChainFunction& p) { qcf=&p; }
+Convert::Convert(KOrderMarkovFunction& p):kom(&p), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { }
+Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data):kom(NULL), cstyle_fs(fs), cstyle_fv(NULL), data(data) {  }
+Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data):kom(NULL), cstyle_fs(NULL), cstyle_fv(fv), data(data) {  }
 
 #ifndef libRoboticsCourse
-//Convert::Convert(ControlledSystem& p) { s=new sConvert(); s->cs=&p; }
+//Convert::Convert(ControlledSystem& p) { cs=&p; }
 #endif
 
 Convert::~Convert() {
-  delete s;
 }
 
 //===========================================================================
@@ -79,26 +42,10 @@ Convert::~Convert() {
 
 Convert::operator ScalarFunction() {
   if(!sf) {
-//    if(s->vcf) sf = new sConvert::VectorChainFunction_ScalarFunction(*s->vcf);
-//    if(s->kom) vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
-//    if(s->cstyle_fv) vf = new sConvert::cfunc_VectorFunction(s->cstyle_fv, s->data);
-    if(s->cstyle_fs){
-      sf = [this](arr& g, arr& H, const arr& x) -> double {
-        if(&H) NIY;
-        return this->s->cstyle_fs(&g, x, this->s->data);
-      };
-    }else{
+    if(cstyle_fs) sf = convert_cstylefs_ScalarFunction(cstyle_fs, data);
+    else {
       if(!vf) vf = this->operator VectorFunction();
-      if(vf){
-        sf = [this](arr& g, arr& H, const arr& x) -> double {
-          arr y,J;
-          this->vf(y, (&g?J:NoArr), x);
-          //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
-          if(&g){ g = comp_At_x(J, y); g *= 2.; }
-          if(&H){ H = comp_At_A(J); H *= 2.; }
-          return sumOfSqr(y);
-        };
-      }
+      if(vf)  sf = convert_VectorFunction_ScalarFunction(vf);
     }
   }
   if(!sf) HALT("");
@@ -107,17 +54,10 @@ Convert::operator ScalarFunction() {
 
 Convert::operator VectorFunction() {
   if(!vf) {
-//    if(s->cs) operator KOrderMarkovFunction&();
-    if(s->cstyle_fv){
-      vf = [this](arr& y, arr& J, const arr& x) -> void {
-        this->s->cstyle_fv(y, &J, x, this->s->data);
-      };
-    }else{
-      if(s->kom){
-        vf = [this](arr& y, arr& J, const arr& x) -> void {
-          convert_KOrderMarkovFunction_VectorFunction(*s->kom, y, J, x);
-        };
-      }
+    if(cstyle_fv)
+      vf = convert_cstylefv_VectorFunction(cstyle_fv, data);
+    else {
+      if(kom) vf = convert_KOrderMarkovFunction_VectorFunction(*kom);
     }
   }
   if(!vf) HALT("");
@@ -125,29 +65,21 @@ Convert::operator VectorFunction() {
 }
 
 Convert::operator ConstrainedProblem() {
-  if(!cp.f) {
-    if(s->kom){
-      cp.dim_x = cp.dim_g = 0;
-      uint T = s->kom->get_T();
-      for(uint t=0; t<=T; t++) cp.dim_x += s->kom->dim_x();
-      for(uint t=0; t<=T; t++) cp.dim_g += s->kom->dim_g(t);
-      cp.f = [this](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
-        return convert_KOrderMarkovFunction_ConstrainedProblem(*this->s->kom, df, Hf, g, Jg, x);
-      };
-    }
+  if(!cp) {
+    if(kom) cp = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
   }
-  if(!cp.f) HALT("");
+  if(!cp) HALT("");
   return cp;
 }
 
 Convert::operator KOrderMarkovFunction&() {
-  if(!s->kom) {
+  if(!kom) {
 // #ifndef libRoboticsCourse
-//     if(s->cs) s->kom = new sConvert::ControlledSystem_2OrderMarkovFunction(*s->cs);
+//     if(cs) kom = new sConvert::ControlledSystem_2OrderMarkovFunction(*cs);
 // #endif
   }
-  if(!s->kom) HALT("");
-  return *s->kom;
+  if(!kom) HALT("");
+  return *kom;
 }
 
 //===========================================================================
@@ -155,16 +87,31 @@ Convert::operator KOrderMarkovFunction&() {
 // actual convertion routines
 //
 
-double convert_VectorFunction_ScalarFunction(VectorFunction f, arr& grad, arr& H, const arr& x) {
-  arr y,J;
-  f(y, (&grad?J:NoArr), x);
-//  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
-  if(&grad){ grad = comp_At_x(J, y); grad *= 2.; }
-  if(&H){ H = comp_At_A(J); H *= 2.; }
-  return sumOfSqr(y);
+ScalarFunction convert_cstylefs_ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data){
+  return [&fs,data](arr& g, arr& H, const arr& x) -> double {
+    if(&H) NIY;
+    return fs(&g, x, data);
+  };
 }
 
-void convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi, arr& J, const arr& _x) {
+VectorFunction convert_cstylefv_VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data){
+  return [&fv,data](arr& y, arr& J, const arr& x) -> void {
+    fv(y, &J, x, data);
+  };
+}
+
+ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f) {
+  return [&f](arr& g, arr& H, const arr& x) -> double {
+    arr y,J;
+    f(y, (&g?J:NoArr), x);
+    //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+    if(&g){ g = comp_At_x(J, y); g *= 2.; }
+    if(&H){ H = comp_At_A(J); H *= 2.; }
+    return sumOfSqr(y);
+  };
+}
+
+void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi, arr& J, const arr& _x) {
 #if 0 //non-packed Jacobian
   //probing dimensionality
   uint T=f->get_T();
@@ -297,8 +244,14 @@ void convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& p
 #endif
 }
 
+VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f) {
+  return [&f](arr& y, arr& J, const arr& x) -> void {
+    conv_KOrderMarkovFunction_VectorFunction(f, y, J, x);
+  };
+}
+
 //collect the constraints from a KOrderMarkovFunction
-double convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
 #if 0 //old way
   //probing dimensionality
   uint T=f->get_T();
@@ -413,7 +366,7 @@ double convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, 
 //  sConvert::KOrderMarkovFunction_VectorFunction F(*f);
   arr phi, J;
   bool getJ = (&df) || (&Hf) || (&Jg);
-  convert_KOrderMarkovFunction_VectorFunction(f, phi, (getJ?J:NoArr), x);
+  conv_KOrderMarkovFunction_VectorFunction(f, phi, (getJ?J:NoArr), x);
   RowShiftedPackedMatrix *J_aux = (RowShiftedPackedMatrix*)J.aux;
 
   //resizing things:
@@ -486,22 +439,9 @@ double convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, 
 #endif
 }
 
-//uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_x() {
-//  uint T=f->get_T();
-//  uint n=f->dim_x();
-//  return (T+1)*n;
-//}
+ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
+  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
+    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, x);
+  };
+}
 
-//uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_phi() {
-//  uint T =f->get_T();
-//  uint gphi=0;
-//  for(uint t=0; t<=T; t++) gphi += f->dim_phi(t);
-//  return gphi;
-//}
-
-//uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_g() {
-//  uint T =f->get_T();
-//  uint gd=0;
-//  for(uint t=0; t<=T; t++) gd += f->dim_g(t);
-//  return gd;
-//}

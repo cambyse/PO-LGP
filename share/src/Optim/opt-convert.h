@@ -22,10 +22,14 @@
 
 /// A struct that allows to convert one function type into another, even when given as argument
 struct Convert {
-  struct sConvert* s;
+  KOrderMarkovFunction *kom;
+  double(*cstyle_fs)(arr*, const arr&, void*);
+  void (*cstyle_fv)(arr&, arr*, const arr&, void*);
+  void *data;
   ScalarFunction sf;
   VectorFunction vf;
   ConstrainedProblem cp;
+
   Convert(const ScalarFunction&);
   Convert(const VectorFunction&);
   Convert(KOrderMarkovFunction&);
@@ -37,3 +41,10 @@ struct Convert {
   operator ConstrainedProblem();
   operator KOrderMarkovFunction&();
 };
+
+//-- low level converters
+ScalarFunction convert_cstylefs_ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
+VectorFunction convert_cstylefv_VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
+ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f);
+VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f);
+ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f);
