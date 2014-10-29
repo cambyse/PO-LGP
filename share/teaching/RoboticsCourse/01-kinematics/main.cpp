@@ -54,35 +54,29 @@ void openingSimulator(){
   S.watch();
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-void reach(){
+void reach_problem(){
   Simulator S("man.ors");
   arr q,W;
   uint n = S.getJointDimension();
   S.getJointAngles(q);
-  W.setDiag(1.e4,n);  //W is equal the Id_n matrix
+  double w = MT::getParameter("w",1e-4);
+  W.setDiag(w,n);  //W is equal the Id_n matrix times scalar w
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
   S.watch();        //pause and watch initial posture
 
-  arr y_target,y,y0,yT,J,Phi,PhiJ;
-  yT = ARR(-0.2, -0.4, 2.1);
-  S.kinematicsPos(y0,"handR");
-  uint T=10;
-  for(uint t=0;t<=10*T;t++){
+  arr y_target,y,J;
+  for(uint i=0;i<10;i++){
     //1st task:
+    y_target = {-0.2, -0.4, 1.1}; 
     S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
     S.jacobianPos  (J,"handR");
-    if(t<T) y_target = y0 + ((double)t/T)*(yT-y0); 
-    else    y_target = yT;
-    Phi  = (y - y_target)/1e-2;  //build the big Phi (sigma = 0.01)
-    PhiJ = J/1e-2;               //and the big Jacobian
-
-    //report on error in the first task
-    cout <<t <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;
 
     //compute joint updates
-    q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
+    q += inverse(~J*J + W)*~J*(y_target - y); 
+    //NOTATION: ~J is the transpose of J
     
     //sets joint angles AND computes all frames AND updates display
     S.setJointAngles(q);
@@ -91,6 +85,47 @@ void reach(){
     S.watch();
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void reach_sol(){
+  Simulator S("man.ors");
+  arr q,W;
+  uint n = S.getJointDimension();
+  S.getJointAngles(q);
+  double w = MT::getParameter("w",1e-4);
+  W.setDiag(w,n);  //W is equal the Id_n matrix times scalar w
+
+  cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
+  S.watch();        //pause and watch initial posture
+
+  arr y_target,y,y0,yT,J;
+  yT = {-0.2, -0.4, 2.1};
+  S.kinematicsPos(y0,"handR");
+  uint T=10;
+  for(uint t=0;t<=T+10;t++){
+    //1st task:
+    if(t<T) y_target = y0 + ((double)t/T)*(yT-y0); 
+    else    y_target = yT;
+    S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
+    S.jacobianPos  (J,"handR");
+
+    //report on error in the first task
+    cout <<t <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;
+
+    //compute joint updates
+    q += inverse(~J*J + W)*~J*(y_target - y); 
+    //NOTATION: ~J is the transpose of J
+    
+    //sets joint angles AND computes all frames AND updates display
+    S.setJointAngles(q);
+
+    //optional: pause and watch OpenGL
+    S.watch();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void circle(){
   Simulator S("man.ors");
@@ -157,12 +192,13 @@ void multiTask(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",4)){
+  switch(MT::getParameter<int>("mode",2)){
   case 0:  simpleArrayOperations();  break;
   case 1:  openingSimulator();  break;
-  case 2:  reach();  break;
-  case 3:  circle();  break;
-  case 4:  multiTask();  break;
+  case 2:  reach_problem();  break;
+  case 3:  reach_sol();  break;
+  case 4:  circle();  break;
+  case 5:  multiTask();  break;
   }
 
   return 0;
