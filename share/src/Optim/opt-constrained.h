@@ -34,27 +34,31 @@ struct UnconstrainedProblem{
   /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
       concatenated to one vector:
       phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  const ConstrainedProblem &P;
+  const ConstrainedProblem& P;
+
   //-- parameters of the unconstrained meta function F
   double muLB;       ///< log barrier weight
-  double mu;         ///< squared penalty weight
-  arr lambda;        ///< lagrange multiplier in augmented lagrangian
+  double mu;         ///< squared penalty weight for inequalities g
+  double nu;         ///< squared penalty weight for equalities h
+  arr lambda;        ///< lagrange multipliers for inequalities g
+  arr kappa;         ///< lagrange multiplier for equalities h
 
   //-- buffers to avoid recomputing gradients
-  arr x, df_x, Hf_x, g_x, Jg_x;
-  double f_x;
+  arr x; ///< point where P was last evaluated
+  double f_x; ///< scalar value f(x)
+  arr df_x, Hf_x, g_x, Jg_x, h_x, Jh_x; ///< everything else at x
 
-  UnconstrainedProblem(const ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {
-    SF = [this](arr& dL, arr& HL, const arr& x) -> double {
-      return this->fs(dL, HL, x);
+  UnconstrainedProblem(const ConstrainedProblem &P):P(P), muLB(0.), mu(0.), nu(0.) {
+    Lag = [this](arr& dL, arr& HL, const arr& x) -> double {
+      return this->lagrangian(dL, HL, x);
     };
   }
 
-  double fs(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
-  ScalarFunction SF;
-  operator const ScalarFunction&(){
-    return SF;
-  }
+  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
+
+  ScalarFunction Lag; ///< the unconstrained problem, typically the (augmented) Lagrangian with given lambda, mu, etc
+
+//  operator const ScalarFunction&(){ return Lag; }
 
   void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
   void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
@@ -75,7 +79,7 @@ struct PhaseOneProblem{
   ConstrainedProblem f_phaseOne;
 
   PhaseOneProblem(const ConstrainedProblem &f_orig):f_orig(f_orig) {
-    f_phaseOne = [this](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
+    f_phaseOne = [this](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
       return this->phase_one(df, Hf, g, Jg, x);
     };
   }
@@ -98,9 +102,9 @@ uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions o
 //
 
 inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
-  arr g;
-  double f = P(NoArr, NoArr, g, NoArr, x);
-  os <<"f=" <<f <<" compl="<<sum(elemWiseMax(g,zeros(g.N,1))) <<endl;
+  arr g,h;
+  double f = P(NoArr, NoArr, g, NoArr, h, NoArr, x);
+  os <<"f=" <<f <<" sum([g>0]g)="<<sum(elemWiseMax(g,zeros(g.N,1))) <<" sum(|h|)=" <<sumOfAbs(h) <<endl;
 }
 
 

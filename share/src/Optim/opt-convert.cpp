@@ -251,7 +251,7 @@ VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction&
 }
 
 //collect the constraints from a KOrderMarkovFunction
-double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
 #if 0 //old way
   //probing dimensionality
   uint T=f->get_T();
@@ -365,7 +365,7 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
 
 //  sConvert::KOrderMarkovFunction_VectorFunction F(*f);
   arr phi, J;
-  bool getJ = (&df) || (&Hf) || (&Jg);
+  bool getJ = (&df) || (&Hf) || (&Jg) || (&Jh);
   conv_KOrderMarkovFunction_VectorFunction(f, phi, (getJ?J:NoArr), x);
   RowShiftedPackedMatrix *J_aux = (RowShiftedPackedMatrix*)J.aux;
 
@@ -373,35 +373,39 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
   uint T=f.get_T();
   uint dimphi = 0;  for(uint t=0; t<=T; t++) dimphi += f.dim_phi(t);
   uint dimg = 0;    for(uint t=0; t<=T; t++) dimg += f.dim_g(t);
-  uint dimy = dimphi - dimg;
+  uint dimh = 0;    for(uint t=0; t<=T; t++) dimh += f.dim_h(t);
+  uint dimy = dimphi - dimg - dimh;
   CHECK(phi.N==dimphi,"");
 
   arr y, Jy;
-  RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
+  RowShiftedPackedMatrix *Jy_aux, *Jg_aux, *Jh_aux;
   y.resize(dimy);
   if(&g) g.resize(dimg);
   if(getJ) Jy_aux = auxRowShifted(Jy, dimy, J.d1, J_aux->real_d1);
   if(&Jg)  Jg_aux = auxRowShifted(Jg, dimg, J.d1, J_aux->real_d1);
+  if(&Jh)  Jh_aux = auxRowShifted(Jh, dimh, J.d1, J_aux->real_d1);
 
   //if there is a z
   uint dimz = f.dim_z();
-  arr *Jz, *Jyz, *Jgz;
-  RowShiftedPackedMatrix *Jz_aux, *Jyz_aux, *Jgz_aux;
+  arr *Jz, *Jyz, *Jgz, *Jhz;
+  RowShiftedPackedMatrix *Jz_aux, *Jyz_aux, *Jgz_aux, *Jhz_aux;
   if(dimz && getJ){
     Jz = J_aux->nextInSum;
     Jz_aux = (RowShiftedPackedMatrix*)Jz->aux;
             { Jyz = new arr(dimy, dimz);  Jy_aux->nextInSum = Jyz;  Jyz_aux = auxRowShifted(*Jyz, dimy, Jz->d1, Jz_aux->real_d1); }
     if(&Jg) { Jgz = new arr(dimg, dimz);  Jg_aux->nextInSum = Jgz;  Jgz_aux = auxRowShifted(*Jgz, dimg, Jz->d1, Jz_aux->real_d1); }
+    if(&Jh) { Jhz = new arr(dimh, dimz);  Jh_aux->nextInSum = Jhz;  Jhz_aux = auxRowShifted(*Jhz, dimh, Jz->d1, Jz_aux->real_d1); }
   }
 
   //loop over time t
-  uint M=0, y_count=0, g_count=0;
+  uint M=0, y_count=0, g_count=0, h_count=0;
   for(uint t=0; t<=T; t++){
     uint dimphi_t = f.dim_phi(t);
     uint dimg_t   = f.dim_g(t);
-    uint dimf_t   = dimphi_t-dimg_t;
+    uint dimh_t   = f.dim_h(t);
+    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
 
-    //split up
+    //split up: push cost terms into y
     y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
     if(getJ) {
       Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
@@ -414,6 +418,7 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     M += dimf_t;
     y_count += dimf_t;
 
+    //split up: push inequality terms into g
     if(&g && dimg) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
     if(&Jg && dimg) {
       Jg.setMatrixBlock(J.subRange(M, M+dimg_t-1), g_count, 0);
@@ -425,12 +430,27 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     }
     M += dimg_t;
     g_count += dimg_t;
+
+    //split up: push equality terms into h
+    if(&h && dimh) h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
+    if(&Jh && dimh) {
+      Jh.setMatrixBlock(J.subRange(M, M+dimh_t-1), h_count, 0);
+      for(uint i=0; i<dimh_t; i++) Jh_aux->rowShift(h_count+i) = J_aux->rowShift(M+i);
+      if(dimz){
+        Jhz->setMatrixBlock(Jz->subRange(M, M+dimh_t-1), h_count, 0);
+        for(uint i=0; i<dimh_t; i++) Jhz_aux->rowShift(h_count+i) = Jz_aux->rowShift(M+i);
+      }
+    }
+    M += dimh_t;
+    h_count += dimh_t;
   }
   CHECK(M==dimphi,"");
   CHECK(y_count==dimy,"");
   if(&g) CHECK(g_count==dimg,"");
+  if(&h) CHECK(h_count==dimh,"");
   if(getJ) Jy_aux->computeColPatches(true);
   if(&Jg) Jg_aux->computeColPatches(true);
+  if(&Jh) Jh_aux->computeColPatches(true);
 
   //finally, compute the scalar function
   if(&df){ df = comp_At_x(Jy, y); df *= 2.; }
@@ -440,8 +460,8 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
 }
 
 ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
-  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) -> double {
-    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, x);
+  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
+    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
   };
 }
 

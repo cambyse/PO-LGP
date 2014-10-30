@@ -29,18 +29,17 @@ double I_lambda_x(uint i, arr& lambda, arr& g){
   return 0.;
 }
 
-double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
+double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
-    f_x = P(df_x, Hf_x, g_x, Jg_x, x);
-//    CHECK(P.dim_g==g_x.N,"this conversion requires phi.N to be m-dimensional");
+    f_x = P(df_x, Hf_x, g_x, Jg_x, h_x, Jh_x, x);
+    CHECK(df_x.N==x.N && Hf_x.d0==x.N && g_x.N==Jg_x.d0 && h_x.N==Jh_x.d0,"");
+//    && Hf_x.d1==x.N && Jg_x.d1==x.N &&  && Jh_x.d1==x.N //those dimensions might be non-equal due to packing...
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
-    if(&dL) CHECK(df_x.N && Jg_x.nd,"");
-    if(&HL) CHECK(Hf_x.N && Jg_x.nd,"");
+    if(&dL) CHECK(df_x.N && g_x.N==Jg_x.d0 && h_x.N==Jh_x.d0,"");
+    if(&HL) CHECK(Hf_x.N && g_x.N==Jg_x.d0 && h_x.N==Jh_x.d0,"");
   }
-
-  //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;
 
   //-- construct unconstrained problem
   //precompute I_lambda_x
@@ -50,29 +49,53 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
   //L value
   double L=f_x;
   if(muLB)     for(uint i=0;i<g_x.N;i++){ if(g_x(i)>0.) return NAN;  L -= muLB * ::log(-g_x(i)); } //log barrier, check feasibility
-  if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) L += mu * MT::sqr(g_x(i));  //penalty
-  if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) L += lambda(i) * g_x(i);  //augments
+  if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) L += mu * MT::sqr(g_x(i));   //g-penalty
+  if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) L += lambda(i) * g_x(i);      //g-lagrange terms
+  if(nu)       for(uint i=0;i<h_x.N;i++) L += nu * MT::sqr(h_x(i));                     //h-penalty
+  if(kappa.N)  for(uint i=0;i<h_x.N;i++) L += kappa(i) * h_x(i);                        //h-lagrange terms
 
   if(&dL){ //L gradient
     dL=df_x;
-    arr coeff(Jg_x.d0); coeff.setZero();
-    if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) -= (muLB/g_x(i));  //log barrier
-    if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu*g_x(i);  //penalty
-    if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);  //augments
-    dL += comp_At_x(Jg_x, coeff);
+    //-- g-terms
+    if(g_x.N){
+      arr coeff=zeros(g_x.N);
+      if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) -= (muLB/g_x(i));                   //log barrier
+      if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu*g_x(i);  //g-penalty
+      if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);      //g-lagrange terms
+      dL += comp_At_x(Jg_x, coeff);
+    }
+    //-- h-terms
+    if(h_x.N){
+      arr coeff=zeros(h_x.N);
+      if(nu)       for(uint i=0;i<h_x.N;i++) coeff(i) += 2.*nu*h_x(i);                    //h-penalty
+      if(kappa.N)  for(uint i=0;i<h_x.N;i++) coeff(i) += kappa(i);                        //h-lagrange terms
+      dL += comp_At_x(Jh_x, coeff);
+    }
+
     dL.reshape(x.N);
   }
 
   if(&HL){ //L hessian
+    // the 2.*Jg_x^T Jg_x terms are considered as in Gauss-Newton type; no real Hg used
     HL=Hf_x;
-    /// the 2.*Jg_x^T Jg_x terms are considered as in Gauss-Newton type; no real Hg used
-    arr coeff(Jg_x.d0); coeff.setZero();
-    if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) += (muLB/MT::sqr(g_x(i)));  //log barrier
-    if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu;  //penalty
-    //if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments -> evaluates to zero
-    arr tmp = Jg_x;
-    for(uint i=0;i<g_x.N;i++) tmp[i]() *= sqrt(coeff(i));
-    HL += comp_At_A(tmp); //Gauss-Newton type!
+    //-- g-terms
+    if(g_x.N){
+      arr coeff=zeros(g_x.N);
+      if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) += (muLB/MT::sqr(g_x(i)));   //log barrier
+      if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu;  //g-penalty
+      arr tmp = Jg_x;
+      for(uint i=0;i<g_x.N;i++) tmp[i]() *= sqrt(coeff(i));
+      HL += comp_At_A(tmp); //Gauss-Newton type!
+    }
+    //-- h-terms
+    if(h_x.N){
+      arr coeff=zeros(h_x.N);
+      if(nu)       for(uint i=0;i<h_x.N;i++) coeff(i) += 2.*nu;                    //h-penalty
+      arr tmp = Jh_x;
+      for(uint i=0;i<h_x.N;i++) tmp[i]() *= sqrt(coeff(i));
+      HL += comp_At_A(tmp); //Gauss-Newton type!
+    }
+
     if(!HL.special) HL.reshape(x.N,x.N);
   }
 
@@ -80,17 +103,22 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
 }
 
 void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr &dL_x, arr &HL_x){
-  if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
+  if(!lambda.N) lambda=zeros(g_x.N);
+  if(!kappa .N) kappa =zeros(h_x.N);
 
+  //-- lambda update
   lambda += (lambdaStepsize * 2.*mu)*g_x;
+  //bound clipping
   for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+  //-- kappa update
+  kappa += (lambdaStepsize * 2.*nu)*h_x;
 
-  //-- adapt mu as well
+  //-- adapt mu as well?
   if(muInc>1.) mu *= muInc;
 
   //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
   if(L_x || &dL_x || &HL_x){
-    double L = fs(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
+    double L = lagrangian(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
     if(L_x) *L_x = L;
   }
 }
@@ -104,6 +132,10 @@ bool UnconstrainedProblem::anyTimeAulaUpdateStopCriterion(const arr& dL_x){
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
+  //-- kappa update
+  kappa += (lambdaStepsize * 2.*nu)*h_x;
+
+  //-- lambda update
   lambda += (lambdaStepsize * 2.*mu)*g_x;
   //bound clipping
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
@@ -143,12 +175,12 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
   }
 
-  //-- adapt mu as well
+  //-- adapt mu as well?
   if(muInc>1.) mu *= muInc;
 
   //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
   if(L_x || &dL_x || &HL_x){
-    double L = fs(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
+    double L = lagrangian(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
     if(L_x) *L_x = L;
   }
 }
@@ -162,7 +194,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 double PhaseOneProblem::phase_one(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x){
   NIY;
   arr g, Jg;
-  f_orig(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
+//  f_orig(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
 
   meta_g.resize(g.N+1);
   meta_g(0) = x.last();                                       //cost
@@ -205,7 +237,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
 
   if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
 
-  OptNewton newton(x, UCP, opt);
+  OptNewton newton(x, UCP.Lag, opt);
 
   for(uint k=0;;k++){
     fil <<k <<' ' <<newton.evals <<' ' <<UCP.f_x <<' ' <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<endl;
