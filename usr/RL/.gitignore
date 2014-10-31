@@ -7,3 +7,6 @@ moc_*.cpp
 
 ## backup file of vue
 .~*.vue
+
+## ipython notebook
+*/.ipynb_checkpoints/*.ipynb
