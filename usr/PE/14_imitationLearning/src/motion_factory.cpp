@@ -88,6 +88,11 @@ void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Arr
         createScene4(s_train,1,vis);
         createScene4(s_test,3,vis);
         break;
+      case 5:
+        /// nonlinear simple example
+        createScene5(s_train,1,vis);
+        createScene5(s_test,3,vis);
+        break;
     }
     s_test.xInit = s_train.xRef;
     s_train.xInit = s_train.xRef;
@@ -120,7 +125,7 @@ void MotionFactory::createScene0(Scene &s, uint i, bool vis) {
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
-  s.MP->T = 200;
+  s.MP->T = 20;
   s.MP->tau = 0.01;
 
   //-- setup new motion problem
@@ -140,7 +145,7 @@ void MotionFactory::createScene0(Scene &s, uint i, bool vis) {
 
   TaskCost *c;
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  c->setCostSpecs(s.MP->T,s.MP->T, ARRAY(tar->X.pos), param(N));
+  c->setCostSpecs(s.MP->T-1,s.MP->T, ARRAY(tar->X.pos), param(N));
 
   s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
   s.MP->x0(0) = M_PI_2;
@@ -665,6 +670,75 @@ void MotionFactory::createScene4(Scene &s, uint i, bool vis)
   s.paramRef = param;
   s.contactTime = contactTime;
 }
+
+
+
+void MotionFactory::createScene5(Scene &s, uint i, bool vis) {
+  s.world = new ors::KinematicWorld("scene");
+  arr q, qdot;
+  s.world->getJointState(q, qdot);
+  makeConvexHulls(s.world->shapes);
+  s.world->swift().setCutoff(10.);
+
+  s.world->swift();
+  s.MP = new MotionProblem(*s.world,false);
+  s.MP->useSwift=true;
+  s.MP->loadTransitionParameters();
+  s.MP->makeContactsAttractive=false;
+  s.MP->T = 20;
+  s.MP->tau = 0.1;
+
+  //-- setup new motion problem
+  s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.1,0.);
+
+  ors::Shape *grasp = s.world->getShapeByName("endeff");
+  ors::Body *tar = s.world->getBodyByName("target");
+
+  // only work with normalized task costs (for comparison)
+  arr param = ARR(s.MP->H_rate_diag(0));
+  param.append(ARR(1e3));
+  param = param/sqrt(sumOfSqr(param))*costScale;
+  cout << param << endl;
+  s.MP->H_rate_diag = param(0);
+
+  uint N = 1;
+
+  TaskCost *c;
+  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
+//  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, ARRAY(tar->X.pos), param(N));
+  c->prec(s.MP->T*0.5) = param(N);
+
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0(0) = M_PI_2;
+
+  MotionProblemFunction MPF(*s.MP);
+  uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = s.MP->tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" << N<<endl;
+  arr x(T+1,n); x.setZero();arr lambda(T+1,2); lambda.setZero();
+  x = repmat(~s.MP->x0,T+1,1);
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4, allowOverstep=true));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,  allowOverstep=true));
+
+  if (vis) {
+    cout << "Lambda" << lambda << endl;
+//    s.MP->costReport(true);
+    displayTrajectory(x,s.MP->T/2.,s.MP->world,"t");
+  }
+
+  // set all costs equal to 1 or 0
+  s.MP->H_rate_diag = 1.;
+  for (uint c=0;c < s.MP->taskCosts.N;c++) {
+    if (!s.MP->taskCosts(c)->map.constraint) {
+      s.MP->taskCosts(c)->prec = 1.;
+    }
+  }
+
+  s.xRef = x;
+  s.lambdaRef = lambda;
+  s.paramRef = param;
+}
+
 
 
 /*

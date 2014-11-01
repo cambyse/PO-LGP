@@ -17,6 +17,7 @@
 //#include "scene.h"
 
 
+
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
   arr lambda0; // Demonstrated constrains

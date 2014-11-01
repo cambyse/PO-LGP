@@ -21,6 +21,9 @@ struct MotionFactory {
   void createScene2(Scene &s, uint i, bool vis=false);
   void createScene3(Scene &s, uint i, bool vis=false);
   void createScene4(Scene &s, uint i, bool vis=false);
+  void createScene5(Scene &s, uint i, bool vis=false);
+
 };
+
 
 #endif // MOTION_FACTORY_H

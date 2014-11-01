@@ -15,10 +15,15 @@ struct GaussianCosts {
   GaussianCosts() {
   };
 
-  void f(arr &x, arr &y);
-  void dfdmu(arr &x, arr &g, arr& H=NoArr);
-  void dfdstd(arr &x, arr &g, arr& H=NoArr);
-  void dfdw(arr &x, arr &g, arr& H=NoArr);
+  void f(const arr &x, arr &y);
+  void dfdmu(const arr &x, arr &g, arr& H=NoArr);
+  void dfdstd(const arr &x, arr &g, arr& H=NoArr);
+  void dfdw(const arr &x, arr &g, arr& H=NoArr);
+
+
+  void dfdwdmu(const arr &x,arr& H);
+  void dfdwdstd(const arr &x,arr& H);
+  void dfdmudstd(const arr &x,arr& H);
 };
 
 #endif // GAUSSIAN_COSTS_H
