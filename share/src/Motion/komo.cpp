@@ -22,7 +22,7 @@ arr moveTo(ors::KinematicWorld& world,
   world.swift().initActivations(world);
   MP.world.watch(false);
 
-  TaskCost *c;
+  Task *c;
 
   c = MP.addTask("transitions", new TransitionTaskMap(world));
   c->map.order=2; //make this an acceleration task!

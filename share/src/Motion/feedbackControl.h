@@ -94,6 +94,7 @@ struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   MT::Array<ConstraintForceTask*> forceTasks;
   PDtask qitselfPD;
+  arr H_rate_diag;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 

@@ -115,7 +115,7 @@ struct ProxyTaskMap:public TaskMap {
 
 struct CollisionConstraint:public TaskMap {
   double margin;
-  CollisionConstraint(double _margin=.1):margin(_margin){ constraint=true; }
+  CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
@@ -125,7 +125,7 @@ struct CollisionConstraint:public TaskMap {
 struct LimitsConstraint:public TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(.05){ constraint=true; }
+  LimitsConstraint():margin(.05){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
@@ -140,7 +140,7 @@ struct PairCollisionConstraint:public TaskMap {
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
       margin(.02) {
-    constraint=true;
+    type=ineqTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
@@ -154,7 +154,7 @@ struct PlaneConstraint:public TaskMap {
   arr planeParams;  ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   PlaneConstraint(const ors::KinematicWorld& G, const char* iShapeName, const arr& _planeParams)
-    : i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){ constraint=true; }
+    : i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){ type=ineqTT; }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
@@ -167,7 +167,7 @@ struct ConstraintStickiness:public TaskMap {
   TaskMap& map;
   ConstraintStickiness(TaskMap& _map)
     : map(_map) {
-    constraint=false;
+    type=eqTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);

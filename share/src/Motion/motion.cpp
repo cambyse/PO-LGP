@@ -64,7 +64,7 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
 
 //===========================================================================
 
-void TaskCost::setCostSpecs(uint fromTime,
+void Task::setCostSpecs(uint fromTime,
                             uint toTime,
                             const arr& _target,
                             double _prec){
@@ -77,7 +77,7 @@ void TaskCost::setCostSpecs(uint fromTime,
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
-    : world(_world) , useSwift(useSwift), transitionType(none), T(0), tau(0.)
+    : world(_world) , useSwift(useSwift), T(0), tau(0.)
 {
   if(useSwift) {
     makeConvexHulls(world.shapes);
@@ -94,8 +94,6 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   world = const_cast<ors::KinematicWorld&>(other.world);
   useSwift = other.useSwift;
   taskCosts = other.taskCosts;
-  transitionType = other.transitionType;
-  H_rate_diag = other.H_rate_diag;
   T = other.T;
   tau = other.tau;
   x0 = other.x0;
@@ -106,15 +104,7 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   return *this;
 }
 
-void MotionProblem::loadTransitionParameters() {
-  //transition type
-  transitionType = (TransitionType)MT::getParameter<int>("transitionType");
-  
-  //time and steps
-  double duration = MT::getParameter<double>("duration");
-  T = MT::getParameter<uint>("timeSteps");
-  tau = duration/T;
-  
+arr MotionProblem::getH_rate_diag() {
   //transition cost metric
   arr W_diag;
   if(MT::checkParameter<arr>("Wdiag")) {
@@ -122,18 +112,19 @@ void MotionProblem::loadTransitionParameters() {
   } else {
     W_diag = world.naturalQmetric();
   }
-  H_rate_diag = MT::getParameter<double>("Hrate")*W_diag;
+  return MT::getParameter<double>("Hrate")*W_diag;
 }
 
-TaskCost* MotionProblem::addTask(const char* name, TaskMap *m){
-  TaskCost *t = new TaskCost(m);
+Task* MotionProblem::addTask(const char* name, TaskMap *m){
+  Task *t = new Task(m);
   t->name=name;
   taskCosts.append(t);
   return t;
 }
 
+#if 1
 void MotionProblem::setInterpolatingCosts(
-  TaskCost *c,
+  Task *c,
   TaskCostInterpolationType inType,
   const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget, double y_midPrec, double earlyFraction) {
   uint m=c->map.dim_phi(world);
@@ -182,20 +173,17 @@ void MotionProblem::setInterpolatingCosts(
   } break;
   }
 }
+#endif
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
   if(useSwift) world.stepSwift();
-  if(transitionType == realDynamic) {
-    NIY;
-    //requires computation of the real dynamics, i.e. of M and F
-  }
 }
 
 
 uint MotionProblem::dim_phi(const ors::KinematicWorld &G, uint t) {
   uint m=0;
-  for(TaskCost *c: taskCosts) {
+  for(Task *c: taskCosts) {
     m += c->dim_phi(G, t); //counts also constraints
   }
   return m;
@@ -203,65 +191,20 @@ uint MotionProblem::dim_phi(const ors::KinematicWorld &G, uint t) {
 
 uint MotionProblem::dim_g(const ors::KinematicWorld &G, uint t) {
   uint m=0;
-  for(TaskCost *c: taskCosts) {
-    if(c->active && c->map.constraint)  m += c->map.dim_phi(G);
+  for(Task *c: taskCosts) {
+    if(c->active && c->map.type==ineqTT)  m += c->map.dim_phi(G);
   }
   return m;
 }
 
-
-//bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
-//  phi.clear();
-//  bool feasible = true;
-//  if(&J_x) J_x.clear();
-//  if(&J_v) J_v.clear();
-//  arr y,J;
-//  //-- append task costs
-//  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
-//    if(!c->map.constraint) {
-//      c->map.phi(y, J, world);
-//      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
-//      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
-//      CHECK(c->map.order==0 || c->map.order==1,"");
-//      if(c->map.order==0) { //pose costs
-//        phi.append(sqrt(c->prec(t))*(y - c->target[t]));
-//        if(&J_x) J_x.append(sqrt(c->prec(t))*J);
-//        if(&J_v) J_v.append(0.*J);
-//      }
-//      if(c->map.order==1) { //velocity costs
-//        phi.append(sqrt(c->prec(t))*(J*world.qdot - c->target[t]));
-//        if(&J_x) J_x.append(0.*J);
-//        if(&J_v) J_v.append(sqrt(c->prec(t))*J);
-//      }
-//    }
-//    if(phi.N && phi.last() > c->threshold) feasible = false; //TOTAL hack: last(). Please use constraints, or a separate routine
-//  }
-//  //-- append constraints
-//  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
-//    if(c->map.constraint) {
-//      c->map.phi(y, J, world);
-//      phi.append(y);
-//      if(phi.last() > c->threshold) feasible = false;
-//      if(&J_x) J_x.append(J);
-//      if(&J_v) J_v.append(0.*J);
-//    }
-//  }
-//  if(&J_x) J_x.reshape(phi.N, world.q.N);
-//  if(&J_v) J_v.reshape(phi.N, world.q.N);
-
-//  CHECK(phi.N == dim_phi(world, t),"");
-
-//  return feasible;
-//}
-
-bool MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
+bool MotionProblem::getPhi(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
   phi.clear();
   if(&J) J.clear();
   arr y, Jy;
   bool constraintsHold=true;
   //-- append task costs
-  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
-    if(!c->map.constraint) {
+  for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
+    if(c->map.type==sumOfSqrTT) {
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
       if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       if(c->target.N==1) y -= c->target(0);
@@ -272,8 +215,8 @@ bool MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
     }
   }
   //-- append constraints
-  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
-    if(c->map.constraint) {
+  for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
+    if(c->map.type==ineqTT) {
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
       phi.append(y);
       if(&J) J.append(Jy);
@@ -286,13 +229,35 @@ bool MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
   return constraintsHold;
 }
 
-uint MotionProblem::dim_psi() {
-  if(transitionType==none) return 0;
-  return x0.N;
+StringA MotionProblem::getPhiNames(const ors::KinematicWorld& G, uint t){
+  StringA names(dim_phi(G, t));
+  uint m=0;
+  for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
+    if(c->map.type==sumOfSqrTT) {
+      uint d = c->dim_phi(G, t); //counts also constraints
+      for(uint i=0;i<d;i++){
+        names(m+i)=c->name;
+        names(m+i) <<"_f" <<i;
+      }
+      m+=d;
+    }
+  }
+  for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
+    if(c->map.type==ineqTT) {
+      uint d = c->dim_phi(G, t); //counts also constraints
+      for(uint i=0;i<d;i++){
+        names(m+i)=c->name;
+        names(m+i) <<"_g" <<i;
+      }
+      m+=d;
+    }
+  }
+  CHECK(m == names.N,"");
+  return names;
 }
 
 void MotionProblem::activateAllTaskCosts(bool active) {
-  for(TaskCost *c: taskCosts) c->active=active;
+  for(Task *c: taskCosts) c->active=active;
 }
 
 void MotionProblem::costReport(bool gnuplt) {
@@ -300,7 +265,6 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<"Size of cost matrix:" <<phiMatrix.getDim() <<endl;
   uint T=phiMatrix.d0-1;
 
-  if(dim_psi()) HALT("using psi is deprecated!");
   arr plotData(T+1,taskCosts.N); plotData.setZero();
 
   //-- collect all task costs and constraints
@@ -308,16 +272,16 @@ void MotionProblem::costReport(bool gnuplt) {
   arr taskC(taskCosts.N); taskC.setZero();
   arr taskG(taskCosts.N); taskG.setZero();
   for(uint t=0; t<=T; t++){
-    uint m=dim_psi();
+    uint m=0;
     for(uint i=0; i<taskCosts.N; i++) {
-      TaskCost *c = taskCosts(i);
+      Task *c = taskCosts(i);
       uint d=c->dim_phi(world, t);
-      if(d && !c->map.constraint){
+      if(d && c->map.type==sumOfSqrTT){
         taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
         plotData(t,i) = a;
         m += d;
       }
-      if(d && c->map.constraint){
+      if(d && c->map.type==ineqTT){
         double gpos=0.;
         for(uint j=0;j<d;j++){
           double g=phiMatrix(t)(m+j);
@@ -334,8 +298,8 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<" * task costs:" <<endl;
   double totalC=0., totalG=0.;
   for(uint i=0; i<taskCosts.N; i++) {
-    TaskCost *c = taskCosts(i);
-    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" con=" <<c->map.constraint;
+    Task *c = taskCosts(i);
+    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" type=" <<c->map.type;
     cout <<" \tcosts=" <<taskC(i) <<" \tconstraints=" <<taskG(i) <<endl;
     totalC += taskC(i);
     totalG += taskG(i);
@@ -352,7 +316,7 @@ void MotionProblem::costReport(bool gnuplt) {
     fil <<c->name <<'[' <<d <<"] ";
   }
   for(auto c:taskCosts){
-    if(c->map.constraint && dualMatrix.N){
+    if(c->map.type==ineqTT && dualMatrix.N){
       fil <<c->name <<"_dual";
     }
   }
@@ -455,6 +419,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
   MP.phiMatrix(t) = phi;
 }
+
 #else
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
@@ -465,7 +430,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   CHECK(x_bar.d1==n,"");
   CHECK(t<=T,"");
 
-  //-- manage configurations
+  //-- manage configurations and set x_bar states
   if(configurations.N!=k+1 || (MP.world.operators.N && t==0)){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
@@ -502,37 +467,9 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
     }
   }
 
-  //-- transition costs
-  if(MP.transitionType!=MotionProblem::none){
-    MT_MSG("deprecated: try to set transition costs as a task, not separately");
-    double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
-    arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
-    if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
-    if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
-    if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
-    phi = h % phi;
-
-    if(&J) {
-      J.resize(phi.N, k+1, n);
-      J.setZero();
-      for(uint i=0;i<n;i++){
-        if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
-        if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
-        if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
-      }
-      if(k==1) J/=tau;
-      if(k==2) J/=tau2;
-      if(k==3) J/=tau3;
-      J.reshape(phi.N, (k+1)*n);
-      for(uint i=0; i<n; i++) J[i]() *= h(i);
-    }
-
-    if(&J) CHECK(J.d0==phi.N,"");
-  }
-
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
-  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
   phi.append(_phi);
   if(&J) J.append(_J);
 //  if(&J_z){
@@ -550,26 +487,31 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
 }
 #endif
 
+StringA MotionProblemFunction::getPhiNames(uint t){
+  return MP.getPhiNames(*configurations.last(), t);
+}
+
 //===========================================================================
 
 void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   //-- transition costs
-  arr h = MP.H_rate_diag;
-  if(MP.transitionType==MotionProblem::kinematic){
-    h *= MP.tau/double(MP.T);
-    h=sqrt(h);
-  } else {
-    double D = MP.tau*MP.T;
-    h *= 16./D/D/D;
-    h=sqrt(h);
-  }
-  phi = h%(x-MP.x0);
-  if(&J) J.setDiag(h);
+  NIY;
+//  arr h = MP.H_rate_diag;
+//  if(MP.transitionType==MotionProblem::kinematic){
+//    h *= MP.tau/double(MP.T);
+//    h=sqrt(h);
+//  } else {
+//    double D = MP.tau*MP.T;
+//    h *= 16./D/D/D;
+//    h=sqrt(h);
+//  }
+//  phi = h%(x-MP.x0);
+//  if(&J) J.setDiag(h);
 
   //-- task costs
   arr _phi, J_x;
   MP.setState(x, zeros(x.N));
-  MP.getTaskCosts2(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
+  MP.getPhi(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
   phi.append(_phi);
   if(&J && _phi.N) {
     J.append(J_x);
@@ -578,7 +520,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   if(absMax(phi)>1e10){
     MT_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
     MP.setState(x, NoArr);
-    MP.getTaskCosts2(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
+    MP.getPhi(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
   }
 
   if(&J) CHECK(J.d0==phi.N,"");

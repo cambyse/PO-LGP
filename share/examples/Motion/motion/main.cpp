@@ -18,7 +18,7 @@ void TEST(PR2reach){
   MotionProblem MP(G);
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
 
   c = MP.addTask("transitions", new TransitionTaskMap(G));
   c->map.order=2; //make this an acceleration task!
@@ -73,7 +73,7 @@ void TEST(Basics){
   MP.loadTransitionParameters();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 

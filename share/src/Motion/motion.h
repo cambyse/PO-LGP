@@ -35,14 +35,13 @@
 //
 
 struct TaskMap {
-  bool constraint;  ///< TODO: make element of {cost_feature, inequality, equality} MAYBE: move this to TaskCost?    whether this is a hard constraint (implementing a constraint function g)
+  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to TaskCost?
   uint order;       ///< 0=position, 1=vel, etc
-  //Actually, the right way would be to give phi a list of $k+1$ graphs -- and retrieve the velocities/accs from that...
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0; ///< this needs to be overloaded
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau); ///< if not overloaded this computes the generic pos/vel/acc depending on order
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
-  TaskMap():constraint(false),order(0) {}
+  TaskMap():type(sumOfSqrTT),order(0) {}
   virtual ~TaskMap() {};
 };
 
@@ -53,18 +52,17 @@ struct TaskMap {
 /// optionally rescaled using 'target' and 'prec'
 //
 
-struct TaskCost { //TODO: Rename as Task (meaning 'cost_feature, ineq or eq', 
+struct Task {
   TaskMap& map;
   MT::String name;
   bool active;
-  arr target, prec;  ///< target & precision over a whole trajectory
-  double threshold;  ///< threshold for feasibility checks (e.g. in RRTs) TODO: remove
+  arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
+
   uint dim_phi(const ors::KinematicWorld& G, uint t){
     if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
-  TaskCost(TaskMap* m):map(*m), active(true){}
+  Task(TaskMap* m):map(*m), active(true){}
 
-  enum TaskCostInterpolationType { atTimeOnly, tillTime, fromTime };
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
@@ -78,7 +76,7 @@ struct TaskCost { //TODO: Rename as Task (meaning 'cost_feature, ineq or eq',
 //
 
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
-struct MotionProblem { //TODO: rename MotionPlanningProblem
+struct MotionProblem {
   //engines to compute things
   ors::KinematicWorld& world;
   bool useSwift;
@@ -86,13 +84,10 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //******* the following three sections are parameters that define the problem
 
   //-- task cost descriptions
-  MT::Array<TaskCost*> taskCosts;
+  MT::Array<Task*> taskCosts;
   bool makeContactsAttractive;
   
-  //-- transition cost descriptions //TODO: remove! should become a task map just like any other
-  enum TransitionType { none=-1, kinematic=0, pseudoDynamic=1, realDynamic=2 };
-  TransitionType transitionType;
-  arr H_rate_diag; ///< cost rate
+  //-- trajectory length and tau
   uint T; ///< number of time steps
   double tau; ///< duration of single step
   
@@ -113,27 +108,26 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   
   MotionProblem& operator=(const MotionProblem& other);
 
-  void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
-
   //-- setting costs in a task space
-  TaskCost* addTask(const char* name, TaskMap *map);
+  Task* addTask(const char* name, TaskMap *map);
+  //TODO: the following are deprecated; use Task::setCostSpecs instead
   enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
-  void setInterpolatingCosts(TaskCost *c,
+  void setInterpolatingCosts(Task *c,
                              TaskCostInterpolationType inType,
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
+  bool getPhi(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   uint dim_phi(const ors::KinematicWorld& G, uint t);
   uint dim_g(const ors::KinematicWorld& G, uint t);
-  uint dim_psi();
-//  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  bool getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
+  StringA getPhiNames(const ors::KinematicWorld& G, uint t);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 
   //-- helpers
+  arr getH_rate_diag();
   arr getInitialization();
 };
 
@@ -156,8 +150,9 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint get_k() { return 2; }
   virtual uint dim_x() { return MP.x0.N; }
   virtual uint dim_z() { return MP.z0.N; }
-  virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
+  virtual StringA getPhiNames(uint t);
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();
 };

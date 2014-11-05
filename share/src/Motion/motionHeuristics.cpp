@@ -106,7 +106,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   //xtarget(2) += .02; //grasp it 2cm above center
   
   //-- graspCenter -> predefined point (xtarget)
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("graspCenter",
                    new DefaultTaskMap(posTMT, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
@@ -230,7 +230,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   target = ARRAY(target_shape->X.pos);
 
   //-- graspCenter -> predefined point (xtarget)
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("graspCenter",
                     new DefaultTaskMap(posTMT, MP.world, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,

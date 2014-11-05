@@ -117,7 +117,7 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
   : MotionProblem(_world, useSwift), qitselfPD(NULL) {
-  loadTransitionParameters();
+  H_rate_diag = getH_rate_diag();
   qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,10.);
   qitselfPD.prec=1.;
