@@ -111,6 +111,130 @@ ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f) {
   };
 }
 
+void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr& phi, arr& J, TermTypeA& tt, StringA& termNames, const arr& _x) {
+  //probing dimensionality
+  uint T=f.get_T();
+  uint k=f.get_k();
+  uint n=f.dim_x();
+  uint dim_z=f.dim_z();
+  arr x_pre=f.get_prefix();
+  arr x_post=f.get_postfix();
+  arr x,z;
+  if(dim_z){ //split _x into (x,z)
+    x.referTo(_x);
+    x.reshape((T+1-x_post.d0)*n + dim_z);
+    z.referToSubRange(x, -(int)dim_z, -1);
+    x.referToSubRange(_x, 0, -(int)dim_z-1);
+    x.reshape(T+1-x_post.d0, n);
+  }else{ //there is no z -> x = _x
+    x.referTo(_x);
+    x.reshape(T+1-x_post.d0, n);
+  }
+  uint dim_phi=0;
+  for(uint t=0; t<=T; t++) dim_phi+=f.dim_phi(t);
+  CHECK(x.nd==2 && x.d1==n && x.d0==T+1-x_post.d0,"");
+  CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
+
+  //resizing things:
+  phi.resize(dim_phi).setZero();
+  RowShiftedPackedMatrix *Jaux, *Jzaux;
+  arr *Jz;
+  if(&J){
+    Jaux = auxRowShifted(J, dim_phi, (k+1)*n, _x.N);
+    J.setZero();
+    if(dim_z){
+      Jz = new arr(dim_phi, dim_z);
+      Jzaux = auxRowShifted(*Jz, dim_phi, dim_z, _x.N);
+      Jz->setZero();
+      Jaux->nextInSum = Jz; //this is crucial: the returned J contains a quite hidden link to Jz
+    }
+  }
+  tt.resize(dim_phi).setZero();
+
+  //loop over time t
+  uint M=0;
+  for(uint t=0; t<=T; t++) {
+    uint dimphi_t = f.dim_phi(t);
+    uint dimg_t   = f.dim_g(t);
+    uint dimh_t   = f.dim_h(t);
+    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
+    if(!dimphi_t) continue;
+
+    //construct x_bar
+    arr x_bar;
+    if(t>=k) {
+      if(t>=x.d0) { //x_bar includes the postfix
+        x_bar.resize(k+1,n);
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
+      } else{
+        if(!dim_z) x_bar.referToSubRange(x, t-k, t);
+        else x_bar = x.sub(t-k, t, 0, -1); //need to copy as we will augment
+      }
+    } else { //x_bar includes the prefix
+      x_bar.resize(k+1,n);
+      for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
+    }
+    if(dim_z){ //append the constant variable to x_bar
+      x_bar.insColumns(x_bar.d1, dim_z);
+      for(uint i=0;i<=k;i++) x_bar[i].subRange(-dim_z, -1)=z;
+    }
+
+    //query
+    arr phi_t, J_t, Jz_t;
+    f.phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
+    CHECK(phi_t.N==dimphi_t,"");
+    phi.setVectorBlock(phi_t, M);
+
+    //set term types
+    tt.subRange(M,               M+dimf_t-1)               = sumOfSqrTT;
+    tt.subRange(M+dimf_t,        M+dimf_t+dimg_t-1)        = ineqTT;
+    tt.subRange(M+dimf_t+dimg_t, M+dimf_t+dimg_t+dimh_t-1) = eqTT;
+
+    //if the jacobian is returned
+    if(&J) {
+      if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
+      //in case of a z: decompose J_t -> (J_t_xbar, Jz_t) //TODO: inefficient
+      if(dim_z){
+        Jz_t.resize(J_t.d0, dim_z).setZero();
+        J_t.reshape(J_t.d0, (k+1)*(n+dim_z));
+        for(uint i=0;i<=k;i++){
+          J_t.setMatrixBlock(J_t.sub(0, -1, i*(n+dim_z), i*(n+dim_z)+n-1), 0, i*n);
+          Jz_t += J_t.sub(0, -1, i*(n+dim_z)+n, i*(n+dim_z)+n+dim_z-1); //we add up the Jacobians
+        }
+        J_t.delColumns((k+1)*n, (k+1)*dim_z);
+      }
+      //insert J_t into the large J at index M
+      CHECK(J_t.d0==dimphi_t && J_t.d1==(k+1)*n,"");
+      if(t>=k) {
+        J.setMatrixBlock(J_t, M, 0);
+        for(uint i=0; i<dimphi_t; i++) Jaux->rowShift(M+i) = (t-k)*n;
+      } else { //cut away the Jacobian w.r.t. the prefix
+        J_t.delColumns(0,(k-t)*n);
+        J.setMatrixBlock(J_t, M, 0);
+        for(uint i=0; i<dimphi_t; i++) Jaux->rowShift(M+i) = 0;
+      }
+      //insert Jz_t into the large Jz at index M
+      if(dim_z){
+        CHECK(!Jz_t.N || (Jz_t.d0==dimphi_t && Jz_t.d1==dim_z),"");
+        Jz->setMatrixBlock(Jz_t, M, 0);
+        for(uint i=0; i<dimphi_t; i++) Jzaux->rowShift(M+i) = x.N;
+      }
+    }
+
+    //if the termNames is returned
+    if(&termNames) {
+    }
+
+    M += dimphi_t;
+  }
+
+  CHECK(M==dim_phi,"");
+  if(&J){
+    Jaux->computeColPatches(true);
+    if(dim_z) Jzaux->computeColPatches(false);
+  }
+}
+
 void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi, arr& J, const arr& _x) {
 #if 0 //non-packed Jacobian
   //probing dimensionality

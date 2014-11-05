@@ -147,6 +147,40 @@ void circle(){
   S.watch();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void circle2(){
+  Simulator S("man.ors");
+  arr q,q_home,y_target,y,J,W,Phi,PhiJ;
+  uint n = S.getJointDimension();
+  S.getJointAngles(q);
+  W.setDiag(1.,n); //we define W as identity matrix
+
+  q_home = q;
+  for(uint i=0;i<10000;i++){
+    Phi.clear();
+    PhiJ.clear();
+
+    //1st task: track with right hand
+    y_target = ARR(-0.2, -0.4, 1.1);
+    y_target += .2 * ARR(cos((double)i/20), 0, sin((double)i/20));
+    S.kinematicsPos(y,"handR");
+    S.jacobianPos (J,"handR");
+    Phi .append( 1e2 * (y - y_target) ); //rho = 1e4 (cp. slide 02:45)
+    PhiJ.append( 1e2 * J );
+
+    //add the "stay close to home" task here
+
+    //add another task for the left hand here, if you like
+
+    //compute joint updates
+    q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi; //(cp. slide 02:46)
+    S.setJointAngles(q);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void multiTask(){
   Simulator S("man.ors");
   arr q,y_target,y,J,W,Phi,PhiJ;
@@ -197,7 +231,7 @@ int main(int argc,char **argv){
   case 1:  openingSimulator();  break;
   case 2:  reach_problem();  break;
   case 3:  reach_sol();  break;
-  case 4:  circle();  break;
+  case 4:  circle2();  break;
   case 5:  multiTask();  break;
   }
 
