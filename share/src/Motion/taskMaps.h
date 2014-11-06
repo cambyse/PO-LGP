@@ -167,7 +167,7 @@ struct ConstraintStickiness:public TaskMap {
   TaskMap& map;
   ConstraintStickiness(TaskMap& _map)
     : map(_map) {
-    type=eqTT;
+    type=sumOfSqrTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);

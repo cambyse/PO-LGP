@@ -281,14 +281,19 @@ void MotionProblem::costReport(bool gnuplt) {
         plotData(t,i) = a;
         m += d;
       }
+    }
+    for(uint i=0; i<taskCosts.N; i++) {
+      Task *c = taskCosts(i);
+      uint d=c->dim_phi(world, t);
       if(d && c->map.type==ineqTT){
-        double gpos=0.;
+        double gpos=0.,gall=0.;
         for(uint j=0;j<d;j++){
           double g=phiMatrix(t)(m+j);
           if(g>0.) gpos+=g;
+          gall += g;
         }
         taskG(i) += gpos;
-        plotData(t,i) = gpos;
+        plotData(t,i) = gall;
         m += d;
       }
     }

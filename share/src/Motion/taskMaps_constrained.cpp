@@ -67,6 +67,6 @@ void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 
 void ConstraintStickiness::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   map.phi(y, J, G);
-  for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
+  for(uint j=0;j<y.N;j++) y(j) = -y(j);
   if(&J) for(uint j=0;j<J.d0;j++) J[j]() *= -1.;
 }

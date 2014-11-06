@@ -46,7 +46,7 @@ int main(int argc,char** argv){
     MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
 
     Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(c->map));
-    sticky->setCostSpecs(0, MP.T, {0.}, 1.);
+    sticky->setCostSpecs(0, MP.T, {0.}, 1.e1);
   }else{
     c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
     MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
@@ -59,32 +59,11 @@ int main(int argc,char** argv){
   x.setZero();
 
   Convert CP(MF);
-#if 1
-  optConstrained(x, MP.dualMatrix, CP);
-  MP.costReport();
-  for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
-#else
-  UnconstrainedProblem UCP(CP);
-  UCP.mu = 1.;
-
-  if(con){
-    for(uint k=0;k<20;k++){
-//      checkAll(CP, x, 1e-4);
-      optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
-      P.costReport();
-      displayTrajectory(x, 1, G, "planned trajectory");
-//      saveTrajectory(x, G, gl);
-//      UCP.mu *= 10;
-      UCP.aulaUpdate(.9);
-    }
-  }else{
-    for(uint k=0;k<10;k++){
-      optNewton(x, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
-      P.costReport();
-      displayTrajectory(x, 1, G, "planned trajectory");
-    }
+  for(uint k=0;k<1;k++){
+    optConstrained(x, MP.dualMatrix, CP);
+    MP.costReport();
+    for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
   }
-#endif
 
   return 0;
 }
