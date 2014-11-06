@@ -182,7 +182,7 @@ void gaussConvolution(arr& out, const arr& in, uint width, double eps){
 }
 
 void mrf_BP(BP_data& msg, void (*conv)(arr&, const arr&), uint iter, byteA *max){
-  CHECK(msg.phi.nd==3, "");
+  CHECK_EQ(msg.phi.nd,3, "");
   uint Y=msg.phi.d0, X=msg.phi.d1, K=msg.phi.d2;
   msg.phi.reshape(Y*X, K);
   
@@ -282,7 +282,7 @@ void byte2float(floatA& f, const byteA& b){
 void rgb2hsv(floatA& hsv, floatA& rgb){
   uint W=0, H=0, N=0;
   if(rgb.nd==3){ H=rgb.d0; W=rgb.d1; N=W*H; rgb.reshape(N, 3); } else N=rgb.d0;
-  CHECK(rgb.d1==3, "");
+  CHECK_EQ(rgb.d1,3, "");
   uint i;
   float r, g, b, h, s, v, min;
   hsv.resizeAs(rgb);
@@ -631,7 +631,7 @@ void compute_basics(){
 //
 
 void symmetricConvolution(floatA& output, const floatA& input, const floatA& wi, const floatA& wj){
-  CHECK(input.nd==2, "");
+  CHECK_EQ(input.nd,2, "");
   int I=input.d0, J=input.d1;
   int DI=(wi.N-1)/2, DJ=(wj.N-1)/2;
   int x, di, dj, X=I*J;

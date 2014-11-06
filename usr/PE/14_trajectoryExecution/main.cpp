@@ -112,7 +112,7 @@ void executeTrajectory(String scene, ControlType cType){
   arr goal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);

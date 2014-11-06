@@ -34,18 +34,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem
 
 
-  //TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
   //MODIFY the target location relatively to the height +0.12 = 0.1 + 0.02 (0.02 is table width).
   world.getBodyByName("target")->X.pos.z = height + 0.12;
 
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
 
 
   // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
     P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
 
     if(stickyness){

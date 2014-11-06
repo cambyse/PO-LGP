@@ -199,7 +199,7 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
 }
 
 void SwiftInterface::pushToSwift(const ors::KinematicWorld& world) {
-  CHECK(INDEXshape2swift.N==world.shapes.N,"the number of shapes has changed");
+  CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
   ors::Matrix rot;
   for_list(ors::Shape,  s,  world.shapes) {
     rot = s->X.rot.getMatrix();
@@ -304,7 +304,7 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
     double ab_radius = MT::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
     if(proxy->cenD>ab_radius) MT_MSG("shit");
   }
-  CHECK(k == (int)world.proxies.N, "");
+  CHECK_EQ(k , (int)world.proxies.N, "");
   
   //add pointClound stuff to list
   if(global_ANN) {

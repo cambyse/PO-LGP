@@ -449,7 +449,7 @@ void RuleSetContainer_ground::sanityCheck() const {
     action_ids.setAppend(rules.elem(i)->action->pred->id);
   }
   sort_desc(action_ids);  // descending
-  CHECK(action_ids(0) == DEFAULT_ACTION_PRED__ID, "");
+  CHECK_EQ(action_ids(0) , DEFAULT_ACTION_PRED__ID, "");
   
   Substitution sub;
   FOR1D(action_ids, i) {
@@ -609,7 +609,7 @@ void RuleSetContainer_ground::sort() {
 //     }
 //     cout<<endl;
     
-    CHECK(rules.num() == ra_sorted.N, "Some strange rule-sorting mistake.");
+    CHECK_EQ(rules.num() , ra_sorted.N, "Some strange rule-sorting mistake.");
     RuleSet rules_sorted;
     uint i;
     FOR1D(ra_sorted, i) {
@@ -693,7 +693,7 @@ double CostFunction_ground::loglikelihood(const arr& probs) {
 double CostFunction_ground::calc(const arr& in) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"CostFunction_ground::calc [START]"<<endl;
-  CHECK(in.N == cf_coverage_outcome_example_ground.d0, "invalid number of arguments")
+  CHECK_EQ(in.N , cf_coverage_outcome_example_ground.d0, "invalid number of arguments")
   uint i;
   // calc log-likelihood
   double loglik = loglikelihood(in);
@@ -716,7 +716,7 @@ double CostFunction_ground::calc(const arr& in) {
 void CostFunction_ground::calc_grad(arr& out, const arr& in) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calc_grad [START]"<<endl;
-  CHECK(in.N == cf_coverage_outcome_example_ground.d0, "invalid number of arguments")
+  CHECK_EQ(in.N , cf_coverage_outcome_example_ground.d0, "invalid number of arguments")
   out.resize(in.N);
   double sumIn = sum(in);
   double loglik_grad, const1_grad, const2_grad, denom_sum;
@@ -852,7 +852,7 @@ void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& poten
 
 
 void SearchOperator_ground::calcSubsumption(boolA& subsumes, const boolA& coverage) {
-  CHECK(coverage.nd == 2, "invalid coverage matrix")
+  CHECK_EQ(coverage.nd , 2, "invalid coverage matrix")
   subsumes.resize(coverage.d0, coverage.d0);
   subsumes.setUni(false);
   uint i, j, k;
@@ -1048,7 +1048,7 @@ void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& c
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
   
-  CHECK(covered_experiences_ids.N == coveredExamples.N, "");
+  CHECK_EQ(covered_experiences_ids.N , coveredExamples.N, "");
   CHECK(coveredExamples.N>0, "No examples, bro!");
     
   // calc changes first per example

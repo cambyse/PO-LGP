@@ -86,7 +86,7 @@ void PDtask::reportState(ostream& os){
 //===========================================================================
 
 void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& lambda_desired){
-  CHECK(_g.N==1, "can handle only 1D constraints so far");
+  CHECK_EQ(_g.N,1, "can handle only 1D constraints so far");
   double g=_g(0);
   CHECK(lambda_desired>=0., "lambda must be positive or zero");
 
@@ -182,7 +182,7 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
   for(ConstraintForceTask* t: forceTasks){
     if(t->active) {
       t->map.phi(y, J_y, world);
-      CHECK(y.N==1," can only handle 1D constraints for now");
+      CHECK_EQ(y.N,1," can only handle 1D constraints for now");
       Jl += ~J_y * t->desiredForce;
     }
   }

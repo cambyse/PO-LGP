@@ -75,7 +75,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,

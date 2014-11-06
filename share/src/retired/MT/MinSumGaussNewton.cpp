@@ -45,7 +45,7 @@ void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
   VERBOSE(2, cout <<"reapproximating potentials at node " <<i <<" at " <<x_i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
-    CHECK(Msgs(m, 1)==i, "");
+    CHECK_EQ(Msgs(m, 1),i, "");
     j=Msgs(m, 0);
     if(j==i){ //node potential
       Psi(psi, psiI, psiJ, i, j, x_i, x[j]);
@@ -102,7 +102,7 @@ void MinSumGaussNewton::updateMessage(uint m){
       for(k=0; k<del(j).N; k++){ //collect all messages k->j to j (excluding i->j)
         //recall: this includes also node potentials since we index them as j->j
         mm=del(j)(k);
-        CHECK(Msgs(mm, 1)==j, "");
+        CHECK_EQ(Msgs(mm, 1),j, "");
         if(Msgs(mm, 0)==i) continue; //(exclude i->j)
         VERBOSE(3, cout <<"    collecting message " <<mm <<":" <<Msgs(mm, 0) <<"->" <<j <<endl);
         Abar    += mu(mm).M;
@@ -147,7 +147,7 @@ void MinSumGaussNewton::updateMessagesToNode(uint i){
   VERBOSE(2, cout <<"updating all messages to node " <<i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
-    CHECK(Msgs(m, 1)==i, "");
+    CHECK_EQ(Msgs(m, 1),i, "");
     updateMessage(m);
   }
 }
@@ -243,7 +243,7 @@ double MinSumGaussNewton::updateNode(uint i){
         fy += mu(m).hatm + (~y*mu(m).M*y -2.*~mu(m).m*y)(0);
       }
       VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<length(Delta) <<" \talpha=" <<alpha <<std::flush);
-      CHECK(fy==fy, "cost seems to be NAN: f(y)=" <<fy);
+      CHECK_EQ(fy,fy, "cost seems to be NAN: f(y)=" <<fy);
       if(fy <= fx) break;
       //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
       //decrease stepsize

@@ -129,7 +129,7 @@ void executeTrajectoryWholeBody(String scene){
   arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
   c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -367,7 +367,7 @@ void executeTrajectoryRightArm(String scene){
   arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);

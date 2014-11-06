@@ -68,13 +68,13 @@ void soc::SocSystem_Toy::getH  (arr& H){ H=s->H; }
 void soc::SocSystem_Toy::getQ  (arr& Q){ Q=s->Q; }
 
 void soc::SocSystem_Toy::setq(const arr& q, uint t){
-  CHECK(q.N==1, "");
+  CHECK_EQ(q.N,1, "");
   s->x=q(0);
   s->v=0.;
 }
 
 void soc::SocSystem_Toy::setx(const arr& x, uint t){
-  CHECK(x.N==2, "");
+  CHECK_EQ(x.N,2, "");
   s->x=x(0);
   s->v=x(1);
 }
@@ -105,24 +105,24 @@ void soc::SocSystem_Toy::getMinvF(arr& Minv, arr& F){
 }
 
 bool soc::SocSystem_Toy::isConditioned(uint i, uint t){
-  CHECK(i==0, "");
+  CHECK_EQ(i,0, "");
   return true;
 }
 
 void soc::SocSystem_Toy::getPhi(arr& phiq_i, uint i){
-  CHECK(i==0, "");
+  CHECK_EQ(i,0, "");
   phiq_i.resize(1);
   phiq_i(0)=s->x;
 }
 
 void soc::SocSystem_Toy::getJqd(arr& jqd_i, uint i){
-  CHECK(i==0, "");
+  CHECK_EQ(i,0, "");
   jqd_i.resize(1);
   jqd_i(0)=s->v;
 }
 
 void soc::SocSystem_Toy::getJJt(arr& J_i, arr& tJ_i, uint i){
-  CHECK(i==0, "");
+  CHECK_EQ(i,0, "");
   J_i .resize(1, 1); J_i (0, 0)=1.;
   tJ_i.resize(1, 1); tJ_i(0, 0)=1.;
 }

@@ -504,7 +504,7 @@ Reach::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
-  CHECK(reachPoint.N==3, "");
+  CHECK_EQ(reachPoint.N,3, "");
   TV_eff->active = true;
   TV_eff->y_prec=0.;  TV_eff->v_prec=1e-1;
   TV_eff->v_target=reachPoint - TV_eff->y;

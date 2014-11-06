@@ -274,7 +274,7 @@ double AICO_clean::stepClean(){
   //get state info for t=0
   arr q0;
   sys->get_x0(q0);
-  if(sys->dynamic){  CHECK(q0.N==2*sys->qDim(), "");  }else{  CHECK(q0.N==sys->qDim(), "");  }
+  if(sys->dynamic){  CHECK_EQ(q0.N,2*sys->qDim(), "");  }else{  CHECK_EQ(q0.N,sys->qDim(), "");  }
   
   s[0]=q0;      Sinv[0].setDiag(1e10);
   b[0]=q0;      Binv[0].setDiag(1e10);
@@ -410,9 +410,9 @@ double AICO_clean::stepDynamic(){
   arr q0;
   sys->get_x0(q0);
   if(sys->dynamic){
-    CHECK(q0.N==2*sys->qDim(), "");
+    CHECK_EQ(q0.N,2*sys->qDim(), "");
   }else{
-    CHECK(q0.N==sys->qDim(), "");
+    CHECK_EQ(q0.N,sys->qDim(), "");
   }
   s[0]=q0;      Sinv[0].setDiag(1e10);
   b[0]=q0;      Binv[0].setDiag(1e10);

@@ -96,7 +96,7 @@ void testPickAndPlace(){
   listDelete(MP.taskCosts);
   MP.x0 = x[MP.T-1];
 
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 

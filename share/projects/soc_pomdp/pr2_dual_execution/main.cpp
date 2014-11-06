@@ -44,19 +44,19 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   world.getBodyByName("target")->X.pos.z = height + 0.1;
 
 
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
 
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height)));
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e4);
 
-  TaskCost *collision = P.addTask("collisionConstraint", new CollisionConstraint());
+  Task *collision = P.addTask("collisionConstraint", new CollisionConstraint());
   P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1e3);
 
 
 
-  TaskCost *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+  Task *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
   sticky->setCostSpecs(0, P.T, {0.}, 1.);
 
   P.makeContactsAttractive = true;

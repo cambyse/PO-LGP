@@ -70,7 +70,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   }
   
   //set the time horizon
-  CHECK(T==sys.get_T(), "");
+  CHECK_EQ(T,sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars(), false);
@@ -130,7 +130,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   ors::Shape *obj  = sys.getOrs().getShapeByName(objShape);
   ors::Shape *from = sys.getOrs().getShapeByName(belowFromShape);
   ors::Shape *onto = sys.getOrs().getShapeByName(belowToShape);
-  CHECK(obj->body==sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
+  CHECK_EQ(obj->body,sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   onto->cont=false;
   from->cont=false;

@@ -18,7 +18,7 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
 
   //-- create tasks for optimization problem
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
 

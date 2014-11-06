@@ -1232,7 +1232,7 @@ void learn::calcCoverage(StateTransitionL& covered_experiences, uintA& covered_e
 
 
 void learn_outcomes__calcSubsumption(boolA& subsumes, const boolA& coverage) {
-  CHECK(coverage.nd == 2, "invalid coverage matrix")
+  CHECK_EQ(coverage.nd , 2, "invalid coverage matrix")
   subsumes.resize(coverage.d0, coverage.d0);
   subsumes.setUni(false);
   uint i, j, k;
@@ -1364,7 +1364,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
   
-  CHECK(covered_experiences_ids.N == coveredExperiences.N, "");
+  CHECK_EQ(covered_experiences_ids.N , coveredExperiences.N, "");
   CHECK(coveredExperiences.N>0, "No experiences, bro!");
     
   // calc changes first per experience
@@ -1400,7 +1400,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
         subs.elem(s)->write(cout); cout << endl;
       }
     }
-    CHECK(subs.num()==1, "Cannot be deictic variant! (Should've been taken care for somewhere else.)")
+    CHECK_EQ(subs.num(),1, "Cannot be deictic variant! (Should've been taken care for somewhere else.)")
 
     LitL nextOutcome;
     // just take first subs --> DEICTIC
@@ -1774,7 +1774,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
     sorted__coveredExperiences_per_outcome(current_i) = coveredExperiences_per_outcome(sorted_indices(i));
     current_i++;
   }
-  CHECK(current_i == r->outcomes.N-1, "");
+  CHECK_EQ(current_i , r->outcomes.N-1, "");
   sorted__probs.last() = r->probs.last();   // noise outcome
   sorted__coveredExperiences_per_outcome.last() = coveredExperiences_per_outcome.last();   // noise outcome
   r->outcomes = sorted__outcomes;
@@ -2040,7 +2040,7 @@ double learn::CostFunction::loglikelihood(const arr& probs) {
 double learn::CostFunction::calc(const arr& in) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"CostFunction::calc [START]"<<endl;
-  CHECK(in.N == __cf_coverage_outcome_experience.d0, "invalid number of arguments")
+  CHECK_EQ(in.N , __cf_coverage_outcome_experience.d0, "invalid number of arguments")
   uint i;
   // calc log-likelihood
   double loglik = loglikelihood(in);
@@ -2063,7 +2063,7 @@ double learn::CostFunction::calc(const arr& in) {
 void learn::CostFunction::calc_grad(arr& out, const arr& in) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calc_grad [START]"<<endl;
-  CHECK(in.N == __cf_coverage_outcome_experience.d0, "invalid number of arguments")
+  CHECK_EQ(in.N , __cf_coverage_outcome_experience.d0, "invalid number of arguments")
   out.resize(in.N);
   double sumIn = sum(in);
   double loglik_grad, const1_grad, const2_grad, denom_sum;

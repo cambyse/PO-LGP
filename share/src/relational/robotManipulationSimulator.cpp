@@ -633,7 +633,7 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
   FOR1D(objs, i) {
     arr orientation;
     getOrientation(orientation, objs(i));
-    CHECK(orientation.N == 2, "too many angles");
+    CHECK_EQ(orientation.N , 2, "too many angles");
     FOR1D(orientation, k) {
       angles(i, k) = orientation(k);
       if(angles(i, k) < 0.00001)
@@ -880,7 +880,7 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
 
 
 bool RobotManipulationSimulator::isClosed(uint box_id) {
-  CHECK(bodies(box_id)->shapes.N == 6, "isn't a box");
+  CHECK_EQ(bodies(box_id)->shapes.N , 6, "isn't a box");
   if(TL::isZero(bodies(box_id)->shapes.last()->rel.pos.x)  &&  TL::isZero(bodies(box_id)->shapes.last()->rel.pos.y)
       &&  bodies(box_id)->shapes.last()->rel.pos.x < 0.1)
     return true;
@@ -1447,7 +1447,7 @@ void RobotManipulationSimulator::dropObjectAbove(uint obj_below, const char* mes
 void RobotManipulationSimulator::dropObject(uint manipulator_id) {
   if(bodies(manipulator_id)->outLinks.N == 0)
     return;
-  CHECK(bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
+  CHECK_EQ(bodies(manipulator_id)->outLinks.N , 1, "too many objects in hand");
   delete bodies(manipulator_id)->outLinks(0);
   //del_edge(bodies(manipulator_id)->outLinks(0), bodies, joints, true);
 }

@@ -17,7 +17,7 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
-    TaskCost *c;
+    Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
     MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());

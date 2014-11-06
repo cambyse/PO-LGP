@@ -8,7 +8,7 @@ struct InnerCostFunction{
   virtual void setParam(const arr &param,const ors::KinematicWorld &world,uint T) = 0;
   virtual ~InnerCostFunction(){}
   uint numParam;
-  MT::Array<TaskCost*> taskCosts;
+  MT::Array<Task*> taskCosts;
 };
 
 struct SimpleICF:InnerCostFunction{

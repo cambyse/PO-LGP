@@ -147,15 +147,15 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   stickyWeight=1.;
 
   //-- setup the motion problem
-  TaskCost *pos = P.addTask("position",
+  Task *pos = P.addTask("position",
                             new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
+  Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
   P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
 
   //-- convert

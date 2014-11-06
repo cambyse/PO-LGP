@@ -35,7 +35,7 @@
 //
 
 struct TaskMap {
-  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to TaskCost?
+  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
   uint order;       ///< 0=position, 1=vel, etc
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0; ///< this needs to be overloaded
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau); ///< if not overloaded this computes the generic pos/vel/acc depending on order
@@ -85,7 +85,6 @@ struct MotionProblem {
 
   //-- task cost descriptions
   MT::Array<Task*> taskCosts;
-  bool makeContactsAttractive;
   
   //-- trajectory length and tau
   uint T; ///< number of time steps

@@ -57,7 +57,7 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) { MT::useLapack=false; in
 void blas_Mv(arr& y, const arr& A, const arr& x) {       MT::useLapack=false; innerProduct(y, A, x); MT::useLapack=true; };
 #else
 void blas_MM(arr& X, const arr& A, const arr& B) {
-  CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
+  CHECK_EQ(A.d1,B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   cblas_dgemm(CblasRowMajor,
               CblasNoTrans, CblasNoTrans,
@@ -101,7 +101,7 @@ void blas_At_A(arr& X, const arr& A) {
 }
 
 void blas_Mv(arr& y, const arr& A, const arr& x) {
-  CHECK(A.d1==x.N, "matrix multiplication: wrong dimensions");
+  CHECK_EQ(A.d1,x.N, "matrix multiplication: wrong dimensions");
   y.resize(A.d0);
   if(!x.N && !A.d1) { y.setZero(); return; }
   cblas_dgemv(CblasRowMajor,
@@ -118,7 +118,7 @@ void blas_Mv(arr& y, const arr& A, const arr& x) {
 }
 
 void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
-  CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
+  CHECK_EQ(A.d1,B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   cblas_dsymm(CblasRowMajor,
               CblasLeft, CblasUpper,
@@ -247,7 +247,7 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA) {
 
 /// A=C^T C (C is upper triangular!)
 void lapack_cholesky(arr& C, const arr& A) {
-  CHECK(A.d0==A.d1, "");
+  CHECK_EQ(A.d0,A.d1, "");
   integer n=A.d0;
   integer info;
   C=A;
@@ -268,10 +268,10 @@ const char *potrf_ERR="\n\
 *                completed.\n";
 
 void lapack_mldivide(arr& X, const arr& A, const arr& b) {
-  CHECK(A.nd == 2, "A in Ax=b must be a NxM Matrix.");
-  CHECK(b.nd == 1, "b in Ax=b must be a Vector.");
+  CHECK_EQ(A.nd , 2, "A in Ax=b must be a NxM Matrix.");
+  CHECK_EQ(b.nd , 1, "b in Ax=b must be a Vector.");
   
-  CHECK(A.d1 == b.d0, "b and A must have the same amount of rows in Ax=b.");
+  CHECK_EQ(A.d1 , b.d0, "b and A must have the same amount of rows in Ax=b.");
   
   X = b;
   arr LU = A;
@@ -287,7 +287,7 @@ void lapack_mldivide(arr& X, const arr& A, const arr& b) {
 }
 
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A) {
-  CHECK(A.d0==A.d1, "");
+  CHECK_EQ(A.d0,A.d1, "");
   integer n=A.d0;
   integer info;
   Ainv=A;

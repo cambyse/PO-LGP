@@ -21,7 +21,7 @@ int main(int argc,char** argv){
   MP.loadTransitionParameters();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 

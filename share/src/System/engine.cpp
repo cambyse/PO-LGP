@@ -369,13 +369,13 @@ void Engine::open(System& S){
 
 //    //accesses have automatically been created as member of a module,
 //    //need to link them now
-//    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
+//    CHECK_EQ(m->mod->accesses.N,modIt->parentOf.N,"dammit");
 //    for(Item *accIt: modIt->parentOf){
 //      Access *a = m->mod->accesses(accIt_COUNT);
 //      //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
-//      //CHECK(acc->type == a->type,"");
+//      //CHECK_EQ(acc->type , a->type,"");
 //      Item *varIt = accIt->parents(1);
-//      CHECK(varIt->keys(0)=="Variable","");
+//      CHECK_EQ(varIt->keys(0),"Variable","");
 //      SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
 //      CHECK(v,"");
 //      cout <<"linking access " <<modIt->keys(1) <<"->" <<a->name

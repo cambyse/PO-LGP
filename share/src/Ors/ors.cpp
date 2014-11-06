@@ -235,8 +235,8 @@ void ors::Shape::parseAts() {
   MT::String str;
   MT::FileToken *fil;
   ats.getValue<Transformation>(rel, "rel");
-  if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.getValue<arr>(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.getValue<arr>(x, "color"))         { CHECK_EQ(x.N,3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.getValue<double>(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats.getValue<bool>("contact"))         { cont=true; }
   fil=ats.getValue<MT::FileToken>("mesh");  if(fil) { mesh.read(fil->getIs(), fil->name.getLastN(3).p); }
@@ -408,7 +408,7 @@ void ors::Joint::parseAts() {
   arr axis;
   ats.getValue<arr>(axis, "axis");
   if(axis.N) {
-    CHECK(axis.N==3,"");
+    CHECK_EQ(axis.N,3,"");
     Vector ax(axis);
     Transformation f;
     f.setZero();
@@ -420,12 +420,12 @@ void ors::Joint::parseAts() {
   arr ctrl_limits;
   ats.getValue<arr>(limits, "limits");
   if(limits.N){
-    CHECK(limits.N==2*qDim(), "parsed limits have wrong dimension");
+    CHECK_EQ(limits.N,2*qDim(), "parsed limits have wrong dimension");
   }
   ats.getValue<arr>(ctrl_limits, "ctrl_limits");
   if(ctrl_limits.N){
     if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
-    CHECK(limits.N==ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
+    CHECK_EQ(limits.N,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
     limits.append(ctrl_limits);
   }
   //coupled to another joint requires post-processing by the Graph::read!!
@@ -809,7 +809,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
   uint n=0;
   for(Joint *j: joints) if(j->agent==q_agent){
     if(j->mimic) continue; //don't count dependent joints
-    CHECK(j->qIndex==n,"joint indexing is inconsistent");
+    CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
     switch(j->type) {
       case JT_hingeX:
       case JT_hingeY:
@@ -906,7 +906,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
       default: NIY;
     }
   }
-  CHECK(n==N,"");
+  CHECK_EQ(n,N,"");
 }
 
 void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
@@ -915,7 +915,7 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
     if(j->mimic){
       j->Q=j->mimic->Q;
     }else{
-      CHECK(j->qIndex==n,"joint indexing is inconsistent");
+      CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
       switch(j->type) {
         case JT_hingeX: {
           j->Q.rot.setRadX(q(n));
@@ -1002,7 +1002,7 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
     }
   }
 
-  CHECK(n==q.N,"");
+  CHECK_EQ(n,q.N,"");
 }
 
 
@@ -1129,12 +1129,12 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
   if(b->inLinks.N) {
     j1=b->inLinks(0);
     while(j1) {
-      CHECK(j1->agent==q_agent,"NIY");
+      CHECK_EQ(j1->agent,q_agent,"NIY");
       j1_idx=j1->qIndex;
 
       j2=j1;
       while(j2) {
-        CHECK(j2->agent==q_agent,"NIY");
+        CHECK_EQ(j2->agent,q_agent,"NIY");
         j2_idx=j2->qIndex;
 
         if(j1->type>=JT_hingeX && j1->type<=JT_hingeZ && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //both are hinges
@@ -1599,7 +1599,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   
   ItemL bs = G.getItems("body");
   for_list(Item,  it,  bs) {
-    CHECK(it->keys(0)=="body","");
+    CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
     
     Body *b=new Body(*this);
@@ -1610,7 +1610,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   
   ItemL ss = G.getItems("shape");
   for(Item *it: ss) {
-    CHECK(it->keys(0)=="shape","");
+    CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
     CHECK(it->getValueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
     
@@ -1630,8 +1630,8 @@ void ors::KinematicWorld::read(std::istream& is) {
   uint nCoupledJoints=0;
   ItemL js = G.getItems("joint");
   for(Item *it: js) {
-    CHECK(it->keys(0)=="joint","");
-    CHECK(it->parents.N==2,"joints must have two parents");
+    CHECK_EQ(it->keys(0),"joint","");
+    CHECK_EQ(it->parents.N,2,"joints must have two parents");
     CHECK(it->getValueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
     
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
@@ -2090,22 +2090,22 @@ bool ors::KinematicWorld::checkConsistency(){
   for(Body *b: bodies){
     CHECK(&b->world, "");
     CHECK(&b->world==this,"");
-    CHECK(b==bodies(b->index),"");
-    for(Joint *j: b->outLinks) CHECK(j->from==b,"");
-    for(Joint *j: b->inLinks)  CHECK(j->to==b,"");
-    for(Shape *s: b->shapes)   CHECK(s->body==b,"");
+    CHECK_EQ(b,bodies(b->index),"");
+    for(Joint *j: b->outLinks) CHECK_EQ(j->from,b,"");
+    for(Joint *j: b->inLinks)  CHECK_EQ(j->to,b,"");
+    for(Shape *s: b->shapes)   CHECK_EQ(s->body,b,"");
   }
   for(Joint *j: joints){
     CHECK(&j->world && j->from && j->to, "");
     CHECK(&j->world==this,"");
-    CHECK(j==joints(j->index),"");
+    CHECK_EQ(j,joints(j->index),"");
     CHECK(j->from->outLinks.findValue(j)>=0,"");
     CHECK(j->to->inLinks.findValue(j)>=0,"");
   }
   for(Shape *s: shapes){
     CHECK(&s->world, "");
     CHECK(&s->world==this,"");
-    CHECK(s==shapes(s->index),"");
+    CHECK_EQ(s,shapes(s->index),"");
     if(s->body) CHECK(s->body->shapes.findValue(s)>=0,"");
   }
   return true;

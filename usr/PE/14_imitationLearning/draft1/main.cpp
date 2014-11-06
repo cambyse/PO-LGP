@@ -22,7 +22,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
-    TaskCost *c;
+    Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
     MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
@@ -70,7 +70,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
   MP.loadTransitionParameters();
 
   world.getBodyByName("goalRef")->X.pos = refGoal;
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, param(0));
   c = MP.addTask("vel_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));

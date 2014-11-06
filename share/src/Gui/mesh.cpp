@@ -223,7 +223,7 @@ void Mesh::setCappedCylinder(double r, double l, uint fineness) {
   the vertex list (V) */
 void Mesh::setGrid(uint X, uint Y) {
   CHECK(X>1 && Y>1, "grid has to be at least 2x2");
-  CHECK(V.d0==X*Y, "don't have X*Y mesh-vertices to create grid faces");
+  CHECK_EQ(V.d0,X*Y, "don't have X*Y mesh-vertices to create grid faces");
   uint i, j, k=T.d0;
   T.resizeCopy(k+(Y-1)*2*(X-1), 3);
   for(j=0; j<Y-1; j++) {
@@ -434,7 +434,7 @@ void deleteZeroTriangles(Mesh& m) {
 }
 
 void permuteVertices(Mesh& m, uintA& p) {
-  CHECK(p.N==m.V.d0, "");
+  CHECK_EQ(p.N,m.V.d0, "");
   uint i;
   arr x(p.N, 3);
   for(i=0; i<p.N; i++) { x(i, 0)=m.V(p(i), 0); x(i, 1)=m.V(p(i), 1); x(i, 2)=m.V(p(i), 2); }
@@ -869,7 +869,7 @@ void Mesh::readOffFile(std::istream& is) {
   for(i=0; i<V.N; i++) is >>V.elem(i);
   for(i=0; i<T.d0; i++) {
     is >>k;
-    CHECK(k==3, "can only read triangles from OFF");
+    CHECK_EQ(k,3, "can only read triangles from OFF");
     is >>T(i, 0) >>T(i, 1) >>T(i, 2);
   }
 }
@@ -893,7 +893,7 @@ void Mesh::readPlyFile(std::istream& is) {
     }
     for(i=0; i<T.d0; i++) {
       is >>k >>T(i, 0) >>T(i, 1) >>T(i, 2);
-      CHECK(k==3, "can only read triangles from ply");
+      CHECK_EQ(k,3, "can only read triangles from ply");
     }
   }
 }
@@ -1097,7 +1097,7 @@ void Mesh::readStlFile(std::istream& is) {
       is.read((char*)&Vfloat(3*i,0), 9*Vfloat.sizeT);
       T(i,0)=3*i+0;  T(i,1)=3*i+1;  T(i,2)=3*i+2;
       is.read((char*)&att, 2);
-      CHECK(att==0,"");
+      CHECK_EQ(att,0,"");
     }
     copy(V,Vfloat);
   }

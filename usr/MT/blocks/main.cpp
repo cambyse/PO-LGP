@@ -57,7 +57,7 @@ int main(int argc,char** argv){
   MP.world.reportProxies();
 //  return 0;
 
-  TaskCost *c;
+  Task *c;
   bool con=true;
   if(con){
     c = MP.addTask("collisionConstraints", new CollisionConstraint(.02));

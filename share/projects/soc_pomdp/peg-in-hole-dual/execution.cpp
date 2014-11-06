@@ -28,27 +28,27 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem
 
 
-  TaskCost *c;
+  Task *c;
 
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 2e5);
 
-  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
+  Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
   P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
   //see taskmap_default.cpp;
-  TaskCost *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",ARRAY(0.,0.,1.)));
+  Task *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",ARRAY(0.,0.,1.)));
   //P.setInterpolatingCosts(vec, MotionProblem::finalOnly, ARRAY(0.,0.,-1.), 1e3, ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, ARRAY(0.,0.,-1.), 1e3, NoArr, -1., 0.1);
 
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.5)));//0.3 is peg's end_eff 0.2 is table width  //0.05 above table surface to avoid slippery
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.5)));//0.3 is peg's end_eff 0.2 is table width  //0.05 above table surface to avoid slippery
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e2);
 
 
 #if 1  //CONSTRAINT
-  TaskCost *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.05));
+  Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.05));
   P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1e3);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
@@ -58,7 +58,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
   if(stickyness){
 
-    TaskCost *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+    Task *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
     sticky->setCostSpecs(0, P.T, {0.}, 1.);
 
     P.makeContactsAttractive = true;

@@ -18,7 +18,7 @@ void TEST(Basics){
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a <<endl;
   cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1) <<endl;
-  CHECK(a.last()==a.N-1,"");
+  CHECK_EQ(a.last(),a.N-1,"");
 
   //easier looping:
   cout <<"\neasier looping:\n";
@@ -36,8 +36,8 @@ void TEST(Basics){
   cout <<"\n2 columns deleted at 1:\n" <<a <<endl;
   a.insColumns(1,3);
   cout <<"\n3 columns inserted at 1:\n" <<a <<endl;
-  CHECK(a.d1==6,"");
-  CHECK(a(0,1)==0,"non-zeros inserted");
+  CHECK_EQ(a.d1,6,"");
+  CHECK_EQ(a(0,1),0,"non-zeros inserted");
 
   //access:
   cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
@@ -45,8 +45,8 @@ void TEST(Basics){
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
   cout <<"\nrows manipulated:\n" <<a <<endl;
-  CHECK(a(2,1)==7.,"");
-  CHECK(a[1]==a[2],"");
+  CHECK_EQ(a(2,1),7.,"");
+  CHECK_EQ(a[1],a[2],"");
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
@@ -54,7 +54,7 @@ void TEST(Basics){
   ints = ARRAY<int>(0, -1, -2, -3, -4);
   cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
-  CHECK(a(2)==-2,"");
+  CHECK_EQ(a(2),-2,"");
 
   //TRY DEBUGGING with GDB:
   //set a breakpoint here
@@ -159,7 +159,7 @@ void TEST(Matlab){
 
   x = eye(5);
   cout <<"\neye(5)" <<x <<endl;
-  for(uint i=0;i<x.d0;i++) CHECK(x(i,i)==1.,"is not eye");
+  for(uint i=0;i<x.d0;i++) CHECK_EQ(x(i,i),1.,"is not eye");
 
   uintA p = randperm(5);
   cout <<"\nrandperm(5)" <<p <<endl;
@@ -229,7 +229,7 @@ void TEST(BinaryIO){
   cout <<"binary read time: " <<MT::timerRead() <<"sec" <<endl;
   bin.close();
 
-  CHECK(a==b,"binary IO failed!");
+  CHECK_EQ(a,b,"binary IO failed!");
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
 
@@ -533,21 +533,21 @@ void TEST(Tensor){
     rndUniform(B,0.,1.,false);
     C=A;
     tensorMultiply(C,B,TUP(1,0));
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
     C=A;
     tensorMultiply_old(C,B,TUP(C.d0,C.d1),TUP(1,0));
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
     tensorEquation(C,A,TUP(0,1),B,TUP(1,0),0);
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
 
     //matrix product
     C.resize(A.d0,A.d0);
     tensorEquation(C,A,TUP(0,2),B,TUP(2,1),1);
-    CHECK(C==A*B,"");
+    CHECK_EQ(C,A*B,"");
 
     C.resize(A.d1,A.d1);
     tensorEquation(C,A,TUP(2,0),B,TUP(1,2),1);
-    CHECK(C==~A*~B,"");
+    CHECK_EQ(C,~A*~B,"");
   }
   cout <<"\n... tensor tests successful\n";
 

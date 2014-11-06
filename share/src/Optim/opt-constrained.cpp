@@ -157,7 +157,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
   if(A.d0>0){
     arr tmp = comp_A_At(A);
     if(Jg_x.special==arr::RowShiftedPackedMatrixST){
-      CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
+      CHECK_EQ(castRowShiftedPackedMatrix(tmp).symmetric,true,"");
       for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
     }else{
       for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;

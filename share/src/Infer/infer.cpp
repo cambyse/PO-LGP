@@ -120,23 +120,23 @@ void checkSpaceRegistry(iSpace *S){
   uint i, j, k;
   for(i=0;i<S->variables.N;i++){
     v=S->variables(i);
-    CHECK(v->space==S, "variale points to another space");
-    CHECK(v->id==i, "variable id is not the position globalVariableList registry");
+    CHECK_EQ(v->space,S, "variale points to another space");
+    CHECK_EQ(v->id,i, "variable id is not the position globalVariableList registry");
     for(j=0;j<v->factors.N;j++){
       f=v->factors(j);
       k=f->varIds.findValue(i);
       CHECK(k<f->varIds.N, "variable's factor doesn't include the variable's id");
-      CHECK(v->dim==f->dim(k), "variable's factor thinks variable has different dim");
+      CHECK_EQ(v->dim,f->dim(k), "variable's factor thinks variable has different dim");
     }
   }
   for(i=0;i<S->factors.N;i++){
     f=S->factors(i);
-    CHECK(f->space==S, "factor points to another space");
+    CHECK_EQ(f->space,S, "factor points to another space");
     for(j=0;j<f->varIds.N;j++){
       v=S->variables(f->varIds(j));
       k=v->factors.findValue(f);
       //CHECK(k<v->factors.N, "factor's variable doesn't include the factor in its list"); [[REDO!]]
-      CHECK(f->dim(j)==v->dim, "factor's variable thinks it is of different dim");
+      CHECK_EQ(f->dim(j),v->dim, "factor's variable thinks it is of different dim");
     }
   }
 }
@@ -160,7 +160,7 @@ void iSpace::write(std::ostream& os) const{
     os <<'[' <<i <<"] " <<variables(i)->name <<' ' <<variables(i)->dim;
     for(j=0;j<variables(i)->factors.N;j++) os <<',' <<variables(i)->factors(j)->varIds;
     os <<endl;
-    CHECK(variables(i)->id==i, "");
+    CHECK_EQ(variables(i)->id,i, "");
   }
   os <<" #factors="    <<factors.N <<endl;
   for(i=0;i<factors.N;i++){
@@ -246,7 +246,7 @@ void infer::Factor::relinkTo(const infer::VariableList& vars){
   variables=vars;
   for(Variable *v: variables) v->factors.append(this);
   for(uint i=0; i<vars.N; i++) varIds(i)=variables(i)->id;
-  for(uint i=0; i<vars.N; i++) CHECK(dim(i)==variables(i)->dim, "relinking to variables with different dimension!");
+  for(uint i=0; i<vars.N; i++) CHECK_EQ(dim(i),variables(i)->dim, "relinking to variables with different dimension!");
 }
 
 void infer::Factor::init(const infer::VariableList& vars){
@@ -260,11 +260,11 @@ void infer::Factor::init(const infer::VariableList& vars){
 }
 
 void infer::checkConsistent(const infer::Factor &f){
-  CHECK(f.variables.N==f.varIds.N, "");
-  CHECK(f.variables.N==f.dim.N, "");
+  CHECK_EQ(f.variables.N,f.varIds.N, "");
+  CHECK_EQ(f.variables.N,f.dim.N, "");
   for_list(Variable, v,  f.variables){
-    CHECK(v->id ==f.varIds(v_COUNT), "");
-    CHECK(v->dim==f.dim(v_COUNT), "");
+    CHECK_EQ(v->id ,f.varIds(v_COUNT), "");
+    CHECK_EQ(v->dim,f.dim(v_COUNT), "");
   }
 }
 
@@ -304,7 +304,7 @@ void infer::Factor::operator=(const infer::Factor& q){
 
 void infer::Factor::setP(const arr& p){
   P = p;
-  CHECK(P.N==product(dim), "infer::Factor set with ill-dimensioned array");
+  CHECK_EQ(P.N,product(dim), "infer::Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;
 #ifdef LOG_NORM_SCALE
@@ -314,7 +314,7 @@ void infer::Factor::setP(const arr& p){
 
 void infer::Factor::setText(const char* str){
   MT::String(str) >>P;
-  CHECK(P.N==product(dim), "infer::Factor set with ill-dimensioned array");
+  CHECK_EQ(P.N,product(dim), "infer::Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;
 #ifdef LOG_NORM_SCALE
@@ -340,7 +340,7 @@ void infer::Factor::setUniform(){
   logP=0.;
 #ifdef LOG_NORM_SCALE
   lognormScale(P, logP);
-  CHECK(logP == 0., "Normalizing in lognormScale failed.");
+  CHECK_EQ(logP , 0., "Normalizing in lognormScale failed.");
 #endif
 }
 
@@ -644,7 +644,7 @@ void infer::FactorGraph::setCliqueBeliefs(const infer::FactorList& fs_orig){
     }
 //     MT_MSG("Rebuilding clique beliefs");
   }
-  CHECK(fs_orig.N == B_c.N, "Number of original factors does not fit number of clique beliefs.");
+  CHECK_EQ(fs_orig.N , B_c.N, "Number of original factors does not fit number of clique beliefs.");
   FOR1D(B_c, i){
     B_c(i)->P = fs_orig(i)->P;
     B_c(i)->logP = fs_orig(i)->logP;
@@ -793,7 +793,7 @@ void infer::FactorGraph::addV2Fmap(infer::Factor* f){
 //     if(!(product == *B_c(i))){
 //       cerr <<"Product:" <<endl <<product <<endl;
 //       cerr <<"*B_c(i):" <<endl <<*B_c(i) <<endl;
-//       CHECK(product == *B_c(i), "Faithfulness failed for factor over " <<B_c(i)->varIds);
+//       CHECK_EQ(product , *B_c(i), "Faithfulness failed for factor over " <<B_c(i)->varIds);
 //     }
 //   }
 //   if(DEBUG>0){cout <<"Checking variable factors:" <<endl;}
@@ -820,7 +820,7 @@ void infer::FactorGraph::addV2Fmap(infer::Factor* f){
 //       FOR1D(product.P, k){cout <<product.P.elem(k) <<endl;}
 //       cerr <<"*B_v(i):" <<endl <<*B_v(i) <<endl;
 //       FOR1D(B_v(i)->P, k){cout <<B_v(i)->P.elem(k) <<endl;}
-//       CHECK(product == *B_v(i), "Faithfulness failed for factor over " <<B_v(i)->varIds);
+//       CHECK_EQ(product , *B_v(i), "Faithfulness failed for factor over " <<B_v(i)->varIds);
 //     }
 //   }
 //   if(DEBUG>0){cout <<"checkFaithfulness [END]" <<endl;}
@@ -949,7 +949,7 @@ void infer::collectBelief(infer::Factor& belief, infer::Variable *v, const Messa
     if(s->v1==v){
       tensorMultiply(belief, s->m21);
     }else{
-      CHECK(s->v2==v, "");
+      CHECK_EQ(s->v2,v, "");
       tensorMultiply(belief, s->m12);
     }
   }
@@ -1000,9 +1000,9 @@ bool infer::checkConsistency(const MessagePair& sep){
   m12_m21=sep.m12;
   tensorMultiply(m12_m21, sep.m21);
   
-  CHECK(f1_marg==f2_marg, "marginals inconsistent");
-  CHECK(f1_marg==m12_m21, "marginals inconsistent");
-  CHECK(m12_m21==f2_marg, "marginals inconsistent");
+  CHECK_EQ(f1_marg,f2_marg, "marginals inconsistent");
+  CHECK_EQ(f1_marg,m12_m21, "marginals inconsistent");
+  CHECK_EQ(m12_m21,f2_marg, "marginals inconsistent");
   return true;
 }
 
@@ -1355,14 +1355,14 @@ void infer::tensorAdd(infer::Factor& f, const infer::Factor& m){
 }
 
 void infer::tensorInvertMultiply(infer::Factor& f, const infer::Factor& m){
-  CHECK(m.variables==f.variables, "infer::Factor invMultiply needs identical variables");
+  CHECK_EQ(m.variables,f.variables, "infer::Factor invMultiply needs identical variables");
   for(uint i=0; i<f.P.N; i++) f.P.elem(i)=robustDivide(m.P.elem(i), f.P.elem(i));
   f.logP = -f.logP + m.logP;
   lognormScale(f.P, f.logP);
 }
 
 void infer::tensorWeightedAdd(infer::Factor& f, double w, const infer::Factor& m){
-  CHECK(m.variables==f.variables, "infer::Factor weightedAdd needs identical variables");
+  CHECK_EQ(m.variables,f.variables, "infer::Factor weightedAdd needs identical variables");
   w *= ::exp(m.logP-f.logP);
   for(uint i=0; i<f.P.N; i++) f.P.elem(i) = f.P.elem(i) + w*m.P.elem(i);
   lognormScale(f.P, f.logP);
@@ -1374,13 +1374,13 @@ void infer::tensorWeightedAdd(infer::Factor& f, double w, const infer::Factor& m
   for(i=0;i<f.varIds.N;i++){
     if(i) os <<' ';
     os <<f.varIds(i) <<'.' <<globalVariableList(f.varIds(i))->name;
-    CHECK(f.varIds(i)==globalVariableList(f.varIds(i))->id, "identity mismatch!!");
+    CHECK_EQ(f.varIds(i),globalVariableList(f.varIds(i))->id, "identity mismatch!!");
   }
   os <<") dims=<";
   for(i=0;i<f.varIds.N;i++){
     if(i) os <<' ';
     os <<f.dim(i);
-    CHECK(f.dim(i)==globalVariableList(f.varIds(i))->dim, "dimensionality mismatch!!");
+    CHECK_EQ(f.dim(i),globalVariableList(f.varIds(i))->dim, "dimensionality mismatch!!");
   }
   os <<"> P.dims=";
   f.P.writeDim(os);
@@ -1551,7 +1551,7 @@ void infer::eliminationAlgorithm(infer::Factor& posterior, const infer::FactorLi
   posterior.setOne();
   /*if(remaining_vars.N==0){ //DON'T HANDLE SCALAR OUTPUT SPECIAL...
     for(i=0;i<factors_copy.N;i++){
-      CHECK(factors_copy.N == 1, "too many factors created");
+      CHECK_EQ(factors_copy.N , 1, "too many factors created");
     posterior.P.scalar()=sum(factors_copy(0)->P) * exp(factors_copy(0)->logP);
   }else{*/
   for(i=0; i<factors_copy.N; i++){
@@ -1656,7 +1656,7 @@ void infer::JunctionTree::checkJunctionTreeProperty(FactorGraph& junctionTree){
     if(DEBUG > 0)
       cout <<" containsId_after=" <<containsId <<endl;
     FOR1D(containsId, f)
-    CHECK(containsId(f) == 0, " junction tree property violated for variable " <<id <<endl);
+    CHECK_EQ(containsId(f) , 0, " junction tree property violated for variable " <<id <<endl);
   }
   if(DEBUG > 0)
     cout <<"checkJunctionTreeProperty [END]" <<endl;
@@ -2375,7 +2375,7 @@ void infer::LoopyBP_obsolete::shoutMessages(infer::Factor& f, MsgCalc calcMsgTyp
 
 void check_exactlyOneConditional(infer::VariableList& vars, infer::FactorList& facs){
   uint i, k;
-  CHECK(vars.N==facs.N, "#vars != #facs");
+  CHECK_EQ(vars.N,facs.N, "#vars != #facs");
   FOR1D(vars, i){
     FOR1D(facs, k){
       if(facs(k)->variables(0) == vars(i)) break;
@@ -2787,7 +2787,7 @@ void infer::inferMixLengthStructured(
   double gt, gSum;
   uint t;
   DEBUG_INFER(2, cout <<"  headVars=" <<headVars <<"  tailVars=" <<tailVars <<endl);
-  CHECK(headVars.N==tailVars.N, ""); //actually should also check that their dims are equal...
+  CHECK_EQ(headVars.N,tailVars.N, ""); //actually should also check that their dims are equal...
   CHECK(gamma>0. && gamma<=1., "");
   if(!updateMode){
     //get initial a and b:

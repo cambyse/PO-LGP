@@ -260,8 +260,8 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
   double col_prec=1e-1;
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
   phi.resize(m);

@@ -25,37 +25,43 @@ int main(int argc,char** argv){
 
   bool con=true;
 
-  MotionProblem P(G);
-  P.loadTransitionParameters();
-  P.makeContactsAttractive=false;
+  MotionProblem MP(G);
 
   //-- setup the motion problem
-  TaskCost *c;
-  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e3);
+  Task *c;
 
-  c = P.addTask("position_vel", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  c = MP.addTask("transitions", new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getBodyByName("target")->X.pos), 1e3);
+
+  c = MP.addTask("position_vel", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
   if(con){
-    c = P.addTask("collisionConstraints", new CollisionConstraint());
-    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+    c = MP.addTask("collisionConstraints", new CollisionConstraint());
+    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+
+    Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(c->map));
+    sticky->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{
-    c = P.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
-    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+    c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
+    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }
 
   
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(P);
+  MotionProblemFunction MF(MP);
   arr x(MF.get_T()+1,MF.dim_x());
   x.setZero();
 
   Convert CP(MF);
 #if 1
-  optConstrained(x, P.dualMatrix, CP);
-  P.costReport();
+  optConstrained(x, MP.dualMatrix, CP);
+  MP.costReport();
   for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
 #else
   UnconstrainedProblem UCP(CP);

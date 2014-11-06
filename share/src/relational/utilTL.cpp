@@ -219,7 +219,7 @@ struct PermutationsMemory {
         // memory - permutations
         MT::Array< MT::Array< PermutationsList > > mem_list;
         mem__2plus.append(mem_list);
-        CHECK(mem__2plus.N-1 == map_1[args(0)], "");
+        CHECK_EQ(mem__2plus.N-1 , map_1[args(0)], "");
         // memory - arguments
         MT::Array< MT::Array< uintA > > mem_args_list;
         mem_args__2plus.append(mem_args_list);
@@ -499,7 +499,7 @@ void TL::sort_desc(arr& sorted, uintA& sortedIndices, const arr& unsorted) {
     sortedIndices.append(max_id);
     un_copy(max_id) = LOCAL_MIN;
   }
-  CHECK(sorted.N == unsorted.N, "");
+  CHECK_EQ(sorted.N , unsorted.N, "");
 }
 
 
@@ -525,7 +525,7 @@ void TL::sort_desc(uintA& sorted, uintA& sortedIndices, const uintA& unsorted) {
     sorted.append(unsorted(maxID));
     used(maxID) = true;
   }
-  CHECK(sorted.N == unsorted.N, "");
+  CHECK_EQ(sorted.N , unsorted.N, "");
 }
 
 void TL::sort_desc(uintA& values) {
@@ -587,8 +587,8 @@ void TL::sort_asc_keys(uintA& sortedIndices, const uintA& unsorted) {
 bool TL::isAcyclic(boolA adjMatrix) {
   // eliminate successively nodes without outgoing or without incoming 
   // edges since these cannot be part of a cycle
-  CHECK(adjMatrix.nd==2, "adjMatrix must be square")
-  CHECK(adjMatrix.d0==adjMatrix.d1, "adjMatrix must be square")
+  CHECK_EQ(adjMatrix.nd,2, "adjMatrix must be square")
+  CHECK_EQ(adjMatrix.d0,adjMatrix.d1, "adjMatrix must be square")
   boolA endangeredNodes(adjMatrix.d0);
   endangeredNodes.setUni(true);
   bool change;
@@ -699,8 +699,8 @@ void TL::Rprop::step(arr& w,const arr& grad,uint *singleI){
     lastGrad.setZero();
     stepSize = delta0;
   }
-  CHECK(grad.N==stepSize.N,"Rprop: gradient dimensionality changed!");
-  CHECK(w.N==stepSize.N   ,"Rprop: parameter dimensionality changed!");
+  CHECK_EQ(grad.N,stepSize.N,"Rprop: gradient dimensionality changed!");
+  CHECK_EQ(w.N,stepSize.N   ,"Rprop: parameter dimensionality changed!");
 
   uint i=0,I=w.N;
   if(singleI){ i=*(singleI); I=i+1; }

@@ -133,7 +133,7 @@ void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, Op
   if(W){
     if(W->nd==1){
       if(W->N > get_qDim()){ W->resizeCopy(get_qDim()); MT_MSG("truncating W diagonal..."); }
-      CHECK(W->N==get_qDim(), "");
+      CHECK_EQ(W->N,get_qDim(), "");
       W_rate.setDiag(*W);
     } else NIY;
   }else{
@@ -419,7 +419,7 @@ void OrsSystem::getTaskCosts(arr& phiBar, arr& JBar, uint t){
     if(s->dynamic){
       s->getJqd(phi_v, i);
       s->getTargetV(v, precv, i, t);
-      //CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
+      //CHECK_EQ(xt.N,2*Jac.d1, ""); //x is a dynamic state
       //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
 
@@ -448,7 +448,7 @@ void OrsSystem::setx(const arr& x){
     s->setq(x);
   }else{
     uint n=x.N/2;
-    CHECK(x.N==2*n, "");
+    CHECK_EQ(x.N,2*n, "");
     arr q, v;
     q.referToSubRange(x, 0, n-1);
     v.referToSubRange(x, n, 2*n-1);

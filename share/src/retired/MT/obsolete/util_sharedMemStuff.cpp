@@ -92,7 +92,7 @@ void SHM::open(const char *name, uint size, bool directDestroy){
     }
   }else{
     //CHECK(!strcmp(name, info->pagename), "requested shm has different name");
-    //CHECK(size==info->size, "requested shm has different size");
+    //CHECK_EQ(size,info->size, "requested shm has different size");
     info->guests++;
     for(i=0; i<maxShmGuests; i++) if(info->guestPids[i]==-1) break;
     if(i==maxShmGuests) HALT("exceeded max number of clients " <<maxShmGuests);

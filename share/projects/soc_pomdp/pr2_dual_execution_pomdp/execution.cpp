@@ -27,19 +27,19 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   P.T = horizon;
   x = P.getInitialization();
 
-  TaskCost *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target", NoVector));
+  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos.x,target->X.pos.y,target->X.pos.z), 1e3);
 
 
 
   // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height+0.02)));
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height+0.02)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
 
 
   if(stickyness){
 
-        TaskCost *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+        Task *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
         sticky->setCostSpecs(0, P.T, {0.}, 1.);
 
         P.makeContactsAttractive = true;

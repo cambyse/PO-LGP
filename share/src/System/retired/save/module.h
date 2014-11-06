@@ -112,7 +112,7 @@ struct Access_typed:Access{
   Access_typed(const char* name=NULL):Access(name), data(NULL){}
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
-  T& operator()(){ CHECK(variable->rwlock.state==-1,"");  return *data; } //TODO ensure that it is locked
+  T& operator()(){ CHECK_EQ(variable->rwlock.state,-1,"");  return *data; } //TODO ensure that it is locked
   virtual void* createOwnData();
   virtual void setData(void* _data);
 };

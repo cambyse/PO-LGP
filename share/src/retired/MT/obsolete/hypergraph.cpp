@@ -111,7 +111,7 @@ Element *HyperGraph::add(const uintA& tuple){
 }
 
 void HyperGraph::del(Element *e){
-  CHECK(elem(e->index)==e, "this is not an element of the hypergraph")
+  CHECK_EQ(elem(e->index),e, "this is not an element of the hypergraph")
   uint i;
   for(i=0; i<maxDegree; i++){
     if(e->parentOf[i].N){

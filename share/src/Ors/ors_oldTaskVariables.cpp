@@ -477,8 +477,8 @@ void TaskVariable::updateChange(int t, double tau) {
     yt.referTo(y_target);
     vt.referTo(v_target);
   }
-  CHECK(yt.N==y.N, "targets have wrong dimension -- perhaps need to be set before");
-  CHECK(vt.N==v.N, "targets have wrong dimension -- perhaps need to be set before");
+  CHECK_EQ(yt.N,y.N, "targets have wrong dimension -- perhaps need to be set before");
+  CHECK_EQ(vt.N,v.N, "targets have wrong dimension -- perhaps need to be set before");
   switch(targetType) {
     case trajectoryTT:
     case directTT: {
@@ -861,7 +861,7 @@ void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, 
       }
       m+=j;
     }
-    CHECK(m==y.d1,"");
+    CHECK_EQ(m,y.d1,"");
   }
 }
 

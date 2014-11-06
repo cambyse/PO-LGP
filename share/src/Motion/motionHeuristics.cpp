@@ -87,7 +87,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
   
   //deactivate all variables
   MP.activateAllTaskCosts(false);
@@ -212,7 +212,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
 
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
 
   //delete all previous variables
   MP.taskCosts.clear();
@@ -337,7 +337,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
 
   
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
   
   //deactivate all variables
   MP.activateAllTaskCosts(false);
@@ -350,7 +350,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   if (obj->body!=MP.world.getBodyByName("m9")){
     reattachShape(MP.world, NULL, obj->name, "m9");
   }
-  CHECK(obj->body==MP.world.getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
+  CHECK_EQ(obj->body,MP.world.getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   if(onto) onto->cont=false;
   MP.swift->initActivations(MP.world, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)

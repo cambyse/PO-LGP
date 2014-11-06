@@ -115,7 +115,7 @@ void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _capture
 //  captureDep=_captureDep;
   if(width==-1) width=s->gl->width;
   if(height==-1) height=s->gl->height;
-  CHECK(width%4==0,"should be devidable by 4!!")
+  CHECK_EQ(width%4,0,"should be devidable by 4!!")
 
   isUpdating.waitForValueEq(0);
   isUpdating.setValue(1);

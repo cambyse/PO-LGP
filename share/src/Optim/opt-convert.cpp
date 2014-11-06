@@ -182,7 +182,7 @@ void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr
     //query
     arr phi_t, J_t, Jz_t;
     f.phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
-    CHECK(phi_t.N==dimphi_t,"");
+    CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
 
     //set term types
@@ -228,7 +228,7 @@ void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr
     M += dimphi_t;
   }
 
-  CHECK(M==dim_phi,"");
+  CHECK_EQ(M,dim_phi,"");
   if(&J){
     Jaux->computeColPatches(true);
     if(dim_z) Jzaux->computeColPatches(false);
@@ -253,7 +253,7 @@ void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi,
     m_t = f->get_m(t);
     arr phi_t,J_t;
     f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t, t+k));
-    CHECK(phi_t.N==m_t,"");
+    CHECK_EQ(phi_t.N,m_t,"");
     phi.setVectorBlock(phi_t, M);
     if(&J) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
@@ -329,7 +329,7 @@ void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi,
     //query
     arr f_t, J_t, Jz_t;
     f.phi_t(f_t, (&J?J_t:NoArr), t, x_bar);
-    CHECK(f_t.N==dimf_t,"");
+    CHECK_EQ(f_t.N,dimf_t,"");
     phi.setVectorBlock(f_t, M);
     if(&J) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
@@ -360,7 +360,7 @@ void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi,
     M += dimf_t;
   }
 
-  CHECK(M==dim_Phi,"");
+  CHECK_EQ(M,dim_Phi,"");
   if(&J){
     Jaux->computeColPatches(true);
     if(dim_z) Jzaux->computeColPatches(false);
@@ -428,12 +428,12 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     //query the phi
     f->phi_t(phi_t, (getJ?J_t:NoArr), t, x_bar);
     if(getJ) if(J_t.nd==3) J_t.reshape(J_t.d0, J_t.d1*J_t.d2);
-    CHECK(phi_t.N==phid,"");
+    CHECK_EQ(phi_t.N,phid,"");
     if(getJ) CHECK(J_t.d0==phid && J_t.d1==(k+1)*n,"");
 
     //insert in meta_y
     f_t.referToSubRange(phi_t, 0, m_t-1);
-    CHECK(f_t.N==m_t,"");
+    CHECK_EQ(f_t.N,m_t,"");
     meta_y.setVectorBlock(f_t, y_count);
     if(getJ) {
       Jf_t.referToSubRange(J_t, 0, m_t-1);
@@ -452,7 +452,7 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     //insert in meta_g
     if(dimg_t){
       g_t.referToSubRange(phi_t, m_t, -1);
-      CHECK(g_t.N==dimg_t,"");
+      CHECK_EQ(g_t.N,dimg_t,"");
       if(&g) g.setVectorBlock(g_t, g_count);
       if(&Jg) {
         Jg_t.referToSubRange(J_t, m_t, -1);
@@ -469,8 +469,8 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
       g_count += dimg_t;
     }
   }
-  CHECK(y_count==meta_y.N,"");
-  if(&g) CHECK(g_count==g.N,"");
+  CHECK_EQ(y_count,meta_y.N,"");
+  if(&g) CHECK_EQ(g_count,g.N,"");
   if(getJ) Jy_aux->computeColPatches(true);
   if(&Jg) Jg_aux->computeColPatches(true);
   //if(&J) J=Jaux->unpack();
@@ -499,7 +499,7 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
   uint dimg = 0;    for(uint t=0; t<=T; t++) dimg += f.dim_g(t);
   uint dimh = 0;    for(uint t=0; t<=T; t++) dimh += f.dim_h(t);
   uint dimy = dimphi - dimg - dimh;
-  CHECK(phi.N==dimphi,"");
+  CHECK_EQ(phi.N,dimphi,"");
 
   arr y, Jy;
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux, *Jh_aux;
@@ -568,10 +568,10 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     M += dimh_t;
     h_count += dimh_t;
   }
-  CHECK(M==dimphi,"");
-  CHECK(y_count==dimy,"");
-  if(&g) CHECK(g_count==dimg,"");
-  if(&h) CHECK(h_count==dimh,"");
+  CHECK_EQ(M,dimphi,"");
+  CHECK_EQ(y_count,dimy,"");
+  if(&g) CHECK_EQ(g_count,dimg,"");
+  if(&h) CHECK_EQ(h_count,dimh,"");
   if(getJ) Jy_aux->computeColPatches(true);
   if(&Jg) Jg_aux->computeColPatches(true);
   if(&Jh) Jh_aux->computeColPatches(true);

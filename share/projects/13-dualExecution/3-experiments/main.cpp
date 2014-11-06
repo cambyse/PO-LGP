@@ -14,18 +14,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   x = MP.getInitialization();
 
   //-- setup the motion problem
-  TaskCost *pos = MP.addTask("position",
+  Task *pos = MP.addTask("position",
                             new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  Task *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   vel->map.order=1;
   vel->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *cons = MP.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  Task *cons = MP.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
   cons->setCostSpecs(0, MP.T, {0.}, 1.);
 
-  TaskCost *sticky = MP.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+  Task *sticky = MP.addTask("planeStickiness", new ConstraintStickiness(cons->map));
   sticky->setCostSpecs(0, MP.T, {0.}, 1.);
 
   //-- convert

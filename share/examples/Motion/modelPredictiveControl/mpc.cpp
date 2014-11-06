@@ -40,7 +40,7 @@ void MPC::replan(arr &_goal, arr &_q) {
     P.prefix = prefix;
   }
 
-  TaskCost *c2;
+  Task *c2;
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly, _goal, 1e4);
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));

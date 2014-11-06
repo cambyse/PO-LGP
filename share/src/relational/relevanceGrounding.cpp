@@ -971,7 +971,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
     if (DEBUG_LOGGING > 0)
       cout<<"====== LOGGING ======"<<endl;
     CHECK(object_infos.N>0, "no object information provided!");
-    CHECK(verification_num == subnets_num, "insufficient verifications");
+    CHECK_EQ(verification_num , subnets_num, "insufficient verifications");
     
     ofstream log_file;
     log_file.open("relevance.arff", std::ios::app);

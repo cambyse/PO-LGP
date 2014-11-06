@@ -198,7 +198,7 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
         W[l]() = wk-w;
         l++;
       }
-    CHECK(l==vertices.N-2, "");
+    CHECK_EQ(l,vertices.N-2, "");
     W[l]() = v-w;
     W[l+1]() = p-y; //not important (is already orthogonal to the full facet)
     MT::Array<double*> tmp;
@@ -232,8 +232,8 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
 
 double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
                     double mu, double torqueWeights, arr *dFdC) { //, arr *dFdCn
-  CHECK(C.d0==Cn.d0, "different number of points and normals");
-  CHECK(C.d1==3, "");
+  CHECK_EQ(C.d0,Cn.d0, "different number of points and normals");
+  CHECK_EQ(C.d1,3, "");
   
   uint i, j, S=7;
   ors::Vector c, n;
@@ -353,7 +353,7 @@ void getTriangulatedHull(uintA& T, arr& V) {
     }
     f++;
   }
-  CHECK(f==T.d0, "");
+  CHECK_EQ(f,T.d0, "");
   
   qh_freeqhull(!qh_ALL);
   int curlong, totlong;
@@ -381,7 +381,7 @@ void getDelaunayEdges(uintA& E, const arr& V) {
     if(!facet->upperdelaunay) {
       i=0;
       FOREACHvertex_(facet->vertices) face[i++]=qh_pointid(vertex->point);//vertex->id;
-      CHECK(i==dim+1, "strange number of vertices of a facet!");
+      CHECK_EQ(i,dim+1, "strange number of vertices of a facet!");
       for(j=0; j<dim+1; j++) for(k=j+1; k<dim+1; k++) {
           E.append(ARRAY<uint>(face[j], face[k]));
         }
@@ -420,7 +420,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
   doubleA P;
   P.resize(g.N, dim);
   for(i=0; i<g.N; i++) {
-    CHECK(g.nodes(i)->point.N==dim, "point doesn't have expected dim in delaunay");
+    CHECK_EQ(g.nodes(i)->point.N,dim, "point doesn't have expected dim in delaunay");
     P[i]=(doubleA&)(*(g.nodes(i)));
     //P(i, 0)=g.nodes(i)->feat.x;
     //P(i, 1)=g.nodes(i)->feat.y;
@@ -437,7 +437,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
       if(!facet->upperdelaunay) {
         uint j=0;
         FOREACHvertex_(facet->vertices) face[j++]=qh_pointid(vertex->point);
-        CHECK(j==dim+1, "strange number of vertices of a facet!");
+        CHECK_EQ(j,dim+1, "strange number of vertices of a facet!");
         for(k=0; k<dim+1; k++) for(l=0; l<dim+1; l++) if(k!=l)
               if(!g.getEdge(g.nodes(face[k]), g.nodes(face[l])))
                 g.new_edge(g.nodes(face[k]), g.nodes(face[l]));

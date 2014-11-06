@@ -97,7 +97,7 @@ void RuleLearner_FixedContexts::learn_rules(RuleSetContainer& rulesC, SymbolicEx
       fake_rule.context = contexts(k);
       if (ruleReasoning::cover_rule_groundedAction(experiences(i)->pre, experiences(i)->action, &fake_rule, subs)) {
         if (DEBUG>1) {cout<<"Subs ("<<subs.num()<<"):"<<endl; subs.write();}
-        CHECK(subs.num() == 1, "too many subs: subs.num()="<<subs.num());
+        CHECK_EQ(subs.num() , 1, "too many subs: subs.num()="<<subs.num());
         experiences_per_context(k).append(experiences(i));
         experienceIds_per_context(k).append(i);
         break;
@@ -428,7 +428,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
    // Collect unknown contexts
   RuleSet non_confident_rules;
   RuleSet confident_rules;
-  CHECK(rules__confidences. N == rulesC.rules.num(), "");
+  CHECK_EQ(rules__confidences. N , rulesC.rules.num(), "");
   FOR1D_(fixed_partial_rules, i) {
     if (ruleReasoning::isDefaultRule(fixed_partial_rules.elem(i)))
       continue;

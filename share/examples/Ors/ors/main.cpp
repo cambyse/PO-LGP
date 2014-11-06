@@ -126,7 +126,7 @@ void TEST(Copy){
   g1.readRaw(FILE("z.1"));
   g2.readRaw(FILE("z.2"));
 
-  CHECK(g1==g2,"copy operator failed!")
+  CHECK_EQ(g1,g2,"copy operator failed!")
   cout <<"** copy operator success" <<endl;
 }
 

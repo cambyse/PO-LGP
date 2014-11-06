@@ -16,7 +16,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   }
   
   //set the time horizon
-  CHECK(T==sys.get_T(), "");
+  CHECK_EQ(T,sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);

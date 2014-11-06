@@ -101,7 +101,7 @@ public:
     MotionProblem P(&G);
     P.loadTransitionParameters();
 
-    TaskCost *c;
+    Task *c;
     c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,

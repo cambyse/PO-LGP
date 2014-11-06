@@ -6,7 +6,7 @@
 // KFScore {{{
 KFScore::KFScore() { clear(); }
 KFScore::KFScore(const arr &t, const arr &y) {
-  CHECK(t.N == y.N, "Output and target arrays must have the same size.");
+  CHECK_EQ(t.N , y.N, "Output and target arrays must have the same size.");
   clear();
   tot = t.N;
   totpos = sum(t);

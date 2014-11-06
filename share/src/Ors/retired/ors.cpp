@@ -316,7 +316,7 @@ void ors::KinematicWorld::getTouchState(arr& touch) {
       i++;
     }
   }
-  CHECK(i==td, "");
+  CHECK_EQ(i,td, "");
 }
 #endif
 

@@ -53,7 +53,7 @@ void testPickAndPlace(){
   ors::Shape *grasp = G.getShapeByName("graspRef");
   ors::Shape *obj = G.getShapeByName("obj1");
   ors::Shape *tar = G.getShapeByName("target");
-  TaskCost *c;
+  Task *c;
 
   c = MP.addTask("pos",
                  new DefaultTaskMap(posTMT, grasp->index) );

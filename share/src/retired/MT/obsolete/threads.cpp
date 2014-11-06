@@ -312,7 +312,7 @@ StepThread::~StepThread(){
 
 void StepThread::threadOpen(int priority){
 #ifndef MT_NO_THREADS
-  CHECK(threadCondition.state==tsCLOSE, "never open while not closed!");
+  CHECK_EQ(threadCondition.state,tsCLOSE, "never open while not closed!");
   threadCondition.setState(tsOPEN);
   threadPriority = priority;
   int rc;
@@ -353,7 +353,7 @@ void StepThread::threadClose(){
 void StepThread::threadStep(bool wait){
 #ifndef MT_NO_THREADS
   if(wait) threadWait();
-  CHECK(threadCondition.state==tsIDLE, "never step while thread is busy!");
+  CHECK_EQ(threadCondition.state,tsIDLE, "never step while thread is busy!");
   threadCondition.setState(1);
 #else
   step();
@@ -377,7 +377,7 @@ void StepThread::threadStepOrSkip(uint maxSkips){
 
 void StepThread::threadSteps(uint steps){
 #ifndef MT_NO_THREADS
-  CHECK(threadCondition.state==tsIDLE, "never step while thread is busy!");
+  CHECK_EQ(threadCondition.state,tsIDLE, "never step while thread is busy!");
   threadCondition.setState(steps);
 #else
   for(uint k=0;k<steps;k++) step();
@@ -402,7 +402,7 @@ bool StepThread::threadIsReady(){
 void StepThread::threadLoop(){
 #ifndef MT_NO_THREADS
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
+  CHECK_EQ(threadCondition.state,tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -413,7 +413,7 @@ void StepThread::threadLoopWithBeat(double sec){
 #ifndef MT_NO_THREADS
   metronome=new Metronome("threadTiccer", 1000.*sec);
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
+  CHECK_EQ(threadCondition.state,tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsBEATING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -425,7 +425,7 @@ void StepThread::threadLoopSyncWithDone(StepThread& thread){
   thread.broadCastDone=true;
   syncCondition = &thread.threadCondition;
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
+  CHECK_EQ(threadCondition.state,tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsSYNCLOOPING);
 #else
   HALT("can't loop in no-threads mode!");

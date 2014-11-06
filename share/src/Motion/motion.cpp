@@ -225,7 +225,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, uint t, const WorldL &G, double tau
   }
   if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
 
-  CHECK(phi.N == dim_phi(*G.last(), t),"");
+  CHECK_EQ(phi.N, dim_phi(*G.last(), t), "");
   return constraintsHold;
 }
 
@@ -252,7 +252,7 @@ StringA MotionProblem::getPhiNames(const ors::KinematicWorld& G, uint t){
       m+=d;
     }
   }
-  CHECK(m == names.N,"");
+  CHECK_EQ(m , names.N,"");
   return names;
 }
 
@@ -292,7 +292,7 @@ void MotionProblem::costReport(bool gnuplt) {
         m += d;
       }
     }
-    CHECK(m == phiMatrix(t).N, "");
+    CHECK_EQ(m , phiMatrix(t).N, "");
   }
 
   cout <<" * task costs:" <<endl;
@@ -368,8 +368,8 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   uint T=get_T(), n=dim_x(), k=get_k();
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
   double tau=MP.tau;
@@ -397,7 +397,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
     for(uint i=0; i<n; i++) J[i]() *= h(i);
   }
   
-  if(&J) CHECK(J.d0==phi.N,"");
+  if(&J) CHECK_EQ(J.d0,phi.N,"");
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, J_x, J_v;
@@ -413,7 +413,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
     J.append(Japp);
   }
   
-  if(&J) CHECK(J.d0==phi.N,"");
+  if(&J) CHECK_EQ(J.d0,phi.N,"");
   
   //store in CostMatrix
   if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
@@ -426,8 +426,8 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   uint T=get_T(), n=dim_x()+dim_z(), k=get_k();
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
   //-- manage configurations and set x_bar states
@@ -478,8 +478,8 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
 //    for(auto& c:configurations) c->setAgent(0);
 //  }
 
-  if(&J) CHECK(J.d0==phi.N,"");
-//  if(&J_z) CHECK(J.d0==phi.N,"");
+  if(&J) CHECK_EQ(J.d0,phi.N,"");
+//  if(&J_z) CHECK_EQ(J.d0,phi.N,"");
 
   //store in CostMatrix
   if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
@@ -523,7 +523,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
     MP.getPhi(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
   }
 
-  if(&J) CHECK(J.d0==phi.N,"");
+  if(&J) CHECK_EQ(J.d0,phi.N,"");
 
   //store in CostMatrix
   MP.phiMatrix = phi;

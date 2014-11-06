@@ -156,7 +156,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1) { nd=2; d
 template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, true); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1) { CHECK(N==D0*D1, "reshape must preserve total memory size"); nd=2; d0=D0; d1=D1; d2=0; resetD(); return *this; }
+template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1) { CHECK_EQ(N,D0*D1, "reshape must preserve total memory size"); nd=2; d0=D0; d1=D1; d2=0; resetD(); return *this; }
 
 /// same for 3D ...
 template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, false); return *this; }
@@ -165,7 +165,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1, uint D2) 
 template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, true); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1, uint D2) { CHECK(N==D0*D1*D2, "reshape must preserve total memory size"); nd=3; d0=D0; d1=D1; d2=D2; resetD(); return *this; }
+template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1, uint D2) { CHECK_EQ(N,D0*D1*D2, "reshape must preserve total memory size"); nd=3; d0=D0; d1=D1; d2=D2; resetD(); return *this; }
 
 /// resize to multi-dimensional tensor
 template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
@@ -200,7 +200,7 @@ template<class T> MT::Array<T>& MT::Array<T>::reshape(uint ND, uint *dim) {
   for(j=0; j<nd && j<3; j++) {(&d0)[j]=dim[j]; }
   if(nd>3) { d=new uint[nd];  memmove(d, dim, nd*sizeof(uint)); }
   for(S=(nd>0?1:0), j=0; j<nd; j++) S*=dim[j];
-  CHECK(N==S, "reshape must preserve total memory size");
+  CHECK_EQ(N,S, "reshape must preserve total memory size");
   return *this;
 }
 
@@ -234,7 +234,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopyAs(const MT::Array<T>& a
 
 template<class T> MT::Array<T>& MT::Array<T>::reshapeAs(const MT::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
-  CHECK(N==a.N, "reshape must preserve total memory size");
+  CHECK_EQ(N,a.N, "reshape must preserve total memory size");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2; resetD();
   if(nd>3) { d=new uint[nd];  memmove(d, a.d, nd*sizeof(uint)); }
   return *this;
@@ -250,7 +250,7 @@ template<class T> uint MT::Array<T>::getMemsize() const { return M*sizeof(T); }
 
 /// multi-dimensional (tensor) access
 template<class T> T& MT::Array<T>::operator()(const Array<uint> &I) const {
-  CHECK(I.N == nd, "wrong dimensions");
+  CHECK_EQ(I.N , nd, "wrong dimensions");
   uint i, j;
   i=0;
   for(j=0; j<nd; j++) i = i*dim(j) + I(j);
@@ -389,7 +389,7 @@ template<class T> MT::Array<T>& MT::Array<T>::dereference(){
   N=M=0;
   p=NULL;
   resizeMEM(n, false);
-  CHECK(memMove==1,"only with memmove");
+  CHECK_EQ(memMove,1,"only with memmove");
   memmove(p, pold, sizeT*N);
   return *this;
 }
@@ -491,7 +491,7 @@ template<class T> void MT::Array<T>::reverse() {
 
 /// reverse the rows of this array
 template<class T> void MT::Array<T>::reverseRows() {
-  CHECK(this->nd == 2, "Can only reverse rows of 2 dim arrays. nd=" << this->nd);
+  CHECK_EQ(this->nd , 2, "Can only reverse rows of 2 dim arrays. nd=" << this->nd);
   MT::Array<T> L2;
   uint i;
   for(i=this->d0; i--;) L2.append(this->operator[](i));
@@ -591,7 +591,7 @@ template<class T> void MT::Array<T>::replace(uint i, uint n, const MT::Array<T>&
 /// deletes the i-th row [must be 2D]
 template<class T> void MT::Array<T>::delRows(uint i, uint k) {
   CHECK(memMove, "only with memMove");
-  CHECK(nd==2, "only for matricies");
+  CHECK_EQ(nd,2, "only for matricies");
   CHECK(i+k<=d0, "range check error");
   uint n=d1;
   if(i+k<d0) memmove(p+i*n, p+(i+k)*n, sizeT*(d0-i-k)*n);
@@ -601,7 +601,7 @@ template<class T> void MT::Array<T>::delRows(uint i, uint k) {
 /// inserts k rows at the i-th row [must be 2D]
 template<class T> void MT::Array<T>::insRows(uint i, uint k) {
   CHECK(memMove, "only with memMove");
-  CHECK(nd==2, "only for matricies");
+  CHECK_EQ(nd,2, "only for matricies");
   CHECK(i<=d0, "range check error");
   uint n=d0;
   resizeCopy(d0+k, d1);
@@ -613,7 +613,7 @@ template<class T> void MT::Array<T>::insRows(uint i, uint k) {
 template<class T> void MT::Array<T>::delColumns(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK(k>0, "");
-  CHECK(nd==2, "only for matricies");
+  CHECK_EQ(nd,2, "only for matricies");
   if(i==d1) i=d1-k;
   CHECK(i+k<=d1, "range check error");
   uint n=d1;
@@ -628,7 +628,7 @@ template<class T> void MT::Array<T>::delColumns(uint i, uint k) {
 template<class T> void MT::Array<T>::insColumns(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK(k>0, "");
-  CHECK(nd==2, "only for matricies");
+  CHECK_EQ(nd,2, "only for matricies");
   CHECK(i<=d1, "range check error");
   uint n=d1;
   resizeCopy(d0, n+k);
@@ -795,11 +795,11 @@ template<class T> uint MT::Array<T>::maxIndex() const { uint i, m=0; for(i=0; i<
 
 /** @brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
-template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j) const { CHECK(nd==2, "needs 2D array"); j=maxIndex(); i=j/d1; j=j%d1; }
+template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j) const { CHECK_EQ(nd,2, "needs 2D array"); j=maxIndex(); i=j/d1; j=j%d1; }
 
 /** @brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
-template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j, uint& k) const { CHECK(nd==3, "needs 3D array"); k=maxIndex(); i=k/(d1*d2); k=k%(d1*d2); j=k/d2; k=k%d2; }
+template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j, uint& k) const { CHECK_EQ(nd,3, "needs 3D array"); k=maxIndex(); i=k/(d1*d2); k=k%(d1*d2); j=k/d2; k=k%d2; }
 
 /// get the maximal and second maximal value
 template<class T> void MT::Array<T>::maxIndeces(uint& m1, uint& m2) const {
@@ -852,7 +852,7 @@ template<class T> bool MT::Array<T>::containsDoubles() const {
   the upper limit I is -1, it is replaced by the max limit (like
   [i:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
-  CHECK(nd==1, "1D range error ");
+  CHECK_EQ(nd,1, "1D range error ");
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
@@ -867,7 +867,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) const {
-  CHECK(nd==2, "2D range error ");
+  CHECK_EQ(nd,2, "2D range error ");
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(j<0) j+=d1;
@@ -884,7 +884,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {
-  CHECK(nd==3, "3D range error ");
+  CHECK_EQ(nd,3, "3D range error ");
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(j<0) j+=d1;
@@ -904,7 +904,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   over the columns explicitly referred to by cols. (col doesn't have
   to be ordered or could also contain some columns multiply) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols) const {
-  CHECK(nd==2, "2D range error ");
+  CHECK_EQ(nd,2, "2D range error ");
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
@@ -1008,7 +1008,7 @@ template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
 /** @brief returns an ordinary 2-dimensional C-pointer to the Array content.
   Requires the Array<T*> as buffer. */
 template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
-  CHECK(nd==2, "only 2D array gives C-array of type T**");
+  CHECK_EQ(nd,2, "only 2D array gives C-array of type T**");
   Cpointers.resize(d0);
   for(uint i=0; i<d0; i++) Cpointers(i)=p+i*d1;
   return Cpointers.p;
@@ -1017,7 +1017,7 @@ template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
 #if 0
 /// returns an ordinary 3-dimensional C-pointer-array
 template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>& array2d) const {
-  CHECK(nd==3, "only 3D array gives C-array of type T*** ");
+  CHECK_EQ(nd,3, "only 3D array gives C-array of type T*** ");
   array2d.resize(d0, d1);
   for(uint i=0; i<d0; i++) {
     for(uint j=0; j<d1; j++) array2d(i, j)=&operator()(i, j, 0);
@@ -1102,7 +1102,7 @@ template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
 
 /// sets x to be the diagonal matrix with diagonal v
 template<class T> void MT::Array<T>::setDiag(const MT::Array<T>& v) {
-  CHECK(v.nd==1, "can only give diagonal of 1D array");
+  CHECK_EQ(v.nd,1, "can only give diagonal of 1D array");
   resize(v.d0, v.d0);
   setZero();
   uint i;
@@ -1129,7 +1129,7 @@ template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const
 /// constructs the block matrix X=[A, B ; C, D]
 template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const MT::Array<T>& B) {
   CHECK(A.nd==2 && B.nd==2, "");
-  CHECK(A.d0==B.d0, "");
+  CHECK_EQ(A.d0,B.d0, "");
   resize(A.d0, A.d1+B.d1);
   setMatrixBlock(A, 0, 0);
   setMatrixBlock(B, 0, A.d1);
@@ -1227,7 +1227,7 @@ template<class T> void MT::Array<T>::setCarray(const T **buffer, uint D0, uint D
 
 /// copy 'this' into a C array
 template<class T> void MT::Array<T>::copyInto(T *buffer) const {
-  CHECK(nd==1, "can only copy 1D Array into 1D C-array");
+  CHECK_EQ(nd,1, "can only copy 1D Array into 1D C-array");
   uint i;
   if(memMove && typeid(T)==typeid(T)) memmove(buffer, p, sizeT*d0);
   else for(i=0; i<d0; i++) buffer[i]=(T)operator()(i);
@@ -1235,7 +1235,7 @@ template<class T> void MT::Array<T>::copyInto(T *buffer) const {
 
 /// copy 'this' into a C array
 template<class T> void MT::Array<T>::copyInto2D(T **buffer) const {
-  CHECK(nd==2, "can only copy 2D Array into 2D C-array");
+  CHECK_EQ(nd,2, "can only copy 2D Array into 2D C-array");
   uint i, j;
   for(i=0; i<d0; i++) {
     if(memMove && typeid(T)==typeid(T)) memmove(buffer[i], p+i*d1, sizeT*d1);
@@ -1446,7 +1446,7 @@ template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare c
 /// fast remove method in a sorted array, the array remains sorted
 template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare comp) {
   uint i=findValueInSorted(x, comp);
-  CHECK(elem(i)==x, "value not found");
+  CHECK_EQ(elem(i),x, "value not found");
   remove(i);
 }
 
@@ -1639,7 +1639,7 @@ template<class T> void MT::Array<T>::readDim(std::istream& is) {
     is >>dim[ND];
     is.get(c);
     if(c=='>') break;
-    CHECK(c==' ', "error in reading dimensionality");
+    CHECK_EQ(c,' ', "error in reading dimensionality");
   }
   resize(ND+1, dim);
 }
@@ -1695,7 +1695,7 @@ template<class T> bool MT::Array<T>::readTagged(std::istream& is, const char *ta
     String read_tag;
     read_tag.read(is, " \t\n\r", " \t\n\r");
     if(!is.good() || read_tag.N==0) return false;
-    CHECK(read_tag==tag, "read `" <<read_tag <<"' instead of `" <<tag <<"' in arr file");
+    CHECK_EQ(read_tag,tag, "read `" <<read_tag <<"' instead of `" <<tag <<"' in arr file");
   };
   read(is);
   return true;
@@ -1786,7 +1786,7 @@ template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
 template<class T> void checkNan(const MT::Array<T>& x) {
   for(uint i=0; i<x.N; i++) {
     //CHECK(x.elem(i)!=NAN, "found a NaN" <<x.elem(i) <<'[' <<i <<']');
-    CHECK(x.elem(i)==x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
+    CHECK_EQ(x.elem(i),x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
   }
 }
 
@@ -1827,7 +1827,7 @@ template<class T> T normalizeDist(MT::Array<T>& v) {
 /// v = v / sum(v)
 template<class T> void makeConditional(MT::Array<T>& P) {
   MT_MSG("makeConditional: don't use this anymore because it normalizes over the second index!!!, rather use tensorCondNormalize and condition on _later_ indices");
-  CHECK(P.nd==2, "");
+  CHECK_EQ(P.nd,2, "");
   uint i, j;
   T pi;
   for(i=0; i<P.d0; i++) {
@@ -1875,7 +1875,7 @@ template<class T> void checkNormalization(MT::Array<T>& v, double tol) {
 }
 
 template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d) {
-  CHECK(y.nd==2, "only implemented for 2D yet");
+  CHECK_EQ(y.nd,2, "only implemented for 2D yet");
   uint i, j;
   if(d==1) {
     x.resize(y.d0); x=(T)0;
@@ -1888,7 +1888,7 @@ template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d)
 }
 
 template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d, uint e) {
-  CHECK(y.nd==3, "only implemented for 3D yet");
+  CHECK_EQ(y.nd,3, "only implemented for 3D yet");
   uint i, j, k;
   if(d==1 && e==2) {
     x.resize(y.d0); x=(T)0;
@@ -1906,7 +1906,7 @@ template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d,
 
 // Eliminates one-dimension, d, from a 3D-tensor, y, and puts the result in x.
 template<class T> void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, uint d) {
-  CHECK(y.nd==3, "only implemented for 3D yet");
+  CHECK_EQ(y.nd,3, "only implemented for 3D yet");
   uint i, j, k;
   if(d==2) {
     x.resize(y.d0, y.d1); x=(T)0;
@@ -1931,7 +1931,7 @@ template<class T> void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, 
 /// \f$\sum_i (v^i-w^i)^2\f$
 template<class T>
 T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
-  CHECK(v.N==w.N,
+  CHECK_EQ(v.N,w.N,
         "sqrDistance on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
   for(uint i=v.N; i--;) { d=v.p[i]-w.p[i]; t+=d*d; }
@@ -1939,7 +1939,7 @@ T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
 }
 
 template<class T> T maxDiff(const MT::Array<T>& v, const MT::Array<T>& w, uint *im) {
-  CHECK(v.N==w.N,
+  CHECK_EQ(v.N,w.N,
         "maxDiff on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
   if(!im)
@@ -1955,7 +1955,7 @@ template<class T> T maxDiff(const MT::Array<T>& v, const MT::Array<T>& w, uint *
 }
 
 template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T tol) {
-  CHECK(v.N==w.N,
+  CHECK_EQ(v.N,w.N,
         "maxDiff on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0), a, b, c;
   for(uint i=v.N; i--;) {
@@ -1971,7 +1971,7 @@ template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T t
 /// \f$\sum_{i|{\rm mask}_i={\rm true}} (v^i-w^i)^2\f$
 /*template<class T>
   T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w, const MT::Array<bool>& mask){
-  CHECK(v.N==w.N,
+  CHECK_EQ(v.N,w.N,
   "sqrDistance on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
   for(uint i=v.N;i--;) if(mask(i)){ d=v.p[i]-w.p[i]; t+=d*d; }
@@ -2136,7 +2136,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     }
   */
   if(y.nd==2 && z.nd==1) {  //matrix x vector -> vector
-    CHECK(y.d1==z.d0, "wrong dimensions for inner product");
+    CHECK_EQ(y.d1,z.d0, "wrong dimensions for inner product");
 #ifdef MT_LAPACK
     if(MT::useLapack && typeid(T)==typeid(double)) { blas_Mv(x, y, z); return; }
 #endif
@@ -2154,7 +2154,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     return;
   }
   if(y.nd==2 && z.nd==2) {  //plain matrix multiplication
-    CHECK(y.d1==z.d0, "wrong dimensions for inner product");
+    CHECK_EQ(y.d1,z.d0, "wrong dimensions for inner product");
     uint i, j, d0=y.d0, d1=z.d1, dk=y.d1;
 #if 0
     if(y.mtype==MT::Array<T>::diagMT) {
@@ -2233,7 +2233,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   }
   if(y.nd==1 && z.nd==1) {  //should be scalar product, but be careful
     HALT("what do you want? scalar product or element wise multiplication?");
-    CHECK(y.d0==z.d0, "wrong dimensions for inner product");
+    CHECK_EQ(y.d0,z.d0, "wrong dimensions for inner product");
     uint k, dk=y.d0;
     x.resize(1);
     T s;
@@ -2269,13 +2269,13 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
     return;
   }
   if(y.nd==1 && z.nd==2) {  //vector x matrix -> index-wise
-    CHECK(y.N==z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
+    CHECK_EQ(y.N,z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
     x=z;
     for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
     return;
   }
   if(y.nd==2 && z.nd==1) {  //matrix x vector -> index-wise
-    CHECK(y.d1==z.N,"wrong dims for indexWiseProduct:" <<y.d1 <<"!=" <<z.N);
+    CHECK_EQ(y.d1,z.N,"wrong dims for indexWiseProduct:" <<y.d1 <<"!=" <<z.N);
     x=y;
     for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
     return;
@@ -2317,7 +2317,7 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
 /// \f$\sum_i v_i\, w_i\f$, or \f$\sum_{ij} v_{ij}\, w_{ij}\f$, etc.
 template<class T>
 T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {
-  CHECK(v.N==w.N,
+  CHECK_EQ(v.N,w.N,
         "scalar product on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T t(0);
   for(uint i=v.N; i--; t+=v.p[i]*w.p[i]);
@@ -2348,13 +2348,13 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
   arr x;
   uint i, j;
   if(y.nd==1) {
-    CHECK(y.N==z.d0, "");
+    CHECK_EQ(y.N,z.d0, "");
     x=z;
     for(i=0; i<x.d0; i++) for(j=0; j<x.d1; j++) x(i, j) *= y(i);
     return x;
   }
   if(z.nd==1) {
-    CHECK(z.N==y.d1, "");
+    CHECK_EQ(z.N,y.d1, "");
     x=y;
     for(i=0; i<x.d0; i++) for(j=0; j<x.d1; j++) x(i, j) *= z(j);
     return x;
@@ -2408,7 +2408,7 @@ template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
   if(left>=0) {  //normalize over the left variables
     for(j=0; j<(uint)left; j++) dl*=X.dim(j);
     dr=X.N/dl;
-    CHECK(dl*dr==X.N, "");
+    CHECK_EQ(dl*dr,X.N, "");
     for(i=0; i<dr; i++) {
       sum=(T)0;
       for(j=0; j<dl; j++)  sum += X.p[j*dr + i];
@@ -2418,7 +2418,7 @@ template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
   } else { //normalize over the right variables
     for(j=0; j<(uint)-left; j++) dl*=X.dim(j);
     dr=X.N/dl;
-    CHECK(dl*dr==X.N, "");
+    CHECK_EQ(dl*dr,X.N, "");
     for(i=0; i<dl; i++) {
       sum=(T)0;
       for(j=0; j<dr; j++)  sum += X.p[i*dr + j];
@@ -2435,7 +2435,7 @@ template<class T> void tensorCondMax(MT::Array<T>& X, uint left) {
   T pmax;
   for(j=0; j<left; j++) dl*=X.dim(j);
   dr=X.N/dl;
-  CHECK(dl*dr==X.N, "");
+  CHECK_EQ(dl*dr,X.N, "");
   for(i=0; i<dr; i++) {
     jmax=0;
     pmax=X.p[jmax*dr + i];
@@ -2452,7 +2452,7 @@ template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate)
   uint i, j, dl=1, dr, jmax1, jmax2;
   for(j=0; j<left; j++) dl*=X.dim(j);
   dr=X.N/dl;
-  CHECK(dl*dr==X.N, "");
+  CHECK_EQ(dl*dr,X.N, "");
   arr X_i(dl);
   double amin=10.;
   for(i=0; i<dr; i++) {
@@ -2485,7 +2485,7 @@ template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X, uint 
   double sum;
   for(j=0; j<left; j++) dl*=X.dim(j);
   dr=X.N/dl;
-  CHECK(dl*dr==X.N, "");
+  CHECK_EQ(dl*dr,X.N, "");
   for(i=0; i<dr; i++) {
     sum=0.;
     for(j=0; j<dl; j++) sum += X.p[j*dr + i];
@@ -2498,7 +2498,7 @@ template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>
   double sum, coeff=::exp(logP);
   for(j=0; j<left; j++) dl*=X.dim(j);
   dr=X.N/dl;
-  CHECK(dl*dr==X.N, "");
+  CHECK_EQ(dl*dr,X.N, "");
   for(i=0; i<dr; i++) {
     sum=0.;
     uintA checkedIds;
@@ -2554,16 +2554,16 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
   if(!sum) {
     res=1;
     //X.resizeTensor(d);
-    CHECK(d==X.d, "for security, please set size before");
+    CHECK_EQ(d,X.d, "for security, please set size before");
   } else {
     dx.resize(d.N-sum);
     res=1;
     for(j=0; j<dx.N; j++) dx(j)=d(j);
     for(; j<d .N; j++) res*=d(j);
     //X.resizeTensor(dx);
-    CHECK(dx==X.d, "for security, please set size before");
+    CHECK_EQ(dx,X.d, "for security, please set size before");
   }
-  CHECK(N==X.N*res, "");
+  CHECK_EQ(N,X.N*res, "");
   DEBUG_TENSOR(cout <<"dx=" <<dx <<" res=" <<res <<endl;);
   
   //here the copying and multiplying takes place...
@@ -2603,7 +2603,7 @@ template<class T> void tensorEquation_doesntWorkLikeThat(MT::Array<T> &X, const 
   //dimensionalities: left-sum-right
   uint ldim=1, sdim=1, rdim=1;
   for(i=0; i<Aperm.nd-sum; i++) { ldim *= Aperm.d[i]; }
-  for(i=0; i<sum; i++) { j = Aperm.d[sum+i]; CHECK(j==Bperm.d[i], ""); sdim*=j; }
+  for(i=0; i<sum; i++) { j = Aperm.d[sum+i]; CHECK_EQ(j,Bperm.d[i], ""); sdim*=j; }
   for(i=0; i<Bperm.nd-sum; i++) { rdim *= Bperm.d[sum+i]; }
   DEBUG_TENSOR(cout <<"ldim=" <<ldim <<" sdim=" <<sdim <<" rdim=" <<rdim <<endl;)
   
@@ -2666,11 +2666,11 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
     //check if incrementing Y worked out
     uint k, jj=0;
     for(k=0; k<Yid.N; k++) { jj*=Ydim[k]; jj+=I[Yid(k)]; }
-    CHECK(jj==Ycount, "");
+    CHECK_EQ(jj,Ycount, "");
     //check if incrementing I worked out
     uintA II;
     getIndexTuple(II, Xcount, uintA(X.d, X.nd));
-    CHECK(II==I, "not equal: " <<II <<uintA(I, X.nd));
+    CHECK_EQ(II,I, "not equal: " <<II <<uintA(I, X.nd));
 #endif
     Y.p[Ycount] += X.p[Xcount];
     multiDimIncrement(Ycount, I, X.d, Yinc, Ydec, X.nd);
@@ -2681,7 +2681,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
   from X, where Y will share the slots `Yid' with X */
 template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
-  CHECK(Yid.N==X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
+  CHECK_EQ(Yid.N,X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
@@ -2722,11 +2722,11 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
   where Y shares the slots `Yid' with X */
 template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
-  CHECK(Yid.N==Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
+  CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
   //handle scalar case
-  if(!Yid.N) { CHECK(Y.N==1, "");  X+=Y.scalar();  return; }  //Y is only a scalar
+  if(!Yid.N) { CHECK_EQ(Y.N,1, "");  X+=Y.scalar();  return; }  //Y is only a scalar
   
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
@@ -2744,7 +2744,7 @@ template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, con
 
 template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x, const uintA &xd, const uintA &ids) {
   uint i, j, k, n=product(xd);
-  CHECK(x.N==n, "");
+  CHECK_EQ(x.N,n, "");
   //size y
   uintA yd(ids.N);
   for(i=0; i<ids.N; i++) yd(i)=xd(ids(i));
@@ -2767,11 +2767,11 @@ template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x
   where Y shares the slots `Yid' with X */
 template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
-  CHECK(Yid.N==Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
+  CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
   //handle scalar case
-  if(!Yid.N) { CHECK(Y.N==1, "");  X*=Y.scalar();  return; }  //Y is only a scalar
+  if(!Yid.N) { CHECK_EQ(Y.N,1, "");  X*=Y.scalar();  return; }  //Y is only a scalar
   
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
@@ -2790,11 +2790,11 @@ template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, co
 // TODO cope with division by 0, in particular 0/0
 template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
-  CHECK(Yid.N==Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
+  CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
   //handle scalar case
-  if(!Yid.N) { CHECK(Y.N==1, "");  X/=Y.scalar();  return; }  //Y is only a scalar
+  if(!Yid.N) { CHECK_EQ(Y.N,1, "");  X/=Y.scalar();  return; }  //Y is only a scalar
   
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
@@ -2811,11 +2811,11 @@ template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, cons
 
 template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
-  CHECK(Yid.N==Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
+  CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
   //handle scalar case
-  if(!Yid.N) { CHECK(Y.N==1, "");  X+=Y.scalar();  return; }  //Y is only a scalar
+  if(!Yid.N) { CHECK_EQ(Y.N,1, "");  X+=Y.scalar();  return; }  //Y is only a scalar
   
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
@@ -2833,11 +2833,11 @@ template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const u
   dimensions `ids' with x */
 template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y, const uintA &d, const uintA &ids) {
   uint i, j, k, n=x.N;
-  CHECK(n==product(d), "");
+  CHECK_EQ(n,product(d), "");
   
   uintA yd(ids.N);
   for(i=0; i<ids.N; i++) yd(i)=d(ids(i));
-  CHECK(y.N==product(yd), "");
+  CHECK_EQ(y.N,product(yd), "");
   
   uintA I(d.N); I.setZero();
   for(i=0; i<n; i++) {
@@ -2993,7 +2993,7 @@ template<class T> Array<T> operator%(const Array<T>& y, const Array<T>& z) { Arr
 
 #define UpdateOperator( op )        \
   template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y){ \
-    CHECK(x.N==y.N, "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
+    CHECK_EQ(x.N,y.N, "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
     T *xp=x.p, *xstop=xp+x.N;              \
     const T *yp=y.p;              \
     for(; xp!=xstop; xp++, yp++) *xp op *yp;       \
@@ -3138,7 +3138,7 @@ UnaryFunction(floor);
 #define BinaryFunction( func )            \
   template<class T>             \
   MT::Array<T> func(const MT::Array<T>& y, const MT::Array<T>& z){ \
-    CHECK(y.N==z.N,             \
+    CHECK_EQ(y.N,z.N,             \
           "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")"); \
     MT::Array<T> x;             \
     x.resizeAs(y);              \
@@ -3178,7 +3178,7 @@ BinaryFunction(fmod);
 
 /// element-wise linear combination (plus with scalar factors for each array)
 template<class T> void plusSASA(MT::Array<T>& x, T a, const MT::Array<T>& y, T b, const MT::Array<T>& z){
-CHECK(y.N==z.N, "must have same size for adding!");
+CHECK_EQ(y.N,z.N, "must have same size for adding!");
 uint i, n=y.N;
 x.resizeAs(y);
 for(i=0;i<n;i++) x.p[i]=a*y.p[i]+b*z.p[i];
@@ -3226,7 +3226,7 @@ template<class T> void listRead(MT::Array<T*>& L, std::istream& is, const char *
   CHECK(!L.N, "delete the list before reading!");
   CHECK(delim, "automatic list reading requires delimiters");
   char c;
-  if(delim) { MT::skip(is); is.get(c); CHECK(c==delim[0], "couldn't parse opening list delimiter"); }
+  if(delim) { MT::skip(is); is.get(c); CHECK_EQ(c,delim[0], "couldn't parse opening list delimiter"); }
   for(;;) {
     c=MT::peerNextChar(is);
     if(c==delim[1]) { is.get(c); break; }
@@ -3384,7 +3384,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
   // (which becomes uniform in the limit that d is small and N goes
   // to infinity).
   
-  CHECK((N*d)%2==0, "");
+  CHECK_EQ((N*d)%2,0, "");
   
   uint i, j;
   for(i=0; i<N; i++) V.append(new vert);

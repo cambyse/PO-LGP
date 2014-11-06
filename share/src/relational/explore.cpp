@@ -1049,7 +1049,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
             other_actions.append(visited_actions(rulesC.experiences_per_rule(rule_idx)(q)));
             other_graphs.append(graphs(rulesC.experiences_per_rule(rule_idx)(q)));
           }
-          CHECK(s_pre == graphs.last()->state, "");
+          CHECK_EQ(s_pre , graphs.last()->state, "");
           RelationalStateGraph* graph = RelationalStateGraph::createSubgraph(*action, *graphs.last(), *rulesC.rules.elem(rule_idx), ENTROPY_RELATED_OBJECTS_DEPTH);
           double min_distance = RelationalStateGraph::getMinDistance(*graph, *action, other_graphs, other_actions);
           if (DEBUG>0) {cout<<"Min distance of new experience to old experiences :  "<<min_distance<<endl;}
@@ -2650,7 +2650,7 @@ double RelationalStateGraph::distance(const RelationalStateGraph& g1, const Atom
     cout<<"*** Action 1:  "<<a1<<endl;  cout<<"Graph 1:"<<endl;  g1.writeNice();
     cout<<"*** Action 2:  "<<a2<<endl;  cout<<"Graph 2:"<<endl;  g2.writeNice();
   }
-  CHECK(a1.pred == a2.pred, "bad actions:   a1="<<a1<<"  vs.  a2="<<a2);
+  CHECK_EQ(a1.pred , a2.pred, "bad actions:   a1="<<a1<<"  vs.  a2="<<a2);
   Substitution* init_sub = new Substitution;
   if (a1.args.N > 0) {init_sub->addSubs(a1.args(0), a2.args(0));}
   SubstitutionSet subs;
@@ -2697,7 +2697,7 @@ double RelationalStateGraph::entropy(const AtomL& actions, const MT::Array< Rela
   int k;
   double entropy = 0.0;
   FOR1D(graphs, i) {
-    CHECK(actions(i)->pred == actions(0)->pred, "bad actions:   actions(i)="<<*actions(i)<<"  vs.  actions(0)="<<*actions(0));
+    CHECK_EQ(actions(i)->pred , actions(0)->pred, "bad actions:   actions(i)="<<*actions(i)<<"  vs.  actions(0)="<<*actions(0));
     if (DEBUG>1) {cout<<"+++ i="<<i<<endl;}
     double min_distance_to_others = 1.0;
     // comparison to previous states
