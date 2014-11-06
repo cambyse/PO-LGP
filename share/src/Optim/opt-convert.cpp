@@ -505,6 +505,7 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux, *Jh_aux;
   y.resize(dimy);
   if(&g) g.resize(dimg);
+  if(&h) h.resize(dimh);
   if(getJ) Jy_aux = auxRowShifted(Jy, dimy, J.d1, J_aux->real_d1);
   if(&Jg)  Jg_aux = auxRowShifted(Jg, dimg, J.d1, J_aux->real_d1);
   if(&Jh)  Jh_aux = auxRowShifted(Jh, dimh, J.d1, J_aux->real_d1);

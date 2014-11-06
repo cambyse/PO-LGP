@@ -130,7 +130,8 @@ bool UnconstrainedProblem::anyTimeAulaUpdateStopCriterion(const arr& dL_x){
 }
 
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
-  if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
+  if(!lambda.N) lambda=zeros(g_x.N);
+  if(!kappa .N) kappa =zeros(h_x.N);
 
   //-- kappa update
   kappa += (lambdaStepsize * 2.*nu)*h_x;
@@ -227,6 +228,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
   //uint stopTolInc;
 
   //switch on penalty terms
+  UCP.nu=1.;
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
@@ -244,8 +246,8 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
 
     if(opt.verbose>0){
       cout <<"***** optConstrained: iteration=" <<k
-	   <<" mu=" <<UCP.mu <<" muLB=" <<UCP.muLB;
-      if(x.N<5) cout <<" \tlambda=" <<UCP.lambda;
+           <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
+      if(x.N<5) cout <<" \tlambda=" <<UCP.lambda <<" \tkappa=" <<UCP.kappa /*<<" \tg=" <<UCP.g_x <<" \th=" <<UCP.h_x*/;
       cout <<endl;
     }
 
@@ -274,7 +276,9 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
     }
 
     if(opt.verbose>0){
-      cout <<k <<' ' <<newton.evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1)));
+      cout <<k <<' ' <<newton.evals <<" f(x)=" <<UCP.f_x
+          <<" \tg_compl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N)))
+         <<" \th_compl=" <<sumOfAbs(UCP.h_x);
       if(x.N<5) cout <<" \tx=" <<x;
       cout <<endl;
     }

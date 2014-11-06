@@ -119,6 +119,7 @@ struct MotionProblem {
   bool getPhi(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   uint dim_phi(const ors::KinematicWorld& G, uint t);
   uint dim_g(const ors::KinematicWorld& G, uint t);
+  uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
@@ -151,6 +152,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint dim_z() { return MP.z0.N; }
   virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
+  virtual uint dim_h(uint t){ return MP.dim_h(MP.world, t); }
   virtual StringA getPhiNames(uint t);
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();

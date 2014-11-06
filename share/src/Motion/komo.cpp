@@ -22,34 +22,38 @@ arr moveTo(ors::KinematicWorld& world,
   world.swift().initActivations(world);
   MP.world.watch(false);
 
-  Task *c;
+  Task *t;
 
-  c = MP.addTask("transitions", new TransitionTaskMap(world));
-  c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
-  c->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
+  t = MP.addTask("final_vel", new TransitionTaskMap(world));
+  t->map.order=1; //make this a velocity task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
 
-  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff"));
-//  c = MP.addTask("q_vel", new TaskMap_qItself());
-  c->setCostSpecs(MP.T, MP.T, {0.}, zeroVelPrec);
-  c->map.order=1; //make this a velocity task!
+  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
+  t->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
+
+//  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff"));
+////  c = MP.addTask("q_vel", new TaskMap_qItself());
+//  c->setCostSpecs(MP.T, MP.T, {0.}, zeroVelPrec);
+//  c->map.order=1; //make this a velocity task!
 
   if(colPrec<0){ //interpreted as hard constraint (default)
-    c = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
+    t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
   }else{ //cost term
-    c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
+    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
   }
-  c->setCostSpecs(0, MP.T, {0.}, colPrec);
+  t->setCostSpecs(0, MP.T, {0.}, colPrec);
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
     ors::Vector axis;
     axis.setZero();
     axis(i)=1.;
-    c = MP.addTask(STRING("endeff_align_"<<i),
+    t = MP.addTask(STRING("endeff_align_"<<i),
                    new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis));
-    c->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
+    t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)

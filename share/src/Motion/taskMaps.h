@@ -92,7 +92,7 @@ enum PTMtype {
 };
 
 /// Proxy task variable
-struct ProxyTaskMap:public TaskMap {
+struct ProxyTaskMap:TaskMap {
   /// @name data fields
   PTMtype type;
   uintA shapes,shapes2;
@@ -113,7 +113,7 @@ struct ProxyTaskMap:public TaskMap {
 
 //===========================================================================
 
-struct CollisionConstraint:public TaskMap {
+struct CollisionConstraint:TaskMap {
   double margin;
   CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
@@ -122,7 +122,7 @@ struct CollisionConstraint:public TaskMap {
 
 //===========================================================================
 
-struct LimitsConstraint:public TaskMap {
+struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
   LimitsConstraint():margin(.05){ type=ineqTT; }
@@ -132,7 +132,7 @@ struct LimitsConstraint:public TaskMap {
 
 //===========================================================================
 
-struct PairCollisionConstraint:public TaskMap {
+struct PairCollisionConstraint:TaskMap {
   int i;       ///< which shapes does it refer to?
   int j;       ///< which shapes does it refer to?
   double margin;
@@ -149,7 +149,7 @@ struct PairCollisionConstraint:public TaskMap {
 
 //===========================================================================
 
-struct PlaneConstraint:public TaskMap {
+struct PlaneConstraint:TaskMap {
   int i;       ///< which shapes does it refer to?
   arr planeParams;  ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
@@ -163,7 +163,7 @@ struct PlaneConstraint:public TaskMap {
 //===========================================================================
 
 //this is NOT a constraint -- it turns a constraint into stickiness
-struct ConstraintStickiness:public TaskMap {
+struct ConstraintStickiness:TaskMap {
   TaskMap& map;
   ConstraintStickiness(TaskMap& _map)
     : map(_map) {
@@ -174,5 +174,26 @@ struct ConstraintStickiness:public TaskMap {
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
+//===========================================================================
+
+struct PointEqualityConstraint:TaskMap {
+  int i, j;               ///< which shapes does it refer to?
+  ors::Vector ivec, jvec; ///< additional position or vector
+
+
+  PointEqualityConstraint(const ors::KinematicWorld &G,
+                          const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
+                          const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector){
+    DefaultTaskMap dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
+    i=dummy.i;
+    j=dummy.j;
+    ivec=dummy.ivec;
+    jvec=dummy.jvec;
+    type=eqTT;
+  }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
+};
 
 

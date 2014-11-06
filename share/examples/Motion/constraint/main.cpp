@@ -13,43 +13,41 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
     gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p, true, false);
     flip_image(gl.captureImage);
     vid.addFrame(gl.captureImage);
-//    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
+    //    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
   }
   vid.close();
 }
 
-int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-
+void TEST(Stickiness){
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
-  bool con=true;
+  bool hardConstraint=true;
 
   MotionProblem MP(G);
 
   //-- setup the motion problem
-  Task *c;
+  Task *t;
 
-  c = MP.addTask("transitions", new TransitionTaskMap(G));
-  c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getBodyByName("target")->X.pos), 1e3);
+  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
-  c = MP.addTask("position_vel", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  c->map.order=1;
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  if(con){
-    c = MP.addTask("collisionConstraints", new CollisionConstraint());
-    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  if(hardConstraint){
+    t = MP.addTask("collisionConstraints", new CollisionConstraint());
+    t->setCostSpecs(0, MP.T, {0.}, 1.);
 
-    Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(c->map));
+    Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(t->map));
     sticky->setCostSpecs(0, MP.T, {0.}, 1.e1);
   }else{
-    c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
-    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
+    t->setCostSpecs(0, MP.T, {0.}, 1.);
   }
 
   
@@ -64,7 +62,49 @@ int main(int argc,char** argv){
     MP.costReport();
     for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
   }
+}
 
+//===========================================================================
+
+void TEST(EqualityConstraints){
+  ors::KinematicWorld G("chain.ors");
+  MotionProblem MP(G);
+
+  //-- setup the motion problem
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
+
+#if 1
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
+#else
+  t = MP.addTask("position", new PointEqualityConstraint(G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
+#endif
+
+  t = MP.addTask("ballEqCon", new PointEqualityConstraint(G, "point", NoVector, NULL, G.getShapeByName("point")->X.pos));
+  t->setCostSpecs(0, MP.T, {0.}, 1.);
+
+  //-- create the Optimization problem (of type kOrderMarkov)
+  MotionProblemFunction MF(MP);
+  arr x = MP.getInitialization();
+  optConstrained(x, MP.dualMatrix, Convert(MF));
+  MP.costReport();
+  displayTrajectory(x, 1, G, "planned trajectory");
+}
+
+//===========================================================================
+
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
+//  testStickiness();
+  testEqualityConstraints();
   return 0;
 }
 

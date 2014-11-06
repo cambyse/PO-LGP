@@ -70,3 +70,21 @@ void ConstraintStickiness::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   for(uint j=0;j<y.N;j++) y(j) = -y(j);
   if(&J) for(uint j=0;j<J.d0;j++) J[j]() *= -1.;
 }
+
+//===========================================================================
+
+void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+  ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
+  ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
+  ors::Body *body_i = i<0?NULL: G.shapes(i)->body;
+  ors::Body *body_j = j<0?NULL: G.shapes(j)->body;
+  ors::Vector pi = body_i ? body_i->X * vec_i : vec_i;
+  ors::Vector pj = body_j ? body_j->X * vec_j : vec_j;
+  y = ARRAY(pi-pj);
+  if(&J) {
+    arr Ji, Jj;
+    G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
+    G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
+    J = Ji - Jj;
+  }
+}

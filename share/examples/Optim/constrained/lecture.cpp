@@ -90,7 +90,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
 //    }
 
     system("cat z.grad >>z.grad_all");
-    cout <<k <<' ' <<evals <<' ' <<"f(x)=" <<UCP.f_x
+    cout <<k <<' ' <<evals <<" f(x)=" <<UCP.f_x
         <<" \tg_compl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N)))
        <<" \th_compl=" <<sumOfAbs(UCP.h_x)
       <<" \tmu=" <<UCP.mu <<" \tnu=" <<UCP.nu <<" \tmuLB=" <<UCP.muLB;
