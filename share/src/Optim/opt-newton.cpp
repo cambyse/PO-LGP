@@ -58,9 +58,11 @@ void OptNewton::reinit(){
 }
 
 OptNewton::StopCriterion OptNewton::step(){
+  cout <<"OPT" <<o <<endl;
+
   double fy;
   arr y, gy, Hy, Delta;
-  x_changed=false;
+//  x_changed=false;
 
   it++;
   if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tbeta=" <</*std::setprecision(3) <<*/beta <<flush;
@@ -105,7 +107,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
-      x_changed=true;
+//      x_changed=true;
       x = y;
       fx = fy;
       gx = gy;

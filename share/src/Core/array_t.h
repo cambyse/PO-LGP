@@ -1259,6 +1259,7 @@ template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, int 
   reference=true; memMove=a.memMove;
   if(i<0) i+=a.d0;
   if(I<0) I+=a.d0;
+  if(i>I) return;
   CHECK((uint)i<a.d0 && (uint)I<a.d0, "SubRange range error (" <<i <<"<" <<a.d0 <<", " <<I <<"<" <<a.d0 <<")");
   if(a.nd==1) {
     nd=1;  d0=I+1-i; d1=0; d2=0;  N=d0;

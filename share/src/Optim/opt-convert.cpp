@@ -72,6 +72,14 @@ Convert::operator ConstrainedProblem() {
   return cp;
 }
 
+Convert::operator ConstrainedProblemMix() {
+  if(!cpm) {
+    if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblemMix(*kom);
+  }
+  if(!cpm) HALT("");
+  return cpm;
+}
+
 Convert::operator KOrderMarkovFunction&() {
   if(!kom) {
 // #ifndef libRoboticsCourse
@@ -111,7 +119,7 @@ ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f) {
   };
 }
 
-void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr& phi, arr& J, TermTypeA& tt, StringA& termNames, const arr& _x) {
+void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, arr& phi, arr& J, TermTypeA& tt, const arr& _x) {
   //probing dimensionality
   uint T=f.get_T();
   uint k=f.get_k();
@@ -181,14 +189,19 @@ void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr
 
     //query
     arr phi_t, J_t, Jz_t;
-    f.phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
+    TermTypeA tt_t;
+    f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t, x_bar);
     CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
-
+#if 1
+    tt.setVectorBlock(tt_t, M);
+#else
+//    cout <<tt_t <<endl;
     //set term types
     tt.subRange(M,               M+dimf_t-1)               = sumOfSqrTT;
     tt.subRange(M+dimf_t,        M+dimf_t+dimg_t-1)        = ineqTT;
     tt.subRange(M+dimf_t+dimg_t, M+dimf_t+dimg_t+dimh_t-1) = eqTT;
+#endif
 
     //if the jacobian is returned
     if(&J) {
@@ -221,18 +234,20 @@ void conv_KOrderMarkovFunction_ConstraintProblemMix(KOrderMarkovFunction& f, arr
       }
     }
 
-    //if the termNames is returned
-    if(&termNames) {
-    }
-
     M += dimphi_t;
   }
 
-  CHECK_EQ(M,dim_phi,"");
+  CHECK_EQ(M, dim_phi,"");
   if(&J){
     Jaux->computeColPatches(true);
     if(dim_z) Jzaux->computeColPatches(false);
   }
+}
+
+ConstrainedProblemMix convert_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f){
+  return [&f](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+    conv_KOrderMarkovFunction_ConstrainedProblemMix(f, phi, J, tt, x);
+  };
 }
 
 void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi, arr& J, const arr& _x) {
@@ -328,7 +343,7 @@ void conv_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f, arr& phi,
 
     //query
     arr f_t, J_t, Jz_t;
-    f.phi_t(f_t, (&J?J_t:NoArr), t, x_bar);
+    f.phi_t(f_t, (&J?J_t:NoArr), NoTermTypeA, t, x_bar);
     CHECK_EQ(f_t.N,dimf_t,"");
     phi.setVectorBlock(f_t, M);
     if(&J) {
@@ -589,4 +604,13 @@ ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovF
     return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
   };
 }
+
+
+//===========================================================================
+
+struct RUN_ON_INIT{
+  RUN_ON_INIT(){
+    MT::Array<TermType>::memMove=true;
+  }
+} dummy;
 

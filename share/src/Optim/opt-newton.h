@@ -34,7 +34,7 @@ struct OptNewton{
   double alpha, beta;
   uint it, evals;
   StopCriterion stopCriterion;
-  bool x_changed;
+//  bool x_changed;
   ofstream fil;
 
   OptNewton(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);

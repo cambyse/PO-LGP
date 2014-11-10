@@ -100,8 +100,9 @@ struct MotionProblem {
   arr z0; ///< an initialization of the stationary parameters of the motion problem
 
   //-- return values of an optimizer
-  MT::Array<arr> phiMatrix;
+  arrA phiMatrix;
   arr dualMatrix;
+  MT::Array<TermTypeA> ttMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
@@ -116,7 +117,7 @@ struct MotionProblem {
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  bool getPhi(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
+  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   uint dim_phi(const ors::KinematicWorld& G, uint t);
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_h(const ors::KinematicWorld& G, uint t);
@@ -144,7 +145,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return 2; }

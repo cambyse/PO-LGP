@@ -18,27 +18,27 @@ void TEST(PR2reach){
   MotionProblem MP(G);
 
   //-- setup the motion problem
-  Task *c;
+  Task *t;
 
-  c = MP.addTask("transitions", new TransitionTaskMap(G));
-  c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, G, "endeff"));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
+//  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, G, "endeff"));
+  t->map.order=1; //make this a velocity task!
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
-  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, G, "endeff"));
-//  c = MP.addTask("q_vel", new TaskMap_qItself());
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
-  c->map.order=1; //make this a velocity variable!
+  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, MP.world.getShapeByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-//#define CONSTRAINT
+#define CONSTRAINT
 #ifndef CONSTRAINT
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
+  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
 #else
-  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
+  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
 #endif
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+  t->setCostSpecs(0, MP.T, {0.}, 1e-0);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -51,7 +51,8 @@ void TEST(PR2reach){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+//    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
 #endif
 
     cout <<"** optimization time=" <<MT::timerRead()
@@ -70,24 +71,29 @@ void TEST(Basics){
   G.getShapeByName("target")->cont=false;
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
 
   //-- setup the motion problem
-  Task *c;
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
+  Task *t;
 
-  c = MP.addTask("q_vel", new TaskMap_qItself());
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
-  c->map.order=1; //make this a velocity variable!
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-//#define CONSTRAINT
-#ifndef CONSTRAINT
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
-#else
-  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
-#endif
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+  //#define CONSTRAINT
+  #ifndef CONSTRAINT
+  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
+  #else
+  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
+  #endif
+  t->setCostSpecs(0, MP.T, {0.}, 1e-0);
+
+  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t->map.order=1; //make this a velocity task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e1);
+
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
+
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -109,7 +115,7 @@ void TEST(Basics){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, damping=.1));
 #else
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
     MP.costReport();

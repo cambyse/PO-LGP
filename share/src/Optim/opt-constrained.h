@@ -65,6 +65,39 @@ struct UnconstrainedProblem{
   bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
 };
 
+struct UnconstrainedProblemMix:ScalarFunction{
+  /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
+      concatenated to one vector:
+      phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
+  const ConstrainedProblemMix& P;
+
+  //-- parameters of the unconstrained meta function F
+  double muLB;       ///< log barrier weight
+  double mu;         ///< squared penalty weight for inequalities g
+  double nu;         ///< squared penalty weight for equalities h
+  arr lambda;        ///< lagrange multipliers for inequalities g and equalities h
+
+  //-- buffers to avoid recomputing gradients
+  arr x; ///< point where P was last evaluated
+  arr phi_x, J_x; ///< everything else at x
+  TermTypeA tt_x; ///< everything else at x
+
+  UnconstrainedProblemMix(const ConstrainedProblemMix &P):P(P), muLB(0.), mu(0.), nu(0.) {
+    ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
+      return this->lagrangian(dL, HL, x);
+    } );
+  }
+
+  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
+
+  double get_sumOfSquares(); ///< info on the terms from last call
+  double get_sumOfGviolations(); ///< info on the terms from last call
+  double get_sumOfHviolations(); ///< info on the terms from last call
+
+  void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
+  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
+  bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
+};
 
 //==============================================================================
 //
@@ -94,6 +127,7 @@ struct PhaseOneProblem{
 //
 
 uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
+uint optConstrainedMix(arr& x, arr &dual, const ConstrainedProblemMix& P, OptOptions opt=NOOPT);
 
 
 //==============================================================================
