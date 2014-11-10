@@ -193,15 +193,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
     f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t, x_bar);
     CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
-#if 1
     tt.setVectorBlock(tt_t, M);
-#else
-//    cout <<tt_t <<endl;
-    //set term types
-    tt.subRange(M,               M+dimf_t-1)               = sumOfSqrTT;
-    tt.subRange(M+dimf_t,        M+dimf_t+dimg_t-1)        = ineqTT;
-    tt.subRange(M+dimf_t+dimg_t, M+dimf_t+dimg_t+dimh_t-1) = eqTT;
-#endif
 
     //if the jacobian is returned
     if(&J) {

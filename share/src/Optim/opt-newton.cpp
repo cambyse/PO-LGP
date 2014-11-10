@@ -58,8 +58,6 @@ void OptNewton::reinit(){
 }
 
 OptNewton::StopCriterion OptNewton::step(){
-  cout <<"OPT" <<o <<endl;
-
   double fy;
   arr y, gy, Hy, Delta;
 //  x_changed=false;
