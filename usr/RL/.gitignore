@@ -1,4 +1,10 @@
 Makefile*
 ui_*.h
 moc_*.cpp
+
+## qtcreator files
 *.pro.user
+build-*
+
+## backup file of vue
+.~*.vue

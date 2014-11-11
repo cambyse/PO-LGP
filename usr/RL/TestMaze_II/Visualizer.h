@@ -2,6 +2,7 @@
 #define VISUALIZER_H_
 
 #include <QGraphicsView>
+#include <QGraphicsScene>
 
 #include <vector>
 #include <tuple>
@@ -15,7 +16,7 @@ public:
     enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
 
     Visualizer() = default;
-    virtual ~Visualizer() = default;
+    virtual ~Visualizer();
 
     /** \brief Initializes get graphics view (or initialize).
      *
@@ -33,9 +34,10 @@ protected:
 
     /** \brief QGraphicsView to render the environment. */
     QGraphicsView * view = nullptr;
+    QGraphicsScene * scene = nullptr;
 
     /*! \brief Rescale the scene to fit into view. */
-    virtual void rescale_scene(QGraphicsView * view);
+    virtual void rescale_scene();
 
 };
 

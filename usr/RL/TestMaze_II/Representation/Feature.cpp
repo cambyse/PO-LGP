@@ -2,10 +2,17 @@
 
 #include "DoublyLinkedInstance.h"
 
+#include "../ButtonWorld/ButtonAction.h"
+
+#include <tuple>
+#include <vector>
+
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
+using std::vector;
 using std::get;
+using std::make_tuple;
 using std::string;
 using std::shared_ptr;
 using std::dynamic_pointer_cast;
@@ -15,6 +22,8 @@ using util::INVALID;
 // for binary features the "map" may be a set containing the active ('true')
 // features only
 #define LOOK_UP_MAP_IS_SET
+
+const bool Feature::use_complexity_penalty = false;
 
 void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
 #ifdef LOOK_UP_MAP_IS_SET
@@ -50,30 +59,23 @@ Feature::Feature():
 
 Feature::~Feature() {}
 
-Feature::feature_return_t Feature::evaluate(const_instance_ptr_t) const {
-    DEBUG_ERROR("Evaluating abstract type Feature");
-    return return_function(0);
+Feature::feature_return_t Feature::evaluate(const_instance_ptr_t ins) const {
+    return return_function(intern_evaluate(ins));
 }
 
 Feature::feature_return_t Feature::evaluate(const_instance_ptr_t ins,
                                                 action_ptr_t action,
                                                 observation_ptr_t observation,
                                                 reward_ptr_t reward) const {
-    return this->evaluate(
-        DoublyLinkedInstance::create(action,observation,reward,ins,INVALID)
-        );
+    return return_function(intern_evaluate(ins, action, observation, reward));
 }
 
-Feature::feature_return_t Feature::evaluate(const look_up_map_t&) const {
-    DEBUG_ERROR("Evaluating abstract type Feature");
-    return return_function(0);
+Feature::feature_return_t Feature::evaluate(const look_up_map_t & m) const {
+    return return_function(intern_evaluate(m));
 }
-
-// string Feature::identifier() const {
-//    return QString("(%1)").arg(id).toStdString();
-// }
 
 string Feature::identifier() const {
+    // return QString("(%1)").arg(id).toStdString();
     return string("");
 }
 
@@ -103,9 +105,32 @@ unsigned int Feature::get_complexity() const{
     return complexity;
 }
 
-Feature::feature_return_t Feature::return_function(const feature_return_t& ret) const {
-    return ret;
-    //return (complexity+1) * ret;
+Feature::intern_feature_return_t Feature::intern_evaluate(const_instance_ptr_t) const {
+    DEBUG_ERROR("Evaluating abstract type Feature");
+    return 0;
+}
+
+Feature::intern_feature_return_t Feature::intern_evaluate(const_instance_ptr_t ins,
+                                                action_ptr_t action,
+                                                observation_ptr_t observation,
+                                                reward_ptr_t reward) const {
+    return this->intern_evaluate(
+        DoublyLinkedInstance::create(action,observation,reward,ins,INVALID)
+        );
+}
+
+Feature::intern_feature_return_t Feature::intern_evaluate(const look_up_map_t&) const {
+    DEBUG_ERROR("Evaluating abstract type Feature");
+    return 0;
+}
+
+Feature::feature_return_t Feature::return_function(const intern_feature_return_t& ret) const {
+    static_assert(!use_complexity_penalty || std::is_same<feature_return_t,double>(), "Return type must be double");
+    if(use_complexity_penalty) {
+        return (feature_return_t)ret/(complexity+1);
+    } else {
+        return ret;
+    }
 }
 
 BasisFeature::unique_feature_set_t BasisFeature::unique_feature_set;
@@ -114,7 +139,7 @@ BasisFeature::~BasisFeature() {
     erase_from_unique();
 }
 
-Feature::feature_return_t BasisFeature::evaluate(const look_up_map_t& look_up_map) const {
+Feature::intern_feature_return_t BasisFeature::intern_evaluate(const look_up_map_t& look_up_map) const {
     auto it = look_up_map.find(self_ptr.lock());
     if(it!=look_up_map.end()) {
 #ifdef LOOK_UP_MAP_IS_SET
@@ -169,14 +194,14 @@ void BasisFeature::erase_from_unique() {
     }
 }
 
-ConstFeature::ConstFeature(const feature_return_t& v) {
+ConstFeature::ConstFeature(const intern_feature_return_t& v) {
     feature_type = CONST_FEATURE;
     complexity = 0;
     const_feature = true;
     const_return_value = v;
 }
 
-Feature::const_feature_ptr_t ConstFeature::create(const feature_return_t& v) {
+Feature::const_feature_ptr_t ConstFeature::create(const intern_feature_return_t& v) {
     return BasisFeature::create(new ConstFeature(v));
 }
 
@@ -184,13 +209,13 @@ ConstFeature::~ConstFeature() {
     erase_from_unique();
 }
 
-Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins) const {
-    return return_function(ins==INVALID ? 0 : const_return_value);
+Feature::intern_feature_return_t ConstFeature::intern_evaluate(const_instance_ptr_t ins) const {
+    return ins==INVALID ? 0 : const_return_value;
 }
 
-Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
+Feature::intern_feature_return_t ConstFeature::intern_evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
     // re-implement because it's more efficient
-    return return_function(ins==INVALID ? 0 : const_return_value);
+    return ins==INVALID ? 0 : const_return_value;
 }
 
 string ConstFeature::identifier() const {
@@ -233,12 +258,12 @@ Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const 
     return BasisFeature::create(new ActionFeature(a,d));
 }
 
-Feature::feature_return_t ActionFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::intern_feature_return_t ActionFeature::intern_evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->action==action) {
-        return return_function(1);
+        return 1;
     } else {
-        return return_function(0);
+        return 0;
     }
 }
 
@@ -278,6 +303,78 @@ bool ActionFeature::operator<(const Feature& other) const {
     }
 }
 
+ButtonActionFeature::ButtonActionFeature(const int& idx, const int& d, const bool& n): negation(n), button_idx(idx), delay(d) {
+    feature_type = BUTTON_ACTION;
+    complexity = 1;
+}
+
+ButtonActionFeature::~ButtonActionFeature() {
+    erase_from_unique();
+}
+
+Feature::const_feature_ptr_t ButtonActionFeature::create(const int& idx, const int& d, const bool& n) {
+    return BasisFeature::create(new ButtonActionFeature(idx,d,n));
+}
+
+Feature::intern_feature_return_t ButtonActionFeature::intern_evaluate(const_instance_ptr_t ins) const {
+    ins = ins->const_next(delay);
+    if(ins==INVALID) {
+        return 0;
+    }
+    auto button_action = ins->action.get_derived<ButtonAction>();
+    if(button_action==nullptr) {
+        DEBUG_WARNING("Action type is not ButtonAction");
+        return 0;
+    }
+    auto array = button_action->get_array();
+    if(button_idx >= (int)array.size()) {
+        DEBUG_WARNING("Too large button index");
+        return 0;
+    }
+    if(array[button_idx]) {
+        return negation?0:1;
+    } else {
+        return negation?1:0;
+    }
+}
+
+string ButtonActionFeature::identifier() const {
+    return QString("b(%1,%2,%3)").arg(button_idx).arg(delay).arg(negation?"no":"yes").toStdString()+Feature::identifier();
+}
+
+bool ButtonActionFeature::features_contradict(const ButtonActionFeature& f1, const ButtonActionFeature& f2) {
+    if(f1.delay==f2.delay && f1.button_idx==f2.button_idx && f1.negation!=f2.negation) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ButtonActionFeature::operator==(const Feature& other) const {
+    const ButtonActionFeature * pt = dynamic_cast<const ButtonActionFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->button_idx==pt->button_idx &&
+                this->delay==pt->delay &&
+                this->negation==pt->negation);
+    }
+}
+
+bool ButtonActionFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const ButtonActionFeature * f_ptr = dynamic_cast<const ButtonActionFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return make_tuple(this->delay, this->button_idx, this->negation) < make_tuple(f_ptr->delay, f_ptr->button_idx, f_ptr->negation);
+        }
+    }
+}
+
 ObservationFeature::ObservationFeature(const observation_ptr_t& s, const int& d): observation(s), delay(d) {
     feature_type = OBSERVATION;
     complexity = 1;
@@ -291,12 +388,12 @@ Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t&
     return BasisFeature::create(new ObservationFeature(s,d));
 }
 
-Feature::feature_return_t ObservationFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::intern_feature_return_t ObservationFeature::intern_evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->observation==observation ) {
-        return return_function(1);
+        return 1;
     } else {
-        return return_function(0);
+        return 0;
     }
 }
 
@@ -351,12 +448,12 @@ Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const 
     return BasisFeature::create(new RewardFeature(r,d));
 }
 
-Feature::feature_return_t RewardFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::intern_feature_return_t RewardFeature::intern_evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->reward==reward ) {
-        return return_function(1);
+        return 1;
     } else {
-        return return_function(0);
+        return 0;
     }
 }
 
@@ -420,34 +517,34 @@ AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2, const_fea
 
 AndFeature::~AndFeature() {}
 
-Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::intern_feature_return_t AndFeature::intern_evaluate(const_instance_ptr_t ins) const {
     if(ins!=INVALID) {
         if(const_feature) {
-            return return_function(const_return_value);
+            return const_return_value;
         } else {
-            Feature::feature_return_t prod = 1;
+            Feature::intern_feature_return_t prod = 1;
             for(auto feature_iterator : subfeatures) {
-                prod *= feature_iterator->evaluate(ins);
+                prod *= feature_iterator->intern_evaluate(ins);
                 if(prod==0) {
                     break;
                 }
             }
-            return return_function(prod);
+            return prod;
         }
     } else {
-        return return_function(0);
+        return 0;
     }
 }
 
-AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_map) const {
-    Feature::feature_return_t prod = 1;
+AndFeature::intern_feature_return_t AndFeature::intern_evaluate(const look_up_map_t& look_up_map) const {
+    Feature::intern_feature_return_t prod = 1;
     for(auto sub_f : subfeatures) {
-        prod *= sub_f->evaluate(look_up_map);
+        prod *= sub_f->intern_evaluate(look_up_map);
         if(prod==0) {
             break;
         }
     }
-    return return_function(prod);
+    return prod;
 }
 
 string AndFeature::identifier() const {
@@ -533,7 +630,10 @@ void AndFeature::add_feature(const_feature_ptr_t f) {
 
 void AndFeature::finalize_construction() {
     feature_type = AND;
-    complexity = subfeatures.size();
+    complexity = 0;
+    for(auto f : subfeatures) {
+        complexity += f->complexity;
+    }
     check_for_contradicting_subfeatures();
 }
 

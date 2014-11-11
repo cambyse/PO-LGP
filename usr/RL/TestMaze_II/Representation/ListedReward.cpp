@@ -3,7 +3,11 @@
 #include <sstream>
 #include <algorithm> // for min, max
 
-#define DEBUG_LEVEL 1
+#ifdef UNIT_TESTS
+    #define DEBUG_LEVEL 2
+#else
+    #define DEBUG_LEVEL 1
+#endif
 #include "../util/debug.h"
 
 using std::min;
@@ -109,6 +113,10 @@ ListedReward::value_t ListedReward::max_reward() const {
         max_val = max(max_val,v);
     }
     return max_val;
+}
+
+ListedReward::ptr_t ListedReward::new_reward() const {
+    return ptr_t(new ListedReward(reward_list,reward_index));
 }
 
 ListedReward::ptr_t ListedReward::new_reward(const int& idx) const {
