@@ -1,7 +1,7 @@
 #include <Ors/roboticsCourse.h>
 #include <Core/array.h>
 
-void testDynamics(){
+void TEST(Dynamics){
   Simulator S("pin_balancing.ors");
   
   arr q,qdot,qddot;

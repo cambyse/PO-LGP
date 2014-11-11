@@ -42,7 +42,7 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
   if(!colPrec) x1->active=false;
 }
 
-void testSoc(){
+void TEST(Soc){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
@@ -77,7 +77,7 @@ void testSoc(){
   bool pseudoDynamic;
 };*/
 
-void testGradients(){
+void TEST(Gradients){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
@@ -152,7 +152,7 @@ void testGradients(){
 
 }
 
-void testPlan(){
+void TEST(Plan){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;

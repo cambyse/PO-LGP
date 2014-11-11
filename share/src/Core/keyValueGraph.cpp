@@ -461,7 +461,7 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader) {
   }
   if(!withoutHeader){
     os <<"}" <<endl;
-    HALT("TODO: counter offset to index items dotlike...")
+    MT_MSG("TODO: counter offset to index items dotlike...")
   }
 }
 

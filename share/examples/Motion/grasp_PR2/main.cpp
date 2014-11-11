@@ -8,7 +8,7 @@
 
 #include <Ors/ors_swift.h>
 
-void testGraspHeuristic(){
+void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
@@ -59,7 +59,7 @@ void testGraspHeuristic(){
 
 //===========================================================================
 
-void testPickAndPlace(){
+void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem

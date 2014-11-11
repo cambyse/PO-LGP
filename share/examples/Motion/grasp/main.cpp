@@ -3,7 +3,7 @@
 
 #include <Motion/motionHeuristics.h>
 
-void testGraspHeuristic(){
+void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 //  double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
 

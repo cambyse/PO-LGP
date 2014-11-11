@@ -1,7 +1,7 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-void testForManyLPs(){
+void TEST(ForManyLPs){
   ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod",augmentedLag);
   ofstream fil(STRING("z.all."<<MethodName[constrainedMethod]));
 

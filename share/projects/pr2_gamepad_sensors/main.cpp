@@ -54,7 +54,7 @@ struct MySystem:System{
   }
 };
 
-void testSensors(){
+void TEST(Sensors){
 
 
   MySystem S;

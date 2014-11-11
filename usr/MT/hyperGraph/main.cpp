@@ -16,7 +16,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   gv.watch();
 }
 
-void testBasic(){
+void TEST(Basic){
   KeyValueGraph G;
   G.append(TUP());
   cout <<G <<"\n--------------------------" <<endl;

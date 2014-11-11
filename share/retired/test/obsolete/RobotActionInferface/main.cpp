@@ -3,7 +3,7 @@
 #include <MT/robotActionInterface.h>
 #include <signal.h>
 
-void testPattern(){
+void TEST(Pattern){
   RobotActionInterface R;
   R.open();
 
@@ -23,14 +23,14 @@ void testPattern(){
   R.close();
 }
 
-void testGamepad(){
+void TEST(Gamepad){
   RobotActionInterface R;
   R.open();
   R.gamepad();
   R.close();
 }
 
-void testActions(){
+void TEST(Actions){
   RobotActionInterface R;
   R.open();
   R.gamepad();

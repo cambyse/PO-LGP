@@ -168,7 +168,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
 struct MotionProblem_EndPoseFunction:VectorFunction {
   MotionProblem& MP;
 
-  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P) {};
+  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P) { NIY };
 
   //VectorFunction definitions
   virtual void fv(arr& phi, arr& J, const arr& x);

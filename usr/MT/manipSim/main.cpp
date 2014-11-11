@@ -43,7 +43,7 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
 
 //===========================================================================
 
-void testReachable() {
+void TEST(Reachable){
 
   KeyValueGraph G;
   ors::KinematicWorld world("model.kvg");

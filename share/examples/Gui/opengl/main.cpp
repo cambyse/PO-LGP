@@ -162,7 +162,7 @@ void menuCallback3(int i){
   cout <<"menu 3 callback: " <<i <<endl;
 }
 
-void testMenu(){
+void TEST(Menu){
 #if 0
   OpenGL gl;
   gl.text.clear() <<"press the right moust";
@@ -266,7 +266,7 @@ void TEST(Select) {
 
 /************ test clicking on and identifying objects in the scene ************/
 
-void testUI(){
+void TEST(UI){
   OpenGL gl;
   glUI ui;
   gl.reportEvents=true;

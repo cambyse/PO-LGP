@@ -15,7 +15,7 @@ void drawChecker(void*){
                 0.2, -.2, 1.0);
 }
 
-void testStereoCapture(){
+void TEST(StereoCapture){
   ors::KinematicWorld ors;
   ors.init("capture_scene.ors");
 

@@ -44,7 +44,7 @@ int main(int argc,char **argv){
     return 0;
 }
 
-void testHand() {
+void TEST(Hand){
     const uint num_fings=5;
 
     // tips and knucks represent the body names of the last and first "bodies" of each finger.

@@ -8,7 +8,7 @@
 #include "simulator.h"
 #include <Motion/gamepad2tasks.h>
 
-void testSimulator(){
+void TEST(Simulator){
   struct MySystem:System{
     ACCESS(arr, q_ref);
     ACCESS(arr, qdot_ref);
