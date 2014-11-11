@@ -371,7 +371,11 @@ void TEST(Dynamics){
     ors::KinematicWorld& G;
     arr u;
     bool friction;
-    DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
+    DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){
+      VectorFunction::operator=( [this](arr& y, arr& J, const arr& x) -> void {
+        this->fv(y, J, x);
+      } );
+    }
     void fv(arr& y,arr&,const arr& x){
       G.setJointState(x[0], x[1], true);
       if(!u.N) u.resize(x.d1).setZero();
@@ -528,6 +532,8 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
+  testDynamics();
+  return 0;
   testLoadSave();
   testKinematics();
   //  return 0;

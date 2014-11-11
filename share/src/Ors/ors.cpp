@@ -1356,6 +1356,7 @@ void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
     clearForces();
     gravityToForces();
   }
+  if(!qdot.N) qdot.resize(q.N).setZero();
   ors::equationOfMotion(M, F, tree, qdot);
   F *= -1.;
 }
@@ -1536,7 +1537,11 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
   struct DiffEqn:VectorFunction{
     ors::KinematicWorld &S;
     const arr& Bu;
-    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S), Bu(_Bu){}
+    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S), Bu(_Bu){
+      VectorFunction::operator=( [this](arr& y, arr& J, const arr& x) -> void {
+        this->fv(y, J, x);
+      } );
+    }
     void fv(arr& y, arr& J, const arr& x){
       S.setJointState(x[0], x[1]);
       arr M,Minv,F;
