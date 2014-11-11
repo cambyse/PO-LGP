@@ -89,7 +89,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   //-- constraint
   phi.append(-x_bar(2,0));
 
-  CHECK(phi.N==dim_phi(t),"");
+  CHECK_EQ(phi.N,dim_phi(t),"");
 
   if(&J){ //we also need to return the Jacobian
     J.resize(phi.N, k+1, n).setZero();

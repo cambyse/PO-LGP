@@ -69,8 +69,8 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
     lastGrad.setZero();
     stepSize = delta0;
   }
-  CHECK(grad.N==stepSize.N, "Rprop: gradient dimensionality changed!");
-  CHECK(w.N==stepSize.N   , "Rprop: parameter dimensionality changed!");
+  CHECK_EQ(grad.N,stepSize.N, "Rprop: gradient dimensionality changed!");
+  CHECK_EQ(w.N,stepSize.N   , "Rprop: parameter dimensionality changed!");
 
   uint i=0, I=w.N;
   if(singleI) { i=*(singleI); I=i+1; }
@@ -95,7 +95,7 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
 
 bool Rprop::step(arr& x, ScalarFunction& f) {
   arr grad;
-  f.fs(grad, NoArr, x);
+  f(grad, NoArr, x);
   return s->step(x, grad, NULL);
 }
 
@@ -123,7 +123,7 @@ uint Rprop::loop(arr& _x,
   for(;;) {
     //checkGradient(p, x, stoppingTolerance);
     //compute value and gradient at x
-    fx = f.fs(J, NoArr, x);  evals++;
+    fx = f(J, NoArr, x);  evals++;
 
     if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<' ' <<x <<endl;
     if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<x <<endl;

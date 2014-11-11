@@ -17,7 +17,6 @@ if(LIBFREENECT_FOUND)
 		LINK_PRIVATE Core ${LIBFREENECT_LIBRARIES} -lfreenect_sync)
 
 
-else(LIBFREENECT_FOUND)
+else()
 	message(STATUS "Kinect support not built because libfreenect not found")
-endif(LIBFREENECT_FOUND)
-
+endif()

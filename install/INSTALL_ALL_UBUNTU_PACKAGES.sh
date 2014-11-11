@@ -42,7 +42,13 @@ tcl8.5-dev \
 tk-dev \
 tk8.5-dev \
 libfreenect-dev \
-libavcodec-extra-53
+libavcodec-extra-54 \
+libqt4-dev-bin \
+libusb-dev
+libavcodec-extra-53 \
+libavdevice-dev \
+libavfilter-dev \
+libx264-dev
 
 # install google test
 cd /usr/src/gtest

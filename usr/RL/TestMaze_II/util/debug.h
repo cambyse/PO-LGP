@@ -11,7 +11,10 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
+//#define NDEBUG // to turn of asserts
+
 #include <iostream>
+#include <assert.h>
 #include "ColorOutput.h"
 
 #ifndef DEBUG_STRING
@@ -21,27 +24,29 @@
 #ifndef DEBUG_LEVEL
 #define DEBUG_LEVEL 0
 #endif
+#ifndef FORCE_DEBUG_LEVEL
+#define FORCE_DEBUG_LEVEL 0
+#endif
+
+#define IF_DEBUG(level) if(level<=FORCE_DEBUG_LEVEL || (FORCE_DEBUG_LEVEL==0 && level<=DEBUG_LEVEL))
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cout << ColorOutput::fg_red() << ColorOutput::bold() << DEBUG_STRING << "Error(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cout << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cout << ColorOutput::fg_magenta() << DEBUG_STRING << "Warning(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cout << ColorOutput::fg_magenta() << "Warning(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
-#define DEBUG_OUT(level,message) {                              \
-        if(level<=DEBUG_LEVEL) {                                \
-            std::cout << DEBUG_STRING << message << std::endl;  \
-        }                                                       \
+#define DEBUG_OUT(level,message) {                                      \
+        IF_DEBUG(level) {                                               \
+            std::cout << DEBUG_STRING << message << std::endl;          \
+        }                                                               \
     }
 
-#define DEBUG_DEAD_LINE {                               \
-        DEBUG_ERROR("This line (" << __LINE__ <<        \
-                    ") in file " << __FILE__ <<         \
-                    " should never be reached");        \
+#define DEBUG_DEAD_LINE {                                       \
+        DEBUG_ERROR("This line should never be reached");       \
     }
 
-#define DEBUG_IF(check) if(DEBUG_LEVEL>0 && (check))
 
 #endif /* DEBUG_H_ */

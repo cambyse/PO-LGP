@@ -1,5 +1,7 @@
 set(CURRENT_SLICE 
- G4
+ flycap
+G4
+joystick
 kinect
 racer
 ueyecamera

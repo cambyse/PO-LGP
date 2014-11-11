@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -75,7 +75,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,

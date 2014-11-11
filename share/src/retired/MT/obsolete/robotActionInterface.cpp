@@ -20,7 +20,7 @@ RobotActionInterface::RobotActionInterface(){
   s=new sRobotActionInterface;
   s->robotProcesses.ctrl.taskLock.writeLock();
   s->robotProcesses.ctrl.task = &s->mytask;
-  s->mytask.joyVar = &s->robotProcesses.joy;
+  s->mytask.gamepadVar = &s->robotProcesses.gamepad;
   s->robotProcesses.ctrl.taskLock.unlock();
 }
 
@@ -48,21 +48,21 @@ void RobotActionInterface::wait(double sec){
   double time=MT::realTime();
   for(; !schunkShutdown;){
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) break;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
     if(sec>0 && MT::realTime()-time>sec) break;
   }
-  //while(s->robotProcesses.joy.state(0)!=0) s->robotProcesses.step();
+  //while(s->robotProcesses.gamepad.state(0)!=0) s->robotProcesses.step();
 }
 
-void RobotActionInterface::joystick(){
-  s->robotProcesses.ctrl.change_task(Joystick::a());
+void RobotActionInterface::gamepad(){
+  s->robotProcesses.ctrl.change_task(Gamepad::a());
   for(; !schunkShutdown;){
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) break;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
   }
   s->robotProcesses.ctrl.change_task(Stop::a());
   //for(uint t=0; t<10; t++) s->robotProcesses.step();
-  //while(s->robotProcesses.joy.state(0)!=0) s->robotProcesses.step();
+  //while(s->robotProcesses.gamepad.state(0)!=0) s->robotProcesses.step();
 }
 
 void RobotActionInterface::homing(){
@@ -72,7 +72,7 @@ void RobotActionInterface::homing(){
     double dist=length(s->robotProcesses.ctrl.q_reference);
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
-    if(s->robotProcesses.joy.state(0)&0x30) break;
+    if(s->robotProcesses.gamepad.state(0)&0x30) break;
   }
   s->robotProcesses.ctrl.change_task(Stop::a());
 }
@@ -99,7 +99,7 @@ void RobotActionInterface::reach(const char* shapeName, const arr& posGoal, doub
     MT::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
-    if(s->robotProcesses.joy.state(0)&0x30) break;
+    if(s->robotProcesses.gamepad.state(0)&0x30) break;
   }
   
   s->robotProcesses.ctrl.taskLock.writeLock();
@@ -138,7 +138,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
     MT::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
-    if(s->robotProcesses.joy.state(0)&0x30) break;
+    if(s->robotProcesses.gamepad.state(0)&0x30) break;
   }
   
   s->robotProcesses.ctrl.taskLock.writeLock();
@@ -194,7 +194,7 @@ void RobotActionInterface::perceiveObjects(PerceptionModule perc){
     if(bPerceive) break;
     
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) break;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
   }
 }
 
@@ -233,7 +233,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
     if(bPlanDone)  break;
     
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) return;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
   MT::wait(.5); //make the robot really stop...
@@ -298,7 +298,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
     if(bPlanDone)  break;
     
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) return;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
   MT::wait(.5); //make the robot really stop...
@@ -354,7 +354,7 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner, const
     if(bPlanDone)  break;
     
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) return;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
   MT::wait(.5); //make the robot really stop...

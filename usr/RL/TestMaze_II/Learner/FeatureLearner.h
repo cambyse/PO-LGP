@@ -12,8 +12,6 @@ public:
 
     // typedefs/types
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::feature_return_value f_ret_t;
-    typedef Feature::const_feature_ptr_t  f_ptr_t;
     enum class LEARNER_TYPE { FULL_PREDICTIVE, HISTORY_ONLY, HISTORY_AND_ACTION };
 
     // constructor/destructor

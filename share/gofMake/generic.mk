@@ -29,6 +29,10 @@ ifndef OUTPUT
 OUTPUT = x.exe
 endif
 
+ifndef SRCS
+SRCS = $(OBJS:%.o=%.cpp)
+endif
+
 
 ################################################################################
 #
@@ -51,7 +55,7 @@ endif
 
 LINK	= $(CXX)
 CPATHS	+= $(BASE)/include $(BASE)/src $(MLR_LIBPATH)/include
-LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib
+LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib /usr/local/lib
 LIBS += -lrt
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 

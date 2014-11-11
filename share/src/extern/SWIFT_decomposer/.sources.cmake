@@ -1,1 +1,3 @@
-set(SOURCES ./viewer.h ./tk8.4a3.h ./convex.cpp ./cvxutils.cpp ./gui.h ./guidraw.h ./cvxutils.h ./gui.cpp ./togl.h ./io.h ./convex.h ./io.cpp ./viewer.cpp ./guidraw.cpp ./togl.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

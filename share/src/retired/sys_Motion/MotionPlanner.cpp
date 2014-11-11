@@ -93,7 +93,7 @@ void MotionPlanner::step() {
       x0.append(_HardwareReference->get_v_reference(NULL));
       m->set_frame0(x0, this);
     }
-    CHECK(x0.N==s->sys.get_xDim(),"You need to initialize frame0 to start pose!");
+    CHECK_EQ(x0.N,s->sys.get_xDim(),"You need to initialize frame0 to start pose!");
     s->sys.x0 = x0;
     //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<x0->frameCount <<' ' <<frame1->frameCount <<' ' <<m->frameCount <<endl;
 

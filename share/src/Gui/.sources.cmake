@@ -1,1 +1,3 @@
-set(SOURCES ./plot.cpp ./opengl.cpp ./graphview.cpp ./mesh.cpp ./graphview.h ./plot.h ./gtk.h ./ors_opengl.cpp ./geo_qhull.cpp ./mesh_lewiner.cpp ./opengl_qt.h ./gtk.cpp ./mesh.h ./color.h ./opengl.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

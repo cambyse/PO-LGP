@@ -3,8 +3,8 @@
 
 #include <Ors/ors.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include "Demonstration.h"
 #include "InnerCostFunction.h"
 

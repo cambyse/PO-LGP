@@ -13,7 +13,7 @@ public:
 
     virtual ~Policy() = default;
 
-    virtual action_ptr_t get_action(const instance_t*) = 0;
+    virtual action_ptr_t get_action(const_instance_ptr_t) = 0;
 
 };
 

@@ -3,8 +3,8 @@
 
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 
 void pickandplace(arr finalpos){
@@ -76,7 +76,7 @@ cout <<"DIM =" <<G.getJointStateDimension();
 
   //-- setup the motion problem
 finalpos(0) -= 0.2 * i;
-  TaskCost *c;
+  Task *c;
  c = MP2.addTask("position", new DefaultTaskMap(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
  MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
@@ -98,7 +98,7 @@ if (current<5) orient.set(0,1,0);
   //c = MP2.addTask("orientation", new DefaultTaskMap(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
   //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,1.), 1e3);
 /*
-  c = MP2.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP2.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 */
@@ -192,12 +192,12 @@ for (uint i=0;i<5;i++)  {
 cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< endl;
 
 
-  TaskCost *c;
+  Task *c;
   double shift; if (i>3) shift=0; else shift =  -0.18;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
@@ -234,7 +234,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
@@ -330,11 +330,11 @@ for (uint i=0;i<5;i++)  {
      // finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X.pos);
          cout << "POS = "<< finalpos<< endl;
 
-      TaskCost *c;
+      Task *c;
       c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,0)));
       MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
-      c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+      c = MP.addTask("q_vel", new TaskMap_qItself());
       c->map.order=1; //make this a velocity variable!
       MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
@@ -368,11 +368,11 @@ for (uint i=0;i<5;i++)  {
       MP.x0 = x[MP.T-1];
       //! go to intermediate state
 
-      c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+      c = MP.addTask("q_vel", new TaskMap_qItself());
       c->map.order=1; //make this a velocity variable!
       MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-      c = MP.addTask("q_itself", new DefaultTaskMap(qItselfTMT, G));
+      c = MP.addTask("q_itself", new TaskMap_qItself());
      // c->map.order=1; //make this a velocity variable!
       MP.setInterpolatingCosts(c, MotionProblem::finalOnly,initial, 1e1);
 
@@ -391,9 +391,9 @@ for (uint i=0;i<5;i++)  {
 
 }
  MotionProblemFunction MF(MP);
- TaskCost *c;
+ Task *c;
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 

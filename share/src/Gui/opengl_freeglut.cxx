@@ -117,7 +117,7 @@ struct sOpenGL {
   //-- callbacks
   
   static void _Void() { }
-  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); unlock(); }
+  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); unlock(); gl->isUpdating.setValue(0); }
   static void _Key(unsigned char key, int x, int y) { lock(); glwins(glutGetWindow())->Key(key,x,y); unlock(); }
   static void _Mouse(int button, int updown, int x, int y) { lock(); glwins(glutGetWindow())->Mouse(button,updown,x,y); unlock(); }
   static void _Motion(int x, int y) { lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
@@ -156,6 +156,9 @@ void OpenGL::resize(int w,int h) {
   s->unlock_win();
 }
 
+void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _captureDep){
+  NIY;
+}
 // int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
 // int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
 

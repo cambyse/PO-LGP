@@ -172,14 +172,14 @@ void plotFunction(const arr& f, double x0, double x1) {
 }
 
 void plotFunctions(const arr& F, double x0, double x1) {
-  CHECK(F.nd==2, "");
+  CHECK_EQ(F.nd,2, "");
   arr tF;
   transpose(tF, F);
   for(uint j=0; j<tF.d0; j++) plotFunction(tF[j], x0, x1);
 }
 
 void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
-  CHECK(x.d0==f.d0, "Domain and image of function have different size!")
+  CHECK_EQ(x.d0,f.d0, "Domain and image of function have different size!")
   arr X(x.d0, x.d1+1);
   uint i, j;
   for(i=0; i<X.d0; i++) {
@@ -191,8 +191,8 @@ void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
 }
 
 void plotFunction(const arr& x, const arr& f) {
-  CHECK(x.d0==f.d0, "Domain and image of function have different size!")
-  CHECK(f.nd==1, "Function image should be 1D")
+  CHECK_EQ(x.d0,f.d0, "Domain and image of function have different size!")
+  CHECK_EQ(f.nd,1, "Function image should be 1D")
   CHECK(x.d[x.nd-1]<3, "Can handle up to 2D domains")
   arr X(x.d0, x.d1+1);
   uint i, j;
@@ -204,7 +204,7 @@ void plotFunction(const arr& x, const arr& f) {
 }
 
 void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& l) {
-  CHECK(x.d0==f.d0, "Domain and image of function have different size!")
+  CHECK_EQ(x.d0,f.d0, "Domain and image of function have different size!")
   CHECK(f.nd==1&&h.nd==1&&l.nd==1, "Function image should be 1D")
   CHECK(x.d[x.nd-1]<2, "Can handle up to 1D domains")
   arr X(x.d0, x.d1+3);
@@ -316,7 +316,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
       phi=MT_2PI*((double)i)/(101-1);
       d(202+i, 0)=0.; d(202+i, 1)=cos(phi); d(202+i, 2)=sin(phi);
     }
-    CHECK(cov.d0==3, "");
+    CHECK_EQ(cov.d0,3, "");
     //lapack_cholesky(V, cov);
     svd(U, w, V, cov);
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
@@ -378,7 +378,7 @@ void plotVectorField(const arr& X, const arr& dX) {
 }
 
 void plotMatrixFlow(uintA& M, double len) {
-  CHECK(M.nd==2, "");
+  CHECK_EQ(M.nd,2, "");
   uint i, j;
   arr X, dX;
   X.resize(M.d0, M.d1, 2);
@@ -489,7 +489,7 @@ void plotDrawOpenGL(void *_data) {
       c.setIndex(a);
       if(!plotModule.grid) { //as a mesh
         c.whiten(.5);
-        CHECK(Y*X==data.mesh.V.d0, "you must recall display(data.array) when dimensions changed");
+        CHECK_EQ(Y*X,data.mesh.V.d0, "you must recall display(data.array) when dimensions changed");
         for(j=0; j<Y; j++) for(i=0; i<X; i++) {
             x= 2.*(double)i/(X-1.)-1.;
             y= 2.*(double)j/(Y-1.)-1.;

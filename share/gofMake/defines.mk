@@ -66,7 +66,7 @@ endif
 
 ifeq ($(GL),1)
 CXXFLAGS  += -DMT_GL
-LIBS += -lglut -lGLU -lGL -lX11
+LIBS += -lGLEW -lglut -lGLU -lGL -lX11
 endif
 
 ifeq ($(QT),1)
@@ -244,10 +244,16 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
-LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
-CPATH := $(CPATH):/usr/include/pcl-1.6
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/$(ROS_VERSION)/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
+LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
+CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
+LPATH += /opt/ros/$(ROS_VERSION)/lib
 FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+CXXFLAGS += -DMLR_FREENECT
+LIBS += -lfreenect -lusb-1.0
 endif
 
 ifeq ($URGLASER),1)
@@ -325,16 +331,28 @@ CXXFLAGS  += -DMT_PORTAUDIO
 LIBS += -lportaudio
 endif
 
+ifeq ($(G4),1)
+CXXFLAGS += -DG4_INSTALLED
+LIBS += -lG4Track -lusb-1.0
+endif
+
 ifeq ($(ROS),1)
+CXXFLAGS  += -DMT_ROS
 ROSP=pr2_mechanism/pr2_controller_interface\
 pr2_mechanism/pr2_mechanism_model\
 pr2_mechanism/pr2_hardware_interface\
 ros_control/hardware_interface\
 ros_control/controller_interface
 
-CPATHS += /opt/ros/groovy/include $(ROSP:%=/opt/ros/groovy/stacks/%/include)
+CPATHS += /opt/ros/$(ROS_VERSION)/include $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/include)
 
-LPATHS += /opt/ros/groovy/lib $(ROSP:%=/opt/ros/groovy/stacks/%/lib)
+LPATHS += /opt/ros/$(ROS_VERSION)/lib $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/lib)
 
+ifeq ($(ROS_VERSION),groovy)
 LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lboost_signals-mt -lxmlrpcpp -ltinyxml -lboost_filesystem-mt -lclass_loader -lPocoFoundation -ldl -lrosconsole -lboost_regex-mt -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lboost_date_time-mt -lboost_system-mt -lboost_thread-mt -lpthread -lcpp_common -lorocos-kdl
+endif
+ifeq ($(ROS_VERSION),indigo)
+LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl
+endif
+
 endif

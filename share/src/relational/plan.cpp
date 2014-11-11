@@ -71,7 +71,7 @@ void NID_Planner::setGroundRules(RuleSet& ground_rules) {
     }
     is_manipulating_rule.append(manipulates);
   }
-  CHECK(is_manipulating_rule.N == this->ground_rules.num(), "");
+  CHECK_EQ(is_manipulating_rule.N , this->ground_rules.num(), "");
   
   FOR1D_(ground_rules, i) {
     if (ground_rules.elem(i)->outcome_rewards.N > 0) {

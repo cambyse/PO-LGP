@@ -1,5 +1,5 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 
@@ -8,7 +8,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   P.loadTransitionParameters();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,

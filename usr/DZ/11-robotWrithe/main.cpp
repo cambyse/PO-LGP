@@ -59,7 +59,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
   } 
     
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK_EQ(T,sys.nTime(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);

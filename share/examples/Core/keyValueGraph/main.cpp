@@ -1,7 +1,10 @@
 #include <Core/keyValueGraph.h>
 #include <Core/registry.h>
 
+//const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
 const char *filename=NULL;
+
+//===========================================================================
 
 void TEST(Read){
   KeyValueGraph G;
@@ -23,20 +26,44 @@ void TEST(Read){
   cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
 }
 
+//===========================================================================
+
 void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
-  G.writeDot();
+  G.writeDot(FILE("z.dot").getOs());
 }
 
+//===========================================================================
+
+struct Something{
+  Something(double y=0.){ x=y; }
+  double x;
+};
+void operator<<(ostream& os, Something& s){ os <<s.x; }
+//the following 2 lines are optional: they enable naming the type and typed reading from file
+void operator>>(istream& is, Something& s){ is >>s.x; }
+REGISTER_TYPE(Something)
+
+void TEST(Manual){
+  KeyValueGraph G;
+  G.append(STRINGS("hallo"), ItemL(), new Something(3));
+  cout <<G <<endl;
+}
+
+//===========================================================================
+
 int MAIN(int argc, char** argv){
+
   cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
   if(argc>=2) filename=argv[1];
 
   testRead();
   testDot();
+
+//  if(!filename) testManual();
 
   return 0;
 }

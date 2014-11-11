@@ -125,7 +125,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   }
   for_list(Type, b, handBodies){
     for_list(Type, l, b->outLinks){
-      CHECK(l->from->index == b->index,"");
+      CHECK_EQ(l->from->index , b->index,"");
       new ors::Joint(grasp, bodyMap(l->from->index), bodyMap(l->to->index), l);
     }
   }

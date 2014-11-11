@@ -1,3 +1,30 @@
+** module system
+
+* check catching of SIGINT when linking to ROS
+* Vars should publish & subscribe automatically!
+  * topic "MLR/name"
+  * by default: they should have a ROS mesage type
+  * otherwise, generic packedData type {string c-type; byte [][]}
+  * Maybe have a look again on shared memory!
+* pr2 controller: check max diff > 0.2 !!
+* Item.read/write, don't use operator<<?
+* joypad, joystick -> gamepad
+* Module -> Process
+
+
+** PR2 controller
+
+* make everything linear
+* have data stuctures
+  * JointConfigInfo { map index-to-name } ? (Necessary?)
+  * JointControllerRefs { q_ref, Kq_matrix, Kd_factor, u_bias, fL_ref, fR_ref, KfL, KfR }
+  * JointControllerState { q_real, qdot_real, u_cmd, u_real, fL_real, fR_real }
+
+** relative quaterion task variables
+
+* scalar product issues with quaternion distance/difference
+* implement correctly within DefaultTaskMap
+
 ** task & constraints
 
 check the consistency of the constraintProxyVariable with squared

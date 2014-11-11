@@ -17,8 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "motionHeuristics.h"
-#include "taskMap_default.h"
-#include "taskMap_proxy.h"
+#include "taskMaps.h"
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>
 
@@ -88,7 +87,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
   
   //deactivate all variables
   MP.activateAllTaskCosts(false);
@@ -107,7 +106,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   //xtarget(2) += .02; //grasp it 2cm above center
   
   //-- graspCenter -> predefined point (xtarget)
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("graspCenter",
                    new DefaultTaskMap(posTMT, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
@@ -129,7 +128,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                   new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+                   new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
@@ -191,13 +190,13 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = MP.addTask("limits",
-                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
+                    new TaskMap_qLimits(limits));
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
   c = MP.addTask("qitself",
-                    new DefaultTaskMap(qItselfTMT));
+                    new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
@@ -213,7 +212,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
 
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
 
   //delete all previous variables
   MP.taskCosts.clear();
@@ -231,7 +230,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   target = ARRAY(target_shape->X.pos);
 
   //-- graspCenter -> predefined point (xtarget)
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("graspCenter",
                     new DefaultTaskMap(posTMT, MP.world, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
@@ -257,7 +256,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                    new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+                    new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
@@ -302,7 +301,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   //-- homing
   c = MP.addTask("qitself",
-                    new DefaultTaskMap(qItselfTMT));
+                    new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 
   return;
@@ -314,7 +313,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = MP.addTask("limits",
-                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
+                    new TaskMap_qLimits(limits));
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
@@ -338,7 +337,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
 
   
   //set the time horizon
-  CHECK(T==MP.T, "");
+  CHECK_EQ(T,MP.T, "");
   
   //deactivate all variables
   MP.activateAllTaskCosts(false);
@@ -351,7 +350,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   if (obj->body!=MP.world.getBodyByName("m9")){
     reattachShape(MP.world, NULL, obj->name, "m9");
   }
-  CHECK(obj->body==MP.world.getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
+  CHECK_EQ(obj->body,MP.world.getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   if(onto) onto->cont=false;
   MP.swift->initActivations(MP.world, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)

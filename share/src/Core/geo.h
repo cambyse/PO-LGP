@@ -38,7 +38,8 @@ struct Vector {
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const Vector& v) { set(v.x, v.y, v.z); }
-  Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
+  Vector(const arr& x) { CHECK_EQ(x.N,3, "");  set(x.p); }
+  Vector(const arrf& x) { CHECK_EQ(x.N,3, "");  set(x(0), x(1), x(2)); }
   double *p() { return &x; }
   
   double& operator()(uint i);
@@ -70,7 +71,7 @@ struct Matrix {
   double m00, m01, m02, m10, m11, m12, m20, m21, m22;
   
   Matrix() {}
-  Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
+  Matrix(const arr& m) { CHECK_EQ(m.N,9, "");  set(m.p); };
   Matrix(const Matrix& m) : m00(m.m00), m01(m.m01), m02(m.m02), m10(m.m10), m11(m.m11), m12(m.m12), m20(m.m20), m21(m.m21), m22(m.m22) {}
   double *p() { return &m00; }
   
@@ -99,7 +100,7 @@ struct Quaternion {
 
   Quaternion() {}
   Quaternion(double w, double x, double y, double z) { set(w,x,y,z); }
-  Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
+  Quaternion(const arr& q) { CHECK_EQ(q.N,4, "");  set(q.p); };
   Quaternion(const Quaternion& q) { set(q.w, q.x, q.y, q.z); };
   double *p() { return &w; }
   
@@ -121,6 +122,7 @@ struct Quaternion {
   void setDiff(const Vector& from, const Vector& to);
   void setInterpolate(double t, const Quaternion& a, const Quaternion b);
   Quaternion& invert();
+  void flipSign();
   void normalize();
   void multiply(double f);
   void alignWith(const Vector& v);
@@ -131,10 +133,10 @@ struct Quaternion {
   double getRad() const;
   void getDeg(double& degree, Vector& axis) const;
   void getRad(double& angle , Vector& axis) const;
-  Vector& getVec(Vector& v) const;
-  Vector& getX(Vector& Rx) const;
-  Vector& getY(Vector& Ry) const;
-  Vector& getZ(Vector& Rz) const;
+  Vector getVec() const;
+  Vector getX() const;
+  Vector getY() const;
+  Vector getZ() const;
   Matrix getMatrix() const;
   arr    getArr() const;
   double* getMatrix(double* m) const;
@@ -152,10 +154,10 @@ struct Transformation {
   Quaternion rot; ///< orientation
   Vector vel;     ///< linear velocity
   Vector angvel;  ///< angular velocity
-  bool zero,zeroVels;    ///< velocities are identically zero
+  bool zeroVels;    ///< velocities are identically zero
   
   Transformation() {}
-  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {}
+  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zeroVels(t.zeroVels) {}
   
   Transformation& setZero();
   Transformation& setText(const char* txt);

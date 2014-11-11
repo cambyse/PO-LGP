@@ -23,12 +23,12 @@ struct DummyTask:public TaskAbstraction{//do nothing
 };
 
 int
-get_joy_state(RobotProcessGroup& robot){
+get_gamepad_state(RobotProcessGroup& robot){
     int r = 0;
-    if (robot.openJoystick){
-      robot.joy.readAccess(NULL);
-      r = robot.joy.state(0);
-      robot.joy.deAccess(NULL);
+    if (robot.openGamepad){
+      robot.gamepad.readAccess(NULL);
+      r = robot.gamepad.state(0);
+      robot.gamepad.deAccess(NULL);
     }
     return r;
 }
@@ -166,7 +166,7 @@ main(int argc,char** argv){
     //robot.step();
     MT_MSG("Note: robot does not have a step routine anymore - are you properly looping? add a MT::wait(.01) or so");
 
-    if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
+    if(get_gamepad_state(robot)==16 || get_gamepad_state(robot)==32) break;
   }
   robot.close();
   perc.threadClose();

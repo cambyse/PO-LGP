@@ -98,7 +98,7 @@ void Vector::makeColinear(const Vector& b) {
 
 //{ measuring the vector
 
-/// 1-norm to zero
+/// L1-norm to zero
 double Vector::diffZero() const { return fabs(x)+fabs(y)+fabs(z); }
 
 /// is it normalized?
@@ -428,6 +428,9 @@ Matrix& operator+=(Matrix& a, const Matrix& b) {
 /// inverts the current rotation
 Quaternion& Quaternion::invert() { w=-w; return *this; }
 
+/// flips the sign of the quaterion -- which still represents the same rotation
+void Quaternion::flipSign() { w=-w; x=-x; y=-y; z=-z; }
+
 /// multiplies the rotation by a factor f (i.e., makes f-times the rotation)
 void Quaternion::multiply(double f) {
   if(w==1. || f==1.) return;
@@ -599,7 +602,7 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
   setRad(phi, axis);
 }
 
-/// 1-norm to zero (i.e., identical rotation)
+/// L1-norm to zero (i.e., identical rotation)
 double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
 
 /// gets rotation angle (in rad [0, 2pi])
@@ -627,22 +630,24 @@ void Quaternion::getDeg(double& degree, Vector& vec) const {
 void Quaternion::getRad(double& angle, Vector& vec) const {
   if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { angle=0.; vec.set(0., 0., 1.); return; }
   angle=acos(w);
-  double s=sin(angle);
+  double s=1./sin(angle);
   angle*=2;
-  vec.x=x/s; vec.y=y/s; vec.z=z/s;
+  vec.x=s*x; vec.y=s*y; vec.z=s*z;
   CHECK(angle>=0. && angle<=MT_2PI, "");
 }
 
 /// gets the axis rotation vector with length equal to the rotation angle in rad
-Vector& Quaternion::getVec(Vector& v) const {
-  if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { v.setZero(); return v; }
+Vector Quaternion::getVec() const {
+  Vector vec;
+  if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { vec.setZero(); return vec; }
   double phi=acos(w);
   double s=2.*phi/sin(phi);
-  v.x=s*x; v.y=s*y; v.z=s*z;
-  return v;
+  vec.x=s*x; vec.y=s*y; vec.z=s*z;
+  return vec;
 }
 
-Vector& Quaternion::getX(Vector& Rx) const {
+Vector Quaternion::getX() const {
+  Vector Rx;
   double q22 = 2.*y*y;
   double q33 = 2.*z*z;
   double q12 = 2.*x*y;
@@ -654,8 +659,8 @@ Vector& Quaternion::getX(Vector& Rx) const {
   Rx.z=q13-q02;
   return Rx;
 }
-Vector& Quaternion::getY(Vector& Ry) const { Ry = (*this)*Vector(0, 1, 0);  return Ry; }
-Vector& Quaternion::getZ(Vector& Rz) const { Rz = (*this)*Vector(0, 0, 1);  return Rz; }
+Vector Quaternion::getY() const { return (*this)*Vector_y; }
+Vector Quaternion::getZ() const { return (*this)*Vector_z; }
 
 void Quaternion::setMatrix(double* m) {
   w = .5*sqrt(1.+m[0]+m[4]+m[8]); //sqrt(1.-(3.-(m[0]+m[4]+m[8]))/4.);
@@ -748,7 +753,7 @@ double* Quaternion::getMatrixGL(double* m) const {
   return m;
 }
 
-void Quaternion::writeNice(std::ostream& os) const { Vector v; os <<"Quaternion: " <<getDeg() <<" around " <<getVec(v) <<"\n"; }
+void Quaternion::writeNice(std::ostream& os) const { os <<"Quaternion: " <<getDeg() <<" around " <<getVec() <<"\n"; }
 void Quaternion::write(std::ostream& os) const {
   if(!MT::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';
   else os <<' ' <<w <<' ' <<x <<' ' <<y <<' ' <<z;
@@ -865,7 +870,7 @@ Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation));
   rot.w = 1.;
   pos.isZero = rot.isZero = vel.isZero = angvel.isZero = true;
-  zero = zeroVels = true;
+  zeroVels = true;
   return *this;
 }
 
@@ -1092,7 +1097,7 @@ bool Transformation::isZero() const {
   return pos.isZero && rot.isZero && vel.isZero && angvel.isZero;
 }
 
-/// 1-norm to zero
+/// L1-norm to zero
 double Transformation::diffZero() const {
   return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.diffZero();
 }
@@ -1204,8 +1209,7 @@ double DistanceFunction_Sphere::fs(arr& g, arr& H, const arr& x){
 //===========================================================================
 
 double DistanceFunction_Cylinder::fs(arr& g, arr& H, const arr& x){
-  ors::Vector bla;
-  arr z = ARRAY(t.rot.getZ(bla));
+  arr z = ARRAY(t.rot.getZ());
   arr c = ARRAY(t.pos);
   arr b = scalarProduct(x-c, z) * z;
   arr a = (x-c) - b;

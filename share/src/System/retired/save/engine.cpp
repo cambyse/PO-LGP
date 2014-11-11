@@ -51,7 +51,7 @@ void SystemDescription::complete(){
     Item *reg=m->reg;
     if(!m->accs.N && reg->parentOf.N){ //declaration has children but description no accesses...
       for(Item *acc: reg->parentOf){
-        CHECK(acc->keys(0)=="Decl_Access","");
+        CHECK_EQ(acc->keys(0),"Decl_Access","");
         Item* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
         VariableEntry *v=NULL;
         if(!varIt){ //we need to add a variable
@@ -164,13 +164,13 @@ void Engine::create(SystemDescription& S){
 
     //accesses have automatically been created as member of a module,
     //need to link them now
-    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
+    CHECK_EQ(m->mod->accesses.N,modIt->parentOf.N,"dammit");
     for(Item *accIt: modIt->parentOf){
       Access *a = m->mod->accesses(accIt_COUNT);
       //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
-      //CHECK(acc->type == a->type,"");
+      //CHECK_EQ(acc->type , a->type,"");
       Item *varIt = accIt->parents(1);
-      CHECK(varIt->keys(0)=="Variable","");
+      CHECK_EQ(varIt->keys(0),"Variable","");
       SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
       CHECK(v,"");
       cout <<"linking access " <<modIt->keys(1) <<"->" <<a->name

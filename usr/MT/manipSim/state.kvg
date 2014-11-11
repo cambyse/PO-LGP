@@ -1,0 +1,20 @@
+body table1
+body table2
+body hand
+body obj1
+
+pose (table1) = <T 0.6 0 0.6 1 0 0 0>
+pose (table2) = <T -0.6 0 0.6 1 0 0 0>
+pose (hand) = <T 0 0 0 1 0 0 0>
+pose (obj1) = <T 0.5 0.1 0.72 1 0 0 0>
+
+fixed (table1)
+fixed (table2)
+canGrasp (hand)
+
+support (table1 obj1)
+rigid (hand table2)
+controllable (hand)
+controllable (table2)
+
+

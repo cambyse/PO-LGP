@@ -1,1 +1,3 @@
-set(SOURCES ./dxl_hal.h ./dxl_hal.c ./dynamixel.c ./dynamixel.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

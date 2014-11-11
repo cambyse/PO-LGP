@@ -1,0 +1,15 @@
+get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
+if(FLYCAPTURE_LIBRARY)
+
+	add_executable(x_${NAME} main.cpp)
+	add_executable(flycap_serials flycap_serials.cpp)
+	
+	target_link_libraries(x_${NAME} Hardware_flycap Gui Core)
+	target_link_libraries(flycap_serials Hardware_flycap)
+	
+	mlr_example_test(${NAME})
+
+endif()	

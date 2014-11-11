@@ -1,1 +1,3 @@
-set(SOURCES ./SWIFT.h ./SWIFT_common.h ./SWIFT_mesh_utils.h ./SWIFT_boxnode.h ./SWIFT_object.h ./pqueue.cpp ./mesh.cpp ./SWIFT_array.h ./scene.cpp ./SWIFT_front.h ./SWIFT_mesh.h ./object.cpp ./SWIFT_pqueue.h ./SWIFT_pair.h ./mesh_utils.cpp ./SWIFT_config.h ./lut.cpp ./SWIFT_linalg.h ./SWIFT_lut.h ./SWIFT_fileio.h ./pair.cpp ./fileio.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

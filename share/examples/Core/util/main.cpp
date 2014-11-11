@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.h>
 #include <math.h>
 
 void TEST(String){
@@ -8,7 +8,7 @@ void TEST(String){
   t1 <<s <<"length=" <<s.N <<'|' <<endl;   // piping into a string (including the endl '\n')
   t2 <<s <<"length=7|" <<endl;
   cout <<t1 <<t2;                          // outputting a string
-  CHECK(t1==t2,"");
+  CHECK_EQ(t1,t2,"");
 
   //-- parsing from a string
   MT::String tmp;
@@ -19,28 +19,26 @@ void TEST(String){
   s >>tmp;      // read string from string (starting at current scan position)
   CHECK_ZERO(a-1.2, 1e-10, "");
   CHECK_ZERO(b-3.4, 1e-10, "");
-  CHECK(tmp==", blabla", "");
+  CHECK_EQ(tmp,", blabla", "");
   cout <<"a=" <<a <<", b=" <<b <<tmp <<'|' <<endl;
 
   s.resetIstream();   // reset the istream pointer of source string before...
   s >>tmp;            // ...reading string from string (starting at beginning of string)
-  CHECK(tmp=="a=1.2, b=3.4, blabla", "");
+  CHECK_EQ(tmp,"a=1.2, b=3.4, blabla", "");
   cout <<tmp <<'|' <<endl;
 
   s.resetIstream();   // reset the istream pointer of source string before...
   tmp.read(s,"", " ,;:\n\r"); //stop symbols
-  CHECK(tmp=="a=1.2", "");
+  CHECK_EQ(tmp,"a=1.2", "");
   cout <<tmp <<'|' <<endl;
 }
 
 void TEST(Parameter){
-  String p1;
-  MT::getParameter(p1, "par", String("default1"));
-  CHECK(p1=="default1","");
+  String p1 = MT::getParameter<String>("par", String("default1"));
+  CHECK_EQ(p1,"default1","");
 
-  String p2;
-  MT::getParameter(p2, "h", String("def2"));
-  CHECK(p2=="def2","");
+  String p2 = MT::getParameter<String>("h", String("def2"));
+  CHECK_EQ(p2,"def2","");
 
   cout <<p1 <<endl <<p2 <<endl;
 }

@@ -93,7 +93,7 @@ void Motors::step(){
   double time=MT::realTime();
   arr u = controls.get();
   if(!u.N) return;
-  CHECK(u.N==3," need u=(vel1, vel2, acc)");
+  CHECK_EQ(u.N,3," need u=(vel1, vel2, acc)");
 
   if(u(2)<0) u*=-1.;
   int vel0=128 - int(u(0));  if(vel0<0) vel0=0;  if(vel0>255) vel0=255;

@@ -79,12 +79,12 @@ void monitorMain(){
       shm->changed[i]=false;
       writeMem(i);
       switch(i){
-      case joystickB:
-        if(shm->joystick[0]&0x02) driveMode^=1;
+      case gamepadB:
+        if(shm->gamepad[0]&0x02) driveMode^=1;
         if(driveMode){
           if(!wheelsInitialized) initWheels(); 
-          shm->wheels[0]=127-shm->joystick[2];
-          shm->wheels[1]=127-shm->joystick[4];
+          shm->wheels[0]=127-shm->gamepad[2];
+          shm->wheels[1]=127-shm->gamepad[4];
           //cout <<"drive event: ";
           writeBlock(cout,wheelsB);
           //cout <<endl;

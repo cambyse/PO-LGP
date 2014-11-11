@@ -20,23 +20,24 @@
 
 #include "optimization.h"
 
-int optNewton(arr& x, ScalarFunction& f, OptOptions opt=NOOPT);
+int optNewton(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT);
 
 struct OptNewton{
   arr& x;
-  ScalarFunction& f;
+  const ScalarFunction& f;
   OptOptions o;
   arr *additionalRegularizer;
 
-  enum StopCriterion { stopNone=0, stopCrit1, stopCrit2, stopCritEvals };
+  enum StopCriterion { stopNone=0, stopCrit1, stopCrit2, stopCritEvals, stopStepFailed };
   double fx;
   arr gx, Hx;
-  double alpha, lambda;
+  double alpha, beta;
   uint it, evals;
-  bool x_changed;
+  StopCriterion stopCriterion;
+//  bool x_changed;
   ofstream fil;
 
-  OptNewton(arr& x, ScalarFunction& f, OptOptions o=NOOPT);
+  OptNewton(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);
   ~OptNewton();
   StopCriterion step();
   StopCriterion run();

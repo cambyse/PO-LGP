@@ -117,7 +117,7 @@ void soc::SocSystem_Ors::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_
   if(W){
     if(W->nd==1){
       if(W->N > s->q0.N){ W->resizeCopy(s->q0.N); MT_MSG("truncating W diagonal..."); }
-      CHECK(W->N==s->q0.N, "");
+      CHECK_EQ(W->N,s->q0.N, "");
       W_rate.setDiag(*W);
     } else NIY;
   }else{
@@ -297,7 +297,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   MT_MSG("Warning - need to change this");
   Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
   //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
-  CHECK(Wdiag.N==sys.s->q0.N, "wrong W matrix!");
+  CHECK_EQ(Wdiag.N,sys.s->q0.N, "wrong W matrix!");
   sys.s->W.setDiag(Wdiag);
   sys.s->H_rate = sys.s->W;
 
@@ -477,7 +477,7 @@ void soc::SocSystem_Ors::setx(const arr& x, uint t){
     setq(x);
   }else{
     uint n=x.N/2;
-    CHECK(x.N==2*n, "");
+    CHECK_EQ(x.N,2*n, "");
     arr q, v;
     q.referToSubRange(x, 0, n-1);
     v.referToSubRange(x, n, 2*n-1);

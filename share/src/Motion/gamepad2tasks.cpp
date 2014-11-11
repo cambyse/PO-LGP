@@ -17,35 +17,23 @@
     -----------------------------------------------------------------  */
 
 #include "gamepad2tasks.h"
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
+#include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
-  endeffR = MP.addPDTask("endeffR", .2, .8, posTMT, "endeffR");
-  endeffL = MP.addPDTask("endeffL", .2, .8, posTMT, "endeffL");
-  base = MP.addPDTask("endeffBase", .2, .8, posTMT, "endeffBase");
-  baseQuat = MP.addPDTask("endeffBase", .2, .8, quatTMT, "endeffBase");
-  head = MP.addPDTask("endeffHead", 1., .8, vecTMT, "endeffHead", ors::Vector(1., 0., 0.));
-  limits = MP.addPDTask("limits", .2, .8, qLimitsTMT);
-  limits->y_ref.setZero();
-  limits->v_ref.setZero();
-
-  coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
-  coll->y_ref.setZero();
-  coll->v_ref.setZero();
-
-  gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_joint")->qIndex));
-  gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_joint")->qIndex));
+  endeffR = MP.addPDTask("endeffR", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffR"));
+  endeffL = MP.addPDTask("endeffL", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffL"));
+  base = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffBase"));
+  baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
+  head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
+  limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
+  coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
+  gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
+  gripperR = MP.addPDTask("gripperR", 2., .8, new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
 }
 
-double joySignalMap(double x){
+double gamepadSignalMap(double x){
   return MT::sign(x)*(exp(MT::sqr(x))-1.);
-}
-
-bool stopButtons(const arr& gamepadState){
-  if(!gamepadState.N) return false;
-  uint mode = uint(gamepadState(0));
-  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
-  return false;
 }
 
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
@@ -60,12 +48,12 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   if(gamepadState.N<6) return false;
 
-  double joyRate=MT::getParameter<double>("joyRate",.1);
+  double gamepadRate=MT::getParameter<double>("gamepadRate",.1);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
-  double joyLeftRight   = -joyRate*joySignalMap(gamepadState(4));
-  double joyForwardBack = -joyRate*joySignalMap(gamepadState(3));
-  double joyUpDown      = -joyRate*joySignalMap(gamepadState(2));
-  double joyRotate   = -1.*joyRate*joySignalMap(gamepadState(1));
+  double gamepadLeftRight   = -gamepadRate*gamepadSignalMap(gamepadState(4));
+  double gamepadForwardBack = -gamepadRate*gamepadSignalMap(gamepadState(3));
+  double gamepadUpDown      = -gamepadRate*gamepadSignalMap(gamepadState(2));
+  double gamepadRotate   = -1.*gamepadRate*gamepadSignalMap(gamepadState(1));
 
   uint mode = uint(gamepadState(0));
 
@@ -95,7 +83,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         pdt->map.phi(pdt->y, NoArr, MP.world);
         pdt->v_ref.resizeAs(pdt->y);
       }
-      ors::Vector vel(joyLeftRight, joyForwardBack, joyUpDown);
+      ors::Vector vel(gamepadLeftRight, gamepadForwardBack, gamepadUpDown);
       vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
       pdt->y_ref = pdt->y + 0.01*ARRAY(vel);
       pdt->v_ref = ARRAY(vel); //setZero();
@@ -111,14 +99,14 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       }
 
       //-- if down: also control rotation
-      if(sel==down && fabs(joyRotate)>0.){
+      if(sel==down && fabs(gamepadRotate)>0.){
         pdt_rot=baseQuat;
         pdt_rot->active=true;
         if(!pdt_rot->y.N || !pdt_rot->v.N){
           pdt_rot->map.phi(pdt_rot->y, NoArr, MP.world);
           pdt_rot->v_ref.resizeAs(pdt_rot->y);
         }
-        ors::Quaternion vel(0., 0., 0., joyRotate);
+        ors::Quaternion vel(0., 0., 0., gamepadRotate);
         vel = vel*ors::Quaternion(pdt_rot->y);
         pdt_rot->y_ref = pdt_rot->y + 0.01*ARRAY(vel);
         pdt_rot->v_ref = ARRAY(vel); //.setZero();
@@ -126,13 +114,14 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
       break;
     }
-    case 1: { //(1) homing
-      cout <<"HOMING" <<endl;
+    case 1: { //homing
+      cout <<"homing" <<endl;
       MP.qitselfPD.setGainsAsNatural(2.,1.);
       break;
     }
     case 4:
     case 8:{ //open/close hand
+      cout <<"open/close hand" <<endl;
       PDtask *pdt=NULL;
       switch(sel){
         case right:  pdt=gripperR;  break;

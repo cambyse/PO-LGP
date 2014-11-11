@@ -1,6 +1,6 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 
@@ -11,7 +11,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   x = P.getInitialization();
 
   //-- setup the motion problem
-  TaskCost *pos =
+  Task *pos =
       P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
@@ -19,7 +19,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
-  TaskCost *cont = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  Task *cont = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
@@ -61,7 +61,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   PDtask *pd_x=
       MC.addPDTask("pose", .1, .8,
-                    new DefaultTaskMap(qItselfTMT, world));
+                    new TaskMap_qItself());
   pd_x->prec = .1;
 
   ConstraintForceTask *pd_c =

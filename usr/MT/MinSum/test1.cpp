@@ -61,7 +61,7 @@ void testChain(){
       VERBOSE(2,cout <<"reapproximating potentials at node "<<i <<" at " <<x_i <<endl);
       for(k=0;k<del(i).N;k++){
         m=del(i)(k);
-        CHECK(Msgs(m,1)==i,"");
+        CHECK_EQ(Msgs(m,1),i,"");
         j=Msgs(m,0);
         if(j<i) Psi(psi, psiI, psiJ, i, j, x_i, x[j]);
         else    Psi(psi, psiI, psiJ, j, i, x[j], x_i);

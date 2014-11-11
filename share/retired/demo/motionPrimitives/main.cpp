@@ -58,7 +58,7 @@ int main(int argc,char** argv){
   MotionFuture motions;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
-  JoystickState joystickState;
+  GamepadState gamepadState;
   
   // processes
   MotionController controller;
@@ -72,7 +72,7 @@ int main(int argc,char** argv){
   // variables
   //(none)
   // processes
-  Joystick joystick;
+  Gamepad gamepad;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
@@ -98,7 +98,7 @@ int main(int argc,char** argv){
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
   P.append(LIST<Process>(controller));
-  //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
+  //P.append(LIST<Process>(gamepad, schunkArm, schunkHand, schunkSkin));
   //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
 
   //views don't need to be started -- they now listen!

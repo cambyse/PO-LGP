@@ -1080,7 +1080,7 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       if (DEBUG>0) {PRINT(substring);}
       Literal::get(base_literals, substring);
       CHECK(base_literals.N >= 2, "Too few parameters!")
-      CHECK(base_literals(0)->s == base_literals(1)->s, "Functions must be equal!")
+      CHECK_EQ(base_literals(0)->s , base_literals(1)->s, "Functions must be equal!")
       Symbol *baseSymbol = base_literals(0)->s;
       Literal *baseFLit1 = base_literals(0);
       Literal *baseFLit2 = base_literals(1);

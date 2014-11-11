@@ -1,0 +1,14 @@
+BASE = ../..
+
+OBJS = main.o ../pcl_sprint_projections/dataStructures.o ../pcl_sprint_projections/methods.o
+
+PLIB = 1
+PCL = 1
+GL = 1
+DEPEND = Core System Hardware_gamepad Motion Ors Gui pr2 Perception
+
+LPATHS += /opt/ros/groovy/lib
+
+#CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'
+
+include $(BASE)/gofMake/generic.mk

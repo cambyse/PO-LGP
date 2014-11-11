@@ -1956,7 +1956,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
 
 
 void PRADA_DBN::inferStates(const LitL& given_action_sequence) {
-//   CHECK(given_action_sequence.N == horizon, "");
+//   CHECK_EQ(given_action_sequence.N , horizon, "");
   uint t;
   FOR1D(given_action_sequence, t) {
     inferRules(t);
@@ -2315,7 +2315,7 @@ void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_D
   }
   CHECK(constants.isSorted(TL::uint_compare), "");
   uint i, k;
-  CHECK(s->arity==2, "TransClosureSymbol has to be 2dim");
+  CHECK_EQ(s->arity,2, "TransClosureSymbol has to be 2dim");
   if (__auxiliary_transclosure__constants != constants) {
     __auxiliary_transclosure__symbols.clear();
     __auxiliary_transclosure__baseLits.clear();
@@ -2483,13 +2483,13 @@ void calcDerived1(SumFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn
     s->write(cout);cout<<endl;
     PRINT(t);
   }
-  CHECK(s->arity == 0, "so far implemented only for zero-ary");
+  CHECK_EQ(s->arity , 0, "so far implemented only for zero-ary");
   uintA empty;
   Literal* lit = Literal::get(s, empty, 1);
   if (DEBUG>0) {PRINT(*lit);}
   LiteralRV* var = dbn->RVefficiency__atom2var(lit);
   if (DEBUG>0) {var->write();}
-  CHECK(var->type == LiteralRV::expectation, "only defined for expectation random vars");
+  CHECK_EQ(var->type , LiteralRV::expectation, "only defined for expectation random vars");
   uint c;
   MT::Array< uintA > combos;
   TL::allPermutations(combos, constants, s->base_symbol->arity, true, true);
@@ -2500,7 +2500,7 @@ void calcDerived1(SumFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn
     if (DEBUG>1) {cout<<*lit_base;}
     LiteralRV* var_base = dbn->RVefficiency__atom2var(lit_base);
     if (DEBUG>1) {cout<<"  "<<var_base->P(t,0)<<endl;}
-    CHECK(var_base->type == LiteralRV::expectation, "only defined for expectation random vars");
+    CHECK_EQ(var_base->type , LiteralRV::expectation, "only defined for expectation random vars");
     sum += var_base->P(t,0);
   }
   var->P(t,0) = sum;
@@ -2516,7 +2516,7 @@ void calcDerived1(RewardFunction* f, uint t, const uintA& constants, PRADA_DBN* 
     f->write(cout);cout<<endl;
     PRINT(t);
   }
-  CHECK(f->arity == 0, "so far implemented only for zero-ary");
+  CHECK_EQ(f->arity , 0, "so far implemented only for zero-ary");
   uintA empty;
   NIY;
 #if 0
@@ -2814,7 +2814,7 @@ void PRADA_DBN::create_dbn_structure(const SymL& symbols_state, const SymL& acti
   vars_action.clear();
   // Init efficiency structure
   SymL symbols_all;  symbols_all.append(symbols_state);  symbols_all.append(actions);
-  CHECK(RVefficiency__symbols.N == 0, "DBN has already been built before!");
+  CHECK_EQ(RVefficiency__symbols.N , 0, "DBN has already been built before!");
   RVefficiency__init(symbols_all);
   
   // Build mapping: action --> rules

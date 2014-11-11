@@ -160,7 +160,7 @@ void getPhaseTrajectory(arr& x, const arr& q, double tau){
 /// simply get the q-trajectory from a (q, v)-trajectory
 void getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
-  CHECK(2*n==_q.d1, "")
+  CHECK_EQ(2*n,_q.d1, "")
   q.resize(T, n);
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }

@@ -24,6 +24,8 @@
 #undef MAX
 #include <X11/Xlib.h>
 #include <GL/glx.h>
+//#include <GL/glut.h>
+//#include <GL/glext.h>
 
 #include <Core/geo.h>
 #include "opengl.h"
@@ -108,12 +110,170 @@ void OpenGL::resize(int w,int h){
 //int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
 //int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
+void OpenGL::renderInBack(int width, int height, bool _captureImg, bool _captureDep){
+//  captureImg=_captureImg;
+//  captureDep=_captureDep;
+  if(width==-1) width=s->gl->width;
+  if(height==-1) height=s->gl->height;
+  CHECK_EQ(width%4,0,"should be devidable by 4!!")
+
+  isUpdating.waitForValueEq(0);
+  isUpdating.setValue(1);
+//  processEvents();  isUpdating.waitForValueEq(0);  processEvents();
+
+  s->beginGlContext();
+
+#if 1
+//  if(!fbo || !render_buf){ //need to initialize
+//    glewInit();
+//    glGenFramebuffers(1,&fbo);
+//    glGenRenderbuffers(1,&render_buf);
+//    glBindRenderbuffer(GL_RENDERBUFFER, render_buf);
+//    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, width, height);
+//    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+//    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buf);
+//  }
+
+//  //Before drawing
+//  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+
+
+  if(!rboColor || !rboDepth){ //need to initialize
+    glewInit();
+    // Create a new renderbuffer unique name.
+    glGenRenderbuffers(1, &rboColor);
+    // Set it as the current.
+    glBindRenderbuffer(GL_RENDERBUFFER, rboColor);
+    // Sets storage type for currently bound renderbuffer.
+    glRenderbufferStorage(
+          GL_RENDERBUFFER,
+          GL_RGBA8,
+          width,
+          height
+          );
+
+    // Depth renderbuffer.
+
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(
+          GL_RENDERBUFFER,
+          GL_DEPTH_COMPONENT24,
+          width,
+          height
+          );
+
+    // Framebuffer.
+
+    // Create a framebuffer and a renderbuffer object.
+    // You need to delete them when program exits.
+    glGenFramebuffers(1, &fboId);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    //from now on, operate on the given framebuffer
+    //GL_FRAMEBUFFER        read write
+    //GL_READ_FRAMEBUFFER   read
+    //GL_FRAMEBUFFER        write
+
+    // Adds color renderbuffer to currently bound framebuffer.
+    glFramebufferRenderbuffer(
+          GL_FRAMEBUFFER,
+          GL_COLOR_ATTACHMENT0,
+          GL_RENDERBUFFER,
+          rboColor
+          );
+
+    glFramebufferRenderbuffer(
+          GL_FRAMEBUFFER,
+          GL_DEPTH_ATTACHMENT,
+          GL_RENDERBUFFER,
+          rboDepth
+          );
+
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    //glReadBuffer(GL_BACK);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+      cout << "framebuffer error:" << endl;
+      switch (status) {
+        case GL_FRAMEBUFFER_UNDEFINED: {
+          cout << "GL_FRAMEBUFFER_UNDEFINED" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_UNSUPPORTED: {
+          cout << "GL_FRAMEBUFFER_UNSUPPORTED" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << endl;
+          break;
+        }
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: {
+          cout << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS" << endl;
+          break;
+        }
+        case 0: {
+          cout << "0" << endl;
+          break;
+        }
+      }
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+
+#endif
+
+  s->gl->Draw(width, height);
+
+  glFlush();
+
+  //after drawing
+//  std::vector<std::uint8_t> data(width*height*4);
+//  glReadBuffer(GL_COLOR_ATTACHMENT0);
+//  glReadPixels(0,0,width,height,GL_BGRA,GL_UNSIGNED_BYTE,&data[0]);
+
+#if 1
+  captureImage.resize(height, width, 3);
+  glReadBuffer(GL_BACK);
+//  glReadBuffer(GL_COLOR_ATTACHMENT0);
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, captureImage.p);
+#endif
+
+#if 1
+  // Return to onscreen rendering:
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
+
+  isUpdating.setValue(0);
+  s->endGlContext();
+}
+
 Display* OpenGL::xdisplay(){ return s->xdisplay; }
 Drawable OpenGL::xdraw(){ return s->xdraw; }
 
 sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
+  _gl->isUpdating.setValue(2);
   gtkLock();
   container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(container), title);
@@ -139,7 +299,6 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "sOpenGL", this);
 
-  
   glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
   GDK_GL_MODE_DEPTH |
   GDK_GL_MODE_DOUBLE));
@@ -192,6 +351,13 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
 
 sOpenGL::~sOpenGL(){
 //  MT_MSG("destructing sOpenGL sOpenGL=" <<this <<" glArea="<<glArea);
+#if 0
+  if(gl->fbo || gl->render_buf){ //need to destroy offscreen rendering buffers
+    glDeleteFramebuffers(1,&gl->fbo);
+    glDeleteRenderbuffers(1,&gl->render_buf);
+  }
+#endif
+
   gtkLock();
   gtk_widget_destroy(glArea);
   //if(ownViewport) gtk_widget_destroy(GTK_WIDGET(gtk_container_get_children(GTK_CONTAINER(container))->data));
@@ -224,7 +390,8 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
 
   s->endGlContext();
-  
+  s->gl->isUpdating.setValue(0);
+
   return true;
 }
 

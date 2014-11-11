@@ -223,7 +223,7 @@ bool reason::derive_transclosure(LitL& lits_derived, TransClosureSymbol& s, cons
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_transclosure [START]"<<endl;}
   if (DEBUG>0) {cout<<s<<endl;}
-  CHECK(s.arity==2, "transitive closure defined only for binary symbols with two arguments")
+  CHECK_EQ(s.arity,2, "transitive closure defined only for binary symbols with two arguments")
   lits_derived.clear();
   uint i;
   // (1) find edges
@@ -384,7 +384,7 @@ bool reason::derive_avg(LitL& lits_derived, AverageFunction& s, const LitL& lits
 #if 0
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_avg [START]"<<endl;}
-  CHECK(f.arity==0, "only implemented for zero-ary avg functions");
+  CHECK_EQ(f.arity,0, "only implemented for zero-ary avg functions");
   uint i, k;
   MT::Array< uintA > combos;
   uintA local_constants;
@@ -427,7 +427,7 @@ bool reason::derive_avg(LitL& lits_derived, AverageFunction& s, const LitL& lits
 bool reason::derive_sum(LitL& lits_derived, SumFunction& s, const LitL& lits_given, const uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_sum [START]"<<endl;}
-  CHECK(s.arity==0, "only implemented for zero-ary avg functions");
+  CHECK_EQ(s.arity,0, "only implemented for zero-ary avg functions");
   uint i, k;
   MT::Array< uintA > combos;
   TL::allPermutations(combos, constants, s.base_symbol->arity, true, true);
@@ -456,7 +456,7 @@ bool reason::derive_max(LitL& lits_derived, MaxFunction& s, const LitL& lits_giv
 #if 0
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_max [START]"<<endl;}
-  CHECK(f.arity==0, "only implemented for zero-ary max functions");
+  CHECK_EQ(f.arity,0, "only implemented for zero-ary max functions");
   uint i, k;
   MT::Array< uintA > combos;
   uintA local_constants;
@@ -501,7 +501,7 @@ bool reason::derive_reward(LitL& lits_derived, RewardFunction& s, const LitL& li
 #if 0
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_reward [START]"<<endl;}
-  CHECK(f.arity==0, "only zero-ary functions");
+  CHECK_EQ(f.arity,0, "only zero-ary functions");
   double value = 0;
   if (reason::holds(s, f.ground_pis))
     value = f.reward_value;
@@ -702,7 +702,7 @@ bool reason::calcSubstitution(Substitution& sub, const uintA& ground_args, const
   FOR1D(ground_args, i) {
     CHECK(isConstant(ground_args(i)), "ground_args contains not-ground "<<ground_args(i))
   }
-  CHECK(ground_args.N==other_args.N, "wrong slot assignments:  ground_args="<<ground_args<<"  vs.  other_args="<<other_args);
+  CHECK_EQ(ground_args.N,other_args.N, "wrong slot assignments:  ground_args="<<ground_args<<"  vs.  other_args="<<other_args);
   FOR1D(other_args, i) {
     if (isConstant(other_args(i))) {
       if (other_args(i) != ground_args(i))
@@ -754,7 +754,7 @@ bool reason::calcSubstitution(Substitution& sub, const Literal* ground_lit, cons
 bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, Literal* lit_input, bool free_neg_vars__all_quantified, Substitution* initSub) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calcSubstitutions(..., const LitL& lits_ground, Literal* lit_input, ...) [START]"<<endl;
-  CHECK(subs.num()==0, "There are already subs!")
+  CHECK_EQ(subs.num(),0, "There are already subs!")
   if (DEBUG>1) {
     cout << "lits_ground: "<<lits_ground<<endl;
     cout << "lit_input: "<<*lit_input<<endl;
@@ -889,7 +889,7 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, c
     else {cout<<"-"<<endl;}
   }
   CHECK(Literal::negativeBinaryLiteralsLast(lits_input), "Positive literals need to be first!");
-  CHECK(subs.num()==0, "Subs has to be empty.");
+  CHECK_EQ(subs.num(),0, "Subs has to be empty.");
   Substitution* initSub_copy = new Substitution;
   if (initSub != NULL)
     *initSub_copy = *initSub;
@@ -1148,7 +1148,7 @@ uint reason::calcSubstitutions_asMuchAsPossible(SubstitutionSet& subs,
                                 const SymbolicState& state1, const Literal& action1,
                                 const SymbolicState& state2, const Literal& action2) {
   Substitution* action_sub = new Substitution;
-  CHECK(action1.s == action2.s, "Try to unify different action symbols:  " << action2.s << " vs " << action1.s);
+  CHECK_EQ(action1.s , action2.s, "Try to unify different action symbols:  " << action2.s << " vs " << action1.s);
   uint i;
   FOR1D(action1.args, i) {
     action_sub->addSubs(action1.args(i), action2.args(i));

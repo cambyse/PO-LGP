@@ -1,0 +1,29 @@
+
+
+What relational state do we want to represent?
+
+* the actual relational state currently?
+* NEIN! nehm den "envelope state"
+
+Definition: Given an initial geometric state $XX$ and a sequence
+$a_{0:T}$, we consider all possible trajectories conditioned on
+$a_{0:T}. This implies the set of possible final object configurations
+of all objects. This set is constrained. We define the \emph{enveloping state}
+$\G(s_0,a_{0:T}$ as the relational state that defines this set.
+
+Definitions: The \emph{unconstrained configuration space} is
+$X=\SE(3)^n$. A relational state $\G$ is a set of kinematic relations
+that imply constraints on $X$; we define $X_\G = \{ x\in\X : x\covered
+\G\}$ as the space of configurations conditional to a relational state
+$\G$.
+
+
+
+* check feasibility of a break: only if object is physically supported?
+* On the search tree, store both, the current kinematic state; and the reachability state? OR: store both in one
+
+
+Initial state:
+* support(obj*, table)
+
+

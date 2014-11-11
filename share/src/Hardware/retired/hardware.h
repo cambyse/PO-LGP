@@ -20,12 +20,12 @@ struct SkinPressure:public Variable {
   }
 };
 
-struct JoystickState: public Variable {
+struct GamepadState: public Variable {
   FIELD(intA, state);
   FIELD(uint, n);
   FIELD(bool, exitSignal);
   
-  JoystickState():Variable("JoystickState"), n(0), exitSignal(false) {
+  GamepadState():Variable("GamepadState"), n(0), exitSignal(false) {
     reg_state();
     reg_n();
     reg_exitSignal();
@@ -43,7 +43,7 @@ struct JoystickState: public Variable {
 
 //TODO:
 // Process* newBumblebee(Image& left, Image& right);
-Process* newJoystick(JoystickState &joy);
+Process* newGamepad(GamepadState &gamepad);
 // Process* newSchunkArm(HardwareReference &ref);
 // Process* newSchunkHand(HardwareReference &ref);
 // Process* newSchunkSkin(SkinPressure &skin);

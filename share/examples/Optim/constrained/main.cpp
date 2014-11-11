@@ -1,18 +1,18 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-
+#include "problems.h"
 
 //lecture.cpp:
-void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20);
+void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20);
 
 //==============================================================================
 //
 // test standard constrained optimizers
 //
 
-void testConstraint2(ConstrainedProblem& p, arr& x_start=NoArr){
+void testConstraint2(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr){
   //-- initial x
-  arr x = zeros(p.dim_x());
+  arr x = zeros(dim_x);
   if(&x_start) x=x_start;
   rnd.seed(0);
 
@@ -26,19 +26,37 @@ void testConstraint2(ConstrainedProblem& p, arr& x_start=NoArr){
 // test the phase one optimization
 //
 
-void testPhaseOne(ConstrainedProblem& f){
+void testPhaseOne(const ConstrainedProblem& f, uint dim_x){
   PhaseOneProblem metaF(f);
 
   arr x;
   x = ARRAY(1., 1., 10.);
 
-  testConstraint(metaF, x, 1);
+  testConstraint(metaF, dim_x, x, 1);
   //one iteration of phase one should be enough
   //properly done: check in each step if constraints are fulfilled and exit phase one then
   //no need to really minimize
 
   x=x.sub(0,-2);
-  testConstraint(f, x);
+  testConstraint(f, dim_x, x);
+}
+
+//==============================================================================
+
+void testCoveringSphere(){
+  uint n=100, s=10;
+  arr x(n,3); rndGauss(x);
+  CoveringSpheresProblem F(x,s);
+
+  //-- initial x
+  arr cr = F.initialization(x);
+  rndGauss(cr, .01);
+
+  cout <<"point = " <<x <<endl;
+  cout <<"cr_init=" <<cr <<endl;
+  checkAllGradients(F, cr, 1e-4);
+  optConstrained(cr, NoArr, F);
+  cout <<"cr_opt=" <<cr <<endl;
 }
 
 //==============================================================================
@@ -49,8 +67,10 @@ int main(int argc,char** argv){
   ChoiceConstraintFunction F;
 //  RandomLPFunction F;
 //  SimpleConstraintFunction F;
-//  testConstraint(F);
-  testConstraint2(F);
+  testConstraint(F, F.dim_x());
+//  testConstraint2(F, F.dim_x());
+
+//  testCoveringSphere();
 
   return 0;
 }

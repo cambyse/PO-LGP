@@ -6,7 +6,7 @@ struct ExampleFunction:public VectorFunction{
   double q;
   ExampleFunction(){ q = MT::getParameter<double>("q",10.); }
   void fv(arr& phi, arr& J,const arr& x){
-    CHECK(x.N==1,"");
+    CHECK_EQ(x.N,1,"");
     phi.resize(1);
     if(&J) J.resize(1);
 #if 0

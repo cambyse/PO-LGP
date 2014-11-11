@@ -266,7 +266,7 @@ void FrameToMatrix(arr &X, const ors::Transformation& f) {
 
 void ors::Link::setFeatherstones() {
   switch(type) {
-    case -1:     CHECK(parent==-1, ""); _h.clear();  break;
+    case -1:     CHECK_EQ(parent,-1, ""); _h.clear();  break;
     case JT_hingeX: _h.resize(6); _h.setZero(); _h(0)=1.; break;
     case JT_hingeY: _h.resize(6); _h.setZero(); _h(1)=1.; break;
     case JT_hingeZ: _h.resize(6); _h.setZero(); _h(2)=1.; break;
@@ -305,9 +305,9 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   iq=0;
   for_list(ors::Body,n,C.bodies) {
     i=n_COUNT;
-    CHECK(i==n->index, "not properly indexed!");
+    CHECK_EQ(i,n->index, "not properly indexed!");
     if(n->inLinks.N) {
-      CHECK(n->inLinks.N==1, "this is not a tree");
+      CHECK_EQ(n->inLinks.N,1, "this is not a tree");
       e=n->inLinks(0);
       p=e->from;
       
@@ -328,7 +328,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
       tree(i).Q=e->Q;
       iq++;
     } else {
-      CHECK(n->inLinks.N==0, "dammit");
+      CHECK_EQ(n->inLinks.N,0, "dammit");
       
       tree(i).type=-1;
       tree(i).index=-1;
@@ -343,12 +343,12 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
     tree(i).force=n->force;
     tree(i).torque=n->torque;
   }
-  CHECK(iq==C.getJointStateDimension(), "");
+  CHECK_EQ(iq,C.getJointStateDimension(), "");
   for(i=0; i<tree.N; i++) tree(i).setFeatherstones();
 }
 
 void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
-  CHECK(tree.N==C.bodies.N, "");
+  CHECK_EQ(tree.N,C.bodies.N, "");
   
   uint i;
   ors::Body *p;
@@ -964,7 +964,7 @@ void ors::equationOfMotion(arr& H, arr& C,
   
   int par;
   uint i, j, N=tree.N, iq, jq;
-  //CHECK(N-1==qd.N,"vels don't have right dimension")
+  //CHECK_EQ(N-1,qd.N,"vels don't have right dimension")
   arr h(N, 6);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IC(N, 6, 6), fvp(N, 6), avp(N, 6);
   arr vJ, fh;

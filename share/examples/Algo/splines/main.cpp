@@ -144,7 +144,7 @@ void testPath(){
     MT::Path &P;
     TestGrad(MT::Path& _P):P(_P){}
     void fv(arr& y, arr& J, const arr& x){
-      CHECK(x.N==1,"");
+      CHECK_EQ(x.N,1,"");
       y = P.getPosition(x(0));
       if(&J) J = P.getVelocity(x(0));
     }

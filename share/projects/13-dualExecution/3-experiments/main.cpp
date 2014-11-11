@@ -1,6 +1,6 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
@@ -14,18 +14,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   x = MP.getInitialization();
 
   //-- setup the motion problem
-  TaskCost *pos = MP.addTask("position",
+  Task *pos = MP.addTask("position",
                             new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  Task *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   vel->map.order=1;
   vel->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  TaskCost *cons = MP.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  Task *cons = MP.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
   cons->setCostSpecs(0, MP.T, {0.}, 1.);
 
-  TaskCost *sticky = MP.addTask("planeStickiness", new ConstraintStickiness(cons->map));
+  Task *sticky = MP.addTask("planeStickiness", new ConstraintStickiness(cons->map));
   sticky->setCostSpecs(0, MP.T, {0.}, 1.);
 
   //-- convert
@@ -75,7 +75,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   //joint space PD task
   PDtask *pd_x=
       MC.addPDTask("pose", 1., .8,
-                    new DefaultTaskMap(qItselfTMT, world));
+                    new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

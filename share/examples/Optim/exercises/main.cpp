@@ -259,10 +259,9 @@ int main(int argc,char** argv){
 
   switch((TestType)MT::getParameter<int>("exercise")){
   case unconstrained: {
-    ChoiceFunction F;
-    displayFunction(F);
+    displayFunction(ChoiceFunction);
     MT::wait();
-    testGradDescent(F);
+    testGradDescent(ChoiceFunction);
   } break;
   case constrained: {
     ChoiceConstraintFunction F;
@@ -274,7 +273,7 @@ int main(int argc,char** argv){
   } break;
   case gaussNewton: {
     SinusesFunction F;
-    displayFunction(F);
+    displayFunction(Convert(F));
     MT::wait();
     testGaussNewton(F);
   }

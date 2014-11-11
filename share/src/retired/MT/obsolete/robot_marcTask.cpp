@@ -48,7 +48,7 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
 MarcsRobotTask::MarcsRobotTask(){
   ctrl.taskLock.writeLock();
   ctrl.task = this;
-  this->joyVar = &joy;
+  this->gamepadVar = &gamepad;
   ctrl.taskLock.unlock();
 }
 
@@ -184,7 +184,7 @@ void MarcsRobotTask::reachObject(){
   reachPoint = objectPosition;
   for(; !signalStop;){
     NIY; //();
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
   }
   controlMode = stopCM;
   for(uint t=0; t<10; t++) NIY; //();
@@ -352,22 +352,22 @@ void MarcsRobotTask::loadPlainTrajectory(const char* filename){
   plan_Vinv.writeTagged(fil2, "Vinv");
 }
 
-void MarcsRobotTask::joystick(){
-  controlMode = joystickCM;
+void MarcsRobotTask::gamepad(){
+  controlMode = gamepadCM;
   for(; !signalStop;){
     NIY; //();
     //cout <<"tip3 inlink frame = " <<ors.getBodyByName("tip3")->inLinks(0)->X.p <<endl;
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
   }
   controlMode = stopCM;
   for(uint t=0; t<10; t++) NIY; //();
-  waitJoyClean();
+  waitGamepadClean();
 }
 
-void MarcsRobotTask::waitJoyClean(){
+void MarcsRobotTask::waitGamepadClean(){
   for(; !signalStop;){
-    joy.step();
-    if(joy.state(0)==0) break;
+    gamepad.step();
+    if(gamepad.state(0)==0) break;
     MT::wait(.001);
   }
 }
@@ -378,7 +378,7 @@ void MarcsRobotTask::followTrajectory(){
   for(; !signalStop;){
     if((uint)plan_count >= plan_v.d0) break;
     NIY; //();
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
   }
   controlMode = stopCM;
   for(uint t=0; t<10; t++) NIY; //();
@@ -396,7 +396,7 @@ void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
   controlMode = closeHandCM;
   for(; !signalStop;){
     NIY; //();
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
     if(length(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>400) break; //early stop!!
   }
@@ -430,7 +430,7 @@ void MarcsRobotTask::openHand(const char* objShape){
   controlMode = openHandCM;
   for(; !signalStop;){
     NIY; //();
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+    if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
     //if(stepCounter>200 && length(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>300) break; //early stop!!
     

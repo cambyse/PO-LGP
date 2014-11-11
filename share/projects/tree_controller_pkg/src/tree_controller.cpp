@@ -53,7 +53,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   MP->qitselfPD.active=false;
   taskPos = MP->addPDTask("pos", .1, 1, posTMT, "endeffR");
   taskVec = MP->addPDTask("vec", .1, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
-  taskHome = MP->addPDTask("home", .1, 1., qItselfTMT);
+  taskHome = MP->addPDTask("home", .1, 1., new TaskMap_qItself());
 
   double t_PD = 0.1;
   double damp_PD = 0.9;

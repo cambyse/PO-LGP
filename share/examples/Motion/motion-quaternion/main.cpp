@@ -1,8 +1,8 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -21,14 +21,14 @@ int main(int argc,char** argv){
   MP.loadTransitionParameters();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("position", new DefaultTaskMap(quatTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.rot), 1e3);
 
-//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+//  c = MP.addTask("q_vel", new TaskMap_qItself());
 //  c->map.order=1; //make this a velocity variable!
 //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 

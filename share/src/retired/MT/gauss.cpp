@@ -177,7 +177,7 @@ void estimate(Gaussian& g, const arr& X){
 }
 
 void estimateWeighted(Gaussian& g, const arr& X, const arr& W){
-  CHECK(X.d0==W.N, "");
+  CHECK_EQ(X.d0,W.N, "");
   uint k=X.d0, n=X.d1, i;
   g.c.resize(n);   g.c.setZero();
   g.C.resize(n, n); g.C.setZero();
@@ -371,7 +371,7 @@ void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double upd
     x.c = Finv*(y.c-f);
     x.C = Finv*(y.C+Q)*~Finv;
   }else{
-    CHECK(x.c.N==F.d1, "x.c must be initialized when pulling back a redundant mapping!");
+    CHECK_EQ(x.c.N,F.d1, "x.c must be initialized when pulling back a redundant mapping!");
     //arr tF = ~F;
     //arr iF = tF * inverse(F*tF);
     //CHECK(maxDiff(Finv, iF)<1e-10, "pseudo inverse not right");
@@ -473,7 +473,7 @@ void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f){
 }
 
 void getLinFwdFromJoint(arr& f, arr& F, arr& Q, uint n1, uint n2, Gaussian& x){
-  CHECK(n1+n2==x.c.N, "");
+  CHECK_EQ(n1+n2,x.c.N, "");
   arr A, B, C, Ainv, a, b;
   x.makeC();
   a=x.c.sub(0, n1-1);        //upper vector
@@ -674,7 +674,7 @@ void makeConditional(Gaussian& xi, uint dx){
 //simple version with first product rule
 void multiplyToJoint(Gaussian& xi, Gaussian& b){
   uint n=b.N();
-  CHECK(xi.N()==2*n, "only for doubles sizes yet");
+  CHECK_EQ(xi.N(),2*n, "only for doubles sizes yet");
   if(useC){
     arr zero(n, n); zero.setZero();
     arr big; big.setDiag(1e8, n);
@@ -941,7 +941,7 @@ void multiplyToJoint(arr& d, arr& D, arr& c, arr& C, arr& b, arr& B){
 }
 
 void getLinFwdFromJoint(arr& f, arr& F, arr& Q, uint n1, uint n2, arr& j, arr& J){
-  CHECK(n1+n2==j.N, "");
+  CHECK_EQ(n1+n2,j.N, "");
   arr A, B, C, Ainv, a, b;
   a=j.sub(0, n1-1);        //upper vector
   b=j.sub(n1, -1);         //lower vector

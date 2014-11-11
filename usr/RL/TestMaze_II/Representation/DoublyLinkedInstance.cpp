@@ -1,7 +1,10 @@
 #include "DoublyLinkedInstance.h"
 
+#define DEBUG_STRING "DoublyLinkedInstance	("<<this<<") / "<<*this<<":	"
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
+
+using util::INVALID;
 
 DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          observation_ptr_t o,
@@ -10,89 +13,128 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          ptr_t after) {
     DoublyLinkedInstance * d = new DoublyLinkedInstance(a,o,r,before,after);
     ptr_t ret =  AbstractInstance::create(d); // sets self pointer
-    d->prev_ptr->subscribe(d->get_self_ptr(),SUCCESSOR);
-    d->next_ptr->subscribe(d->get_self_ptr(),PREDECESSOR);
+    d->const_prev()->subscribe(d->get_self_ptr(),SUCCESSOR);
+    d->const_next()->subscribe(d->get_self_ptr(),PREDECESSOR);
+    return ret;
+}
+
+DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
+                                                         observation_ptr_t o,
+                                                         reward_ptr_t r,
+                                                         const_ptr_t before,
+                                                         const_ptr_t after) {
+    DoublyLinkedInstance * d = new DoublyLinkedInstance(a,o,r,before,after);
+    ptr_t ret =  AbstractInstance::create(d); // sets self pointer
+    d->const_prev()->subscribe(d->get_self_ptr(),SUCCESSOR);
+    d->const_next()->subscribe(d->get_self_ptr(),PREDECESSOR);
     return ret;
 }
 
 DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          observation_ptr_t o,
                                                          reward_ptr_t r) {
-    return DoublyLinkedInstance::create(a,o,r,create_invalid(),create_invalid());
+    return DoublyLinkedInstance::create(a,o,r,ptr_t(INVALID),ptr_t(INVALID));
 }
 
-DoublyLinkedInstance::Iterator DoublyLinkedInstance::begin() {
-    DEBUG_OUT(2,*this << "->begin()");
-    ptr_t first = get_self_ptr();
-    ptr_t before_first = first->prev();
-    while(before_first!=ptr_t()) {
-        first = before_first;
-        before_first = first->prev();
-    }
-    return Iterator(first);
-}
-
-DoublyLinkedInstance::ptr_t DoublyLinkedInstance::next(const int& n) const {
-    DEBUG_OUT(2,*this << "->next(" << n << ")");
+DoublyLinkedInstance::const_ptr_t DoublyLinkedInstance::const_next(const int& n) const {
     if(n<0) {
-        return prev(-n);
+        return const_prev(-n);
     } else if(n==0) {
         return get_self_ptr();
     } else if(n==1) {
-        return ptr_t(next_ptr);
+        return const_next_ptr;
     } else {
-        return next_ptr->next(n-1);
+        return const_next()->const_next(n-1);
     }
 }
 
-DoublyLinkedInstance::ptr_t DoublyLinkedInstance::prev(const int& n) const {
-    DEBUG_OUT(2,*this << "->prev(" << n << ")");
+DoublyLinkedInstance::const_ptr_t DoublyLinkedInstance::const_prev(const int& n) const {
     if(n<0) {
-        return next(-n);
+        return const_next(-n);
     } else if(n==0) {
         return get_self_ptr();
     } else if(n==1) {
-        return ptr_t(prev_ptr);
+        return const_prev_ptr;
     } else {
-        return prev_ptr->prev(n-1);
+        return const_prev()->const_prev(n-1);
+    }
+}
+
+DoublyLinkedInstance::ptr_t DoublyLinkedInstance::non_const_next(const int& n) const {
+    if(n<0) {
+        return non_const_prev(-n);
+    } else if(n==0) {
+        return get_self_ptr();
+    } else if(n==1) {
+        return next_ptr;
+    } else {
+        return non_const_next()->non_const_next(n-1);
+    }
+}
+
+DoublyLinkedInstance::ptr_t DoublyLinkedInstance::non_const_prev(const int& n) const {
+    if(n<0) {
+        return non_const_next(-n);
+    } else if(n==0) {
+        return get_self_ptr();
+    } else if(n==1) {
+        return prev_ptr;
+    } else {
+        return non_const_prev()->non_const_prev(n-1);
     }
 }
 
 DoublyLinkedInstance::ptr_t DoublyLinkedInstance::append(action_ptr_t a,
                                                          observation_ptr_t o,
                                                          reward_ptr_t r) {
-    DEBUG_OUT(1,*this << "->append(" << a << "," << o << "," << r << ")");
-    set_successor(DoublyLinkedInstance::create(a,o,r,get_self_ptr(),create_invalid()));
-    return next_ptr;
+    DEBUG_OUT(1,"append(" << a << "," << o << "," << r << ")");
+    set_non_const_successor(DoublyLinkedInstance::create(a,o,r,get_self_ptr(),INVALID));
+    return non_const_next();
 }
 
-void DoublyLinkedInstance::set_predecessor(ptr_t pre) {
-    prev_ptr->unsubscribe(get_self_ptr(),SUCCESSOR);
+void DoublyLinkedInstance::set_non_const_predecessor(ptr_t pre) {
+    const_prev()->unsubscribe(get_self_ptr(),SUCCESSOR);
     prev_ptr = pre;
-    prev_ptr->subscribe(get_self_ptr(),SUCCESSOR);
+    const_prev_ptr = pre;
+    const_prev()->subscribe(get_self_ptr(),SUCCESSOR);
 }
 
-void DoublyLinkedInstance::set_successor(ptr_t suc) {
-    next_ptr->unsubscribe(get_self_ptr(),PREDECESSOR);
+void DoublyLinkedInstance::set_non_const_successor(ptr_t suc) {
+    const_next()->unsubscribe(get_self_ptr(),PREDECESSOR);
     next_ptr = suc;
-    next_ptr->subscribe(get_self_ptr(),PREDECESSOR);
+    const_next_ptr = suc;
+    const_next()->subscribe(get_self_ptr(),PREDECESSOR);
 }
 
-void DoublyLinkedInstance::detachment_notification(ptr_t ins, SUBSCRIBTION_TYPE t) {
-    DEBUG_OUT(2,*this << " got detachment notification from " << ins);
+void DoublyLinkedInstance::set_const_predecessor(const_ptr_t pre) {
+    const_prev()->unsubscribe(get_self_ptr(),SUCCESSOR);
+    prev_ptr = INVALID;
+    const_prev_ptr = pre;
+    const_prev()->subscribe(get_self_ptr(),SUCCESSOR);
+}
+
+void DoublyLinkedInstance::set_const_successor(const_ptr_t suc) {
+    const_next()->unsubscribe(get_self_ptr(),PREDECESSOR);
+    next_ptr = INVALID;
+    const_next_ptr = suc;
+    const_next()->subscribe(get_self_ptr(),PREDECESSOR);
+}
+
+void DoublyLinkedInstance::detachment_notification(const_ptr_t ins, SUBSCRIBTION_TYPE t) {
+    DEBUG_OUT(2,"got detachment notification from " << ins);
     switch(t) {
     case PREDECESSOR:
-        if(DEBUG_LEVEL>1 && ins!=next_ptr) {
-            DEBUG_ERROR(ins << " is not successor of " << *this);
-        } else if(ins==next_ptr) {
-            set_successor(create_invalid());
+        if(DEBUG_LEVEL>1 && ins!=const_next()) {
+            DEBUG_ERROR(ins << " is not successor (should be " << const_next() << ")");
+        } else if(ins==const_next()) {
+            set_non_const_successor(INVALID);
         }
         break;
     case SUCCESSOR:
-        if(DEBUG_LEVEL>1 && ins!=prev_ptr) {
-            DEBUG_ERROR(ins << " is not predecessor of " << *this);
-        } else if(ins==prev_ptr) {
-            set_predecessor(create_invalid());
+        if(DEBUG_LEVEL>1 && ins!=const_prev()) {
+            DEBUG_ERROR(ins << " is not predecessor (should be " << const_prev() << ")");
+        } else if(ins==const_prev()) {
+            set_non_const_predecessor(INVALID);
         }
     }
 }
@@ -100,20 +142,16 @@ void DoublyLinkedInstance::detachment_notification(ptr_t ins, SUBSCRIBTION_TYPE 
 DoublyLinkedInstance::DoublyLinkedInstance(action_ptr_t a,
                                            observation_ptr_t o,
                                            reward_ptr_t r,
-                                           shared_ptr_t p,
-                                           shared_ptr_t n):
-    AbstractInstance(a,o,r)
-{
-    // set predecessor
-    if(p==nullptr) {
-        prev_ptr = create_invalid();
-    } else {
-        prev_ptr = p;
-    }
-    // set successor
-    if(n==nullptr) {
-        next_ptr = create_invalid();
-    } else {
-        next_ptr = n;
-    }
-}
+                                           ptr_t p,
+                                           ptr_t n):
+    AbstractInstance(a,o,r), prev_ptr(p), next_ptr(n), const_prev_ptr(p), const_next_ptr(n)
+{}
+
+DoublyLinkedInstance::DoublyLinkedInstance(action_ptr_t a,
+                                           observation_ptr_t o,
+                                           reward_ptr_t r,
+                                           const_ptr_t p,
+                                           const_ptr_t n):
+    AbstractInstance(a,o,r),
+    prev_ptr(INVALID), next_ptr(INVALID), const_prev_ptr(p), const_next_ptr(n)
+{}

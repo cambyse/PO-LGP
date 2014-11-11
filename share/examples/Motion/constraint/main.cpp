@@ -1,6 +1,6 @@
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
@@ -13,73 +13,98 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
     gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p, true, false);
     flip_image(gl.captureImage);
     vid.addFrame(gl.captureImage);
-//    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
+    //    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
   }
   vid.close();
 }
 
-int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-
+void TEST(Stickiness){
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
-  bool con=true;
+  bool hardConstraint=true;
 
-  MotionProblem P(G);
-  P.loadTransitionParameters();
-  P.makeContactsAttractive=false;
+  MotionProblem MP(G);
 
   //-- setup the motion problem
-  TaskCost *c;
-  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e3);
+  Task *t;
 
-  c = P.addTask("position_vel", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  if(con){
-    c = P.addTask("collisionConstraints", new CollisionConstraint());
-    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
+
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
+
+  if(hardConstraint){
+    t = MP.addTask("collisionConstraints", new CollisionConstraint());
+    t->setCostSpecs(0, MP.T, {0.}, 1.);
+
+    Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(t->map));
+    sticky->setCostSpecs(0, MP.T, {0.}, 1.e1);
   }else{
-    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
-    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
+    t->setCostSpecs(0, MP.T, {0.}, 1.);
   }
 
   
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(P);
+  MotionProblemFunction MF(MP);
   arr x(MF.get_T()+1,MF.dim_x());
   x.setZero();
 
   Convert CP(MF);
-#if 0
-  optConstrained(x, P.dualMatrix, CP);
-  P.costReport();
-  for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
-#else
-  UnconstrainedProblem UCP(CP);
-  UCP.mu = 1.;
-
-  if(con){
-    for(uint k=0;k<20;k++){
-//      checkAll(CP, x, 1e-4);
-      optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
-      P.costReport();
-      displayTrajectory(x, 1, G, "planned trajectory");
-//      saveTrajectory(x, G, gl);
-//      UCP.mu *= 10;
-      UCP.aulaUpdate(.9);
-    }
-  }else{
-    for(uint k=0;k<10;k++){
-      optNewton(x, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
-      P.costReport();
-      displayTrajectory(x, 1, G, "planned trajectory");
-    }
+  for(uint k=0;k<1;k++){
+    optConstrained(x, MP.dualMatrix, CP);
+    MP.costReport();
+    for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
   }
+}
+
+//===========================================================================
+
+void TEST(EqualityConstraints){
+  ors::KinematicWorld G("chain.ors");
+  MotionProblem MP(G);
+
+  //-- setup the motion problem
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
+
+#if 0
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
+#else
+  t = MP.addTask("position", new PointEqualityConstraint(G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 #endif
 
+  t = MP.addTask("ballEqCon", new PointEqualityConstraint(G, "point", NoVector, NULL, G.getShapeByName("point")->X.pos));
+  t->setCostSpecs(0, MP.T, {0.}, 1.);
+
+  //-- create the Optimization problem (of type kOrderMarkov)
+  MotionProblemFunction MF(MP);
+  arr x = MP.getInitialization();
+  optConstrained(x, MP.dualMatrix, Convert(MF));
+  MP.costReport();
+  displayTrajectory(x, 1, G, "planned trajectory");
+}
+
+//===========================================================================
+
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
+//  testStickiness();
+  testEqualityConstraints();
   return 0;
 }
 

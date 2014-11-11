@@ -105,6 +105,8 @@ struct Body {
 
 //===========================================================================
 
+struct JointLocker;
+
 /// a joint
 struct Joint {
   KinematicWorld& world;
@@ -114,9 +116,7 @@ struct Joint {
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
 
-  bool locked;           ///< saves whether a joint is already locked
-  bool (*locked_func)(void*);  ///< this function should return true if the joint is locked
-  void *locked_data;           ///< this pointer is handed to the locked_func on each call
+  JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -131,11 +131,12 @@ struct Joint {
   
   Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
+  Joint(const Joint &j);
   void operator=(const Joint& j) {
     qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
-    locked_func=j.locked_func; locked_data=j.locked_data;
+    locker=j.locker;
   }
   void reset();
   void parseAts();
@@ -275,6 +276,8 @@ struct KinematicWorld {
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
   void jacobianR(arr& J, Body *b) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const;
+  void kinematicsRelVec (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const;
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
@@ -404,12 +407,13 @@ struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
-void animateConfiguration(ors::KinematicWorld& G);
+void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /// @} // END of group ors_interface_opengl

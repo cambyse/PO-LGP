@@ -655,7 +655,7 @@ void OdeInterface::addJointForce(doubleA& x) {
       default: NIY;
     }
   }
-  CHECK(n==x.N, "wrong dimensionality");
+  CHECK_EQ(n,x.N, "wrong dimensionality");
 }
 
 void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
@@ -679,7 +679,7 @@ void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
       default: NIY;
     }
   }
-  CHECK(n==qdot.N, "wrong dimensionality");
+  CHECK_EQ(n,qdot.N, "wrong dimensionality");
 }
 
 uint OdeInterface::getJointMotorDimension() {
@@ -705,7 +705,7 @@ void OdeInterface::setJointMotorVel(ors::Joint *e, double v0, double maxF) {
 }
 
 void OdeInterface::setJointMotorPos(doubleA& x, double maxF, double tau) {
-  //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
+  //CHECK_EQ(x.N,E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   uint i=0;
   for_list(ors::Body,  n,  C.bodies) {
@@ -715,11 +715,11 @@ void OdeInterface::setJointMotorPos(doubleA& x, double maxF, double tau) {
       break;
     }
   }
-  CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
+  CHECK_EQ(x.N,i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
 void OdeInterface::setJointMotorVel(doubleA& x, double maxF) {
-  //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
+  //CHECK_EQ(x.N,E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   uint i=0;
   for_list(ors::Body,  n,  C.bodies) {
@@ -729,7 +729,7 @@ void OdeInterface::setJointMotorVel(doubleA& x, double maxF) {
       break;
     }
   }
-  CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
+  CHECK_EQ(x.N,i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
 void OdeInterface::unsetJointMotors() {
@@ -763,7 +763,7 @@ void OdeInterface::getJointMotorForce(doubleA& f) {
       break;
     }
   }
-  CHECK(f.N==i, "joint motor array had wrong dimension " <<f.N <<"!=" <<i);
+  CHECK_EQ(f.N,i, "joint motor array had wrong dimension " <<f.N <<"!=" <<i);
 }
 
 void OdeInterface::pidJointPos(ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt) {

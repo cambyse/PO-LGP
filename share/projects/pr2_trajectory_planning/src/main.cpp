@@ -7,8 +7,8 @@
 #include <Motion/motion.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_default.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <ctime>
@@ -93,7 +93,7 @@ arr create_endpose(ors::KinematicWorld& G) {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
-  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
@@ -115,14 +115,14 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
-  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
   c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
   arr q = { 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003 };
-  planner.joint_max = q + ones(q.N);
-  planner.joint_min = q - ones(q.N);
+  planner.joint_max = q + ones(q.N,q.N);
+  planner.joint_min = q - ones(q.N,q.N);
   std::cout << "Planner initialized" <<std::endl;
   
   return planner.getTrajectoryTo(target);
@@ -137,7 +137,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
-  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));

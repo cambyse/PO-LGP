@@ -1,5 +1,7 @@
 BASE = ../../../share
 
+DEPEND = Core Gui
+
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
 include $(BASE)/gofMake/generic.mk

@@ -633,7 +633,7 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
   FOR1D(objs, i) {
     arr orientation;
     getOrientation(orientation, objs(i));
-    CHECK(orientation.N == 2, "too many angles");
+    CHECK_EQ(orientation.N , 2, "too many angles");
     FOR1D(orientation, k) {
       angles(i, k) = orientation(k);
       if(angles(i, k) < 0.00001)
@@ -880,7 +880,7 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
 
 
 bool RobotManipulationSimulator::isClosed(uint box_id) {
-  CHECK(bodies(box_id)->shapes.N == 6, "isn't a box");
+  CHECK_EQ(bodies(box_id)->shapes.N , 6, "isn't a box");
   if(TL::isZero(bodies(box_id)->shapes.last()->rel.pos.x)  &&  TL::isZero(bodies(box_id)->shapes.last()->rel.pos.y)
       &&  bodies(box_id)->shapes.last()->rel.pos.x < 0.1)
     return true;
@@ -1222,9 +1222,9 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   uint t;
   FeedbackMotionControl MP(*this, false);
   PDtask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
-  PDtask *c = MP.addPDTask("collision", .5, 2., collTMT, NULL, NoVector, NULL, NoVector, ARR(.02));
+  PDtask *c = MP.addPDTask("collision", .5, 2., new ProxyTaskMap(allPTMT, {}, {.02}));
   c->prec = 1.;
-//  PDtask *r =  MP.addPDTask("q-pose", .5, 1., qItselfTMT);
+//  PDtask *r =  MP.addPDTask("q-pose", .5, 1., new TaskMap_qItself());
 //  r->prec = 1.;
 //  r->y_ref = q0;
 
@@ -1447,7 +1447,7 @@ void RobotManipulationSimulator::dropObjectAbove(uint obj_below, const char* mes
 void RobotManipulationSimulator::dropObject(uint manipulator_id) {
   if(bodies(manipulator_id)->outLinks.N == 0)
     return;
-  CHECK(bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
+  CHECK_EQ(bodies(manipulator_id)->outLinks.N , 1, "too many objects in hand");
   delete bodies(manipulator_id)->outLinks(0);
   //del_edge(bodies(manipulator_id)->outLinks(0), bodies, joints, true);
 }
@@ -1570,7 +1570,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   
 #ifdef NEW_FEEDBACK_CONTROL
   FeedbackMotionControl MP(*this, false);
-  PDtask *x =  MP.addPDTask("q-pose", .2, 1., qItselfTMT);
+  PDtask *x =  MP.addPDTask("q-pose", .2, 1., new TaskMap_qItself());
   x->y_ref = q0;
   uint t;
   for(t=0; t<Tabort; t++) {

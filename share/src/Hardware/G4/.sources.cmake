@@ -1,1 +1,3 @@
-set(SOURCES ./module_G4Display.cpp ./module_G4Recorder.h ./G4.cpp ./module_G4Recorder.cpp ./G4.h ./module_G4Display.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

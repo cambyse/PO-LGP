@@ -12,6 +12,7 @@ MT.log
 *_doc/*
 html
 Makefile.dep
+Makefile.gof
 retired
 obsolete
 

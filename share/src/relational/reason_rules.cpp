@@ -324,8 +324,8 @@ bool reason::calcSubstitutions_context(SubstitutionSet& subs, const SymbolicStat
     cout<<*rule<<state<<endl;
     cout<<"Action sub: ";actionSub->write(cout);cout<<endl;
   }
-  CHECK(subs.num()==0, "Already subs given!");
-  CHECK(rule->action->args.N==actionSub->num(), "Incomplete actionSub.");
+  CHECK_EQ(subs.num(),0, "Already subs given!");
+  CHECK_EQ(rule->action->args.N,actionSub->num(), "Incomplete actionSub.");
   if (!state.derived_lits_are_calculated) {MT_MSG("Derived symbols have not been derived in state!");}
   uintA actionSub_outs;
   actionSub->getOuts(actionSub_outs);
@@ -401,8 +401,8 @@ bool reason::calcSubstitutions_rule_groundAction(SubstitutionSet& subs, const Sy
     cout<<"RULE:"<<endl<<*rule;
     cout<<"SUBS (N="<<subs.num()<<"):"<<endl;  uint i; FOR1D_(subs, i) {cout<<"("<<i<<")  ";  subs.elem(i)->write();}
   }
-  CHECK(subs.num()==0, "There are already substitutions!");
-  CHECK(groundAction->s->symbol_type == Symbol::action, "Not an action symbol in groundAction-literal!");
+  CHECK_EQ(subs.num(),0, "There are already substitutions!");
+  CHECK_EQ(groundAction->s->symbol_type , Symbol::action, "Not an action symbol in groundAction-literal!");
 	// applied world knowledge: default rule always covers
   if (Rule::isDefaultRule(rule)) {
     if (subs.num() == 0)
@@ -567,7 +567,7 @@ uint reason::calc_uniqueCoveringRule_groundRules_groundAction(const RuleSet& all
   uintA coveringGroundRules_ids;
   calc_coveringGroundRules_groundAction(coveringGroundRules_ids, all_ground_rules, s, groundAction);
   if (coveringGroundRules_ids.N == 2) {
-    CHECK(coveringGroundRules_ids(0) == 0, "first rule should be noisy default rule");
+    CHECK_EQ(coveringGroundRules_ids(0) , 0, "first rule should be noisy default rule");
     return coveringGroundRules_ids(1);
   }
   else if (coveringGroundRules_ids.N == 1  &&  !Rule::isDefaultRule(all_ground_rules.elem(coveringGroundRules_ids(0)))) {
@@ -582,7 +582,7 @@ uint reason::calc_uniqueAbstractCoveringRule_groundAction(const RuleSet& all_abs
   uintA coveringRuleIDs;
   calc_coveringRules_groundAction(coveringRuleIDs, all_abstract_rules, s, groundAction);
   if (coveringRuleIDs.N == 2) {
-    CHECK(coveringRuleIDs(0) == 0, "first rule should be noisy default rule");
+    CHECK_EQ(coveringRuleIDs(0) , 0, "first rule should be noisy default rule");
     return coveringRuleIDs(1);
   }
   else
@@ -612,7 +612,7 @@ void reason::calc_coveringOutcomes(uintA& covering_outcomes, Rule* abstractRule,
   CHECK(reason::isPurelyAbstract(abstractRule->action), "Rule action has to be abstract!");
   SubstitutionSet subs;
   calcSubstitutions_rule_groundAction(subs, pre, groundAction, abstractRule);
-  CHECK(subs.num()==1, "rule coverage only in case of exactly one sub");
+  CHECK_EQ(subs.num(),1, "rule coverage only in case of exactly one sub");
   Rule* r_ground = subs.elem(0)->apply(*abstractRule);
   calc_coveringOutcomes(covering_outcomes, r_ground, pre, post);
   delete r_ground;

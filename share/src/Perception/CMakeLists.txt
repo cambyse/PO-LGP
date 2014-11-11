@@ -45,5 +45,51 @@ if(WITH_LIBPULSE)
     endif(PA_FOUND)
 endif(WITH_LIBPULSE)
 
+# optionally put in some ROS deps, if available and enabled
+if(ROSBUILD)
+	pkg_check_modules(ROS_IMG_TRANS image_transport camera_info_manager sensor_msgs roscpp)
+	if(ROS_IMG_TRANS_FOUND)
+		message(STATUS "Building ROS image transport for libPerception")
+		add_definitions(-DHAVE_ROS_IMAGE_TRANSPORT ${ROS_IMG_TRANS_CFLAGS_OTHER})
+		include_directories(${ROS_IMG_TRANS_INCLUDE_DIRS})
+		link_directories(${ROS_IMG_TRANS_LIBRARY_DIRS})
+	else()
+		unset(ROS_IMG_TRANS_LIBRARIES CACHE) # remove possible left-overs
+	endif()
+else()
+	message(STATUS "ROSBUILD not found, not building ROS image transport")
+endif(ROSBUILD)
+
+if(PCL_FOUND)
+    include_directories(${PCL_INCLUDE_DIRS})
+    link_directories(${PCL_LIBRAY_DIRS})
+endif(PCL_FOUND)
+
 add_library(Perception SHARED ${SOURCES})
-target_link_libraries(Perception LINK_PRIVATE Core Gui Ors Algo extern_SWIFT extern_libcolorseg ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_SWSCALE_LIBRARIES} ${X264_LIBRARIES} ${OPENCV_LIBRARIES} ${PA_LIBRARIES})
+target_link_libraries(Perception 
+	LINK_PRIVATE 
+	Core 
+	Gui 
+	Ors 
+	Algo 
+	extern_SWIFT extern_libcolorseg 
+	${LIBAV_AVCODEC_LIBRARIES} 
+	${LIBAV_SWSCALE_LIBRARIES} 
+	${X264_LIBRARIES} 
+	${OPENCV_LIBRARIES} 
+	${PA_LIBRARIES}
+	${ROS_IMG_TRANS_LDFLAGS}
+)
+if(PCL_FOUND)
+target_link_libraries(Perception
+    LINK_PRIVATE
+    ${PCL_COMMON_LIBRARIES}
+    ${PCL_SEGMENTATION_LIBRARIES}
+    ${PCL_IO_LIBRARIES}
+    ${PCL_VISUALIZATION_LIBRARIES}
+    ${PCL_SAMPLE_CONSENSUS_LIBRARIES}
+    ${PCL_FEATURES_LIBRARIES}
+    ${PCL_FILTERS_LIBRARIES}
+    ${PCL_SEARCH_LIBRARIES}
+)
+endif(PCL_FOUND)

@@ -1,0 +1,17 @@
+#! /bin/bash
+
+version="2-2.6.3.4"
+url_prefix="http://ipvs.informatik.uni-stuttgart.de/mlr/drivers/flycapture${version}"
+
+if [ $(uname -m) = "x86_64" ]; then
+	wget "${url_prefix}-amd64-pkg.tgz"
+else
+	wget "${url_prefix}-i386-pkg.tgz"
+fi
+
+tar xfz flycapture${version}-*.tgz
+pushd flycapture${version}-*
+bash ./install_flycapture.sh
+popd
+
+

@@ -2,8 +2,8 @@
 #include <Ors/ors.h>
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -132,7 +132,7 @@ void scenario1() {
 
   cout << "Loaded scene: " << endl;
 
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -183,7 +183,7 @@ void scenario2() {
 
   cout << "Loaded scene: " << endl;
 
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -223,7 +223,7 @@ void scenario2() {
 
   // reset costs
   MT::timerStart();
-  TaskCost *c2;
+  Task *c2;
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
@@ -279,7 +279,7 @@ void scenario3() {
   arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));

@@ -444,7 +444,7 @@ Rule* Rule::read(ifstream& in) {
   // Action
   line.read(in, NULL, "\n"); // ACTION:
   if (DEBUG>1) PRINT(line);
-  CHECK(line(0)=='A',"bad action (expecting action first);  line="<<line);   CHECK(line.N < 10, "bad action: too short");
+  CHECK_EQ(line(0),'A',"bad action (expecting action first);  line="<<line);   CHECK(line.N < 10, "bad action: too short");
   line.read(in, NULL, "\n");
   if (DEBUG>1) PRINT(line);
   LitL actions_wrapper;
@@ -771,7 +771,7 @@ void RuleSet::sort_using_args() {
 //     }
 //     cout<<endl;
     
-    CHECK(ra.N == ra_sorted.N, "Some strange rule-sorting mistake.");
+    CHECK_EQ(ra.N , ra_sorted.N, "Some strange rule-sorting mistake.");
     this->ra = ra_sorted;
   }
 }
@@ -1855,7 +1855,7 @@ void SubstitutionSet::createAllPossibleSubstitutions(SubstitutionSet& subs, cons
     }
     id=assignment.N-1;
   }
-  CHECK(subs.num() == pow(constants.N, vars.N), "Oh no, we forgot some subs!")
+  CHECK_EQ(subs.num() , pow(constants.N, vars.N), "Oh no, we forgot some subs!")
   if (DEBUG>0) cout<<"createAllPossibleSubstitutions [END]"<<endl;
 }
 

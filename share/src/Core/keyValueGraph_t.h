@@ -25,7 +25,7 @@ template <typename B, typename D> struct Host {
   operator B*() const;
   operator D*();
 };
-template <typename B, typename D> struct is_base_of {
+template <typename B, typename D> struct MLR_is_base_of {
   template <typename T>
   static yes check(D*, T);
   static no check(B*, int);
@@ -43,20 +43,21 @@ struct Item_typed:Item {
   T *value;
   
   Item_typed():value(NULL) {}
-  Item_typed(T *_value):value(_value) {}
-  //copy value
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *container=NULL):value(NULL) {
+
+  /// directly store pointer to value
+  Item_typed(KeyValueGraph& container, T *_value):Item(container), value(_value) {}
+
+  /// directly store pointer to value
+  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, T *_value=NULL)
+    : Item(container, parents), value(_value) {
+    keys=_keys;
+  }
+
+  /// copy value
+  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, const T& _value)
+    : Item(container, parents), value(NULL) {
     value = new T(_value);
     keys=_keys;
-    parents=_parents;
-    if(container) container->append(this);
-  }
-  
-  //directly store pointer to value
-  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *container=NULL):value(_value) {
-    keys=_keys;
-    parents=_parents;
-    if(container) container->append(this);
   }
 
   virtual bool hasValue() const {
@@ -82,10 +83,10 @@ struct Item_typed:Item {
   }
   
   virtual bool is_derived_from_RootType() const {
-    return is_base_of<RootType, T>::value;
+    return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
+  virtual Item *newClone(KeyValueGraph& container) const { return new Item_typed<T>(container, keys, parents, value); }
 };
 
 template<class T> T *Item::getValue() {
@@ -126,6 +127,12 @@ template<class T> T* KeyValueGraph::getValue(const char *key) {
   return it->getValue<T>();
 }
 
+template<class T> T* KeyValueGraph::getValue(const StringA &keys) {
+  Item *it = getItem(keys);
+  if(!it) return NULL;
+  return it->getValue<T>();
+}
+
 template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   MT::Array<T*> ret;
   for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
@@ -138,11 +145,12 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   return ret;
 }
 
-template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
-  Item *it = append(new Item_typed<T>(keys, parents, x, NULL));
+template<class T> Item *KeyValueGraph::append(T *x) {
+  return new Item_typed<T>(*this, x, NULL);
+}
 
-  for(Item *par: parents) par->parentOf.append(it);
-  return it;
+template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
+  return new Item_typed<T>(*this, keys, parents, x);
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {

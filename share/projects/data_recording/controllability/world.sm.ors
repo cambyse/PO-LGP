@@ -1,0 +1,6 @@
+body world { fixed }
+
+%include ors_models/handR.ors
+%include ors_models/handL.ors
+%include ors_models/ball.ors
+%include ors_models/bbox.ors
