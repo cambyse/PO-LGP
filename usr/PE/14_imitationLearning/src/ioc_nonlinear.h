@@ -120,7 +120,7 @@ struct CostWeight {
   }
 };
 
-struct IKMO {
+/*struct IKMO {
   MT::Array<CostWeight*> weights;
   MT::Array<Scene> scenes;
 
@@ -167,7 +167,7 @@ struct IKMO {
     }
   }
 };
-
+*/
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
   arr lambda0; // Demonstrated constrains

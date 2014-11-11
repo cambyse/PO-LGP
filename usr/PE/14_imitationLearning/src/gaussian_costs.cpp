@@ -15,7 +15,7 @@ void GaussianCosts::f(const arr& x, arr& y) {
   y.flatten();
   // remove small values
   for (uint i = 0;i<y.d0;i++) {
-    if (y(i)<1e-4) {
+    if (y(i)<1e-3) {
       y(i)=0.;
     }
   }
@@ -67,6 +67,8 @@ void GaussianCosts::dfdwdstd(const arr &x, arr &H)
 
 void GaussianCosts::dfdmudstd(const arr &x, arr &H)
 {
-  H = exp(-(x-mu)%(x-mu)/(2*pow(std,2))) % ( (x-mu)%(x-mu)%(x-mu)/pow(std,5) - 2.*(x-mu)/pow(std,3) );
+  arr y;
+  f(x,y);
+  H = y%(x-mu)/pow(std,2)%(x-mu)%(x-mu)/pow(std,3) + -2.*y%(x-mu)/pow(std,3);
   H.flatten();
 }

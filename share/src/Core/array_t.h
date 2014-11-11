@@ -1451,6 +1451,13 @@ template<class T> void MT::Array<T>::permuteInv(const MT::Array<uint>& permutati
   for(uint i=0; i<N; i++) elem(permutation(i))=b.elem(i);
 }
 
+/// permute the rows (operator[]) according to the given permutation
+template<class T> void MT::Array<T>::permuteRowsInv(const MT::Array<uint>& permutation) {
+  CHECK(permutation.N<=d0, "array smaller than permutation ("<<N<<"<"<<permutation.N<<")");
+  MT::Array<T> b=(*this);
+  for(uint i=0; i<d0; i++) operator[](permutation(i))()=b[i];
+}
+
 /// randomly permute all entries of 'this'
 template<class T> void MT::Array<T>::permuteRandomly() {
   uintA perm;
