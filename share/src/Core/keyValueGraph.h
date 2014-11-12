@@ -110,6 +110,8 @@ struct KeyValueGraph:ItemL {
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
+  //-- debugging
+  bool checkConsistency();
 
   //-- I/O
   void sortByDotOrder();

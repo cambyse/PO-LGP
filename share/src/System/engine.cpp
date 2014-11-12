@@ -280,16 +280,25 @@ VariableL createVariables(const ModuleL& ms){
 KeyValueGraph System::graph() const{
   KeyValueGraph g;
   g.append<bool>("SystemModule", name, NULL);
+  g.checkConsistency();
   std::map<Variable*, Item*> vit;
   for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v);
+  g.checkConsistency();
   for(Module *m: mts){
     Item *mit = g.append("Module", m->name, &m);
+    g.checkConsistency();
     for(Access *a: m->accesses){
       Item *ait = g.append("Access", a->name, &a);
       ait->parents.append(mit);
-      if(a->var) ait->parents.append(vit[a->var]);
+      mit->parentOf.append(ait);
+      if(a->var){
+        ait->parents.append(vit[a->var]);
+        vit[a->var]->parentOf.append(ait);
+      }
+      g.checkConsistency();
     }
   }
+  g.checkConsistency();
   return g;
 }
 

@@ -274,7 +274,8 @@ KeyValueGraph::KeyValueGraph():s(NULL), isReference(false), isItemOfParentKvg(NU
 
 KeyValueGraph::~KeyValueGraph() {
 //  delete s;
-  if(!isReference) listDelete(*this);
+  if(!isReference){ while(N) delete last(); }
+//  if(!isReference) listDelete(*this);
 }
 
 Item *KeyValueGraph::append(const uintA& parentIdxs) {
@@ -479,3 +480,14 @@ void KeyValueGraph::sortByDotOrder() {
   for_list(Item, it2, list()) it2->index=it2_COUNT;
 }
 
+bool KeyValueGraph::checkConsistency(){
+  uint idx=0;
+  for(Item *i: list()){
+    CHECK_EQ(&i->container, this, "");
+    CHECK_EQ(i->index, idx, "");
+    for(Item *j: i->parents) CHECK(j->parentOf.findValue(i) != -1,"");
+    for(Item *j: i->parentOf) CHECK(j->parents.findValue(i) != -1,"");
+    idx++;
+  }
+  return true;
+}
