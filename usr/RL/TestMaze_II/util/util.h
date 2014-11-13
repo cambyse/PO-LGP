@@ -74,6 +74,30 @@ namespace util {
     //                      Classes                           //
     //========================================================//
 
+    /** Grabs a stream like std::cout. The stream is redirected to as
+     * std::stringstream and reset on destruction of the GrabStream object. The
+     * content can be accessed using the get_text() method.*/
+    class GrabStream {
+    public:
+    GrabStream(std::ostream & s = std::cout):
+        stream(s),
+            buffer(),
+            old(stream.rdbuf(buffer.rdbuf()))
+            {}
+        ~GrabStream() {
+            stream.rdbuf(old);
+        }
+        std::string get_text() { return buffer.str(); }
+    private:
+        /** The stream that was grabbed. */
+        std::ostream & stream;
+        /** The std::stringstream buffer the stream is redirected to. */
+        std::stringstream buffer;
+        /** The old buffer the stream is reset to on destruction of this
+         * object. */
+        std::streambuf * old;
+    };
+
     /** \brief Comparison of pointers via their pointed-to objects. */
     template<class A, class B = A>
         class deref_less {
@@ -157,11 +181,17 @@ namespace util {
             virtual bool operator!=(const PointerType& other) const final {
                 return *(this->ptr)!=*(other.ptr);
             }
+            virtual bool operator!=(const nullptr_t) const final {
+                return *(this->ptr)!=DerivedSpace();
+            }
             virtual bool operator==(const DerivedSpace& other) const final {
                 return !(*this!=other);
             }
             virtual bool operator==(const PointerType& other) const final {
                 return !(*this!=other);
+            }
+            virtual bool operator==(const nullptr_t) const final {
+                return !(this->operator!=(nullptr));
             }
             virtual bool operator<(const PointerType& other) const final {
                 return *(this->ptr)<*(other.ptr);
@@ -200,6 +230,11 @@ namespace util {
             /** \brief Dereference operator returns pointer. */
             virtual ptr_t operator*() const final {
                 return object;
+            }
+
+            /** Member access operator. */
+            virtual const ptr_t * operator->() const final {
+                return &object;
             }
 
             /** \brief Increment operator.
@@ -518,6 +553,51 @@ namespace util {
         iRange(int n);
     };
 
+    /** Enumerate allows for python-like for loops. */
+    /* The code is taken from
+     * http://stackoverflow.com/questions/11328264/python-like-loop-enumeration-in-c
+     * and only slightly modified. */
+
+    template<typename Iterable>
+        class EnumerateObject
+    {
+    private:
+        Iterable _iterable;
+        int _counter;
+        int _inc;
+        decltype(_iterable.begin()) _begin;
+
+    public:
+        template<class Iterable2>
+            EnumerateObject(Iterable2&& iterable, int counter, int inc):
+            _iterable(std::forward<Iterable2>(iterable)),
+            _counter(counter),
+            _inc(inc),
+            _begin(iterable.begin())
+            {}
+
+        const EnumerateObject& begin() const { return *this; }
+        const EnumerateObject& end()   const { return *this; }
+
+        bool operator!=(const EnumerateObject& other) const {
+            return this->_begin != other._iterable.end();
+        }
+
+        void operator++() {
+            ++_begin;
+            _counter += _inc;
+        }
+
+        std::pair<int&, decltype(*_begin)> operator*() {
+            return std::pair<int&, decltype(*_begin)>(_counter, *_begin);
+        }
+    };
+
+    template<typename Iterable>
+        EnumerateObject<Iterable> enumerate(Iterable&& iter, int counter = 0, int inc = 1) {
+        return EnumerateObject<Iterable>(std::forward<Iterable>(iter), counter, inc);
+    }
+
     //========================================================//
     //                  Global Variables                      //
     //========================================================//
@@ -551,6 +631,35 @@ namespace util {
             return upper;
         }
         return value;
+    }
+
+    /** Sum of container. */
+    template < class C >
+        typename C::value_type sum(const C & c) {
+        typename C::value_type ret = *c.begin();
+        for(auto idx_elem : enumerate(c)) {
+            if(idx_elem.first==0) continue;
+            ret += idx_elem.second;
+        }
+        return ret;
+    }
+
+    /** True if all elements are true. */
+    template < class C >
+        bool all(const C & c) {
+        for(auto elem : c) {
+            if(!elem) { return false; }
+        }
+        return true;
+    }
+
+    /** True if any element is true. */
+    template < class C >
+        bool any(const C & c) {
+        for(auto elem : c) {
+            if(elem) { return true; }
+        }
+        return false;
     }
 
     /** \brief Select a random element from a vector. */
@@ -618,7 +727,7 @@ namespace util {
      * temperature \f$T\f$ the return vector \f$v\f$ is computed as \f$v_{i} =
      * \frac{\exp\left[u_{i}/T\right]}{\sum_{j}\exp\left[u_{j}/T\right]}\f$. */
     template < typename Vec >
-        Vec soft_max(const Vec& vec, double temperature = 1) {
+        Vec soft_max(const Vec& vec, double temperature) {
         if(vec.size()==0) {
             Vec ret = vec;
             return ret;
@@ -633,6 +742,26 @@ namespace util {
         Vec ret = vec;
         for(int idx=0; idx<(int)vec.size(); ++idx) {
             ret[idx] = exp(vec[idx]/temperature - log_sum);
+        }
+        return ret;
+    }
+    /** SoftMax function for temperature 1. */
+    template < typename Vec >
+        Vec soft_max(const Vec& vec) {
+        if(vec.size()==0) {
+            Vec ret = vec;
+            return ret;
+        }
+        //---------------//
+        // Use log scale //
+        //---------------//
+        double log_sum = vec[0]; // cannot initialize to log(0)
+        for(int idx=1; idx<(int)vec.size(); ++idx) {
+            log_sum = log_add_exp(log_sum,vec[idx]);
+        }
+        Vec ret = vec;
+        for(int idx=0; idx<(int)vec.size(); ++idx) {
+            ret[idx] = exp(vec[idx] - log_sum);
         }
         return ret;
     }

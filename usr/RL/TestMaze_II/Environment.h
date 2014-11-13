@@ -24,7 +24,7 @@ public:
                                     observation_ptr_t & o,
                                     reward_ptr_t & r ) = 0;
 
-    virtual void get_features(std::vector<f_ptr_t> & basis_features,
+    virtual void get_features(f_set_t & basis_features,
                               FeatureLearner::LEARNER_TYPE type) const = 0;
 };
 

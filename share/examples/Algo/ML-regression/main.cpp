@@ -161,7 +161,7 @@ void test2Class() {
 
 //===========================================================================
 
-void testKernelLogReg() {
+void TEST(KernelLogReg){
 //  rnd.seed(1);
 
   arr X,y;
@@ -192,7 +192,7 @@ void testKernelLogReg() {
 
 //===========================================================================
 
-void testMultiClass() {
+void TEST(MultiClass){
   //rnd.seed(1);
   rnd.clockSeed();
 
@@ -234,7 +234,7 @@ void testMultiClass() {
   }
 }
 
-void testCV() {
+void TEST(CV){
 
   struct myCV:public CrossValidation {
     void  train(const arr& X, const arr& y, double param, arr& beta) {

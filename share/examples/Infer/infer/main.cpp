@@ -49,7 +49,7 @@ loopy_...:
 
 //===========================================================================
 
-void testTensorOperations(){
+void TEST(TensorOperations){
   infer::Variable
     x(3, "x"),
     y(4, "y"),
@@ -87,7 +87,7 @@ void testTensorOperations(){
 
 //===========================================================================
 
-void testBurglary() {
+void TEST(Burglary){
   infer::Variable
     bl(2, "burglary"),
     eq(2, "earthquake"),
@@ -245,7 +245,7 @@ void testHMMInference(uint T) {
 
 
 // loopy graphical model tested with JunctionTree und LoopyBP
-void testLoop(){
+void TEST(Loop){
   infer::Variable A(2, "A");
   infer::Variable B(2, "B");
   infer::Variable C(2, "C");
@@ -277,7 +277,7 @@ void testLoop(){
 
 #include "gridBP.inc"
             
-void testGridBP(){
+void TEST(GridBP){
   uint i,j,k;
   
   //Gaussian weigh list
@@ -317,14 +317,14 @@ void testGridBP2(){
 
 
 #include "rndNetBP.inc"
-void testRndNetBP(){
+void TEST(RndNetBP){
   uint order=MT::Parameter<uint>("order");
   uint N    =MT::Parameter<uint>("N");
   double conn =MT::Parameter<double>("conn");
   rndNetBPwithExcludeEchoMessages(N,2,conn,order);
 }
 
-void testPairBP(){
+void TEST(PairBP){
   infer::FactorList facs;
   infer::VariableList vars;
   randomPairNet(vars,facs,3,2,1);
@@ -342,7 +342,7 @@ void testPairBP(){
 }
 
 #ifdef MT_DAI
-void testDai(){
+void TEST(Dai){
   infer::FactorList facs;
   infer::VariableList vars;
   randomPairNet(vars,facs,10,2,1);

@@ -6,12 +6,14 @@
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
 #include "../CheeseMaze/CheeseMazeAction.h"
+#include "../ButtonWorld/ButtonAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 
 #include "../Representation/AbstractObservation.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
+#include "../Representation/UniqueObservation.h"
 
 #include "../Representation/AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
@@ -22,7 +24,7 @@
 #include <vector>
 #include <list>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using std::vector;
@@ -99,6 +101,7 @@ namespace {
         action_vector.push_back(new MazeAction(MazeAction::ACTION::DOWN));
         action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::LEFT,AugmentedMazeAction::TAG::TAG_2));
         action_vector.push_back(new CheeseMazeAction(CheeseMazeAction::ACTION::EAST));
+        action_vector.push_back(new ButtonAction(4, {0,1,1,1}));
 
         int action_type_idx = 0;
         // for all action types (represented by one specific action of each type)
@@ -150,6 +153,7 @@ namespace {
         observation_vector.push_back(new MinimalObservation(MinimalObservation::OBSERVATION::RED));
         observation_vector.push_back(new MazeObservation(10,10,3,4));
         observation_vector.push_back(new CheeseMazeObservation("N"));
+        observation_vector.push_back(new UniqueObservation());
 
         int observation_type_idx = 0;
         // for all observation types (represented by one specific observation of each type)
@@ -279,10 +283,9 @@ namespace {
         EXPECT_EQ(o4,o5);
 
         // bound check
-        DEBUG_WARNING("Expecting three errors:");
-        MazeObservation o6(2,2,2,1);
-        MazeObservation o7(2,2,1,2);
-        MazeObservation o8(2,2,4);
+        assert_error(MazeObservation o6(2,2,2,1), "Error(../Maze/MazeObservation.cpp:44): Position out of bounds: (2,1) in (2,2)-maze");
+        assert_error(MazeObservation o7(2,2,1,2), "Error(../Maze/MazeObservation.cpp:44): Position out of bounds: (1,2) in (2,2)-maze");
+        assert_error(MazeObservation o8(2,2,4), "Error(../Maze/MazeObservation.cpp:44): Position out of bounds: (0,2) in (2,2)-maze");
     }
 
     TEST(RepresentationTest, ListedReward) {
@@ -305,8 +308,7 @@ namespace {
         EXPECT_EQ(1,r5.get_value());
         r4.set_value(3.5);
         EXPECT_EQ(3.5,r4.get_value());
-        DEBUG_WARNING("Expecting one error:");
-        r4.set_value(3);
+        assert_error(r4.set_value(3), "Error(../Representation/ListedReward.cpp:99): Value (3) does not match any in reward list.");
         EXPECT_EQ(3.5,r4.get_value());
     }
 

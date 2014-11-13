@@ -19,7 +19,7 @@ arr GetJacoB(CarSimulator & S, const arr & u,const arr & x){
 }
 
 //ok, works
-void testKalman(){
+void TEST(Kalman){
   double theta = 0.3;
   
   CarSimulator Sim;

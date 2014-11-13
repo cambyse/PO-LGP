@@ -4,7 +4,7 @@
 #include <Hardware/racer/modules.h>
 #include <Hardware/gamepad/gamepad.h>
 
-void testGamepad(){
+void TEST(Gamepad){
   struct MySystem:System{
     ACCESS(arr, gamepadState);
     MySystem(){

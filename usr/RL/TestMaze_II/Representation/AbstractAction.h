@@ -7,7 +7,13 @@
 /** \brief Base class for all actions. */
 class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:
-    enum class ACTION_TYPE { NONE, MINIMAL, MAZE_ACTION, AUGMENTED_MAZE_ACTION, CHEESE_MAZE_ACTION };
+    enum class ACTION_TYPE {NONE
+            ,MINIMAL
+            ,MAZE_ACTION
+            ,AUGMENTED_MAZE_ACTION
+            ,CHEESE_MAZE_ACTION
+            ,BUTTON_ACTION
+            };
     AbstractAction(ACTION_TYPE t = ACTION_TYPE::NONE);
     virtual ~AbstractAction() {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractAction);

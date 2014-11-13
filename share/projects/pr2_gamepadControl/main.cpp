@@ -25,7 +25,7 @@ struct MySystem:System{
 void changeColor(void*){  orsDrawAlpha = .7; }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
-void testGamepad(){
+void TEST(Gamepad){
   MySystem S;
   engine().open(S);
 

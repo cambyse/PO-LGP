@@ -6,7 +6,7 @@
 #include <MT/gamepad.h>
 
 
-void testTracking(){
+void TEST(Tracking){
 
   uint T=200;
 
@@ -154,7 +154,7 @@ void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../../s
 }
 
 
-void testSchunk(){
+void TEST(Schunk){
   SchunkModule schunk;
   schunk.openLWA();
   testCube( schunk, 9 );
@@ -163,7 +163,7 @@ void testSchunk(){
   printf( "That's all folks!\n" );
 }
 
-void testControl(){
+void TEST(Control){
   OpenGL gl;
   ors::KinematicWorld ors;
   loadOrsFile(ors,gl);

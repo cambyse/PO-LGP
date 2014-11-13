@@ -3265,7 +3265,6 @@ template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {
 }
 
 template<class T> void listDelete(MT::Array<T*>& L) {
-//  while(L.N) delete L.last();
   for(uint i=L.N; i--;) delete L.elem(i);
   L.clear();
 }

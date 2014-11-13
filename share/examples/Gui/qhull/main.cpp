@@ -128,7 +128,7 @@ void drawInit(void*){
 }
 
 /*
-void testFCinOrs(){
+void TEST(FCinOrs){
   ors::KinematicWorld C;
   C <<FILE("../../configurations/forceClosureTest.ors");
 

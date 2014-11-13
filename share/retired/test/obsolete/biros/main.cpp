@@ -27,7 +27,7 @@ struct TestThread:public Process{
 };
 
 
-void testLoop(){
+void TEST(Loop){
   // create processes
   TestThread A("A loop (self=.08)",.08);
   TestThread E("E slave of B (self=.0)",.0);
@@ -95,7 +95,7 @@ struct Adder:public Process{
   }
 };
 
-void testListening(){
+void TEST(Listening){
   biros().enableAccessLog();
   // create and open the biros EventControlView
   EventControlView v;
@@ -154,7 +154,7 @@ struct Maxxer:public Process{
   }
 };
 
-void testMultiAccess(){
+void TEST(MultiAccess){
   uint n=MT::getParameter<uint>("n",100);
   MT::Array<ExampleVar> vars(n);
   MT::Array<Maxxer> procs(2*n);

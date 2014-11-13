@@ -4,27 +4,21 @@
 
 //===========================================================================
 
-struct Blobby:ScalarFunction{
-  double fs(arr&,arr&, const arr& X){
+ScalarFunction blobby = [](arr&,arr&, const arr& X){
     double x=X(0), y=X(1), z=X(2);
     return x*x*x*x - 5*x*x+ y*y*y*y - 5*y*y + z*z*z*z - 5*z*z + 11.8;
-  }
-} blobby;
+  };
 
-struct Sphere:ScalarFunction{
-  double fs(arr&,arr&, const arr& X){
+ScalarFunction sphere=[](arr&,arr&, const arr& X){
     double x=X(0), y=X(1), z=X(2);
     return (x*x +y*y+z*z)-1.;
-  }
-} sphere;
+  };
 
-struct Torus:ScalarFunction{
-  double fs(arr&,arr&, const arr& X){
+ScalarFunction torus = [](arr&,arr&, const arr& X){
     double x=X(0), y=X(1), z=X(2);
     double r=sqrt(x*x + y*y);
     return z*z + (1.-r)*(1.-r) - .1;
-  }
-} torus;
+  };
 
 //double sigmoid(double x){ return .5*(1.+x/(1.+::fabs(x))); }
 double sigmoid(double x){ return 1./(1.+exp(-x)); }
@@ -36,12 +30,10 @@ double box(double x,double lo,double hi,double steep=10.){
   return 2.*(1.-sigmoid(xa)*sigmoid(xb));
 }
 
-struct Cylinder:ScalarFunction{
-  double fs(arr&,arr&, const arr& X){
+ScalarFunction cylinder = [](arr&,arr&, const arr& X){
     double x=X(0), y=X(1), z=X(2);
     return x*x + y*y + box(z,-1.,1.) - 1.;
-  }
-} cylinder;
+  };
 
 void TEST(SimpleImplicitSurfaces) {
   ors::Mesh m;

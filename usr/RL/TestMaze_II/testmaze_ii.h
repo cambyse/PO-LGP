@@ -5,9 +5,7 @@
 
 #include "Config.h"
 
-#include "Learner/KMarkovCRF.h"
 #include "Learner/UTree.h"
-#include "Learner/LinearQ.h"
 #include "Learner/TemporallyExtendedLinearQ.h"
 #include "Learner/TemporallyExtendedModel.h"
 #include "Learner/ConjunctiveAdjacency.h"
@@ -30,6 +28,7 @@
 #include <map>
 
 class Environment;
+class MoveByKeys;
 
 class TestMaze_II : public QWidget
 {
@@ -63,12 +62,9 @@ private:
         NONE,
         RANDOM,
         OPTIMAL_LOOK_AHEAD,
-        SPARSE_LOOK_AHEAD,
-        KMDP_LOOK_AHEAD,
         UTREE_LOOK_AHEAD,
         TEM_LOOK_AHEAD,
         UTREE_VALUE,
-        LINEAR_Q_VALUE,
         TEL_VALUE,
         GOAL_ITERATION
     } planner_type;
@@ -83,6 +79,7 @@ private:
     // the user interface
     Ui::TestMaze_IIClass ui;
     Commander::CommandCenter command_center;
+    MoveByKeys * move_by_keys;
 
     // the environment
     std::shared_ptr<Environment> environment;
@@ -124,9 +121,7 @@ private:
     double l1_factor;
 
     // Learners
-    std::shared_ptr<KMarkovCRF> crf;                  ///< TEF+CRF model
     std::shared_ptr<UTree> utree;                     ///< UTree
-    std::shared_ptr<LinearQ> linQ;                    ///< Linear-Q
     std::shared_ptr<ConjunctiveAdjacency> N_plus_TEL; ///< N+ operator for TEL
     std::shared_ptr<TemporallyExtendedLinearQ> tel;   ///< Linear-Q with TEFs
     std::shared_ptr<ConjunctiveAdjacency> N_plus_TEM; ///< N+ operator for TEM

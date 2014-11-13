@@ -39,7 +39,7 @@ void convert(LoopyBP& lbp,BinaryBPNet& net){
 
 //================================================================================
 
-void testEvidenceDiscounting(){
+void TEST(EvidenceDiscounting){
   BinaryBPNet net;
   net.setRandom(8,.5,.2,1.);
   net.init();
@@ -135,7 +135,7 @@ void testEvidenceDiscounting(){
 
 //================================================================================
 
-void testGradient(){
+void TEST(Gradient){
   uint t,i;
   
   BinaryBPNet net;
@@ -209,7 +209,7 @@ void testGradient(){
 
 //================================================================================
 
-void testParameterLearning(){
+void TEST(ParameterLearning){
   /*BinaryBPNet net;
   net.setRandom(8,.5,.2,1.);
 

@@ -100,7 +100,7 @@ void monitorMain(){
   closeRobotSharedMemory();
 }
 
-void testClient(){
+void TEST(Client){
   signal(SIGINT, finish);
   cout <<"*** TEST CLIENT ***" <<endl;
   openRobotSharedMemory();

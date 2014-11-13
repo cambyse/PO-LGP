@@ -13,7 +13,7 @@
 
 //===========================================================================
 
-void testPickAndPlace(){
+void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem

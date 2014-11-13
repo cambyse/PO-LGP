@@ -12,7 +12,7 @@ void draw(void*){
   glutSolidTeapot(1.);
 }
 
-void testRevel(){
+void TEST(Revel){
   OpenGL gl;
   gl.add(draw,0);
 

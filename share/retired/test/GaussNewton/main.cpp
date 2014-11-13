@@ -21,7 +21,7 @@ struct ExampleFunction:public VectorFunction{
 };
 
 
-void testGaussNewton(){
+void TEST(GaussNewton){
   cout <<"For this function (gnuplot: plot 1-1/(x**10+1)) the initial step size is\n\
   much too large (because of the plateau at the starting point x=10). Therefore the initial\n\
   steps are rejected. Later, convergence is fast." <<endl;

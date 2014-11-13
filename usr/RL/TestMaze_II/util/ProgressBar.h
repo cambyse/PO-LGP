@@ -25,6 +25,8 @@ public:
         );
     static void print(const double& progress);
     static void print(const int& progress, const int& max_progress);
+    static void print_forced(const double& progress);
+    static void print_forced(const int& progress, const int& max_progress);
     static std::stringstream& msg();
     static std::stringstream& msg_append();
     static void terminate(const char* message = "");

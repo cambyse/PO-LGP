@@ -8,7 +8,7 @@
 
 #include <Perception/opencv.h>
 
-void testShow(){
+void TEST(Show){
   byteA rgbL,rgbR;
   read_ppm(rgbL,"left.ppm");
   read_ppm(rgbR,"right.ppm");
@@ -17,7 +17,7 @@ void testShow(){
   cvShow(rgbR,"right",true);
 }
 
-void testSurf(){
+void TEST(Surf){
   byteA rgbL,rgbR,rgbDraw;
   read_ppm(rgbL,"left.ppm");
   read_ppm(rgbR,"right.ppm");
@@ -146,7 +146,7 @@ void testSurf(){
 }
 
 
-void testShiftAnalysis(){
+void TEST(ShiftAnalysis){
   byteA rgbL,rgbR,rgbDraw;
   read_ppm(rgbL,"left.ppm");
   read_ppm(rgbR,"right.ppm");

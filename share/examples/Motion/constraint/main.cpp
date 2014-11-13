@@ -82,7 +82,7 @@ void TEST(EqualityConstraints){
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
-#if 0
+#if 1
   t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 #else

@@ -31,11 +31,11 @@
 #define IF_DEBUG(level) if(level<=FORCE_DEBUG_LEVEL || (FORCE_DEBUG_LEVEL==0 && level<=DEBUG_LEVEL))
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cout << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cout << ColorOutput::fg_magenta() << "Warning(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_magenta() << "Warning(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                                      \
@@ -48,5 +48,16 @@
         DEBUG_ERROR("This line should never be reached");       \
     }
 
+#define assert_error(call, msg) {                                       \
+        util::GrabStream stream(std::cerr);                             \
+        {call;}                                                         \
+        EXPECT_EQ("[31m[1m" msg "[0m\n", stream.get_text());      \
+    }
+
+#define assert_warning(call, msg) {                             \
+        util::GrabStream stream(std::cerr);                     \
+        {call;}                                                 \
+        EXPECT_EQ("[35m" msg "[0m\n", stream.get_text());   \
+    }
 
 #endif /* DEBUG_H_ */

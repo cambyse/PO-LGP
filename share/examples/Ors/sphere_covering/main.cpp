@@ -76,7 +76,7 @@ struct CoveringSpheresProblem:ConstrainedProblem {
 
 //==============================================================================
 
-void testCoveringSphere(){
+void TEST(CoveringSphere){
   uint n=1000, s=6;
   arr x(n,3); rndGauss(x);
   for(uint i=0;i<x.d0;i++) x(i,0) *=3.;

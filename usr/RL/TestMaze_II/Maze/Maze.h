@@ -64,7 +64,7 @@ public:
      * punishments (for not collecting an activated reward). */
     probability_t get_prediction(const_instance_ptr_t, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
-    virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
+    virtual void get_features(f_set_t & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
 
     void print_reward_activation_on_random_walk(const int& walk_length);
 

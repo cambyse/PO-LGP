@@ -10,7 +10,7 @@ void draw(void*){
   glutSolidTeapot(1.);
 }
 
-void testVideo(){
+void TEST(Video){
   OpenGL gl;
   gl.add(draw,0);
   //gl.watch();

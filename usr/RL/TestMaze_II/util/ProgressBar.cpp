@@ -53,6 +53,16 @@ void ProgressBar::print(const int& progress, const int& max_progress) {
     }
 }
 
+void ProgressBar::print_forced(const double& progress) {
+    current_progress = progress*bar_width; // drop decimal places
+    print();
+}
+
+void ProgressBar::print_forced(const int& progress, const int& max_progress) {
+    current_progress=progress*bar_width/max_progress; // drop decimal places
+    print();
+}
+
 stringstream& ProgressBar::msg() {
     end_msg.str("");
     return end_msg;

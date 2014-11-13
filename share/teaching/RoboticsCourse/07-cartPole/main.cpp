@@ -76,7 +76,7 @@ void glDrawCartPole(void *classP){
 #endif
 }
 
-void testDraw(){
+void TEST(Draw){
   CartPoleState s;
   s.gl.watch();
 }

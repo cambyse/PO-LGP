@@ -2,7 +2,7 @@
 #include <Actions/actions.h>
 
 
-void testActionMachine() {
+void TEST(ActionMachine){
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);

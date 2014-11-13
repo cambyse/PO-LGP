@@ -3,7 +3,7 @@
 #include <Gui/plot.h>
 
 void holdSteady(){
-  Simulator S("../02-pegInAHole/pegInAHole.ors");
+  Simulator S("pegArm.ors");
   S.setDynamicSimulationNoise(1.);
   S.setDynamicGravity(true);
   uint n=S.getJointDimension();

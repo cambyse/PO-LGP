@@ -67,7 +67,7 @@ struct ShapeFitProblem:public ScalarFunction {
 };*/
 
 
-void testShapes(){
+void TEST(Shapes){
   //test creating shape points
   byteA img(700,700,3);
   arr params;
@@ -86,7 +86,7 @@ void testShapes(){
   }
 }
 
-void testColorBasedShapeTracking(){
+void TEST(ColorBasedShapeTracking){
   byteA img;
   CvMatDonor cvMatDonor;
 

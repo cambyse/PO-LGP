@@ -55,7 +55,7 @@ void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../conf
 }
 
 
-void testSchunk(){
+void TEST(Schunk){
   SchunkArm schunk;
   schunk.open();
   schunk.reportParameters(cout);
@@ -64,7 +64,7 @@ void testSchunk(){
   printf( "That's all folks!\n" );
 }
 
-// void testControl(){
+// void TEST(Control){
 //   OpenGL gl;
   
 //   OrsSystem sys;

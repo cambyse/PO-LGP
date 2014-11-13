@@ -93,7 +93,7 @@ void Racer::getDynamics(arr& M, arr& F, arr& B, arr& M_dash, arr& M_ddash, arr& 
 VectorFunction& Racer::dynamicsFct(){
   static struct DynFct:VectorFunction{
     Racer& R;
-    DynFct(Racer& _R):R(_R){}
+    DynFct(Racer& _R):R(_R){ NIY }
     void fv(arr& y, arr& J, const arr& q__q_dot){
       R.q = q__q_dot[0];
       R.q_dot = q__q_dot[1];
@@ -189,7 +189,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
 VectorFunction& Racer::observationFct(){
   static struct ObsFct:VectorFunction{
     Racer& R;
-    ObsFct(Racer& _R):R(_R){}
+    ObsFct(Racer& _R):R(_R){ NIY }
     void fv(arr& y, arr& C, const arr& q__q_dot){
       R.q = q__q_dot[0];
       R.q_dot = q__q_dot[1];

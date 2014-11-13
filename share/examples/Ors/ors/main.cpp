@@ -37,17 +37,18 @@ void TEST(Kinematics){
     ors::Body *b, *b2;
     ors::Vector& vec, &vec2;
     MyFct(Mode _mode, ors::KinematicWorld &_W,
-          ors::Body *_b, ors::Vector &_vec, ors::Body *b2, ors::Vector &vec2)
-      : mode(_mode), W(_W), b(_b), vec(_vec), b2(b2), vec2(vec2){}
-    virtual void fv(arr& y, arr& J, const arr& x){
-      W.setJointState(x);
-      switch(mode){
-        case Pos:    W.kinematicsPos(y,J,b,&vec); break;
-        case Vec:    W.kinematicsVec(y,J,b,&vec); break;
-        case Quat:   W.kinematicsQuat(y,J,b); break;
-        case RelPos: W.kinematicsRelPos(y,J,b,&vec,b2,&vec2); break;
-        case RelVec: W.kinematicsRelVec(y,J,b,&vec,b2); break;
-      }
+          ors::Body *_b, ors::Vector &_vec, ors::Body *_b2, ors::Vector &_vec2)
+      : mode(_mode), W(_W), b(_b), vec(_vec), b2(_b2), vec2(_vec2){
+      VectorFunction::operator= ( [this](arr& y, arr& J, const arr& x) -> void{
+        W.setJointState(x);
+        switch(mode){
+          case Pos:    W.kinematicsPos(y,J,b,&vec); break;
+          case Vec:    W.kinematicsVec(y,J,b,&vec); break;
+          case Quat:   W.kinematicsQuat(y,J,b); break;
+          case RelPos: W.kinematicsRelPos(y,J,b,&vec,b2,&vec2); break;
+          case RelVec: W.kinematicsRelVec(y,J,b,&vec,b2); break;
+        }
+      } );
     }
     VectorFunction& operator()(){ return *this; }
   };
@@ -174,14 +175,6 @@ void TEST(KinematicSpeed){
 // SWIFT and contacts test
 //
 
-namespace Ctest{
-  ors::KinematicWorld *G;
-  void f(arr& c, arr *dfdx, const arr &x,void*){
-    G->setJointState(x);
-    G->stepSwift();
-    G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
-  }
-}
 
 void TEST(Contacts){
   ors::KinematicWorld G("arm7.ors");
@@ -191,7 +184,11 @@ void TEST(Contacts){
 
   G.swift().setCutoff(.5);
 
-  Ctest::G=&G;
+  VectorFunction f = [&G](arr& y, arr& J, const arr& x) -> void {
+    G.setJointState(x);
+    G.stepSwift();
+    G.kinematicsProxyCost(y, (&J?J:NoArr), .2);
+  };
 
   x = G.q;
   for(t=0;t<100;t++){
@@ -207,7 +204,7 @@ void TEST(Contacts){
     //x += inverse(grad)*(-.1*c);
     x -= 3e-3*grad; //.1 * (invJ * grad);
 
-    checkJacobian(Convert(Ctest::f, NULL), x, 1e10);
+    checkJacobian(f, x, 1e10);
   }
 }
 
@@ -215,15 +212,12 @@ void TEST(Contacts){
 
 void TEST(Limits){
   ors::KinematicWorld G("arm7.ors");
-  struct MyFct:VectorFunction{
-    ors::KinematicWorld& world;
-    arr limits;
-    MyFct(ors::KinematicWorld& _world):world(_world),limits(world.getLimits()){}
-    void fv(arr& y, arr& J, const arr& x){
-      world.setJointState(x);
-      world.kinematicsLimitsCost(y,J,limits);
-    }
-  } F(G);
+
+  arr limits = G.getLimits();
+  VectorFunction F = [&G, &limits](arr& y, arr& J, const arr& x){
+    G.setJointState(x);
+    G.kinematicsLimitsCost(y,J,limits);
+  };
 
   uint n=G.getJointStateDimension();
   arr x(n),y,J;
@@ -231,7 +225,7 @@ void TEST(Limits){
     rndUniform(x,-2.,2.,false);
     checkJacobian(F,x,1e-4);
     for(uint t=0;t<10;t++){
-      F.fv(y,J,x);
+      F(y,J,x);
       cout <<"y=" <<y <<"  " <<flush;
       x -= .1 * J.reshape(n);
       checkJacobian(F,x,1e-4);
@@ -367,24 +361,19 @@ void TEST(Dynamics){
 //  G.makeLinkTree();
   cout <<G <<endl;
 
-  struct DiffEqn:VectorFunction{
-    ors::KinematicWorld& G;
-    arr u;
-    bool friction;
-    DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
-    void fv(arr& y,arr&,const arr& x){
-      G.setJointState(x[0], x[1], true);
-      if(!u.N) u.resize(x.d1).setZero();
-      if(friction) u = -10. * x[1];
-      G.clearForces();
-      G.gravityToForces();
-      /*if(T2::addContactsToDynamics){
+  arr u;
+  bool friction=false;
+  VectorFunction diffEqn = [&G,&u,&friction](arr& y,arr&,const arr& x){
+    G.setJointState(x[0], x[1], true);
+    if(!u.N) u.resize(x.d1).setZero();
+    if(friction) u = -10. * x[1];
+    G.clearForces();
+    G.gravityToForces();
+    /*if(T2::addContactsToDynamics){
         G.contactsToForces(100.,10.);
       }*/
-      G.fwdDynamics(y, x[1], u);
-    }
-  } diffEqn(G);
-
+    G.fwdDynamics(y, x[1], u);
+  };
   
   uint t,T=720,n=G.getJointStateDimension();
   arr q,qd,qdd(n),qdd_(n);
@@ -401,11 +390,11 @@ void TEST(Dynamics){
   for(t=0;t<T;t++){
     if(t>=500){ //hold steady
       qdd_ = -1. * qd;
-      G.inverseDynamics(diffEqn.u, qd, qdd_);
+      G.inverseDynamics(u, qd, qdd_);
       //tau.resize(n); tau.setZero();
       //G.clearForces();
       //G.gravityToForces();
-      G.fwdDynamics(qdd, qd, diffEqn.u);
+      G.fwdDynamics(qdd, qd, u);
       CHECK(maxDiff(qdd,qdd_,0)<1e-5,"dynamics and inverse dynamics inconsistent");
       //cout <<q <<qd <<qdd <<endl;
       cout <<"test dynamics: fwd-inv error =" <<maxDiff(qdd,qdd_,0) <<endl;
@@ -421,10 +410,10 @@ void TEST(Dynamics){
       MT::rk4_2ndOrder(x, x, diffEqn, dt);
       q=x[0]; qd=x[1];
       if(t>300){
-        diffEqn.friction=true;
+        friction=true;
         G.gl().text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
       }else{
-        diffEqn.friction=false;
+        friction=false;
         G.gl().text.clear() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
       }
     }

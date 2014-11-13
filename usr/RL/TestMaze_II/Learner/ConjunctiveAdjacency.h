@@ -10,7 +10,7 @@ class ConjunctiveAdjacency: public AdjacencyOperator, public SpaceManager {
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(AdjacencyOperator);
     /** What t=0 (immediate future) features should be includes. */
-    enum T_ZERO_FEATURES { NONE, ACTION, ACTION_OBSERVATION_REWARD };
+    enum class T_ZERO_FEATURES { NONE, ACTION, OBSERVATION_REWARD };
 
     //----members----//
 private:
@@ -22,7 +22,7 @@ private:
     int max_horizon = -1;
     int min_horizon = -1;
     bool allow_zero_delay = true;
-    T_ZERO_FEATURES t_zero_features = ACTION_OBSERVATION_REWARD;
+    T_ZERO_FEATURES t_zero_features = T_ZERO_FEATURES::OBSERVATION_REWARD;
 
     //----methods----//
 public:

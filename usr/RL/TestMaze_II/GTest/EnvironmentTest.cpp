@@ -10,6 +10,8 @@
 #include "../PredictiveEnvironment.h"
 #include "MinimalEnvironmentExample/MinimalEnvironment.h"
 #include "../Maze/Maze.h"
+#include "../ButtonWorld/JointButtonWorld.h"
+#include "../ButtonWorld/SeparateButtonWorld.h"
 #include "../CheeseMaze/CheeseMaze.h"
 
 #define DEBUG_LEVEL 1
@@ -35,6 +37,8 @@ TEST(EnvironmentTest, MinimalMemoryCheck) {
         vector<env_ptr_t> environments;
         environments.push_back(env_ptr_t(new MinimalEnvironment()));
         environments.push_back(env_ptr_t(new Maze(0.1)));
+        environments.push_back(env_ptr_t(new JointButtonWorld(5, 0.5)));
+        environments.push_back(env_ptr_t(new SeparateButtonWorld(5, 0.5)));
         for(auto env : environments) {
             // get spaces
             action_ptr_t action_space;
@@ -74,6 +78,8 @@ TEST(EnvironmentTest, NormalizationAndTransitions) {
         vector<env_ptr_t> environments;
         environments.push_back(env_ptr_t(new MinimalEnvironment()));
         environments.push_back(env_ptr_t(new Maze(0.1)));
+        environments.push_back(env_ptr_t(new JointButtonWorld(5, 0.5)));
+        environments.push_back(env_ptr_t(new SeparateButtonWorld(5, 0.5)));
 
         // test all environments
         for(auto env : environments) {

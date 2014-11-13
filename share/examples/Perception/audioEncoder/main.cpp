@@ -1,6 +1,6 @@
 #include <Perception/audio.h>
 
-void testAudio(){
+void TEST(Audio){
     AudioPoller_PA poller;
     AudioWriter_libav writer("test.wav");
 

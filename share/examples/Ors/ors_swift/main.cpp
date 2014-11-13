@@ -92,16 +92,18 @@ void TEST(Meshes3) {
   mesh.readTriFile(FILE("z.e4.tri"));
   gl.reportSelects=true;
   gl.watch();
-  cout <<gl.topSelection->name <<endl;
-  uint i=gl.topSelection->name >> 4;
-  mesh.skin(i);
+  if(gl.topSelection){
+    cout <<gl.topSelection->name <<endl;
+    uint i=gl.topSelection->name >> 4;
+    mesh.skin(i);
+  }
   gl.watch();
 }
 
 int MAIN(int argc, char** argv){
 
-  testSwift();
-  testSphere();
+//  testSwift();
+//  testSphere();
   testMeshes3();
 
   return 0;

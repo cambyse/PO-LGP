@@ -30,7 +30,7 @@ public:
     virtual void render_tear_down() override;
     virtual void perform_transition(const action_ptr_t& action) override;
     virtual void perform_transition(const action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r ) override;
-    virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
+    virtual void get_features(f_set_t & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
 
 private:
 

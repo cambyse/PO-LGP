@@ -79,7 +79,7 @@ void kernelPCAEmbedding(arr& Z,const arr& W){
   Z=V;
 }
 
-void testEmbedding(){
+void TEST(Embedding){
   //load data
   ifstream fil("spiral.txt");
   //ifstream fil("spiral_debug.txt");

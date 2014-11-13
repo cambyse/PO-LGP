@@ -43,7 +43,7 @@ void testPhaseOne(const ConstrainedProblem& f, uint dim_x){
 
 //==============================================================================
 
-void testCoveringSphere(){
+void TEST(CoveringSphere){
   uint n=100, s=10;
   arr x(n,3); rndGauss(x);
   CoveringSpheresProblem F(x,s);
