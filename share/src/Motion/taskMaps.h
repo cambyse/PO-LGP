@@ -136,10 +136,10 @@ struct PairCollisionConstraint:TaskMap {
   int i;       ///< which shapes does it refer to?
   int j;       ///< which shapes does it refer to?
   double margin;
-  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName)
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName,double _margin)
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
-      margin(.02) {
+      margin(_margin) {
     type=ineqTT;
   }
 
@@ -196,4 +196,34 @@ struct PointEqualityConstraint:TaskMap {
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
 };
 
+struct ContactEqualityConstraint:TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  double margin;
+  ContactEqualityConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName,double _margin)
+    : i(G.getShapeByName(iShapeName)->index),
+      j(G.getShapeByName(jShapeName)->index),
+      margin(_margin) {
+    type=eqTT;
+  }
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){
+    return 1;
+  }
+};
 
+struct VelAlignConstraint:TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  ors::Vector ivec, jvec; ///< additional position or vector
+
+  double margin;
+  VelAlignConstraint(const ors::KinematicWorld& G,
+                     const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
+                     const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector);
+
+
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};

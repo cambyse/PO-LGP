@@ -564,8 +564,14 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     g_count += dimg_t;
 
     //split up: push equality terms into h
-    if(&h && dimh) h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
-    if(&Jh && dimh) {
+
+    if(&h && dimh_t) {
+//      cout << h << endl;
+//      cout << phi.subRange(M, M+dimh_t-1) << endl;
+      h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
+
+    }
+    if(&Jh && dimh_t) {
       Jh.setMatrixBlock(J.subRange(M, M+dimh_t-1), h_count, 0);
       for(uint i=0; i<dimh_t; i++) Jh_aux->rowShift(h_count+i) = J_aux->rowShift(M+i);
       if(dimz){

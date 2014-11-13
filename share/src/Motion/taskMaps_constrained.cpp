@@ -35,22 +35,12 @@ void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 
 //===========================================================================
 
-PairCollisionConstraint::PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin){
-  i = G.getShapeByName(iShapeName)->index;
-  j = (G.getShapeByName(jShapeName)->index);
-  margin = _margin;
-  cout << "PairCollisionConstraint Margin: " <<margin << endl;
-  constraint=true;
-}
-
 void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   y.resize(1) = -1.;
   if(&J) J.resize(1,G.q.N).setZero();
   for(ors::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
       G.kinematicsProxyConstraint(y, J, p, margin, false);
-//      cout << p->d << endl;
-//      cout << y << endl;
       break;
     }
   }
@@ -97,4 +87,43 @@ void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
     G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
     J = Ji - Jj;
   }
+}
+
+//===========================================================================
+
+void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+  y.resize(1) = 0.;
+  if(&J) J.resize(1,G.q.N).setZero();
+  for(ors::Proxy *p: G.proxies){
+    if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
+      G.kinematicsProxyConstraint(y, J, p, margin, false);
+      cout << y << endl;
+      break;
+    }
+  }
+}
+
+VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
+                   const char* iShapeName, const ors::Vector& _ivec,
+                   const char* jShapeName, const ors::Vector& _jvec) {
+  ors::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
+  ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
+  if(a) i=a->index;
+  if(b) j=b->index;
+  if(&_ivec) ivec=_ivec; else ivec.setZero();
+  if(&_jvec) jvec=_jvec; else jvec.setZero();
+  type=ineqTT;
+  order = 1;
+}
+
+void VelAlignConstraint::phi(arr &y, arr &J, const ors::KinematicWorld &G) {
+  arr y1,J1;
+  G.kinematicsPos(y1,J1,G.shapes(i)->body,&ivec);
+
+  arr y2,J2;
+  G.kinematicsVec(y2,J2,G.shapes(j)->body,&jvec);
+  innerProduct(y,~y1,y2);
+  J = ~y2*J1 + ~y1*J2;
+//  cout << "y1: " << y1 << endl;
+//  cout << "y2: " << y2 << endl;
 }

@@ -4,9 +4,7 @@
 #include <Ors/ors.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
 #include <vector>
 #include "gaussian_costs.h"
 #include "rbf_costs.h"
@@ -54,10 +52,14 @@ struct Scene {
   uint contactTime;
   uint T;
 
+  arr JxP,JgP,JhP; // packed jacobians
+  arr Jx,Jg; // unpacked jacobians
+
   // task vars
-  arr J_Jt,PHI,J,JP;
+  arr J_Jt,PHI;
   // constrain vars
-  arr Jg,g, JgP,Jg_Jgt,Jg_JgtP;
+  arr g, Jg_Jgt,Jg_JgtP;
+  arr h;
   arr J_Jgt;
   arr dWdx_dPHI_J_G_Jt_dPHI_dWdx;
   arr Jgt_JgJgtI_Jg;
@@ -94,12 +96,15 @@ struct IKMO:ConstrainedProblem {
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param);
 
-  virtual uint dim_x() {return nP;}
-
+//  virtual uint dim_x() {return nP;}
   // param limits + norm constraint + num active cons
-  virtual uint dim_g() {return 2*nP+1+numLambda;}
+//  virtual uint dim_g() {
+//    return 2*nP+1+numLambda;
+//  }
 
-  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+
+
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
     double costs = 0.;
     /// compute weight vector
     arr w;
@@ -110,7 +115,6 @@ struct IKMO:ConstrainedProblem {
       // compute Hw and dw once if there are only nonlinear parameter
       compWeights(w,(dwC.N>0)?NoArr:dwC,(HwC.N>0)?NoArr:HwC,x);
     }
-
 
     if (&df) { df.resize(nP);df.setZero();}
     if (&Hf) { Hf.resize(nP,nP);Hf.setZero();}
@@ -125,7 +129,6 @@ struct IKMO:ConstrainedProblem {
     for (uint i=0;i<scenes.d0;i++) {
       arr dfi,Hfi,gi,Jgi;
       costs += scenes(i).compCosts(dfi, Hfi, &g?gi:NoArr, &Jg?Jgi:NoArr, w, dwC, HwC);
-
       if (&df) {
         df += dfi;
       }
