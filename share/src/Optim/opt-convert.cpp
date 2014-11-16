@@ -551,8 +551,8 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     y_count += dimf_t;
 
     //split up: push inequality terms into g
-    if(&g && dimg) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
-    if(&Jg && dimg) {
+    if(&g && dimg_t) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
+    if(&Jg && dimg_t) {
       Jg.setMatrixBlock(J.subRange(M, M+dimg_t-1), g_count, 0);
       for(uint i=0; i<dimg_t; i++) Jg_aux->rowShift(g_count+i) = J_aux->rowShift(M+i);
       if(dimz){
@@ -564,8 +564,8 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     g_count += dimg_t;
 
     //split up: push equality terms into h
-    if(&h && dimh) h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
-    if(&Jh && dimh) {
+    if(&h && dimh_t) h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
+    if(&Jh && dimh_t) {
       Jh.setMatrixBlock(J.subRange(M, M+dimh_t-1), h_count, 0);
       for(uint i=0; i<dimh_t; i++) Jh_aux->rowShift(h_count+i) = J_aux->rowShift(M+i);
       if(dimz){
