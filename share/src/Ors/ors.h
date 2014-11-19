@@ -283,6 +283,7 @@ struct KinematicWorld {
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
   void kinematicsContactConstraints(arr& y, arr &J) const;
+  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
