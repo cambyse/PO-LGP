@@ -17,8 +17,6 @@ void TEST(GraspHeuristic){
   G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   ors::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -68,8 +66,6 @@ void TEST(PickAndPlace){
 //  G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   arr x, xT;
 

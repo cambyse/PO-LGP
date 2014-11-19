@@ -19,7 +19,7 @@
 #include "opt-rprop.h"
 
 /// minimizes \f$f(x)\f$ using its gradient only
-uint optRprop(arr& x, ScalarFunction& f, OptOptions o) {
+uint optRprop(arr& x, const ScalarFunction& f, OptOptions o) {
   return Rprop().loop(x, f, o.fmin_return, o.stopTolerance, o.initStep, o.stopEvals, o.verbose);
 }
 
@@ -93,7 +93,7 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
   return stepSize.max() < incr*dMin;
 }
 
-bool Rprop::step(arr& x, ScalarFunction& f) {
+bool Rprop::step(arr& x, const ScalarFunction& f) {
   arr grad;
   f(grad, NoArr, x);
   return s->step(x, grad, NULL);
@@ -101,7 +101,7 @@ bool Rprop::step(arr& x, ScalarFunction& f) {
 
 //----- the rprop wrapped with stopping criteria
 uint Rprop::loop(arr& _x,
-                 ScalarFunction& f,
+                 const ScalarFunction& f,
                  double *fmin_return,
                  double stoppingTolerance,
                  double initialStepSize,

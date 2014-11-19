@@ -288,19 +288,25 @@ extern ors::Transformation& NoTransformation;
 
 struct DistanceFunction_Sphere:ScalarFunction{
   ors::Transformation t; double r;
-  DistanceFunction_Sphere(const ors::Transformation& _t, double _r):t(_t),r(_r){ NIY }
+  DistanceFunction_Sphere(const ors::Transformation& _t, double _r):t(_t),r(_r){
+    ScalarFunction::operator=( [this](arr& g, arr& H, const arr& x)->double{ return fs(g,H,x); } );
+  }
   virtual double fs(arr& g, arr& H, const arr& x);
 };
 
 struct DistanceFunction_Box:ScalarFunction{
   ors::Transformation t; double dx, dy, dz;
-  DistanceFunction_Box(const ors::Transformation& _t, double _dx, double _dy, double _dz):t(_t),dx(_dx),dy(_dy),dz(_dz){ NIY }
+  DistanceFunction_Box(const ors::Transformation& _t, double _dx, double _dy, double _dz):t(_t),dx(_dx),dy(_dy),dz(_dz){
+    ScalarFunction::operator=( [this](arr& g, arr& H, const arr& x)->double{ return fs(g,H,x); } );
+  }
   virtual double fs(arr& g, arr& H, const arr& x);
 };
 
 struct DistanceFunction_Cylinder:ScalarFunction{
   ors::Transformation t; double r, dz;
-  DistanceFunction_Cylinder(const ors::Transformation& _t, double _r, double _dz):t(_t),r(_r),dz(_dz){ NIY }
+  DistanceFunction_Cylinder(const ors::Transformation& _t, double _r, double _dz):t(_t),r(_r),dz(_dz){
+    ScalarFunction::operator=( [this](arr& g, arr& H, const arr& x)->double{ return fs(g,H,x); } );
+  }
   virtual double fs(arr& g, arr& H, const arr& x);
 };
 
