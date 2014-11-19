@@ -8,7 +8,6 @@ void testLinReg(const char *datafile=NULL) {
     datafile="z.train";
     arr X,y;
     artificialData(X, y);
-
     FILE(datafile) <<catCol(X,y);
   }
 
@@ -252,7 +251,8 @@ void TEST(CV){
   arr Phi = makeFeatures(X);
   FILE("z.train") <<catCol(X, y);
 
-  cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
+  uint k_fold = MT::getParameter<uint>("k_fold",10);
+  cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), k_fold, false);
   cv.plot();
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
 }
@@ -332,8 +332,10 @@ void exercise2() {
 
 int main(int argc, char *argv[]) {
   MT::initCmdLine(argc,argv);
-  
-//  rnd.clockSeed();
+
+  uint seed = MT::getParameter<uint>("seed", 0);
+  if(!seed)  rnd.clockSeed();
+  else rnd.seed(seed);
 
   switch(MT::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;

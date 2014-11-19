@@ -3,7 +3,7 @@ NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
 ROS = 1
-ROS_VERSION = groovy
+#ROS_VERSION = groovy
 DEPEND = Core System Hardware Hardware_gamepad Motion Ors Gui System
 
 #CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'

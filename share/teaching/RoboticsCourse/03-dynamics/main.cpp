@@ -1,30 +1,30 @@
 #include <stdlib.h>
 #include <Ors/roboticsCourse.h>
-#include <Gui/plot.h>
 
 void TestPD(double xi, double waveLength){
   double mass = 1.0;
   double tau = 0.01;
   int T = 500;
   double Target = 1;
-  arr x(T),v(T),a(T);
-  double u;
+  arr x(T+1,2);
+  double u,a;
 
   double lambda = waveLength/MT_2PI;
   double Kp = 1./(lambda*lambda);
   double Kd = 2.*xi/lambda;
   
-  for (int i = 0; i < T-1; i++){
+  x[0]=0.; //initial state
+  ofstream fil("z.X");
+  for (int t = 1; t <=T; t++){
     //control
-    u  = Kp*(Target - x(i)) - Kd*v(i);
+    u  = Kp*(Target - x(t-1,0)) + Kd*(0.-x(t-1,1));
 
     //simulate
-    a(i+1) = u/mass;
-    v(i+1) = v(i) + a(i+1)*tau;
-    x(i+1) = x(i) + v(i+1)*tau;
+    a = u/mass;
+    x[t] = x[t-1] + tau*ARR(x(t-1,1), a);
+    fil <<tau*t <<' ' <<x(t,0) <<' ' <<x(t,1) <<endl; //store time, position & velocity
   }
-  gnuplot(x);
-  MT::wait();
+  gnuplot("plot 'z.X' us 1:2 t 'position', '' us 1:3 t 'velocity'", false, true);
 }
 
 
@@ -167,7 +167,7 @@ void followReferenceTrajectory(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",4)){
+  switch(MT::getParameter<int>("mode",1)){
     case 1:  TestPD(1., .5);  break;
     case 2:  TestPD(5., .5);  break;
     case 3:  TestPD(.1, .5);  break;

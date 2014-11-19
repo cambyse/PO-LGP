@@ -75,7 +75,7 @@ void TEST(DistanceFunctions) {
       suc &= checkHessian(*f, x, 1e-6);
       if(!suc){
         arr g,H;
-        f->fs(g,H,x); //set breakpoint here;
+        (*f)(g,H,x); //set breakpoint here;
         HALT("x=" <<x);
       }
     }

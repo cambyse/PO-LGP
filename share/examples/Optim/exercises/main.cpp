@@ -18,7 +18,7 @@ The constraint is always as in exercise 3\n";
 // plain grad descent
 //
 
-void testGradDescent(ScalarFunction& F){
+void testGradDescent(const ScalarFunction& F){
   uint d=MT::getParameter<uint>("dim", 2);
   arr x(d),x0;
   rnd.clockSeed();
@@ -146,14 +146,15 @@ void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
   system("rm z.grad_all");
 
   for(uint k=0;k<iters;k++){
-    checkGradient(F, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
-    checkHessian (F, x, 1e-4);
+    checkAllGradients(f, x, 1e-4);
+    checkGradient(F.Lag, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
+    checkHessian (F.Lag, x, 1e-4);
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    optNewton(x, F.Lag, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
-    displayFunction(F);
+    displayFunction(F.Lag);
     MT::wait();
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -218,7 +219,7 @@ void testPhaseOne(ConstrainedProblem& f){
   arr x;
   x = ARRAY(1., 1., 10.);
 
-  testConstraint(metaF, x, 1);
+  testConstraint(metaF.f_phaseOne, x, 1);
   //one iteration of phase one should be enough
   //properly done: check in each step if constraints are fulfilled and exit phase one then
   //no need to really minimize
@@ -259,9 +260,9 @@ int main(int argc,char** argv){
 
   switch((TestType)MT::getParameter<int>("exercise")){
   case unconstrained: {
-    displayFunction(ChoiceFunction);
+    displayFunction(ChoiceFunction());
     MT::wait();
-    testGradDescent(ChoiceFunction);
+    testGradDescent(ChoiceFunction());
   } break;
   case constrained: {
     ChoiceConstraintFunction F;

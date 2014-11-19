@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 
+#ifdef G4_INSTALLED
+
 #include"G4TrackIncl.h"
 
 using namespace std;
@@ -112,3 +114,11 @@ void *thread_main(void *) {
   cout << "EXIT THREAD" << endl;
   pthread_exit(0);
 }
+
+#else //G4_INSTALLED
+
+int main(int argc, char **argv) {
+  std::cout <<"G4 is not installed - can't run raw example" <<std::endl;
+}
+
+#endif

@@ -1110,6 +1110,40 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
   }
 }
 
+/** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
+  of the i-th body W.R.T. the 6 axes of an arbitrary shape-frame, NOT the robot's joints (3 x 6 tensor)
+  WARNING: this does not check if s is actually in the kinematic chain from root to b.
+*/
+void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const {
+  if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
+
+  //get position
+  ors::Vector pos_world = b->X.pos;
+  if(rel) pos_world += b->X.rot*(*rel);
+  if(&y) y = ARRAY(pos_world); //return the output
+  if(!&J) return; //do not return the Jacobian
+
+  //get Jacobian
+  J.resize(3, 6).setZero();
+  ors::Vector diff = pos_world - s->X.pos;
+  MT::Array<ors::Vector> axes = {s->X.rot.getX(), s->X.rot.getY(), s->X.rot.getZ()};
+
+  //3 translational axes
+  for(uint i=0;i<3;i++){
+    J(0, i) += axes(i).x;
+    J(1, i) += axes(i).y;
+    J(2, i) += axes(i).z;
+  }
+
+  //3 rotational axes
+  for(uint i=0;i<3;i++){
+    ors::Vector tmp = axes(i) ^ diff;
+    J(0, 3+i) += tmp.x;
+    J(1, 3+i) += tmp.y;
+    J(2, 3+i) += tmp.z;
+  }
+}
+
 /** @brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
 void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {

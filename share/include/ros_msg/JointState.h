@@ -118,7 +118,6 @@ struct JointState_
 
   typedef boost::shared_ptr< ::marc_controller_pkg::JointState_<ContainerAllocator> > Ptr;
   typedef boost::shared_ptr< ::marc_controller_pkg::JointState_<ContainerAllocator> const> ConstPtr;
-  boost::shared_ptr<std::map<std::string, std::string> > __connection_header;
 
 }; // struct JointState_
 
@@ -148,7 +147,7 @@ namespace message_traits
 
 
 // BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': False}
-// {'geometry_msgs': ['/opt/ros/groovy/share/geometry_msgs/msg'], 'std_msgs': ['/opt/ros/groovy/share/std_msgs/msg']}
+// {'geometry_msgs': ['/opt/ros/indigo/share/geometry_msgs/msg'], 'std_msgs': ['/opt/ros/indigo/share/std_msgs/msg']}
 
 // !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
 
