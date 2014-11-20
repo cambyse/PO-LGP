@@ -2,7 +2,7 @@ BASE   = ../../..
 -include $(BASE)/gofMake/config.mk
 
 MSGFILE = msg/JointState.msg
-ROSDIR = /opt/ros/$(ROS_VERSION)
+ROSDIR = /opt/ros/$(ROS_DISTRO)
 OUTPUTDIR = $(BASE)/include/ros_msg
 PKGNAME = marc_controller_pkg
 
