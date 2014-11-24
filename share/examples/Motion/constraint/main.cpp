@@ -166,7 +166,7 @@ void TEST(ContactConstraint){
   //-- setup the motion problem
   Task *t;
   t = MP.addTask("transitions", new TransitionTaskMap(G));
-  t->map.order=1; //make this an acceleration task!
+  t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  t = MP.addTask("final_vel", new TransitionTaskMap(G));
@@ -211,8 +211,8 @@ void TEST(VelConstraint){
   //-- setup the motion problem
   Task *t;
   t = MP.addTask("transitions", new TransitionTaskMap(G));
-  t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e1);
 
 //  t = MP.addTask("final_vel", new TransitionTaskMap(G));
 //  t->map.order=1; //make this a velocity task!
@@ -232,9 +232,13 @@ void TEST(VelConstraint){
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
   arr lambda = zeros(x.d0,2);
+
+
   optConstrained(x, lambda, Convert(MF));
-  cout << lambda << endl;
-  MP.costReport();
+  checkGradient(Convert(MF),x,1e-3);
+
+//  cout << lambda << endl;
+//  MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
 }
 
@@ -245,8 +249,8 @@ int main(int argc,char** argv){
 //  testStickiness();
 //  testEqualityConstraints();
 //  testClosedKinematicChain();
-  testContactConstraint();
-//  testVelConstraint();
+//  testContactConstraint();
+  testVelConstraint();
 
   return 0;
 }

@@ -105,7 +105,7 @@ void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G
 
 VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
                    const char* iShapeName, const ors::Vector& _ivec,
-                   const char* jShapeName, const ors::Vector& _jvec) {
+                   const char* jShapeName, const ors::Vector& _jvec, double _target) {
   ors::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
   ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
   if(a) i=a->index;
@@ -114,16 +114,60 @@ VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
   if(&_jvec) jvec=_jvec; else jvec.setZero();
   type=ineqTT;
   order = 1;
+  target = _target;
 }
 
-void VelAlignConstraint::phi(arr &y, arr &J, const ors::KinematicWorld &G) {
-  arr y1,J1;
-  G.kinematicsPos(y1,J1,G.shapes(i)->body,&ivec);
+void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau) {
+  uint k=order;
 
-  arr y2,J2;
-  G.kinematicsVec(y2,J2,G.shapes(j)->body,&jvec);
-  innerProduct(y,~y1,y2);
-  J = ~y2*J1 + ~y1*J2;
-//  cout << "y1: " << y1 << endl;
-//  cout << "y2: " << y2 << endl;
+  // compute body j orientation
+  arr y_j,J_j,J_bar_j;
+  G(G.N-1)->kinematicsVec(y_j,(&J?J_bar_j:NoArr),G(G.N-1)->shapes(j)->body,&jvec);
+
+  if(&J){
+    J_j = zeros(G.N, y_j.N, J_bar_j.d1);
+    J_j[G.N-1]() = J_bar_j;
+    arr tmp(J_j);
+    tensorPermutation(J_j, tmp, TUP(1,0,2));
+    J_j.reshape(y_j.N, G.N*J_bar_j.d1);
+  }
+
+  // compute body i velocity
+  arrA y_bar, J_bar;
+  y_bar.resize(k+1);
+  J_bar.resize(k+1);
+
+  for(uint c=0;c<=k;c++) {
+    G(G.N-1-c)->kinematicsPos(y_bar(c),(&J?J_bar(c):NoArr),G(G.N-1-c)->shapes(i)->body,&ivec);
+  }
+
+  arr dy_i, dJ_i;
+  dy_i = (y_bar(0)-y_bar(1));
+
+  if (&J) {
+    dJ_i = zeros(G.N, dy_i.N, J_bar(0).d1);
+    dJ_i[G.N-1-1]() = -J_bar(1);
+    dJ_i[G.N-1-0]() = J_bar(0);
+    arr tmp(dJ_i);
+    tensorPermutation(dJ_i, tmp, TUP(1,0,2));
+    dJ_i.reshape(dy_i.N, G.N*J_bar(0).d1);
+  }
+
+  // normalize dy_i
+  if (length(dy_i) != 0) {
+    if (&J) {
+      double tmp = (~dy_i*dy_i).scalar();
+      dJ_i = ( eye(dJ_i.d0) - (dy_i*~dy_i)/(tmp) )*dJ_i/(length(dy_i));
+    }
+    dy_i = dy_i/(length(dy_i));
+  }
+
+  innerProduct(y,~dy_i,y_j);
+
+  if (&J) {
+    J = ~dy_i*J_j + ~y_j*dJ_i;
+    J = -J;
+  }
+  y = -y+target;
+
 }

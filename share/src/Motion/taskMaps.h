@@ -216,14 +216,14 @@ struct VelAlignConstraint:TaskMap {
   int i;       ///< which shapes does it refer to?
   int j;       ///< which shapes does it refer to?
   ors::Vector ivec, jvec; ///< additional position or vector
+  double target;
 
   double margin;
   VelAlignConstraint(const ors::KinematicWorld& G,
                      const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
-                     const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector);
+                     const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector, double _target = 0.);
 
-
-
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) { } ;
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };

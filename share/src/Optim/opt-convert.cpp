@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2014 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -566,46 +566,6 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     //split up: push equality terms into h
     if(&h && dimh_t) h.setVectorBlock(phi.subRange(M, M+dimh_t-1), h_count);
     if(&Jh && dimh_t) {
-      for(uint i=0; i<dimh_t; i++) Jh_aux->rowShift(h_count+i) = J_aux->rowShift(M+i);
-      if(dimz){
-        Jhz->setMatrixBlock(Jz->subRange(M, M+dimh_t-1), h_count, 0);
-        for(uint i=0; i<dimh_t; i++) Jhz_aux->rowShift(h_count+i) = Jz_aux->rowShift(M+i);
-      }
-    }
-    M += dimh_t;
-    h_count += dimh_t;
-  }
-  CHECK_EQ(M,dimphi,"");
-  CHECK_EQ(y_count,dimy,"");
-  if(&g) CHECK_EQ(g_count,dimg,"");
-  if(&h) CHECK_EQ(h_count,dimh,"");
-  if(getJ) Jy_aux->computeColPatches(true);
-  if(&Jg) Jg_aux->computeColPatches(true);
-  if(&Jh) Jh_aux->computeColPatches(true);
-
-  //finally, compute the scalar function
-  if(&df){ df = comp_At_x(Jy, y); df *= 2.; }
-  if(&Hf){ Hf = comp_At_A(Jy); Hf *= 2.; }
-  return sumOfSqr(y);
-#endif
-}
-
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
-  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
-    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
-  };
-}
-
-
-//===========================================================================
-
-struct RUN_ON_INIT{
-  RUN_ON_INIT(){
-    MT::Array<TermType>::memMove=true;
-  }
-} dummy;
-
-
       Jh.setMatrixBlock(J.subRange(M, M+dimh_t-1), h_count, 0);
       for(uint i=0; i<dimh_t; i++) Jh_aux->rowShift(h_count+i) = J_aux->rowShift(M+i);
       if(dimz){
