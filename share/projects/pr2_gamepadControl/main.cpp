@@ -5,7 +5,7 @@
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
-
+#include <Core/array-vector.h>
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
@@ -35,7 +35,6 @@ void TEST(Gamepad){
   arr q, qdot;
   world.getJointState(q, qdot);
   ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffL");
 
   ors::KinematicWorld world_pr2 = world;
   world.gl().add(changeColor);
@@ -69,6 +68,10 @@ void TEST(Gamepad){
   zero_qdot.setZero();
   CtrlMsg refs;
 
+  arr fLobs,uobs;
+  ofstream fil("z.forces");
+  MT::arrayBrackets="  ";
+
   for(uint t=0;;t++){
 //    S.gamepadState.var->waitForNextRevision();
     arr gamepadState = S.gamepadState.get();
@@ -78,6 +81,8 @@ void TEST(Gamepad){
     // joint state
     if(useRos){
       world_pr2.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
+      fLobs = S.ctrl_obs.get()->fL;
+      uobs = S.ctrl_obs.get()->u_bias;
     }
 
     //compute control
@@ -85,7 +90,7 @@ void TEST(Gamepad){
     q += .01*qdot;
     qdot += .01*a;
     cout <<t <<endl;
-    MP.reportCurrentState();
+//    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
     if(!(t%4))
@@ -95,25 +100,69 @@ void TEST(Gamepad){
     uint mode = 0;
     if(gamepadState.N) mode = uint(gamepadState(0));
     if(mode==2){
-      arr y_fL, J_fL;
-      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+//      arr y_fL, J_fL;
+//      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
 #if 0 // set a feew fwd force task
       refs.fL = ARR(10., 0., 0.);
       refs.u_bias = 1.*(~J_fL * refs.fL);
       refs.Kq_gainFactor = ARR(.3);
-#else // change stiffness of endeff
-      J_fL = J_fL.sub(0,1,0,-1);
-      arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
-      cout <<J_fL <<gain <<endl;
-      refs.Kq_gainFactor = gain;
-      refs.u_bias = zeros(q.N);
+#else // apply force in direction fe
+      arr fe = ARR(0.,0.,-5.);
+      double alpha = .01;
+      ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
+      arr JeFT,Jeq;
+      MP.world.kinematicsPos(NoArr,Jeq,ftL_shape->body,&ftL_shape->rel.pos);
+      MP.world.kinematicsPos_wrtFrame(NoArr,JeFT,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
+
+      JeFT = inverse_SymPosDef(JeFT*~JeFT)*JeFT;
+
+      // compute u_bias
+      refs.u_bias = ~Jeq*fe;
+//      refs.u_bias = zeros(q.N);
+
+      // compute force feedback
+      refs.fL = fe;
+      refs.KfL_gainFactor = alpha*~Jeq;
+      refs.EfL = JeFT;
+
+      Jeq = inverse_SymPosDef(Jeq*~Jeq)*Jeq;
+
+      fil <<t <<' ' <<fe <<' ' << JeFT*fLobs << " " << Jeq*uobs << endl;
+
+      // compute position gains that are 0 along force direction
+//      arr yVec_fL, JVec_fL;
+//      ors::Vector rel = ftL_shape->rel.rot*ors::Vector(fe/length(fe));
+//      MP.world.kinematicsVec(yVec_fL, JVec_fL, ftL_shape->body,&rel);
+
+//      ors::Quaternion quat;
+//      quat.setDiff(ors::Vector(1.,0.,0.),yVec_fL);
+//      arr R = ~quat.getArr();
+//      arr J_fL0 = R*Jeq;
+//      J_fL0[0]=0.;
+
+//      refs.Kq_gainFactor = ~Jeq*inverse(Jeq * ~Jeq)*J_fL0;
+//      refs.Kq_gainFactor = 10.*refs.Kq_gainFactor + 0.1*eye(q.N);
+
+//       test gains
+//      arr dq;
+//      MP.world.getJointState(dq);
+//      dq = dq*0.+0.1;
+//      cout << refs.Kq_gainFactor*dq << endl;
+//      cout << ~R*J_fL0*dq << endl;
+//      arr dy = ~R*Jeq*refs.Kq_gainFactor*dq;
+//      cout << R*dy << endl;
+
 #endif
     }else{
-      refs.fL = ARR(0., 0., 0.);
-      refs.Kq_gainFactor = ARR(1.);
+      refs.fL = ARR(0., 0., 0.,0.,0.,0.);
+      refs.KfL_gainFactor.clear();
+      refs.EfL.clear();
       refs.u_bias = zeros(q.N);
     }
+    refs.Kq_gainFactor = 0.;
+    refs.Kd_gainFactor = 1.;
+    refs.gamma = 1.;
 
     refs.q=q;
     refs.qdot=zero_qdot;
