@@ -6,7 +6,7 @@
 
 struct SineSound{
   float sampleRate;
-  floatA notes;
+  floatA notes; //four entries per note: (sin-buffer-step-size, amplitude, time, decay)
   floatA SIN;
 
   SineSound(float _sampleRate=SAMPLE_RATE);

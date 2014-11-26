@@ -5,16 +5,13 @@
 
 uintA DUR = {0,2,4,5,7,9,11};
 
-/*******************************************************************/
-int main(void){
-  //paTestData data;
+void basic(SineSound& S, Audio& audio){
+  S.addNote(440., .1, .0);
+  MT::wait(3.);
+}
 
-  SineSound S;
-  Audio audio;
-
-  audio.open(S);
-
-  uint mode=3;
+void complex(SineSound& S, Audio& audio){
+  uint mode=0;
   for(uint k=0;k<200;k++){
     MT::wait(.1);
     switch(mode){
@@ -34,6 +31,18 @@ int main(void){
         break;
     }
   }
+}
+
+/*******************************************************************/
+int main(void){
+  //paTestData data;
+
+  SineSound S;
+  Audio audio;
+
+  audio.open(S);
+
+  basic(S, audio);
 
   audio.close();
 

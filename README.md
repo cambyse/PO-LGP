@@ -141,3 +141,9 @@ When creating new projects:
 -- understand, that programs are by default run in msvc\Debug
 -- perhaps you need to copy dlls around - (don't know how to set the
    path globally)
+
+
+# MISC
+
+* Installing portaudio19-dev: Currently has broken links in
+  ubuntu. Solution: first install libjack-jackd2-dev
