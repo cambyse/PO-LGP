@@ -1,7 +1,9 @@
 BASE = ../..
 
+
 OBJS = main.o
 PLIB = 1
+ROS = 1
 DEPEND = Core System Hardware_gamepad Motion Ors Gui pr2
 
 LPATHS += /opt/ros/groovy/lib

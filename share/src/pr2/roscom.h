@@ -18,12 +18,12 @@ void rosCheckInit();
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
-  arr q, qdot, fL, fR, u_bias;
-  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
-  double velLimitRatio, effLimitRatio;
-  CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), Kf_gainFactor(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
-  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias, double _velLimitRatio, double _effLimitRatio)
-    :q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias), velLimitRatio(_velLimitRatio), effLimitRatio(_effLimitRatio){}
+  arr q, qdot, fL, fR, u_bias,EfL;
+  arr Kq_gainFactor, Kd_gainFactor, KfL_gainFactor;
+  double velLimitRatio, effLimitRatio, gamma;
+  CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), KfL_gainFactor(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
+  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _u_bias, const arr& _EfL, double _velLimitRatio, double _effLimitRatio, double _gamma)
+    :q(_q), qdot(_qdot), fL(_fL), u_bias(_u_bias), EfL(_EfL), velLimitRatio(_velLimitRatio), effLimitRatio(_effLimitRatio), gamma(_gamma){}
 };
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 inline void operator>>(istream& os, CtrlMsg& m){  }

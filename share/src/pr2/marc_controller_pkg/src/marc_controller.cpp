@@ -29,7 +29,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
   Kq_gainFactor=Kd_gainFactor=ARR(1.);
-  Kf_gainFactor=ARR(0.);
+  KfL_gainFactor.clear();
   limits.resize(world.q.N,4).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
@@ -64,7 +64,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   baseCommand_publisher = nh.advertise<geometry_msgs::Twist>("/base_controller/command", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
-  forceSensor_subscriber = nh.subscribe("/ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
+  forceSensor_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
 
   ROS_INFO("*** TreeControllerClass Started");
 
@@ -78,24 +78,20 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
+  fL_error = zeros(3);
   q_filt = 0.;
   qd_filt = 0.95;
+  gamma = 1.;
   velLimitRatio = effLimitRatio = 1.;
 }
 
 /// Controller update loop in realtime
 void TreeControllerClass::update() {
-  //-- get current point pos
+  //-- get current joint pos
   for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
       q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
       qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
   }
-
-  //-- publish joint state
-  jointStateMsg.q = VECTOR(q);
-  jointStateMsg.qdot = VECTOR(qd);
-  jointStateMsg.fL = VECTOR(fL_obs);
-  jointState_publisher.publish(jointStateMsg);
 
   mutex.lock(); //only inside here we use the msg values...
 
@@ -127,6 +123,15 @@ void TreeControllerClass::update() {
     }
     u += u_bias;
 
+    // torque PD for left ft sensor
+    if (KfL_gainFactor.N==0) {
+      fL_error = fL_error*0.;    // reset integral error
+    } else {
+      fL_error = gamma*fL_error + (fL_ref - EfL*fL_obs);
+//       ROS_INFO("%s",STRING("KfL_gainFactor * fL_error: " << KfL_gainFactor * fL_error).p);
+      u += KfL_gainFactor * fL_error;
+    }
+
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
 	/*double velM = marginMap(qd(i), -velLimitRatio*limits(i,2), velLimitRatio*limits(i,2), .1);
@@ -150,6 +155,15 @@ void TreeControllerClass::update() {
   }
 
   mutex.unlock();
+
+  //-- publish joint state
+  jointStateMsg.q = VECTOR(q);
+  jointStateMsg.qdot = VECTOR(qd);
+  jointStateMsg.fL = VECTOR(fL_obs);
+  jointStateMsg.u_bias = VECTOR(u);
+
+  jointState_publisher.publish(jointStateMsg);
+
 }
 
 /// Controller stopping in realtime
@@ -159,16 +173,20 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   mutex.lock();
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
-  //  fL_ref = ARRAY(msg->fL);
-  //  fR_ref = ARRAY(msg->fR);
   u_bias = ARRAY(msg->u_bias);
+
+  fL_ref = ARRAY(msg->fL);
+  EfL = ARRAY(msg->EfL);
+  KfL_gainFactor = ARRAY(msg->KfL_gainFactor);
+  if (KfL_gainFactor.N>0) KfL_gainFactor.reshape(q_ref.N,3);
+  if (EfL.N>0) EfL.reshape(3,6);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kq_gainFactor);
   CP(Kd_gainFactor);
-  CP(Kf_gainFactor);
 #undef CP
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
+  gamma = msg->gamma;
   mutex.unlock();
 }
 

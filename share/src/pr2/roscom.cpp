@@ -42,7 +42,7 @@ struct sRosCom_ControllerSync{
   ros::Publisher pub_jointReference;
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   //  cout <<"** joinstState_callback" <<endl;
-    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), msg->velLimitRatio, msg->effLimitRatio);
+    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->u_bias), ARRAY(msg->EfL), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
 };
@@ -64,13 +64,14 @@ void RosCom_ControllerSync::step(){
   jointRef.q = VECTOR(m.q);
   jointRef.qdot= VECTOR(m.qdot);
   jointRef.fL = VECTOR(m.fL);
-  jointRef.fR = VECTOR(m.fR);
   jointRef.u_bias = VECTOR(m.u_bias);
   jointRef.Kq_gainFactor = VECTOR(m.Kq_gainFactor);
   jointRef.Kd_gainFactor = VECTOR(m.Kd_gainFactor);
-  jointRef.Kf_gainFactor = VECTOR(m.Kf_gainFactor);
+  jointRef.KfL_gainFactor = VECTOR(m.KfL_gainFactor);
+  jointRef.EfL = VECTOR(m.EfL);
   jointRef.velLimitRatio = m.velLimitRatio;
   jointRef.effLimitRatio = m.effLimitRatio;
+  jointRef.gamma = m.gamma;
   s->pub_jointReference.publish(jointRef);
 }
 
