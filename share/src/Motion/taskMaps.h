@@ -125,7 +125,7 @@ struct CollisionConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(0.001){ type=ineqTT; }
+  LimitsConstraint():margin(.05){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };

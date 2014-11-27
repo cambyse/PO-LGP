@@ -285,7 +285,7 @@ struct KinematicWorld {
   void kinematicsContactConstraints(arr& y, arr &J) const;
   void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
-  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=0.0) const;
+  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
