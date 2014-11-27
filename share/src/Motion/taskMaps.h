@@ -125,7 +125,7 @@ struct CollisionConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(.05){ type=ineqTT; }
+  LimitsConstraint():margin(0.001){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
@@ -226,4 +226,18 @@ struct VelAlignConstraint:TaskMap {
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) { } ;
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+
+struct qItselfConstraint:TaskMap {
+  arr M;
+
+  qItselfConstraint(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; type=eqTT; }
+  qItselfConstraint(const arr& _M=NoArr){ if(&_M) M=_M; type=eqTT;}
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){
+    if(M.nd==2) return M.d0;
+    return G.getJointStateDimension();
+  }
 };

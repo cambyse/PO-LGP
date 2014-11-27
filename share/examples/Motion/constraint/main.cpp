@@ -242,6 +242,45 @@ void TEST(VelConstraint){
   displayTrajectory(x, 1, G, "planned trajectory");
 }
 
+void TEST(qItselfConstraint){
+  ors::KinematicWorld G("table.ors");
+
+  arr q;
+  G.getJointState(q);
+  q.setZero();
+  G.setJointState(q+0.1);
+  G.watch(true);
+  MotionProblem MP(G);
+
+
+  //-- setup the motion problem
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t->map.order=1; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e1);
+
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
+
+  t = MP.addTask("qItself", new qItselfConstraint(3,G.getJointStateDimension()));
+  t->setCostSpecs(0., MP.T/2., {0.}, 1.);
+  t->map.order=1;
+
+
+  //-- create the Optimization problem (of type kOrderMarkov)
+  MotionProblemFunction MF(MP);
+  arr x = MP.getInitialization();
+  arr lambda = zeros(x.d0,2);
+
+
+  optConstrained(x, lambda, Convert(MF));
+  checkGradient(Convert(MF),x,1e-3);
+
+//  cout << lambda << endl;
+//  MP.costReport();
+  displayTrajectory(x, 1, G, "planned trajectory");
+}
+
 //===========================================================================
 
 int main(int argc,char** argv){
@@ -250,8 +289,8 @@ int main(int argc,char** argv){
 //  testEqualityConstraints();
 //  testClosedKinematicChain();
 //  testContactConstraint();
-  testVelConstraint();
-
+//  testVelConstraint();
+  testqItselfConstraint();
   return 0;
 }
 

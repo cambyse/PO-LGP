@@ -32,10 +32,10 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
-double orsDrawAlpha=1.00;
+double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
 
 #ifdef MT_GL

@@ -19,6 +19,7 @@ struct MotionFactory {
   void execMotion(IKMO &ikmo, Scene &s, arr param, bool vis=false, uint verbose=0);
   void createScenes(uint sID, MT::Array<Scene> &trainScenes, MT::Array<Scene> &testScenes, MT::Array<CostWeight> &weights);
   void createScene0(Scene &s, MT::Array<CostWeight> &weights, uint i);
+  void createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uint i);
   void createScene1(Scene &s, MT::Array<CostWeight> &weights, uint i);
   void createScene2(Scene &s, MT::Array<CostWeight> &weights, uint i);
   void createScene3(Scene &s, MT::Array<CostWeight> &weights, uint i);

@@ -8,8 +8,8 @@ shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.08 0 .12)> type=5 colo
 
 shape endeffKinect(head_tilt_link){ rel=<T t(0 -.05 .12) d(180 0 0 1) d(-90 1 0 0) > type=5 color=[1 0 0] size=[.1 0 0 0]}
 
-shape endeffForceL(l_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffForceR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffForceL(l_wrist_roll_link){ rel=<T t(.25 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffForceR(r_wrist_roll_link){ rel=<T t(.25 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 
 shape wrenchDispL(l_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] size=[.1 0 0 0]}
 shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] size=[.1 0 0 0]}

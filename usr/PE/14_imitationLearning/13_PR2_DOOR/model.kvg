@@ -1,0 +1,10 @@
+
+%include ../../../../share/data/pr2_model/pr2_clean.ors
+%include ../../../../share/data/pr2_model/pr2_modifications.ors
+
+
+body target2{ contact, type=4, X=<T t(.5 .2 .7) t( .0 .1 0) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .02], color=[.3 .9 .1] }
+body target1{ contact, type=4, X=<T t(.5 .2 .7) t( .1 -.1 0) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+body base {}
+shape target(base){ contact, type=1, rel=<T t(.5 -.5 1.)>, size=[.0 .0 .0 .03], color=[1. .9 .1] }

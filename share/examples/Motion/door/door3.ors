@@ -1,0 +1,14 @@
+
+%include ../../../data/pr2_model/pr2_clean.ors
+%include ../../../data/pr2_model/pr2_modifications.ors
+
+shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+body door_frame1 { X=<T t(1.2 1.2 1)>  type=4 size=[0. 0. 2 0.05] fixed, }
+body door {  type=0 size=[.1 1 2 0.] color=[1. 1. 1.] fixed, contact}
+body handle {  type=0 size=[.02 .2 .02 0.] color=[0. 0. 0.] fixed, contact}
+joint frame_door(door_frame1 door) { A=<T t(0 0. 0.) > B=<T t(0 -0.56 .0)> type=2 }
+joint door_handle(door handle) { A=<T t(-0.1 -0.45 0.) d(180 0 0 1)> B=<T t(0 -0.1 .0)> limits=[ -0.01 0.5 ] type=0 }
+
+shape target(handle) { rel=<T t(0 -0.05 0.02)>  type=1 size=[.1 .1 .1 .02] color=[0 .5 0] fixed, }

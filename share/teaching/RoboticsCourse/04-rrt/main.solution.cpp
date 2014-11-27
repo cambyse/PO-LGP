@@ -245,7 +245,7 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode", 1)){
+  switch(MT::getParameter<int>("mode", 0)){
   case 0: RTTplan(); //break;
   case 1: optim(); break;
   }

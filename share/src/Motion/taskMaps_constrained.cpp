@@ -103,6 +103,9 @@ void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G
   }
 }
 
+//===========================================================================
+
+
 VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
                    const char* iShapeName, const ors::Vector& _ivec,
                    const char* jShapeName, const ors::Vector& _jvec, double _target) {
@@ -170,4 +173,19 @@ void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau) {
   }
   y = -y+target;
 
+}
+
+//===========================================================================
+
+void qItselfConstraint::phi(arr& q, arr& J, const ors::KinematicWorld& G) {
+  G.getJointState(q);
+  if(M.N){
+    if(M.nd==1){
+      q=M%q; if(&J) J.setDiag(M);
+    }else{
+      q=M*q; if(&J) J=M;
+    }
+  }else{
+    if(&J) J.setId(q.N);
+  }
 }

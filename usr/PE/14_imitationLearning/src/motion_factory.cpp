@@ -53,11 +53,12 @@ void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Arr
 //        createScene0(s_test,weights,i+nS);
         break;
       case 1:
+        createScenePR2(s_train,weights,i);
+        break;
+      case 2:
         /// recovery of Gaussian (1 parameter)
 //        createScene1(s_train,weights,i);
 //        createScene1(s_test,weights,i+nS);
-        break;
-      case 2:
         /// recovery of Gaussian (2 parameter)
 //        createScene2(s_train,weights,i);
 //        createScene2(s_test,weights,i+nS);
@@ -196,6 +197,11 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.lambdaRef = lambda;
   s.paramRef = param;
 }
+
+void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+
+}
+
 /*
 void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
