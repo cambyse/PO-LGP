@@ -49,6 +49,8 @@ struct Item {
   template<class T> const T *getValue() const; ///< as above
   void write(std::ostream &os) const;
   KeyValueGraph ParentOf();
+  //-- specific standard values
+  KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY};
@@ -64,7 +66,7 @@ stdOutPipe(Item);
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
   bool isReference;
-  KeyValueGraph *isItemOfParentKvg;
+  Item *isItemOfParentKvg;
   
   KeyValueGraph();
   ~KeyValueGraph();
@@ -83,7 +85,7 @@ struct KeyValueGraph:ItemL {
   Item* getItem(const char *key1, const char *key2);
   Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
-  
+
   //-- get lists of items
   KeyValueGraph getItems(const char* key);
   KeyValueGraph getTypedItems(const char* key, const std::type_info& type);

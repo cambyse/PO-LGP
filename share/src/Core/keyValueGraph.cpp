@@ -147,7 +147,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   if(verbose) { cout <<" parents:"; if(!parents.N) cout <<"none"; else listWrite(parents,cout," ","()"); cout <<flush; }
   
   //-- read value
-  if(c=='=' || c=='{' || c=='[' || c=='<' || c=='\'' || c=='"') {
+  if(c=='=' || c=='{' || c=='[' || c=='<' || c=='!' || c=='\'' || c=='"') {
     if(c=='=') c=MT::getNextChar(is);
     if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String or boolean
       is.putback(c);
@@ -161,6 +161,9 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
       try { is >>d; } catch(...) PARSERR("can't parse double");
       item = new Item_typed<double>(containingKvg, keys, parents, new double(d));
     } else switch(c) {
+        case '!': { //boolean false
+	  item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false));
+	} break;
         case '\'': { //MT::FileToken
           str.read(is, "", "\'", true);
           MT::FileToken *f = new MT::FileToken(str, false);
@@ -199,10 +202,10 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         } break;
         case '{': { // KeyValueGraph (e.g., attribute list)
           KeyValueGraph *subList = new KeyValueGraph;
-          subList->isItemOfParentKvg = &containingKvg;
+          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList);
+          subList->isItemOfParentKvg = item;
           subList->read(is);
           MT::parse(is, "}");
-          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList);
         } break;
         case '(': { // referring KeyValueGraph
           KeyValueGraph refs;
@@ -288,7 +291,7 @@ Item *KeyValueGraph::append(const uintA& parentIdxs) {
 Item* KeyValueGraph::getItem(const char *key) {
   for(Item *it: (*this))
     for(const MT::String& k:it->keys) if(k==key) return it;
-  if(isItemOfParentKvg) return isItemOfParentKvg->getItem(key);
+  if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(key);
   return NULL;
 }
 
@@ -394,6 +397,8 @@ void KeyValueGraph::read(std::istream& is) {
       if(str=="%include"){
         is >>str;
         read(FILE(str).getIs());
+      }else if(str=="%end"){
+	break;
       }else HALT("don't know special command " <<str);
     }else{
       if(!is.good() || c=='}') { is.clear(); break; }
@@ -487,6 +492,9 @@ bool KeyValueGraph::checkConsistency(){
     CHECK_EQ(i->index, idx, "");
     for(Item *j: i->parents) CHECK(j->parentOf.findValue(i) != -1,"");
     for(Item *j: i->parentOf) CHECK(j->parents.findValue(i) != -1,"");
+    if(i->getValueType()==typeid(KeyValueGraph)){
+      i->getValue<KeyValueGraph>()->checkConsistency();
+    }
     idx++;
   }
   return true;
