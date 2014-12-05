@@ -1,7 +1,7 @@
 #include "taskMaps.h"
 
 TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
-  velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/vecCoeff",.0);
+  velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
   accCoeff = MT::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
 
   //transition cost metric

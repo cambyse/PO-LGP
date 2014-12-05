@@ -16,9 +16,8 @@ void TEST(Door1){
   G.getJointState(q);
 //  q.setZero();
 //  G.setJointState(q+0.5);
-  G.getJointState(q);
   cout << "q: " << q << endl;
-  G.watch(true);
+  G.watch(false);
   MotionProblem MP(G);
 
 
@@ -29,16 +28,19 @@ void TEST(Door1){
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getShapeByName("target")->X.pos));
-  t->setCostSpecs(MP.T/2-3., MP.T/2., {0.}, 1e3);
+  t->setCostSpecs(MP.T/2-5, MP.T/2, {0.}, 1e3);
 
   t = MP.addTask("door_joint", new TaskMap_qItself(G.getJointByName("door_joint")->qIndex, G.joints.N));
   t->setCostSpecs(MP.T, MP.T, {-.4}, 1e2);
 
+  t = MP.addTask("door_joint_fix", new TaskMap_qItself(G.getJointByName("door_joint")->qIndex, G.joints.N));
+  t->setCostSpecs(0, MP.T/2, {0}, 1e2);
+
   t = MP.addTask("contact", new PointEqualityConstraint(G, "endeff",NoVector, "target",NoVector));
   t->setCostSpecs(MP.T/2., MP.T, {0.}, 1.);
 
-  t = MP.addTask("direction", new VelAlignConstraint(G, "endeff",NoVector, "door", ors::Vector(-1.,0.,0.),0.7));
-  t->setCostSpecs(MP.T/2., MP.T, {0.}, 1.);
+//  t = MP.addTask("direction", new VelAlignConstraint(G, "endeff",NoVector, "door", ors::Vector(-1.,0.,0.),0.7));
+//  t->setCostSpecs(MP.T/2., MP.T, {0.}, 1.);
 
   t = MP.addTask("collision", new CollisionConstraint(0.05));
   t->setCostSpecs(0., MP.T, {0.}, 1.);
@@ -48,12 +50,15 @@ void TEST(Door1){
   arr x = MP.getInitialization();
   arr lambda = zeros(x.d0,2);
 
-  optConstrained(x, lambda, Convert(MF));
-  checkGradient(Convert(MF),x,1e-3);
+  optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., aulaMuInc=1.5));
+//  optConstrained(x, lambda, Convert(MF));
+//  checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;
   MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
+
+
 }
 
 
@@ -196,9 +201,9 @@ void TEST(Door3){
 
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
-//  testDoor1();
+  testDoor1();
 //  testDoor2();
-  testDoor3();
+//  testDoor3();
 
   return 0;
 }
