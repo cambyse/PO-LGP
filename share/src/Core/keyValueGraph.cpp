@@ -84,7 +84,7 @@ void Item::write(std::ostream& os) const {
   } else if(getValueType()==typeid(double)) {
     os <<'=' <<*getValue<double>();
   } else if(getValueType()==typeid(bool)) {
-    os <<'=' <<(*getValue<bool>()?"true":"false");
+    if(*getValue<bool>()) os<<','; else os <<'!';
   } else {
     Item *it = reg_findType(getValueType().name());
     if(it && it->keys.N>1) {
@@ -425,49 +425,58 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader) {
+void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEdges, int nodesOrEdges) {
   if(!withoutHeader){
     os <<"graph G{" <<endl;
     os <<"graph [ rankdir=\"TD\", ranksep=0.05 ];" <<endl;
     os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
     os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+    index(true);
   }
-  for_list(Item, i, list()) i->index = i_COUNT;
   for(Item *it: list()) {
-    if(it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
-      os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ ";
-      if(it->keys.N){
-        os <<"label=\"" <<it->keys(0);
-        for(uint i=1;i<it->keys.N;i++) os <<'_' <<it->keys(i);
-        os <<"\" ";
-      }
-      os <<"];" <<endl;
-    }else{
-      os <<it->index <<" [ ";
-      if(it->keys.N){
-        os <<"label=\"" <<it->keys(0);
-        for(uint i=1;i<it->keys.N;i++) os <<'\n' <<it->keys(i);
-        os <<"\" ";
-      }
-      if(it->parents.N) os <<"shape=box";
-      else os <<"shape=ellipse";
-      os <<" ];" <<endl;
-      for_list(Item, pa, it->parents) {
-        if(pa->index<it->index)
-          os <<pa->index <<" -- " <<it->index <<" [ ";
-        else
-          os <<it->index <<" -- " <<pa->index <<" [ ";
-        os <<"label=" <<pa_COUNT;
-        os <<" ];" <<endl;
-      }
+    MT::String label;
+    if(it->keys.N){
+      label <<"label=\"" <<it->keys(0);
+      for(uint i=1;i<it->keys.N;i++) label <<'\n' <<it->keys(i);
+      label <<"\" ";
+    }else if(it->parents.N){
+      label <<"label=\"(" <<it->parents(0)->keys.last();
+      for(uint i=1;i<it->parents.N;i++) label <<' ' <<it->parents(i)->keys.last();
+      label <<")\" ";
     }
-    if(it->getValueType()==typeid(KeyValueGraph)){
-      it->getValue<KeyValueGraph>()->writeDot(os, true);
+
+    if(defaultEdges && it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
+      os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
+    }else{
+      if(it->getValueType()==typeid(KeyValueGraph)){
+        os <<"subgraph cluster_" <<it->index <<" { " <<label <<endl;
+        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, +1);
+        os <<"}" <<endl;
+        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, -1);
+      }else{//normal item
+        if(nodesOrEdges>=0){
+          os <<it->index <<" [ " <<label;
+          if(it->parents.N) os <<"shape=box";
+          else os <<"shape=ellipse";
+          os <<" ];" <<endl;
+        }
+        if(nodesOrEdges<=0){
+          for_list(Item, pa, it->parents) {
+            if(pa->index<it->index)
+              os <<pa->index <<" -- " <<it->index <<" [ ";
+            else
+              os <<it->index <<" -- " <<pa->index <<" [ ";
+            os <<"label=" <<pa_COUNT;
+            os <<" ];" <<endl;
+          }
+        }
+      }
     }
   }
   if(!withoutHeader){
     os <<"}" <<endl;
     MT_MSG("TODO: counter offset to index items dotlike...")
+    index(false);
   }
 }
 
@@ -498,4 +507,20 @@ bool KeyValueGraph::checkConsistency(){
     idx++;
   }
   return true;
+}
+
+uint KeyValueGraph::index(bool subKVG, uint start){
+  uint idx=start;
+  for(Item *i: list()){
+    i->index=idx;
+    idx++;
+    if(i->getValueType()==typeid(KeyValueGraph)){
+      if(subKVG){
+        idx = i->getValue<KeyValueGraph>()->index(true, idx);
+      }else{
+        i->getValue<KeyValueGraph>()->index(false, 0);
+      }
+    }
+  }
+  return idx;
 }

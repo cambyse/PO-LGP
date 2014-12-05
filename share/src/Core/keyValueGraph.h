@@ -115,12 +115,15 @@ struct KeyValueGraph:ItemL {
   //-- debugging
   bool checkConsistency();
 
+  //-- indexing
+  uint index(bool subKVG=false, uint start=0);
+
   //-- I/O
   void sortByDotOrder();
   
   void read(std::istream& is);
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
-  void writeDot(std::ostream& os, bool withoutHeader=false);
+  void writeDot(std::ostream& os, bool withoutHeader=false, bool defaultEdges=false, int nodesOrEdges=0);
 };
 stdPipes(KeyValueGraph);
 
