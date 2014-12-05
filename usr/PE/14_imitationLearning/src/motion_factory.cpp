@@ -5,33 +5,48 @@
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 #include <Core/geo.h>
+#include <Motion/motion.h>
 
 
 void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint verbose) {
 
-  param = costScale*param/(sqrt(sumOfSqr(param)));
+  param = costScale*param/length(param);
   ikmo.setParam(*s.MP,param);
 
   // reinit swift interface
-  s.world->swift().initActivations(*s.world);
+//  s.world->swift().initActivations(*s.world);
+  s.MP->prefix.clear();
+  s.MP->x0 = s.xDem[0];
+  s.MP->world.setJointState(s.xDem[0]);
+  cout << "x0: " << s.MP->x0 << endl;
+
+//  Task *t;
+//  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+//  t->map.order=1;
+//  t->setCostSpecs(0, s.MP->T, ARR(0.), 1.);
+//  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+
+  s.MP->phiMatrix.clear();
+  s.MP->ttMatrix.clear();
 
   // optimize the motion problem
   MotionProblemFunction MPF(*s.MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = s.MP->tau;
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<s.MP->world.getJointStateDimension()<<endl;
   arr x(T+1,n); x.setZero();arr lambda(T+1); lambda.setZero();
-//  x = repmat(~s.MP->x0,T+1,1);
+  x = repmat(~s.MP->x0,T+1,1);
 //  x = randn(T+1,n);
 //  x = s.xInit;
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=verbose,stopTolerance=1e-4));
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=verbose,stopTolerance=1e-6, allowOverstep=true));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=verbose,stopTolerance=1e-5));
+//  optConstrained(x, lambda, Convert(MPF), OPT(verbose=verbose,stopTolerance=1e-6));
 
 
   // visualize trajectory
   if (vis) {
     cout <<  "lambda: " << lambda << endl;
     s.MP->costReport(true);
-    displayTrajectory(x,s.MP->T/2.,s.MP->world,"world");
+    for (;;)
+      displayTrajectory(x,s.MP->T/2.,s.MP->world,"world");
   }
 }
 
@@ -199,7 +214,184 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
 }
 
 void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+  s.world = new ors::KinematicWorld("model.kvg");
 
+  cout << "Joints: " << endl;
+  for (uint i = 0;i<s.world->joints.d0;i++){
+    if (s.world->joints(i)->type != 10)
+      cout << s.world->joints(i)->name << " " << s.world->joints(i)->type << " "  << s.world->joints(i)->qIndex<< endl;
+  }
+
+  cout << s.world->getJointByName("torso_lift_joint")->axis << endl;
+  s.world->getJointByName("torso_lift_joint")->A.pos.z +=0.29398;
+
+  s.world->calc_fwdPropagateFrames();
+  // endeffL pos: (0.55445 0.240455 0.977503)
+
+  cout << "###########################################################" << endl;
+  /// load demonstrations data
+  MT::String demoPath = MT::getParameter<MT::String>("demoPath");
+  cout << "Demo: " << demoPath << endl;
+  // load joint trajectory
+  arr xDem; xDem << FILE(STRING(demoPath<<"_joints").p);
+  arr x0 = xDem[0];
+  cout << "x0: " << x0 << endl;
+  s.world->setJointState(x0);
+
+  cout << "endeffL pos: " << s.world->getShapeByName("endeffL")->X.pos << endl;
+
+  // set door position
+  arr marker0; marker0 << FILE(STRING(demoPath<<"_marker0").p);
+  arr markerQuat0; markerQuat0 << FILE(STRING(demoPath<<"_markerQuat0").p);
+  arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
+
+  cout << marker0 << endl;
+  cout << markerQuat0 << endl;
+  ors::Quaternion door_rot = ors::Quaternion(markerQuat0[1]);
+  ors::Quaternion trans = s.world->getBodyByName("torso_lift_link")->X.rot;
+  door_rot = trans*door_rot;
+  trans.setRad(M_PI_2,ors::Vector(1.,0.,0.));
+  door_rot = trans*door_rot;
+  trans.setRad(M_PI_2,door_rot.getY());
+  door_rot = trans*door_rot;
+  trans.setRad(M_PI_2,door_rot.getZ());
+  door_rot = trans*door_rot;
+
+  s.world->getJointByName("world_door")->A.pos = refFrame + marker0[1] + door_rot.getArr()*ARR(0.015,0.375*2,0.);
+  s.world->getJointByName("world_door")->A.pos.z = .99;
+  s.world->getJointByName("world_door")->A.rot = door_rot;
+
+  s.world->getBodyByName("marker17")->X.pos = marker0[0]+refFrame;
+  s.world->getBodyByName("marker17")->X.rot = door_rot;
+  s.world->getBodyByName("marker4")->X.pos = marker0[1]+refFrame;
+  s.world->getBodyByName("marker4")->X.rot = door_rot;
+
+  arr xDemTaskPos, xDemTaskVec;
+  // compute task spaces of demonstrations
+  for (uint t =0;t<xDem.d0;t++) {
+    s.world->setJointState(xDem[t]);
+    arr tmpPos,tmpVec;
+    s.world->kinematicsPos(tmpPos,NoArr,s.world->getBodyByName("l_wrist_roll_link"),&s.world->getShapeByName("endeffL")->rel.pos);
+    xDemTaskPos.append(~tmpPos);
+    ors::Vector vv = ors::Vector(0.,0.,1.);
+    s.world->kinematicsVec(tmpVec,NoArr,s.world->getShapeByName("endeffL")->body,&vv);
+    xDemTaskVec.append(~tmpVec);
+  }
+
+//  s.world->watch(true);
+
+  double N = s.world->getJointStateDimension();
+  cout << "Number of Joints: " << N << endl;
+  if (vis) { displayTrajectory(xDem,xDem.d0*.5,*s.world,"");}
+
+  s.MP = new MotionProblem(*s.world,false);
+  s.MP->T = xDem.d0-1;
+  s.MP->tau = 0.05;
+  s.MP->x0 = x0;
+  s.world->setJointState(x0);
+
+  /// Set task costs
+//  arr param = ARRAY(1.,1e2,1e2,1e2,1e2);
+  arr param = ARRAY(.1,1e2,1e2,1e2,1e2,1e2,1e1);
+//  arr param = ARRAY(0.0423369, 96.5584, 7.91922, 33.2956);
+  param = param/length(param)*costScale;
+  uint pC = 0;
+  // transition costs
+  Task *t;
+  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+  t->map.order=1;
+  t->setCostSpecs(0, s.MP->T, ARR(0.), param(pC));
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,N,ARR(0.1,1e2)));
+  pC++;
+
+  // time points
+  uint C = 90;
+  uint U = 140;
+  uint F = s.MP->T;
+
+  /// tasks
+  // first contact with door
+  t = s.MP->addTask("posC", new DefaultTaskMap(posTMT, *s.world, "endeffL",NoVector));
+  t->setCostSpecs(C, C, ARRAY(s.world->getShapeByName("handle")->X.pos), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,3));
+  pC++;
+
+  t = s.MP->addTask("vecC", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t->setCostSpecs(C, C, ARR(1.), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,1));
+  pC++;
+
+  t = s.MP->addTask("vecC2", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t->setCostSpecs(C-10, C-10, ARR(1.), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C-10),1,1));
+  pC++;
+
+  t = s.MP->addTask("vecC3", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t->setCostSpecs(C+10, C+10, ARR(1.), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C+10),1,1));
+  pC++;
+
+  ors::Vector dir = ors::Vector(0.,-.7,0.2); dir.normalize();
+  t = s.MP->addTask("vecF", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
+  t->setCostSpecs(U, U, ARR(1.), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(U),1,1));
+  pC++;
+
+//  // handle down
+////  t = s.MP->addTask("vecU", new DefaultTaskMap(vecTMT, *s.world, "endeffL", ors::Vector(0.,0.,1.)));
+////  t->setCostSpecs(U, U, xDemTaskVec[U], param(pC));
+////  weights.append(CostWeight(CostWeight::Dirac,1,ARR(U),1,3));
+////  pC++;
+  // door final position
+  t = s.MP->addTask("door_joint", new TaskMap_qItself(s.world->getJointByName("frame_door")->qIndex, s.world->getJointStateDimension()));
+  t->setCostSpecs(F, F, ARR(xDem(F,0)), param(pC));
+  weights.append(CostWeight(CostWeight::Dirac,1,ARR(F),1,1));
+  pC++;
+
+//  t = s.MP->addTask("posC2", new DefaultTaskMap(posTMT, *s.world, "endeffL",NoVector));
+//  t->setCostSpecs(U, U, xDemTaskPos[0]*3., param(pC));
+//  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,3));
+//  pC++;
+
+  /// constraints
+  // hold contact endeffector-handle
+  t = s.MP->addTask("contact", new PointEqualityConstraint(*s.world, "endeffL",NoVector, "target",NoVector));
+  t->setCostSpecs(U+1, F, {0.}, 1.);
+  // door fixation
+  t = s.MP->addTask("door_fixation", new qItselfConstraint(s.world->getJointByName("frame_door")->qIndex, s.world->getJointStateDimension()));
+  t->setCostSpecs(0,U-1, {0.}, 1.);
+  t->map.order=1;
+
+  MotionProblemFunction MPF(*s.MP);
+  uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = s.MP->tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
+  arr x(T+1,n); x.setZero();arr lambda(T+1,1); lambda.setZero();
+  x = repmat(~s.MP->x0,T+1,1);
+//  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-3));
+//  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0,stopTolerance=1e-8,  allowOverstep=true));
+
+//  s.MP->costReport(false);
+  if (vis) {
+//    cout << lambda << endl;
+//    for (;;)
+      displayTrajectory(x,s.MP->T,s.MP->world,"t");
+  }
+  s.world->setJointState(x0);
+
+  // set all costs in s.MP equal to 0 or 1
+  for (uint c=0;c < s.MP->taskCosts.N;c++) {
+    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+      s.MP->taskCosts(c)->prec /= (s.MP->taskCosts(c)->prec+1e-12);
+      cout << s.MP->taskCosts(c)->prec << endl;
+    }
+  }
+
+  s.MP->prefix.clear();
+  s.MP->postfix.clear();
+  s.xDem = xDem;
+  s.lambdaRef = lambda;
+  s.paramRef = param;
 }
 
 /*
@@ -763,3 +955,55 @@ void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint 
     s.world->gl().update(STRING(t));
   }
   */
+
+/*
+// quaternion test
+arr marker0; marker0 << FILE(STRING(demoPath<<"_marker0").p);
+arr markerQuat0; markerQuat0 << FILE(STRING(demoPath<<"_markerQuat0").p);
+arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
+
+
+ors::Quaternion torso_rot = s.world->getBodyByName("torso_lift_link")->X.rot;
+s.world->getBodyByName("marker")->X.pos = ARRAY(1.,1.,0.1);
+s.world->getBodyByName("marker")->X.rot = torso_rot;
+
+ors::Quaternion world_rot = s.world->getBodyByName("world")->X.rot;
+s.world->getBodyByName("marker2")->X.pos = ARRAY(1.,1.,.5);
+s.world->getBodyByName("marker2")->X.rot = world_rot;
+
+ors::Quaternion obj_rot = s.world->getBodyByName("door")->X.rot;
+s.world->getBodyByName("marker3")->X.pos = ARRAY(1.,1.,1.);
+s.world->getBodyByName("marker3")->X.rot = obj_rot;
+
+ors::Quaternion door1_rot = ors::Quaternion(markerQuat0[1]);
+s.world->getBodyByName("marker4")->X.pos = ARRAY(1.,1.,1.5);
+s.world->getBodyByName("marker4")->X.rot = door1_rot;
+
+ors::Quaternion door1_trans = torso_rot*door1_rot;
+s.world->getBodyByName("marker5")->X.pos = ARRAY(1.,1.,2.);
+s.world->getBodyByName("marker5")->X.rot = door1_trans;
+
+ors::Quaternion door1_xRot; door1_xRot.setRad(M_PI_2,ors::Vector(1.,0.,0.));
+ors::Quaternion door1_trans2 = door1_xRot*door1_trans;
+s.world->getBodyByName("marker6")->X.pos = ARRAY(1.,1.,2.5);
+s.world->getBodyByName("marker6")->X.rot = door1_trans2;
+
+ors::Quaternion door1_xRot2; door1_xRot2.setRad(M_PI_2,door1_trans2.getY());
+ors::Quaternion door1_trans3 = door1_xRot2*door1_trans2;
+ors::Quaternion door1_zRot; door1_zRot.setRad(M_PI_2,door1_trans3.getZ());
+door1_trans3 =door1_trans3*door1_zRot;
+s.world->getBodyByName("marker7")->X.pos = ARRAY(1.,1.,3.);
+s.world->getBodyByName("marker7")->X.rot = door1_trans3;
+
+s.world->getJointByName("world_door")->A.pos = refFrame + marker0[1] + door1_trans3.getArr()*ARR(0.,0.375*2,0.);
+s.world->getJointByName("world_door")->A.pos.z = .99;
+s.world->getJointByName("world_door")->A.rot = door1_trans3;
+
+
+s.world->getBodyByName("marker17")->X.pos = marker0[0]+refFrame;
+s.world->getBodyByName("marker17")->X.rot = door1_trans3;
+s.world->getBodyByName("marker4")->X.pos = marker0[1]+refFrame;
+s.world->getBodyByName("marker4")->X.rot = door1_trans3;
+
+s.world->calc_fwdPropagateFrames();
+*/

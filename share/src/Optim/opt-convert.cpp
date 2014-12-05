@@ -538,18 +538,19 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     uint dimf_t   = dimphi_t - dimg_t - dimh_t;
 
     //split up: push cost terms into y
-    y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
-    if(getJ) {
-      Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
-      for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
-      if(dimz){
-        Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
-        for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+    if (dimf_t) {
+      y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
+      if(getJ) {
+        Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
+        for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
+        if(dimz){
+          Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
+          for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+        }
       }
+      M += dimf_t;
+      y_count += dimf_t;
     }
-    M += dimf_t;
-    y_count += dimf_t;
-
     //split up: push inequality terms into g
     if(&g && dimg_t) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
     if(&Jg && dimg_t) {

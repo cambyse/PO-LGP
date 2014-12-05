@@ -136,6 +136,11 @@ void TEST(Door3){
   arr q;
   G.getJointState(q);
   G.watch(true);
+  q = q+.5;
+  G.setJointState(q);
+  G.watch(true);
+  return;
+  cout << q.N << endl;
 
   MotionProblem MP(G);
 //  MP.useSwift=false;

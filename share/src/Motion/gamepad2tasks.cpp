@@ -91,11 +91,11 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
       //-- left right: gaze control
       if(sel==left || sel==right){
-        head->active=true;
-        arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
-        gaze /= length(gaze);
-        head->y_ref = gaze;
-        head->v_ref.setZero();
+//        head->active=true;
+//        arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
+//        gaze /= length(gaze);
+//        head->y_ref = gaze;
+//        head->v_ref.setZero();
       }
 
       //-- if down: also control rotation

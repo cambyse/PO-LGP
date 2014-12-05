@@ -94,7 +94,7 @@ struct IKMO:ConstrainedProblem {
   void setParam(MotionProblem &MP,const arr &param);
   void compWeights(arr &w, arr &dw, arr &Hw, const arr &param);
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
-  void costReport(arr param);
+  void costReport(arr param, arr param0);
 
 //  virtual uint dim_x() {return nP;}
   // param limits + norm constraint + num active cons
@@ -106,6 +106,7 @@ struct IKMO:ConstrainedProblem {
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
     double costs = 0.;
+
     /// compute weight vector
     arr w;
     if (optNonlinearParam) {
