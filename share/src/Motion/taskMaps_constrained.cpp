@@ -27,6 +27,23 @@ void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 
 //===========================================================================
 
+
+ProxyConstraint::ProxyConstraint(PTMtype _type,
+                                 uintA _shapes,
+                                 double _margin,
+                                 bool _useCenterDist,
+                                 bool _useDistNotCost)
+  : prox(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
+  type=ineqTT;
+}
+
+void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+  prox.phi(y, J, G);
+  y -= .5;
+}
+
+//===========================================================================
+
 void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   if(!limits.N) limits = G.getLimits();
   G.kinematicsLimitsCost(y, J, limits, margin);

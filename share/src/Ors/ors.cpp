@@ -337,6 +337,12 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
   return I;
 }
 
+uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes) {
+  uintA I(shapes.N);
+  for(uint i=0; i<shapes.N; i++) I(i) = shapes(i)->index;
+  return I;
+}
+
 void makeConvexHulls(ShapeL& shapes){
   for(ors::Shape *s: shapes) s->mesh.makeConvexHull();
 }
@@ -419,11 +425,11 @@ void ors::Joint::parseAts() {
   //limit
   arr ctrl_limits;
   ats.getValue<arr>(limits, "limits");
-  if(limits.N){
+  if(limits.N && type!=JT_fixed){
     CHECK_EQ(limits.N,2*qDim(), "parsed limits have wrong dimension");
   }
   ats.getValue<arr>(ctrl_limits, "ctrl_limits");
-  if(ctrl_limits.N){
+  if(ctrl_limits.N && type!=JT_fixed){
     if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
     CHECK_EQ(limits.N,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
     limits.append(ctrl_limits);
@@ -804,7 +810,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
   
   uint N=getJointStateDimension();
   q.resize(N);
-  qdot.resize(N);
+  qdot.resize(N).setZero();
 
   uint n=0;
   for(Joint *j: joints) if(j->agent==q_agent){
@@ -1973,8 +1979,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
 void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1).setZero();
   if(&J) J.resize(1, getJointStateDimension()).setZero();
-  for(uint i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
-    kinematicsProxyCost(y, J, proxies(i), margin, useCenterDist, true);
+  for(Proxy *p:proxies) if(p->d<margin) {
+    kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
   }
 }
 
@@ -2118,13 +2124,13 @@ void ors::KinematicWorld::removeUselessBodies() {
   //-- reindex
   listReindex(bodies);
   listReindex(joints);
+  checkConsistency();
 //  for_list(Joint, j, joints) j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 //  for(Shape *s: shapes) s->ibody = s->body->index;
   //-- clear all previous index related things
   qdim.clear();
-  q.clear();
-  qdot.clear();
   proxies.clear();
+  calc_q_from_Q();
 }
 
 bool ors::KinematicWorld::checkConsistency(){

@@ -382,6 +382,7 @@ void glDrawGraph(void *classP);
 #ifndef MT_ORS_ONLY_BASICS
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
+uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //

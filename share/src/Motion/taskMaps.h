@@ -103,7 +103,7 @@ struct ProxyTaskMap:TaskMap {
   ProxyTaskMap(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
-               bool _useCenterDist=true,
+               bool _useCenterDist=false,
                bool _useDistNotCost=false);
   virtual ~ProxyTaskMap() {};
   
@@ -116,6 +116,19 @@ struct ProxyTaskMap:TaskMap {
 struct CollisionConstraint:TaskMap {
   double margin;
   CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
+struct ProxyConstraint:TaskMap {
+  ProxyTaskMap prox;
+  ProxyConstraint(PTMtype _type,
+                  uintA _shapes,
+                  double _margin=.02,
+                  bool _useCenterDist=false,
+                  bool _useDistNotCost=false);
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
