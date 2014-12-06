@@ -113,3 +113,9 @@ BEGIN_MODULE(RosCom_ForceSensorSync)
 END_MODULE()
 
 //===========================================================================
+
+BEGIN_MODULE(RosCom_ARMarkerSync)
+  ACCESS(arr, marker_pose)
+END_MODULE()
+
+//===========================================================================

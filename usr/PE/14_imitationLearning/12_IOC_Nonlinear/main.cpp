@@ -26,12 +26,13 @@ void run() {
   mf->costScale=1e2;
   mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 
+
   /// create ikmo problem
-//  arr param = trainScenes(0).paramRef;
+  arr param = trainScenes(0).paramRef;
 //  arr param = ARR(1.,1e2);
-  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.flatten();
+//  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.flatten();
 //  param = 0.*param + 1e0;
-  cout << param << endl;
+  cout << "Parameter initialization: " << param << endl;
 
   IKMO ikmo(trainScenes,weights,param.d0);
   checkAllGradients(ikmo,param,1e-2);

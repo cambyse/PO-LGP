@@ -159,7 +159,7 @@ void CostWeight::compConstraints(arr &gL, arr &gU, arr &gS, arr &JgL, arr &JgU, 
       // TODO: should not become too high
       break;
     case Transition:
-      // TODO: should not become 0, should not become too high
+
       break;
     case RBF:
       //
@@ -191,7 +191,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
   arr PHI_T, J_T; // total PHI and J
   TermTypeA tt;
   v(PHI_T,J_T,tt,xDem);
-
+//  cout << PHI_T << endl;
   // split up PHI_T and J_T into costs and constraints
   if (!optConstraintsParam) {
     JxP = J_T;
@@ -206,14 +206,15 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     tt.findValues(f,ineqTT);
     uint gN = f.N;
     tt.findValues(f,eqTT);
-    uint hN = f.N;
+//    uint hN = f.N;
+    gN = gN + f.N;
 
     uint xC = 0;
     uint gC = 0;
     uint hC = 0;
     RowShiftedPackedMatrix *Jx_aux = auxRowShifted(JxP, xN, J_T.d1, J_T_aux->real_d1);
     RowShiftedPackedMatrix *Jg_aux = auxRowShifted(JgP, gN, J_T.d1, J_T_aux->real_d1);
-    RowShiftedPackedMatrix *Jh_aux = auxRowShifted(JhP, hN, J_T.d1, J_T_aux->real_d1);
+//    RowShiftedPackedMatrix *Jh_aux = auxRowShifted(JhP, hN, J_T.d1, J_T_aux->real_d1);
 
     for (uint i= 0;i<tt.d0;i++){
       switch (tt(i)) {
@@ -227,6 +228,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
           JgP[gC] = J_T[i];
           Jg_aux->rowShift(gC) = J_T_aux->rowShift(i);
           g.append(PHI_T(i));
+          lambdaDem.append(1.);
           gC++;
           break;
         }
@@ -240,10 +242,10 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     }
   }
 
-  for (uint i =0;i<g.d0;i++){
-    lambdaDem.append(g(i)>=0.);
-  }
-  cout << lambdaDem << endl;
+//  for (uint i =0;i<g.d0;i++){
+//    lambdaDem.append(g(i)>=0.);
+//  }
+  cout << lambdaDem.N << "active constraints" << endl;
 
   T = xDem.d0;
 
@@ -257,32 +259,56 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
   } else {
     /// Constrained case
     optConstraintsParam = true;
+    Jg = unpack(JgP); Jg.special = arr::noneST;
     // reduce Jg to only active part (lambda !=0)
-    MT::Array<uint> idx;
-    lambdaDem.findValues(idx,0.);
-    lambdaDem.removeAllValues(0.);
-    Jg = unpack(JgP);
-    cout << lambdaDem << endl;
-    arr Jgr;
-    uint j = 0;
-    for (uint i =0;i<Jg.d0;i++) {
-      if(!idx.contains(i)) {
-        Jgr.append(~Jg[i]);
-      }
-      if(idx.contains(i)) {
-        JgP.delRows(j);
-        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
-        j--;
-      }
-      j++;
-    }
+//    MT::Array<uint> idx;
+//    lambdaDem.findValues(idx,0.);
+//    lambdaDem.removeAllValues(0.);
+//    Jg = unpack(JgP);
+//    cout << lambdaDem << endl;
+//    arr Jgr;
+//    uint j = 0;
+//    for (uint i =0;i<Jg.d0;i++) {
+//      if(!idx.contains(i)) {
+//        Jgr.append(~Jg[i]);
+//      }
+//      if(idx.contains(i)) {
+//        JgP.delRows(j);
+//        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+//        j--;
+//      }
+//      j++;
+//    }
 
-    Jg = Jgr;
+//    Jg = Jgr;
+    MT::timerStart(true);
+    cout << "timer start: " << endl;
     Jg_JgtP = comp_A_At(JgP);
     Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
-    Jgt_JgJgtI_Jg = ~Jg*inverse_SymPosDef(Jg_Jgt)*Jg;
-    JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~Jx*diag(PHI);
-    J_Jgt = Jx*~Jg;
+    cout << "Jg_Jgt: " << MT::timerRead(true) << endl;
+
+    arr Jg_Jgt_I = lapack_inverseSymPosDef(Jg_Jgt);
+//    arr Jg_Jgt_I_P = inverse(Jg_JgtP);
+//    lapack_inverseSymPosDef();
+
+    Jgt_JgJgtI_Jg = ~Jg*Jg_Jgt_I*Jg;
+    cout << "Jg_Jgt_I: " << MT::timerRead(true) << endl;
+
+//    arr tmp = repmat(~PHI,Jx.d0,1);
+//    arr JgJgtI_Jg_J_dPHI2 = Jg_Jgt_I*Jg*~Jx;
+//    JgJgtI_Jg_J_dPHI2= JgJgtI_Jg_J_dPHI2%repmat(~PHI,JgJgtI_Jg_J_dPHI2.d0,1);
+
+    arr tmp = Jg*~Jx;
+//    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*tmp;
+//    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI*diag(PHI);
+//    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI%repmat(~PHI,JgJgtI_Jg_J_dPHI.d0,1);
+//    cout << "JgJgtI_Jg_J_dPHI: " << MT::timerRead(true) << endl;
+
+//    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*Jg*~Jx*diag(PHI);
+//    cout <<sum(JgJgtI_Jg_J_dPHI2-JgJgtI_Jg_J_dPHI) << endl;
+//    J_Jgt = Jx*~Jg;
+    J_Jgt = ~tmp;
+    cout << "J_Jgt: " << MT::timerRead(true) << endl;
   }
 
 }
@@ -330,10 +356,10 @@ double Scene::compCosts(arr &df, arr &Hf, arr &g, arr &Jg, const arr &w, const a
     }
   }
   if (&g && optConstraintsParam) {
-    g = 2.*JgJgtI_Jg_Jt_PHIw;
+//    g = 2.*JgJgtI_Jg_Jt_PHIw;
   }
   if (&Jg && optConstraintsParam) {
-    Jg = 2.*JgJgtI_Jg_J_dPHI*dw ;
+//    Jg = 2.*JgJgtI_Jg_J_dPHI*dw ;
   }
   return y;
 }
@@ -348,67 +374,68 @@ IKMO::IKMO(MT::Array<Scene> &_scenes, MT::Array<CostWeight> &_weights,uint _nP):
   ConstrainedProblem::operator=( [this](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double{
                                  return this->fc(df, Hf, g, Jg, h, Jh, x);} );
 
-nX = scenes(0).MP->world.getJointStateDimension();
-nT = scenes(0).MP->T;
+  nX = scenes(0).MP->world.getJointStateDimension();
+  nT = scenes(0).MP->T;
 
-/// optimization parameter
-optLearnTransParam = MT::getParameter<bool>("optLearnTransParam");
-optNormParam = MT::getParameter<bool>("optNormParam");
-optNonlinearParam = MT::getParameter<bool>("optNonlinearParam");
-optConstraintsParam = MT::getParameter<bool>("optConstraintsParam");
+  /// optimization parameter
+  optLearnTransParam = MT::getParameter<bool>("optLearnTransParam");
+  optNormParam = MT::getParameter<bool>("optNormParam");
+  optNonlinearParam = MT::getParameter<bool>("optNonlinearParam");
+  optConstraintsParam = MT::getParameter<bool>("optConstraintsParam");
 
-/// precompute matrices for permutation of PHI
-uintA cost_counts;
-arr counts=zeros(weights.N);
-arr Dpdp;
-for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) { // task costs;
-  if (scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT){
-    cost_counts.append(0.);
-    for (uint t=0;t<=nT;t++) {
-      uint dim = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
-      cost_counts.last() += dim;
+  /// precompute matrices for permutation of PHI
+  uintA cost_counts;
+  arr counts=zeros(weights.N);
+  arr Dpdp;
+  for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) { // task costs;
+    if (scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT){
+      cost_counts.append(0.);
+      for (uint t=0;t<=nT;t++) {
+        uint dim = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
+        cost_counts.last() += dim;
+      }
     }
   }
-}
 
-// precompute DWdx
-for (uint t=0;t<= nT;t++) {
-  // add transition cost elements
-  //    if (optLearnTransParam){
-  //      Dpdp.append(linspace(counts(0),counts(0)+nX-1,nX-1));
-  //      counts(0) += nX;
-  //    } else {
-  //      NIY;
-  //    }
+  // precompute DWdx
+  for (uint t=0;t<= nT;t++) {
+    // add transition cost elements
+    //    if (optLearnTransParam){
+    //      Dpdp.append(linspace(counts(0),counts(0)+nX-1,nX-1));
+    //      counts(0) += nX;
+    //    } else {
+    //      NIY;
+    //    }
 
-  // add task cost elements
-  for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) {
-    if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT) {
-      uint m;
-      m = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
-      double b = (c==0)?0.:sum(cost_counts.subRange(0,c-1));
-      arr tmp = linspace(counts(c),counts(c)+m-1,m-1);
-      if (tmp.N==1) {tmp = 0.;}
-      Dpdp.append(b + tmp);
-      counts(c) += m;
+    // add task cost elements
+    for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) {
+      if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT) {
+        uint m;
+        m = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
+        double b = (c==0)?0.:sum(cost_counts.subRange(0,c-1));
+        arr tmp = linspace(counts(c),counts(c)+m-1,m-1);
+        if (tmp.N==1) {tmp = 0.;}
+        Dpdp.append(b + tmp);
+        counts(c) += m;
+      }
     }
   }
-}
 
-// copy into uint array
-Dpdp.flatten();
-for (uint i=0;i<Dpdp.d0;i++){
-  phi_perm.append(int(Dpdp(i)));
-}
-
-numLambda = 0;
-// initialize cost functions for demonstrations
-for (uint i=0;i<scenes.d0;i++) {
-  scenes(i).initCosts(phi_perm,optConstraintsParam,optNonlinearParam);
-  if ( scenes(i).optConstraintsParam ) {
-    numLambda += scenes(i).lambdaDem.N;
+  // copy into uint array
+  Dpdp.flatten();
+  for (uint i=0;i<Dpdp.d0;i++){
+    phi_perm.append(int(Dpdp(i)));
   }
-}
+  cout << phi_perm << endl;
+
+  numLambda = 0;
+  // initialize cost functions for demonstrations
+  for (uint i=0;i<scenes.d0;i++) {
+    scenes(i).initCosts(phi_perm,optConstraintsParam,optNonlinearParam);
+    if ( scenes(i).optConstraintsParam ) {
+      numLambda += scenes(i).lambdaDem.N;
+    }
+  }
 }
 
 void IKMO::compWeights(arr &w, arr &dw, arr &Hw, const arr &param){
@@ -500,7 +527,9 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
 
   g=gL;
   g.append(gU);
-  g.append(1.-sum(gS));
+  g.append(1e4-sum(gS));
+//  cout << "sum(gS) " <<sum(gS) << endl;
+//  cout << g << endl;
   if (&Jg) {
     Jg=diag(JgL);
     Jg.append(diag(JgU));
@@ -510,26 +539,21 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
 
 void IKMO::setParam(MotionProblem &MP, const arr &param)
 {
-  //  if (optLearnTransParam) {
-  //    CHECK(weights(0).type==CostWeight::Transition, "The first weight should be transition costs!");
-  //    MP.H_rate_diag = fabs(param(0));
-  //  }
-
   for (uint c=0;c<MP.taskCosts.N;c++) {
     if (MP.taskCosts(c)->map.type == sumOfSqrTT) {
       arr w;
       weights(c).compWeights(w,NoArr,NoArr,param.subRange(c,c+weights(c).numParam - 1),true);
       if (weights(c).type==CostWeight::Dirac){
-        MP.taskCosts(c)->prec(weights(c).fixedParam(0)) = w(0);
+        MP.taskCosts(c)->prec(weights(c).fixedParam(0)) = fabs(w(0));
       }else {
         MP.taskCosts(c)->prec = fabs(w);
       }
-      //      cout << MP.taskCosts(c)->prec << endl;
+//      cout << MP.taskCosts(c)->prec << endl;
     }
   }
 }
 
-void IKMO::costReport(arr param) {
+void IKMO::costReport(arr param,arr param0) {
   cout << "\n############################################################################\n *** IKMO -- CostReport" << endl;
   cout << "Number of parameters: " << nP << endl;
   cout << "Number of time steps: " << nT << endl;
@@ -539,6 +563,7 @@ void IKMO::costReport(arr param) {
   // normalize parameter
   arr paramRefNorm = 1e4*paramRef /sqrt(sumOfSqr(paramRef));
   arr paramNorm = 1e4*param/sqrt(sumOfSqr(param));
+  arr param0Norm = 1e4*param0/sqrt(sumOfSqr(param0));
 
   arr gSol;
   double cost = 0.;// fc(gSol,NoArr,NoArr,NoArr,NoArr,NoArr,param);
@@ -546,14 +571,14 @@ void IKMO::costReport(arr param) {
   cout << "Gradient at solution: " << gSol << endl;
 
 
-  cout << "\nReference parameter | Learned parameter | Learned parameter (unnormalized)" << endl;
+  cout << "\nReference parameter | Learned parameter | Learned parameter (unnormalized) | Initialized parameter" << endl;
   uint c =0;
   for (uint i=0;i<scenes(0).MP->taskCosts.N;i++) {
     if (scenes(0).MP->taskCosts(i)->map.type==sumOfSqrTT) {
       if (weights(i).numParam>1){
         //        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramNorm.subRange(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRange(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRange(c,c+weights(i).numParam-1) << endl;
       }else {
-        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramRefNorm(c) <<  " | " << paramNorm(c) << " | " <<  param(c) << endl;
+        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramRefNorm(c) <<  " | " << paramNorm(c) << " | " <<  param(c) << " | " <<  param0(c) << endl;
       }
       c = c+weights(i).numParam;
     }

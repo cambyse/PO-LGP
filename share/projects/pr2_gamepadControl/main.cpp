@@ -51,6 +51,7 @@ void TEST(Gamepad){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
+
       S.ctrl_obs.var->waitForNextRevision();
       if(S.ctrl_obs.get()->q.N==MP.world.q.N
          && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
@@ -100,8 +101,6 @@ void TEST(Gamepad){
     uint mode = 0;
     if(gamepadState.N) mode = uint(gamepadState(0));
     if(mode==2){
-//      arr y_fL, J_fL;
-//      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
 #if 0 // set a feew fwd force task
       refs.fL = ARR(10., 0., 0.);
@@ -160,7 +159,7 @@ void TEST(Gamepad){
       refs.EfL.clear();
       refs.u_bias = zeros(q.N);
     }
-    refs.Kq_gainFactor = 0.;
+    refs.Kq_gainFactor = 1.;
     refs.Kd_gainFactor = 1.;
     refs.gamma = 1.;
 
@@ -170,7 +169,7 @@ void TEST(Gamepad){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-      if(true){ //no translations!
+      if(false){ //no translations!
         refs.qdot(trans->qIndex+0) = 0.;
         refs.qdot(trans->qIndex+1) = 0.;
         refs.qdot(trans->qIndex+2) = 0.;

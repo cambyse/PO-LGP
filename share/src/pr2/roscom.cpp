@@ -7,6 +7,7 @@
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
+#include <ar_track_alvar/AlvarMarkers.h>
 
 //===========================================================================
 
@@ -41,7 +42,7 @@ struct sRosCom_ControllerSync{
   ros::Subscriber sub_jointState;
   ros::Publisher pub_jointReference;
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
-  //  cout <<"** joinstState_callback" <<endl;
+    //  cout <<"** joinstState_callback" <<endl;
     CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->u_bias), ARRAY(msg->EfL), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
@@ -53,8 +54,8 @@ void RosCom_ControllerSync::open(){
   s->base=this;
   s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom_ControllerSync::joinstState_callback, s);
   s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
-//  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
-//  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
+  //  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
+  //  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
 }
 
 void RosCom_ControllerSync::step(){
@@ -209,6 +210,43 @@ void RosCom_ForceSensorSync::step(){
 void RosCom_ForceSensorSync::close(){
   s->nh.shutdown();
 }
+
+//===========================================================================
+
+struct sRosCom_ARMarkerSync{
+  RosCom_ARMarkerSync *base;
+  ros::NodeHandle nh;
+  ros::Subscriber ar_marker;
+  void cb_sync(const ar_track_alvar::AlvarMarkers::ConstPtr& msg){
+    uint N = 20;
+    arr marker_pose;
+    if (marker_pose.N==0){
+      marker_pose = zeros(N,7);
+    }else{
+      marker_pose = base->marker_pose.get();
+    }
+    for (uint i = 0; i<msg->markers.size();i++) {
+      const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
+      marker_pose[m.id] = ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
+    }
+    base->marker_pose.set() = marker_pose;
+  }
+};
+
+void RosCom_ARMarkerSync::open(){
+  rosCheckInit();
+  s = new sRosCom_ARMarkerSync;
+  s->base = this;
+  s->ar_marker  = s->nh.subscribe("/ar_pose_marker", 1, &sRosCom_ARMarkerSync::cb_sync, s);
+}
+
+void RosCom_ARMarkerSync::step(){
+}
+
+void RosCom_ARMarkerSync::close(){
+  s->nh.shutdown();
+}
+
 
 //===========================================================================
 
