@@ -47,6 +47,8 @@ struct Item {
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
+  bool matches(const char *key);
+  bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
   KeyValueGraph ParentOf();
   //-- specific standard values
@@ -65,7 +67,7 @@ stdOutPipe(Item);
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
-  bool isReference;
+  KeyValueGraph* isReferringToItemsOf;
   Item *isItemOfParentKvg;
   
   KeyValueGraph();
@@ -88,6 +90,7 @@ struct KeyValueGraph:ItemL {
 
   //-- get lists of items
   KeyValueGraph getItems(const char* key);
+  KeyValueGraph getItemsOfDegree(uint deg);
   KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
   template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
   template<class T> ItemL getDerivedItems();
@@ -126,6 +129,15 @@ struct KeyValueGraph:ItemL {
   void writeDot(std::ostream& os, bool withoutHeader=false, bool defaultEdges=false, int nodesOrEdges=0);
 };
 stdPipes(KeyValueGraph);
+
+typedef KeyValueGraph Graph;
+
+inline Graph GRAPH(const ItemL& L){
+  Graph G;
+  G.isReferringToItemsOf = (Graph*)(1);
+  G.ItemL::operator=(L);
+  return G;
+}
 
 #include "keyValueGraph_t.h"
 

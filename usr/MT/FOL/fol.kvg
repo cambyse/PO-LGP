@@ -1,4 +1,5 @@
 Constant M1
+Constant M2
 Constant Nono
 Constant America
 Constant West
@@ -12,40 +13,38 @@ Missile
 Owns
 Enemy
 
-{
+(Owns Nono M1),
+(Missile M1),
+(Missile M2),
+(American West),
+(Enemy Nono America),
+
+Query { (Criminal West) }
+
+Rule {
 x, y, z,
 (American x) (Weapon y) (Sells x y z) (Hostile z)
 (Criminal x)
 }
 
-{
-(Owns Nono M1) (Missile M1)
-}
 
-{
-Var x
+Rule {
+x
 (Missile x) (Owns Nono x)
 (Sells West x Nono)
 }
 
 
-{
-Var x
+Rule {
+x
 (Missile x)
 (Weapon x)
 }
 
-{
-Var x
+Rule {
+x
 (Enemy x America)
 (Hostile x)
 }
 
-{
-(American West)
-}
-
-{
-(Enemy Nono America)
-}
 

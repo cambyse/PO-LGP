@@ -1,9 +1,22 @@
-#include <Core/keyValueGraph.h>
+#include "fol.h"
 
-void testFol(){
+//===========================================================================
+
+void testPol(){
+  KeyValueGraph G;
+  FILE("pol.kvg") >>G;
+
+  cout <<G <<endl;
+
+  cout <<"Q=" <<(forwardChaining_propositional(G, G["Q"]) ?"true":"false") <<endl;
+}
+
+//===========================================================================
+
+void testFol1(){
   KeyValueGraph G;
 
-  FILE("fol.kvg") >>G;
+  FILE("fol0.kvg") >>G;
 
 //  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
 
@@ -22,52 +35,36 @@ void testFol(){
   new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(1), consts(2)});
 }
 
-bool forwardChaining(KeyValueGraph& KB, Item* q){
-  KB.checkConsistency();
-  uintA count(KB.N);     count=0;
-  boolA inferred(KB.N);  inferred=false;
-  ItemL clauses = KB.getItems("Clause");
-  ItemL agenda;
-  for(Item *clause:clauses){
-    count(clause->index) = clause->kvg().N;
-    if(!count(clause->index)){ //no preconditions -> facts -> add to 'agenda'
-      agenda.append(clause->parents(0));
-    }
-  }
-  cout <<count <<endl;
+//===========================================================================
 
-  while(agenda.N){
-    Item *s = agenda.popFirst();
-    if(!inferred(s->index)){
-      inferred(s->index) = true;
-      for(Item *child : s->parentOf){ //all objects that involve 's'
-        Item *clause = child->container.isItemOfParentKvg; //check if child is a literal in a clause
-        if(clause){ //yes: 's' is a literal in a clause
-          CHECK(count(clause->index)>0,"");
-//          if(count(clause->index)>0){ //I think this is always true...
-          count(clause->index)--;
-          if(!count(clause->index)){ //are all the preconditions fulfilled?
-            Item *newFact = clause->parents(0);
-            if(newFact==q) return true;
-            agenda.append(newFact);
-          }
-        }
-        cout <<count <<endl;
-      }
-    }
-  }
-  return false;
-}
-
-void testPol(){
+void testFol2(){
   KeyValueGraph G;
-  FILE("pol.kvg") >>G;
 
-  cout <<G <<endl;
+  FILE("fol.kvg") >>G;
 
-  cout <<"Q=" <<(forwardChaining(G, G["Q"]) ?"true":"false") <<endl;
+//  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
+
+  ItemL consts = G.getItems("Constant");
+  ItemL rules = G.getItems("Rule");
+  ItemL state = getLiteralsOfScope(G);
+
+//  cout <<"consts = " <<consts <<endl;
+//  cout <<"rules = " <<rules <<endl;
+  cout <<"INIT STATE = " <<GRAPH(state) <<endl;
+
+//  Graph& rule = rules(3)->kvg();
+//  cout <<"rule = " <<rule <<endl;
+//  removeInfeasible(rule(0), consts, rule(1), G);
+//  for(Item* rule:rules)
+//    getSubstitutions(rule->kvg(), state);
+
+  Item *query=G["Query"]->kvg()(0);
+  forwardChaining_FOL(G, query);
 }
+
+//===========================================================================
 
 int main(int argn, char** argv){
-  testPol();
+//  testPol();
+  testFol2();
 }

@@ -50,6 +50,18 @@ Item::~Item() {
   for_list(Item, i, container) i->index=i_COUNT;
 }
 
+bool Item::matches(const char *key){
+  for(const MT::String& k:keys) if(k==key) return true;
+  return false;
+}
+
+bool Item::matches(const StringA &query_keys) {
+  for(const MT::String& k:query_keys) {
+    if(!matches(k)) return false;
+  }
+  return true;
+}
+
 void Item::write(std::ostream& os) const {
   //-- write keys
   keys.write(os, " ", "", "\0\0");
@@ -101,8 +113,8 @@ void Item::write(std::ostream& os) const {
 
 KeyValueGraph Item::ParentOf(){
   KeyValueGraph G;
+  G.isReferringToItemsOf = &container;
   G.ItemL::operator=(parentOf);
-  G.isReference = true;
   return G;
 }
 
@@ -209,7 +221,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         } break;
         case '(': { // referring KeyValueGraph
           KeyValueGraph refs;
-          refs.isReference=true;
+          refs.isReferringToItemsOf = &containingKvg;
           for(uint j=0;; j++) {
             str.read(is, " , ", " , )", false);
             if(!str.N) break;
@@ -270,14 +282,14 @@ struct sKeyValueGraph {
 //  std::map<std::string, Item*> keyMap;
 };
 
-KeyValueGraph::KeyValueGraph():s(NULL), isReference(false), isItemOfParentKvg(NULL) {
+KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
 //  s = new sKeyValueGraph;
 }
 
 KeyValueGraph::~KeyValueGraph() {
 //  delete s;
-  if(!isReference){ while(N) delete last(); }
+  if(!isReferringToItemsOf){ while(N) delete last(); }
 //  if(!isReference) listDelete(*this);
 }
 
@@ -289,8 +301,8 @@ Item *KeyValueGraph::append(const uintA& parentIdxs) {
 
 
 Item* KeyValueGraph::getItem(const char *key) {
-  for(Item *it: (*this))
-    for(const MT::String& k:it->keys) if(k==key) return it;
+  for(Item *it: (*this)) if(it->matches(key)) return it;
+//    for(const MT::String& k:it->keys) if(k==key) return it;
   if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(key);
   return NULL;
 }
@@ -306,37 +318,49 @@ Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
 }
 
 Item* KeyValueGraph::getItem(const StringA &keys) {
-  bool found;
-  for(Item *it: (*this)) {
-    found = true;
-    for(uint k = 0; k < keys.N && found; k++) {
-      found = false;
-      for(const String &key: it->keys) {
-        if(keys(k) == key) {
-          found = true;
-          break;
-        }
-      }
-    }
-    if(found) return it;
-  }
+//  bool found;
+  for(Item *it: (*this)) if(it->matches(keys)) return it;
+  if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(keys);
+//  {
+//    found = true;
+//    for(uint k = 0; k < keys.N && found; k++) {
+//      found = false;
+//      for(const String &key: it->keys) {
+//        if(keys(k) == key) {
+//          found = true;
+//          break;
+//        }
+//      }
+//    }
+//    if(found) return it;
+//  }
   return NULL;
 }
 
 KeyValueGraph KeyValueGraph::getItems(const char* key) {
   KeyValueGraph ret;
-  ret.isReference = true;
+  ret.isReferringToItemsOf = this;
+  for(Item *it: (*this)) if(it->matches(key)) ret.ItemL::append(it);
+//    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.ItemL::append(it); break; }
+//  }
+  return ret;
+}
+
+KeyValueGraph KeyValueGraph::getItemsOfDegree(uint deg) {
+  KeyValueGraph ret;
+  ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) {
-    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.ItemL::append(it); break; }
+    if(it->parents.N==deg) ret.ItemL::append(it);
   }
   return ret;
 }
 
+
 KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info& type) {
   KeyValueGraph ret;
-  ret.isReference = true;
+  ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) if(it->getValueType()==type) {
-    if(!key) ret.appendItem(it);
+    if(!key) ret.ItemL::append(it);
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
       ret.ItemL::append(it);
       break;
@@ -372,7 +396,7 @@ Item* KeyValueGraph::merge(Item *m){
 }
 
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
-  if(!isReference) listDelete(*this);
+  if(!isReferringToItemsOf){ while(N) delete last(); } // listDelete(*this);
   { for_list(Item, i, G) i->index=i_COUNT; }
   for(Item *it:G) it->newClone(*this);
   //rewire links
