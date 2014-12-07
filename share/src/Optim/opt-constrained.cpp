@@ -283,7 +283,8 @@ void UnconstrainedProblemMix::aulaUpdate(double lambdaStepsize, double muInc, do
   }
 
   //-- adapt mu as well?
-  if(muInc>1.) mu *= muInc;
+  if(muInc>1. && mu<1e6) mu *= muInc;
+  if(muInc>1. && nu<1e6) nu *= muInc;
 
   //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
   if(L_x || &dL_x || &HL_x){

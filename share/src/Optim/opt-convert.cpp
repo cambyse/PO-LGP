@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2014 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -538,18 +538,19 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     uint dimf_t   = dimphi_t - dimg_t - dimh_t;
 
     //split up: push cost terms into y
-    y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
-    if(getJ) {
-      Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
-      for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
-      if(dimz){
-        Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
-        for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+    if (dimf_t) {
+      y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
+      if(getJ) {
+        Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
+        for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
+        if(dimz){
+          Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
+          for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+        }
       }
+      M += dimf_t;
+      y_count += dimf_t;
     }
-    M += dimf_t;
-    y_count += dimf_t;
-
     //split up: push inequality terms into g
     if(&g && dimg_t) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
     if(&Jg && dimg_t) {

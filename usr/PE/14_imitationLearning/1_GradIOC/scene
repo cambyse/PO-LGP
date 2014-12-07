@@ -1,0 +1,17 @@
+
+body stem { X=<T t(0 0 1)>  type=4 size=[0.1 0.1 2 .1] static }
+body arm1 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm2 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm3 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm4 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm5 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body endeff { type=1 size=[0 0 0 .03] color=[0 1 1] dynamic contact }
+#body endeff { type=0 size=[0.1 0.1 .2 .1] color=[0 1 1] dynamic contact }
+
+joint j1(stem arm1) { A=<T t(0 0 1) d(90 1 0 0)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j2(arm1 arm2) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j3(arm2 arm3) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j6(arm3 endeff) { A=<T t(0 0 0.3) d(0 0 0 0)> B=<T t(0 0 0)>  Q=<T d(1 0 0 0)> type=10}
+
+
+body goal { type=2 size=[0. 0. .2 .02] X=<T t(0.4 -0.4 1.2) > color=[1 0 1] fixed,dynamic }

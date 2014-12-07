@@ -18,12 +18,14 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
-  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
+  arr Kq_gainFactor, Kd_gainFactor, KfL_gainFactor;
   arr u_bias;
   double velLimitRatio, effLimitRatio;
 
   //force related things
-  arr fL_obs, fR_obs;
+  arr fL_obs, fR_obs, fL_ref, fR_ref;
+  arr fL_error, fR_error, EfL, EfR;
+  double gamma;
 
   //matching joint indices
   MT::Array<pr2_mechanism_model::JointState*> ROS_joints;

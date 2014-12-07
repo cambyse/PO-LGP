@@ -1,0 +1,5 @@
+
+%include pr2_model/pr2_clean.ors
+%include pr2_model/pr2_modifications.ors
+%include target.ors
+

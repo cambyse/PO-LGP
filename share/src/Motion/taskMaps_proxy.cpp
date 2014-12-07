@@ -32,8 +32,8 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
 }
 
 void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  y.resize(1);  y.setZero();
-  if(&J){ J.resize(1, G.getJointStateDimension(false));  J.setZero(); }
+  y.resize(1).setZero();
+  if(&J) J.resize(1, G.getJointStateDimension(false)).setZero();
 
   switch(type) {
     case allPTMT:
