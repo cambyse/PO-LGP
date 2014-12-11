@@ -48,14 +48,14 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
   //-- read out the task variable from the k+1 configurations
   for(uint i=0;i<=k;i++)
     phi(y_bar(i), (&J?J_bar(i):NoArr), *G(G.N-1-i));
-  if(k==1)  y = (y_bar(1)-y_bar(0))/tau; //penalize velocity
-  if(k==2)  y = (y_bar(2)-2.*y_bar(1)+y_bar(0))/tau2; //penalize acceleration
-  if(k==3)  y = (y_bar(3)-3.*y_bar(2)+3.*y_bar(1)-y_bar(0))/tau3; //penalize jerk
+  if(k==1)  y = (y_bar(0)-y_bar(1))/tau; //penalize velocity
+  if(k==2)  y = (y_bar(0)-2.*y_bar(1)+y_bar(2))/tau2; //penalize acceleration
+  if(k==3)  y = (y_bar(0)-3.*y_bar(1)+3.*y_bar(2)-y_bar(3))/tau3; //penalize jerk
   if(&J) {
     J = zeros(G.N, y.N, J_bar(0).d1);
-    if(k==1){ J[G.N-1-1]() = J_bar(1);  J[G.N-1-0]() = -J_bar(0);  J/=tau; }
-    if(k==2){ J[G.N-1-2]() = J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
-    if(k==3){ J[G.N-1-3]() = J_bar(3);  J[G.N-1-2]() = -3.*J_bar(2);  J[G.N-1-1]() = +3.*J_bar(1);  J[G.N-1-0]() = -1.*J_bar(0);  J/=tau3; }
+    if(k==1){ J[G.N-1-1]() = -J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau; }
+    if(k==2){ J[G.N-1-2]() =  J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
+    if(k==3){ J[G.N-1-3]() = -J_bar(3);  J[G.N-1-2]() =  3.*J_bar(2);  J[G.N-1-1]() = -3.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau3; }
     arr tmp(J);
     tensorPermutation(J, tmp, TUP(1,0,2));
     J.reshape(y.N, G.N*J_bar(0).d1);

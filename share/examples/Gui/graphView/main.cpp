@@ -9,11 +9,13 @@ void TEST(Dot){
   cout <<"read KVG:\n----------\n" <<G <<"\n----------\n" <<endl;
   G.sortByDotOrder();
   GraphView gv(G);
+  gv.writeFile("z.dot");
   gv.watch();
 }
 
 int MAIN(int argc, char** argv){
   MT::initCmdLine(argc, argv);
+
   testDot();
 
   return 0;

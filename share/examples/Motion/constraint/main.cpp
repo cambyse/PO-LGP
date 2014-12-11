@@ -286,11 +286,11 @@ void TEST(qItselfConstraint){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 //  testStickiness();
-//  testEqualityConstraints();
+  testEqualityConstraints();
 //  testClosedKinematicChain();
 //  testContactConstraint();
 //  testVelConstraint();
-  testqItselfConstraint();
+//  testqItselfConstraint();
   return 0;
 }
 

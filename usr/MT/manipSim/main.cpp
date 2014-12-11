@@ -79,7 +79,7 @@ void TEST(Reachable){
 
 //===========================================================================
 
-struct GoalFunction:ConstrainedProblem{
+struct GoalFunction:ConstrainedProblemMix{
   ors::KinematicWorld& world;
   ors::Body *obj, *table;
   arr target;
@@ -87,39 +87,44 @@ struct GoalFunction:ConstrainedProblem{
     obj = world.getBodyByName("obj1");
     table = world.getBodyByName("table1");
     target = {-2.,-2.,1.};
+    ConstrainedProblemMix::operator=(
+      [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+        return this -> phi(phi, J, tt, x);
+      }
+    );
   }
-  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x){
+  void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
     world.setJointState(x);
     arr y,J;
     world.kinematicsPos(y, J, obj);
 //    cout <<"QUERY: pos=" <<y <<endl;
     world.gl().update();
 
+    phi.clear();
+    if(&phiJ) phiJ.clear();
+    if(&tt) tt.clear();
+
     //-- cost
-    double f = sumOfSqr(y-target);
-    if(&df) df = 2. * ~(y-target) * J;
-    if(&Hf) Hf = 2. * ~J * J;
+    phi.append(y-target);
+    if(&tt) tt.append(sumOfSqrTT, y.N);
+    if(&phiJ) phiJ.append(J);
 
     //-- constraints
     arr rel;
     world.kinematicsRelPos(rel, J, obj, NULL, table, NULL);
-    if(&g){
-      g.resize(4);
-      g(0) =  rel(0) - (+.5*table->shapes(0)->size[0]-0.05);
-      g(1) = -rel(0) + (-.5*table->shapes(0)->size[0]+0.05);
-      g(2) =  rel(1) - (+.5*table->shapes(0)->size[1]-0.05);
-      g(3) = -rel(1) + (-.5*table->shapes(0)->size[1]+0.05);
-//      cout <<"g=" <<g <<endl;  world.gl().watch();
+    phi.append(  rel(0) - (+.5*table->shapes(0)->size[0]-0.05) );
+    phi.append( -rel(0) + (-.5*table->shapes(0)->size[0]+0.05) );
+    phi.append(  rel(1) - (+.5*table->shapes(0)->size[1]-0.05) );
+    phi.append( -rel(1) + (-.5*table->shapes(0)->size[1]+0.05) );
+    if(&phiJ){
+      phiJ.append( J[0]);
+      phiJ.append(-J[0]);
+      phiJ.append( J[1]);
+      phiJ.append(-J[1]);
     }
-    if(&Jg){
-      Jg.resize(4, J.d1);
-      Jg[0]() =  J[0];
-      Jg[1]() = -J[0];
-      Jg[2]() =  J[1];
-      Jg[3]() = -J[1];
-    }
+    if(&tt) tt.append(ineqTT, 4);
 
-    return f;
+    if(&phiJ) phiJ.reshape(phi.N, x.N);
   }
   virtual uint dim_x(){ return world.getJointStateDimension(); }
   virtual uint dim_g(){ return 4; }
@@ -132,8 +137,8 @@ void optimizeConfig(){
 
   arr x = world.getJointState();
 
-  checkAllGradients(f, x, 1e-4);
-  optConstrained(x, NoArr, f, OPT(verbose=1));
+  checkJacobian(f, x, 1e-4);
+  optConstrainedMix(x, NoArr, f, OPT(verbose=1));
   f.world.gl().watch();
 
 //  for(;;){

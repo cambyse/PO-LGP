@@ -1,4 +1,5 @@
 #include "fol.h"
+#include <Gui/graphview.h>
 
 //===========================================================================
 
@@ -64,7 +65,20 @@ void testFol2(){
 
 //===========================================================================
 
+void testFol3(){
+  KeyValueGraph G;
+  FILE("fol.kvg") >>G;
+
+  GraphView view(G);
+  view.watch();
+
+}
+
+//===========================================================================
+
 int main(int argn, char** argv){
 //  testPol();
+//  testFol1();
   testFol2();
+//  testFol3();
 }

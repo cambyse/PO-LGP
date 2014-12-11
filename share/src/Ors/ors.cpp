@@ -338,8 +338,9 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 }
 
 uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes) {
-  uintA I(shapes.N);
-  for(uint i=0; i<shapes.N; i++) I(i) = shapes(i)->index;
+  uintA I;
+  resizeAs(I, shapes);
+  for(uint i=0; i<shapes.N; i++) I.elem(i) = shapes.elem(i)->index;
   return I;
 }
 
@@ -1766,9 +1767,10 @@ end_header\n";
 }
 
 /// dump the list of current proximities on the screen
-void ors::KinematicWorld::reportProxies(std::ostream *os) {
+void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for_list(Proxy, p, proxies) {
+    if(belowMargin>0. && p->d>belowMargin) continue;
     ors::Shape *a = shapes(p->a);
     ors::Shape *b = shapes(p->b);
     (*os)

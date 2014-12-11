@@ -193,7 +193,8 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   if(_x!=x){
     x=_x;
     P(phi_x, J_x, tt_x, x);
-    CHECK(phi_x.N==J_x.d0 && phi_x.N==tt_x.N,"");
+    CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
+    CHECK_EQ(phi_x.N, tt_x.N, "termType array size inconsistent");
 //    && Hf_x.d1==x.N && Jg_x.d1==x.N &&  && Jh_x.d1==x.N //those dimensions might be non-equal due to packing...
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
     if(&dL || &HL) CHECK(J_x.N,"");
@@ -398,7 +399,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
   UCP.nu=1.;
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
-    case augmentedLag:   UCP.mu=1.;  break;
+    case augmentedLag:   UCP.mu=100.;  break;
     case anyTimeAula:    UCP.mu=1.;  /*stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.);*/ break;
     case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;

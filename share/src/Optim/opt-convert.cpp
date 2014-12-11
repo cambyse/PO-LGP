@@ -157,7 +157,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
       Jaux->nextInSum = Jz; //this is crucial: the returned J contains a quite hidden link to Jz
     }
   }
-  tt.resize(dim_phi).setZero();
+  if(&tt) tt.resize(dim_phi).setZero();
 
   //loop over time t
   uint M=0;
@@ -193,7 +193,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
     f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t, x_bar);
     CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
-    tt.setVectorBlock(tt_t, M);
+    if(&tt) tt.setVectorBlock(tt_t, M);
 
     //if the jacobian is returned
     if(&J) {

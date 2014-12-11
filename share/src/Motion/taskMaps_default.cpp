@@ -74,6 +74,21 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
     return;
   }
 
+  if(type==posDiffTMT){
+    ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
+    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
+    G.kinematicsPos(y, J, body_i, &vec_i);
+    if(!body_j){ //relative to world
+      y -= ARRAY(vec_j);
+    }else{
+      arr y2, J2;
+      G.kinematicsPos(y2, J2, body_j, &vec_j);
+      y -= y2;
+      J -= J2;
+    }
+    return;
+  }
+
   if(type==vecTMT){
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
 //    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
@@ -89,6 +104,21 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
     //      f.rot.getZ(c);
     //      y = ARRAY(c);
     NIY; //TODO: Jacobian?
+    return;
+  }
+
+  if(type==vecDiffTMT){
+    ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
+    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
+    G.kinematicsVec(y, J, body_i, &vec_i);
+    if(!body_j){ //relative to world
+      y -= ARRAY(vec_j);
+    }else{
+      arr y2, J2;
+      G.kinematicsVec(y2, J2, body_j, &vec_j);
+      y -= y2;
+      J -= J2;
+    }
     return;
   }
 
@@ -115,11 +145,35 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
   }
 
   if(type==quatTMT){
-    if(body_j==NULL) {
+    if(body_j==NULL) { //simple, no j reference
       G.kinematicsQuat(y, J, body_i);
       return;
-    }
+    }//else...
     NIY;
+  }
+
+  if(type==quatDiffTMT){
+    ors::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
+    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
+    G.kinematicsQuat(y, J, body_i);
+    if(!body_j){ //relative to world
+      arr y2 = ARRAY(q_j);
+      if(scalarProduct(y,y2)>=0.){
+        y -= y2;
+      }else{
+        y += y2;
+      }
+    }else{
+      arr y2, J2;
+      G.kinematicsQuat(y2, J2, body_j);
+      if(scalarProduct(y,y2)>=0.){
+        y -= y2;
+        J -= J2;
+      }else{
+        y += y2;
+        J += J2;
+      }
+    }
     return;
   }
 
@@ -130,8 +184,11 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
   switch(type) {
     case posTMT: return 3;
     case vecTMT: return 3;
-    case vecAlignTMT: return 1;
     case quatTMT: return 4;
+    case posDiffTMT: return 3;
+    case vecDiffTMT: return 3;
+    case quatDiffTMT: return 4;
+    case vecAlignTMT: return 1;
     default:  HALT("no such TMT");
   }
 }

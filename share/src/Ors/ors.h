@@ -325,7 +325,7 @@ struct KinematicWorld {
   void read(std::istream& is);
   void glDraw();
 
-  void reportProxies(std::ostream *os=&std::cout);
+  void reportProxies(std::ostream *os=&std::cout, double belowMargin=-1.);
   void writePlyFile(const char* filename) const; //TODO: move outside
 };
 

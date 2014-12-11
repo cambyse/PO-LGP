@@ -452,7 +452,7 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
 void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEdges, int nodesOrEdges) {
   if(!withoutHeader){
     os <<"graph G{" <<endl;
-    os <<"graph [ rankdir=\"TD\", ranksep=0.05 ];" <<endl;
+    os <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
     os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
     os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
     index(true);
@@ -473,7 +473,7 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEd
       os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
     }else{
       if(it->getValueType()==typeid(KeyValueGraph)){
-        os <<"subgraph cluster_" <<it->index <<" { " <<label <<endl;
+        os <<"subgraph cluster_" <<it->index <<" { " <<label /*<<" rank=same"*/ <<endl;
         it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, +1);
         os <<"}" <<endl;
         it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, -1);
@@ -499,7 +499,6 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEd
   }
   if(!withoutHeader){
     os <<"}" <<endl;
-    MT_MSG("TODO: counter offset to index items dotlike...")
     index(false);
   }
 }

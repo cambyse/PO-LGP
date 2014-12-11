@@ -56,7 +56,7 @@ void TEST(Manual){
 
 int MAIN(int argc, char** argv){
 
-  cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
+//  cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
   if(argc>=2) filename=argv[1];
 
