@@ -243,8 +243,8 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
     //-- append ineq constraints
     for(Task *c: taskCosts) if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t)){
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
-      phi.append(y);
-      if(&J) J.append(Jy);
+      phi.append(c->prec(t)*y);
+      if(&J) J.append(c->prec(t)*Jy);
       if(max(y)>0.) ineqHold=false;
     }
     //-- append eq constraints

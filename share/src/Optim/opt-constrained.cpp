@@ -399,7 +399,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
   UCP.nu=1.;
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
-    case augmentedLag:   UCP.mu=100.;  break;
+    case augmentedLag:   UCP.mu=1.;  break;
     case anyTimeAula:    UCP.mu=1.;  /*stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.);*/ break;
     case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;
