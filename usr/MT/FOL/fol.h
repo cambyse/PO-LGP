@@ -35,7 +35,7 @@ bool checkFeasibility(Item *literal, const ItemL& subst);
 /// the return value is an array: for every item of the literal's scope:
 /// if item=variable the array contains a pointer to the constant
 /// if item=non-variable the arrach contains a NULL pointer
-ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants);
+ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool verbose=false);
 
 /// extracts the preconditions of the rule, then returns substitutions
 ItemL getSubstitutions(Graph& rule, ItemL& state, ItemL& constants);

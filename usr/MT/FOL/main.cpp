@@ -76,9 +76,29 @@ void testFol3(){
 
 //===========================================================================
 
+void testFol4(){
+  KeyValueGraph G;
+
+  FILE("boxes.kvg") >>G;
+
+  ItemL rules = G.getItems("Rule");
+  ItemL constants = G.getItems("Constant");
+  ItemL state = getLiteralsOfScope(G);
+
+  for(Item* rule:rules){
+    cout <<"*** RULE: " <<*rule <<endl;
+    cout <<  "Substitutions:" <<endl;
+    ItemL subs = getSubstitutions(rule->kvg(), state, constants);
+  }
+}
+
+
+//===========================================================================
+
 int main(int argn, char** argv){
 //  testPol();
 //  testFol1();
-  testFol2();
+//  testFol2();
 //  testFol3();
+  testFol4();
 }

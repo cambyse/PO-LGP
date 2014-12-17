@@ -9,7 +9,9 @@ ItemL getLiteralsOfScope(Graph& KB){
 }
 
 ItemL getVariablesOfScope(Graph& KB){
-  return KB.getItemsOfDegree(0);
+  ItemL vars;
+  for(Item *i:KB) if(i->parents.N==0 && i!=KB.last()) vars.append(i);
+  return vars;
 }
 
 ItemL getVariables(Item* literal){
@@ -29,6 +31,10 @@ void removeInfeasible(ItemL& domain, Item* literal){
   CHECK(lit_vars.N==1," remove Infeasible works only for literals with one open variable!");
   Item *var = lit_vars(0);
   Item *predicate = literal->parents(0);
+  bool trueValue=true; //check if the literal is negated
+  if(literal->getValueType()==typeid(bool)){
+    if(*literal->getValue<bool>() == false) trueValue = false;
+  }
 
   ItemL dom;
   for(Item *state_literal:predicate->parentOf) if(&state_literal->container==&G){
@@ -47,7 +53,8 @@ void removeInfeasible(ItemL& domain, Item* literal){
     }
   }
   //  cout <<"possible domain of " <<*var <<" BEFORE = " <<GRAPH(domain) <<endl;
-  domain = setSection(domain, dom);
+  if(trueValue) domain = setSection(domain, dom);
+  else setMinus(domain, dom);
   //  cout <<"possible domain of " <<*var <<" AFTER = " <<GRAPH(domain) <<endl;
 }
 
@@ -98,10 +105,15 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst){
 bool checkFeasibility(Item* literal, const ItemL& subst){
   Graph& G=literal->container.isItemOfParentKvg->container;
   Item *predicate = literal->parents(0);
-  for(Item *fact:predicate->parentOf) if(&fact->container==&G){
-    if(match(fact, literal, subst)) return true;
+  bool trueValue=true; //check if the literal is negated
+  if(literal->getValueType()==typeid(bool)){
+    if(*literal->getValue<bool>() == false) trueValue = false;
   }
-  return false;
+
+  for(Item *fact:predicate->parentOf) if(&fact->container==&G){
+    if(match(fact, literal, subst)) return trueValue;
+  }
+  return !trueValue;
 }
 
 
@@ -116,7 +128,7 @@ ItemL getSubstitutions(Graph& rule, ItemL& state, ItemL& constants){
 }
 
 
-ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants){
+ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool verbose){
   CHECK(literals.N,"");
   Graph& scope = literals(0)->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
 
@@ -126,6 +138,9 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants){
   MT::Array<ItemL> domain(scope.N);
   for(Item *v:vars) domain(v->index) = constants;
 
+  if(verbose) cout <<"domains before 'constraint propagation':" <<endl;
+  if(verbose) for(Item *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
+
   //-- grab open variables for each literal
   MT::Array<ItemL> lit_vars(scope.N);
   for(Item *literal:literals) lit_vars(literal->index) = getVariables(literal);
@@ -134,10 +149,15 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants){
   for(Item *literal:literals){
     if(lit_vars(literal->index).N==1){
       Item *var = lit_vars(literal->index)(0);
+      if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
       removeInfeasible(domain(var->index), literal);
+      if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
       if(domain(var->index).N==0) return ItemL(); //early failure
     }
   }
+
+  if(verbose) cout <<"domains after 'constraint propagation':" <<endl;
+  if(verbose) for(Item *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
 
   //-- for the others, create constraints
   ItemL constraints;
@@ -146,6 +166,8 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants){
       constraints.append(literal);
     }
   }
+
+  if(verbose){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
 
   //-- naive CSP: loop through everything
   ItemL substitutions;
@@ -178,9 +200,19 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants){
           values(vars(2)->index) = value2;
           bool feasible=true;
           for(Item* literal:constraints){
-            if(!checkFeasibility(literal, values)){ feasible=false; break; }
+            if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); }
+            if(!checkFeasibility(literal, values)){
+              feasible=false;
+              if(verbose) cout <<" -- failed" <<endl;
+              break;
+            }else{
+              if(verbose) cout <<" -- good" <<endl;
+            }
           }
-          if(feasible) substitutions.append(values);
+          if(feasible){
+            if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); }
+            substitutions.append(values);
+          }
         }
       }
     }
