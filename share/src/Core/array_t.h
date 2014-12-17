@@ -2410,8 +2410,6 @@ template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
 /// @name tensor operations
 //
 
-void getIndexTuple(uintA &I, uint i, const uintA &d);
-
 #define DEBUG_TENSOR(x) //x
 /// @name tensor
 
@@ -2584,7 +2582,7 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
   //here the copying and multiplying takes place...
   X.setZero();
   for(i=0; i<N; i++) {
-    getIndexTuple(I, i, d);
+    I = getIndexTuple(i, d);
     for(j=0; j<A.nd; j++) Ia(j)=I(pickA(j));
     for(j=0; j<B.nd; j++) Ib(j)=I(pickB(j));
     //DEBUG_TENSOR(cout <<"i=" <<i <<" I=" <<I <<" i/res=" <<i/res <<" Ia=" <<Ia <<" Ib=" <<Ib <<endl;)

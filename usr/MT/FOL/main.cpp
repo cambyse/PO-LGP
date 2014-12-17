@@ -92,13 +92,62 @@ void testFol4(){
   }
 }
 
+//===========================================================================
+
+void testMonteCarlo(){
+  KeyValueGraph G;
+
+  FILE("boxes.kvg") >>G;
+
+  ItemL rules = G.getItems("Rule");
+  ItemL constants = G.getItems("Constant");
+
+  MT::rnd.seed(3);
+
+  for(uint h=0;h<20;h++){
+    cout <<"****************** MonteCarlo rollout step " <<h <<endl;
+
+    ItemL state = getLiteralsOfScope(G);
+    cout <<"*** state = "; listWrite(state, cout); cout<<endl;
+
+    //-- get all possible decisions
+    MT::Array<std::pair<Item*, ItemL> > decisions; //tuples of rule and substitution
+    for(Item* rule:rules){
+//      cout <<"*** RULE: " <<*rule <<endl;
+//      cout <<  "Substitutions:" <<endl;
+      ItemL subs = getRuleSubstitutions(rule, state, constants, false);
+      for(uint s=0;s<subs.d0;s++){
+        decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
+      }
+    }
+
+    cout <<"*** # possible decisions: " <<decisions.N <<endl;
+//    for(auto d:decisions){
+//      cout <<"rule " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
+//    }
+
+    //-- pick a random decision
+    std::pair<Item*, ItemL>& d = decisions(MT::rnd(decisions.N));
+    cout <<"*** decision = " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
+
+    Item *effect = d.first->kvg().last();
+    cout <<"*** applying" <<*effect <<endl;
+    applyEffectLiterals(G, effect, d.second, &d.first->kvg());
+
+//    state = getLiteralsOfScope(G);
+//    cout <<"*** new state = "; listWrite(state, cout); cout<<endl;
+
+  }
+}
 
 //===========================================================================
+
 
 int main(int argn, char** argv){
 //  testPol();
 //  testFol1();
 //  testFol2();
 //  testFol3();
-  testFol4();
+//  testFol4();
+  testMonteCarlo();
 }

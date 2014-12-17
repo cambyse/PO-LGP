@@ -16,18 +16,20 @@ void removeInfeasible(ItemL& domain, Item *literal);
 /// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool match(Item *literal0, Item *literal1);
 
-/// return all matches with a fact (calling match(lit0, lit1))
-ItemL getMatches(Item *literal, ItemL& literals);
+/// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
+ItemL getFactMatches(Item *literal, ItemL& literals);
 
 /// check match, where all variables of literal are replaced by subst(var->index)
-bool match(Item *fact, Item *literal, const ItemL& subst);
+bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope);
 
 /// create a new literal by substituting all variables with subst(var->index) (if non-NULL)
 /// add the new literal to KB
-Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst);
+Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope);
+
+void applyEffectLiterals(Graph& KB, Item* literals, const ItemL& subst, Graph* subst_scope);
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
-bool checkFeasibility(Item *literal, const ItemL& subst);
+bool checkFeasibility(Item *literal, const ItemL& subst, Graph* subst_scope);
 
 /// the list of literals is a conjunctive clause (e.g. precondition)
 /// all literals must be in the same scope (element of the same subKvg)
@@ -38,7 +40,7 @@ bool checkFeasibility(Item *literal, const ItemL& subst);
 ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool verbose=false);
 
 /// extracts the preconditions of the rule, then returns substitutions
-ItemL getSubstitutions(Graph& rule, ItemL& state, ItemL& constants);
+ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verbose=false);
 
 
 bool forwardChaining_FOL(KeyValueGraph& KB, Item* query);

@@ -1,7 +1,5 @@
 #include "fol.h"
 
-
-
 ItemL getLiteralsOfScope(Graph& KB){
   ItemL state;
   for(Item *i:KB) if(i->parents.N>0) state.append(i);
@@ -66,12 +64,12 @@ bool match(Item* literal0, Item* literal1){
   return true;
 }
 
-bool match(Item* fact, Item* literal, const ItemL& subst){
+bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope){
   if(fact->parents.N!=literal->parents.N) return false;
   for(uint i=0;i<literal->parents.N;i++){
     Item *lit_arg = literal->parents(i);
     Item *fact_arg = fact->parents(i);
-    if(&lit_arg->container==&literal->container){ //this is a variable -> check match of substitution
+    if(&lit_arg->container==subst_scope){ //this is a variable -> check match of substitution
       if(subst(lit_arg->index)!=fact_arg) return false;
     }else if(lit_arg!=fact_arg) return false;
   }
@@ -86,12 +84,13 @@ ItemL getFactMatches(Item* literal, ItemL& literals){
 }
 
 
-Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst){
-  Graph& lit_scope = literal->container;
+Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
   Item *fact = literal->newClone(KB);
   for(uint i=0;i<fact->parents.N;i++){
     Item *arg=fact->parents(i);
-    if(&arg->container==&lit_scope && subst(arg->index)!=NULL){ //is a variable, and subst exists
+    CHECK(&arg->container==subst_scope || &arg->container==&KB,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
+    if(&arg->container==subst_scope && subst(arg->index)!=NULL){ //is a variable, and subst exists
+      CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
       fact->parents(i) = subst(arg->index);
       arg->parentOf.removeValue(fact);
       fact->parents(i)->parentOf.append(fact);
@@ -101,30 +100,62 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst){
   return fact;
 }
 
+void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
+  bool trueValue=true; //check if the literal is negated
+  if(literal->getValueType()==typeid(bool)){
+    if(*literal->getValue<bool>() == false) trueValue = false;
+  }
 
-bool checkFeasibility(Item* literal, const ItemL& subst){
-  Graph& G=literal->container.isItemOfParentKvg->container;
+  if(trueValue){
+    createNewSubstitutedLiteral(KB, literal, subst, subst_scope);
+    //TODO: remove double!
+  }else{
+    //delete all matching facts!
+    Item *predicate = literal->parents(0);
+    ItemL toBeDeleted;
+    for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
+      if(match(fact, literal, subst, subst_scope)) toBeDeleted.append(fact);
+    }
+    for(Item *fact:toBeDeleted){
+      delete fact;
+      KB.checkConsistency();
+    }
+  }
+}
+
+void applyEffectLiterals(Graph& KB, Item* literals, const ItemL& subst, Graph* subst_scope){
+  CHECK(literals->getValueType()==typeid(KeyValueGraph), "");
+  KeyValueGraph &effect = *literals->getValue<KeyValueGraph>();
+  for(Item *lit:effect){
+    applySubstitutedLiteral(KB, lit, subst, subst_scope);
+  }
+}
+
+bool checkFeasibility(Item* literal, const ItemL& subst, Graph* subst_scope){
+  Graph& KB=literal->container.isItemOfParentKvg->container;
   Item *predicate = literal->parents(0);
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
     if(*literal->getValue<bool>() == false) trueValue = false;
   }
 
-  for(Item *fact:predicate->parentOf) if(&fact->container==&G){
-    if(match(fact, literal, subst)) return trueValue;
+  for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
+    if(match(fact, literal, subst, subst_scope)) return trueValue;
   }
   return !trueValue;
 }
 
 
-ItemL getSubstitutions(Graph& rule, ItemL& state, ItemL& constants){
+ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verbose){
   //-- extract precondition
+  if(verbose){ cout <<"Substitutions for rule " <<*rule <<endl; }
+  Graph& Rule=rule->kvg();
   ItemL precond;
-  for(Item *i:rule){
-    if(i->parents.N>0 && i!=rule.last()) //literal <-> degree>0, last literal = outcome
+  for(Item *i:Rule){
+    if(i->parents.N>0 && i!=Rule.last()) //literal <-> degree>0, last literal = outcome
       precond.append(i);
   }
-  return getSubstitutions(precond, state, constants);
+  return getSubstitutions(precond, state, constants, verbose);
 }
 
 
@@ -133,6 +164,9 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   Graph& scope = literals(0)->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
 
   ItemL vars = getVariablesOfScope(scope);
+
+  if(verbose){ cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables "; listWrite(vars, cout); cout <<endl; }
+
 
   //-- initialize potential domains for each variable
   MT::Array<ItemL> domain(scope.N);
@@ -152,7 +186,10 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
       if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
       removeInfeasible(domain(var->index), literal);
       if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
-      if(domain(var->index).N==0) return ItemL(); //early failure
+      if(domain(var->index).N==0){
+        if(verbose) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
+        return ItemL(); //early failure
+      }
     }
   }
 
@@ -185,7 +222,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
         values(vars(1)->index) = value1;
         bool feasible=true;
         for(Item* literal:constraints){
-          if(!checkFeasibility(literal, values)){ feasible=false; break; }
+          if(!checkFeasibility(literal, values, &scope)){ feasible=false; break; }
         }
         if(feasible) substitutions.append(values);
       }
@@ -201,7 +238,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
           bool feasible=true;
           for(Item* literal:constraints){
             if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); }
-            if(!checkFeasibility(literal, values)){
+            if(!checkFeasibility(literal, values, &scope)){
               feasible=false;
               if(verbose) cout <<" -- failed" <<endl;
               break;
@@ -210,7 +247,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
             }
           }
           if(feasible){
-            if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); }
+            if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
             substitutions.append(values);
           }
         }
@@ -218,16 +255,35 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
     }
   }
   if(vars.N>3){
-    NIY;
+    //-- using 'getIndexTuple' we can linearly enumerate all configurations of all variables
+    uintA domainN(vars.N);
+    for(uint i=0;i<vars.N;i++) domainN(i) = domain(i).N;  //collect dims/cardinalities of domains
+    uint configurationsN = product(domainN); //number of all possible configurations
+    for(uint config=0;config<configurationsN;config++){ //loop through all possible configurations
+      uintA valueIndex = getIndexTuple(config, domainN);
+      for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domain(i)(valueIndex(i)); //assign the configuration
+      bool feasible=true;
+      for(Item* literal:constraints){ //loop through all constraints
+        if(!checkFeasibility(literal, values, &scope)) feasible=false;
+        if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
+        if(!feasible) break;
+      }
+      if(feasible){
+        if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
+        substitutions.append(values);
+      }
+    }
   }
   substitutions.reshape(substitutions.N/scope.N,scope.N);
 
-  cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;
-  for(uint s=0;s<substitutions.d0;s++){
-    for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
-      cout <<scope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
+  if(verbose){
+    cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;
+    for(uint s=0;s<substitutions.d0;s++){
+      for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
+        cout <<scope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
+      }
+      cout <<endl;
     }
-    cout <<endl;
   }
   return substitutions;
 }
@@ -256,7 +312,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query){
     for(Item *rule:rules){
       ItemL subs = getSubstitutions(rule->kvg(), state, constants);
       for(uint s=0;s<subs.d0;s++){
-        Item *fact = createNewSubstitutedLiteral(KB, rule->kvg().last(), subs[s]);
+        Item *fact = createNewSubstitutedLiteral(KB, rule->kvg().last(), subs[s], &rule->kvg());
         ItemL matches = getFactMatches(fact, state);
         state = getLiteralsOfScope(KB);
         cout <<"new fact = " <<*fact <<endl;
