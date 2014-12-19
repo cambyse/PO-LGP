@@ -1458,6 +1458,20 @@ template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare
   remove(i);
 }
 
+template<class T> void MT::Array<T>::setSectionSorted(const MT::Array<T>& x, const MT::Array<T>& y, ElemCompare comp) {
+  clear();
+  T* xp=x.p, *yp=y.p, *xstop=x.p+N, *ystop=y.p+N;
+  while(xp!=xstop && yp!=ystop){
+    if(*xp==*yp){
+      append(*xp);
+      xp++;
+      yp++;
+    }else{
+      if(comp(*xp,*yp)) xp++;
+      else yp++;
+    }
+  }
+}
 
 //***** permutations
 

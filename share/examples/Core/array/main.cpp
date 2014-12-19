@@ -8,6 +8,8 @@ using namespace std;
 
 bool DoubleComp(const double& a,const double& b){ return a<b; }
 
+//===========================================================================
+
 void TEST(Basics){
   cout <<"\n*** basic manipulations\n";
   arr a;     //'arr' is a macro for MT::Array<double>
@@ -86,6 +88,8 @@ void TEST(Basics){
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
+//===========================================================================
+
 void TEST(StdVectorCompat) {
   std::vector<double> x(3);
   x[0]=1.;
@@ -95,6 +99,8 @@ void TEST(StdVectorCompat) {
   x=VECTOR(y);
   cout <<"arr -> std::vector -> arr = " <<ARRAY(x) <<endl;
 }
+
+//===========================================================================
 
 void TEST(SimpleIterators) {
   // This test shows how to use the iterators
@@ -130,6 +136,8 @@ void TEST(InitializationList) {
   cout << a << endl;
 }
 
+//===========================================================================
+
 void TEST(RowsAndColumsAccess) {
   // access rows and columns easily
   arr A = eye(3);
@@ -153,6 +161,8 @@ void TEST(RowsAndColumsAccess) {
   cout << A.cols(1, 3) << endl;
 }
 
+//===========================================================================
+
 void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
@@ -169,6 +179,8 @@ void TEST(Matlab){
   cout <<"\nA=" <<A <<endl;
   cout <<"\nrepmat(A,2,3)" <<B <<endl;
 }
+
+//===========================================================================
 
 void TEST(Exception){
   cout <<"\n*** exception handling\n";
@@ -199,6 +211,8 @@ void TEST(MemoryBound){
   cout <<"total memory allocated = " <<MT::globalMemoryTotal <<endl;
   MT::globalMemoryBound=1ull<<30;
 }
+
+//===========================================================================
 
 void TEST(BinaryIO){
   cout <<"\n*** acsii and binary IO\n";
@@ -233,6 +247,8 @@ void TEST(BinaryIO){
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
 
+//===========================================================================
+
 void TEST(Expression){
   cout <<"\n*** matrix expressions\n";
   arr a(2,3),b(3,2),c(3),d;
@@ -249,6 +265,8 @@ void TEST(Expression){
   cout <<"\nlonger expression\n" <<2.*a + 3.*a;
   cout <<"\nlonger expression\n" <<2.*a + ~b;
 }
+
+//===========================================================================
 
 void TEST(Permutation){
   cout <<"\n*** permutation\n";
@@ -268,6 +286,8 @@ void TEST(Permutation){
   for(uint i=0;i<p.N;i++) cout <<i <<":" <<p(i) <<"\n";
 }
 
+//===========================================================================
+
 void TEST(Gnuplot){
   cout <<"\n*** gnuplot\n";
   uint i,j;
@@ -285,6 +305,8 @@ void TEST(Gnuplot){
   MT::wait(1.);
 }
 
+//===========================================================================
+
 void TEST(Determinant){
   cout <<"\n*** determinant computation\n";
   arr a = ARR(1,1,2,1,1,0,0,-2,3);
@@ -300,6 +322,8 @@ void TEST(Determinant){
   //  CHECK(fabs(d-c00*a(0,0))<1e-10,"");
   //  CHECK(fabs(d-c11*a(1,0))<1e-10,"");
 }
+
+//===========================================================================
 
 void TEST(MM){
   cout <<"\n*** matrix multiplication speeds\n";
@@ -330,6 +354,8 @@ void TEST(MM){
   CHECK_ZERO(maxDiff(C,D), 1e-10, "blas MM is not equivalent to native matrix multiplication");
   CHECK(t_blas < t_native,"blas MM is slower than native");
 }
+
+//===========================================================================
 
 void TEST(SVD){
   cout <<"\n*** singular value decomposition\n";
@@ -365,6 +391,8 @@ void TEST(SVD){
   CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "Lapack SVD failed");
 }
 
+//===========================================================================
+
 void TEST(PCA) {
   // TODO: not really checking values automatically, just visualizing them
   // (and they are ok).
@@ -388,6 +416,8 @@ void TEST(PCA) {
   arr yp = y * w;
   cout << "yp = " << yp << endl;
 }
+
+//===========================================================================
 
 void TEST(Inverse){
   cout <<"\n*** matrix inverse\n";
@@ -448,6 +478,8 @@ void TEST(Inverse){
   CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");
 }
 
+//===========================================================================
+
 void TEST(GaussElimintation) {
   cout << "\n*** Gaussian elimination with partial pivoting \n";
   if (MT::lapackSupported) {
@@ -467,58 +499,7 @@ void TEST(GaussElimintation) {
   }
 }
 
-//------------------------------------------------------------------------------
-//
-// alternative operator notation -- TRASH THIS?
-//
-
-/*enum ArrayOpType { exProduct, inProduct, elemProduct };
-class ArrayOp{
-public:
-  ArrayOpType type;
-  const arr *left,*right;
-  ArrayOp(ArrayOpType typ){ type=typ; left=right=0; }
-  void assign(arr &x){
-    CHECK(left && right,"mist");
-    switch(type){
-    case inProduct:
-      cout <<"inner Product between " <<*left <<" and " <<*right <<endl;
-      innerProduct(x,*left,*right);
-      return;
-    case exProduct:
-      cout <<"outer Product between " <<*left <<" and " <<*right <<endl;
-      outerProduct(x,*left,*right);
-      return;
-    case elemProduct:
-      cout <<"element-wise Product between " <<*left <<" and " <<*right <<endl;
-      x = *left % *right;
-      return;
-    }
-    left=right=0;
-    HALT("something went wrong");
-    return;
-  }
-};
-ArrayOp &operator%(const arr &z,ArrayOp &op){ op.left=&z; return op; }
-ArrayOp &operator%(ArrayOp &op,const arr &z){ op.right=&z; return op; }
-ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; return os; }
-//arr &operator=(arr &x,ArrayOp &op){ op.assign(x); return x; }
-
-#define PROD % ArrayOp(inProduct) %
-#define PROD % ArrayOp(inProduct) %
-#define MUL  % ArrayOp(elemProduct) %
-*/
-
-/*void TEST(NewOp){
-  arr x(2,3),y(3,4);
-  rndInt(x,0,5);
-  rndInt(y,0,5);
-  cout <<x <<y <<x PROD y <<x MUL x;
-  //x = x MUL x;
-  }*/
-
-
-//------------------------------------------------------------------------------
+//===========================================================================
 
 void TEST(Tensor){
   cout <<"\n*** tensor manipulations\n";
@@ -558,7 +539,7 @@ void TEST(Tensor){
   cout <<A <<endl <<B <<endl;
 }
 
-//------------------------------------------------------------------------------
+//===========================================================================
 
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
@@ -607,7 +588,7 @@ void TEST(RowShiftedPackedMatrix){
   }
 }
 
-//------------------------------------------------------------------------------
+//===========================================================================
 
 int MAIN(int argc, char *argv[]){
 

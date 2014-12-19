@@ -287,9 +287,19 @@ KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfPare
 //  s = new sKeyValueGraph;
 }
 
+KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+  ItemL::memMove=true;
+  *this = G;
+//  s = new sKeyValueGraph;
+}
+
 KeyValueGraph::~KeyValueGraph() {
 //  delete s;
-  if(!isReferringToItemsOf){ while(N) delete last(); }
+  if(!isReferringToItemsOf){
+    checkConsistency();
+    while(N) delete last();
+    checkConsistency();
+  }
 //  if(!isReference) listDelete(*this);
 }
 
@@ -396,17 +406,42 @@ Item* KeyValueGraph::merge(Item *m){
 }
 
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
+  G.checkConsistency();
+
   if(!isReferringToItemsOf){ while(N) delete last(); } // listDelete(*this);
   { for_list(Item, i, G) i->index=i_COUNT; }
-  for(Item *it:G) it->newClone(*this);
-  //rewire links
-  for(Item *it:*this) it->parentOf.clear();
-  for(Item *it:*this){
-    for(uint i=0;i<it->parents.N;i++){
-      it->parents(i) = elem(it->parents(i)->index);
-      it->parents(i)->parentOf.append(it);
+  for(Item *it:G){
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph());
+      clone->parentOf.clear();
+      clone->kvg().isItemOfParentKvg=clone;
+      clone->kvg().operator=(it->kvg()); //you can only call the operator= AFTER assigning isItemOfParentKvg
+    }else{
+      Item *clone = it->newClone(*this); //this appends sequentially clones of all items to 'this'
+      clone->parentOf.clear();
     }
   }
+
+  //rewire links
+  for(Item *it:*this){
+    for(uint i=0;i<it->parents.N;i++){
+      Item *p=it->parents(i);
+      const Graph *newg=this, *oldg=&G;
+      while(&p->container!=oldg){  //find the container while iterating backward also in the newG
+        CHECK(oldg->isItemOfParentKvg,"");
+        newg = &newg->isItemOfParentKvg->container;
+        oldg = &oldg->isItemOfParentKvg->container;
+      }
+      CHECK(p==oldg->elem(p->index),""); //we found the parent in oldg
+      p->parentOf.removeValue(it);
+      p = newg->elem(p->index); //now assign it to the same in newg
+      p->parentOf.append(it);
+      it->parents(i)=p;
+    }
+  }
+
+  this->checkConsistency();
+  G.checkConsistency();
   return *this;
 }
 
@@ -517,15 +552,25 @@ void KeyValueGraph::sortByDotOrder() {
   for_list(Item, it2, list()) it2->index=it2_COUNT;
 }
 
-bool KeyValueGraph::checkConsistency(){
+bool KeyValueGraph::checkConsistency() const{
   uint idx=0;
-  for(Item *i: list()){
-    CHECK_EQ(&i->container, this, "");
-    CHECK_EQ(i->index, idx, "");
-    for(Item *j: i->parents) CHECK(j->parentOf.findValue(i) != -1,"");
-    for(Item *j: i->parentOf) CHECK(j->parents.findValue(i) != -1,"");
-    if(i->getValueType()==typeid(KeyValueGraph)){
-      i->getValue<KeyValueGraph>()->checkConsistency();
+  for(Item *it: *this){
+    CHECK_EQ(&it->container, this, "");
+    CHECK_EQ(it->index, idx, "");
+    for(Item *j: it->parents)  CHECK(j->parentOf.findValue(it) != -1,"");
+    for(Item *j: it->parentOf) CHECK(j->parents.findValue(it) != -1,"");
+    for(Item *j: it->parents) if(&j->container!=this){
+      //check that parent is contained in a super-graph of this
+      const Graph *g = this;
+      while(&j->container!=g){
+        CHECK(g->isItemOfParentKvg,"");
+        g = &g->isItemOfParentKvg->container;
+      }
+    }
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      Graph& G = it->kvg();
+      CHECK(G.isItemOfParentKvg==it,"");
+      G.checkConsistency();
     }
     idx++;
   }

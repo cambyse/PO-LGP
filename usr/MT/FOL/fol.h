@@ -9,12 +9,20 @@ ItemL getVariablesOfScope(Graph& KB);
 /// returns all variables of the literal
 ItemL getVariables(Item *literal);
 
+uint getNumOfVariables(Item* literal);
+
 /// ONLY for a literal with one free variable: remove all infeasible values from the domain
 /// this is meant to be used as basic 'constraint propagation' for order-1 constraints
 void removeInfeasible(ItemL& domain, Item *literal);
 
 /// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool match(Item *literal0, Item *literal1);
+
+/// try to find a literal within 'scope' that is exactly equal to 'literal'
+Item *getMatchInScope(Item *literal, Graph* scope);
+
+/// check if all literals in 'literals' can be matched with one in scope
+bool checkAllMatchesInScope(ItemL& literals, Graph* scope);
 
 /// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
 ItemL getFactMatches(Item *literal, ItemL& literals);

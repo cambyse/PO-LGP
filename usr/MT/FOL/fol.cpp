@@ -22,12 +22,30 @@ ItemL getVariables(Item* literal){
   return vars;
 }
 
+uint getNumOfVariables(Item* literal){
+  uint v=0;
+  for(Item *i:literal->parents)
+    if(&i->container==&literal->container){
+      CHECK(i->parents.N==0,"");
+      v++;
+    }
+  return v;
+}
+
+Item *getFirstVariable(Item* literal){
+  for(Item *i:literal->parents)
+    if(&i->container==&literal->container){
+      CHECK(i->parents.N==0,"");
+      return i;
+    }
+  return NULL;
+}
+
 void removeInfeasible(ItemL& domain, Item* literal){
   Graph& G=literal->container.isItemOfParentKvg->container;
 
-  ItemL lit_vars = getVariables(literal);
-  CHECK(lit_vars.N==1," remove Infeasible works only for literals with one open variable!");
-  Item *var = lit_vars(0);
+  CHECK(getNumOfVariables(literal)==1," remove Infeasible works only for literals with one open variable!");
+  Item *var = getFirstVariable(literal);
   Item *predicate = literal->parents(0);
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
@@ -47,10 +65,11 @@ void removeInfeasible(ItemL& domain, Item* literal){
     }
     if(match){
       CHECK(value && &value->container==&G,""); //the value should be a constant!
-      dom.ItemL::append(value);
+      dom.ItemL::append(value); //, ItemComp);
     }
   }
   //  cout <<"possible domain of " <<*var <<" BEFORE = " <<GRAPH(domain) <<endl;
+//  if(trueValue) domain.setSectionSorted(domain, dom, ItemComp); // = setSection(domain, dom);
   if(trueValue) domain = setSection(domain, dom);
   else setMinus(domain, dom);
   //  cout <<"possible domain of " <<*var <<" AFTER = " <<GRAPH(domain) <<endl;
@@ -60,6 +79,22 @@ bool match(Item* literal0, Item* literal1){
   if(literal0->parents.N!=literal1->parents.N) return false;
   for(uint i=0;i<literal0->parents.N;i++){
     if(literal0->parents(i) != literal1->parents(i)) return false;
+  }
+  return true;
+}
+
+Item *getMatchInScope(Item *literal, Graph* scope){
+  CHECK(&literal->container!=scope,"if the literal is in the scope, this does not make sense to ask");
+  Item *predicate=literal->parents(0);
+  for(Item *lit:predicate->parentOf) if(&lit->container==scope){
+    if(match(literal, lit)) return lit;
+  }
+  return NULL;
+}
+
+bool checkAllMatchesInScope(ItemL& literals, Graph* scope){
+  for(Item *lit:literals){
+    if(!getMatchInScope(lit, scope)) return false;
   }
   return true;
 }
@@ -90,13 +125,13 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, 
     Item *arg=fact->parents(i);
     CHECK(&arg->container==subst_scope || &arg->container==&KB,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
     if(&arg->container==subst_scope && subst(arg->index)!=NULL){ //is a variable, and subst exists
-      CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
+      //CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
       fact->parents(i) = subst(arg->index);
       arg->parentOf.removeValue(fact);
       fact->parents(i)->parentOf.append(fact);
     }
   }
-  cout <<*fact <<endl;
+//  cout <<*fact <<endl;
   return fact;
 }
 
@@ -116,10 +151,7 @@ void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph
     for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
       if(match(fact, literal, subst, subst_scope)) toBeDeleted.append(fact);
     }
-    for(Item *fact:toBeDeleted){
-      delete fact;
-      KB.checkConsistency();
-    }
+    for(Item *fact:toBeDeleted) delete fact;
   }
 }
 
@@ -169,20 +201,21 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
 
 
   //-- initialize potential domains for each variable
-  MT::Array<ItemL> domain(scope.N);
+  MT::Array<ItemL> domain(vars.N);
+  constants.sort(ItemComp);
   for(Item *v:vars) domain(v->index) = constants;
 
   if(verbose) cout <<"domains before 'constraint propagation':" <<endl;
   if(verbose) for(Item *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
 
   //-- grab open variables for each literal
-  MT::Array<ItemL> lit_vars(scope.N);
-  for(Item *literal:literals) lit_vars(literal->index) = getVariables(literal);
+  uintA lit_numVars(scope.N);
+  for(Item *literal:literals) lit_numVars(literal->index) = getNumOfVariables(literal);
 
   //-- first pick out all precondition predicates with just one open variable and reduce domains directly
   for(Item *literal:literals){
-    if(lit_vars(literal->index).N==1){
-      Item *var = lit_vars(literal->index)(0);
+    if(lit_numVars(literal->index)==1){
+      Item *var = getFirstVariable(literal);
       if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
       removeInfeasible(domain(var->index), literal);
       if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
@@ -199,7 +232,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   //-- for the others, create constraints
   ItemL constraints;
   for(Item *literal:literals){
-    if(lit_vars(literal->index).N>1){
+    if(lit_numVars(literal->index)>1){
       constraints.append(literal);
     }
   }
@@ -208,7 +241,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
 
   //-- naive CSP: loop through everything
   ItemL substitutions;
-  ItemL values(scope.N); values.setZero();
+  ItemL values(vars.N); values.setZero();
   if(vars.N==1){
     for(Item* value0:domain(vars(0)->index)){
       values(vars(0)->index) = value0;
@@ -274,7 +307,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
       }
     }
   }
-  substitutions.reshape(substitutions.N/scope.N,scope.N);
+  substitutions.reshape(substitutions.N/vars.N,vars.N);
 
   if(verbose){
     cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;

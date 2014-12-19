@@ -51,7 +51,7 @@ struct Item {
   bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
   KeyValueGraph ParentOf();
-  //-- specific standard values
+  //-- specific standard values TODO: make return pointer!
   KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
@@ -71,6 +71,7 @@ struct KeyValueGraph:ItemL {
   Item *isItemOfParentKvg;
   
   KeyValueGraph();
+  KeyValueGraph(const KeyValueGraph& G);
   ~KeyValueGraph();
   
   KeyValueGraph& operator=(const KeyValueGraph&);
@@ -116,7 +117,7 @@ struct KeyValueGraph:ItemL {
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
   //-- debugging
-  bool checkConsistency();
+  bool checkConsistency() const;
 
   //-- indexing
   uint index(bool subKVG=false, uint start=0);
@@ -137,6 +138,10 @@ inline Graph GRAPH(const ItemL& L){
   G.isReferringToItemsOf = (Graph*)(1);
   G.ItemL::operator=(L);
   return G;
+}
+
+inline bool ItemComp(Item* const& a, Item* const& b){
+  return a < b;
 }
 
 #include "keyValueGraph_t.h"

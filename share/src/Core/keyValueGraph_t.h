@@ -86,7 +86,10 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone(KeyValueGraph& container) const { return new Item_typed<T>(container, keys, parents, value); }
+  virtual Item *newClone(KeyValueGraph& container) const {
+    if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL);
+    return new Item_typed<T>(container, keys, parents, new T(*value));
+  }
 };
 
 template<class T> T *Item::getValue() {

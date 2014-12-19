@@ -95,48 +95,56 @@ void testFol4(){
 //===========================================================================
 
 void testMonteCarlo(){
-  KeyValueGraph G;
-
-  FILE("boxes.kvg") >>G;
-
-  ItemL rules = G.getItems("Rule");
-  ItemL constants = G.getItems("Constant");
-
+  KeyValueGraph Gorig;
+  FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
+  uint verbose=1;
 
-  for(uint h=0;h<20;h++){
-    cout <<"****************** MonteCarlo rollout step " <<h <<endl;
+  for(uint k=0;k<500;k++){
+    KeyValueGraph G = Gorig;
+    G.checkConsistency();
+    ItemL rules = G.getItems("Rule");
+    ItemL constants = G.getItems("Constant");
+    Graph& terminal = G.getItem("terminal")->kvg();
 
-    ItemL state = getLiteralsOfScope(G);
-    cout <<"*** state = "; listWrite(state, cout); cout<<endl;
+    for(uint h=0;h<100;h++){
+      if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;
 
-    //-- get all possible decisions
-    MT::Array<std::pair<Item*, ItemL> > decisions; //tuples of rule and substitution
-    for(Item* rule:rules){
-//      cout <<"*** RULE: " <<*rule <<endl;
-//      cout <<  "Substitutions:" <<endl;
-      ItemL subs = getRuleSubstitutions(rule, state, constants, false);
-      for(uint s=0;s<subs.d0;s++){
-        decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
+      ItemL state = getLiteralsOfScope(G);
+      if(verbose>2){ cout <<"*** state = "; listWrite(state, cout); cout<<endl; }
+
+      //-- get all possible decisions
+      MT::Array<std::pair<Item*, ItemL> > decisions; //tuples of rule and substitution
+      for(Item* rule:rules){
+        //      cout <<"*** RULE: " <<*rule <<endl;
+        //      cout <<  "Substitutions:" <<endl;
+        ItemL subs = getRuleSubstitutions(rule, state, constants, (verbose>4) );
+        for(uint s=0;s<subs.d0;s++){
+          decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
+        }
+      }
+
+      if(verbose>2) cout <<"*** # possible decisions: " <<decisions.N <<endl;
+      if(verbose>3) for(auto d:decisions){
+        cout <<"rule " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
+      }
+
+      //-- pick a random decision
+      std::pair<Item*, ItemL>& d = decisions(MT::rnd(decisions.N));
+      if(verbose>2){ cout <<"*** decision = " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
+
+      Item *effect = d.first->kvg().last();
+      if(verbose>2) cout <<"*** applying" <<*effect <<endl;
+      applyEffectLiterals(G, effect, d.second, &d.first->kvg());
+
+      //-- test the terminal state
+      if(checkAllMatchesInScope(terminal, &G)){
+        if(verbose>0) cout <<"************* TERMINAL STATE FOUND (h=" <<h <<") ************" <<endl;
+        state = getLiteralsOfScope(G);
+        if(verbose>1){ cout <<"*** FINAL STATE = "; listWrite(state, cout); cout<<endl; }
+        break;
       }
     }
-
-    cout <<"*** # possible decisions: " <<decisions.N <<endl;
-//    for(auto d:decisions){
-//      cout <<"rule " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
-//    }
-
-    //-- pick a random decision
-    std::pair<Item*, ItemL>& d = decisions(MT::rnd(decisions.N));
-    cout <<"*** decision = " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
-
-    Item *effect = d.first->kvg().last();
-    cout <<"*** applying" <<*effect <<endl;
-    applyEffectLiterals(G, effect, d.second, &d.first->kvg());
-
-//    state = getLiteralsOfScope(G);
-//    cout <<"*** new state = "; listWrite(state, cout); cout<<endl;
-
   }
 }
 
