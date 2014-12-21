@@ -325,22 +325,28 @@ template<class T> void MT::Array<T>::makeSparse() {
 //***** internal memory routines (probably not for external use)
 
 /// allocate memory (maybe using \ref flexiMem)
-template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
-  if(n==N) return;
+template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
+  if(n==N && Mforce<0) return; //no change
   CHECK(!reference, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
+  if(n>N && n<=M){ N=n; return; } //memory is big enough, just increase N (copy does not matter)
   uint i;
   T *pold=p;
   uint Mold=M, Mnew;
   //determine a new M (number of allocated items)
-  if(!ARRAY_flexiMem) {
-    Mnew=n;
-  } else {
-    if(n>0 && Mold==0) {
-      Mnew=n;      //first time: exact allocation
-    } else if(n>Mold || 10+2*n<Mold/2) {
-      Mnew=10+2*n; //big down-or-up-resize: allocate with some extra space
+  if(Mforce>=0){ //forced size
+    Mnew = Mforce;
+    CHECK(n<=Mnew,"Mforce is smaller than required!");
+  }else{ //automatic
+    if(!ARRAY_flexiMem) {
+      Mnew=n;
     } else {
-      Mnew=Mold;   //small down-size: don't really resize memory
+      if(n>0 && Mold==0) {
+        Mnew=n;      //first time: exact allocation
+      } else if(n>Mold || 10+2*n<Mold/4) {
+        Mnew=10+2*n; //big down-or-up-resize: allocate with some extra space
+      } else {
+        Mnew=Mold;   //small down-size: don't really resize memory
+      }
     }
   }
   if(Mnew!=Mold) {  //if M changed, allocate the memory
@@ -378,7 +384,6 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
   }
   N=n;
 }
-
 
 ///this was a reference; becomes a copy
 template<class T> MT::Array<T>& MT::Array<T>::dereference(){
@@ -430,7 +435,16 @@ template<class T> T& MT::Array<T>::append() {
 }
 
 /// append an element to the array -- the array becomes 1D!
-template<class T> T& MT::Array<T>::append(const T& x) { append()=x; return p[N-1]; }
+template<class T> T& MT::Array<T>::append(const T& x) {
+  if(N<M && nd==1){ //simple and fast
+    N++;
+    d0++;
+    p[N-1]=x;
+  }else{
+    append()=x;
+  }
+  return p[N-1];
+}
 
 /// append an element to the array -- the array becomes 1D!
 template<class T> void MT::Array<T>::append(const T& x, uint multiple) {
@@ -1456,21 +1470,6 @@ template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare
   uint i=findValueInSorted(x, comp);
   CHECK_EQ(elem(i),x, "value not found");
   remove(i);
-}
-
-template<class T> void MT::Array<T>::setSectionSorted(const MT::Array<T>& x, const MT::Array<T>& y, ElemCompare comp) {
-  clear();
-  T* xp=x.p, *yp=y.p, *xstop=x.p+N, *ystop=y.p+N;
-  while(xp!=xstop && yp!=ystop){
-    if(*xp==*yp){
-      append(*xp);
-      xp++;
-      yp++;
-    }else{
-      if(comp(*xp,*yp)) xp++;
-      else yp++;
-    }
-  }
 }
 
 //***** permutations
@@ -2884,10 +2883,15 @@ template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y
 /// x becomes the section of y and z
 template<class T>
 void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
-  uint i, j;
   x.clear();
-  for(i=0; i<y.N; i++) {
-    for(j=0; j<z.N; j++) if(y(i)==z(j)) { x.append(y(i)); break; }
+  x.anticipateMEM(MT::MIN(y.N,z.N));
+  T* yp=y.p, *zp=z.p, *ystop=y.p+y.N, *zstop=z.p+z.N;
+  for(yp=y.p;yp!=ystop;yp++){
+    for(zp=z.p;zp!=zstop;zp++){
+      if(*yp==*zp) {
+        x.append(*yp); break;
+      }
+    }
   }
 }
 
@@ -2914,6 +2918,37 @@ void setMinus(MT::Array<T>& x, const MT::Array<T>& y) {
       }
     }
     if(j==y.N) i++;
+  }
+}
+
+template<class T> MT::Array<T> setSectionSorted(const MT::Array<T>& x, const MT::Array<T>& y,
+                                                bool (*comp)(const T& a, const T& b) ) {
+  MT::Array<T> R;
+//  R.anticipateMEM(MT::MIN(x.N,y.N));
+  T* xp=x.p, *yp=y.p, *xstop=x.p+x.N, *ystop=y.p+y.N;
+  while(xp!=xstop && yp!=ystop){
+    if(*xp==*yp){
+      R.append(*xp);
+      xp++;
+      yp++;
+    }else{
+      if(comp(*xp,*yp)) xp++;
+      else yp++;
+    }
+  }
+  return R;
+}
+
+/// x becomes the section of y and z
+template<class T>
+void setMinusSorted(MT::Array<T>& x, const MT::Array<T>& y,
+                    bool (*comp)(const T& a, const T& b) ){
+  T *yp=y.p, *ystop=y.p+y.N;
+  for(uint i=0;i<x.N;){
+    while(yp!=ystop && comp(*yp,x(i))) yp++;
+    if(yp==ystop) break;
+    if(*yp==x(i)) x.remove(i);
+    else i++;
   }
 }
 

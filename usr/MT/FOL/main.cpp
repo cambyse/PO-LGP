@@ -108,7 +108,7 @@ void testMonteCarlo(){
     Graph& terminal = G.getItem("terminal")->kvg();
 
     for(uint h=0;h<100;h++){
-      if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;
+      if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
 
       ItemL state = getLiteralsOfScope(G);
       if(verbose>2){ cout <<"*** state = "; listWrite(state, cout); cout<<endl; }
@@ -130,8 +130,9 @@ void testMonteCarlo(){
       }
 
       //-- pick a random decision
-      std::pair<Item*, ItemL>& d = decisions(MT::rnd(decisions.N));
-      if(verbose>2){ cout <<"*** decision = " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
+      uint deci = MT::rnd(decisions.N);
+      std::pair<Item*, ItemL>& d = decisions(deci);
+      if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 
       Item *effect = d.first->kvg().last();
       if(verbose>2) cout <<"*** applying" <<*effect <<endl;

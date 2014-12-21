@@ -2,12 +2,14 @@
 
 ItemL getLiteralsOfScope(Graph& KB){
   ItemL state;
+  state.anticipateMEM(KB.N);
   for(Item *i:KB) if(i->parents.N>0) state.append(i);
   return state;
 }
 
 ItemL getVariablesOfScope(Graph& KB){
   ItemL vars;
+  vars.anticipateMEM(KB.N);
   for(Item *i:KB) if(i->parents.N==0 && i!=KB.last()) vars.append(i);
   return vars;
 }
@@ -53,6 +55,7 @@ void removeInfeasible(ItemL& domain, Item* literal){
   }
 
   ItemL dom;
+  dom.anticipateMEM(domain.N);
   for(Item *state_literal:predicate->parentOf) if(&state_literal->container==&G){
     //-- check that all arguments are the same, except for var!
     bool match=true;
@@ -65,11 +68,13 @@ void removeInfeasible(ItemL& domain, Item* literal){
     }
     if(match){
       CHECK(value && &value->container==&G,""); //the value should be a constant!
-      dom.ItemL::append(value); //, ItemComp);
+//      dom.ItemL::setAppendInSorted(value, ItemComp);
+      dom.ItemL::append(value);
     }
   }
   //  cout <<"possible domain of " <<*var <<" BEFORE = " <<GRAPH(domain) <<endl;
-//  if(trueValue) domain.setSectionSorted(domain, dom, ItemComp); // = setSection(domain, dom);
+//  if(trueValue) domain = setSectionSorted(domain, dom, ItemComp); // = setSection(domain, dom);
+//  else setMinusSorted(domain, dom, ItemComp);
   if(trueValue) domain = setSection(domain, dom);
   else setMinus(domain, dom);
   //  cout <<"possible domain of " <<*var <<" AFTER = " <<GRAPH(domain) <<endl;
@@ -110,7 +115,6 @@ bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope){
   }
   return true;
 }
-
 
 ItemL getFactMatches(Item* literal, ItemL& literals){
   ItemL matches;
@@ -183,6 +187,7 @@ ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verb
   if(verbose){ cout <<"Substitutions for rule " <<*rule <<endl; }
   Graph& Rule=rule->kvg();
   ItemL precond;
+  precond.anticipateMEM(Rule.N);
   for(Item *i:Rule){
     if(i->parents.N>0 && i!=Rule.last()) //literal <-> degree>0, last literal = outcome
       precond.append(i);
@@ -202,7 +207,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
 
   //-- initialize potential domains for each variable
   MT::Array<ItemL> domain(vars.N);
-  constants.sort(ItemComp);
+//  constants.sort(ItemComp);
   for(Item *v:vars) domain(v->index) = constants;
 
   if(verbose) cout <<"domains before 'constraint propagation':" <<endl;
