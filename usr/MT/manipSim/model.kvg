@@ -11,28 +11,21 @@ shape leg2(table2) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.
 shape leg3(table2) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 shape leg4(table2) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 
-body hand { size=[.1 .1 .2 .05] type=1 contact, color=[1 0 0], ctrlable, canGrasp }
+#body hand { size=[.1 .1 .2 .05] type=1 contact, color=[1 0 0], ctrlable, canGrasp }
 
-body obj1 { size=[.1 .1 .2 0] type=0 contact }
-body obj2 { size=[.1 .1 .2 0] type=0 contact }
-#body obj3 { size=[.1 .1 .2 0] type=0 contact }
-body obj4 { size=[.4 .1 .02 0] type=0 contact }
-#body obj5 { size=[.1 .4 .03 0] type=0 contact }
-#body obj6 { size=[.1 .1 .2 0] type=0 contact }
+body block1 { size=[.1 .1 .2 0] type=0 contact }
+body block2 { size=[.1 .1 .2 0] type=0 contact }
+body block3 { size=[.1 .1 .2 0] type=0 contact }
+body block4 { size=[.1 .1 .2 0] type=0 contact }
 
-#joint (table1 obj0) { from=<T t( .3 .3 0)> to=<T t(0 0 .07)> type=10 }
+body board1 { size=[.4 .6 .02 0] type=0 contact }
+body board2 { size=[.1 .4 .02 0] type=0 contact }
 
-joint (table1 obj1) { from=<T t(-.1 .1 0)> to=<T t(0 0 .12)> type=8 }
-joint (table1 obj2) { from=<T t(-.3 .1 0)> to=<T t(0 0 .12)> type=10 }
-#joint (table1 obj3) { from=<T t(-.4 -.3 0)> to=<T t(0 0 .12)> type=10 }
-joint (obj1 obj4) { from=<T t(-.1 -.1 0)> to=<T t(0 0 .03)> type=10 }
-#joint (table1 obj5) { from=<T t( .4 -.1 0)> to=<T t(0 0 .03)> type=10 }
-#joint (table1 obj6) { from=<T t(-.1 .5 0)> to=<T t(0 0 .12)> type=10 }
+joint (table1 block1) { from=<T t(-.1 .1 .02)> to=<T t(0 0 .1)> type=8 }
+joint (table1 block2) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }
+joint (board1 block3) { from=<T t(-.4 -.3 .01)> to=<T t(0 0 .1)> type=8 }
+joint (board1 block4) { from=<T t(-.1 .5 .01)> to=<T t(0 0 .1)> type=8 }
 
+joint (block1 board1) { from=<T t(-.1 -.1 .1)> to=<T t(0 0 .01)> type=8 }
+joint (block3 board2) { from=<T t( .4 -.1 .1)> to=<T t(0 0 .01)> type=8 }
 
-ReaKin{
-  (support obj1 table1)
-  (support obj2 table1)
-  (support obj4 obj1)
-  (support obj4 obj2)
-}

@@ -287,6 +287,12 @@ KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfPare
 //  s = new sKeyValueGraph;
 }
 
+KeyValueGraph::KeyValueGraph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+  ItemL::memMove=true;
+//  s = new sKeyValueGraph;
+  FILE(filename) >>*this;
+}
+
 KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   *this = G;
@@ -466,6 +472,7 @@ void KeyValueGraph::read(std::istream& is) {
       if(it->keys.N && it->keys(0)=="Include"){
         read(it->getValue<MT::FileToken>()->getIs());
         ItemL::removeValue(it);
+        index();
       }
     }
   }

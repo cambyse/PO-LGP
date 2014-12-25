@@ -71,6 +71,7 @@ struct KeyValueGraph:ItemL {
   Item *isItemOfParentKvg;
   
   KeyValueGraph();
+  KeyValueGraph(const char* filename);
   KeyValueGraph(const KeyValueGraph& G);
   ~KeyValueGraph();
   

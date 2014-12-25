@@ -161,7 +161,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
-  Item *it=ats["type"]; if(it) ats.removeValue(it);
+  Item *it=ats["type"]; if(it){ ats.removeValue(it); ats.index(); }
   //  listDelete(ats);
 }
 
@@ -1081,7 +1081,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
           if(j->mimic) NIY;
           arr R = j->X.rot.getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
-          ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->Q.pos));
+          ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->X.rot*j->Q.pos));
           J(0, j_idx+2) += tmp.x;
           J(1, j_idx+2) += tmp.y;
           J(2, j_idx+2) += tmp.z;
@@ -1641,6 +1641,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
+  G.checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
   
   clear();
