@@ -3,7 +3,7 @@
 ItemL getLiteralsOfScope(Graph& KB){
   ItemL state;
   state.anticipateMEM(KB.N);
-  for(Item *i:KB) if(i->parents.N>0) state.append(i);
+  for(Item *i:KB) if(i->keys.N==0 && i->parents.N>0) state.append(i);
   return state;
 }
 
@@ -51,7 +51,7 @@ void removeInfeasible(ItemL& domain, Item* literal){
   Item *predicate = literal->parents(0);
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
-    if(*literal->getValue<bool>() == false) trueValue = false;
+    if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
 
   ItemL dom;
@@ -142,7 +142,7 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, 
 void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
-    if(*literal->getValue<bool>() == false) trueValue = false;
+    if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
 
   if(trueValue){
@@ -172,7 +172,7 @@ bool checkFeasibility(Item* literal, const ItemL& subst, Graph* subst_scope){
   Item *predicate = literal->parents(0);
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
-    if(*literal->getValue<bool>() == false) trueValue = false;
+    if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
 
   for(Item *fact:predicate->parentOf) if(&fact->container==&KB){

@@ -557,19 +557,20 @@ void TEST(RowShiftedPackedMatrix){
   rndInteger(J,0,9);
   for(uint i=0;i<J.d0;i++) Jaux->rowShift(i) = i/3;
   Jaux->computeColPatches(false);
-  write(*Jaux);
+  write(castRowShiftedPackedMatrix(J));
 
   //constructor compressing an array
   arr K =  packRowShifted(unpack(J));
-  write(*((RowShiftedPackedMatrix*)K.aux));
+  write(castRowShiftedPackedMatrix(K));
   
   cout <<"-----------------------" <<endl;
 
-  //--randomized check
+  //-- randomized checks
   for(uint k=0;k<100;k++){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
+    RowShiftedPackedMatrix& Yaux = castRowShiftedPackedMatrix(Y);
 //    write(castRowShiftedPackedMatrix(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
@@ -580,17 +581,28 @@ void TEST(RowShiftedPackedMatrix){
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
 //    arr tmp =comp_A_At(Y);
-//    //write(*((RowShiftedPackedMatrix*)tmp.aux));
+//    //write(castRowShiftedPackedMatrix(tmp));
 //    cout <<X*~X <<endl <<unpack(comp_A_At(Y)) <<endl;
     CHECK_ZERO(maxDiff(X*~X, unpack(comp_A_At(Y))), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
     CHECK_ZERO(maxDiff(X*x2, comp_A_x(Y,x2)), 1e-10, "");
+
+    //cholesky:
+    arr H = comp_A_At(Y);
+    addDiag(H, 1.);
+    arr Hchol;
+    lapack_choleskySymPosDef(Hchol, H);
+    CHECK_ZERO(maxDiff(comp_At_A(Hchol), H), 1e-10, "");
+    CHECK_ZERO(maxDiff(unpack(comp_At_A(Hchol)), unpack(H)), 1e-10, "");
   }
 }
 
 //===========================================================================
 
 int MAIN(int argc, char *argv[]){
+
+  testRowShiftedPackedMatrix();
+  return 0;
 
   testBasics();
   testCheatSheet();

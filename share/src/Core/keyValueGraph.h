@@ -55,7 +55,8 @@ struct Item {
   KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
-  virtual bool hasValue() const {NIY};
+  virtual bool hasValue() const {NIY}
+  virtual void *getValueDirectly() const {NIY}
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
@@ -89,6 +90,7 @@ struct KeyValueGraph:ItemL {
   Item* getItem(const char *key1, const char *key2);
   Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
+  Item* getChild(Item *p1, Item *p2) const;
 
   //-- get lists of items
   KeyValueGraph getItems(const char* key);

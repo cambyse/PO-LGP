@@ -362,6 +362,19 @@ KeyValueGraph KeyValueGraph::getItems(const char* key) {
   return ret;
 }
 
+Item* KeyValueGraph::getChild(Item *p1, Item *p2) const{
+  if(p1->parentOf.N < p2->parentOf.N){
+    for(Item *i:p1->parentOf){
+      if(p2->parentOf.findValue(i)>0) return i;
+    }
+  }else{
+    for(Item *i:p2->parentOf){
+      if(p1->parentOf.findValue(i)>0) return i;
+    }
+  }
+  return NULL;
+}
+
 KeyValueGraph KeyValueGraph::getItemsOfDegree(uint deg) {
   KeyValueGraph ret;
   ret.isReferringToItemsOf = this;

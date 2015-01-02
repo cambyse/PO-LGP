@@ -64,6 +64,10 @@ struct Item_typed:Item {
     return value!=NULL;
   }
 
+  virtual void *getValueDirectly() const {
+    return value;
+  }
+
   virtual void takeoverValue(Item *it) {
     Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");

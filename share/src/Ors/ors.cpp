@@ -2187,6 +2187,9 @@ void ors::KinematicWorld::meldFixedJoints() {
     a->inertia += b->inertia;
     b->mass = 0.;
   }
+  qdim.clear();
+  proxies.clear();
+  calc_q_from_Q();
   checkConsistency();
   //-- remove fixed joints and reindex
   for_list_rev(Joint, jj, joints) if(jj->type==JT_fixed) delete jj;
