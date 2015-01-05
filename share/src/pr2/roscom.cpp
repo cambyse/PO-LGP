@@ -7,7 +7,9 @@
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include <ar_track_alvar/AlvarMarkers.h>
+#ifdef MLR_AR_TRACK
+#  include <ar_track_alvar/AlvarMarkers.h>
+#endif
 
 //===========================================================================
 
@@ -213,6 +215,8 @@ void RosCom_ForceSensorSync::close(){
 
 //===========================================================================
 
+#ifdef MLR_AR_TRACK
+
 struct sRosCom_ARMarkerSync{
   RosCom_ARMarkerSync *base;
   ros::NodeHandle nh;
@@ -247,6 +251,20 @@ void RosCom_ARMarkerSync::close(){
   s->nh.shutdown();
 }
 
+#else
+
+void RosCom_ARMarkerSync::open(){
+  MT_MSG("compiler flags do not enable ARMarkers")
+}
+
+void RosCom_ARMarkerSync::step(){
+}
+
+void RosCom_ARMarkerSync::close(){
+  MT_MSG("compiler flags do not enable disabled ARMarkers")
+}
+
+#endif
 
 //===========================================================================
 

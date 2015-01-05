@@ -163,9 +163,9 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
   uint M=0;
   for(uint t=0; t<=T; t++) {
     uint dimphi_t = f.dim_phi(t);
-    uint dimg_t   = f.dim_g(t);
-    uint dimh_t   = f.dim_h(t);
-    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
+//    uint dimg_t   = f.dim_g(t);
+//    uint dimh_t   = f.dim_h(t);
+//    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
     if(!dimphi_t) continue;
 
     //construct x_bar

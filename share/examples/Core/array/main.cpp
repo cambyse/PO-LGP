@@ -570,7 +570,7 @@ void TEST(RowShiftedPackedMatrix){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
-    RowShiftedPackedMatrix& Yaux = castRowShiftedPackedMatrix(Y);
+//    RowShiftedPackedMatrix& Yaux = castRowShiftedPackedMatrix(Y);
 //    write(castRowShiftedPackedMatrix(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
@@ -600,9 +600,6 @@ void TEST(RowShiftedPackedMatrix){
 //===========================================================================
 
 int MAIN(int argc, char *argv[]){
-
-  testRowShiftedPackedMatrix();
-  return 0;
 
   testBasics();
   testCheatSheet();

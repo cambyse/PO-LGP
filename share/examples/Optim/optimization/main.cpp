@@ -3,7 +3,7 @@
 #include <functional>
 
 void TEST(SqrProblem) {
-  ScalarFunction f = ChoiceFunction();
+  const ScalarFunction& f = ChoiceFunction();
 
   displayFunction(f, true);
 

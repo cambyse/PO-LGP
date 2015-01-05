@@ -708,7 +708,7 @@ void RuleSet::sort_using_args() {
       FOR1D(this->ra, r) {
         int action_idx = symbols_action.findValue(this->ra(r)->action->s);
         if (this->ra(r)->action->s->arity == 0) {
-          if (action_idx * 100 == action_ids(i))
+          if (action_idx * 100 == (int) action_ids(i))
             ra_sorted.append(this->ra(r));
         }
         else if (this->ra(r)->action->s->arity == 1) {
@@ -1428,7 +1428,7 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
   FOR1D(rules_ground.ra, r) {
     if (rules_ground.ra(r)->context.containsDoubles()) {    //remove doubles if necessary
       LitL newContext;
-      for (int ci = 0; ci < rules_ground.ra(r)->context.N; ci++)
+      for (uint ci = 0; ci < rules_ground.ra(r)->context.N; ci++)
         newContext.setAppend(rules_ground.ra(r)->context(ci));
       rules_ground.ra(r)->context = newContext;
     }
