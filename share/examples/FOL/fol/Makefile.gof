@@ -1,0 +1,6 @@
+BASE = ../../..
+
+DEPEND = Core FOL Gui
+OPTIM=fast_debug
+
+include $(BASE)/gofMake/generic.mk
