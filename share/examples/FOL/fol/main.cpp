@@ -31,9 +31,9 @@ void testFol1(){
   cout <<"state = " <<*s <<"\nrule=" <<*r <<endl;
 
 
-  Item *sub = new Item_typed<KeyValueGraph>(G, new KeyValueGraph);
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(0), consts(0)});
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(1), consts(2)});
+  Item *sub = new Item_typed<KeyValueGraph>(G, new KeyValueGraph, true);
+  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(0), consts(0)}, NULL, false);
+  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(1), consts(2)}, NULL, false);
 }
 
 //===========================================================================
@@ -100,7 +100,7 @@ void testMonteCarlo(){
   MT::rnd.seed(3);
   uint verbose=1;
 
-  for(uint k=0;k<1000;k++){
+  for(uint k=0;k<10;k++){
     KeyValueGraph G = Gorig;
     G.checkConsistency();
     Item *Terminate_keyword = G["Terminate"];

@@ -108,11 +108,11 @@ struct KeyValueGraph:ItemL {
   void removeItem(Item* it){ delete it; }
 
   //-- adding items
-  template<class T> Item *append(T *x);
-  template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
-  template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
-  template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
-  template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+  template<class T> Item *append(T *x, bool ownsValue);
+  template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue);
+  template<class T> Item *append(const StringA& keys, T *x, bool ownsValue) { return append(keys, ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x, ownsValue); }
   Item *append(const uintA& parentIdxs);
 
   //-- merging items

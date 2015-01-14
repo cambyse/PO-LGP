@@ -5,7 +5,10 @@
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
 
+//===========================================================================
+
 void sample();
+void testMonteCarlo();
 
 void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
   W.qdim.clear();
@@ -202,7 +205,7 @@ int main(int argc,char **argv){
 
 //  optimizeFinal();
 //  testReachable();
-  sample();
+  testMonteCarlo();
 
 
   return 0;

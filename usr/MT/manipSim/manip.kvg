@@ -1,63 +1,90 @@
-Object table1
-Object table2
-Object block1
-Object block2
-Object block3
-Object block4
-Object board1
-Object board2
+fluent
+object
+loaded
+ANY
+
+Symbol table1
+Symbol table2
+Symbol block1
+Symbol block2
+Symbol block3
+Symbol block4
+Symbol board1
+Symbol board2
 
 # predicates
 Symbol fixed
-Symbol supports
+Symbol on
 Symbol movable
 Symbol canGrasp
 
-#initial state
+#non-fluent facts
+(fluent on)
+(fluent movable)
+(object table1)
+(object table2)
+(object block1)
+(object block2)
+(object block3)
+(object block4)
+(object board1)
+(object board2)
+
 (fixed table1)
 (fixed table2)
+
+
+#initial state (fluent-facts)
 #(movable hand)
 #(canGrasp hand)
-(supports table1 block1)
-(supports table1 block2)
-(supports table2 board1)
-(supports table2 board2)
-(supports table1 block3)
-(supports table1 block4)
+#(on table1 block1)
+#(on table1 block2)
+#(on table2 board1)
+#(on table2 board2)
+#(on table1 block3)
+#(on table1 block4)
 
-#(supports table1 block1)
-#(supports table1 block2)
-#(supports block1 board1)
-#(supports block2 board1)
-#(supports board1 block3)
-#(supports board1 block4)
-#(supports block3 board2)
-#(supports block4 board2)
+#(on table1 block1)
+#(on table1 block2)
+#(on block1 board1)
+#(on block2 board1)
+#(on board1 block3)
+#(on board1 block4)
+#(on block3 board2)
+#(on block4 board2)
 
 
 ### RULES
 
 Rule break {
-     SYM, X, Y
-     (SYM X Y)
-     out1 { (SYM X Y)! }
+     X, SYM, Y
+     (X SYM Y) (fluent SYM) (object X) (object Y)
+     out1 { (X SYM Y)! }
 }
 
-Rule create {
-     SYM, X, Y
-     (SYM X Y)!
-     out1 { (SYM X Y) (movable X) }
+Rule create_on{
+  X, Y,
+  (loaded X)! (fixed X)! (object X) (object Y)
+  out1 { (X on Y) (loaded Y) (movable X) }
 }
+
+#Rule create {
+#     SYM, X, Y
+#     (SYM X Y)! (fluent SYM) (object X) (object Y)
+#     out1 { (SYM X Y) (movable X) }
+#}
+
+
 
 ###
 
-NegConstraint {
- X, Y, Z
- (support X Y) (support Y Z) (support X Z)
-}
+#NegConstraint {
+# X, Y, Z
+# (on X Y) (on Y Z) (on X Z)
+#
 
-Constraint {
- X, Y, Z
- (support X Y) (support Y Z) (support X Z)
-}
+#Constraint {
+# X, Y, Z
+# (on X Y) (on Y Z) (on X Z)
+#}
 

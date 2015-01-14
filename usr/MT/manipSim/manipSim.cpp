@@ -49,7 +49,7 @@ void State::compControllable(){
   for(Item *o:ctrlables){
     bool hasTag=false;
     for(Item *r:o->parentOf) if(r->keys(0)=="controllable"){ hasTag=true; break; }
-    if(!hasTag) G.append<bool>(STRINGS("controllable"), ARRAY(o), NULL);
+    if(!hasTag) G.append<bool>(STRINGS("controllable"), ARRAY(o), NULL, false);
   }
 //  cout <<G <<endl;
 }
@@ -67,7 +67,7 @@ bool State::testAction(const Action& a, bool apply){
       if(!o1->ParentOf()["canGrasp"]) return false;
     }
     applicable = true;
-    if(apply) G.append<bool>(STRINGS(a.p), ARRAY(o1,o2), NULL);
+    if(apply) G.append<bool>(STRINGS(a.p), ARRAY(o1,o2), NULL, false);
   }
   if(a.a==break_){
     Item *toBeBroken=NULL;

@@ -38,11 +38,11 @@ KeyValueGraph& registry();
 
 //macros to be used in *.cpp files
 
-#define REGISTER_ITEM(T, key, value) \
-  Item_typed<T > key##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key)), ItemL(), value);
+#define REGISTER_ITEM(T, key, value, ownsValue) \
+  Item_typed<T > key##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key)), ItemL(), value, ownsValue);
 
-#define REGISTER_ITEM2(T, key1, key2, value) \
-  Item_typed<T > key1##_##key2##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value);
+#define REGISTER_ITEM2(T, key1, key2, value, ownsValue) \
+  Item_typed<T > key1##_##key2##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, ownsValue);
 
 
 //===========================================================================
@@ -136,7 +136,7 @@ template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
   Type_typed_readable() {}
   Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
-  virtual Item* readItem(KeyValueGraph& container, istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(container, x); }
+  virtual Item* readItem(KeyValueGraph& container, istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(container, x, true); }
   virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 
@@ -148,13 +148,13 @@ struct Type_typed_readable:Type_typed<T,Base> {
 
 #define KO ,
 #define REGISTER_TYPE(T) \
-  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO void>(NULL,NULL), true);
 
 #define REGISTER_TYPE_Key(Key, T) \
-  REGISTER_ITEM2(Type, Decl_Type, Key, new Type_typed_readable<T KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, Key, new Type_typed_readable<T KO void>(NULL,NULL), true);
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
-  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO Base>(#Base,NULL));
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO Base>(#Base,NULL), true);
 
 
 #endif

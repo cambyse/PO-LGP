@@ -175,7 +175,12 @@ bool checkFeasibility(Item* literal, const ItemL& subst, Graph* subst_scope){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
 
+#if 1
   for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
+#else
+  ItemL state = getLiteralsOfScope(KB);
+  for(Item *fact:state) if(&fact->container==&KB){
+#endif
     if(match(fact, literal, subst, subst_scope)) return trueValue;
   }
   return !trueValue;

@@ -161,7 +161,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
-  Item *it=ats["type"]; if(it){ ats.removeValue(it); ats.index(); }
+  Item *it=ats["type"]; if(it){ delete it; /*ats.removeValue(it);*/ ats.index(); }
   //  listDelete(ats);
 }
 
@@ -277,7 +277,7 @@ void ors::Shape::parseAts() {
     Vector c = mesh.center();
     if(!ats.getValue<bool>("rel_includes_mesh_center")){
       rel.addRelativeTranslation(c);
-      ats.append<bool>("rel_includes_mesh_center",new bool(true));
+      ats.append<bool>("rel_includes_mesh_center",new bool(true), true);
     }
     mesh_radius = mesh.getRadius();
   }

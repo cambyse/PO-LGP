@@ -68,13 +68,14 @@ void Item::write(std::ostream& os) const {
   
   //-- write parents
   if(parents.N) {
-    os <<" (";
+    if(keys.N) os <<' ';
+    os <<'(';
     for_list(Item, it, parents) {
       if(it_COUNT) os <<' ';
       CHECK(it->keys.N,"");
       os <<it->keys.last();
     }
-    os <<")";
+    os <<')';
   }
   
   //-- write value
@@ -166,36 +167,37 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
       str.read(is, "", " \n\r\t,;}", false);
       if(str=="true") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true));
       else if(str=="false") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false));
-      else item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str));
+      else item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
     } else if(MT::contains("-.0123456789", c)) {  //single double
       is.putback(c);
       double d;
       try { is >>d; } catch(...) PARSERR("can't parse double");
-      item = new Item_typed<double>(containingKvg, keys, parents, new double(d));
+      item = new Item_typed<double>(containingKvg, keys, parents, new double(d), true);
     } else switch(c) {
         case '!': { //boolean false
-	  item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false));
+          item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false), true);
 	} break;
         case '\'': { //MT::FileToken
           str.read(is, "", "\'", true);
           MT::FileToken *f = new MT::FileToken(str, false);
           try{
             f->getIs(); //creates the ifstream and might throw an error
-            item = new Item_typed<MT::FileToken>(containingKvg, keys, parents, f);
+            item = new Item_typed<MT::FileToken>(containingKvg, keys, parents, f, true);
           } catch(...){
             PARSERR("kvg indicates file which does not exist -> converting to string!");
-            item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str));
+            item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
+            delete f;
           }
         } break;
         case '\"': { //MT::String
           str.read(is, "", "\"", true);
-          item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str));
+          item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
         } break;
         case '[': { //arr
           is.putback(c);
           arr reals;
           is >>reals;
-          item = new Item_typed<arr>(containingKvg, keys, parents, new arr(reals));
+          item = new Item_typed<arr>(containingKvg, keys, parents, new arr(reals), true);
         } break;
         case '<': { //any type parser
           str.read(is, " \t", " \t\n\r()`-=~!@#$%^&*()+[]{};'\\:|,./<>?", false);
@@ -214,28 +216,28 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         } break;
         case '{': { // KeyValueGraph (e.g., attribute list)
           KeyValueGraph *subList = new KeyValueGraph;
-          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList);
+          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList, true);
           subList->isItemOfParentKvg = item;
           subList->read(is);
           MT::parse(is, "}");
         } break;
         case '(': { // referring KeyValueGraph
-          KeyValueGraph refs;
-          refs.isReferringToItemsOf = &containingKvg;
+          KeyValueGraph *refs = new KeyValueGraph;
+          refs->isReferringToItemsOf = &containingKvg;
           for(uint j=0;; j++) {
             str.read(is, " , ", " , )", false);
             if(!str.N) break;
             Item *e=containingKvg.getItem(str);
             if(!e && parentGraph) e=parentGraph->getItem(str);
             if(e) { //sucessfully found
-              refs.ItemL::append(e);
+              refs->ItemL::append(e);
             } else { //this element is not known!!
               HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
                    <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
             }
           }
           MT::parse(is, ")");
-          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, new KeyValueGraph(refs));
+          item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, refs, true);
         } break;
         default: { //error
           is.putback(c);
@@ -245,7 +247,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
       }
   } else { //no '=' or '{' -> boolean
     is.putback(c);
-    item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true));
+    item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true), true);
   }
 
 #undef PARSERR
@@ -312,7 +314,7 @@ KeyValueGraph::~KeyValueGraph() {
 Item *KeyValueGraph::append(const uintA& parentIdxs) {
   ItemL parents(parentIdxs.N);
   for(uint i=0;i<parentIdxs.N; i++) parents(i) = ItemL::elem(parentIdxs(i));
-  return append<int>(STRINGS_1(ItemL::N), parents, NULL);
+  return append<int>(STRINGS_1(ItemL::N), parents, NULL, false);
 }
 
 
@@ -431,7 +433,7 @@ KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
   { for_list(Item, i, G) i->index=i_COUNT; }
   for(Item *it:G){
     if(it->getValueType()==typeid(KeyValueGraph)){
-      Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph());
+      Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph(), true);
       clone->parentOf.clear();
       clone->kvg().isItemOfParentKvg=clone;
       clone->kvg().operator=(it->kvg()); //you can only call the operator= AFTER assigning isItemOfParentKvg
