@@ -519,7 +519,6 @@ void TEST(BlenderImport){
 int MAIN(int argc,char **argv){
   
   testKinematics();
-    return 0;
   testLoadSave();
   testCopy();
   testPlayStateSequence();

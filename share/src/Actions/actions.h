@@ -41,10 +41,14 @@ struct SetQ : GroundedAction {
 struct PushForce : GroundedAction {
   arr forceVec;
   PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
-  bool finishedSuccess(ActionMachine& M);
+  virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
+struct FollowReferenceInTaskSpace : GroundedAction{
+  FollowReferenceInTaskSpace(const char* name, TaskMap *map, const arr& referenceTraj, double secondsPerStep);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
 
 // TODO:
 // extern ActionSymbol &gamepad,

@@ -73,7 +73,7 @@ struct Item_typed:Item {
   }
 
   virtual void *getValueDirectly() const {
-    return value;
+    return (void*)value;
   }
 
   virtual void takeoverValue(Item *it) {

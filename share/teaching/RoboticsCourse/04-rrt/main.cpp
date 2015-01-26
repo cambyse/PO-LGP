@@ -197,6 +197,18 @@ void RTTplan(){
   q >>FILE("q.rrt");
 }
 
+int main(int argc,char **argv){
+  MT::initCmdLine(argc,argv);
+
+  switch(MT::getParameter<int>("mode", 1)){
+  case 0: RTTplan(); //break;
+    //  case 1: optim(); break;
+  }
+
+  return 0;
+}
+
+/*
 void optim(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
@@ -246,16 +258,6 @@ void optim(){
   }
 }
 
-int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-
-  switch(MT::getParameter<int>("mode", 1)){
-  case 0: RTTplan(); //break;
-  case 1: optim(); break;
-  }
-
-  return 0;
-}
 
 
 void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
@@ -314,3 +316,4 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
     }
   }
 }
+*/

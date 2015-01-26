@@ -10,10 +10,15 @@ VideoEncoder_libav_simple *vid;
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   MotionProblem MP(world, false);
-  MP.loadTransitionParameters();
   x = MP.getInitialization();
 
   //-- setup the motion problem
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+
   Task *pos = MP.addTask("position",
                             new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
