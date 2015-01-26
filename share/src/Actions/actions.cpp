@@ -142,9 +142,50 @@ PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forc
   // add a PDTask to the ActionMachine
 }
 
+void PushForce::step(ActionMachine& M){
+//      TODO: move to step() method of the action itself
+//      if(a->name == "PushForce") {
+//        cout <<" - FORCE TASK: " << endl;
+//        PushForce* pf = dynamic_cast<PushForce*>(a);
+//        // cout << pf->forceVec << endl;
+//        s->refs.fR = pf->forceVec;
+//        NIY;
+////        s->refs.fR_gainFactor = 1.;
+////        s->refs.Kp_gainFactor = .2;
+//      }
+}
+
 bool PushForce::finishedSuccess(ActionMachine& M) {
   return false;
   // PDtask *task=tasks(0);
   // return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
   // return false;
+}
+
+//===========================================================================
+FollowReferenceInTaskSpace::FollowReferenceInTaskSpace(ActionMachine& actionMachine, const char* name, TaskMap *map, const arr& referenceTraj, double durationInSeconds)
+  : GroundedAction(actionMachine, name), ref(referenceTraj), duration(durationInSeconds), task(NULL) {
+  PDtaskL::memMove=true;
+  task = new PDtask(
+                   STRING("FollowTraj_" << name), 1., .8,
+                   map);
+  // task->setGains(200.,0.);
+  task->y_ref = ref[0];
+//  task->v_ref = referenceTraj[0]; TODO!
+  tasks.append(task);
+}
+
+void FollowReferenceInTaskSpace::step(ActionMachine& M){
+  uint t = actionTime/duration * (ref.d0-1);
+  t = MT::MIN(t, ref.d0-1);
+  task->y_ref = ref[t];
+  cout <<"STEPPING" <<endl;
+}
+
+bool FollowReferenceInTaskSpace::finishedSuccess(ActionMachine& M){
+  return actionTime>=duration;
+}
+
+void FollowReferenceInTaskSpace::reportDetails(ostream& os) {
+  cout <<"HELLO" <<endl;
 }

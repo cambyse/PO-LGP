@@ -61,47 +61,39 @@ void ActionMachine::step(){
   if(!(t%10))
     s->feedbackController.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
+  //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
   transition();
 
   //defaults
   s->refs.fR = ARR(0., 0., 0.);
   s->refs.Kq_gainFactor = ARR(1.);
 
+  //-- check the gamepad
   arr gamepad = gamepadState.get();
   if(stopButtons(gamepad)) engine().shutdown.incrementValue();
 
-  //-- get access
-  A.readAccess();
+  //-- get access to the list of actions
+  A.writeAccess();
 
   //  cout <<"** active actions:";
   reportActions(A());
 
+  //-- call the step method for each action
   for(GroundedAction *a : A()) {
     if(a->actionState==ActionState::active){
+      a->step(*this);
       for(PDtask *t:a->tasks) t->active=true;
-
-      if(a->name == "PushForce") {
-        cout <<" - FORCE TASK: " << endl;
-        PushForce* pf = dynamic_cast<PushForce*>(a);
-        // cout << pf->forceVec << endl;
-        s->refs.fR = pf->forceVec;
-        NIY;
-//        s->refs.fR_gainFactor = 1.;
-//        s->refs.Kp_gainFactor = .2;
-      }
-    }
-    else {
+      a->actionTime += .01;
+    } else {
       for(PDtask *t:a->tasks) t->active=false;
     }
   }
 
-  cout <<"FL=" <<ctrl_obs.get()->fL <<endl;
-
-  //collect all tasks of all actions into the feedback controller:
+  //-- compute the feedback controller step
+  //first collect all tasks of all actions into the feedback controller:
   s->feedbackController.tasks.clear();
   for(GroundedAction *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
-
-
+  //now operational space control
   for(uint tt=0;tt<10;tt++){
     arr a = s->feedbackController.operationalSpaceControl();
     s->q += .001*s->qdot;
@@ -112,6 +104,7 @@ void ActionMachine::step(){
   // s->MP.reportCurrentState();
   A.deAccess();
 
+  //-- send the computed movement to the robot
   s->refs.q=s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.u_bias = zeros(s->q.N);
@@ -199,7 +192,7 @@ void ActionMachine::waitForActionCompletion() {
 //
 
 GroundedAction::GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState)
-  : name(name), actionState(actionState){
+  : name(name), actionState(actionState), actionTime(0.){
   actionMachine.A.set()->append(this);
 }
 
@@ -209,8 +202,12 @@ GroundedAction::~GroundedAction(){
 }
 
 void GroundedAction::reportState(ostream& os){
-  os <<"Action '" <<name << "':  actionState=" << getActionStateString(actionState) <<"  PDtasks:" <<endl;
+  os <<"Action '" <<name
+    <<"':  actionState=" << getActionStateString(actionState)
+    <<"  actionTime=" << actionTime
+    <<"  PDtasks:" <<endl;
   for(PDtask* t: tasks) t->reportState(os);
+  reportDetails(os);
 }
 
 //===========================================================================

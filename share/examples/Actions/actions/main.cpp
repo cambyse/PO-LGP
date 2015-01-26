@@ -1,6 +1,11 @@
 #include <Actions/actionMachine.h>
+#include <Actions/actionMachine_internal.h>
 #include <Actions/actions.h>
+#include <Motion/motionHeuristics.h>
 
+
+//===========================================================================
+//very basic - just to play around
 
 void TEST(ActionMachine){
   ActionSystem activity;
@@ -36,7 +41,10 @@ void TEST(ActionMachine){
   engine().close(activity);
 }
 
-void do_the_dance() {
+//===========================================================================
+// do some sequential hand movements
+
+void TEST(Dance) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
@@ -55,6 +63,33 @@ void do_the_dance() {
   
   engine().close(activity);
 }
+
+//===========================================================================
+// do some sequential hand movements
+
+void TEST(FollowTrajectory) {
+  ActionSystem activity;
+  new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+
+
+  // first construct the trajectory
+  arr q = interpolate_trajectory({.6, -.5, 1.2}, {.6, .6, 1.2}, 100);
+
+  // then construct a space in which to execute
+  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
+
+  // then the action
+  GroundedAction *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
+
+  cout <<"I'm here...waiting" <<endl;
+  MT::wait(7.);
+
+  engine().close(activity);
+}
+
+//===========================================================================
 
 void test_push() {
   ActionSystem activity;
@@ -133,7 +168,8 @@ int main(int argc, char** argv) {
   // idle2();
   // return 0;
   // test_collision();
-  do_the_dance();
+//  testDance();
+  testFollowTrajectory();
   // testActionMachine();
   
   return 0;

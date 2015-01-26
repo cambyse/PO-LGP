@@ -69,9 +69,9 @@ void PDtask::reportState(ostream& os){
   os <<"  PDtask " <<name;
   if(active) {
     if(y_ref.N==y.N && v_ref.N==v.N){
-      os <<": \ty_ref=" <<y_ref <<" \ty=" <<y
-           <<" \tPterm=(" <<Pgain <<'*' <<length(y_ref-y)
-           <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-v) <<')'
+      os <<":  y_ref=" <<y_ref <<" \ty=" <<y
+           <<"  Pterm=(" <<Pgain <<'*' <<length(y_ref-y)
+           <<")   Dterm=(" <<Dgain <<'*' <<length(v_ref-v) <<')'
            <<endl;
     }else{
       os <<" -- y_ref.N!=y.N or v_ref.N!=v.N -- not initialized? -- "
