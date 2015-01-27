@@ -110,3 +110,6 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   f.world.setJointState(x);
   return opt.UCP.get_sumOfSquares();
 }
+
+//===========================================================================
+

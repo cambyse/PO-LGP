@@ -11,7 +11,11 @@ shape leg2(table2) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.
 shape leg3(table2) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 shape leg4(table2) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 
-#body hand { size=[.1 .1 .2 .05] type=1 contact, color=[1 0 0], ctrlable, canGrasp }
+body base { size=[.1 .1 .1 .05] type=0 contact, color=[0 0 0] }
+body base2 { size=[.1 .1 .1 .05] type=0 contact, color=[0 0 0] }
+body hand { size=[.05 .05 .2 .05] type=0 contact, color=[1 0 0], ctrlable, canGrasp }
+joint (base base2) { type=7 }
+joint (base2 hand) { type=11 }
 
 body block1 { size=[.1 .1 .2 0] type=0 contact }
 body block2 { size=[.1 .1 .2 0] type=0 contact }

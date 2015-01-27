@@ -1,0 +1,15 @@
+Symbol supports
+Symbol pap
+
+Object table1
+Object block1
+Object board1
+
+(supports table1 block1)
+(supports table1 board1)
+
+actionSequence{
+ (pap block1 board1)
+}
+
+#Quit

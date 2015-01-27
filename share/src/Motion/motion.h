@@ -66,7 +66,6 @@ struct Task {
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
-
 };
 
 

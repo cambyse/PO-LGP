@@ -5,7 +5,8 @@
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
 
-#include "planManip.h"
+#include "endStateOptim.h"
+#include "switchOptim.h"
 
 //===========================================================================
 
@@ -48,43 +49,6 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
 
 //===========================================================================
 
-void TEST(Reachable){
-
-  KeyValueGraph G;
-  ors::KinematicWorld world("model.kvg");
-
-//  G <<FILE("state.kvg");
-  RelationalGraph2OrsGraph(world, G);
-
-
-//  world.checkConsistency();
-//  world >>FILE("z.ors");
-//  //some optional manipulations
-//  world.checkConsistency();
-//  world.setShapeNames();
-//  world.checkConsistency();
-//  world.meldFixedJoints();
-//  world.checkConsistency();
-//  world >>FILE("z.ors");
-//  world.removeUselessBodies();
-//  world >>FILE("z.ors");
-//  world.topSort();
-//  world.makeLinkTree();
-//  world.calc_q_from_Q();
-//  world.calc_fwdPropagateFrames();
-//  world >>FILE("z.ors");
-
-//  if(MT::checkParameter<bool>("cleanOnly")) return;
-
-  for(;;){
-    animateConfiguration(world);
-    world.gl().watch();
-  }
-}
-
-
-//===========================================================================
-
 void optimizeFinal(){
   ors::KinematicWorld world("model.kvg");
   Graph G("final.kvg");
@@ -97,9 +61,27 @@ void optimizeFinal(){
 
 //===========================================================================
 
+void optimSwitchConfigurations(){
+  ors::KinematicWorld world("model.kvg");
+  Graph G("switches.kvg");
+
+  ors::KinematicWorld world_init = world;
+
+  double fx = endStateOptim(world, G);
+  cout <<"fx=" <<fx <<endl;
+  world.gl().watch();
+
+  fx = optimSwitchConfigurations(world_init, world, G);
+  cout <<"fx=" <<fx <<endl;
+  world.gl().watch();
+}
+
+//===========================================================================
+
 int main(int argc,char **argv){
 
-  optimizeFinal();
+//  optimizeFinal();
+  optimSwitchConfigurations();
 //  testReachable();
 //  testMonteCarlo();
 
