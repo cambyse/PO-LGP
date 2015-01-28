@@ -1,4 +1,4 @@
-#include "ikmo.h"
+#include "ikmo_cma.h"
 #include <Core/util.h>
 
 
@@ -315,40 +315,40 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 //    }
 
 //    Jg = Jgr;
-    MT::timerStart(true);
-    cout << "timer start: " << endl;
-    Jg_JgtP = comp_A_At(JgP);
-    Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
-    cout << "Jg_Jgt: " << MT::timerRead(true) << endl;
+//    MT::timerStart(true);
+//    cout << "timer start: " << endl;
+//    Jg_JgtP = comp_A_At(JgP);
+//    Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
+//    cout << "Jg_Jgt: " << MT::timerRead(true) << endl;
 
-//    cout << Jg_Jgt << endl;
-//    cout << Jg << endl;
-//    arr Jg_Jgt_I = inverse(Jg_Jgt);
-    cout << Jg.d0 << " " << Jg.d1 << endl;
-    cout << Jg_Jgt.d0 << " " << Jg_Jgt.d1 << endl;
+////    cout << Jg_Jgt << endl;
+////    cout << Jg << endl;
+////    arr Jg_Jgt_I = inverse(Jg_Jgt);
+//    cout << Jg.d0 << " " << Jg.d1 << endl;
+//    cout << Jg_Jgt.d0 << " " << Jg_Jgt.d1 << endl;
 
-    arr Jg_Jgt_I = lapack_inverseSymPosDef(Jg_Jgt);
-//    arr Jg_Jgt_I_P = inverse(Jg_JgtP);
-//    lapack_inverseSymPosDef();
+//    arr Jg_Jgt_I = lapack_inverseSymPosDef(Jg_Jgt);
+////    arr Jg_Jgt_I_P = inverse(Jg_JgtP);
+////    lapack_inverseSymPosDef();
 
-    Jgt_JgJgtI_Jg = ~Jg*Jg_Jgt_I*Jg;
-    cout << "Jg_Jgt_I: " << MT::timerRead(true) << endl;
+//    Jgt_JgJgtI_Jg = ~Jg*Jg_Jgt_I*Jg;
+//    cout << "Jg_Jgt_I: " << MT::timerRead(true) << endl;
 
-//    arr tmp = repmat(~PHI,Jx.d0,1);
-//    arr JgJgtI_Jg_J_dPHI2 = Jg_Jgt_I*Jg*~Jx;
-//    JgJgtI_Jg_J_dPHI2= JgJgtI_Jg_J_dPHI2%repmat(~PHI,JgJgtI_Jg_J_dPHI2.d0,1);
+////    arr tmp = repmat(~PHI,Jx.d0,1);
+////    arr JgJgtI_Jg_J_dPHI2 = Jg_Jgt_I*Jg*~Jx;
+////    JgJgtI_Jg_J_dPHI2= JgJgtI_Jg_J_dPHI2%repmat(~PHI,JgJgtI_Jg_J_dPHI2.d0,1);
 
-    arr tmp = Jg*~Jx;
-//    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*tmp;
-//    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI*diag(PHI);
-//    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI%repmat(~PHI,JgJgtI_Jg_J_dPHI.d0,1);
-//    cout << "JgJgtI_Jg_J_dPHI: " << MT::timerRead(true) << endl;
+//    arr tmp = Jg*~Jx;
+////    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*tmp;
+////    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI*diag(PHI);
+////    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI%repmat(~PHI,JgJgtI_Jg_J_dPHI.d0,1);
+////    cout << "JgJgtI_Jg_J_dPHI: " << MT::timerRead(true) << endl;
 
-//    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*Jg*~Jx*diag(PHI);
-//    cout <<sum(JgJgtI_Jg_J_dPHI2-JgJgtI_Jg_J_dPHI) << endl;
-//    J_Jgt = Jx*~Jg;
-    J_Jgt = ~tmp;
-    cout << "J_Jgt: " << MT::timerRead(true) << endl;
+////    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*Jg*~Jx*diag(PHI);
+////    cout <<sum(JgJgtI_Jg_J_dPHI2-JgJgtI_Jg_J_dPHI) << endl;
+////    J_Jgt = Jx*~Jg;
+//    J_Jgt = ~tmp;
+//    cout << "J_Jgt: " << MT::timerRead(true) << endl;
   }
 
 }

@@ -34,6 +34,8 @@ struct Scene {
   bool optConstraintsParam;
   bool optNonlinearParam;
   bool constraintsActive;
+  arr bretlM;
+  arr bretlrh;
 
   /// scene description
   MotionProblem* MP;
@@ -42,6 +44,8 @@ struct Scene {
   /// reference solutions
   arr lambdaRef;
   arr paramRef;
+
+  arr O;
 
   /// demonstrations
   arr xDem;
@@ -86,7 +90,7 @@ struct IKMO:ConstrainedProblem {
   bool optNormParam;
   bool optNonlinearParam;
   bool optConstraintsParam;
-
+  bool initBretl;
   /// constant matrices for the linear weight function
   arr dwC,HwC;
 
@@ -101,23 +105,40 @@ struct IKMO:ConstrainedProblem {
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
     double costs = 0.;
 
+
+
     /// compute weight vector
     arr w;
     if (optNonlinearParam) {
       dwC.clear();HwC.clear();
       compWeights(w,dwC,HwC,x);
+
     } else {
       // compute Hw and dw only once if there are no nonlinear parameter
       compWeights(w,(dwC.N>0)?NoArr:dwC,(HwC.N>0)?NoArr:HwC,x);
+
     }
+
+    if (!initBretl){
+      initBretl=true;
+      uint numL = numLambda;// = scenes.last().Jg.d0;
+      dwC = catCol(dwC,zeros(dwC.d0,numL));
+      dwC.append(catCol(zeros(numL,dwC.d1-numL),eye(numL)));
+
+
+    }
+
+    w.append(x.subRange(weights.d0,x.d0-1));
+
+
 
     if (&df) { df.resize(nP);df.setZero();}
     if (&Hf) { Hf.resize(nP,nP);Hf.setZero();}
 
     /// Set global constraints
     if (&g) {
-      g.clear();
-      compParamConstraints(g,Jg,x);
+//      g.clear();
+//      compParamConstraints(g,Jg,x);
     }
 
     /// iterate over demonstrations
@@ -132,10 +153,10 @@ struct IKMO:ConstrainedProblem {
       }
       /// Set constraints for each demonstration
       if (&g) {
-        g.append(gi);
+//        g.append(gi);
       }
       if (&Jg && Jgi.N>0) {
-        Jg.append(Jgi);
+//        Jg.append(Jgi);
       }
     }
     return costs;

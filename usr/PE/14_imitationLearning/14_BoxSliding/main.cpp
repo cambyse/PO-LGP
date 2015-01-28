@@ -9,6 +9,7 @@
 #include "../src/motion_factory.h"
 #include "../src/ikmo.h"
 
+
 void run() {
 
   /// load parameter
@@ -27,14 +28,14 @@ void run() {
   MT::Array<Scene > trainScenes;
   MT::Array<Scene > testScenes;
   MT::Array<CostWeight> weights;
-  mf->costScale=optCostScale;
+  mf->costScale=1e1;
   mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 
   /// create ikmo problem
   arr param;
   switch (optParam0Variant){
     case 0:
-      param = trainScenes(0).paramRef+20.*fabs(randn(trainScenes(0).paramRef.d0,1));
+      param = trainScenes(0).paramRef;//+20.*fabs(randn(trainScenes(0).paramRef.d0,1));
       break;
     case 1:
       param = fabs(randn(trainScenes(0).paramRef.d0,1));
@@ -43,24 +44,41 @@ void run() {
       param = ones(trainScenes(0).paramRef.d0,1);
       break;
   }
+
   param.flatten();
-  param(0) = 0.1;
-  param.subRange(1,param.d0-1) = param.subRange(1,param.d0-1)/length(param.subRange(1,param.d0-1))*mf->costScale;
+  param = param/sum(param)*mf->costScale;
+
 
   arr param0=param;
   cout << "Parameter initialization: " << param << endl;
+  MT::timerStart(true);
   cout << "ikmo start" << endl;
   IKMO ikmo(trainScenes,weights,param.d0,mf->costScale);
   cout << "ikmo initializied" << endl;
-//  checkAllGradients(ikmo,param,1e-2);
+  checkAllGradients(ikmo,param,1e-2);
 
-  optConstrained(param,NoArr,ikmo,OPT(verbose=1, stopIters=1000, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-4));
+
+  optConstrained(param,NoArr,ikmo,OPT(verbose=verbose,stopTolerance=1e-4,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=anyTimeAula, stopIters=1000,dampingInc=1.));
+//  optConstrained(param,NoArr,ikmo,OPT(verbose=verbose,stopTolerance=1e-9,aulaMuInc=1,stopEvals=1000,stopIters=1000,dampingInc=1., constrainedMethod=augmentedLag,minStep=-1,maxStep=-1));
+  cout << "TIME: " << MT::timerRead() << endl;
+
   cout << param << endl;
-  optConstrained(param,NoArr,ikmo,OPT(verbose=1, stopIters=1000, maxStep=1., stepInc=2., aulaMuInc=4,stopTolerance = optTermCond));
-
   ikmo.costReport(param,param0);
 
-  mf->execMotion(ikmo,trainScenes(0),param,visTest);
+  arr x;
+  mf->execMotion(ikmo,trainScenes(0),param,visTest,0,x);
+
+  /*
+  /// 3. Evaluate code on test scenarios
+  w = fabs(w);
+  for (;;) {
+    for (uint i = 0; i<testScenes.d0; i++) {
+      mf->execMotion(testScenes(i),w,true);
+      mf->execMotion(trainScenes(i),w,true);
+    }
+  }
+  */
+  return;
 }
 
 int main(int argc,char **argv){
