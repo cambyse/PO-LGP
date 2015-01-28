@@ -10,6 +10,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
   ors::KinematicWorld world;
   Graph& symbolicState;
   int verbose;
+  uint microSteps;
 
   MotionProblem MP;
   MotionProblemFunction MPF;
@@ -18,6 +19,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     : world(world_initial), symbolicState(symbolicState), verbose(verbose), MP(world), MPF(MP){
     ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
 
+    microSteps = 10;
     double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
 
     //get the actions!
@@ -25,7 +27,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     Graph& actions = actionSequence->kvg();
 
     //-- set up the MotionProblem
-    MP.T=2*actions.N;
+    MP.T=2*actions.N*microSteps;
     world.swift().initActivations(world);
     MP.world.watch(false);
 
@@ -38,22 +40,36 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     for(uint i=0;i<actions.N;i++){
       Item *a = actions(i);
 
-      uint endeff_index = world.getShapeByName("hand")->index;
+      uint endeff_index = world.getShapeByName("graspRef")->index;
       uint object_index = world.getShapeByName(a->parents(1)->keys(1))->index;
       uint target_index = world.getShapeByName(a->parents(2)->keys(1))->index;
 
       //pick at time 2*i+1
+      ors::GraphOperator *op_pick = new ors::GraphOperator();
+      op_pick->symbol = ors::GraphOperator::addRigid;
+      op_pick->timeOfApplication = (2*i+1)*microSteps+1;
+      op_pick->fromId = world.shapes(endeff_index)->body->index;
+      op_pick->toId = world.shapes(object_index)->body->index;
+      world.operators.append(op_pick);
+
       t = MP.addTask("pick_pos", new DefaultTaskMap(posDiffTMT, endeff_index, NoVector, object_index, NoVector));
-      t->setCostSpecs(2*i+1, 2*i+1, {0.}, posPrec);
+      t->setCostSpecs((2*i+1)*microSteps, (2*i+1)*microSteps, {0.}, posPrec);
       t = MP.addTask("pick_quat", new DefaultTaskMap(quatDiffTMT, endeff_index, NoVector, object_index, NoVector));
-      t->setCostSpecs(2*i+1, 2*i+1, {0.}, posPrec);
+      t->setCostSpecs((2*i+1)*microSteps, (2*i+1)*microSteps, {0.}, posPrec);
 
       //place at time 2*i+2
+      ors::GraphOperator *op_place = new ors::GraphOperator();
+      op_place->symbol = ors::GraphOperator::deleteJoint;
+      op_place->timeOfApplication = (2*i+2)*microSteps+1;
+      op_place->fromId = world.shapes(endeff_index)->body->index;
+      op_place->toId = world.shapes(object_index)->body->index;
+      world.operators.append(op_place);
+
       ors::Transformation target_X = world_final.shapes(object_index)->X;
       t = MP.addTask("place_pos", new DefaultTaskMap(posTMT, object_index));
-      t->setCostSpecs(2*i+2, 2*i+2, ARRAY(target_X.pos), posPrec);
+      t->setCostSpecs((2*i+2)*microSteps, (2*i+2)*microSteps, ARRAY(target_X.pos), posPrec);
       t = MP.addTask("place_quat", new DefaultTaskMap(quatTMT, object_index));
-      t->setCostSpecs(2*i+2, 2*i+2, ARRAY(target_X.rot), posPrec);
+      t->setCostSpecs((2*i+2)*microSteps, (2*i+2)*microSteps, ARRAY(target_X.rot), posPrec);
     }
 
 /*

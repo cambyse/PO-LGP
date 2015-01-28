@@ -11,19 +11,23 @@ shape leg2(table2) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.
 shape leg3(table2) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 shape leg4(table2) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
 
-body base { size=[.1 .1 .1 .05] type=0 contact, color=[0 0 0] }
-body base2 { size=[.1 .1 .1 .05] type=0 contact, color=[0 0 0] }
-body hand { size=[.05 .05 .2 .05] type=0 contact, color=[1 0 0], ctrlable, canGrasp }
+body base { size=[.1 .1 .1 .05] type=0 _contact, color=[0 0 0] }
+body base2 { size=[.1 .1 .1 .05] type=0 _contact, color=[0 0 0] }
+body hand { size=[.05 .05 .2 .05] type=0 _contact, color=[1 0 0], ctrlable, canGrasp }
 joint (base base2) { type=7 }
 joint (base2 hand) { type=11 }
 
-body block1 { size=[.1 .1 .2 0] type=0 contact }
-body block2 { size=[.1 .1 .2 0] type=0 contact }
-body block3 { size=[.1 .1 .2 0] type=0 contact }
-body block4 { size=[.1 .1 .2 0] type=0 contact }
+body graspRef { type=5 size=[.1 0 0 0] }
+joint (hand graspRef){ A=<T t(0 0 .2)> type=11 }
 
-body board1 { size=[.4 .6 .02 0] type=0 contact }
-body board2 { size=[.1 .4 .02 0] type=0 contact }
+
+body block1 { size=[.1 .1 .2 0] type=0 _contact }
+body block2 { size=[.1 .1 .2 0] type=0 _contact }
+body block3 { size=[.1 .1 .2 0] type=0 _contact }
+body block4 { size=[.1 .1 .2 0] type=0 _contact }
+
+body board1 { size=[.4 .6 .02 0] type=0 _contact }
+body board2 { size=[.1 .4 .02 0] type=0 _contact }
 
 joint (table1 block1) { from=<T t(-.1 .1 .02)> to=<T t(0 0 .1)> type=8 }
 joint (table1 block2) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }

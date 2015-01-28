@@ -62,18 +62,24 @@ void optimizeFinal(){
 //===========================================================================
 
 void optimSwitchConfigurations(){
-  ors::KinematicWorld world("model.kvg");
+  ors::KinematicWorld world_final("model.kvg");
+  Graph G_fin("final.kvg");
   Graph G("switches.kvg");
 
-  ors::KinematicWorld world_init = world;
+  ors::KinematicWorld world_init = world_final;
 
-  double fx = endStateOptim(world, G);
+  double fx = endStateOptim(world_final, G_fin);
   cout <<"fx=" <<fx <<endl;
-  world.gl().watch();
+  world_final.gl().watch();
 
-  fx = optimSwitchConfigurations(world_init, world, G);
+  for(uint i=world_init.joints.N;i--;){
+    ors::Joint *j=world_init.joints(i);
+    if(j->type==8) delete(j);
+  }
+
+  fx = optimSwitchConfigurations(world_init, world_final, G);
   cout <<"fx=" <<fx <<endl;
-  world.gl().watch();
+  world_final.gl().watch();
 }
 
 //===========================================================================

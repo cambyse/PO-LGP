@@ -260,6 +260,7 @@ struct KinematicWorld {
   /// @name get state
   uint getJointStateDimension(int agent=-1) const;
   void getJointState(arr &_q, arr& _qdot=NoArr) const {
+    if(!qdim.N && getJointStateDimension()!=q.N) HALT("");
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
   arr getJointState() const { return q; }

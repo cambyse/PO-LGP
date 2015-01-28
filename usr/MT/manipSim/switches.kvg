@@ -3,13 +3,22 @@ Symbol pap
 
 Object table1
 Object block1
+Object block2
+Object block3
+Object block4
 Object board1
+Object board2
 
 (supports table1 block1)
 (supports table1 board1)
 
 actionSequence{
  (pap block1 board1)
+ (pap block2 board1)
+ (pap board1 board1)
+ (pap block3 board1)
+ (pap block4 board1)
+ (pap board2 board1)
 }
 
 #Quit

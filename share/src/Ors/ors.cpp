@@ -384,8 +384,12 @@ ors::Joint::~Joint() {
   if(to){   to->inLinks.removeValue(this); listReindex(to->inLinks); }
   world.joints.removeValue(this);
   listReindex(world.joints);
+  world.q.clear();
+  world.qdot.clear();
   world.qdim.clear();
+  world.calc_q_from_Q();
 }
+
 void ors::Joint::reset() { 
   listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
   locker=NULL;
@@ -539,6 +543,7 @@ void ors::KinematicWorld::clear() {
 void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
   q = G.q;
   qdot = G.qdot;
+  qdim = G.qdim;
   q_agent = G.q_agent;
   isLinkTree = G.isLinkTree;
 #if 1
@@ -2213,6 +2218,7 @@ void ors::GraphOperator::apply(KinematicWorld& G){
     return;
   }
   if(symbol==addRigid){
+    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from, to);
 
     // Keep Object Orientation
