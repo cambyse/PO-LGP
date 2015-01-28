@@ -217,19 +217,25 @@ struct sRosCom_ARMarkerSync{
   RosCom_ARMarkerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber ar_marker;
+  arr marker_pose;
   void cb_sync(const ar_track_alvar::AlvarMarkers::ConstPtr& msg){
     uint N = 20;
-    arr marker_pose;
+    double f;
     if (marker_pose.N==0){
       marker_pose = zeros(N,7);
+       f = 0.;
     }else{
       marker_pose = base->marker_pose.get();
+      f = 0.9;
     }
-    for (uint i = 0; i<msg->markers.size();i++) {
-      const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
-      marker_pose[m.id] = ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
+
+    if (msg->markers.size()==4){ // only update if all 4 markers are visible
+      for (uint i = 0; i<msg->markers.size();i++) {
+        const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
+        marker_pose[m.id] = marker_pose[m.id]*f+(1.-f)*ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
+      }
+      base->marker_pose.set() = marker_pose;
     }
-    base->marker_pose.set() = marker_pose;
   }
 };
 

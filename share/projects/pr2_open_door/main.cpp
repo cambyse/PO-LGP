@@ -27,16 +27,15 @@ struct MySystem:System{
 void changeColor(void*){  orsDrawAlpha = .7; }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
-void planTrajectory(arr &x,ors::KinematicWorld &world) {
+void planTrajHandle(arr &x,ors::KinematicWorld &world) {
   MotionProblem MP(world,false);
 
   /// load parameter from file
-
   double costScale = 1e2;
-//  arr param = ARRAY(.1,1e2,1e2,1e2,1e2,1e2,1e1);
-  arr param = ARRAY(0.22899,44.0754,0.115977,0.447064, 0.0262478, 63.4698 ,63.4825);
 
-  param = param/length(param)*costScale;
+  arr param = ARRAY(.1,1.281488,5.7258,5.7258,3.50189,0.749742);
+  param.subRange(1,param.d0-1) = param.subRange(1,param.d0-1)/length(param.subRange(1,param.d0-1))*costScale;
+
   uint pC = 0;
   // transition costs
   Task *t;
@@ -44,110 +43,128 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   t->map.order=1;
   t->setCostSpecs(0,MP.T, ARR(0.), param(pC));
   ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  ((TransitionTaskMap*)&t->map)->H_rate_diag.subRange(0,2)=100.;
   pC++;
 
   // time points
-  uint C = 90;
-  uint U = 140;
-  uint F =MP.T;
+  uint P = 60;
+  uint C = 95;
+  uint U = 157;
+  uint F = MP.T;
 
   /// tasks
-  // first contact with door
+  // contact with handle
   t =MP.addTask("posC", new DefaultTaskMap(posTMT, world, "endeffL",NoVector));
-  t->setCostSpecs(C, C, ARRAY(world.getShapeByName("handle")->X.pos), param(pC));
+  t->setCostSpecs(P, P, ARRAY(world.getShapeByName("target1")->X.pos), param(pC));
   pC++;
 
-  t =MP.addTask("vecC", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
-  t->setCostSpecs(C, C, ARR(1.), param(pC));
+  t = MP.addTask("vecC", new DefaultTaskMap(vecAlignTMT, world,"endeffL",ors::Vector(1.,0.,0.),"handle",ors::Vector(-1.,0.,0.)));
+  t->setCostSpecs(C, U, ARRAY(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC2", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
-  t->setCostSpecs(C-10, C-10, ARR(1.), param(pC));
+  t = MP.addTask("vecC2", new DefaultTaskMap(vecAlignTMT, world,"endeffL",ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,-1.)));
+  t->setCostSpecs(P, P, ARRAY(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC3", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
-  t->setCostSpecs(C+10, C+10, ARR(1.), param(pC));
+////  ors::Vector vecTarget = ors::Vector(0., 0.9939, -0.1104);
+  ors::Vector vecTarget = ors::Vector(0., 1.,0.);
+  vecTarget.normalize();
+  t =MP.addTask("vecUF", new DefaultTaskMap(vecAlignTMT, world, "endeffL",ors::Vector(0.,1.,0.),"handle",vecTarget));
+  t->setCostSpecs(U, F, ARRAY(1.), param(pC));
   pC++;
 
-  ors::Vector dir = ors::Vector(0.,-.7,0.2); dir.normalize();
-  t =MP.addTask("vecF", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
-  t->setCostSpecs(U, U, ARR(1.), param(pC));
+  t = MP.addTask("door_joint", new TaskMap_qItself(world.getJointByName("frame_door")->qIndex, world.getJointStateDimension()));
+  t->setCostSpecs(F-10, F, ARRAY(-.47), param(pC));
+//  t->setCostSpecs(F-10, F, ARRAY(-.37), param(pC));
+//  t->setCostSpecs(F-10, F, ARRAY(-.27), param(pC));
+//  t->setCostSpecs(F-10, F, ARRAY(-.17), param(pC));
+//    t->setCostSpecs(F-10, F, ARRAY(-.57), param(pC));
+//    t->setCostSpecs(F-10, F, ARRAY(-.67), param(pC));
+//    t->setCostSpecs(F-10, F, ARRAY(-.77), param(pC));
   pC++;
 
-  // door final position
-  t =MP.addTask("door_joint", new TaskMap_qItself(world.getJointByName("frame_door")->qIndex,world.getJointStateDimension()));
-  t->setCostSpecs(F, F, ARR(-0.65), param(pC));
-  pC++;
 
   /// constraints
-  // hold contact endeffector-handle
-  t =MP.addTask("contact", new PointEqualityConstraint(world, "endeffL",NoVector, "target",NoVector));
-  t->setCostSpecs(U+1, F, {0.}, 1.);
-  // door fixation
-  t =MP.addTask("door_fixation", new qItselfConstraint(world.getJointByName("frame_door")->qIndex,world.getJointStateDimension()));
-  t->setCostSpecs(0,U-1, {0.}, 1.);
+  t =MP.addTask("torso_fixation", new qItselfConstraint(world.getJointByName("torso_lift_joint")->qIndex,world.getJointStateDimension()));
+  t->setCostSpecs(0,F, {0.}, 1.);
   t->map.order=1;
+
+
+  t =MP.addTask("door_fixation", new qItselfConstraint(world.getJointByName("frame_door")->qIndex,world.getJointStateDimension()));
+  t->setCostSpecs(0,U, {0.}, 1.);
+  t->map.order=1;
+
+  t = MP.addTask("contact", new PointEqualityConstraint(world, "endeffL",NoVector, "target",NoVector));
+  t->setCostSpecs(C, F, {0.}, 1.);
+
+
+//  // q limit constraint
+//  t = MP.addTask("qLimits", new LimitsConstraint());
+//  t->setCostSpecs(0., MP.T, {0.}, 1.);
 
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt =MP.tau;
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
   arr lambda(T+1,1); lambda.setZero();
   x = repmat(~MP.x0,T+1,1);
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
+  optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=1, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
 
-  displayTrajectory(x,MP.T,MP.world,"world");
-  displayTrajectory(x,MP.T,MP.world,"world");
+  MP.costReport(true);
+  MP.world.watch(true);
+  displayTrajectory(x,MP.T*10.,MP.world,"world");
 
+  // visualization code
 }
 
+void planTrajInit(arr &x,ors::KinematicWorld &world) {
+  MotionProblem MP(world,false);
 
-void initDoor(ors::KinematicWorld &world, arr &marker_pose){
-  arr doorMarker = marker_pose[4];
-  arr doorMarkerPos = doorMarker.subRange(0,2);
-  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.subRange(3,6));
+  /// load parameter from file
+  double costScale = 1e2;
 
-  arr wallMarker = marker_pose[17];
-  arr wallMarkerPos = wallMarker.subRange(0,2);
-  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRange(3,6));
+  uint pC = 0;
+  // transition costs
+  Task *t;
+  t =MP.addTask("tra", new TransitionTaskMap(world));
+  t->map.order=1;
+  t->setCostSpecs(0,MP.T, ARR(0.), 1e0);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  pC++;
 
-  arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+  // time points
+  uint F =MP.T;
 
-  ors::Quaternion door_rot = ors::Quaternion(0,1,0,0);//doorMarkerQuat;//ors::Quaternion(markerQuat0[1]);
-  ors::Quaternion trans = world.getBodyByName("torso_lift_link")->X.rot;
-//  trans.z=0.; trans.normalize();
-//  arr tmp = ~trans.getArr();
-//  cout << tmp << endl;
-//  trans.setDiff(tmp[2],ors::Vector(0.,0.,1));
-//  door_rot = trans*door_rot;
-  trans.setRad(-M_PI,door_rot.getZ());
-  door_rot = trans*door_rot;
-//  trans.setRad(M_PI_2,ors::Vector(0.,0.,1.));
-//  door_rot = trans*door_rot;
-//  trans.setRad(M_PI_2,door_rot.getY());
-//  door_rot = trans*door_rot;
-//  trans.setRad(M_PI_2,door_rot.getZ());
-//  door_rot = trans*door_rot;
-//  trans.setRad(M_PI_2,door_rot.getZ());
-//  door_rot = trans*door_rot;
+  arr q0 = ARRAY(0.250694, 0., 1.04935, 0.362997, 1.45626, -1.64196, -2.68619, -0.456745, 0.0659161);
 
-  world.getJointByName("world_door")->A.pos = refFrame + doorMarkerPos + door_rot.getArr()*ARR(0.015,0.375*2,0.);
-  world.getJointByName("world_door")->A.pos.z = .99;
-  world.getJointByName("world_door")->A.rot = door_rot;
+  /// tasks
+  // contact with handle
+  t =MP.addTask("q", new TaskMap_qItself());
+  t->setCostSpecs(F-5, F, q0, 1e1);
+  pC++;
 
-  world.getBodyByName("marker17")->X.pos = doorMarkerPos+refFrame;
-  world.getBodyByName("marker17")->X.rot = door_rot;
-  world.getBodyByName("marker4")->X.pos = wallMarkerPos+refFrame;
-  world.getBodyByName("marker4")->X.rot = door_rot;
+  /// constraints
+  // q limit constraint
+  t = MP.addTask("qLimits", new LimitsConstraint());
+  t->setCostSpecs(0., MP.T, {0.}, 1.);
 
-  world.calc_fwdPropagateFrames();
-  world.calc_fwdPropagateShapeFrames();
+  MotionProblemFunction MPF(MP);
+  uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt =MP.tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
+  arr lambda(T+1,1); lambda.setZero();
+  x = repmat(~MP.x0,T+1,1);
+  optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+
+  MP.costReport(true);
+  displayTrajectory(x,MP.T,MP.world,"world");
 }
 
 void transPlanPR2(MT::Array<MT::String> &active_joints, ors::KinematicWorld &w_plan, ors::KinematicWorld &w_pr2, const arr &q_plan, arr &q_pr2) {
   for (uint i = 0; i<active_joints.d0;i++){
-    uint planIdx = w_plan.getJointByName(active_joints(i))->qIndex;
-    uint pr2Idx = w_pr2.getJointByName(active_joints(i))->qIndex;
-    q_pr2(pr2Idx) = q_plan(planIdx);
+    for (uint k = 0; k<w_plan.getJointByName(active_joints(i))->qDim(); k++){
+      uint planIdx = w_plan.getJointByName(active_joints(i))->qIndex+k;
+      uint pr2Idx = w_pr2.getJointByName(active_joints(i))->qIndex+k;
+      q_pr2(pr2Idx) = q_plan(planIdx);
+    }
   }
 }
 
@@ -159,20 +176,36 @@ void transPR2Plan(MT::Array<MT::String> &act_joints, ors::KinematicWorld &w_pr2,
   }
 }
 
-void run(){
+void syncMarker(ors::KinematicWorld &world, arr &marker_pose){
+  arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+  world.getBodyByName("marker4")->X.pos = refFrame + marker_pose[4].subRange(0,2);
+  world.getBodyByName("marker11")->X.pos = refFrame + marker_pose[11].subRange(0,2);
+  world.getBodyByName("marker15")->X.pos = refFrame + marker_pose[15].subRange(0,2);
+  world.getBodyByName("marker17")->X.pos = refFrame + marker_pose[17].subRange(0,2);
+
+  // compute door angle
+  arr v1 = ARRAY(world.getBodyByName("marker4")->X.pos - world.getBodyByName("marker15")->X.pos);
+  v1(2)=0.;
+  v1 = v1/sqrt(sumOfSqr(v1));
+  arr v2 = ARRAY(1.,0.,0.);
+  double alpha = acos(sum(v1%v2));
+
+  world.getJointByName("world_door")->A.rot.setRadZ(M_PI_2-alpha);
+  world.getJointByName("world_door")->A.pos = ARRAY(world.getBodyByName("marker15")->X.pos)+ world.getJointByName("world_door")->A.rot.getArr()*ARRAY(0.,0.6205,0.2305);
+  world.getJointByName("world_door")->A.pos.z = .99;
+
+  world.calc_fwdPropagateFrames();
+}
+
+
+
+
+
+void TEST(Marker){
   MySystem S;
   engine().open(S);
   ors::KinematicWorld world_plan("model_reduced.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
-
-  // set list of active joints for remapping between pr2 and plan KinematicWorlds
-  MT::Array<MT::String> active_joints;
-  for (uint i = 0;i<world_plan.joints.d0;i++) {
-    if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
-      active_joints.append(world_plan.joints(i)->name);
-      cout << world_plan.joints(i)->name << " " << world_plan.joints(i)->type << " "  << world_plan.joints(i)->qIndex<< endl;
-    }
-  }
 
   arr q,qdot; // joints states of pr2 world
   arr qP,qPdot; // joints states of planned world
@@ -181,11 +214,20 @@ void run(){
   world_pr2.getJointState(q,qdot);
   world_plan.getJointState(qP,qPdot);
 
+  /// set list of active joints for remapping between world_pr2 and world_plan
+  MT::Array<MT::String> active_joints;
+  for (uint i = 0;i<world_plan.joints.d0;i++) {
+    if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
+      active_joints.append(world_plan.joints(i)->name);
+      cout << world_plan.joints(i)->name << " " << world_plan.joints(i)->type << " "  << world_plan.joints(i)->qIndex<< endl;
+    }
+  }
+
   /// read initial robot position and marker position
   bool useRos = MT::getParameter<bool>("useRos", false);
   if(useRos){
     //-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
+    cout <<"** Waiting for ROS message on initial joints.." <<endl;
     for(;;){
       S.ctrl_obs.var->waitForNextRevision();
       if(S.ctrl_obs.get()->q.N==world_pr2.q.N &&S.ctrl_obs.get()->qdot.N==world_pr2.q.N)
@@ -194,80 +236,226 @@ void run(){
     //-- set current state
     q =S.ctrl_obs.get()->q;
     qdot =S.ctrl_obs.get()->qdot;
-    world_pr2.setJointState(q);
 
+    world_pr2.setJointState(q);
     transPR2Plan(active_joints,world_pr2,world_plan,q,qP);
     world_plan.setJointState(qP);
-    cout << world_plan.getJointByName("torso_lift_joint")->A.pos << endl;
-    cout << world_pr2.getJointByName("torso_lift_joint")->A.pos << endl;
-    world_plan.getJointByName("torso_lift_joint")->A.pos.z += q(world_pr2.getJointByName("torso_lift_joint")->qIndex);
-    world_plan.getJointByName("torso_lift_joint")->A.pos.y += -0.0472;
-    world_plan.getJointByName("torso_lift_joint")->A.pos.x += 0.0155;
-    world_plan.calc_fwdPropagateFrames();
-
-//    cout << world_plan.getBodyByName("torso_lift_joint")->X.pos << endl;
-//    cout << world_pr2.getBodyByName("torso_lift_joint")->X.pos << endl;
-//    world_plan.getJointByName("torso_lift_joint")->A.pos.z = world_pr2.getJointByName("torso_lift_joint")->A.pos.z;
 
     //-- wait for first marker observation
+    cout <<"** Waiting for ROS message on initial markers.." <<endl;
     for(;;){
-      S.marker_pose.var->waitForNextRevision();
-      if(S.marker_pose.get()->N > 0 /*&& S.marker_pose.get()->[4].length()>0 &&S.marker_pose.get()[17].length()>0*/)
+//      S.marker_pose.var->waitForNextRevision();
+      S.marker_pose.var->waitForRevisionGreaterThan(10);
+      if(S.marker_pose.get()->N > 3)
         break;
     }
+
     //-- set marker state
     marker_pose = S.marker_pose.get();
+    syncMarker(world_plan,marker_pose);
 
-    // for debugginig  (move door away)
-//    marker_pose[4]= marker_pose[4] + ARR(-.1,0.,0.,0.,0.,0.,0.);
-//    marker_pose[17]= marker_pose[17] + ARR(-.1,0.,0.,0.,0.,0.,0.);
-  } else {
-    qP = ARR(-0, 1.0951, 0.31445, 1.6866, -1.8677, -2.8285, -0.029944, -3.3155);
-    marker_pose[4]=ARR(0.94048, -0.32071, 0.43706,-0.39946, 0.58953, 0.55908, -0.42459);
-    marker_pose[17]=ARR(0.96383, -0.056259, 0.43725,-0.41846, 0.57182, 0.57531, -0.40854);
-    world_plan.getJointByName("torso_lift_joint")->A.pos.z +=0.29398;
-    world_plan.calc_fwdPropagateFrames();
-    world_plan.setJointState(qP);
-    transPlanPR2(active_joints,world_plan,world_pr2,qP,q);
-    world_pr2.setJointState(q);
+    world_pr2.watch(false);
+    world_plan.watch(false);
   }
 
-  initDoor(world_plan,marker_pose);
-  world_plan.watch(false);
-  world_pr2.watch(true);
-
-  /// plan trajectory
+  /// create trajectory
   arr x,xd;
   double duration = MT::getParameter<double>("duration");
-  planTrajectory(x,world_plan);
+  planTrajHandle(x,world_plan);
   double tau = duration/x.d0;
   getVel(xd,x,tau);
 
-  arr xPR2,xdPR2;
+  arr xP,xdP;
   for (uint i = 0;i<x.d0;i++){
     arr q_tmp = q;
     arr qd_tmp = qdot;
     transPlanPR2(active_joints,world_plan,world_pr2,x[i],q_tmp);
     transPlanPR2(active_joints,world_plan,world_pr2,xd[i],qd_tmp);
-    xPR2.append(~q_tmp);
-    xdPR2.append(~qd_tmp);
+    xP.append(~q_tmp);
+    xdP.append(~qd_tmp);
   }
 
-  cout << xPR2 << endl;
-  cout << xdPR2 << endl;
-  MT::Spline xs(x.d0,xPR2);
-  MT::Spline xds(x.d0,xdPR2);
+  MT::Spline xs(x.d0,xP);
+  MT::Spline xds(x.d0,xdP);
 
-  /// execute trajectory on robot
-  cout <<"** GO!" <<endl;
-  cout <<"Duration: " << duration << endl;
-  cout <<"tau: " << tau << endl;
+  /// start motion execution
+  while(true){
+    //-- sync marker
+    S.marker_pose.var->waitForNextRevision();
+    marker_pose = S.marker_pose.get();
+    syncMarker(world_plan, marker_pose);
+
+    //-- sync robot
+    S.ctrl_obs.var->waitForNextRevision();
+    q =S.ctrl_obs.get()->q;
+    qdot =S.ctrl_obs.get()->qdot;
+
+    world_pr2.setJointState(q);
+    transPR2Plan(active_joints,world_pr2,world_plan,q,qP);
+    world_plan.setJointState(qP);
+
+    world_plan.gl().update();
+  }
+  world_plan.watch(true);
+}
+
+void TEST(ReplayDemo){
+  ors::KinematicWorld world_plan("model_reduced.kvg");
+  ors::KinematicWorld world_pr2("model.kvg");
+
+  arr q,qdot; // joints states of pr2 world
+  arr qP,qPdot; // joints states of planned world
+  arr marker_pose = zeros(20,7);
+
+  world_pr2.getJointState(q,qdot);
+  world_plan.getJointState(qP,qPdot);
+
+  /// set list of active joints for remapping between world_pr2 and world_plan
+  MT::Array<MT::String> active_joints;
+  for (uint i = 0;i<world_plan.joints.d0;i++) {
+    if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
+      active_joints.append(world_plan.joints(i)->name);
+      cout << world_plan.joints(i)->name << " " << world_plan.joints(i)->type << " "  << world_plan.joints(i)->qIndex<< endl;
+    }
+  }
+
+  cout << "###########################################################" << endl;
+  /// load demonstrations data
+  MT::String demoPath = MT::getParameter<MT::String>("demoPath");
+  cout << "Demo: " << demoPath << endl;
+  // load joint trajectory
+  arr xDem; xDem << FILE(STRING(demoPath<<"/pr2_joints").p);
+
+  arr markerDem; markerDem << FILE(STRING(demoPath<<"/pr2_marker0").p);
+  marker_pose[4].subRange(0,2) = markerDem[0];
+  marker_pose[11].subRange(0,2) = markerDem[1];
+  marker_pose[15].subRange(0,2) = markerDem[2];
+  marker_pose[17].subRange(0,2) = markerDem[3];
+
+  //-- set door initial position
+  syncMarker(world_plan,marker_pose);
+
+  //-- replay trajectory
+  for (uint t =0;t<xDem.d0;t++){
+    world_plan.setJointState(xDem[t]);
+    world_plan.gl().update(STRING(t));
+    MT::wait(0.1);
+  }
+  return;
+}
+
+void run(){
+  MySystem S;
+  engine().open(S);
+  ors::KinematicWorld world_plan("model_reduced.kvg");
+  ors::KinematicWorld world_pr2("model.kvg");
+
+  arr q,qdot; // joints states of pr2 world
+  arr qP,qPdot; // joints states of planned world
+  arr marker_pose = zeros(20,7);
+
+  world_pr2.getJointState(q,qdot);
+  world_plan.getJointState(qP,qPdot);
+
+  /// set list of active joints for remapping between world_pr2 and world_plan
+  MT::Array<MT::String> active_joints;
+  for (uint i = 0;i<world_plan.joints.d0;i++) {
+    if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
+      active_joints.append(world_plan.joints(i)->name);
+      cout << world_plan.joints(i)->name << " " << world_plan.joints(i)->type << " "  << world_plan.joints(i)->qIndex<< endl;
+    }
+  }
+
+  /// read initial robot position and marker position
+  bool useRos = MT::getParameter<bool>("useRos", false);
+  if(useRos){
+    //-- wait for first q observation!
+    cout <<"** Waiting for ROS message on initial joints.." <<endl;
+    for(;;){
+      S.ctrl_obs.var->waitForNextRevision();
+      if(S.ctrl_obs.get()->q.N==world_pr2.q.N &&S.ctrl_obs.get()->qdot.N==world_pr2.q.N)
+        break;
+    }
+    //-- set current state
+    q =S.ctrl_obs.get()->q;
+    qdot =S.ctrl_obs.get()->qdot;
+
+    world_pr2.setJointState(q);
+    transPR2Plan(active_joints,world_pr2,world_plan,q,qP);
+    world_plan.setJointState(qP);
+
+    cout << "qP "<< qP << endl;
+
+    //-- wait for first marker observation
+    cout <<"** Waiting for ROS message on initial markers.." <<endl;
+    for(;;){
+      S.marker_pose.var->waitForRevisionGreaterThan(10);
+      if(S.marker_pose.get()->N > 3)
+        break;
+    }
+
+    //-- set marker state
+    marker_pose = S.marker_pose.get();
+    syncMarker(world_plan,marker_pose);
+
+  }else{
+    q = ARRAY(0.250694, 0., 1.04935, 0.362997, 1.45626, -1.64196, -2.68619, -0.456745, 0.0659161);
+    marker_pose[4].subRange(0,2) = ARR(1.019, 0.30718, 0.57917);
+    marker_pose[11].subRange(0,2) = ARR(1.1834, -0.051653, 0.26799);
+    marker_pose[15].subRange(0,2) = ARR(0.9855, 0.42244, 0.27362);
+    marker_pose[17].subRange(0,2) = ARR(1.1376, 0.066198, 0.58049);
+//        world.getBodyByName("marker4")->X.pos = refFrame + marker_pose[4].subRange(0,2);
+//        world.getBodyByName("marker11")->X.pos = refFrame + marker_pose[11].subRange(0,2);
+//        world.getBodyByName("marker15")->X.pos = refFrame + marker_pose[15].subRange(0,2);
+//        world.getBodyByName("marker17")->X.pos = refFrame + marker_pose[17].subRange(0,2);
+    world_plan.setJointState(q);
+    syncMarker(world_plan,marker_pose);
+  }
+//  world_pr2.watch(false);
+  world_plan.watch(true);
+
+  /// create trajectory
+  arr x,xd;
+  double duration = MT::getParameter<double>("duration");
+  bool optGotoInitPos = MT::getParameter<bool>("optGotoInitPos");
+
+  if (optGotoInitPos) {
+    planTrajInit(x,world_plan);
+  } else {
+    planTrajHandle(x,world_plan);
+  }
+
+  double tau = duration/x.d0;
+  getVel(xd,x,tau);
+
+  arr xP,xdP;
+  for (uint i = 0;i<x.d0;i++){
+    arr q_tmp = q;
+    arr qd_tmp = qdot;
+    transPlanPR2(active_joints,world_plan,world_pr2,x[i],q_tmp);
+    transPlanPR2(active_joints,world_plan,world_pr2,xd[i],qd_tmp);
+    xP.append(~q_tmp);
+    xdP.append(~qd_tmp);
+  }
+
+  MT::Spline xs(x.d0,xP);
+  MT::Spline xds(x.d0,xdP);
+
+
+  ors::Joint *trans=world_pr2.getJointByName("worldTranslationRotation");
+
+  /// start motion execution
+  cout <<"** Start Motion with" <<endl;
+  cout <<"- Duration: " << duration << endl;
+  cout <<"- tau: " << tau << endl;
+  cout <<"<< Press button to start motion >>" << endl;
   world_plan.watch(true);
   double s = 0.;
   double t = 0.;
   MT::timerStart(true);
+
+
   while(s<1.){
-    //compute control
     cout <<"t: "<< t <<endl;
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
@@ -281,13 +469,24 @@ void run(){
     s = t/duration;
     refs.q=xs.eval(s);
     refs.qdot=xds.eval(s)*0.;
-    cout << refs.q << endl;
 
-    refs.velLimitRatio = .1;
+
+//    arr qfb =S.ctrl_obs.get()->q;
+//    arr qdref = xds.eval(s);
+//    cout << refs.q(trans->qIndex+0) - qfb(trans->qIndex+0) << endl;
+//    cout << refs.q(trans->qIndex+1) - qfb(trans->qIndex+1) << endl;
+//    cout << refs.q(trans->qIndex+1) - qfb(trans->qIndex+1) << endl;
+//    refs.qdot(trans->qIndex+0) = qdref(trans->qIndex+0) + (refs.q(trans->qIndex+0) - qfb(trans->qIndex+0));
+//    refs.qdot(trans->qIndex+1) = qdref(trans->qIndex+1) + (refs.q(trans->qIndex+1) - qfb(trans->qIndex+1));
+//    refs.qdot(trans->qIndex+2) = qdref(trans->qIndex+2) + (refs.q(trans->qIndex+2) - qfb(trans->qIndex+2));
+
+    refs.velLimitRatio = .5;
     refs.effLimitRatio = 1.;
-    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
+
     S.ctrl_ref.set() = refs;
     S.step();
+    world_pr2.setJointState(refs.q);
+    world_pr2.gl().update();
 
     t = t + MT::timerRead(true);
   }
@@ -295,9 +494,10 @@ void run(){
   engine().close(S);
 }
 
-
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
   run();
+//  testMarker();
+//  testReplayDemo();
   return 0;
 }
