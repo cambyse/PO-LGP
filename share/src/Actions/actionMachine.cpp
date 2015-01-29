@@ -108,6 +108,7 @@ void ActionMachine::step(){
   s->refs.q=s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.u_bias = zeros(s->q.N);
+  s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
 

@@ -52,6 +52,9 @@ void TEST(Gamepad){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
       S.ctrl_obs.var->waitForNextRevision();
+      cout << S.ctrl_obs.get()->q.N << endl;
+      cout << MP.world.q.N << endl;
+
       if(S.ctrl_obs.get()->q.N==MP.world.q.N
          && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
         break;
@@ -160,8 +163,8 @@ void TEST(Gamepad){
       refs.EfL.clear();
       refs.u_bias = zeros(q.N);
     }
-    refs.Kq_gainFactor = 0.;
-    refs.Kd_gainFactor = 1.;
+    refs.Kq_gainFactor = 1.;
+    refs.Kd_gainFactor = 0.;
     refs.gamma = 1.;
 
     refs.q=q;
