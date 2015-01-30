@@ -113,3 +113,29 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 
 //===========================================================================
 
+void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
+  Item *actionSequence = symbolicState["actionSequence"];
+  Item *supportSymbol  = symbolicState["supports"];
+  Graph& actions = actionSequence->kvg();
+
+  for(Item *a:actions){
+
+    //-- create a symbol that says A-on-B
+    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
+
+    //-- create a joint between the object and the target
+    ors::Shape *object= world.getShapeByName(a->parents(1)->keys(1));
+    ors::Shape *target = world.getShapeByName(a->parents(2)->keys(1));
+
+    if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
+        ors::Joint *j = new ors::Joint(world, target->body, object->body);
+        j->type = ors::JT_transXYPhi;
+        j->A.addRelativeTranslation(0, 0, .5*target->size[2]);
+        j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
+        j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
+        j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
+    }
+  }
+}
+
+//===========================================================================

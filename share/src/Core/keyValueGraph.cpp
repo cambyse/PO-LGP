@@ -317,7 +317,6 @@ Item *KeyValueGraph::append(const uintA& parentIdxs) {
   return append<int>(STRINGS_1(ItemL::N), parents, NULL, false);
 }
 
-
 Item* KeyValueGraph::getItem(const char *key) {
   for(Item *it: (*this)) if(it->matches(key)) return it;
 //    for(const MT::String& k:it->keys) if(k==key) return it;

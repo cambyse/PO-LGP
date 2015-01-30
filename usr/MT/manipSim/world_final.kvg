@@ -1,0 +1,43 @@
+body table1 { pose=<T 0.6 0 0.6 0.866025 0 0 0.5 > mass=43.84 dyntype=2  }
+body table2 { pose=<T -0.6 0 0.6 1 0 0 0 > mass=43.84 dyntype=2  }
+body base { mass=1  }
+body block1 { mass=2  }
+body block2 { mass=2  }
+body block3 { mass=2  }
+body block4 { mass=2  }
+body board1 { mass=4.8  }
+body board2 { mass=0.8  }
+body base2 { mass=1  }
+body hand { mass=0.5  }
+body graspRef { pose=<T 0 0 0.2 1 0 0 0 >  }
+
+shape table1 (table1){ type=0 rel=<T 0 0 8.67362e-19 1 0 0 0 >  X = <T 0.6 0 0.6 0.866025 0 0 0.5>  size=[ 1 1 0.04 0 ]  color=[ 0.8 0.5 0.3 ]  fixed,  contact,  rel_includes_mesh_center,  }
+shape table2 (table2){ type=0 rel=<T 0 0 8.67362e-19 1 0 0 0 >  X = <T -0.6 0 0.6 1 0 0 0>  size=[ 1 1 0.04 0 ]  color=[ 0.8 0.5 0.3 ]  fixed,  contact,  rel_includes_mesh_center,  }
+shape base (base){ type=0 rel=<T 0 0 -1.73472e-18 1 0 0 0 >  size=[ 0.1 0.1 0.1 0.05 ]  _contact,  color=[ 0 0 0 ]  rel_includes_mesh_center,  }
+shape base2 (base2){ type=0 rel=<T 0 0 -1.73472e-18 1 0 0 0 >  size=[ 0.1 0.1 0.1 0.05 ]  _contact,  color=[ 0 0 0 ]  rel_includes_mesh_center,  }
+shape hand (hand){ type=0 rel=<T 0 0 -3.46945e-18 1 0 0 0 >  size=[ 0.05 0.05 0.2 0.05 ]  _contact,  color=[ 1 0 0 ]  ctrlable,  canGrasp,  rel_includes_mesh_center,  }
+shape graspRef (graspRef){ type=5  size=[ 0.1 0 0 0 ]  }
+shape block1 (block1){ type=0 rel=<T 0 0 -3.46945e-18 1 0 0 0 >  size=[ 0.1 0.1 0.2 0 ]  _contact,  rel_includes_mesh_center,  }
+shape block2 (block2){ type=0 rel=<T 0 0 -3.46945e-18 1 0 0 0 >  size=[ 0.1 0.1 0.2 0 ]  _contact,  rel_includes_mesh_center,  }
+shape block3 (block3){ type=0 rel=<T 0 0 -3.46945e-18 1 0 0 0 >  size=[ 0.1 0.1 0.2 0 ]  _contact,  rel_includes_mesh_center,  }
+shape block4 (block4){ type=0 rel=<T 0 0 -3.46945e-18 1 0 0 0 >  size=[ 0.1 0.1 0.2 0 ]  _contact,  rel_includes_mesh_center,  }
+shape board1 (board1){ type=0 rel=<T 0 0 4.33681e-19 1 0 0 0 >  size=[ 0.4 0.6 0.02 0 ]  _contact,  rel_includes_mesh_center,  }
+shape board2 (board2){ type=0 rel=<T 0 0 4.33681e-19 1 0 0 0 >  size=[ 0.1 0.4 0.02 0 ]  _contact,  rel_includes_mesh_center,  }
+shape leg1 (table1){ type=0 rel=<T -0.3 -0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg2 (table1){ type=0 rel=<T -0.3 0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg3 (table1){ type=0 rel=<T 0.3 0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg4 (table1){ type=0 rel=<T 0.3 -0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg1 (table2){ type=0 rel=<T -0.3 -0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg2 (table2){ type=0 rel=<T -0.3 0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg3 (table2){ type=0 rel=<T 0.3 0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+shape leg4 (table2){ type=0 rel=<T 0.3 -0.3 -0.3 1 0 0 0 >  size=[ 0.04 0.04 0.6 0 ]  color=[ 0.5 0.3 0.15 ]  rel_includes_mesh_center,  }
+
+joint (base base2){ type=7  }
+joint (base2 hand){ type=11  }
+joint (hand graspRef){ type=11 from=<T 0 0 0.2 1 0 0 0 >  }
+joint (table1 block1){ type=8 from=<T 0 0 0.02 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T -0.082639 0.0414269 0 0.7158 0 0 -0.698305 >  }
+joint (table1 block2){ type=8 from=<T 0 0 0.02 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T -0.016047 -0.0436699 0 0.134555 0 0 0.990906 >  }
+joint (block1 board1){ type=8 from=<T 0 0 0.1 1 0 0 0 > to=<T 0 0 0.01 1 0 0 0 > Q=<T 0.00586572 -0.0824939 0 0.387071 0 0 -0.92205 >  }
+joint (board1 block3){ type=8 from=<T 0 0 0.01 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T -0.0309436 -0.0630125 0 0.138689 0 0 -0.990336 >  }
+joint (board1 block4){ type=8 from=<T 0 0 0.01 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T 0.0222989 0.0418355 0 0.971483 0 0 -0.237111 >  }
+joint (block3 board2){ type=8 from=<T 0 0 0.1 1 0 0 0 > to=<T 0 0 0.01 1 0 0 0 > Q=<T -0.0586011 -0.0479056 0 0.408741 0 0 0.91265 >  }

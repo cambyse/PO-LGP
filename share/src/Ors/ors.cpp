@@ -122,10 +122,11 @@ void ors::Body::parseAts(KinematicWorld& G) {
   }
 
   type=dynamicBT;
-  if(ats.getValue<bool>("fixed"))      type=staticBT;
-  if(ats.getValue<bool>("static"))     type=staticBT;
-  if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
-  
+  if(ats.getValue<bool>("fixed"))       type=staticBT;
+  if(ats.getValue<bool>("static"))      type=staticBT;
+  if(ats.getValue<bool>("kinematic"))   type=kinematicBT;
+  if(ats.getValue<double>(d,"dyntype")) type=(BodyType)d;
+
   // SHAPE handling
   Item* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
@@ -168,7 +169,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
 void ors::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   if(mass) os <<"mass=" <<mass <<' ';
-  if(type!=dynamicBT) os <<"type=" <<(int)type <<' ';
+  if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
 //  uint i; Item *a;
 //  for_list(Type,  a,  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';

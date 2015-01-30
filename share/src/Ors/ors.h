@@ -263,7 +263,7 @@ struct KinematicWorld {
     if(!qdim.N && getJointStateDimension()!=q.N) HALT("");
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
-  arr getJointState() const { return q; }
+  arr getJointState() const { if(q.N!=getJointStateDimension()) ((KinematicWorld*)this)->calc_q_from_Q(); return q; }
   arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   arr getLimits() const;
 
