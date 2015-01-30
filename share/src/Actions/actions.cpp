@@ -189,3 +189,12 @@ bool FollowReferenceInTaskSpace::finishedSuccess(ActionMachine& M){
 void FollowReferenceInTaskSpace::reportDetails(ostream& os) {
   cout <<"HELLO" <<endl;
 }
+
+Relax::Relax(ActionMachine &actionMachine, const char *name)
+  : GroundedAction(actionMachine,name) {
+}
+
+void Relax::step(ActionMachine &actionMachine) {
+  actionMachine.Kq_gainFactor = ARR(0.);
+  actionMachine.Kd_gainFactor = ARR(0.);
+}

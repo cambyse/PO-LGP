@@ -56,6 +56,12 @@ struct FollowReferenceInTaskSpace : GroundedAction{
   void reportDetails(ostream& os);
 };
 
+//===========================================================================
+struct Relax : GroundedAction{
+  Relax(ActionMachine& actionMachine, const char* name);
+  virtual void step(ActionMachine& actionMachine);
+};
+
 // TODO:
 // extern ActionSymbol &gamepad,
 // &coreTasks,

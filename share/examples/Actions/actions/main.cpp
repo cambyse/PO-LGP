@@ -11,7 +11,7 @@ void TEST(ActionMachine){
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-  
+
   // auto a1 =
   //     new MoveEffTo("endeffR", ARR(.6, -.5, 1.2));
   // activity.machine->waitForActionCompletion(a1);
@@ -66,7 +66,6 @@ void TEST(Dance) {
 
 //===========================================================================
 // do some sequential hand movements
-
 void TEST(FollowTrajectory) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
@@ -90,7 +89,6 @@ void TEST(FollowTrajectory) {
 }
 
 //===========================================================================
-
 void test_push() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
@@ -106,6 +104,7 @@ void test_push() {
   engine().close(activity);
 }
 
+//===========================================================================
 void idle() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
@@ -124,6 +123,7 @@ void idle() {
   engine().close(activity);
 }
 
+//===========================================================================
 void test_collision() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
@@ -136,6 +136,7 @@ void test_collision() {
   engine().close(activity);
 }
 
+//===========================================================================
 void idle2() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
@@ -151,10 +152,73 @@ void idle2() {
   activity.machine->waitForActionCompletion();
   MT::wait(5);
   
+
   // new MoveEffTo(*activity.machine, "endeffR", {.6, -.2, .9});
   // new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {1, 0, 0});
   // activity.machine->waitForActionCompletion();
   
+  engine().close(activity);
+}
+
+//===========================================================================
+void test_record() {
+  ActionSystem activity;
+  GroundedAction *core = new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+  GroundedAction *t = new Relax(*activity.machine, "relax");
+  core->actionState = inactive;
+  activity.machine->s->feedbackController.useSwift=false;
+  activity.ctrl_obs.waitForNextRevision();
+  cout << "\nStart relax " << endl;
+
+  arr trajQ, trajX;
+  for (uint i =0;i<1000;i++){
+    arr q = activity.ctrl_obs.get()->q;
+    arr qdot = activity.ctrl_obs.get()->qdot;
+    arr x = ARRAY(activity.machine->s->world.getShapeByName("endeffR")->X.pos);
+    activity.machine->s->feedbackController.setState(q,qdot);
+    activity.machine->s->q = q;
+    activity.machine->s->qdot = qdot;
+
+    trajQ.append(~q);
+    trajX.append(~x);
+    MT::wait(0.01);
+  }
+  cout << "End recording" << endl;
+
+  activity.machine->removeGroundedAction(t);
+  core->actionState = active;
+
+  write(LIST<arr>(trajX),"trajX.data");
+  write(LIST<arr>(trajQ),"trajQ.data");
+
+  engine().close(activity);
+}
+
+//===========================================================================
+void test_replay() {
+  ActionSystem activity;
+  GroundedAction *core = new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+  arr trajX;
+  trajX << FILE("trajX.data");
+
+  // 1. put robot in initial position
+  arr x0 = trajX[0];
+  cout << x0 << endl;
+  cout <<"Goto init position" <<endl;
+  GroundedAction* right = new MoveEffTo(*activity.machine, "endeffR", x0);
+  activity.machine->waitForActionCompletion(right);
+  MT::wait(3.);
+
+  // 2. execute trajectory
+  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
+  GroundedAction *a = new FollowReferenceInTaskSpace(*activity.machine, "replay task", t, trajX, 10.);
+  cout <<"Execute trajectory" <<endl;
+  MT::wait(10.);
+
   engine().close(activity);
 }
 
@@ -164,13 +228,17 @@ int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
   // test_push();
-  // idle();
+//   idle();
   // idle2();
   // return 0;
   // test_collision();
 //  testDance();
-  testFollowTrajectory();
-  // testActionMachine();
+//  testFollowTrajectory();
+//   testActionMachine();
+
+//  test_record();
+  test_replay();
+
   
   return 0;
 }

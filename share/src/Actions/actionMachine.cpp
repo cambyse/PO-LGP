@@ -21,6 +21,8 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 
 ActionMachine::ActionMachine():Module("ActionMachine"){
   ActionL::memMove=true;
+  Kq_gainFactor = ARR(1.);
+  Kd_gainFactor = ARR(1.);
   s = new sActionMachine();
 }
 
@@ -33,6 +35,7 @@ void ActionMachine::open(){
 
   s->feedbackController.H_rate_diag = pr2_reasonable_W(s->world);
   s->feedbackController.qitselfPD.y_ref = s->q;
+
 //  s->MP.qitselfPD.setGains(1.,10.);
 
   if(MT::getParameter<bool>("useRos",false)){
@@ -64,9 +67,9 @@ void ActionMachine::step(){
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
   transition();
 
-  //defaults
-  s->refs.fR = ARR(0., 0., 0.);
-  s->refs.Kq_gainFactor = ARR(1.);
+  //-- set gains to default value (can be overwritten by other actions)
+  Kq_gainFactor=ARR(1.);
+  Kd_gainFactor=ARR(1.);
 
   //-- check the gamepad
   arr gamepad = gamepadState.get();
@@ -105,6 +108,10 @@ void ActionMachine::step(){
   A.deAccess();
 
   //-- send the computed movement to the robot
+  s->refs.fR = ARR(0., 0., 0.);
+  s->refs.Kq_gainFactor = Kq_gainFactor;
+  s->refs.Kd_gainFactor = Kd_gainFactor;
+
   s->refs.q=s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.u_bias = zeros(s->q.N);

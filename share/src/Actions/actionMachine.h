@@ -91,6 +91,7 @@ struct ActionMachine : Module {
   ActionMachine();
   ~ActionMachine();
 
+  arr Kq_gainFactor, Kd_gainFactor;
   //-- user methods
 
   /** Add a sequence of actions started one after the other..
