@@ -14,7 +14,7 @@ TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
   H_rate_diag = MT::getParameter<double>("Hrate")*H_diag;
 }
 
-void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
+void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   if(G.last()->q_agent!=0){ //we're referring to a graph set to non-zero agent!
     uint n=G.last()->getJointStateDimension();
     CHECK(n!=H_rate_diag.N,"just checking...");

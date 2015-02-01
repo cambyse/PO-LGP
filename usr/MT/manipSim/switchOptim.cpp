@@ -34,10 +34,11 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     MP.world.watch(false);
 
     //-- decide on pickAndPlace times
-    uintA tPick(actions.N), tPlace(actions.N);
+    uintA tPick(actions.N), tPlace(actions.N), idObject(actions.N);
     for(uint i=0;i<actions.N;i++){
       tPick(i) = (2*i+1)*microSteps;
       tPlace(i) = (2*i+2)*microSteps;
+      idObject(i) = world.getShapeByName(actions(i)->parents(1)->keys(1))->index;
     }
 
     //-- transitions
@@ -45,6 +46,18 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     t = MP.addTask("transitions", new TransitionTaskMap(world));
     t->map.order=2;
     t->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+    //-- placement
+    DefaultTaskMap *m;
+    t = MP.addTask("place_pos", m=new DefaultTaskMap(posTMT));
+    m->referenceIds.resize(MP.T+1) = -1;
+    t->prec.resize(MP.T+1).setZero();
+    t->target.resize(MP.T+1,3).setZero();
+    for(uint i=0;i<actions.N;i++){
+      m->referenceIds(tPlace(i)) = idObject(i);
+      t->prec(tPlace(i))=posPrec;
+      t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.pos );
+    }
 
 //    if(colPrec<0){ //interpreted as hard constraint (default)
 //      t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
@@ -59,7 +72,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
 
       uint endeff_index = world.getShapeByName("graspRef")->index;
       uint object_index = world.getShapeByName(a->parents(1)->keys(1))->index;
-      uint target_index = world.getShapeByName(a->parents(2)->keys(1))->index;
+//      uint target_index = world.getShapeByName(a->parents(2)->keys(1))->index;
 
       //pick at time 2*i+1
       ors::GraphOperator *op_pick = new ors::GraphOperator();
@@ -94,8 +107,8 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       world.operators.append(op_place);
 
       ors::Transformation target_X = world_final.shapes(object_index)->X;
-      t = MP.addTask("place_pos", new DefaultTaskMap(posTMT, object_index));
-      t->setCostSpecs(tPlace(i), tPlace(i), ARRAY(target_X.pos), posPrec);
+//      t = MP.addTask("place_pos", new DefaultTaskMap(posTMT, object_index));
+//      t->setCostSpecs(tPlace(i), tPlace(i), ARRAY(target_X.pos), posPrec);
       t = MP.addTask("place_quat", new DefaultTaskMap(quatTMT, object_index));
       t->setCostSpecs(tPlace(i), tPlace(i), ARRAY(target_X.rot), posPrec);
 
@@ -109,6 +122,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       t = MP.addTask("place_pos_vel", new DefaultTaskMap(posTMT, object_index));
       t->map.order=1;
       t->setCostSpecs(tPlace(i)-2, tPlace(i)-2, {0.,0.,-.1}, posPrec);
+
     }
 
 /*

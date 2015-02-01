@@ -190,13 +190,13 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = MP.addTask("limits",
-                    new TaskMap_qLimits(limits));
+                 new TaskMap_qLimits(limits));
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
   c = MP.addTask("qitself",
-                    new TaskMap_qItself());
+                 new TaskMap_qItself());
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 

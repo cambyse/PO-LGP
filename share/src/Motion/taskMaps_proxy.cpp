@@ -31,7 +31,7 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
-void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   y.resize(1).setZero();
   if(&J) J.resize(1, G.getJointStateDimension(false)).setZero();
 

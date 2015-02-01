@@ -39,7 +39,12 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWor
 }
 
 
-void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
+void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  if(t>=0 && referenceIds.N){
+    if(referenceIds.nd==1){  i=referenceIds(t); j=-1; }
+    if(referenceIds.nd==2){  i=referenceIds(t,0); j=referenceIds(t,1); }
+  }
+
   ors::Body *body_i = i<0?NULL: G.shapes(i)->body;
   ors::Body *body_j = j<0?NULL: G.shapes(j)->body;
 
@@ -195,7 +200,7 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
 
 //===========================================================================
 
-void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G) {
+void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
   if(M.N){
     if(M.nd==1){
@@ -215,7 +220,7 @@ uint TaskMap_qItself::dim_phi(const ors::KinematicWorld& G) {
 
 //===========================================================================
 
-void TaskMap_qLimits::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
+void TaskMap_qLimits::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(!limits.N) limits=G.getLimits();
   G.kinematicsLimitsCost(y, J, limits);
   cout << y << endl;

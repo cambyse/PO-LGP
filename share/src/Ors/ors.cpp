@@ -1071,7 +1071,12 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
 void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
-  if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
+  if(!b){
+    MT_MSG("WARNING: calling kinematics for NULL body");
+    y.resize(3).setZero();
+    if(&J) J.resize(3, getJointStateDimension()).setZero();
+    return;
+  }
 
   //get position
   ors::Vector pos_world = b->X.pos;

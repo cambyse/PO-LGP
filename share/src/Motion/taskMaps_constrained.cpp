@@ -20,7 +20,7 @@
 
 //===========================================================================
 
-void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   G.kinematicsProxyCost(y, J, margin, false);
   y -= .5;
 }
@@ -37,7 +37,7 @@ ProxyConstraint::ProxyConstraint(PTMtype _type,
   type=ineqTT;
 }
 
-void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   prox.phi(y, J, G);
   y -= .5;
 }
