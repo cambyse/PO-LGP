@@ -371,16 +371,18 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
   : world(G), index(0), qIndex(UINT_MAX), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
-  index=G.joints.N;
-  G.joints.append(this);
+  index=world.joints.N;
+  world.joints.append(this);
   f->outLinks.append(this);
   t-> inLinks.append(this);
-  G.qdim.clear();
+  world.q.clear();
+  world.qdot.clear();
+  world.qdim.clear();
 }
 
 ors::Joint::~Joint() {
-  reset();
   world.checkConsistency();
+  reset();
   if(from){ from->outLinks.removeValue(this); listReindex(from->outLinks); }
   if(to){   to->inLinks.removeValue(this); listReindex(to->inLinks); }
   world.joints.removeValue(this);
@@ -388,7 +390,6 @@ ors::Joint::~Joint() {
   world.q.clear();
   world.qdot.clear();
   world.qdim.clear();
-  world.calc_q_from_Q();
 }
 
 void ors::Joint::reset() { 
@@ -779,6 +780,26 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
     ((KinematicWorld*)this)->qdim(agent) = qd; //hack to work around const declaration
   }
   return qdim(agent);
+}
+
+void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot) const {
+  if(!qdim.N || q.N!=getJointStateDimension()){
+    getJointStateDimension();
+    ((KinematicWorld*)this)->calc_q_from_Q();
+  }
+  _q=q;
+  if(&_qdot){
+    _qdot=qdot;
+    if(!_qdot.N) _qdot.resizeAs(q).setZero();
+  }
+}
+
+arr ors::KinematicWorld::getJointState() const {
+  if(!qdim.N || q.N!=getJointStateDimension()){
+    getJointStateDimension();
+    ((KinematicWorld*)this)->calc_q_from_Q();
+  }
+  return q;
 }
 
 /** @brief returns the vector of joint limts */
@@ -2143,6 +2164,18 @@ void ors::KinematicWorld::removeUselessBodies() {
 }
 
 bool ors::KinematicWorld::checkConsistency(){
+  if(qdim.N){
+    uint N=getJointStateDimension();
+    CHECK_EQ(N, q.N, "");
+//    CHECK_EQ(N, qdot.N, "");
+    uint n=0;
+    for(Joint *j: joints){
+      if(j->mimic) continue; //don't count dependent joints
+      CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
+      n += j->qDim();
+    }
+    CHECK_EQ(n,N,"");
+  }
   for(Body *b: bodies){
     CHECK(&b->world, "");
     CHECK(&b->world==this,"");
@@ -2219,7 +2252,7 @@ void ors::GraphOperator::apply(KinematicWorld& G){
     return;
   }
   if(symbol==addRigid){
-    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
+//    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from, to);
 
     // Keep Object Orientation

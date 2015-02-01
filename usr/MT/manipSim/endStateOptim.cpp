@@ -105,8 +105,10 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 
   arr x = world.getJointState();
 
+//  checkJacobianCP(f, x, 1e-4);
   OptConstrained opt(x, NoArr, f, OPT(verbose=1));
   opt.run();
+//  checkJacobianCP(f, x, 1e-4);
   f.world.setJointState(x);
   return opt.UCP.get_sumOfSquares();
 }
@@ -136,6 +138,9 @@ void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
         j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
     }
   }
+
+  world.topSort();
+  world.checkConsistency();
 }
 
 //===========================================================================

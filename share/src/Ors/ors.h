@@ -242,7 +242,7 @@ struct KinematicWorld {
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); /*for(Shape *s: shapes) if(s->body) s->ibody=s->body->index;*/ }
+  void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
@@ -259,11 +259,8 @@ struct KinematicWorld {
 
   /// @name get state
   uint getJointStateDimension(int agent=-1) const;
-  void getJointState(arr &_q, arr& _qdot=NoArr) const {
-    if(!qdim.N && getJointStateDimension()!=q.N) HALT("");
-    _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
-  }
-  arr getJointState() const { if(q.N!=getJointStateDimension()) ((KinematicWorld*)this)->calc_q_from_Q(); return q; }
+  void getJointState(arr &_q, arr& _qdot=NoArr) const;
+  arr getJointState() const;
   arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   arr getLimits() const;
 

@@ -50,8 +50,10 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
 //===========================================================================
 
 void optimizeFinal(){
-  ors::KinematicWorld world("model.kvg");
-  Graph G("final.kvg");
+  ors::KinematicWorld world("world_finalExample.kvg");
+  Graph G("symbols_finalExample.kvg");
+
+  world >>FILE("z.kvg");
 
   double fx = endStateOptim(world, G);
   cout <<"fx=" <<fx <<endl;
@@ -62,29 +64,28 @@ void optimizeFinal(){
 //===========================================================================
 
 void optimSwitchConfigurations(){
-  ors::KinematicWorld world_init("model.kvg");
-//  ors::KinematicWorld world_final("model.kvg");
-//  Graph G_fin("final.kvg");
-  Graph G("switches.kvg");
+  ors::KinematicWorld world_init("world.kvg");
+  Graph G("symbols.kvg");
 
   ors::KinematicWorld world_final = world_init;
   Graph G_final = G;
   createEndState(world_final, G_final);
-  world_final >>FILE("world_final.kvg");
-  G_final >>FILE("symbols_final.kvg");
+  world_final >>FILE("z.world_final.kvg");
+  G_final >>FILE("z.symbols_final.kvg");
+
 
   double fx = endStateOptim(world_final, G_final);
   cout <<"fx=" <<fx <<endl;
-  world_final.gl().watch();
+//  world_final.gl().watch();
 
-  for(uint i=world_init.joints.N;i--;){
-    ors::Joint *j=world_init.joints(i);
-    if(j->type==8) delete(j);
-  }
+//  for(uint i=world_init.joints.N;i--;){
+//    ors::Joint *j=world_init.joints(i);
+//    if(j->type==8) delete(j);
+//  }
 
   fx = optimSwitchConfigurations(world_init, world_final, G);
   cout <<"fx=" <<fx <<endl;
-  world_final.gl().watch();
+//  world_final.gl().watch();
 }
 
 //===========================================================================
