@@ -33,12 +33,12 @@ ProxyConstraint::ProxyConstraint(PTMtype _type,
                                  double _margin,
                                  bool _useCenterDist,
                                  bool _useDistNotCost)
-  : prox(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
+  : proxyCosts(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
   type=ineqTT;
 }
 
 void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
-  prox.phi(y, J, G);
+  proxyCosts.phi(y, J, G, t);
   y -= .5;
 }
 
@@ -52,14 +52,50 @@ void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 
 //===========================================================================
 
-void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  y.resize(1) = -1.;
+void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+  if(t>=0 && referenceIds.N){
+    if(referenceIds.nd==1){  i=referenceIds(t); j=-1; }
+    if(referenceIds.nd==2){  i=referenceIds(t,0); j=referenceIds(t,1); }
+  }
+
+  y.resize(1) = -1.; //default value if not overwritten below
   if(&J) J.resize(1,G.q.N).setZero();
-  for(ors::Proxy *p: G.proxies){
-    if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
-      G.kinematicsProxyConstraint(y, J, p, margin, false);
-      break;
+  if(j>=0){ //against a concrete j
+    for(ors::Proxy *p: G.proxies){
+      if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
+        G.kinematicsProxyConstraint(y, J, p, margin);
+        break;
+      }
     }
+  }else if(j==-1){ //against all objects
+    NIY; //this doesn't work, don't know why
+    //first collect all relevant proxies
+    ProxyL P;
+    for(ors::Proxy *p: G.proxies) if((p->a==i) || (p->b==i)) P.append(p);
+    //Compute the softmax
+    double alpha = 10.;
+    double yHat=0.,yNorm=0.;
+    for(ors::Proxy *p: P){
+      G.kinematicsProxyConstraint(y, NoArr, p, margin);
+      double yi=y.scalar();
+      double expyi=::exp(alpha*yi);
+      yNorm += expyi;
+      yHat  += expyi * yi;
+    }
+    yHat /= yNorm;
+    //compute derivative
+    if(&J){
+      J.resize(1,G.getJointStateDimension()).setZero();
+      arr Ji;
+      for(ors::Proxy *p: P){
+        G.kinematicsProxyConstraint(y, Ji, p, margin);
+        double yi=y.scalar();
+        double expyi=::exp(alpha*yi);
+        J += expyi * (1.+alpha*(yi-yHat)) * Ji;
+      }
+      J /= yNorm;
+    }
+    y.scalar() = yHat;
   }
 }
 
@@ -113,7 +149,7 @@ void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G
   if(&J) J.resize(1,G.q.N).setZero();
   for(ors::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
-      G.kinematicsProxyConstraint(y, J, p, margin, false);
+      G.kinematicsProxyConstraint(y, J, p, margin);
       cout << y << endl;
       break;
     }

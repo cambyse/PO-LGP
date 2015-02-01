@@ -2019,12 +2019,10 @@ void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, boo
   }
 }
 
-void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin, bool addValues) const {
-  g.resize(1);
-  if(&J) J.resize(1, getJointStateDimension());
-  if(!addValues){ g.setZero();  if(&J) J.setZero(); }
+void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin) const {
+  if(&J) J.resize(1, getJointStateDimension()).setZero();
 
-  g(0) += margin - p->d;
+  g.resize(1) = margin - p->d;
 
   //Jacobian
   if(&J){

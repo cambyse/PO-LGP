@@ -32,6 +32,9 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
 }
 
 void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+  uintA shapes_t;
+  shapes_t.referTo(shapes);
+
   y.resize(1).setZero();
   if(&J) J.resize(1, G.getJointStateDimension(false)).setZero();
 
@@ -50,9 +53,10 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
         }
       }
       break;
-    case allVersusListedPTMT: {
+    case allVsListedPTMT: {
+      if(t && shapes.nd==2) shapes_t.referToSubDim(shapes,t);
       for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
-        if(shapes.contains(p->a) || shapes.contains(p->b)) {
+        if(shapes_t.contains(p->a) || shapes_t.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
         }
@@ -132,7 +136,7 @@ uint ProxyTaskMap::dim_phi(const ors::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:
-  case allVersusListedPTMT:
+  case allVsListedPTMT:
   case allExceptListedPTMT:
   case bipartitePTMT:
   case pairsPTMT:

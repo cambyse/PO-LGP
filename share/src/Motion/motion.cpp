@@ -220,7 +220,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
       if(c->map.type==sumOfSqrTT){
         if(c->target.N==1) y -= c->target(0);
         else if(c->target.nd==1) y -= c->target;
-        else y -= c->target[t];
+        else if(c->target.nd==2) y -= c->target[t];
         y *= sqrt(c->prec(t));
         if(&J) Jy *= sqrt(c->prec(t));
       }

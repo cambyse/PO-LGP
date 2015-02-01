@@ -180,7 +180,7 @@ struct Shape {
 /// as return value from external collision libs
 struct Proxy {
   //TODO: have a ProxyL& L as above...
-  int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
+  int a;              ///< index of shape A (-1==world) //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
   Vector posA, cenA;  ///< contact or closest point position on surface of shape A (in world coordinates)
   Vector posB, cenB;  ///< contact or closest point position on surface of shape B (in world coordinates)
@@ -279,8 +279,8 @@ struct KinematicWorld {
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
-  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
-  void kinematicsContactConstraints(arr& y, arr &J) const;
+  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02) const;
+  void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: deprecated?
   void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;

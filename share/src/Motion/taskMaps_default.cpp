@@ -162,12 +162,12 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
     G.kinematicsQuat(y, J, body_i);
     if(!body_j){ //relative to world
-      arr y2 = ARRAY(q_j);
-      if(scalarProduct(y,y2)>=0.){
-        y -= y2;
-      }else{
-        y += y2;
-      }
+//      arr y2 = ARRAY(q_j);
+//      if(scalarProduct(y,y2)>=0.){
+//        y -= y2;
+//      }else{
+//        y += y2;
+//      }
     }else{
       arr y2, J2;
       G.kinematicsQuat(y2, J2, body_j);
