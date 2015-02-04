@@ -90,8 +90,54 @@ void optimSwitchConfigurations(){
 
 //===========================================================================
 
+void generateRandomProblems(){
+  ors::KinematicWorld world_base("world_base.kvg");
+  Graph symbols_base("symbols_base.kvg");
+
+  for(uint k=0;k<10;k++){
+    ors::KinematicWorld world(world_base);
+    Graph symbols(symbols_base);
+    uint n = 5+rnd(30);
+    double x=-1.6, y=-1.;
+    for(uint i=0;i<n;i++){
+      //add an object to the geometry
+      ors::Body *b = new ors::Body(world);
+      ors::Shape *s = new ors::Shape(world, *b);
+      s->name <<"obj_" <<i;
+      s->cont=true;
+      b->X.addRelativeTranslation(x,y,.62);
+      //randomize type and size
+      if(rnd.uni()<.6){
+        s->type = ors::cylinderST;
+        s->size[1]=.1;
+        s->size[2]=.2;
+        s->size[3]=.05;
+      }else{
+        s->type = ors::boxST;
+        s->size[0]=.1 + .3*rnd.uni();
+        s->size[1]=.1 + .6*rnd.uni();
+        s->size[2]=.02;
+      }
+      //position on grid
+      b->X.addRelativeTranslation(0,.5*s->size[1],.5*s->size[2]);
+      y += .1 + s->size[1];
+      if(y>1.){ x+=.4; y=-1.; }
+
+      //add symbols
+      symbols.append<bool>("Object", s->name, new bool(true), true);
+    }
+    cout <<symbols <<endl;
+    world.calc_fwdPropagateShapeFrames();
+    world.gl().watch();
+  }
+
+
+}
+
 int main(int argc,char **argv){
 
+  generateRandomProblems();
+  return 0;
 //  optimizeFinal();
   optimSwitchConfigurations();
 //  testReachable();
