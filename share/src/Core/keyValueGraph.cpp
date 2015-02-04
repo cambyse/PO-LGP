@@ -427,9 +427,10 @@ Item* KeyValueGraph::merge(Item *m){
 
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
   G.checkConsistency();
+//  G.index();//necessary, after checkConsistency?
+  //  { for_list(Item, i, G) i->index=i_COUNT; }
 
   if(!isReferringToItemsOf){ while(N) delete last(); } // listDelete(*this);
-  { for_list(Item, i, G) i->index=i_COUNT; }
   for(Item *it:G){
     if(it->getValueType()==typeid(KeyValueGraph)){
       Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph(), true);
@@ -580,13 +581,20 @@ bool KeyValueGraph::checkConsistency() const{
     CHECK_EQ(it->index, idx, "");
     for(Item *j: it->parents)  CHECK(j->parentOf.findValue(it) != -1,"");
     for(Item *j: it->parentOf) CHECK(j->parents.findValue(it) != -1,"");
-    for(Item *j: it->parents) if(&j->container!=this){
+    for(Item *parent: it->parents) if(&parent->container!=this){
       //check that parent is contained in a super-graph of this
-      const Graph *g = this;
-      while(&j->container!=g){
-        CHECK(g->isItemOfParentKvg,"");
-        g = &g->isItemOfParentKvg->container;
+      const Graph *parentGraph = this;
+      const Item *parentGraphItem;
+      while(&parent->container!=parentGraph){
+        //wee need to descend one more
+        parentGraphItem = parentGraph->isItemOfParentKvg;
+        CHECK(parentGraphItem,"there is no more supergraph to find the parent");
+        parentGraph = &parentGraphItem->container;
       }
+      //check sorting
+      CHECK(parent->index < parentGraphItem->index,"subitem refers to parent that sorts below the subgraph");
+    }else{
+      CHECK(parent->index < it->index,"item refers to parent that sorts below the item");
     }
     if(it->getValueType()==typeid(KeyValueGraph)){
       Graph& G = it->kvg();

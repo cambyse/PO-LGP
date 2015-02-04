@@ -109,7 +109,7 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   OptConstrained opt(x, NoArr, f, OPT(verbose=1));
   opt.run();
 //  checkJacobianCP(f, x, 1e-4);
-  f.world.setJointState(x);
+  world.setJointState(x);
   return opt.UCP.get_sumOfSquares();
 }
 

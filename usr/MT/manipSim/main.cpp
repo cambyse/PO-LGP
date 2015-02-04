@@ -7,6 +7,7 @@
 
 #include "endStateOptim.h"
 #include "switchOptim.h"
+#include "search.h"
 
 //===========================================================================
 
@@ -76,16 +77,31 @@ void optimSwitchConfigurations(){
 
   double fx = endStateOptim(world_final, G_final);
   cout <<"fx=" <<fx <<endl;
-//  world_final.gl().watch();
-
-//  for(uint i=world_init.joints.N;i--;){
-//    ors::Joint *j=world_init.joints(i);
-//    if(j->type==8) delete(j);
-//  }
 
   fx = optimSwitchConfigurations(world_init, world_final, G);
   cout <<"fx=" <<fx <<endl;
 //  world_final.gl().watch();
+}
+
+//===========================================================================
+
+void solveProblem(ors::KinematicWorld& world, Graph& symbols){
+  runMonteCarlo(symbols);
+
+  ors::KinematicWorld world_final = world;
+  Graph G_final = symbols;
+  createEndState(world_final, G_final);
+  world_final >>FILE("z.world_fin.kvg");
+  G_final >>FILE("z.symbols_fin.kvg");
+
+  double fx = endStateOptim(world_final, G_final);
+  world_final.gl().watch();
+  cout <<"fx=" <<fx <<endl;
+
+  return;
+  fx = optimSwitchConfigurations(world, world_final, symbols);
+  cout <<"fx=" <<fx <<endl;
+
 }
 
 //===========================================================================
@@ -103,7 +119,8 @@ void generateRandomProblems(){
       //add an object to the geometry
       ors::Body *b = new ors::Body(world);
       ors::Shape *s = new ors::Shape(world, *b);
-      s->name <<"obj_" <<i;
+      b->name <<"obj_" <<i;
+      s->name = b->name;
       s->cont=true;
       b->X.addRelativeTranslation(x,y,.62);
       //randomize type and size
@@ -126,13 +143,21 @@ void generateRandomProblems(){
       //add symbols
       symbols.append<bool>("Object", s->name, new bool(true), true);
     }
+
+    //HACK: move the actionSequence item to the end...
+    Item *as = symbols["actionSequence"];
+    symbols.ItemL::append(as);
+    symbols.ItemL::remove(as->index);
+    symbols.index();
+
     cout <<symbols <<endl;
     world.calc_fwdPropagateShapeFrames();
     world.gl().watch();
+    solveProblem(world, symbols);
   }
-
-
 }
+
+//===========================================================================
 
 int main(int argc,char **argv){
 

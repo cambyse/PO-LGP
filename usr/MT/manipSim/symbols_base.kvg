@@ -1,3 +1,14 @@
 Symbol supports
 Symbol pap
+Object table1
+Symbol done
 
+(done table1)
+
+Rule pap {
+     X, Y
+     (done Y) (done X)!
+     out1 { (done X) }
+}
+
+actionSequence{}
