@@ -44,6 +44,15 @@ namespace util {
 
     double approx_equal_tolerance() { return 1e-10; }
 
+    QString random_alpha_num(int n) {
+        QString alpha_num = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        QString random;
+        for(int i=0; i<n; ++i) {
+            random += alpha_num.at(rand()%alpha_num.length());
+        }
+        return random;
+    }
+
     const InvalidBase INVALID = InvalidBase(true);
 
     Range::Range(int first, int last, int increment):

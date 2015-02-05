@@ -49,6 +49,14 @@
         DEBUG_ERROR("This line should never be reached");       \
     }
 
+#define DEBUG_EXPECT(level, condition) {                \
+        IF_DEBUG(level) {                               \
+            if(!(condition)) {                          \
+                DEBUG_ERROR("Condition not fulfilled"); \
+            }                                           \
+        }                                               \
+    }                                                   \
+
 // assert of errors and warnings for unit tests
 
 #define assert_error(call, msg) {                                       \

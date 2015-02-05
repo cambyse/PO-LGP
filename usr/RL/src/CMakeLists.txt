@@ -27,6 +27,7 @@ else()
 endif()
 
 # add all other directories
+add_subdirectory(ActiveOnlineSearch)
 add_subdirectory(ButtonWorld)
 add_subdirectory(CheeseMaze)
 add_subdirectory(environment)
