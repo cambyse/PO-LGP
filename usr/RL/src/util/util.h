@@ -664,13 +664,35 @@ namespace util {
         return false;
     }
 
-    /** \brief Select a random element from a vector. */
-    template < typename T >
-        T random_select(const std::vector<T> vec) {
-        if(vec.size()==0) {
-            DEBUG_ERROR("Cannot draw from an empty vector");
+    /** \brief Overload for selecting a random element from a container with
+     * random-access iterator. This function is called by util::random_select.*/
+    template <class C>
+        typename C::value_type random_select_overload(const C & container, std::random_access_iterator_tag) {
+        return container[rand()%container.size()];
+    }
+    /** \brief Overload for selecting a random element from a container with
+     * input iterator. This function is called by util::random_select. */
+    template <class C>
+        typename C::value_type random_select_overload(const C & container, std::input_iterator_tag) {
+        int idx = rand()%container.size();
+        for(auto elem : container) {
+            if(idx==0) {
+                return elem;
+            }
+            --idx;
         }
-        return vec[rand()%vec.size()];
+        DEBUG_DEAD_LINE;
+    }
+    /** \brief Select a random element from a container. This function calls the
+     * util::random_select_overload.*/
+    template <class C>
+        typename C::value_type random_select(const C & container) {
+        if(container.size()==0) {
+            DEBUG_ERROR("Cannot select element from an empty container");
+            return typename C::value_type();
+        } else {
+            return random_select_overload(container, typename C::iterator::iterator_category());
+        }
     }
 
     /** \brief Return index draw from normalized (or unnormalized) vector. */
