@@ -63,6 +63,7 @@ private:
 public:
     SearchTree(const state_t &, std::shared_ptr<Environment> env, double d = 0.9);
     virtual ~SearchTree() = default;
+    void init(const state_t &);
     void perform_rollout();
     action_t recommend_action() const;
     void prune(const action_t &, const state_t &);

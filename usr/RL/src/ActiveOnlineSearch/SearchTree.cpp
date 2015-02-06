@@ -30,6 +30,11 @@ SearchTree::SearchTree(const state_t & s, std::shared_ptr<Environment> env, doub
     discount(d),
     environment(env)
 {
+    init(s);
+}
+
+void SearchTree::init(const state_t & s) {
+    graph.clear();
     root_node = graph.addNode();
     node_info_map[root_node].state=s;
 }
@@ -97,7 +102,8 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
 
     // check if new root node was found
     if(new_root_node==INVALID) {
-        DEBUG_WARNING("No branch for (action --> state) = (" << action << " --> " << state << ")");
+        DEBUG_OUT(1, "No branch for (state --> action --> state) = ("
+                  << node_info_map[root_node].state << " --> " << action << " --> " << state << ")");
         graph.clear();
         root_node = graph.addNode();
         node_info_map[root_node].state=state;
@@ -156,8 +162,8 @@ void SearchTree::toPdf(const char* file_name) const {
     //-------------------//
     // random file names //
     //-------------------//
-    //QString dot_file_name = util::random_alpha_num(50)+".dot";
-    QString dot_file_name = "tree.dot";
+    QString dot_file_name = util::random_alpha_num(50)+".dot";
+    //QString dot_file_name = "tree.dot";
     QString graphics_file_name = file_name;
 
     //-----------------------------------------//
@@ -236,7 +242,7 @@ void SearchTree::toPdf(const char* file_name) const {
     //-----------------//
     // remove dot file //
     //-----------------//
-    //remove(dot_file_name.toLatin1());
+    remove(dot_file_name.toLatin1());
 }
 
 SearchTree::trajectory_item_t  SearchTree::add_sample(const node_t & node,
@@ -407,12 +413,11 @@ void SearchTree::update_model(const node_t & state_node,
 
 SearchTree::action_t SearchTree::tree_policy(const node_t & state_node, bool & is_terminal) const {
     // get a vector of unsampled actions
-    vector<action_t> a_vector;
+    set<action_t> action_set;
     vector<tuple<double,action_t>> upper_bounds;
     {
-        set<action_t> a_set;
         for(action_t a : environment->actions) {
-            a_set.insert(a);
+            action_set.insert(a);
         }
         int state_counts = node_info_map[state_node].counts;
         for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc) {
@@ -420,18 +425,15 @@ SearchTree::action_t SearchTree::tree_policy(const node_t & state_node, bool & i
             action_t action = action_node_info.action;
             double upper = action_node_info.value;
             upper += sqrt(2*log(state_counts)/action_node_info.counts);
-            a_set.erase(action);
+            action_set.erase(action);
             upper_bounds.push_back(make_tuple(upper,action));
-        }
-        for(action_t a : a_set) {
-            a_vector.push_back(a);
         }
     }
 
-    // selec unsampled action if there is any
-    if(a_vector.size()>0) {
+    // select unsampled action if there is any
+    if(action_set.size()>0) {
         is_terminal = true;
-        return random_select(a_vector);
+        return random_select(action_set);
     }
 
     // use UCB1 otherwise

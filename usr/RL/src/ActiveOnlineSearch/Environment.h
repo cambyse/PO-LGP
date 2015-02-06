@@ -24,6 +24,8 @@ public:
     virtual state_reward_pair_t sample(const state_t &, const action_t &) const = 0;
     virtual QString action_name(const action_t &) const = 0;
     virtual QString state_name(const state_t &) const = 0;
+    virtual bool has_terminal_state() const = 0;
+    virtual bool is_terminal_state(state_t) const = 0;
 
 public:
     Environment(const std::vector<action_t> & a = std::vector<action_t>(),
