@@ -694,6 +694,13 @@ namespace util {
             return random_select_overload(container, typename C::iterator::iterator_category());
         }
     }
+    /** \brief Select a random element from the specified initializer
+     * list. Internally constructs a std::vector<T> v and calls
+     * util::random_select(v). */
+    template <class T>
+        T random_select(std::initializer_list<T> init_list) {
+        return random_select(std::vector<T>(init_list));
+    }
 
     /** \brief Return index draw from normalized (or unnormalized) vector. */
     template < typename T >

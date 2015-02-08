@@ -743,7 +743,7 @@ f_ptr_t get_basis_feature(MODE mode, bool clear) {
                 Feature::FEATURE_TYPE::BUTTON_ACTION
                 });
     // initialize at random
-    static Feature::FEATURE_TYPE type = random_select<Feature::FEATURE_TYPE>(feature_types);
+    static Feature::FEATURE_TYPE type = random_select(feature_types);
     // modes
     switch(mode) {
     case MODE::RANDOM:
@@ -757,7 +757,7 @@ f_ptr_t get_basis_feature(MODE mode, bool clear) {
             get_reward_feature(MODE::RANDOM);
         }
         // use random type
-        type = random_select<Feature::FEATURE_TYPE>(feature_types);
+        type = random_select(feature_types);
         break;
     case MODE::REUSE:
         // just use the same type as in last call
