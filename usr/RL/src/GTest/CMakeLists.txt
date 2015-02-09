@@ -7,6 +7,7 @@ find_package(Qt5Svg)
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 add_executable(GTest
+    main.cpp
     CommanderTest.cpp
     EnvironmentTest.cpp
     Examples.cpp
@@ -15,7 +16,6 @@ add_executable(GTest
     InstanceTest.cpp
     LBFGSTest.cpp
     LearnerTest.cpp
-    main.cpp
     PlannerTest.cpp
     RandomElements.cpp
     RandomElements.h
@@ -31,6 +31,7 @@ add_executable(GTest
     MinimalEnvironmentExample/MinimalObservation.h
     MinimalEnvironmentExample/MinimalReward.cpp
     MinimalEnvironmentExample/MinimalReward.h
+    ../util/unit_tests.cpp
 )
 
 target_include_directories(GTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -843,7 +843,7 @@ namespace util {
     //=======================================================================//
     // Define << operator for tuples (this is just copy pasted from the web) //
 
-    namespace aux{
+    namespace tuple_print{
         template<std::size_t...> struct seq{};
 
         template<std::size_t N, std::size_t... Is>
@@ -857,20 +857,107 @@ namespace util {
             using swallow = int[];
             (void)swallow{0, (void(os << (Is == 0? "" : ", ") << std::get<Is>(t)), 0)...};
         }
-    } // aux::
-
-    template<class Ch, class Tr, class... Args>
-        auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t)
-        -> std::basic_ostream<Ch, Tr>&
-    {
-        os << "(";
-        aux::print_tuple(os, t, aux::gen_seq<sizeof...(Args)>());
-        return os << ")";
     }
 
     //=======================================================================//
 
+    /** Convert a iterable container to a string. */
+    template <class C>
+        std::string container_to_str(const C & container,
+                                     const char* separator = " ",
+                                     const char* start = "",
+                                     const char* end = "") {
+        std::stringstream ss;
+        bool first = true;
+        ss << start;
+        for(auto elem : container) {
+            if(!first) {
+                ss << separator;
+            } else {
+                first = false;
+            }
+            ss << elem;
+        }
+        ss << end;
+        return ss.str();
+    }
+
+    /** Convert a multi-dimensional index into a linear index. Version with
+     * return value by reference, which allows a different return type than the
+     * container value_type. */
+    template <class C, class D, class IDX_TYPE>
+        void ND_index_to_linear(const C & ND_index,
+                                  const D & ND_bounds,
+                                  IDX_TYPE & linear_index) {
+        DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
+        linear_index = 0;
+        auto idx_it = ND_index.begin();
+        auto bnd_it = ND_bounds.begin();
+        IDX_TYPE multiplyer = 1;
+        while(idx_it!=ND_index.end()) {
+            linear_index += multiplyer**idx_it;
+            multiplyer *= *bnd_it;
+            ++idx_it;
+            ++bnd_it;
+        }
+    }
+    /** Convert a multi-dimensional index into a linear index. Version with
+     * return value where the return type is the container value_type. */
+    template <class C, class D, class IDX_TYPE = typename C::value_type>
+        IDX_TYPE ND_index_to_linear(const C & ND_index,
+                                      const D & ND_bounds) {
+        IDX_TYPE linear_index;
+        ND_index_to_linear<C,D,IDX_TYPE>(ND_index, ND_bounds, linear_index);
+        return linear_index;
+    }
+
+    /** Convert a linear index into a multi-dimensional index. Version with
+     * return value by reference, which allows a different return type than the
+     * linear index type. */
+    template <class C, class D, class IDX_TYPE>
+        void linear_to_ND_index(IDX_TYPE linear_index,
+                                C & ND_index,
+                                const D & ND_bounds) {
+        DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
+        auto idx_it = ND_index.begin();
+        auto bnd_it = ND_bounds.begin();
+        while(idx_it!=ND_index.end()) {
+            *idx_it = linear_index%*bnd_it;
+            linear_index /= *bnd_it;
+            ++idx_it;
+            ++bnd_it;
+        }
+    }
+    /** Convert a linear index into a multi-dimensional index. Version with
+     * return value where the return type is the same as the bound container
+     * type. */
+    template <class D, class IDX_TYPE>
+        D linear_to_ND_index(const IDX_TYPE & linear_index,
+                                    const D & ND_bounds) {
+        D ND_index(ND_bounds.size());
+        linear_to_ND_index(linear_index, ND_index, ND_bounds);
+        return ND_index;
+    }
+
 } // end namespace util
+
+/** Defines ostream operator for iterable containers. The ValueType template
+ * parameter disambiguates (via SFNIAE) overloads. */
+template<class Ch, class Tr, class C, class ValueType = typename C::value_type>
+    auto operator<<(std::basic_ostream<Ch, Tr>& os, const C & container) -> std::basic_ostream<Ch, Tr> & {
+    os << util::container_to_str(container);
+    return os;
+}
+
+/** Defines ostream operator for tuples. */
+template<class Ch, class Tr, class... Args>
+    auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t)
+    -> std::basic_ostream<Ch, Tr>&
+{
+    os << "(";
+    util::tuple_print::print_tuple(os, t, util::tuple_print::gen_seq<sizeof...(Args)>());
+    return os << ")";
+}
 
 #include "debug_exclude.h"
 

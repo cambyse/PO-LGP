@@ -1,18 +1,23 @@
 #include <iostream>
 #include <time.h>
+#include <vector>
 #include <set>
+#include <tuple>
 #include <unistd.h>
 
 #include <tclap/CmdLine.h>
 
 #include <util/util.h>
+#include <util/QtUtil.h>
 
 #include "SearchTree.h"
 #include "TightRope.h"
+#include "DynamicTightRope.h"
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
 
+using std::vector;
 using std::cout;
 using std::endl;
 using util::Range;
@@ -31,7 +36,7 @@ mean reward per trial to std::cout.",\
                                                      false, "SAMPLE", "string");
 static TCLAP::ValueArg<std::string> environment_arg( "e", "environment",\
                                                      "Environment to use.",\
-                                                     false, "TightRope", "string");
+                                                     false, "DynamicTightRope", "string");
 static TCLAP::ValueArg<int> sample_n_arg(            "n", "sample_n",\
                                                      "Number of samples/rollouts.",\
                                                      false, 1000, "int" );
@@ -56,7 +61,8 @@ static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
 static const std::set<std::string> mode_set = {"SAMPLE",
                                                "UCT",
                                                "UCT_EVAL"};
-static const std::set<std::string> environment_set = {"TightRope"};
+static const std::set<std::string> environment_set = {"TightRope",
+                                                      "DynamicTightRope"};
 
 bool check_arguments();
 
@@ -93,6 +99,8 @@ int main(int argn, char ** args) {
     std::shared_ptr<Environment> environment;
     if(environment_arg.getValue()=="TightRope") {
         environment.reset(new TightRope(15));
+    } else if(environment_arg.getValue()=="DynamicTightRope") {
+        environment.reset(new DynamicTightRope(15));
     } else {
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
@@ -135,6 +143,8 @@ int main(int argn, char ** args) {
         }
     } else if(mode_arg.getValue()=="UCT_EVAL") {
         SearchTree tree(0, environment, 0.5);
+        // print header
+        cout << "mean reward,number of samples,run" << endl;
         // several runs
         for(int run : Range(run_n_arg.getValue())) {
             DEBUG_OUT(1, "Run # " << run);
@@ -164,11 +174,8 @@ int main(int argn, char ** args) {
                     tree.prune(action,state);
                     ++step;
                 }
-                // print mean reward
-                cout << mean_reward/step << " ";
+                cout << QString("%1,%2,%3").arg(mean_reward/step).arg(sample_n).arg(run) << endl;
             }
-            // print new line to start a new run
-            cout << endl;
         }
     } else {
         cout << "Unknown mode" << endl;

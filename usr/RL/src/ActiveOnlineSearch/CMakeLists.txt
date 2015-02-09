@@ -11,6 +11,8 @@ add_executable(ActiveOnlineSearch
     Environment.h
     TightRope.h
     TightRope.cpp
+    DynamicTightRope.h
+    DynamicTightRope.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
