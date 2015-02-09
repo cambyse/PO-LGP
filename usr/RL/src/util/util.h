@@ -918,7 +918,9 @@ namespace util {
         void linear_to_ND_index(IDX_TYPE linear_index,
                                 C & ND_index,
                                 const D & ND_bounds) {
-        DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
+        if(ND_index.size()!=ND_bounds.size()) {
+            ND_index.resize(ND_bounds.size());
+        }
         auto idx_it = ND_index.begin();
         auto bnd_it = ND_bounds.begin();
         while(idx_it!=ND_index.end()) {
