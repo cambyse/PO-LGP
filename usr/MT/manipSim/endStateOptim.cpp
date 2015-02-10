@@ -19,8 +19,9 @@ struct EndStateProgram:ConstrainedProblemMix{
 
   void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
     world.setJointState(x);
-    if(verbose>1) world.gl().update();
+    if(verbose>1) world.gl().timedupdate(.1);
     if(verbose>2) world.gl().watch();
+    double prec=0.;
 
     phi.clear();
     if(&phiJ) phiJ.clear();
@@ -28,9 +29,13 @@ struct EndStateProgram:ConstrainedProblemMix{
 
     //-- support symbols -> constraints of being inside!
     Item *support=symbolicState["supports"];
-    for(Item *constraint:support->parentOf){
+    for(Item *constraint:support->parentOf) if(constraint->container==support->container){
       ors::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
       ors::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
+      if(b2->shapes(0)->type==ors::cylinderST){
+        ors::Body *z=b1;
+        b1=b2; b2=z;
+      }//b2 should be the board
       arr y,J;
       world.kinematicsRelPos(y, J, b1, NULL, b2, NULL);
       arr range(3);
@@ -48,15 +53,16 @@ struct EndStateProgram:ConstrainedProblemMix{
        <<" 11=" <<b1->shapes(0)->size[1]
       <<" 21=" <<b2->shapes(0)->size[1]
         <<endl;
-      phi.append(  y(0) - range(0) );
-      phi.append( -y(0) - range(0) );
-      phi.append(  y(1) - range(1) );
-      phi.append( -y(1) - range(1) );
+      prec = 1e1;
+      phi.append(prec*(  y(0) - range(0) ));
+      phi.append(prec*( -y(0) - range(0) ));
+      phi.append(prec*(  y(1) - range(1) ));
+      phi.append(prec*( -y(1) - range(1) ));
       if(&phiJ){
-        phiJ.append( J[0]);
-        phiJ.append(-J[0]);
-        phiJ.append( J[1]);
-        phiJ.append(-J[1]);
+        phiJ.append(prec*( J[0]));
+        phiJ.append(prec*(-J[0]));
+        phiJ.append(prec*( J[1]));
+        phiJ.append(prec*(-J[1]));
       }
       if(&tt) tt.append(ineqTT, 4);
     }
@@ -70,8 +76,8 @@ struct EndStateProgram:ConstrainedProblemMix{
           supporters.append(constraint->parents(1));
         }
       }
-      if(verbose>1){ cout <<"Object" <<*obj <<" is supported by "; listWrite(supporters, cout); cout <<endl; }
       if(supporters.N>=2){
+        if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" above "; listWrite(supporters, cout); cout <<endl; }
         //-- compute center
         uint n=world.getJointStateDimension();
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
@@ -87,54 +93,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         cenJ /= (double)supporters.N;
 
         //-- max distances to center
-        for(Item *s:supporters){
-          b=world.getBodyByName(s->keys(1));
-          world.kinematicsPos(y, J, b);
-          y -= cen;
-          double d = length(y);
-          arr normal = y/d;
-          phi.append( 1.-d );
-          if(&phiJ) phiJ.append( ~normal*(-J+cenJ) );
-          if(&tt) tt.append(sumOfSqrTT, 1);
-        }
-
-        //-- align center with object center
-        b=world.getBodyByName(obj->keys(1));
-        world.kinematicsPos(y, J, b);
-        phi.append( 1e-1*(y-cen) );
-        if(&phiJ) phiJ.append( 1e-1*(J-cenJ) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
-      }
-    }
-
-    //-- supporters above object
-//    objs=symbolicState.getItems("Object");
-    for(Item *obj:objs){
-      ItemL supporters;
-      for(Item *constraint:obj->parentOf){
-        if(constraint->parents.N==3 && constraint->parents(0)==support && constraint->parents(1)==obj){
-          supporters.append(constraint->parents(2));
-        }
-      }
-      if(verbose>1){ cout <<"Object" <<*obj <<" is supported by "; listWrite(supporters, cout); cout <<endl; }
-
-      if(supporters.N>=2){
-        //-- compute center
-        uint n=world.getJointStateDimension();
-        arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
-        ors::Body *b;
-        arr y,J;
-        for(Item *s:supporters){
-          b=world.getBodyByName(s->keys(1));
-          world.kinematicsPos(y, J, b);
-          cen += y;
-          cenJ += J;
-        }
-        cen  /= (double)supporters.N;
-        cenJ /= (double)supporters.N;
-
-        //-- max distances to center
-        double prec=1e-1;
+        prec=3e-1;
         for(Item *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
@@ -147,22 +106,90 @@ struct EndStateProgram:ConstrainedProblemMix{
         }
 
         //-- align center with object center
+        prec=1e-1;
         b=world.getBodyByName(obj->keys(1));
         world.kinematicsPos(y, J, b);
-        phi.append( 1e-1*(y-cen) );
-        if(&phiJ) phiJ.append( 1e-1*(J-cenJ) );
+        phi.append( prec*(y-cen) );
+        if(&phiJ) phiJ.append( prec*(J-cenJ) );
         if(&tt) tt.append(sumOfSqrTT, 3);
       }
 
+      prec=1e-0;
       if(supporters.N==1){ // just one-on-one: align
         arr y1,J1,y2,J2;
         ors::Body *b1=world.getBodyByName(obj->keys(1));
         ors::Body *b2=world.getBodyByName(supporters(0)->keys(1));
-        world.kinematicsPos(y1, J1, b1);
-        world.kinematicsPos(y2, J2, b2);
-        phi.append( 1e-1*(y1-y2) );
-        if(&phiJ) phiJ.append( 1e-1*(J1-J2) );
+        if(b1->shapes(0)->type==ors::boxST){
+          if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
+          world.kinematicsPos(y1, J1, b1);
+          world.kinematicsPos(y2, J2, b2);
+          phi.append( prec*(y1-y2) );
+          if(&phiJ) phiJ.append( prec*(J1-J2) );
+          if(&tt) tt.append(sumOfSqrTT, 3);
+        }
+      }
+    }
+
+    //-- supporters above object
+    for(Item *obj:objs){
+      ItemL supporters;
+      for(Item *constraint:obj->parentOf){
+        if(constraint->parents.N==3 && constraint->parents(0)==support && constraint->parents(1)==obj){
+          supporters.append(constraint->parents(2));
+        }
+      }
+
+      if(supporters.N>=2){
+        if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
+        //-- compute center
+        uint n=world.getJointStateDimension();
+        arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
+        ors::Body *b;
+        arr y,J;
+        for(Item *s:supporters){
+          b=world.getBodyByName(s->keys(1));
+          world.kinematicsPos(y, J, b);
+          cen += y;
+          cenJ += J;
+        }
+        cen  /= (double)supporters.N;
+        cenJ /= (double)supporters.N;
+
+        //-- max distances to center
+        prec=1e-1;
+        for(Item *s:supporters){
+          b=world.getBodyByName(s->keys(1));
+          world.kinematicsPos(y, J, b);
+          y -= cen;
+          double d = length(y);
+          arr normal = y/d;
+          phi.append( prec*(1.-d) );
+          if(&phiJ) phiJ.append( prec*(~normal*(-J+cenJ)) );
+          if(&tt) tt.append(sumOfSqrTT, 1);
+        }
+
+        //-- align center with object center
+        prec=1e-0;
+        b=world.getBodyByName(obj->keys(1));
+        world.kinematicsPos(y, J, b);
+        phi.append( prec*(y-cen) );
+        if(&phiJ) phiJ.append( prec*(J-cenJ) );
         if(&tt) tt.append(sumOfSqrTT, 3);
+      }
+
+      prec=1e-0;
+      if(supporters.N==1){ // just one-on-one: align
+        arr y1,J1,y2,J2;
+        ors::Body *b1=world.getBodyByName(obj->keys(1));
+        ors::Body *b2=world.getBodyByName(supporters(0)->keys(1));
+        if(b1->shapes(0)->type==ors::boxST){
+          if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
+          world.kinematicsPos(y1, J1, b1);
+          world.kinematicsPos(y2, J2, b2);
+          phi.append( prec*(y1-y2) );
+          if(&phiJ) phiJ.append( prec*(J1-J2) );
+          if(&tt) tt.append(sumOfSqrTT, 3);
+        }
       }
     }
 
@@ -191,23 +218,26 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 //===========================================================================
 
 void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
-  Item *actionSequence = symbolicState["actionSequence"];
+//  Item *actionSequence = symbolicState["actionSequence"];
   Item *supportSymbol  = symbolicState["supports"];
-  Graph& actions = actionSequence->kvg();
+//  Graph& actions = actionSequence->kvg();
 
-  for(Item *a:actions){
+  for(Item *s:supportSymbol->parentOf) if(s->container==supportSymbol->container){
 
-    //-- create a symbol that says A-on-B
-    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
+//  }
+//  for(Item *a:actions){
+
+//    //-- create a symbol that says A-on-B
+//    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
 
     //-- create a joint between the object and the target
-    ors::Shape *object= world.getShapeByName(a->parents(1)->keys(1));
-    ors::Shape *target = world.getShapeByName(a->parents(2)->keys(1));
+    ors::Shape *base = world.getShapeByName(s->parents(1)->keys(1));
+    ors::Shape *object= world.getShapeByName(s->parents(2)->keys(1));
 
     if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-        ors::Joint *j = new ors::Joint(world, target->body, object->body);
+        ors::Joint *j = new ors::Joint(world, base->body, object->body);
         j->type = ors::JT_transXYPhi;
-        j->A.addRelativeTranslation(0, 0, .5*target->size[2]);
+        j->A.addRelativeTranslation(0, 0, .5*base->size[2]);
         j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
         j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
         j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);

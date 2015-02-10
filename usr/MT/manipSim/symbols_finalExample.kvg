@@ -11,13 +11,13 @@ Object board2
 
 (supports table1 block1)
 (supports table1 block2)
-#(supports table1 block5)
-#(supports block1 board1)
-#(supports block2 board1)
-#(supports block5 board1)
-#(supports board1 block3)
-#(supports board1 block4)
-#(supports block3 board2)
-#(supports block4 board2)
+(supports table1 block5)
+(supports block1 board1)
+(supports block2 board1)
+(supports block5 board1)
+(supports board1 block3)
+(supports board1 block4)
+(supports block3 board2)
+(supports block4 board2)
 
 #Quit

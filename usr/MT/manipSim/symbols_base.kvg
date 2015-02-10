@@ -2,13 +2,29 @@ Symbol supports
 Symbol pap
 Object table1
 Symbol done
+Symbol free
+Symbol Board
+Symbol Cylin
 
 (done table1)
+(Board table1)
 
-Rule pap {
+Rule pap_CylinOnBoard {
      X, Y
-     (done Y) (done X)!
-     out1 { (done X) }
+     (done X)! (done Y) (Cylin X) (Board Y)
+     out1 { (done X) (free X) (supports Y X) }
+}
+
+Rule pap_BoardOnCylin {
+     X, Y
+     (done X)! (done Y) (free Y) (Board X) (Cylin Y)
+     out1 { (done X) (free Y)! (supports Y X) }
+}
+
+Rule pap_BoardOn2Cylin {
+     X, Y, Z
+     (done X)! (done Y) (free Y) (done Z) (free Z) (Board X) (Cylin Y) (Cylin Z)
+     out1 { (done X) (free Y)! (free Z)! (supports Y X) (supports Z X) }
 }
 
 actionSequence{}

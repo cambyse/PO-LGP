@@ -87,7 +87,6 @@ void optimSwitchConfigurations(){
 
 void solveProblem(ors::KinematicWorld& world, Graph& symbols){
   runMonteCarlo(symbols);
-  exit(0);
 
   ors::KinematicWorld world_final = world;
   Graph G_final = symbols;
@@ -114,14 +113,14 @@ void generateRandomProblems(){
   for(uint k=0;k<10;k++){
     ors::KinematicWorld world(world_base);
     Graph symbols(symbols_base);
-    uint n = 5+rnd(30);
+    Item *CYLIN = symbols["Cylin"];
+    Item *BOARD = symbols["Board"];
+    uint n = 5; //+rnd(30);
     double x=-1.6, y=-1.;
     for(uint i=0;i<n;i++){
       //add an object to the geometry
       ors::Body *b = new ors::Body(world);
       ors::Shape *s = new ors::Shape(world, *b);
-      b->name <<"obj_" <<i;
-      s->name = b->name;
       s->cont=true;
       b->X.addRelativeTranslation(x,y,.62);
       //randomize type and size
@@ -130,19 +129,27 @@ void generateRandomProblems(){
         s->size[1]=.1;
         s->size[2]=.2;
         s->size[3]=.05;
+        s->name <<"cyl_" <<i;
       }else{
         s->type = ors::boxST;
         s->size[0]=.1 + .3*rnd.uni();
         s->size[1]=.1 + .6*rnd.uni();
         s->size[2]=.02;
+        s->name <<"boa_" <<i;
       }
+      b->name = s->name;
       //position on grid
       b->X.addRelativeTranslation(0,.5*s->size[1],.5*s->size[2]);
       y += .1 + s->size[1];
       if(y>1.){ x+=.4; y=-1.; }
 
       //add symbols
-      symbols.append<bool>("Object", s->name, new bool(true), true);
+      Item *o = symbols.append<bool>("Object", s->name, new bool(true), true);
+      if(s->type==ors::cylinderST){
+        symbols.append<bool>(STRINGS_0(), {CYLIN ,o}, new bool(true), true);
+      }else{
+        symbols.append<bool>(STRINGS_0(), {BOARD, o}, new bool(true), true);
+      }
     }
 
     //HACK: move the actionSequence item to the end...
