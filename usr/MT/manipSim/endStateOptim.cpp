@@ -29,7 +29,7 @@ struct EndStateProgram:ConstrainedProblemMix{
 
     //-- support symbols -> constraints of being inside!
     Item *support=symbolicState["supports"];
-    for(Item *constraint:support->parentOf) if(constraint->container==support->container){
+    for(Item *constraint:support->parentOf) if(&constraint->container==&support->container){
       ors::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
       ors::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
       if(b2->shapes(0)->type==ors::cylinderST){
@@ -222,7 +222,7 @@ void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
   Item *supportSymbol  = symbolicState["supports"];
 //  Graph& actions = actionSequence->kvg();
 
-  for(Item *s:supportSymbol->parentOf) if(s->container==supportSymbol->container){
+  for(Item *s:supportSymbol->parentOf) if(&s->container==&supportSymbol->container){
 
 //  }
 //  for(Item *a:actions){

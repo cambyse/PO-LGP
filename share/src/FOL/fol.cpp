@@ -210,7 +210,7 @@ bool checkTruth(Item* literal, const ItemL& subst, Graph* subst_scope){
 }
 
 bool checkEquality(Item* it1, Item* it2, const ItemL& subst, Graph* subst_scope){
-  CHECK(it1->container==it2->container,"");
+  CHECK(&it1->container==&it2->container,"");
   if(it1->getValueType()!=it2->getValueType()) return false;
   if(it1->parents(0)!=it2->parents(0)) return false;
   Graph& KB=it1->container.isItemOfParentKvg->container;
@@ -306,8 +306,13 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
     uint configurationsN = product(domainN); //number of all possible configurations
     for(uint config=0;config<configurationsN;config++){ //loop through all possible configurations
       uintA valueIndex = getIndexTuple(config, domainN);
-      for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domain(i)(valueIndex(i)); //assign the configuration
       bool feasible=true;
+      for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domain(i)(valueIndex(i)); //assign the configuration
+      //only allow for disjoint assignments
+      for(uint i=0; i<values.N && feasible; i++) for(uint j=i+1; j<values.N && feasible; j++){
+        if(values(i)==values(j)) feasible=false;
+      }
+      if(!feasible) continue;
       for(Item* literal:constraints){ //loop through all constraints
         if(literal->parents.N && literal->parents(0)==EQ){ //check equality of subsequent literals
           Item *it1 = literal->container(literal->index+1);

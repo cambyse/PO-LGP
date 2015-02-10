@@ -115,6 +115,7 @@ void generateRandomProblems(){
     Graph symbols(symbols_base);
     Item *CYLIN = symbols["Cylin"];
     Item *BOARD = symbols["Board"];
+    Item *DEPTH = symbols["depth"];
     uint n = 5+rnd(30);
     double x=-1.6, y=-1.;
     for(uint i=0;i<n;i++){
@@ -151,6 +152,7 @@ void generateRandomProblems(){
       }else{
         symbols.append<bool>(STRINGS_0(), {BOARD, o}, new bool(true), true);
       }
+      symbols.append<double>(STRINGS_0(), {DEPTH, o}, new double(0.), true);
     }
 
     //HACK: move the actionSequence item to the end...

@@ -14,6 +14,7 @@ void runMonteCarlo(Graph& G){
   ItemL constants = G.getItems("Object");
   Graph& actionSequence = G["actionSequence"]->kvg();
   Item *papSymbol = G["pap"];
+  Item *depthSymbol = G["depth"];
   //    Graph& terminal = G.getItem("terminal")->kvg();
 
   for(uint h=0;h<100;h++){
@@ -52,6 +53,18 @@ void runMonteCarlo(Graph& G){
         Item *effect = d.first->kvg().last();
         if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
         applyEffectLiterals(G, effect, d.second, &d.first->kvg());
+
+        //hack: apply depth effect:
+        Item *depth0=NULL, *depth1=NULL;
+        for(Item *fact:d.second(0)->parentOf) if(&fact->container==&G && fact->parents(0)==depthSymbol){
+          depth0=fact; break;
+        }
+        for(Item *fact:d.second(1)->parentOf) if(&fact->container==&G && fact->parents(0)==depthSymbol){
+          depth1=fact; break;
+        }
+        if(depth0 && depth1){
+          *depth0->getValue<double>() = *depth1->getValue<double>() + 1.;
+        }
 
         //-- append it to store the decision
         actionSequence.append(STRINGS_0(), cat({papSymbol}, d.second), new bool(true), true);

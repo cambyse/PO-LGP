@@ -1,13 +1,15 @@
+EQ
 Symbol supports
 Symbol pap
 Object table1
 Symbol done
+Symbol depth
 Symbol free
 Symbol Board
 Symbol Cylin
 
 (done table1)
-(height table1)=1
+(depth table1)=1
 (Board table1)
 
 Rule pap_CylinOnBoard {
@@ -18,14 +20,27 @@ Rule pap_CylinOnBoard {
 
 Rule pap_BoardOnCylin {
      X, Y
-     (done X)! (done Y) (free Y) (Board X) (Cylin Y)
+     (done X)! (Board X) (done Y) (free Y) (Cylin Y)
      out1 { (done X) (free Y)! (supports Y X) }
 }
 
-#Rule pap_BoardOn2Cylin {
-#     X, Y, Z
-#     (done X)! (done Y) (free Y) (done Z) (free Z) (Board X) (Cylin Y) (Cylin Z)
-#     out1 { (done X) (free Y)! (free Z)! (supports Y X) (supports Z X) }
-#}
+Rule pap_BoardOn2Cylin {
+     X, Y, Z
+     (done X)! (Board X) (done Y) (free Y) (Cylin Y) (done Z) (free Z) (Cylin Z) (EQ) (depth Y) (depth Z)
+     out1 { (done X) (free Y)! (free Z)! (supports Y X) (supports Z X) }
+}
+
+Rule pap_BoardOn2Cylin {
+     X, Y, Z, V, W
+     (done X)! (Board X)
+       (done Y) (free Y) (Cylin Y)
+       (done Z) (free Z) (Cylin Z)
+       (done V) (free V) (Cylin V)
+       (done W) (free W) (Cylin W)
+       (EQ) (depth Y) (depth Z)
+       (EQ) (depth Y) (depth V)
+       (EQ) (depth Y) (depth W)
+     out1 { (done X) (free Y)! (free Z)! (free V)! (free W)! (supports Y X) (supports Z X) (supports V X) (supports W X) }
+}
 
 actionSequence{}
