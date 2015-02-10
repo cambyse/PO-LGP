@@ -8,10 +8,11 @@ class DynamicTightRope: public Environment {
 
     //----members----//
 private:
+    const int position_n;
+    static const int velocity_n = 5;
     std::vector<QString> action_names;
     std::vector<QString> state_names;
     enum ACTIONS {ACCELERATE, KEEP_VELOCITY, DECELERATE};
-    static const int velocity_n = 5;
 
     //----methods----//
 public:

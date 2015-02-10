@@ -232,11 +232,11 @@ namespace Commander {
                 args_array[arg_idx] = args[arg_idx];
             }
             // map to QString tuple
-            N_tuple<n_args,QString> args_tuple;
+            template_lib::N_tuple<n_args,QString> args_tuple;
             args_tuple = array_to_tuple<decltype(args_array),decltype(args_tuple)>(args_array);
             // map to correct types
             arg_type_tuple_type<func_t> types_tuple;
-            N_tuple<n_args,bool> ok_tuple;
+            template_lib::N_tuple<n_args,bool> ok_tuple;
             auto result_tuple = zip_tuples(ok_tuple,types_tuple);
             map_tuples<decltype(args_tuple),decltype(result_tuple),Mapper>(args_tuple,result_tuple);
             ok_tuple = unzip_tuples_first(result_tuple);
@@ -248,7 +248,7 @@ namespace Commander {
                 bool ok_arr[n_args];
                 tuple_to_array<decltype(ok_tuple),decltype(ok_arr)>(ok_tuple,ok_arr);
                 // get array of type descriptors
-                N_tuple<n_args,QString> type_descriptor_tuple;
+                template_lib::N_tuple<n_args,QString> type_descriptor_tuple;
                 map_tuples<decltype(types_tuple),decltype(type_descriptor_tuple),TypeDescriptor>(types_tuple,type_descriptor_tuple);
                 QString type_descriptor_arr[n_args];
                 tuple_to_array<decltype(type_descriptor_tuple),decltype(type_descriptor_arr)>(type_descriptor_tuple,type_descriptor_arr);
@@ -289,7 +289,7 @@ namespace Commander {
         QString ret;
         arg_type_tuple_type<Func> types_tuple;
         constexpr int n_args = std::tuple_size<decltype(types_tuple)>::value;
-        N_tuple<n_args,QString> type_descriptor_tuple;
+        template_lib::N_tuple<n_args,QString> type_descriptor_tuple;
         map_tuples<decltype(types_tuple),decltype(type_descriptor_tuple),TypeDescriptor>(types_tuple,type_descriptor_tuple);
         QString type_descriptor_arr[n_args];
         tuple_to_array<decltype(type_descriptor_tuple),decltype(type_descriptor_arr)>(type_descriptor_tuple,type_descriptor_arr);

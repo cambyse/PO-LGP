@@ -13,7 +13,6 @@ add_library(util
     Commander.h
     debug_exclude.h
     debug.h
-    file_name.h
     function_signature.h
     KolmogorovSmirnovDist.cpp
     KolmogorovSmirnovDist.h
@@ -21,10 +20,14 @@ add_library(util
     KolmogorovSmirnovTest.h
     lbfgs_codes.cpp
     lbfgs_codes.h
+    macro_lib.h
+    pretty_printer.h
     ProgressBar.cpp
     ProgressBar.h
     QtUtil.cpp
     QtUtil.h
+    return_tuple_macros.h
+    template_lib.h
     util.cpp
     util.h
 )

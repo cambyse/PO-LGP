@@ -11,17 +11,23 @@ using std::vector;
 
 DynamicTightRope::DynamicTightRope(int n):
     Environment({0,1}, vector<state_t>(velocity_n*n)),
+    position_n(n),
     action_names({"accelerate", "keep velocity", "decelerate"}),
-    state_names(velocity_n*n) {
-    for(int i : Range(n)) {
+    state_names(velocity_n*position_n) {
+    for(int pos : Range(position_n)) {
         for(int vel : Range(velocity_n)) {
-            states[i+n*vel] = i+n*vel;
-            state_names[i+n*vel] = QString("state %1, velocity %2").arg(i).arg(vel);
+            int linear_idx = util::convert_ND_to_1D_index({pos,vel},{position_n,velocity_n});
+            states[linear_idx] = linear_idx;
+            state_names[linear_idx] = QString("position %1, velocity %2").arg(pos).arg(vel);
         }
     }
 }
 
-DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s, const action_t & a) const {
+DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s,
+                                                               const action_t & a) const {
+    // position/velocity
+
+
     // return values
     state_t ss = 0;
     reward_t r = 0;

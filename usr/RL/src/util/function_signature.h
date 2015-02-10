@@ -5,6 +5,7 @@
 #include <functional> // std::function
 #include <vector>
 #include <tuple>
+#include "template_lib.h"
 
 /** \brief This namespace contains some tools to infer the signature of
  * arbitrary functors (objects implementing operator() ). */
@@ -178,57 +179,6 @@ namespace function_signature {
     template<class Func>
         using arg_type_tuple_type = typename arg_type_tuple_type_helper<Func>::type;
 
-    //================================================================//
-    //==== prepend_N_tuple_type, prepend_tuple_type, N_tuple_type ====//
-    //================================================================//
-
-    template<int N, class T, class ... TupleTypes>
-        struct prepend_N_tuple_type {
-            using type = typename prepend_N_tuple_type<N-1,T,T,TupleTypes...>::type;
-    };
-
-    template<class T, class ... TupleTypes>
-        struct prepend_N_tuple_type<0,T,TupleTypes...> {
-        using type = std::tuple<TupleTypes...>;
-    };
-
-    template<class T, class Tuple>
-        struct prepend_tuple_type {};
-
-    template<class T, class ... TupleTypes>
-        struct prepend_tuple_type<T,std::tuple<TupleTypes...>> {
-        using type = typename prepend_N_tuple_type<1,T,TupleTypes...>::type;
-    };
-
-    //==============================================================//
-    //==== append_N_tuple_type, append_tuple_type, N_tuple_type ====//
-    //==============================================================//
-
-    template<int N, class T, class ... TupleTypes>
-        struct append_N_tuple_type {
-            using type = typename append_N_tuple_type<N-1,T,TupleTypes...,T>::type;
-    };
-
-    template<class T, class ... TupleTypes>
-        struct append_N_tuple_type<0,T,TupleTypes...> {
-        using type = std::tuple<TupleTypes...>;
-    };
-
-    template<class T, class Tuple>
-        struct append_tuple_type {};
-
-    template<class T, class ... TupleTypes>
-        struct append_tuple_type<T,std::tuple<TupleTypes...>> {
-        using type = typename append_N_tuple_type<1,T,TupleTypes...>::type;
-    };
-
-    //======================//
-    //==== N_tuple_type ====//
-    //======================//
-
-    template<int N, class T>
-        using N_tuple = typename prepend_N_tuple_type<N,T>::type;
-
     //==========================================================//
     //==== reversed_tuple_type_helper, reversed_tuple_type  ====//
     //==========================================================//
@@ -238,7 +188,7 @@ namespace function_signature {
 
     template<class T1, class ... MoreT>
         struct reversed_tuple_type_helper<std::tuple<T1,MoreT...>> {
-        using type = typename append_tuple_type<
+        using type = typename template_lib::append_tuple_type<
             T1,
             typename reversed_tuple_type_helper<std::tuple<MoreT...>>::type
             >::type;
@@ -328,7 +278,7 @@ namespace function_signature {
     template<class T1, class T2>
         struct zipped_tuple_type {
             static_assert(std::tuple_size<T1>::value==std::tuple_size<T2>::value,"Tuples must have the same size to zip them");
-            using type = typename prepend_tuple_type<
+            using type = typename template_lib::prepend_tuple_type<
                 std::tuple<typename tuple_get_first_type<T1>::type, typename tuple_get_first_type<T2>::type>,
                 typename zipped_tuple_type<typename tuple_drop_first_type<T1>::type, typename tuple_drop_first_type<T2>::type>::type
                 >::type;
@@ -400,7 +350,7 @@ namespace function_signature {
     template<class First, class ... Rest>
         struct unzipped_tuple_type_first<std::tuple<First,Rest...>> {
             static_assert(std::tuple_size<First>::value==2,"Can only unzip tuples of pairs (size of first element is not two)");
-            using type = typename prepend_tuple_type<
+            using type = typename template_lib::prepend_tuple_type<
                 typename std::tuple_element<0,First>::type,
                 typename unzipped_tuple_type_first<std::tuple<Rest...>>::type
                 >::type;
@@ -423,7 +373,7 @@ namespace function_signature {
     template<class First, class ... Rest>
         struct unzipped_tuple_type_second<std::tuple<First,Rest...>> {
             static_assert(std::tuple_size<First>::value==2,"Can only unzip tuples of pairs (size of first element is not two)");
-            using type = typename prepend_tuple_type<
+            using type = typename template_lib::prepend_tuple_type<
                 typename std::tuple_element<1,First>::type,
                 typename unzipped_tuple_type_second<std::tuple<Rest...>>::type
                 >::type;

@@ -16,10 +16,10 @@
 #include <iostream>
 #include <assert.h>
 #include "ColorOutput.h"
-#include "file_name.h"
+#include "macro_lib.h"
 
 #ifndef DEBUG_STRING
-#define DEBUG_STRING __FILENAME__ << ": "
+#define DEBUG_STRING FILENAME << ": "
 #endif
 
 #ifndef DEBUG_LEVEL
@@ -32,11 +32,11 @@
 #define IF_DEBUG(level) if(level<=FORCE_DEBUG_LEVEL || (FORCE_DEBUG_LEVEL==0 && level<=DEBUG_LEVEL))
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cerr << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILENAME__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << FILENAME << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cerr << ColorOutput::fg_magenta() << "Warning(" << __FILENAME__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cerr << ColorOutput::fg_magenta() << "Warning(" << FILENAME << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                                      \

@@ -15,6 +15,8 @@
 #include <algorithm> // for std::max
 #include <memory> // for shared_ptr
 
+#include "template_lib.h"
+
 #define DEBUG_LEVEL 0
 #define DEBUG_STRING "util: "
 #include "debug.h"
@@ -698,7 +700,7 @@ namespace util {
      * list. Internally constructs a std::vector<T> v and calls
      * util::random_select(v). */
     template <class T>
-        T random_select(std::initializer_list<T> init_list) {
+        T random_select(const std::initializer_list<T> init_list) {
         return random_select(std::vector<T>(init_list));
     }
 
@@ -840,55 +842,13 @@ namespace util {
     template < class C >
         bool operator<<(const C& c1, const C& c2) { return c1>c2-approx_equal_tolerance(); }
 
-    //=======================================================================//
-    // Define << operator for tuples (this is just copy pasted from the web) //
-
-    namespace tuple_print{
-        template<std::size_t...> struct seq{};
-
-        template<std::size_t N, std::size_t... Is>
-            struct gen_seq : gen_seq<N-1, N-1, Is...>{};
-
-        template<std::size_t... Is>
-            struct gen_seq<0, Is...> : seq<Is...>{};
-
-        template<class Ch, class Tr, class Tuple, std::size_t... Is>
-            void print_tuple(std::basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){
-            using swallow = int[];
-            (void)swallow{0, (void(os << (Is == 0? "" : ", ") << std::get<Is>(t)), 0)...};
-        }
-    }
-
-    //=======================================================================//
-
-    /** Convert a iterable container to a string. */
-    template <class C>
-        std::string container_to_str(const C & container,
-                                     const char* separator = " ",
-                                     const char* start = "",
-                                     const char* end = "") {
-        std::stringstream ss;
-        bool first = true;
-        ss << start;
-        for(auto elem : container) {
-            if(!first) {
-                ss << separator;
-            } else {
-                first = false;
-            }
-            ss << elem;
-        }
-        ss << end;
-        return ss.str();
-    }
-
     /** Convert a multi-dimensional index into a linear index. Version with
      * return value by reference, which allows a different return type than the
      * container value_type. */
     template <class C, class D, class IDX_TYPE>
-        void ND_index_to_linear(const C & ND_index,
-                                  const D & ND_bounds,
-                                  IDX_TYPE & linear_index) {
+        void convert_ND_to_1D_index(const C & ND_index,
+                                    const D & ND_bounds,
+                                    IDX_TYPE & linear_index) {
         DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
         linear_index = 0;
         auto idx_it = ND_index.begin();
@@ -904,20 +864,62 @@ namespace util {
     /** Convert a multi-dimensional index into a linear index. Version with
      * return value where the return type is the container value_type. */
     template <class C, class D, class IDX_TYPE = typename C::value_type>
-        IDX_TYPE ND_index_to_linear(const C & ND_index,
-                                      const D & ND_bounds) {
+        IDX_TYPE convert_ND_to_1D_index(const C & ND_index,
+                                        const D & ND_bounds) {
         IDX_TYPE linear_index;
-        ND_index_to_linear<C,D,IDX_TYPE>(ND_index, ND_bounds, linear_index);
+        convert_ND_to_1D_index<C,D,IDX_TYPE>(ND_index, ND_bounds, linear_index);
         return linear_index;
+    }
+    /** Version with initializer list. */
+    template <class C_IDX_TYPE, class D, class IDX_TYPE>
+        void convert_ND_to_1D_index(const std::initializer_list<C_IDX_TYPE> ND_index,
+                                    const D & ND_bounds,
+                                    IDX_TYPE & linear_index) {
+        convert_ND_to_1D_index(std::vector<C_IDX_TYPE>(ND_index), ND_bounds, linear_index);
+    }
+    /** Version with initializer list. */
+    template <class C, class D_IDX_TYPE, class IDX_TYPE>
+        void convert_ND_to_1D_index(const C & ND_index,
+                                    const std::initializer_list<D_IDX_TYPE> ND_bounds,
+                                    IDX_TYPE & linear_index) {
+        convert_ND_to_1D_index(ND_index, std::vector<D_IDX_TYPE>(ND_bounds), linear_index);
+    }
+    /** Version with initializer list. */
+    template <class C_IDX_TYPE, class D_IDX_TYPE, class IDX_TYPE>
+        void convert_ND_to_1D_index(const std::initializer_list<C_IDX_TYPE> ND_index,
+                                    const std::initializer_list<D_IDX_TYPE> ND_bounds,
+                                    IDX_TYPE & linear_index) {
+        convert_ND_to_1D_index(std::vector<C_IDX_TYPE>(ND_index),
+                               std::vector<D_IDX_TYPE>(ND_bounds),
+                               linear_index);
+    }
+    /** Version with initializer list. */
+    template <class C_IDX_TYPE, class D, class IDX_TYPE = C_IDX_TYPE>
+        IDX_TYPE convert_ND_to_1D_index(const std::initializer_list<C_IDX_TYPE> ND_index,
+                                        const D & ND_bounds) {
+        return convert_ND_to_1D_index(std::vector<C_IDX_TYPE>(ND_index), ND_bounds);
+    }
+    /** Version with initializer list. */
+    template <class C, class D_IDX_TYPE, class IDX_TYPE = typename C::value_type>
+        IDX_TYPE convert_ND_to_1D_index(const C & ND_index,
+                                        const std::initializer_list<D_IDX_TYPE> ND_bounds) {
+        return convert_ND_to_1D_index(ND_index, std::vector<D_IDX_TYPE>(ND_bounds));
+    }
+    /** Version with initializer list. */
+    template <class C_IDX_TYPE, class D_IDX_TYPE, class IDX_TYPE = C_IDX_TYPE>
+        IDX_TYPE convert_ND_to_1D_index(const std::initializer_list<C_IDX_TYPE> ND_index,
+                                        const std::initializer_list<D_IDX_TYPE> ND_bounds) {
+        return convert_ND_to_1D_index(std::vector<C_IDX_TYPE>(ND_index),
+                                      std::initializer_list<D_IDX_TYPE>(ND_bounds));
     }
 
     /** Convert a linear index into a multi-dimensional index. Version with
      * return value by reference, which allows a different return type than the
      * linear index type. */
     template <class C, class D, class IDX_TYPE>
-        void linear_to_ND_index(IDX_TYPE linear_index,
-                                C & ND_index,
-                                const D & ND_bounds) {
+        void convert_1D_to_ND_index(IDX_TYPE linear_index,
+                                    C & ND_index,
+                                    const D & ND_bounds) {
         if(ND_index.size()!=ND_bounds.size()) {
             ND_index.resize(ND_bounds.size());
         }
@@ -930,36 +932,33 @@ namespace util {
             ++bnd_it;
         }
     }
+    /** Version with initializer list. */
+    template <class C, class D_IDX_TYPE, class IDX_TYPE>
+        void convert_1D_to_ND_index(IDX_TYPE linear_index,
+                                    C & ND_index,
+                                    const std::initializer_list<D_IDX_TYPE> ND_bounds) {
+        convert_1D_to_ND_index(linear_index, ND_index, std::vector<D_IDX_TYPE>(ND_bounds));
+    }
+
     /** Convert a linear index into a multi-dimensional index. Version with
      * return value where the return type is the same as the bound container
      * type. */
     template <class D, class IDX_TYPE>
-        D linear_to_ND_index(const IDX_TYPE & linear_index,
-                                    const D & ND_bounds) {
+        D convert_1D_to_ND_index(const IDX_TYPE & linear_index,
+                                 const D & ND_bounds) {
         D ND_index(ND_bounds.size());
-        linear_to_ND_index(linear_index, ND_index, ND_bounds);
+        convert_1D_to_ND_index(linear_index, ND_index, ND_bounds);
         return ND_index;
+    }
+    /** Version with initializer list. */
+    template <class D_IDX_TYPE, class IDX_TYPE>
+        std::vector<D_IDX_TYPE> convert_1D_to_ND_index(const IDX_TYPE & linear_index,
+                                                       const std::initializer_list<D_IDX_TYPE> ND_bounds)
+    {
+        return convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
     }
 
 } // end namespace util
-
-/** Defines ostream operator for iterable containers. The ValueType template
- * parameter disambiguates (via SFNIAE) overloads. */
-template<class Ch, class Tr, class C, class ValueType = typename C::value_type>
-    auto operator<<(std::basic_ostream<Ch, Tr>& os, const C & container) -> std::basic_ostream<Ch, Tr> & {
-    os << util::container_to_str(container);
-    return os;
-}
-
-/** Defines ostream operator for tuples. */
-template<class Ch, class Tr, class... Args>
-    auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t)
-    -> std::basic_ostream<Ch, Tr>&
-{
-    os << "(";
-    util::tuple_print::print_tuple(os, t, util::tuple_print::gen_seq<sizeof...(Args)>());
-    return os << ")";
-}
 
 #include "debug_exclude.h"
 
