@@ -316,9 +316,10 @@ void ors::Shape::reset() {
 
 void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
+  os <<"size=[" <<size[0] <<' '<<size[1] <<' '<<size[2] <<' '<<size[3] <<"] ";
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
   for_list(Item, a, ats)
-  if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
+  if(a->keys(0)!="rel" && a->keys(0)!="type" && a->keys(0)!="size") os <<*a <<' ';
 }
 
 void ors::Shape::read(std::istream& is) {

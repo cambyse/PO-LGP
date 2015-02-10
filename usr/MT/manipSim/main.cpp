@@ -115,7 +115,7 @@ void generateRandomProblems(){
     Graph symbols(symbols_base);
     Item *CYLIN = symbols["Cylin"];
     Item *BOARD = symbols["Board"];
-    uint n = 5; //+rnd(30);
+    uint n = 5+rnd(30);
     double x=-1.6, y=-1.;
     for(uint i=0;i<n;i++){
       //add an object to the geometry
@@ -126,7 +126,7 @@ void generateRandomProblems(){
       //randomize type and size
       if(rnd.uni()<.6){
         s->type = ors::cylinderST;
-        s->size[1]=.1;
+        s->size[0]=s->size[1]=0.;
         s->size[2]=.2;
         s->size[3]=.05;
         s->name <<"cyl_" <<i;
@@ -135,6 +135,7 @@ void generateRandomProblems(){
         s->size[0]=.1 + .3*rnd.uni();
         s->size[1]=.1 + .6*rnd.uni();
         s->size[2]=.02;
+        s->size[3]=0.;
         s->name <<"boa_" <<i;
       }
       b->name = s->name;

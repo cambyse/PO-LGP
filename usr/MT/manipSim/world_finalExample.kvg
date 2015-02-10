@@ -1,40 +1,40 @@
+body table1 { pose=<T 0.6 0 0.6 0.866025 0 0 0.5 > mass=43.84 dyntype=2  }
+body table2 { pose=<T -1 0 0.6 1 0 0 0 > mass=173.84 dyntype=2  }
+body base { mass=1  }
+body cyl_1 { pose=<T -1.6 -0.75 0.72 1 0 0 0 >  }
+body base2 { pose=<T 0 0 1 1 0 0 0 > mass=0.523599  }
+body boa_3 { pose=<T -1.6 0.22652 0.63 1 0 0 0 >  }
+body hand { pose=<T 0 0 1 0.5 0 -0.866025 0 > mass=0.5  }
+body cyl_0 { pose=<T -1.6 -0.95 0.72 1 0 0 0 >  }
+body cyl_4 { pose=<T -1.6 0.688198 0.72 1 0 0 0 >  }
+body graspRef { pose=<T -0.173205 0 0.9 0.5 0 -0.866025 0 >  }
+body boa_2 { pose=<T -1.6 -0.392579 0.63 1 0 0 0 >  }
 
-body table1{ type=0, X=<T t(.6 0 .6) d(60 0 0 1)>, size=[1. 1. .04 .0], color=[.8 .5 .3] fixed, contact }
-shape leg1(table1) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg2(table1) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg3(table1) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg4(table1) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
+shape table1 (table1){ type=0 size=[1 1 0.04 0] rel=<T 0 0 8.67362e-19 1 0 0 0 >  X = <T 0.6 0 0.6 0.866025 0 0 0.5>  color=[ 0.8 0.5 0.3 ]  fixed,  contact,  rel_includes_mesh_center,  }
+shape table2 (table2){ type=0 size=[1.7 2.5 0.04 0] rel=<T 0 0 8.67362e-19 1 0 0 0 >  X = <T -1 0 0.6 1 0 0 0>  color=[ 0.8 0.5 0.3 ]  fixed,  contact,  rel_includes_mesh_center,  }
+shape base (base){ type=0 size=[0.1 0.1 0.1 0.05] rel=<T 0 0 -1.73472e-18 1 0 0 0 >  _contact,  color=[ 0 0 0 ]  rel_includes_mesh_center,  }
+shape base2 (base2){ type=1 size=[0.1 0.1 0.1 0.05] rel=<T -4.5579e-19 -1.14288e-18 -2.99325e-18 1 0 0 0 >  contact,  color=[ 0 0 0 ]  rel_includes_mesh_center,  }
+shape hand (hand){ type=0 size=[0.05 0.05 0.2 0.05] rel=<T 0 0 -3.46945e-18 1 0 0 0 >  contact,  color=[ 1 0 0 ]  ctrlable,  canGrasp,  rel_includes_mesh_center,  }
+shape graspRef (graspRef){ type=5 size=[0.1 0 0 0]  }
+shape leg1 (table1){ type=0 size=[0.04 0.04 0.6 0] rel=<T -0.3 -0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg2 (table1){ type=0 size=[0.04 0.04 0.6 0] rel=<T -0.3 0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg3 (table1){ type=0 size=[0.04 0.04 0.6 0] rel=<T 0.3 0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg4 (table1){ type=0 size=[0.04 0.04 0.6 0] rel=<T 0.3 -0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg1 (table2){ type=0 size=[0.04 0.04 0.6 0] rel=<T -0.3 -0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg2 (table2){ type=0 size=[0.04 0.04 0.6 0] rel=<T -0.3 0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg3 (table2){ type=0 size=[0.04 0.04 0.6 0] rel=<T 0.3 0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape leg4 (table2){ type=0 size=[0.04 0.04 0.6 0] rel=<T 0.3 -0.3 -0.3 1 0 0 0 >  color=[ 0.5 0.3 0.15 ]  contact,  rel_includes_mesh_center,  }
+shape cyl_0 (cyl_0){ type=4 size=[1 0.1 0.2 0.05]  }
+shape cyl_1 (cyl_1){ type=4 size=[1 0.1 0.2 0.05]  }
+shape boa_2 (boa_2){ type=0 size=[0.297613 0.414843 0.02 1]  }
+shape boa_3 (boa_3){ type=0 size=[0.276577 0.623355 0.02 1]  }
+shape cyl_4 (cyl_4){ type=4 size=[1 0.1 0.2 0.05]  }
 
-body table2{ type=0, X=<T t(-.6 0 .6)>, size=[1. 1. .04 .0], color=[.8 .5 .3] fixed, contact }
-shape leg1(table2) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg2(table2) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg3(table2) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-shape leg4(table2) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
-
-body base { size=[.1 .1 .1 .05] type=0 _contact, color=[0 0 0] }
-body base2 { size=[.1 .1 .1 .05] type=0 _contact, color=[0 0 0] }
-body hand { size=[.05 .05 .2 .05] type=0 _contact, color=[1 0 0], ctrlable, canGrasp }
-joint (base base2) { type=7 }
-joint (base2 hand) { type=11 }
-
-body graspRef { type=5 size=[.1 0 0 0] }
-joint (hand graspRef){ A=<T t(0 0 .2)> type=11 }
-
-
-body block1 { size=[.0 .0 .2 .05] type=4 _contact }
-body block2 { size=[.0 .0 .2 .05] type=4 _contact }
-body block3 { size=[.0 .0 .2 .05] type=4 _contact }
-body block4 { size=[.0 .0 .2 .05] type=4 _contact }
-body block5 { size=[.0 .0 .2 .05] type=4 _contact }
-
-body board1 { size=[.4 .6 .02 0] type=0 _contact }
-body board2 { size=[.1 .4 .02 0] type=0 _contact }
-
-joint (table1 block1) { from=<T t(-.1 .1 .02)> to=<T t(0 0 .1)> type=8 }
-joint (table1 block2) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }
-joint (table1 block5) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }
-joint (board1 block3) { from=<T t(-.4 -.3 .01)> to=<T t(0 0 .1)> type=8 }
-joint (board1 block4) { from=<T t(-.1 .5 .01)> to=<T t(0 0 .1)> type=8 }
-joint (block1 board1) { from=<T t(-.1 -.1 .1)> to=<T t(0 0 .01)> type=8 }
-joint (block3 board2) { from=<T t( .4 -.1 .1)> to=<T t(0 0 .01)> type=8 }
-
+joint (table1 cyl_1){ type=8 from=<T 0 0 0.02 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T -0.0453505 0.0124512 0 0.97994 0 0 0.199295 >  }
+joint (base base2){ type=7 Q=<T 0 0 1 1 0 0 0 >  }
+joint (cyl_1 boa_3){ type=8 from=<T 0 0 0.1 1 0 0 0 > to=<T 0 0 0.01 1 0 0 0 > Q=<T 0.0262934 -0.0826601 0 0.958926 0 0 0.283655 >  }
+joint (base2 hand){ type=11 Q=<T 0 0 0 0.5 0 -0.866025 0 >  }
+joint (boa_3 cyl_0){ type=8 from=<T 0 0 0.01 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T 0.0613839 0.0733634 0 0.0434419 0 0 -0.999056 >  }
+joint (boa_3 cyl_4){ type=8 from=<T 0 0 0.01 1 0 0 0 > to=<T 0 0 0.1 1 0 0 0 > Q=<T 0.0645871 -0.0927529 0 0.969017 0 0 -0.246995 >  }
+joint (hand graspRef){ type=11 from=<T 0 0 0.2 1 0 0 0 >  }
+joint (cyl_0 boa_2){ type=8 from=<T 0 0 0.1 1 0 0 0 > to=<T 0 0 0.01 1 0 0 0 > Q=<T -0.0714194 -0.0193154 0 0.0110492 0 0 -0.999939 >  }
