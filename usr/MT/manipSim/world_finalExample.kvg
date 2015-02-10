@@ -21,18 +21,20 @@ body graspRef { type=5 size=[.1 0 0 0] }
 joint (hand graspRef){ A=<T t(0 0 .2)> type=11 }
 
 
-body block1 { size=[.1 .1 .2 0] type=0 _contact }
-body block2 { size=[.1 .1 .2 0] type=0 _contact }
-body block3 { size=[.1 .1 .2 0] type=0 _contact }
-body block4 { size=[.1 .1 .2 0] type=0 _contact }
+body block1 { size=[.0 .0 .2 .05] type=4 _contact }
+body block2 { size=[.0 .0 .2 .05] type=4 _contact }
+#body block3 { size=[.0 .0 .2 .05] type=4 _contact }
+#body block4 { size=[.0 .0 .2 .05] type=4 _contact }
+#body block5 { size=[.0 .0 .2 .05] type=4 _contact }
 
-body board1 { size=[.4 .6 .02 0] type=0 _contact }
-body board2 { size=[.1 .4 .02 0] type=0 _contact }
+#body board1 { size=[.4 .6 .02 0] type=0 _contact }
+#body board2 { size=[.1 .4 .02 0] type=0 _contact }
 
 joint (table1 block1) { from=<T t(-.1 .1 .02)> to=<T t(0 0 .1)> type=8 }
 joint (table1 block2) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }
-joint (board1 block3) { from=<T t(-.4 -.3 .01)> to=<T t(0 0 .1)> type=8 }
-joint (board1 block4) { from=<T t(-.1 .5 .01)> to=<T t(0 0 .1)> type=8 }
-joint (block1 board1) { from=<T t(-.1 -.1 .1)> to=<T t(0 0 .01)> type=8 }
-joint (block3 board2) { from=<T t( .4 -.1 .1)> to=<T t(0 0 .01)> type=8 }
+#joint (table1 block5) { from=<T t(-.3 .1 .02)> to=<T t(0 0 .1)> type=8 }
+#joint (board1 block3) { from=<T t(-.4 -.3 .01)> to=<T t(0 0 .1)> type=8 }
+#joint (board1 block4) { from=<T t(-.1 .5 .01)> to=<T t(0 0 .1)> type=8 }
+#joint (block1 board1) { from=<T t(-.1 -.1 .1)> to=<T t(0 0 .01)> type=8 }
+#joint (block3 board2) { from=<T t( .4 -.1 .1)> to=<T t(0 0 .01)> type=8 }
 

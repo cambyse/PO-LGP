@@ -61,7 +61,7 @@ struct EndStateProgram:ConstrainedProblemMix{
       if(&tt) tt.append(ineqTT, 4);
     }
 
-    //-- supporters below object -> maximize their distances and center
+    //-- supporters below object -> maximize their distances
     ItemL objs=symbolicState.getItems("Object");
     for(Item *obj:objs){
       ItemL supporters;
@@ -85,8 +85,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         }
         cen  /= (double)supporters.N;
         cenJ /= (double)supporters.N;
-
-        //-- max distances to center
+        //-- max distance to center
         for(Item *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
@@ -97,17 +96,10 @@ struct EndStateProgram:ConstrainedProblemMix{
           if(&phiJ) phiJ.append( ~normal*(-J+cenJ) );
           if(&tt) tt.append(sumOfSqrTT, 1);
         }
-
-        //-- align center with object center
-        b=world.getBodyByName(obj->keys(1));
-        world.kinematicsPos(y, J, b);
-        phi.append( 1e-1*(y-cen) );
-        if(&phiJ) phiJ.append( 1e-1*(J-cenJ) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
       }
     }
 
-    //-- supporters above object
+    //-- supporter above object -> center
 //    objs=symbolicState.getItems("Object");
     for(Item *obj:objs){
       ItemL supporters;
@@ -118,7 +110,7 @@ struct EndStateProgram:ConstrainedProblemMix{
       }
       if(verbose>1){ cout <<"Object" <<*obj <<" is supported by "; listWrite(supporters, cout); cout <<endl; }
 
-      if(supporters.N>=2){
+      if(false && supporters.N>=1){
         //-- compute center
         uint n=world.getJointStateDimension();
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
@@ -128,40 +120,16 @@ struct EndStateProgram:ConstrainedProblemMix{
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
           cen += y;
-          cenJ += J;
+          J += cenJ;
         }
         cen  /= (double)supporters.N;
         cenJ /= (double)supporters.N;
 
-        //-- max distances to center
-        double prec=1e-1;
-        for(Item *s:supporters){
-          b=world.getBodyByName(s->keys(1));
-          world.kinematicsPos(y, J, b);
-          y -= cen;
-          double d = length(y);
-          arr normal = y/d;
-          phi.append( prec*(1.-d) );
-          if(&phiJ) phiJ.append( prec*(~normal*(-J+cenJ)) );
-          if(&tt) tt.append(sumOfSqrTT, 1);
-        }
-
-        //-- align center with object center
+        //-- compare to object center
         b=world.getBodyByName(obj->keys(1));
         world.kinematicsPos(y, J, b);
-        phi.append( 1e-1*(y-cen) );
-        if(&phiJ) phiJ.append( 1e-1*(J-cenJ) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
-      }
-
-      if(supporters.N==1){ // just one-on-one: align
-        arr y1,J1,y2,J2;
-        ors::Body *b1=world.getBodyByName(obj->keys(1));
-        ors::Body *b2=world.getBodyByName(supporters(0)->keys(1));
-        world.kinematicsPos(y1, J1, b1);
-        world.kinematicsPos(y2, J2, b2);
-        phi.append( 1e-1*(y1-y2) );
-        if(&phiJ) phiJ.append( 1e-1*(J1-J2) );
+        phi.append( 1e-3*(y-cen) );
+        if(&phiJ) phiJ.append( 1e-3*(J-cenJ) );
         if(&tt) tt.append(sumOfSqrTT, 3);
       }
     }

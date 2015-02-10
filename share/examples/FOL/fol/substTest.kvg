@@ -1,0 +1,33 @@
+## activities
+pickingup
+positioning
+screwing
+releasing
+busy
+inhandNil
+
+## basic predicates
+object
+table
+on
+wall
+height
+
+## constants
+Constant 1
+Constant 2
+Constant 3
+
+## initial state
+(object 1)
+(object 2)
+(ground 3)
+
+### RULES
+
+Rule do {
+     X, Y
+     (object X) (object Y)
+     out1 { (height X)=1 }
+}
+

@@ -128,7 +128,8 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, 
   for(uint i=0;i<fact->parents.N;i++){
     Item *arg=fact->parents(i);
     CHECK(&arg->container==subst_scope || &arg->container==&KB,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
-    if(&arg->container==subst_scope && subst(arg->index)!=NULL){ //is a variable, and subst exists
+    if(&arg->container==subst_scope){ //is a variable, and subst exists
+       CHECK(subst(arg->index)!=NULL,"a variable (=argument in local scope) requires a substitution, no?");
       //CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
       fact->parents(i) = subst(arg->index);
       arg->parentOf.removeValue(fact);
@@ -145,24 +146,35 @@ void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
 
+  //first collect tuple matches
+  ItemL matches;
+  for(Item *fact:literal->parents(0)->parentOf) if(&fact->container==&KB){
+    if(match(fact, literal, subst, subst_scope)) matches.append(fact);
+  }
+
   if(trueValue){
-    createNewSubstitutedLiteral(KB, literal, subst, subst_scope);
+    if(!matches.N){
+      createNewSubstitutedLiteral(KB, literal, subst, subst_scope);
+    }else{
+      for(Item *m:matches){
+        if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
+          *m->getValue<double>() += *literal->getValue<double>();
+        }else{
+          m->copyValue(literal);
+        }
+      }
+    }
     //TODO: remove double!
   }else{
     //delete all matching facts!
-    Item *predicate = literal->parents(0);
-    ItemL toBeDeleted;
-    for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
-      if(match(fact, literal, subst, subst_scope)) toBeDeleted.append(fact);
-    }
-    for(Item *fact:toBeDeleted) delete fact;
+    for(Item *fact:matches) delete fact;
   }
 }
 
-void applyEffectLiterals(Graph& KB, Item* literals, const ItemL& subst, Graph* subst_scope){
-  CHECK(literals->getValueType()==typeid(KeyValueGraph), "");
-  KeyValueGraph &effect = *literals->getValue<KeyValueGraph>();
-  for(Item *lit:effect){
+void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope){
+  CHECK(effectliterals->getValueType()==typeid(KeyValueGraph), "");
+  KeyValueGraph &effects = *effectliterals->getValue<KeyValueGraph>();
+  for(Item *lit:effects){
     applySubstitutedLiteral(KB, lit, subst, subst_scope);
   }
 }
@@ -353,7 +365,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query){
     KB.checkConsistency();
     bool newFacts=false;
     for(Item *rule:rules){
-      ItemL subs = getSubstitutions(rule->kvg(), state, constants);
+      ItemL subs = getRuleSubstitutions(rule, state, constants);
       for(uint s=0;s<subs.d0;s++){
         Item *fact = createNewSubstitutedLiteral(KB, rule->kvg().last(), subs[s], &rule->kvg());
         ItemL matches = getFactMatches(fact, state);

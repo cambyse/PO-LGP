@@ -34,7 +34,7 @@ bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope);
 /// add the new literal to KB
 Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope);
 
-void applyEffectLiterals(Graph& KB, Item* literals, const ItemL& subst, Graph* subst_scope);
+void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope);
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
 bool checkFeasibility(Item *literal, const ItemL& subst, Graph* subst_scope);

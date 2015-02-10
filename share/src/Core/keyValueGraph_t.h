@@ -76,6 +76,14 @@ struct Item_typed:Item {
     return (void*)value;
   }
 
+  virtual void copyValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    CHECK(itt->value,"can't assign to nothing");
+    if(value) delete value;
+    value = new T(*itt->value);
+  }
+
   virtual void takeoverValue(Item *it) {
     Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");

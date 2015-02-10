@@ -286,19 +286,20 @@ struct sKeyValueGraph {
 
 KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
-//  s = new sKeyValueGraph;
 }
 
 KeyValueGraph::KeyValueGraph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
-//  s = new sKeyValueGraph;
   FILE(filename) >>*this;
 }
 
 KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   *this = G;
-//  s = new sKeyValueGraph;
+}
+
+KeyValueGraph::KeyValueGraph(Item *itemOfParentKvg):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(itemOfParentKvg) {
+  ItemL::memMove=true;
 }
 
 KeyValueGraph::~KeyValueGraph() {

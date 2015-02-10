@@ -60,6 +60,7 @@ struct Item {
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
+  virtual void copyValue(Item*) {NIY}
   virtual void takeoverValue(Item*) {NIY}
   virtual Item *newClone(KeyValueGraph& container) const {NIY}
 };
@@ -74,6 +75,7 @@ struct KeyValueGraph:ItemL {
   KeyValueGraph();
   KeyValueGraph(const char* filename);
   KeyValueGraph(const KeyValueGraph& G);
+  KeyValueGraph(Item *itemOfParentKvg);
   ~KeyValueGraph();
   
   KeyValueGraph& operator=(const KeyValueGraph&);

@@ -160,11 +160,11 @@ void generateRandomProblems(){
 //===========================================================================
 
 int main(int argc,char **argv){
-
-  generateRandomProblems();
-  return 0;
-//  optimizeFinal();
-  optimSwitchConfigurations();
+  rnd.clockSeed();
+//  generateRandomProblems();
+//  return 0;
+  optimizeFinal();
+//  optimSwitchConfigurations();
 //  testReachable();
 //  testMonteCarlo();
 

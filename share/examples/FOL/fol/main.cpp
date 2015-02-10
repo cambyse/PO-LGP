@@ -3,7 +3,7 @@
 
 //===========================================================================
 
-void testPol(){
+void testPolFwdChaining(){
   KeyValueGraph G;
   FILE("pol.kvg") >>G;
 
@@ -14,10 +14,11 @@ void testPol(){
 
 //===========================================================================
 
-void testFol1(){
+void testFolLoadFile(){
   KeyValueGraph G;
-
+  G.checkConsistency();
   FILE("fol0.kvg") >>G;
+  G.checkConsistency();
 
 //  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
 
@@ -31,14 +32,19 @@ void testFol1(){
   cout <<"state = " <<*s <<"\nrule=" <<*r <<endl;
 
 
+  G.checkConsistency();
   Item *sub = new Item_typed<KeyValueGraph>(G, new KeyValueGraph, true);
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(0), consts(0)}, NULL, false);
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {vars(1), consts(2)}, NULL, false);
+  sub->kvg().isItemOfParentKvg = sub;
+  G.checkConsistency();
+  new Item_typed<bool>(sub->kvg(), STRINGS(), {s, consts(0)}, NULL, false);
+  G.checkConsistency();
+  new Item_typed<bool>(sub->kvg(), STRINGS(), {s, consts(2)}, NULL, false);
+  G.checkConsistency();
 }
 
 //===========================================================================
 
-void testFol2(){
+void testFolFwdChaining(){
   KeyValueGraph G;
 
   FILE("fol.kvg") >>G;
@@ -49,15 +55,7 @@ void testFol2(){
   ItemL rules = G.getItems("Rule");
   ItemL state = getLiteralsOfScope(G);
 
-//  cout <<"consts = " <<consts <<endl;
-//  cout <<"rules = " <<rules <<endl;
   cout <<"INIT STATE = " <<GRAPH(state) <<endl;
-
-//  Graph& rule = rules(3)->kvg();
-//  cout <<"rule = " <<rule <<endl;
-//  removeInfeasible(rule(0), consts, rule(1), G);
-//  for(Item* rule:rules)
-//    getSubstitutions(rule->kvg(), state);
 
   Item *query=G["Query"]->kvg()(0);
   forwardChaining_FOL(G, query);
@@ -65,7 +63,7 @@ void testFol2(){
 
 //===========================================================================
 
-void testFol3(){
+void testFolDisplay(){
   KeyValueGraph G;
   FILE("fol.kvg") >>G;
 
@@ -76,10 +74,11 @@ void testFol3(){
 
 //===========================================================================
 
-void testFol4(){
+void testFolSubstitution(){
   KeyValueGraph G;
 
-  FILE("boxes.kvg") >>G;
+//  FILE("boxes.kvg") >>G;
+  FILE("substTest.kvg") >>G;
 
   ItemL rules = G.getItems("Rule");
   ItemL constants = G.getItems("Constant");
@@ -88,7 +87,14 @@ void testFol4(){
   for(Item* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
     cout <<  "Substitutions:" <<endl;
-    ItemL subs = getSubstitutions(rule->kvg(), state, constants);
+    ItemL subs = getSubstitutions(rule->kvg(), state, constants, true);
+    cout <<"STATE="; listWrite(getLiteralsOfScope(G), cout); cout <<endl;
+    for(uint s=0;s<subs.d0;s++){
+      Item *effect = rule->kvg().last();
+      { cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
+      applyEffectLiterals(G, effect, subs[s], &rule->kvg());
+      cout <<"STATE="; listWrite(getLiteralsOfScope(G), cout); cout <<endl;
+    }
   }
 }
 
@@ -206,10 +212,10 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-//  testPol();
-//  testFol1();
-//  testFol2();
-//  testFol3();
-//  testFol4();
-  testMonteCarlo();
+//  testPolFwdChaining();
+//  testFolLoadFile();
+//  testFolFwdChaining();
+//  testFolDisplay();
+  testFolSubstitution();
+//  testMonteCarlo();
 }
