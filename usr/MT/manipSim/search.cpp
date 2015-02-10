@@ -6,7 +6,7 @@
 
 void runMonteCarlo(Graph& G){
 //  MT::rnd.seed(3);
-  uint verbose=3;
+  uint verbose=4;
 
   G.checkConsistency();
   //    Item *Terminate_keyword = G["Terminate"];

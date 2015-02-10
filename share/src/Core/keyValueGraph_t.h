@@ -93,6 +93,13 @@ struct Item_typed:Item {
     itt->value = NULL;
   }
 
+  virtual bool hasEqualValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    if(!itt->value || !value) return false;
+    return memcmp(itt->value, value, sizeof(T))==0;
+  }
+
   virtual void writeValue(std::ostream &os) const {
     if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
     else os <<*value;

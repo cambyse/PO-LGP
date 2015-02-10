@@ -62,6 +62,7 @@ struct Item {
   virtual bool is_derived_from_RootType() const {NIY}
   virtual void copyValue(Item*) {NIY}
   virtual void takeoverValue(Item*) {NIY}
+  virtual bool hasEqualValue(Item*) {NIY}
   virtual Item *newClone(KeyValueGraph& container) const {NIY}
 };
 stdOutPipe(Item);

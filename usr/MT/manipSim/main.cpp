@@ -87,6 +87,7 @@ void optimSwitchConfigurations(){
 
 void solveProblem(ors::KinematicWorld& world, Graph& symbols){
   runMonteCarlo(symbols);
+  exit(0);
 
   ors::KinematicWorld world_final = world;
   Graph G_final = symbols;
@@ -161,9 +162,9 @@ void generateRandomProblems(){
 
 int main(int argc,char **argv){
   rnd.clockSeed();
-//  generateRandomProblems();
+  generateRandomProblems();
 //  return 0;
-  optimizeFinal();
+//  optimizeFinal();
 //  optimSwitchConfigurations();
 //  testReachable();
 //  testMonteCarlo();

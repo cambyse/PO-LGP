@@ -43,7 +43,7 @@ Item *getFirstVariable(Item* literal){
   return NULL;
 }
 
-void removeInfeasible(ItemL& domain, Item* literal){
+void removeInfeasible(ItemL& domain, Item* literal, bool checkAlsoValue){
   Graph& G=literal->container.isItemOfParentKvg->container;
 
   CHECK(getNumOfVariables(literal)==1," remove Infeasible works only for literals with one open variable!");
@@ -52,19 +52,24 @@ void removeInfeasible(ItemL& domain, Item* literal){
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
+    checkAlsoValue=false;
   }
 
   ItemL dom;
   dom.anticipateMEM(domain.N);
-  for(Item *state_literal:predicate->parentOf) if(&state_literal->container==&G){
+  for(Item *fact:predicate->parentOf) if(&fact->container==&G){
     //-- check that all arguments are the same, except for var!
     bool match=true;
     Item *value=NULL;
     for(uint i=0;i<literal->parents.N;i++){
       Item *lit_arg = literal->parents(i);
-      Item *state_arg = state_literal->parents(i);
-      if(lit_arg==var) value = state_arg;
-      else if(lit_arg!=state_arg){ match=false; break; }
+      Item *fact_arg = fact->parents(i);
+      if(lit_arg==var) value = fact_arg;
+      else if(lit_arg!=fact_arg){ match=false; break; }
+    }
+    if(match && checkAlsoValue){
+      if(fact->getValueType()!=literal->getValueType()) match=false;
+      match = fact->hasEqualValue(literal);
     }
     if(match){
       CHECK(value && &value->container==&G,""); //the value should be a constant!
@@ -104,14 +109,18 @@ bool checkAllMatchesInScope(ItemL& literals, Graph* scope){
   return true;
 }
 
-bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope){
+bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope,bool checkAlsoValue){
   if(fact->parents.N!=literal->parents.N) return false;
   for(uint i=0;i<literal->parents.N;i++){
     Item *lit_arg = literal->parents(i);
     Item *fact_arg = fact->parents(i);
-    if(&lit_arg->container==subst_scope){ //this is a variable -> check match of substitution
+    if(&lit_arg->container==subst_scope){ //lit_arg is a variable -> check match of substitution
       if(subst(lit_arg->index)!=fact_arg) return false;
     }else if(lit_arg!=fact_arg) return false;
+  }
+  if(checkAlsoValue){
+    if(fact->getValueType()!=literal->getValueType()) return false;
+    if(!fact->hasEqualValue(literal)) return false;
   }
   return true;
 }
@@ -179,12 +188,14 @@ void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Gr
   }
 }
 
-bool checkFeasibility(Item* literal, const ItemL& subst, Graph* subst_scope){
+bool checkTruth(Item* literal, const ItemL& subst, Graph* subst_scope){
   Graph& KB=literal->container.isItemOfParentKvg->container;
   Item *predicate = literal->parents(0);
   bool trueValue=true; //check if the literal is negated
+  bool checkAlsoValue=true;
   if(literal->getValueType()==typeid(bool)){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
+    checkAlsoValue=false;
   }
 
 #if 1
@@ -193,9 +204,32 @@ bool checkFeasibility(Item* literal, const ItemL& subst, Graph* subst_scope){
   ItemL state = getLiteralsOfScope(KB);
   for(Item *fact:state) if(&fact->container==&KB){
 #endif
-    if(match(fact, literal, subst, subst_scope)) return trueValue;
+    if(match(fact, literal, subst, subst_scope, checkAlsoValue)) return trueValue;
   }
   return !trueValue;
+}
+
+bool checkEquality(Item* it1, Item* it2, const ItemL& subst, Graph* subst_scope){
+  CHECK(it1->container==it2->container,"");
+  if(it1->getValueType()!=it2->getValueType()) return false;
+  if(it1->parents(0)!=it2->parents(0)) return false;
+  Graph& KB=it1->container.isItemOfParentKvg->container;
+  Item *predicate = it1->parents(0);
+
+  //find 1st match
+  Item *m1=NULL, *m2=NULL;
+  for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
+    if(match(fact, it1, subst, subst_scope, false)){ m1=fact; break; }
+  }
+  if(!m1) return false;
+  //find 2nd match
+  for(Item *fact:predicate->parentOf) if(&fact->container==&KB){
+    if(match(fact, it2, subst, subst_scope, false)){ m2=fact; break; }
+  }
+  if(!m2) return false;
+
+  if(m1==m2) return true;
+  return m1->hasEqualValue(m2);
 }
 
 
@@ -217,6 +251,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   CHECK(literals.N,"");
   Graph& scope = literals(0)->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
 
+  Item* EQ = state(0)->container["EQ"];
   ItemL vars = getVariablesOfScope(scope);
 
   if(verbose){ cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables "; listWrite(vars, cout); cout <<endl; }
@@ -239,7 +274,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
     if(lit_numVars(literal->index)==1){
       Item *var = getFirstVariable(literal);
       if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
-      removeInfeasible(domain(var->index), literal);
+      removeInfeasible(domain(var->index), literal, true);
       if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domain(var->index), cout); cout <<" }" <<endl; }
       if(domain(var->index).N==0){
         if(verbose) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
@@ -254,7 +289,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   //-- for the others, create constraints
   ItemL constraints;
   for(Item *literal:literals){
-    if(lit_numVars(literal->index)>1){
+    if(lit_numVars(literal->index)>1 || (literal->parents.N && literal->parents(0)==EQ)){
       constraints.append(literal);
     }
   }
@@ -264,52 +299,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   //-- naive CSP: loop through everything
   ItemL substitutions;
   ItemL values(vars.N); values.setZero();
-  if(vars.N==1){
-    for(Item* value0:domain(vars(0)->index)){
-      values(vars(0)->index) = value0;
-      substitutions.append(values);
-    }
-  }
-  if(vars.N==2){
-    for(Item* value0:domain(vars(0)->index)){
-      values(vars(0)->index) = value0;
-      for(Item* value1:domain(vars(1)->index)){
-        values(vars(1)->index) = value1;
-        bool feasible=true;
-        for(Item* literal:constraints){
-          if(!checkFeasibility(literal, values, &scope)){ feasible=false; break; }
-        }
-        if(feasible) substitutions.append(values);
-      }
-    }
-  }
-  if(vars.N==3){
-    for(Item* value0:domain(vars(0)->index)){
-      values(vars(0)->index) = value0;
-      for(Item* value1:domain(vars(1)->index)){
-        values(vars(1)->index) = value1;
-        for(Item* value2:domain(vars(2)->index)){
-          values(vars(2)->index) = value2;
-          bool feasible=true;
-          for(Item* literal:constraints){
-            if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); }
-            if(!checkFeasibility(literal, values, &scope)){
-              feasible=false;
-              if(verbose) cout <<" -- failed" <<endl;
-              break;
-            }else{
-              if(verbose) cout <<" -- good" <<endl;
-            }
-          }
-          if(feasible){
-            if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
-            substitutions.append(values);
-          }
-        }
-      }
-    }
-  }
-  if(vars.N>3){
+  {
     //-- using 'getIndexTuple' we can linearly enumerate all configurations of all variables
     uintA domainN(vars.N);
     for(uint i=0;i<vars.N;i++) domainN(i) = domain(i).N;  //collect dims/cardinalities of domains
@@ -319,7 +309,13 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
       for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domain(i)(valueIndex(i)); //assign the configuration
       bool feasible=true;
       for(Item* literal:constraints){ //loop through all constraints
-        if(!checkFeasibility(literal, values, &scope)) feasible=false;
+        if(literal->parents.N && literal->parents(0)==EQ){ //check equality of subsequent literals
+          Item *it1 = literal->container(literal->index+1);
+          Item *it2 = literal->container(literal->index+2);
+          feasible = checkEquality(it1, it2, values, &scope);
+        }else{
+          feasible = checkTruth(literal, values, &scope);
+        }
         if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
         if(!feasible) break;
       }

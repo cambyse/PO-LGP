@@ -13,7 +13,7 @@ uint getNumOfVariables(Item* literal);
 
 /// ONLY for a literal with one free variable: remove all infeasible values from the domain
 /// this is meant to be used as basic 'constraint propagation' for order-1 constraints
-void removeInfeasible(ItemL& domain, Item *literal);
+void removeInfeasible(ItemL& domain, Item *literal, bool checkAlsoValue=false);
 
 /// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool match(Item *literal0, Item *literal1);
@@ -28,7 +28,7 @@ bool checkAllMatchesInScope(ItemL& literals, Graph* scope);
 ItemL getFactMatches(Item *literal, ItemL& literals);
 
 /// check match, where all variables of literal are replaced by subst(var->index)
-bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope);
+bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=false);
 
 /// create a new literal by substituting all variables with subst(var->index) (if non-NULL)
 /// add the new literal to KB
@@ -37,7 +37,7 @@ Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, 
 void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope);
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
-bool checkFeasibility(Item *literal, const ItemL& subst, Graph* subst_scope);
+bool checkTruth(Item *literal, const ItemL& subst, Graph* subst_scope);
 
 /// the list of literals is a conjunctive clause (e.g. precondition)
 /// all literals must be in the same scope (element of the same subKvg)
