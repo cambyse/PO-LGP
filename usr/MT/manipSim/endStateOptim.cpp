@@ -11,9 +11,9 @@ struct EndStateProgram:ConstrainedProblemMix{
   EndStateProgram(ors::KinematicWorld& world, Graph& symbolicState, int verbose)
     : world(world), symbolicState(symbolicState), verbose(verbose){
     ConstrainedProblemMix::operator=(
-      [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-        return this -> phi(phi, J, tt, x);
-      }
+          [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+      return this -> phi(phi, J, tt, x);
+    }
     );
   }
 
@@ -47,12 +47,12 @@ struct EndStateProgram:ConstrainedProblemMix{
       range(1) = fabs(d1 - d2);
       range(2)=0.;
       if(verbose>2) cout <<y <<range
-          <<y-range <<-y-range
-         <<"\n 10=" <<b1->shapes(0)->size[0]
-        <<" 20=" <<b2->shapes(0)->size[0]
-       <<" 11=" <<b1->shapes(0)->size[1]
-      <<" 21=" <<b2->shapes(0)->size[1]
-        <<endl;
+                        <<y-range <<-y-range
+                       <<"\n 10=" <<b1->shapes(0)->size[0]
+                      <<" 20=" <<b2->shapes(0)->size[0]
+                     <<" 11=" <<b1->shapes(0)->size[1]
+                    <<" 21=" <<b2->shapes(0)->size[1]
+                   <<endl;
       prec = 1e1;
       phi.append(prec*(  y(0) - range(0) ));
       phi.append(prec*( -y(0) - range(0) ));
@@ -207,10 +207,10 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   arr x = world.getJointState();
   rndGauss(x, .1, true);
 
-  checkJacobianCP(f, x, 1e-4);
-  OptConstrained opt(x, NoArr, f, OPT(verbose=1));
+  //  checkJacobianCP(f, x, 1e-4);
+  OptConstrained opt(x, NoArr, f, OPT(verbose=0));
   opt.run();
-  checkJacobianCP(f, x, 1e-4);
+  //  checkJacobianCP(f, x, 1e-4);
   world.setJointState(x);
   return opt.UCP.get_sumOfSquares();
 }
@@ -218,29 +218,29 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 //===========================================================================
 
 void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
-//  Item *actionSequence = symbolicState["actionSequence"];
+  //  Item *actionSequence = symbolicState["actionSequence"];
   Item *supportSymbol  = symbolicState["supports"];
-//  Graph& actions = actionSequence->kvg();
+  //  Graph& actions = actionSequence->kvg();
 
   for(Item *s:supportSymbol->parentOf) if(&s->container==&supportSymbol->container){
 
-//  }
-//  for(Item *a:actions){
+    //  }
+    //  for(Item *a:actions){
 
-//    //-- create a symbol that says A-on-B
-//    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
+    //    //-- create a symbol that says A-on-B
+    //    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
 
     //-- create a joint between the object and the target
     ors::Shape *base = world.getShapeByName(s->parents(1)->keys(1));
     ors::Shape *object= world.getShapeByName(s->parents(2)->keys(1));
 
     if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-        ors::Joint *j = new ors::Joint(world, base->body, object->body);
-        j->type = ors::JT_transXYPhi;
-        j->A.addRelativeTranslation(0, 0, .5*base->size[2]);
-        j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
-        j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
-        j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
+      ors::Joint *j = new ors::Joint(world, base->body, object->body);
+      j->type = ors::JT_transXYPhi;
+      j->A.addRelativeTranslation(0, 0, .5*base->size[2]);
+      j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
+      j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
+      j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
     }
   }
 

@@ -18,6 +18,6 @@ joint (base base2) { type=7 Q=<T t(0 0 1)> }
 joint (base2 hand) { type=11 Q=<T d(-120 0 1 0)> }
 
 body graspRef { type=5 size=[.1 0 0 0] }
-joint (hand graspRef){ A=<T t(0 0 .2)> type=11 }
+joint graspJoint(hand graspRef){ A=<T t(0 0 .2)> type=11 }
 
 

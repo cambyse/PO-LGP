@@ -6,7 +6,7 @@
 
 void runMonteCarlo(Graph& G){
 //  MT::rnd.seed(3);
-  uint verbose=3;
+  uint verbose=0;
 
   G.checkConsistency();
   //    Item *Terminate_keyword = G["Terminate"];
@@ -67,7 +67,7 @@ void runMonteCarlo(Graph& G){
         }
 
         //-- append it to store the decision
-        actionSequence.append(STRINGS_0(), cat({papSymbol}, d.second), new bool(true), true);
+        actionSequence.append(STRINGS_1(d.first->keys(1)), cat({papSymbol}, d.second), new bool(true), true);
       }
     }
 

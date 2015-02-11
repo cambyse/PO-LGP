@@ -51,6 +51,14 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       t->setCostSpecs(0, MP.T, {0.}, 1e0);
     }
 
+    //-- pose
+    {
+      Task *t;
+      t = MP.addTask("pose", new TaskMap_qItself());
+      t->map.order=0;
+      t->setCostSpecs(0, MP.T, {0.}, 1e-5);
+    }
+
     //-- tasks
     {
       Task *t;
@@ -107,6 +115,19 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       for(uint i=0;i<actions.N;i++){
         t->prec(tPick(i))=posPrec;
         t->prec(tPlace(i))=posPrec;
+      }
+
+      // zero grasp joint motion during holding
+      ors::Joint *j_grasp = world.getJointByName("graspJoint");
+      arr M(j_grasp->qDim(),world.getJointStateDimension());
+      M.setZero();
+      for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
+      cout <<M <<endl;
+      t = MP.addTask("graspJoint", new TaskMap_qItself(M));
+      t->map.order=1;
+      t->prec.resize(MP.T+1).setZero();
+      for(uint i=0;i<actions.N;i++){
+        for(uint time=tPick(i);time<tPlace(i);time++) t->prec(time)=posPrec;
       }
 
       // up/down velocities after/before pick/place
@@ -192,7 +213,7 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   OptConstrained opt(x, NoArr, f, OPT(verbose=1, damping = 1e-2, stopTolerance=1e-3));
   opt.run();
   f.MP.costReport();
-  displayTrajectory(x, 1, f.MP.world, "planned configs", .1);
+  displayTrajectory(x, 1, f.MP.world, "planned configs", -1);
   return opt.UCP.get_sumOfSquares();
 }
 

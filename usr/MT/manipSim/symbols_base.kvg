@@ -1,12 +1,13 @@
 EQ
 Symbol supports
 Symbol pap
-Object table1
 Symbol done
 Symbol depth
 Symbol free
 Symbol Board
 Symbol Cylin
+
+Object table1
 
 (done table1)
 (depth table1)=1
@@ -18,11 +19,11 @@ Rule pap_CylinOnBoard {
      out1 { (done X) (free X) (supports Y X) }
 }
 
-Rule pap_BoardOnCylin {
-     X, Y
-     (done X)! (Board X) (done Y) (free Y) (Cylin Y)
-     out1 { (done X) (free Y)! (supports Y X) }
-}
+#Rule pap_BoardOnCylin {
+#     X, Y
+#     (done X)! (Board X) (done Y) (free Y) (Cylin Y)
+#     out1 { (done X) (free Y)! (supports Y X) }
+#}
 
 Rule pap_BoardOn2Cylin {
      X, Y, Z

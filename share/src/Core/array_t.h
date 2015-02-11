@@ -2324,13 +2324,14 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {
     CHECK(y.N==3 && z.N==3,"cross product only works for 3D vectors!");
     MT::Array<T> x(3);
-    x(0)=y(1)*z(2)-y(2)*z(1);
-    x(1)=y(2)*z(0)-y(0)*z(2);
-    x(2)=y(0)*z(1)-y(1)*z(0);
+    x.p[0]=y.p[1]*z.p[2]-y.p[2]*z.p[1];
+    x.p[1]=y.p[2]*z.p[0]-y.p[0]*z.p[2];
+    x.p[2]=y.p[0]*z.p[1]-y.p[1]*z.p[0];
     return x;
   }
   if(y.nd==2 && z.nd==1) { //every COLUMN of y is cross-product'd with z!
     CHECK(y.d0==3 && z.N==3,"cross product only works for 3D vectors!");
+#if 0
     MT::Array<T> x(3, y.d1);
     for(uint i=0;i<y.d1;i++){
       x(0,i)=y(1,i)*z(2)-y(2,i)*z(1);
@@ -2338,6 +2339,18 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
       x(2,i)=y(0,i)*z(1)-y(1,i)*z(0);
     }
     return x;
+#else
+    MT::Array<T> x(y.d1, 3);
+    MT::Array<T> yt = ~y;
+    double *xp, *yp, *zp=z.p;
+    for(uint i=0;i<y.d1;i++){
+      xp = &x(i,0); yp = &yt(i,0);
+      xp[0]=yp[1]*zp[2]-yp[2]*zp[1];
+      xp[1]=yp[2]*zp[0]-yp[0]*zp[2];
+      xp[2]=yp[0]*zp[1]-yp[1]*zp[0];
+    }
+    return ~x;
+#endif
   }
   HALT("cross product - not yet implemented for these dimensions");
 }
