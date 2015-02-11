@@ -161,9 +161,4 @@ uint TaskMap_qItself::dim_phi(const ors::KinematicWorld& G) {
 void TaskMap_qLimits::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
   if(!limits.N) limits=G.getLimits();
   G.kinematicsLimitsCost(y, J, limits);
-  cout << y << endl;
-  if (y(0)!=0){
-    arr z;
-    G.kinematicsLimitsCost(z, J, limits);
-  }
 }
