@@ -1,0 +1,164 @@
+#rules = 4
+# Rule #0
+ACTION:
+  default()
+CONTEXT:
+  --
+OUTCOMES:
+  0.5 <no-change> 
+  0.5 <noise>
+
+
+# Rule #1
+ACTION:
+  activate_pickup(X Y)
+CONTEXT:
+  pickup(X Y)=0 hand(X) object(Y) inhandNil(X) table(Z) on(Y Z) -busy(X) -active_pickup(X Y) 
+OUTCOMES:
+  1.0 pickup(X Y)=2.1 active_pickup(X Y) busy(X)
+
+
+ACTION:
+  terminate_pickup(X Y)
+CONTEXT:
+  active_pickup(X Y) pickup(X Y)=0 busy(X) hand(X) object(Y) inhandNil(X) table(Z) on(Y Z)
+OUTCOMES:
+  1.0 inhand(X Y) -on(Y Z) -active_pickup(X Y) -busy(X)
+
+
+
+
+# Rule #2
+ACTION:
+  activate_positioning(X)
+CONTEXT:
+  positioning(X)=0 hand(X) object(Y) inhand(X Y) -inPosition(Y) -busy(X) -active_positioning(X) 
+OUTCOMES:
+  1.0 positioning(X)=3.1 active_positioning(X) busy(X)
+
+ACTION:
+  terminate_positioning(X)
+CONTEXT:
+  positioning(X)=0 active_positioning(X) busy(X) hand(X) object(Y) inhand(X Y)
+OUTCOMES:
+  1.0 inhand(X Y) inPosition(Y) -active_positioning(X) -busy(X)
+
+
+
+
+
+
+# Rule #3
+ACTION:
+  activate_release(X)
+CONTEXT:
+  release(X)=0 hand(X) object(Y) inhand(X Y) -busy(X) -active_release(X)
+OUTCOMES:
+  1.0 release(X)=1.0 active_release(X) busy(X)
+ 
+
+ACTION:
+  terminate_release(X)
+CONTEXT:
+  release(X)=0 active_release(X) busy(X) hand(X) object(Y) inhand(X Y)
+OUTCOMES:
+  1.0 -inhand(X Y) -active_release(X) -busy(X)
+
+
+# Rule #4
+ACTION:
+  activate_screwing(X,Y,Z,W) 
+CONTEXT:
+  screwing(X,Y,Z,W)=0 hand(X) screw(Y) inhand(X Y) wall(Z) ground(W) inPosition(Z) inPosition(W) hand(U) inhand(U Z) hand(V) inhand(V W) -fixed(Z W) -active_screwing(X,Y,Z,W) -busy(X) -busy(U) -busy(V)  -used(Y)
+OUTCOMES:
+  1.0 screwing(X,Y,Z,W)=8.0 active_screwing(X,Y,Z,W) busy(X) busy(U) busy(V)
+
+ACTION:
+  terminate_screwing(X,Y,Z,W) 
+CONTEXT:
+  screwing(X,Y,Z,W)=0.0 active_screwing(X,Y,Z,W) busy(X) busy(U) busy(V) hand(X) screw(Y) inhand(X Y) wall(Z) ground(W) inPosition(Z) inPosition(W) hand(U) inhand(U Z) hand(V) inhand(V W)
+OUTCOMES:
+  1.0 fixed(Z W) used(Y) -active_screwing(X,Y,Z,W) -busy(X) -busy(U) -busy(V)
+
+
+
+
+
+
+
+
+####
+
+# Rule #1
+ACTION:
+  activate_pickup(X Y)
+CONTEXT:
+  pickup(X Y)=0.0 hand(X) object(Y) inhandNil(X) table(Z) on(Z Y) -busy(X) -active_pickup(X Y) 
+OUTCOMES:
+  1.0 pickup(X Y)=2.1 active_pickup(X Y) busy(X)
+
+
+ACTION:
+  terminate_pickup(X Y)
+CONTEXT:
+   pickup(X Y)=0.0 active_pickup(X Y) busy(X) hand(X) object(Y) inhandNil(X) table(Z) on(Z Y)
+OUTCOMES:
+  1.0 inhand(X Y) pickup(X Y)=0.0 -on(Z Y) -active_pickup(X Y) -busy(X)
+
+
+# Rule #2
+ACTION:
+  activate_positioning(X)
+CONTEXT:
+  positioning(X)=0 hand(X) object(Y) inhand(X Y) -inPosition(Y) -busy(X) -active_positioning(X) 
+OUTCOMES:
+  1.0 positioning(X)=3.1 active_positioning(X) busy(X) inhand(X Y)
+
+ACTION:
+  terminate_positioning(X)
+CONTEXT:
+  positioning(X)=0 active_positioning(X) busy(X) hand(X) object(Y) inhand(X Y)
+OUTCOMES:
+  1.0 inhand(X Y) inPosition(Y)  positioning(X)=0 -active_positioning(X) -busy(X)
+
+# Rule #3
+ACTION:
+  activate_release(X)
+CONTEXT:
+  release(X)=0 hand(X) object(Y) inhand(X Y) -busy(X) -active_release(X)
+OUTCOMES:
+  1.0 release(X)=1.0 active_release(X) busy(X) inhand(X Y)
+ 
+
+ACTION:
+  terminate_release(X)
+CONTEXT:
+  release(X)=0 active_release(X) busy(X) hand(X) object(Y) inhand(X Y)
+OUTCOMES:
+  1.0 release(X)=0 -inhand(X Y) -active_release(X) -busy(X)
+
+# Rule #4
+ACTION:
+  activate_screwing(X,Y,Z,W) 
+CONTEXT:
+  screwing(X,Y,Z,W)=0 hand(X) screw(Y) inhand(X Y) wall(Z) ground(W) inPosition(Z) inPosition(W) hand(U) inhand(U Z) hand(V) inhand(V W) -fixed(Z W) -active_screwing(X,Y,Z,W) -busy(X) -busy(U) -busy(V)  -used(Y)
+OUTCOMES:
+  1.0 screwing(X,Y,Z,W)=8.0 active_screwing(X,Y,Z,W) busy(X) busy(U) busy(V) inhand(X Y) inPosition(Z) inPosition(W) inhand(U Z) inhand(V W)
+
+ACTION:
+  terminate_screwing(X,Y,Z,W) 
+CONTEXT:
+  screwing(X,Y,Z,W)=0.0 active_screwing(X,Y,Z,W) busy(X) busy(U) busy(V) hand(X) screw(Y) inhand(X Y) wall(Z) ground(W) inPosition(Z) inPosition(W) hand(U) inhand(U Z) hand(V) inhand(V W)
+OUTCOMES:
+  1.0 screwing(X,Y,Z,W)=0.0 fixed(Z W) used(Y) inPosition(Z) inPosition(W) inhand(U Z) inhand(V W) -busy(X) -busy(U) -busy(V) -inhand(X Y)  -active_screwing(X,Y,Z,W)
+
+
+
+
+
+
+
+
+
+
+

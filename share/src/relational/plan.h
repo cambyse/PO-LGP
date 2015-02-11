@@ -157,6 +157,74 @@ private:
 };
 
 
+
+/************************************************
+ *     UCT for Concurrent Planning
+ *     NID-Con-UCT
+ *
+ * The ground_actions set is assumed to have: first two are default and donothing,
+ * then n activate actions, and n respective terminate actions.
+ * We will only sample the first n+2 actions. Assuming that there is another type of action called "decision".
+ * The decision is indexed n+3.
+ * In total, therefore we have n+3 actions in use for UCT.
+ ************************************************/
+
+struct StateActionValues_Con {
+  public:
+    const SymbolicState& s;
+    arr values;
+    uintA visits;
+    uintA activityList; //list of activated rules (concurrently running)
+
+
+    StateActionValues_Con(const SymbolicState& s, uint num_actions);
+    ~StateActionValues_Con();
+
+    // counts: c(s,a)
+    uint getVisits();
+    uint getVisits(uint action_id);
+    void increaseVisits(uint action_id);
+
+    //activity
+    void addActivity(uint id); //the id in the groundactions list
+    void removeActivity(uint id);
+
+    // Q-values: Q(s,a)
+    double getQvalue(uint action_id);
+    void setQvalue(uint action_id, double value);
+};
+
+
+class NID_UCT_CON : public NID_Planner {
+public:
+
+
+
+  NID_UCT_CON();
+  ~NID_UCT_CON();
+
+  Literal* plan_action(const SymbolicState& current_state, uint max_runs = 1);
+
+  Literal* execute_action(const SymbolicState& current_state, SymbolicState& nextState, const Rule* rule);
+
+
+
+
+  void setC(double c);
+  void setNumEpisodes(uint numEpisodes);
+
+private:
+  #define DEFAULT__NID_UCT__C 1.0
+  #define DEFAULT__NID_UCT__NUM_EPISODES 500
+  double c;
+  uint numEpisodes;
+  MT::Array< StateActionValues_Con* > s_a_values;
+  StateActionValues_Con* getStateActionValues(const SymbolicState& s);
+  void killStateActionValues();
+  void runEpisode(double& reward, const SymbolicState& s, uint t, SymbolicState& leafs);
+};
+
+
   
 
 /************************************************

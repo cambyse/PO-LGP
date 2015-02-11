@@ -244,6 +244,514 @@ Literal* NID_SST::plan_action(const SymbolicState& current_state, uint max_runs)
 
 
 
+/************************************************
+ *
+ *     NID-UCT-CONCURRENT
+ *
+ ************************************************/
+
+StateActionValues_Con::StateActionValues_Con(const SymbolicState& _s, uint num_actions) : s(_s) {
+
+  //cout<<" initialization:::: "<<endl<<endl;
+  //cout<<_s <<endl<<endl;
+  values.resize(num_actions);// - num_actions/2); //dont need terminate actions
+  values.setUni(0.);  
+  visits.resize(num_actions);
+  visits.setUni(0.);
+  activityList.clear();
+}
+
+
+StateActionValues_Con::~StateActionValues_Con() {
+}
+
+
+uint StateActionValues_Con::getVisits() {
+  return sum(visits);
+}
+
+
+uint StateActionValues_Con::getVisits(uint action_id) {
+  return visits(action_id);
+}
+
+
+void StateActionValues_Con::increaseVisits(uint action_id) {
+  visits(action_id)++;
+}
+
+void StateActionValues_Con::addActivity(uint id){
+    activityList.append(id);
+}
+void StateActionValues_Con::removeActivity(uint id){
+    activityList.removeValue(id);
+}
+
+
+double StateActionValues_Con::getQvalue(uint action_id) {
+  return values(action_id);
+}
+
+
+void StateActionValues_Con::setQvalue(uint action_id, double value) {
+  values(action_id) = value;
+}
+
+
+NID_UCT_CON::NID_UCT_CON() : NID_Planner() {
+  c = DEFAULT__NID_UCT__C;
+  numEpisodes = DEFAULT__NID_UCT__NUM_EPISODES;
+
+  //temp_activityList.clear();
+}
+
+
+NID_UCT_CON::~NID_UCT_CON() {
+  killStateActionValues();
+}
+
+
+inline void test( MT::Array< StateActionValues_Con* > abc){
+    uint DEBUG=0;
+    if(DEBUG>0){
+        uint i;
+        cout<<endl<<endl;
+        FOR1D(abc,i){
+                cout<<i<<" TEST    s_a_values                       "<<abc(i)->visits << "   s = "   <<abc(i)->s<<endl;}
+
+        cout<<endl<<endl;
+    }
+}
+
+
+inline void copy(SymbolicState& suc, const SymbolicState& pre)
+{
+    uint i;
+      // keep literals from predecessor that are not specified in outcome
+    FOR1D(pre.lits, i) {
+      //relational::Literal* lit = relational::Literal::get(pre.lits(i)->s, pre.lits(i)->args, pre.lits(i)->value);
+      suc.lits.append(pre.lits(i));
+    }
+}
+
+
+
+LitL DEBUG__UCT_CON_ACTIONS;
+uintA temp_activityList;
+Literal* NID_UCT_CON::plan_action(const SymbolicState& s, uint max_runs) {
+  uint DEBUG = 0;
+  killStateActionValues(); // full replanning... comment if not desired
+  uint i, k, j;
+  DEBUG__UCT_CON_ACTIONS.resize(horizon);
+  SymbolicState temp;
+  SymbolicState finalS;
+  copy(temp,s);
+  for (k=0; k<max_runs; k++) {
+    for (i=0; i<numEpisodes; i++) {
+      DEBUG__UCT_CON_ACTIONS.setUni(NULL);
+      temp_activityList.clear();
+
+
+      double dummy_reward;
+
+
+
+
+
+
+
+      runEpisode(dummy_reward, s, 0,finalS);
+
+      if (i%100 == 0){
+           //cout<<"After "<<finalS<<endl;
+           cout<<i<<" "<<endl;write(DEBUG__UCT_CON_ACTIONS); cout<<endl<<endl;
+          //cerr<<"."<<std::flush;
+      }
+
+      if(dummy_reward>0)
+          cout<<" [][][][][][ [TERMINAL]]  "<<endl;
+
+
+      FOR1D_(ground_rules,j){
+          if((j>=2)&&(j<14)){
+              ground_rules.elem(j)->outcomes(0)(0)->value = 8.0;
+          }else if((j>=14)&&(j<20)){
+              ground_rules.elem(j)->outcomes(0)(0)->value = 1.0;
+          }else if((j>=20)&&(j<26)){
+              ground_rules.elem(j)->outcomes(0)(0)->value = 3.1;
+          }else if((j>=26)&&(j<35)){
+              ground_rules.elem(j)->outcomes(0)(0)->value = 2.1;
+          }
+
+          if (j> 36) break;
+
+      }
+
+
+
+
+
+
+
+
+      if (DEBUG>1) {
+        cout<<i<<":  "; write(DEBUG__UCT_CON_ACTIONS); cout<<endl;
+        cout<<endl<<endl;
+        cout<<"plan_action"<<endl;test(s_a_values);
+      }
+    }
+    // get maximum q value for s
+    StateActionValues_Con* s_a_info = getStateActionValues(s);
+    if (DEBUG>1) {
+      cout<<"Q values for starting state for states tried more than 0 times:"<<endl;
+      FOR1D(ground_actions, i) {
+        if (s_a_info->getVisits(i) > 0) {
+          ground_actions(i)->write(); cout<<": "<<s_a_info->getQvalue(i)<<"   ("<<s_a_info->getVisits(i)<<" visits)"<<endl;
+        }
+      }
+    }
+    uint max_id = s_a_info->values.maxIndex();
+#define THRESHOLD_UCT 0.0005
+    if (s_a_info->values(max_id) > THRESHOLD_UCT)
+      return ground_actions(max_id);
+    MT_MSG("NID_UCT_CON: No good action found --> Retry!");
+  }
+  MT_MSG("NID_UCT_CON: Still no good action found. I'll give up :-(.");
+  return NULL;
+}
+
+
+void NID_UCT_CON::setC(double c) {
+  this->c = c;
+}
+
+
+void NID_UCT_CON::setNumEpisodes(uint numEpisodes) {
+  this->numEpisodes = numEpisodes;
+}
+
+
+StateActionValues_Con* NID_UCT_CON::getStateActionValues(const SymbolicState& state) {
+  uint i;
+  uint DEBUG = 0;
+
+
+  if (DEBUG>0){ cout<<"INSIDE 0: ";  test(s_a_values);}
+
+
+  FOR1D(s_a_values, i) {
+    //if(DEBUG>0) cout<<"[NID_UCT_CON::getStateActionValues] "<<i <<" state "<<s_a_values(i)->s<<endl;
+    if (s_a_values(i)->s == state)
+      return s_a_values(i);
+  }
+  // create new one
+  StateActionValues_Con* s_a_info = new StateActionValues_Con(state, ground_actions.N);
+  s_a_values.append(s_a_info);
+
+  if(DEBUG>0) cout<<endl<<"[NID_UCT_CON::getStateActionValues] size ="<<s_a_values.d0 <<endl;
+  if(DEBUG>0){ cout<<"INSIDE 1: ";  test(s_a_values);}
+
+
+  return s_a_info;
+}
+
+
+void NID_UCT_CON::killStateActionValues() {
+  listDelete(s_a_values);
+}
+
+
+void NID_UCT_CON::runEpisode(double& value, const SymbolicState& s, uint t, SymbolicState& leafS) {
+  int DEBUG = -10;
+  uint numActs = ground_actions.N - ground_actions.N/2 + 2;
+  SymbolicState s_suc;
+  arr UCB(numActs);
+  RuleSet rules;
+  uintA rulesTerminate;
+  uintA untried_action_ids;
+
+  SymbolicState s_curr;
+  copy(s_curr,s);
+
+
+
+
+  if (DEBUG>0) {
+    cout<<"NID_UCT_CONCURRENT::runEpisode() [START]"<<endl;
+    PRINT(t);
+    cout<<"SymbolicState: "; s.write(cout, true); cout<<endl;
+  }
+  double reward_s = reward->evaluate(s);
+
+  if (DEBUG>0) {PRINT(reward_s);}
+  if (t==horizon) {
+    value = reward_s;
+  }
+  else if (reward->satisfied(s)) {
+
+
+    value = reward_s;
+
+
+  }
+  else {  
+
+     StateActionValues_Con* s_a_info = getStateActionValues(s);
+    s_a_info->activityList = temp_activityList;
+    uint i;
+
+
+
+
+    if (DEBUG>0) {cout<<"visits(s)="<<s_a_info->getVisits()<<endl;}
+
+    for(i=0;i<numActs;i++){
+        if(i==numActs-1){//DECISION action
+            rules.append(Rule::getDoNothingRule()); //this is a hack. This rule is never called when this action is chosen. The termiate_rules are called instead.
+            rulesTerminate.append(i);
+            if (s_a_info->getVisits(i) == 0) {
+              untried_action_ids.append(i);
+              UCB(i) = -11.;
+            }
+            else
+              UCB(i) = s_a_info->getQvalue(i)  +  c * sqrt(log((double)s_a_info->getVisits()) / (1.0 * s_a_info->getVisits(i)));
+
+        }else{ //normal actions
+          //SymbolicState dummy_state = s;
+          Rule* r = ground_rules.elem(reason::calc_uniqueCoveringRule_groundRules_groundAction(ground_rules, s, ground_actions(i)));
+          if (!Rule::isDefaultRule(r)) {
+            rules.append(r);
+            rulesTerminate.append(i);
+            if (s_a_info->getVisits(i) == 0) {
+              untried_action_ids.append(i);
+              UCB(i) = -11.;
+            }
+            else
+              UCB(i) = s_a_info->getQvalue(i)  +  c * sqrt(log((double)s_a_info->getVisits()) / (1.0 * s_a_info->getVisits(i)));
+          }
+          else {
+            rules.append(Rule::getDoNothingRule()); // just as a hack
+            rulesTerminate.append(1); //add DoNothing
+            UCB(i) = -22.;
+          }
+
+
+
+        }
+    }
+
+
+
+    uint id_opt;
+
+
+
+    //Adjust code here: VIENNA, to add decision actions
+    if (untried_action_ids.N > 0)
+      id_opt = untried_action_ids(rnd.num(untried_action_ids.N));
+    else
+      id_opt = UCB.maxIndex();
+
+    uint flag;
+
+    bool state_change = false;
+
+
+    if (DEBUG>-1){cout<<" after selection "; test(s_a_values);}
+
+
+    double ruleOutcome_value;//
+    if(id_opt==numActs-1){ // decision action
+
+        if(DEBUG>0) cout<<"[DECISION ACTION]"<<endl;
+
+        ruleOutcome_value = 0.0;
+        //find shortest duration
+        double shortest = 100000;
+        arr allIndex;
+        allIndex.clear();
+        arr list_termiates;
+        list_termiates.clear();
+
+        //cout<<s_a_info->activityList<<endl;
+
+        FOR1D(s_a_info->activityList,i){ //list of activated covering rules of s
+            uint actionID = s_a_info->activityList(i);
+            Symbol* symbol_action  = ground_actions(actionID)->s;
+            uintA args = ground_actions(actionID)->args;
+            relational::Symbol* symbol_pAction;
+
+            //cout<< "  test "<<s_a_info->activityList(i)<<"  "<<*symbol_action <<"  "<<args <<endl;
+
+            if(symbol_action->name==MT::String("activate_pickup")){
+                symbol_pAction = relational::Symbol::get("pickup");
+            }
+            if(symbol_action->name==MT::String("activate_positioning")){
+                symbol_pAction = relational::Symbol::get("positioning");
+            }
+            if(symbol_action->name==MT::String("activate_screwing")){
+                //cout<<args<<endl;
+                symbol_pAction = relational::Symbol::get("screwing");
+                if(args.d0>1) args.remove(1);//as screwing's arity =1, activate_screwing's is 3. Then we remove 2 args
+                if(args.d0>1) args.remove(1);
+                //cout<<args<<endl;
+            }
+            if(symbol_action->name==MT::String("activate_release")){
+                symbol_pAction = relational::Symbol::get("release");
+            }
+            arr values,indexes;
+            //get literals and their IDs in s that matches symbol_pAction(args)
+            relational::SymbolicState::getValuesIDs(values,indexes,s,*symbol_pAction,args);
+
+            if(indexes.d0 > 0){
+                allIndex.append(indexes(0));
+                if((values(0)>0.)&&(values(0) < shortest)){
+                    shortest = values(0);
+                    list_termiates.clear();
+                    list_termiates.append(actionID); //the action will be terminating
+                }else if(values(0)==shortest){
+                    list_termiates.append(actionID); //the action will be terminating
+                }
+            }            
+        }
+        //1. Decrease duration of all activated actions
+
+
+
+        FOR1D(allIndex,i){
+            s_curr.lits(allIndex(i))->value = s_curr.lits(allIndex(i))->value - shortest;
+            if(s_curr.lits(allIndex(i))->value < 0.)
+                s_curr.lits(allIndex(i))->value = 0.;
+        }
+
+        //2. Find successor
+
+        FOR1D(list_termiates,i){
+            //call respective terminate rules
+            uint terminateID = list_termiates(i);
+            terminateID = terminateID + numActs-3;
+
+            Rule* r = ground_rules.elem(reason::calc_uniqueCoveringRule_groundRules_groundAction(ground_rules, s_curr, ground_actions(terminateID)));
+            if (!Rule::isDefaultRule(r)){
+
+                DEBUG__UCT_CON_ACTIONS(t) = ground_actions(terminateID);             
+                s_suc.lits.clear();
+                ruleOutcome_value = reason::sampleSuccessorState_groundRule(s_suc, s_curr, r, flag);
+                s_curr = s_suc;
+
+                state_change = true;
+
+            }
+            //3. Filter the activity list
+            s_a_info->activityList.removeValue(list_termiates(i));
+        }
+        //forward this activity list.
+        temp_activityList = s_a_info->activityList;
+
+
+   }else{                  // normal actions (activation)
+        DEBUG__UCT_CON_ACTIONS(t) = ground_actions(rulesTerminate(id_opt));
+        //write(DEBUG__UCT_CON_ACTIONS);
+        if(DEBUG>0) cout<<"[NORMAL ACTION]"<<endl;
+        //activity list
+        if(rulesTerminate(id_opt)>1) //ignore Default and DoNothing rulles
+            s_a_info->activityList.append(rulesTerminate(id_opt));
+        //
+
+
+
+        //cout<<"TEST RULE 11: "<<*rules.elem(id_opt)<<endl;
+
+
+
+        ruleOutcome_value = reason::sampleSuccessorState_groundRule(s_suc, s, rules.elem(id_opt), flag);
+        state_change = true;
+
+        //forward this activity list.
+        temp_activityList = s_a_info->activityList;
+
+
+
+       // cout<<s_suc<<endl;
+        //cout<<"TEST RULE 1: "<<*rules.elem(id_opt)<<endl;
+
+
+
+    }
+
+
+    double reward_suc = 0.;
+
+
+    //write(DEBUG__UCT_CON_ACTIONS); cout<<endl<<endl;
+
+
+    //cout<<"TEST RULE XXXX 00 BEFORE RECURSIVE: "<<*ground_rules.elem(34)<<endl;
+
+
+
+
+    if(state_change)
+        runEpisode(reward_suc, s_suc, t+1, leafS);  // recursive call
+    else{
+        s_suc=s;
+        runEpisode(reward_suc, s_suc, t+1, leafS);  // recursive call
+    }
+    reward_suc = postprocessValue(reward_suc, flag);
+    value = reward_s +  discount * reward_suc;
+    if (use_ruleOutcome_rewards) {
+      value += ruleOutcome_value;
+    }
+    // update Q-value
+    s_a_info->increaseVisits(id_opt);
+    double old_q = s_a_info->getQvalue(id_opt);
+    double new_q = old_q + (1 / (1.0 * s_a_info->getVisits(id_opt))) * (value - old_q);
+    s_a_info->setQvalue(id_opt, new_q);
+
+    if (DEBUG>0) {
+      PRINT(reward_suc);
+      PRINT(ruleOutcome_value);
+      PRINT(value);
+      PRINT(old_q);
+      PRINT(new_q);
+    }
+  }
+
+  if (DEBUG>0) {
+    cout<<"NID_UCT_CONCURRENT::runEpisode() [END]"<<endl;
+  }
+
+
+  if (DEBUG>-1){cout<<" after call runEpisode:END "; test(s_a_values);}
+
+
+  if(t==horizon-1)
+      leafS = s_suc;
+
+
+ // cout<<"TEST RULE XXXX 00 ENDEND: "<<*ground_rules.elem(34)<<endl;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /************************************************
@@ -460,6 +968,13 @@ void NID_UCT::runEpisode(double& value, const SymbolicState& s, uint t) {
     cout<<"NID_UCT::runEpisode() [END]"<<endl;
   }
 }
+
+
+
+
+
+
+
 
 
 

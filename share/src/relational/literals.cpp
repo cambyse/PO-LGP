@@ -670,6 +670,7 @@ void Literal::sort(LitL& lits) {
   // Stelle 8: negative
   FOR1D(lits, i) {
     uint key = 0;
+    if (DEBUG>1) {cout<<"("<<i<<") "<<*lits(i)<<endl;}
     // Stellen 1-4: arguments
     if (lits(i)->s->arity > 0) {
       CHECK(lits(i)->args(0) < 100, "");
@@ -963,6 +964,16 @@ void SymbolicState::getValues(arr& values, const SymbolicState& state, const Sym
       values.append(state.lits(i)->value);
   }
 }
+void SymbolicState::getValuesIDs(arr& values, arr& indexes, const SymbolicState& state, const Symbol& s, const uintA& objs){
+    uint i;
+    FOR1D(state.lits, i) {
+      if (state.lits(i)->s != &s) continue;
+      if (numberSharedElements(state.lits(i)->args, objs) == objs.N){
+        values.append(state.lits(i)->value);
+        indexes.append(i);
+      }
+    }
+  }
 
 
 void SymbolicState::getRelatedConstants(uintA& constants_related, uint id, bool id_covers_first, const Symbol& s, const SymbolicState& state) {
