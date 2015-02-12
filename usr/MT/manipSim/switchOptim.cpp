@@ -47,8 +47,9 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     {
       Task *t;
       t = MP.addTask("transitions", new TransitionTaskMap(world));
-      t->map.order=2;
-      t->setCostSpecs(0, MP.T, {0.}, 1e0);
+      if(microSteps>3) t->map.order=2;
+      else t->map.order=1;
+      t->setCostSpecs(0, MP.T, {0.}, 1e-1);
     }
 
     //-- pose
@@ -100,21 +101,23 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       }
 
       // zero position velocity
-      t = MP.addTask("psp_zeroPosVel", m=new DefaultTaskMap(posTMT, endeff_index));
-      t->map.order=1;
-      t->prec.resize(MP.T+1).setZero();
-      for(uint i=0;i<actions.N;i++){
-        t->prec(tPick(i))=posPrec;
-        t->prec(tPlace(i))=posPrec;
-      }
+      if(microSteps>3){
+        t = MP.addTask("psp_zeroPosVel", m=new DefaultTaskMap(posTMT, endeff_index));
+        t->map.order=1;
+        t->prec.resize(MP.T+1).setZero();
+        for(uint i=0;i<actions.N;i++){
+          t->prec(tPick(i))=posPrec;
+          t->prec(tPlace(i))=posPrec;
+        }
 
-      // zero quaternion velocity
-      t = MP.addTask("pap_zeroQuatVel", new DefaultTaskMap(quatTMT, endeff_index));
-      t->map.order=1;
-      t->prec.resize(MP.T+1).setZero();
-      for(uint i=0;i<actions.N;i++){
-        t->prec(tPick(i))=posPrec;
-        t->prec(tPlace(i))=posPrec;
+        // zero quaternion velocity
+        t = MP.addTask("pap_zeroQuatVel", new DefaultTaskMap(quatTMT, endeff_index));
+        t->map.order=1;
+        t->prec.resize(MP.T+1).setZero();
+        for(uint i=0;i<actions.N;i++){
+          t->prec(tPick(i))=posPrec;
+          t->prec(tPlace(i))=posPrec;
+        }
       }
 
       // zero grasp joint motion during holding
@@ -127,20 +130,22 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
-        for(uint time=tPick(i);time<tPlace(i);time++) t->prec(time)=posPrec;
+        for(uint time=tPick(i)+1;time<tPlace(i);time++) t->prec(time)=posPrec;
       }
 
       // up/down velocities after/before pick/place
-      t = MP.addTask("pap_upDownPosVel", new DefaultTaskMap(posTMT, endeff_index));
-      t->map.order=1;
-      t->prec.resize(MP.T+1).setZero();
-      t->target.resize(MP.T+1,3).setZero();
-      for(uint i=0;i<actions.N;i++){
-        t->prec(tPick(i)+2)=posPrec;
-        t->target[tPick(i)+2] = {0.,0.,+.1};
+      if(microSteps>3){
+        t = MP.addTask("pap_upDownPosVel", new DefaultTaskMap(posTMT, endeff_index));
+        t->map.order=1;
+        t->prec.resize(MP.T+1).setZero();
+        t->target.resize(MP.T+1,3).setZero();
+        for(uint i=0;i<actions.N;i++){
+          t->prec(tPick(i)+2)=posPrec;
+          t->target[tPick(i)+2] = {0.,0.,+.1};
 
-        t->prec(tPlace(i)-2)=posPrec;
-        t->target[tPlace(i)-2] = {0.,0.,-.1};
+          t->prec(tPlace(i)-2)=posPrec;
+          t->target[tPlace(i)-2] = {0.,0.,-.1};
+        }
       }
     }
 
@@ -150,13 +155,15 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       ProxyConstraint *m;
 
       //of the object itself
-      t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true));
-      m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
-      t->prec.resize(MP.T+1).setZero();
-      for(uint i=0;i<actions.N;i++){
-        for(uint time=tPick(i)+3;time<tPlace(i)-3;time++){
-          m->proxyCosts.shapes(time,0)=idObject(i);
-          t->prec(time)=1.;
+      if(microSteps>3){
+        t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true));
+        m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
+        t->prec.resize(MP.T+1).setZero();
+        for(uint i=0;i<actions.N;i++){
+          for(uint time=tPick(i)+3;time<tPlace(i)-3;time++){
+            m->proxyCosts.shapes(time,0)=idObject(i);
+            t->prec(time)=1.;
+          }
         }
       }
 
@@ -210,7 +217,7 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   arr x = replicate(f.MP.x0, f.MP.T+1); //we initialize with a constant trajectory!
 //  rndGauss(x,.01,true); //don't initialize at a singular config
 
-  OptConstrained opt(x, NoArr, f, OPT(verbose=1, damping = 1e-2, stopTolerance=1e-3));
+  OptConstrained opt(x, NoArr, f, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-3, maxStep=.5));
   opt.run();
   f.MP.costReport();
   displayTrajectory(x, 1, f.MP.world, "planned configs", -1);

@@ -244,12 +244,12 @@ void coreExperiment(){
 int main(int argc,char **argv){
 //  coreExperiment();
 //  rnd.clockSeed();
-  //  generateRandomProblems();
-  //  return 0;
-  //  optimizeFinal();
+//  generateRandomProblems();
+//  return 0;
+//  optimizeFinal();
     optimSwitchConfigurations();
-  //  testReachable();
-  //  testMonteCarlo();
+//  testReachable();
+//  testMonteCarlo();
 
 
   return 0;
