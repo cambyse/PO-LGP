@@ -15,11 +15,13 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
   MotionProblem MP;
   MotionProblemFunction MPF;
 
-  SwitchConfigurationProgram(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final, Graph& symbolicState, int verbose)
-    : world(world_initial), symbolicState(symbolicState), verbose(verbose), MP(world), MPF(MP){
+  SwitchConfigurationProgram(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final,
+                             Graph& symbolicState,
+                             uint microSteps,
+                             int verbose)
+    : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
     ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
 
-    microSteps = 20;
     double posPrec = MT::getParameter<double>("LGP/precision", 1e3);
     double colPrec = MT::getParameter<double>("LGP/collisionPrecision", -1e0);
     double margin = MT::getParameter<double>("LGP/collisionMargin", .05);
@@ -28,7 +30,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     Item *actionSequence=symbolicState["actionSequence"];
     Graph& actions = actionSequence->kvg();
     uint endeff_index = world.getShapeByName("graspRef")->index;
-    uint hand_index = world.getShapeByName("base2")->index;
+    uint hand_index = world.getShapeByName("eff")->index;
 
     //-- set up the MotionProblem
     MP.T=2*actions.N*microSteps;
@@ -211,8 +213,10 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
 
 //===========================================================================
 
-double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final, Graph& symbolicState){
-  SwitchConfigurationProgram f(world_initial, world_final, symbolicState, 0);
+double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final,
+                                 Graph& symbolicState,
+                                 uint microSteps){
+  SwitchConfigurationProgram f(world_initial, world_final, symbolicState, microSteps, 0);
 
   arr x = replicate(f.MP.x0, f.MP.T+1); //we initialize with a constant trajectory!
 //  rndGauss(x,.01,true); //don't initialize at a singular config

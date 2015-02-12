@@ -77,7 +77,7 @@ void optimSwitchConfigurations(){
   double fx = endStateOptim(world_final, G_final);
   cout <<"fx=" <<fx <<endl;
 
-  fx = optimSwitchConfigurations(world_init, world_final, G);
+  fx = optimSwitchConfigurations(world_init, world_final, G, 20);
   cout <<"fx=" <<fx <<endl;
   //  world_final.gl().watch();
 }
@@ -98,7 +98,7 @@ void solveProblem(ors::KinematicWorld& world, Graph& symbols){
   cout <<"fx=" <<fx <<endl;
 
   return;
-  fx = optimSwitchConfigurations(world, world_end, symbols);
+  fx = optimSwitchConfigurations(world, world_end, symbols, 20);
   cout <<"fx=" <<fx <<endl;
 
 }
@@ -135,7 +135,7 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     b->name = s->name;
     //position on grid
     b->X.addRelativeTranslation(0,.5*s->size[1],.5*s->size[2]);
-    y += .1 + s->size[1];
+    y += .1 + s->size[1]+s->size[3];
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
@@ -234,7 +234,7 @@ void coreExperiment(){
     gl.drawers(1).classP= &world_best;
     gl.watch();
 
-    double f_path = optimSwitchConfigurations(world, world_best, symbols_best);
+    double f_path = optimSwitchConfigurations(world, world_best, symbols_best, 20);
     cout <<"f_path=" <<f_path <<endl;
 
   }
@@ -242,12 +242,12 @@ void coreExperiment(){
 
 //===========================================================================
 int main(int argc,char **argv){
-//  coreExperiment();
+  coreExperiment();
 //  rnd.clockSeed();
 //  generateRandomProblems();
 //  return 0;
 //  optimizeFinal();
-    optimSwitchConfigurations();
+//    optimSwitchConfigurations();
 //  testReachable();
 //  testMonteCarlo();
 

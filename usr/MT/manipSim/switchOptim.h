@@ -4,5 +4,6 @@
 double optimSwitchConfigurations(
     ors::KinematicWorld& world_initial,
     ors::KinematicWorld& world_final,
-    Graph& symbolicState);
+    Graph& symbolicState,
+    uint microSteps);
 
