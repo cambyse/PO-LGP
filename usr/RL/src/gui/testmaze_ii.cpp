@@ -1,6 +1,7 @@
 #include "testmaze_ii.h"
 
 #include <config/Config.h>
+#include <util/pretty_printer.h>
 #include <util/util.h>
 #include <util/QtUtil.h>
 

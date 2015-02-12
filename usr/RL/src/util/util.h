@@ -950,13 +950,48 @@ namespace util {
         convert_1D_to_ND_index(linear_index, ND_index, ND_bounds);
         return ND_index;
     }
-    /** Version with initializer list. */
+    /** Version with initializer list and unspecified dimension (returning std::vector). */
     template <class D_IDX_TYPE, class IDX_TYPE>
         std::vector<D_IDX_TYPE> convert_1D_to_ND_index(const IDX_TYPE & linear_index,
                                                        const std::initializer_list<D_IDX_TYPE> ND_bounds)
     {
         return convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
     }
+    /** Class wrapper to get multi-dimensional index as tuple (requires
+     * explicitly specifying dimensions as template argument). */
+    template <size_t N>
+        struct get_ND_index {
+            /// Get ND tuple from initializer list.
+            template <class D_IDX_TYPE, class IDX_TYPE>
+                static template_lib::N_tuple<N,D_IDX_TYPE> from(const IDX_TYPE & linear_index,
+                                                                const std::initializer_list<D_IDX_TYPE> ND_bounds)
+            {
+                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                auto vec = convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
+                std::array<D_IDX_TYPE,N> arr;
+                for(int idx = 0; idx<std::min(N,vec.size()); ++idx) {
+                    arr[idx] = vec[idx];
+                }
+                return template_lib::array_to_tuple(arr);
+            }
+            /// Get ND tuple from container.
+            template <class D, class IDX_TYPE>
+                static template_lib::N_tuple<N,IDX_TYPE> from(const IDX_TYPE & linear_index,
+                                                                const D & ND_bounds)
+            {
+                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                auto ND_index = convert_1D_to_ND_index(linear_index, ND_bounds);
+                std::array<IDX_TYPE,N> arr;
+                auto arr_it = arr.begin();
+                auto ND_it = ND_index.begin();
+                while(arr_it!=arr.end() && ND_it!=ND_index.end()) {
+                    *arr_it = *ND_it;
+                    ++arr_it;
+                    ++ND_it;
+                }
+                return template_lib::array_to_tuple(arr);
+            }
+        };
 
 } // end namespace util
 

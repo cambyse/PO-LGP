@@ -26,7 +26,7 @@ add_library(util
     ProgressBar.h
     QtUtil.cpp
     QtUtil.h
-    return_tuple_macros.h
+    tuple_return.h
     template_lib.h
     util.cpp
     util.h

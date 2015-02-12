@@ -8,7 +8,7 @@
 #include <deque>
 
 #include <util/util.h>
-#include <util/return_tuple_macros.h>
+#include <util/tuple_return.h>
 #include <util/pretty_printer.h>
 #include <util/template_lib.h>
 
@@ -146,6 +146,7 @@ TEST(Util, IndexConversion) {
     std::vector<int> v_idx({3,7,3,8,4});
     std::deque<int> d_idx({3,7,3,8,4});
     std::list<int> l_idx({3,7,3,8,4});
+    std::tuple<int,int,int,int,int> t_idx{3,7,3,8,4};
     // bounds
     std::vector<int> v_bnd({11,12,13,14,15});
     std::deque<int> d_bnd({11,12,13,14,15});
@@ -154,7 +155,7 @@ TEST(Util, IndexConversion) {
     std::vector<int> v_return;
     std::deque<int> d_return;
     std::list<int> l_return;
-    std::array<int,5> a_return;
+    std::tuple<int,int,int,int,int> t_return;
     // return by reference
     {
         // vector/vector
@@ -972,6 +973,25 @@ TEST(Util, IndexConversion) {
             EXPECT_EQ(v_idx, v_return);
         }
     }
+    // using wrapper class
+    {
+        // vector
+        linear_idx = util::convert_ND_to_1D_index(v_idx, v_bnd);
+        t_return = util::get_ND_index<5>::from(linear_idx, v_bnd);
+        EXPECT_EQ(t_return,t_idx);
+        // deque
+        linear_idx = util::convert_ND_to_1D_index(d_idx, d_bnd);
+        t_return = util::get_ND_index<5>::from(linear_idx, d_bnd);
+        EXPECT_EQ(t_return,t_idx);
+        // list
+        linear_idx = util::convert_ND_to_1D_index(l_idx, l_bnd);
+        t_return = util::get_ND_index<5>::from(linear_idx, l_bnd);
+        EXPECT_EQ(t_return,t_idx);
+        // initializer list
+        linear_idx = util::convert_ND_to_1D_index({3,7,3,8,4}, {11,12,13,14,15});
+        t_return = util::get_ND_index<5>::from(linear_idx, {11,12,13,14,15});
+        EXPECT_EQ(t_return,t_idx);
+    }
 
     DEBUG_OUT(1, "Performed " << counter << " checks");
 
@@ -980,77 +1000,74 @@ TEST(Util, IndexConversion) {
 }
 
 TEST(Util, ReturnTuple) {
-    int r;
 
-    // create named tuple separately
-    {
-        r = rand()%10;
-        TT1(tt, int, i);
-        tt = std::make_tuple(r);
-        EXPECT_EQ(r, i);
-        EXPECT_EQ(i, std::get<0>(tt));
+    repeat(100) {
+
+        int rand_int = rand();
+        double rand_double = drand48();
+
+        // create named tuple and assign separately
+        {
+
+            TN(tt, int, i, double, d);
+            tt = std::make_tuple(rand_int, rand_double);
+            EXPECT_EQ(rand_int, i);
+            EXPECT_EQ(rand_double, d);
+            EXPECT_EQ(i, std::get<0>(tt));
+            EXPECT_EQ(d, std::get<1>(tt));
+        }
+
+        // create named tuple and assign in one step
+        {
+            TN(tt, int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            EXPECT_EQ(rand_int, i);
+            EXPECT_EQ(rand_double, d);
+            EXPECT_EQ(i, std::get<0>(tt));
+            EXPECT_EQ(d, std::get<1>(tt));
+        }
+
+        // create anonymous tuple for assignment only
+        {
+            T(int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            EXPECT_EQ(rand_int, i);
+            EXPECT_EQ(rand_double, d);
+        }
+
+        // create variables separately and assign as tuple
+        {
+            int i; double d;
+            t(i,d) = std::make_tuple(rand_int, rand_double);
+            EXPECT_EQ(rand_int, i);
+            EXPECT_EQ(rand_double, d);
+        }
+
     }
+}
 
-    // create named tuple and assign
-    {
-        r = rand()%10;
-        TT1(tt, int, i) = std::make_tuple(r);
-        EXPECT_EQ(r, i);
-        EXPECT_EQ(i, std::get<0>(tt));
-    }
-
-    // create anonymous tuple for assignment only
-    {
-        r = rand()%10;
-        T1(int, i) = std::make_tuple(r);
-        DEBUG_OUT(r,i);
-    }
-
-    // and for 10-tuple
-    {
-        r = rand()%10;
-        TT10(tt, int, i1, int, i2, int, i3, int, i4, int, i5,
-             int, i6, int, i7, int, i8, int, i9, int, i10);
-        tt = std::make_tuple(r,r,r,r,r,r,r,r,r,r);
-        EXPECT_EQ(r, i1);
-        EXPECT_EQ(r, i2);
-        EXPECT_EQ(r, i3);
-        EXPECT_EQ(r, i4);
-        EXPECT_EQ(r, i5);
-        EXPECT_EQ(r, i6);
-        EXPECT_EQ(r, i7);
-        EXPECT_EQ(r, i8);
-        EXPECT_EQ(r, i9);
-        EXPECT_EQ(r, i10);
-        EXPECT_EQ(i1, std::get<0>(tt));
-        EXPECT_EQ(i2, std::get<1>(tt));
-        EXPECT_EQ(i3, std::get<2>(tt));
-        EXPECT_EQ(i4, std::get<3>(tt));
-        EXPECT_EQ(i5, std::get<4>(tt));
-        EXPECT_EQ(i6, std::get<5>(tt));
-        EXPECT_EQ(i7, std::get<6>(tt));
-        EXPECT_EQ(i8, std::get<7>(tt));
-        EXPECT_EQ(i9, std::get<8>(tt));
-        EXPECT_EQ(i10, std::get<9>(tt));
-    }
-
+TEST(Util, ArrayToTuple) {
     using namespace template_lib;
     {
         array<int,1> a = {11};
         tuple<int> t = array_to_tuple(a);
-        DEBUG_OUT(0, t);
+        tuple<int> t_ret(11);
+        EXPECT_EQ(t, t_ret);
     }
     {
         array<int,2> a = {11,22};
         tuple<int,int> t = array_to_tuple(a);
-        DEBUG_OUT(0, t);
+        tuple<int,int> t_ret(11,22);
+        EXPECT_EQ(t, t_ret);
     }
     {
         array<int,3> a = {11,22,33};
         tuple<int,int,int> t = array_to_tuple(a);
-        DEBUG_OUT(0, t);
+        tuple<int,int,int> t_ret(11,22,33);
+        EXPECT_EQ(t, t_ret);
     }
     {
-        std::tuple<int,int,int> tt{2,3,4};
+        array<int,4> a = {11,22,33,44};
+        tuple<int,int,int,int> t = array_to_tuple(a);
+        tuple<int,int,int,int> t_ret(11,22,33,44);
+        EXPECT_EQ(t, t_ret);
     }
 }

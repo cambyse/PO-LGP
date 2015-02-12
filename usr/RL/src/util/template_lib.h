@@ -63,14 +63,43 @@ namespace template_lib {
     //================================//
 
     /** Tuple of N times type T. For instance @code N_tuple<3,int> @endcode is
-     * the same as @code std::tuple<int,int,int> @endcode. */
+     * derived from @code std::tuple<int,int,int> @endcode. */
+    /* template<int N, class T> */
+    /*     struct N_tuple: public template_lib::prepend_N_tuple_type<N,T>::type { */
+    /*     // typedef */
+    /*     typedef typename template_lib::prepend_N_tuple_type<N,T>::type type; */
+    /*     N_tuple() {} */
+    /*     /// Constructor for type casting array to tuple. */
+    /*     N_tuple(const std::array<T,N> & arr); // implemented below */
+    /* }; */
+
     template<int N, class T>
-        struct N_tuple: public template_lib::prepend_N_tuple_type<N,T>::type {
-        // typedef
-        typedef typename template_lib::prepend_N_tuple_type<N,T>::type type;
-        N_tuple() {}
-        /// Constructor for type casting array to tuple.
-        N_tuple(const std::array<T,N> & arr); // implemented below
+        using N_tuple = typename prepend_N_tuple_type<N,T>::type;
+
+    //================================================//
+    // Copy values between tuples of different length //
+    //================================================//
+
+    template <size_t N, class ... T>
+        struct tuple_copy {};
+
+    template <size_t N, class ... TupleTypes_1, class ... TupleTypes_2>
+        struct tuple_copy<N,std::tuple<TupleTypes_1...>,std::tuple<TupleTypes_2...>> {
+        typedef std::tuple<TupleTypes_1...> T1;
+        typedef std::tuple<TupleTypes_2...> T2;
+        static void copy(const T1 & t1, T2 & t2) {
+            std::get<N>(t2) = std::get<N>(t1);
+            tuple_copy<N-1,T1,T2>::copy(t1,t2);
+        }
+    };
+
+    template <class ... TupleTypes_1, class ... TupleTypes_2>
+        struct tuple_copy<0,std::tuple<TupleTypes_1...>,std::tuple<TupleTypes_2...>> {
+        typedef std::tuple<TupleTypes_1...> T1;
+        typedef std::tuple<TupleTypes_2...> T2;
+        static void copy(const T1 & t1, T2 & t2) {
+            std::get<0>(t2) = std::get<0>(t1);
+        }
     };
 
     //=================================//
@@ -107,9 +136,9 @@ namespace template_lib {
         return return_tuple;
     }
 
-    // now implement constructor from array
-    template<int N, class T>
-    N_tuple<N,T>::N_tuple(const std::array<T,N> & arr): type(array_to_tuple(arr)) {}
+    // now implement constructor from array using converter functions from above
+    /* template<int N, class T> */
+    /* N_tuple<N,T>::N_tuple(const std::array<T,N> & arr): type(array_to_tuple(arr)) {} */
 
 } // namespace template_lib
 
