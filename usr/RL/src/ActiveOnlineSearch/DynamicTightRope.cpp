@@ -1,22 +1,26 @@
 #include "DynamicTightRope.h"
 
 #include <util/util.h>
+#include <util/tuple_return.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using util::Range;
+using util::get_ND_index;
+using util::convert_ND_to_1D_index;
+using util::clamp;
 using std::tuple;
 using std::vector;
 
 DynamicTightRope::DynamicTightRope(int n):
-    Environment({0,1}, vector<state_t>(velocity_n*n)),
+    Environment({0,1,2}, vector<state_t>(velocity_n*n)),
     position_n(n),
     action_names({"accelerate", "keep velocity", "decelerate"}),
     state_names(velocity_n*position_n) {
     for(int pos : Range(position_n)) {
         for(int vel : Range(velocity_n)) {
-            int linear_idx = util::convert_ND_to_1D_index({pos,vel},{position_n,velocity_n});
+            int linear_idx = convert_ND_to_1D_index({pos,vel},{position_n,velocity_n});
             states[linear_idx] = linear_idx;
             state_names[linear_idx] = QString("position %1, velocity %2").arg(pos).arg(vel);
         }
@@ -26,44 +30,48 @@ DynamicTightRope::DynamicTightRope(int n):
 DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s,
                                                                const action_t & a) const {
     // position/velocity
+    T(int,pos,int,vel) = get_ND_index<2>::from(s,{position_n,velocity_n});
+    DEBUG_OUT(1,"pos = " << pos << ", vel = " << vel);
 
-
-    // return values
-    state_t ss = 0;
+    // reward
     reward_t r = 0;
-    // success probabilities for forward moves
-    double max_success_rate = 1;
-    double min_success_rate = 0.8;
-    double max_success_rate_fast = 1;
-    double min_success_rate_fast = 0.4;
-    // position on the rope
-    double t = ((double)s)/(states.size()-1); // in [0,1] linearly increasing
-    t = pow(2*(t-0.5),2);                    // in [0,1] with minimum at 0.5
-    t = 1-exp(-t/0.15);
-    DEBUG_OUT(1,"Path = " << t << " (s = " << s << ")");
+
+    // adapt velocity
+    if(a==ACCELERATE) {
+        vel += 1;
+    } else if(a==DECELERATE) {
+        vel -= 1;
+    }
+    vel = clamp(0,velocity_n-1,vel);
+
+    // success probability
+    double prob = success_probability(pos,vel);
+
     // perform action
-    // if(a==FORWARD) {
-    //     DEBUG_OUT(1,"Rate = " << t*max_success_rate+(1-t)*min_success_rate);
-    //     if(drand48()<t*max_success_rate+(1-t)*min_success_rate) {
-    //         ss = s+1;
-    //         r = forward_reward;
-    //     } else {
-    //         ss = s;
-    //         r = fail_reward;
-    //     }
-    // } else if(a==FAST_FORWARD) {
-    //     DEBUG_OUT(1,"Rate = " << t*max_success_rate_fast+(1-t)*min_success_rate_fast);
-    //     if(drand48()<t*max_success_rate_fast+(1-t)*min_success_rate_fast) {
-    //         ss = s+1;
-    //         r = fast_forward_reward;
-    //     } else {
-    //         ss = s;
-    //         r = fail_reward;
-    //     }
-    // }
-    // // clamp to allowed states and return
-    // ss = util::clamp<int>(0,states.size()-1,ss);
-    return state_reward_pair_t(ss,r);
+    if(drand48()<prob) {
+        //---------//
+        // success //
+        //---------//
+
+        // change position
+        pos += vel;
+        pos = clamp(0,position_n-1,pos);
+
+        // give reward for moving forward
+        r = vel;
+    } else {
+        //---------//
+        // failure //
+        //---------//
+
+        // you hurt yourself (the more the faster you go)
+        r = -vel;
+
+        // falling brings velocity to zero (position stays the same)
+        vel = 0;
+    }
+
+    return state_reward_pair_t(convert_ND_to_1D_index({pos,vel},{position_n,velocity_n}),r);
 }
 
 QString DynamicTightRope::action_name(const action_t & a) const {
@@ -72,4 +80,21 @@ QString DynamicTightRope::action_name(const action_t & a) const {
 
 QString DynamicTightRope::state_name(const state_t & s) const {
     return state_names[s];
+}
+
+double DynamicTightRope::success_probability(const int & pos, const int & vel) const {
+
+    // success probabilities
+    double max_success_rate = 0.95;
+    double min_success_rate = 0.05;
+
+    // relative position on the rope -- in [0,1] linearly increasing
+    double t = ((double)pos)/(position_n-1);
+
+    // "risk" on the rope (bell-shaped) -- in [0,1] with maximum at 0.5
+    double risk = exp(-pow(2*(t-0.5),2)/0.15);
+
+    // for low velocity it's always safe but risk increases for higher
+    // velocities
+    return max_success_rate - (1-min_success_rate)*risk*vel/(velocity_n-1);
 }

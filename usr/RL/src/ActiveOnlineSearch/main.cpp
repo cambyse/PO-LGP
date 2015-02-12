@@ -4,6 +4,7 @@
 #include <set>
 #include <tuple>
 #include <unistd.h>
+#include <memory>
 
 #include <tclap/CmdLine.h>
 
@@ -13,6 +14,8 @@
 #include "SearchTree.h"
 #include "TightRope.h"
 #include "DynamicTightRope.h"
+
+#include <util/tuple_return.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -100,19 +103,45 @@ int main(int argn, char ** args) {
     if(environment_arg.getValue()=="TightRope") {
         environment.reset(new TightRope(15));
     } else if(environment_arg.getValue()=="DynamicTightRope") {
-        environment.reset(new DynamicTightRope(15));
+        environment.reset(new DynamicTightRope(30));
     } else {
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
     }
+    typedef Environment::state_t state_t;
+    typedef Environment::action_t action_t;
+    typedef Environment::reward_t reward_t;
 
     // different modes
     if(mode_arg.getValue()=="SAMPLE") {
-        repeat(sample_n_arg.getValue()) {
-            Environment::state_t state = util::random_select(environment->states);
-            Environment::action_t action = util::random_select(environment->actions);
-            auto state_reward = environment->sample(state, action);
-            cout << state << " " << action << " " << std::get<0>(state_reward) << " " << std::get<1>(state_reward) << endl;
+        cout << QString("run,time,condition,value") << endl;
+        for(int run : Range(sample_n_arg.getValue())) {
+            for(auto state_from : environment->states) {
+                int time, condition;
+                double value;
+                if(environment_arg.getValue()=="TightRope") {
+                    time = state_from;
+                    for(auto action : environment->actions) {
+                        T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        value = reward;
+                        condition = action;
+                        cout << QString("%1,%2,%3,%4").arg(run).arg(time).arg(condition).arg(value) << endl;
+                    }
+                } else if(environment_arg.getValue()=="DynamicTightRope") {
+                    auto env = std::dynamic_pointer_cast<DynamicTightRope>(environment);
+                    DEBUG_EXPECT(0,env);
+                    t(time,condition) = util::get_ND_index<2>::from(state_from,{env->position_n,env->velocity_n});
+                    value = -DBL_MAX;
+                    //value = 0;
+                    for(auto action : environment->actions) {
+                        T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        value = std::max(reward,value);
+                        //value += reward;
+                    }
+                    //value /= 3;
+                    cout << QString("%1,%2,%3,%4").arg(run).arg(time).arg(condition).arg(value) << endl;
+                }
+            }
         }
     } else if(mode_arg.getValue()=="UCT") {
         cout << "Running UCT..." << endl;
