@@ -109,7 +109,7 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
   Item *CYLIN = symbols["Cylin"];
   Item *BOARD = symbols["Board"];
   Item *DEPTH = symbols["depth"];
-  uint n = 15+rnd(50);
+  uint n = 10+rnd(20);
   double x=-1.6, y=-1.;
   for(uint i=0;i<n;i++){
     //add an object to the geometry
@@ -202,14 +202,14 @@ void coreExperiment(){
 
   ofstream fil("data/samples.dat");
   fil <<"experiment #objects MCTS_time lev1_time f_bestEnd lev2_time lev3_time" <<endl;
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<50;k++){
     ors::KinematicWorld world(world_base);
     Graph symbols(symbols_base);
 
     uint nObjects = world.bodies.N;
     generateRandomProblem(world, symbols);
     nObjects = world.bodies.N - nObjects;
-//    world.gl().watch();
+//    world .gl().watch();
 
     ors::KinematicWorld world_best;
     Graph symbols_best;
@@ -218,7 +218,7 @@ void coreExperiment(){
     double MCTS_time=0., lev1_time=0., lev2_time=0., lev3_time=0.;
 
     uint s;
-    for(s=0;s<10;s++){
+    for(s=0;s<100;s++){
       ors::KinematicWorld world_sol(world);
       Graph symbols_sol(symbols);
       MT::timerRead(true);
@@ -242,13 +242,17 @@ void coreExperiment(){
     cout <<"BEST:" <<endl;
     world_best >>FILE("z.world_best.kvg");
     symbols_best >>FILE("z.symbols_best.kvg");
-    fil <<k <<' ' <<nObjects <<' ' <<MCTS_time/s <<' ' <<lev1_time/s <<' ' <<f_best <<endl;
 
     gl.drawers(1).classP= &world_best;
+    gl.update();
 //    gl.watch();
 
-//    double f_path = optimSwitchConfigurations(world, world_best, symbols_best, 20);
-//    cout <<"f_path=" <<f_path <<endl;
+    MT::timerRead(true);
+    double f_path = optimSwitchConfigurations(world, world_best, symbols_best, 20);
+    lev2_time = MT::timerRead(true);
+    cout <<"f_path=" <<f_path <<endl;
+
+    fil <<k <<' ' <<nObjects <<' ' <<MCTS_time/s <<' ' <<lev1_time/s <<' ' <<f_best <<' ' <<lev2_time <<endl;
 
   }
 }

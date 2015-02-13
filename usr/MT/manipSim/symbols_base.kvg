@@ -19,11 +19,11 @@ Rule pap_CylinOnBoard {
      out1 { (done X) (free X) (supports Y X) }
 }
 
-#Rule pap_BoardOnCylin {
-#     X, Y
-#     (done X)! (Board X) (done Y) (free Y) (Cylin Y)
-#     out1 { (done X) (free Y)! (supports Y X) }
-#}
+Rule pap_BoardOnCylin {
+     X, Y
+     (done X)! (Board X) (done Y) (free Y) (Cylin Y)
+     out1 { (done X) (free Y)! (supports Y X) }
+}
 
 Rule pap_BoardOn2Cylin {
      X, Y, Z
@@ -31,17 +31,17 @@ Rule pap_BoardOn2Cylin {
      out1 { (done X) (free Y)! (free Z)! (supports Y X) (supports Z X) }
 }
 
-Rule pap_BoardOn2Cylin {
-     X, Y, Z, V, W
-     (done X)! (Board X)
-       (done Y) (free Y) (Cylin Y)
-       (done Z) (free Z) (Cylin Z)
-       (done V) (free V) (Cylin V)
-       (done W) (free W) (Cylin W)
-       (EQ) (depth Y) (depth Z)
-       (EQ) (depth Y) (depth V)
-       (EQ) (depth Y) (depth W)
-     out1 { (done X) (free Y)! (free Z)! (free V)! (free W)! (supports Y X) (supports Z X) (supports V X) (supports W X) }
-}
+#Rule pap_BoardOn2Cylin {
+#     X, Y, Z, V, W
+#     (done X)! (Board X)
+#       (done Y) (free Y) (Cylin Y)
+#       (done Z) (free Z) (Cylin Z)
+#       (done V) (free V) (Cylin V)
+#       (done W) (free W) (Cylin W)
+#       (EQ) (depth Y) (depth Z)
+#       (EQ) (depth Y) (depth V)
+#       (EQ) (depth Y) (depth W)
+#     out1 { (done X) (free Y)! (free Z)! (free V)! (free W)! (supports Y X) (supports Z X) (supports V X) (supports W X) }
+#}
 
 actionSequence{}

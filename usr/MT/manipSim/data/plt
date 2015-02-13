@@ -4,6 +4,7 @@ set key right bottom
 set key samplen 1
 set key nobox
 set log y
+set grid
 
 set xlabel 'number of objects'
 set ylabel 'seconds'
