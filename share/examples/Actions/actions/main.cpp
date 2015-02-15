@@ -227,17 +227,17 @@ void test_replay() {
 int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
-  // test_push();
-//   idle();
-  // idle2();
-  // return 0;
-  // test_collision();
-//  testDance();
+//  test_push();
+//  idle();
+//  idle2();
+//  return 0;
+//  test_collision();
+  testDance();
 //  testFollowTrajectory();
-//   testActionMachine();
+//  testActionMachine();
 
 //  test_record();
-  test_replay();
+//  test_replay();
 
   
   return 0;

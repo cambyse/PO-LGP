@@ -79,7 +79,7 @@ void ActionMachine::step(){
   A.writeAccess();
 
   //  cout <<"** active actions:";
-  reportActions(A());
+//  reportActions(A());
 
   //-- call the step method for each action
   for(GroundedAction *a : A()) {

@@ -19,6 +19,7 @@
 #pragma once
 
 #include "optimization.h"
+#include "opt-newton.h"
 
 extern const char* MethodName[];
 
