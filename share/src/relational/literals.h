@@ -128,6 +128,7 @@ struct SymbolicState {
   static void getArguments(uintA& args, const SymbolicState& state, const Symbol& symbol);
   static double getValue(const Symbol* s, const SymbolicState& state);
   static void getValues(arr& values, const SymbolicState& s, const Symbol& f, const uintA& constants);
+  static void getValuesIDs(arr& values, arr& indexes, const SymbolicState& s, const Symbol& f, const uintA& constants);
   static void filterState_full(SymbolicState& state_filtered, const SymbolicState& state_full, const uintA& filter_constants, bool primOnly = true);  // only "filter_constants" as args
   static void filterState_atleastOne(SymbolicState& state_filtered, const SymbolicState& state_full, const uintA& filter_constants, bool primOnly = true); // at least one in "filter_constants" as arg
   static void calcDifferences(LitL& lits_diff_1to2, LitL& lits_diff_2to1, uintA& changedConstants, const SymbolicState& state1, const SymbolicState& state2);

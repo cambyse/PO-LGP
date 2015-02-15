@@ -33,18 +33,22 @@ const char* getActionStateString(ActionState actionState);
 struct GroundedAction {
   MT::String name;
   ActionState actionState;
+  double actionTime;
 
   /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
   ActionL conflictsWith;
 
-  //-- not nice: list PDtasks that this action added to the OSC
+  //-- not nice: list of PDtasks that this action added to the OSC
   PDtaskL tasks;
 
   GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
   virtual ~GroundedAction();
 
+
   /// @name manage common functions to manage GroundedSymbols
+  /// inform the action to progress; e.g. reading off the absolute time
+  virtual void step(ActionMachine& actionMachine) {}
   /// default: always feasible
   virtual bool isFeasible(ActionMachine& actionMachine) { return true; }
   /// default: never finish
@@ -55,6 +59,8 @@ struct GroundedAction {
   virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
   /// default: always time to go //neg-log success likelihood?
   virtual double expCostToGo(ActionMachine& actionMachine) { return 0.; }
+  /// more details are reported when calling reportState
+  virtual void reportDetails(ostream& os) {}
 
   void reportState(ostream& os);
 };
@@ -85,6 +91,7 @@ struct ActionMachine : Module {
   ActionMachine();
   ~ActionMachine();
 
+  arr Kq_gainFactor, Kd_gainFactor;
   //-- user methods
 
   /** Add a sequence of actions started one after the other..

@@ -41,13 +41,25 @@ struct SetQ : GroundedAction {
 struct PushForce : GroundedAction {
   arr forceVec;
   PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
+  virtual void step(ActionMachine& M);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct FollowReferenceInTaskSpace : GroundedAction{
-  FollowReferenceInTaskSpace(const char* name, TaskMap *map, const arr& referenceTraj, double secondsPerStep);
+  arr ref;
+  double duration;
+  PDtask *task;
+  FollowReferenceInTaskSpace(ActionMachine& actionMachine, const char* name, TaskMap *map, const arr& referenceTraj, double durationInSeconds);
+  virtual void step(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
+  void reportDetails(ostream& os);
+};
+
+//===========================================================================
+struct Relax : GroundedAction{
+  Relax(ActionMachine& actionMachine, const char* name);
+  virtual void step(ActionMachine& actionMachine);
 };
 
 // TODO:

@@ -30,5 +30,8 @@ void setHomingGoals(MotionProblem& M, uint T);
 
 double keyframeOptimizer(arr& x, MotionProblem& M, bool x_is_initialized, uint verbose);
 void interpolate_trajectory(arr &q, const arr& q0, const arr& qT, uint T);
+inline arr interpolate_trajectory(const arr& q0, const arr& qT, uint T){
+  arr q; interpolate_trajectory(q, q0, qT, T); return q;
+}
 
 #endif

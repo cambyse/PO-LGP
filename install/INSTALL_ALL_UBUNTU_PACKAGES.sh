@@ -20,6 +20,7 @@ libcv-dev \
 libcvaux-dev \
 libdc1394-22-dev \
 libf2c2-dev \
+libglew-dev \
 libgtest-dev \
 libgtkglext1-dev \
 libhighgui-dev \

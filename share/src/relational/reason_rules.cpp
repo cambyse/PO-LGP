@@ -173,6 +173,7 @@ void reason::calcSuccessorState(SymbolicState& suc, const SymbolicState& pre, co
 
 double reason::sampleSuccessorState_groundRule(SymbolicState& successor, const SymbolicState& predecessor, Rule* ground_rule, uint& flag) {
   uint outcome_id = TL::basic_sample(ground_rule->probs);
+  //ground_rule->write(); cout<<endl<<endl;
   if (outcome_id == ground_rule->outcomes.N - 1) { // noise outcome
     flag = STATE_TRANSITION__NOISE_OUTCOME;
     successor = predecessor;

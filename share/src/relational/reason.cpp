@@ -632,6 +632,10 @@ void reason::dederive(SymbolicState* state) {
 
 bool reason::consistent(Literal* lit_given, Literal* lit_test) {
   uint DEBUG = 0;
+
+  //if((lit_test->s->name.p[0]=='t')&& (lit_test->args.d0>1)&&(lit_test->args(0)==77)&&(lit_test->args(1)==71))
+  //        DEBUG = 5;
+
   if (DEBUG>0) cout << "consistent [START]" << endl;
   if (DEBUG>0) {PRINT(*lit_given);  PRINT(*lit_test);}
   // special treatment for negated binary literals
@@ -659,6 +663,9 @@ bool reason::consistent(Literal* lit_given, Literal* lit_test) {
 
 bool reason::holds(const LitL& lits_given, Literal* lit_test) {
   uint DEBUG = 0;
+  //if((lit_test->s->name.p[0]=='t')&&(lit_test->args.d0>1)&&(lit_test->args(0)==77)&&(lit_test->args(1)==71))
+  //        DEBUG = 5;
+
   if (DEBUG>0) cout << "holds [START]" << endl;
   if (DEBUG>0) {PRINT(lits_given);  PRINT(*lit_test);}
   bool does_hold = false;
