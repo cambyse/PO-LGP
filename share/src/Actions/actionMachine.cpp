@@ -1,9 +1,7 @@
-#include "actions.h"
 #include "actionMachine_internal.h"
 
 #include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
-#include <Gui/opengl.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -62,7 +60,7 @@ void ActionMachine::step(){
   t++;
 
   if(!(t%10))
-    s->feedbackController.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
+    s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
   transition();
@@ -82,7 +80,7 @@ void ActionMachine::step(){
 //  reportActions(A());
 
   //-- call the step method for each action
-  for(GroundedAction *a : A()) {
+  for(Action *a : A()) {
     if(a->actionState==ActionState::active){
       a->step(*this);
       for(PDtask *t:a->tasks) t->active=true;
@@ -95,7 +93,7 @@ void ActionMachine::step(){
   //-- compute the feedback controller step
   //first collect all tasks of all actions into the feedback controller:
   s->feedbackController.tasks.clear();
-  for(GroundedAction *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
+  for(Action *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
   //now operational space control
   for(uint tt=0;tt<10;tt++){
     arr a = s->feedbackController.operationalSpaceControl();
@@ -122,10 +120,10 @@ void ActionMachine::step(){
 void ActionMachine::close(){
 }
 
-void ActionMachine::add_sequence(GroundedAction *action1,
-                                 GroundedAction *action2,
-                                 GroundedAction *action3,
-                                 GroundedAction *action4)
+void ActionMachine::add_sequence(Action *action1,
+                                 Action *action2,
+                                 Action *action3,
+                                 Action *action4)
 {
   action2->actionState = ActionState::queued;
   action2->dependsOnCompletion.append(action1);
@@ -139,7 +137,7 @@ void ActionMachine::add_sequence(GroundedAction *action1,
   }
 }
 
-void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
+void ActionMachine::removeGroundedAction(Action* a, bool hasLock){
   if(!hasLock) A.set()->removeValue(a);
   else A().removeValue(a);
   delete a;
@@ -149,21 +147,21 @@ void ActionMachine::transition(){
   A.writeAccess();
 
   //-- first remove all old successes and fails
-  for_list_rev(GroundedAction, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
+  for_list_rev(Action, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
     removeGroundedAction(a, true);
     a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
   }
 
   //-- check new successes and fails
-  for(GroundedAction *a:A()) if(a->actionState==ActionState::active){
+  for(Action *a:A()) if(a->actionState==ActionState::active){
     if(a->finishedSuccess(*this)) a->actionState=ActionState::success;
     if(a->finishedFail(*this)) a->actionState=ActionState::failed;
   }
 
   //-- progress with queued
-  for(GroundedAction *a:A()) if(a->actionState==ActionState::queued){
+  for(Action *a:A()) if(a->actionState==ActionState::queued){
     bool fail=false, succ=true;
-    for(GroundedAction *b:a->dependsOnCompletion){
+    for(Action *b:a->dependsOnCompletion){
       if(b->actionState==ActionState::failed) fail=true;
       if(b->actionState!=ActionState::success) succ=false;
     }
@@ -175,7 +173,7 @@ void ActionMachine::transition(){
   A.deAccess();
 }
 
-void ActionMachine::waitForActionCompletion(GroundedAction* a){
+void ActionMachine::waitForActionCompletion(Action* a){
   for(bool cont=true;cont;){
     A.var->waitForNextRevision();
     A.readAccess();
@@ -199,17 +197,17 @@ void ActionMachine::waitForActionCompletion() {
 // GroundedAction
 //
 
-GroundedAction::GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState)
+Action::Action(ActionMachine& actionMachine, const char* name, ActionState actionState)
   : name(name), actionState(actionState), actionTime(0.){
   actionMachine.A.set()->append(this);
 }
 
-GroundedAction::~GroundedAction(){
+Action::~Action(){
 //  for (PDtask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
   listDelete(tasks);
 }
 
-void GroundedAction::reportState(ostream& os){
+void Action::reportState(ostream& os){
   os <<"Action '" <<name
     <<"':  actionState=" << getActionStateString(actionState)
     <<"  actionTime=" << actionTime
@@ -224,5 +222,5 @@ void GroundedAction::reportState(ostream& os){
 
 void reportActions(ActionL &A){
   cout <<"** REPORT ON CURRENT STATE OF ACTIONS" <<endl;
-  for (GroundedAction *a : A) a->reportState(cout);
+  for (Action *a : A) a->reportState(cout);
 }

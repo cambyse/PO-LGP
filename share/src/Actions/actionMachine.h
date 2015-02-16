@@ -4,70 +4,7 @@
 #include <System/engine.h>
 #include <pr2/roscom.h>
 
-//===========================================================================
-struct GroundedAction;
-struct PDtask;
-struct ActionMachine;
-typedef MT::Array<GroundedAction*> ActionL;
-typedef MT::Array<PDtask*> PDtaskL;
-
-
-//===========================================================================
-//GroundedAction
-//True, False refer to state symbols, the rest to action symbols
-enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
-const char* getActionStateString(ActionState actionState);
-
-/** A GroundedAction is an instantiation/grounding of an Symbol (for example
- * a motor primitive type.
- *
- * The grounding is defined by the specific arguments: which
- * objects/body parts does the action refer to; which parameters does it have.
- * While state literals typically are binary-valued (on(A,B) is true or false);
- * action literals have a value that denotes the action state: whether it is
- * currently active, queued, failed, etc The full action state is given as
- * a list of GroundedActions.  For convenience, a grounded action can be
- * annotated by dependencies, telling the ActionMachine how to transition the
- * action state.
- */
-struct GroundedAction {
-  MT::String name;
-  ActionState actionState;
-  double actionTime;
-
-  /// @name dependence & hierarchy
-  ActionL dependsOnCompletion;
-  ActionL conflictsWith;
-
-  //-- not nice: list of PDtasks that this action added to the OSC
-  PDtaskL tasks;
-
-  GroundedAction(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
-  virtual ~GroundedAction();
-
-
-  /// @name manage common functions to manage GroundedSymbols
-  /// inform the action to progress; e.g. reading off the absolute time
-  virtual void step(ActionMachine& actionMachine) {}
-  /// default: always feasible
-  virtual bool isFeasible(ActionMachine& actionMachine) { return true; }
-  /// default: never finish
-  virtual bool finishedSuccess(ActionMachine& actionMachine) { return false; }
-  /// default: never finish
-  virtual bool finishedFail(ActionMachine& actionMachine) { return false; }
-  /// default: always time to go
-  virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
-  /// default: always time to go //neg-log success likelihood?
-  virtual double expCostToGo(ActionMachine& actionMachine) { return 0.; }
-  /// more details are reported when calling reportState
-  virtual void reportDetails(ostream& os) {}
-
-  void reportState(ostream& os);
-};
-
-//===========================================================================
-// Helper functions
-void reportActions(ActionL& A);
+#include "actions.h"
 
 //===========================================================================
 // Module System integration
@@ -99,14 +36,14 @@ struct ActionMachine : Module {
    * the previous action and are queued.
    * TODO use initilizer_list or varadic templates to allow arbitrarily many
    * actions */
-  void add_sequence(GroundedAction *action1,
-                    GroundedAction *action2,
-                    GroundedAction *action3=NULL,
-                    GroundedAction *action4=NULL);
+  void add_sequence(Action *action1,
+                    Action *action2,
+                    Action *action3=NULL,
+                    Action *action4=NULL);
 
-  void removeGroundedAction(GroundedAction* a, bool hasLock=false);
+  void removeGroundedAction(Action* a, bool hasLock=false);
   /// Block till the given action `a` is done
-  void waitForActionCompletion(GroundedAction* a);
+  void waitForActionCompletion(Action* a);
   /// Block till all actions (excluding CoreTasks) are done
   void waitForActionCompletion();
 
@@ -118,13 +55,14 @@ struct ActionMachine : Module {
   void transition();
 };
 
+//===========================================================================
+
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
-    //addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);

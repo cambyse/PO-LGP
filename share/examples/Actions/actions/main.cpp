@@ -28,7 +28,7 @@ void TEST(ActionMachine){
   
   // action =
   //     new AlignEffTo("endeffR", ARR(1, 0, 0), ARR(1, 0, 0));
-  GroundedAction* action = new PushForce(*activity.machine, "endeffR", ARR(1, 2, 3)/*, ARR(1, 4, 8)*/);
+  Action* action = new PushForce(*activity.machine, "endeffR", ARR(1, 2, 3)/*, ARR(1, 4, 8)*/);
   activity.machine->waitForActionCompletion(action);
   
   // MT::wait(2);
@@ -41,7 +41,7 @@ void TEST(ActionMachine){
   engine().close(activity);
 }
 
-//===========================================================================
+//===============================================home============================
 // do some sequential hand movements
 
 void TEST(Dance) {
@@ -49,14 +49,14 @@ void TEST(Dance) {
   new CoreTasks(*activity.machine);
   engine().open(activity);
   
-  for(int i = 0; i < 5; ++i) {
-    GroundedAction* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.5, 1.2});
-    GroundedAction* a_left = new MoveEffTo(*activity.machine, "endeffL", {.6, .6, 1.2});
+  for(int i = 0; i < 2; ++i) {
+    Action* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.5, 1.2});
+    Action* a_left = new MoveEffTo(*activity.machine, "endeffL", {.6, .6, 1.2});
     activity.machine->waitForActionCompletion(a_left);
     activity.machine->waitForActionCompletion(a_right);
     
-    GroundedAction* a_right2 = new MoveEffTo(*activity.machine, "endeffR", {.3, -.7, 1.0});
-    GroundedAction* a_left2 = new MoveEffTo(*activity.machine, "endeffL", {.3, .7, 1.0});
+    Action* a_right2 = new MoveEffTo(*activity.machine, "endeffR", {.3, -.7, 1.0});
+    Action* a_left2 = new MoveEffTo(*activity.machine, "endeffL", {.3, .7, 1.0});
     activity.machine->waitForActionCompletion(a_left2);
     activity.machine->waitForActionCompletion(a_right2);
   }
@@ -80,7 +80,7 @@ void TEST(FollowTrajectory) {
   TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
 
   // then the action
-  GroundedAction *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
+  Action *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
 
   cout <<"I'm here...waiting" <<endl;
   MT::wait(7.);
@@ -94,11 +94,11 @@ void test_push() {
   new CoreTasks(*activity.machine);
   engine().open(activity);
   
-  GroundedAction* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.3, 1});
+  Action* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.3, 1});
   activity.machine->waitForActionCompletion(a_right);
   cout << "waiting" << endl;
   MT::wait(3);
-  GroundedAction* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
+  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
   activity.machine->waitForActionCompletion(push);
   
   engine().close(activity);
@@ -110,8 +110,8 @@ void idle() {
   new CoreTasks(*activity.machine);
   engine().open(activity);
   
-  GroundedAction* right = new MoveEffTo(*activity.machine, "endeffR", {.95, -.2, .9});
-  GroundedAction* left = new MoveEffTo(*activity.machine, "endeffL", {.95, .2, .9});
+  Action* right = new MoveEffTo(*activity.machine, "endeffR", {.95, -.2, .9});
+  Action* left = new MoveEffTo(*activity.machine, "endeffL", {.95, .2, .9});
   activity.machine->waitForActionCompletion(right);
   activity.machine->waitForActionCompletion(left);
   
@@ -163,10 +163,10 @@ void idle2() {
 //===========================================================================
 void test_record() {
   ActionSystem activity;
-  GroundedAction *core = new CoreTasks(*activity.machine);
+  Action *core = new CoreTasks(*activity.machine);
   engine().open(activity);
 
-  GroundedAction *t = new Relax(*activity.machine, "relax");
+  Action *t = new Relax(*activity.machine, "relax");
   core->actionState = inactive;
   activity.machine->s->feedbackController.useSwift=false;
   activity.ctrl_obs.waitForNextRevision();
@@ -199,7 +199,7 @@ void test_record() {
 //===========================================================================
 void test_replay() {
   ActionSystem activity;
-  GroundedAction *core = new CoreTasks(*activity.machine);
+  Action *core = new CoreTasks(*activity.machine);
   engine().open(activity);
 
   arr trajX;
@@ -209,13 +209,13 @@ void test_replay() {
   arr x0 = trajX[0];
   cout << x0 << endl;
   cout <<"Goto init position" <<endl;
-  GroundedAction* right = new MoveEffTo(*activity.machine, "endeffR", x0);
+  Action* right = new MoveEffTo(*activity.machine, "endeffR", x0);
   activity.machine->waitForActionCompletion(right);
   MT::wait(3.);
 
   // 2. execute trajectory
   TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
-  GroundedAction *a = new FollowReferenceInTaskSpace(*activity.machine, "replay task", t, trajX, 10.);
+  Action *a = new FollowReferenceInTaskSpace(*activity.machine, "replay task", t, trajX, 10.);
   cout <<"Execute trajectory" <<endl;
   MT::wait(10.);
 

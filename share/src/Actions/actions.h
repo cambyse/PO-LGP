@@ -1,44 +1,111 @@
-#include "actionMachine_internal.h"
+#pragma once
 
-/** @file This file contains implementations of GroundedActions.  */
+#include <Core/array.h>
+#include <Motion/taskMaps.h>
+
+/** @file This file contains implementations of Actions.  */
 
 //===========================================================================
-struct CoreTasks : GroundedAction {
+struct Action;
+struct PDtask;
+struct ActionMachine;
+typedef MT::Array<Action*> ActionL;
+typedef MT::Array<PDtask*> PDtaskL;
+
+
+//===========================================================================
+// Action
+// True, False refer to state symbols, the rest to action symbols
+enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
+const char* getActionStateString(ActionState actionState);
+
+/** A GroundedAction is an instantiation/grounding of an Symbol (for example
+ * a motor primitive type.
+ *
+ * The grounding is defined by the specific arguments: which
+ * objects/body parts does the action refer to; which parameters does it have.
+ * While state literals typically are binary-valued (on(A,B) is true or false);
+ * action literals have a value that denotes the action state: whether it is
+ * currently active, queued, failed, etc The full action state is given as
+ * a list of GroundedActions.  For convenience, a grounded action can be
+ * annotated by dependencies, telling the ActionMachine how to transition the
+ * action state.
+ */
+struct Action {
+  MT::String name;
+  ActionState actionState;
+  double actionTime;
+
+  /// @name dependence & hierarchy
+  ActionL dependsOnCompletion;
+
+  //-- not nice: list of PDtasks that this action added to the OSC
+  PDtaskL tasks;
+
+  Action(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
+  virtual ~Action();
+
+
+  /// @name manage common functions to manage GroundedSymbols
+  /// inform the action to progress; e.g. reading off the absolute time
+  virtual void step(ActionMachine& actionMachine) {}
+  /// default: always feasible
+  virtual bool isFeasible(ActionMachine& actionMachine) { return true; }
+  /// default: never finish
+  virtual bool finishedSuccess(ActionMachine& actionMachine) { return false; }
+  /// default: never finish
+  virtual bool finishedFail(ActionMachine& actionMachine) { return false; }
+  /// default: always time to go
+  virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
+  /// default: always time to go //neg-log success likelihood?
+  virtual double expCostToGo(ActionMachine& actionMachine) { return 0.; }
+  /// more details are reported when calling reportState
+  virtual void reportDetails(ostream& os) {}
+
+  void reportState(ostream& os);
+};
+
+//===========================================================================
+// Helper functions
+void reportActions(ActionL& A);
+
+//===========================================================================
+struct CoreTasks : Action {
   CoreTasks(ActionMachine& actionMachine);
 };
 
 //===========================================================================
-struct MoveEffTo : GroundedAction {
+struct MoveEffTo : Action {
   MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
-struct PoseTo : GroundedAction {
+struct PoseTo : Action {
   PoseTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget, const arr& orientationTarget);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
-struct AlignEffTo : GroundedAction {
+struct AlignEffTo : Action {
   AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effVector, const arr& alignPos);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
-struct OrientationQuat : GroundedAction {
+struct OrientationQuat : Action {
   OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientation);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
-struct SetQ : GroundedAction {
+struct SetQ : Action {
   SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
-struct PushForce : GroundedAction {
+struct PushForce : Action {
   arr forceVec;
   PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
   virtual void step(ActionMachine& M);
@@ -46,7 +113,7 @@ struct PushForce : GroundedAction {
 };
 
 //===========================================================================
-struct FollowReferenceInTaskSpace : GroundedAction{
+struct FollowReferenceInTaskSpace : Action{
   arr ref;
   double duration;
   PDtask *task;
@@ -57,7 +124,7 @@ struct FollowReferenceInTaskSpace : GroundedAction{
 };
 
 //===========================================================================
-struct Relax : GroundedAction{
+struct Relax : Action{
   Relax(ActionMachine& actionMachine, const char* name);
   virtual void step(ActionMachine& actionMachine);
 };
