@@ -17,4 +17,4 @@ roslaunch startPR2sim.launch
 rosrun pr2_controller_manager pr2_controller_manager list
 rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller l_arm_controller head_traj_controller r_gripper_controller l_gripper_controller torso_controller
 
-roslaunch marc_rt_controller.launch
+roslaunch marc_rt_controller.launch &
