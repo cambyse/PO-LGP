@@ -61,7 +61,7 @@ void ors::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint 
 }
 
 #else //extern_Lewiner
-void ors::Mesh::setImplicitSurface(ScalarFunction& f, double lo, double hi, uint res) {
+void ors::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint res) {
   NICO
 }
 #endif
