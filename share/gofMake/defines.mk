@@ -6,7 +6,6 @@
 # (a tag like `FREEGLUT = 1' can be defined in the make-config as needed)
 
 ARCH = $(shell uname -m)
-ROS_VERSION = indigo
 
 ifeq ($(OPENMP),1)
 CXXFLAGS += -fopenmp -DOPENMP
