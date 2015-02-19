@@ -31,14 +31,15 @@ void TEST(LoadSave){
 //
 
 void TEST(Kinematics){
+
   struct MyFct:VectorFunction{
     enum Mode {Pos, Vec, Quat, RelPos, RelVec} mode;
     ors::KinematicWorld& W;
     ors::Body *b, *b2;
-    ors::Vector& vec, &vec2;
+    ors::Vector &vec, &vec2;
     MyFct(Mode _mode, ors::KinematicWorld &_W,
           ors::Body *_b, ors::Vector &_vec, ors::Body *_b2, ors::Vector &_vec2)
-      : mode(_mode), W(_W), b(_b), vec(_vec), b2(_b2), vec2(_vec2){
+      : mode(_mode), W(_W), b(_b), b2(_b2), vec(_vec), vec2(_vec2){
       VectorFunction::operator= ( [this](arr& y, arr& J, const arr& x) -> void{
         W.setJointState(x);
         switch(mode){
@@ -517,9 +518,8 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
-  testLoadSave();
   testKinematics();
-  //  return 0;
+  testLoadSave();
   testCopy();
   testPlayStateSequence();
   testQuaternionKinematics();

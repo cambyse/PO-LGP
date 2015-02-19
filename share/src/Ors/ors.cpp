@@ -122,10 +122,11 @@ void ors::Body::parseAts(KinematicWorld& G) {
   }
 
   type=dynamicBT;
-  if(ats.getValue<bool>("fixed"))      type=staticBT;
-  if(ats.getValue<bool>("static"))     type=staticBT;
-  if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
-  
+  if(ats.getValue<bool>("fixed"))       type=staticBT;
+  if(ats.getValue<bool>("static"))      type=staticBT;
+  if(ats.getValue<bool>("kinematic"))   type=kinematicBT;
+  if(ats.getValue<double>(d,"dyntype")) type=(BodyType)d;
+
   // SHAPE handling
   Item* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
@@ -161,14 +162,14 @@ void ors::Body::parseAts(KinematicWorld& G) {
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
-  Item *it=ats["type"]; if(it) ats.removeValue(it);
+  Item *it=ats["type"]; if(it){ delete it; /*ats.removeValue(it);*/ ats.index(); }
   //  listDelete(ats);
 }
 
 void ors::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   if(mass) os <<"mass=" <<mass <<' ';
-  if(type!=dynamicBT) os <<"type=" <<(int)type <<' ';
+  if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
 //  uint i; Item *a;
 //  for_list(Type,  a,  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
@@ -277,7 +278,7 @@ void ors::Shape::parseAts() {
     Vector c = mesh.center();
     if(!ats.getValue<bool>("rel_includes_mesh_center")){
       rel.addRelativeTranslation(c);
-      ats.append<bool>("rel_includes_mesh_center",new bool(true));
+      ats.append<bool>("rel_includes_mesh_center",new bool(true), true);
     }
     mesh_radius = mesh.getRadius();
   }
@@ -315,9 +316,10 @@ void ors::Shape::reset() {
 
 void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
+  os <<"size=[" <<size[0] <<' '<<size[1] <<' '<<size[2] <<' '<<size[3] <<"] ";
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
   for_list(Item, a, ats)
-  if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
+  if(a->keys(0)!="rel" && a->keys(0)!="type" && a->keys(0)!="size") os <<*a <<' ';
 }
 
 void ors::Shape::read(std::istream& is) {
@@ -334,6 +336,13 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
     if(!s) HALT("shape name '"<<names(i)<<"' doesn't exist");
     I(i) = s->index;
   }
+  return I;
+}
+
+uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes) {
+  uintA I;
+  resizeAs(I, shapes);
+  for(uint i=0; i<shapes.N; i++) I.elem(i) = shapes.elem(i)->index;
   return I;
 }
 
@@ -363,22 +372,27 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
   : world(G), index(0), qIndex(UINT_MAX), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
-  index=G.joints.N;
-  G.joints.append(this);
+  index=world.joints.N;
+  world.joints.append(this);
   f->outLinks.append(this);
   t-> inLinks.append(this);
-  G.qdim.clear();
+  world.q.clear();
+  world.qdot.clear();
+  world.qdim.clear();
 }
 
 ors::Joint::~Joint() {
-  reset();
   world.checkConsistency();
+  reset();
   if(from){ from->outLinks.removeValue(this); listReindex(from->outLinks); }
   if(to){   to->inLinks.removeValue(this); listReindex(to->inLinks); }
   world.joints.removeValue(this);
   listReindex(world.joints);
+  world.q.clear();
+  world.qdot.clear();
   world.qdim.clear();
 }
+
 void ors::Joint::reset() { 
   listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
   locker=NULL;
@@ -419,11 +433,11 @@ void ors::Joint::parseAts() {
   //limit
   arr ctrl_limits;
   ats.getValue<arr>(limits, "limits");
-  if(limits.N){
+  if(limits.N && type!=JT_fixed){
     CHECK_EQ(limits.N,2*qDim(), "parsed limits have wrong dimension");
   }
   ats.getValue<arr>(ctrl_limits, "ctrl_limits");
-  if(ctrl_limits.N){
+  if(ctrl_limits.N && type!=JT_fixed){
     if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
     CHECK_EQ(limits.N,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
     limits.append(ctrl_limits);
@@ -530,8 +544,10 @@ void ors::KinematicWorld::clear() {
 }
 
 void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
+  clear();
   q = G.q;
   qdot = G.qdot;
+  qdim = G.qdim;
   q_agent = G.q_agent;
   isLinkTree = G.isLinkTree;
 #if 1
@@ -768,6 +784,26 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   return qdim(agent);
 }
 
+void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot) const {
+  if(!qdim.N || q.N!=getJointStateDimension()){
+    getJointStateDimension();
+    ((KinematicWorld*)this)->calc_q_from_Q();
+  }
+  _q=q;
+  if(&_qdot){
+    _qdot=qdot;
+    if(!_qdot.N) _qdot.resizeAs(q).setZero();
+  }
+}
+
+arr ors::KinematicWorld::getJointState() const {
+  if(!qdim.N || q.N!=getJointStateDimension()){
+    getJointStateDimension();
+    ((KinematicWorld*)this)->calc_q_from_Q();
+  }
+  return q;
+}
+
 /** @brief returns the vector of joint limts */
 arr ors::KinematicWorld::getLimits() const {
   uint N=getJointStateDimension();
@@ -804,7 +840,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
   
   uint N=getJointStateDimension();
   q.resize(N);
-  qdot.resize(N);
+  qdot.resize(N).setZero();
 
   uint n=0;
   for(Joint *j: joints) if(j->agent==q_agent){
@@ -1037,7 +1073,12 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
 void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
-  if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
+  if(!b){
+    MT_MSG("WARNING: calling kinematics for NULL body");
+    y.resize(3).setZero();
+    if(&J) J.resize(3, getJointStateDimension()).setZero();
+    return;
+  }
 
   //get position
   ors::Vector pos_world = b->X.pos;
@@ -1074,7 +1115,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
           if(j->mimic) NIY;
           arr R = j->X.rot.getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
-          ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->Q.pos));
+          ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->X.rot*j->Q.pos));
           J(0, j_idx+2) += tmp.x;
           J(1, j_idx+2) += tmp.y;
           J(2, j_idx+2) += tmp.z;
@@ -1634,6 +1675,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
+  G.checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
   
   clear();
@@ -1760,9 +1802,10 @@ end_header\n";
 }
 
 /// dump the list of current proximities on the screen
-void ors::KinematicWorld::reportProxies(std::ostream *os) {
+void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for_list(Proxy, p, proxies) {
+    if(belowMargin>0. && p->d>belowMargin) continue;
     ors::Shape *a = shapes(p->a);
     ors::Shape *b = shapes(p->b);
     (*os)
@@ -1960,11 +2003,15 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
     if(useCenterDist && d2>0.){
       arel=a->X.rot/(p->cenA-a->X.pos);
       brel=b->X.rot/(p->cenB-b->X.pos);
-      CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
-      arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
+//      CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
+      if(!p->cenN.isNormalized()){
+        MT_MSG("proxy->cenN is not normalized: objects seem to be at exactly the same place");
+      }else{
+        arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
         
-      kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d1/ab_radius*(normal*Jpos);
-      kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d1/ab_radius*(normal*Jpos);
+      }
     }
   }
 }
@@ -1973,17 +2020,15 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
 void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1).setZero();
   if(&J) J.resize(1, getJointStateDimension()).setZero();
-  for(uint i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
-    kinematicsProxyCost(y, J, proxies(i), margin, useCenterDist, true);
+  for(Proxy *p:proxies) if(p->d<margin) {
+    kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
   }
 }
 
-void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin, bool addValues) const {
-  g.resize(1);
-  if(&J) J.resize(1, getJointStateDimension());
-  if(!addValues){ g.setZero();  if(&J) J.setZero(); }
+void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin) const {
+  if(&J) J.resize(1, getJointStateDimension()).setZero();
 
-  g(0) += margin - p->d;
+  g.resize(1) = margin - p->d;
 
   //Jacobian
   if(&J){
@@ -2118,16 +2163,28 @@ void ors::KinematicWorld::removeUselessBodies() {
   //-- reindex
   listReindex(bodies);
   listReindex(joints);
+  checkConsistency();
 //  for_list(Joint, j, joints) j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 //  for(Shape *s: shapes) s->ibody = s->body->index;
   //-- clear all previous index related things
   qdim.clear();
-  q.clear();
-  qdot.clear();
   proxies.clear();
+  calc_q_from_Q();
 }
 
 bool ors::KinematicWorld::checkConsistency(){
+  if(qdim.N){
+    uint N=getJointStateDimension();
+    CHECK_EQ(N, q.N, "");
+//    CHECK_EQ(N, qdot.N, "");
+    uint n=0;
+    for(Joint *j: joints){
+      if(j->mimic) continue; //don't count dependent joints
+      CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
+      n += j->qDim();
+    }
+    CHECK_EQ(n,N,"");
+  }
   for(Body *b: bodies){
     CHECK(&b->world, "");
     CHECK(&b->world==this,"");
@@ -2178,6 +2235,9 @@ void ors::KinematicWorld::meldFixedJoints() {
     a->inertia += b->inertia;
     b->mass = 0.;
   }
+  qdim.clear();
+  proxies.clear();
+  calc_q_from_Q();
   checkConsistency();
   //-- remove fixed joints and reindex
   for_list_rev(Joint, jj, joints) if(jj->type==JT_fixed) delete jj;
@@ -2201,8 +2261,15 @@ void ors::GraphOperator::apply(KinematicWorld& G){
     return;
   }
   if(symbol==addRigid){
+//    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from, to);
-//    j->A.setDifference(from->X, to->X);
+
+    // Keep Object Orientation
+//    Transformation A = from->X;
+  //  Transformation B = to->X;
+    //A.pos *= 0.;
+   // B.pos *= 0.;
+   // j->A.setDifference(A, B);
     j->type=JT_fixed;
 //    j->agent=1;
     G.isLinkTree=false;

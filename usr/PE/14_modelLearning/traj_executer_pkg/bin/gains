@@ -1,0 +1,5 @@
+# low gains
+rosservice call /tree_rt_controller/set_joint_gains -- [150.0,150.0,30.,40.,30.,30.,20.] [30.0,30.0,8.,8.,8.,8.,6.] 0.99
+
+# high gains
+rosservice call /tree_rt_controller/set_joint_gains -- [250.0,350.0,200.,200.,150.,100.,100.] [30.0,30.0,4.,5.,3.,1.,1.] 0.95

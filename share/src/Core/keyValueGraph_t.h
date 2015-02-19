@@ -41,27 +41,47 @@ template <typename B, typename D> struct MLR_is_base_of {
 template<class T>
 struct Item_typed:Item {
   T *value;
-  
-  Item_typed():value(NULL) {}
+  bool ownsValue;
+
+  Item_typed():value(NULL), ownsValue(false) { HALT("shouldn't be called, right? Always want to append to container"); }
 
   /// directly store pointer to value
-  Item_typed(KeyValueGraph& container, T *_value):Item(container), value(_value) {}
+  Item_typed(KeyValueGraph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
+    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
+  }
 
   /// directly store pointer to value
-  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, T *_value=NULL)
-    : Item(container, parents), value(_value) {
+  Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, T *value, bool ownsValue)
+    : Item(container, parents), value(value), ownsValue(ownsValue) {
+    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     keys=_keys;
   }
 
   /// copy value
   Item_typed(KeyValueGraph& container, const StringA& _keys, const ItemL& parents, const T& _value)
-    : Item(container, parents), value(NULL) {
+    : Item(container, parents), value(NULL), ownsValue(true) {
     value = new T(_value);
     keys=_keys;
   }
 
+  virtual ~Item_typed(){
+    if(ownsValue) delete value;
+  }
+
   virtual bool hasValue() const {
     return value!=NULL;
+  }
+
+  virtual void *getValueDirectly() const {
+    return (void*)value;
+  }
+
+  virtual void copyValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    CHECK(itt->value,"can't assign to nothing");
+    if(value) delete value;
+    value = new T(*itt->value);
   }
 
   virtual void takeoverValue(Item *it) {
@@ -71,6 +91,13 @@ struct Item_typed:Item {
     if(value) delete value;
     value = itt->value;
     itt->value = NULL;
+  }
+
+  virtual bool hasEqualValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    if(!itt->value || !value) return false;
+    return memcmp(itt->value, value, sizeof(T))==0;
   }
 
   virtual void writeValue(std::ostream &os) const {
@@ -86,7 +113,10 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone(KeyValueGraph& container) const { return new Item_typed<T>(container, keys, parents, value); }
+  virtual Item *newClone(KeyValueGraph& container) const {
+    if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL, false);
+    return new Item_typed<T>(container, keys, parents, new T(*value), true);
+  }
 };
 
 template<class T> T *Item::getValue() {
@@ -145,12 +175,12 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   return ret;
 }
 
-template<class T> Item *KeyValueGraph::append(T *x) {
-  return new Item_typed<T>(*this, x, NULL);
+template<class T> Item *KeyValueGraph::append(T *x, bool ownsValue) {
+  return new Item_typed<T>(*this, x, ownsValue);
 }
 
-template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
-  return new Item_typed<T>(*this, keys, parents, x);
+template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
+  return new Item_typed<T>(*this, keys, parents, x, ownsValue);
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {

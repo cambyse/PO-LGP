@@ -1,0 +1,18 @@
+set key autotitle columnhead
+set key right bottom
+
+set key samplen 1
+set key nobox
+set log y
+set grid
+
+set xlabel 'number of objects'
+set ylabel 'seconds'
+plot 'samples.datall'\
+ us 2:3 lw 2 t 'time for single MCTS rollout',\
+ '' us 2:4 lw 2 t 'time for single end space optimization'
+
+set terminal pdfcairo size 4,2
+set output "times.pdf"
+replot
+set terminal x11

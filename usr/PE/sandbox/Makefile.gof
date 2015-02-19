@@ -1,0 +1,5 @@
+BASE = ../../../share
+
+DEPEND = Motion Core Ors Gui Optim Perception
+
+include $(BASE)/gofMake/generic.mk

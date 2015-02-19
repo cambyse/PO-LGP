@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2014 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -157,15 +157,15 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
       Jaux->nextInSum = Jz; //this is crucial: the returned J contains a quite hidden link to Jz
     }
   }
-  tt.resize(dim_phi).setZero();
+  if(&tt) tt.resize(dim_phi).setZero();
 
   //loop over time t
   uint M=0;
   for(uint t=0; t<=T; t++) {
     uint dimphi_t = f.dim_phi(t);
-    uint dimg_t   = f.dim_g(t);
-    uint dimh_t   = f.dim_h(t);
-    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
+//    uint dimg_t   = f.dim_g(t);
+//    uint dimh_t   = f.dim_h(t);
+//    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
     if(!dimphi_t) continue;
 
     //construct x_bar
@@ -193,7 +193,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
     f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t, x_bar);
     CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
-    tt.setVectorBlock(tt_t, M);
+    if(&tt) tt.setVectorBlock(tt_t, M);
 
     //if the jacobian is returned
     if(&J) {
@@ -538,18 +538,19 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
     uint dimf_t   = dimphi_t - dimg_t - dimh_t;
 
     //split up: push cost terms into y
-    y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
-    if(getJ) {
-      Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
-      for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
-      if(dimz){
-        Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
-        for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+    if (dimf_t) {
+      y.setVectorBlock(phi.subRange(M, M+dimf_t-1), y_count);
+      if(getJ) {
+        Jy.setMatrixBlock(J.subRange(M, M+dimf_t-1), y_count, 0);
+        for(uint i=0; i<dimf_t; i++) Jy_aux->rowShift(y_count+i) = J_aux->rowShift(M+i);
+        if(dimz){
+          Jyz->setMatrixBlock(Jz->subRange(M, M+dimf_t-1), y_count, 0);
+          for(uint i=0; i<dimf_t; i++) Jyz_aux->rowShift(y_count+i) = Jz_aux->rowShift(M+i);
+        }
       }
+      M += dimf_t;
+      y_count += dimf_t;
     }
-    M += dimf_t;
-    y_count += dimf_t;
-
     //split up: push inequality terms into g
     if(&g && dimg_t) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
     if(&Jg && dimg_t) {

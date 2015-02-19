@@ -28,8 +28,8 @@ struct TransitionTaskMap:TaskMap {
   double velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
   arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
   TransitionTaskMap(const ors::KinematicWorld& G);
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G){ HALT("can only be of higher order"); }
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
   virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
 };
 
@@ -39,6 +39,9 @@ enum DefaultTaskMapType {
   posTMT,     ///< 3D position of reference
   vecTMT,     ///< 3D vec (orientation)
   quatTMT,    ///< 4D quaterion
+  posDiffTMT, ///< the difference of two positions (NOT the relative position)
+  vecDiffTMT, ///< the difference of two vectors (NOT the relative position)
+  quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
   vecAlignTMT ///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
 };
 
@@ -46,6 +49,7 @@ struct DefaultTaskMap:TaskMap {
   DefaultTaskMapType type;
   int i, j;               ///< which shapes does it refer to?
   ors::Vector ivec, jvec; ///< additional position or vector
+  intA referenceIds; ///< the shapes it refers to DEPENDENT on time
 
   DefaultTaskMap(DefaultTaskMapType type,
                  int iShape=-1, const ors::Vector& ivec=NoVector,
@@ -55,7 +59,7 @@ struct DefaultTaskMap:TaskMap {
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
 
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
 };
 
@@ -65,7 +69,7 @@ struct TaskMap_qItself:TaskMap {
   arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
   TaskMap_qItself(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; } ///< The singleQ parameter generates a matrix M that picks out a single q value
   TaskMap_qItself(const arr& _M=NoArr){ if(&_M) M=_M; }                     ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
 };
 
@@ -74,7 +78,7 @@ struct TaskMap_qItself:TaskMap {
 struct TaskMap_qLimits:TaskMap {
   arr limits;
   TaskMap_qLimits(const arr& _limits=NoArr){ if(&_limits) limits=_limits; } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
@@ -83,13 +87,15 @@ struct TaskMap_qLimits:TaskMap {
 enum PTMtype {
   allPTMT, //phi=sum over all proxies (as is standard)
   listedVsListedPTMT, //phi=sum over all proxies between listed shapes
-  allVersusListedPTMT, //phi=sum over all proxies between listed shapes
+  allVsListedPTMT, //phi=sum over all proxies against listed shapes
   allExceptListedPTMT, //as above, but excluding listed shapes
   bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
   pairsPTMT, //sum over proxies of explicitly listed pairs (shapes is n-times-2)
   allExceptPairsPTMT, //sum excluding these pairs
   vectorPTMT //vector of all pair proxies (this is the only case where dim(phi)>1)
 };
+
+//===========================================================================
 
 /// Proxy task variable
 struct ProxyTaskMap:TaskMap {
@@ -103,11 +109,11 @@ struct ProxyTaskMap:TaskMap {
   ProxyTaskMap(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
-               bool _useCenterDist=true,
+               bool _useCenterDist=false,
                bool _useDistNotCost=false);
   virtual ~ProxyTaskMap() {};
   
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
 };
 
@@ -116,7 +122,20 @@ struct ProxyTaskMap:TaskMap {
 struct CollisionConstraint:TaskMap {
   double margin;
   CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
+struct ProxyConstraint:TaskMap {
+  ProxyTaskMap proxyCosts;
+  ProxyConstraint(PTMtype _type,
+                  uintA _shapes,
+                  double _margin=.02,
+                  bool _useCenterDist=false,
+                  bool _useDistNotCost=false);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
@@ -133,17 +152,21 @@ struct LimitsConstraint:TaskMap {
 //===========================================================================
 
 struct PairCollisionConstraint:TaskMap {
-  int i;       ///< which shapes does it refer to?
-  int j;       ///< which shapes does it refer to?
+  int i,j;       ///< which shapes does it refer to?
   double margin;
-  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName)
+  intA referenceIds; ///< the shapes it refers to DEPENDENT on time
+  PairCollisionConstraint(double _margin)
+    : i(-1), j(-1), margin(_margin){
+    type=ineqTT;
+  }
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin)
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
-      margin(.02) {
+      margin(_margin) {
     type=ineqTT;
   }
 
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
@@ -180,7 +203,6 @@ struct PointEqualityConstraint:TaskMap {
   int i, j;               ///< which shapes does it refer to?
   ors::Vector ivec, jvec; ///< additional position or vector
 
-
   PointEqualityConstraint(const ors::KinematicWorld &G,
                           const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
                           const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector){
@@ -196,4 +218,55 @@ struct PointEqualityConstraint:TaskMap {
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
 };
 
+//===========================================================================
 
+struct ContactEqualityConstraint:TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  double margin;
+  ContactEqualityConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName,double _margin)
+    : i(G.getShapeByName(iShapeName)->index),
+      j(G.getShapeByName(jShapeName)->index),
+      margin(_margin) {
+    type=eqTT;
+  }
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){
+    return 1;
+  }
+};
+
+//===========================================================================
+
+struct VelAlignConstraint:TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  ors::Vector ivec, jvec; ///< additional position or vector
+  double target;
+
+  double margin;
+  VelAlignConstraint(const ors::KinematicWorld& G,
+                     const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
+                     const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector, double _target = 0.);
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) { } ;
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
+struct qItselfConstraint:TaskMap {
+  arr M;
+
+  qItselfConstraint(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; type=eqTT; }
+  qItselfConstraint(const arr& _M=NoArr){ if(&_M) M=_M; type=eqTT;}
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){
+    if(M.nd==2) return M.d0;
+    return G.getJointStateDimension();
+  }
+};
+
+//===========================================================================

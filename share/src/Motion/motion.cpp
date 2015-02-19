@@ -26,12 +26,12 @@
 
 //===========================================================================
 
-void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
+void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   CHECK(G.N>=order+1,"I need at least " <<order+1 <<" configurations to evaluate");
   uint k=order;
   if(k==0){// basic case: order=0
     arr J_bar;
-    phi(y, (&J?J_bar:NoArr), *G.last());
+    phi(y, (&J?J_bar:NoArr), *G.last(), t);
     if(&J){
       J = zeros(G.N, y.N, J_bar.d1);
       J[G.N-1]() = J_bar;
@@ -47,15 +47,15 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
   J_bar.resize(k+1);
   //-- read out the task variable from the k+1 configurations
   for(uint i=0;i<=k;i++)
-    phi(y_bar(i), (&J?J_bar(i):NoArr), *G(G.N-1-i));
-  if(k==1)  y = (y_bar(1)-y_bar(0))/tau; //penalize velocity
-  if(k==2)  y = (y_bar(2)-2.*y_bar(1)+y_bar(0))/tau2; //penalize acceleration
-  if(k==3)  y = (y_bar(3)-3.*y_bar(2)+3.*y_bar(1)-y_bar(0))/tau3; //penalize jerk
+    phi(y_bar(i), (&J?J_bar(i):NoArr), *G(G.N-1-i), t-i);
+  if(k==1)  y = (y_bar(0)-y_bar(1))/tau; //penalize velocity
+  if(k==2)  y = (y_bar(0)-2.*y_bar(1)+y_bar(2))/tau2; //penalize acceleration
+  if(k==3)  y = (y_bar(0)-3.*y_bar(1)+3.*y_bar(2)-y_bar(3))/tau3; //penalize jerk
   if(&J) {
     J = zeros(G.N, y.N, J_bar(0).d1);
-    if(k==1){ J[G.N-1-1]() = J_bar(1);  J[G.N-1-0]() = -J_bar(0);  J/=tau; }
-    if(k==2){ J[G.N-1-2]() = J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
-    if(k==3){ J[G.N-1-3]() = J_bar(3);  J[G.N-1-2]() = -3.*J_bar(2);  J[G.N-1-1]() = +3.*J_bar(1);  J[G.N-1-0]() = -1.*J_bar(0);  J/=tau3; }
+    if(k==1){ J[G.N-1-1]() = -J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau; }
+    if(k==2){ J[G.N-1-2]() =  J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
+    if(k==3){ J[G.N-1-3]() = -J_bar(3);  J[G.N-1-2]() =  3.*J_bar(2);  J[G.N-1-1]() = -3.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau3; }
     arr tmp(J);
     tensorPermutation(J, tmp, TUP(1,0,2));
     J.reshape(y.N, G.N*J_bar(0).d1);
@@ -214,13 +214,13 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   bool ineqHold=true;
   if(&tt){ //append all terms in mixed fashion
     for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
       if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       //linear transform (target shift)
       if(c->map.type==sumOfSqrTT){
         if(c->target.N==1) y -= c->target(0);
         else if(c->target.nd==1) y -= c->target;
-        else y -= c->target[t];
+        else if(c->target.nd==2) y -= c->target[t];
         y *= sqrt(c->prec(t));
         if(&J) Jy *= sqrt(c->prec(t));
       }
@@ -232,7 +232,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   }else{ //append tasks sorted in blocks for costs, ineq, eq
     //-- append task costs
     for(Task *c: taskCosts) if(c->map.type==sumOfSqrTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
       if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       if(c->target.N==1) y -= c->target(0);
       else if(c->target.nd==1) y -= c->target;
@@ -242,14 +242,14 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
     }
     //-- append ineq constraints
     for(Task *c: taskCosts) if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau);
-      phi.append(y);
-      if(&J) J.append(Jy);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
+      phi.append(c->prec(t)*y);
+      if(&J) J.append(c->prec(t)*Jy);
       if(max(y)>0.) ineqHold=false;
     }
     //-- append eq constraints
     for(Task *c: taskCosts) if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
       phi.append(c->prec(t)*y);
       if(&J) J.append(c->prec(t)*Jy);
       if(fabs(max(y))>1e-10) ineqHold=false;
@@ -543,6 +543,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
     for(uint i=0;i<=k;i++){
       if(t+i>=k && op->timeOfApplication==t-k+i){
         op->apply(*configurations(i));
+        if(MP.useSwift) configurations(i)->swift().initActivations(*configurations(i));
       }
     }
   }

@@ -47,15 +47,22 @@ struct Item {
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
+  bool matches(const char *key);
+  bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
   KeyValueGraph ParentOf();
+  //-- specific standard values TODO: make return pointer!
+  KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
-  virtual bool hasValue() const {NIY};
+  virtual bool hasValue() const {NIY}
+  virtual void *getValueDirectly() const {NIY}
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
+  virtual void copyValue(Item*) {NIY}
   virtual void takeoverValue(Item*) {NIY}
+  virtual bool hasEqualValue(Item*) {NIY}
   virtual Item *newClone(KeyValueGraph& container) const {NIY}
 };
 stdOutPipe(Item);
@@ -63,10 +70,13 @@ stdOutPipe(Item);
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
-  bool isReference;
-  KeyValueGraph *isItemOfParentKvg;
+  KeyValueGraph* isReferringToItemsOf;
+  Item *isItemOfParentKvg;
   
   KeyValueGraph();
+  KeyValueGraph(const char* filename);
+  KeyValueGraph(const KeyValueGraph& G);
+  KeyValueGraph(Item *itemOfParentKvg);
   ~KeyValueGraph();
   
   KeyValueGraph& operator=(const KeyValueGraph&);
@@ -83,9 +93,11 @@ struct KeyValueGraph:ItemL {
   Item* getItem(const char *key1, const char *key2);
   Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
-  
+  Item* getChild(Item *p1, Item *p2) const;
+
   //-- get lists of items
   KeyValueGraph getItems(const char* key);
+  KeyValueGraph getItemsOfDegree(uint deg);
   KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
   template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
   template<class T> ItemL getDerivedItems();
@@ -99,11 +111,11 @@ struct KeyValueGraph:ItemL {
   void removeItem(Item* it){ delete it; }
 
   //-- adding items
-  template<class T> Item *append(T *x);
-  template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
-  template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
-  template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
-  template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+  template<class T> Item *append(T *x, bool ownsValue);
+  template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue);
+  template<class T> Item *append(const StringA& keys, T *x, bool ownsValue) { return append(keys, ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x, ownsValue); }
   Item *append(const uintA& parentIdxs);
 
   //-- merging items
@@ -111,16 +123,32 @@ struct KeyValueGraph:ItemL {
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
   //-- debugging
-  bool checkConsistency();
+  bool checkConsistency() const;
+
+  //-- indexing
+  uint index(bool subKVG=false, uint start=0);
 
   //-- I/O
   void sortByDotOrder();
   
   void read(std::istream& is);
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
-  void writeDot(std::ostream& os, bool withoutHeader=false);
+  void writeDot(std::ostream& os, bool withoutHeader=false, bool defaultEdges=false, int nodesOrEdges=0);
 };
 stdPipes(KeyValueGraph);
+
+typedef KeyValueGraph Graph;
+
+inline Graph GRAPH(const ItemL& L){
+  Graph G;
+  G.isReferringToItemsOf = (Graph*)(1);
+  G.ItemL::operator=(L);
+  return G;
+}
+
+inline bool ItemComp(Item* const& a, Item* const& b){
+  return a < b;
+}
 
 #include "keyValueGraph_t.h"
 

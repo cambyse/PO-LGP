@@ -59,7 +59,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 #if 1  //CONSTRAINT
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.01));
-  P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1e3);
+  P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1.);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
   P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e1);

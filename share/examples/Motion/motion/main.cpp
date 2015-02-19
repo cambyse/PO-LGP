@@ -38,7 +38,7 @@ void TEST(PR2reach){
 #else
   t = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
 #endif
-  t->setCostSpecs(0, MP.T, {0.}, 1e-0);
+  t->setCostSpecs(0, MP.T, {0.}, 1.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -85,7 +85,7 @@ void TEST(Basics){
   #else
   t = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
   #endif
-  t->setCostSpecs(0, MP.T, {0.}, 1e-0);
+  t->setCostSpecs(0, MP.T, {0.}, 1.);
 
   t = MP.addTask("final_vel", new TransitionTaskMap(G));
   t->map.order=1; //make this a velocity task!

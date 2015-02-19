@@ -52,7 +52,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e4);
 
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint());
-  P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1e3);
+  P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1.);
 
 
 

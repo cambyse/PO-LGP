@@ -1,3 +1,13 @@
+** core stuff
+
+* MotionProblem + MotionProblemFunction -> MotionProgram
+* use Program instead of Problem in optim
+* ors::KinematicWorld -> ors::KinematicGraph
+* Ors -> Kinematic
+* loading parameters -> KeyValueGraph
+* KeyValueGraph -> Graph
+
+
 ** module system
 
 * check catching of SIGINT when linking to ROS

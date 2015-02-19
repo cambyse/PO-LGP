@@ -2350,7 +2350,7 @@ void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_D
   // precompute all probs
   arr PROBS_BASE_TABLE(constants.N, constants.N);
   PROBS_BASE_TABLE.setUni(0.);
-  int idx1, idx2;
+  uint idx1, idx2;
   FOR1D(baseLits, i) {
     idx1 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(0));
     idx2 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(1));
@@ -3016,7 +3016,7 @@ void PRADA_DBN::create_dbn_params() {
   uint DEBUG = 0;
   if (DEBUG) {cout<<"create_dbn_params [START]"<<endl;}
   uint r, v, o, k;
-  int val;
+  uint val;
   // impacts_val
   impacts_val.clear();
   uint no_changeable_rvs = 0;

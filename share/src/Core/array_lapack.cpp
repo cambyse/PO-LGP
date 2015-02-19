@@ -24,10 +24,7 @@
 #include "array.h"
 #include "util.h"
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-
 #include "cblas.h"
 #ifdef MT_MSVC
 #  include <lapack/blaswrap.h>
@@ -37,7 +34,7 @@ extern "C" {
 #undef large
 #ifdef ARCH_LINUX
 #  include <lapack/lapacke.h>
-#define integer int
+#  define integer int
 #else
 #  include <lapack/clapack.h>
 #endif
@@ -45,10 +42,7 @@ extern "C" {
 #undef max
 #undef min
 #undef abs
-
-#ifdef __cplusplus
 }
-#endif
 
 
 #ifdef NO_BLAS
@@ -148,7 +142,7 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
   }
   if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
-    if(!Aaux->symmetric) HALT("this is not a symmetric matric");
+    if(!Aaux->symmetric) HALT("this is not a symmetric matrix");
     for(uint i=0; i<A.d0; i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
   }
   x=b;
@@ -270,35 +264,47 @@ const char *potrf_ERR="\n\
 void lapack_mldivide(arr& X, const arr& A, const arr& b) {
   CHECK_EQ(A.nd , 2, "A in Ax=b must be a NxM Matrix.");
   CHECK_EQ(b.nd , 1, "b in Ax=b must be a Vector.");
-  
   CHECK_EQ(A.d1 , b.d0, "b and A must have the same amount of rows in Ax=b.");
   
   X = b;
   arr LU = A;
-  integer n = A.d1;
-  integer nrhs = 1;
-  integer lda = A.d0;
-  MT::Array<integer> ipiv(n);
+  integer N = A.d1, NRHS = 1, LDA = A.d0, INFO;
+  MT::Array<integer> IPIV(N);
   
-  integer info;
-  
-  dgesv_(&n, &nrhs, LU.p, &lda, ipiv.p, X.p, &lda, &info);
-  CHECK(!info, "LAPACK gaussian elemination error info = " <<info <<potrf_ERR);
+  dgesv_(&N, &NRHS, LU.p, &LDA, IPIV.p, X.p, &LDA, &INFO);
+  CHECK(!INFO, "LAPACK gaussian elemination error info = " <<INFO);
+}
+
+void lapack_choleskySymPosDef(arr& Achol, const arr& A) {
+  if(A.special==arr::RowShiftedPackedMatrixST) {
+    RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
+    if(!Aaux->symmetric) HALT("this is not a symmetric matrix");
+    for(uint i=0; i<A.d0; i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
+
+    Achol=A;
+    integer N=A.d0, KD=A.d1-1, LDAB=A.d1, INFO;
+
+    dpbtrf_((char*)"L", &N, &KD, Achol.p, &LDAB, &INFO);
+    CHECK(!INFO, "LAPACK Cholesky decomp error info = " <<INFO);
+
+  }else{
+    NIY;
+  }
+
 }
 
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A) {
-  CHECK_EQ(A.d0,A.d1, "");
-  integer n=A.d0;
-  integer info;
   Ainv=A;
+  integer N=A.d0, LDAB=A.d1, INFO;
   //compute cholesky
-  dpotrf_((char*)"L", &n, Ainv.p, &n, &info);
-  CHECK(!info, "LAPACK Cholesky decomp error info = " <<info <<potrf_ERR);
+  dpotrf_((char*)"L", &N, Ainv.p, &LDAB, &INFO);
+  CHECK(!INFO, "LAPACK Cholesky decomp error info = " <<INFO <<potrf_ERR);
   //invert
-  dpotri_((char*)"L", &n, Ainv.p, &n, &info);
-  CHECK(!info, "lapack_inverseSymPosDef error info = " <<info);
+  dpotri_((char*)"L", &N, Ainv.p, &N, &INFO);
+  CHECK(!INFO, "lapack_inverseSymPosDef error info = " <<INFO);
+  //fill in the lower triangular elements
   uint i, j;
-  for(i=0; i<(uint)n; i++) for(j=0; j<i; j++) Ainv(i, j)=Ainv(j, i);
+  for(i=0; i<(uint)N; i++) for(j=0; j<i; j++) Ainv(i, j)=Ainv(j, i);
 }
 
 double lapack_determinantSymPosDef(const arr& A) {

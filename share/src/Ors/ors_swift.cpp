@@ -97,6 +97,32 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
         break;
     }
     if(add) {
+      if(!s->mesh.V.d0){
+        switch(s->type) {
+          case ors::boxST:
+            s->mesh.setBox();
+            s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+            break;
+          case ors::sphereST:
+            s->mesh.setSphere();
+            s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+            break;
+          case ors::cylinderST:
+            CHECK(s->size[3]>1e-10,"");
+            s->mesh.setCylinder(s->size[3], s->size[2]);
+            break;
+          case ors::cappedCylinderST:
+            CHECK(s->size[3]>1e-10,"");
+            s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+            break;
+          case ors::SSBoxST:
+            s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
+            break;
+          default:
+            break;
+        }
+        s->mesh_radius = s->mesh.getRadius();
+      }
       CHECK(s->mesh.V.d0,"no mesh to add to SWIFT, something was wrongly initialized");
       r=scene->Add_Convex_Object(
           s->mesh.V.p, (int*)s->mesh.T.p,

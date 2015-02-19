@@ -61,6 +61,7 @@ int main(int argc,char** argv){
   bool con=true;
   if(con){
     c = MP.addTask("collisionConstraints", new CollisionConstraint(.02));
+    c->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{
     c = MP.addTask("collision",
                    new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));

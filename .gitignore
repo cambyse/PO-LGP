@@ -11,6 +11,7 @@ lex.yy.c
 *_moc.cpp
 *_ui.h
 
+
 %% EXECUTABLE
 *.exe
 x_*
@@ -41,6 +42,7 @@ _*.py
 # EXECUTION
 core
 CORE
+*.log
 
 
 %% BACKUP/temporary files
@@ -52,6 +54,7 @@ z/
 MT.log
 .#*#
 .#*
+#*#
 
 
 %% MAKE
@@ -84,7 +87,12 @@ orspy.py
 *.tdo
 *.blg
 *.bbl
+*.snm
+*.nav
+*.ilg
+*.ind
 *.fdb_latexmk
+_region_.*
 
 
 %% SPECIAL for git/mlr:
