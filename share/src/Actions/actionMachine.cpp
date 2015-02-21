@@ -36,14 +36,24 @@ void ActionMachine::open(){
 
 //  s->MP.qitselfPD.setGains(1.,10.);
 
-  if(MT::getParameter<bool>("useRos",false)){
-	//-- wait for first q observation!
+  bool useRos = MT::getParameter<bool>("useRos",false);
+  if(useRos){
+    //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
+    uint trials=0;
+    for(;useRos;){
       ctrl_obs.var->waitForNextRevision();
+      cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
+      cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+
       if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
          && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N)
         break;
+
+      trials++;
+      if(trials>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
     }
 
     //-- set current state
@@ -52,7 +62,6 @@ void ActionMachine::open(){
     s->qdot = ctrl_obs.get()->qdot;
     s->feedbackController.setState(s->q, s->qdot);
   }
-  //arr fL_base = S.fL_obs.get();
 }
 
 void ActionMachine::step(){

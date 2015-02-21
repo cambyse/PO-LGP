@@ -75,6 +75,12 @@ struct CoreTasks : Action {
 };
 
 //===========================================================================
+struct Homing : Action {
+  Homing(ActionMachine& actionMachine, const char* effName);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
 struct MoveEffTo : Action {
   MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget);
   virtual bool finishedSuccess(ActionMachine& M);
