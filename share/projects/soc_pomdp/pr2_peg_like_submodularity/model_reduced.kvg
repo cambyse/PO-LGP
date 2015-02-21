@@ -1,0 +1,37 @@
+%include /home/ngovn/git/mlr/share/data/pr2_model/pr2_clean.ors
+%include /home/ngovn/git/mlr/share/data/pr2_model/pr2_modifications.ors
+
+
+# FIX unused joints
+Merge r_shoulder_pan_joint {type=10 limits =[]}
+Merge r_shoulder_pan_joint {type=10 limits =[]}
+Merge r_shoulder_lift_joint {type=10 limits =[]}
+Merge r_upper_arm_roll_joint {type=10 limits =[]}
+Merge r_elbow_flex_joint {type=10 limits =[]}
+Merge r_forearm_roll_joint {type=10 limits =[]}
+Merge r_wrist_flex_joint {type=10 limits =[]}
+Merge r_wrist_roll_joint {type=10 limits =[]}
+Merge r_gripper_joint {type=10  limits =[]}
+Merge l_gripper_joint {type=10  limits =[]}
+Merge head_pan_joint {type=10 limits =[]}
+Merge head_tilt_joint {type=10 limits =[]}
+Merge laser_tilt_mount_joint {type=10 limits=[]}
+Merge r_gripper_l_finger_joint {type=10 limits=[]}
+#Merge l_gripper_l_finger_joint {type=10 q=.79 limits=[]}
+Merge l_gripper_l_finger_joint {type=10 q=.4 limits=[]}
+Merge l_gripper_r_finger_joint {type=10 q=.4 limits=[]}
+#Merge torso_lift_joint {type=10 limits=[]}
+Merge worldTranslationRotation {type=10 limits=[]}
+
+#shape endeffL(l_wrist_roll_link){ rel=<T t(.18 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+#shape endeffL(l_wrist_roll_link){ rel=<T t(.18 0.025 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+
+body table { X=<T t(0.5 -0.2 .48)>  type=0 size=[.6 0.6 .04 0] color=[.3 .3 .3] contact fixed }
+
+body target { X=<T t(0.5 -0.2 .5)>  type=5 size=[0 0 0 .02] color=[1 1.0 1.0] fixed }
+shape truetarget(table) { rel=<T t(0.0 .0 .02)>  type=1 size=[0 0 0 .02] color=[1 0 0] fixed }
+
+
+#shape endeff (R_HAND_M_FINGER_KNUCKLE_3){ type=5 rel=<T t(.058 0 .007)> size=[.02 0 0 .1] }
