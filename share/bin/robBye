@@ -2,6 +2,6 @@ robot stop
 robot release
 read -p "Do you want to shutdown? y/[n]" yn
 case $yn in
-     y|Y) sudo pr2shutdown ;;
+     y|Y) sudo pr2-shutdown ;;
     *) ;;
 esac
