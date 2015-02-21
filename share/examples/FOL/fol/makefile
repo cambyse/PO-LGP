@@ -1,1 +1,1 @@
-Makefile.gof
+./Makefile.gof
