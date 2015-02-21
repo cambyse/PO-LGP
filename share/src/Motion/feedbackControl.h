@@ -41,20 +41,17 @@ struct CtrlTask{
   bool active;
   double prec;
 
-  /// @{ @name Immediate (next step) desired target reference
+  /// @{ @name Parameters that define the linear acceleration control law
   arr y_ref; ///< position reference
   arr v_ref; ///< velocity reference
-  /// @}
-  /// @{ @name Gains of the PD controller
-  double Pgain, Dgain;
+  double Pgain; ///< proportional gain
+  double Dgain; ///< derivative gain
   /// @}
 
-  /// @{ @name Conditional flip variable especially for quaternion targets
+  /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetScalarProduct;
-  /// @}
 
   /// @{ @name The actual state when LAST getDesiredAcceleration was called
-  /// Use carefully! (in online mode only)
   arr y, v;
   /// @}
 

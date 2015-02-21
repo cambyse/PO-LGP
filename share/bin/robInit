@@ -1,0 +1,6 @@
+read -p " *** ABORT if you do not have the RUNSTOP in your hand! " yn
+
+robot claim
+robot start
+rosrun pr2_dashboard pr2_dashboard &
+

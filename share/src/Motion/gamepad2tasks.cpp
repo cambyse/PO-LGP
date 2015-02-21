@@ -70,10 +70,10 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     case 0: { //(NIL) motion rate control
       CtrlTask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
-        case right:  pdt=endeffR;  break;
-        case left:   pdt=endeffL;  break;
-        case up:     pdt=head;    break;
-        case down:   pdt=base;   break;
+        case right:  pdt=endeffR;  cout <<"effR control" <<endl;  break;
+        case left:   pdt=endeffL;  cout <<"effL control" <<endl;  break;
+        case up:     pdt=head;  cout <<"head control" <<endl;  break;
+        case down:   pdt=base;  cout <<"base control" <<endl;  break;
         case none:   pdt=NULL;  break;
         case downRot: break;
       }

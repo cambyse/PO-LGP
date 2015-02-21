@@ -29,8 +29,24 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
   //tasks.append(coll);
 }
 
+//===========================================================================
+Homing::Homing(ActionMachine& actionMachine, const char* effName)
+  : Action(actionMachine, "Homing") {
+  CtrlTaskL::memMove=true;
+  CtrlTask *task = new CtrlTask(
+                   STRING("Homing_" << effName), 1., .8,
+                   new TaskMap_qItself());
+  task->y_ref=actionMachine.s->q0;
+  tasks.append(task);
+}
+
+bool Homing::finishedSuccess(ActionMachine& M){
+  if(!tasks.N) return false;
+  CtrlTask *task=tasks(0);
+  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
+}
+
 // ============================================================================
-// MoveEffTo
 MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget)
     : Action(actionMachine, "MoveEffTo") {
   CtrlTaskL::memMove=true;
@@ -191,6 +207,8 @@ bool FollowReferenceInTaskSpace::finishedSuccess(ActionMachine& M){
 void FollowReferenceInTaskSpace::reportDetails(ostream& os) {
   cout <<"HELLO" <<endl;
 }
+
+//===========================================================================
 
 Relax::Relax(ActionMachine &actionMachine, const char *name)
   : Action(actionMachine,name) {
