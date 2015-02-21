@@ -31,6 +31,7 @@ struct ActionMachine : Module {
   arr Kq_gainFactor, Kd_gainFactor;
   //-- user methods
   const ors::KinematicWorld *world;
+  ofstream fil;
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on
@@ -68,6 +69,7 @@ struct ActionSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
     }
     connect();
   }

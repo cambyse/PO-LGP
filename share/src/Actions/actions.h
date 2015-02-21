@@ -77,7 +77,7 @@ struct FollowReference : Action {
   bool stopOnContact;
 
   FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
-      const arr& yref={}, const arr& vref={}, double durationInSeconds=-1.,
+                  const arr& yref=arr(), const arr& vref=arr(), double durationInSeconds=-1.,
       double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
       double relativePrec=100.,
       double stopTolerance=1e-2, bool stopOnContact=true);

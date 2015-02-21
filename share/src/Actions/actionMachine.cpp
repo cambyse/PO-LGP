@@ -36,6 +36,8 @@ void ActionMachine::open(){
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
 
+  MT::open(fil,"z.actionMachine");
+
   bool useRos = MT::getParameter<bool>("useRos",false);
   if(useRos){
     //-- wait for first q observation!
@@ -86,7 +88,25 @@ void ActionMachine::step(){
   A.writeAccess();
 
   //  cout <<"** active actions:";
-  reportActions(A());
+//  reportActions(A());
+
+  //-- code to output force signals
+  if(true){
+    ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
+    arr fLobs = ctrl_obs.get()->fL;
+    arr uobs =  ctrl_obs.get()->u_bias;
+    cout <<fLobs <<endl;
+    if(fLobs.N && uobs.N){
+      arr Jft, J;
+      world->kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
+      world->kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,world->getShapeByName("l_ft_sensor"));
+      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
+      J = inverse_SymPosDef(J*~J)*J;
+      MT::arrayBrackets="  ";
+      fil <<t <<' ' <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
+      MT::arrayBrackets="[]";
+    }
+  }
 
   //-- call the step method for each action
   for(Action *a : A()) {
@@ -127,6 +147,7 @@ void ActionMachine::step(){
 }
 
 void ActionMachine::close(){
+  fil.close();
 }
 
 void ActionMachine::add_sequence(Action *action1,

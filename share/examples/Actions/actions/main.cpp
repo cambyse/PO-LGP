@@ -58,16 +58,16 @@ void TEST(Push) {
   
   Action *a, *b;
 
-  b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffR", Vector_x),
-                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .5, 10., 100., -1.);
+  b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
+                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .1, 10., 100., -1.);
 
-  a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffR"),
-                          {.7, -.3, .6}, {}, -1., .5, .9, .2, 10.);
+  a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+                          {.7, .3, .7}, {}, -1., .5, .9, .1, 10.);
 
   activity.machine->waitForActionCompletion(a);
 
-  a = new FollowReference(*activity.machine, "orientation", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffR"),
-                          {.7, -.3, .3}, {}, -1., .5, .9, .05, 10.);
+  a = new FollowReference(*activity.machine, "orientation", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+                          {.7, .3, .5}, {}, -1., .5, .9, .05, 10.);
 
   activity.machine->waitForActionCompletion(a);
 

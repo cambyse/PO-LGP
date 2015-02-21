@@ -119,24 +119,24 @@ void TEST(Gamepad){
       arr fe = ARR(0.,0.,-5.);
       double alpha = .01;
       ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-      arr JeFT,Jeq;
-      MP.world.kinematicsPos(NoArr,Jeq,ftL_shape->body,&ftL_shape->rel.pos);
-      MP.world.kinematicsPos_wrtFrame(NoArr,JeFT,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
+      arr Jft, J;
+      MP.world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
+      MP.world.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
 
-      JeFT = inverse_SymPosDef(JeFT*~JeFT)*JeFT;
+      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
 
       // compute u_bias
-      refs.u_bias = ~Jeq*fe;
+      refs.u_bias = ~J*fe;
 //      refs.u_bias = zeros(q.N);
 
       // compute force feedback
       refs.fL = fe;
-      refs.KfL_gainFactor = alpha*~Jeq;
-      refs.EfL = JeFT;
+      refs.KfL_gainFactor = alpha*~J;
+      refs.EfL = Jft;
 
-      Jeq = inverse_SymPosDef(Jeq*~Jeq)*Jeq;
+      J = inverse_SymPosDef(J*~J)*J;
 
-      fil <<t <<' ' <<fe <<' ' << JeFT*fLobs << " " << Jeq*uobs << endl;
+      fil <<t <<' ' <<fe <<' ' << Jft*fLobs << " " << J*uobs << endl;
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
