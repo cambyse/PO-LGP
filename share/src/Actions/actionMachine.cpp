@@ -22,6 +22,7 @@ ActionMachine::ActionMachine():Module("ActionMachine"){
   Kq_gainFactor = ARR(1.);
   Kd_gainFactor = ARR(1.);
   s = new sActionMachine();
+  world = &s->world;
 }
 
 ActionMachine::~ActionMachine(){
@@ -31,10 +32,9 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->feedbackController.H_rate_diag = pr2_reasonable_W(s->world);
+  s->feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
   s->feedbackController.qitselfPD.y_ref = s->q;
-
-//  s->MP.qitselfPD.setGains(1.,10.);
+  s->feedbackController.qitselfPD.setGains(.0,10.);
 
   bool useRos = MT::getParameter<bool>("useRos",false);
   if(useRos){
@@ -86,7 +86,7 @@ void ActionMachine::step(){
   A.writeAccess();
 
   //  cout <<"** active actions:";
-//  reportActions(A());
+  reportActions(A());
 
   //-- call the step method for each action
   for(Action *a : A()) {
@@ -146,7 +146,7 @@ void ActionMachine::add_sequence(Action *action1,
   }
 }
 
-void ActionMachine::removeGroundedAction(Action* a, bool hasLock){
+void ActionMachine::removeAction(Action* a, bool hasLock){
   if(!hasLock) A.set()->removeValue(a);
   else A().removeValue(a);
   delete a;
@@ -157,7 +157,7 @@ void ActionMachine::transition(){
 
   //-- first remove all old successes and fails
   for_list_rev(Action, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
-    removeGroundedAction(a, true);
+    removeAction(a, true);
     a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
   }
 

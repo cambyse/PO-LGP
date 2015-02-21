@@ -3,6 +3,59 @@
 #include "actionMachine_internal.h"
 
 // ============================================================================
+FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
+    const arr& yref, const arr& vref, double durationInSeconds,
+    double decayTime, double dampingRatio, double maxVel, double maxAcc,
+    double relativePrec,
+    double stopTolerance, bool stopOnContact)
+  : Action(actionMachine, "FollowReference"), duration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
+  CtrlTask* task = new CtrlTask(STRING("FollowReference_" << name), map,
+                                decayTime, dampingRatio, maxVel, maxAcc);
+  if(yref.nd==2){
+    CHECK(durationInSeconds>0., "need to specify a duration for a trajectory");
+    CHECK(vref.N==0, "can't specify a vref for a trajectory");
+    ref = yref;
+  }else{
+    CHECK(durationInSeconds<0., "can't specify a duration for a point reference");
+    task->y_ref = yref;
+    task->v_ref = vref;
+  }
+  task->prec = relativePrec;
+  actionMachine.A.writeAccess();
+  tasks.append(task);
+  actionMachine.A.deAccess();
+}
+
+void FollowReference::step(ActionMachine& M){
+  if(!tasks.N) return;
+  CtrlTask *task=tasks(0);
+  if(task->y_ref.nd==2){
+    uint t = actionTime/duration * (ref.d0-1);
+    t = MT::MIN(t, ref.d0-1);
+    task->y_ref = ref[t];
+    cout <<"STEPPING" <<endl;
+  }
+}
+
+bool FollowReference::finishedSuccess(ActionMachine& M){
+  if(!tasks.N) return false;
+  CtrlTask *task=tasks(0);
+  if(stopOnContact){
+    arr fL = M.ctrl_obs.get()->fL;
+    if(absMax(fL)>2.) return true;
+  }
+  if(task->y_ref.nd==1 && task->y.N==task->y_ref.N
+     && maxDiff(task->y, task->y_ref)<stopTolerance
+     && maxDiff(task->v, task->v_ref)<stopTolerance) return true;
+  if(task->y_ref.nd==2 && actionTime>=duration) return true;
+  return false;
+}
+
+void FollowReference::reportDetails(ostream& os) {
+  cout <<"HELLO" <<endl;
+}
+
+// ============================================================================
 // CoreTasks
 CoreTasks::CoreTasks(ActionMachine& actionMachine)
   : Action(actionMachine, "CoreTasks") {
@@ -14,8 +67,7 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
   // qitself->prec=100.;
   // tasks.append(qitself);
 
-  CtrlTask* limits = new CtrlTask("limits", .1, .8,
-                              new TaskMap_qLimits());
+  CtrlTask* limits = new CtrlTask("limits", new TaskMap_qLimits(), .1, .8, 1., 1.);
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
@@ -32,10 +84,10 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 //===========================================================================
 Homing::Homing(ActionMachine& actionMachine, const char* effName)
   : Action(actionMachine, "Homing") {
-  CtrlTaskL::memMove=true;
   CtrlTask *task = new CtrlTask(
-                   STRING("Homing_" << effName), 1., .8,
-                   new TaskMap_qItself());
+                     STRING("Homing_" << effName),
+                     new TaskMap_qItself(),
+                     1., .8, 1., 1.);
   task->y_ref=actionMachine.s->q0;
   tasks.append(task);
 }
@@ -49,10 +101,10 @@ bool Homing::finishedSuccess(ActionMachine& M){
 // ============================================================================
 MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget)
     : Action(actionMachine, "MoveEffTo") {
-  CtrlTaskL::memMove=true;
   CtrlTask *task = new CtrlTask(
-                   STRING("MoveEffTo_" << effName), 1., .8,
-                   new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
+                     STRING("MoveEffTo_" << effName),
+                     new DefaultTaskMap(posTMT, actionMachine.s->world, effName),
+                     1., .8, 1., 1.);
   // task->setGains(200.,0.);
   task->y_ref = positionTarget;
   tasks.append(task);
@@ -70,18 +122,19 @@ bool MoveEffTo::finishedSuccess(ActionMachine& M) {
 
 PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget, const arr& orientationTarget)
     : Action(actionMachine, "PoseTo"){
-  CtrlTaskL::memMove=true;
   CtrlTask *task = new CtrlTask(
-                   STRING("PosTo_" << effName), 1., .8,
-                   new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
+                     STRING("PosTo_" << effName),
+                     new DefaultTaskMap(posTMT, actionMachine.s->world, effName),
+                     1., .8, 1., 1.);
   task->y_ref = positionTarget;
   tasks.append(task);
 
   task = new CtrlTask(
-           STRING("OrientatationQuat_" << effName), 1., .8,
-           new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
+           STRING("OrientatationQuat_" << effName),
+           new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
+            1., .8, 1., 1.);
   task->setTarget(orientationTarget);
-  task->flipTargetScalarProduct = true;
+  task->flipTargetSignOnNegScalarProduct = true;
   tasks.append(task);
 }
 
@@ -98,8 +151,9 @@ bool PoseTo::finishedSuccess(ActionMachine& M) {
 AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effVector, const arr& vectorTarget)
     : Action(actionMachine, "AlignEffTo") {
   CtrlTask *task = new CtrlTask(
-                   STRING("AlignEffTo_" << effName), 2., .8,
-                   new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)));
+                     STRING("AlignEffTo_" << effName),
+                     new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)),
+                     2., .8, 1., 1.);
   // task->setGains(100.,0.);
   task->y_ref = vectorTarget;
   tasks.append(task);
@@ -115,13 +169,12 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 // OrientationQuat
 OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientationTarget)
     : Action(actionMachine, "OrientationQuat") {
-  CtrlTaskL::memMove=true;
-
   auto task = new CtrlTask(
-                STRING("OrientatationQuat_" << effName), 2, .8,
-                new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
+                STRING("OrientatationQuat_" << effName),
+                new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
+                2, .8, 1., 1.);
   task->setTarget(orientationTarget);
-  task->flipTargetScalarProduct = true;
+  task->flipTargetSignOnNegScalarProduct = true;
   tasks.append(task);
 }
 
@@ -136,10 +189,8 @@ bool OrientationQuat::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 SetQ::SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos)
     : Action(actionMachine, "SetQ") {
-  CtrlTaskL::memMove=true;
-
   auto task = new CtrlTask(
-      effName, 2, .8, new TaskMap_qItself(jointID, actionMachine.s->world.q.N));
+      effName, new TaskMap_qItself(jointID, actionMachine.s->world.q.N), 2, .8, 1., 1.);
   task->setTarget({jointPos});
   task->active = true;
   tasks.append(task);
@@ -183,10 +234,8 @@ bool PushForce::finishedSuccess(ActionMachine& M) {
 //===========================================================================
 FollowReferenceInTaskSpace::FollowReferenceInTaskSpace(ActionMachine& actionMachine, const char* name, TaskMap *map, const arr& referenceTraj, double durationInSeconds)
   : Action(actionMachine, name), ref(referenceTraj), duration(durationInSeconds), task(NULL) {
-  CtrlTaskL::memMove=true;
   task = new CtrlTask(
-                   STRING("FollowTraj_" << name), 1., .8,
-                   map);
+                   STRING("FollowTraj_" << name), map, 1., .8, 1., 1.);
   // task->setGains(200.,0.);
   task->y_ref = ref[0];
 //  task->v_ref = referenceTraj[0]; TODO!
@@ -218,3 +267,11 @@ void Relax::step(ActionMachine &actionMachine) {
   actionMachine.Kq_gainFactor = ARR(0.);
   actionMachine.Kd_gainFactor = ARR(0.);
 }
+
+//===========================================================================
+
+struct RUN_ON_INIT{
+  RUN_ON_INIT(){
+    CtrlTaskL::memMove=true;
+  }
+} dummy;

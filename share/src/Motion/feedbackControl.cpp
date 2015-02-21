@@ -20,8 +20,8 @@
 
 //===========================================================================
 
-CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio, TaskMap* map)
-  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
+CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
+  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
@@ -59,10 +59,45 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
   this->y = y;
   this->v = ydot;
-//  cout <<" TASK " <<name <<":  \tPterm=(" <<Pgain <<'*' <<length(y_ref-y) <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-ydot) <<')' <<endl;
-  if(flipTargetScalarProduct && scalarProduct(y, y_ref) < 0)
+  if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
-  return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
+  //compute diffs
+  arr y_diff(y);
+  if(y_ref.N==1) y_diff -= y_ref.scalar();
+  if(y_ref.N==y_diff.N) y_diff -= y_ref;
+  arr ydot_diff(ydot);
+  if(v_ref.N==1) ydot_diff -= v_ref.scalar();
+  if(v_ref.N==ydot_diff.N) ydot_diff -= v_ref;
+
+  arr a = - Pgain*y_diff - Dgain*ydot_diff;
+  //check limits
+  double accNorm = length(a);
+  if(accNorm<1e-4) return a;
+  if(maxAcc>0. && accNorm>maxAcc) a *= maxAcc/accNorm;
+  if(!maxVel) return a;
+  double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;
+  if(velRatio>1.) a.setZero();
+  else if(velRatio>.9) a *= 1.-10.*(velRatio-.9);
+  return a;
+}
+
+void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
+  //-- get necessary Jacobians
+  DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(&map);
+  CHECK(m,"this only works for the default position/ori task map");
+  CHECK(m->type==posTMT,"this only works for the default position/ori task map");
+  CHECK(m->i>=0,"this only works for the default position/ori task map");
+  ors::Body *body = world.shapes(m->i)->body;
+  ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
+  arr J_ft, J;
+  world.kinematicsPos         (NoArr, J,   body, &vec);
+  world.kinematicsPos_wrtFrame(NoArr, J_ft,body, &vec, world.getShapeByName("l_ft_sensor"));
+
+  //-- compute the control coefficients
+  u_bias = ~J*f_ref;
+  f_des = f_ref;
+  J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+  K_I = f_Igain*~J;
 }
 
 void CtrlTask::reportState(ostream& os){
@@ -119,12 +154,12 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   : MotionProblem(_world, useSwift), qitselfPD(NULL) {
   H_rate_diag = getH_rate_diag();
   qitselfPD.name="qitselfPD";
-  qitselfPD.setGains(0.,10.);
+  qitselfPD.setGains(0.,100.);
   qitselfPD.prec=1.;
 }
 
 CtrlTask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
-  return tasks.append(new CtrlTask(name, decayTime, dampingRatio, map));
+  return tasks.append(new CtrlTask(name, map, decayTime, dampingRatio, 1., 1.));
 }
 
 CtrlTask* FeedbackMotionControl::addPDTask(const char* name,
@@ -132,8 +167,8 @@ CtrlTask* FeedbackMotionControl::addPDTask(const char* name,
                                          DefaultTaskMapType type,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec){
-  return tasks.append(new CtrlTask(name, decayTime, dampingRatio,
-                                 new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec)));
+  return tasks.append(new CtrlTask(name, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec),
+                                   decayTime, dampingRatio, 1., 1.));
 }
 
 ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
@@ -194,9 +229,8 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr c, J;
   getCostCoeffs(c, J);
   if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
-  arr H = diag(H_rate_diag);
-  arr A = H;
-  arr a(H.d0); a.setZero();
+  arr A = diag(H_rate_diag);
+  arr a(A.d0); a.setZero();
   if(qitselfPD.active){
     a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
   }

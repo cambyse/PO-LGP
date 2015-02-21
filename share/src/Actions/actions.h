@@ -70,6 +70,23 @@ struct Action {
 void reportActions(ActionL& A);
 
 //===========================================================================
+struct FollowReference : Action {
+  arr ref;
+  double duration;
+  double stopTolerance;
+  bool stopOnContact;
+
+  FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
+      const arr& yref={}, const arr& vref={}, double durationInSeconds=-1.,
+      double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
+      double relativePrec=100.,
+      double stopTolerance=1e-2, bool stopOnContact=true);
+  virtual void step(ActionMachine& actionMachine);
+  virtual bool finishedSuccess(ActionMachine& M);
+  void reportDetails(ostream& os);
+};
+
+//===========================================================================
 struct CoreTasks : Action {
   CoreTasks(ActionMachine& actionMachine);
 };

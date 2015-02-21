@@ -30,6 +30,7 @@ struct ActionMachine : Module {
 
   arr Kq_gainFactor, Kd_gainFactor;
   //-- user methods
+  const ors::KinematicWorld *world;
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on
@@ -41,7 +42,7 @@ struct ActionMachine : Module {
                     Action *action3=NULL,
                     Action *action4=NULL);
 
-  void removeGroundedAction(Action* a, bool hasLock=false);
+  void removeAction(Action* a, bool hasLock=false);
   /// Block till the given action `a` is done
   void waitForActionCompletion(Action* a);
   /// Block till all actions (excluding CoreTasks) are done

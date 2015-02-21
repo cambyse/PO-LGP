@@ -46,23 +46,30 @@ struct CtrlTask{
   arr v_ref; ///< velocity reference
   double Pgain; ///< proportional gain
   double Dgain; ///< derivative gain
+  double maxVel, maxAcc;
   /// @}
 
+  /// @{ @name Parameters that define the integral force feedback control law
+  arr f_ref;
+  double f_Igain;
+
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
-  bool flipTargetScalarProduct;
+  bool flipTargetSignOnNegScalarProduct;
 
   /// @{ @name The actual state when LAST getDesiredAcceleration was called
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){}
-  CtrlTask(const char* name, double decayTime, double dampingRatio, TaskMap* map);
+  CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetSignOnNegScalarProduct(false){}
+  CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
+
+  void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
 
   void reportState(ostream& os);
 };

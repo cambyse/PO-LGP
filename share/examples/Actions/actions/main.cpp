@@ -58,13 +58,37 @@ void TEST(Push) {
   
   Action *a, *b;
 
+  b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffR", Vector_x),
+                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .5, 10., 100., -1.);
+
+  a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffR"),
+                          {.7, -.3, .6}, {}, -1., .5, .9, .2, 10.);
+
+  activity.machine->waitForActionCompletion(a);
+
+  a = new FollowReference(*activity.machine, "orientation", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffR"),
+                          {.7, -.3, .3}, {}, -1., .5, .9, .05, 10.);
+
+  activity.machine->waitForActionCompletion(a);
+
+  activity.machine->removeAction(b);
+
+  a = new Homing(*activity.machine, "homing");
+  activity.machine->waitForActionCompletion(a);
+
+#if 0
+  a = new MoveEffTo(*activity.machine, "endeffR", {.7, -.5, .6});
+
+  b = new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {0, 0, -1.});
+  activity.machine->waitForActionCompletion(a);
+  activity.machine->waitForActionCompletion(b);
+
   a = new MoveEffTo(*activity.machine, "endeffR", {.7, -.5, .6});
   b = new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {0, 0, -1.});
   activity.machine->waitForActionCompletion(a);
   activity.machine->waitForActionCompletion(b);
 
-  a = new Homing(*activity.machine, "homing");
-  activity.machine->waitForActionCompletion(a);
+#endif
 
 //  cout << "waiting" << endl;
 //  MT::wait(3);
@@ -72,6 +96,7 @@ void TEST(Push) {
 //  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
 //  activity.machine->waitForActionCompletion(push);
   
+  MT::wait(1.);
   engine().close(activity);
 }
 
@@ -158,7 +183,7 @@ void test_record() {
   }
   cout << "End recording" << endl;
 
-  activity.machine->removeGroundedAction(t);
+  activity.machine->removeAction(t);
   core->actionState = active;
 
   write(LIST<arr>(trajX),"trajX.data");
