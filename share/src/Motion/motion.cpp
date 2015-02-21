@@ -85,8 +85,8 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
   }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
-  double duration = MT::getParameter<double>("duration");
-  T = MT::getParameter<uint>("timeSteps");
+  double duration = MT::getParameter<double>("duration", 5.);
+  T = MT::getParameter<uint>("timeSteps", 50.);
   tau = duration/T;
 }
 
@@ -113,7 +113,7 @@ arr MotionProblem::getH_rate_diag() {
   } else {
     W_diag = world.naturalQmetric();
   }
-  return MT::getParameter<double>("Hrate")*W_diag;
+  return MT::getParameter<double>("Hrate", 1.)*W_diag;
 }
 
 Task* MotionProblem::addTask(const char* name, TaskMap *m){
