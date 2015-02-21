@@ -47,10 +47,12 @@ void TEST(Gamepad){
   Gamepad2Tasks j2t(MP);
 
   bool useRos = MT::getParameter<bool>("useRos", false);
+  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
+    uint trials=0;
+    for(;useRos;){
       S.ctrl_obs.var->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<MP.world.q.N <<endl;
@@ -58,6 +60,11 @@ void TEST(Gamepad){
       if(S.ctrl_obs.get()->q.N==MP.world.q.N
          && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
         break;
+
+      trials++;
+      if(trials>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
     }
 
     //-- set current state
@@ -92,7 +99,7 @@ void TEST(Gamepad){
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
-    cout <<t <<endl;
+//    cout <<t <<endl;
 //    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
@@ -156,30 +163,25 @@ void TEST(Gamepad){
 
 #endif
     }else{
-      refs.fL = ARR(0., 0., 0.,0.,0.,0.);
+      refs.fL = zeros(6);
       refs.KfL_gainFactor.clear();
       refs.EfL.clear();
       refs.u_bias = zeros(q.N);
     }
     refs.Kq_gainFactor = 1.;
-    refs.Kd_gainFactor = 0.;
+    refs.Kd_gainFactor = 1.;
     refs.gamma = 1.;
 
     refs.q=q;
     refs.qdot=zero_qdot;
-    if(trans && trans->qDim()==3){
+    if(sendBaseMotion && trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-      if(false){ //no translations!
-        refs.qdot(trans->qIndex+0) = 0.;
-        refs.qdot(trans->qIndex+1) = 0.;
-        refs.qdot(trans->qIndex+2) = 0.;
-      }
     }
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
-    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
+//    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
     S.ctrl_ref.set() = refs;
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;

@@ -4,43 +4,6 @@
 #include <Motion/motionHeuristics.h>
 
 
-//===========================================================================
-//very basic - just to play around
-
-void TEST(ActionMachine){
-  ActionSystem activity;
-  new CoreTasks(*activity.machine);
-  engine().open(activity);
-
-  // auto a1 =
-  //     new MoveEffTo("endeffR", ARR(.6, -.5, 1.2));
-  // activity.machine->waitForActionCompletion(a1);
-  
-  // auto a2 =
-  //     new AlignEffTo("endeffR", ARR(1., 0., 0.), ARR(1., 0., 0.));
-  // activity.machine->waitForActionCompletion(a2);
-  // auto a3 = new MoveEffTo("endeffL", ARR(.8, .4, 1.2));
-  
-  // auto action =
-  //     new MoveEffTo("endeffR", ARR(.6, -.4, 1.0))
-  // );
-  // activity.machine->waitForActionCompletion(action);
-  
-  // action =
-  //     new AlignEffTo("endeffR", ARR(1, 0, 0), ARR(1, 0, 0));
-  Action* action = new PushForce(*activity.machine, "endeffR", ARR(1, 2, 3)/*, ARR(1, 4, 8)*/);
-  activity.machine->waitForActionCompletion(action);
-  
-  // MT::wait(2);
-  
-  // activity.machine->waitForActionCompletion(a3);
-  
-  // auto a4 = new PushForce("endeffR", ors::Vector(15, 0, 0), ARR(2, 0, 0)))
-  // activity.machine->waitForActionCompletion(a4);
-  // }
-  engine().close(activity);
-}
-
 //===============================================home============================
 // do some sequential hand movements
 
@@ -72,12 +35,11 @@ void TEST(FollowTrajectory) {
   engine().open(activity);
 
 
-
   // first construct the trajectory
   arr q = interpolate_trajectory({.6, -.5, 1.2}, {.6, .6, 1.2}, 100);
 
   // then construct a space in which to execute
-  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
+  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructor requires a 'world' is ugly!
 
   // then the action
   Action *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
@@ -89,17 +51,26 @@ void TEST(FollowTrajectory) {
 }
 
 //===========================================================================
-void test_push() {
+void TEST(Push) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
   
-  Action* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.3, 1});
-  activity.machine->waitForActionCompletion(a_right);
-  cout << "waiting" << endl;
-  MT::wait(3);
-  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
-  activity.machine->waitForActionCompletion(push);
+  Action *a, *b;
+
+  a = new MoveEffTo(*activity.machine, "endeffR", {.7, -.5, .8});
+  b = new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {0, 0, -1.});
+  activity.machine->waitForActionCompletion(a);
+  activity.machine->waitForActionCompletion(b);
+
+  a = new Homing(*activity.machine, "homing");
+  activity.machine->waitForActionCompletion(a);
+
+//  cout << "waiting" << endl;
+//  MT::wait(3);
+//  cout << "pushing" << endl;
+//  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
+//  activity.machine->waitForActionCompletion(push);
   
   engine().close(activity);
 }
@@ -227,14 +198,13 @@ void test_replay() {
 int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
-//  test_push();
+  testPush();
 //  idle();
 //  idle2();
 //  return 0;
 //  test_collision();
-  testDance();
+//  testDance();
 //  testFollowTrajectory();
-//  testActionMachine();
 
 //  test_record();
 //  test_replay();
