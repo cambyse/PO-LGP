@@ -1,5 +1,3 @@
-read -p " *** ABORT if you do not have the RUNSTOP in your hand! " yn
-
 robot stop
 robot release
 read -p "Do you want to shutdown? y/[n]" yn
