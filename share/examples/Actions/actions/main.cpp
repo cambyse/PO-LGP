@@ -58,7 +58,7 @@ void TEST(Push) {
   
   Action *a, *b;
 
-  a = new MoveEffTo(*activity.machine, "endeffR", {.7, -.5, .8});
+  a = new MoveEffTo(*activity.machine, "endeffR", {.7, -.5, .6});
   b = new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {0, 0, -1.});
   activity.machine->waitForActionCompletion(a);
   activity.machine->waitForActionCompletion(b);
