@@ -6,15 +6,15 @@
 // CoreTasks
 CoreTasks::CoreTasks(ActionMachine& actionMachine)
   : Action(actionMachine, "CoreTasks") {
-  // PDtask *qitself;
-  // qitself = new PDtask("DampMotion_qitself", .1, 1., new TaskMap_qItself(P.s->MP.H_rate_diag));
+  // CtrlTask *qitself;
+  // qitself = new CtrlTask("DampMotion_qitself", .1, 1., new TaskMap_qItself(P.s->MP.H_rate_diag));
   // qitself->setGains(0.,10.);
   // qitself->y_ref = P.s->MP.qitselfPD.y_ref;
   // qitself->v_ref.setZero();
   // qitself->prec=100.;
   // tasks.append(qitself);
 
-  PDtask* limits = new PDtask("limits", .1, .8,
+  CtrlTask* limits = new CtrlTask("limits", .1, .8,
                               new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
@@ -22,7 +22,7 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
   limits->prec=100.;
   tasks.append(limits);
 
-  //PDtask* coll = new PDtask(
+  //CtrlTask* coll = new CtrlTask(
       //"collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   //coll->y_ref.setZero();
   //coll->v_ref.setZero();
@@ -33,8 +33,8 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 // MoveEffTo
 MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget)
     : Action(actionMachine, "MoveEffTo") {
-  PDtaskL::memMove=true;
-  PDtask *task = new PDtask(
+  CtrlTaskL::memMove=true;
+  CtrlTask *task = new CtrlTask(
                    STRING("MoveEffTo_" << effName), 1., .8,
                    new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
   // task->setGains(200.,0.);
@@ -44,7 +44,7 @@ MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const ar
 
 bool MoveEffTo::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
-  PDtask *task=tasks(0);
+  CtrlTask *task=tasks(0);
 //  return false;
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
 }
@@ -54,14 +54,14 @@ bool MoveEffTo::finishedSuccess(ActionMachine& M) {
 
 PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget, const arr& orientationTarget)
     : Action(actionMachine, "PoseTo"){
-  PDtaskL::memMove=true;
-  PDtask *task = new PDtask(
+  CtrlTaskL::memMove=true;
+  CtrlTask *task = new CtrlTask(
                    STRING("PosTo_" << effName), 1., .8,
                    new DefaultTaskMap(posTMT, actionMachine.s->world, effName));
   task->y_ref = positionTarget;
   tasks.append(task);
 
-  task = new PDtask(
+  task = new CtrlTask(
            STRING("OrientatationQuat_" << effName), 1., .8,
            new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
   task->setTarget(orientationTarget);
@@ -71,8 +71,8 @@ PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& pos
 
 bool PoseTo::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
-  PDtask *task0=tasks(0);
-  PDtask *task1=tasks(1);
+  CtrlTask *task0=tasks(0);
+  CtrlTask *task1=tasks(1);
   return (task0->y.N==task0->y_ref.N && maxDiff(task0->y, task0->y_ref)<1e-2) 
       && (task1->y.N == task1->y_ref.N && maxDiff(task1->y, task1->y_ref) < 1e-2);
 }
@@ -81,7 +81,7 @@ bool PoseTo::finishedSuccess(ActionMachine& M) {
 // AlignEffTo
 AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const arr& effVector, const arr& vectorTarget)
     : Action(actionMachine, "AlignEffTo") {
-  PDtask *task = new PDtask(
+  CtrlTask *task = new CtrlTask(
                    STRING("AlignEffTo_" << effName), 2., .8,
                    new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)));
   // task->setGains(100.,0.);
@@ -91,7 +91,7 @@ AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const 
 
 bool AlignEffTo::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
-  PDtask *task=tasks(0);
+  CtrlTask *task=tasks(0);
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
 }
 
@@ -99,9 +99,9 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 // OrientationQuat
 OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effName, const arr& orientationTarget)
     : Action(actionMachine, "OrientationQuat") {
-  PDtaskL::memMove=true;
+  CtrlTaskL::memMove=true;
 
-  auto task = new PDtask(
+  auto task = new CtrlTask(
                 STRING("OrientatationQuat_" << effName), 2, .8,
                 new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}));
   task->setTarget(orientationTarget);
@@ -111,7 +111,7 @@ OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effNa
 
 bool OrientationQuat::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
-  PDtask *task=tasks(0);
+  CtrlTask *task=tasks(0);
 //  return false;
   return (task->y.N == task->y_ref.N &&
           maxDiff(task->y, task->y_ref) < .3);
@@ -120,9 +120,9 @@ bool OrientationQuat::finishedSuccess(ActionMachine& M) {
 // ============================================================================
 SetQ::SetQ(ActionMachine& actionMachine, const char* effName, int jointID, double jointPos)
     : Action(actionMachine, "SetQ") {
-  PDtaskL::memMove=true;
+  CtrlTaskL::memMove=true;
 
-  auto task = new PDtask(
+  auto task = new CtrlTask(
       effName, 2, .8, new TaskMap_qItself(jointID, actionMachine.s->world.q.N));
   task->setTarget({jointPos});
   task->active = true;
@@ -131,7 +131,7 @@ SetQ::SetQ(ActionMachine& actionMachine, const char* effName, int jointID, doubl
 
 bool SetQ::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
-  PDtask *task=tasks(0);
+  CtrlTask *task=tasks(0);
   return false;
   return (task->y.N == task->y_ref.N &&
           maxDiff(task->y, task->y_ref) < 1e-3);
@@ -159,7 +159,7 @@ void PushForce::step(ActionMachine& M){
 
 bool PushForce::finishedSuccess(ActionMachine& M) {
   return false;
-  // PDtask *task=tasks(0);
+  // CtrlTask *task=tasks(0);
   // return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
   // return false;
 }
@@ -167,8 +167,8 @@ bool PushForce::finishedSuccess(ActionMachine& M) {
 //===========================================================================
 FollowReferenceInTaskSpace::FollowReferenceInTaskSpace(ActionMachine& actionMachine, const char* name, TaskMap *map, const arr& referenceTraj, double durationInSeconds)
   : Action(actionMachine, name), ref(referenceTraj), duration(durationInSeconds), task(NULL) {
-  PDtaskL::memMove=true;
-  task = new PDtask(
+  CtrlTaskL::memMove=true;
+  task = new CtrlTask(
                    STRING("FollowTraj_" << name), 1., .8,
                    map);
   // task->setGains(200.,0.);

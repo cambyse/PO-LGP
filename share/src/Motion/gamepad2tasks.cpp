@@ -39,7 +39,7 @@ double gamepadSignalMap(double x){
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   if(stopButtons(gamepadState)) return true;
 
-  for(PDtask* pdt:MP.tasks) pdt->active=false;
+  for(CtrlTask* pdt:MP.tasks) pdt->active=false;
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
 
@@ -68,7 +68,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
-      PDtask *pdt=NULL, *pdt_rot=NULL;
+      CtrlTask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
         case right:  pdt=endeffR;  break;
         case left:   pdt=endeffL;  break;
@@ -122,7 +122,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     case 4:
     case 8:{ //open/close hand
       cout <<"open/close hand" <<endl;
-      PDtask *pdt=NULL;
+      CtrlTask *pdt=NULL;
       switch(sel){
         case right:  pdt=gripperR;  break;
         case left:   pdt=gripperL;  break;

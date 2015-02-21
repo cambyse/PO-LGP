@@ -251,11 +251,11 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-  PDtask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
+  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

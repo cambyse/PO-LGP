@@ -186,7 +186,7 @@ void executeTrajectory(String scene, ControlType cType){
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dir);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
+  CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
   double regularization = 1e-3;
 
   // initialize controllers

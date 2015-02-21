@@ -130,15 +130,15 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-    PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
     pd_y->prec = 10.;
 
     //joint space PD task
-    PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+    CtrlTask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
     pd_x->prec = .1;
 
 
-    //PDtask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+    //CtrlTask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
     //  coll->y_ref.setZero();
     //  coll->v_ref.setZero();
 
@@ -251,15 +251,15 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-  PDtask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
-  //PDtask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  //CtrlTask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   //  coll->y_ref.setZero();
   //  coll->v_ref.setZero();
 
@@ -431,24 +431,24 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
 
 
-  PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
 /*/
 
-  PDtask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
+  CtrlTask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
   //tasks.append(limits);
 
-  PDtask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  CtrlTask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   coll->y_ref.setZero();
   coll->v_ref.setZero();/*/
 

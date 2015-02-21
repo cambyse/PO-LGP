@@ -212,8 +212,8 @@ void executeTrajectoryWholeBody(String scene){
   MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
-  PDtask *taskPosL, *taskVecL;
+  CtrlTask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
+  CtrlTask *taskPosL, *taskVecL;
   //double regularization = 1e-2;
 
   // initialize controllers
@@ -435,7 +435,7 @@ void executeTrajectoryRightArm(String scene){
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *qitself;
+  CtrlTask *taskPosR, *taskVecR, *qitself;
   //double regularization = 1e-2;
 
   // initialize controllers

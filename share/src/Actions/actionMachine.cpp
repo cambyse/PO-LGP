@@ -83,17 +83,17 @@ void ActionMachine::step(){
   for(Action *a : A()) {
     if(a->actionState==ActionState::active){
       a->step(*this);
-      for(PDtask *t:a->tasks) t->active=true;
+      for(CtrlTask *t:a->tasks) t->active=true;
       a->actionTime += .01;
     } else {
-      for(PDtask *t:a->tasks) t->active=false;
+      for(CtrlTask *t:a->tasks) t->active=false;
     }
   }
 
   //-- compute the feedback controller step
   //first collect all tasks of all actions into the feedback controller:
   s->feedbackController.tasks.clear();
-  for(Action *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
+  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->feedbackController.tasks.append(t);
   //now operational space control
   for(uint tt=0;tt<10;tt++){
     arr a = s->feedbackController.operationalSpaceControl();
@@ -203,7 +203,7 @@ Action::Action(ActionMachine& actionMachine, const char* name, ActionState actio
 }
 
 Action::~Action(){
-//  for (PDtask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
+//  for (CtrlTask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
   listDelete(tasks);
 }
 
@@ -211,8 +211,8 @@ void Action::reportState(ostream& os){
   os <<"Action '" <<name
     <<"':  actionState=" << getActionStateString(actionState)
     <<"  actionTime=" << actionTime
-    <<"  PDtasks:" <<endl;
-  for(PDtask* t: tasks) t->reportState(os);
+    <<"  CtrlTasks:" <<endl;
+  for(CtrlTask* t: tasks) t->reportState(os);
   reportDetails(os);
 }
 

@@ -20,12 +20,12 @@
 
 //===========================================================================
 
-PDtask::PDtask(const char* name, double decayTime, double dampingRatio, TaskMap* map)
+CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio, TaskMap* map)
   : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
-//PDtask::PDtask(const char* name, double decayTime, double dampingRatio,
+//CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio,
 //               DefaultTaskMapType type, const ors::KinematicWorld& G,
 //               const char* iShapeName, const ors::Vector& ivec,
 //               const char* jShapeName, const ors::Vector& jvec,
@@ -34,19 +34,19 @@ PDtask::PDtask(const char* name, double decayTime, double dampingRatio, TaskMap*
 //  setGainsAsNatural(decayTime, dampingRatio);
 //}
 
-void PDtask::setTarget(const arr& yref, const arr& vref){
+void CtrlTask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
   if(&vref) v_ref=vref; else v_ref.resizeAs(y_ref).setZero();
 }
 
-void PDtask::setGains(double pgain, double dgain) {
+void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
   Pgain=pgain;
   Dgain=dgain;
   if(!prec) prec=100.;
 }
 
-void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
+void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
   Pgain = MT::sqr(1./lambda);
@@ -54,7 +54,7 @@ void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
   if(!prec) prec=100.;
 }
 
-arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
+arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!y_ref.N) y_ref.resizeAs(y).setZero();
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
   this->y = y;
@@ -65,8 +65,8 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 
-void PDtask::reportState(ostream& os){
-  os <<"  PDtask " <<name;
+void CtrlTask::reportState(ostream& os){
+  os <<"  CtrlTask " <<name;
   if(active) {
     if(y_ref.N==y.N && v_ref.N==v.N){
       os <<":  y_ref=" <<y_ref <<" \ty=" <<y
@@ -123,16 +123,16 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   qitselfPD.prec=1.;
 }
 
-PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
-  return tasks.append(new PDtask(name, decayTime, dampingRatio, map));
+CtrlTask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
+  return tasks.append(new CtrlTask(name, decayTime, dampingRatio, map));
 }
 
-PDtask* FeedbackMotionControl::addPDTask(const char* name,
+CtrlTask* FeedbackMotionControl::addPDTask(const char* name,
                                          double decayTime, double dampingRatio,
                                          DefaultTaskMapType type,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec){
-  return tasks.append(new PDtask(name, decayTime, dampingRatio,
+  return tasks.append(new CtrlTask(name, decayTime, dampingRatio,
                                  new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec)));
 }
 
@@ -150,7 +150,7 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
   c.clear();
   if(&J) J.clear();
   arr y, J_y, yddot_des;
-  for(PDtask* t: tasks) {
+  for(CtrlTask* t: tasks) {
     if(t->active) {
       t->map.phi(y, J_y, world);
       yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
@@ -162,7 +162,7 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
 }
 
 void FeedbackMotionControl::reportCurrentState(){
-  for(PDtask* t: tasks) t->reportState(cout);
+  for(CtrlTask* t: tasks) t->reportState(cout);
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){

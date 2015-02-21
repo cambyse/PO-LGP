@@ -46,7 +46,7 @@ private:
   // Ors related variables
   FeedbackMotionControl* MP;
   ors::KinematicWorld* world;
-  PDtask *taskPos, *taskVec, *taskHome, *taskLimits;
+  CtrlTask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;
   arr Kp,Ki,Kd;

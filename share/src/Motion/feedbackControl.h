@@ -26,16 +26,16 @@
  * @file
  * With the feedback control we can define motions for operation space control.
  *
- * We simply define a set of motions via PDtasks/ConstraintForceTask and run
+ * We simply define a set of motions via CtrlTasks/ConstraintForceTask and run
  * them.
  */
 
 
 //===========================================================================
 /**
- * A PDtask defines a motion in operational space.
+ * A CtrlTask defines a motion in operational space.
  */
-struct PDtask{
+struct CtrlTask{
   TaskMap& map;
   MT::String name;
   bool active;
@@ -58,8 +58,8 @@ struct PDtask{
   arr y, v;
   /// @}
 
-  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){}
-  PDtask(const char* name, double decayTime, double dampingRatio, TaskMap* map);
+  CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){}
+  CtrlTask(const char* name, double decayTime, double dampingRatio, TaskMap* map);
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
@@ -78,7 +78,7 @@ struct ConstraintForceTask{
   bool active;
 
   double desiredForce;
-  PDtask desiredApproach;
+  CtrlTask desiredApproach;
 
   ConstraintForceTask(TaskMap* m):map(*m), active(true), desiredForce(0.), desiredApproach(m){}
 
@@ -88,19 +88,19 @@ struct ConstraintForceTask{
 //===========================================================================
 
 /**
- * FeedbackMotionControl contains all individual motions/PDtasks.
+ * FeedbackMotionControl contains all individual motions/CtrlTasks.
  */
 struct FeedbackMotionControl : MotionProblem {
-  MT::Array<PDtask*> tasks;
+  MT::Array<CtrlTask*> tasks;
   MT::Array<ConstraintForceTask*> forceTasks;
-  PDtask qitselfPD;
+  CtrlTask qitselfPD;
   arr H_rate_diag;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
   /// @{ @name adding tasks
-  PDtask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
-  PDtask* addPDTask(const char* name,
+  CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
+  CtrlTask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
                     DefaultTaskMapType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,

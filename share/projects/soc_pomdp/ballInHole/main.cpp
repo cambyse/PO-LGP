@@ -208,13 +208,13 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   MC.qitselfPD.active=true;
 
   //position PD task
-  PDtask *pd_y=
+  CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x=
+  CtrlTask *pd_x=
       MC.addPDTask("pose", .1, .8,
                     new TaskMap_qItself());
   pd_x->prec = .1;

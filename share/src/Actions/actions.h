@@ -7,10 +7,10 @@
 
 //===========================================================================
 struct Action;
-struct PDtask;
+struct CtrlTask;
 struct ActionMachine;
 typedef MT::Array<Action*> ActionL;
-typedef MT::Array<PDtask*> PDtaskL;
+typedef MT::Array<CtrlTask*> CtrlTaskL;
 
 
 //===========================================================================
@@ -39,8 +39,8 @@ struct Action {
   /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
 
-  //-- not nice: list of PDtasks that this action added to the OSC
-  PDtaskL tasks;
+  //-- not nice: list of CtrlTasks that this action added to the OSC
+  CtrlTaskL tasks;
 
   Action(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
   virtual ~Action();
@@ -116,7 +116,7 @@ struct PushForce : Action {
 struct FollowReferenceInTaskSpace : Action{
   arr ref;
   double duration;
-  PDtask *task;
+  CtrlTask *task;
   FollowReferenceInTaskSpace(ActionMachine& actionMachine, const char* name, TaskMap *map, const arr& referenceTraj, double durationInSeconds);
   virtual void step(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);

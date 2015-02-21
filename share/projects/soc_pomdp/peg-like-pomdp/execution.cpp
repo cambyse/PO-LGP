@@ -140,14 +140,14 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     MC.qitselfPD.active=false;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-    PDtask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+    CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector));
     pd_y->prec = 10.;
     pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
     //MC.setInterpolatingCosts();
 
 
     //joint space PD task
-    PDtask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
+    CtrlTask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
     pd_x->prec = .1;
 
     //plane constraint task
