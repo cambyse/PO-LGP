@@ -149,11 +149,13 @@ Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, 
   return fact;
 }
 
-void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
+bool applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
   }
+
+  bool hasEffects=false;
 
   //first collect tuple matches
   ItemL matches;
@@ -164,12 +166,17 @@ void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph
   if(trueValue){
     if(!matches.N){
       createNewSubstitutedLiteral(KB, literal, subst, subst_scope);
+      hasEffects=true;
     }else{
       for(Item *m:matches){
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
           *m->getValue<double>() += *literal->getValue<double>();
+          hasEffects=true;
         }else{
-          m->copyValue(literal);
+          if(!m->hasEqualValue(literal)){
+            m->copyValue(literal);
+            hasEffects=true;
+          }
         }
       }
     }
@@ -177,15 +184,20 @@ void applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph
   }else{
     //delete all matching facts!
     for(Item *fact:matches) delete fact;
+    if(matches.N) hasEffects=true;
   }
+  return hasEffects;
 }
 
-void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope){
+bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope){
   CHECK(effectliterals->getValueType()==typeid(KeyValueGraph), "");
   KeyValueGraph &effects = *effectliterals->getValue<KeyValueGraph>();
+  bool hasEffects=false;
   for(Item *lit:effects){
-    applySubstitutedLiteral(KB, lit, subst, subst_scope);
+    bool e = applySubstitutedLiteral(KB, lit, subst, subst_scope);
+    hasEffects = hasEffects || e;
   }
+  return hasEffects;
 }
 
 bool checkTruth(Item* literal, const ItemL& subst, Graph* subst_scope){
@@ -289,7 +301,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   //-- for the others, create constraints
   ItemL constraints;
   for(Item *literal:literals){
-    if(lit_numVars(literal->index)>1 || (literal->parents.N && literal->parents(0)==EQ)){
+    if(lit_numVars(literal->index)!=1 || (literal->parents.N && literal->parents(0)==EQ)){
       constraints.append(literal);
     }
   }
@@ -297,6 +309,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
   if(verbose){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
 
   //-- naive CSP: loop through everything
+  uint subN=0;
   ItemL substitutions;
   ItemL values(vars.N); values.setZero();
   {
@@ -327,10 +340,11 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
       if(feasible){
         if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
         substitutions.append(values);
+        subN++;
       }
     }
   }
-  substitutions.reshape(substitutions.N/vars.N,vars.N);
+  substitutions.reshape(subN,vars.N);
 
   if(verbose){
     cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;
@@ -345,7 +359,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
 }
 
 
-bool forwardChaining_FOL(KeyValueGraph& KB, Item* query){
+bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
   //  KB.checkConsistency();
   //  uintA count(KB.N);     count=0;
   //  boolA inferred(KB.N);  inferred=false;
@@ -366,28 +380,45 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query){
     KB.checkConsistency();
     bool newFacts=false;
     for(Item *rule:rules){
-      ItemL subs = getRuleSubstitutions(rule, state, constants);
+      if(verbose) cout <<"Testing Rule " <<*rule <<endl;
+      ItemL subs = getRuleSubstitutions(rule, state, constants, verbose);
       for(uint s=0;s<subs.d0;s++){
-        Item *fact = createNewSubstitutedLiteral(KB, rule->kvg().last(), subs[s], &rule->kvg());
-        ItemL matches = getFactMatches(fact, state);
+        Item *effect = rule->kvg().last();
+        if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
+        bool e = applyEffectLiterals(KB, effect, subs[s], &rule->kvg());
         state = getLiteralsOfScope(KB);
-        cout <<"new fact = " <<*fact <<endl;
-        cout <<"NEW STATE = " <<GRAPH(state) <<endl;
-        if(matches.N){
-          cout <<"EXISTED -> DELETED!" <<endl;
-          delete fact;
-        }else{
-          newFacts=true;
+        if(verbose){
+          if(e) cout <<"NEW STATE = " <<GRAPH(state) <<endl;
+          else cout <<"DID NOT CHANGE STATE" <<endl;
+        }
+        newFacts |= e;
+        if(e){
           if(getFactMatches(query, state).N){
             cout <<"SUCCESS!" <<endl;
             return true;
           }
         }
+
+//        Item *fact = createNewSubstitutedLiteral(KB, rule->kvg().last(), subs[s], &rule->kvg());
+//        ItemL matches = getFactMatches(fact, state);
+//        state = getLiteralsOfScope(KB);
+//        cout <<"new fact = " <<*fact <<endl;
+//        cout <<"NEW STATE = " <<GRAPH(state) <<endl;
+//        if(matches.N){
+//          cout <<"EXISTED -> DELETED!" <<endl;
+//          delete fact;
+//        }else{
+//          newFacts=true;
+//          if(getFactMatches(query, state).N){
+//            cout <<"SUCCESS!" <<endl;
+//            return true;
+//          }
+//        }
       }
-      if(!subs.N){
-        cout <<"NO NEW STATE" <<endl;
+      if(!subs.d0){
+        if(verbose) cout <<"NO NEW STATE for this rule" <<endl;
       }
-//      MT::wait();
+//      if(verbose) MT::wait();
     }
     if(!newFacts) break;
   }

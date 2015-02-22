@@ -34,7 +34,7 @@ bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bo
 /// add the new literal to KB
 Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope);
 
-void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope);
+bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope);
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
 bool checkTruth(Item *literal, const ItemL& subst, Graph* subst_scope);
@@ -51,7 +51,7 @@ ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool ver
 ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verbose=false);
 
 
-bool forwardChaining_FOL(KeyValueGraph& KB, Item* query);
+bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose=false);
 
 // actually propositional logic:
 bool forwardChaining_propositional(KeyValueGraph& KB, Item* q);

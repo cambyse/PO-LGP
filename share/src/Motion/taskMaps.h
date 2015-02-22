@@ -42,7 +42,8 @@ enum DefaultTaskMapType {
   posDiffTMT, ///< the difference of two positions (NOT the relative position)
   vecDiffTMT, ///< the difference of two vectors (NOT the relative position)
   quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
-  vecAlignTMT ///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  vecAlignTMT,///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  gazeAtTMT   ///< 2D orthogonality measure of object relative to camera plane
 };
 
 struct DefaultTaskMap:TaskMap {

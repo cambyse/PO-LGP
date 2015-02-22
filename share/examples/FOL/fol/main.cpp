@@ -212,10 +212,10 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-//  testPolFwdChaining();
+  testPolFwdChaining();
 //  testFolLoadFile();
 //  testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
+//  testFolSubstitution();
 //  testMonteCarlo();
 }

@@ -1,0 +1,37 @@
+Symbol conv
+Symbol over
+Symbol contact
+
+Symbol gaze
+Symbol handAlign
+Symbol posHand
+Symbol lowHand
+Symbol stabForce
+Symbol home
+
+#initial state:
+(gaze) (handAlign) (posHand)
+
+Terminal{ (home conv) }
+
+# rules to be replaced by the real machine!
+Rule {  (posHand),  { (posHand conv) } }
+Rule {  (handAlign),  { (handAlign conv) } }
+Rule {  (lowHand),  { (contact) } }
+Rule {  (stabForce),  { (stabForce over) } }
+Rule {  (home),  { (home conv) } }
+
+Rule {
+  (posHand conv) (handAlign conv),
+  { (lowHand) (posHand)! (posHand conv)! }
+}
+
+Rule {
+  (lowHand) (contact),
+  { (lowHand)! (stabForce) }
+}
+
+Rule {
+  (stabForce over),
+  { (home) (gaze)! (handAlign)! (handAlign conv)! (stabForce)! (stabForce over)! }
+}

@@ -149,6 +149,32 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     return;
   }
 
+  if(type==gazeAtTMT){
+    ors::Vector vec_i = G.shapes(i)->rel.rot*ivec;
+    ors::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
+    ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
+    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
+    arr pi,Jpi, xi,Jxi, yi,Jyi, pj,Jpj;
+    G.kinematicsPos(pi, Jpi, body_i, &vec_i);
+    G.kinematicsVec(xi, Jxi, body_i, &vec_xi);
+    G.kinematicsVec(yi, Jyi, body_i, &vec_yi);
+    if(body_j==NULL) {
+      pj = ARRAY(vec_j);
+      if(&J) { Jpj.resizeAs(Jpi); Jpj.setZero(); }
+    } else {
+      G.kinematicsPos(pj, Jpj, body_j, &vec_j);
+    }
+    y.resize(2);
+    y(0) = scalarProduct(xi, (pj-pi));
+    y(1) = scalarProduct(yi, (pj-pi));
+    if(&J) {
+      J = cat( ~xi * (Jpj-Jpi) + ~(pj-pi) * Jxi,
+               ~yi * (Jpj-Jpi) + ~(pj-pi) * Jyi );
+      J.reshape(2, G.getJointStateDimension());
+    }
+    return;
+  }
+
   if(type==quatTMT){
     if(body_j==NULL) { //simple, no j reference
       G.kinematicsQuat(y, J, body_i);
@@ -194,6 +220,7 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
     case vecDiffTMT: return 3;
     case quatDiffTMT: return 4;
     case vecAlignTMT: return 1;
+    case gazeAtTMT: return 2;
     default:  HALT("no such TMT");
   }
 }
