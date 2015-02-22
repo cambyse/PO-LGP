@@ -183,7 +183,7 @@ struct Engine{
   Engine();
   virtual ~Engine();
 
-  void open(System& S);
+  void open(System& S, bool waitForOpened=true);
   void step(Module &m, bool threadedOnly=false);
   void step(System& S=NoSystem);
   void test(System& S=NoSystem);

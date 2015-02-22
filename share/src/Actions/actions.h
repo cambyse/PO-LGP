@@ -34,6 +34,7 @@ const char* getActionStateString(ActionState actionState);
 struct Action {
   MT::String name;
   ActionState actionState;
+  Item *symbol;
   double actionTime;
 
   /// @name dependence & hierarchy

@@ -343,7 +343,7 @@ Engine::~Engine(){
   delete acc;
 }
 
-void Engine::open(System& S){
+void Engine::open(System& S, bool waitForOpened){
   system = &S;
 
   S.connect();
@@ -407,6 +407,9 @@ void Engine::open(System& S){
       case Module_Thread::loopFull:  m->thread->threadLoop();  break;
       default:  break;
       }
+    }
+    if(waitForOpened){
+      for(Module *m: S.mts) m->thread->waitForOpened();
     }
   }
 

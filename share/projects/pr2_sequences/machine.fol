@@ -2,6 +2,7 @@ Symbol conv
 Symbol over
 Symbol contact
 
+Action CoreTasks
 Action gaze
 Action handAlign
 Action posHand
@@ -10,16 +11,16 @@ Action stabForce
 Action home
 
 #initial state:
-(gaze) (handAlign) (posHand)
+(CoreTasks) (gaze) (handAlign) (posHand)
 
 Terminal{ (home conv) }
 
 # rules to be replaced by the real machine!
-Rule {  (posHand),  { (posHand conv) } }
-Rule {  (handAlign),  { (handAlign conv) } }
-Rule {  (lowHand),  { (contact) } }
-Rule {  (stabForce),  { (stabForce over) } }
-Rule {  (home),  { (home conv) } }
+#Rule {  (posHand),  { (posHand conv) } }
+#Rule {  (handAlign),  { (handAlign conv) } }
+#Rule {  (lowHand),  { (contact) } }
+#Rule {  (stabForce),  { (stabForce over) } }
+#Rule {  (home),  { (home conv) } }
 
 Rule {
   (posHand conv) (handAlign conv),
@@ -27,11 +28,12 @@ Rule {
 }
 
 Rule {
-  (lowHand) (contact),
-  { (lowHand)! (stabForce) }
+  (lowHand) (lowHand conv),
+#  { (stabForce) (lowHand)! (lowHand conv)! }
+  { (home) (lowHand)! (lowHand conv)! (gaze)! (handAlign)! (handAlign conv)! }
 }
 
-Rule {
-  (stabForce over),
-  { (home) (gaze)! (handAlign)! (handAlign conv)! (stabForce)! (stabForce over)! }
-}
+#Rule {
+#  (stabForce over),
+#  { (home) (gaze)! (handAlign)! (handAlign conv)! (stabForce)! (stabForce over)! }
+#}

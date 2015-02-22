@@ -2,6 +2,7 @@
 
 #include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
+#include <FOL/fol.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -35,6 +36,12 @@ void ActionMachine::open(){
   s->feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
+
+  KB.writeAccess();
+  FILE("machine.fol") >> KB();
+  KB().checkConsistency();
+  KB()>> FILE("z.initialKB");
+  KB.deAccess();
 
   MT::open(fil,"z.actionMachine");
 
@@ -74,7 +81,8 @@ void ActionMachine::step(){
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
-  transition();
+//  transition();
+  transitionFOL();
 
   //-- set gains to default value (can be overwritten by other actions)
   Kq_gainFactor=ARR(1.);
@@ -88,14 +96,14 @@ void ActionMachine::step(){
   A.writeAccess();
 
   //  cout <<"** active actions:";
-//  reportActions(A());
+  reportActions(A());
 
   //-- code to output force signals
   if(true){
     ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
     arr fLobs = ctrl_obs.get()->fL;
     arr uobs =  ctrl_obs.get()->u_bias;
-    cout <<fLobs <<endl;
+//    cout <<fLobs <<endl;
     if(fLobs.N && uobs.N){
       arr Jft, J;
       world->kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
@@ -203,6 +211,40 @@ void ActionMachine::transition(){
   A.deAccess();
 }
 
+void ActionMachine::transitionFOL(){
+  KB.writeAccess();
+
+  //-- check new successes and fails and add to symbolic state
+  Item* convSymbol = KB().getItem("conv");
+  Item* overSymbol = KB().getItem("over");
+  A.readAccess();
+  for(Action *a:A()) if(a->actionState==ActionState::active){
+    if(a->finishedSuccess(*this)){
+      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
+      if(getMatchInScope(newit, &KB())) delete newit;
+//    if(a->finishedFail(*this)) a->actionState=ActionState::failed;
+    }
+  }
+  A.deAccess();
+
+  forwardChaining_FOL(KB(), NULL, false);
+  A.writeAccess();
+  for(Action *a:A()){
+    bool act=false;
+    for(Item *lit:a->symbol->parentOf){
+      if(&lit->container==&KB() && lit->parents.N==1){ act=true; break; }
+    }
+    if(act) a->actionState=ActionState::active;
+    else a->actionState=ActionState::queued;
+  }
+  A.deAccess();
+  {
+    ItemL state = getLiteralsOfScope(KB());
+    listWrite(state, cout); cout <<endl;
+  }
+  KB.deAccess();
+}
+
 void ActionMachine::waitForActionCompletion(Action* a){
   for(bool cont=true;cont;){
     A.var->waitForNextRevision();
@@ -222,28 +264,6 @@ void ActionMachine::waitForActionCompletion() {
     }
     A.deAccess();
   }
-}
-//===========================================================================
-// GroundedAction
-//
-
-Action::Action(ActionMachine& actionMachine, const char* name, ActionState actionState)
-  : name(name), actionState(actionState), actionTime(0.){
-  actionMachine.A.set()->append(this);
-}
-
-Action::~Action(){
-//  for (CtrlTask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
-  listDelete(tasks);
-}
-
-void Action::reportState(ostream& os){
-  os <<"Action '" <<name
-    <<"':  actionState=" << getActionStateString(actionState)
-    <<"  actionTime=" << actionTime
-    <<"  CtrlTasks:" <<endl;
-  for(CtrlTask* t: tasks) t->reportState(os);
-  reportDetails(os);
 }
 
 //===========================================================================

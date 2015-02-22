@@ -9,32 +9,33 @@
 //===========================================================================
 void TEST(Push) {
   ActionSystem activity;
-  new CoreTasks(*activity.machine);
   engine().open(activity);
   
+  new CoreTasks(*activity.machine);
+
   Action *a, *b, *c;
 
-  c = new FollowReference(*activity.machine, "moving",
+  c = new FollowReference(*activity.machine, "gaze",
                           new DefaultTaskMap(gazeAtTMT, *activity.machine->world, "endeffHead", NoVector, "endeffL"),
                           {}, {}, -1., .5, .9, .1, 10., 1., -1.);
 
-  b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
-                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .1, 10., 100., -1.);
+  b = new FollowReference(*activity.machine, "handAlign", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
+                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .1, 10., 100.);
 
-  a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+  a = new FollowReference(*activity.machine, "posHand", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
                           {.7, .3, .7}, {}, -1., .5, .9, .1, 10.);
 
-  activity.machine->waitForActionCompletion(a);
+//  activity.machine->waitForActionCompletion(a);
 
-  a = new FollowReference(*activity.machine, "orientation", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+  a = new FollowReference(*activity.machine, "lowHand", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
                           {.7, .3, .5}, {}, -1., .5, .9, .05, 10.);
 
-  activity.machine->waitForActionCompletion(a);
+//  activity.machine->waitForActionCompletion(a);
 
-  activity.machine->removeAction(b);
-  activity.machine->removeAction(c);
+//  activity.machine->removeAction(b);
+//  activity.machine->removeAction(c);
 
-  a = new Homing(*activity.machine, "homing");
+  a = new Homing(*activity.machine, "home");
   activity.machine->waitForActionCompletion(a);
 
 #if 0
@@ -115,9 +116,9 @@ void rewriteGraph(){
 int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
-//  testPush();
+  testPush();
 //  testFol();
-  rewriteGraph();
+//  rewriteGraph();
 
   return 0;
 }

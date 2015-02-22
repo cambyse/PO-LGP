@@ -2,13 +2,43 @@
 #include <Motion/feedbackControl.h>
 #include "actionMachine_internal.h"
 
+//===========================================================================
+// Action
+//
+
+Action::Action(ActionMachine& actionMachine, const char* name, ActionState actionState)
+  : name(name), actionState(actionState), symbol(NULL), actionTime(0.){
+  actionMachine.A.set()->append(this);
+  actionMachine.KB.readAccess();
+  Item *it = actionMachine.KB().getItem(name);
+  if(it && &it->container != &actionMachine.KB()) it=NULL;
+  if(it && it->getValueType()!=typeid(bool)) it=NULL;
+  actionMachine.KB.deAccess();
+  if(!it) MT_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
+  if(it) symbol=it;
+}
+
+Action::~Action(){
+//  for (CtrlTask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
+  listDelete(tasks);
+}
+
+void Action::reportState(ostream& os){
+  os <<"Action '" <<name
+    <<"':  actionState=" << getActionStateString(actionState)
+    <<"  actionTime=" << actionTime
+    <<"  CtrlTasks:" <<endl;
+  for(CtrlTask* t: tasks) t->reportState(os);
+  reportDetails(os);
+}
+
 // ============================================================================
 FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
     const arr& yref, const arr& vref, double durationInSeconds,
     double decayTime, double dampingRatio, double maxVel, double maxAcc,
     double relativePrec,
     double stopTolerance, bool stopOnContact)
-  : Action(actionMachine, "FollowReference"), duration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
+  : Action(actionMachine, name), duration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
   CtrlTask* task = new CtrlTask(STRING("FollowReference_" << name), map,
                                 decayTime, dampingRatio, maxVel, maxAcc);
   if(yref.nd==2){
@@ -83,7 +113,7 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 
 //===========================================================================
 Homing::Homing(ActionMachine& actionMachine, const char* effName)
-  : Action(actionMachine, "Homing") {
+  : Action(actionMachine, "home") {
   CtrlTask *task = new CtrlTask(
                      STRING("Homing_" << effName),
                      new TaskMap_qItself(),

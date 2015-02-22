@@ -94,9 +94,9 @@ bool match(Item* literal0, Item* literal1){
 }
 
 Item *getMatchInScope(Item *literal, Graph* scope){
-  CHECK(&literal->container!=scope,"if the literal is in the scope, this does not make sense to ask");
+//  CHECK(&literal->container!=scope,"if the literal is in the scope, this does not make sense to ask");
   Item *predicate=literal->parents(0);
-  for(Item *lit:predicate->parentOf) if(&lit->container==scope){
+  for(Item *lit:predicate->parentOf) if(&lit->container==scope && lit!=literal){
     if(match(literal, lit)) return lit;
   }
   return NULL;
@@ -392,7 +392,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
           else cout <<"DID NOT CHANGE STATE" <<endl;
         }
         newFacts |= e;
-        if(e){
+        if(e && query){
           if(getFactMatches(query, state).N){
             cout <<"SUCCESS!" <<endl;
             return true;
@@ -422,7 +422,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
     }
     if(!newFacts) break;
   }
-  cout <<"FAILED" <<endl;
+  if(query) cout <<"FAILED" <<endl;
   return false;
 }
 

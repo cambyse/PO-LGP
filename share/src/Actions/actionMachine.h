@@ -24,6 +24,7 @@ struct ActionMachine : Module {
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
+  ACCESS(Graph, KB);
 
   ActionMachine();
   ~ActionMachine();
@@ -55,6 +56,7 @@ struct ActionMachine : Module {
   void close();
 
   void transition();
+  void transitionFOL();
 };
 
 //===========================================================================
