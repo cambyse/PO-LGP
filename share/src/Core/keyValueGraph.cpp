@@ -517,9 +517,10 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEdges, int nodesOrEdges) {
+void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultEdges, int nodesOrEdges) {
   if(!withoutHeader){
-    os <<"graph G{" <<endl;
+    if(defaultEdges) os <<"digraph G{" <<endl;
+    else             os <<"graph G{" <<endl;
     os <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
     os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
     os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
@@ -538,7 +539,7 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEd
     }
 
     if(defaultEdges && it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
-      os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
+      os <<it->parents(0)->index <<" -> " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
     }else{
       if(it->getValueType()==typeid(KeyValueGraph)){
         os <<"subgraph cluster_" <<it->index <<" { " <<label /*<<" rank=same"*/ <<endl;

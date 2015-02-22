@@ -31,8 +31,10 @@ void TEST(Read){
 void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
-  G.sortByDotOrder();
-  G.writeDot(FILE("z.dot").getOs());
+  G.checkConsistency();
+//  G.sortByDotOrder();
+//  G.checkConsistency();
+  G.writeDot(FILE("z.dot").getOs(), false, true);
 }
 
 //===========================================================================
@@ -48,7 +50,7 @@ REGISTER_TYPE(Something)
 
 void TEST(Manual){
   KeyValueGraph G;
-  G.append(STRINGS("hallo"), ItemL(), new Something(3));
+  G.append(STRINGS("hallo"), ItemL(), new Something(3), true);
   cout <<G <<endl;
 }
 

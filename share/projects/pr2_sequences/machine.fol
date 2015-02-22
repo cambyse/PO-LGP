@@ -2,12 +2,12 @@ Symbol conv
 Symbol over
 Symbol contact
 
-Symbol gaze
-Symbol handAlign
-Symbol posHand
-Symbol lowHand
-Symbol stabForce
-Symbol home
+Action gaze
+Action handAlign
+Action posHand
+Action lowHand
+Action stabForce
+Action home
 
 #initial state:
 (gaze) (handAlign) (posHand)
