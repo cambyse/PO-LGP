@@ -95,7 +95,7 @@ struct CoreTasks : Action {
 
 //===========================================================================
 struct Homing : Action {
-  Homing(ActionMachine& actionMachine, const char* effName);
+  Homing(ActionMachine& actionMachine, const char* name);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 

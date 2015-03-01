@@ -42,16 +42,16 @@ DefaultTaskMap::DefaultTaskMap(Graph& params, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   Item *it=NULL;
   if((it=params["type"])){
-    MT::String Type=it->GetValue<MT::String>();
+    MT::String Type=it->V<MT::String>();
     if(Type=="pos") type=posTMT;
     if(Type=="vec") type=vecTMT;
     if(Type=="gazeAt") type=gazeAtTMT;
   }
   CHECK(type!=noTMT,"unknown type");
-  if((it=params["ref1"])) i = G.getShapeByName(it->GetValue<MT::String>())->index;
-  if((it=params["ref2"])) j = G.getShapeByName(it->GetValue<MT::String>())->index;
-  if((it=params["vec1"])) ivec = ors::Vector(it->GetValue<arr>());  else ivec.setZero();
-  if((it=params["vec2"])) jvec = ors::Vector(it->GetValue<arr>());  else jvec.setZero();
+  if((it=params["ref1"])) i = G.getShapeByName(it->V<MT::String>())->index;
+  if((it=params["ref2"])) j = G.getShapeByName(it->V<MT::String>())->index;
+  if((it=params["vec1"])) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
+  if((it=params["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
 }
 
 

@@ -1,53 +1,60 @@
+# These predicate symbols are used to indicate the 'state' of activities
 Symbol conv
-Symbol over
+Symbol timeout
 Symbol contact
 Symbol quit
 
+# These are symbols (constants) that indicate specific activities
+# the control tasks of these activities are defined at the bottom of this file
 Action CoreTasks
-Action gaze
-Action handAlign
-Action posHand
-Action lowHand
-Action stabForce
-Action home
+Action gazeAtHand
+Action alignHand
+Action positionHand
+Action lowerHand
+Action controlForce
+Action homing
 
-#initial state:
-(CoreTasks) (gaze) (handAlign) (posHand)
 
-Terminal{ (home conv) }
+# This is the initial state (just a propositional list of activities for now)
+(CoreTasks) (gazeAtHand) (alignHand) (positionHand)
 
-# rules to be replaced by the real machine!
-#Rule {  (posHand),  { (posHand conv) } }
-#Rule {  (handAlign),  { (handAlign conv) } }
-#Rule {  (lowHand),  { (contact) } }
-#Rule {  (stabForce),  { (stabForce over) } }
-#Rule {  (home),  { (home conv) } }
+# The following defined transition rules of the activity state
+# in the same format as our NID rules
+# so far, they're propositional; but the whole machinery works for FOL
 
+# When both, the positionHand and alignHand activities have converged, then activate 'lowerHand'
 Rule {
-  (posHand conv) (handAlign conv),
-  { (lowHand) (posHand)! (posHand conv)! }
+  (positionHand conv) (alignHand conv),
+  { (lowerHand) (positionHand)! (positionHand conv)! }
 }
 
 Rule {
-  (lowHand) (lowHand conv),
-#  { (stabForce) (lowHand)! (lowHand conv)! }
-  { (home) (lowHand)! (lowHand conv)! (gaze)! (handAlign)! (handAlign conv)! }
+  (lowerHand) (lowerHand conv),
+  { (controlForce) (lowerHand)! (lowerHand conv)! }
+}
+
+Rule {
+  (controlForce timeout),
+  { (homing) (gazeAtHand)! (alignHand)! (alignHand conv)! (controlForce)! (controlForce timeout)! }
 }
 
 Rule{
-  (home) (home conv),
-  { (quit) (home)! (home conv)! }
+  (homing) (homing conv),
+  { (quit) (homing)! (homing conv)! }
 }
 
-#Rule {
-#  (stabForce over),
-#  { (home) (gaze)! (handAlign)! (handAlign conv)! (stabForce)! (stabForce over)! }
-#}
+# This is only a shortcut to run the code without robot attached:
+# it immediately flags the controlForce timeout
+Rule {  (controlForce),  { (controlForce timeout) } }
 
+# These are just the parameter sets of the activities
 Tasks {
-  (gaze){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
-  (handAlign){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
-  (posHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
-  (lowHand){ type="pos", ref1="endeffL", target=[.7, .3, .5], PD=[.5, .9, .1, 10.] }
-  (home){ type="homing" }
+  (gazeAtHand){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
+  (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
+  (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
+  (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .5], PD=[.5, .9, .1, 10.] }
+  (homing){ type="homing" }
 }
+
+# just for checking the FOL fwd chaining engine .. not used
+Terminal{ (homing conv) }

@@ -126,7 +126,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   Item *item=NULL;
   
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
-  
+
 #define PARSERR(x) { cerr <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
                           <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
@@ -248,6 +248,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
         }
         MT::parse(is, ")");
         item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, refs, true);
+        refs->isItemOfParentKvg = item;
       } break;
       default: { //error
         is.putback(c);
@@ -611,7 +612,7 @@ bool KeyValueGraph::checkConsistency() const{
     if(it->getValueType()==typeid(KeyValueGraph)){
       Graph& G = it->kvg();
       CHECK(G.isItemOfParentKvg==it,"");
-      G.checkConsistency();
+      if(!G.isReferringToItemsOf) G.checkConsistency();
     }
     idx++;
   }
@@ -620,14 +621,14 @@ bool KeyValueGraph::checkConsistency() const{
 
 uint KeyValueGraph::index(bool subKVG, uint start){
   uint idx=start;
-  for(Item *i: list()){
-    i->index=idx;
+  for(Item *it: list()){
+    it->index=idx;
     idx++;
-    if(i->getValueType()==typeid(KeyValueGraph)){
-      if(subKVG){
-        idx = i->getValue<KeyValueGraph>()->index(true, idx);
-      }else{
-        i->getValue<KeyValueGraph>()->index(false, 0);
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      Graph& G=it->kvg();
+      if(!G.isReferringToItemsOf){
+        if(subKVG) idx = G.index(true, idx);
+        else G.index(false, 0);
       }
     }
   }

@@ -9,8 +9,10 @@ const char *filename=NULL;
 void TEST(Read){
   KeyValueGraph G;
 
+  G.checkConsistency();
   cout <<"\n** reading graph..." <<flush;
   G <<FILE(filename?filename:"example.kvg");
+  G.checkConsistency();
   cout <<"\ndone" <<endl;
   cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
@@ -18,12 +20,14 @@ void TEST(Read){
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
+  G.checkConsistency();
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
-  cout <<*G["k"]->getValue<KeyValueGraph>() <<endl;
-  cout <<*G["val"]->getValue<double>() <<endl;
-  cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
+  cout <<G["k"]->kvg() <<endl;
+  cout <<G["val"]->V<double>() <<endl;
+  cout <<G["k"]->kvg()["z"]->V<MT::String>() <<endl;
+  cout <<"DONE" <<endl;
 }
 
 //===========================================================================
@@ -62,8 +66,8 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-//  testRead();
-  testDot();
+  testRead();
+//  testDot();
 
 //  if(!filename) testManual();
 

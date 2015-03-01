@@ -119,10 +119,10 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 }
 
 //===========================================================================
-Homing::Homing(ActionMachine& actionMachine, const char* effName)
-  : Action(actionMachine, "home") {
+Homing::Homing(ActionMachine& actionMachine, const char* name)
+  : Action(actionMachine, name) {
   CtrlTask *task = new CtrlTask(
-                     STRING("Homing_" << effName),
+                     STRING("Homing_" << name),
                      new TaskMap_qItself(),
                      1., .8, 1., 1.);
   task->y_ref=actionMachine.s->q0;

@@ -98,7 +98,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts(KinematicWorld& G);
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };

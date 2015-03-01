@@ -106,7 +106,7 @@ void ors::Body::reset() {
   inertia.setZero();
 }
 
-void ors::Body::parseAts(KinematicWorld& G) {
+void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
   MT::String str;
@@ -138,12 +138,12 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
     // if mesh is not .obj we only have one shape
     if(!file->name.endsWith("obj")) {
-      new Shape(G, *this);
+      new Shape(world, *this);
     }else{  // if .obj file create Shape for all submeshes
       auto subMeshPositions = getSubMeshPositions(file->name);
       for(uint i=0;i<subMeshPositions.d0;i++){
         auto parsing_pos = subMeshPositions[i];
-        Shape *s = new Shape(G, *this);
+        Shape *s = new Shape(world, *this);
         s->mesh.parsing_pos_start = parsing_pos(0);
         s->mesh.parsing_pos_end = parsing_pos(1);
         s->mesh.readObjFile(file->getIs());
@@ -155,7 +155,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
   // add shape if there is no shape exists yet
   if(ats.getItem("type") && !shapes.N){
-    Shape *s = new Shape(G, *this);
+    Shape *s = new Shape(world, *this);
     s->name = name;
   }
 
@@ -179,7 +179,7 @@ void ors::Body::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
-  parseAts(NoGraph);
+  parseAts();
 }
 
 namespace ors {
@@ -1688,7 +1688,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
     b->ats = *it->getValue<KeyValueGraph>();
-    b->parseAts(*this);
+    b->parseAts();
   }
   
   ItemL ss = G.getItems("shape");

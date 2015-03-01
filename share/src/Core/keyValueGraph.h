@@ -47,7 +47,9 @@ struct Item {
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
-  template<class T> T& GetValue(); ///< as above
+//  template<class T> T& GetValue(); ///< as above
+  template<class T> T& V(){ T *x=getValue<T>(); CHECK(x,"wrong type"); return *x; }
+
   bool matches(const char *key);
   bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
@@ -94,6 +96,7 @@ struct KeyValueGraph:ItemL {
   Item* getItem(const char *key1, const char *key2);
   Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
+  Item& I(const char *key) { Item *it=getItem(key); CHECK(it,"item '" <<key <<"' does not exist"); return *it; }
   Item* getChild(Item *p1, Item *p2) const;
 
   //-- get lists of items

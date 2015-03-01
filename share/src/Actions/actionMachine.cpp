@@ -103,7 +103,7 @@ void ActionMachine::step(){
   A.writeAccess();
 
   //  cout <<"** active actions:";
-  reportActions(A());
+//  reportActions(A());
 
   //-- code to output force signals
   if(true){
@@ -166,10 +166,10 @@ void ActionMachine::close(){
 }
 
 void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
-  cout <<T <<endl;
+  cout <<"Instantiating task descriptions:\n" <<T <<endl;
   for(Item *t:T){
     Graph &td = t->kvg();
-    MT::String type=td["type"]->GetValue<MT::String>();
+    MT::String type=td["type"]->V<MT::String>();
     if(type=="homing"){
       new Homing(*this, t->parents(0)->keys(1));
     }else{
@@ -238,7 +238,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   //-- check new successes and fails and add to symbolic state
   Item* convSymbol = KB().getItem("conv");
-  Item* overSymbol = KB().getItem("over");
+  Item* timeoutSymbol = KB().getItem("timeout");
   A.readAccess();
   for(Action *a:A()) if(a->actionState==ActionState::active){
     if(a->finishedSuccess(*this)){
@@ -251,10 +251,10 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
 
   if(changes || forceChaining){
     ItemL state = getLiteralsOfScope(KB());
-    cout <<"CHANGED STATE (t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+    cout <<"STATE (changed by real world at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
     forwardChaining_FOL(KB(), NULL, false);
     state = getLiteralsOfScope(KB());
-    cout <<"CHAINED STATE (t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
 
     A.writeAccess();
     for(Action *a:A()){
