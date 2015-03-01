@@ -62,6 +62,7 @@ struct CtrlTask{
 
   CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetSignOnNegScalarProduct(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
+  CtrlTask(const char* name, TaskMap& map, Graph& params);
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);

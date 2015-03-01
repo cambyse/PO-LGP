@@ -399,17 +399,15 @@ void Engine::open(System& S, bool waitForOpened){
 
   //open modules
   if(mode==threaded){
+    for(Module *m: S.mts) m->thread->threadOpen();
+    if(waitForOpened) for(Module *m: S.mts) m->thread->waitForOpened();
     for(Module *m: S.mts){
-      m->thread->threadOpen();
       //start looping if in loop mode:
       switch(m->thread->mode){
       case Module_Thread::loopWithBeat:  m->thread->threadLoopWithBeat(m->thread->beat);  break;
-      case Module_Thread::loopFull:  m->thread->threadLoop();  break;
+      case Module_Thread::loopFull:      m->thread->threadLoop();  break;
       default:  break;
       }
-    }
-    if(waitForOpened){
-      for(Module *m: S.mts) m->thread->waitForOpened();
     }
   }
 

@@ -56,6 +56,13 @@ FollowReference::FollowReference(ActionMachine& actionMachine, const char* name,
   actionMachine.A.deAccess();
 }
 
+FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, CtrlTask* task)
+  : Action(actionMachine, name), duration(-1.), stopTolerance(1e-2), stopOnContact(true) {
+  actionMachine.A.writeAccess();
+  tasks.append(task);
+  actionMachine.A.deAccess();
+}
+
 void FollowReference::step(ActionMachine& M){
   if(!tasks.N) return;
   CtrlTask *task=tasks(0);

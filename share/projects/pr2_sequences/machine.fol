@@ -1,6 +1,7 @@
 Symbol conv
 Symbol over
 Symbol contact
+Symbol quit
 
 Action CoreTasks
 Action gaze
@@ -33,7 +34,20 @@ Rule {
   { (home) (lowHand)! (lowHand conv)! (gaze)! (handAlign)! (handAlign conv)! }
 }
 
+Rule{
+  (home) (home conv),
+  { (quit) (home)! (home conv)! }
+}
+
 #Rule {
 #  (stabForce over),
 #  { (home) (gaze)! (handAlign)! (handAlign conv)! (stabForce)! (stabForce over)! }
 #}
+
+Tasks {
+  (gaze){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
+  (handAlign){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
+  (posHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
+  (lowHand){ type="pos", ref1="endeffL", target=[.7, .3, .5], PD=[.5, .9, .1, 10.] }
+  (home){ type="homing" }
+}

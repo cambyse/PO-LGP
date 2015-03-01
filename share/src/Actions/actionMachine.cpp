@@ -43,6 +43,13 @@ void ActionMachine::open(){
   KB()>> FILE("z.initialKB");
   KB.deAccess();
 
+  KB.readAccess();
+  Item *tasks = KB()["Tasks"];
+  if(tasks){
+    parseTaskDescriptions(tasks->kvg());
+  }
+  KB.deAccess();
+
   MT::open(fil,"z.actionMachine");
 
   bool useRos = MT::getParameter<bool>("useRos",false);
@@ -77,12 +84,12 @@ void ActionMachine::step(){
   static uint t=0;
   t++;
 
-  if(!(t%10))
+  if(!(t%20))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
-  transitionFOL();
+  transitionFOL( .01*t,  (t<=1) );
 
   //-- set gains to default value (can be overwritten by other actions)
   Kq_gainFactor=ARR(1.);
@@ -158,6 +165,21 @@ void ActionMachine::close(){
   fil.close();
 }
 
+void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
+  cout <<T <<endl;
+  for(Item *t:T){
+    Graph &td = t->kvg();
+    MT::String type=td["type"]->GetValue<MT::String>();
+    if(type=="homing"){
+      new Homing(*this, t->parents(0)->keys(1));
+    }else{
+      DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+      CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
+      new FollowReference(*this, t->parents(0)->keys(1), task);
+    }
+  }
+}
+
 void ActionMachine::add_sequence(Action *action1,
                                  Action *action2,
                                  Action *action3,
@@ -211,9 +233,9 @@ void ActionMachine::transition(){
   A.deAccess();
 }
 
-void ActionMachine::transitionFOL(){
+void ActionMachine::transitionFOL(double time, bool forceChaining){
+  bool changes=false;
   KB.writeAccess();
-
   //-- check new successes and fails and add to symbolic state
   Item* convSymbol = KB().getItem("conv");
   Item* overSymbol = KB().getItem("over");
@@ -222,32 +244,35 @@ void ActionMachine::transitionFOL(){
     if(a->finishedSuccess(*this)){
       Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
       if(getMatchInScope(newit, &KB())) delete newit;
-//    if(a->finishedFail(*this)) a->actionState=ActionState::failed;
+      else changes=true;
     }
   }
   A.deAccess();
 
-  forwardChaining_FOL(KB(), NULL, false);
-  A.writeAccess();
-  for(Action *a:A()){
-    bool act=false;
-    for(Item *lit:a->symbol->parentOf){
-      if(&lit->container==&KB() && lit->parents.N==1){ act=true; break; }
-    }
-    if(act) a->actionState=ActionState::active;
-    else a->actionState=ActionState::queued;
-  }
-  A.deAccess();
-  {
+  if(changes || forceChaining){
     ItemL state = getLiteralsOfScope(KB());
-    listWrite(state, cout); cout <<endl;
+    cout <<"CHANGED STATE (t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+    forwardChaining_FOL(KB(), NULL, false);
+    state = getLiteralsOfScope(KB());
+    cout <<"CHAINED STATE (t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+
+    A.writeAccess();
+    for(Action *a:A()){
+      bool act=false;
+      for(Item *lit:a->symbol->parentOf){
+        if(&lit->container==&KB() && lit->parents.N==1){ act=true; break; }
+      }
+      if(act) a->actionState=ActionState::active;
+      else a->actionState=ActionState::queued;
+    }
+    A.deAccess();
   }
   KB.deAccess();
 }
 
 void ActionMachine::waitForActionCompletion(Action* a){
   for(bool cont=true;cont;){
-    A.var->waitForNextRevision();
+    A.waitForNextRevision();
     A.readAccess();
     if(!A().contains(a)) cont=false;
     A.deAccess();
@@ -257,12 +282,25 @@ void ActionMachine::waitForActionCompletion(Action* a){
 void ActionMachine::waitForActionCompletion() {
   bool cont = true;
   while (cont) {
-    A.var->waitForNextRevision();
+    A.waitForNextRevision();
     A.readAccess();
     if (A().N == 0 || (A().N == 1 && A()(0)->name == "CoreTasks")) {
       cont=false;
     }
     A.deAccess();
+  }
+}
+
+void ActionMachine::waitForQuitSymbol() {
+  bool cont = true;
+  while (cont) {
+    KB.waitForNextRevision();
+    KB.readAccess();
+    Item* quitSymbol = KB().getItem("quit");
+    for(Item *f:quitSymbol->parentOf){
+      if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
+    }
+    KB.deAccess();
   }
 }
 

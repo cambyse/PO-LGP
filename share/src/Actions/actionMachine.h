@@ -49,6 +49,10 @@ struct ActionMachine : Module {
   void waitForActionCompletion(Action* a);
   /// Block till all actions (excluding CoreTasks) are done
   void waitForActionCompletion();
+  /// Block till the quit symbol is true in the KB
+  void waitForQuitSymbol();
+
+  void parseTaskDescriptions(const KeyValueGraph& T);
 
   /// @name module implementations
   void open();
@@ -56,7 +60,7 @@ struct ActionMachine : Module {
   void close();
 
   void transition();
-  void transitionFOL();
+  void transitionFOL(double time, bool forceChaining);
 };
 
 //===========================================================================

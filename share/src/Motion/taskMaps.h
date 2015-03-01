@@ -36,6 +36,7 @@ struct TransitionTaskMap:TaskMap {
 //===========================================================================
 
 enum DefaultTaskMapType {
+  noTMT,      ///< non-initialization
   posTMT,     ///< 3D position of reference
   vecTMT,     ///< 3D vec (orientation)
   quatTMT,    ///< 4D quaterion
@@ -59,6 +60,8 @@ struct DefaultTaskMap:TaskMap {
   DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
+
+  DefaultTaskMap(Graph& parameters, const ors::KinematicWorld& G);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);

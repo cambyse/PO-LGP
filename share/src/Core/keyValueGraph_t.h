@@ -151,6 +151,13 @@ template<class T> const T *Item::getValue() const {
   return typed->value;
 }
 
+template<class T> T& Item::GetValue() {
+  T *x=getValue<T>();
+  CHECK(x,"wrong type!");
+  return *x;
+}
+
+
 template<class T> T* KeyValueGraph::getValue(const char *key) {
   Item *it = getItem(key);
   if(!it) return NULL;

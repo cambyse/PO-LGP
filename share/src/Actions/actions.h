@@ -82,6 +82,7 @@ struct FollowReference : Action {
       double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
       double relativePrec=100.,
       double stopTolerance=1e-2, bool stopOnContact=true);
+  FollowReference(ActionMachine& actionMachine, const char* name, CtrlTask *task);
   virtual void step(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
   void reportDetails(ostream& os);

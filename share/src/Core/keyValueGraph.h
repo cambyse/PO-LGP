@@ -47,6 +47,7 @@ struct Item {
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
+  template<class T> T& GetValue(); ///< as above
   bool matches(const char *key);
   bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;

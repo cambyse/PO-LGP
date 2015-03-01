@@ -1,5 +1,6 @@
 #include "fol.h"
 
+/// given a scope (a subKvg, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
 ItemL getLiteralsOfScope(Graph& KB){
   ItemL state;
   state.anticipateMEM(KB.N);
@@ -7,6 +8,7 @@ ItemL getLiteralsOfScope(Graph& KB){
   return state;
 }
 
+/// return all variables (defined by degree=0)
 ItemL getVariablesOfScope(Graph& KB){
   ItemL vars;
   vars.anticipateMEM(KB.N);
@@ -14,6 +16,7 @@ ItemL getVariablesOfScope(Graph& KB){
   return vars;
 }
 
+/// returns all variables of the literal
 ItemL getVariables(Item* literal){
   ItemL vars;
   for(Item *i:literal->parents)
@@ -43,6 +46,8 @@ Item *getFirstVariable(Item* literal){
   return NULL;
 }
 
+/// ONLY for a literal with one free variable: remove all infeasible values from the domain
+/// this is meant to be used as basic 'constraint propagation' for order-1 constraints
 void removeInfeasible(ItemL& domain, Item* literal, bool checkAlsoValue){
   Graph& G=literal->container.isItemOfParentKvg->container;
 
@@ -85,6 +90,7 @@ void removeInfeasible(ItemL& domain, Item* literal, bool checkAlsoValue){
   //  cout <<"possible domain of " <<*var <<" AFTER = " <<GRAPH(domain) <<endl;
 }
 
+/// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool match(Item* literal0, Item* literal1){
   if(literal0->parents.N!=literal1->parents.N) return false;
   for(uint i=0;i<literal0->parents.N;i++){
@@ -93,6 +99,7 @@ bool match(Item* literal0, Item* literal1){
   return true;
 }
 
+/// try to find a literal within 'scope' that is exactly equal to 'literal'
 Item *getMatchInScope(Item *literal, Graph* scope){
 //  CHECK(&literal->container!=scope,"if the literal is in the scope, this does not make sense to ask");
   Item *predicate=literal->parents(0);
@@ -102,6 +109,7 @@ Item *getMatchInScope(Item *literal, Graph* scope){
   return NULL;
 }
 
+/// check if all literals in 'literals' can be matched with one in scope
 bool checkAllMatchesInScope(ItemL& literals, Graph* scope){
   for(Item *lit:literals){
     if(!getMatchInScope(lit, scope)) return false;
@@ -109,6 +117,7 @@ bool checkAllMatchesInScope(ItemL& literals, Graph* scope){
   return true;
 }
 
+/// check match, where all variables of literal are replaced by subst(var->index)
 bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope,bool checkAlsoValue){
   if(fact->parents.N!=literal->parents.N) return false;
   for(uint i=0;i<literal->parents.N;i++){
@@ -125,6 +134,7 @@ bool match(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope,boo
   return true;
 }
 
+/// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
 ItemL getFactMatches(Item* literal, ItemL& literals){
   ItemL matches;
   for(Item *lit:literals) if(match(literal,lit)) matches.append(lit);
@@ -132,6 +142,8 @@ ItemL getFactMatches(Item* literal, ItemL& literals){
 }
 
 
+/// create a new literal by substituting all variables with subst(var->index) (if non-NULL)
+/// add the new literal to KB
 Item* createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope){
   Item *fact = literal->newClone(KB);
   for(uint i=0;i<fact->parents.N;i++){
@@ -200,6 +212,7 @@ bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Gr
   return hasEffects;
 }
 
+/// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
 bool checkTruth(Item* literal, const ItemL& subst, Graph* subst_scope){
   Graph& KB=literal->container.isItemOfParentKvg->container;
   Item *predicate = literal->parents(0);
@@ -245,6 +258,7 @@ bool checkEquality(Item* it1, Item* it2, const ItemL& subst, Graph* subst_scope)
 }
 
 
+/// extracts the preconditions of the rule, then returns substitutions
 ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verbose){
   //-- extract precondition
   if(verbose){ cout <<"Substitutions for rule " <<*rule <<endl; }
@@ -259,6 +273,12 @@ ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verb
 }
 
 
+/// the list of literals is a conjunctive clause (e.g. precondition)
+/// all literals must be in the same scope (element of the same subKvg)
+/// we return all feasible substitutions of the literal's variables by constants
+/// the return value is an array: for every item of the literal's scope:
+/// if item=variable the array contains a pointer to the constant
+/// if item=non-variable the arrach contains a NULL pointer
 ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool verbose){
   CHECK(literals.N,"");
   Graph& scope = literals(0)->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
@@ -427,6 +447,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
 }
 
 
+/// actually propositional logic:
 bool forwardChaining_propositional(KeyValueGraph& KB, Item* q){
   KB.checkConsistency();
   uintA count(KB.N);     count=0;

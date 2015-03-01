@@ -25,6 +25,19 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
+CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
+  : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
+  Item *it;
+  if((it=params["PD"])){
+    arr pd=it->GetValue<arr>();
+    setGainsAsNatural(pd(0), pd(1));
+    maxVel = pd(2);
+    maxAcc = pd(3);
+  }
+  if((it=params["prec"])) prec = it->GetValue<double>();
+  if((it=params["target"])) y_ref = it->GetValue<arr>();
+}
+
 //CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio,
 //               DefaultTaskMapType type, const ors::KinematicWorld& G,
 //               const char* iShapeName, const ors::Vector& ivec,
