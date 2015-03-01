@@ -23,28 +23,28 @@ Query { (Criminal West) }
 
 Rule {
 x, y, z,
-(American x) (Weapon y) (Sells x y z) (Hostile z)
-(Criminal x)
+(American x) (Weapon y) (Sells x y z) (Hostile z),
+{ (Criminal x) }
 }
 
 
 Rule {
 x
-(Missile x) (Owns Nono x)
-(Sells West x Nono)
+(Missile x) (Owns Nono x),
+{ (Sells West x Nono) }
 }
 
 
 Rule {
 x
-(Missile x)
-(Weapon x)
+(Missile x),
+{ (Weapon x) }
 }
 
 Rule {
 x
-(Enemy x America)
-(Hostile x)
+(Enemy x America),
+{ (Hostile x) }
 }
 
 

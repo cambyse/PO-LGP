@@ -75,25 +75,25 @@ void testFolDisplay(){
 //===========================================================================
 
 void testFolSubstitution(){
-  KeyValueGraph G;
+  KeyValueGraph KB;
 
 //  FILE("boxes.kvg") >>G;
-  FILE("substTest.kvg") >>G;
+  FILE("substTest.kvg") >>KB;
 
-  ItemL rules = G.getItems("Rule");
-  ItemL constants = G.getItems("Constant");
-  ItemL state = getLiteralsOfScope(G);
+  ItemL rules = KB.getItems("Rule");
+  ItemL constants = KB.getItems("Constant");
+  ItemL state = getLiteralsOfScope(KB);
 
   for(Item* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
     cout <<  "Substitutions:" <<endl;
-    ItemL subs = getSubstitutions(rule->kvg(), state, constants, true);
-    cout <<"STATE="; listWrite(getLiteralsOfScope(G), cout); cout <<endl;
+    ItemL subs = getRuleSubstitutions(KB, rule, constants, true);
+    cout <<"STATE="; listWrite(getLiteralsOfScope(KB), cout); cout <<endl;
     for(uint s=0;s<subs.d0;s++){
       Item *effect = rule->kvg().last();
       { cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
-      applyEffectLiterals(G, effect, subs[s], &rule->kvg());
-      cout <<"STATE="; listWrite(getLiteralsOfScope(G), cout); cout <<endl;
+      applyEffectLiterals(KB, effect, subs[s], &rule->kvg());
+      cout <<"STATE="; listWrite(getLiteralsOfScope(KB), cout); cout <<endl;
     }
   }
 }
@@ -107,17 +107,17 @@ void testMonteCarlo(){
   uint verbose=1;
 
   for(uint k=0;k<10;k++){
-    KeyValueGraph G = Gorig;
-    G.checkConsistency();
-    Item *Terminate_keyword = G["Terminate"];
-    ItemL rules = G.getItems("Rule");
-    ItemL constants = G.getItems("Constant");
-    Graph& terminal = G.getItem("terminal")->kvg();
+    KeyValueGraph KB = Gorig;
+    KB.checkConsistency();
+    Item *Terminate_keyword = KB["Terminate"];
+    ItemL rules = KB.getItems("Rule");
+    ItemL constants = KB.getItems("Constant");
+    Graph& terminal = KB.getItem("terminal")->kvg();
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
 
-      ItemL state = getLiteralsOfScope(G);
+      ItemL state = getLiteralsOfScope(KB);
       if(verbose>2){ cout <<"*** state = "; listWrite(state, cout); cout<<endl; }
 
       bool forceWait=false, decideWait=false;
@@ -127,7 +127,7 @@ void testMonteCarlo(){
         for(Item* rule:rules){
           //      cout <<"*** RULE: " <<*rule <<endl;
           //      cout <<  "Substitutions:" <<endl;
-          ItemL subs = getRuleSubstitutions(rule, state, constants, (verbose>4) );
+          ItemL subs = getRuleSubstitutions(KB, rule, constants, (verbose>4) );
           for(uint s=0;s<subs.d0;s++){
             decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
           }
@@ -148,7 +148,7 @@ void testMonteCarlo(){
 
           Item *effect = d.first->kvg().last();
           if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
-          applyEffectLiterals(G, effect, d.second, &d.first->kvg());
+          applyEffectLiterals(KB, effect, d.second, &d.first->kvg());
         }
       }else{
         decideWait=true;
@@ -183,7 +183,7 @@ void testMonteCarlo(){
           //-- for all these activities call the terminate operator
           for(Item *act:activities){
             Item *predicate = act->parents(0);
-            Item *rule = G.getChild(Terminate_keyword, predicate);
+            Item *rule = KB.getChild(Terminate_keyword, predicate);
             if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
             Item *effect = rule->kvg().last();
             ItemL vars = getVariablesOfScope(rule->kvg());
@@ -192,15 +192,15 @@ void testMonteCarlo(){
             for(uint i=0;i<vars.N;i++) subs(i) = act->parents(i+1);
 
             if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs, cout); cout <<endl; }
-            applyEffectLiterals(G, effect, subs, &rule->kvg());
+            applyEffectLiterals(KB, effect, subs, &rule->kvg());
           }
         }
       }
 
       //-- test the terminal state
-      if(checkAllMatchesInScope(terminal, &G)){
+      if(allFactsHaveEqualsInScope(KB, terminal)){
         if(verbose>0) cout <<"************* TERMINAL STATE FOUND (h=" <<h <<") ************" <<endl;
-        state = getLiteralsOfScope(G);
+        state = getLiteralsOfScope(KB);
         if(verbose>1){ cout <<"*** FINAL STATE = "; listWrite(state, cout); cout<<endl; }
         break;
       }
@@ -214,8 +214,8 @@ void testMonteCarlo(){
 int main(int argn, char** argv){
   testPolFwdChaining();
 //  testFolLoadFile();
-//  testFolFwdChaining();
+  testFolFwdChaining();
 //  testFolDisplay();
-//  testFolSubstitution();
-//  testMonteCarlo();
+  testFolSubstitution();
+  testMonteCarlo();
 }

@@ -243,7 +243,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   for(Action *a:A()) if(a->actionState==ActionState::active){
     if(a->finishedSuccess(*this)){
       Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
-      if(getMatchInScope(newit, &KB())) delete newit;
+      if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }
   }
