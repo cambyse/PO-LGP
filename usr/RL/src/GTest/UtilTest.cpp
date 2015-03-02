@@ -145,3 +145,64 @@ TEST(UtilTest, Enumerate) {
         DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
     }
 }
+
+TEST(UtilTest, Range) {
+    int first, last;
+    bool is_first;
+
+    // implicit start and increment
+    is_first = true;
+    for(int i : util::Range(10)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,0);
+    EXPECT_EQ(last,9);
+
+    // implicit increment
+    is_first = true;
+    for(int i : util::Range(-1,10)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,-1);
+    EXPECT_EQ(last,10);
+
+    // everything explicit
+    is_first = true;
+    for(int i : util::Range(-3,10,3)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,-3);
+    EXPECT_EQ(last,9);
+
+    // only on element
+    is_first = true;
+    for(int i : util::Range(1,1)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,1);
+    EXPECT_EQ(last,1);
+}

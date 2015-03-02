@@ -83,7 +83,7 @@ namespace util {
     }
 
     Range::Range(int first, int last):
-        Range(first,last,first<last?+1:-1)
+        Range(first,last,first<=last?+1:-1)
     {}
 
     Range::Range(int last):
