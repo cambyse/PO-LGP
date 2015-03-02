@@ -178,7 +178,10 @@ struct __##name##__Access:Access_typed<type>{ \
     instantiate the module just by referring to its string name. */
 
 #define REGISTER_MODULE(name) \
-  Item_typed<Type> name##_ModuleRegistryItem(registry(), STRINGS("Decl_Module", #name), ItemL(), new Type_typed<name, void>(NULL,NULL), true);
+  RUN_ON_INIT_BEGIN(name) \
+  new Item_typed<Type>(registry(), STRINGS_2("Decl_Module", #name), ItemL(), new Type_typed<name, void>(NULL,NULL), true); \
+  RUN_ON_INIT_END(name)
+
 
 
 //===========================================================================

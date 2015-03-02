@@ -6,8 +6,8 @@
 // Action
 //
 
-Action::Action(ActionMachine& actionMachine, const char* name, ActionState actionState)
-  : name(name), actionState(actionState), symbol(NULL), actionTime(0.){
+Action::Action(ActionMachine& actionMachine, const char* name)
+  : name(name), active(false), symbol(NULL), actionTime(0.){
   actionMachine.A.set()->append(this);
   actionMachine.KB.readAccess();
   Item *it = actionMachine.KB().getItem(name);
@@ -25,8 +25,8 @@ Action::~Action(){
 
 void Action::reportState(ostream& os){
   os <<"Action '" <<name
-    <<"':  actionState=" << getActionStateString(actionState)
-    <<"  actionTime=" << actionTime
+    <<"':  active=" <<active
+    <<"  actionTime=" <<actionTime
     <<"  CtrlTasks:" <<endl;
   for(CtrlTask* t: tasks) t->reportState(os);
   reportDetails(os);
@@ -38,7 +38,7 @@ FollowReference::FollowReference(ActionMachine& actionMachine, const char* name,
     double decayTime, double dampingRatio, double maxVel, double maxAcc,
     double relativePrec,
     double stopTolerance, bool stopOnContact)
-  : Action(actionMachine, name), duration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
+  : Action(actionMachine, name), trajectoryDuration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
   CtrlTask* task = new CtrlTask(STRING("FollowReference_" << name), map,
                                 decayTime, dampingRatio, maxVel, maxAcc);
   if(yref.nd==2){
@@ -57,7 +57,7 @@ FollowReference::FollowReference(ActionMachine& actionMachine, const char* name,
 }
 
 FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, CtrlTask* task)
-  : Action(actionMachine, name), duration(-1.), stopTolerance(1e-2), stopOnContact(true) {
+  : Action(actionMachine, name), trajectoryDuration(-1.), stopTolerance(1e-2), stopOnContact(true) {
   actionMachine.A.writeAccess();
   tasks.append(task);
   actionMachine.A.deAccess();
@@ -67,7 +67,7 @@ void FollowReference::step(ActionMachine& M){
   if(!tasks.N) return;
   CtrlTask *task=tasks(0);
   if(task->y_ref.nd==2){
-    uint t = actionTime/duration * (ref.d0-1);
+    uint t = actionTime/trajectoryDuration * (ref.d0-1);
     t = MT::MIN(t, ref.d0-1);
     task->y_ref = ref[t];
     cout <<"STEPPING" <<endl;
@@ -84,7 +84,7 @@ bool FollowReference::finishedSuccess(ActionMachine& M){
   if(task->y_ref.nd==1 && task->y.N==task->y_ref.N
      && maxDiff(task->y, task->y_ref)<stopTolerance
      && maxDiff(task->v, task->v_ref)<stopTolerance) return true;
-  if(task->y_ref.nd==2 && actionTime>=duration) return true;
+  if(task->y_ref.nd==2 && actionTime>=trajectoryDuration) return true;
   return false;
 }
 
@@ -307,8 +307,6 @@ void Relax::step(ActionMachine &actionMachine) {
 
 //===========================================================================
 
-struct RUN_ON_INIT{
-  RUN_ON_INIT(){
-    CtrlTaskL::memMove=true;
-  }
-} dummy;
+RUN_ON_INIT_BEGIN()
+  CtrlTaskL::memMove=true;
+RUN_ON_INIT_END();

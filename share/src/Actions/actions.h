@@ -33,17 +33,13 @@ const char* getActionStateString(ActionState actionState);
  */
 struct Action {
   MT::String name;
-  ActionState actionState;
+  bool active;
   Item *symbol;
   double actionTime;
 
-  /// @name dependence & hierarchy
-  ActionL dependsOnCompletion;
-
-  //-- not nice: list of CtrlTasks that this action added to the OSC
   CtrlTaskL tasks;
 
-  Action(ActionMachine& actionMachine, const char* name, ActionState actionState=ActionState::active);
+  Action(ActionMachine& actionMachine, const char* name);
   virtual ~Action();
 
 
@@ -73,7 +69,7 @@ void reportActions(ActionL& A);
 //===========================================================================
 struct FollowReference : Action {
   arr ref;
-  double duration;
+  double trajectoryDuration; ///< -1 if this is only a point reference instead of a trajectory
   double stopTolerance;
   bool stopOnContact;
 

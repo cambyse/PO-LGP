@@ -47,7 +47,7 @@ Item::~Item() {
   for(Item *i: parents) i->parentOf.removeValue(this);
   for(Item *i: parentOf) i->parents.removeValue(this);
   container.removeValue(this);
-  for_list(Item, i, container) i->index=i_COUNT;
+  container.index();
 }
 
 bool Item::matches(const char *key){
@@ -119,24 +119,28 @@ KeyValueGraph Item::ParentOf(){
   return G;
 }
 
-Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false, KeyValueGraph* parentGraph=NULL) {
+Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false, KeyValueGraph* parentGraph=NULL, MT::String prefixedKey=MT::String()) {
   MT::String str;
   StringA keys;
   ItemL parents;
   Item *item=NULL;
-  
+
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
 
 #define PARSERR(x) { cerr <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
                           <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
   //-- read keys
-  MT::skip(is," \t\n\r");
-  for(;;) {
-    if(!str.read(is, " \t", " \t\n\r,;([{}=", false)) break;
-    keys.append(str);
+  if(!prefixedKey.N){
+    MT::skip(is," \t\n\r");
+    for(;;) {
+      if(!str.read(is, " \t", " \t\n\r,;([{}=", false)) break;
+      keys.append(str);
+    }
+    //if(!keys.N) return false;
+  }else{
+    keys.append(prefixedKey);
   }
-  //if(!keys.N) return false;
   
   if(verbose) { cout <<" keys:" <<keys <<flush; }
   
@@ -165,8 +169,8 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
     if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String or boolean
       is.putback(c);
       str.read(is, "", " \n\r\t,;}", false);
-      if(str=="true") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true));
-      else if(str=="false") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false));
+      if(str=="true") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true), true);
+      else if(str=="false") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false), true);
       else item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
     } else if(MT::contains("-.0123456789", c)) {  //single double
       is.putback(c);

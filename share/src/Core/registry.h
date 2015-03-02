@@ -28,21 +28,25 @@
 #include "array.h"
 #include "keyValueGraph.h"
 
-
 //===========================================================================
 //
 // global registry of anything using a singleton KeyValueGraph
 //
 
 KeyValueGraph& registry();
+void initRegistry(int argc, char *argv[]);
 
 //macros to be used in *.cpp files
 
 #define REGISTER_ITEM(T, key, value, ownsValue) \
-  Item_typed<T > key##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key)), ItemL(), value, ownsValue);
+  RUN_ON_INIT_BEGIN(key) \
+  new Item_typed<T>(registry(), STRINGS_1(#key), ItemL(), value, ownsValue); \
+  RUN_ON_INIT_END(key)
 
 #define REGISTER_ITEM2(T, key1, key2, value, ownsValue) \
-  Item_typed<T > key1##_##key2##_RegistryEntry(registry(), ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, ownsValue);
+  RUN_ON_INIT_BEGIN(key1##_##key2) \
+  new Item_typed<T>(registry(), STRINGS_2(#key1,#key2), ItemL(), value, ownsValue); \
+  RUN_ON_INIT_END(key1##_##key2)
 
 
 //===========================================================================
@@ -147,6 +151,7 @@ struct Type_typed_readable:Type_typed<T,Base> {
 //
 
 #define KO ,
+
 #define REGISTER_TYPE(T) \
   REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed_readable<T KO void>(NULL,NULL), true);
 
