@@ -532,10 +532,18 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultE
     index(true);
   }
   for(Item *it: list()) {
-    MT::String label;
+    MT::String label, shape("shape=ellipse");
     if(it->keys.N){
-      label <<"label=\"" <<it->keys(0);
-      for(uint i=1;i<it->keys.N;i++) label <<'\n' <<it->keys(i);
+      label <<"label=\"";
+      bool newline=false;
+      for(MT::String& k:it->keys){
+        if(k=="box") shape="shape=box";
+        else{
+          if(newline) label <<'\n';
+          label <<k;
+          newline=true;
+        }
+      }
       label <<"\" ";
     }else if(it->parents.N){
       label <<"label=\"(" <<it->parents(0)->keys.last();
@@ -553,10 +561,7 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultE
         it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, -1);
       }else{//normal item
         if(nodesOrEdges>=0){
-          os <<it->index <<" [ " <<label;
-          if(it->parents.N) os <<"shape=box";
-          else os <<"shape=ellipse";
-          os <<" ];" <<endl;
+          os <<it->index <<" [ " <<label <<shape <<" ];" <<endl;
         }
         if(nodesOrEdges<=0){
           for_list(Item, pa, it->parents) {

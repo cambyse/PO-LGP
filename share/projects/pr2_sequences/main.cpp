@@ -35,6 +35,7 @@ void testFol(){
 void rewriteGraph(){
   KeyValueGraph G, nice;
   FILE("machine.fol") >>G;
+//  FILE("machine_simple.fol") >>G;
 
   ItemL actions=G.getItems("Action");
   ItemL rules=G.getItems("Rule");
@@ -45,36 +46,41 @@ void rewriteGraph(){
   }
 
   for(Item* rule:rules){
-    Graph& r=rule->kvg();
-    Item *rit = nice.append<bool>(STRING("R"<<rule->index), NULL, false);
-    for(Item* prec:r) if(prec->parents.N){
+    Graph& Rule=rule->kvg();
+    Item *rit = nice.append<bool>(STRINGS_2("box","R"), NULL, false);
+    for(Item* prec:Rule) if(prec->parents.N){
       Item *pit=nice[prec->parents(0)->keys(1)];
       if(pit){
-        if(prec->parents.N>1) nice.append<bool>(STRINGS_1(prec->parents(1)->keys(1)), {pit, rit}, NULL, false);
-        else nice.append<bool>(STRINGS_1("active"), {pit, rit}, NULL, false);
+        MT::String label/*("pre")*/;
+        if(prec->parents.N>1) label <<prec->parents(1)->keys(1);
+        nice.append<bool>({label}, {pit, rit}, NULL, false);
       }
     }
-    Graph &effect = r.last()->kvg();
+    Graph &effect = Rule.last()->kvg();
     for(Item* eff:effect){
       Item *pit=nice[eff->parents(0)->keys(1)];
       if(pit){
-        if(eff->parents.N>1) nice.append<bool>(STRINGS_1(eff->parents(1)->keys(1)), {pit, rit}, NULL, false);
-        else nice.append<bool>(STRINGS_1("active"), {rit, pit}, NULL, false);
+        MT::String label/*("eff")*/;
+        if(eff->parents.N>1) label <<eff->parents(1)->keys(1);
+        if(eff->getValueType()==typeid(bool) && eff->V<bool>()==false) label <<'!';
+        nice.append<bool>({label}, {rit, pit}, NULL, false);
       }
     }
 
   }
 
   nice >>FILE("z.nice");
+  nice.writeDot(FILE("z.dot").getOs(), false, true);
+  system("dot -Tpdf z.dot > z.pdf");
 }
 
 // ============================================================================
 int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
-  testPush();
+//  testPush();
 //  testFol();
-//  rewriteGraph();
+  rewriteGraph();
 
   return 0;
 }

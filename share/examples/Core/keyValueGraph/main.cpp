@@ -38,7 +38,7 @@ void TEST(Dot){
   G.checkConsistency();
 //  G.sortByDotOrder();
 //  G.checkConsistency();
-  G.writeDot(FILE("z.dot").getOs(), false, true);
+  G.writeDot(FILE("z.dot").getOs());
 }
 
 //===========================================================================
@@ -66,8 +66,8 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-  testRead();
-//  testDot();
+//  testRead();
+  testDot();
 
 //  if(!filename) testManual();
 
