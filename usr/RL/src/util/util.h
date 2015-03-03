@@ -557,10 +557,24 @@ namespace util {
         iRange(int n);
     };
 
-    /** Enumerate allows for python-like for loops. */
-    /* The code is taken from
+    /** Enumerate allows for python-like for loops.
+     * The code is taken from
      * http://stackoverflow.com/questions/11328264/python-like-loop-enumeration-in-c
-     * and only slightly modified. */
+     * and only slightly modified. Example:
+     * @code
+     std::vector<std::string> vec = {"1st elem", "2nd elem", "3rd elem", "4th elem"};
+     for(auto idx_elem : util::enumerate(vec)) {
+         std::cout << idx_elem.first << " / " << idx_elem.second << endl;
+     }
+     @endcode
+     * prints
+     @code
+     -2 / 1st elem
+     0 / 2nd elem
+     2 / 3rd elem
+     4 / 4th elem
+     @endcode
+     * */
 
     template<typename Iterable>
         class EnumerateObject
@@ -597,6 +611,7 @@ namespace util {
         }
     };
 
+    /** Constructs an EnumerateObject. */
     template<typename Iterable>
         EnumerateObject<Iterable> enumerate(Iterable&& iter, int counter = 0, int inc = 1) {
         return EnumerateObject<Iterable>(std::forward<Iterable>(iter), counter, inc);
