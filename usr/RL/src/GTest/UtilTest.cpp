@@ -3,6 +3,7 @@
 #include <string>
 
 #include "../util/util.h"
+#include "../util/pretty_printer.h"
 
 #define DEBUG_LEVEL 1
 #include "../util/debug.h"
@@ -205,4 +206,15 @@ TEST(UtilTest, Range) {
     cout << endl;
     EXPECT_EQ(first,1);
     EXPECT_EQ(last,1);
+}
+
+TEST(UtilTest, PrettyPrinter) {
+    {
+        vector<int> v({1,2,3,4,5});
+        cout << v << endl;
+    }
+    {
+        vector<vector<int>> v({{1,2,3},{11,22,33},{111,222,333}});
+        cout << v << endl;
+    }
 }

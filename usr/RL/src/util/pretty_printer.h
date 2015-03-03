@@ -1,3 +1,5 @@
+#ifndef PRETTY_PRINTER_H_
+#define PRETTY_PRINTER_H_
 
 namespace util {
 
@@ -40,18 +42,22 @@ namespace util {
 
 }
 
-/** Defines ostream operator for iterable containers. The ValueType template
- * parameter disambiguates (via SFNIAE) overloads. */
-template<class Ch, class Tr, class C, class ValueType = typename C::value_type>
-    auto operator<<(std::basic_ostream<Ch, Tr>& os, const C & container) -> std::basic_ostream<Ch, Tr> & {
-    os << util::container_to_str(container);
-    return os;
+namespace std {
+    /** Defines ostream operator for iterable containers. The ValueType template
+     * parameter disambiguates (via SFNIAE) overloads. */
+    template<class Ch, class Tr, class C, class ValueType = typename C::value_type>
+        auto operator<<(std::basic_ostream<Ch, Tr>& os, const C & container) -> std::basic_ostream<Ch, Tr> & {
+        os << util::container_to_str(container);
+        return os;
+    }
+
+    /** Defines ostream operator for tuples. */
+    template<class Ch, class Tr, class... Args>
+        auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t) -> std::basic_ostream<Ch, Tr>& {
+        os << "(";
+        util::pretty_printer::print_tuple(os, t, util::pretty_printer::gen_seq<sizeof...(Args)>());
+        return os << ")";
+    }
 }
 
-/** Defines ostream operator for tuples. */
-template<class Ch, class Tr, class... Args>
-    auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t) -> std::basic_ostream<Ch, Tr>& {
-    os << "(";
-    util::pretty_printer::print_tuple(os, t, util::pretty_printer::gen_seq<sizeof...(Args)>());
-    return os << ")";
-}
+#endif /* PRETTY_PRINTER_H_ */
