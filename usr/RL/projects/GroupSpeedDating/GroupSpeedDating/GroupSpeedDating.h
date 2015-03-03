@@ -28,6 +28,7 @@ private:
     double score, max_score, temperature;
     vec_int_3D round_table_seat;
     vec_double_2D weights;
+    bool messages_on;
 
     // METHODS //
 
@@ -36,11 +37,15 @@ public:
     ~GroupSpeedDating();
 
 private:
-    int objective(const vec_int_3D talk_table_group) const;
     void permute(vec_int_3D & talk_table_group) const;
     double compute_score() const;
     void swap(int round, int table_1, int seat_1, int table_2, int seat_2);
+    void print_weights() const;
+    void print_dates() const;
+    void remember_schedule();
 private slots:
+    void messages_toggled(bool);
+    void clear_dates();
     void try_permutation();
     void update_table();
     void temperature_changed(int);

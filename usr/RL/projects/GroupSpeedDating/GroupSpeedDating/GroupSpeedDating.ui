@@ -73,7 +73,7 @@
            <number>100</number>
           </property>
           <property name="value">
-           <number>1</number>
+           <number>2</number>
           </property>
          </widget>
         </item>
@@ -165,6 +165,9 @@ per Table</string>
           </property>
           <property name="maximum">
            <number>100</number>
+          </property>
+          <property name="value">
+           <number>2</number>
           </property>
          </widget>
         </item>
@@ -335,7 +338,7 @@ per Table</string>
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>50</height>
+            <height>65</height>
            </size>
           </property>
          </widget>
@@ -379,7 +382,7 @@ per Table</string>
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="_wTable"/>
+         <widget class="QTableWidget" name="_wTableWeights"/>
         </item>
         <item>
          <spacer name="verticalSpacer_9">
@@ -432,9 +435,22 @@ per Table</string>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_11">
+           <widget class="QLabel" name="_wScore">
             <property name="text">
              <string>0 / 0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="_wClearDates">
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Clear</string>
             </property>
            </widget>
           </item>
@@ -460,29 +476,66 @@ per Table</string>
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="label_9">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>3</number>
           </property>
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
+          <property name="topMargin">
+           <number>5</number>
           </property>
-          <property name="text">
-           <string>Messages</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="_wMessageButton">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
+            </property>
+            <property name="text">
+             <string>Messages</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
         <item>
-         <widget class="QTextEdit" name="_wMessages"/>
+         <widget class="QLineEdit" name="_wMessages">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -588,7 +641,7 @@ per Table</string>
    </hints>
   </connection>
   <connection>
-   <sender>_wTable</sender>
+   <sender>_wTableWeights</sender>
    <signal>cellChanged(int,int)</signal>
    <receiver>GroupSpeedDating</receiver>
    <slot>weight_changed(int,int)</slot>
@@ -635,6 +688,38 @@ per Table</string>
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>_wClearDates</sender>
+   <signal>clicked()</signal>
+   <receiver>GroupSpeedDating</receiver>
+   <slot>clear_dates()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>975</x>
+     <y>440</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>910</x>
+     <y>785</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wMessageButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>GroupSpeedDating</receiver>
+   <slot>messages_toggled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>506</x>
+     <y>698</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>526</x>
+     <y>786</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temperature_changed(int)</slot>
@@ -642,5 +727,7 @@ per Table</string>
   <slot>weight_changed(int,int)</slot>
   <slot>name_changed(int,int)</slot>
   <slot>start_stop(bool)</slot>
+  <slot>clear_dates()</slot>
+  <slot>messages_toggled(bool)</slot>
  </slots>
 </ui>
