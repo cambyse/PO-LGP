@@ -355,7 +355,7 @@ QString SearchTree::str_rich(const node_t & n) const {
     // return QString("<i>%1</i>=%2").
     //     arg(is_state_node?"s":"a").
     //     arg(is_state_node?node_info_map[n].state:node_info_map[n].action);
-    return QString("%1").arg(is_state_node?node_info_map[n].state:node_info_map[n].action);
+    return QString("%1").arg(is_state_node?environment->state_name(node_info_map[n].state):environment->action_name(node_info_map[n].action));
 }
 
 double SearchTree::color_rescale(const double& d) const {

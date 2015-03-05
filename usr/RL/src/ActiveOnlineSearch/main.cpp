@@ -16,6 +16,7 @@
 #include "DynamicTightRope.h"
 
 #include <util/tuple_return.h>
+#include <util/pretty_printer.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -25,24 +26,35 @@ using std::cout;
 using std::endl;
 using util::Range;
 
+static const std::set<std::string> mode_set = {"SAMPLE",
+                                               "UCT",
+                                               "UCT_EVAL"};
+static const std::set<std::string> environment_set = {"TightRope",
+                                                      "DynamicTightRope"};
+static const std::set<std::string> accumulate_set = {"min",
+                                                     "mean",
+                                                     "max"};
+
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
-                                                     "Mode to use. \n'SAMPLE' takes <n> (--sample_n <n>) random state-action samples \
-from the environment <e> (--environment <e>) and prints the \
-state-action-state-reward tuples to std::cout.\n'UCT' runs tree search with \
-<n> rollouts per step and performs <s> (--step_n <s>) steps. The progress \
-during tree building can be watched at a different level of detail \
-(--progress).\n'UCT_EVAL' performs <r> (--run_n <r>) runs with a series of \
-trials for different numbers of rollouts <n>, <n>+<i>, ... , <m> \
-(--sample_incr <i> --sample_max <m>) and <s> steps per trial and prints the \
-mean reward per trial to std::cout.",\
-                                                     false, "SAMPLE", "string");
+                                                     "Mode to use "+util::container_to_str(mode_set,", ","(",")")+".\n'SAMPLE' takes <n> (--sample_n <n>) samples for different state-action \
+pairs from the environment <e> (--environment <e>) and prints the data to \
+std::cout.\n'UCT' runs tree search with <n> rollouts per step and performs <s> \
+(--step_n <s>) steps. The progress during tree building can be watched at a \
+different level of detail (--progress).\n'UCT_EVAL' performs <r> (--run_n <r>) \
+runs with a series of trials for different numbers of rollouts <n>, <n>+<i>, \
+... , <m> (--sample_incr <i> --sample_max <m>) and <s> steps per trial and \
+prints the mean reward per trial to std::cout.",\
+                                                     true, "SAMPLE", "string");
 static TCLAP::ValueArg<std::string> environment_arg( "e", "environment",\
-                                                     "Environment to use.",\
-                                                     false, "DynamicTightRope", "string");
+                                                     "Environment to use "+util::container_to_str(environment_set,", ","(",")")+".\nDynamicTightRope: The agent has integer position and velocity. SAMPLE mode \
+prints the max-reward (over actions) for a given position and \
+velocity.\nTightRope: The agent has integer position. SAMPLE mode prints the \
+reward for a given position and action.", \
+                                                     true, "DynamicTightRope", "string");
 static TCLAP::ValueArg<int> sample_n_arg(            "n", "sample_n",\
                                                      "Number of samples/rollouts.",\
-                                                     false, 1000, "int" );
+                                                     false, 1, "int" );
 static TCLAP::ValueArg<int> sample_incr_arg(         "i", "sample_incr",\
                                                      "Increment of the number rollouts. ",\
                                                      false, 1, "int" );
@@ -61,11 +73,9 @@ static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
 static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
                                                      "Don't generate graphics."\
                                                      , false);
-static const std::set<std::string> mode_set = {"SAMPLE",
-                                               "UCT",
-                                               "UCT_EVAL"};
-static const std::set<std::string> environment_set = {"TightRope",
-                                                      "DynamicTightRope"};
+static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
+                                                     "How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
+                                                     , false, "mean", "string");
 
 bool check_arguments();
 
@@ -74,6 +84,7 @@ int main(int argn, char ** args) {
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(accumulate_arg);
         cmd.add(no_graphics_arg);
         cmd.add(watch_progress_arg);
         cmd.add(run_n_arg);
@@ -114,32 +125,46 @@ int main(int argn, char ** args) {
 
     // different modes
     if(mode_arg.getValue()=="SAMPLE") {
-        cout << QString("run,time,condition,value") << endl;
-        for(int run : Range(sample_n_arg.getValue())) {
-            for(auto state_from : environment->states) {
-                int time, condition;
-                double value;
-                if(environment_arg.getValue()=="TightRope") {
-                    time = state_from;
+        if(environment_arg.getValue()=="TightRope") {
+            cout << "run,state,action,reward" << endl;
+            for(int run : Range(sample_n_arg.getValue())) {
+                for(auto state_from : environment->states) {
                     for(auto action : environment->actions) {
                         T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
-                        value = reward;
-                        condition = action;
-                        cout << QString("%1,%2,%3,%4").arg(run).arg(time).arg(condition).arg(value) << endl;
+                        cout << QString("%1,%2,%3,%4").arg(run).arg(state_from).arg(action).arg(reward) << endl;
                     }
-                } else if(environment_arg.getValue()=="DynamicTightRope") {
+                }
+            }
+        } else if(environment_arg.getValue()=="DynamicTightRope") {
+            cout << "run,position,velocity,"+accumulate_arg.getValue()+"_reward" << endl;
+            for(int run : Range(sample_n_arg.getValue())) {
+                for(auto state_from : environment->states) {
+                    double accum_reward;
                     auto env = std::dynamic_pointer_cast<DynamicTightRope>(environment);
-                    DEBUG_EXPECT(0,env);
-                    t(time,condition) = util::get_ND_index<2>::from(state_from,{env->position_n,env->velocity_n});
-                    value = -DBL_MAX;
-                    //value = 0;
+                    DEBUG_EXPECT(0,env!=nullptr);
+                    T(int,position,int,velocity) = env->get_position_and_velocity(state_from);
+                    if(accumulate_arg.getValue()=="min") {
+                        accum_reward = DBL_MAX;
+                    } else if(accumulate_arg.getValue()=="max") {
+                        accum_reward = -DBL_MAX;
+                    } else if(accumulate_arg.getValue()=="mean") {
+                        accum_reward = 0;
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
                     for(auto action : environment->actions) {
                         T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
-                        value = std::max(reward,value);
-                        //value += reward;
+                        if(accumulate_arg.getValue()=="min") {
+                            accum_reward = std::min(reward,accum_reward);
+                        } else if(accumulate_arg.getValue()=="max") {
+                            accum_reward = std::max(reward,accum_reward);
+                        } else if(accumulate_arg.getValue()=="mean") {
+                            accum_reward += reward/environment->actions.size();
+                        } else {
+                            DEBUG_DEAD_LINE;
+                        }
                     }
-                    //value /= 3;
-                    cout << QString("%1,%2,%3,%4").arg(run).arg(time).arg(condition).arg(value) << endl;
+                    cout << QString("%1,%2,%3,%4").arg(run).arg(position).arg(velocity).arg(accum_reward) << endl;
                 }
             }
         }
@@ -149,8 +174,10 @@ int main(int argn, char ** args) {
         for(int step : Range(0,step_n_arg.getValue())) {
             for(int sample : Range(sample_n_arg.getValue())) {
                 tree.perform_rollout();
-                if(watch_progress_arg.getValue()>=3 && !no_graphics_arg.getValue()) {
-                    tree.toPdf("tree.pdf");
+                if(watch_progress_arg.getValue()>=3) {
+                    if(!no_graphics_arg.getValue()) {
+                        tree.toPdf("tree.pdf");
+                    }
                     cout << "Sample # " << sample+1 << endl;
                     getchar();
                 }
@@ -160,9 +187,11 @@ int main(int argn, char ** args) {
                 auto state_reward = environment->sample(tree.node_info_map[tree.root_node].state,action);
                 auto state = std::get<0>(state_reward);
                 tree.prune(action,state);
-                if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
-                    tree.toPdf("tree.pdf");
-                    cout << "Step # " << step+1 << ": (action --> state) = (" << action << " --> " << state << ")" << endl;
+                if(watch_progress_arg.getValue()>=2) {
+                    if(!no_graphics_arg.getValue()) {
+                        tree.toPdf("tree.pdf");
+                    }
+                    cout << "Step # " << step+1 << ": (action --> state) = (" << environment->action_name(action) << " --> " << environment->state_name(state) << ")" << endl;
                     getchar();
                 }
             }
@@ -217,23 +246,22 @@ bool check_arguments() {
     // check mode
     if(mode_set.find(mode_arg.getValue())==mode_set.end()) {
         ok = false;
-        cout << "Mode must be one of:" << endl;
-        for(auto mode : mode_set) {
-            cout << "\t" << mode << endl;
-        }
+        cout << "Mode must be one of:" << util::container_to_str(mode_set,"\n\t","\n\t") << endl;
     }
     // check environment
     if(environment_set.find(environment_arg.getValue())==environment_set.end()) {
         ok = false;
-        cout << "Environment must be one of:" << endl;
-        for(auto environment : environment_set) {
-            cout << "\t" << environment << endl;
-        }
+        cout << "Environment must be one of:" << util::container_to_str(environment_set,"\n\t","\n\t") << endl;
     }
     // check sample number
     if(sample_n_arg.getValue()<0) {
         ok = false;
         cout << "Number of samples must be non-negative." << endl;
+    }
+    // check accumulation
+    if(accumulate_set.find(accumulate_arg.getValue())==accumulate_set.end()) {
+        ok = false;
+        cout << "Accumulation must be one of:" << util::container_to_str(accumulate_set,"\n\t","\n\t") << endl;
     }
     return ok;
 }

@@ -16,13 +16,13 @@ using std::vector;
 DynamicTightRope::DynamicTightRope(int n):
     Environment({0,1,2}, vector<state_t>(velocity_n*n)),
     position_n(n),
-    action_names({"accelerate", "keep velocity", "decelerate"}),
+    action_names({"accel", "keep", "decel"}),
     state_names(velocity_n*position_n) {
     for(int pos : Range(position_n)) {
         for(int vel : Range(velocity_n)) {
             int linear_idx = convert_ND_to_1D_index({pos,vel},{position_n,velocity_n});
             states[linear_idx] = linear_idx;
-            state_names[linear_idx] = QString("position %1, velocity %2").arg(pos).arg(vel);
+            state_names[linear_idx] = QString("pos %1, vel %2").arg(pos).arg(vel);
         }
     }
 }
@@ -80,6 +80,10 @@ QString DynamicTightRope::action_name(const action_t & a) const {
 
 QString DynamicTightRope::state_name(const state_t & s) const {
     return state_names[s];
+}
+
+std::tuple<int,int> DynamicTightRope::get_position_and_velocity(const state_t & state) const {
+    return get_ND_index<2>::from(state,{position_n,velocity_n});
 }
 
 double DynamicTightRope::success_probability(const int & pos, const int & vel) const {
