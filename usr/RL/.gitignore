@@ -9,4 +9,4 @@ moc_*.cpp
 .~*.vue
 
 ## ipython notebook
-*/.ipynb_checkpoints/*.ipynb
+**/.ipynb_checkpoints/**
