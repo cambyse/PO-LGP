@@ -1,7 +1,7 @@
 #include "DynamicTightRope.h"
 
 #include <util/util.h>
-#include <util/tuple_return.h>
+#include <util/return_tuple.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -30,7 +30,7 @@ DynamicTightRope::DynamicTightRope(int n):
 DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s,
                                                                const action_t & a) const {
     // position/velocity
-    T(int,pos,int,vel) = get_ND_index<2>::from(s,{position_n,velocity_n});
+    RETURN_TUPLE(int,pos,int,vel) = get_ND_index<2>::from(s,{position_n,velocity_n});
     DEBUG_OUT(1,"pos = " << pos << ", vel = " << vel);
 
     // reward

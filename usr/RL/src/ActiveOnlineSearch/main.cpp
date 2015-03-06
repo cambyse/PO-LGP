@@ -15,7 +15,7 @@
 #include "TightRope.h"
 #include "DynamicTightRope.h"
 
-#include <util/tuple_return.h>
+#include <util/return_tuple.h>
 #include <util/pretty_printer.h>
 
 #define DEBUG_LEVEL 0
@@ -130,7 +130,7 @@ int main(int argn, char ** args) {
             for(int run : Range(sample_n_arg.getValue())) {
                 for(auto state_from : environment->states) {
                     for(auto action : environment->actions) {
-                        T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
                         cout << QString("%1,%2,%3,%4").arg(run).arg(state_from).arg(action).arg(reward) << endl;
                     }
                 }
@@ -142,7 +142,7 @@ int main(int argn, char ** args) {
                     double accum_reward;
                     auto env = std::dynamic_pointer_cast<DynamicTightRope>(environment);
                     DEBUG_EXPECT(0,env!=nullptr);
-                    T(int,position,int,velocity) = env->get_position_and_velocity(state_from);
+                    RETURN_TUPLE(int,position,int,velocity) = env->get_position_and_velocity(state_from);
                     if(accumulate_arg.getValue()=="min") {
                         accum_reward = DBL_MAX;
                     } else if(accumulate_arg.getValue()=="max") {
@@ -153,7 +153,7 @@ int main(int argn, char ** args) {
                         DEBUG_DEAD_LINE;
                     }
                     for(auto action : environment->actions) {
-                        T(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
                         if(accumulate_arg.getValue()=="min") {
                             accum_reward = std::min(reward,accum_reward);
                         } else if(accumulate_arg.getValue()=="max") {
