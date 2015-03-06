@@ -23,7 +23,6 @@ add_executable(GTest
     SandBox.cpp
     SandBox.h
     TemplateTest.cpp
-    UtilTest.cpp
     MinimalEnvironmentExample/MinimalAction.cpp
     MinimalEnvironmentExample/MinimalAction.h
     MinimalEnvironmentExample/MinimalEnvironment.h
@@ -32,11 +31,13 @@ add_executable(GTest
     MinimalEnvironmentExample/MinimalReward.cpp
     MinimalEnvironmentExample/MinimalReward.h
     ../util/unit_tests.cpp
+    ../ActiveOnlineSearch/unit_tests.cpp
 )
 
 target_include_directories(GTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(GTest PUBLIC
+    ActiveOnlineSearch
     ButtonWorld
     CheeseMaze
     environment

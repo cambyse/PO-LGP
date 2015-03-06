@@ -14,6 +14,7 @@ add_library(util
     debug_exclude.h
     debug.h
     function_signature.h
+    graph_plotting.h
     KolmogorovSmirnovDist.cpp
     KolmogorovSmirnovDist.h
     KolmogorovSmirnovTest.cpp
@@ -26,7 +27,7 @@ add_library(util
     ProgressBar.h
     QtUtil.cpp
     QtUtil.h
-    tuple_return.h
+    return_tuple.h
     template_lib.h
     util.cpp
     util.h

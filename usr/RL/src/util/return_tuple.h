@@ -1,3 +1,6 @@
+#ifndef TUPLERETURN_H_
+#define TUPLERETURN_H_
+
 /** \file tuple_return.h
  *
  * This files defines convenience macros and function for assigning values to
@@ -29,7 +32,6 @@
  * T(int, i, double, d) = std::make_tuple(1, 1.1);
  * @endcode
  *  */
-
 
 #include <tuple>
 
@@ -92,69 +94,76 @@
 /// macro calls the correct version of the NAMED_TUPLE_INITIALIZATION
 /// macros. These terminate without trailing semicolon so that assignment can be
 /// performed directly.
-#define TN(...) CONCATENATE(NAMED_TUPLE_INITIALIZATION_,VA_ARGS_NUM_DIV_2(__VA_ARGS__))(__VA_ARGS__)
+#define NAMED_RETURN_TUPLE(...) CONCATENATE(NAMED_TUPLE_INITIALIZATION_,VA_ARGS_NUM_DIV_2(__VA_ARGS__))(__VA_ARGS__)
 
 /** Calls TN macro with an anonymous name for the tuple. The name is
  * 'unique_tuple_identifyer_LINE' where LINE is the line number. Therefore you
  * must not use this macro more than once in the same line. */
-#define T(...) TN(CONCATENATE(unique_tuple_identifyer_,__LINE__),__VA_ARGS__)
+#define RETURN_TUPLE(...) NAMED_RETURN_TUPLE(CONCATENATE(unique_tuple_identifyer_,__LINE__),__VA_ARGS__)
 
-/** Constructs a tuple of references to variable v1. */
-template <class T1>
-std::tuple<T1&> t(T1& v1) {
-    return std::tuple<T1&>(v1);
-}
+namespace return_tuple {
 
-/** Constructs a tuple of references to variables v1, v2. */
-template <class T1, class T2>
-    std::tuple<T1&, T2&> t(T1& v1, T2& v2) {
-    return std::tuple<T1&, T2&>(v1, v2);
-}
+    /** Constructs a tuple of references to variable v1. */
+    template <class T1>
+        std::tuple<T1&> t(T1& v1) {
+        return std::tuple<T1&>(v1);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3. */
-template <class T1, class T2, class T3>
-    std::tuple<T1&, T2&, T3&> t(T1& v1, T2& v2, T3& v3) {
-    return std::tuple<T1&, T2&, T3&>(v1, v2, v3);
-}
+    /** Constructs a tuple of references to variables v1, v2. */
+    template <class T1, class T2>
+        std::tuple<T1&, T2&> t(T1& v1, T2& v2) {
+        return std::tuple<T1&, T2&>(v1, v2);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4. */
-template <class T1, class T2, class T3, class T4>
-    std::tuple<T1&, T2&, T3&, T4&> t(T1& v1, T2& v2, T3& v3, T4& v4) {
-    return std::tuple<T1&, T2&, T3&, T4&>(v1, v2, v3, v4);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3. */
+    template <class T1, class T2, class T3>
+        std::tuple<T1&, T2&, T3&> t(T1& v1, T2& v2, T3& v3) {
+        return std::tuple<T1&, T2&, T3&>(v1, v2, v3);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5. */
-template <class T1, class T2, class T3, class T4, class T5>
-    std::tuple<T1&, T2&, T3&, T4&, T5&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&>(v1, v2, v3, v4, v5);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4. */
+    template <class T1, class T2, class T3, class T4>
+        std::tuple<T1&, T2&, T3&, T4&> t(T1& v1, T2& v2, T3& v3, T4& v4) {
+        return std::tuple<T1&, T2&, T3&, T4&>(v1, v2, v3, v4);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6. */
-template <class T1, class T2, class T3, class T4, class T5, class T6>
-    std::tuple<T1&, T2&, T3&, T4&, T5&, T6&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&>(v1, v2, v3, v4, v5, v6);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5. */
+    template <class T1, class T2, class T3, class T4, class T5>
+        std::tuple<T1&, T2&, T3&, T4&, T5&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&>(v1, v2, v3, v4, v5);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7. */
-template <class T1, class T2, class T3, class T4, class T5, class T6, class T7>
-    std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&>(v1, v2, v3, v4, v5, v6, v7);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6. */
+    template <class T1, class T2, class T3, class T4, class T5, class T6>
+        std::tuple<T1&, T2&, T3&, T4&, T5&, T6&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&>(v1, v2, v3, v4, v5, v6);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8. */
-template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
-    std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&>(v1, v2, v3, v4, v5, v6, v7, v8);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7. */
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+        std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&>(v1, v2, v3, v4, v5, v6, v7);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8, v9. */
-template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
-    std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8, T9& v9) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&>(v1, v2, v3, v4, v5, v6, v7, v8, v9);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8. */
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+        std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&>(v1, v2, v3, v4, v5, v6, v7, v8);
+    }
 
-/** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8, v9, v10. */
-template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
-    std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&, T10&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8, T9& v9, T10& v10) {
-    return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&, T10&>(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10);
-}
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8, v9. */
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
+        std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8, T9& v9) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&>(v1, v2, v3, v4, v5, v6, v7, v8, v9);
+    }
+
+    /** Constructs a tuple of references to variables v1, v2, v3, v4, v5, v6, v7, v8, v9, v10. */
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
+        std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&, T10&> t(T1& v1, T2& v2, T3& v3, T4& v4, T5& v5, T6& v6, T7& v7, T8& v8, T9& v9, T10& v10) {
+        return std::tuple<T1&, T2&, T3&, T4&, T5&, T6&, T7&, T8&, T9&, T10&>(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10);
+    }
+
+}; // end namespace return_tuple
+
+#endif /* TUPLERETURN_H_ */
+

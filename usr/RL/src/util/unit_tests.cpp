@@ -7,10 +7,15 @@
 #include <list>
 #include <deque>
 
+#include <string>
+
+#include <lemon/list_graph.h>
+
 #include <util/util.h>
-#include <util/tuple_return.h>
+#include <util/return_tuple.h>
 #include <util/pretty_printer.h>
 #include <util/template_lib.h>
+#include <util/graph_plotting.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -18,8 +23,18 @@
 using std::vector;
 using std::array;
 using std::tuple;
+using std::cout;
+using std::endl;
+using std::string;
+
+using util::log_add_exp;
 
 static int counter;
+
+// test log add exp
+void test_log_add_exp(double t1, double t2) {
+    EXPECT_NEAR(exp(log_add_exp(t1,t2)),exp(t1)+exp(t2),1e-6);
+}
 
 // function for testing index conversion by reference
 template <class C1, class C2>
@@ -83,6 +98,205 @@ void test_ND_idx_non_ref(int max_dim = 10, int max_bound = 10) {
               " / bounds: " << ND_bounds);
 }
 
+TEST(Util, LogAddExp) {
+    test_log_add_exp(2,5);
+    test_log_add_exp(-100,100);
+    test_log_add_exp(0,0);
+}
+
+TEST(Util, SoftMax) {
+    // extreme value / over flow
+    {
+        DEBUG_OUT(1,"Testing extreme values / over flow");
+        vector<double> values({-1000,-100,-10,0,10,100,1000});
+        vector<double> expect_probs({0,0,0,0,0,0,1});
+        vector<double> probs = util::soft_max(values,1e-10);
+        DEBUG_OUT(1,"    T=1e-10");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+    }
+
+    // high temperature limit
+    {
+        DEBUG_OUT(1,"High temperature limit");
+        vector<double> values({-1000,-100,0,100,1000});
+        vector<double> expect_probs({.2,.2,.2,.2,.2});
+        vector<double> probs = util::soft_max(values,1e10);
+        DEBUG_OUT(1,"    T=1e10");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+    }
+
+    // equal values
+    {
+        DEBUG_OUT(1,"Testing equally distributed values");
+        vector<double> probs;
+        vector<double> expect_probs({.2,.2,.2,.2,.2});
+
+        {
+            DEBUG_OUT(1,"    {1,1,1,1,1}");
+            vector<double> values({1,1,1,1,1});
+            probs = util::soft_max(values,1e-10);
+            DEBUG_OUT(1,"    T=1e-10");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+            probs = util::soft_max(values,1);
+            DEBUG_OUT(1,"    T=1");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+        }
+
+        {
+            DEBUG_OUT(1,"    {0,0,0,0,0}");
+            vector<double> values({0,0,0,0,0});
+            probs = util::soft_max(values,1e-10);
+            DEBUG_OUT(1,"    T=1e-10");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+            probs = util::soft_max(values,1);
+            DEBUG_OUT(1,"    T=1");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+        }
+
+        {
+            DEBUG_OUT(1,"    {-1,-1,-1,-1,-1}");
+            vector<double> values({-1,-1,-1,-1,-1});
+            probs = util::soft_max(values,1e-10);
+            DEBUG_OUT(1,"    T=1e-10");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+            probs = util::soft_max(values,1);
+            DEBUG_OUT(1,"    T=1");
+            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+            }
+        }
+    }
+}
+
+TEST(Util, Enumerate) {
+    vector<string> vec = {"1st elem", "2nd elem", "3rd elem", "4th elem"};
+    int counter;
+    // simple form
+    counter = 0;
+    for(auto idx_elem : util::enumerate(vec)) {
+        EXPECT_EQ(idx_elem.first, counter);
+        EXPECT_EQ(idx_elem.second, vec[counter]);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
+        ++counter;
+    }
+    // with specific value for start and increment
+    counter = -10;
+    for(auto idx_elem : util::enumerate(vec, counter, 2)) {
+        EXPECT_EQ(idx_elem.first, counter);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
+        counter += 2;
+    }
+    // assigning
+    for(auto idx_elem : util::enumerate(vec)) {
+        string new_elem;
+        repeat(idx_elem.first) {
+            new_elem += "X";
+        }
+        idx_elem.second = new_elem;
+    }
+    for(auto idx_elem : util::enumerate(vec)) {
+        string new_elem;
+        repeat(idx_elem.first) {
+            new_elem += "X";
+        }
+        EXPECT_EQ(idx_elem.second, new_elem);
+        DEBUG_OUT(1, idx_elem.first << " / " << idx_elem.second);
+    }
+}
+
+TEST(Util, Range) {
+    int first, last;
+    bool is_first;
+
+    // implicit start and increment
+    is_first = true;
+    for(int i : util::Range(10)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,0);
+    EXPECT_EQ(last,9);
+
+    // implicit increment
+    is_first = true;
+    for(int i : util::Range(-1,10)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,-1);
+    EXPECT_EQ(last,10);
+
+    // everything explicit
+    is_first = true;
+    for(int i : util::Range(-3,10,3)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,-3);
+    EXPECT_EQ(last,9);
+
+    // only on element
+    is_first = true;
+    for(int i : util::Range(1,1)) {
+        if(is_first) {
+            first = i;
+            is_first = false;
+        }
+        last = i;
+        cout << i << " ";
+    }
+    cout << endl;
+    EXPECT_EQ(first,1);
+    EXPECT_EQ(last,1);
+}
+
+TEST(Util, PrettyPrinter) {
+    {
+        vector<int> v({1,2,3,4,5});
+        cout << v << endl;
+    }
+    {
+        vector<vector<int>> v({{1,2,3},{11,22,33},{111,222,333}});
+        cout << v << endl;
+    }
+}
 
 TEST(Util, IndexConversion) {
 
@@ -1009,7 +1223,7 @@ TEST(Util, ReturnTuple) {
         // create named tuple and assign separately
         {
 
-            TN(tt, int, i, double, d);
+            NAMED_RETURN_TUPLE(tt, int, i, double, d);
             tt = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
@@ -1019,7 +1233,7 @@ TEST(Util, ReturnTuple) {
 
         // create named tuple and assign in one step
         {
-            TN(tt, int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            NAMED_RETURN_TUPLE(tt, int, i, double, d) = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
             EXPECT_EQ(i, std::get<0>(tt));
@@ -1028,7 +1242,7 @@ TEST(Util, ReturnTuple) {
 
         // create anonymous tuple for assignment only
         {
-            T(int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            RETURN_TUPLE(int, i, double, d) = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
         }
@@ -1036,7 +1250,7 @@ TEST(Util, ReturnTuple) {
         // create variables separately and assign as tuple
         {
             int i; double d;
-            t(i,d) = std::make_tuple(rand_int, rand_double);
+            return_tuple::t(i,d) = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
         }
@@ -1070,4 +1284,38 @@ TEST(Util, ArrayToTuple) {
         tuple<int,int,int,int> t_ret(11,22,33,44);
         EXPECT_EQ(t, t_ret);
     }
+}
+
+TEST(Util, GraphToPdf) {
+
+    using namespace lemon;
+
+    ListDigraph graph;
+    auto n1 = graph.addNode();
+    auto n2 = graph.addNode();
+    auto n3 = graph.addNode();
+    graph.addArc(n1,n2);
+    graph.addArc(n1,n3);
+    bool first;
+    ListDigraph::NodeMap<QString> node_map(graph);
+    first = true;
+    for(ListDigraph::NodeIt node(graph); node!=INVALID; ++node) {
+        if(first) {
+            node_map[node] = "color=red";
+            first = false;
+        }
+    }
+    ListDigraph::ArcMap<QString> arc_map(graph);
+    first = true;
+    for(ListDigraph::ArcIt arc(graph); arc!=INVALID; ++arc) {
+        if(first) {
+            arc_map[arc] = "style=solid";
+            first = false;
+        }
+    }
+
+    util::graph_to_pdf("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
+
+    EXPECT_EQ(0,system("dot -V")) << "Could not find 'dot' command for generating graphs.";
+    EXPECT_EQ(0,remove("graph.pdf")) << "Graph 'graph.pdf' was not generated.";
 }

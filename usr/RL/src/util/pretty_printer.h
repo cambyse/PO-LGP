@@ -19,7 +19,7 @@ namespace util {
         }
     }
 
-    /** Convert a iterable container to a string. */
+    /** Convert a iterable container to a std::string. */
     template <class C>
         std::string container_to_str(const C & container,
                                      const char* separator = " ",
@@ -39,7 +39,6 @@ namespace util {
         ss << end;
         return ss.str();
     }
-
 }
 
 namespace std {
