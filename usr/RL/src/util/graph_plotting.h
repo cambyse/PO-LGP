@@ -25,7 +25,8 @@ namespace util {
                           const STRING_2_T general_node_properties = "",
                           const typename GRAPH_T::template NodeMap<STRING_1_T> * node_properties = nullptr,
                           const STRING_4_T general_arc_properties = "",
-                          const typename GRAPH_T::template ArcMap<STRING_3_T> * arc_properties = nullptr) {
+                          const typename GRAPH_T::template ArcMap<STRING_3_T> * arc_properties = nullptr,
+                          bool delete_dot_file = true) {
 
         //-------------------//
         // random file names //
@@ -78,7 +79,7 @@ namespace util {
         //-----------------//
         // remove dot file //
         //-----------------//
-        remove(dot_file_name.toLatin1());
+        if(delete_dot_file) remove(dot_file_name.toLatin1());
     }
 
 }; // end namespace graph_plotting

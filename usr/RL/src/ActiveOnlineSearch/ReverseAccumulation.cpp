@@ -16,53 +16,34 @@ using std::set;
 ReverseAccumulation::ReverseAccumulation():
     node_labels(graph),
     node_values(graph),
-    node_functions(graph) {
+    node_differentials(graph),
+    node_variables(graph),
+    arc_values(graph),
+    node_functions(graph),
+    arc_functions(graph) {
 
     // create graph
-    auto alpha = graph.addNode();
-    node_labels[alpha] = "alpha";
-    node_functions[alpha] = {{},[](vector<double>)->double{return NAN;}};
-    auto t = graph.addNode();
-    node_labels[t] = "t";
-    node_functions[t] = {{},[](vector<double>)->double{return NAN;}};
-    auto w = graph.addNode();
-    node_labels[w] = "w";
-    node_functions[w] = {{},[](vector<double>)->double{return NAN;}};
+    node_t alpha = add_node("alpha");
+    node_t t = add_node("t");
+    node_t w = add_node("w");
 
-    auto v1 = graph.addNode();
-    node_labels[v1] = "v1";
-    node_functions[v1] = {{"t"},[](vector<double> v)->double{return sqrt(v[0]);}};
-    auto v2 = graph.addNode();
-    node_labels[v2] = "v2";
-    node_functions[v2] = {{"alpha","v1"},[](vector<double> v)->double{return -v[0]*v[1];}};
-    auto v3 = graph.addNode();
-    node_labels[v3] = "v3";
-    node_functions[v3] = {{"v2"},[](vector<double> v)->double{return exp(v[0]);}};
-    auto v4 = graph.addNode();
-    node_labels[v4] = "v4";
-    node_functions[v4] = {{"w","v3","v1"},[](vector<double> v)->double{return v[0]*v[1]*v[2];}};
+    node_t v1 = add_node("v1", {"t"}, [](vector<double> v)->double{return sqrt(v[0]);});
+    node_t v2 = add_node("v2", {"alpha","v1"}, [](vector<double> v)->double{return -v[0]*v[1];});
+    node_t v3 = add_node("v3", {"v2"}, [](vector<double> v)->double{return exp(v[0]);});
+    node_t v4 = add_node("v4", {"w","v3","v1"}, [](vector<double> v)->double{return v[0]*v[1]*v[2];});
 
-    auto x = graph.addNode();
-    node_labels[x] = "x";
-    node_functions[x] = {{"v4"},[](vector<double> v)->double{return sin(v[0]);}};
-    auto y = graph.addNode();
-    node_labels[y] = "y";
-    node_functions[y] = {{"v4"},[](vector<double> v)->double{return cos(v[0]);}};
+    node_t x = add_node("x", {"v4"}, [](vector<double> v)->double{return sin(v[0]);});
+    node_t y = add_node("y", {"v4"}, [](vector<double> v)->double{return cos(v[0]);});
 
-    graph.addArc(alpha,v2);
-    graph.addArc(t,v1);
-    graph.addArc(w,v4);
-    graph.addArc(v1,v2);
-    graph.addArc(v1,v4);
-    graph.addArc(v2,v3);
-    graph.addArc(v3,v4);
-    graph.addArc(v4,x);
-    graph.addArc(v4,y);
-
-    // initialize values
-    for(node_it_t node(graph); node!=INVALID; ++node) {
-        node_values[node] = NAN;
-    }
+    add_arc(alpha, v2, [](vector<double> v)->double{return -v[1];});
+    add_arc(t, v1, [](vector<double> v)->double{return -1/(2*sqrt(v[0]));});
+    add_arc(w, v4, [](vector<double> v)->double{return v[1]*v[2];});
+    add_arc(v1, v2, [](vector<double> v)->double{return -v[0];});
+    add_arc(v1, v4, [](vector<double> v)->double{return v[0]*v[1];});
+    add_arc(v2, v3, [](vector<double> v)->double{return exp(v[0]);});
+    add_arc(v3, v4, [](vector<double> v)->double{return v[0]*v[1];});
+    add_arc(v4, x, [](vector<double> v)->double{return cos(v[0]);});
+    add_arc(v4, y, [](vector<double> v)->double{return -sin(v[0]);});
 
     // fill lists of input/output nodes
     input_nodes.push_back(alpha);
@@ -114,8 +95,7 @@ void ReverseAccumulation::propagate_values() {
             }
             if(all_inputs_available) {
                 DEBUG_OUT(3, "            All inputs available --> compute value");
-                double value = map_function(node, node_functions[node]);
-                node_values[node] = value;
+                evaluate_node(node);
                 done[node] = true;
                 new_done.insert(node);
                 for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
@@ -162,43 +142,81 @@ void ReverseAccumulation::propagate_values() {
 void ReverseAccumulation::plot_graph(const char* file_name) const {
     graph_t::NodeMap<QString> node_properties(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
-        node_properties[node] = QString("label=<%1=%2>").
+        node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
             arg(node_labels[node]).
-            arg(node_values[node]);
+            arg(node_values[node]).
+            arg(node_differentials[node]);
     }
-    util::graph_to_pdf(file_name, graph, "", &node_properties);
+    graph_t::ArcMap<QString> arc_properties(graph);
+    for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
+        arc_properties[arc] = QString("label=<%1>").
+            arg(arc_values[arc]);
+    }
+    util::graph_to_pdf(file_name, graph, "", &node_properties, "", &arc_properties);
 }
 
-double ReverseAccumulation::map_function(const node_t & node,
-                                         const std::pair<std::vector<QString>, node_function_t> & func) const {
+double ReverseAccumulation::evaluate_node(const node_t & node) {
+    // get variables
+    vector<QString> variables = node_variables[node];
     vector<double> values;
-    for(QString label : func.first) {
+    for(QString var : variables) {
         bool found = false;
         for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
             node_t source_node = graph.source(arc);
-            if(node_labels[source_node]==label) {
+            if(node_labels[source_node]==var) {
                 found = true;
                 values.push_back(node_values[source_node]);
             }
         }
         if(!found) {
-            DEBUG_ERROR("Could not find node with label '" << label << "' while computing value of node '" << node_labels[node] << "'");
+            DEBUG_ERROR("Could not find node with label '" << var << "' while computing value of node '" << node_labels[node] << "'");
             values.push_back(NAN);
         }
     }
 
+    // debug output
     IF_DEBUG(1) {
         int input_size = 0;
         for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
             ++input_size;
         }
-        if(input_size!=func.first.size()) {
+        if(input_size!=variables.size()) {
             DEBUG_WARNING("Number of input values ("
                           << input_size
-                          << ") does not match number of variables labels given ("
-                          << func.first.size() << ")");
+                          << ") does not match number of variables given ("
+                          << variables.size() << ")");
         }
     }
 
-    return func.second(values);
+    // evaluate arcs
+    for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+        double val = arc_functions[arc](values);
+        arc_values[arc] = val;
+    }
+
+    // evaluate node
+    double val = node_functions[node](values);
+    node_values[node] = val;
+    return val;
+}
+
+ReverseAccumulation::node_t ReverseAccumulation::add_node(QString label,
+                                                          std::vector<QString> variables,
+                                                          function_t function) {
+    node_t node = graph.addNode();
+    node_labels[node] = label;
+    node_values[node] = NAN;
+    node_differentials[node] = NAN;
+    node_variables[node] = variables;
+    node_functions[node] = function;
+    return node;
+}
+
+ReverseAccumulation::arc_t ReverseAccumulation::add_arc(node_t from,
+                                                        node_t to,
+                                                        function_t function) {
+    arc_t arc = graph.addArc(from, to);
+    arc_values[arc] = NAN;
+    arc_functions[arc] = function;
+    return arc;
 }
