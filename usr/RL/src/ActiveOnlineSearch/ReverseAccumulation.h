@@ -19,6 +19,7 @@ private:
     typedef graph_t::OutArcIt out_arc_it_t;
     typedef graph_t::InArcIt in_arc_it_t;
     typedef std::function<double(std::vector<double>)> function_t;
+    enum TYPE { VALUES, FORWARD, REVERSE };
 
     //----members----//
 private:
@@ -37,8 +38,10 @@ private:
 public:
     ReverseAccumulation();
     virtual ~ReverseAccumulation() = default;
-    void assign_values(std::vector<double> values);
-    void propagate_values();
+    void compute_values(std::vector<double> values);
+    void forward_accumulation(std::vector<double> values, std::vector<double> differentials);
+    void reverse_accumulation(std::vector<double> values, std::vector<double> differentials);
+    void check_derivatives(std::vector<double> values, double epsilon = 1e-5, double delta = 1e-5);
     void plot_graph(const char* file_name) const;
     node_t add_node(QString node_label = "",
                     std::vector<QString> node_variables = std::vector<QString>(),
@@ -46,8 +49,13 @@ public:
     arc_t add_arc(node_t from,
                   node_t to,
                   function_t node_function = [](std::vector<double>)->double{return NAN;});
+    std::vector<double> get_input_differentials() const;
+    std::vector<double> get_output_differentials() const;
+    std::vector<double> get_output_values() const;
 private:
-    double evaluate_node(const node_t & node);
+    void propagate_values(TYPE p);
+    void assign_values(std::vector<double> values, TYPE a);
+    double evaluate_node(const node_t & node, TYPE e);
 };
 
 #endif /* REVERSEACCUMULATION_H_ */
