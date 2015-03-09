@@ -30,6 +30,11 @@ Rule {
 
 Rule {
   (lowerHand) (lowerHand conv),
+  { (homing) (gazeAtHand)! (alignHand)! (alignHand conv)! (controlForce)! (controlForce timeout)! }
+}
+
+Rule {
+  (lowerHand) (contact),
   { (controlForce) (lowerHand)! (lowerHand conv)! }
 }
 

@@ -22,6 +22,8 @@ struct ActionMachine : Module {
 
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
+  ACCESS(arr, wrenchL)
+  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
   ACCESS(Graph, KB);
@@ -62,6 +64,7 @@ struct ActionMachine : Module {
 
   void transition();
   void transitionFOL(double time, bool forceChaining);
+  double getContactForce();
 };
 
 //===========================================================================
@@ -69,6 +72,8 @@ struct ActionMachine : Module {
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
+  ACCESS(arr, wrenchL)
+  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){

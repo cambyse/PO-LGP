@@ -202,8 +202,8 @@ void RosCom_ForceSensorSync::open(){
   rosCheckInit();
   s = new sRosCom_ForceSensorSync;
   s->base = this;
-  s->sub_left  = s->nh.subscribe("/ft/l_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_left, s);
-  s->sub_right = s->nh.subscribe("/ft/r_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_right, s);
+  s->sub_left  = s->nh.subscribe("/ft_sensor/ft_compensated", 1, &sRosCom_ForceSensorSync::cb_left, s);  // /ft/l_gripper_motor
+//  s->sub_right = s->nh.subscribe("/ft_sensor/r_ft_compensated", 1, &sRosCom_ForceSensorSync::cb_right, s); // /ft/r_gripper_motor
 }
 
 void RosCom_ForceSensorSync::step(){

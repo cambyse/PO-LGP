@@ -105,6 +105,11 @@ void ActionMachine::step(){
   //  cout <<"** active actions:";
 //  reportActions(A());
 
+  // report on force:
+  arr fL = wrenchL.get()();
+  fil <<"wrenchL=" <<fL <<' ' <<length(fL) <<endl;
+
+
   //-- code to output force signals
   if(true){
     ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
@@ -192,6 +197,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   //-- check new successes and fails and add to symbolic state
   Item* convSymbol = KB().getItem("conv");
+  Item* contactSymbol = KB().getItem("contact");
   Item* timeoutSymbol = KB().getItem("timeout");
   A.readAccess();
   for(Action *a:A()) if(a->active){
@@ -200,6 +206,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
       if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }
+  }
+  if(getContactForce()>5.){
+    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
+    if(getEqualFactInKB(KB(), newit)) delete newit;
+    else changes=true;
   }
   A.deAccess();
 
@@ -222,6 +233,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
     A.deAccess();
   }
   KB.deAccess();
+}
+
+double ActionMachine::getContactForce(){
+  arr fL = wrenchL.get()();
+  return length(fL);
 }
 
 void ActionMachine::waitForActionCompletion(Action* a){
