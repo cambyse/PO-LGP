@@ -52,7 +52,7 @@ Tasks {
   (gazeAtHand){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
   (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
   (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
-  (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .5], PD=[.5, .9, .1, 10.] }
+  (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .45], PD=[.5, .9, .1, 10.] }
   (homing){ type="homing" }
 }
 

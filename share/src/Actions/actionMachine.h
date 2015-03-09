@@ -33,6 +33,7 @@ struct ActionMachine : Module {
   //-- user methods
   const ors::KinematicWorld *world;
   ofstream fil;
+  bool initStateFromRos;
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on

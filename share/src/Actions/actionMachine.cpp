@@ -18,7 +18,7 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 // ActionMachine
 //
 
-ActionMachine::ActionMachine():Module("ActionMachine"){
+ActionMachine::ActionMachine():Module("ActionMachine"), initStateFromRos(false){
   ActionL::memMove=true;
   Kq_gainFactor = ARR(1.);
   Kd_gainFactor = ARR(1.);
@@ -54,35 +54,35 @@ void ActionMachine::open(){
 
   bool useRos = MT::getParameter<bool>("useRos",false);
   if(useRos){
-    //-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    uint trials=0;
-    for(;useRos;){
-      ctrl_obs.var->waitForNextRevision();
-      cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
-      cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
-
-      if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
-         && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N)
-        break;
-
-      trials++;
-      if(trials>20){
-        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
-      }
-    }
-
-    //-- set current state
-    cout <<"** GO!" <<endl;
-    s->q = ctrl_obs.get()->q;
-    s->qdot = ctrl_obs.get()->qdot;
-    s->feedbackController.setState(s->q, s->qdot);
+    initStateFromRos=true;
   }
 }
 
 void ActionMachine::step(){
   static uint t=0;
   t++;
+  if(initStateFromRos){
+    //-- wait for first q observation!
+    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
+
+    ctrl_obs.waitForNextRevision();
+    cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
+    cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+
+    if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
+       && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N){ //all is good
+      //-- set current state
+      s->q = ctrl_obs.get()->q;
+      s->qdot = ctrl_obs.get()->qdot;
+      s->feedbackController.setState(s->q, s->qdot);
+      cout <<"** GO!" <<endl;
+      initStateFromRos = false;
+    }else{
+      if(t>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
+    }
+  }
 
   if(!(t%20))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
