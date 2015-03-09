@@ -177,6 +177,7 @@ void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
     MT::String type=td["type"]->V<MT::String>();
     if(type=="homing"){
       new Homing(*this, t->parents(0)->keys(1));
+    }if(type=="forceCtrl"){
     }else{
       DefaultTaskMap *map = new DefaultTaskMap(td, *world);
       CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
