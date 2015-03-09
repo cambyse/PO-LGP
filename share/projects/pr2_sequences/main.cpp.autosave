@@ -78,9 +78,9 @@ void rewriteGraph(){
 int main(int argc, char** argv) {
   MT::initCmdLine(argc, argv);
   
-  testPush();
+//  testPush();
 //  testFol();
-//  rewriteGraph();
+  rewriteGraph();
 
   return 0;
 }

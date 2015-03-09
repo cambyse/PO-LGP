@@ -104,7 +104,7 @@ void testMonteCarlo(){
   KeyValueGraph Gorig;
   FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
-  uint verbose=1;
+  uint verbose=3;
 
   for(uint k=0;k<10;k++){
     KeyValueGraph KB = Gorig;
@@ -212,10 +212,10 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-  testPolFwdChaining();
+  //  testPolFwdChaining();
 //  testFolLoadFile();
-  testFolFwdChaining();
+//  testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
+//  testFolSubstitution();
   testMonteCarlo();
 }
