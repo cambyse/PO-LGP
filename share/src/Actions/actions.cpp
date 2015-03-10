@@ -7,7 +7,7 @@
 //
 
 Action::Action(ActionMachine& actionMachine, const char* name)
-  : name(name), active(false), symbol(NULL), actionTime(0.){
+  : name(name), active(false), symbol(NULL), actionTime(0.), timeOut(-1.){
   actionMachine.A.set()->append(this);
   actionMachine.KB.readAccess();
   Item *it = actionMachine.KB().getItem(name);
@@ -242,20 +242,22 @@ bool SetQ::finishedSuccess(ActionMachine& M) {
 }
 // ============================================================================
 // PushForce
-PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec)
-    : Action(actionMachine, "PushForce") {
+PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
+    : Action(actionMachine, "controlForce") {
   DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
   CtrlTask *task = new CtrlTask(
                      STRING("MoveEffTo_" << effName),
                      m,
                      1., .8, 1., 1.);
-
+  if(_timeOut>0.) timeOut=_timeOut;
   task->f_ref = forceVec;
   task->f_Igain = .01;
   tasks.append(task);
 }
 
 void PushForce::step(ActionMachine& M){
+  int i=1;
+  i++;
 }
 
 bool PushForce::finishedSuccess(ActionMachine& M) {

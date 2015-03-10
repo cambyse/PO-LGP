@@ -151,6 +151,9 @@ void ActionMachine::step(){
     s->feedbackController.setState(s->q, s->qdot);
   }
 
+  s->refs.fR = ARR(0., 0., 0.);
+  s->refs.u_bias = zeros(s->q.N);
+
   //-- compute the force feedback control coefficients
   uint count=0;
   for(Action *a : A()) {
@@ -166,13 +169,11 @@ void ActionMachine::step(){
   A.deAccess();
 
   //-- send the computed movement to the robot
-  s->refs.fR = ARR(0., 0., 0.);
   s->refs.Kq_gainFactor = Kq_gainFactor;
   s->refs.Kd_gainFactor = Kd_gainFactor;
 
   s->refs.q=s->q;
   s->refs.qdot = zeros(s->q.N);
-  s->refs.u_bias = zeros(s->q.N);
   s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
@@ -188,7 +189,8 @@ void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
     MT::String type=td["type"]->V<MT::String>();
     if(type=="homing"){
       new Homing(*this, t->parents(0)->keys(1));
-    }if(type=="forceCtrl"){
+    }else if(type=="forceCtrl"){
+      new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
     }else{
       DefaultTaskMap *map = new DefaultTaskMap(td, *world);
       CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
@@ -215,6 +217,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
       Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
+      if(getEqualFactInKB(KB(), newit)) delete newit;
+      else changes=true;
+    }
+    if(a->indicateTimeout(*this)){
+      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, timeoutSymbol}, new bool(true), true);
       if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }

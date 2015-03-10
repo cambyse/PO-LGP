@@ -200,7 +200,7 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
   if(&J) J.clear();
   arr y, J_y, yddot_des;
   for(CtrlTask* t: tasks) {
-    if(t->active) {
+    if(t->active && !t->f_ref.N) {
       t->map.phi(y, J_y, world);
       yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
       c.append(::sqrt(t->prec)*(yddot_des /*-Jdot*qdot*/));

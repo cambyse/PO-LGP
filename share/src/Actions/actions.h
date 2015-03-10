@@ -35,7 +35,7 @@ struct Action {
   MT::String name;
   bool active;
   Item *symbol;
-  double actionTime;
+  double actionTime, timeOut;
 
   CtrlTaskL tasks;
 
@@ -52,6 +52,8 @@ struct Action {
   virtual bool finishedSuccess(ActionMachine& actionMachine) { return false; }
   /// default: never finish
   virtual bool finishedFail(ActionMachine& actionMachine) { return false; }
+  /// indicator function for the timeout symbol
+  virtual bool indicateTimeout(ActionMachine& actionMachine) { if(timeOut<0.) return false; return actionTime>timeOut; }
   /// default: always time to go
   virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
   /// default: always time to go //neg-log success likelihood?
@@ -128,7 +130,7 @@ struct SetQ : Action {
 //===========================================================================
 struct PushForce : Action {
   arr forceVec;
-  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
+  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double timeOut=-1.);
   virtual void step(ActionMachine& M);
   virtual bool finishedSuccess(ActionMachine& M);
 };
