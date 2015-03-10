@@ -174,9 +174,9 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);
-//  fL_ref = ARRAY(msg->fL);
-//  EfL = ARRAY(msg->EfL);
-//  KfL_gainFactor = ARRAY(msg->KfL_gainFactor);
+  fL_ref = ARRAY(msg->fL);
+  EfL = ARRAY(msg->EfL);
+  KfL_gainFactor = ARRAY(msg->KfL_gainFactor);
   if (KfL_gainFactor.N>0) KfL_gainFactor.reshape(q_ref.N,3);
   if (EfL.N>0) EfL.reshape(3,6);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
