@@ -28,19 +28,24 @@ Rule {
   { (lowerHand) (positionHand)! (positionHand conv)! }
 }
 
-Rule {
-  (lowerHand) (lowerHand conv),
-  { (homing) (gazeAtHand)! (alignHand)! (alignHand conv)! (controlForce)! (controlForce timeout)! }
-}
+#Rule {
+#  (lowerHand) (lowerHand conv),
+#  { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! (controlForce)! (controlForce timeout)! }
+#}
+
+#Rule {
+#  (lowerHand) (contact),
+#  { (controlForce) (lowerHand)! (lowerHand conv)! }
+#}
 
 Rule {
-  (lowerHand) (contact),
+  (lowerHand) (lowerHand conv),
   { (controlForce) (lowerHand)! (lowerHand conv)! }
 }
 
 Rule {
-  (controlForce timeout),
-  { (homing) (gazeAtHand)! (alignHand)! (alignHand conv)! (controlForce)! (controlForce timeout)! }
+  (controlForce) (controlForce timeout),
+  { (homing) (controlForce)! (controlForce timeout)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
 }
 
 Rule{
@@ -50,7 +55,7 @@ Rule{
 
 # This is only a shortcut to run the code without robot attached:
 # it immediately flags the controlForce timeout
-Rule {  (controlForce),  { (controlForce timeout) } }
+#Rule {  (controlForce),  { (controlForce timeout) } }
 
 # These are just the parameter sets of the activities
 Tasks {
@@ -58,7 +63,7 @@ Tasks {
   (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
   (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
   (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .45], PD=[.5, .9, .1, 10.] }
-  (controlForce){ type="forceCtrl", target=[0 0 5] }
+  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 5], timeOut=0.1 }
   (homing){ type="homing" }
 }
 

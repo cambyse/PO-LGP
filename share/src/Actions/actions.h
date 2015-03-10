@@ -35,7 +35,7 @@ struct Action {
   MT::String name;
   bool active;
   Item *symbol;
-  double actionTime;
+  double actionTime, timeOut;
 
   CtrlTaskL tasks;
 
@@ -52,6 +52,8 @@ struct Action {
   virtual bool finishedSuccess(ActionMachine& actionMachine) { return false; }
   /// default: never finish
   virtual bool finishedFail(ActionMachine& actionMachine) { return false; }
+  /// indicator function for the timeout symbol
+  virtual bool indicateTimeout(ActionMachine& actionMachine) { if(timeOut<0.) return false; return actionTime>timeOut; }
   /// default: always time to go
   virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
   /// default: always time to go //neg-log success likelihood?
@@ -71,13 +73,12 @@ struct FollowReference : Action {
   arr ref;
   double trajectoryDuration; ///< -1 if this is only a point reference instead of a trajectory
   double stopTolerance;
-  bool stopOnContact;
 
   FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
                   const arr& yref=arr(), const arr& vref=arr(), double durationInSeconds=-1.,
       double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
       double relativePrec=100.,
-      double stopTolerance=1e-2, bool stopOnContact=true);
+      double stopTolerance=1e-2);
   FollowReference(ActionMachine& actionMachine, const char* name, CtrlTask *task);
   virtual void step(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
@@ -128,7 +129,7 @@ struct SetQ : Action {
 //===========================================================================
 struct PushForce : Action {
   arr forceVec;
-  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec);
+  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double timeOut=-1.);
   virtual void step(ActionMachine& M);
   virtual bool finishedSuccess(ActionMachine& M);
 };

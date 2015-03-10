@@ -28,8 +28,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   qd.resize(world.q.N).setZero();
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
-  Kq_gainFactor=Kd_gainFactor=ARR(1.);
-  KfL_gainFactor.clear();
+  Kp=Kd=ARR(1.);
+  Ki.clear();
   limits.resize(world.q.N,4).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
@@ -78,7 +78,7 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
-  fL_error = zeros(3);
+  err = zeros(3);
   q_filt = 0.;
   qd_filt = 0.95;
   gamma = 1.;
@@ -114,22 +114,22 @@ void TreeControllerClass::update() {
     }
 
     u = zeros(q.N);
-    if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
-      u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
-      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
-    }else if(Kq_gainFactor.d0==q.N && Kq_gainFactor.d1==q.N && Kd_gainFactor.N==1){
-      u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
-      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
+    if(Kp.N==1 && Kd.N==1){
+      u += Kp.scalar()*(Kp % (q_ref - q));
+      u += Kd.scalar()*(Kd % (qdot_ref - qd));
+    }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
+      u += Kp % (Kp*(q_ref - q)); //matrix multiplication!
+      u += Kd.scalar()*(Kd % (qdot_ref - qd));
     }
     u += u_bias;
 
     // torque PD for left ft sensor
-    if (KfL_gainFactor.N==0) {
-      fL_error = fL_error*0.;    // reset integral error
+    if (Ki.N==0) {
+      err = err*0.;    // reset integral error
     } else {
-      fL_error = gamma*fL_error + (fL_ref - EfL*fL_obs);
-//       ROS_INFO("%s",STRING("KfL_gainFactor * fL_error: " << KfL_gainFactor * fL_error).p);
-      u += KfL_gainFactor * fL_error;
+      err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
+//       ROS_INFO("%s",STRING("Ki * fL_error: " << Ki * fL_error).p);
+      u += Ki * err;
     }
 
     //-- command efforts to KDL
@@ -175,14 +175,13 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);
   fL_ref = ARRAY(msg->fL);
-  EfL = ARRAY(msg->EfL);
-  KfL_gainFactor = ARRAY(msg->KfL_gainFactor);
-  if (KfL_gainFactor.N>0) KfL_gainFactor.reshape(q_ref.N,3);
-  if (EfL.N>0) EfL.reshape(3,6);
+  fR_ref = ARRAY(msg->fR);
+  J_ft_inv = ARRAY(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
-  CP(Kq_gainFactor);
-  CP(Kd_gainFactor);
+  CP(Kp);
+  CP(Kd);
 #undef CP
+  Ki = ARRAY(msg->Ki);             if (Ki.N>0) Ki.reshape(q_ref.N, 3);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   gamma = msg->gamma;

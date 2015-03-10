@@ -22,8 +22,6 @@ struct ActionMachine : Module {
 
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, wrenchL)
-  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
   ACCESS(Graph, KB);
@@ -31,7 +29,7 @@ struct ActionMachine : Module {
   ActionMachine();
   ~ActionMachine();
 
-  arr Kq_gainFactor, Kd_gainFactor;
+  arr Kp, Kd;
   //-- user methods
   const ors::KinematicWorld *world;
   ofstream fil;
@@ -72,8 +70,6 @@ struct ActionMachine : Module {
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, wrenchL)
-  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
@@ -81,7 +77,7 @@ struct ActionSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+//      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
     }
     connect();
   }
