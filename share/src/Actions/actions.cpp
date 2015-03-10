@@ -244,28 +244,22 @@ bool SetQ::finishedSuccess(ActionMachine& M) {
 // PushForce
 PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec)
     : Action(actionMachine, "PushForce") {
-  // Note that the pushtask is kinda seperate to the normal PDTasks. I does not
-  // add a PDTask to the ActionMachine
+  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+  CtrlTask *task = new CtrlTask(
+                     STRING("MoveEffTo_" << effName),
+                     m,
+                     1., .8, 1., 1.);
+
+  task->f_ref = forceVec;
+  task->f_Igain = .01;
+  tasks.append(task);
 }
 
 void PushForce::step(ActionMachine& M){
-//      TODO: move to step() method of the action itself
-//      if(a->name == "PushForce") {
-//        cout <<" - FORCE TASK: " << endl;
-//        PushForce* pf = dynamic_cast<PushForce*>(a);
-//        // cout << pf->forceVec << endl;
-//        s->refs.fR = pf->forceVec;
-//        NIY;
-////        s->refs.fR_gainFactor = 1.;
-////        s->refs.Kp_gainFactor = .2;
-//      }
 }
 
 bool PushForce::finishedSuccess(ActionMachine& M) {
   return false;
-  // CtrlTask *task=tasks(0);
-  // return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
-  // return false;
 }
 
 //===========================================================================

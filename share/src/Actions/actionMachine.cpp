@@ -134,7 +134,7 @@ void ActionMachine::step(){
     }
   }
 
-  //-- compute the feedback controller step
+  //-- compute the feedback controller step and iterate to compute a forward reference
   //first collect all tasks of all actions into the feedback controller:
   s->feedbackController.tasks.clear();
   for(Action *a : A()) for(CtrlTask *t:a->tasks) s->feedbackController.tasks.append(t);
@@ -145,6 +145,17 @@ void ActionMachine::step(){
     s->qdot += .001*a;
     s->feedbackController.setState(s->q, s->qdot);
   }
+
+  //-- compute the force feedback control coefficients
+  uint count=0;
+  for(Action *a : A()) {
+    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
+      count++;
+      if(count!=1) HALT("you have multiple active force control tasks - NIY");
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.KfL_gainFactor, s->refs.EfL, *world);
+    }
+  }
+
 
   // s->MP.reportCurrentState();
   A.deAccess();

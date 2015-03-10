@@ -102,9 +102,10 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   CHECK(m->i>=0,"this only works for the default position/ori task map");
   ors::Body *body = world.shapes(m->i)->body;
   ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
+  ors::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");
   arr J_ft, J;
   world.kinematicsPos         (NoArr, J,   body, &vec);
-  world.kinematicsPos_wrtFrame(NoArr, J_ft,body, &vec, world.getShapeByName("l_ft_sensor"));
+  world.kinematicsPos_wrtFrame(NoArr, J_ft,body, &vec, l_ft_sensor);
 
   //-- compute the control coefficients
   u_bias = ~J*f_ref;
