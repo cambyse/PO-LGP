@@ -73,16 +73,16 @@ struct Pr2GamepadController:Module{
       arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
       cout <<J_fL <<gain <<endl;
 //      refs.u_bias = 1.*(~J_fL * refs.fL);
-      refs.Kq_gainFactor = gain;
-//      refs.Kq_gainFactor = ARR(.3);
+      refs.Kp = gain;
+//      refs.Kp = ARR(.3);
       refs.u_bias = zeros(q.N);
     }else{
       refs.fL = ARR(0., 0., 0.);
-      refs.Kq_gainFactor = ARR(1.);
+      refs.Kp = ARR(1.);
       refs.u_bias = zeros(q.N);
     }
 
-    refs.Kd_gainFactor = ARR(1.);
+    refs.Kd = ARR(1.);
     refs.q=q;
     refs.qdot=zero_qdot;
     if(trans && trans->qDim()==3){

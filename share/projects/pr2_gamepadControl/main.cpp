@@ -114,29 +114,24 @@ void TEST(Gamepad){
 #if 0 // set a feew fwd force task
       refs.fL = ARR(10., 0., 0.);
       refs.u_bias = 1.*(~J_fL * refs.fL);
-      refs.Kq_gainFactor = ARR(.3);
+      refs.Kp = ARR(.3);
 #else // apply force in direction fe
-      arr fe = ARR(0.,0.,-5.);
+      arr f_des = ARR(0.,0.,-5.);
       double alpha = .01;
       ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-      arr Jft, J;
+      arr J_ft, J;
       MP.world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      MP.world.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
+      MP.world.kinematicsPos_wrtFrame(NoArr,J_ft,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
 
-      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
-
-      // compute u_bias
-      refs.u_bias = ~J*fe;
-//      refs.u_bias = zeros(q.N);
-
-      // compute force feedback
-      refs.fL = fe;
-      refs.KfL_gainFactor = alpha*~J;
-      refs.EfL = Jft;
+      refs.u_bias = ~J*f_des;
+      refs.fL = f_des;
+      arr J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+      refs.Ki = alpha*~J;
+      refs.J_ft_inv = J_ft_inv;
 
       J = inverse_SymPosDef(J*~J)*J;
 
-      fil <<t <<' ' <<fe <<' ' << Jft*fLobs << " " << J*uobs << endl;
+      fil <<t <<' ' <<f_des <<' ' << J_ft*fLobs << " " << J*uobs << endl;
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
@@ -149,27 +144,28 @@ void TEST(Gamepad){
 //      arr J_fL0 = R*Jeq;
 //      J_fL0[0]=0.;
 
-//      refs.Kq_gainFactor = ~Jeq*inverse(Jeq * ~Jeq)*J_fL0;
-//      refs.Kq_gainFactor = 10.*refs.Kq_gainFactor + 0.1*eye(q.N);
+//      refs.Kp = ~Jeq*inverse(Jeq * ~Jeq)*J_fL0;
+//      refs.Kp = 10.*refs.Kp + 0.1*eye(q.N);
 
 //       test gains
 //      arr dq;
 //      MP.world.getJointState(dq);
 //      dq = dq*0.+0.1;
-//      cout << refs.Kq_gainFactor*dq << endl;
+//      cout << refs.Kp*dq << endl;
 //      cout << ~R*J_fL0*dq << endl;
-//      arr dy = ~R*Jeq*refs.Kq_gainFactor*dq;
+//      arr dy = ~R*Jeq*refs.Kp*dq;
 //      cout << R*dy << endl;
 
 #endif
     }else{
       refs.fL = zeros(6);
-      refs.KfL_gainFactor.clear();
-      refs.EfL.clear();
+      refs.Ki.clear();
+      refs.J_ft_inv.clear();
       refs.u_bias = zeros(q.N);
     }
-    refs.Kq_gainFactor = 1.;
-    refs.Kd_gainFactor = 1.;
+    refs.Kp = 1.;
+    if(mode==2) refs.Kp = .1;
+    refs.Kd = 1.;
     refs.gamma = 1.;
 
     refs.q=q;

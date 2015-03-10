@@ -37,8 +37,8 @@ FollowReference::FollowReference(ActionMachine& actionMachine, const char* name,
     const arr& yref, const arr& vref, double durationInSeconds,
     double decayTime, double dampingRatio, double maxVel, double maxAcc,
     double relativePrec,
-    double stopTolerance, bool stopOnContact)
-  : Action(actionMachine, name), trajectoryDuration(durationInSeconds), stopTolerance(stopTolerance), stopOnContact(stopOnContact) {
+    double stopTolerance)
+  : Action(actionMachine, name), trajectoryDuration(durationInSeconds), stopTolerance(stopTolerance) {
   CtrlTask* task = new CtrlTask(STRING("FollowReference_" << name), map,
                                 decayTime, dampingRatio, maxVel, maxAcc);
   if(yref.nd==2){
@@ -57,7 +57,7 @@ FollowReference::FollowReference(ActionMachine& actionMachine, const char* name,
 }
 
 FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, CtrlTask* task)
-  : Action(actionMachine, name), trajectoryDuration(-1.), stopTolerance(1e-2), stopOnContact(true) {
+  : Action(actionMachine, name), trajectoryDuration(-1.), stopTolerance(1e-2) {
   actionMachine.A.writeAccess();
   tasks.append(task);
   actionMachine.A.deAccess();
@@ -77,10 +77,6 @@ void FollowReference::step(ActionMachine& M){
 bool FollowReference::finishedSuccess(ActionMachine& M){
   if(!tasks.N) return false;
   CtrlTask *task=tasks(0);
-  if(stopOnContact){
-    arr fL = M.ctrl_obs.get()->fL;
-    if(absMax(fL)>2.) return true;
-  }
   if(task->y_ref.nd==1 && task->y.N==task->y_ref.N
      && maxDiff(task->y, task->y_ref)<stopTolerance
      && maxDiff(task->v, task->v_ref)<stopTolerance) return true;
@@ -251,7 +247,7 @@ PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forc
                      1., .8, 1., 1.);
   if(_timeOut>0.) timeOut=_timeOut;
   task->f_ref = forceVec;
-  task->f_Igain = .01;
+  task->f_Igain = .001;
   tasks.append(task);
 }
 
@@ -297,8 +293,8 @@ Relax::Relax(ActionMachine &actionMachine, const char *name)
 }
 
 void Relax::step(ActionMachine &actionMachine) {
-  actionMachine.Kq_gainFactor = ARR(0.);
-  actionMachine.Kd_gainFactor = ARR(0.);
+  actionMachine.Kp = ARR(0.);
+  actionMachine.Kd = ARR(0.);
 }
 
 //===========================================================================

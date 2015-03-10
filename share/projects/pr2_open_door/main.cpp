@@ -271,11 +271,11 @@ void run(){
     cout <<"t: "<< t <<endl;
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
-    refs.KfL_gainFactor.clear();
-    refs.EfL.clear();
+    refs.Ki.clear();
+    refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kq_gainFactor = 1.;
-    refs.Kd_gainFactor = 1.;
+    refs.Kp = 1.;
+    refs.Kd = 1.;
     refs.gamma = 1.;
 
     s = t/duration;

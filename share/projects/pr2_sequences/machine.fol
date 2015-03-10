@@ -63,7 +63,7 @@ Tasks {
   (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
   (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
   (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .45], PD=[.5, .9, .1, 10.] }
-  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 5], timeOut=1.0 }
+  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 5], timeOut=0.1 }
   (homing){ type="homing" }
 }
 

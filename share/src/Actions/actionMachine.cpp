@@ -20,8 +20,8 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 
 ActionMachine::ActionMachine():Module("ActionMachine"), initStateFromRos(false){
   ActionL::memMove=true;
-  Kq_gainFactor = ARR(1.);
-  Kd_gainFactor = ARR(1.);
+  Kp = ARR(1.);
+  Kd = ARR(1.);
   s = new sActionMachine();
   world = &s->world;
 }
@@ -92,8 +92,8 @@ void ActionMachine::step(){
   transitionFOL( .01*t,  (t<=1) );
 
   //-- set gains to default value (can be overwritten by other actions)
-  Kq_gainFactor=ARR(1.);
-  Kd_gainFactor=ARR(1.);
+  Kp=ARR(1.);
+  Kd=ARR(1.);
 
   //-- check the gamepad
   arr gamepad = gamepadState.get();
@@ -106,8 +106,8 @@ void ActionMachine::step(){
 //  reportActions(A());
 
   // report on force:
-  arr fL = wrenchL.get()();
-  fil <<"wrenchL=" <<fL <<' ' <<length(fL) <<endl;
+//  arr fL = wrenchL.get()();
+//  fil <<"wrenchL=" <<fL <<' ' <<length(fL) <<endl;
 
 
   //-- code to output force signals
@@ -151,28 +151,27 @@ void ActionMachine::step(){
     s->feedbackController.setState(s->q, s->qdot);
   }
 
-  s->refs.fR = ARR(0., 0., 0.);
-  s->refs.u_bias = zeros(s->q.N);
-
   //-- compute the force feedback control coefficients
-  uint count=0;
-  for(Action *a : A()) {
-    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
-      count++;
-      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.KfL_gainFactor, s->refs.EfL, *world);
-    }
-  }
+//  uint count=0;
+//  for(Action *a : A()) {
+//    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
+//      count++;
+//      if(count!=1) HALT("you have multiple active force control tasks - NIY");
+//      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+//    }
+//  }
 
 
   // s->MP.reportCurrentState();
   A.deAccess();
 
   //-- send the computed movement to the robot
-  s->refs.Kq_gainFactor = Kq_gainFactor;
-  s->refs.Kd_gainFactor = Kd_gainFactor;
+  s->refs.Kp = ARR(1.); //Kp;
+  s->refs.Kd = ARR(1.); //Kd;
+  s->refs.fR = ARR(0., 0., 0.);
+  s->refs.u_bias = zeros(s->q.N);
 
-  s->refs.q=s->q;
+  s->refs.q =  zeros(s->q.N);//s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;
@@ -226,11 +225,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
       else changes=true;
     }
   }
-  if(getContactForce()>5.){
-    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
-    if(getEqualFactInKB(KB(), newit)) delete newit;
-    else changes=true;
-  }
+//  if(getContactForce()>5.){
+//    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
+//    if(getEqualFactInKB(KB(), newit)) delete newit;
+//    else changes=true;
+//  }
   A.deAccess();
 
   if(changes || forceChaining){
@@ -255,7 +254,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
 }
 
 double ActionMachine::getContactForce(){
-  arr fL = wrenchL.get()();
+  arr fL = ctrl_obs.get()->fL;
   return length(fL);
 }
 
