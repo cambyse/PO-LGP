@@ -1,6 +1,6 @@
 #include "actionMachine_internal.h"
 
-#include <Hardware/gamepad/gamepad.h>
+//#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
 
@@ -84,7 +84,7 @@ void ActionMachine::step(){
     }
   }
 
-  if(!(t%20))
+  if(!(t%5))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
@@ -97,7 +97,14 @@ void ActionMachine::step(){
 
   //-- check the gamepad
   arr gamepad = gamepadState.get();
-  if(stopButtons(gamepad)) engine().shutdown.incrementValue();
+  if(stopButtons(gamepad)){
+    cout <<"STOP" <<endl;
+    KB.writeAccess();
+    Item *quitSymbol = KB()["quit"];
+    KB().append<bool>({},{quitSymbol}, NULL, false);
+    KB.deAccess();
+//    engine().shutdown.incrementValue();
+  }
 
   //-- get access to the list of actions
   A.writeAccess();

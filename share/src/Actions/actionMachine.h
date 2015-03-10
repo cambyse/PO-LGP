@@ -3,6 +3,7 @@
 #include <Core/array.h>
 #include <System/engine.h>
 #include <pr2/roscom.h>
+#include <Hardware/gamepad/gamepad.h>
 
 #include "actions.h"
 
@@ -74,6 +75,7 @@ struct ActionSystem : System{
   ActionMachine *machine;
   ActionSystem():machine(NULL){
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
