@@ -1,6 +1,7 @@
-#include "ReverseAccumulation.h"
+#include "ComputationalGraph.h"
 
 #include <lemon/maps.h>
+#include <lemon/connectivity.h>
 
 #include <cmath>
 #include <set>
@@ -16,48 +17,20 @@ using std::vector;
 using std::set;
 using util::Range;
 
-ReverseAccumulation::ReverseAccumulation():
-    node_labels(graph),
-    node_values(graph),
-    node_differentials(graph),
-    node_variables(graph),
-    arc_values(graph),
-    node_functions(graph),
-    arc_functions(graph) {
 
-    // create graph
-    node_t alpha = add_node("alpha");
-    node_t w = add_node("w");
-    node_t t = add_node("t");
+ComputationalGraph::ComputationalGraph(std::shared_ptr<graph_t> g):
+    graph(g),
+    node_labels(*graph),
+    node_values(*graph),
+    node_differentials(*graph),
+    node_variables(*graph),
+    arc_values(*graph),
+    node_functions(*graph),
+    arc_functions(*graph) {}
 
-    node_t v1 = add_node("v1", {"t"}, [](vector<double> v)->double{return sqrt(v[0]);});
-    node_t v2 = add_node("v2", {"alpha","v1"}, [](vector<double> v)->double{return -v[0]*v[1];});
-    node_t v3 = add_node("v3", {"v2"}, [](vector<double> v)->double{return exp(v[0]);});
-    node_t v4 = add_node("v4", {"w","v3","v1"}, [](vector<double> v)->double{return v[0]*v[1]*v[2];});
+ComputationalGraph::ComputationalGraph(): ComputationalGraph(std::make_shared<graph_t>()) {}
 
-    node_t x = add_node("x", {"v4"}, [](vector<double> v)->double{return sin(v[0]);});
-    node_t y = add_node("y", {"v4"}, [](vector<double> v)->double{return cos(v[0]);});
-
-    add_arc(alpha, v2, [](vector<double> v)->double{return -v[1];});
-    add_arc(t, v1, [](vector<double> v)->double{return 1/(2*sqrt(v[0]));});
-    add_arc(w, v4, [](vector<double> v)->double{return v[1]*v[2];});
-    add_arc(v1, v2, [](vector<double> v)->double{return -v[0];});
-    add_arc(v1, v4, [](vector<double> v)->double{return v[0]*v[1];});
-    add_arc(v2, v3, [](vector<double> v)->double{return exp(v[0]);});
-    add_arc(v3, v4, [](vector<double> v)->double{return v[0]*v[2];}); //
-    add_arc(v4, x, [](vector<double> v)->double{return cos(v[0]);});
-    add_arc(v4, y, [](vector<double> v)->double{return -sin(v[0]);});
-
-    // fill lists of input/output nodes
-    input_nodes.push_back(alpha);
-    input_nodes.push_back(w);
-    input_nodes.push_back(t);
-
-    output_nodes.push_back(x);
-    output_nodes.push_back(y);
-    }
-
-void ReverseAccumulation::assign_values(std::vector<double> values, TYPE a) {
+void ComputationalGraph::assign_values(std::vector<double> values, TYPE a) {
     switch(a) {
     case VALUES:
         if(values.size()!=input_nodes.size()) {
@@ -106,9 +79,9 @@ void ReverseAccumulation::assign_values(std::vector<double> values, TYPE a) {
     }
 }
 
-void ReverseAccumulation::propagate_values(TYPE p) {
+void ComputationalGraph::propagate_values(TYPE p) {
     // status of the nodes
-    graph_t::NodeMap<bool> done(graph,false);
+    graph_t::NodeMap<bool> done(*graph,false);
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
 
@@ -120,8 +93,8 @@ void ReverseAccumulation::propagate_values(TYPE p) {
         for(node_t node : input_nodes) {
             done[node] = true;
             DEBUG_OUT(3, "        Input node '" << node_labels[node] << "'");
-            for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                node_t target_node = graph.target(arc);
+            for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                node_t target_node = graph->target(arc);
                 active_nodes.insert(target_node);
                 DEBUG_OUT(3, "            add '" << node_labels[target_node] << "' to active set");
             }
@@ -133,8 +106,8 @@ void ReverseAccumulation::propagate_values(TYPE p) {
         for(node_t node : output_nodes) {
             done[node] = true;
             DEBUG_OUT(3, "        Output node '" << node_labels[node] << "'");
-            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                node_t source_node = graph.source(arc);
+            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                node_t source_node = graph->source(arc);
                 active_nodes.insert(source_node);
                 DEBUG_OUT(3, "            add '" << node_labels[source_node] << "' to active set");
             }
@@ -157,16 +130,16 @@ void ReverseAccumulation::propagate_values(TYPE p) {
             switch(p) {
             case VALUES:
             case FORWARD:
-                for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph.source(arc)]) {
+                for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                    if(!done[graph->source(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
                 }
                 break;
             case REVERSE:
-                for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph.target(arc)]) {
+                for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                    if(!done[graph->target(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
@@ -183,15 +156,15 @@ void ReverseAccumulation::propagate_values(TYPE p) {
                 switch(p) {
                 case VALUES:
                 case FORWARD:
-                    for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                        node_t target_node = graph.target(arc);
+                    for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                        node_t target_node = graph->target(arc);
                         new_active_nodes.insert(target_node);
                         DEBUG_OUT(4, "                    add '" << node_labels[target_node] << "' to active set");
                     }
                     break;
                 case REVERSE:
-                    for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                        node_t source_node = graph.source(arc);
+                    for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                        node_t source_node = graph->source(arc);
                         new_active_nodes.insert(source_node);
                         DEBUG_OUT(4, "                    add '" << node_labels[source_node] << "' to active set");
                     }
@@ -235,42 +208,44 @@ void ReverseAccumulation::propagate_values(TYPE p) {
     }
 }
 
-void ReverseAccumulation::compute_values(std::vector<double> values) {
+void ComputationalGraph::compute_values(std::vector<double> values) {
     assign_values(values, VALUES);
     propagate_values(VALUES);
 }
 
-void ReverseAccumulation::forward_accumulation(std::vector<double> values,
+void ComputationalGraph::forward_accumulation(std::vector<double> values,
                                                std::vector<double> differentials) {
     compute_values(values);
     assign_values(differentials, FORWARD);
     propagate_values(FORWARD);
 }
 
-void ReverseAccumulation::reverse_accumulation(std::vector<double> values,
+void ComputationalGraph::reverse_accumulation(std::vector<double> values,
                                                std::vector<double> differentials) {
     compute_values(values);
     assign_values(differentials, REVERSE);
     propagate_values(REVERSE);
 }
 
-void ReverseAccumulation::check_derivatives(std::vector<double> values,
-                                            double epsilon,
-                                            double delta) {
+bool ComputationalGraph::check_derivatives(std::vector<double> values,
+                                            double delta,
+                                            double epsilon_absolute,
+                                            double epsilon_relative) {
     // compute all values
     compute_values(values);
     // make a copy of the derivatives
-    graph_t::ArcMap<double> arc_values_copy(graph);
-    mapCopy(graph, arc_values, arc_values_copy);
+    graph_t::ArcMap<double> arc_values_copy(*graph);
+    mapCopy(*graph, arc_values, arc_values_copy);
     // change the value of all nodes by delta and nummerically check derivatives
-    for(node_it_t node(graph); node!=INVALID; ++node) {
+    bool ok = true;
+    for(node_it_t node(*graph); node!=INVALID; ++node) {
         DEBUG_OUT(2,"Checking derivatives w.r.t " <<
-                  node_labels[node] << " (id" << graph.id(node) << ")");
+                  node_labels[node] << " (id" << graph->id(node) << ")");
         // get dependent nodes (the ones we need to check)
         vector<node_t> dependent_nodes;
         vector<arc_t> dependent_arcs;
-        for(out_arc_it_t arc(graph, node); arc!=INVALID; ++arc) {
-            dependent_nodes.push_back(graph.target(arc));
+        for(out_arc_it_t arc(*graph, node); arc!=INVALID; ++arc) {
+            dependent_nodes.push_back(graph->target(arc));
             dependent_arcs.push_back(arc);
         }
         // compute finite differences
@@ -299,39 +274,42 @@ void ReverseAccumulation::check_derivatives(std::vector<double> values,
                      values_2.size()==num_vars);
         for(int idx : Range(num_vars)) {
             DEBUG_OUT(2,"Checking derivative of " << node_labels[dependent_nodes[idx]] <<
-                      " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
-                      node_labels[node] << " (id" << graph.id(node) << ")");
+                      " (id" << graph->id(dependent_nodes[idx]) << ") w.r.t " <<
+                      node_labels[node] << " (id" << graph->id(node) << ")");
             double numerical_derivative = (values_1[idx] - values_2[idx])/delta;
             double analytical_derivative = arc_values_copy[dependent_arcs[idx]];
-            if(fabs(numerical_derivative-analytical_derivative)>epsilon) {
+            if(fabs(numerical_derivative-analytical_derivative)>epsilon_absolute and
+               fabs(numerical_derivative/analytical_derivative-1)>epsilon_relative) {
+                ok = false;
                 DEBUG_WARNING("Partial derivative of " << node_labels[dependent_nodes[idx]] <<
-                              " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
+                              " (id" << graph->id(dependent_nodes[idx]) << ") w.r.t " <<
                               node_labels[node] <<
-                              " (id" << graph.id(node) << ") is out of bounds (numerical=" <<
+                              " (id" << graph->id(node) << ") is out of bounds (numerical=" <<
                               numerical_derivative << " / analytical=" <<
                               analytical_derivative << ")");
             }
         }
     }
+    return ok;
 }
 
-void ReverseAccumulation::plot_graph(const char* file_name) const {
-    graph_t::NodeMap<QString> node_properties(graph);
-    for(node_it_t node(graph); node!=INVALID; ++node) {
+void ComputationalGraph::plot_graph(const char* file_name) const {
+    graph_t::NodeMap<QString> node_properties(*graph);
+    for(node_it_t node(*graph); node!=INVALID; ++node) {
         node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
             arg(node_labels[node]).
             arg(node_values[node]).
             arg(node_differentials[node]);
     }
-    graph_t::ArcMap<QString> arc_properties(graph);
-    for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
+    graph_t::ArcMap<QString> arc_properties(*graph);
+    for(arc_it_t arc(*graph); arc!=INVALID; ++arc) {
         arc_properties[arc] = QString("label=<%1>").
             arg(arc_values[arc]);
     }
-    util::graph_to_pdf(file_name, graph, "", &node_properties, "", &arc_properties);
+    util::graph_to_pdf(file_name, *graph, "", &node_properties, "", &arc_properties);
 }
 
-double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
+double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
     switch(e) {
     case VALUES:
     {
@@ -340,8 +318,8 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
         vector<double> values;
         for(QString var : variables) {
             bool found = false;
-            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                node_t source_node = graph.source(arc);
+            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+                node_t source_node = graph->source(arc);
                 if(node_labels[source_node]==var) {
                     found = true;
                     values.push_back(node_values[source_node]);
@@ -356,7 +334,7 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
         // debug output
         IF_DEBUG(1) {
             int input_size = 0;
-            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
                 ++input_size;
             }
             if(input_size!=variables.size()) {
@@ -368,7 +346,7 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
         }
 
         // evaluate arcs
-        for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+        for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
             double val = arc_functions[arc](values);
             arc_values[arc] = val;
         }
@@ -382,8 +360,8 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
     {
         // evaluate arcs
         double val = 0;
-        for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-            val += node_differentials[graph.source(arc)]*arc_values[arc];
+        for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+            val += node_differentials[graph->source(arc)]*arc_values[arc];
         }
         node_differentials[node] = val;
         return val;
@@ -392,8 +370,8 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
     {
         // evaluate arcs
         double val = 0;
-        for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-            val += node_differentials[graph.target(arc)]*arc_values[arc];
+        for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+            val += node_differentials[graph->target(arc)]*arc_values[arc];
         }
         node_differentials[node] = val;
         return val;
@@ -404,10 +382,10 @@ double ReverseAccumulation::evaluate_node(const node_t & node, TYPE e) {
     }
 }
 
-ReverseAccumulation::node_t ReverseAccumulation::add_node(QString label,
+ComputationalGraph::node_t ComputationalGraph::add_node(QString label,
                                                           std::vector<QString> variables,
                                                           function_t function) {
-    node_t node = graph.addNode();
+    node_t node = graph->addNode();
     node_labels[node] = label;
     node_values[node] = NAN;
     node_differentials[node] = NAN;
@@ -416,16 +394,16 @@ ReverseAccumulation::node_t ReverseAccumulation::add_node(QString label,
     return node;
 }
 
-ReverseAccumulation::arc_t ReverseAccumulation::add_arc(node_t from,
+ComputationalGraph::arc_t ComputationalGraph::add_arc(node_t from,
                                                         node_t to,
                                                         function_t function) {
-    arc_t arc = graph.addArc(from, to);
+    arc_t arc = graph->addArc(from, to);
     arc_values[arc] = NAN;
     arc_functions[arc] = function;
     return arc;
 }
 
-vector<double> ReverseAccumulation::get_input_differentials() const {
+vector<double> ComputationalGraph::get_input_differentials() const {
     vector<double> values;
     for(node_t node : input_nodes) {
         values.push_back(node_differentials[node]);
@@ -433,7 +411,7 @@ vector<double> ReverseAccumulation::get_input_differentials() const {
     return values;
 }
 
-vector<double> ReverseAccumulation::get_output_differentials() const {
+vector<double> ComputationalGraph::get_output_differentials() const {
     vector<double> values;
     for(node_t node : output_nodes) {
         values.push_back(node_differentials[node]);
@@ -441,10 +419,52 @@ vector<double> ReverseAccumulation::get_output_differentials() const {
     return values;
 }
 
-vector<double> ReverseAccumulation::get_output_values() const {
+vector<double> ComputationalGraph::get_output_values() const {
     vector<double> values;
     for(node_t node : output_nodes) {
         values.push_back(node_values[node]);
     }
     return values;
+}
+
+void ComputationalGraph::set_input_nodes(std::vector<node_t> n) {
+    input_nodes = n;
+}
+
+void ComputationalGraph::set_output_nodes(std::vector<node_t> n) {
+    output_nodes = n;
+}
+
+bool ComputationalGraph::check_graph_structure(bool reset_input_nodes,
+                                                bool reset_output_nodes) {
+    bool ok = true;
+
+    // check for cycles
+    if(!dag(*graph)) {
+        DEBUG_WARNING("Graph contains cycles");
+        ok = false;
+    }
+
+    // check input/output nodes
+    set<node_t> new_input_nodes, new_output_nodes;
+    for(node_it_t node(*graph); node!=INVALID; ++node) {
+        if(in_arc_it_t(*graph,node)==INVALID) new_input_nodes.insert(node);
+        if(out_arc_it_t(*graph,node)==INVALID) new_output_nodes.insert(node);
+    }
+    // input
+    if(reset_input_nodes) input_nodes.assign(new_input_nodes.begin(), new_input_nodes.end());
+    set<node_t> old_input_nodes(input_nodes.begin(), input_nodes.end());
+    if(old_input_nodes!=new_input_nodes) {
+        DEBUG_WARNING("Provided and actual input nodes do not match");
+        ok = false;
+    }
+    // output
+    if(reset_output_nodes) output_nodes.assign(new_output_nodes.begin(), new_output_nodes.end());
+    set<node_t> old_output_nodes(output_nodes.begin(), output_nodes.end());
+    if(old_output_nodes!=new_output_nodes) {
+        DEBUG_WARNING("Provided and actual output nodes do not match");
+        ok = false;
+    }
+
+    return ok;
 }

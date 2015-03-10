@@ -1,5 +1,5 @@
-#ifndef REVERSEACCUMULATION_H_
-#define REVERSEACCUMULATION_H_
+#ifndef COMPUTATIONAL_GRAPH_H_
+#define COMPUTATIONAL_GRAPH_H_
 
 #include <QString>
 
@@ -7,10 +7,11 @@
 
 #include <vector>
 #include <functional>
+#include <memory>
 
-class ReverseAccumulation {
+class ComputationalGraph {
     //----typedefs/classes----//
-private:
+public:
     typedef lemon::ListDigraph graph_t;
     typedef graph_t::Node node_t;
     typedef graph_t::NodeIt node_it_t;
@@ -23,7 +24,7 @@ private:
 
     //----members----//
 private:
-    graph_t graph;
+    std::shared_ptr<graph_t> graph;
     graph_t::NodeMap<QString> node_labels;
     graph_t::NodeMap<double> node_values; // variable values
     graph_t::NodeMap<double> node_differentials;
@@ -36,12 +37,16 @@ private:
 
     //----methods----//
 public:
-    ReverseAccumulation();
-    virtual ~ReverseAccumulation() = default;
+    ComputationalGraph();
+    ComputationalGraph(std::shared_ptr<graph_t> g);
+    virtual ~ComputationalGraph() = default;
     void compute_values(std::vector<double> values);
     void forward_accumulation(std::vector<double> values, std::vector<double> differentials);
     void reverse_accumulation(std::vector<double> values, std::vector<double> differentials);
-    void check_derivatives(std::vector<double> values, double epsilon = 1e-5, double delta = 1e-5);
+    bool check_derivatives(std::vector<double> values,
+                           double delta = 1e-5,
+                           double epsilon_absolute = 1e-10,
+                           double epsilon_relative = 1e-5);
     void plot_graph(const char* file_name) const;
     node_t add_node(QString node_label = "",
                     std::vector<QString> node_variables = std::vector<QString>(),
@@ -52,10 +57,13 @@ public:
     std::vector<double> get_input_differentials() const;
     std::vector<double> get_output_differentials() const;
     std::vector<double> get_output_values() const;
+    void set_input_nodes(std::vector<node_t>);
+    void set_output_nodes(std::vector<node_t>);
+    bool check_graph_structure(bool reset_input_nodes = false, bool reset_output_nodes = false);
 private:
     void propagate_values(TYPE p);
     void assign_values(std::vector<double> values, TYPE a);
     double evaluate_node(const node_t & node, TYPE e);
 };
 
-#endif /* REVERSEACCUMULATION_H_ */
+#endif /* COMPUTATIONAL_GRAPH_H_ */
