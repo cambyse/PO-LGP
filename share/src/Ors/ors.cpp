@@ -766,9 +766,9 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
 /** @brief returns the joint (actuator) dimensionality */
 uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   if(agent==-1) agent=q_agent;
-  CHECK(agent!=UINT_MAX,"");
-  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(UINT_MAX);
-  if(qdim(agent)==UINT_MAX){
+  CHECK(agent!=INT_MAX,"");
+  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(INT_MAX);
+  if(qdim(agent)==INT_MAX){
     uint qd=0;
     for(Joint *j: joints) if(j->agent==(uint)agent){
       CHECK(j->type!=JT_none,"joint type is uninitialized");
@@ -2317,7 +2317,6 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 //-- template instantiations
 
 #include <Core/util_t.h>
-template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
 template MT::Array<ors::Shape*>::Array(uint);

@@ -18,7 +18,7 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 // ActionMachine
 //
 
-ActionMachine::ActionMachine():Module("ActionMachine"){
+ActionMachine::ActionMachine():Module("ActionMachine"), initStateFromRos(false){
   ActionL::memMove=true;
   Kq_gainFactor = ARR(1.);
   Kd_gainFactor = ARR(1.);
@@ -54,35 +54,35 @@ void ActionMachine::open(){
 
   bool useRos = MT::getParameter<bool>("useRos",false);
   if(useRos){
-    //-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    uint trials=0;
-    for(;useRos;){
-      ctrl_obs.var->waitForNextRevision();
-      cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
-      cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
-
-      if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
-         && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N)
-        break;
-
-      trials++;
-      if(trials>20){
-        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
-      }
-    }
-
-    //-- set current state
-    cout <<"** GO!" <<endl;
-    s->q = ctrl_obs.get()->q;
-    s->qdot = ctrl_obs.get()->qdot;
-    s->feedbackController.setState(s->q, s->qdot);
+    initStateFromRos=true;
   }
 }
 
 void ActionMachine::step(){
   static uint t=0;
   t++;
+  if(initStateFromRos){
+    //-- wait for first q observation!
+    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
+
+    ctrl_obs.waitForNextRevision();
+    cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
+    cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+
+    if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
+       && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N){ //all is good
+      //-- set current state
+      s->q = ctrl_obs.get()->q;
+      s->qdot = ctrl_obs.get()->qdot;
+      s->feedbackController.setState(s->q, s->qdot);
+      cout <<"** GO!" <<endl;
+      initStateFromRos = false;
+    }else{
+      if(t>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
+    }
+  }
 
   if(!(t%20))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
@@ -104,6 +104,11 @@ void ActionMachine::step(){
 
   //  cout <<"** active actions:";
 //  reportActions(A());
+
+  // report on force:
+  arr fL = wrenchL.get()();
+  fil <<"wrenchL=" <<fL <<' ' <<length(fL) <<endl;
+
 
   //-- code to output force signals
   if(true){
@@ -183,6 +188,7 @@ void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
     MT::String type=td["type"]->V<MT::String>();
     if(type=="homing"){
       new Homing(*this, t->parents(0)->keys(1));
+    }if(type=="forceCtrl"){
     }else{
       DefaultTaskMap *map = new DefaultTaskMap(td, *world);
       CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
@@ -203,6 +209,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   //-- check new successes and fails and add to symbolic state
   Item* convSymbol = KB().getItem("conv");
+  Item* contactSymbol = KB().getItem("contact");
   Item* timeoutSymbol = KB().getItem("timeout");
   A.readAccess();
   for(Action *a:A()) if(a->active){
@@ -211,6 +218,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
       if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }
+  }
+  if(getContactForce()>5.){
+    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
+    if(getEqualFactInKB(KB(), newit)) delete newit;
+    else changes=true;
   }
   A.deAccess();
 
@@ -233,6 +245,11 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
     A.deAccess();
   }
   KB.deAccess();
+}
+
+double ActionMachine::getContactForce(){
+  arr fL = wrenchL.get()();
+  return length(fL);
 }
 
 void ActionMachine::waitForActionCompletion(Action* a){

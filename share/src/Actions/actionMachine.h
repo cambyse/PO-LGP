@@ -22,6 +22,8 @@ struct ActionMachine : Module {
 
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
+  ACCESS(arr, wrenchL)
+  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
   ACCESS(Graph, KB);
@@ -33,6 +35,7 @@ struct ActionMachine : Module {
   //-- user methods
   const ors::KinematicWorld *world;
   ofstream fil;
+  bool initStateFromRos;
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on
@@ -61,6 +64,7 @@ struct ActionMachine : Module {
 
   void transition();
   void transitionFOL(double time, bool forceChaining);
+  double getContactForce();
 };
 
 //===========================================================================
@@ -68,6 +72,8 @@ struct ActionMachine : Module {
 struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
+  ACCESS(arr, wrenchL)
+  ACCESS(arr, wrenchR)
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
