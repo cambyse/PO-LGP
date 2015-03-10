@@ -303,6 +303,7 @@ SearchTree::trajectory_item_t  SearchTree::add_sample(const node_t & node,
     // add action node if not found
     if(action_node==INVALID) {
         action_node = graph.addNode();
+        // (counts and value default initialized)
         node_info_map[action_node].type = ACTION_NODE;
         node_info_map[action_node].action = action;
         node_info_map[action_node].state = state;
@@ -317,6 +318,7 @@ SearchTree::trajectory_item_t  SearchTree::add_sample(const node_t & node,
     // add state node if not found
     if(state_node==INVALID) {
         state_node = graph.addNode();
+        // (counts and value default initialized)
         node_info_map[state_node].type = STATE_NODE;
         node_info_map[state_node].state = state;
         DEBUG_OUT(1, "    Add state node!");
@@ -330,10 +332,12 @@ SearchTree::trajectory_item_t  SearchTree::add_sample(const node_t & node,
 
     // add state --> action arc if not found
     if(to_action_arc==INVALID) {
+        // (counts, mean_reward, probability default initialized)
         to_action_arc = graph.addArc(node, action_node);
     }
     // add action --> state arc if not found
     if(to_state_arc==INVALID) {
+        // (counts, mean_reward, probability default initialized)
         to_state_arc = graph.addArc(action_node, state_node);
     }
 
