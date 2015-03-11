@@ -58,6 +58,11 @@ class ActionCmd(cmd.Cmd):
         print("opening gripper {}".format(side))
 
     # CMD stuff
+    def preloop(self):
+        print("Type 'help' to see all actions.")
+        print("Type 'help action' to get the help for the given action.")
+        print()
+
     def do_exit(self, line):
         """End the program."""
         print("Exiting...")
