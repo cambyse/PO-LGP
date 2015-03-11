@@ -1,3 +1,7 @@
+/** @file
+ * \brief This file implements unit tests for the ActiveOnlineSearch
+ * library and executable. */
+
 #include <gtest/gtest.h>
 
 #include "../util/util.h"
@@ -82,7 +86,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     typedef ComputationalGraph::node_t node_t;
     typedef lemon::ListDigraph graph_t;
 
-    auto graph = std::make_shared<graph_t>();
+    graph_t graph;
     ComputationalGraph cg(graph);
 
     // create the graph

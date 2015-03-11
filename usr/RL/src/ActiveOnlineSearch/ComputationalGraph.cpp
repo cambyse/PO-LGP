@@ -3,6 +3,8 @@
 #include <lemon/maps.h>
 #include <lemon/connectivity.h>
 #include <lemon/bfs.h>
+#include <lemon/adaptors.h>
+#include <lemon/concepts/digraph.h>
 
 #include <cmath>
 #include <set>
@@ -18,19 +20,27 @@ using namespace lemon;
 using std::vector;
 using std::set;
 using util::Range;
+using std::shared_ptr;
 
+ComputationalGraph::ComputationalGraph():
+    graph(graph_dummy),
+    node_labels(graph),
+    node_values(graph),
+    node_differentials(graph),
+    node_variables(graph),
+    arc_values(graph),
+    node_functions(graph),
+    arc_functions(graph) {}
 
-ComputationalGraph::ComputationalGraph(std::shared_ptr<graph_t> g):
+ComputationalGraph::ComputationalGraph(graph_t & g):
     graph(g),
-    node_labels(*graph),
-    node_values(*graph),
-    node_differentials(*graph),
-    node_variables(*graph),
-    arc_values(*graph),
-    node_functions(*graph),
-    arc_functions(*graph) {}
-
-ComputationalGraph::ComputationalGraph(): ComputationalGraph(std::make_shared<graph_t>()) {}
+    node_labels(graph),
+    node_values(graph),
+    node_differentials(graph),
+    node_variables(graph),
+    arc_values(graph),
+    node_functions(graph),
+    arc_functions(graph) {}
 
 void ComputationalGraph::assign_values(std::vector<double> values, std::vector<node_t> nodes) {
     if(values.size()!=nodes.size()) {
@@ -54,15 +64,16 @@ void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_no
     // status of the nodes
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
-    graph_t::NodeMap<bool> done(*graph,false);
-    graph_t::NodeMap<bool> reached(*graph,false);
+    graph_t::NodeMap<bool> done(graph,false);
+    graph_t::NodeMap<bool> reached(graph,false);
 
-    // Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(*graph);
+    auto reverse_graph = ReverseDigraph<graph_t>(graph);
+    // Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
     // search.reachedMap(reached).init();
     // for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
     // search.start();
     // DEBUG_OUT(0,"Reached nodes:");
-    // for(node_it_t node(*graph); node!=INVALID; ++node) {
+    // for(node_it_t node(graph); node!=INVALID; ++node) {
     //     DEBUG_OUT(0,"    " << node_labels[node]);
     // }
 
@@ -74,15 +85,15 @@ void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_no
         switch(p) {
         case VALUES:
         case FORWARD:
-            for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                node_t target_node = graph->target(arc);
+            for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                node_t target_node = graph.target(arc);
                 active_nodes.insert(target_node);
                 DEBUG_OUT(3, "            add '" << node_labels[target_node] << "' to active set");
             }
             break;
         case REVERSE:
-            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                node_t source_node = graph->source(arc);
+            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                node_t source_node = graph.source(arc);
                 active_nodes.insert(source_node);
                 DEBUG_OUT(3, "            add '" << node_labels[source_node] << "' to active set");
             }
@@ -105,16 +116,16 @@ void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_no
             switch(p) {
             case VALUES:
             case FORWARD:
-                for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph->source(arc)]) {
+                for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                    if(!done[graph.source(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
                 }
                 break;
             case REVERSE:
-                for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph->target(arc)]) {
+                for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                    if(!done[graph.target(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
@@ -131,15 +142,15 @@ void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_no
                 switch(p) {
                 case VALUES:
                 case FORWARD:
-                    for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                        node_t target_node = graph->target(arc);
+                    for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                        node_t target_node = graph.target(arc);
                         new_active_nodes.insert(target_node);
                         DEBUG_OUT(4, "                    add '" << node_labels[target_node] << "' to active set");
                     }
                     break;
                 case REVERSE:
-                    for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                        node_t source_node = graph->source(arc);
+                    for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                        node_t source_node = graph.source(arc);
                         new_active_nodes.insert(source_node);
                         DEBUG_OUT(4, "                    add '" << node_labels[source_node] << "' to active set");
                     }
@@ -209,18 +220,18 @@ bool ComputationalGraph::check_derivatives(std::vector<double> values,
     // compute all values
     compute_values(values);
     // make a copy of the derivatives
-    graph_t::ArcMap<double> arc_values_copy(*graph);
-    mapCopy(*graph, arc_values, arc_values_copy);
+    graph_t::ArcMap<double> arc_values_copy(graph);
+    mapCopy(graph, arc_values, arc_values_copy);
     // change the value of all nodes by delta and nummerically check derivatives
     bool ok = true;
-    for(node_it_t node(*graph); node!=INVALID; ++node) {
+    for(node_it_t node(graph); node!=INVALID; ++node) {
         DEBUG_OUT(2,"Checking derivatives w.r.t " <<
-                  node_labels[node] << " (id" << graph->id(node) << ")");
+                  node_labels[node] << " (id" << graph.id(node) << ")");
         // get dependent nodes (the ones we need to check)
         vector<node_t> dependent_nodes;
         vector<arc_t> dependent_arcs;
-        for(out_arc_it_t arc(*graph, node); arc!=INVALID; ++arc) {
-            dependent_nodes.push_back(graph->target(arc));
+        for(out_arc_it_t arc(graph, node); arc!=INVALID; ++arc) {
+            dependent_nodes.push_back(graph.target(arc));
             dependent_arcs.push_back(arc);
         }
         // compute finite differences
@@ -249,17 +260,17 @@ bool ComputationalGraph::check_derivatives(std::vector<double> values,
                      values_2.size()==num_vars);
         for(int idx : Range(num_vars)) {
             DEBUG_OUT(2,"Checking derivative of " << node_labels[dependent_nodes[idx]] <<
-                      " (id" << graph->id(dependent_nodes[idx]) << ") w.r.t " <<
-                      node_labels[node] << " (id" << graph->id(node) << ")");
+                      " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
+                      node_labels[node] << " (id" << graph.id(node) << ")");
             double numerical_derivative = (values_1[idx] - values_2[idx])/delta;
             double analytical_derivative = arc_values_copy[dependent_arcs[idx]];
             if(fabs(numerical_derivative-analytical_derivative)>epsilon_absolute and
-               fabs(numerical_derivative/analytical_derivative-1)>epsilon_relative) {
+               fabs(numerical_derivative/analytical_derivative)>1+epsilon_relative) {
                 ok = false;
                 DEBUG_WARNING("Partial derivative of " << node_labels[dependent_nodes[idx]] <<
-                              " (id" << graph->id(dependent_nodes[idx]) << ") w.r.t " <<
+                              " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
                               node_labels[node] <<
-                              " (id" << graph->id(node) << ") is out of bounds (numerical=" <<
+                              " (id" << graph.id(node) << ") is out of bounds (numerical=" <<
                               numerical_derivative << " / analytical=" <<
                               analytical_derivative << ")");
             }
@@ -269,19 +280,19 @@ bool ComputationalGraph::check_derivatives(std::vector<double> values,
 }
 
 void ComputationalGraph::plot_graph(const char* file_name) const {
-    graph_t::NodeMap<QString> node_properties(*graph);
-    for(node_it_t node(*graph); node!=INVALID; ++node) {
+    graph_t::NodeMap<QString> node_properties(graph);
+    for(node_it_t node(graph); node!=INVALID; ++node) {
         node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
             arg(node_labels[node]).
             arg(node_values[node]).
             arg(node_differentials[node]);
     }
-    graph_t::ArcMap<QString> arc_properties(*graph);
-    for(arc_it_t arc(*graph); arc!=INVALID; ++arc) {
+    graph_t::ArcMap<QString> arc_properties(graph);
+    for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         arc_properties[arc] = QString("label=<%1>").
             arg(arc_values[arc]);
     }
-    util::graph_to_pdf(file_name, *graph, "", &node_properties, "", &arc_properties);
+    util::graph_to_pdf(file_name, graph, "", &node_properties, "", &arc_properties);
 }
 
 double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
@@ -293,8 +304,8 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
         vector<double> values;
         for(QString var : variables) {
             bool found = false;
-            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-                node_t source_node = graph->source(arc);
+            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                node_t source_node = graph.source(arc);
                 if(node_labels[source_node]==var) {
                     found = true;
                     values.push_back(node_values[source_node]);
@@ -309,7 +320,7 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
         // debug output
         IF_DEBUG(1) {
             int input_size = 0;
-            for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
                 ++input_size;
             }
             if(input_size!=variables.size()) {
@@ -321,7 +332,7 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
         }
 
         // evaluate arcs
-        for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
+        for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
             double val = arc_functions[arc](values);
             arc_values[arc] = val;
         }
@@ -335,8 +346,8 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
     {
         // evaluate arcs
         double val = 0;
-        for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-            val += node_differentials[graph->source(arc)]*arc_values[arc];
+        for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+            val += node_differentials[graph.source(arc)]*arc_values[arc];
         }
         node_differentials[node] = val;
         return val;
@@ -345,8 +356,8 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
     {
         // evaluate arcs
         double val = 0;
-        for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
-            val += node_differentials[graph->target(arc)]*arc_values[arc];
+        for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+            val += node_differentials[graph.target(arc)]*arc_values[arc];
         }
         node_differentials[node] = val;
         return val;
@@ -360,7 +371,7 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
 ComputationalGraph::node_t ComputationalGraph::add_node(QString label,
                                                           std::vector<QString> variables,
                                                           function_t function) {
-    node_t node = graph->addNode();
+    node_t node = graph.addNode();
     node_labels[node] = label;
     node_values[node] = NAN;
     node_differentials[node] = NAN;
@@ -372,7 +383,7 @@ ComputationalGraph::node_t ComputationalGraph::add_node(QString label,
 ComputationalGraph::arc_t ComputationalGraph::add_arc(node_t from,
                                                         node_t to,
                                                         function_t function) {
-    arc_t arc = graph->addArc(from, to);
+    arc_t arc = graph.addArc(from, to);
     arc_values[arc] = NAN;
     arc_functions[arc] = function;
     return arc;
@@ -414,17 +425,21 @@ bool ComputationalGraph::check_graph_structure(bool reset_input_nodes,
                                                 bool reset_output_nodes) {
     bool ok = true;
 
-    // check for cycles
-    if(!dag(*graph)) {
+    //==================//
+    // check for cycles //
+    //==================//
+    if(!dag(graph)) {
         DEBUG_WARNING("Graph contains cycles");
         ok = false;
     }
 
-    // check input/output nodes
+    //==========================//
+    // check input/output nodes //
+    //==========================//
     set<node_t> new_input_nodes, new_output_nodes;
-    for(node_it_t node(*graph); node!=INVALID; ++node) {
-        if(in_arc_it_t(*graph,node)==INVALID) new_input_nodes.insert(node);
-        if(out_arc_it_t(*graph,node)==INVALID) new_output_nodes.insert(node);
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        if(in_arc_it_t(graph,node)==INVALID) new_input_nodes.insert(node);
+        if(out_arc_it_t(graph,node)==INVALID) new_output_nodes.insert(node);
     }
     // input
     if(reset_input_nodes) input_nodes.assign(new_input_nodes.begin(), new_input_nodes.end());
@@ -439,6 +454,42 @@ bool ComputationalGraph::check_graph_structure(bool reset_input_nodes,
     if(old_output_nodes!=new_output_nodes) {
         DEBUG_WARNING("Provided and actual output nodes do not match");
         ok = false;
+    }
+
+    //======================//
+    // Check variable lists //
+    //======================//
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        // get actual labels by scanning incomming arcs/nodes
+        set<QString> actual_labels;
+        for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+            QString new_label = node_labels[graph.source(arc)];
+            if(actual_labels.find(new_label)!=actual_labels.end()) {
+                DEBUG_WARNING("Found duplicate label '" << new_label <<
+                              "' in nodes adjacent to node '" << node_labels[node] << "'");
+                ok = false;
+            } else {
+                actual_labels.insert(new_label);
+            }
+        }
+        // get provided labels (also check for duplicates)
+        set<QString> provided_labels;
+        for(QString new_label : node_variables[node]) {
+            if(provided_labels.find(new_label)!=provided_labels.end()) {
+                DEBUG_WARNING("Found duplicate label '" << new_label <<
+                              "' in provided labels of node '" << node_labels[node] << "'");
+                ok = false;
+            } else {
+                provided_labels.insert(new_label);
+            }
+        }
+        // check if labels are the same
+        if(actual_labels!=provided_labels) {
+            DEBUG_WARNING("For node '" << node_labels[node] <<
+                          "' actual labels (from adjacent nodes) and provided labels (on construction) do not match.");
+            DEBUG_WARNING("      actual: " << util::container_to_str(actual_labels,"' '","'","'"));
+            DEBUG_WARNING("    provided: " << util::container_to_str(provided_labels,"' '","'","'"));
+        }
     }
 
     return ok;
