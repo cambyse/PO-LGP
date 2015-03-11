@@ -61,8 +61,9 @@ public:
     void set_output_nodes(std::vector<node_t>);
     bool check_graph_structure(bool reset_input_nodes = false, bool reset_output_nodes = false);
 private:
-    void propagate_values(TYPE p);
-    void assign_values(std::vector<double> values, TYPE a);
+    void propagate_values(TYPE p, std::vector<node_t> changed_nodes);
+    void assign_values(std::vector<double> values, std::vector<node_t> nodes);
+    void assign_differentials(std::vector<double> values, std::vector<node_t> nodes);
     double evaluate_node(const node_t & node, TYPE e);
 };
 

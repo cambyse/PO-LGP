@@ -2,9 +2,11 @@
 
 #include <lemon/maps.h>
 #include <lemon/connectivity.h>
+#include <lemon/bfs.h>
 
 #include <cmath>
 #include <set>
+#include <algorithm>
 
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
@@ -30,91 +32,64 @@ ComputationalGraph::ComputationalGraph(std::shared_ptr<graph_t> g):
 
 ComputationalGraph::ComputationalGraph(): ComputationalGraph(std::make_shared<graph_t>()) {}
 
-void ComputationalGraph::assign_values(std::vector<double> values, TYPE a) {
-    switch(a) {
-    case VALUES:
-        if(values.size()!=input_nodes.size()) {
-            DEBUG_WARNING("Number of values to assign does not match number of input nodes.");
-        }
-        {
-            auto value_it = values.begin();
-            auto node_it = input_nodes.begin();
-            while(value_it!=values.end() && node_it!=input_nodes.end()) {
-                node_values[*node_it] = *value_it;
-                ++value_it;
-                ++node_it;
-            }
-        }
-        break;
-    case FORWARD:
-        if(values.size()!=input_nodes.size()) {
-            DEBUG_WARNING("Number of values to assign does not match number of input nodes.");
-        }
-        {
-            auto value_it = values.begin();
-            auto node_it = input_nodes.begin();
-            while(value_it!=values.end() && node_it!=input_nodes.end()) {
-                node_differentials[*node_it] = *value_it;
-                ++value_it;
-                ++node_it;
-            }
-        }
-        break;
-    case REVERSE:
-        if(values.size()!=output_nodes.size()) {
-            DEBUG_WARNING("Number of values to assign does not match number of output nodes.");
-        }
-        {
-            auto value_it = values.begin();
-            auto node_it = output_nodes.begin();
-            while(value_it!=values.end() && node_it!=output_nodes.end()) {
-                node_differentials[*node_it] = *value_it;
-                ++value_it;
-                ++node_it;
-            }
-        }
-        break;
-    default:
-        DEBUG_DEAD_LINE;
+void ComputationalGraph::assign_values(std::vector<double> values, std::vector<node_t> nodes) {
+    if(values.size()!=nodes.size()) {
+        DEBUG_WARNING("Number of values to assign does not match number of nodes.");
+    }
+    for(int idx : Range(std::min(values.size(),nodes.size()))) {
+        node_values[nodes[idx]] = values[idx];
     }
 }
 
-void ComputationalGraph::propagate_values(TYPE p) {
+void ComputationalGraph::assign_differentials(std::vector<double> values, std::vector<node_t> nodes) {
+    if(values.size()!=nodes.size()) {
+        DEBUG_WARNING("Number of values to assign does not match number of nodes.");
+    }
+    for(int idx : Range(std::min(values.size(),nodes.size()))) {
+        node_differentials[nodes[idx]] = values[idx];
+    }
+}
+
+void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
     // status of the nodes
-    graph_t::NodeMap<bool> done(*graph,false);
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
+    graph_t::NodeMap<bool> done(*graph,false);
+    graph_t::NodeMap<bool> reached(*graph,false);
 
-    switch(p) {
-    case VALUES:
-    case FORWARD:
-        // kick off propagation from input nodes
-        DEBUG_OUT(2, "Processing input nodes...");
-        for(node_t node : input_nodes) {
-            done[node] = true;
-            DEBUG_OUT(3, "        Input node '" << node_labels[node] << "'");
+    // Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(*graph);
+    // search.reachedMap(reached).init();
+    // for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+    // search.start();
+    // DEBUG_OUT(0,"Reached nodes:");
+    // for(node_it_t node(*graph); node!=INVALID; ++node) {
+    //     DEBUG_OUT(0,"    " << node_labels[node]);
+    // }
+
+    // kick off propagation from changed nodes
+    DEBUG_OUT(2, "Processing changed nodes...");
+    for(node_t node : changed_nodes) {
+        done[node] = true;
+        DEBUG_OUT(3, "        Changed node '" << node_labels[node] << "'");
+        switch(p) {
+        case VALUES:
+        case FORWARD:
             for(out_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
                 node_t target_node = graph->target(arc);
                 active_nodes.insert(target_node);
                 DEBUG_OUT(3, "            add '" << node_labels[target_node] << "' to active set");
             }
-        }
-        break;
-    case REVERSE:
-        // kick off propagation from output nodes
-        DEBUG_OUT(2, "Processing output nodes...");
-        for(node_t node : output_nodes) {
-            done[node] = true;
-            DEBUG_OUT(3, "        Output node '" << node_labels[node] << "'");
+            break;
+        case REVERSE:
             for(in_arc_it_t arc(*graph,node); arc!=INVALID; ++arc) {
                 node_t source_node = graph->source(arc);
                 active_nodes.insert(source_node);
                 DEBUG_OUT(3, "            add '" << node_labels[source_node] << "' to active set");
             }
+            break;
+        default:
+            DEBUG_DEAD_LINE;
         }
-        break;
-    default:
-        DEBUG_DEAD_LINE;
     }
 
     // keep processing active nodes till end
@@ -209,22 +184,22 @@ void ComputationalGraph::propagate_values(TYPE p) {
 }
 
 void ComputationalGraph::compute_values(std::vector<double> values) {
-    assign_values(values, VALUES);
-    propagate_values(VALUES);
+    assign_values(values, input_nodes);
+    propagate_values(VALUES, input_nodes);
 }
 
 void ComputationalGraph::forward_accumulation(std::vector<double> values,
                                                std::vector<double> differentials) {
     compute_values(values);
-    assign_values(differentials, FORWARD);
-    propagate_values(FORWARD);
+    assign_differentials(differentials, input_nodes);
+    propagate_values(FORWARD, input_nodes);
 }
 
 void ComputationalGraph::reverse_accumulation(std::vector<double> values,
                                                std::vector<double> differentials) {
     compute_values(values);
-    assign_values(differentials, REVERSE);
-    propagate_values(REVERSE);
+    assign_differentials(differentials, output_nodes);
+    propagate_values(REVERSE, output_nodes);
 }
 
 bool ComputationalGraph::check_derivatives(std::vector<double> values,
