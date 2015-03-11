@@ -158,27 +158,32 @@ void ActionMachine::step(){
     s->feedbackController.setState(s->q, s->qdot);
   }
 
+  //-- first zero references
+  s->refs.Kp = ARR(1.); //Kp;
+  s->refs.Kd = ARR(1.); //Kd;
+  s->refs.fL = zeros(6);
+  s->refs.fR = zeros(6);
+  s->refs.Ki.clear();
+  s->refs.J_ft_inv.clear();
+  s->refs.u_bias = zeros(s->q.N);
+
   //-- compute the force feedback control coefficients
-//  uint count=0;
-//  for(Action *a : A()) {
-//    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
-//      count++;
-//      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-//      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
-//    }
-//  }
+  uint count=0;
+  for(Action *a : A()) {
+    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
+      count++;
+      if(count!=1) HALT("you have multiple active force control tasks - NIY");
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+    }
+  }
+  if(count==1) s->refs.Kp = .5;
 
 
   // s->MP.reportCurrentState();
   A.deAccess();
 
   //-- send the computed movement to the robot
-  s->refs.Kp = ARR(1.); //Kp;
-  s->refs.Kd = ARR(1.); //Kd;
-  s->refs.fR = ARR(0., 0., 0.);
-  s->refs.u_bias = zeros(s->q.N);
-
-  s->refs.q =  zeros(s->q.N);//s->q;
+  s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;

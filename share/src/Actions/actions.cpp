@@ -247,7 +247,7 @@ PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forc
                      1., .8, 1., 1.);
   if(_timeOut>0.) timeOut=_timeOut;
   task->f_ref = forceVec;
-  task->f_Igain = .001;
+  task->f_Igain = .003;
   tasks.append(task);
 }
 
