@@ -26,15 +26,15 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** ORS model loaded");
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
-  Kp.resize(world.q.N).setZero();
-  Kd.resize(world.q.N).setZero();
+  Kp_base.resize(world.q.N).setZero();
+  Kd_base.resize(world.q.N).setZero();
   Kp=Kd=ARR(1.);
   Ki.clear();
   limits.resize(world.q.N,4).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
-    info = j->ats.getValue<arr>("gains");  if(info){ Kp(j->qIndex)=info->elem(0); Kd(j->qIndex)=info->elem(1); }
+    info = j->ats.getValue<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
     info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
     } }
@@ -49,7 +49,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       q(j->qIndex) = pr2_joint->position_;
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
 		      <<"' \tq=" <<q(j->qIndex)
-		      <<" \tgains=" <<Kp(j->qIndex) <<' '<<Kd(j->qIndex)
+		      <<" \tgains=" <<Kp_base(j->qIndex) <<' '<<Kd_base(j->qIndex)
 		      <<" \tlimits=" <<limits[j->qIndex]).p);
     }else{
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' not matched in pr2").p);
@@ -64,7 +64,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   baseCommand_publisher = nh.advertise<geometry_msgs::Twist>("/base_controller/command", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
-  forceSensor_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
+  l_ft_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::l_ft_subscriber_callback, this);
+  r_ft_subscriber = nh.subscribe("/ft_sensor/r_ft_compensated", 1, &TreeControllerClass::r_ft_subscriber_callback, this);
 
   ROS_INFO("*** TreeControllerClass Started");
 
@@ -115,20 +116,20 @@ void TreeControllerClass::update() {
 
     u = zeros(q.N);
     if(Kp.N==1 && Kd.N==1){
-      u += Kp.scalar()*(Kp % (q_ref - q));
-      u += Kd.scalar()*(Kd % (qdot_ref - qd));
+      u += Kp_base % (Kp.scalar() * (q_ref - q));
+      u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
-      u += Kp % (Kp*(q_ref - q)); //matrix multiplication!
-      u += Kd.scalar()*(Kd % (qdot_ref - qd));
+      u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
+      u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }
     u += u_bias;
 
     // torque PD for left ft sensor
-    if (Ki.N==0) {
-      err = err*0.;    // reset integral error
+    //double ft_norm = length(fL_obs);
+    if (/*ft_norm<2. ||*/ !Ki.N) {   // no contact or Ki gain -> don't use the integral term
+      err = err*0.;              // reset integral error
     } else {
       err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
-//       ROS_INFO("%s",STRING("Ki * fL_error: " << Ki * fL_error).p);
       u += Ki * err;
     }
 
@@ -160,6 +161,7 @@ void TreeControllerClass::update() {
   jointStateMsg.q = VECTOR(q);
   jointStateMsg.qdot = VECTOR(qd);
   jointStateMsg.fL = VECTOR(fL_obs);
+  jointStateMsg.fR = VECTOR(fR_obs);
   jointStateMsg.u_bias = VECTOR(u);
 
   jointState_publisher.publish(jointStateMsg);
@@ -188,10 +190,16 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   mutex.unlock();
 }
 
-void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
+void TreeControllerClass::l_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
   const geometry_msgs::Vector3 &f=msg->wrench.force;
   const geometry_msgs::Vector3 &t=msg->wrench.torque;
   fL_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
+}
+
+void TreeControllerClass::r_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
+  const geometry_msgs::Vector3 &f=msg->wrench.force;
+  const geometry_msgs::Vector3 &t=msg->wrench.torque;
+  fR_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
 }
 
 } // namespace
