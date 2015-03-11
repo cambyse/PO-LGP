@@ -1,6 +1,7 @@
-PROJECT_NAME           = "Utility Library"
+PROJECT_NAME           = "ActiveOnlineSearch"
 OUTPUT_DIRECTORY       = doc
 GENERATE_TAGFILE       = doc/doxy.tag
+#TAGFILES 	       = ../util/doc/doxy.tag=../../../util/doc/html
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 EXTRACT_ALL            = YES
@@ -8,6 +9,7 @@ EXTRACT_PRIVATE        = YES
 EXTRACT_PACKAGE        = YES
 EXTRACT_STATIC         = YES
 RECURSIVE              = YES
+HTML_EXTRA_FILES       = doc/images/graph.jpg
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES

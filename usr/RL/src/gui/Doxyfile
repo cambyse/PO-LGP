@@ -1,0 +1,21 @@
+PROJECT_NAME           = "MazeSuite"
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_PACKAGE        = YES
+EXTRACT_STATIC         = YES
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = *function_signature.h \
+		       SandBox.h SandBox.cpp \
+		       *qcustomplot*
+EXCLUDE_SYMBOLS        = qt_meta* \
+		       QCP*
+HTML_OUTPUT            = doc
+GENERATE_LATEX         = NO
+XML_OUTPUT             = xml
+XML_SCHEMA             =
+XML_DTD                =
+XML_PROGRAMLISTING     = YES
+HAVE_DOT               = YES
+UML_LOOK               = YES
