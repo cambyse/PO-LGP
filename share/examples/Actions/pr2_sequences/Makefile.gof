@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../..
 
 PLIB = 1
 ROS = 1

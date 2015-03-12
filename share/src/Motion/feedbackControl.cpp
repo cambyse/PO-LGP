@@ -241,7 +241,7 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
 
 arr FeedbackMotionControl::operationalSpaceControl(){
   arr c, J;
-  getCostCoeffs(c, J);
+  getCostCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
   if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr A = diag(H_rate_diag);
   arr a(A.d0); a.setZero();

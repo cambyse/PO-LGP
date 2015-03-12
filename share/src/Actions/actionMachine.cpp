@@ -37,11 +37,16 @@ void ActionMachine::open(){
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
 
-  KB.writeAccess();
-  FILE("machine.fol") >> KB();
-  KB().checkConsistency();
-  KB()>> FILE("z.initialKB");
-  KB.deAccess();
+  {
+    MT::FileToken fil("machine.fol");
+    if(fil.exists()){
+      KB.writeAccess();
+      fil >> KB();
+      KB().checkConsistency();
+      KB()>> FILE("z.initialKB");
+      KB.deAccess();
+    }
+  }
 
   KB.readAccess();
   Item *tasks = KB()["Tasks"];
@@ -193,21 +198,24 @@ void ActionMachine::close(){
   fil.close();
 }
 
-void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
-  cout <<"Instantiating task descriptions:\n" <<T <<endl;
-  for(Item *t:T){
-    Graph &td = t->kvg();
-    MT::String type=td["type"]->V<MT::String>();
-    if(type=="homing"){
-      new Homing(*this, t->parents(0)->keys(1));
-    }else if(type=="forceCtrl"){
-      new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
-    }else{
-      DefaultTaskMap *map = new DefaultTaskMap(td, *world);
-      CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
-      new FollowReference(*this, t->parents(0)->keys(1), task);
-    }
+void ActionMachine::parseTaskDescription(KeyValueGraph& td){
+  Item *t = td.isItemOfParentKvg;
+  MT::String type=td["type"]->V<MT::String>();
+  if(type=="homing"){
+    new Homing(*this, t->parents(0)->keys.last());
+  }else if(type=="forceCtrl"){
+    new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+  }else{
+    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
+    task->active=false;
+    new FollowReference(*this, t->parents(0)->keys.last(), task);
   }
+}
+
+void ActionMachine::parseTaskDescriptions(const KeyValueGraph& tds){
+  cout <<"Instantiating task descriptions:\n" <<tds <<endl;
+  for(Item *t:tds) parseTaskDescription(t->kvg());
 }
 
 void ActionMachine::removeAction(Action* a, bool hasLock){
@@ -221,9 +229,9 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   bool changes=false;
   KB.writeAccess();
   //-- check new successes and fails and add to symbolic state
-  Item* convSymbol = KB().getItem("conv");
-  Item* contactSymbol = KB().getItem("contact");
-  Item* timeoutSymbol = KB().getItem("timeout");
+  Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
+  Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
+  Item* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
@@ -253,9 +261,10 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
 
     A.writeAccess();
     for(Action *a:A()){
+      if(!a->symbol){ a->active=false;  continue; }
       bool act=false;
       for(Item *lit:a->symbol->parentOf){
-        if(&lit->container==&KB() && lit->parents.N==1){ act=true; break; }
+        if(&lit->container==&KB() && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
       }
       if(act) a->active=true;
       else a->active=false;
@@ -297,6 +306,10 @@ void ActionMachine::waitForQuitSymbol() {
     KB.waitForNextRevision();
     KB.readAccess();
     Item* quitSymbol = KB().getItem("quit");
+    if(!quitSymbol){
+      MT_MSG("WARNING: no quit symbol!");
+      return;
+    }
     for(Item *f:quitSymbol->parentOf){
       if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
     }

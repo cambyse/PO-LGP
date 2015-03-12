@@ -60,6 +60,15 @@ bool factsAreEqual(Item* fact0, Item* fact1, bool checkAlsoValue){
   return true;
 }
 
+/// check if these are literally equal (all arguments are identical, be they vars or consts)
+bool factsAreEqual(Item *fact0, ItemL& fact1){
+  if(fact0->parents.N!=fact1.N) return false;
+  for(uint i=0;i<fact0->parents.N;i++){
+    if(fact0->parents(i) != fact1(i)) return false;
+  }
+  return true;
+}
+
 /// check match, where all variables of literal are replaced by subst(var->index)
 bool factsAreEqual(Item* fact, Item* literal, const ItemL& subst, Graph* subst_scope,bool checkAlsoValue){
   if(fact->parents.N!=literal->parents.N) return false;
@@ -86,6 +95,19 @@ Item *getEqualFactInKB(Graph& KB, Item *fact, bool checkAlsoValue){
   //now check only these candidates
   for(Item *fact1:candidates) if(&fact1->container==&KB && fact1!=fact){
     if(factsAreEqual(fact, fact1, checkAlsoValue)) return fact1;
+  }
+  return NULL;
+}
+
+/// try to find a literal within 'scope' that is exactly equal to 'literal'
+Item *getEqualFactInKB(Graph& KB, ItemL& fact){
+  //first find the section of all facts that derive from the same symbols
+  ItemL candidates=fact(0)->parentOf;
+//  for(uint p=1;p<fact.N;p++)
+//    candidates = setSection(candidates, fact->parents(p)->parentOf);
+  //now check only these candidates
+  for(Item *fact1:candidates) if(&fact1->container==&KB){
+    if(factsAreEqual(fact1, fact)) return fact1;
   }
   return NULL;
 }

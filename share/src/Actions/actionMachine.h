@@ -54,7 +54,8 @@ struct ActionMachine : Module {
   /// Block till the quit symbol is true in the KB
   void waitForQuitSymbol();
 
-  void parseTaskDescriptions(const KeyValueGraph& T);
+  void parseTaskDescription(KeyValueGraph& td);
+  void parseTaskDescriptions(const KeyValueGraph& tds);
 
   /// @name module implementations
   void open();

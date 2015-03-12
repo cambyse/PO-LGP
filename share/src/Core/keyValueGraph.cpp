@@ -25,6 +25,7 @@
 #include "registry.h"
 
 const ItemL& NoItemL=*((ItemL*)NULL);
+Graph& NoGraph=*((Graph*)NULL);
 
 //===========================================================================
 //
@@ -32,8 +33,12 @@ const ItemL& NoItemL=*((ItemL*)NULL);
 //
 
 Item::Item(KeyValueGraph& _container):container(_container){
-  index=container.N;
-  container.ItemL::append(this);
+  if(&container!=&NoGraph){
+    index=container.N;
+    container.ItemL::append(this);
+  }else{
+    index=(uint)(-1);
+  }
 }
 
 Item::Item(KeyValueGraph& _container, const ItemL& _parents)
@@ -68,7 +73,7 @@ void Item::write(std::ostream& os) const {
   
   //-- write parents
   if(parents.N) {
-    if(keys.N) os <<' ';
+    //    if(keys.N) os <<' ';
     os <<'(';
     for_list(Item, it, parents) {
       if(it_COUNT) os <<' ';
@@ -290,6 +295,12 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
 }
 
 
+ItemInitializer::ItemInitializer(const char* key){
+  it = new Item_typed<bool>(NoGraph, NULL, false);
+  it->keys.append(STRING(key));
+}
+
+
 //===========================================================================
 //
 //  KeyValueGraph methods
@@ -306,6 +317,24 @@ KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfPare
 KeyValueGraph::KeyValueGraph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   FILE(filename) >>*this;
+}
+
+KeyValueGraph::KeyValueGraph(const std::map<std::string, std::string>& dict):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+  ItemL::memMove=true;
+  appendDict(dict);
+}
+
+KeyValueGraph::KeyValueGraph(std::initializer_list<ItemInitializer> list) {
+  ItemL::memMove=true;
+  for(const ItemInitializer& ic:list){
+    Item *clone = ic.it->newClone(*this); //this appends sequentially clones of all items to 'this'
+    for(const MT::String& s:ic.parents){
+      Item *p = getItem(s);
+      CHECK(p,"parent " <<p <<" of " <<*clone <<" does not exist!");
+      clone->parents.append(p);
+      p->parentOf.append(clone);
+    }
+  }
 }
 
 KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
@@ -333,7 +362,14 @@ Item *KeyValueGraph::append(const uintA& parentIdxs) {
   return append<int>(STRINGS_1(ItemL::N), parents, NULL, false);
 }
 
-Item* KeyValueGraph::getItem(const char *key) {
+void KeyValueGraph::appendDict(const std::map<std::string, std::string>& dict){
+  for(const std::pair<std::string,std::string>& p:dict){
+    Item *it = readItem(*this, STRING('='<<p.second), false, NULL, MT::String(p.first));
+    if(!it) MT_MSG("failed to read dict entry <" <<p.first <<',' <<p.second <<'>');
+  }
+}
+
+Item* KeyValueGraph::getItem(const char *key) const {
   for(Item *it: (*this)) if(it->matches(key)) return it;
   //    for(const MT::String& k:it->keys) if(k==key) return it;
   if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(key);

@@ -26,6 +26,7 @@
 #define MT_keyValueGraph_h
 
 #include "array.h"
+#include <map>
 
 struct Item;
 struct KeyValueGraph;
@@ -70,6 +71,13 @@ struct Item {
 };
 stdOutPipe(Item);
 
+struct ItemInitializer{
+  ItemInitializer(const char* key);
+  template<class T> ItemInitializer(const char* key, const T& x);
+  template<class T> ItemInitializer(const char* key, const StringA& parents, const T& x);
+  Item *it;
+  StringA parents;
+};
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
@@ -77,7 +85,9 @@ struct KeyValueGraph:ItemL {
   Item *isItemOfParentKvg;
   
   KeyValueGraph();
-  KeyValueGraph(const char* filename);
+  explicit KeyValueGraph(const char* filename);
+  KeyValueGraph(const std::map<std::string, std::string>& dict);
+  KeyValueGraph(std::initializer_list<ItemInitializer> list);
   KeyValueGraph(const KeyValueGraph& G);
   KeyValueGraph(Item *itemOfParentKvg);
   ~KeyValueGraph();
@@ -92,7 +102,7 @@ struct KeyValueGraph:ItemL {
   template<class T> bool getValue(T& x, const StringA &keys) { T* y=getValue<T>(keys); if(y) { x=*y; return true; } return false; }
 
   //-- get items
-  Item* getItem(const char *key);
+  Item* getItem(const char *key) const;
   Item* getItem(const char *key1, const char *key2);
   Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
@@ -122,6 +132,8 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x, ownsValue); }
   Item *append(const uintA& parentIdxs);
 
+  void appendDict(const std::map<std::string, std::string>& dict);
+
   //-- merging items
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
@@ -142,6 +154,8 @@ struct KeyValueGraph:ItemL {
 stdPipes(KeyValueGraph);
 
 typedef KeyValueGraph Graph;
+
+extern Graph& NoGraph; //this is a pointer to NULL!!!! I use it for optional arguments
 
 inline Graph GRAPH(const ItemL& L){
   Graph G;

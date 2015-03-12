@@ -32,6 +32,14 @@ void TEST(Read){
 
 //===========================================================================
 
+void TEST(Init){
+  KeyValueGraph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", MT::String("BLA")} };
+  cout <<G <<endl;
+  G.checkConsistency();
+}
+
+//===========================================================================
+
 void TEST(Dot){
   KeyValueGraph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
@@ -67,7 +75,8 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
 //  testRead();
-  testDot();
+  testInit();
+//  testDot();
 
 //  if(!filename) testManual();
 

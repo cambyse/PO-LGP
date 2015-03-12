@@ -151,6 +151,17 @@ template<class T> const T *Item::getValue() const {
   return typed->value;
 }
 
+template<class T> ItemInitializer::ItemInitializer(const char* key, const T& x){
+  it = new Item_typed<T>(NoGraph, new T(x), true);
+  it->keys.append(STRING(key));
+}
+
+template<class T> ItemInitializer::ItemInitializer(const char* key, const StringA& parents, const T& x)
+  : parents(parents){
+  it = new Item_typed<T>(NoGraph, new T(x), true);
+  it->keys.append(STRING(key));
+}
+
 template<class T> T* KeyValueGraph::getValue(const char *key) {
   Item *it = getItem(key);
   if(!it) return NULL;
@@ -180,7 +191,9 @@ template<class T> Item *KeyValueGraph::append(T *x, bool ownsValue) {
 }
 
 template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
-  return new Item_typed<T>(*this, keys, parents, x, ownsValue);
+  Item *it = new Item_typed<T>(*this, keys, parents, x, ownsValue);
+  if(typeid(T)==typeid(Graph)) it->kvg().isItemOfParentKvg = it;
+  return it;
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {

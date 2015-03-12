@@ -1,5 +1,7 @@
 #include <Core/keyValueGraph.h>
 
+//### Level 0 routines
+
 ItemL getLiteralsOfScope(Graph& KB);
 ItemL getVariablesOfScope(Graph& KB);
 ItemL getVariables(Item *literal);
@@ -8,9 +10,11 @@ uint getNumOfVariables(Item* literal);
 //---------- checking equality of facts or literals
 
 bool factsAreEqual(Item *fact0, Item *fact1, bool checkAlsoValue=false);
+bool factsAreEqual(Item *fact0, ItemL& fact1);
 bool factsAreEqual(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=false);
 Item *getEqualFactInKB(Graph& KB, Item *fact, bool checkAlsoValue=true);
-Item* getEqualFactInKB(Graph& KB, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=true);
+Item *getEqualFactInKB(Graph& KB, ItemL& fact);
+Item *getEqualFactInKB(Graph& KB, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=true);
 Item *getEqualFactInList(Item *fact, ItemL& facts);
 bool allFactsHaveEqualsInScope(Graph& KB, ItemL& facts);
 
@@ -31,3 +35,11 @@ bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Gr
 
 bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose=false);
 bool forwardChaining_propositional(KeyValueGraph& KB, Item* q);
+
+//### Level 1 class
+
+//struct FOL: KeyValueGraph{
+//  Graph& state;
+
+
+//};
