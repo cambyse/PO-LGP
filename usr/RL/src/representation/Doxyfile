@@ -1,4 +1,4 @@
-PROJECT_NAME           = "ActiveOnlineSearch"
+PROJECT_NAME           = "Representation Library"
 OUTPUT_DIRECTORY       = doc
 GENERATE_TAGFILE       = doc/doxy.tag
 TAGFILES	       = ../doc/doxy.tag=../../../doc/html
@@ -9,7 +9,7 @@ EXTRACT_PRIVATE        = YES
 EXTRACT_PACKAGE        = YES
 EXTRACT_STATIC         = YES
 RECURSIVE              = YES
-HTML_EXTRA_FILES       = doc/images/graph.jpg
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES
+EXAMPLE_PATH           = doc/examples
