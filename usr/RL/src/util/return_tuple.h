@@ -1,7 +1,7 @@
 #ifndef TUPLERETURN_H_
 #define TUPLERETURN_H_
 
-/** \file tuple_return.h
+/** \file return_tuple.h
  *
  * This files defines convenience macros and function for assigning values to
  * tuples of variables.

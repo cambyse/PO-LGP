@@ -11,6 +11,10 @@
 #include <util/util.h>
 #include <util/debug.h>
 
+/** \example Instance_Example.cpp
+ * This is an example of how to use AbstractInstance and its derived classes.
+ * */
+
 class AbstractInstance {
     //------------------------------------------------------------//
     //                         friends                            //

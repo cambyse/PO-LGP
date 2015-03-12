@@ -17,6 +17,10 @@
 
 #include "debug.h"
 
+/** \example Commander_Example.cpp
+ * This is an example of how to use the Commander class.
+ * */
+
 namespace Commander {
 
     /** \brief Represents a list of command aliases. */
