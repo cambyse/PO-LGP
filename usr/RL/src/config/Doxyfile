@@ -12,3 +12,4 @@ RECURSIVE              = YES
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES
+EXAMPLE_PATH           = doc

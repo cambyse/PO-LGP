@@ -2,6 +2,20 @@ PROJECT_NAME           = "RL Software Suite"
 INPUT		       = doc
 OUTPUT_DIRECTORY       = doc
 GENERATE_TAGFILE       = doc/doxy.tag
+EXAMPLE_PATH           = ActiveOnlineSearch/doc \
+			 batchworker/doc \
+			 ButtonWorld/doc \
+			 CheeseMaze/doc \
+			 config/doc \
+			 environment/doc \
+			 GTest/doc \
+			 gui/doc \
+			 learner/doc \
+			 Maze/doc \
+			 optimization/doc \
+			 planning/doc \
+			 representation/doc \
+			 util/doc
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 EXTRACT_ALL            = YES

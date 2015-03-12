@@ -15,4 +15,4 @@ UML_LOOK               = YES
 EXCLUDE_PATTERNS       = SandBox.h SandBox.cpp \
 		       	 *qcustomplot*
 EXCLUDE_SYMBOLS        = qt_meta* \
-		       	 QCP*
+		       	 QCP*EXAMPLE_PATH           = doc

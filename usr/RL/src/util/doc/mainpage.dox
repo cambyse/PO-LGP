@@ -1,8 +1,4 @@
 /*! \mainpage
-
-    The Utility Library contains a collection of helper tools. These are mostly
-    small functions and classes collected in the util.h file. But there are also
-    some classes just too small for an own library. The Utility Library is part
-    of the <a href="../../../doc/html/index.html">RL Software Suite</a>.
-
-    */
+    \htmlinclude short_description.dox
+    The Utility Library is part of the <a href="../../../doc/html/index.html">RL Software Suite</a>.
+*/

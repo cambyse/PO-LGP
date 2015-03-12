@@ -8,7 +8,7 @@ Utility Library
 <a href="../../util/doc/html/index.html"> Utility Library </a>
 ------------------------------------------------------------
 
-This is a collection of helper tools.
+\htmlinclude util/doc/short_description.dox
 
 Maze Suite
 ==========
@@ -16,37 +16,57 @@ Maze Suite
 <a href="../../batchworker/doc/html/index.html"> Batchworker </a>
 ---------------------------------------------------------------
 
+\htmlinclude batchworker/doc/short_description.dox
+
 <a href="../../ButtonWorld/doc/html/index.html"> Button World </a>
 ---------------------------------------------------------------
+
+\htmlinclude ButtonWorld/doc/short_description.dox
 
 <a href="../../CheeseMaze/doc/html/index.html"> Cheese Maze </a>
 -------------------------------------------------------------
 
+\htmlinclude CheeseMaze/doc/short_description.dox
+
 <a href="../../config/doc/html/index.html"> Config </a>
 -----------------------------------------------------
+
+\htmlinclude config/doc/short_description.dox
 
 <a href="../../environment/doc/html/index.html"> Environment </a>
 ---------------------------------------------------------------
 
+\htmlinclude environment/doc/short_description.dox
+
 <a href="../../gui/doc/html/index.html"> GUI </a>
 -----------------------------------------------
+
+\htmlinclude gui/doc/short_description.dox
 
 <a href="../../learner/doc/html/index.html"> Learner </a>
 -------------------------------------------------------
 
+\htmlinclude learner/doc/short_description.dox
+
 <a href="../../Maze/doc/html/index.html"> Maze </a>
 -------------------------------------------------
+
+\htmlinclude Maze/doc/short_description.dox
 
 <a href="../../optimization/doc/html/index.html"> Optimization </a>
 -----------------------------------------------------------------
 
+\htmlinclude optimization/doc/short_description.dox
+
 <a href="../../planning/doc/html/index.html"> Planning </a>
 ---------------------------------------------------------
+
+\htmlinclude planning/doc/short_description.dox
 
 <a href="../../representation/doc/html/index.html"> Representation Library </a>
 -----------------------------------------------------------------------------
 
-This is for...well...representations :-)
+\htmlinclude representation/doc/short_description.dox
 
 Online Planning
 ===============
@@ -54,12 +74,14 @@ Online Planning
 <a href="../../ActiveOnlineSearch/doc/html/index.html"> Active Online Search </a>
 -------------------------------------------------------------------------------
 
-This is a boundle for online planning.
+\htmlinclude ActiveOnlineSearch/doc/short_description.dox
 
 Unit Tests
 ==========
 
 <a href="../../GTest/doc/html/index.html"> Unit Tests </a>
 ---------------------------------------------------
+
+\htmlinclude GTest/doc/short_description.dox
 
 */

@@ -2,6 +2,7 @@ PROJECT_NAME           = "ActiveOnlineSearch"
 OUTPUT_DIRECTORY       = doc
 GENERATE_TAGFILE       = doc/doxy.tag
 TAGFILES	       = ../doc/doxy.tag=../../../doc/html
+EXAMPLE_PATH	       = doc
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 EXTRACT_ALL            = YES
