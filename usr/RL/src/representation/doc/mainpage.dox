@@ -1,0 +1,7 @@
+/*! \mainpage
+
+    The Representation Library contains things like definition of States,
+    Actions, Observation, Rewards, and Instances. It is part of the <a
+    href="../../../doc/html/index.html">RL Software Suite</a>.
+
+*/

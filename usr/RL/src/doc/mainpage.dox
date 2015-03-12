@@ -1,0 +1,65 @@
+/*! \mainpage
+
+This sofware suite is a collection of multiple libraries and executables.
+
+Utility Library
+===============
+
+<a href="../../util/doc/html/index.html"> Utility Library </a>
+------------------------------------------------------------
+
+This is a collection of helper tools.
+
+Maze Suite
+==========
+
+<a href="../../batchworker/doc/html/index.html"> Batchworker </a>
+---------------------------------------------------------------
+
+<a href="../../ButtonWorld/doc/html/index.html"> Button World </a>
+---------------------------------------------------------------
+
+<a href="../../CheeseMaze/doc/html/index.html"> Cheese Maze </a>
+-------------------------------------------------------------
+
+<a href="../../config/doc/html/index.html"> Config </a>
+-----------------------------------------------------
+
+<a href="../../environment/doc/html/index.html"> Environment </a>
+---------------------------------------------------------------
+
+<a href="../../gui/doc/html/index.html"> GUI </a>
+-----------------------------------------------
+
+<a href="../../learner/doc/html/index.html"> Learner </a>
+-------------------------------------------------------
+
+<a href="../../Maze/doc/html/index.html"> Maze </a>
+-------------------------------------------------
+
+<a href="../../optimization/doc/html/index.html"> Optimization </a>
+-----------------------------------------------------------------
+
+<a href="../../planning/doc/html/index.html"> Planning </a>
+---------------------------------------------------------
+
+<a href="../../representation/doc/html/index.html"> Representation Library </a>
+-----------------------------------------------------------------------------
+
+This is for...well...representations :-)
+
+Online Planning
+===============
+
+<a href="../../ActiveOnlineSearch/doc/html/index.html"> Active Online Search </a>
+-------------------------------------------------------------------------------
+
+This is a boundle for online planning.
+
+Unit Tests
+==========
+
+<a href="../../GTest/doc/html/index.html"> Unit Tests </a>
+---------------------------------------------------
+
+*/
