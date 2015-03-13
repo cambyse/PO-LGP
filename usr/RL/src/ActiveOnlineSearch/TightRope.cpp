@@ -23,7 +23,6 @@ TightRope::state_reward_pair_t TightRope::sample(const state_t & s, const action
     state_t ss = 0;
     reward_t r = 0;
     // rewards/punishments
-    double backward_reward = -1;
     double fail_reward = -1;
     double forward_reward = 1;
     double fast_forward_reward = 2;

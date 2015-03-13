@@ -699,6 +699,7 @@ namespace util {
             --idx;
         }
         DEBUG_DEAD_LINE;
+        return typename C::value_type();
     }
     /** \brief Select a random element from a container. This function calls the
      * util::random_select_overload.*/
@@ -984,7 +985,7 @@ namespace util {
                 DEBUG_EXPECT(0,ND_bounds.size()==N);
                 auto vec = convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
                 std::array<D_IDX_TYPE,N> arr;
-                for(int idx = 0; idx<std::min(N,vec.size()); ++idx) {
+                for(int idx = 0; idx<(int)std::min(N,vec.size()); ++idx) {
                     arr[idx] = vec[idx];
                 }
                 return template_lib::array_to_tuple(arr);

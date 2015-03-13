@@ -18,7 +18,7 @@ public:
     virtual QString action_name(const action_t &) const override;
     virtual QString state_name(const state_t &) const override;
     bool has_terminal_state() const override {return true;}
-    bool is_terminal_state(state_t s) const override {return s==states.size()-1;}
+    bool is_terminal_state(state_t s) const override {return s==(int)states.size()-1;}
 public:
     TightRope(int n = 15);
     virtual ~TightRope() = default;
