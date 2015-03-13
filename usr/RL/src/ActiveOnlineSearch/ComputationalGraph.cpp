@@ -13,7 +13,7 @@
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 4
 #include <util/debug.h>
 
 using namespace lemon;
@@ -64,29 +64,27 @@ void CG::assign_differentials(std::vector<double> values, std::vector<node_t> no
 }
 
 void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
+
+    DEBUG_OUT(1, "Propagating values...");
+
     // status of the nodes
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
-    graph_t::NodeMap<bool> done(graph,false);
-    graph_t::NodeMap<bool> reached(graph,false);
 
+    // find nodes that have to be processed
     //auto reverse_graph = ReverseDigraph<graph_t>(graph);
-    // Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
-    // search.reachedMap(reached).init();
-    // for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
-    // search.start();
-    // DEBUG_OUT(0,"Reached nodes:");
-    // for(node_it_t node(graph); node!=INVALID; ++node) {
-    //     if(reached[node]) {
-    //         DEBUG_OUT(0,"    " << node_labels[node]);
-    //     }
-    // }
+    graph_t::NodeMap<bool> to_be_processed(graph,true);
+    Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
+    search.reachedMap(to_be_processed).init();
+    for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+    search.start();
 
-    // kick off propagation from changed nodes
-    DEBUG_OUT(2, "Processing changed nodes...");
+    // kick off propagation from changed nodes and remove changed nodes from
+    // to-be-processed
+    DEBUG_OUT(2, "    Kick-off from changed nodes...");
     for(node_t node : changed_nodes) {
-        done[node] = true;
-        DEBUG_OUT(3, "        Changed node '" << node_labels[node] << "'");
+        to_be_processed[node] = false;
+        DEBUG_OUT(3, "        '" << node_labels[node] << "'");
         switch(p) {
         case VALUES:
         case FORWARD:
@@ -108,12 +106,22 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
         }
     }
 
+    // print nodes to be processed
+    IF_DEBUG(3) {
+        DEBUG_OUT(3,"    Nodes to be processed:");
+        for(node_it_t node(graph); node!=INVALID; ++node) {
+            if(to_be_processed[node]) {
+                DEBUG_OUT(3,"        '" << node_labels[node] << "'");
+            }
+        }
+    }
+
     // keep processing active nodes till end
     DEBUG_OUT(2, "    Looping through active nodes...");
     while(active_nodes.size()>0) {
         DEBUG_OUT(2, "    New iteration...");
         set<node_t> new_active_nodes;
-        set<node_t> new_done;
+        set<node_t> new_processed;
         set<node_t> move_to_pending;
         for(node_t node : active_nodes) {
             DEBUG_OUT(2, "            Checking active node '" << node_labels[node] << "'");
@@ -122,7 +130,7 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
             case VALUES:
             case FORWARD:
                 for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph.source(arc)]) {
+                    if(to_be_processed[graph.source(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
@@ -130,7 +138,7 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
                 break;
             case REVERSE:
                 for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(!done[graph.target(arc)]) {
+                    if(to_be_processed[graph.target(arc)]) {
                         all_inputs_available = false;
                         break;
                     }
@@ -140,8 +148,8 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
                 DEBUG_DEAD_LINE;
             }
             if(all_inputs_available) {
-                done[node] = true;
-                new_done.insert(node);
+                to_be_processed[node] = false;
+                new_processed.insert(node);
                 DEBUG_OUT(3, "                All inputs available --> compute value");
                 evaluate_node(node, p);
                 switch(p) {
@@ -173,22 +181,22 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
         //-------------//
         // swap old and new active
         active_nodes.swap(new_active_nodes);
-        // remove done nodes from active and pending (possibly includes new
-        // active nodes that could be done in the same iteration)
-        DEBUG_OUT(4,"    Done nodes:");
-        for(node_t node : new_done) {
+        // remove processed nodes from active and pending (this may also include
+        // new active nodes that were already processed in the same iteration)
+        DEBUG_OUT(4,"    Processed nodes:" << (new_processed.size()==0?" NONE":""));
+        for(node_t node : new_processed) {
             DEBUG_OUT(4,"        " << node_labels[node]);
             active_nodes.erase(node);
             pending_nodes.erase(node);
         }
         // print new active nodes
         IF_DEBUG(4) {
-            DEBUG_OUT(4,"    New active nodes:");
+            DEBUG_OUT(4,"    New active nodes:" << (active_nodes.size()==0?" NONE":""));
             for(node_t node : active_nodes) {
                 DEBUG_OUT(4,"        " << node_labels[node]);
             }
         }
-        DEBUG_OUT(4,"    Move to pending:");
+        DEBUG_OUT(4,"    Move to pending:" << (move_to_pending.size()==0?" NONE":""));
         for(node_t node : move_to_pending) {
             DEBUG_OUT(4,"        " << node_labels[node]);
             pending_nodes.insert(node);
