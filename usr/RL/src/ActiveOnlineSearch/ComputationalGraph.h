@@ -110,19 +110,43 @@ public:
     /**
      * Compute all values. Assign values to input variables and compute values
      * and partial derivatives of all nodes and arcs. */
-    void compute_values(std::vector<double> values);
+    ComputationalGraph & compute_values(std::vector<double> values);
     /**
      * Compute values and total derivatives. Assign values to input variables
      * and their differentials, compute values and partial derivatives, and
      * compute differentials and total derivatives of output variables via
      * forward accumulation. */
-    void forward_accumulation(std::vector<double> values, std::vector<double> differentials);
+    ComputationalGraph & forward_accumulation(std::vector<double> values,
+                                              std::vector<double> differentials);
     /**
      * Compute values and total derivatives. Assign values to input variables
      * and their differentials, compute values and partial derivatives, and
      * compute differentials and total derivatives of output variables via
      * reverse accumulation. */
-    void reverse_accumulation(std::vector<double> values, std::vector<double> differentials);
+    ComputationalGraph & reverse_accumulation(std::vector<double> values,
+                                              std::vector<double> differentials);
+    /**
+     * Like compute_values() but only update changed values. Actually
+     * compute_values() is just a shorthand for calling update_values() on all
+     * input nodes. */
+    ComputationalGraph & update_values(std::vector<double> values,
+                                       std::vector<node_t> nodes,
+                                       bool input_nodes_only = true);
+    /**
+     * Like forward_accumulation() but only update changed values. Actually
+     * forward_accumulation() is just a shorthand for calling compute_values()
+     * and update_differentials_forward() on the input nodes. */
+    ComputationalGraph & update_differentials_forward(std::vector<double> differentials,
+                                                      std::vector<node_t> nodes,
+                                                      bool input_nodes_only = true);
+    /**
+     * Like reverse_accumulation() but only update changed values. Actually
+     * reverse_accumulation() is just a shorthand for calling compute_values()
+     * on the input nodes and update_differentials_reverse() on the output
+     * nodes. */
+    ComputationalGraph & update_differentials_reverse(std::vector<double> differentials,
+                                                      std::vector<node_t> nodes,
+                                                      bool output_nodes_only = true);
     /**
      * Checks the derivatives via finite differences. The function changes every
      * node/variable by +/- \e delta. It then computes the nummerical derivative
@@ -140,7 +164,7 @@ public:
                            double epsilon_relative = 1e-10);
     /**
      * Uses util::graph_to_pdf to plot the graph. */
-    void plot_graph(const char* file_name) const;
+    ComputationalGraph & plot_graph(const char* file_name);
     /**
      * Add a node/variable.
      *
@@ -178,11 +202,17 @@ public:
      * Returns the values of the output variables. */
     std::vector<double> get_output_values() const;
     /**
+     * Gets the input variables. */
+    std::vector<node_t> get_input_nodes() const { return input_nodes; }
+    /**
+     * Gets the output variables. */
+    std::vector<node_t> get_output_nodes() const { return output_nodes; }
+    /**
      * Sets the input variables. */
-    void set_input_nodes(std::vector<node_t>);
+    ComputationalGraph & set_input_nodes(std::vector<node_t>);
     /**
      * Sets the output variables. */
-    void set_output_nodes(std::vector<node_t>);
+    ComputationalGraph & set_output_nodes(std::vector<node_t>);
     /**
      * Check the graph structure. This function checks three things: (1) whether
      * the graph is acyclic (2) whether the provided input/output nodes match
@@ -213,6 +243,10 @@ private:
      *
      * @param e The mode of evaluation. */
     double evaluate_node(const node_t & node, TYPE e);
+    /**
+     * Check if \e nodes contain \e subnodes. Converts both vectors to sets and
+     * uses std::includes(). */
+    static bool includes(std::vector<node_t> nodes, std::vector<node_t> subnodes);
 };
 
 #endif /* COMPUTATIONAL_GRAPH_H_ */

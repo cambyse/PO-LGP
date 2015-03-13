@@ -20,29 +20,32 @@ using namespace lemon;
 using std::vector;
 using std::set;
 using util::Range;
-using std::shared_ptr;
 
-ComputationalGraph::ComputationalGraph():
+typedef ComputationalGraph CG;
+
+CG::ComputationalGraph():
     graph(graph_dummy),
     node_labels(graph),
     node_values(graph),
     node_differentials(graph),
-    node_variables(graph),
     arc_values(graph),
+    node_variables(graph),
     node_functions(graph),
-    arc_functions(graph) {}
+    arc_functions(graph)
+{}
 
-ComputationalGraph::ComputationalGraph(graph_t & g):
+CG::ComputationalGraph(graph_t & g):
     graph(g),
     node_labels(graph),
     node_values(graph),
     node_differentials(graph),
-    node_variables(graph),
     arc_values(graph),
+    node_variables(graph),
     node_functions(graph),
-    arc_functions(graph) {}
+    arc_functions(graph)
+{}
 
-void ComputationalGraph::assign_values(std::vector<double> values, std::vector<node_t> nodes) {
+void CG::assign_values(std::vector<double> values, std::vector<node_t> nodes) {
     if(values.size()!=nodes.size()) {
         DEBUG_WARNING("Number of values to assign does not match number of nodes.");
     }
@@ -51,7 +54,7 @@ void ComputationalGraph::assign_values(std::vector<double> values, std::vector<n
     }
 }
 
-void ComputationalGraph::assign_differentials(std::vector<double> values, std::vector<node_t> nodes) {
+void CG::assign_differentials(std::vector<double> values, std::vector<node_t> nodes) {
     if(values.size()!=nodes.size()) {
         DEBUG_WARNING("Number of values to assign does not match number of nodes.");
     }
@@ -60,21 +63,23 @@ void ComputationalGraph::assign_differentials(std::vector<double> values, std::v
     }
 }
 
-void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
+void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
     // status of the nodes
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
     graph_t::NodeMap<bool> done(graph,false);
     graph_t::NodeMap<bool> reached(graph,false);
 
-    auto reverse_graph = ReverseDigraph<graph_t>(graph);
+    //auto reverse_graph = ReverseDigraph<graph_t>(graph);
     // Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
     // search.reachedMap(reached).init();
     // for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
     // search.start();
     // DEBUG_OUT(0,"Reached nodes:");
     // for(node_it_t node(graph); node!=INVALID; ++node) {
-    //     DEBUG_OUT(0,"    " << node_labels[node]);
+    //     if(reached[node]) {
+    //         DEBUG_OUT(0,"    " << node_labels[node]);
+    //     }
     // }
 
     // kick off propagation from changed nodes
@@ -194,29 +199,65 @@ void ComputationalGraph::propagate_values(TYPE p, std::vector<node_t> changed_no
     }
 }
 
-void ComputationalGraph::compute_values(std::vector<double> values) {
-    assign_values(values, input_nodes);
-    propagate_values(VALUES, input_nodes);
+CG & CG::compute_values(std::vector<double> values) {
+    update_values(values, input_nodes);
+    return *this;
 }
 
-void ComputationalGraph::forward_accumulation(std::vector<double> values,
-                                               std::vector<double> differentials) {
+CG & CG::forward_accumulation(std::vector<double> values,
+                              std::vector<double> differentials) {
     compute_values(values);
-    assign_differentials(differentials, input_nodes);
-    propagate_values(FORWARD, input_nodes);
+    update_differentials_forward(differentials, input_nodes);
+    return *this;
 }
 
-void ComputationalGraph::reverse_accumulation(std::vector<double> values,
-                                               std::vector<double> differentials) {
+CG & CG::reverse_accumulation(std::vector<double> values,
+                              std::vector<double> differentials) {
     compute_values(values);
-    assign_differentials(differentials, output_nodes);
-    propagate_values(REVERSE, output_nodes);
+    update_differentials_reverse(differentials, output_nodes);
+    return *this;
 }
 
-bool ComputationalGraph::check_derivatives(std::vector<double> values,
-                                            double delta,
-                                            double epsilon_absolute,
-                                            double epsilon_relative) {
+CG & CG::update_values(std::vector<double> values,
+                       std::vector<node_t> nodes,
+                       bool input_nodes_only) {
+    if(input_nodes_only and !includes(input_nodes, nodes)) {
+        DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
+        return *this;
+    }
+    assign_values(values, nodes);
+    propagate_values(VALUES, nodes);
+    return *this;
+}
+
+CG & CG::update_differentials_forward(std::vector<double> differentials,
+                                      std::vector<node_t> nodes,
+                                      bool input_nodes_only) {
+    if(input_nodes_only and !includes(input_nodes, nodes)) {
+        DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
+        return *this;
+    }
+    assign_differentials(differentials, nodes);
+    propagate_values(FORWARD, nodes);
+    return *this;
+}
+
+CG & CG::update_differentials_reverse(std::vector<double> differentials,
+                                      std::vector<node_t> nodes,
+                                      bool output_nodes_only) {
+    if(output_nodes_only and !includes(output_nodes, nodes)) {
+        DEBUG_WARNING("Given nodes are not a subset of the output nodes.");
+        return *this;
+    }
+    assign_differentials(differentials, nodes);
+    propagate_values(REVERSE, nodes);
+    return *this;
+}
+
+bool CG::check_derivatives(std::vector<double> values,
+                           double delta,
+                           double epsilon_absolute,
+                           double epsilon_relative) {
     // compute all values
     compute_values(values);
     // make a copy of the derivatives
@@ -254,10 +295,10 @@ bool ComputationalGraph::check_derivatives(std::vector<double> values,
         }
         // check against derivatives
         int num_vars = dependent_nodes.size();
-        DEBUG_EXPECT(1, dependent_nodes.size()==num_vars &&
-                     dependent_arcs.size()==num_vars &&
-                     values_1.size()==num_vars &&
-                     values_2.size()==num_vars);
+        DEBUG_EXPECT(1, (int)dependent_nodes.size()==num_vars &&
+                     (int)dependent_arcs.size()==num_vars &&
+                     (int)values_1.size()==num_vars &&
+                     (int)values_2.size()==num_vars);
         for(int idx : Range(num_vars)) {
             DEBUG_OUT(2,"Checking derivative of " << node_labels[dependent_nodes[idx]] <<
                       " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
@@ -279,7 +320,7 @@ bool ComputationalGraph::check_derivatives(std::vector<double> values,
     return ok;
 }
 
-void ComputationalGraph::plot_graph(const char* file_name) const {
+CG & CG::plot_graph(const char* file_name) {
     graph_t::NodeMap<QString> node_properties(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
         node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
@@ -293,9 +334,10 @@ void ComputationalGraph::plot_graph(const char* file_name) const {
             arg(arc_values[arc]);
     }
     util::graph_to_pdf(file_name, graph, "", &node_properties, "", &arc_properties);
+    return *this;
 }
 
-double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
+double CG::evaluate_node(const node_t & node, TYPE e) {
     switch(e) {
     case VALUES:
     {
@@ -323,7 +365,7 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
             for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
                 ++input_size;
             }
-            if(input_size!=variables.size()) {
+            if(input_size!=(int)variables.size()) {
                 DEBUG_WARNING("Number of input values ("
                               << input_size
                               << ") does not match number of variables given ("
@@ -368,9 +410,9 @@ double ComputationalGraph::evaluate_node(const node_t & node, TYPE e) {
     }
 }
 
-ComputationalGraph::node_t ComputationalGraph::add_node(QString label,
-                                                          std::vector<QString> variables,
-                                                          function_t function) {
+CG::node_t CG::add_node(QString label,
+                        std::vector<QString> variables,
+                        function_t function) {
     node_t node = graph.addNode();
     node_labels[node] = label;
     node_values[node] = NAN;
@@ -380,16 +422,16 @@ ComputationalGraph::node_t ComputationalGraph::add_node(QString label,
     return node;
 }
 
-ComputationalGraph::arc_t ComputationalGraph::add_arc(node_t from,
-                                                        node_t to,
-                                                        function_t function) {
+CG::arc_t CG::add_arc(node_t from,
+                      node_t to,
+                      function_t function) {
     arc_t arc = graph.addArc(from, to);
     arc_values[arc] = NAN;
     arc_functions[arc] = function;
     return arc;
 }
 
-vector<double> ComputationalGraph::get_input_differentials() const {
+vector<double> CG::get_input_differentials() const {
     vector<double> values;
     for(node_t node : input_nodes) {
         values.push_back(node_differentials[node]);
@@ -397,7 +439,7 @@ vector<double> ComputationalGraph::get_input_differentials() const {
     return values;
 }
 
-vector<double> ComputationalGraph::get_output_differentials() const {
+vector<double> CG::get_output_differentials() const {
     vector<double> values;
     for(node_t node : output_nodes) {
         values.push_back(node_differentials[node]);
@@ -405,7 +447,7 @@ vector<double> ComputationalGraph::get_output_differentials() const {
     return values;
 }
 
-vector<double> ComputationalGraph::get_output_values() const {
+vector<double> CG::get_output_values() const {
     vector<double> values;
     for(node_t node : output_nodes) {
         values.push_back(node_values[node]);
@@ -413,16 +455,18 @@ vector<double> ComputationalGraph::get_output_values() const {
     return values;
 }
 
-void ComputationalGraph::set_input_nodes(std::vector<node_t> n) {
+CG & CG::set_input_nodes(std::vector<node_t> n) {
     input_nodes = n;
+    return *this;
 }
 
-void ComputationalGraph::set_output_nodes(std::vector<node_t> n) {
+CG & CG::set_output_nodes(std::vector<node_t> n) {
     output_nodes = n;
+    return *this;
 }
 
-bool ComputationalGraph::check_graph_structure(bool reset_input_nodes,
-                                                bool reset_output_nodes) {
+bool CG::check_graph_structure(bool reset_input_nodes,
+                               bool reset_output_nodes) {
     bool ok = true;
 
     //==================//
@@ -493,4 +537,13 @@ bool ComputationalGraph::check_graph_structure(bool reset_input_nodes,
     }
 
     return ok;
+}
+
+bool CG::includes(std::vector<node_t> nodes, std::vector<node_t> subnodes) {
+    set<node_t> node_set(nodes.begin(), nodes.end());
+    set<node_t> subnode_set(subnodes.begin(), subnodes.end());
+    return std::includes(
+        node_set.begin(), node_set.end(),
+        subnode_set.begin(), subnode_set.end()
+        );
 }

@@ -112,53 +112,67 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     cg.add_arc(v4_node, x_node, [](vector<double> v)->double{return cos(v[0]);});
     cg.add_arc(v4_node, y_node, [](vector<double> v)->double{return -sin(v[0]);});
 
+    // input values
+#define VALUES 0.1,3,30
+
     // fill lists of input/output nodes
-    cg.set_input_nodes({alpha_node, w_node, t_node});
-    cg.set_output_nodes({x_node, y_node});
+    vector<node_t> input_nodes({alpha_node, w_node, t_node});
+    vector<node_t> output_nodes({x_node, y_node});
+    cg.set_input_nodes(input_nodes);
+    cg.set_output_nodes(output_nodes);
 
     // check graph structure and in-/output nodes
     {
         bool ok;
         EXPECT_TRUE(ok=cg.check_graph_structure()) <<
-            "Aborting tests to avoid initinte loop during computation";
+            "Aborting tests to avoid infinite loop during computation";
         if(!ok) return;
     }
     // check derivatives
-    EXPECT_TRUE(cg.check_derivatives({0.1,3,30}));
+    EXPECT_TRUE(cg.check_derivatives({VALUES}));
 
     // compute values and check
-    cg.compute_values({0.1,3,30});
-    vec_double_1D output_vals = cg.get_output_values();
-    vec_double_1D analytical_output_vals({x(0.1,3,30),y(0.1,3,30)});
-    EXPECT_EQ(output_vals, analytical_output_vals);
+    EXPECT_EQ(cg.compute_values({VALUES}).get_output_values(),
+              cg.update_values({VALUES},input_nodes).get_output_values());
+    EXPECT_EQ(cg.get_output_values(),
+              vec_double_1D({x(VALUES),y(VALUES)}));
+
+    // cg.update_values({0.2},{alpha_node});
+    // return;
 
     // compute derivatives via forward accumulation
-    cg.forward_accumulation({0.1,3,30},{1,0,0});
-    vec_double_1D output_diff_1 = cg.get_output_differentials();
-    cg.forward_accumulation({0.1,3,30},{0,1,0});
-    vec_double_1D output_diff_2 = cg.get_output_differentials();
-    cg.forward_accumulation({0.1,3,30},{0,0,1});
-    vec_double_1D output_diff_3 = cg.get_output_differentials();
+    vec_double_1D output_diff_1 = cg.forward_accumulation({VALUES},{1,0,0}).get_output_differentials();
+    EXPECT_EQ(cg.update_differentials_forward({1,0,0},input_nodes).get_output_differentials(),
+              output_diff_1);
+    vec_double_1D output_diff_2 = cg.forward_accumulation({VALUES},{0,1,0}).get_output_differentials();
+    EXPECT_EQ(cg.update_differentials_forward({0,1,0},input_nodes).get_output_differentials(),
+              output_diff_2);
+    vec_double_1D output_diff_3 = cg.forward_accumulation({VALUES},{0,0,1}).get_output_differentials();
+    EXPECT_EQ(cg.update_differentials_forward({0,0,1},input_nodes).get_output_differentials(),
+              output_diff_3);
 
     // compute derivatives via reverse accumulation
-    cg.reverse_accumulation({0.1,3,30},{1,0});
-    vec_double_1D input_diff_1 = cg.get_input_differentials();
-    cg.reverse_accumulation({0.1,3,30},{0,1});
-    vec_double_1D input_diff_2 = cg.get_input_differentials();
+    vec_double_1D input_diff_1 = cg.reverse_accumulation({VALUES},{1,0}).get_input_differentials();
+    EXPECT_EQ(cg.update_differentials_reverse({1,0},output_nodes).get_input_differentials(),
+              input_diff_1);
+    vec_double_1D input_diff_2 = cg.reverse_accumulation({VALUES},{0,1}).get_input_differentials();
+    EXPECT_EQ(cg.update_differentials_reverse({0,1},output_nodes).get_input_differentials(),
+              input_diff_2);
 
     // construct matrices of patrial derivatives
     vec_double_2D input_output_diff({output_diff_1, output_diff_2, output_diff_3});
     vec_double_2D output_input_diff({input_diff_1, input_diff_2});
     vec_double_2D analytical_input_output_diff({
-            {dx_dalpha(0.1,3,30), dy_dalpha(0.1,3,30)},
-            {dx_dw(0.1,3,30),     dy_dw(0.1,3,30)},
-            {dx_dt(0.1,3,30),     dy_dt(0.1,3,30)}});
+            {dx_dalpha(VALUES), dy_dalpha(VALUES)},
+            {dx_dw(VALUES),     dy_dw(VALUES)},
+            {dx_dt(VALUES),     dy_dt(VALUES)}});
 
 
     for(int input_idx : Range(3)) {
         for(int output_idx : Range(2)) {
             // compensate for numerical rounding errors, which might be
-            // different in forward and reverse propagation
+            // different in forward propagation, reverse propagation, and
+            // analytical computation
             EXPECT_NEAR(input_output_diff[input_idx][output_idx],
                         output_input_diff[output_idx][input_idx], 1e-10);
             EXPECT_NEAR(analytical_input_output_diff[input_idx][output_idx],
