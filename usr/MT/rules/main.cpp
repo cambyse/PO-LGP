@@ -48,7 +48,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       totalIndicators++;
       
       //-- for each value of each variable: a factor enforcing equality or neutrality depending on change value
-      f = new infer::Factor( ARRAY(v_pre,v_mod,v_post),  change_coupling(), "CHANGE" ); //factor's last variable is ``OR output''
+      f = new infer::Factor( {v_pre,v_mod,v_post},  change_coupling(), "CHANGE" ); //factor's last variable is ``OR output''
       facs.append(f);
     }else for(j=0; j<s->dim; j++){
       //-- for each value of each variable: an indicator, a modification indicator, and a next-time-step indicate
@@ -59,7 +59,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       totalIndicators++;
 
       //-- for each value of each variable: a factor enforcing equality or neutrality depending on change value
-      f = new infer::Factor( ARRAY(v_pre,v_mod,v_post),  change_coupling(), "CHANGE" ); //factor's last variable is ``OR output''
+      f = new infer::Factor( {v_pre,v_mod,v_post},  change_coupling(), "CHANGE" ); //factor's last variable is ``OR output''
       facs.append(f);
     }
   }
@@ -83,7 +83,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       v=listFindByName(vars, txt);
       lhsVars.append(v);
     }
-    f = new infer::Factor( cat(lhsVars, ARRAY(rule_var)), "AND" ); //factor's last variable is ``AND output''
+    f = new infer::Factor( cat(lhsVars, {rule_var}), "AND" ); //factor's last variable is ``AND output''
     f->specialType = infer::AND;
     facs.append(f);
 
@@ -94,7 +94,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       indName(r->values(j),<<'\'');
       v=listFindByName(vars, txt);
       //the pair-wise factor's table is determined by the coupling weight r->weight
-      facs.append(new infer::Factor( ARRAY(rule_var,v), weighted_coupling(r->weight), "rule_out" ));
+      facs.append(new infer::Factor( {rule_var,v}, weighted_coupling(r->weight), "rule_out" ));
       rulesThatModIndicator(v->id).append(rule_var); //MT: Warning: this will fail if the global VarCount is not set zero before calling this...
     }
   }
@@ -105,7 +105,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       indName(0,<<"_mod");
       v=listFindByName(vars, txt);
       //WARNING: s->id+1 requires that the value' has 'id-plus-1' than the value_mod...
-      f = new infer::Factor( cat(rulesThatModIndicator(v->id+1), ARRAY(v)), "OR" ); //factor's last variable is ``OR output''
+      f = new infer::Factor( cat(rulesThatModIndicator(v->id+1), {v}), "OR" ); //factor's last variable is ``OR output''
       f->specialType = infer::OR;
       facs.append(f);
     }else for(j=0; j<s->dim; j++){
@@ -113,7 +113,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       indName(j,<<"_mod");
       v=listFindByName(vars, txt);
       //WARNING: s->id+1 requires that the value' has 'id-plus-1' than the value_mod...
-      f = new infer::Factor( cat(rulesThatModIndicator(v->id+1), ARRAY(v)), "OR" ); //factor's last variable is ``OR output''
+      f = new infer::Factor( cat(rulesThatModIndicator(v->id+1), {v}), "OR" ); //factor's last variable is ``OR output''
       f->specialType = infer::OR;
       facs.append(f);
     }

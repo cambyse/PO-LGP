@@ -98,7 +98,7 @@ arr create_endpose(ors::KinematicWorld& G) {
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   arr x = P.x0;
   keyframeOptimizer(x, P, false, 2);
@@ -142,7 +142,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   MotionProblemFunction MF(P);
   arr x = init_trajectory;

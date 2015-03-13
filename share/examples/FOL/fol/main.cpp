@@ -36,9 +36,9 @@ void testFolLoadFile(){
   Item *sub = new Item_typed<KeyValueGraph>(G, new KeyValueGraph, true);
   sub->kvg().isItemOfParentKvg = sub;
   G.checkConsistency();
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {s, consts(0)}, NULL, false);
+  new Item_typed<bool>(sub->kvg(), {}, {s, consts(0)}, NULL, false);
   G.checkConsistency();
-  new Item_typed<bool>(sub->kvg(), STRINGS(), {s, consts(2)}, NULL, false);
+  new Item_typed<bool>(sub->kvg(), {}, {s, consts(2)}, NULL, false);
   G.checkConsistency();
 }
 

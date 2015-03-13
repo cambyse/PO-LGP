@@ -51,9 +51,9 @@ void TEST(Basics){
   CHECK_EQ(a[1],a[2],"");
 
   //setting arrays ``by hand''
-  a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
+  a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to MT::Array<double>({ ... })
   cout <<"\nset by hand:\n" <<a <<endl;
-  ints = ARRAY<int>(0, -1, -2, -3, -4);
+  ints = { 0, -1, -2, -3, -4 };
   cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
   CHECK_EQ(a(2),-2,"");

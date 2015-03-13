@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
     else {
       subkvg = new KeyValueGraph();
       subkvg->append("lock", lock);
-      kvg.append(STRINGS(o1, o2), subkvg);
+      kvg.append({o1, o2}, subkvg);
     }
   }
 

@@ -45,7 +45,7 @@ void way1(){
   S.addVariable(&s, "s");
 #endif
 
-  x->set() = ARRAY(1., 2., 3.);
+  x->set() = {1., 2., 3.};
 
 #if 1 //serial
   m->open();
@@ -81,7 +81,7 @@ void way2(){
 
   cout <<S <<endl;
 
-  S.x.set() = ARRAY(1., 2., 3.);
+  S.x.set() = {1., 2., 3.};
 
   S.open();
   S.step();

@@ -92,11 +92,11 @@ struct sRosCom_KinectSync{
   ros::Subscriber sub_depth;
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    base->kinect_rgb.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
+    base->kinect_rgb.set() = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
   }
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    byteA data = ARRAY<byte>(msg->data);
+    byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
     base->kinect_depth.set() = ref;

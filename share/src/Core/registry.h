@@ -40,12 +40,12 @@ void initRegistry(int argc, char *argv[]);
 
 #define REGISTER_ITEM(T, key, value, ownsValue) \
   RUN_ON_INIT_BEGIN(key) \
-  new Item_typed<T>(registry(), STRINGS_1(#key), ItemL(), value, ownsValue); \
+  new Item_typed<T>(registry(), {#key}, ItemL(), value, ownsValue); \
   RUN_ON_INIT_END(key)
 
 #define REGISTER_ITEM2(T, key1, key2, value, ownsValue) \
   RUN_ON_INIT_BEGIN(key1##_##key2) \
-  new Item_typed<T>(registry(), STRINGS_2(#key1,#key2), ItemL(), value, ownsValue); \
+  new Item_typed<T>(registry(), {MT::String(#key1), MT::String(#key2)}, ItemL(), value, ownsValue); \
   RUN_ON_INIT_END(key1##_##key2)
 
 

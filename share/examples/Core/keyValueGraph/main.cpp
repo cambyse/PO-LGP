@@ -62,7 +62,7 @@ REGISTER_TYPE(Something)
 
 void TEST(Manual){
   KeyValueGraph G;
-  G.append(STRINGS("hallo"), ItemL(), new Something(3), true);
+  G.append({"hallo"}, {}, new Something(3), true);
   cout <<G <<endl;
 }
 

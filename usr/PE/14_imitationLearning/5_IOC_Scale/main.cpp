@@ -281,7 +281,7 @@ void simpleMotion(){
   c = MP.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(120,120,refGoal2,1e3);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.1));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -320,7 +320,7 @@ void simpleMotion(){
   }
 
   TaskCost *c3 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","table",0.1));
-  MP2.setInterpolatingCosts(c3, MotionProblem::constant, ARRAY(0.), 1.);
+  MP2.setInterpolatingCosts(c3, MotionProblem::constant, {0.}, 1.);
 
   MP2.x0 = {0.,0.,0.};
 

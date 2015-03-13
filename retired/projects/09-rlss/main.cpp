@@ -56,7 +56,7 @@ int main(int argc,char **argv){
   //handup->x_target = ARR(0.,0.,1.);   //set the target to pointing upwards (in world coordinates)
 
   // tell SOC that these variables exists!
-  soc.setTaskVariables(ARRAY(pos,col));  //,handup));
+  soc.setTaskVariables({pos,col});  //,handup));
 
 
   //===========================================================================

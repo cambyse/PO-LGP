@@ -179,7 +179,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(name) \
-  new Item_typed<Type>(registry(), STRINGS_2("Decl_Module", #name), ItemL(), new Type_typed<name, void>(NULL,NULL), true); \
+  new Item_typed<Type>(registry(), {MT::String("Decl_Module"), MT::String(#name)}, ItemL(), new Type_typed<name, void>(NULL,NULL), true); \
   RUN_ON_INIT_END(name)
 
 

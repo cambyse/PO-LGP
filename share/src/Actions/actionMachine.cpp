@@ -235,18 +235,18 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
-      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
+      Item *newit = KB.data()->append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
       if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }
     if(a->indicateTimeout(*this)){
-      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, timeoutSymbol}, new bool(true), true);
+      Item *newit = KB.data()->append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
       if(getEqualFactInKB(KB(), newit)) delete newit;
       else changes=true;
     }
   }
 //  if(getContactForce()>5.){
-//    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
+//    Item *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
 //    if(getEqualFactInKB(KB(), newit)) delete newit;
 //    else changes=true;
 //  }

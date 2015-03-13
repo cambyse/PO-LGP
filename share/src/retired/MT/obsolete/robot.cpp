@@ -401,8 +401,8 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   //arr I2(7, 14); I2.setDiag(1.);
   //TaskVariable *TV_qhand= new TaskVariable("qhand", ors, qLinearTVT, 0, 0, 0, 0, I2);
   
-  TVall.append(ARRAY(TV_eff, TV_q, TV_rot, TV_col, TV_lim, TV_skin));
-  TVall.append(ARRAY(TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3));
+  TVall.append({TV_eff, TV_q, TV_rot, TV_col, TV_lim, TV_skin});
+  TVall.append({TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3});
   ctrl->sys.setTaskVariables(TVall);
   
   TV_x_yprec  = MT::Parameter<double>("TV_x_yprec", 1e3);

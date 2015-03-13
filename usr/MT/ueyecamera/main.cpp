@@ -16,20 +16,20 @@ struct UEyeSystem: System {
   //ACCESS(byteA, ueye_rgb_4);
 
   UEyeSystem(){
-    //addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), Module_Thread::loopWithBeat, 0.005);
-    addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), Module_Thread::loopFull);
-    addModule("VideoEncoderX264", "ENCODER_1", STRINGS("ueye_rgb_1"), Module_Thread::listenFirst);
-    addModule("ImageViewer", "VIEWER_1", STRINGS("ueye_rgb_1"), Module_Thread::listenFirst);
+    //addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module_Thread::loopWithBeat, 0.005);
+    addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module_Thread::loopFull);
+    addModule("VideoEncoderX264", "ENCODER_1", {"ueye_rgb_1"}, Module_Thread::listenFirst);
+    addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"}, Module_Thread::listenFirst);
 
-    //addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), Module_Thread::loopWithBeat, 0.005);
-    //addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), Module_Thread::loopFull);
-    //addModule("VideoEncoder", "ENCODER_3", STRINGS("ueye_rgb_3"), Module_Thread::listenFirst);
-    //addModule("ImageViewer", "VIEWER_3", STRINGS("ueye_rgb_3"), Module_Thread::listenFirst);
+    //addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module_Thread::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module_Thread::loopFull);
+    //addModule("VideoEncoder", "ENCODER_3", {"ueye_rgb_3"}, Module_Thread::listenFirst);
+    //addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"}, Module_Thread::listenFirst);
 
-    //addModule("UEyePoller", "POLLER_5", STRINGS("ueye_rgb_5"), Module_Thread::loopWithBeat, 0.005);
-    //addModule("UEyePoller", "POLLER_4", STRINGS("ueye_rgb_4"), Module_Thread::loopFull);
-    //addModule("VideoEncoder", "ENCODER_4", STRINGS("ueye_rgb_4"), Module_Thread::listenFirst);
-    //addModule("ImageViewer", "VIEWER_4", STRINGS("ueye_rgb_4"), Module_Thread::listenFirst);
+    //addModule("UEyePoller", "POLLER_5", {"ueye_rgb_5"}, Module_Thread::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_4", {"ueye_rgb_4"}, Module_Thread::loopFull);
+    //addModule("VideoEncoder", "ENCODER_4", {"ueye_rgb_4"}, Module_Thread::listenFirst);
+    //addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"}, Module_Thread::listenFirst);
     connect();
   }
 };

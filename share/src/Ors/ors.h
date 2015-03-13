@@ -349,7 +349,7 @@ struct GraphOperator{
 extern ors::Body& NoBody;
 extern ors::Shape& NoShape;
 extern ors::Joint& NoJoint;
-extern ors::KinematicWorld& NoGraph;
+extern ors::KinematicWorld& NoWorld;
 
 
 //===========================================================================

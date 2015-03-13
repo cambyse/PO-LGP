@@ -69,7 +69,7 @@ uint ors::KinematicWorld::setJointStateCount = 0;
 ors::Body& NoBody = *((ors::Body*)NULL);
 ors::Shape& NoShape = *((ors::Shape*)NULL);
 ors::Joint& NoJoint = *((ors::Joint*)NULL);
-ors::KinematicWorld& NoGraph = *((ors::KinematicWorld*)NULL);
+ors::KinematicWorld& NoWorld = *((ors::KinematicWorld*)NULL);
 
 //===========================================================================
 //

@@ -24,7 +24,7 @@ void play(){
   SineSound S;
   Audio audio;
 
-  createVariables(ARRAY<Module*>(&gamepad));
+  createVariables(MT::Array<Module*>({&gamepad}));
 
   gamepad.open();
   audio.open(S);

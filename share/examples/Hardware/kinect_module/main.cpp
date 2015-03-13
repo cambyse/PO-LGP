@@ -11,13 +11,13 @@ void TEST(KinectModules) {
     MySystem(){
       addModule<KinectPoller>(NULL, Module_Thread::loopWithBeat, .1); //this is callback driven...
       addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
-      addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
-      addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
+      addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module_Thread::listenFirst);
+      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module_Thread::listenFirst);
       addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
-      addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
-//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
+      addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module_Thread::listenFirst);
+//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module_Thread::listenFirst);
 //      m_enc->set_rgb(true);
-//      addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
+//      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"}, Module_Thread::listenFirst);
       connect();
     }
   } S;

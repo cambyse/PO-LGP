@@ -128,8 +128,8 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(T *x, bool ownsValue);
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue);
   template<class T> Item *append(const StringA& keys, T *x, bool ownsValue) { return append(keys, ItemL(), x, ownsValue); }
-  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x, ownsValue); }
-  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append({MT::String(key)}, ItemL(), x, ownsValue); }
+  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append({MT::String(key1), MT::String(key2)}, ItemL(), x, ownsValue); }
   Item *append(const uintA& parentIdxs);
 
   void appendDict(const std::map<std::string, std::string>& dict);

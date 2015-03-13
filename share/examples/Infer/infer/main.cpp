@@ -216,9 +216,9 @@ void testHMMInference(uint T) {
   vars.append(obs);
   
   // Specifying some evidence
-  factors.append(new infer::Factor(ARRAY(states(0)), ARR(0.0, 1.0)));
-  factors.append(new infer::Factor(ARRAY(states(1)), ARR(1.0, 0.0)));
-  factors.append(new infer::Factor(ARRAY(states(5)), ARR(1.0, 0.0)));
+  factors.append(new infer::Factor({states(0)}, ARR(0.0, 1.0)));
+  factors.append(new infer::Factor({states(1)}, ARR(1.0, 0.0)));
+  factors.append(new infer::Factor({states(5)}, ARR(1.0, 0.0)));
 
   arr p1,p2;
 

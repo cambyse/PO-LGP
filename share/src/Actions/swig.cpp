@@ -43,7 +43,7 @@ void ActionSwigInterface::startActivity(intV literal, dict parameters){
 
   ItemL parents;
   for(auto i:literal) parents.append(KB(i));
-  KB.append<bool>(STRINGS_0(), parents, NULL, false);
+  KB.append<bool>({}, parents, NULL, false);
   s->activity.machine->KB.deAccess();
 }
 
@@ -79,7 +79,8 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 
   Item *symbol = KB.append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
-  KB.append<Graph>(STRINGS_1("Task"), {symbol}, td, true);
+  KB.append<Graph>({"Task"}, {symbol}, td, true);
+  KB.checkConsistency();
   cout <<KB <<endl;
   s->activity.machine->KB.deAccess();
   s->activity.machine->parseTaskDescription(*td);

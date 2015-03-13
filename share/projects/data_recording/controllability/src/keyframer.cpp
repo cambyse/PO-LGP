@@ -2524,8 +2524,8 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   String subj_dPos = STRING(subj << "_dPos");
   String subj_dQuat = STRING(subj << "_dQuat");
@@ -2979,7 +2979,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   kvg.append("plot", plot);
 #endif
 
-  kvg.append(STRINGS("hmm", subj, obj), hmm);
+  kvg.append({"hmm", subj, obj}, hmm);
   // }}}
 }
 #undef with_object_emission
@@ -3006,8 +3006,8 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
@@ -3421,8 +3421,8 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   StringA bA_dPos, bA_dQuat, bA_dPosSmooth, bA_dQuatSmooth, bA_dPosSmoothSpeed, bA_dQuatSmoothSpeed;
 
@@ -3851,7 +3851,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
 void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha) {
   computeFilter(STRING("pos"), alpha, true);
   computeSmooth(STRING("pos"), alpha, true);
-  computeSpeed(STRINGS("pos", "posFilter", "posSmooth"), true);
+  computeSpeed({"pos", "posFilter", "posSmooth"}, true);
   arr pSpeed_orig = g4d().query("posSpeed", bA);
   arr pSpeed_smooth = g4d().query("posSmoothSpeed", bA);
   arr pSpeed_filter = g4d().query("posFilterSpeed", bA);

@@ -9,21 +9,21 @@ void OrsGraph2RelationalGraph(KeyValueGraph& G, ors::KinematicWorld& W){
 
   //do this first to ensure they have the same indexing
   for(ors::Body *b:world->bodies){
-    G.append<ors::Body>(STRINGS("body", b->name), b);
+    G.append<ors::Body>({"body", b->name}, b);
   }
 
   for(ors::Body *b:world->bodies){
-    G.append<ors::Transformation>(STRINGS("pose"), ARRAY(G(b->index)), new ors::Transformation(b->X));
-//    if(b->ats["ctrlable"]) G.append<bool>(STRINGS("controllable"), ARRAY(G(b->index)), NULL);
-    if(b->ats["canGrasp"]) G.append<bool>(STRINGS("canGrasp"), ARRAY(G(b->index)), NULL);
-    if(b->ats["fixed"])    G.append<bool>(STRINGS("fixed"), ARRAY(G(b->index)), NULL);
+    G.append<ors::Transformation>({"pose"}, ARRAY(G(b->index)), new ors::Transformation(b->X));
+//    if(b->ats["ctrlable"]) G.append<bool>({"controllable"}, ARRAY(G(b->index)), NULL);
+    if(b->ats["canGrasp"]) G.append<bool>({"canGrasp"}, ARRAY(G(b->index)), NULL);
+    if(b->ats["fixed"])    G.append<bool>({"fixed"}, ARRAY(G(b->index)), NULL);
   }
 
   for(ors::Joint *j:world->joints){
     if(j->type==ors::JT_fixed)
-      G.append<bool>(STRINGS("rigid"), ARRAY(G(j->from->index), G(j->to->index)), NULL);
+      G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
     if(j->type==ors::JT_transXYPhi)
-      G.append<bool>(STRINGS("support"), ARRAY(G(j->from->index), G(j->to->index)), NULL);
+      G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   }
 
 }

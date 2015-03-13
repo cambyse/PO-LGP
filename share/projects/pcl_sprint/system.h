@@ -38,11 +38,11 @@ struct PCL_ModuleSystem:System{
     }
 #endif
 
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module_Thread::listenFirst);
 //      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
-//      addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
+//      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module_Thread::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
+    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module_Thread::listenFirst);
     addModule<ArrCloud2PclCloud>(NULL, Module_Thread::listenFirst);
     connect();
   }

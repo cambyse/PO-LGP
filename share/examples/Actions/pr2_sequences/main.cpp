@@ -47,7 +47,7 @@ void rewriteGraph(){
 
   for(Item* rule:rules){
     Graph& Rule=rule->kvg();
-    Item *rit = nice.append<bool>(STRINGS_1("box"), NULL, false);
+    Item *rit = nice.append<bool>({"box"}, NULL, false);
     for(Item* prec:Rule) if(prec->parents.N){
       Item *pit=nice[prec->parents(0)->keys(1)];
       if(pit){

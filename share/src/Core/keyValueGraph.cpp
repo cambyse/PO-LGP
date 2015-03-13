@@ -359,7 +359,7 @@ KeyValueGraph::~KeyValueGraph() {
 Item *KeyValueGraph::append(const uintA& parentIdxs) {
   ItemL parents(parentIdxs.N);
   for(uint i=0;i<parentIdxs.N; i++) parents(i) = ItemL::elem(parentIdxs(i));
-  return append<int>(STRINGS_1(ItemL::N), parents, NULL, false);
+  return append<int>({STRING(ItemL::N)}, parents, NULL, false);
 }
 
 void KeyValueGraph::appendDict(const std::map<std::string, std::string>& dict){

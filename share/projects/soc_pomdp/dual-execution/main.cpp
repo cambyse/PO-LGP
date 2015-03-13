@@ -35,20 +35,20 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   world.getBodyByName("target")->X.pos.z = height + 0.12;
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
 
 
 
     // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
 
 
 
  //P.addTask("collisionConstraints", new CollisionConstraint());
   //Task *coll = P.addTask("collisionConstraints", new CollisionConstraint());
 
-  //P.setInterpolatingCosts(coll, MotionProblem::constant, ARRAY(0.), 1.);
+  //P.setInterpolatingCosts(coll, MotionProblem::constant, {0.}, 1.);
 
   Task *sticky = P.addTask("planeStickiness", new ConstraintStickiness(cons->map));
   sticky->setCostSpecs(0, P.T, {0.}, 1.);

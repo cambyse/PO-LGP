@@ -96,7 +96,7 @@ if (current<5) orient.set(0,1,0);
 //if (current<5) MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
  // MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
   //c = MP2.addTask("orientation", new DefaultTaskMap(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
-  //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,1.), 1e3);
+  //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,1.}, 1e3);
 /*
   c = MP2.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -104,7 +104,7 @@ if (current<5) orient.set(0,1,0);
 */
  //   c = MP2.addTask("collision",
  //                  new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
- //   MP2.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+ //   MP2.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
  
 cout << "TEST\n";
    MotionProblemFunction MF2(MP2);
@@ -154,7 +154,7 @@ void testPickAndPlace(const char* target,arr finalpos){
   MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
 
 for (uint i=0;i<5;i++)  {
-   // finalpos = ARRAY(0.0,-1.0,0.8);
+   // finalpos = {0.0,-1.0,0.8};
 //    finalpos = ARRAY(G.getBodyByName("chair_sitting")->X.pos);
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName(targets(i))->index, 2);
@@ -414,10 +414,10 @@ for (uint i=0;i<5;i++)  {
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-// testPickAndPlace("leg4",ARRAY(0.0,-1.0,0.8));
+// testPickAndPlace("leg4",{0.0,-1.0,0.8});
   AssembleChair();
 // test_Loading_submeshes();
-//testPickAndPlace("leg4",ARRAY(1.0,-1.0,0.5));
- // pickandplace(ARRAY(1.0,1.0,0.5));
+//testPickAndPlace("leg4",{1.0,-1.0,0.5});
+ // pickandplace({1.0,1.0,0.5});
   return 0;
 }

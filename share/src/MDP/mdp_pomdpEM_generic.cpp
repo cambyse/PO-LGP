@@ -60,22 +60,22 @@ double mdp::pomdpEM_structured(
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="state(t+1)"){       x_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="observation(t+1)"){ y_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   
-  infer::VariableList mdp_leftVars=ARRAY(x);
-  infer::VariableList mdp_rightVars=ARRAY(x_);
+  infer::VariableList mdp_leftVars={x};
+  infer::VariableList mdp_rightVars={x_};
   
   //----- define factors for the mdp components
   //start
-  infer::Factor Fx(ARRAY(x));       Fx.setP(mdp.Px);
-  infer::Factor Fy(ARRAY(y));       Fy.setUniform();
+  infer::Factor Fx({x});       Fx.setP(mdp.Px);
+  infer::Factor Fy({y});       Fy.setUniform();
   //transition
-  infer::Factor Fxax(ARRAY(x_, a, x));  Fxax.setP(mdp.Pxax);
-  infer::Factor Fyxa(ARRAY(y_, x_, a)); Fyxa.setP(mdp.Pyxa);
+  infer::Factor Fxax({x_, a, x});  Fxax.setP(mdp.Pxax);
+  infer::Factor Fyxa({y_, x_, a}); Fyxa.setP(mdp.Pyxa);
   //reward
-  infer::Factor FRax(ARRAY(a, x));     FRax.setP(mdp_Rax);
+  infer::Factor FRax({a, x});     FRax.setP(mdp_Rax);
   
-  infer::FactorList mdp_transitions = ARRAY(&Fyxa, &Fxax);
-  infer::FactorList mdp_inits       = ARRAY(&Fy, &Fx);
-  infer::FactorList mdp_rewards     = ARRAY(&FRax);
+  infer::FactorList mdp_transitions = {&Fyxa, &Fxax};
+  infer::FactorList mdp_inits       = {&Fy, &Fx};
+  infer::FactorList mdp_rewards     = {&FRax};
   
   infer::VariableList leftVars=cat(fsc.leftVars, mdp_leftVars);
   infer::VariableList rightVars=cat(fsc.rightVars, mdp_rightVars);
@@ -156,10 +156,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList twotimeslice = cat({&Fbeta}, fsc.transFacs, mdp_transitions, {&Falpha});
   
   //term1: derived from the immediate reward model
-  infer::FactorList immediateR = cat(mdp_rewards, fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList immediateR = cat(mdp_rewards, fsc.transFacs, mdp_transitions, {&Falpha});
   
   //loop through all transition factors of the controller
   for(i=0; i<fsc.transFacs.N; i++){

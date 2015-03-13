@@ -23,9 +23,9 @@ void TEST(ModuleSorter){
   System S;
 #if 0
   for(uint i=0;i<N;i++) S.addVariable<int>(STRING("int"<<i));
-  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), ARRAY<uint>(i-1, i));
+  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {i-1, i});
 #else
-  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), STRINGS_2("int"<<i-1, "int"<<i));
+  for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {STRING("int"<<i-1),STRING("int"<<i)});
   S.connect();
 #endif
 

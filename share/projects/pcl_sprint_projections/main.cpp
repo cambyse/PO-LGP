@@ -36,14 +36,14 @@ struct MySystem:System{
 //      addModule<RosCom_ArmCamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
     }
 //    addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftArm"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightArm"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftEye"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightEye"), Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftArm"}, Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightArm"}, Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftEye"}, Module_Thread::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module_Thread::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
+    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module_Thread::listenFirst);
     connect();
   }
 };

@@ -180,8 +180,8 @@ void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint pare
   for(ors::Body *b: world.bodies) deactivate(b->shapes);
   //deactivate along edges...
   for_list(ors::Joint, e, world.joints) {
-    //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
-    deactivate(ARRAY(e->from, e->to));
+    //cout <<"deactivating edge pair"; listWriteNames({e->from, e->to}, cout); cout <<endl;
+    deactivate(MT::Array<ors::Body*>({ e->from, e->to }));
   }
   //deactivate along trees...
   for_list(ors::Body,  b,  world.bodies) {

@@ -47,7 +47,7 @@ void testSliding() {
   c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(obj->X.pos), 1e4);
 
   c = MP.addTask("quat", new DefaultTaskMap(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
-  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(0.,0.,-1.), 1e3);
+  c->setCostSpecs(MP.T/2, MP.T/2, {0.,0.,-1.}, 1e3);
 
   c = MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
   c->setCostSpecs(MP.T, MP.T, ARRAY(tar->X.pos), 1e3);

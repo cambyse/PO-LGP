@@ -13,21 +13,21 @@ void TEST(ModuleVision) {
   S.addModule("OpencvCamera", NULL, Module_Thread::loopFull);
   S.addModule("CvtGray");
   S.addModule("MotionFilter");
-  S.addModule("DifferenceFilter", NULL, STRINGS("rgb", "ground", "diffImage"));
-  S.addModule("CannyFilter", NULL, STRINGS("gray", "canny"));
-  S.addModule("Patcher", NULL, STRINGS("rgb", "patches"));
-  //  S.addModule("SURFer", NULL, STRINGS("gray", "features"));
+  S.addModule("DifferenceFilter", NULL, {"rgb", "ground", "diffImage"});
+  S.addModule("CannyFilter", NULL, {"gray", "canny"});
+  S.addModule("Patcher", NULL, {"rgb", "patches"});
+  //  S.addModule("SURFer", NULL, {"gray", "features"});
 
-  S.addModule("ImageViewer", NULL, STRINGS("rgb"));
-  S.addModule("ImageViewer", NULL, STRINGS("gray"));
-  S.addModule("ImageViewer", NULL, STRINGS("motion"));
-  S.addModule("ImageViewer", NULL, STRINGS("diffImage"));
-  S.addModule("ImageViewer", NULL, STRINGS("canny"));
-  S.addModule<GenericDisplayViewer<Patching> >(NULL, STRINGS("patches"));
-//  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, STRINGS("features"));
+  S.addModule("ImageViewer", NULL, {"rgb"});
+  S.addModule("ImageViewer", NULL, {"gray"});
+  S.addModule("ImageViewer", NULL, {"motion"});
+  S.addModule("ImageViewer", NULL, {"diffImage"});
+  S.addModule("ImageViewer", NULL, {"canny"});
+  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
+//  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, {"features"});
 
-  //  S.addModule("VideoEncoder", NULL, STRINGS("rgb"), Module_Thread::listenFirst);
-  //  S.addModule("VideoEncoder", "MyMotionWriter", STRINGS("motion"), Module_Thread::listenFirst);
+  //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module_Thread::listenFirst);
+  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"}, Module_Thread::listenFirst);
 
   S.connect();
 
