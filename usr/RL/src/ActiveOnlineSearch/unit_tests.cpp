@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "../util/pretty_printer.h"
 #include "../util/util.h"
 #include "../util/ND_vector.h"
 
@@ -15,8 +16,145 @@
 using namespace ND_vector;
 using util::Range;
 using std::vector;
+using std::cout;
+using std::endl;
+
+// likelihood
+vec_double_1D p_y_I_x0_t0(double p) { return vec_double_1D({p,1-p}); }
+vec_double_1D p_y_I_x1_t0(double p) { return vec_double_1D({p,1-p}); }
+vec_double_1D p_y_I_x0_t1(double p) { return vec_double_1D({p,1-p}); }
+vec_double_1D p_y_I_x1_t1(double p) { return vec_double_1D({p,1-p}); }
+
+vec_double_2D p_y_I_x_t0(double p1, double p2) { return vec_double_2D({p_y_I_x0_t0(p1), p_y_I_x1_t0(p2)}); }
+vec_double_2D p_y_I_x_t1(double p1, double p2) { return vec_double_2D({p_y_I_x0_t1(p1), p_y_I_x1_t1(p2)}); }
+
+//vec_double_3D p_y_I_x_t(double p1 = 0.75, double p2 = 0.01, double p3 = 0.1, double p4 = 0.9) {
+vec_double_3D p_y_I_x_t(double p_y0_I_x0_t0,
+                        double p_y0_I_x1_t0,
+                        double p_y0_I_x0_t1,
+                        double p_y0_I_x1_t1) {
+    return vec_double_3D({p_y_I_x_t0( p_y0_I_x0_t0, p_y0_I_x1_t0), p_y_I_x_t1( p_y0_I_x0_t1, p_y0_I_x1_t1)});
+}
+
+// prior
+vec_double_1D p_t(double p_t0) { return vec_double_1D({p_t0,1-p_t0}); }
+
+// observation marginal
+double p_y_I_x(int x,
+               int y,
+               double p_y0_I_x0_t0,
+               double p_y0_I_x1_t0,
+               double p_y0_I_x0_t1,
+               double p_y0_I_x1_t1,
+               double p_t0) {
+    double p_y_I_x_ = 0;
+    for(int t : {0,1}) {
+        p_y_I_x_ += p_y_I_x_t(p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1)[t][x][y]*p_t(p_t0)[t];
+    }
+    return p_y_I_x_;
+}
+
+// posterior
+vec_double_1D p_t_I_x_y(int x,
+                        int y,
+                        double p_y0_I_x0_t0,
+                        double p_y0_I_x1_t0,
+                        double p_y0_I_x0_t1,
+                        double p_y0_I_x1_t1,
+                        double p_t0) {
+    vec_double_1D p_t_I_x_y_({0,0});
+    for(int t : {0,1}) {
+        p_t_I_x_y_[t] = p_y_I_x_t(p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1)[t][x][y]*p_t(p_t0)[t]/p_y_I_x(x, y, p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1, p_t0);
+    }
+    return p_t_I_x_y_;
+}
+
+// entropy
+double H(vec_double_1D p) {
+    double H_ = 0;
+    for(int idx : Range(p.size())) {
+        H_ += -p[idx]*log(p[idx]);
+    }
+    return H_;
+}
+
+// cross entropy
+double Hx(vec_double_1D p1, vec_double_1D p2) {
+    double Hx_ = 0;
+    for(int idx : Range(std::min(p1.size(),p2.size()))) {
+        Hx_ += -p1[idx]*log(p2[idx]);
+    }
+    return Hx_;
+}
+
+// expected entropy
+double EH_p_t_I_x_y(int x,
+                    double p_y0_I_x0_t0,
+                    double p_y0_I_x1_t0,
+                    double p_y0_I_x0_t1,
+                    double p_y0_I_x1_t1,
+                    double p_t0) {
+    double EH_p_t_I_x_y_ = 0;
+    for(int y : {0,1}) {
+        EH_p_t_I_x_y_ += p_y_I_x(x,y,p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1, p_t0)*H(p_t_I_x_y(x,y,p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1, p_t0));
+    }
+    return EH_p_t_I_x_y_;
+}
+
+// expected cross entropy
+double EHx_p_t_I_x_y(int x,
+                     double p_y0_I_x0_t0,
+                     double p_y0_I_x1_t0,
+                     double p_y0_I_x0_t1,
+                     double p_y0_I_x1_t1,
+                     double p_t0) {
+    double EHx_p_t_I_x_y_ = 0;
+    for(int y : {0,1}) {
+        EHx_p_t_I_x_y_ += p_y_I_x(x,y,p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1, p_t0)*Hx(p_t(p_t0),p_t_I_x_y(x,y,p_y0_I_x0_t0, p_y0_I_x1_t0, p_y0_I_x0_t1, p_y0_I_x1_t1, p_t0));
+    }
+    return EHx_p_t_I_x_y_;
+}
 
 TEST(ActiveOnlineSearch, ComputationalGraph) {
+
+    double p_y0_I_x0_t0 = 0.1;
+    double p_y0_I_x1_t0 = 0.1;
+    double p_y0_I_x0_t1 = 0.1;
+    double p_y0_I_x1_t1 = 0.1;
+    double p_t0 = 0.1;
+
+    cout << "Cross Entropy: " <<  vec_double_1D({EHx_p_t_I_x_y(0,
+                                                               p_y0_I_x0_t0,
+                                                               p_y0_I_x1_t0,
+                                                               p_y0_I_x0_t1,
+                                                               p_y0_I_x1_t1,
+                                                               p_t0),
+                EHx_p_t_I_x_y(1,
+                              p_y0_I_x0_t0,
+                              p_y0_I_x1_t0,
+                              p_y0_I_x0_t1,
+                              p_y0_I_x1_t1,
+                              p_t0)}) << " (max)" << endl;
+    cout << "      Entropy: " <<  vec_double_1D({EH_p_t_I_x_y(0,
+                                                              p_y0_I_x0_t0,
+                                                              p_y0_I_x1_t0,
+                                                              p_y0_I_x0_t1,
+                                                              p_y0_I_x1_t1,
+                                                              p_t0),
+                EH_p_t_I_x_y(1,
+                             p_y0_I_x0_t0,
+                             p_y0_I_x1_t0,
+                             p_y0_I_x0_t1,
+                             p_y0_I_x1_t1,
+                             p_t0)}) << " (min)" << endl;
+
+    // repeat(10) {
+    //     vec_double_1D expected({EHx_p_t_I_x_y(0),EHx_p_t_I_x_y(1)});
+    //     int x = expected[0]>expected[1]?0:1; // max
+    //     //int x = expected[0]<expected[1]?0:1; // min
+    // }
+
+    return;
 
     /*=============================================
                Description of the Graph
