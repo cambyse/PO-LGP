@@ -39,7 +39,7 @@ void TEST(ModuleVision) {
 
   engine().open(S);
 
-  KeyValueGraph g = S.graph();
+  Graph g = S.graph();
   GraphView gv(g); gv.update();
 
   if(engine().mode==Engine::serial){

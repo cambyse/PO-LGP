@@ -277,8 +277,8 @@ VariableL createVariables(const ModuleL& ms){
   return S.vars;
 }
 
-KeyValueGraph System::graph() const{
-  KeyValueGraph g;
+Graph System::graph() const{
+  Graph g;
   g.append<bool>("SystemModule", name, NULL, false);
   g.checkConsistency();
   std::map<Variable*, Item*> vit;

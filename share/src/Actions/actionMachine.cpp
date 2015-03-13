@@ -198,7 +198,7 @@ void ActionMachine::close(){
   fil.close();
 }
 
-void ActionMachine::parseTaskDescription(KeyValueGraph& td){
+void ActionMachine::parseTaskDescription(Graph& td){
   Item *t = td.isItemOfParentKvg;
   MT::String type=td["type"]->V<MT::String>();
   if(type=="homing"){
@@ -213,7 +213,7 @@ void ActionMachine::parseTaskDescription(KeyValueGraph& td){
   }
 }
 
-void ActionMachine::parseTaskDescriptions(const KeyValueGraph& tds){
+void ActionMachine::parseTaskDescriptions(const Graph& tds){
   cout <<"Instantiating task descriptions:\n" <<tds <<endl;
   for(Item *t:tds) parseTaskDescription(t->kvg());
 }

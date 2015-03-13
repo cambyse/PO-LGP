@@ -1,0 +1,3 @@
+struct ConcurrentActivities{
+  Graph KB;
+};

@@ -1,4 +1,4 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Core/registry.h>
 
 //const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
@@ -7,7 +7,7 @@ const char *filename=NULL;
 //===========================================================================
 
 void TEST(Read){
-  KeyValueGraph G;
+  Graph G;
 
   G.checkConsistency();
   cout <<"\n** reading graph..." <<flush;
@@ -33,7 +33,7 @@ void TEST(Read){
 //===========================================================================
 
 void TEST(Init){
-  KeyValueGraph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", MT::String("BLA")} };
+  Graph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", MT::String("BLA")} };
   cout <<G <<endl;
   G.checkConsistency();
 }
@@ -41,7 +41,7 @@ void TEST(Init){
 //===========================================================================
 
 void TEST(Dot){
-  KeyValueGraph G;
+  Graph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
   G.checkConsistency();
 //  G.sortByDotOrder();
@@ -61,7 +61,7 @@ void operator>>(istream& is, Something& s){ is >>s.x; }
 REGISTER_TYPE(Something)
 
 void TEST(Manual){
-  KeyValueGraph G;
+  Graph G;
   G.append({"hallo"}, {}, new Something(3), true);
   cout <<G <<endl;
 }

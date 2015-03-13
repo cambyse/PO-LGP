@@ -311,7 +311,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
     dFdX.reshape(TUP(C.d0, S, origin.N));
     dXdC.reshape(TUP(C.d0, S, origin.N, 3));
     dFdC->resize(TUP(C.d0, 3));
-    tensorEquation(*dFdC, dFdX, TUP(0, 2, 3), dXdC, TUP(0, 2, 3, 1), 2);
+    tensorEquation(*dFdC, dFdX, TUP(0u, 2u, 3u), dXdC, TUP(0u, 2u, 3u, 1u), 2);
   }
   return d;
 }

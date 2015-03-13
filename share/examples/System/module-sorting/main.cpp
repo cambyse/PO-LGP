@@ -47,7 +47,7 @@ void TEST(ModuleSorter){
 
   engine().close(S);
 
-  KeyValueGraph g = S.graph();
+  Graph g = S.graph();
   GraphView gv(g);
   gv.watch();
 }

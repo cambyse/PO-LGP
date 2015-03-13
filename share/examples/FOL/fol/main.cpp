@@ -4,7 +4,7 @@
 //===========================================================================
 
 void testPolFwdChaining(){
-  KeyValueGraph G;
+  Graph G;
   FILE("pol.kvg") >>G;
 
   cout <<G <<endl;
@@ -15,7 +15,7 @@ void testPolFwdChaining(){
 //===========================================================================
 
 void testFolLoadFile(){
-  KeyValueGraph G;
+  Graph G;
   G.checkConsistency();
   FILE("fol0.kvg") >>G;
   G.checkConsistency();
@@ -33,7 +33,7 @@ void testFolLoadFile(){
 
 
   G.checkConsistency();
-  Item *sub = new Item_typed<KeyValueGraph>(G, new KeyValueGraph, true);
+  Item *sub = new Item_typed<Graph>(G, new Graph, true);
   sub->kvg().isItemOfParentKvg = sub;
   G.checkConsistency();
   new Item_typed<bool>(sub->kvg(), {}, {s, consts(0)}, NULL, false);
@@ -45,7 +45,7 @@ void testFolLoadFile(){
 //===========================================================================
 
 void testFolFwdChaining(){
-  KeyValueGraph G;
+  Graph G;
 
   FILE("fol.kvg") >>G;
 
@@ -64,7 +64,7 @@ void testFolFwdChaining(){
 //===========================================================================
 
 void testFolDisplay(){
-  KeyValueGraph G;
+  Graph G;
   FILE("fol.kvg") >>G;
 
   GraphView view(G);
@@ -75,7 +75,7 @@ void testFolDisplay(){
 //===========================================================================
 
 void testFolSubstitution(){
-  KeyValueGraph KB;
+  Graph KB;
 
 //  FILE("boxes.kvg") >>G;
   FILE("substTest.kvg") >>KB;
@@ -101,13 +101,13 @@ void testFolSubstitution(){
 //===========================================================================
 
 void testMonteCarlo(){
-  KeyValueGraph Gorig;
+  Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
   uint verbose=3;
 
   for(uint k=0;k<10;k++){
-    KeyValueGraph KB = Gorig;
+    Graph KB = Gorig;
     KB.checkConsistency();
     Item *Terminate_keyword = KB["Terminate"];
     ItemL rules = KB.getItems("Rule");

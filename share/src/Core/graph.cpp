@@ -21,7 +21,7 @@
 
 #include "util_t.h"
 #include "array_t.h"
-#include "keyValueGraph.h"
+#include "graph.h"
 #include "registry.h"
 
 const ItemL& NoItemL=*((ItemL*)NULL);
@@ -32,7 +32,7 @@ Graph& NoGraph=*((Graph*)NULL);
 //  Item methods
 //
 
-Item::Item(KeyValueGraph& _container):container(_container){
+Item::Item(Graph& _container):container(_container){
   if(&container!=&NoGraph){
     index=container.N;
     container.ItemL::append(this);
@@ -41,7 +41,7 @@ Item::Item(KeyValueGraph& _container):container(_container){
   }
 }
 
-Item::Item(KeyValueGraph& _container, const ItemL& _parents)
+Item::Item(Graph& _container, const ItemL& _parents)
   : container(_container), parents(_parents){
   index=container.N;
   container.ItemL::append(this);
@@ -85,9 +85,9 @@ void Item::write(std::ostream& os) const {
   
   //-- write value
   if(!hasValue()) return;
-  if(getValueType()==typeid(KeyValueGraph)) {
+  if(getValueType()==typeid(Graph)) {
     os <<" {";
-    getValue<KeyValueGraph>()->write(os, " ");
+    getValue<Graph>()->write(os, " ");
     os <<" }";
   } else if(getValueType()==typeid(ItemL)) {
     os <<"=(";
@@ -117,14 +117,14 @@ void Item::write(std::ostream& os) const {
   }
 }
 
-KeyValueGraph Item::ParentOf(){
-  KeyValueGraph G;
+Graph Item::ParentOf(){
+  Graph G;
   G.isReferringToItemsOf = &container;
   G.ItemL::operator=(parentOf);
   return G;
 }
 
-Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false, KeyValueGraph* parentGraph=NULL, MT::String prefixedKey=MT::String()) {
+Item *readItem(Graph& containingKvg, std::istream& is, bool verbose=false, Graph* parentGraph=NULL, MT::String prefixedKey=MT::String()) {
   MT::String str;
   StringA keys;
   ItemL parents;
@@ -132,7 +132,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
 
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
 
-#define PARSERR(x) { cerr <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
+#define PARSERR(x) { cerr <<"[[error in parsing Graph file (line=" <<MT::lineCount <<"):\n"\
                           <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
   //-- read keys
@@ -233,15 +233,15 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
           it->value = next;
         }
       } break;
-      case '{': { // KeyValueGraph (e.g., attribute list)
-        KeyValueGraph *subList = new KeyValueGraph;
-        item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList, true);
+      case '{': { // Graph (e.g., attribute list)
+        Graph *subList = new Graph;
+        item = new Item_typed<Graph>(containingKvg, keys, parents, subList, true);
         subList->isItemOfParentKvg = item;
         subList->read(is);
         MT::parse(is, "}");
       } break;
-      case '(': { // referring KeyValueGraph
-        KeyValueGraph *refs = new KeyValueGraph;
+      case '(': { // referring Graph
+        Graph *refs = new Graph;
         refs->isReferringToItemsOf = &containingKvg;
         for(uint j=0;; j++) {
           str.read(is, " , ", " , )", false);
@@ -256,7 +256,7 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
           }
         }
         MT::parse(is, ")");
-        item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, refs, true);
+        item = new Item_typed<Graph>(containingKvg, keys, parents, refs, true);
         refs->isItemOfParentKvg = item;
       } break;
       default: { //error
@@ -303,28 +303,28 @@ ItemInitializer::ItemInitializer(const char* key){
 
 //===========================================================================
 //
-//  KeyValueGraph methods
+//  Graph methods
 //
 
 struct sKeyValueGraph {
   //  std::map<std::string, Item*> keyMap;
 };
 
-KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+Graph::Graph():s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
 }
 
-KeyValueGraph::KeyValueGraph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+Graph::Graph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   FILE(filename) >>*this;
 }
 
-KeyValueGraph::KeyValueGraph(const std::map<std::string, std::string>& dict):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+Graph::Graph(const std::map<std::string, std::string>& dict):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   appendDict(dict);
 }
 
-KeyValueGraph::KeyValueGraph(std::initializer_list<ItemInitializer> list) {
+Graph::Graph(std::initializer_list<ItemInitializer> list) {
   ItemL::memMove=true;
   for(const ItemInitializer& ic:list){
     Item *clone = ic.it->newClone(*this); //this appends sequentially clones of all items to 'this'
@@ -337,16 +337,16 @@ KeyValueGraph::KeyValueGraph(std::initializer_list<ItemInitializer> list) {
   }
 }
 
-KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+Graph::Graph(const Graph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
   *this = G;
 }
 
-KeyValueGraph::KeyValueGraph(Item *itemOfParentKvg):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(itemOfParentKvg) {
+Graph::Graph(Item *itemOfParentKvg):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(itemOfParentKvg) {
   ItemL::memMove=true;
 }
 
-KeyValueGraph::~KeyValueGraph() {
+Graph::~Graph() {
   //  delete s;
   if(!isReferringToItemsOf){
     checkConsistency();
@@ -356,27 +356,27 @@ KeyValueGraph::~KeyValueGraph() {
   //  if(!isReference) listDelete(*this);
 }
 
-Item *KeyValueGraph::append(const uintA& parentIdxs) {
+Item *Graph::append(const uintA& parentIdxs) {
   ItemL parents(parentIdxs.N);
   for(uint i=0;i<parentIdxs.N; i++) parents(i) = ItemL::elem(parentIdxs(i));
   return append<int>({STRING(ItemL::N)}, parents, NULL, false);
 }
 
-void KeyValueGraph::appendDict(const std::map<std::string, std::string>& dict){
+void Graph::appendDict(const std::map<std::string, std::string>& dict){
   for(const std::pair<std::string,std::string>& p:dict){
     Item *it = readItem(*this, STRING('='<<p.second), false, NULL, MT::String(p.first));
     if(!it) MT_MSG("failed to read dict entry <" <<p.first <<',' <<p.second <<'>');
   }
 }
 
-Item* KeyValueGraph::getItem(const char *key) const {
+Item* Graph::getItem(const char *key) const {
   for(Item *it: (*this)) if(it->matches(key)) return it;
   //    for(const MT::String& k:it->keys) if(k==key) return it;
   if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(key);
   return NULL;
 }
 
-Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
+Item* Graph::getItem(const char *key1, const char *key2) {
   for(Item *it: (*this)) {
     for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key1) {
       for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key2)
@@ -386,7 +386,7 @@ Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
   return NULL;
 }
 
-Item* KeyValueGraph::getItem(const StringA &keys) {
+Item* Graph::getItem(const StringA &keys) {
   //  bool found;
   for(Item *it: (*this)) if(it->matches(keys)) return it;
   if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(keys);
@@ -406,8 +406,8 @@ Item* KeyValueGraph::getItem(const StringA &keys) {
   return NULL;
 }
 
-KeyValueGraph KeyValueGraph::getItems(const char* key) {
-  KeyValueGraph ret;
+Graph Graph::getItems(const char* key) {
+  Graph ret;
   ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) if(it->matches(key)) ret.ItemL::append(it);
   //    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.ItemL::append(it); break; }
@@ -415,7 +415,7 @@ KeyValueGraph KeyValueGraph::getItems(const char* key) {
   return ret;
 }
 
-Item* KeyValueGraph::getChild(Item *p1, Item *p2) const{
+Item* Graph::getChild(Item *p1, Item *p2) const{
   if(p1->parentOf.N < p2->parentOf.N){
     for(Item *i:p1->parentOf){
       if(p2->parentOf.findValue(i)>0) return i;
@@ -428,8 +428,8 @@ Item* KeyValueGraph::getChild(Item *p1, Item *p2) const{
   return NULL;
 }
 
-KeyValueGraph KeyValueGraph::getItemsOfDegree(uint deg) {
-  KeyValueGraph ret;
+Graph Graph::getItemsOfDegree(uint deg) {
+  Graph ret;
   ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) {
     if(it->parents.N==deg) ret.ItemL::append(it);
@@ -438,8 +438,8 @@ KeyValueGraph KeyValueGraph::getItemsOfDegree(uint deg) {
 }
 
 
-KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info& type) {
-  KeyValueGraph ret;
+Graph Graph::getTypedItems(const char* key, const std::type_info& type) {
+  Graph ret;
   ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) if(it->getValueType()==type) {
     if(!key) ret.ItemL::append(it);
@@ -451,15 +451,15 @@ KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info
   return ret;
 }
 
-Item* KeyValueGraph::merge(Item *m){
-  KeyValueGraph KVG = getTypedItems(m->keys(0), m->getValueType());
+Item* Graph::merge(Item *m){
+  Graph KVG = getTypedItems(m->keys(0), m->getValueType());
   //CHECK(KVG.N<=1, "can't merge into multiple items yet");
   Item *it=NULL;
   if(KVG.N) it=KVG.elem(0);
   if(it){
     CHECK(m->getValueType()==it->getValueType(), "can't merge items of different types!");
-    if(it->getValueType()==typeid(KeyValueGraph)){ //merge the KVGs
-      it->getValue<KeyValueGraph>()->merge(*m->getValue<KeyValueGraph>());
+    if(it->getValueType()==typeid(Graph)){ //merge the KVGs
+      it->getValue<Graph>()->merge(*m->getValue<Graph>());
     }else{ //overwrite the value
       it->takeoverValue(m);
     }
@@ -477,15 +477,15 @@ Item* KeyValueGraph::merge(Item *m){
   return NULL;
 }
 
-KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
+Graph& Graph::operator=(const Graph& G) {
   G.checkConsistency();
   //  G.index();//necessary, after checkConsistency?
   //  { for_list(Item, i, G) i->index=i_COUNT; }
 
   if(!isReferringToItemsOf){ while(N) delete last(); } // listDelete(*this);
   for(Item *it:G){
-    if(it->getValueType()==typeid(KeyValueGraph)){
-      Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph(), true);
+    if(it->getValueType()==typeid(Graph)){
+      Item *clone = new Item_typed<Graph>(*this, it->keys, it->parents, new Graph(), true);
       clone->parentOf.clear();
       clone->kvg().isItemOfParentKvg=clone;
       clone->kvg().operator=(it->kvg()); //you can only call the operator= AFTER assigning isItemOfParentKvg
@@ -518,7 +518,7 @@ KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
   return *this;
 }
 
-void KeyValueGraph::read(std::istream& is) {
+void Graph::read(std::istream& is) {
   //read all generic attributes
   //MT::lineCount=1;
   for(;;) {
@@ -544,21 +544,21 @@ void KeyValueGraph::read(std::istream& is) {
     }
   }
   //-- merge all Merge keys
-  KeyValueGraph merges = getItems("Merge");
+  Graph merges = getItems("Merge");
   for(Item *m:merges){
     m->keys.remove(0);
     merge(m);
   }
 }
 
-void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *delim) const {
+void Graph::write(std::ostream& os, const char *ELEMSEP, const char *delim) const {
   uint i;
   if(delim) os <<delim[0];
   for(i=0; i<N; i++) { if(i) os <<ELEMSEP;  if(elem(i)) os <<*elem(i) <<flush; else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultEdges, int nodesOrEdges) {
+void Graph::writeDot(std::ostream& os, bool withoutHeader, bool defaultEdges, int nodesOrEdges) {
   if(!withoutHeader){
     if(defaultEdges) os <<"digraph G{" <<endl;
     else             os <<"graph G{" <<endl;
@@ -590,11 +590,11 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultE
     if(defaultEdges && it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
       os <<it->parents(0)->index <<" -> " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
     }else{
-      if(it->getValueType()==typeid(KeyValueGraph)){
+      if(it->getValueType()==typeid(Graph)){
         os <<"subgraph cluster_" <<it->index <<" { " <<label /*<<" rank=same"*/ <<endl;
-        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, +1);
+        it->getValue<Graph>()->writeDot(os, true, defaultEdges, +1);
         os <<"}" <<endl;
-        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, -1);
+        it->getValue<Graph>()->writeDot(os, true, defaultEdges, -1);
       }else{//normal item
         if(nodesOrEdges>=0){
           os <<it->index <<" [ " <<label <<shape <<" ];" <<endl;
@@ -618,12 +618,12 @@ void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader, bool defaultE
   }
 }
 
-void KeyValueGraph::sortByDotOrder() {
+void Graph::sortByDotOrder() {
   uintA perm;
   perm.setStraightPerm(N);
   for_list(Item, it, list()) {
-    if(it->getValueType()==typeid(KeyValueGraph)) {
-      double *order = it->getValue<KeyValueGraph>()->getValue<double>("dot_order");
+    if(it->getValueType()==typeid(Graph)) {
+      double *order = it->getValue<Graph>()->getValue<double>("dot_order");
       if(!order) { MT_MSG("doesn't have dot_order attribute"); return; }
       perm(it_COUNT) = (uint)*order;
     }
@@ -632,7 +632,7 @@ void KeyValueGraph::sortByDotOrder() {
   for_list(Item, it2, list()) it2->index=it2_COUNT;
 }
 
-bool KeyValueGraph::checkConsistency() const{
+bool Graph::checkConsistency() const{
   uint idx=0;
   for(Item *it: *this){
     CHECK_EQ(&it->container, this, "");
@@ -654,7 +654,7 @@ bool KeyValueGraph::checkConsistency() const{
     }else{
       CHECK(parent->index < it->index,"item refers to parent that sorts below the item");
     }
-    if(it->getValueType()==typeid(KeyValueGraph)){
+    if(it->getValueType()==typeid(Graph)){
       Graph& G = it->kvg();
       CHECK(G.isItemOfParentKvg==it,"");
       if(!G.isReferringToItemsOf) G.checkConsistency();
@@ -664,12 +664,12 @@ bool KeyValueGraph::checkConsistency() const{
   return true;
 }
 
-uint KeyValueGraph::index(bool subKVG, uint start){
+uint Graph::index(bool subKVG, uint start){
   uint idx=start;
   for(Item *it: list()){
     it->index=idx;
     idx++;
-    if(it->getValueType()==typeid(KeyValueGraph)){
+    if(it->getValueType()==typeid(Graph)){
       Graph& G=it->kvg();
       if(!G.isReferringToItemsOf){
         if(subKVG) idx = G.index(true, idx);

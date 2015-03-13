@@ -24,9 +24,9 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<KeyValueGraph> SingleRegistry;
+Singleton<Graph> SingleRegistry;
 
-KeyValueGraph& registry(){ return SingleRegistry(); }
+Graph& registry(){ return SingleRegistry(); }
 
 namespace MT {
 extern std::ifstream cfgFile;
@@ -34,7 +34,7 @@ extern bool cfgFileOpen;
 extern Mutex cfgFileMutex;
 }
 
-extern Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose, KeyValueGraph* parentGraph, MT::String prefixedKey);
+extern Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, Graph* parentGraph, MT::String prefixedKey);
 
 void initRegistry(int argc, char* argv[]){
 

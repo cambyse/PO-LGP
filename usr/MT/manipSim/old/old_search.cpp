@@ -1,6 +1,6 @@
 ors::KinematicWorld* world=NULL;
 
-void OrsGraph2RelationalGraph(KeyValueGraph& G, ors::KinematicWorld& W){
+void OrsGraph2RelationalGraph(Graph& G, ors::KinematicWorld& W){
   G.clear();
 
   //do this first to ensure they have the same indexing

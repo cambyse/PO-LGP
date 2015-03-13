@@ -160,7 +160,7 @@ struct System:Module{
   // [sort of private] check if Variable with variable_name and acc.type exists; if not, create one; then connect
   Variable_SharedMemory* connect(Access& acc, const char *variable_name);
 
-  KeyValueGraph graph() const;
+  Graph graph() const;
   void write(ostream& os) const;
 };
 stdOutPipe(System);

@@ -128,7 +128,7 @@ void FGPlot::open() {
 }
 
 struct FGPlots::sFGPlots {
-  KeyValueGraph kvg, *data;
+  Graph kvg, *data;
   uint nplots;
   FGPlot *plots;
 
@@ -154,9 +154,9 @@ FGPlots::~FGPlots() {
   delete s;
 }
 
-void FGPlots::open(const KeyValueGraph &k) {
+void FGPlots::open(const Graph &k) {
   ItemL plot_list;
-  KeyValueGraph *plot_kvg;
+  Graph *plot_kvg;
 
   String *str;
   bool *b;
@@ -167,10 +167,10 @@ void FGPlots::open(const KeyValueGraph &k) {
   plot_list = s->kvg.getItems("plot").list();
   s->nplots = plot_list.N;
   s->plots = new FGPlot[s->nplots];
-  s->data = new KeyValueGraph[s->nplots];
+  s->data = new Graph[s->nplots];
   for(uint i = 0; i < s->nplots; i++) {
     cout << "Opening new plot:" << endl;
-    plot_kvg = plot_list(i)->getValue<KeyValueGraph>();
+    plot_kvg = plot_list(i)->getValue<Graph>();
 
     // title {{{
     str = plot_kvg->getValue<String>("title");

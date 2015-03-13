@@ -14,7 +14,7 @@
 void sample();
 void testMonteCarlo();
 
-void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
+void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
   W.qdim.clear();
   W.q.clear();
   W.qdot.clear();

@@ -29,7 +29,7 @@
 #include <map>
 
 struct Item;
-struct KeyValueGraph;
+struct Graph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
 extern const ItemL& NoItemL;
@@ -38,13 +38,13 @@ inline std::istream& operator>>(std::istream&, RootType&) { NIY; }
 inline std::ostream& operator<<(std::ostream&, const RootType&) { NIY; }
 
 struct Item {
-  KeyValueGraph& container;
+  Graph& container;
   StringA keys;
   ItemL parents;
   ItemL parentOf;
   uint index;
-  Item(KeyValueGraph& _container);
-  Item(KeyValueGraph& _container, const ItemL& _parents);
+  Item(Graph& _container);
+  Item(Graph& _container, const ItemL& _parents);
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
@@ -54,9 +54,9 @@ struct Item {
   bool matches(const char *key);
   bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
-  KeyValueGraph ParentOf();
+  Graph ParentOf();
   //-- specific standard values TODO: make return pointer!
-  KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
+  Graph& kvg(){ Graph *kvg=getValue<Graph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY}
@@ -67,7 +67,7 @@ struct Item {
   virtual void copyValue(Item*) {NIY}
   virtual void takeoverValue(Item*) {NIY}
   virtual bool hasEqualValue(Item*) {NIY}
-  virtual Item *newClone(KeyValueGraph& container) const {NIY}
+  virtual Item *newClone(Graph& container) const {NIY}
 };
 stdOutPipe(Item);
 
@@ -79,20 +79,20 @@ struct ItemInitializer{
   StringA parents;
 };
 
-struct KeyValueGraph:ItemL {
+struct Graph:ItemL {
   struct sKeyValueGraph *s;
-  KeyValueGraph* isReferringToItemsOf;
+  Graph* isReferringToItemsOf;
   Item *isItemOfParentKvg;
   
-  KeyValueGraph();
-  explicit KeyValueGraph(const char* filename);
-  KeyValueGraph(const std::map<std::string, std::string>& dict);
-  KeyValueGraph(std::initializer_list<ItemInitializer> list);
-  KeyValueGraph(const KeyValueGraph& G);
-  KeyValueGraph(Item *itemOfParentKvg);
-  ~KeyValueGraph();
+  Graph();
+  explicit Graph(const char* filename);
+  Graph(const std::map<std::string, std::string>& dict);
+  Graph(std::initializer_list<ItemInitializer> list);
+  Graph(const Graph& G);
+  Graph(Item *itemOfParentKvg);
+  ~Graph();
   
-  KeyValueGraph& operator=(const KeyValueGraph&);
+  Graph& operator=(const Graph&);
   ItemL& list() { return *this; }
   
   //-- get values directly
@@ -110,10 +110,10 @@ struct KeyValueGraph:ItemL {
   Item* getChild(Item *p1, Item *p2) const;
 
   //-- get lists of items
-  KeyValueGraph getItems(const char* key);
-  KeyValueGraph getItemsOfDegree(uint deg);
-  KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
-  template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
+  Graph getItems(const char* key);
+  Graph getItemsOfDegree(uint deg);
+  Graph getTypedItems(const char* key, const std::type_info& type);
+  template<class T> Graph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
   template<class T> ItemL getDerivedItems();
 
   //-- get lists of values
@@ -151,9 +151,9 @@ struct KeyValueGraph:ItemL {
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
   void writeDot(std::ostream& os, bool withoutHeader=false, bool defaultEdges=false, int nodesOrEdges=0);
 };
-stdPipes(KeyValueGraph);
+stdPipes(Graph);
 
-typedef KeyValueGraph Graph;
+typedef Graph Graph;
 
 extern Graph& NoGraph; //this is a pointer to NULL!!!! I use it for optional arguments
 
@@ -168,18 +168,18 @@ inline bool ItemComp(Item* const& a, Item* const& b){
   return a < b;
 }
 
-#include "keyValueGraph_t.h"
+#include "graph_t.h"
 
 //===========================================================================
 //
-// Andrea's util based on KeyValueGraph
+// Andrea's util based on Graph
 // (would put in util.h, but creates inclusion loop which breaks compilation)
 //
 
 // Params {{{
-#include "keyValueGraph.h"
+#include "graph.h"
 struct Params {
-  KeyValueGraph kvg;
+  Graph kvg;
 
   template<class T>
   void set(const char *key, const T &value) {

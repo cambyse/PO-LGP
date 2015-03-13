@@ -1,4 +1,4 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 
 //### Level 0 routines
 
@@ -33,12 +33,12 @@ bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Gr
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose=false);
-bool forwardChaining_propositional(KeyValueGraph& KB, Item* q);
+bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose=false);
+bool forwardChaining_propositional(Graph& KB, Item* q);
 
 //### Level 1 class
 
-//struct FOL: KeyValueGraph{
+//struct FOL: Graph{
 //  Graph& state;
 
 

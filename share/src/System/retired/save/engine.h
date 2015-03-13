@@ -8,7 +8,7 @@ struct SystemDescription{
   struct VariableEntry{ Type* type; Variable *var; };
   struct AccessEntry{ Item* reg; Type* type; Access *acc; };
   struct ModuleEntry{ Item* reg; Type* type; Module *mod; StepMode mode; double beat; };
-  KeyValueGraph system;
+  Graph system;
 
   SystemDescription() {}
 
@@ -32,7 +32,7 @@ struct SystemDescription{
 struct Engine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
-  KeyValueGraph *system;
+  Graph *system;
 
   Engine();
   ~Engine();

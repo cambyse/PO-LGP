@@ -254,8 +254,8 @@ bool applySubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph
 }
 
 bool applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope){
-  CHECK(effectliterals->getValueType()==typeid(KeyValueGraph), "");
-  KeyValueGraph &effects = *effectliterals->getValue<KeyValueGraph>();
+  CHECK(effectliterals->getValueType()==typeid(Graph), "");
+  Graph &effects = *effectliterals->getValue<Graph>();
   bool hasEffects=false;
   for(Item *lit:effects){
     bool e = applySubstitutedLiteral(KB, lit, subst, subst_scope);
@@ -389,7 +389,7 @@ ItemL getSubstitutions(Graph& KB, ItemL& literals, ItemL& symbols, bool verbose)
 }
 
 
-bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
+bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose){
   //  KB.checkConsistency();
   //  uintA count(KB.N);     count=0;
   //  boolA inferred(KB.N);  inferred=false;
@@ -458,7 +458,7 @@ bool forwardChaining_FOL(KeyValueGraph& KB, Item* query, bool verbose){
 
 
 /// actually propositional logic:
-bool forwardChaining_propositional(KeyValueGraph& KB, Item* q){
+bool forwardChaining_propositional(Graph& KB, Item* q){
   KB.checkConsistency();
   uintA count(KB.N);     count=0;
   boolA inferred(KB.N);  inferred=false;

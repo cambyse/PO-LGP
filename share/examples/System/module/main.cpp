@@ -111,7 +111,7 @@ void TEST(SystemConnect) {
   engine().test(S);
 
   cout <<registry() <<endl;
-  KeyValueGraph g = S.graph();
+  Graph g = S.graph();
   GraphView gv(g);
   gv.watch();
 }

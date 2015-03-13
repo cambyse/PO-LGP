@@ -1,10 +1,10 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Gui/graphview.h>
 
 void TEST(Dot){
   const char* filename = (MT::argc>=2 && MT::argv[1][0]!='-')?MT::argv[1]:NULL;
   if(!filename) filename="coffee_shop.fg";
-  KeyValueGraph G;
+  Graph G;
   G <<FILE(filename);
   cout <<"read KVG:\n----------\n" <<G <<"\n----------\n" <<endl;
   G.sortByDotOrder();

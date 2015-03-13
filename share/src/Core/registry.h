@@ -26,14 +26,14 @@
 #define MT_registry_h
 
 #include "array.h"
-#include "keyValueGraph.h"
+#include "graph.h"
 
 //===========================================================================
 //
-// global registry of anything using a singleton KeyValueGraph
+// global registry of anything using a singleton Graph
 //
 
-KeyValueGraph& registry();
+Graph& registry();
 void initRegistry(int argc, char *argv[]);
 
 //macros to be used in *.cpp files
@@ -57,7 +57,7 @@ void initRegistry(int argc, char *argv[]);
 struct Type:RootType {
   MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
-  virtual struct Item* readItem(KeyValueGraph& container, istream&) const {NIY}; //TODO -> readIntoNewItem
+  virtual struct Item* readItem(Graph& container, istream&) const {NIY}; //TODO -> readIntoNewItem
   virtual void* newInstance() const {NIY}
   virtual Type* clone() const {NIY}
   void write(std::ostream& os) const {
@@ -107,7 +107,7 @@ Item *reg_findType() {
 // read a value from a stream by looking up available registered types
 //
 
-inline Item* readTypeIntoItem(KeyValueGraph& container, const char* key, std::istream& is) {
+inline Item* readTypeIntoItem(Graph& container, const char* key, std::istream& is) {
   Item *ti = reg_findType(key);
   if(ti) return ti->getValue<Type>()->readItem(container, is);
   return NULL;
@@ -140,7 +140,7 @@ template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
   Type_typed_readable() {}
   Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
-  virtual Item* readItem(KeyValueGraph& container, istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(container, x, true); }
+  virtual Item* readItem(Graph& container, istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(container, x, true); }
   virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 

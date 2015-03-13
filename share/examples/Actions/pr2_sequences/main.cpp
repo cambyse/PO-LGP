@@ -20,7 +20,7 @@ void TEST(Push) {
 // ============================================================================
 
 void testFol(){
-  KeyValueGraph G;
+  Graph G;
   FILE("machine.fol") >>G;
   G.checkConsistency();
   cout <<G <<endl;
@@ -33,7 +33,7 @@ void testFol(){
 // ============================================================================
 
 void rewriteGraph(){
-  KeyValueGraph G, nice;
+  Graph G, nice;
   FILE("machine.fol") >>G;
 //  FILE("machine_simple.fol") >>G;
 
