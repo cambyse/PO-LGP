@@ -13,27 +13,25 @@ class TreeControllerClass: public pr2_controller_interface::Controller
 private:
   Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
   ors::KinematicWorld world;
-  pr2_mechanism_model::Tree pr2_tree;
-
-  KDL::JntArray jnt_pos_;
-  KDL::JntArrayVel jnt_vel_;
-  KDL::JntArray jnt_efforts_;
 
   // Ors related variables
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
-  arr fL_ref, fR_ref;
-  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
+  arr Kq_gainFactor, Kd_gainFactor, KfL_gainFactor;
   arr u_bias;
+  double velLimitRatio, effLimitRatio;
 
   //force related things
-  arr fL_obs, fR_obs;
+  arr fL_obs, fR_obs, fL_ref, fR_ref;
+  arr fL_error, fR_error, EfL, EfR;
+  double gamma;
 
   //matching joint indices
-  uintA ROS_qIndex;
+  MT::Array<pr2_mechanism_model::JointState*> ROS_joints;
   ors::Joint *j_worldTranslationRotation;
 
+  //subscriber and publishers
   ros::Publisher jointState_publisher;
   ros::Publisher baseCommand_publisher;
   ros::Subscriber jointReference_subscriber;
@@ -46,6 +44,9 @@ private:
   // Filter
   double q_filt;
   double qd_filt;
+
+  // internal: counter for sparse messages
+  uint msgBlock;
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh);

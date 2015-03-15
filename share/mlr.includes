@@ -1,6 +1,6 @@
 examples/Core/array
 examples/MDP/mdp_pomdp
-examples/Motion/feedbackControl_joystick
+examples/Motion/feedbackControl_gamepad
 examples/Motion/modelPredictiveControl
 examples/System/module
 include/lapack
@@ -30,7 +30,7 @@ src/Gui
 src/Hardware
 src/Hardware/flycap
 src/Hardware/G4
-src/Hardware/joystick
+src/Hardware/gamepad
 src/Hardware/kinect
 src/Hardware/racer
 src/Hardware/retired

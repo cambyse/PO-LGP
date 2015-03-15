@@ -3,7 +3,7 @@
 
 #include <Ors/ors.h>
 
-struct JoystickState;
+struct GamepadState;
 struct SkinPressure;
 
 //===========================================================================
@@ -49,11 +49,11 @@ struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);
 };
 
-struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
-  JoystickState *joyState;
+struct Gamepad_FeedbackControlTask:public FeedbackControlTaskAbstraction {
+  GamepadState *gamepadState;
   SkinPressure *skinPressure;
-  double joyRate, defaultEff_vprec;
-  ~Joystick_FeedbackControlTask() { listDelete(TVs); }
+  double gamepadRate, defaultEff_vprec;
+  ~Gamepad_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::KinematicWorld& ors);
   virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);
 };

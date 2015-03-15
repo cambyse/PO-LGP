@@ -112,8 +112,8 @@ double KLD_pair_probVsFactor(double J, double a, double b, double thi, double th
 #endif
 }
 double KLD(const BinaryPairFG &B, const BinaryPairFG &F){
-  CHECK(B.f_i.N ==F.f_i.N, "");
-  CHECK(B.f_ij.N==F.f_ij.N, "");
+  CHECK_EQ(B.f_i.N ,F.f_i.N, "");
+  CHECK_EQ(B.f_ij.N,F.f_ij.N, "");
   uint i, N=B.f_i.d0, E=B.edges.d0, x, y;
   uintA degree(N); degree.setZero();
   arr b, f;
@@ -229,7 +229,7 @@ void BinaryBPNet::zeroDeltas(uint dim){
 
 void BinaryBPNet::addBeliefDeltas(const arr& delta){
 #ifndef GradTypeArr
-  CHECK(delta.N==nodes.N, "");
+  CHECK_EQ(delta.N,nodes.N, "");
   for_list(node, n, nodes){
     n->delT += delta(n_COUNT);
     for(edge *e: n->edges){
@@ -244,7 +244,7 @@ void BinaryBPNet::addBeliefDeltas(const arr& delta){
 
 void BinaryBPNet::addThetaDeltas(const arr& delta){
 #ifndef GradTypeArr
-  CHECK(delta.N==nodes.N, "");
+  CHECK_EQ(delta.N,nodes.N, "");
   for_list(node, n, nodes) n->delT += delta(n_COUNT);
 #else
   HALT("this feature requires NO GradTypeArr compile flag");
@@ -253,7 +253,7 @@ void BinaryBPNet::addThetaDeltas(const arr& delta){
 
 void BinaryBPNet::addJDeltas(const arr& delta){
 #ifndef GradTypeArr
-  CHECK(delta.N==edges.N, "");
+  CHECK_EQ(delta.N,edges.N, "");
   for_list(edge, e, edges) e->delJ += delta(e_COUNT);
 #else
   HALT("this feature requires NO GradTypeArr compile flag");
@@ -418,9 +418,9 @@ void BinaryBPNet::getBeliefFG(BinaryPairFG &FG, bool addOn, bool normalized){
   arr P;
   
   if(addOn){
-    CHECK(FG.f_i .d0==N, "");
-    CHECK(FG.f_ij.d0==E, "");
-    CHECK(FG.edges.N==E, "");
+    CHECK_EQ(FG.f_i .d0,N, "");
+    CHECK_EQ(FG.f_ij.d0,E, "");
+    CHECK_EQ(FG.edges.N,E, "");
   }else{
     FG.logZ=0.;
     FG.f_i .resize(N, 2);    FG.f_i .setZero();
@@ -529,12 +529,12 @@ void BinaryBPNet::addBetheGradientDeltas(){
 }
 
 void BinaryBPNet::setT(const arr &w){
-  CHECK(w.N==nodes.N, "");
+  CHECK_EQ(w.N,nodes.N, "");
   for_list(node, n, nodes) n->theta = w(n_COUNT);
 }
 
 void BinaryBPNet::setJ(const arr &w){
-  CHECK(w.N==edges.N, "");
+  CHECK_EQ(w.N,edges.N, "");
   for_list(edge, e, edges){ e->J = w(e_COUNT);  e->tanhJ=TANH(e->J);  }
 }
 
@@ -587,7 +587,7 @@ void BinaryBPNet::getGradJ(arr &g){
 void BinaryBPNet::getPerturbationGradT(arr &g){
 #ifdef GradTypeArr
   uint i;  node *n;
-  CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
+  CHECK_EQ(nodes(0)->delT.N,nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(nodes.N);
   for(node *n: nodes){
     g(i) = n->delT(i);
@@ -601,7 +601,7 @@ void BinaryBPNet::getPerturbationGradT(arr &g){
 void BinaryBPNet::getNeighborPerturbationError(arr &g, const arr &J0, bool moduloNodeError){
 #ifdef GradTypeArr
   uint i;  edge *e;
-  CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
+  CHECK_EQ(nodes(0)->delT.N,nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(edges.N, 2);
   //g.setZero();
   for(edge *e: edges){
@@ -625,7 +625,7 @@ void BinaryBPNet::getNeighborPerturbationError(arr &g, const arr &J0, bool modul
 void BinaryBPNet::getPerturbationGradJ(arr &g){
 #ifdef GradTypeArr
   uint i;  edge *e;
-  CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
+  CHECK_EQ(nodes(0)->delT.N,nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(edges.N, nodes.N);
   arr dFdm;
   for(edge *e: edges){
@@ -684,7 +684,7 @@ void BinaryBPGrid::discount(float gamma){
 }
 
 void BinaryBPGrid::step(uint iter){
-  CHECK(phi.nd==2, "");
+  CHECK_EQ(phi.nd,2, "");
   uint Y=phi.d0, X=phi.d1;
   phi.reshape(Y*X);
   

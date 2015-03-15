@@ -10,7 +10,7 @@ int main( int argc, char **argv ){
   skin.report();
 
   uint M=6,X=6,Y=14;
-  MT::Array<uint16> sense(M,Y,X);
+  uint16A sense(M,Y,X);
   sense.setZero();
 
   OpenGL gl;

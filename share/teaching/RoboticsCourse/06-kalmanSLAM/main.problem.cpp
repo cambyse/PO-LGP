@@ -14,8 +14,6 @@ void getControlJacobian(arr& B, CarSimulator & S, const arr & u,const arr & x){
 
 //ok, works
 void Kalman(){
-  double theta = 0.3;
-  
   CarSimulator Sim;
   Sim.gl->watch();
   

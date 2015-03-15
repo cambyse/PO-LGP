@@ -3,7 +3,7 @@
 
 #include <Hardware/racer/modules.h>
 
-void testIMU(){
+void TEST(IMU){
   struct MySystem:System{
     ACCESS(arr, imuData);
     ACCESS(arr, stateEstimate);
@@ -37,7 +37,7 @@ void testIMU(){
   cout <<"bye bye" <<endl;
 }
 
-void testMotors(){
+void TEST(Motors){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
@@ -66,7 +66,7 @@ void testMotors(){
   cout <<"bye bye" <<endl;
 }
 
-void testBalance(){
+void TEST(Balance){
   struct MySystem:System{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate);

@@ -11,8 +11,8 @@
 #endif
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Core/thread.h>
@@ -23,7 +23,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   P.loadTransitionParameters();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
@@ -44,7 +44,7 @@ arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
   arr x = P.getInitialization();
 
   //-- setup the motion problem
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
@@ -159,7 +159,7 @@ int main(int argc, char** argv){
   std::vector<double> desired_joint_positions;
   desired_joint_positions.resize(joint_names.size(),0.0);
 
-  CHECK(joint_names.size()==7, "");
+  CHECK_EQ(joint_names.size(),7, "");
 
   ros::Duration(1.0).sleep();
 

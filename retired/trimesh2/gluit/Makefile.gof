@@ -18,7 +18,7 @@ CFILES =	freeglut_callbacks.c \
 		freeglut_geometry.c \
 		freeglut_glutfont_definitions.c \
 		freeglut_init.c \
-		freeglut_joystick.c \
+		freeglut_gamepad.c \
 		freeglut_main.c \
 		freeglut_menu.c \
 		freeglut_misc.c \

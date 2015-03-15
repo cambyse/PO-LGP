@@ -46,7 +46,7 @@ void TEST(ANNIncremental) {
   }
 }
 
-/*void testANNregression(){
+/*void TEST(ANNregression){
   doubleA X,Y,Z;
   uint i,j;
   X.setGrid(1,-3.,3.,100);

@@ -3,12 +3,12 @@
 
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Ors/ors_swift.h>
 
-void testGraspHeuristic(){
+void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
@@ -17,8 +17,6 @@ void testGraspHeuristic(){
   G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   ors::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -59,7 +57,7 @@ void testGraspHeuristic(){
 
 //===========================================================================
 
-void testPickAndPlace(){
+void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
@@ -68,8 +66,6 @@ void testPickAndPlace(){
 //  G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   arr x, xT;
 
@@ -96,11 +92,11 @@ void testPickAndPlace(){
   listDelete(MP.taskCosts);
   MP.x0 = x[MP.T-1];
 
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
@@ -130,7 +126,7 @@ void testPickAndPlace(){
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 

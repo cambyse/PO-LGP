@@ -12,7 +12,7 @@ bool ComputeSum::test(){
   x.set() = ARR(1., 2., 3.);
   step();
   double S = s.get();
-  CHECK(S==6.,"");
+  CHECK_EQ(S,6.,"");
   cout <<"*** TEST SUCCESS ***" <<endl;
   return true;
 }

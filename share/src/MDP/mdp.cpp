@@ -360,7 +360,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   for_list(infer::Variable,  v,  rewardVars){
     arr val(v->dim);
     strings=values(v->id);
-    CHECK(strings.N==v->dim, "");
+    CHECK_EQ(strings.N,v->dim, "");
     for(j=0; j<strings.N; j++) strings(j).resetIstream() >>val(j);
     //cout <<"reward values = " <<strings <<' ' <<val <<endl;
     infer::Factor R(ARRAY(v));
@@ -477,7 +477,7 @@ void mdp::readImageMaze(MDP& mdp, const char* filename){
 
 /// .
 void mazeToP(const byteA& maze, arr& Px, arr& Pxax, arr& Pyxa, arr& Rax, bool trapWalls){
-  CHECK(maze.nd==2, "");
+  CHECK_EQ(maze.nd,2, "");
   mdp::global_maze = maze;
   uint nx=maze.N, na=5, ny=16, dx=maze.d1, dy=maze.d0;
   uint x, a, i, j, k;
@@ -1085,7 +1085,7 @@ void mdp::generalDirichlet(arr& P){
 }
 
 void mdp::generalNodeTransition(arr& P, double uni, double noise, double stay){
-  CHECK(P.dim(0)==P.dim(P.nd-1), "");
+  CHECK_EQ(P.dim(0),P.dim(P.nd-1), "");
   uint n=P.d0;
   uint m=P.N/(n*n);
   uint i, j;

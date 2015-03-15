@@ -54,9 +54,11 @@ struct CartPoleState{
 };
 
 void glDrawCartPole(void *classP){
+#ifdef MT_GL //FIXME: this should really use our GL abstraction, should it not?
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
   ors::Transformation f;
+  f.setZero();
   //cart
   f.addRelativeTranslation(s->x,0.,1.);
   f.getAffineMatrixGL(GLmatrix);
@@ -70,9 +72,11 @@ void glDrawCartPole(void *classP){
   glLoadMatrixd(GLmatrix);
   glColor(.2,.2,.2);
   glDrawBox(.1, .1, 1.);
+  glLoadIdentity();
+#endif
 }
 
-void testDraw(){
+void TEST(Draw){
   CartPoleState s;
   s.gl.watch();
 }
@@ -80,8 +84,8 @@ void testDraw(){
 void TestMove(){
   CartPoleState s;
   for (uint t=0; t<400000; t++){
-    s.gl.text.clear() <<t <<" ; " <<s.x1 << " ; " <<s.th1;
     s.step(0.0);
+    s.gl.text.clear() <<t <<" ; " <<s.x1 << " ; " <<s.th1;
     s.gl.update();
   }
 }
@@ -153,9 +157,9 @@ void optimize(arr& w, bool noise){
   w = wbest;
 }
 
-void playController(const arr& w,bool noise){
+void playController(const arr& w, bool noise){
   CartPoleState s;
-  if(noise)  s.dynamicsNoise = 0.01;
+  if(noise)  s.dynamicsNoise = 0.1;
   for(uint t=0;;t++){
     s.step(GetControl(w,s));
     s.gl.update();
@@ -166,7 +170,7 @@ void playController(const arr& w,bool noise){
 
 int main(int argc,char **argv){
   //testDraw();
-  //TestMove();
+  TestMove();
   //TestStability(false);//parameter tells whether noise is used or not
 
   arr w=ARR(1.00000, 2.58375, 52.36463, 15.25927);

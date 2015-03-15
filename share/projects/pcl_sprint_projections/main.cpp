@@ -1,4 +1,4 @@
-#include <Hardware/joystick/joystick.h>
+#include <Hardware/gamepad/gamepad.h>
 
 #include "../pcl_sprint_module/system.h"
 #include "../pcl_sprint_module/methods.h"
@@ -10,7 +10,7 @@
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(arr, joystickState)
+  ACCESS(arr, gamepadState)
 
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
@@ -25,9 +25,8 @@ struct MySystem:System{
   ACCESS(byteA, rgb_leftArm)
   ACCESS(byteA, rgb_rightArm)
 
-
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
@@ -50,7 +49,11 @@ struct MySystem:System{
 };
 
 
-void testProjections(){
+void TEST(Projections){
+
+
+
+  MySystem S;
 
   DisplayPrimitives primitives;
   OpenGL gl;
@@ -60,22 +63,17 @@ void testProjections(){
   ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
-
-
-  MySystem S;
-
   gl.lock.writeLock();
-
   primitives.P.append(new ArrCloudView(S.kinect_points, S.kinect_pointColors));
   gl.lock.unlock();
 
   engine().open(S);
 
   for(uint t=0;;t++){
-    arr joypadState = S.joystickState.get();
-    if(t>10 && stopButtons(joypadState)) engine().shutdown.incrementValue();
+    arr gamepadState = S.gamepadState.get();
+    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
     if(engine().shutdown.getValue()>0) break;
-    S.joystickState.var->waitForNextRevision();
+    S.gamepadState.var->waitForNextRevision();
 
     // joint state
     arr q    = S.ctrl_obs.get()->q;
@@ -83,12 +81,14 @@ void testProjections(){
     if(q.N==primitives.G.q.N && qdot.N==primitives.G.qdot.N){
       gl.lock.writeLock();
       primitives.G.setJointState(q,qdot);
-      primitives.P(0)->X = kinShape->X;
       gl.lock.unlock();
     }else{
       cout <<"No joint signals: q.N=" <<q.N <<" G.q.N=" <<primitives.G.q.N <<endl;
     }
 
+    gl.lock.writeLock();
+    primitives.P(0)->X = kinShape->X;
+    gl.lock.unlock();
     gl.update();
 
   }
@@ -99,6 +99,7 @@ void testProjections(){
 
 
 int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
   testProjections();
 
   return 0;

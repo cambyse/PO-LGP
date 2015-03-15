@@ -1,7 +1,7 @@
 BASE = ../..
 
 PLIB = 1
-DEPEND = Core System pr2 Hardware_joystick
+DEPEND = Core System Ors pr2 Motion Hardware_gamepad
 
 LPATHS += /opt/ros/groovy/lib
 

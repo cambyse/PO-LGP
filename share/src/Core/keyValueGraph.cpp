@@ -31,19 +31,51 @@ const ItemL& NoItemL=*((ItemL*)NULL);
 //  Item methods
 //
 
+Item::Item(KeyValueGraph& _container):container(_container){
+  index=container.N;
+  container.ItemL::append(this);
+}
+
+Item::Item(KeyValueGraph& _container, const ItemL& _parents)
+  : container(_container), parents(_parents){
+  index=container.N;
+  container.ItemL::append(this);
+  for(Item *i: parents) i->parentOf.append(this);
+}
+
+Item::~Item() {
+  for(Item *i: parents) i->parentOf.removeValue(this);
+  for(Item *i: parentOf) i->parents.removeValue(this);
+  container.removeValue(this);
+  for_list(Item, i, container) i->index=i_COUNT;
+}
+
+bool Item::matches(const char *key){
+  for(const MT::String& k:keys) if(k==key) return true;
+  return false;
+}
+
+bool Item::matches(const StringA &query_keys) {
+  for(const MT::String& k:query_keys) {
+    if(!matches(k)) return false;
+  }
+  return true;
+}
+
 void Item::write(std::ostream& os) const {
   //-- write keys
   keys.write(os, " ", "", "\0\0");
   
   //-- write parents
   if(parents.N) {
-    os <<" (";
+    if(keys.N) os <<' ';
+    os <<'(';
     for_list(Item, it, parents) {
       if(it_COUNT) os <<' ';
       CHECK(it->keys.N,"");
       os <<it->keys.last();
     }
-    os <<")";
+    os <<')';
   }
   
   //-- write value
@@ -65,7 +97,7 @@ void Item::write(std::ostream& os) const {
   } else if(getValueType()==typeid(double)) {
     os <<'=' <<*getValue<double>();
   } else if(getValueType()==typeid(bool)) {
-    os <<'=' <<(*getValue<bool>()?"true":"false");
+    if(*getValue<bool>()) os<<','; else os <<'!';
   } else {
     Item *it = reg_findType(getValueType().name());
     if(it && it->keys.N>1) {
@@ -80,7 +112,14 @@ void Item::write(std::ostream& os) const {
   }
 }
 
-Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false) {
+KeyValueGraph Item::ParentOf(){
+  KeyValueGraph G;
+  G.isReferringToItemsOf = &container;
+  G.ItemL::operator=(parentOf);
+  return G;
+}
+
+Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false, KeyValueGraph* parentGraph=NULL) {
   MT::String str;
   StringA keys;
   ItemL parents;
@@ -88,13 +127,13 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
   
-#define PARSERR(x) { cout <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
-                            <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
+#define PARSERR(x) { cerr <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
+                          <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
   //-- read keys
   MT::skip(is," \t\n\r");
   for(;;) {
-    if(!str.read(is, " \t", " \t\n\r,;({}=", false)) break;
+    if(!str.read(is, " \t", " \t\n\r,;([{}=", false)) break;
     keys.append(str);
   }
   //if(!keys.N) return false;
@@ -121,90 +160,104 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   if(verbose) { cout <<" parents:"; if(!parents.N) cout <<"none"; else listWrite(parents,cout," ","()"); cout <<flush; }
   
   //-- read value
-  if(c=='=' || c=='{') {
+  if(c=='=' || c=='{' || c=='[' || c=='<' || c=='!' || c=='\'' || c=='"') {
     if(c=='=') c=MT::getNextChar(is);
     if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String or boolean
       is.putback(c);
       str.read(is, "", " \n\r\t,;}", false);
-      if(str=="true") item = new Item_typed<bool>(keys, parents, new bool(true));
-      else if(str=="false") item = new Item_typed<bool>(keys, parents, new bool(false));
-      else item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
+      if(str=="true") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true));
+      else if(str=="false") item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false));
+      else item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
     } else if(MT::contains("-.0123456789", c)) {  //single double
       is.putback(c);
       double d;
       try { is >>d; } catch(...) PARSERR("can't parse double");
-      item = new Item_typed<double>(keys, parents, new double(d));
+      item = new Item_typed<double>(containingKvg, keys, parents, new double(d), true);
     } else switch(c) {
-        case '\'': { //MT::FileToken
-          str.read(is, "", "\'", true);
-          MT::FileToken *f = new MT::FileToken(str, false);
-          try{
-            f->getIs(); //creates the ifstream and might throw an error
-            item = new Item_typed<MT::FileToken>(keys, parents, f);
-          } catch(...){
-            PARSERR("kvg indicates file which does not exist -> converting to string!");
-            item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
-          }
-        } break;
-        case '\"': { //MT::String
-          str.read(is, "", "\"", true);
-          item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
-        } break;
-        case '[': { //arr
-          is.putback(c);
-          arr reals;
-          is >>reals;
-          item = new Item_typed<arr>(keys, parents, new arr(reals));
-        } break;
-        case '<': { //any type parser
-          str.read(is, " \t", " \t\n\r()`-=~!@#$%^&*()+[]{};'\\:|,./<>?", false);
-//      str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
-          item = readTypeIntoItem(str,is);
-          if(!item) {
-            is.clear();
-            MT_MSG("could not parse value of type '" <<str <<"' -- no such type has been registered");
-            str.read(is,"",">",false);
-            MT_MSG("ignoring: '"<<str<<"'");
-          } else {
-            item->keys = keys;
-            item->parents = parents;
-          }
-          MT::parse(is, ">");
-        } break;
-        case '{': { // KeyValueGraph (e.g., attribute list)
-          KeyValueGraph *subList = new KeyValueGraph;
-          subList->parentKvg=&containingKvg;
-          subList->read(is);
-          MT::parse(is, "}");
-          item = new Item_typed<KeyValueGraph>(keys, parents, subList);
-        } break;
-        case '(': { // referring KeyValueGraph
-          KeyValueGraph refs;
-          refs.isReference=true;
-          for(uint j=0;; j++) {
-            str.read(is, " , ", " , )", false);
-            if(!str.N) break;
-            Item *e=containingKvg.getItem(str);
-            if(!e && containingKvg.parentKvg) e=containingKvg.parentKvg->getItem(str);
-            if(e) { //sucessfully found
-              refs.append(e);
-            } else { //this element is not known!!
-              HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
-                   <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
-            }
-          }
-          MT::parse(is, ")");
-          item = new Item_typed<KeyValueGraph>(keys, parents, new KeyValueGraph(refs));
-        } break;
-        default: { //error
-          is.putback(c);
-          PARSERR("unknown value indicator '" <<c <<"'");
-          return NULL;
+      case '!': { //boolean false
+        item = new Item_typed<bool>(containingKvg, keys, parents, new bool(false), true);
+      } break;
+      case '\'': { //MT::FileToken
+        str.read(is, "", "\'", true);
+        MT::FileToken *f = new MT::FileToken(str, false);
+        try{
+          f->getIs(); //creates the ifstream and might throw an error
+          item = new Item_typed<MT::FileToken>(containingKvg, keys, parents, f, true);
+        } catch(...){
+          PARSERR("kvg indicates file which does not exist -> converting to string!");
+          item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
+          delete f;
         }
+      } break;
+      case '\"': { //MT::String
+        str.read(is, "", "\"", true);
+        item = new Item_typed<MT::String>(containingKvg, keys, parents, new MT::String(str), true);
+      } break;
+      case '[': { //arr
+        is.putback(c);
+        arr reals;
+        is >>reals;
+        item = new Item_typed<arr>(containingKvg, keys, parents, new arr(reals), true);
+      } break;
+      case '<': { //any type parser
+        str.read(is, " \t", " \t\n\r()`-=~!@#$%^&*()+[]{};'\\:|,./<>?", false);
+        //      str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
+        item = readTypeIntoItem(containingKvg, str, is);
+        if(!item) {
+          is.clear();
+          MT_MSG("could not parse value of type '" <<str <<"' -- no such type has been registered");
+          str.read(is,"",">",false);
+          MT_MSG("ignoring: '"<<str<<"'");
+        } else {
+          item->keys = keys;
+          item->parents = parents;
+        }
+        MT::parse(is, ">");
+      } break;
+      case '=': { //pointer to the next item!
+        Item_typed<Item> *it = new Item_typed<Item>(containingKvg, keys, parents, NULL, false);
+        item = it;
+        Item *next = readItem(containingKvg, is, verbose, parentGraph);
+        if(!next){
+          PARSERR("could not read next item in assigning to previous");
+        }else{
+          it->value = next;
+        }
+      } break;
+      case '{': { // KeyValueGraph (e.g., attribute list)
+        KeyValueGraph *subList = new KeyValueGraph;
+        item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, subList, true);
+        subList->isItemOfParentKvg = item;
+        subList->read(is);
+        MT::parse(is, "}");
+      } break;
+      case '(': { // referring KeyValueGraph
+        KeyValueGraph *refs = new KeyValueGraph;
+        refs->isReferringToItemsOf = &containingKvg;
+        for(uint j=0;; j++) {
+          str.read(is, " , ", " , )", false);
+          if(!str.N) break;
+          Item *e=containingKvg.getItem(str);
+          if(!e && parentGraph) e=parentGraph->getItem(str);
+          if(e) { //sucessfully found
+            refs->ItemL::append(e);
+          } else { //this element is not known!!
+            HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
+                 <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
+          }
+        }
+        MT::parse(is, ")");
+        item = new Item_typed<KeyValueGraph>(containingKvg, keys, parents, refs, true);
+      } break;
+      default: { //error
+        is.putback(c);
+        PARSERR("unknown value indicator '" <<c <<"'");
+        return NULL;
       }
+    }
   } else { //no '=' or '{' -> boolean
     is.putback(c);
-    item = new Item_typed<bool>(keys, parents, new bool(true));
+    item = new Item_typed<bool>(containingKvg, keys, parents, new bool(true), true);
   }
 
 #undef PARSERR
@@ -215,8 +268,8 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
   }
   
   if(item){
-    for(Item *it:item->parents) it->parentOf.append(item);
-    containingKvg.append(item);
+    //    for(Item *it:item->parents) it->parentOf.append(item);
+    //    containingKvg.appendItem(item);
   }else {
     cout <<"FAILED reading item with keys ";
     keys.write(cout, " ", NULL, "()");
@@ -238,68 +291,121 @@ Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=fals
 //
 
 struct sKeyValueGraph {
-//  std::map<std::string, Item*> keyMap;
+  //  std::map<std::string, Item*> keyMap;
 };
 
-KeyValueGraph::KeyValueGraph():s(NULL), parentKvg(NULL), isReference(false) {
+KeyValueGraph::KeyValueGraph():s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
   ItemL::memMove=true;
-//  s = new sKeyValueGraph;
+}
+
+KeyValueGraph::KeyValueGraph(const char* filename):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+  ItemL::memMove=true;
+  FILE(filename) >>*this;
+}
+
+KeyValueGraph::KeyValueGraph(const KeyValueGraph& G):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(NULL) {
+  ItemL::memMove=true;
+  *this = G;
+}
+
+KeyValueGraph::KeyValueGraph(Item *itemOfParentKvg):s(NULL), isReferringToItemsOf(NULL), isItemOfParentKvg(itemOfParentKvg) {
+  ItemL::memMove=true;
 }
 
 KeyValueGraph::~KeyValueGraph() {
-//  delete s;
+  //  delete s;
+  if(!isReferringToItemsOf){
+    checkConsistency();
+    while(N) delete last();
+    checkConsistency();
+  }
+  //  if(!isReference) listDelete(*this);
+}
+
+Item *KeyValueGraph::append(const uintA& parentIdxs) {
+  ItemL parents(parentIdxs.N);
+  for(uint i=0;i<parentIdxs.N; i++) parents(i) = ItemL::elem(parentIdxs(i));
+  return append<int>(STRINGS_1(ItemL::N), parents, NULL, false);
 }
 
 Item* KeyValueGraph::getItem(const char *key) {
-  for(Item *it: (*this))
-  for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) return it;
+  for(Item *it: (*this)) if(it->matches(key)) return it;
+  //    for(const MT::String& k:it->keys) if(k==key) return it;
+  if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(key);
   return NULL;
 }
 
 Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
   for(Item *it: (*this)) {
     for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key1) {
-        for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key2)
-            return it;
-      }
+      for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key2)
+        return it;
+    }
   }
   return NULL;
 }
 
 Item* KeyValueGraph::getItem(const StringA &keys) {
-  bool found;
-  for(Item *it: (*this)) {
-    found = true;
-    for(uint k = 0; k < keys.N && found; k++) {
-      found = false;
-      for(const String &key: it->keys) {
-        if(keys(k) == key) {
-          found = true;
-          break;
-        }
-      }
-    }
-    if(found) return it;
-  }
+  //  bool found;
+  for(Item *it: (*this)) if(it->matches(keys)) return it;
+  if(isItemOfParentKvg) return isItemOfParentKvg->container.getItem(keys);
+  //  {
+  //    found = true;
+  //    for(uint k = 0; k < keys.N && found; k++) {
+  //      found = false;
+  //      for(const String &key: it->keys) {
+  //        if(keys(k) == key) {
+  //          found = true;
+  //          break;
+  //        }
+  //      }
+  //    }
+  //    if(found) return it;
+  //  }
   return NULL;
 }
 
 KeyValueGraph KeyValueGraph::getItems(const char* key) {
   KeyValueGraph ret;
+  ret.isReferringToItemsOf = this;
+  for(Item *it: (*this)) if(it->matches(key)) ret.ItemL::append(it);
+  //    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.ItemL::append(it); break; }
+  //  }
+  return ret;
+}
+
+Item* KeyValueGraph::getChild(Item *p1, Item *p2) const{
+  if(p1->parentOf.N < p2->parentOf.N){
+    for(Item *i:p1->parentOf){
+      if(p2->parentOf.findValue(i)>0) return i;
+    }
+  }else{
+    for(Item *i:p2->parentOf){
+      if(p1->parentOf.findValue(i)>0) return i;
+    }
+  }
+  return NULL;
+}
+
+KeyValueGraph KeyValueGraph::getItemsOfDegree(uint deg) {
+  KeyValueGraph ret;
+  ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) {
-    for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.append(it); break; }
+    if(it->parents.N==deg) ret.ItemL::append(it);
   }
   return ret;
 }
 
+
 KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info& type) {
   KeyValueGraph ret;
+  ret.isReferringToItemsOf = this;
   for(Item *it: (*this)) if(it->getValueType()==type) {
-    if(!key) ret.append(it);
+    if(!key) ret.ItemL::append(it);
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-          ret.append(it);
-          break;
-        }
+      ret.ItemL::append(it);
+      break;
+    }
   }
   return ret;
 }
@@ -309,7 +415,6 @@ Item* KeyValueGraph::merge(Item *m){
   //CHECK(KVG.N<=1, "can't merge into multiple items yet");
   Item *it=NULL;
   if(KVG.N) it=KVG.elem(0);
-  bool mIsMember = ItemL::contains(m);
   if(it){
     CHECK(m->getValueType()==it->getValueType(), "can't merge items of different types!");
     if(it->getValueType()==typeid(KeyValueGraph)){ //merge the KVGs
@@ -317,19 +422,58 @@ Item* KeyValueGraph::merge(Item *m){
     }else{ //overwrite the value
       it->takeoverValue(m);
     }
-    if(mIsMember) ItemL::removeValue(m);
+    if(&m->container==this) removeItem(m);
   }else{ //nothing to merge, append
-    if(!mIsMember) return append(m);
-    else return m;
+    if(&m->container!=this){
+      Item *it = m->newClone(*this);
+      for(uint i=0;i<it->parents.N;i++){
+        it->parents(i) = elem(it->parents(i)->index);
+        it->parents(i)->parentOf.append(it);
+      }
+    }
+    return m;
   }
   return NULL;
 }
 
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
-  listDelete(*this);
-  this->resize(G.N);
-  uint i;
-  for(i=0; i<G.N; i++) elem(i)=G.elem(i)->newClone();
+  G.checkConsistency();
+  //  G.index();//necessary, after checkConsistency?
+  //  { for_list(Item, i, G) i->index=i_COUNT; }
+
+  if(!isReferringToItemsOf){ while(N) delete last(); } // listDelete(*this);
+  for(Item *it:G){
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      Item *clone = new Item_typed<KeyValueGraph>(*this, it->keys, it->parents, new KeyValueGraph(), true);
+      clone->parentOf.clear();
+      clone->kvg().isItemOfParentKvg=clone;
+      clone->kvg().operator=(it->kvg()); //you can only call the operator= AFTER assigning isItemOfParentKvg
+    }else{
+      Item *clone = it->newClone(*this); //this appends sequentially clones of all items to 'this'
+      clone->parentOf.clear();
+    }
+  }
+
+  //rewire links
+  for(Item *it:*this){
+    for(uint i=0;i<it->parents.N;i++){
+      Item *p=it->parents(i);
+      const Graph *newg=this, *oldg=&G;
+      while(&p->container!=oldg){  //find the container while iterating backward also in the newG
+        CHECK(oldg->isItemOfParentKvg,"");
+        newg = &newg->isItemOfParentKvg->container;
+        oldg = &oldg->isItemOfParentKvg->container;
+      }
+      CHECK(p==oldg->elem(p->index),""); //we found the parent in oldg
+      p->parentOf.removeValue(it);
+      p = newg->elem(p->index); //now assign it to the same in newg
+      p->parentOf.append(it);
+      it->parents(i)=p;
+    }
+  }
+
+  this->checkConsistency();
+  G.checkConsistency();
   return *this;
 }
 
@@ -344,6 +488,8 @@ void KeyValueGraph::read(std::istream& is) {
       if(str=="%include"){
         is >>str;
         read(FILE(str).getIs());
+      }else if(str=="%end"){
+        break;
       }else HALT("don't know special command " <<str);
     }else{
       if(!is.good() || c=='}') { is.clear(); break; }
@@ -352,6 +498,7 @@ void KeyValueGraph::read(std::istream& is) {
       if(it->keys.N && it->keys(0)=="Include"){
         read(it->getValue<MT::FileToken>()->getIs());
         ItemL::removeValue(it);
+        index();
       }
     }
   }
@@ -370,34 +517,63 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(const char *filename) {
-  ofstream fil;
-  MT::open(fil, filename);
-  fil <<"graph G{" <<endl;
-  fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
-  fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
-  fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+void KeyValueGraph::writeDot(std::ostream& os, bool withoutHeader,bool defaultEdges, int nodesOrEdges) {
+  if(!withoutHeader){
+    os <<"graph G{" <<endl;
+    os <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
+    os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
+    os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+    index(true);
+  }
   for(Item *it: list()) {
-    fil <<it->index <<" [ ";
-    if(it->keys.N) fil <<"label=\"" <<it->keys.last() <<"\", ";
-    if(it->parents.N) fil <<"shape=box";
-    else fil <<"shape=ellipse";
-    fil <<" ];" <<endl;
-    for_list(Item, pa, it->parents) {
-      if(pa->index<it->index)
-        fil <<pa->index <<" -- " <<it->index <<" [ ";
-      else
-        fil <<it->index <<" -- " <<pa->index <<" [ ";
-      fil <<"label=" <<pa_COUNT;
-      fil <<" ];" <<endl;
+    MT::String label;
+    if(it->keys.N){
+      label <<"label=\"" <<it->keys(0);
+      for(uint i=1;i<it->keys.N;i++) label <<'\n' <<it->keys(i);
+      label <<"\" ";
+    }else if(it->parents.N){
+      label <<"label=\"(" <<it->parents(0)->keys.last();
+      for(uint i=1;i<it->parents.N;i++) label <<' ' <<it->parents(i)->keys.last();
+      label <<")\" ";
+    }
+
+    if(defaultEdges && it->parents.N==2 && it->getValueType()==typeid(bool)){ //an edge
+      os <<it->parents(0)->index <<" -- " <<it->parents(1)->index <<" [ " <<label <<"];" <<endl;
+    }else{
+      if(it->getValueType()==typeid(KeyValueGraph)){
+        os <<"subgraph cluster_" <<it->index <<" { " <<label /*<<" rank=same"*/ <<endl;
+        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, +1);
+        os <<"}" <<endl;
+        it->getValue<KeyValueGraph>()->writeDot(os, true, defaultEdges, -1);
+      }else{//normal item
+        if(nodesOrEdges>=0){
+          os <<it->index <<" [ " <<label;
+          if(it->parents.N) os <<"shape=box";
+          else os <<"shape=ellipse";
+          os <<" ];" <<endl;
+        }
+        if(nodesOrEdges<=0){
+          for_list(Item, pa, it->parents) {
+            if(pa->index<it->index)
+              os <<pa->index <<" -- " <<it->index <<" [ ";
+            else
+              os <<it->index <<" -- " <<pa->index <<" [ ";
+            os <<"label=" <<pa_COUNT;
+            os <<" ];" <<endl;
+          }
+        }
+      }
     }
   }
-  fil <<"}" <<endl;
-  fil.close();
+  if(!withoutHeader){
+    os <<"}" <<endl;
+    index(false);
+  }
 }
 
 void KeyValueGraph::sortByDotOrder() {
-  uintA perm(N); perm.setZero();
+  uintA perm;
+  perm.setStraightPerm(N);
   for_list(Item, it, list()) {
     if(it->getValueType()==typeid(KeyValueGraph)) {
       double *order = it->getValue<KeyValueGraph>()->getValue<double>("dot_order");
@@ -409,3 +585,50 @@ void KeyValueGraph::sortByDotOrder() {
   for_list(Item, it2, list()) it2->index=it2_COUNT;
 }
 
+bool KeyValueGraph::checkConsistency() const{
+  uint idx=0;
+  for(Item *it: *this){
+    CHECK_EQ(&it->container, this, "");
+    CHECK_EQ(it->index, idx, "");
+    for(Item *j: it->parents)  CHECK(j->parentOf.findValue(it) != -1,"");
+    for(Item *j: it->parentOf) CHECK(j->parents.findValue(it) != -1,"");
+    for(Item *parent: it->parents) if(&parent->container!=this){
+      //check that parent is contained in a super-graph of this
+      const Graph *parentGraph = this;
+      const Item *parentGraphItem;
+      while(&parent->container!=parentGraph){
+        //wee need to descend one more
+        parentGraphItem = parentGraph->isItemOfParentKvg;
+        CHECK(parentGraphItem,"there is no more supergraph to find the parent");
+        parentGraph = &parentGraphItem->container;
+      }
+      //check sorting
+      CHECK(parent->index < parentGraphItem->index,"subitem refers to parent that sorts below the subgraph");
+    }else{
+      CHECK(parent->index < it->index,"item refers to parent that sorts below the item");
+    }
+    if(it->getValueType()==typeid(KeyValueGraph)){
+      Graph& G = it->kvg();
+      CHECK(G.isItemOfParentKvg==it,"");
+      G.checkConsistency();
+    }
+    idx++;
+  }
+  return true;
+}
+
+uint KeyValueGraph::index(bool subKVG, uint start){
+  uint idx=start;
+  for(Item *i: list()){
+    i->index=idx;
+    idx++;
+    if(i->getValueType()==typeid(KeyValueGraph)){
+      if(subKVG){
+        idx = i->getValue<KeyValueGraph>()->index(true, idx);
+      }else{
+        i->getValue<KeyValueGraph>()->index(false, 0);
+      }
+    }
+  }
+  return idx;
+}

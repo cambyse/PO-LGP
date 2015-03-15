@@ -3,7 +3,7 @@
 #include <MT/util.h>
 #include <MT/graphview.h>
 
-void test(){
+void TEST(){
   HyperGraph G;
   cout <<"reading graph..." <<endl;
   G <<FILE("graph");

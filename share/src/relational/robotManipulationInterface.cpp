@@ -443,8 +443,8 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
   }
      PRINT(clearGuys)
      PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
-  CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
+  CHECK_EQ(nonClearGuys.N + clearGuys.N , reason::getConstants().N, "Clear guy calculation failed");
+  CHECK_EQ(numberSharedElements(nonClearGuys, clearGuys) , 0, "Clear guy calculation failed");
             
   // calc out-guys
   uintA outGuys;
@@ -634,8 +634,8 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   }
   // PRINT(clearGuys)
   // PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
-  CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
+  CHECK_EQ(nonClearGuys.N + clearGuys.N , reason::getConstants().N, "Clear guy calculation failed");
+  CHECK_EQ(numberSharedElements(nonClearGuys, clearGuys) , 0, "Clear guy calculation failed");
   
   // calc out-guys
   uintA outGuys;

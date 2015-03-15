@@ -6,7 +6,7 @@ using namespace std;
 
 #include <Algo/MLcourse.h>
 
-void testOutlier(){
+void TEST(Outlier){
   arr X,Phi,y,y_pred;
   arr beta;
   

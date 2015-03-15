@@ -1,7 +1,7 @@
 #include <Ors/roboticsCourse.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Motion/feedbackControl.h>
 #include <Optim/optimization.h>
 //#include <Perception/videoEncoder.h>
@@ -147,15 +147,15 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   stickyWeight=1.;
 
   //-- setup the motion problem
-  TaskCost *pos = P.addTask("position",
+  Task *pos = P.addTask("position",
                             new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
+  Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
   P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
+  Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
   P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
 
   //-- convert
@@ -216,7 +216,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   //joint space PD task
   PDtask *pd_x=
       MC.addPDTask("pose", .1, .8,
-                    new DefaultTaskMap(qItselfTMT, world));
+                    new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

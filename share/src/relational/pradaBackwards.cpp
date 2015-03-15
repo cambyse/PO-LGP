@@ -106,7 +106,7 @@ void setUnchangeableValues(NID_DBN& net, const TL::State& state) {
   FOR1D(net.rvs_state__f_prim, i) {
     if (!net.rvs_state__f_prim(i)->changeable) {
       FunctionInstance* fi = net.rvs_state__f_prim(i)->fi;
-      CHECK(fi->args.N == 1, "");
+      CHECK_EQ(fi->args.N , 1, "");
       uint target_value = (uint) LogicEngine::getValue(fi->args(0), fi->f, state);
       idx_target_value = net.rvs_state__f_prim(i)->range.findValue(target_value);
       for (t=0; t<=net.horizon; t++) {
@@ -266,7 +266,7 @@ void mergeStartStateWithGoal(Goal* goal, NID_DBN& net, uint t, const State& s0, 
   FOR1D(net.rvs_state__f_prim, v) {
 //     if (net.rvs_state__f_prim(v)->changeable) {
     FunctionInstance* fi = net.rvs_state__f_prim(v)->fi;
-    CHECK(fi->args.N == 1, "");
+    CHECK_EQ(fi->args.N , 1, "");
     uint target_value = (uint) LogicEngine::getValue(fi->args(0), fi->f, s0);
     uint idx_target_value = net.rvs_state__f_prim(v)->range.findValue(target_value);
     for (val=0; val<net.rvs_state__f_prim(v)->dim; val++) {

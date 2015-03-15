@@ -45,7 +45,7 @@ NaiveBayesClassificator::~NaiveBayesClassificator() {
 }
 
 int NaiveBayesClassificator::classify(const MT::Array<arr>& features, int set) const {
-  CHECK(features.d1 == s->features.d1, "Feature vector is of different size than trainings data.");
+  CHECK_EQ(features.d1 ,  s->features.d1, "Feature vector is of different size than trainings data.");
   MT::Array<arr> _features = features[set];
   arr probabilities;
   s->getProbabilities(probabilities, _features);
@@ -88,7 +88,7 @@ void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, 
 }
 
 void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int class_) {
-  CHECK(data.d1 == s->features.d1, "The new feature vector does not match the number of features for data in this classificator");
+  CHECK_EQ(data.d1 ,  s->features.d1, "The new feature vector does not match the number of features for data in this classificator");
   int d1 = s->features.d1;
   s->features.append(data);
   s->features.reshape(s->features.N/d1, d1);

@@ -23,7 +23,7 @@ struct KinectPoller : Module {
 
 namespace MLR {
     // convert raw image data into depth and color arrays like in a pointcloud
-    void images2pointcloud(byteA& rgb, MT::Array<uint16_t>& depth, arr& pts, arr& cols);
+    void images2pointcloud(byteA& rgb, uint16A& depth, arr& pts, arr& cols);
 	// pack 16bit depth image into 3 8-bit channels
 	void pack_kindepth2rgb(const uint16A& depth, byteA& buffer);
 

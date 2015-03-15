@@ -60,7 +60,7 @@ int main(int argc,char** argv){
     robotProcesses.step();
     recho.threadStepOrSkip(200);
     
-    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
+    if(robotProcesses.gamepad.state(0)==16 || robotProcesses.gamepad.state(0)==32) break;
   }
   
   recho.threadClose();

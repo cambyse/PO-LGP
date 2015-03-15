@@ -1,7 +1,7 @@
 #include <Ors/roboticsCourse.h>
 
 
-void testSimulator(){
+void TEST(Simulator){
   Simulator S("man.ors");
   cout <<"joint dimensions = " <<S.getJointDimension() <<endl;
 

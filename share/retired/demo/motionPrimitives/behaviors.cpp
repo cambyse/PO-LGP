@@ -22,26 +22,26 @@ Some behaviors are sequential like a finite state machine.
 
 void wait(double sec){
   VAR(MotionPrimitive);
-  VAR(JoystickState);
+  VAR(GamepadState);
   _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
   
   double time=MT::realTime();
   for(;;){
     MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+    if(_GamepadState->get_state(NULL)(0)&0x30) break;
     if(sec>0 && MT::realTime()-time>sec) break;
   }
 }
 
-void joystick(){
+void gamepad(){
   VAR(MotionPrimitive);
-  VAR(JoystickState);
-  Joystick_FeedbackControlTask joyTask;
-  _MotionPrimitive->setFeedbackTask(joyTask, true, false, NULL);
+  VAR(GamepadState);
+  Gamepad_FeedbackControlTask gamepadTask;
+  _MotionPrimitive->setFeedbackTask(gamepadTask, true, false, NULL);
 
   for(;;){
     MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+    if(_GamepadState->get_state(NULL)(0)&0x30) break;
   }
   
   _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
@@ -49,7 +49,7 @@ void joystick(){
 void homing(bool fixFingers){
   VAR(MotionPrimitive);
   VAR(HardwareReference);
-  VAR(JoystickState);
+  VAR(GamepadState);
   Homing_FeedbackControlTask homeTask;
   _MotionPrimitive->setFeedbackTask(homeTask, true, fixFingers, NULL);
   
@@ -62,7 +62,7 @@ void homing(bool fixFingers){
       dist=length(_HardwareReference->get_q_reference(NULL));
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+    if(_GamepadState->get_state(NULL)(0)&0x30) break;
   }
   
   _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
@@ -91,7 +91,7 @@ void reach(const char* shapeName, const arr& posGoal, double maxVel){
     MT::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
-    if(s->robotProcesses.joy.state(0)&0x30) break;
+    if(s->robotProcesses.gamepad.state(0)&0x30) break;
   }
   
   s->robotProcesses.ctrl.taskLock.writeLock();
@@ -134,7 +134,7 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
     MT::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
-    if(s->robotProcesses.joy.state(0)&0x30) break;
+    if(s->robotProcesses.gamepad.state(0)&0x30) break;
   }
   
   s->robotProcesses.ctrl.taskLock.writeLock();
@@ -165,7 +165,7 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   VAR(MotionPrimitive);
   VAR(PerceptionOutput);
   VAR(GeometricState);
-  VAR(JoystickState);
+  VAR(GamepadState);
   _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 
   for(;;){
@@ -198,7 +198,7 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
     if(bPerceive) break;
     
     MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+    if(_GamepadState->get_state(NULL)(0)&0x30) break;
   }
 }
 
@@ -288,7 +288,7 @@ void plannedHoming(const char* objShape, const char* belowToShape){
     if(bPlanDone)  break;
     
     MT::wait(.2);
-    if(s->robotProcesses.joy.state(0)==16 || s->robotProcesses.joy.state(0)==32) return;
+    if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
   MT::wait(.5); //make the robot really stop...

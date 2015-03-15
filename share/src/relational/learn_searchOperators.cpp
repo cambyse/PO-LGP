@@ -2287,12 +2287,12 @@ void CompareFunctionValues::findRules(const RuleSetContainer& rulesC_old, const 
 //             }
             // several tests for correct calculation
             // These tests are intuitive, but wrong!!
-//                         CHECK(coveredExIDsPerComparisonType.d0==comparisonTypes.N, "Too many new rules!!!")
-//                         CHECK(coveredExIDsPerComparisonType(0).d0+coveredExIDsPerComparisonType(1).d0==coveredExIDsPerComparisonType(2).d0, "equal + less != less-equal!!")
-//                         CHECK(coveredExIDsPerComparisonType(0).d0+coveredExIDsPerComparisonType(3).d0==coveredExIDsPerComparisonType(4).d0, "equal + less != less-equal!!")
-//                         CHECK(numberSharedElements(coveredExIDsPerComparisonType(0), coveredExIDsPerComparisonType(2)) == coveredExIDsPerComparisonType(0).N, "<= does not subsume ==!")
-//                         CHECK(numberSharedElements(coveredExIDsPerComparisonType(0), coveredExIDsPerComparisonType(4)) == coveredExIDsPerComparisonType(0).N, ">= does not subsume ==!")
-//                         CHECK(numberSharedElements(coveredExIDsPerComparisonType(1), coveredExIDsPerComparisonType(3)) == 0, "< and > share elements!")
+//                         CHECK_EQ(coveredExIDsPerComparisonType.d0,comparisonTypes.N, "Too many new rules!!!")
+//                         CHECK_EQ(coveredExIDsPerComparisonType(0).d0+coveredExIDsPerComparisonType(1).d0,coveredExIDsPerComparisonType(2).d0, "equal + less != less-equal!!")
+//                         CHECK_EQ(coveredExIDsPerComparisonType(0).d0+coveredExIDsPerComparisonType(3).d0,coveredExIDsPerComparisonType(4).d0, "equal + less != less-equal!!")
+//                         CHECK_EQ(numberSharedElements(coveredExIDsPerComparisonType(0), coveredExIDsPerComparisonType(2)) , coveredExIDsPerComparisonType(0).N, "<= does not subsume ==!")
+//                         CHECK_EQ(numberSharedElements(coveredExIDsPerComparisonType(0), coveredExIDsPerComparisonType(4)) , coveredExIDsPerComparisonType(0).N, ">= does not subsume ==!")
+//                         CHECK_EQ(numberSharedElements(coveredExIDsPerComparisonType(1), coveredExIDsPerComparisonType(3)) , 0, "< and > share elements!")
           }
         }
       } // for term combos

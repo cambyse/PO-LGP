@@ -5,7 +5,9 @@
 // test very basics
 //
 
-#define TEST_DIFF_ZERO(expr) { double e=(expr).diffZero(); CHECK(e<1e-6, " Error="<<e <<" Expression=" <<(expr)); cout <<"Success: " <<e <<endl; }
+#define TEST_DIFF_ZERO(expr) { CHECK_ZERO((expr).diffZero(), 1e-6, "TEST FAILED"); cout <<"Success: " <<(expr).diffZero() <<" == " <<#expr <<endl; }
+
+#define TEST_ZERO(expr) { CHECK_ZERO((expr), 1e-6, "TEST FAILED"); cout <<"Success: " <<(expr) <<" == " <<#expr <<endl; }
 
 void TEST(Basics){
   for(uint k=0;k<10;k++){
@@ -16,6 +18,7 @@ void TEST(Basics){
     TEST_DIFF_ZERO(Quaternion_Id);
     TEST_DIFF_ZERO(A/A);
     TEST_DIFF_ZERO(A*B/B/A);
+    TEST_ZERO( ((A/B).getRad()) - ((B/A).getRad()) );
   }
 
   for(uint k=0;k<10;k++){

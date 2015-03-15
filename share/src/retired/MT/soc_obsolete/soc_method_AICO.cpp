@@ -808,9 +808,9 @@ double soc::AICO::stepDynamic(){
   arr q0;
   sys->get_x0(q0);
   if(sys->dynamic){
-    CHECK(q0.N==2*sys->qDim(), "");
+    CHECK_EQ(q0.N,2*sys->qDim(), "");
   }else{
-    CHECK(q0.N==sys->qDim(), "");
+    CHECK_EQ(q0.N,sys->qDim(), "");
   }
   s[0]=q0;      Sinv[0].setDiag(1e10);
   b[0]=q0;      Binv[0].setDiag(1e10);
@@ -1264,7 +1264,7 @@ double soc::AICO::stepMinSum(){
 
 #if 0
                      void soc::AICO::getMultiScaleMessages(arr& s_, arr& S_, arr& v_, arr& V_, uint t, double upMixS, double selfMixS, double dnMixS, double upMixV, double selfMixV, double dnMixV){
-                     CHECK(multiScales(scale)==this, "");
+                     CHECK_EQ(multiScales(scale),this, "");
                      arr s, S, v, V;
                      s.resize(b.d1);      s.setZero();
                      S.resize(b.d1, b.d1); S.setZero();
@@ -1274,7 +1274,7 @@ double soc::AICO::stepMinSum(){
                      double pS, pSsum=0., pV, pVsum=0.;;
                      uint i, t_;
                      for_list(Type,  A,  multiScales){
-                     CHECK(i==A->scale, "");
+                     CHECK_EQ(i,A->scale, "");
                      if(!A->s.N) continue; //assume this wasn't computed yet..
                      if(i <scale){
                      pS=dnMixS;   pV=dnMixV;   t_=t <<(scale-i);

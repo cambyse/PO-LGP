@@ -65,7 +65,7 @@ public:
     MotionProblem P(&G);
     P.loadTransitionParameters();
 
-    TaskCost *c;
+    Task *c;
     c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,

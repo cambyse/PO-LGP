@@ -1,12 +1,12 @@
 #include <System/engine.h>
-#include <Hardware/joystick.h>
+#include <Hardware/gamepad.h>
 #include <Media/audio.h>
 
 //void threadedRun() {
 //  struct MySystem:System{
-//    ACCESS(arr, joystickState);
+//    ACCESS(arr, gamepadState);
 //    MySystem(){
-//      addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+//      addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
 //      connect();
 //    }
 //  } S;
@@ -20,26 +20,26 @@
 //}
 
 void play(){
-  JoystickInterface joy;
+  GamepadInterface gamepad;
   SineSound S;
   Audio audio;
 
-  createVariables(ARRAY<Module*>(&joy));
+  createVariables(ARRAY<Module*>(&gamepad));
 
-  joy.open();
+  gamepad.open();
   audio.open(S);
   S.addNote(880.,.2,0);
   for(uint k=0;;k++){
     MT::wait(.001);
-    joy.step();
-    arr s = joy.joystickState.get();
+    gamepad.step();
+    arr s = gamepad.gamepadState.get();
     double freq=s(4);
     S.changeFreq(0, 880.*pow(2, s(4)));
     S.notes(0,1)=.001 + .2*(s(3)+1.);
     if(MT::realTime()>10.) break;
   }
 
-  joy.close();
+  gamepad.close();
   audio.close();
 
 }

@@ -156,7 +156,7 @@ private:
         continue;
         
       int mkresult = 0;
-      CHECK(0 == (mkresult = mkdir(dirPart.c_str(), dirmode)), "mkdir failed with '" << mkresult << "' although '" << dirPart << "' didn't exist.");
+      CHECK_EQ(0 , (mkresult = mkdir(dirPart.c_str(), dirmode)), "mkdir failed with '" << mkresult << "' although '" << dirPart << "' didn't exist.");
       
     } while (++pathIndex < pathSize);
     

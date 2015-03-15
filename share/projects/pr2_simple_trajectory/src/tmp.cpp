@@ -120,8 +120,8 @@ public:
 //      cout <<j->name <<endl;
       COUNT++;
     }
-    CHECK(q.N==COUNT,"DAMMIT");
-    CHECK(q_last.N==COUNT,"DAMMIT");
+    CHECK_EQ(q.N,COUNT,"DAMMIT");
+    CHECK_EQ(q_last.N,COUNT,"DAMMIT");
 
     goal.trajectory.points[0].positions.resize(q_last.N);
     goal.trajectory.points[0].velocities.resize(q_last.N);

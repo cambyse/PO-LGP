@@ -16,7 +16,7 @@ NILS = 1
 CUDA = 1
 SWIFT = 1
 SCHUNK = 1
-PLIB = 1  #for the Joystick
+PLIB = 1  #for the Gamepad
 
 CXXFLAGS += -DMT_NO_GLOBALMEM
 

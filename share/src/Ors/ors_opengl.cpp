@@ -32,10 +32,10 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
-double orsDrawAlpha=1.00;
+double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
 
 #ifdef MT_GL
@@ -66,10 +66,12 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
     *(gl.camera.X) = glCamera->X;
+    gl.resize(500,500);
   } else {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
+
   }
   gl.update();
 }
@@ -87,15 +89,14 @@ void glDrawShape(ors::Shape *s) {
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
 
-  double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
-  if(!scale) scale=1.;
-  scale*=.3;
-
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
 
   if(!orsDrawShapes) {
+    double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
+    if(!scale) scale=1.;
+    scale*=.3;
     glDrawAxes(scale);
     glColor(0, 0, .5);
     glDrawSphere(.1*scale);
@@ -150,8 +151,10 @@ void glDrawShape(ors::Shape *s) {
     glEnd();
   }
 
-  glColor(1,1,1);
-  if(orsDrawBodyNames && s->body) glDrawText(s->body->name, 0, 0, 0);
+  if(orsDrawBodyNames && s->body){
+    glColor(1,1,1);
+    glDrawText(s->body->name, 0, 0, 0);
+  }
 
   glPopName();
 }
@@ -250,14 +253,19 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const char *tag, double delay, uint dim_z) {
+void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const char *tag, double delay, uint dim_z, bool copyG) {
   if(!steps) return;
 //  G.gl().update();
   for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
     s->mesh.computeNormals();
   }
-  ors::KinematicWorld Gcopy;// = G;
-  Gcopy.copy(G,true);
+  ors::KinematicWorld *Gcopy;
+  if(G.operators.N) copyG=true;
+  if(!copyG) Gcopy=&G;
+  else{
+    Gcopy = new ors::KinematicWorld;
+    Gcopy->copy(G,true);
+  }
   arr x,z;
   if(dim_z){
     x.referToSubRange(_x,0,-dim_z-1);
@@ -265,7 +273,7 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const c
   }else{
     x.referTo(_x);
   }
-  uint n=Gcopy.getJointStateDimension()-dim_z;
+  uint n=Gcopy->getJointStateDimension()-dim_z;
   x.reshape(x.N/n,n);
   uint num, T=x.d0-1;
   if(steps==1 || steps==-1) num=T; else num=steps;
@@ -274,20 +282,21 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const c
     if(G.operators.N){
       for(ors::GraphOperator *op: G.operators)
         if(op->timeOfApplication==t)
-          op->apply(Gcopy);
+          op->apply(*Gcopy);
     }
-    if(dim_z) Gcopy.setJointState(cat(x[t], z));
-    else Gcopy.setJointState(x[t]);
+    if(dim_z) Gcopy->setJointState(cat(x[t], z));
+    else Gcopy->setJointState(x[t]);
     if(delay<0.){
-      if(delay<-10.) FILE("z.graph") <<Gcopy;
-      Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      if(delay<-10.) FILE("z.graph") <<*Gcopy;
+      Gcopy->gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     }else{
-      Gcopy.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      Gcopy->gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
       if(delay) MT::wait(delay);
     }
   }
   if(steps==1)
-    Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
+    Gcopy->gl().watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
+  if(copyG) delete Gcopy;
 }
 
 /* please don't remove yet: code for displaying edges might be useful...
@@ -616,7 +625,7 @@ void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
 void ors::KinematicWorld::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
 void editConfiguration(const char* orsfile, ors::KinematicWorld& C) { NICO }
-void animateConfiguration(ors::KinematicWorld& C, OpenGL& gl) { NICO }
+void animateConfiguration(ors::KinematicWorld& C, Inotify*) { NICO }
 void glTransform(const ors::Transformation&) { NICO }
 void displayTrajectory(const arr&, int, ors::KinematicWorld&, const char*, double) { NICO }
 void displayState(const arr&, ors::KinematicWorld&, const char*) { NICO }

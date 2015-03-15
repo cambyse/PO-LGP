@@ -929,8 +929,8 @@ MT::FileToken::FileToken(const char* filename, bool change_dir): os(NULL), is(NU
 }
 
 MT::FileToken::~FileToken(){
-  if(is){ is->close(); delete is; is=NULL; }
-  if(os){ os->close(); delete os; os=NULL; }
+  if(is){ is->close(); } //delete is; is=NULL; }
+  if(os){ os->close(); } //delete os; os=NULL; }
   if(cwd.N){
     log() <<"leaving path `" <<path<<"' back to '" <<cwd <<"'" <<std::endl;
     if(chdir(cwd)) HALT("couldn't change back to directory " <<cwd);
@@ -1264,9 +1264,9 @@ double gaussIntExpectation(double x) {
  */
 std::string getcwd_string() {
    char buff[PATH_MAX];
-   getcwd( buff, PATH_MAX );
-   std::string cwd( buff );
-   return cwd;
+   char *succ=getcwd( buff, PATH_MAX );
+   CHECK(succ,"could not call getcwd: errno=" <<errno <<' ' <<strerror(errno));
+   return std::string(buff);
 }
 
 //===========================================================================

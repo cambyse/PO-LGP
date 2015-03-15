@@ -8,7 +8,7 @@ using namespace std;
 
 
 
-void testSetFit(){
+void TEST(SetFit){
   //random data:
   rnd.clockSeed();
   uint n=100;

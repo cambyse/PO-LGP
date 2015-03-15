@@ -1,8 +1,8 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include "../splines/spline.h"
@@ -112,7 +112,7 @@ void executeTrajectory(String scene, ControlType cType){
   arr goal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
@@ -197,7 +197,7 @@ void executeTrajectory(String scene, ControlType cType){
     taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
     taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
     taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
-    taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+    taskHome = MP.addPDTask("home", .02, 0.5, new TaskMap_qItself());
     taskHome->setGains(0.,10.); taskHome->prec=1e-1;
     taskCol->prec=1e0;
     taskPos->prec=1e0;
@@ -210,7 +210,7 @@ void executeTrajectory(String scene, ControlType cType){
     break;
   case(CT_MPC):
     MP.nullSpacePD.prec=0.;
-    jointPos = MP.addPDTask("pos", tau_plan*2, 1, qItselfTMT, "endeff");
+    jointPos = MP.addPDTask("pos", tau_plan*2, 1, new TaskMap_qItself());
     jointPos->setGains(100.,100.);
     mpc = new MPC(P,x);
     // world.gl().add(drawActTraj,&(mpc->x_cart));
@@ -220,7 +220,7 @@ void executeTrajectory(String scene, ControlType cType){
     taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
     taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
     taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
-    taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+    taskHome = MP.addPDTask("home", .02, 0.5, new TaskMap_qItself());
 
     taskPos->setGains(1.,100.); taskPos->prec=1e0;
     taskVec->setGains(1.,100.); taskVec->prec=1e0;

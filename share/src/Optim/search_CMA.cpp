@@ -41,7 +41,7 @@ SearchCMA::~SearchCMA(){
 }
 
 void SearchCMA::init(uint D, int mu, int lambda, const arr &startPoint, double _startDev){
-  CHECK(startPoint.N==D,"");
+  CHECK_EQ(startPoint.N,D,"");
   arr startDev(D);
   startDev=_startDev;
   cmaes_init(&s->evo, NULL, D, startPoint.p, startDev.p, 1, lambda, mu, NULL);

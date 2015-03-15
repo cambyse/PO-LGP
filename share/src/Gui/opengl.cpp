@@ -19,7 +19,7 @@
 
 #include <Core/array_t.h>
 #include <Core/geo.h>
-//#include <GL/glew.h>
+#include <GL/glew.h>
 #include "opengl.h"
 
 //===========================================================================
@@ -130,14 +130,13 @@ void ors::Camera::focus(const Vector& v) { *foc=v; focus(); }
 void ors::Camera::focus() { watchDirection((*foc)-X->pos); } //X->Z=X->pos; X->Z-=foc; X->Z.normalize(); upright(); }
 /// rotate the frame to watch in the direction vector D
 void ors::Camera::watchDirection(const Vector& d) {
-  Vector tmp;
   if(d.x==0. && d.y==0.) {
     X->rot.setZero();
     if(d.z>0) X->rot.setDeg(180, 1, 0, 0);
     return;
   }
   Quaternion r;
-  r.setDiff(-X->rot.getZ(tmp), d);
+  r.setDiff(-X->rot.getZ(), d);
   X->rot=r*X->rot;
 }
 /// rotate the frame to set it upright (i.e. camera's y aligned with 's z)
@@ -929,7 +928,7 @@ void glGrabImage(byteA& image) { NICO }
     depth values between 0 and 1. */
 void glGrabDepth(byteA& depth) {
   if(!depth.N) depth.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH));
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  CHECK_EQ(depth.nd,2, "depth buffer has to be either 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth.p);
 }
@@ -939,7 +938,7 @@ void glGrabDepth(byteA& depth) {
     depth values between 0 and 1. */
 void glGrabDepth(floatA& depth) {
   if(!depth.N) depth.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH));
-  CHECK(depth.nd==2, "depth buffer has to be 2-dimensional");
+  CHECK_EQ(depth.nd,2, "depth buffer has to be 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depth.p);
 }
@@ -1072,6 +1071,7 @@ void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) { NICO }
 void glDrawUI(void *p) { NICO }
 bool glUI::hoverCallback(OpenGL& gl) { NICO }
 bool glUI::clickCallback(OpenGL& gl) { NICO }
+void glDrawPointCloud(const arr& pts, const arr& cols) { NICO }
 #endif
 
 //===========================================================================
@@ -1089,18 +1089,25 @@ void glDrawPointCloud(const arr& pts, const arr& cols) {
   glDisable(GL_LIGHTING);
 #if 0
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_DOUBLE, 0, pts.p);
+  glVertexPointer(3, GL_DOUBLE, pts.d1-3, pts.p);
   if(&cols && cols.N==pts.N){
     glEnableClientState(GL_COLOR_ARRAY);
-    glColorPointer(3, GL_DOUBLE, 0, cols.p );
+    glColorPointer(3, GL_DOUBLE, cols.d1-3, cols.p );
   }else glDisableClientState(GL_COLOR_ARRAY);
   glDrawArrays(GL_POINTS, 0, pts.d0);
   glDisableClientState(GL_VERTEX_ARRAY);
 #else
   glBegin(GL_POINTS);
-  for(uint i=0;i<pts.d0;i++){
-    if(cols.N==pts.N) glColor3dv(&cols(i,0));
-    glVertex3dv(&pts(i,0));
+  if(!&cols || cols.N!=pts.N){
+    const double *p=pts.begin(), *pstop=pts.end();
+    for(; p!=pstop; p+=pts.d1)
+      glVertex3dv(p);
+  }else{
+    const double *p=pts.begin(), *pstop=pts.end(), *c=cols.begin();
+    for(; p!=pstop; p+=pts.d1, c+=cols.d1){
+      glVertex3dv(p);
+      glColor3dv(c);
+    }
   }
   glEnd();
 #endif
@@ -1113,7 +1120,7 @@ void glDrawPointCloud(const arr& pts, const arr& cols) {
 //
 
 OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy)
-  : s(NULL), reportEvents(false), width(0), height(0), captureImg(false), captureDep(false), fbo(0), render_buf(0){
+  : s(NULL), reportEvents(false), width(0), height(0), captureImg(false), captureDep(false), fboId(0), rboColor(0), rboDepth(0){
   //MT_MSG("creating OpenGL=" <<this);
   initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy); //this might call some callbacks (Reshape/Draw) already!
@@ -1122,7 +1129,7 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy)
 }
 
 OpenGL::OpenGL(void *container)
-  : s(NULL), reportEvents(false), width(0), height(0), captureImg(false), captureDep(false), fbo(0), render_buf(0){
+  : s(NULL), reportEvents(false), width(0), height(0), captureImg(false), captureDep(false), fboId(0), rboColor(0), rboDepth(0){
   initGlEngine();
   s=new sOpenGL(this,container); //this might call some callbacks (Reshape/Draw) already!
   init();
@@ -1464,6 +1471,7 @@ void OpenGL::Select() {
 #else
   Draw(width(),height());
 #endif
+  glLoadIdentity();
   
   GLint n;
   n=glRenderMode(GL_RENDER);
@@ -1511,9 +1519,10 @@ int OpenGL::update(const char *txt, bool _captureImg, bool _captureDep, bool wai
   captureImg=_captureImg;
   captureDep=_captureDep;
   if(txt) text.clear() <<txt;
+  isUpdating.waitForValueEq(0);
+  isUpdating.setValue(1);
   postRedrawEvent(false);
-  if(captureImg || captureDep || waitForCompletedDraw) processEvents(); //{ MT::wait(.01); processEvents(); MT::wait(.01); }
-  captureImg=captureDep=false;
+  if(captureImg || captureDep || waitForCompletedDraw){ processEvents();  isUpdating.waitForValueEq(0);  processEvents(); }//{ MT::wait(.01); processEvents(); MT::wait(.01); }
   return pressedkey;
 }
 

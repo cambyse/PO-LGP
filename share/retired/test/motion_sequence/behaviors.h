@@ -3,7 +3,7 @@
 
 #include <motion/motion.h>
 
-void joystick();
+void gamepad();
 void wait(double sec=0);
 void homing(bool fixFingers = false);
 void reach(const char* shapeName, const arr& posGoal, double maxVel=.1);

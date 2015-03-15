@@ -1,8 +1,8 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <GL/glu.h>
@@ -129,7 +129,7 @@ void executeTrajectoryWholeBody(String scene){
   arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
   c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -146,11 +146,11 @@ void executeTrajectoryWholeBody(String scene){
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = P.addTask("qLimits", new TaskMap_qLimits());
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
   //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
 
-  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = P.addTask("homing", new TaskMap_qItself());
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
   //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
 
@@ -226,8 +226,8 @@ void executeTrajectoryWholeBody(String scene){
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");
   taskVecL = MP.addPDTask("vecL", tau_plan*5, 1, vecTMT, "endeffL",ARR(0.,0.,1.));
-  taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
-  taskLimits = MP.addPDTask("limits", .02, 0.5, qLimitsTMT);
+  taskHome = MP.addPDTask("home", .02, 0.5, new TaskMap_qItself());
+  taskLimits = MP.addPDTask("limits", .02, 0.5, new TaskMap_qLimits());
 
   //  taskPos->setGains(10.,100.); taskPos->prec=1e1;
   //  taskVec->setGains(10.,100.); taskVec->prec=1e0;
@@ -367,7 +367,7 @@ void executeTrajectoryRightArm(String scene){
   arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
@@ -376,11 +376,11 @@ void executeTrajectoryRightArm(String scene){
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = P.addTask("qLimits", new TaskMap_qLimits());
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
 //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
 
-  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = P.addTask("homing", new TaskMap_qItself());
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
   //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
   //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
@@ -445,7 +445,7 @@ void executeTrajectoryRightArm(String scene){
   MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
-  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
+  qitself = MP.addPDTask("qitself", .1, 1., new TaskMap_qItself(0.01*MP.H_rate_diag));
   cout << MP.H_rate_diag << endl;
   double t_PD = tau_plan/4.;
   double damp_PD = 0.9;

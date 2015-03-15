@@ -1,0 +1,316 @@
+#rules = 35
+# Rule #0  (1 out of 35)
+ACTION:
+  default()
+CONTEXT:
+  --
+OUTCOMES:
+  0.5 <no-change>
+  0.5 <noise>
+
+# Rule #1  (2 out of 35)
+ACTION:
+  terminate_pickup(76 67)
+CONTEXT:
+  pickup(76 67)=0 active_pickup(76 67) busy(76) busy(67) hand(76) object(67) inhandNil(76) 
+OUTCOMES:
+  1 inhand(76 67) pickup(76 67)=0 -active_pickup(76 67) -busy(76) 
+  0 <noise>
+
+# Rule #2  (3 out of 35)
+ACTION:
+  terminate_pickup(77 67)
+CONTEXT:
+  pickup(77 67)=0 active_pickup(77 67) busy(77) busy(67) hand(77) object(67) inhandNil(77) 
+OUTCOMES:
+  1 inhand(77 67) pickup(77 67)=0 -active_pickup(77 67) -busy(77) 
+  0 <noise>
+
+# Rule #3  (4 out of 35)
+ACTION:
+  terminate_pickup(78 67)
+CONTEXT:
+  pickup(78 67)=0 active_pickup(78 67) busy(78) busy(67) hand(78) object(67) inhandNil(78) 
+OUTCOMES:
+  1 inhand(78 67) pickup(78 67)=0 -active_pickup(78 67) -busy(78) 
+  0 <noise>
+
+# Rule #4  (5 out of 35)
+ACTION:
+  terminate_pickup(76 71)
+CONTEXT:
+  pickup(76 71)=0 active_pickup(76 71) busy(76) busy(71) hand(76) object(71) inhandNil(76) 
+OUTCOMES:
+  1 inhand(76 71) pickup(76 71)=0 -active_pickup(76 71) -busy(76) 
+  0 <noise>
+
+# Rule #5  (6 out of 35)
+ACTION:
+  terminate_pickup(77 71)
+CONTEXT:
+  pickup(77 71)=0 active_pickup(77 71) busy(77) busy(71) hand(77) object(71) inhandNil(77) 
+OUTCOMES:
+  1 inhand(77 71) pickup(77 71)=0 -active_pickup(77 71) -busy(77) 
+  0 <noise>
+
+# Rule #6  (7 out of 35)
+ACTION:
+  terminate_pickup(78 71)
+CONTEXT:
+  pickup(78 71)=0 active_pickup(78 71) busy(78) busy(71) hand(78) object(71) inhandNil(78) 
+OUTCOMES:
+  1 inhand(78 71) pickup(78 71)=0 -active_pickup(78 71) -busy(78) 
+  0 <noise>
+
+# Rule #7  (8 out of 35)
+ACTION:
+  terminate_pickup(76 72)
+CONTEXT:
+  pickup(76 72)=0 active_pickup(76 72) busy(76) busy(72) hand(76) object(72) inhandNil(76) 
+OUTCOMES:
+  1 inhand(76 72) pickup(76 72)=0 -active_pickup(76 72) -busy(76) 
+  0 <noise>
+
+# Rule #8  (9 out of 35)
+ACTION:
+  terminate_pickup(77 72)
+CONTEXT:
+  pickup(77 72)=0 active_pickup(77 72) busy(77) busy(72) hand(77) object(72) inhandNil(77) 
+OUTCOMES:
+  1 inhand(77 72) pickup(77 72)=0 -active_pickup(77 72) -busy(77) 
+  0 <noise>
+
+# Rule #9  (10 out of 35)
+ACTION:
+  terminate_pickup(78 72)
+CONTEXT:
+  pickup(78 72)=0 active_pickup(78 72) busy(78) busy(72) hand(78) object(72) inhandNil(78) 
+OUTCOMES:
+  1 inhand(78 72) pickup(78 72)=0 -active_pickup(78 72) -busy(78) 
+  0 <noise>
+
+# Rule #10  (11 out of 35)
+ACTION:
+  terminate_positioning(76)
+CONTEXT:
+  positioning(76)=0 active_positioning(76) busy(76) hand(76) object(71) inhand(76 71) material(71) 
+OUTCOMES:
+  1 inhand(76 71) inPosition(71) positioning(76)=0 -active_positioning(76) -busy(76) 
+  0 <noise>
+
+# Rule #11  (12 out of 35)
+ACTION:
+  terminate_positioning(76)
+CONTEXT:
+  positioning(76)=0 active_positioning(76) busy(76) hand(76) object(72) inhand(76 72) material(72) 
+OUTCOMES:
+  1 inhand(76 72) inPosition(72) positioning(76)=0 -active_positioning(76) -busy(76) 
+  0 <noise>
+
+# Rule #12  (13 out of 35)
+ACTION:
+  terminate_positioning(77)
+CONTEXT:
+  positioning(77)=0 active_positioning(77) busy(77) hand(77) object(71) inhand(77 71) material(71) 
+OUTCOMES:
+  1 inhand(77 71) inPosition(71) positioning(77)=0 -active_positioning(77) -busy(77) 
+  0 <noise>
+
+# Rule #13  (14 out of 35)
+ACTION:
+  terminate_positioning(77)
+CONTEXT:
+  positioning(77)=0 active_positioning(77) busy(77) hand(77) object(72) inhand(77 72) material(72) 
+OUTCOMES:
+  1 inhand(77 72) inPosition(72) positioning(77)=0 -active_positioning(77) -busy(77) 
+  0 <noise>
+
+# Rule #14  (15 out of 35)
+ACTION:
+  terminate_positioning(78)
+CONTEXT:
+  positioning(78)=0 active_positioning(78) busy(78) hand(78) object(71) inhand(78 71) material(71) 
+OUTCOMES:
+  1 inhand(78 71) inPosition(71) positioning(78)=0 -active_positioning(78) -busy(78) 
+  0 <noise>
+
+# Rule #15  (16 out of 35)
+ACTION:
+  terminate_positioning(78)
+CONTEXT:
+  positioning(78)=0 active_positioning(78) busy(78) hand(78) object(72) inhand(78 72) material(72) 
+OUTCOMES:
+  1 inhand(78 72) inPosition(72) positioning(78)=0 -active_positioning(78) -busy(78) 
+  0 <noise>
+
+# Rule #16  (17 out of 35)
+ACTION:
+  terminate_release(76)
+CONTEXT:
+  release(76)=0 active_release(76) busy(76) hand(76) object(71) inhand(76 71) material(71) 
+OUTCOMES:
+  1 release(76)=0 -inhand(76 71) -active_release(76) -busy(76) -busy(71) 
+  0 <noise>
+
+# Rule #17  (18 out of 35)
+ACTION:
+  terminate_release(76)
+CONTEXT:
+  release(76)=0 active_release(76) busy(76) hand(76) object(72) inhand(76 72) material(72) 
+OUTCOMES:
+  1 release(76)=0 -inhand(76 72) -active_release(76) -busy(76) -busy(72) 
+  0 <noise>
+
+# Rule #18  (19 out of 35)
+ACTION:
+  terminate_release(77)
+CONTEXT:
+  release(77)=0 active_release(77) busy(77) hand(77) object(71) inhand(77 71) material(71) 
+OUTCOMES:
+  1 release(77)=0 -inhand(77 71) -active_release(77) -busy(77) -busy(71) 
+  0 <noise>
+
+# Rule #19  (20 out of 35)
+ACTION:
+  terminate_release(77)
+CONTEXT:
+  release(77)=0 active_release(77) busy(77) hand(77) object(72) inhand(77 72) material(72) 
+OUTCOMES:
+  1 release(77)=0 -inhand(77 72) -active_release(77) -busy(77) -busy(72) 
+  0 <noise>
+
+# Rule #20  (21 out of 35)
+ACTION:
+  terminate_release(78)
+CONTEXT:
+  release(78)=0 active_release(78) busy(78) hand(78) object(71) inhand(78 71) material(71) 
+OUTCOMES:
+  1 release(78)=0 -inhand(78 71) -active_release(78) -busy(78) -busy(71) 
+  0 <noise>
+
+# Rule #21  (22 out of 35)
+ACTION:
+  terminate_release(78)
+CONTEXT:
+  release(78)=0 active_release(78) busy(78) hand(78) object(72) inhand(78 72) material(72) 
+OUTCOMES:
+  1 release(78)=0 -inhand(78 72) -active_release(78) -busy(78) -busy(72) 
+  0 <noise>
+
+# Rule #22  (23 out of 35)
+ACTION:
+  terminate_screwing(76 72 71)
+CONTEXT:
+  screwing(76)=0 active_screwing(76) busy(76) busy(77) busy(77) hand(76) screw(67) inhand(76 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(77) inhand(77 72) hand(77) inhand(77 71) 
+OUTCOMES:
+  1 screwing(76)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(77 72) inhand(77 71) -busy(76) -busy(77) -busy(77) -inhand(76 67) -active_screwing(76) 
+  0 <noise>
+
+# Rule #23  (24 out of 35)
+ACTION:
+  terminate_screwing(76 72 71)
+CONTEXT:
+  screwing(76)=0 active_screwing(76) busy(76) busy(78) busy(77) hand(76) screw(67) inhand(76 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(78) inhand(78 72) hand(77) inhand(77 71) 
+OUTCOMES:
+  1 screwing(76)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(78 72) inhand(77 71) -busy(76) -busy(78) -busy(77) -inhand(76 67) -active_screwing(76) 
+  0 <noise>
+
+# Rule #24  (25 out of 35)
+ACTION:
+  terminate_screwing(76 72 71)
+CONTEXT:
+  screwing(76)=0 active_screwing(76) busy(76) busy(77) busy(78) hand(76) screw(67) inhand(76 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(77) inhand(77 72) hand(78) inhand(78 71) 
+OUTCOMES:
+  1 screwing(76)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(77 72) inhand(78 71) -busy(76) -busy(77) -busy(78) -inhand(76 67) -active_screwing(76) 
+  0 <noise>
+
+# Rule #25  (26 out of 35)
+ACTION:
+  terminate_screwing(76 72 71)
+CONTEXT:
+  screwing(76)=0 active_screwing(76) busy(76) busy(78) busy(78) hand(76) screw(67) inhand(76 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(78) inhand(78 72) hand(78) inhand(78 71) 
+OUTCOMES:
+  1 screwing(76)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(78 72) inhand(78 71) -busy(76) -busy(78) -busy(78) -inhand(76 67) -active_screwing(76) 
+  0 <noise>
+
+# Rule #26  (27 out of 35)
+ACTION:
+  terminate_screwing(77 72 71)
+CONTEXT:
+  screwing(77)=0 active_screwing(77) busy(77) busy(76) busy(76) hand(77) screw(67) inhand(77 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(76) inhand(76 72) hand(76) inhand(76 71) 
+OUTCOMES:
+  1 screwing(77)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(76 72) inhand(76 71) -busy(77) -busy(76) -busy(76) -inhand(77 67) -active_screwing(77) 
+  0 <noise>
+
+# Rule #27  (28 out of 35)
+ACTION:
+  terminate_screwing(77 72 71)
+CONTEXT:
+  screwing(77)=0 active_screwing(77) busy(77) busy(78) busy(76) hand(77) screw(67) inhand(77 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(78) inhand(78 72) hand(76) inhand(76 71) 
+OUTCOMES:
+  1 screwing(77)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(78 72) inhand(76 71) -busy(77) -busy(78) -busy(76) -inhand(77 67) -active_screwing(77) 
+  0 <noise>
+
+# Rule #28  (29 out of 35)
+ACTION:
+  terminate_screwing(77 72 71)
+CONTEXT:
+  screwing(77)=0 active_screwing(77) busy(77) busy(76) busy(78) hand(77) screw(67) inhand(77 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(76) inhand(76 72) hand(78) inhand(78 71) 
+OUTCOMES:
+  1 screwing(77)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(76 72) inhand(78 71) -busy(77) -busy(76) -busy(78) -inhand(77 67) -active_screwing(77) 
+  0 <noise>
+
+# Rule #29  (30 out of 35)
+ACTION:
+  terminate_screwing(77 72 71)
+CONTEXT:
+  screwing(77)=0 active_screwing(77) busy(77) busy(78) busy(78) hand(77) screw(67) inhand(77 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(78) inhand(78 72) hand(78) inhand(78 71) 
+OUTCOMES:
+  1 screwing(77)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(78 72) inhand(78 71) -busy(77) -busy(78) -busy(78) -inhand(77 67) -active_screwing(77) 
+  0 <noise>
+
+# Rule #30  (31 out of 35)
+ACTION:
+  terminate_screwing(78 72 71)
+CONTEXT:
+  screwing(78)=0 active_screwing(78) busy(78) busy(76) busy(76) hand(78) screw(67) inhand(78 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(76) inhand(76 72) hand(76) inhand(76 71) 
+OUTCOMES:
+  1 screwing(78)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(76 72) inhand(76 71) -busy(78) -busy(76) -busy(76) -inhand(78 67) -active_screwing(78) 
+  0 <noise>
+
+# Rule #31  (32 out of 35)
+ACTION:
+  terminate_screwing(78 72 71)
+CONTEXT:
+  screwing(78)=0 active_screwing(78) busy(78) busy(77) busy(76) hand(78) screw(67) inhand(78 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(77) inhand(77 72) hand(76) inhand(76 71) 
+OUTCOMES:
+  1 screwing(78)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(77 72) inhand(76 71) -busy(78) -busy(77) -busy(76) -inhand(78 67) -active_screwing(78) 
+  0 <noise>
+
+# Rule #32  (33 out of 35)
+ACTION:
+  terminate_screwing(78 72 71)
+CONTEXT:
+  screwing(78)=0 active_screwing(78) busy(78) busy(76) busy(77) hand(78) screw(67) inhand(78 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(76) inhand(76 72) hand(77) inhand(77 71) 
+OUTCOMES:
+  1 screwing(78)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(76 72) inhand(77 71) -busy(78) -busy(76) -busy(77) -inhand(78 67) -active_screwing(78) 
+  0 <noise>
+
+# Rule #33  (34 out of 35)
+ACTION:
+  terminate_screwing(78 72 71)
+CONTEXT:
+  screwing(78)=0 active_screwing(78) busy(78) busy(77) busy(77) hand(78) screw(67) inhand(78 67) wall(72) ground(71) inPosition(72) inPosition(71) hand(77) inhand(77 72) hand(77) inhand(77 71) 
+OUTCOMES:
+  1 screwing(78)=0 fixed(72 71) used(67) inPosition(72) inPosition(71) inhand(77 72) inhand(77 71) -busy(78) -busy(77) -busy(77) -inhand(78 67) -active_screwing(78) 
+  0 <noise>
+
+# Rule #34  (35 out of 35)
+ACTION:
+  doNothing()
+CONTEXT:
+  --
+OUTCOMES:
+  1 <no-change>
+  0 <noise>
+

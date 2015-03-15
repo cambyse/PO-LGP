@@ -1,0 +1,6 @@
+BASE = ../../..
+
+PLIB = 1
+DEPEND = Core System Hardware_gamepad
+
+include $(BASE)/gofMake/generic.mk

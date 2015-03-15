@@ -6,7 +6,7 @@
 
 #include <Hardware/racer/racer.h>
 
-void testDraw(){
+void TEST(Draw){
   Racer R;
   R.gl().watch();
 }

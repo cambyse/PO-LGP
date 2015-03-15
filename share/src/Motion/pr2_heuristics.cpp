@@ -30,12 +30,12 @@ arr pr2_reasonable_W(ors::KinematicWorld& world){
   arr W = world.naturalQmetric(5.);
   ors::Joint *j = world.getJointByName("torso_lift_joint");
   if(j){
-    CHECK(j->type == ors::JT_transX, "");
+    CHECK_EQ(j->type , ors::JT_transX, "");
     W(j->qIndex) *= 10;
   }
   j = world.getJointByName("worldTranslationRotation");
   if(j){
-    CHECK(j->type == ors::JT_transXYPhi, "");
+    CHECK_EQ(j->type , ors::JT_transXYPhi, "");
     W(j->qIndex+0) *= 3;
     W(j->qIndex+1) *= 3;
 //    W(j->qIndex+2) *= 10;
@@ -46,7 +46,7 @@ arr pr2_reasonable_W(ors::KinematicWorld& world){
     double h=j->H;
     for(uint k=0;k<j->qDim();k++) W(j->qIndex+k)=h;
   }
-  cout <<W <<endl;
+//  cout <<W <<endl;
 #endif
   return W;
 }

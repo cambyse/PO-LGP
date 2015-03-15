@@ -73,10 +73,11 @@ void TEST(RRT) {
 	  <<"  bwd-tree#=" <<ann[1].X.d0
 	  <<endl;
 	plot(false,str); //update the plot
-	//MT::wait(.1);
+	//MT::wait(.01);
       }
     }
   }
+  //plot(true); //update the plot
 }
 
 

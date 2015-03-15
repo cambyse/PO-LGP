@@ -279,17 +279,26 @@ VariableL createVariables(const ModuleL& ms){
 
 KeyValueGraph System::graph() const{
   KeyValueGraph g;
-  g.append<bool>("SystemModule", name, NULL);
+  g.append<bool>("SystemModule", name, NULL, false);
+  g.checkConsistency();
   std::map<Variable*, Item*> vit;
-  for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v);
+  for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v, false);
+  g.checkConsistency();
   for(Module *m: mts){
-    Item *mit = g.append("Module", m->name, &m);
+    Item *mit = g.append("Module", m->name, &m, false);
+    g.checkConsistency();
     for(Access *a: m->accesses){
-      Item *ait = g.append("Access", a->name, &a);
+      Item *ait = g.append("Access", a->name, &a, false);
       ait->parents.append(mit);
-      if(a->var) ait->parents.append(vit[a->var]);
+      mit->parentOf.append(ait);
+      if(a->var){
+        ait->parents.append(vit[a->var]);
+        vit[a->var]->parentOf.append(ait);
+      }
+      g.checkConsistency();
     }
   }
+  g.checkConsistency();
   return g;
 }
 
@@ -369,13 +378,13 @@ void Engine::open(System& S){
 
 //    //accesses have automatically been created as member of a module,
 //    //need to link them now
-//    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
+//    CHECK_EQ(m->mod->accesses.N,modIt->parentOf.N,"dammit");
 //    for(Item *accIt: modIt->parentOf){
 //      Access *a = m->mod->accesses(accIt_COUNT);
 //      //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
-//      //CHECK(acc->type == a->type,"");
+//      //CHECK_EQ(acc->type , a->type,"");
 //      Item *varIt = accIt->parents(1);
-//      CHECK(varIt->keys(0)=="Variable","");
+//      CHECK_EQ(varIt->keys(0),"Variable","");
 //      SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
 //      CHECK(v,"");
 //      cout <<"linking access " <<modIt->keys(1) <<"->" <<a->name

@@ -475,7 +475,7 @@ void KeyFramer::computeDist(uint f) {
   int np, *oids;
   SWIFT_Real *dists;
   kw().swift().scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
-  //CHECK(np == (int)numO*(2*numA+numO-1)/2, STRING("number of distances (" << np << ") not right (" << numO*(2*numA+numO-1)/2 << ")."));
+  //CHECK_EQ(np , (int)numO*(2*numA+numO-1)/2, STRING("number of distances (" << np << ") not right (" << numO*(2*numA+numO-1)/2 << ")."));
   for(int i = 0; i < np; i++) {
     idsa = oids[i<<1];
     idsb = oids[(i<<1)+1];

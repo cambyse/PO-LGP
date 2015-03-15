@@ -66,7 +66,7 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
     X.reshape(i+1, features.N);
   }
   //cout <<MYtrain <<X <<endl;
-  CHECK(L.N==X.d0, "");
+  CHECK_EQ(L.N,X.d0, "");
   Y.resize(X.d0, max+1); Y.setZero();
   uint j;
   for(i=0; i<X.d0; i++) for(j=0; j<L(i).N; j++)  Y(i, L(i)(j))=1.;

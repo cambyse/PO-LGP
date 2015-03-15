@@ -46,33 +46,33 @@ void testKF(KeyFramer &kf) {
 
   nb = kf.getNBodies();
   cout << "num bodies: " << nb << endl;
-  CHECK(nb == checkNBodies, "Wrong num bodies");
+  CHECK_EQ(nb , checkNBodies, "Wrong num bodies");
 
   ndofs = kf.getAgentNDofs();
   cout << "num dofs agent: " << ndofs << endl;
-  CHECK(ndofs == checkAgentNDofs, "Wrong num agent dofs");
+  CHECK_EQ(ndofs , checkAgentNDofs, "Wrong num agent dofs");
 
   for(uint b = 0; b < nb; b++) {
     ndofs = kf.getNDofs(b);
     cout << "num dofs body " << b << ": " << ndofs << endl;
-    CHECK(ndofs == checkNDofs(b), "Wrong num dofs");
+    CHECK_EQ(ndofs , checkNDofs(b), "Wrong num dofs");
   }
 
   for(uint b = 0; b < nb; b++) {
     ndofs = kf.getCumNDofs(b);
     cout << "num cum dofs body " << b << ": " << ndofs << endl;
-    CHECK(ndofs == checkCumNDofs(b), "Wrong num cum dofs");
+    CHECK_EQ(ndofs , checkCumNDofs(b), "Wrong num cum dofs");
   }
 
   nframes = kf.getNFrames();
   cout << "nframes: " << nframes << endl;
-  CHECK(nframes == checkNFrames, "Wrong nframes");
+  CHECK_EQ(nframes , checkNFrames, "Wrong nframes");
 
   cout << endl;
   cout << "== STATE ======================================" << endl;
   state = kf.getState();
   cout << "state: " << state << endl;
-  CHECK(state == checkState, "Wrong state");
+  CHECK_EQ(state , checkState, "Wrong state");
 
   cout << endl;
   cout << "== CORR =======================================" << endl;

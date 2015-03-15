@@ -30,6 +30,10 @@
 #include <typeinfo>
 #include <stdint.h>
 
+#ifdef MT_ROS
+#  include <ros/ros.h>
+#endif
+
 //----- if no system flag, I assume Linux
 #if !defined MT_MSVC && !defined MT_Cygwin && !defined MT_Linux && !defined MT_MinGW && !defined MT_Darwin
 #  define MT_Linux
@@ -44,7 +48,6 @@
 #define MT_SQRT2 1.414213562373095049
 #define MT_SQRTPI 1.772453850905516027
 typedef unsigned char byte;            ///< byte
-typedef unsigned short int uint16;     ///< 2 bytes
 typedef unsigned int uint;             ///< unsigned integer
 typedef const char* charp;
 
@@ -61,6 +64,7 @@ typedef const char* charp;
 #define niyPipes(type)\
   inline std::istream& operator>>(std::istream& is, type& x){ NIY; return is; }\
   inline std::ostream& operator<<(std::ostream& os, const type& x){ NIY; return os; }
+
 
 
 
@@ -299,11 +303,16 @@ inline void breakPoint() {
 /* #else */
 /* #  define MT_HERE "@" <<(strrchr(__FILE__, '/')?strrchr(__FILE__, '/')+1:__FILE__) <<':' <<__LINE__ <<':' <<__FUNCTION__ <<": " */
 /* #endif */
+#ifdef MT_ROS
+#  define MT_WRITE_MSG(str) { std::cerr <<str <<std::endl; ROS_INFO("MLR-MSG: %s",str.p); }
+#else
+#  define MT_WRITE_MSG(str) { std::cerr <<str <<std::endl; }
+#endif
 #ifndef MT_MSG
 #  define MT_MSG(msg){ std::cerr <<MT_HERE <<msg <<std::endl; MT::breakPoint(); }
 #endif
 #ifndef HALT
-#  define HALT(msg)  { MT::errString.clear() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
+#  define HALT(msg)  { MT::errString.clear() <<MT_HERE <<msg <<" --- HALT"; MT_WRITE_MSG(MT::errString); MT::breakPoint(); throw MT::errString.p; }
 #  define NIY HALT("not implemented yet")
 #  define NICO HALT("not implemented with this compiler options: usually this means that the implementation needs an external library and a corresponding compiler option - see the source code")
 #  define OPS HALT("obsolete")
@@ -374,13 +383,16 @@ struct FileToken{
   MT::String path, name, cwd;
   std::ofstream *os;
   std::ifstream *is;
+
   FileToken(const char* _filename, bool change_dir=true);
   ~FileToken();
   FileToken& operator()(){ return *this; }
+
   void decomposeFilename();
   std::ofstream& getOs();
   std::ifstream& getIs();
   operator std::istream&(){ return getIs(); }
+  operator std::ostream&(){ return getOs(); }
 };
 template<class T> FileToken& operator>>(FileToken& fil, T& x){ fil.getIs() >>x;  return fil; }
 template<class T> FileToken& operator<<(FileToken& fil, const T& x){ fil.getOs() <<x;  return fil; }

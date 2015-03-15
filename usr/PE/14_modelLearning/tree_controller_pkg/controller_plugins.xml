@@ -1,0 +1,5 @@
+<library path="lib/libtree_controller_lib">
+  <class name="tree_controller_pkg/TreeControllerPlugin" 
+         type="tree_controller_ns::TreeControllerClass"           
+         base_class_type="pr2_controller_interface::Controller"/>
+</library>

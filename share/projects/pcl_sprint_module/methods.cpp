@@ -16,7 +16,7 @@ void conv_ArrCloud_PclCloud(pcl::PointCloud<PointT>::Ptr& pcl_cloud,
     p.b = 255.*kinect_pointColors(i,2);
     i++;
   }
-  CHECK(i==kinect_points.d0,"");
+  CHECK_EQ(i,kinect_points.d0,"");
 }
 
 void conv_PclCloud_ArrCloud(arr& kinect_points,
@@ -36,5 +36,5 @@ void conv_PclCloud_ArrCloud(arr& kinect_points,
     kinect_pointColors(i,2) = p.b/255.;
     i++;
   }
-  CHECK(i==kinect_points.d0,"");
+  CHECK_EQ(i,kinect_points.d0,"");
 }

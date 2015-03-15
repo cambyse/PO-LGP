@@ -27,7 +27,7 @@ void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
 }
 
 
-void testPlan(){
+void TEST(Plan){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;

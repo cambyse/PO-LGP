@@ -152,7 +152,7 @@ void OpenGL::createOffscreen(int width, int height){
 /** @brief return the RGBA-image of the given perspective; rendering is done
     off-screen (on an internal QPixmap) */
 void OpenGL::offscreenGrab(byteA& image){
-  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
+  if(image.nd==3){ CHECK_EQ(image.d2,4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK_EQ(image.nd,2, "image has to be either 2- or 3(for RGBA)-dimensional");}
   setOffscreen(image.d1, image.d0);
   Draw(image.d1, image.d0);
   glGrabImage(image);
@@ -161,8 +161,8 @@ void OpenGL::offscreenGrab(byteA& image){
 /** @brief return the RGBA-image of the given perspective; rendering
     is done off-screen (on an internal QPixmap) */
 void OpenGL::offscreenGrab(byteA& image, byteA& depth){
-  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  if(image.nd==3){ CHECK_EQ(image.d2,4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK_EQ(image.nd,2, "image has to be either 2- or 3(for RGBA)-dimensional");}
+  CHECK_EQ(depth.nd,2, "depth buffer has to be either 2-dimensional");
   setOffscreen(image.d1, image.d0);
   Draw(image.d1, image.d0);
   glGrabImage(image);
@@ -172,7 +172,7 @@ void OpenGL::offscreenGrab(byteA& image, byteA& depth){
 /** @brief return only the depth gray-scale map of given perspective;
     rendering is done off-screen (on an internal QPixmap) */
 void OpenGL::offscreenGrabDepth(byteA& depth){
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  CHECK_EQ(depth.nd,2, "depth buffer has to be either 2-dimensional");
   setOffscreen(depth.d1, depth.d0);
   Draw(depth.d1, depth.d0);
   glGrabDepth(depth);
@@ -181,7 +181,7 @@ void OpenGL::offscreenGrabDepth(byteA& depth){
 /** @brief return only the depth gray-scale map of given perspective;
     rendering is done off-screen (on an internal QPixmap) */
 void OpenGL::offscreenGrabDepth(floatA& depth){
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  CHECK_EQ(depth.nd,2, "depth buffer has to be either 2-dimensional");
   setOffscreen(depth.d1, depth.d0);
   Draw(depth.d1, depth.d0);
   glGrabDepth(depth);

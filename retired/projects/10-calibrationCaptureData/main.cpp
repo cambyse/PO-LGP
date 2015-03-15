@@ -20,7 +20,7 @@ int main(int argc,char** argv){
   tracker.var = &R.getProcessGroup()->bumble; 
   tracker.threadLoop();
 
-  R.getProcessGroup()->ctrl.task->controlMode = joystickCM;
+  R.getProcessGroup()->ctrl.task->controlMode = gamepadCM;
   for(;!R.getProcessGroup()->signalStop;){
     //R.step();
     MT::wait(.01);
@@ -34,7 +34,7 @@ int main(int argc,char** argv){
     }
     tracker.deAccess(NULL);
 
-    if(R.getProcessGroup()->joy.state(0)==16 || R.getProcessGroup()->joy.state(0)==32) break;
+    if(R.getProcessGroup()->gamepad.state(0)==16 || R.getProcessGroup()->gamepad.state(0)==32) break;
   }
   R.getProcessGroup()->ctrl.task->controlMode = stopCM;
   //for(uint t=0;t<10;t++) R.step();

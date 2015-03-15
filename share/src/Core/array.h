@@ -14,8 +14,7 @@
     
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
-
+    ---------------------------------------------------------------  */
 
 /// @file
 /// @ingroup group_array
@@ -28,6 +27,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <string.h>
+#include <functional>
 
 #define FOR1D(x, i)   for(i=0;i<x.N;i++)
 #define FOR1D_DOWN(x, i)   for(i=x.N;i--;)
@@ -77,8 +77,6 @@ namespace MT {
   header, which contains lots of functions that can be applied on
   Arrays. */
 template<class T> struct Array {
-  typedef bool (*ElemCompare)(const T& a, const T& b);
-  
   T *p;     ///< the pointer on the linear memory allocated
   uint N;   ///< number of elements
   uint nd;  ///< number of dimensions
@@ -94,7 +92,9 @@ template<class T> struct Array {
   enum SpecialType { noneST, hasCarrayST, sparseST, diagST, RowShiftedPackedMatrixST, CpointerST };
   SpecialType special;
   void *aux; ///< arbitrary auxiliary data, depends on special
-  
+
+  typedef bool (*ElemCompare)(const T& a, const T& b);
+
   /// @name constructors
   Array();
   Array(const Array<T>& a);                 //copy constructor
@@ -161,7 +161,7 @@ template<class T> struct Array {
   void setCarray(const T **buffer, uint D0, uint D1);
   void referTo(const T *buffer, uint n);
   void referTo(const Array<T>& a);
-  void referToSubRange(const Array<T>& a, uint i, int I);
+  void referToSubRange(const Array<T>& a, int i, int I);
   void referToSubDim(const Array<T>& a, uint dim);
   void referToSubDim(const Array<T>& a, uint i, uint j);
   void referToSubDim(const Array<T>& a, uint i, uint j, uint k);
@@ -181,7 +181,7 @@ template<class T> struct Array {
   Array<T> operator[](uint i) const;     // calls referToSubDim(*this, i)
   Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
   Array<T> subDim(uint i, uint j, uint k) const; // calls referToSubDim(*this, i, j, k)
-  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
+  Array<T> subRange(int i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
   T** getCarray(Array<T*>& Cpointers) const;
   
@@ -219,6 +219,7 @@ template<class T> struct Array {
   /// @name appending etc
   T& append();
   T& append(const T& x);
+  void append(const T& x, uint multiple);
   void append(const Array<T>& x);
   void append(const T *p, uint n);
   void prepend(const T& x){ insert(0,x); }
@@ -254,6 +255,8 @@ template<class T> struct Array {
   void permute(const Array<uint>& permutation);
   void permuteInv(const Array<uint>& permutation);
   void permuteRows(const Array<uint>& permutation);
+  void permuteRowsInv(const Array<uint>& permutation);
+
   void permuteRandomly();
   void shift(int offset, bool wrapAround=true);
   
@@ -277,7 +280,8 @@ template<class T> struct Array {
   const char* prt(); //gdb pretty print
   
   /// @name kind of private
-  void resizeMEM(uint n, bool copy);
+  void resizeMEM(uint n, bool copy, int Mforce=-1);
+  void anticipateMEM(uint Mforce){ resizeMEM(N, true, Mforce); if(!nd) nd=1; }
   void freeMEM();
   void resetD();
   void init();
@@ -339,6 +343,7 @@ BinaryOperator(/ , /=);
 /// @{
 
 typedef MT::Array<double> arr;
+typedef MT::Array<float>  arrf;
 typedef MT::Array<double> doubleA;
 typedef MT::Array<float>  floatA;
 typedef MT::Array<uint>   uintA;
@@ -346,9 +351,11 @@ typedef MT::Array<int>    intA;
 typedef MT::Array<char>   charA;
 typedef MT::Array<byte>   byteA;
 typedef MT::Array<bool>   boolA;
+typedef MT::Array<uint16_t>   uint16A;
+typedef MT::Array<uint32_t>   uint32A;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
-typedef MT::Array<arr> arrA;
+typedef MT::Array<arr>    arrA;
 
 namespace MT { struct String; }
 typedef MT::Array<MT::String> StringA;
@@ -368,16 +375,19 @@ extern uintA& NoUintA; //this is a pointer to NULL!!!! I use it for optional arg
 /// @{
 
 /// a scalar function \f$f:~x\mapsto y\in\mathbb{R}\f$ with optional gradient and hessian
-struct ScalarFunction {
-  virtual double fs(arr& g, arr& H, const arr& x) = 0;
-  virtual ~ScalarFunction(){}
-};
+//struct ScalarFunction {
+//  virtual double fs(arr& g, arr& H, const arr& x) = 0;
+//  virtual ~ScalarFunction(){}
+//};
+
+typedef std::function<double(arr& g, arr& H, const arr& x)> ScalarFunction;
 
 /// a vector function \f$f:~x\mapsto y\in\mathbb{R}^d\f$ with optional Jacobian
-struct VectorFunction {
-  virtual void fv(arr& y, arr& J, const arr& x) = 0; ///< returning a vector y and (optionally, if NoArr) Jacobian J for x
-  virtual ~VectorFunction(){}
-};
+//struct VectorFunction {
+//  virtual void fv(arr& y, arr& J, const arr& x) = 0; ///< returning a vector y and (optionally, if NoArr) Jacobian J for x
+//  virtual ~VectorFunction(){}
+//};
+typedef std::function<void(arr& y, arr& J, const arr& x)> VectorFunction;
 
 /// a kernel function
 struct KernelFunction {
@@ -409,9 +419,15 @@ template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T
 template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o) {      MT::Array<T*> z(7); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; return z; }
 template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p) { MT::Array<T*> z(8); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; z(7)=(T*)&p; return z; }
 
+MT::Array<MT::String> STRINGS();
 MT::Array<MT::String> STRINGS(const char* s0);
 MT::Array<MT::String> STRINGS(const char* s0, const char* s1);
 MT::Array<MT::String> STRINGS(const char* s0, const char* s1, const char* s2);
+
+#define STRINGS_0()           (ARRAY<MT::String>())
+#define STRINGS_1(s0)         (ARRAY<MT::String>(STRING(s0)))
+#define STRINGS_2(s0, s1)     (ARRAY<MT::String>(STRING(s0),STRING(s1)))
+#define STRINGS_3(s0, s1, s2) (ARRAY<MT::String>(STRING(s0),STRING(s1),STRING(s2)))
 
 
 //===========================================================================
@@ -427,7 +443,7 @@ inline arr eye(uint n) { return eye(n, n); }
 /// return matrix of ones
 inline arr ones(const uintA& d) {  arr z;  z.resize(d);  z=1.;  return z;  }
 /// return VECTOR of ones
-inline arr ones(uint n) { return ones(TUP(n, n)); }
+inline arr ones(uint n) { return ones(TUP(n)); }
 /// return matrix of ones
 inline arr ones(uint d0, uint d1) { return ones(TUP(d0, d1)); }
 
@@ -439,6 +455,9 @@ inline arr zeros(uint n) { return zeros(TUP(n)); }
 inline arr zeros(uint d0, uint d1) { return zeros(TUP(d0, d1)); }
 /// return tensor of zeros
 inline arr zeros(uint d0, uint d1, uint d2) { return zeros(TUP(d0, d1, d2)); }
+
+/// return a grid (1D: range) split in 'steps' steps
+inline arr grid(uint dim, double lo, double hi, uint steps) { arr g;  g.setGrid(dim, lo, hi, steps);  return g; }
 
 arr repmat(const arr& A, uint m, uint n);
 
@@ -476,6 +495,7 @@ void makeSymmetric(arr& A);
 void transpose(arr& A);
 void SUS(const arr& p, uint n, uintA& s);
 uint SUS(const arr& p);
+void addDiag(arr& A, double d);
 
 namespace MT {
 /// use this to turn on Lapack routines [default true if MT_LAPACK is defined]
@@ -494,20 +514,20 @@ uint inverse_SVD(arr& inverse, const arr& A);
 void inverse_LU(arr& Xinv, const arr& X);
 void inverse_SymPosDef(arr& Ainv, const arr& A);
 inline arr inverse_SymPosDef(const arr& A){ arr Ainv; inverse_SymPosDef(Ainv, A); return Ainv; }
-void pseudoInverse(arr& Ainv, const arr& A, const arr& Winv, double robustnessEps);
+arr pseudoInverse(const arr& A, const arr& Winv=NoArr, double robustnessEps=1e-10);
 void gaussFromData(arr& a, arr& A, const arr& X);
 void rotationFromAtoB(arr& R, const arr& a, const arr& v);
 
 double determinant(const arr& A);
 double cofactor(const arr& A, uint i, uint j);
 
-//void getIndexTuple(uintA &I, uint i, const uintA &d);  //? that also exists inside of array!
+uintA getIndexTuple(uint i, const uintA &d);  //? that also exists inside of array!
 void lognormScale(arr& P, double& logP, bool force=true);
 
-void gnuplot(const arr& X);
+
+
+void gnuplot(const arr& X, bool pauseMouse=false, bool persist=false, const char* PDFfile=NULL);
 //these are obsolete, use catCol instead
-//void write(const arr& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
-//void write(std::ostream& os, const arrL& X, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 void write(const arrL& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 
 
@@ -520,9 +540,9 @@ void flip_image(byteA &img);
 
 void scanArrFile(const char* name);
 
-bool checkGradient(ScalarFunction &f, const arr& x, double tolerance);
-bool checkHessian(ScalarFunction &f, const arr& x, double tolerance);
-bool checkJacobian(VectorFunction &f, const arr& x, double tolerance);
+bool checkGradient(const ScalarFunction& f, const arr& x, double tolerance);
+bool checkHessian(const ScalarFunction& f, const arr& x, double tolerance);
+bool checkJacobian(const VectorFunction& f, const arr& x, double tolerance);
 
 double NNinv(const arr& a, const arr& b, const arr& Cinv);
 double logNNprec(const arr& a, const arr& b, double prec);
@@ -598,6 +618,7 @@ template<class T> T absMin(const MT::Array<T>& x);
 template<class T> void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
+template<class T> MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z); //only for 3 x 3 or (3,n) x 3
 template<class T> T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> MT::Array<T> diagProduct(const MT::Array<T>& v, const MT::Array<T>& w);
@@ -621,6 +642,7 @@ template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X);
 template<class T> MT::Array<T> catCol(const MT::Array<T>& a, const MT::Array<T>& b){ return catCol(LIST<MT::Array<T> >(a,b)); }
 template<class T> MT::Array<T> catCol(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c){ return catCol(LIST<MT::Array<T> >(a,b,c)); }
 template<class T> MT::Array<T> catCol(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d){ return catCol(LIST<MT::Array<T> >(a,b,c,d)); }
+template<class T> MT::Array<T> catCol(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d, const MT::Array<T>& e){ return catCol(LIST<MT::Array<T> >(a,b,c,d,e)); }
 
 
 //===========================================================================
@@ -632,7 +654,11 @@ template<class T> void setUnion(MT::Array<T>& x, const MT::Array<T>& y, const MT
 template<class T> void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> MT::Array<T> setUnion(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; setUnion(x, y, z); return x; }
 template<class T> MT::Array<T> setSection(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; setSection(x, y, z); return x; }
+template<class T> MT::Array<T> setSectionSorted(const MT::Array<T>& x, const MT::Array<T>& y,
+                                                bool (*comp)(const T& a, const T& b) );
 template<class T> void setMinus(MT::Array<T>& x, const MT::Array<T>& y);
+template<class T> void setMinusSorted(MT::Array<T>& x, const MT::Array<T>& y,
+                                      bool (*comp)(const T& a, const T& b) );
 template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void rndInteger(MT::Array<T>& a, int low=0, int high=1, bool add=false);
 template<class T> void rndUniform(MT::Array<T>& a, double low=0., double high=1., bool add=false);
@@ -754,7 +780,9 @@ void lapack_RQ(arr& R, arr& Q, const arr& A);
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs);
 bool lapack_isPositiveSemiDefinite(const arr& symmA);
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A);
+void lapack_choleskySymPosDef(arr& Achol, const arr& A);
 double lapack_determinantSymPosDef(const arr& A);
+inline arr lapack_inverseSymPosDef(const arr& A){ arr Ainv; lapack_inverseSymPosDef(Ainv, A); return Ainv; }
 arr lapack_Ainv_b_sym(const arr& A, const arr& b);
 void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
 
@@ -770,12 +798,13 @@ struct RowShiftedPackedMatrix {
   uintA rowShift;   ///< amount of shift of each row (rowShift.N==Z.d0)
   uintA colPatches; ///< column-patch: (nd=2,d0=real_d1,d1=2) range of non-zeros in a COLUMN; starts with 'a', ends with 'b'-1
   bool symmetric;   ///< flag: if true, this stores a symmetric (banded) matrix: only the upper triangle
+  arr *nextInSum;
   
   RowShiftedPackedMatrix(arr& X);
   RowShiftedPackedMatrix(arr& X, RowShiftedPackedMatrix &aux);
   ~RowShiftedPackedMatrix();
   double acc(uint i, uint j);
-  void computeColPatches(bool assumeMonotonic); //currently presumes monotonous rowShifts
+  void computeColPatches(bool assumeMonotonic);
   arr At_A();
   arr A_At();
   arr At_x(const arr& x);
@@ -783,7 +812,7 @@ struct RowShiftedPackedMatrix {
 };
 
 inline RowShiftedPackedMatrix& castRowShiftedPackedMatrix(arr& X) {
-  ///CHECK(X.special==X.RowShiftedPackedMatrixST,"can't cast like this!");
+  ///CHECK_EQ(X.special,X.RowShiftedPackedMatrixST,"can't cast like this!");
   if(X.special!=X.RowShiftedPackedMatrixST) throw("can't cast like this!");
   return *((RowShiftedPackedMatrix*)X.aux);
 }
@@ -793,6 +822,7 @@ arr packRowShifted(const arr& X);
 RowShiftedPackedMatrix *auxRowShifted(arr& Z, uint d0, uint pack_d1, uint real_d1);
 arr comp_At_A(arr& A);
 arr comp_A_At(arr& A);
+arr comp_A_H_At(arr& A, const arr& H);
 arr comp_At_x(arr& A, const arr& x);
 arr comp_A_x(arr& A, const arr& x);
 

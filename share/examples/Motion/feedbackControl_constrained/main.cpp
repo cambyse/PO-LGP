@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
 
 void reach(){
   ors::KinematicWorld world("man.ors");

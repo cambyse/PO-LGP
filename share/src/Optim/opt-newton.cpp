@@ -25,7 +25,7 @@ bool sanityCheck=false; //true;
 /** @brief Minimizes \f$f(x) = A(x)^T x A^T(x) - 2 a(x)^T x + c(x)\f$. The optional _user arguments specify,
  * if f has already been evaluated at x (another initial evaluation is then omitted
  * to increase performance) and the evaluation of the returned x is also returned */
-int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
+int optNewton(arr& x, const ScalarFunction& f,  OptOptions o) {
   return OptNewton(x, f, o).run();
 }
 
@@ -34,10 +34,10 @@ int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
 // OptNewton
 //
 
-OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
+OptNewton::OptNewton(arr& _x, const ScalarFunction& _f,  OptOptions _o):
   x(_x), f(_f), o(_o){
   alpha = o.initStep;
-  lambda = o.damping;
+  beta = o.damping;
   it=0;
   evals=0;
   additionalRegularizer=NULL;
@@ -45,11 +45,11 @@ OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
 }
 
 void OptNewton::reinit(){
-  fx = f.fs(gx, Hx, x);  evals++;
+  fx = f(gx, Hx, x);  evals++;
   if(additionalRegularizer)  fx += scalarProduct(x,(*additionalRegularizer)*vectorShaped(x));
 
   //startup verbose
-  if(o.verbose>1) cout <<"*** optNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
+  if(o.verbose>1) cout <<"*** optNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" beta=" <<beta <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl;
   if(o.verbose>0) fil.open("z.opt");
   if(o.verbose>0) fil <<0 <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha;
@@ -60,59 +60,65 @@ void OptNewton::reinit(){
 OptNewton::StopCriterion OptNewton::step(){
   double fy;
   arr y, gy, Hy, Delta;
-  x_changed=false;
+//  x_changed=false;
 
   it++;
-  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <</*std::setprecision(3) <<*/lambda <<flush;
+  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tbeta=" <</*std::setprecision(3) <<*/beta <<flush;
 
   if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
 
   //compute Delta
   arr R=Hx;
-  if(lambda) { //Levenberg Marquardt damping
-    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += lambda; //(R(i,0) is the diagonal in the packed matrix!!)
-    else for(uint i=0; i<R.d0; i++) R(i,i) += lambda;
+  if(beta) { //Levenberg Marquardt damping
+    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
+    else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
   }
   if(additionalRegularizer) {
     if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
     //      cout <<*addRegularizer <<R <<endl;
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
-    Delta = lapack_Ainv_b_sym(R, -gx);
+    try {
+      Delta = lapack_Ainv_b_sym(R, -gx);
+    }catch(...){
+      if(o.verbose>0) cout <<endl <<"** hessian inversion failed ... increasing damping **" <<endl;
+      beta *= 10.;
+      return stopCriterion=stopStepFailed;
+    }
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
 
   //lazy stopping criterion: stop without any update
-  if(lambda<2. && absMax(Delta)<1e-1*o.stopTolerance){
+  if(beta<2. && absMax(Delta)<1e-1*o.stopTolerance){
     if(o.verbose>1) cout <<" \t - NO UPDATE" <<endl;
-    return stopCrit1;
+    return stopCriterion=stopCrit1;
   }
 
   for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
     y = x + alpha*Delta;
-    fy = f.fs(gy, Hy, y);  evals++;
+    fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  /*<<" \tf(y)-f(x)=" <<fy-fx */<<flush;
-    //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
+    //CHECK_EQ(fy,fy, "cost seems to be NAN: ly=" <<fy);
     if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
-      x_changed=true;
+//      x_changed=true;
       x = y;
       fx = fy;
       gx = gy;
       Hx = Hy;
       if(fy<=fx){
-        // if(alpha>.9) lambda = .5*lambda;
-        lambda *= o.dampingDec;
+        // if(alpha>.9) beta = .5*beta;
+        beta *= o.dampingDec;
 //        alpha = pow(alpha, o.stepInc);
 //        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
         alpha *= o.stepInc;
         if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
-        lambda *= o.dampingInc;
+        beta *= o.dampingInc;
         alpha *= o.stepDec;
       }
       break;
@@ -120,7 +126,7 @@ OptNewton::StopCriterion OptNewton::step(){
       if(o.verbose>1) cout <<" - reject" <<std::endl <<"\t\t\t\t";
       //reject new points and adapte stepsize|damping
       if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      lambda = lambda*o.dampingInc;
+      beta = beta*o.dampingInc;
       alpha = alpha*o.stepDec;
       if(o.dampingInc!=1.) break; //we need to recompute Delta
     }
@@ -131,15 +137,16 @@ OptNewton::StopCriterion OptNewton::step(){
   if(o.verbose>0) fil <<endl;
 
   //stopping criteria
-#define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return ret; }
-  STOPIF(lambda<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
-  STOPIF(lambda<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
+#define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return stopCriterion=ret; }
+  STOPIF(beta<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
+  STOPIF(beta<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
   STOPIF(evals>=o.stopEvals, stopCritEvals);
   STOPIF(it>=o.stopIters, stopCritEvals);
 #undef STOPIF
 
-  return stopNone;
+  return stopCriterion=stopNone;
 }
+
 
 OptNewton::~OptNewton(){
   if(o.fmin_return) *o.fmin_return=fx;
@@ -152,10 +159,9 @@ OptNewton::~OptNewton(){
 
 
 OptNewton::StopCriterion OptNewton::run(){
-  StopCriterion res;
   for(;;){
-    res = step();
-    if(res>=stopCrit1) break;
+    step();
+    if(stopCriterion>=stopCrit1) break;
   }
-  return res;
+  return stopCriterion;
 }

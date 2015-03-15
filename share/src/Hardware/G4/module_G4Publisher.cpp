@@ -52,6 +52,7 @@ void G4Publisher::close(){
 	if(s) {
 		delete s;
 		s = NULL;
+	}
 }
 
 void G4Publisher::step(){

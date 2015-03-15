@@ -83,9 +83,9 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     if(tag=="graph") {
       is >>PARSE("{") >>i >>j >>PARSE("}");
       graph.resize(j, 2);
-      c=is.get(); CHECK(c=='\n', "couldn't read newline after ascii tag :-(");
+      c=is.get(); CHECK_EQ(c,'\n', "couldn't read newline after ascii tag :-(");
       is.read((char*)graph.p, graph.sizeT*graph.N);
-      c=is.get(); CHECK(c=='\n', "couldn't read newline after array buffer :-(");
+      c=is.get(); CHECK_EQ(c,'\n', "couldn't read newline after array buffer :-(");
       continue;
     }
     if(tag=="names") {

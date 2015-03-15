@@ -38,7 +38,7 @@ int main(int argc,char** argv){
   MotionFuture motions;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
-  JoystickState joystickState;
+  GamepadState gamepadState;
   
   // processes
   Process* ctrl = newMotionController(&hardwareReference, NULL, &motions);

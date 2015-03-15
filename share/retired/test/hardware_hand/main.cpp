@@ -8,7 +8,7 @@
 #define OSNAME_LINUX 1
 #include <sdh/sdh.h>
 
-void testMove(){
+void TEST(Move){
   signal(SIGINT,schunkEmergencyShutdown);
   SchunkHand sdh;
   sdh.open();

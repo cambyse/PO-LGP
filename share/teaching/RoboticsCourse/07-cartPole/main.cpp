@@ -81,7 +81,7 @@ void testDraw(){
   s.gl.watch();
 }
 
-void TestMove(){
+void testMove(){
   CartPoleState s;
   for (uint t=0; t<400000; t++){
     s.step(0.0);
@@ -90,90 +90,11 @@ void TestMove(){
   }
 }
 
-double GetControl(const arr & w, CartPoleState & s){
-  return w(0)*s.x + w(1)*s.x1 + w(2)*s.th + w(3)*s.th1 ;
-}
-
-double GetCost(CartPoleState & s){
-  return s.x*s.x + 0.01*s.th*s.th + s.x1*s.x1 + s.th1*s.th1;
-}
-
-void optimize(arr& w, bool noise){
-  //Nikolay's optimization heuristic
-  CartPoleState s;
-  if(noise)  s.dynamicsNoise = 0.01;
-  arr wbest;
-  w.resize(4);
-  w.setZero(0); wbest = w;
-
-  double fbest = 10000;
-  for (uint z = 0; z < 100000; z++){
-    s.th = 0.1;s.th1 = 0.;	s.x = 0;s.x1 = 0;s.the2 = 0;s.x2 = 0;
-    rndGauss(w,100,false);
-    //rndUniform()w = w*0.12;//w(3) = w(3)*2;//semms larger
-    double cost = 0;
-    for (uint t = 0; t < 600; t++){
-      if (t >= 550 && t%5 == 0)
-	cost+= GetCost(s);//at rest at 0 0
-      s.step(GetControl(w,s));
-    }
-    cost/= 10;
-    if (cost < fbest){
-      fbest = cost;
-      wbest =w;
-      cout << " best at " << z << " " << w << " :  " << cost << " x1 " << s.x1 << " th1" << s.th1 << endl;
-      s.gl.text.clear() <<z <<  " best: " << fbest;
-      s.gl.update();
-    }
-    if(z%1000 == 0){
-      s.gl.text.clear() <<z<<  " best: " << fbest;
-      s.gl.update();
-    }
-  }
-
-  for(uint sd = 0; sd < 2; sd++)
-    for (uint z = 0; z < 100000; z++){
-      s.th = 0.1;s.th1 = 0.;	s.x = 0;s.x1 = 0;s.the2 = 0;s.x2 = 0;
-      w = wbest;
-      rndGauss(w,0.6/(1+sd),true);//decreasing std
-      double cost = 0;
-      for (uint t = 0; t < 600; t++){
-	if (t >= 550 && t%5 == 0)
-	  cost+= GetCost(s);//at rest at 0 0
-	s.step(GetControl(w,s));
-      }
-      cost/= 10;
-      if (cost < fbest){
-	fbest = cost;
-	wbest =w;
-	cout << " best at " << z << " " << w << " :  " << cost << " ; " << s.x1 << " " << s.th1 << endl;
-      }
-      if(z%1000 == 0){
-	s.gl.text.clear() <<z << " " << 0.06/(1+sd) << " best: " << fbest;
-	s.gl.update();
-      }
-    }
-
-  w = wbest;
-}
-
-void playController(const arr& w, bool noise){
-  CartPoleState s;
-  if(noise)  s.dynamicsNoise = 0.1;
-  for(uint t=0;;t++){
-    s.step(GetControl(w,s));
-    s.gl.update();
-    s.gl.text.clear() << t;
-  }
-}
 
 
 int main(int argc,char **argv){
   //testDraw();
-  TestMove();
-  //TestStability(false);//parameter tells whether noise is used or not
-
-  arr w=ARR(1.00000, 2.58375, 52.36463, 15.25927);
-  playController(w,true);
+  testMove();
+  
   return 0;
 }

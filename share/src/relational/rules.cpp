@@ -370,6 +370,7 @@ void Rule::cleanup() {
 
 void Rule::sanityCheck() const {
   // (1) Check no double in context
+  uint DEBUG = 0;
   if (context.containsDoubles()) {
     write(cerr);
     HALT("Context contains doubles");
@@ -378,6 +379,7 @@ void Rule::sanityCheck() const {
   uint i, k;
   FOR1D(outcomes, i) {
     if (outcomes(i).containsDoubles()) {
+      if(DEBUG>0) cout<<" outcomes err "<<outcomes(i) <<endl;
       write(cerr);
       HALT("Outcome " << i << " contain doubles");
     }
@@ -444,7 +446,7 @@ Rule* Rule::read(ifstream& in) {
   // Action
   line.read(in, NULL, "\n"); // ACTION:
   if (DEBUG>1) PRINT(line);
-  CHECK(line(0)=='A',"bad action (expecting action first);  line="<<line);   CHECK(line.N < 10, "bad action: too short");
+  CHECK_EQ(line(0),'A',"bad action (expecting action first);  line="<<line);   CHECK(line.N < 10, "bad action: too short");
   line.read(in, NULL, "\n");
   if (DEBUG>1) PRINT(line);
   LitL actions_wrapper;
@@ -708,7 +710,7 @@ void RuleSet::sort_using_args() {
       FOR1D(this->ra, r) {
         int action_idx = symbols_action.findValue(this->ra(r)->action->s);
         if (this->ra(r)->action->s->arity == 0) {
-          if (action_idx * 100 == action_ids(i))
+          if (action_idx * 100 == (int) action_ids(i))
             ra_sorted.append(this->ra(r));
         }
         else if (this->ra(r)->action->s->arity == 1) {
@@ -771,7 +773,7 @@ void RuleSet::sort_using_args() {
 //     }
 //     cout<<endl;
     
-    CHECK(ra.N == ra_sorted.N, "Some strange rule-sorting mistake.");
+    CHECK_EQ(ra.N , ra_sorted.N, "Some strange rule-sorting mistake.");
     this->ra = ra_sorted;
   }
 }
@@ -1351,6 +1353,9 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
                 }
               }
             }
+
+            //if((r_ground->action->s->name.p[0]=='t')&& (r_ground->context(i)->args.d0>1)&&(r_ground->context(i)->args(0)==77)&&(r_ground->context(i)->args(1)==71))
+            //    r_ground->write();
             
             r_ground->noise_changes = r_abs->noise_changes;
             rules_ground.append(r_ground);
@@ -1368,18 +1373,33 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
           //   (A)  that contain only action-arguments
           //   (B)  that contain not the latest DR
           //  are invalid.
+         //if(r_ground->action->s->name.p[0]='a')
+         //        cout<<r_ground->action->s->name.p[0]<<endl;
+
+
+
           valid_all = true;
           FOR1D(r_ground->context, i) {
+              //if((r_ground->action->s->name.p[0]=='t')&& (r_ground->context(i)->args.d0==2)&&(r_ground->context(i)->args(0)==77)&&(r_ground->context(i)->args(1)==71)){
+              ///    cout<<*r_ground->context(i) <<endl;
+              //    cout<<nonchanging_symbols<<endl;
+              //}
+
+
             // (i) Is non-changing predicate?
             if (nonchanging_symbols.findValue(r_ground->context(i)->s) >= 0) {
                 // (ii) Does context hold?
+                //if((r_ground->context(i)->args.d0>1)&&(r_ground->context(i)->args(0)==77)&&(r_ground->context(i)->args(1)==71))
+                //    cout<<" vvvvvvvvvvvvv" <<endl;
+
                 if (!reason::holds(nonchanging_lits, r_ground->context(i))) {
+
                   valid_all= false;
                   if (DEBUG>3) {cout<<" invalid!  !reason::holds("<<nonchanging_lits<<", "<<*r_ground->context(i)<<")";}
                   // (iii A) Only action arguments?
                   if (!context_containsDR(i)) {
                     valid_action_args = false;
-                    if (DEBUG>2) {cout<<"valid_action_args=false:  literal "<<i<<" "<<r_ground->context(i)<<endl;}
+                    if (DEBUG>2) {cout<<"valid_action_args=false:  literal "<<i<<" "<<*r_ground->context(i)<<endl;}
                   }
                   // (iii B) Only non_latest_DR arguments?
                   else if (!context_containsLatestDR(i)) {
@@ -1398,9 +1418,11 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
             if (DEBUG>2) cout<<" --> ACCEPTED"<<endl;
           }
           else if (!valid_action_args) {
+            //r_ground->write();// <<endl;
             delete r_ground;
             NUM_REJECTED += combos_drefs.N - c2;
             if (DEBUG>2) cout<<" --> REJECTED"<<endl;
+
             break;
           }
           else if (!valid_nonlatest_drefs) { // valid_action_args = true,  valid_nonlatest_drefs = false
@@ -1428,13 +1450,13 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
   FOR1D(rules_ground.ra, r) {
     if (rules_ground.ra(r)->context.containsDoubles()) {    //remove doubles if necessary
       LitL newContext;
-      for (int ci = 0; ci < rules_ground.ra(r)->context.N; ci++)
+      for (uint ci = 0; ci < rules_ground.ra(r)->context.N; ci++)
         newContext.setAppend(rules_ground.ra(r)->context(ci));
       rules_ground.ra(r)->context = newContext;
     }
   }
   
-  rules_ground.sanityCheck();
+  //rules_ground.sanityCheck();
   
   if (DEBUG>0) {
     cout<<"# Accepted rules: "<<rules_ground.num()<<endl;
@@ -1855,7 +1877,7 @@ void SubstitutionSet::createAllPossibleSubstitutions(SubstitutionSet& subs, cons
     }
     id=assignment.N-1;
   }
-  CHECK(subs.num() == pow(constants.N, vars.N), "Oh no, we forgot some subs!")
+  CHECK_EQ(subs.num() , pow(constants.N, vars.N), "Oh no, we forgot some subs!")
   if (DEBUG>0) cout<<"createAllPossibleSubstitutions [END]"<<endl;
 }
 

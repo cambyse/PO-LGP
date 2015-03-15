@@ -56,6 +56,8 @@
 #  include<gl2ps.h>
 #endif
 
+#undef Success
+
 namespace ors {
 struct Transformation;
 struct Vector;
@@ -211,7 +213,11 @@ struct OpenGL {
   double backgroundZoom;
   arr P; //camera projection matrix
   RWLock lock; //locked during draw callbacks (anything that uses the calls)
-  uint fbo, render_buf;
+//  uint fbo, render_buf;
+  uint fboId;
+  uint rboColor;
+  uint rboDepth;
+  ConditionVariable isUpdating;
 
   /// @name constructors & destructors
   OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);

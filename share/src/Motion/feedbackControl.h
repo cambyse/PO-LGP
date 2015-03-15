@@ -20,7 +20,7 @@
 #pragma once
 
 #include "motion.h"
-#include "taskMap_default.h"
+#include "taskMaps.h"
 
 /**
  * @file
@@ -45,23 +45,29 @@ struct PDtask{
   arr y_ref; ///< position reference
   arr v_ref; ///< velocity reference
   /// @}
-
-  /// @{ @name Parameters of the PD controller or attractor dynamics
+  /// @{ @name Gains of the PD controller
   double Pgain, Dgain;
   /// @}
 
-  /// @{ @name The observations when LAST getDesiredAcceleration was called
+  /// @{ @name Conditional flip variable especially for quaternion targets
+  bool flipTargetScalarProduct;
+  /// @}
+
+  /// @{ @name The actual state when LAST getDesiredAcceleration was called
   /// Use carefully! (in online mode only)
   arr y, v;
   /// @}
 
-  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
+  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){}
+  PDtask(const char* name, double decayTime, double dampingRatio, TaskMap* map);
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
+
+  void reportState(ostream& os);
 };
 
 //===========================================================================
@@ -88,6 +94,7 @@ struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   MT::Array<ConstraintForceTask*> forceTasks;
   PDtask qitselfPD;
+  arr H_rate_diag;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
@@ -97,8 +104,7 @@ struct FeedbackMotionControl : MotionProblem {
                     double decayTime, double dampingRatio,
                     DefaultTaskMapType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
-                    const arr& params=NoArr);
+                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
   /// @}
 

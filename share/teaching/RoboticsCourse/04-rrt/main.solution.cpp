@@ -245,7 +245,7 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode", 1)){
+  switch(MT::getParameter<int>("mode", 0)){
   case 0: RTTplan(); //break;
   case 1: optim(); break;
   }
@@ -260,8 +260,8 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
   double col_prec=1e-1;
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
   phi.resize(m);

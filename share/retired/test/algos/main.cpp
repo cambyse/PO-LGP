@@ -10,7 +10,7 @@ using namespace std;
 //----------------------------------------------------
 // tests
 
-void testMonSolve(){
+void TEST(MonSolve){
   MonSolver s;
   double x,e=1.;
   s.init(x);
@@ -27,7 +27,7 @@ void testMonSolve(){
   }
 }
 
-void testSVD(){
+void TEST(SVD){
   doubleA a,u,v,w,W;
   a.resize(7,10);
   rndGauss(a,1.,false);
@@ -37,7 +37,7 @@ void testSVD(){
   cout <<length(a - u * W * ~v) <<endl;
 }
 
-void testDeterminant(){
+void TEST(Determinant){
   //double A[4]={1.,2.,-2.,3.};
   double B[9]={1,1,2,1,1,0,0,-2,3};
   //doubleA a; a.copy(A,4); a.resizeCopy(2,2);
@@ -47,19 +47,17 @@ void testDeterminant(){
   cout <<"co10=" <<cofactor(a,1,0) <<endl;
 }
 
-void testRprop(){
+void TEST(Rprop){
   uint t;
   
   doubleA x(2); x(0)=10.; x(1)=9.;
   Rprop gd;
 
-  struct Function:ScalarFunction{
-    double fs(arr& grad, const arr& x){
+  ScalarFunction f = [](arr& grad, const arr& x){
       double y=scalarProduct(x,x);
       if(&grad) grad=2.*x;
       return y;
-    }
-  } f;
+    };
 
   arr X((uint)0,2);
   for(t=0;t<1000;t++){
@@ -70,27 +68,23 @@ void testRprop(){
   gnuplot("plot [0:20] 'z' us 1,'z' us 2");
 }
 
-void testMaximize(){
+void TEST(Maximize){
 
-  struct Function:ScalarFunction{
     doubleA a,A;
-    Function(){
       A.setId(2);
       rndGauss(A,.3,true);
       a.resize(2);
       a=0.;
-    }
-    double fs(arr& grad, const arr& x){
+  ScalarFunction f = [&A,&a](arr& grad, const arr& x){
       if(&grad) return dNNinv(x,a,A,grad);
       return NNinv(x,a,A);
-    }
-  } f;
+    };
   doubleA x(2); x=10.; rndGauss(x,1.,true);
   Rprop rp;
   for(uint t=0;t<100;t++) rp.step(x,f);
 }
 
-void testSymIndex(){
+void TEST(SymIndex){
   TupleIndex I;
   I.init(2,4);
   
@@ -140,7 +134,7 @@ void plan(){
 }
 #endif
 
-void testExp(){
+void TEST(Exp){
   doubleA X,Y;
   X.setGrid(1,-1.,1.,10*1280);
   Y.resize(X.N);
@@ -152,7 +146,7 @@ void testExp(){
 
 static arr F;
 void f(arr& y, arr *grad, const arr& x,void*){ y=F*x; if(grad) *grad=F; }
-void testCheckGradient(){
+void TEST(CheckGradient){
   F.resize(4,3);
   rndUniform(F,0.,1.,false);
   arr x(3);
@@ -161,7 +155,7 @@ void testCheckGradient(){
 }
 
 
-void testFilter(){
+void TEST(Filter){
   uint i,T=1000;
   arr x(T),y,z(T);
   for(i=0;i<T;i++) x(i) = sin(MT_2PI*i*(1./(1.+.01*i)));
@@ -197,7 +191,7 @@ void testRK_ddf(arr& xdd,const arr& x,const arr& v){
     xdd = -100.*x; // - .1*v;
   }
 }
-void testRK(){
+void TEST(RK){
   double dt=.1; //dt=.1 looses energy, dt=.001 is ok
   uint D=1,T=(uint)(30./dt),t;
   arr x(T,D),v(T,D);
@@ -222,7 +216,7 @@ void testRKswitch_ddf(arr& xdd,const arr& x,const arr& v){
 void testRKswitch_sf(arr& s,const arr& x,const arr& v){
   s=x;
 }
-void testRKswitch(){
+void TEST(RKswitch){
   double dt=.01; //dt=.1 looses energy, dt=.001 is ok
   uint D=1,T=(uint)(30./dt),t;
   arr x(T,D),v(T,D),s(T,1);
@@ -242,7 +236,7 @@ void testRKswitch(){
 }
 
 
-void testLUdecomposition(){
+void TEST(LUdecomposition){
   arr A(6,6),L,U;
   rndGauss(A,1.,false);
 

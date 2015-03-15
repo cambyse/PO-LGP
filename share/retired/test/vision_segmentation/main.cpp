@@ -51,7 +51,7 @@ double findBox(floatA &box,const floatA &phi){
   return b.score;
 }
 
-void test(){
+void TEST(){
   Camera uvc; cam=&uvc;
   uvc.open();
 
@@ -96,7 +96,7 @@ void test(){
   }
 }
 
-void testESS(){
+void TEST(ESS){
   Camera uvc;
   uvc.open();
 
@@ -112,7 +112,7 @@ void testESS(){
 }
 #endif
 
-void testFelz(){
+void TEST(Felz){
   Image imgL("CameraL"), imgR("CameraR");
   camera = newUVCCamera();
 

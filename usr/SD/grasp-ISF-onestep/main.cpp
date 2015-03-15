@@ -119,7 +119,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   }
 
   //set the time horizon
-  CHECK(T==sys.nTime(),"");
+  CHECK_EQ(T,sys.nTime(),"");
 
   //deactivate all variables
   activateAll(sys.vars,false);
