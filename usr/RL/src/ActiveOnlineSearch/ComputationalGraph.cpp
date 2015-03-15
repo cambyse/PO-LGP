@@ -65,19 +65,43 @@ void CG::assign_differentials(std::vector<double> values, std::vector<node_t> no
 
 void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
 
-    DEBUG_OUT(1, "Propagating values...");
+    switch(p) {
+    case VALUES:
+        DEBUG_OUT(1, "Propagating values...");
+        break;
+    case FORWARD:
+        DEBUG_OUT(1, "Propagating differentials (forward)...");
+        break;
+    case REVERSE:
+        DEBUG_OUT(1, "Propagating differentials (reverse)...");
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
 
     // status of the nodes
     set<node_t> active_nodes;
     set<node_t> pending_nodes;
 
     // find nodes that have to be processed
-    //auto reverse_graph = ReverseDigraph<graph_t>(graph);
+    #warning Make this nicer
     graph_t::NodeMap<bool> to_be_processed(graph,true);
-    Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
-    search.reachedMap(to_be_processed).init();
-    for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
-    search.start();
+    if(p==REVERSE) {
+        auto reverse_graph = ReverseDigraph<graph_t>(graph);
+        ReverseDigraph<graph_t>::NodeMap<bool> rev_to_be_processed(reverse_graph,true);
+        Bfs<ReverseDigraph<graph_t>,BfsDefaultTraits<ReverseDigraph<graph_t>>> search(reverse_graph);
+        search.reachedMap(rev_to_be_processed).init();
+        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+        search.start();
+        for(node_it_t node(graph); node!=INVALID; ++node) {
+            to_be_processed[node] = rev_to_be_processed[node];
+        }
+    } else {
+        Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
+        search.reachedMap(to_be_processed).init();
+        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+        search.start();
+    }
 
     // kick off propagation from changed nodes and remove changed nodes from
     // to-be-processed
@@ -150,8 +174,8 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
             if(all_inputs_available) {
                 to_be_processed[node] = false;
                 new_processed.insert(node);
-                DEBUG_OUT(3, "                All inputs available --> compute value");
-                evaluate_node(node, p);
+                double val = evaluate_node(node, p);
+                DEBUG_OUT(3, "                All inputs available --> compute value (" << val << ")");
                 switch(p) {
                 case VALUES:
                 case FORWARD:

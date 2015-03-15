@@ -162,12 +162,12 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     {
         bool ok;
         EXPECT_TRUE(ok=cg.check_graph_structure()) <<
-            "Aborting tests to avoid infinite loop during computation";
+            "Graph structure is corrupt. Aborting tests.";
         if(!ok) return;
     }
 
     // check derivatives
-//    EXPECT_TRUE(cg.check_derivatives({VALUES}));
+    EXPECT_TRUE(cg.check_derivatives({VALUES}));
 
 
     /*=============================================
@@ -181,11 +181,6 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     vec_double_1D output_diff_3({dx_dt(VALUES),     dy_dt(VALUES)});
     vec_double_1D input_diff_1( {dx_dalpha(VALUES), dx_dw(VALUES), dx_dt(VALUES)});
     vec_double_1D input_diff_2( {dy_dalpha(VALUES), dy_dw(VALUES), dy_dt(VALUES)});
-
-
-    EXPECT_EQ(cg.compute_values({0.1,3,30}).update_values({4},{w_node}).get_output_values(),
-              cg.compute_values({0.1,4,30}).get_output_values());
-    return;
 
     // compute values and check
     DISTURB_ALL;
@@ -228,4 +223,142 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     DISTURB_DIFFERENTIALS;
     expect_near(cg.update_differentials_reverse({0,1},output_nodes).get_input_differentials(),
                 input_diff_2);
+
+
+    /*=============================================
+                   Checking Updates
+      =============================================*/
+
+    // values
+    {
+        // change alpha
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({0.2},{alpha_node}).get_output_values();
+        auto v2 = cg.compute_values({0.2,3,30}).get_output_values();
+        EXPECT_EQ(v1,v2);
+    }
+    {
+        // change w
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({4},{w_node}).get_output_values();
+        auto v2 = cg.compute_values({0.1,4,30}).get_output_values();
+        EXPECT_EQ(v1,v2);
+    }
+    {
+        // change t
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({40},{t_node}).get_output_values();
+        auto v2 = cg.compute_values({0.1,3,40}).get_output_values();
+        EXPECT_EQ(v1,v2);
+    }
+
+    // forward accumulation
+    {
+        // change alpha
+        auto v1 = cg.
+            forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
+            update_differentials_forward({0.2},{alpha_node}).
+            get_output_differentials();
+        auto v2 = cg.
+            forward_accumulation({0.1,3,30},{0.2,0.1,0.1}).
+            get_output_differentials();
+        EXPECT_EQ(v1,v2);
+    }
+    {
+        // change w
+        auto v1 = cg.
+            forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
+            update_differentials_forward({0.2},{w_node}).
+            get_output_differentials();
+        auto v2 = cg.
+            forward_accumulation({0.1,3,30},{0.1,0.2,0.1}).
+            get_output_differentials();
+        EXPECT_EQ(v1,v2);
+    }
+    {
+        // change t
+        auto v1 = cg.
+            forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
+            update_differentials_forward({0.2},{t_node}).
+            get_output_differentials();
+        auto v2 = cg.
+            forward_accumulation({0.1,3,30},{0.1,0.1,0.2}).
+            get_output_differentials();
+        EXPECT_EQ(v1,v2);
+    }
+
+    // reverse accumulation
+    {
+        // change x
+        auto v1 = cg.
+            reverse_accumulation({0.1,3,30},{0.1,0.1}).
+            update_differentials_reverse({0.2},{x_node}).
+            get_input_differentials();
+        auto v2 = cg.
+            reverse_accumulation({0.1,3,30},{0.2,0.1}).
+            get_input_differentials();
+        EXPECT_EQ(v1,v2);
+    }
+    {
+        // change y
+        auto v1 = cg.
+            reverse_accumulation({0.1,3,30},{0.1,0.1}).
+            update_differentials_reverse({0.2},{y_node}).
+            get_input_differentials();
+        auto v2 = cg.
+            reverse_accumulation({0.1,3,30},{0.1,0.2}).
+            get_input_differentials();
+        EXPECT_EQ(v1,v2);
+    }
+}
+
+
+TEST(ActiveOnlineSearch, ComputationalGraph2) {
+
+    typedef ComputationalGraph::node_t node_t;
+    typedef lemon::ListDigraph graph_t;
+
+    graph_t graph;
+    ComputationalGraph cg(graph);
+
+    // create the graph
+    node_t in_node = cg.add_node("in");
+    node_t a_node = cg.add_node("a", {"in"}, [](vector<double> v)->double{return v[0];});
+    node_t b_node = cg.add_node("b", {"in"}, [](vector<double> v)->double{return v[0];});
+    node_t c_node = cg.add_node("c", {"b"}, [](vector<double> v)->double{return v[0];});
+    node_t out_node = cg.add_node("out", {"a","c"}, [](vector<double> v)->double{return v[0]+v[1];});
+
+    cg.add_arc(in_node, a_node, [](vector<double> v)->double{return 1;});
+    cg.add_arc(in_node, b_node, [](vector<double> v)->double{return 1;});
+    cg.add_arc(b_node, c_node, [](vector<double> v)->double{return 1;});
+    cg.add_arc(a_node, out_node, [](vector<double> v)->double{return 1;});
+    cg.add_arc(c_node, out_node, [](vector<double> v)->double{return 1;});
+
+    // check graph structure and in-/output nodes
+    {
+        bool ok;
+        EXPECT_TRUE(ok=cg.check_graph_structure(true,true)) <<
+            "Graph structure is corrupt. Aborting tests.";
+        if(!ok) return;
+    }
+
+    // check derivatives
+    EXPECT_TRUE(cg.check_derivatives({1}));
+
+    vec_double_1D v1, v2;
+
+    v1 = cg.
+        reverse_accumulation({1},{1}).
+        update_differentials_reverse({2},{out_node}).
+        get_input_differentials();
+    cg.plot_graph("graph_1.pdf");
+    v2 = cg.
+        reverse_accumulation({1},{2}).
+        get_input_differentials();
+    cg.plot_graph("graph_2.pdf");
+
+    //cout << cg.reverse_accumulation({1},{0.1,0.1}).get_input_differentials() << endl;
+
+    cout << v1 << endl;
+    cout << v2 << endl;
+    EXPECT_EQ(v1,v2);
+
+
 }
