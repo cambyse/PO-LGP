@@ -13,7 +13,7 @@
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
 
-#define DEBUG_LEVEL 4
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using namespace lemon;
@@ -84,23 +84,33 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
     set<node_t> pending_nodes;
 
     // find nodes that have to be processed
-    #warning Make this nicer
     graph_t::NodeMap<bool> to_be_processed(graph,true);
-    if(p==REVERSE) {
-        auto reverse_graph = ReverseDigraph<graph_t>(graph);
-        ReverseDigraph<graph_t>::NodeMap<bool> rev_to_be_processed(reverse_graph,true);
-        Bfs<ReverseDigraph<graph_t>,BfsDefaultTraits<ReverseDigraph<graph_t>>> search(reverse_graph);
-        search.reachedMap(rev_to_be_processed).init();
-        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
-        search.start();
-        for(node_it_t node(graph); node!=INVALID; ++node) {
-            to_be_processed[node] = rev_to_be_processed[node];
-        }
-    } else {
-        Bfs<ListDigraph,BfsDefaultTraits<ListDigraph>> search(graph);
+    switch(p) {
+    case VALUES:
+    case FORWARD: {
+        // simple depth first search from changed nodes
+        Dfs<graph_t> search(graph);
         search.reachedMap(to_be_processed).init();
         for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
         search.start();
+        break;
+    }
+    case REVERSE: {
+        // depth first search in reverse graph from changed nodes TODO: Somehow
+        // directly use to_be_processed map as ReachedMap as above (type does
+        // not match) to avoid the for loop for copying the values.
+        typedef ReverseDigraph<const graph_t> rev_graph_t;
+        Dfs<rev_graph_t> search(reverseDigraph(graph));
+        search.init();
+        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+        search.start();
+        for(node_it_t node(graph); node!=INVALID; ++node) {
+            to_be_processed[node] = search.reached(node);
+        }
+        break;
+    }
+    default:
+        DEBUG_DEAD_LINE;
     }
 
     // kick off propagation from changed nodes and remove changed nodes from

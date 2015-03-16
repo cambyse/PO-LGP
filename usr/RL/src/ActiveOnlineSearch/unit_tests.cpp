@@ -132,9 +132,6 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
 #define DISTURB_VALUES cg.compute_values({0,0,0});
 #define DISTURB_DIFFERENTIALS cg.forward_accumulation({VALUES},{1,1,1});
 #define DISTURB_ALL cg.forward_accumulation({0,0,0},{1,1,1});
-// #define DISTURB_VALUES
-// #define DISTURB_DIFFERENTIALS
-// #define DISTURB_ALL
 
     // check if all entries are near upt to 10 significant digits (make a copy
     // to avoid calling functions multiple times if vec1 or vec2 are function
@@ -312,6 +309,11 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
 
 TEST(ActiveOnlineSearch, ComputationalGraph2) {
 
+    // In the above graph, updates for reverse accumulation work if the
+    // to_be_processed map is just set to false. Here they don't. So this test
+    // complements the above to ensure that the to_be_processed map is correctly
+    // computed.
+
     typedef ComputationalGraph::node_t node_t;
     typedef lemon::ListDigraph graph_t;
 
@@ -342,23 +344,13 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
     // check derivatives
     EXPECT_TRUE(cg.check_derivatives({1}));
 
-    vec_double_1D v1, v2;
-
-    v1 = cg.
+    // update reverse accumulation
+    vec_double_1D v1 = cg.
         reverse_accumulation({1},{1}).
         update_differentials_reverse({2},{out_node}).
         get_input_differentials();
-    cg.plot_graph("graph_1.pdf");
-    v2 = cg.
+    vec_double_1D v2 = cg.
         reverse_accumulation({1},{2}).
         get_input_differentials();
-    cg.plot_graph("graph_2.pdf");
-
-    //cout << cg.reverse_accumulation({1},{0.1,0.1}).get_input_differentials() << endl;
-
-    cout << v1 << endl;
-    cout << v2 << endl;
     EXPECT_EQ(v1,v2);
-
-
 }
