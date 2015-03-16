@@ -3,6 +3,7 @@
 x    	     # key=x, value=true, parents=none
 y	     # key=y, value=true, parents=none
 (x y)	     # key=none, value=true, parents=x y
+(-1 -2)	     # key=none, value=true, parents=the previous and the y-node
 
 ## a bit more verbose graph
 node A{ color=blue }		# keys=node A, value=<KVG>, parents=none
@@ -47,7 +48,7 @@ trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transf
 
 ## strange notations
 a()	   # key=a, value=true, parents=none
-();	   # key=none, value=true, parents=none
+()	   # key=none, value=true, parents=none
 [1 2 3 4]  # key=none, value=MT::arr, parents=none
 [2 3 4]
 [4 6]

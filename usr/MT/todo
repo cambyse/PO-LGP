@@ -17,8 +17,6 @@
   * otherwise, generic packedData type {string c-type; byte [][]}
   * Maybe have a look again on shared memory!
 * pr2 controller: check max diff > 0.2 !!
-* Item.read/write, don't use operator<<?
-* joypad, joystick -> gamepad
 * Module -> Process
 
 
@@ -37,7 +35,6 @@ penelty and old task variables
 
 
 ** PR2
-* force torqu sensor in regler integrieren
 * low gain turning of handles (don't think as them as parts of the robot,no exact model, just relax and pull somehow)
 * generell: sobald man etwas anfasst: relax, gravity compensation is easier
 * action for pregrasp

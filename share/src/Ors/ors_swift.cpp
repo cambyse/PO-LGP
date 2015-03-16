@@ -64,9 +64,9 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
   INDEXswift2shape.resize(world.shapes.N);  INDEXswift2shape=-1;
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
-  cout <<" -- SwiftInterface init";
+  //cout <<" -- SwiftInterface init";
   for_list(ors::Shape, s,  world.shapes) {
-    cout <<'.' <<flush;
+    //cout <<'.' <<flush;
     add=true;
     switch(s->type) {
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
@@ -138,7 +138,7 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
   initActivations(world);
   
   pushToSwift(world);
-  cout <<"...done" <<endl;
+  //cout <<"...done" <<endl;
 }
 
 void SwiftInterface::reinitShape(const ors::Shape *s) {
