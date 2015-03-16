@@ -74,9 +74,9 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-  testRead();
+  //  testRead();
 //  testInit();
-//  testDot();
+  testDot();
 
 //  if(!filename) testManual();
 

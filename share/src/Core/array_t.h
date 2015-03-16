@@ -713,9 +713,9 @@ template<class T> T& MT::Array<T>::scalar() const {
 }
 
 /// reference to the last element
-template<class T> T& MT::Array<T>::last() const {
-  CHECK(N, "can't take last from empty");
-  return p[N-1];
+template<class T> T& MT::Array<T>::last(int i) const {
+  CHECK((int)N+i>=0, "can't take last ("<<i<<") from " <<N <<" elements");
+  return p[N+i];
 }
 
 /// 1D access (throws an error if not 1D or out of range)
