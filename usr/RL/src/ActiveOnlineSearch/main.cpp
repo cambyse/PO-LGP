@@ -202,14 +202,14 @@ int main(int argn, char ** args) {
     } else if(mode_arg.getValue()=="UCT_EVAL") {
         SearchTree tree(0, environment, 0.5);
         // print header
-        cout << "mean reward,number of samples,run" << endl;
+        cout << "mean reward,number of roll-outs,run" << endl;
         // several runs
         for(int run : Range(run_n_arg.getValue())) {
             DEBUG_OUT(1, "Run # " << run);
             // with one trial for a different number of samples
             for(int sample_n : Range(sample_n_arg.getValue(), sample_max_arg.getValue(), sample_incr_arg.getValue())) {
                 DEBUG_OUT(1, "Samples: " << sample_n);
-                double mean_reward = 0;
+                double reward_sum = 0;
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
                 int step = 1;
@@ -223,7 +223,7 @@ int main(int argn, char ** args) {
                     auto action = tree.recommend_action();
                     auto state_reward = environment->sample(tree.node_info_map[tree.root_node].state,action);
                     auto state = std::get<0>(state_reward);
-                    mean_reward += std::get<1>(state_reward);
+                    reward_sum += std::get<1>(state_reward);
                     // break on terminal state
                     if(environment->has_terminal_state() && environment->is_terminal_state(state)) break;
                     // break if (maximum) number of steps was set and reached
@@ -232,7 +232,7 @@ int main(int argn, char ** args) {
                     tree.prune(action,state);
                     ++step;
                 }
-                cout << QString("%1,%2,%3").arg(mean_reward/step).arg(sample_n).arg(run) << endl;
+                cout << QString("%1,%2,%3").arg(reward_sum/step).arg(sample_n).arg(run) << endl;
             }
         }
     } else {
