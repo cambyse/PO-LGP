@@ -5,13 +5,17 @@ template<class D>
 struct Node{
   Node *parent;
   MT::Array<Node*> children;
-  D decision; ///< what decision (relative to the parent) does this node represent
-  double Q;   ///< accumulation of all returns
-  uint N;     ///< #of rollouts from this node
-  uint t;     ///< depth of this node
-  void *data; ///< dummy helper (to convert to other data structures)
+  D decision;           ///< what decision (relative to the parent) does this node represent
 
-  Node(Node *parent, D decision):parent(parent), decision(decision), Q(0.), N(0), t(0), data(NULL){
+  double Qup,Qme,Qlo;   ///< upper, mean, and lower Q estimates
+  double r, R;          ///< last and total immediate rewards
+  uint N;               ///< # of visits (to normalize immediate rewards)
+  double Q;             ///< total (on-policy) returns
+
+  uint t;               ///< depth of this node
+  void *data;           ///< dummy helper (to convert to other data structures)
+
+  Node(Node *parent, D decision):parent(parent), decision(decision), Qup(0.), Qme(0.), Qlo(0.), r(0.), R(0.), N(0), Q(0.), t(0), data(NULL){
     if(parent) t=parent->t+1;
   }
 };
@@ -25,7 +29,8 @@ struct MCTS{
 
   void addRollout();                 ///< adds one more rollout to the tree
   Node<D>* treePolicy(Node<D> *n);   ///< policy to choose the child from which to do a rollout or to expand
-  arr Qfunction(Node<D> *n=NULL);
+  double Qvalue(Node<D>* n, int optimistic); ///< current value estimates at a node
+  arr Qfunction(Node<D> *n=NULL, int optimistic=0); ///< the Q-function (value estimates of all children) at a node
 
   void writeToGraph(Graph& G, Node<D> *n=NULL);
   Graph getGraph(){ Graph G; writeToGraph(G); return G; }
@@ -33,14 +38,13 @@ struct MCTS{
 
 template<class W, class D> void MCTS<W, D>::addRollout(){
   Node<D> *n = &root;
-  double R=0;
   world.resetToStart();
 
   //-- tree policy
   while(!world.terminal()){
     if(!n->children.N) break;
     n = treePolicy(n);
-    R += world.advance(n->decision);
+    n->r = world.advance(n->decision);
   }
 
   //-- expand: compute new decisions and add corresponding nodes
@@ -51,57 +55,73 @@ template<class W, class D> void MCTS<W, D>::addRollout(){
       n->children.append(newNode);
     }
     n = treePolicy(n); //this plays one of the freshmen
-    R += world.advance(n->decision);
+    n->r = world.advance(n->decision);
   }
 
   //-- rollout
-  while(!world.terminal()){
-    R += world.advanceRandomly();
-  }
+  double Return=0.;
+  while(!world.terminal())  Return += world.advanceRandomly();
 
   //-- backup
   for(;;){
     if(!n) break;
-    n->Q += R;
     n->N++;
+    Return += n->r; //total return from n to terminal
+    n->R += n->r;   //total immediate reward
+    n->Q += Return;
+    if(n->children.N && n->N>n->children.N){ //propagate bounds
+      n->Qup = max( Qfunction(n, +1) );
+      n->Qme = max( Qfunction(n,  0) );
+      n->Qlo = max( Qfunction(n, -1) );
+    }else{ //just set them as UCB
+      n->Qup = Qvalue(n, +1);
+      n->Qme = Qvalue(n,  0);
+      n->Qlo = Qvalue(n, -1);
+    }
     n = n->parent;
   }  
 }
 
 template<class W, class D> Node<D>* MCTS<W, D>::treePolicy(Node<D>* n){
-  arr preference = zeros(n->children.N);
-  uint i=0, d;
-  CHECK(n->N, "you should not be a freshman, if you have children!");
-  //NOTE: if every child was visited once we have n->N==#children+1 (because the parent was visited once as a freshman)
+  CHECK(n->children.N, "you should have children!");
+  CHECK(n->N, "you should not be a freshman!");
   if(n->N>n->children.N){ //we've visited each child at least once
-    double beta = 2.*sqrt(2.*::log(n->N));
-    for(Node<D> *c:n->children){
-      preference(i) = c->Q/c->N + beta/sqrt(c->N);
-      i++;
-    }
-    d = argmax(preference);
-  }else{
-    d = n->N-1;
+    arr Q = Qfunction(n, +1);
+    rndUniform(Q, 0., 1e-3, true); //noise on the optimistic Qfunction
+    return n->children( argmax( Q ) );
   }
-  return n->children(d);
+  return n->children( n->N-1 );
 }
 
-template<class W, class D> arr MCTS<W, D>::Qfunction(Node<D>* n){
+template<class W, class D> arr MCTS<W, D>::Qfunction(Node<D>* n, int optimistic){
   if(!n) n=&root;
-  CHECK(n->N>n->children.N, "you should not be a freshman, if you have children!");
-  arr Q = zeros(n->children.N);
+  if(!n->children.N) return arr();
+  arr Q(n->children.N);
   uint i=0;
-  for(Node<D> *c:n->children){
-    Q(i) = c->Q/c->N;
-    i++;
-  }
+  for(Node<D> *ch:n->children){ Q(i) = Qvalue(ch, optimistic); i++; }
   return Q;
+}
+
+template<class W, class D> double MCTS<W, D>::Qvalue(Node<D>* n, int optimistic){
+  if(n->children.N && n->N>n->children.N){ //the child is major and has children itself
+    if(optimistic==+1) return n->Qup;
+    if(optimistic== 0) return n->Qme;
+    if(optimistic==-1) return n->Qlo;
+  }else{
+    //the child is premajor -> use its on-policy return estimates (and UCB)
+    double beta = 2.*sqrt(2.*::log(n->parent?n->parent->N:n->N));
+    if(optimistic==+1) return n->Q/n->N + beta/sqrt(n->N);
+    if(optimistic== 0) return n->Q/n->N;
+    if(optimistic==-1) return n->Q/n->N - beta/sqrt(n->N);
+  }
+  HALT("");
+  return 0.;
 }
 
 template<class W, class D> void MCTS<W, D>::writeToGraph(Graph& G, Node<D> *n){
   ItemL par;
   if(!n) n=&root; else par.append((Item*)(n->parent->data));
   double q=-10.;  if(n->N) q=n->Q/n->N;
-  n->data = new Item_typed<double>(G, {STRING("t"<<n->t <<"d" <<n->decision <<'N' <<n->N <<'Q' <<n->Q)}, par, new double(q), true);
+  n->data = new Item_typed<double>(G, {STRING("t"<<n->t <<'N' <<n->N <<'[' <<n->Qlo <<',' <<n->Qme <<',' <<n->Qup <<']')}, par, new double(q), true);
   for(Node<D> *c:n->children) writeToGraph(G, c);
 }

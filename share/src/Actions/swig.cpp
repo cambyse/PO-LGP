@@ -19,6 +19,12 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
+  s->activity.machine->KB.writeAccess();
+  Graph& KB=s->activity.machine->KB();
+  KB.append<Graph>("STATE", new Graph(), true);
+  KB.checkConsistency();
+  s->activity.machine->KB.deAccess();
+
 }
 
 ActionSwigInterface::~ActionSwigInterface(){
@@ -40,16 +46,18 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
   s->activity.machine->KB.writeAccess();
   Graph& KB=s->activity.machine->KB();
+  Graph& state=KB.getItem("STATE")->kvg();
 
   ItemL parents;
   for(auto i:literal) parents.append(KB(i));
-  KB.append<bool>({}, parents, NULL, false);
+  state.append<bool>({}, parents, NULL, false);
   s->activity.machine->KB.deAccess();
 }
 
 void ActionSwigInterface::waitForCondition(intV literal){
   auto& KB=s->activity.machine->KB;
   KB.readAccess();
+  Graph& state=KB().getItem("STATE")->kvg();
   ItemL lit;
   for(auto i:literal) lit.append(KB()(i));
   KB.deAccess();
@@ -58,7 +66,7 @@ void ActionSwigInterface::waitForCondition(intV literal){
   while (cont) {
     KB.waitForNextRevision();
     KB.readAccess();
-    Item *it = getEqualFactInKB(KB(), lit);
+    Item *it = getEqualFactInKB(state, lit);
     if(it) cont=false;
     KB.deAccess();
   }

@@ -397,7 +397,7 @@ bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose){
   Graph& state = KB.getItem("STATE")->kvg();
 
   for(;;){
-    KB.checkConsistency();
+//    KB.checkConsistency();
     bool newFacts=false;
     for(Item *rule:rules){
       if(verbose) cout <<"Testing Rule " <<*rule <<endl;

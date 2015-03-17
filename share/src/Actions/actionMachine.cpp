@@ -232,16 +232,17 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
   Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
   Item* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
+  Graph& state = KB().getItem("STATE")->kvg();
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
-      Item *newit = KB.data()->append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
-      if(getEqualFactInKB(KB(), newit)) delete newit;
+      Item *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
     if(a->indicateTimeout(*this)){
-      Item *newit = KB.data()->append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
-      if(getEqualFactInKB(KB(), newit)) delete newit;
+      Item *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
   }
@@ -253,18 +254,17 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   A.deAccess();
 
   if(changes || forceChaining){
-    ItemL state = getLiteralsOfScope(KB());
-    cout <<"STATE (changed by real world at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+    cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
     forwardChaining_FOL(KB(), NULL, false);
-    state = getLiteralsOfScope(KB());
-    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+//    state = getLiteralsOfScope(KB());
+    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
 
     A.writeAccess();
     for(Action *a:A()){
       if(!a->symbol){ a->active=false;  continue; }
       bool act=false;
       for(Item *lit:a->symbol->parentOf){
-        if(&lit->container==&KB() && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
+        if(&lit->container==&state && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
       }
       if(act) a->active=true;
       else a->active=false;
