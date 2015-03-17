@@ -12,6 +12,7 @@
 #include <util/QtUtil.h>
 
 #include "SearchTree.h"
+#include "UCT.h"
 #include "TightRope.h"
 #include "DynamicTightRope.h"
 
@@ -24,6 +25,7 @@
 using std::vector;
 using std::cout;
 using std::endl;
+using std::shared_ptr;
 using util::Range;
 
 static const std::set<std::string> mode_set = {"SAMPLE",
@@ -170,37 +172,40 @@ int main(int argn, char ** args) {
         }
     } else if(mode_arg.getValue()=="UCT") {
         cout << "Running UCT..." << endl;
-        SearchTree tree(0, environment, 0.5);
+        state_t root_state = 0;
+        shared_ptr<SearchTree> tree(new UCT(root_state, environment, 0.5));
         for(int step : Range(0,step_n_arg.getValue())) {
             for(int sample : Range(sample_n_arg.getValue())) {
-                tree.perform_rollout();
+                tree->perform_rollout();
                 if(watch_progress_arg.getValue()>=3) {
                     if(!no_graphics_arg.getValue()) {
-                        tree.toPdf("tree.pdf");
+                        tree->toPdf("tree.pdf");
                     }
                     cout << "Sample # " << sample+1 << endl;
                     getchar();
                 }
             }
             if(step<step_n_arg.getValue()) {
-                auto action = tree.recommend_action();
-                auto state_reward = environment->sample(tree.node_info_map[tree.root_node].state,action);
+                auto action = tree->recommend_action();
+                auto state_reward = environment->sample(root_state,action);
                 auto state = std::get<0>(state_reward);
-                tree.prune(action,state);
+                tree->prune(action,state);
                 if(watch_progress_arg.getValue()>=2) {
                     if(!no_graphics_arg.getValue()) {
-                        tree.toPdf("tree.pdf");
+                        tree->toPdf("tree.pdf");
                     }
                     cout << "Step # " << step+1 << ": (action --> state) = (" << environment->action_name(action) << " --> " << environment->state_name(state) << ")" << endl;
                     getchar();
                 }
+                root_state = state;
             }
         }
         if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
-            tree.toPdf("tree.pdf");
+            tree->toPdf("tree.pdf");
         }
     } else if(mode_arg.getValue()=="UCT_EVAL") {
-        SearchTree tree(0, environment, 0.5);
+        state_t root_state = 0;
+        shared_ptr<SearchTree> tree(new UCT(root_state, environment, 0.5));
         // print header
         cout << "mean reward,number of roll-outs,run" << endl;
         // several runs
@@ -213,15 +218,15 @@ int main(int argn, char ** args) {
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
                 int step = 1;
-                tree.init(0); // reinitialize tree to state 0
+                tree->init(0); // reinitialize tree to state 0
                 while(true) {
                     // build tree
                     repeat(sample_n) {
-                        tree.perform_rollout();
+                        tree->perform_rollout();
                     }
                     // perform step
-                    auto action = tree.recommend_action();
-                    auto state_reward = environment->sample(tree.node_info_map[tree.root_node].state,action);
+                    auto action = tree->recommend_action();
+                    auto state_reward = environment->sample(root_state,action);
                     auto state = std::get<0>(state_reward);
                     reward_sum += std::get<1>(state_reward);
                     // break on terminal state
@@ -229,7 +234,8 @@ int main(int argn, char ** args) {
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
-                    tree.prune(action,state);
+                    tree->prune(action,state);
+                    root_state = state;
                     ++step;
                 }
                 cout << QString("%1,%2,%3").arg(reward_sum/step).arg(sample_n).arg(run) << endl;

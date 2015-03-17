@@ -17,6 +17,8 @@ add_executable(main
     DynamicTightRope.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    UCT.h
+    UCT.cpp
 )
 
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -39,6 +41,8 @@ add_library(ActiveOnlineSearch
     DynamicTightRope.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    UCT.h
+    UCT.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
