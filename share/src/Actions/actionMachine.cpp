@@ -106,7 +106,7 @@ void ActionMachine::step(){
     cout <<"STOP" <<endl;
     KB.writeAccess();
     Item *quitSymbol = KB()["quit"];
-    KB().append<bool>({},{quitSymbol}, NULL, false);
+    KB().getItem("STATE")->kvg().append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    engine().shutdown.incrementValue();
   }
@@ -228,6 +228,7 @@ void ActionMachine::removeAction(Action* a, bool hasLock){
 void ActionMachine::transitionFOL(double time, bool forceChaining){
   bool changes=false;
   KB.writeAccess();
+  KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
   Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
   Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
@@ -252,6 +253,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
 //    else changes=true;
 //  }
   A.deAccess();
+  KB().checkConsistency();
 
   if(changes || forceChaining){
     cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;

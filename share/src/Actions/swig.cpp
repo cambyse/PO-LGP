@@ -8,10 +8,12 @@
 
 struct sActionSwigInterface{
   ActionSystem activity;
+  Access_typed<Graph>& KB;
+  sActionSwigInterface():activity(), KB(activity.machine->KB){}
 };
 
 ActionSwigInterface::ActionSwigInterface(bool useRos){
-  s = new sActionSwigInterface;
+  s = new sActionSwigInterface();
   engine().open(s->activity);
 
   createNewSymbol("conv");
@@ -19,11 +21,10 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
-  s->activity.machine->KB.writeAccess();
-  Graph& KB=s->activity.machine->KB();
-  KB.append<Graph>("STATE", new Graph(), true);
-  KB.checkConsistency();
-  s->activity.machine->KB.deAccess();
+  s->KB.writeAccess();
+  s->KB().append<Graph>("STATE", new Graph(), true);
+  s->KB().checkConsistency();
+  s->KB.deAccess();
 
 }
 
@@ -32,7 +33,8 @@ ActionSwigInterface::~ActionSwigInterface(){
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Item *symbol = s->activity.machine->KB.get()->getItem(symbolName.c_str());
+  Item *symbol = s->KB.get()->getItem(symbolName.c_str());
+  CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
 
@@ -44,31 +46,28 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 
 
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
-  s->activity.machine->KB.writeAccess();
-  Graph& KB=s->activity.machine->KB();
-  Graph& state=KB.getItem("STATE")->kvg();
-
+  s->KB.writeAccess();
+  Graph& state=s->KB().getItem("STATE")->kvg();
   ItemL parents;
-  for(auto i:literal) parents.append(KB(i));
+  for(auto i:literal) parents.append(s->KB().elem(i));
   state.append<bool>({}, parents, NULL, false);
-  s->activity.machine->KB.deAccess();
+  s->KB.deAccess();
 }
 
 void ActionSwigInterface::waitForCondition(intV literal){
-  auto& KB=s->activity.machine->KB;
-  KB.readAccess();
-  Graph& state=KB().getItem("STATE")->kvg();
+  s->KB.readAccess();
+  Graph& state=s->KB().getItem("STATE")->kvg();
   ItemL lit;
-  for(auto i:literal) lit.append(KB()(i));
-  KB.deAccess();
+  for(auto i:literal) lit.append(s->KB().elem(i));
+  s->KB.deAccess();
 
   bool cont = true;
   while (cont) {
-    KB.waitForNextRevision();
-    KB.readAccess();
+    s->KB.waitForNextRevision();
+    s->KB.readAccess();
     Item *it = getEqualFactInKB(state, lit);
     if(it) cont=false;
-    KB.deAccess();
+    s->KB.deAccess();
   }
 }
 
@@ -77,20 +76,19 @@ void ActionSwigInterface::waitForQuitSymbol(){
 }
 
 int ActionSwigInterface::createNewSymbol(std::string symbolName){
-  Item *symbol = s->activity.machine->KB.set()->append<bool>(symbolName.c_str(), NULL, false);
+  Item *symbol = s->KB.set()->append<bool>(symbolName.c_str(), NULL, false);
   return symbol->index;
 }
 
 int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName, dict parameters){
-  s->activity.machine->KB.writeAccess();
-  Graph& KB=s->activity.machine->KB();
+  s->KB.writeAccess();
 
-  Item *symbol = KB.append<bool>(symbolName.c_str(), NULL, false);
+  Item *symbol = s->KB().append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
-  KB.append<Graph>({"Task"}, {symbol}, td, true);
-  KB.checkConsistency();
-  cout <<KB <<endl;
-  s->activity.machine->KB.deAccess();
+  s->KB().append<Graph>({"Task"}, {symbol}, td, true);
+  s->KB().checkConsistency();
+  //cout <<s->KB() <<endl;
+  s->KB.deAccess();
   s->activity.machine->parseTaskDescription(*td);
   return symbol->index;
 }
