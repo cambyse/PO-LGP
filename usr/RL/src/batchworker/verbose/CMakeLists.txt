@@ -3,6 +3,8 @@ find_package(Qt5Core)
 find_package(Qt5Widgets)
 find_package(Qt5Svg)
 
+add_definitions(-fopenmp)
+
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 add_executable(BatchWorker_verbose
