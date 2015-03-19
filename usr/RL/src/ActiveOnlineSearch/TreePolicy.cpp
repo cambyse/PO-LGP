@@ -1,5 +1,9 @@
 #include "TreePolicy.h"
 
+#include <set>
+#include <vector>
+#include <utility>
+
 #include "Environment.h"
 #include "AbstractMonteCarloTreeSearch.h"
 
@@ -7,6 +11,13 @@
 
 #define DEBUG_LEVEL 1
 #include <util/debug.h>
+
+using util::random_select;
+using std::set;
+using std::vector;
+using std::pair;
+using std::make_pair;
+using lemon::INVALID;
 
 namespace tree_policy {
 
@@ -39,36 +50,59 @@ namespace tree_policy {
         TreePolicy(environment, graph, node_info_map, mcts_node_info_map)
     {}
 
-    action_t Uniform::next(const node_t & node) {
-        action_t action = util::random_select(environment->actions);
+    action_t Uniform::next(const node_t &) {
+        action_t action = random_select(environment->actions);
         DEBUG_OUT(1,"Select action: " << environment->action_name(action));
         return action;
+    }
 
-        // using return_tuple::t;
+    UCB1::UCB1(std::shared_ptr<const Environment> environment,
+               const graph_t & graph,
+               const node_info_map_t & node_info_map,
+               const mcts_node_info_map_t & mcts_node_info_map):
+        TreePolicy(environment, graph, node_info_map, mcts_node_info_map)
+    {}
 
-        // // select action node
-        // std::vector<node_t> nodes;
-        // for(out_arc_it_t arc(graph, node); arc!=lemon::INVALID; ++arc) {
-        //     nodes.push_back(graph.target(arc));
-        // }
-        // node_t action_node = util::random_select(nodes);
-        // action_t action = node_info_map[action_node].action;
+    action_t UCB1::next(const node_t & state_node) {
+        // get set of actions
+        set<action_t> action_set(environment->actions.begin(), environment->actions.end());
 
-        // // sample state
-        // state_t state_from = node_info_map[node].state;
-        // state_t state_to;
-        // reward_t reward;
-        // t(state_to,reward) = environment->sample(state_from, action);
+        // prepare vector for computing upper bounds
+        vector<pair<reward_t,action_t>> upper_bounds;
 
-        // // find state node
-        // for(out_arc_it_t arc(graph, action_node); arc!=lemon::INVALID; ++arc) {
-        //     node_t state_node = graph.target(arc);
-        //     if(node_info_map[state_node].state==state_to) {
-        //         return state_node;
-        //     }
-        // }
-        // DEBUG_DEAD_LINE;
-        // return lemon::INVALID;
+        // comput upper bounds
+        int state_counts = mcts_node_info_map[state_node].counts;
+        for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc) {
+            node_t action_node = graph.target(arc);
+            action_t action = node_info_map[action_node].action;
+            reward_t upper = mcts_node_info_map[action_node].value;
+            upper += sqrt(2*log(state_counts)/mcts_node_info_map[action_node].counts);
+            upper_bounds.push_back(make_pair(upper,action));
+            // erase this action from set
+            action_set.erase(action);
+        }
+
+        // select unsampled action if there are any left
+        if(action_set.size()>0) {
+            return random_select(action_set);
+        }
+
+        // use UCB1 otherwise
+        DEBUG_EXPECT(1,upper_bounds.size()>0);
+        reward_t max_upper_bound = -DBL_MAX;
+        vector<action_t> max_upper_bound_actions;
+        for(auto bound_action : upper_bounds) {
+            if(bound_action.first>max_upper_bound) {
+                max_upper_bound_actions.clear();
+            }
+            if(bound_action.first>=max_upper_bound) {
+                max_upper_bound = bound_action.first;
+                max_upper_bound_actions.push_back(bound_action.second);
+            }
+        }
+
+        // random tie breaking between action with equal upper bound
+        return random_select(max_upper_bound_actions);
     }
 
 } // end namespace tree_policy

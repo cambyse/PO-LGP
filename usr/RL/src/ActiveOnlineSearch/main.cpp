@@ -195,7 +195,7 @@ int main(int argn, char ** args) {
             tree.reset(new UCT(root_state, environment, 0.9));
             cout << "Running UCT..." << endl;
         } else if(mode_arg.getValue()=="MCTS") {
-            tree.reset(new MonteCarloTreeSearch<Uniform,Zero,Bellman>(root_state, environment, 0.9));
+            tree.reset(new MonteCarloTreeSearch<UCB1,Zero,Bellman>(root_state, environment, 0.9));
             cout << "Running MCTS..." << endl;
         } else DEBUG_DEAD_LINE;
         for(int step : Range(0,step_n_arg.getValue())) {
@@ -240,7 +240,7 @@ int main(int argn, char ** args) {
         if(mode_arg.getValue()=="UCT_EVAL") {
             tree.reset(new UCT(root_state, environment, 0.9));
         } else if(mode_arg.getValue()=="MCTS_EVAL") {
-            tree.reset(new MonteCarloTreeSearch<Uniform,Zero,Bellman>(root_state, environment, 0.9));
+            tree.reset(new MonteCarloTreeSearch<UCB1,Zero,Bellman>(root_state, environment, 0.9));
         } else DEBUG_DEAD_LINE;
         // print header
         cout << "mean reward,number of roll-outs,run" << endl;

@@ -47,6 +47,18 @@ namespace tree_policy {
         action_t next(const node_t &) override;
     };
 
+    /**
+     * Sample actions according to UCB1 policy. */
+    class UCB1: public TreePolicy {
+        //----methods----//
+    public:
+        UCB1(std::shared_ptr<const Environment> environment,
+             const graph_t & graph,
+             const node_info_map_t & node_info_map,
+             const mcts_node_info_map_t & mcts_node_info_map);
+        action_t next(const node_t &) override;
+    };
+
 } // end namespace tree_policy
 
 #endif /* TREEPOLICY_H_ */
