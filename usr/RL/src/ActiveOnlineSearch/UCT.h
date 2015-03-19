@@ -29,6 +29,10 @@ public:
          * Only valid for action --> state arcs: sum of all rewards for this
          * transition. */
         double mean_reward = 0;
+        /**
+         * Only valid for action --> state arcs: probability for this
+         * transition to occurred */
+        double probability = 0;
     };
     typedef graph_t::NodeMap<UCTNodeInfo> uct_node_info_map_t;
     typedef graph_t::ArcMap<UCTArcInfo>   uct_arc_info_map_t;
@@ -40,7 +44,7 @@ public:
      * the next trajcetory item.*/
     typedef std::tuple<node_t, arc_t, node_t, arc_t, node_t> trajectory_item_t;
     /**
-     * A trajectory. This is just a sequence if #trajectory_item_t objects
+     * A trajectory. This is just a sequence of #trajectory_item_t objects
      * describing the corresponding transitions. */
     typedef std::list<trajectory_item_t>    trajectory_t;
 
@@ -57,7 +61,8 @@ protected:
 public:
     UCT(const state_t &, std::shared_ptr<Environment>, double d = 0.9);
     virtual ~UCT() = default;
-    void perform_rollout() override;
+    void next() override { perform_rollout(); }
+    void perform_rollout();
     action_t recommend_action() const override;
     void toPdf(const char* file_name) const override;
 protected:

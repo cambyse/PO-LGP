@@ -13,8 +13,13 @@
 
 #include "SearchTree.h"
 #include "UCT.h"
+#include "MonteCarloTreeSearch.h"
+#include "TreePolicy.h"
+#include "ValueHeuristic.h"
+#include "BackupMethod.h"
 #include "TightRope.h"
 #include "DynamicTightRope.h"
+#include "GamblingHall.h"
 
 #include <util/return_tuple.h>
 #include <util/pretty_printer.h>
@@ -28,11 +33,18 @@ using std::endl;
 using std::shared_ptr;
 using util::Range;
 
+using namespace tree_policy;
+using namespace value_heuristic;
+using namespace backup_method;
+
 static const std::set<std::string> mode_set = {"SAMPLE",
                                                "UCT",
-                                               "UCT_EVAL"};
+                                               "UCT_EVAL",
+                                               "MCTS",
+                                               "MCTS_EVAL"};
 static const std::set<std::string> environment_set = {"TightRope",
-                                                      "DynamicTightRope"};
+                                                      "DynamicTightRope",
+                                                      "GamblingHall"};
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
                                                      "max"};
@@ -116,21 +128,27 @@ int main(int argn, char ** args) {
     if(environment_arg.getValue()=="TightRope") {
         environment.reset(new TightRope(15));
     } else if(environment_arg.getValue()=="DynamicTightRope") {
-        environment.reset(new DynamicTightRope(30));
+        environment.reset(new DynamicTightRope(100, 20));
+    } else if(environment_arg.getValue()=="GamblingHall") {
+        environment.reset(new GamblingHall(3, 0.7));
     } else {
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
     }
+    DEBUG_OUT(1, "States: " << environment->states);
+    DEBUG_OUT(1, "Actions: " << environment->actions);
     typedef Environment::state_t state_t;
     typedef Environment::action_t action_t;
     typedef Environment::reward_t reward_t;
 
     // different modes
     if(mode_arg.getValue()=="SAMPLE") {
-        if(environment_arg.getValue()=="TightRope") {
+        if(environment_arg.getValue()=="TightRope" ||
+           environment_arg.getValue()=="GamblingHall") {
             cout << "run,state,action,reward" << endl;
             for(int run : Range(sample_n_arg.getValue())) {
                 for(auto state_from : environment->states) {
+                    if(environment->is_terminal_state(state_from)) continue;
                     for(auto action : environment->actions) {
                         RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
                         cout << QString("%1,%2,%3,%4").arg(run).arg(state_from).arg(action).arg(reward) << endl;
@@ -169,14 +187,24 @@ int main(int argn, char ** args) {
                     cout << QString("%1,%2,%3,%4").arg(run).arg(position).arg(velocity).arg(accum_reward) << endl;
                 }
             }
+        } else {
+            DEBUG_ERROR("Unexpected environment");
         }
-    } else if(mode_arg.getValue()=="UCT") {
-        cout << "Running UCT..." << endl;
-        state_t root_state = 0;
-        shared_ptr<SearchTree> tree(new UCT(root_state, environment, 0.5));
+    } else if(mode_arg.getValue()=="UCT" ||
+              mode_arg.getValue()=="MCTS") {
+        state_t root_state = environment->default_state();
+        shared_ptr<SearchTree> tree;
+        if(mode_arg.getValue()=="UCT") {
+            tree.reset(new UCT(root_state, environment, 0.9));
+            cout << "Running UCT..." << endl;
+        } else if(mode_arg.getValue()=="MCTS") {
+            tree.reset(new MonteCarloTreeSearch<Uniform,ValueHeuristic,BackupMethod>(root_state, environment, 0.9));
+            cout << "Running MCTS..." << endl;
+        } else DEBUG_DEAD_LINE;
         for(int step : Range(0,step_n_arg.getValue())) {
+            if(environment->is_terminal_state(root_state)) break;
             for(int sample : Range(sample_n_arg.getValue())) {
-                tree->perform_rollout();
+                tree->next();
                 if(watch_progress_arg.getValue()>=3) {
                     if(!no_graphics_arg.getValue()) {
                         tree->toPdf("tree.pdf");
@@ -189,12 +217,17 @@ int main(int argn, char ** args) {
                 auto action = tree->recommend_action();
                 auto state_reward = environment->sample(root_state,action);
                 auto state = std::get<0>(state_reward);
+                auto reward = std::get<1>(state_reward);
                 tree->prune(action,state);
                 if(watch_progress_arg.getValue()>=2) {
                     if(!no_graphics_arg.getValue()) {
                         tree->toPdf("tree.pdf");
                     }
-                    cout << "Step # " << step+1 << ": (action --> state) = (" << environment->action_name(action) << " --> " << environment->state_name(state) << ")" << endl;
+                    cout << "Step # " << step+1 <<
+                        ": (action --> state, reward) = (" <<
+                        environment->action_name(action) << " --> " <<
+                        environment->state_name(state) << ", " <<
+                        reward << ")" << endl;
                     getchar();
                 }
                 root_state = state;
@@ -203,9 +236,15 @@ int main(int argn, char ** args) {
         if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
             tree->toPdf("tree.pdf");
         }
-    } else if(mode_arg.getValue()=="UCT_EVAL") {
-        state_t root_state = 0;
-        shared_ptr<SearchTree> tree(new UCT(root_state, environment, 0.5));
+    } else if(mode_arg.getValue()=="UCT_EVAL" ||
+              mode_arg.getValue()=="MCTS_EVAL") {
+        state_t root_state = environment->default_state();
+        shared_ptr<SearchTree> tree;
+        if(mode_arg.getValue()=="UCT_EVAL") {
+            tree.reset(new UCT(root_state, environment, 0.9));
+        } else if(mode_arg.getValue()=="MCTS_EVAL") {
+            tree.reset(new MonteCarloTreeSearch<Uniform,ValueHeuristic,BackupMethod>(root_state, environment, 0.9));
+        } else DEBUG_DEAD_LINE;
         // print header
         cout << "mean reward,number of roll-outs,run" << endl;
         // several runs
@@ -218,11 +257,13 @@ int main(int argn, char ** args) {
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
                 int step = 1;
-                tree->init(0); // reinitialize tree to state 0
+                // reinitialize tree to default state
+                root_state = environment->default_state();
+                tree->init(root_state);
                 while(true) {
                     // build tree
                     repeat(sample_n) {
-                        tree->perform_rollout();
+                        tree->next();
                     }
                     // perform step
                     auto action = tree->recommend_action();
@@ -242,8 +283,7 @@ int main(int argn, char ** args) {
             }
         }
     } else {
-        cout << "Unknown mode" << endl;
-        DEBUG_DEAD_LINE;
+        DEBUG_ERROR("Unexpected mode");
     }
 }
 

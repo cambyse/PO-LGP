@@ -44,6 +44,7 @@ void UCT::perform_rollout() {
         auto state_reward = environment->sample(node_info_map[state_node].state, action);
         state_t state = std::get<0>(state_reward);
         reward_t reward = std::get<1>(state_reward);
+        is_terminal = is_terminal || environment->is_terminal_state(state);
         auto item = add_sample(state_node, action, state, reward);
         state_node = std::get<4>(item);
         trajectory.push_front(item);
@@ -108,13 +109,12 @@ void UCT::toPdf(const char* file_name) const {
     graph_t::ArcMap<QString> arc_map(graph);
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         node_t source = graph.source(arc);
-        node_t target = graph.target(arc);
         if(node_info_map[source].type==STATE_NODE) {
             arc_map[arc] = QString("style=dashed");
         } else {
             double norm_val = uct_arc_info_map[arc].mean_reward/norm;
             arc_map[arc] = QString("style=solid penwidth=%3 color=\"%4 %5 %5\"").
-                arg(5*arc_info_map[arc].probability).
+                arg(5*uct_arc_info_map[arc].probability).
                 arg(norm_val>0?0.3:0).
                 arg(color_rescale(fabs(norm_val)));
         }
@@ -261,7 +261,7 @@ void UCT::update_model(const node_t & state_node,
     double action_value = 0;
     for(out_arc_it_t arc(graph, action_node); arc!=INVALID; ++arc) {
         double p = (double)uct_arc_info_map[arc].counts/action_counts;
-        arc_info_map[arc].probability = p;
+        uct_arc_info_map[arc].probability = p;
         action_value += p*(uct_arc_info_map[arc].mean_reward
                            + discount*uct_node_info_map[graph.target(arc)].value);
     }

@@ -13,9 +13,10 @@ using util::clamp;
 using std::tuple;
 using std::vector;
 
-DynamicTightRope::DynamicTightRope(int n):
-    Environment({0,1,2}, vector<state_t>(velocity_n*n)),
-    position_n(n),
+DynamicTightRope::DynamicTightRope(int pos, int vel):
+    Environment({0,1,2}, vector<state_t>(vel*pos)),
+    position_n(pos),
+    velocity_n(vel),
     action_names({"accel", "keep", "decel"}),
     state_names(velocity_n*position_n) {
     for(int pos : Range(position_n)) {
@@ -54,7 +55,8 @@ DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s
         //---------//
 
         // change position
-        pos += vel;
+        //pos += vel;
+        pos += 1;
         pos = clamp(0,position_n-1,pos);
 
         // give reward for moving forward
@@ -68,7 +70,7 @@ DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s
         r = -vel;
 
         // falling brings velocity to zero (position stays the same)
-        vel = 0;
+        //vel = 0;
     }
 
     return state_reward_pair_t(convert_ND_to_1D_index({pos,vel},{position_n,velocity_n}),r);

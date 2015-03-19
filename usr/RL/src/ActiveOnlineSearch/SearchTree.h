@@ -23,7 +23,8 @@ public:
     typedef graph_t::OutArcIt                 out_arc_it_t;
 
     /**
-     * Node-specific data for nodes in a SearchTree. */
+     * Basic information about a node. That is, its type (state or action) and
+     * the corresponding state or action, respectively. */
     struct NodeInfo {
         /**
          * Type of the node. */
@@ -35,17 +36,7 @@ public:
          * Only valid for STATE_NODE: the state the node corresponds to. */
         state_t state = -1;
     };
-
-    /**
-     * Arc-specific data for arcs in a SearchTree. */
-    struct ArcInfo {
-        /**
-         * Only valid for action --> state arcs: probability for this
-         * transition to occurred */
-        double probability = 0;
-    };
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
-    typedef graph_t::ArcMap<ArcInfo>   arc_info_map_t;
 
     //----members----//
 protected:
@@ -59,14 +50,14 @@ protected:
      * Map holding node-specific information of type NodeInfo . */
     node_info_map_t node_info_map;
     /**
-     * Map holding arc-specific information of type ArcInfo. */
-    arc_info_map_t arc_info_map;
-    /**
      * Discount factor for computing the value. */
     double discount;
     /**
      * Pointer to the environment. */
     std::shared_ptr<Environment> environment;
+
+    /**
+     * Whether to use square-root scale for colors in PDF output. */
     static const bool use_sqrt_scale = true;
 
     //----methods----//
@@ -79,8 +70,9 @@ public:
      * everything. */
     virtual void init(const state_t & s);
     /**
-     * Performs a single rollout. */
-    virtual void perform_rollout() = 0;
+     * Proceed with planning. In MonteCarloTreeSearch methods this will initiate
+     * a new rollout. */
+    virtual void next() = 0;
     /**
      * Returns a recommendation for an action for the root node. */
     virtual action_t recommend_action() const = 0;
@@ -95,6 +87,7 @@ public:
      * util::graph_to_pdf(). */
     virtual void toPdf(const char* file_name) const;
 protected:
+    virtual bool is_leaf(const node_t & n) const {return out_arc_it_t(graph,n)==lemon::INVALID;}
     virtual QString str(const node_t &) const;
     virtual QString str_rich(const node_t &) const;
     virtual double color_rescale(const double&) const;

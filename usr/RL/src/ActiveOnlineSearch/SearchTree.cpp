@@ -27,7 +27,6 @@ using util::random_select;
 
 SearchTree::SearchTree(const state_t & s, std::shared_ptr<Environment> env, double d):
     node_info_map(graph),
-    arc_info_map(graph),
     discount(d),
     environment(env)
 {
@@ -125,9 +124,7 @@ void SearchTree::toPdf(const char* file_name) const {
 
     graph_t::ArcMap<QString> arc_map(graph);
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
-        node_t source = graph.source(arc);
-        node_t target = graph.target(arc);
-        if(node_info_map[source].type==STATE_NODE) {
+        if(node_info_map[graph.source(arc)].type==STATE_NODE) {
             arc_map[arc] = QString("style=dashed");
         } else {
             arc_map[arc] = QString("style=solid");

@@ -15,10 +15,18 @@ add_executable(main
     TightRope.cpp
     DynamicTightRope.h
     DynamicTightRope.cpp
+    GamblingHall.h
+    GamblingHall.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     UCT.h
     UCT.cpp
+    MonteCarloTreeSearch.h
+    MonteCarloTreeSearch.cpp
+    TreePolicy.h
+    TreePolicy.cpp
+    ValueHeuristic.h
+    BackupMethod.h
 )
 
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -39,10 +47,18 @@ add_library(ActiveOnlineSearch
     TightRope.cpp
     DynamicTightRope.h
     DynamicTightRope.cpp
+    GamblingHall.h
+    GamblingHall.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     UCT.h
     UCT.cpp
+    MonteCarloTreeSearch.h
+    MonteCarloTreeSearch.cpp
+    TreePolicy.h
+    TreePolicy.cpp
+    ValueHeuristic.h
+    BackupMethod.h
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
