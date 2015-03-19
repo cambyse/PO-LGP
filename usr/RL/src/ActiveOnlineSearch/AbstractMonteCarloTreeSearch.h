@@ -18,6 +18,12 @@ public:
         /**
          * Value of this action/state. */
         double value = 0;
+        /**
+         * Trace to predecessor node on the last rollout that visited this
+         * node. The tuple consists of (state_node_from, arc_to_action,
+         * action_node, arc_to_state) which led to \e this node. */
+        std::tuple<node_t,arc_t,node_t,arc_t> backtrace;
+        MCTSNodeInfo();
     };
     typedef graph_t::NodeMap<MCTSNodeInfo> mcts_node_info_map_t;
 
@@ -25,17 +31,18 @@ public:
      * Arc-specific data for MCTS.*/
     struct MCTSArcInfo {
         /**
-         * Only valid for action --> state arcs: number of times this
-         * transition occurred. */
+         * Number of times this arc was taken on a rollout. For action-->state
+         * arcs this corresponds to the (unnormalized) transition
+         * probability. For state-->action arcs this correpsonds to the
+         * (unnormalized) policy. */
         int counts = 0;
         /**
-         * Only valid for action --> state arcs: sum of all rewards for this
-         * transition. */
-        double mean_reward = 0;
-        /**
-         * Only valid for action --> state arcs: probability for this
-         * transition to occurred */
-        double probability = 0;
+         * Sum of rewards of all transitions taking this arc. For action-->state
+         * arcs this corresponds to the (unnormalized) expected reward as a
+         * function of action and target-state. For state-->action arcs this
+         * corresponds to the (unnormalized) expected reward as a function of
+         * source-state and action. */
+        double reward_sum = 0;
     };
     typedef graph_t::ArcMap<MCTSArcInfo>   mcts_arc_info_map_t;
 
@@ -57,6 +64,8 @@ public:
         mcts_node_info_map(graph),
         mcts_arc_info_map(graph){}
     virtual ~AbstractMonteCarloTreeSearch() = default;
+    virtual void prune(const action_t & a, const state_t & s) override;
+    void toPdf(const char* file_name) const override;
 };
 
 #endif /* ABSTRACTMONTECARLOTREESEARCH_H_ */

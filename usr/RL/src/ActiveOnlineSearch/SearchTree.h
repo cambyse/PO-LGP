@@ -2,6 +2,7 @@
 #define SEARCHTREE_H_
 
 #include <memory> // for shared_ptr
+#include <tuple>
 
 #include <lemon/list_graph.h>
 
@@ -91,6 +92,11 @@ protected:
     virtual QString str(const node_t &) const;
     virtual QString str_rich(const node_t &) const;
     virtual double color_rescale(const double&) const;
+    virtual std::tuple<arc_t,node_t> find_state_node(const node_t & action_node,
+                                                     const state_t & state);
+    virtual std::tuple<arc_t,node_t> find_action_node(const node_t & state_node,
+                                                      const action_t & action);
+    virtual void expand_leaf(const node_t & state_node);
 };
 
 #endif /* SEARCHTREE_H_ */

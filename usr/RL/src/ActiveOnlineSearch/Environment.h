@@ -2,6 +2,7 @@
 #define ENVIRONMENT_H_
 
 #include <QString>
+#include <util/QtUtil.h>
 
 #include <tuple>
 #include <vector>

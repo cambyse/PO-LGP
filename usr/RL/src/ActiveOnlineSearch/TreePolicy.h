@@ -7,10 +7,11 @@ class Environment;
 
 namespace tree_policy {
 
-    typedef AbstractMonteCarloTreeSearch::graph_t graph_t;
+    typedef AbstractMonteCarloTreeSearch::graph_t              graph_t;
     typedef AbstractMonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef SearchTree::node_info_map_t node_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::node_t  node_t;
+    typedef AbstractMonteCarloTreeSearch::node_info_map_t      node_info_map_t;
+    typedef AbstractMonteCarloTreeSearch::node_t               node_t;
+    typedef AbstractMonteCarloTreeSearch::action_t             action_t;
 
     /**
      * Abstract basis class for tree policies. The job of the tree policy is to
@@ -21,17 +22,17 @@ namespace tree_policy {
 
         //----members----//
     protected:
-        std::shared_ptr<Environment> environment;
-        graph_t & graph;
-        node_info_map_t & node_info_map;
-        mcts_node_info_map_t & mcts_node_info_map;
+        std::shared_ptr<const Environment> environment;
+        const graph_t & graph;
+        const node_info_map_t & node_info_map;
+        const mcts_node_info_map_t & mcts_node_info_map;
         //----methods----//
     public:
-        TreePolicy(std::shared_ptr<Environment> environment,
-                   graph_t & graph,
-                   node_info_map_t & node_info_map,
-                   mcts_node_info_map_t & mcts_node_info_map);
-        virtual node_t next(const node_t & n) = 0;
+        TreePolicy(std::shared_ptr<const Environment> environment,
+                   const graph_t & graph,
+                   const node_info_map_t & node_info_map,
+                   const mcts_node_info_map_t & mcts_node_info_map);
+        virtual action_t next(const node_t &) = 0;
     };
 
     /**
@@ -39,11 +40,11 @@ namespace tree_policy {
     class Uniform: public TreePolicy {
         //----methods----//
     public:
-        Uniform(std::shared_ptr<Environment> environment,
-                graph_t & graph,
-                node_info_map_t & node_info_map,
-                mcts_node_info_map_t & mcts_node_info_map);
-        node_t next(const node_t & node) override;
+        Uniform(std::shared_ptr<const Environment> environment,
+                const graph_t & graph,
+                const node_info_map_t & node_info_map,
+                const mcts_node_info_map_t & mcts_node_info_map);
+        action_t next(const node_t &) override;
     };
 
 } // end namespace tree_policy

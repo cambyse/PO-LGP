@@ -8,8 +8,6 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 add_executable(main
     main.cpp
-    SearchTree.h
-    SearchTree.cpp
     Environment.h
     TightRope.h
     TightRope.cpp
@@ -19,14 +17,19 @@ add_executable(main
     GamblingHall.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    SearchTree.h
+    SearchTree.cpp
     UCT.h
     UCT.cpp
+    AbstractMonteCarloTreeSearch.h
+    AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h
-    MonteCarloTreeSearch.cpp
     TreePolicy.h
     TreePolicy.cpp
     ValueHeuristic.h
+    ValueHeuristic.cpp
     BackupMethod.h
+    BackupMethod.cpp
 )
 
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -40,8 +43,6 @@ target_link_libraries(main
 ## library
 
 add_library(ActiveOnlineSearch
-    SearchTree.h
-    SearchTree.cpp
     Environment.h
     TightRope.h
     TightRope.cpp
@@ -51,14 +52,19 @@ add_library(ActiveOnlineSearch
     GamblingHall.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    SearchTree.h
+    SearchTree.cpp
     UCT.h
     UCT.cpp
+    AbstractMonteCarloTreeSearch.h
+    AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h
-    MonteCarloTreeSearch.cpp
     TreePolicy.h
     TreePolicy.cpp
     ValueHeuristic.h
+    ValueHeuristic.cpp
     BackupMethod.h
+    BackupMethod.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
