@@ -1,6 +1,8 @@
 #include <Core/array.h>
 #include <Core/graph.h>
 
+//===========================================================================
+
 template<class D>
 struct Node{
   Node *parent;
@@ -16,9 +18,14 @@ struct Node{
   void *data;           ///< dummy helper (to convert to other data structures)
 
   Node(Node *parent, D decision):parent(parent), decision(decision), Qup(0.), Qme(0.), Qlo(0.), r(0.), R(0.), N(0), Q(0.), t(0), data(NULL){
-    if(parent) t=parent->t+1;
+    if(parent){
+      t=parent->t+1;
+      parent->children.append(this);
+    }
   }
 };
+
+//===========================================================================
 
 template<class W, class D>
 struct MCTS{
@@ -32,9 +39,12 @@ struct MCTS{
   double Qvalue(Node<D>* n, int optimistic); ///< current value estimates at a node
   arr Qfunction(Node<D> *n=NULL, int optimistic=0); ///< the Q-function (value estimates of all children) at a node
 
+  //only to display
   void writeToGraph(Graph& G, Node<D> *n=NULL);
   Graph getGraph(){ Graph G; writeToGraph(G); return G; }
 };
+
+//===========================================================================
 
 template<class W, class D> void MCTS<W, D>::addRollout(){
   Node<D> *n = &root;
@@ -49,12 +59,8 @@ template<class W, class D> void MCTS<W, D>::addRollout(){
 
   //-- expand: compute new decisions and add corresponding nodes
   if(!world.terminal() && n->N){ //we expand n only if it is not a freshmen
-    MT::Array<D> decisions = world.getDecisions();
-    for(D d:decisions){
-      Node<D> *newNode = new Node<D>(n, d); //this adds a bunch of freshmen for all possible decisions
-      n->children.append(newNode);
-    }
-    n = treePolicy(n); //this plays one of the freshmen
+    for(D d:world.getDecisions()) new Node<D>(n, d); //this adds a bunch of freshmen for all possible decisions
+    n = n->children(0);
     n->r = world.advance(n->decision);
   }
 
@@ -66,17 +72,13 @@ template<class W, class D> void MCTS<W, D>::addRollout(){
   for(;;){
     if(!n) break;
     n->N++;
-    Return += n->r; //total return from n to terminal
     n->R += n->r;   //total immediate reward
+    Return += n->r; //add up total return from n to terminal
     n->Q += Return;
     if(n->children.N && n->N>n->children.N){ //propagate bounds
       n->Qup = max( Qfunction(n, +1) );
       n->Qme = max( Qfunction(n,  0) );
       n->Qlo = max( Qfunction(n, -1) );
-    }else{ //just set them as UCB
-      n->Qup = Qvalue(n, +1);
-      n->Qme = Qvalue(n,  0);
-      n->Qlo = Qvalue(n, -1);
     }
     n = n->parent;
   }  
@@ -86,11 +88,11 @@ template<class W, class D> Node<D>* MCTS<W, D>::treePolicy(Node<D>* n){
   CHECK(n->children.N, "you should have children!");
   CHECK(n->N, "you should not be a freshman!");
   if(n->N>n->children.N){ //we've visited each child at least once
-    arr Q = Qfunction(n, +1);
-    rndUniform(Q, 0., 1e-3, true); //noise on the optimistic Qfunction
+    arr Q = Qfunction(n, +1);      //optimistic Qfunction
+    rndUniform(Q, 0., 1e-3, true); //add noise
     return n->children( argmax( Q ) );
   }
-  return n->children( n->N-1 );
+  return n->children( n->N-1 ); //else: visit children by their order
 }
 
 template<class W, class D> arr MCTS<W, D>::Qfunction(Node<D>* n, int optimistic){
@@ -103,12 +105,12 @@ template<class W, class D> arr MCTS<W, D>::Qfunction(Node<D>* n, int optimistic)
 }
 
 template<class W, class D> double MCTS<W, D>::Qvalue(Node<D>* n, int optimistic){
-  if(n->children.N && n->N>n->children.N){ //the child is major and has children itself
+  if(n->children.N && n->N>n->children.N){ //the child is mature and has children itself
     if(optimistic==+1) return n->Qup;
     if(optimistic== 0) return n->Qme;
     if(optimistic==-1) return n->Qlo;
   }else{
-    //the child is premajor -> use its on-policy return estimates (and UCB)
+    //the child is premature -> use its on-policy return estimates (and UCB)
     double beta = 2.*sqrt(2.*::log(n->parent?n->parent->N:n->N));
     if(optimistic==+1) return n->Q/n->N + beta/sqrt(n->N);
     if(optimistic== 0) return n->Q/n->N;

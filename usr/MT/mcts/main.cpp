@@ -20,14 +20,14 @@ struct ToyWorld{
 };
 
 int main(int argc,char **argv){
-  ToyWorld world(15);
+  ToyWorld world(10);
   MCTS<ToyWorld, int> mcts(world);
   Graph G = mcts.getGraph();
   GraphView gv(G);
-  for(uint k=0;k<100000;k++){
+  for(uint k=0;k<10000;k++){
     mcts.addRollout();
 //    G = mcts.getGraph();
-//    if(!(k%100)) gv.update();
+//    if(!(k%1)) gv.update();
   }
 
   cout <<mcts.Qfunction() <<endl;

@@ -1,0 +1,19 @@
+BASE = ../..
+NAME   = 
+
+OUTPUT := x.exe rosmsgs
+ROS = 1
+
+include $(BASE)/gofMake/generic.mk
+
+MSGFILE = msg/Literal.msg
+
+rosmsgs:
+	python2 /opt/ros/$(ROS_DISTRO)/lib/gencpp/gen_cpp.py \
+	$(MSGFILE) \
+	-p $(shell basename `pwd`) \
+	-e /opt/ros/$(ROS_DISTRO)/share/gencpp \
+	-I "std_msgs:/opt/ros/$(ROS_DISTRO)/share/std_msgs/msg" \
+	-I "geometry_msgs:/opt/ros/$(ROS_DISTRO)/share/geometry_msgs/msg" \
+	-o $(BASE)/include/ros_msg
+
