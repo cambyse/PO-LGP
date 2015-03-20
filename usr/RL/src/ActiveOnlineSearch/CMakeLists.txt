@@ -24,6 +24,7 @@ add_executable(main
     AbstractMonteCarloTreeSearch.h
     AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h
+    MonteCarloTreeSearch.cpp
     TreePolicy.h
     TreePolicy.cpp
     ValueHeuristic.h
@@ -59,6 +60,7 @@ add_library(ActiveOnlineSearch
     AbstractMonteCarloTreeSearch.h
     AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h
+    MonteCarloTreeSearch.cpp
     TreePolicy.h
     TreePolicy.cpp
     ValueHeuristic.h

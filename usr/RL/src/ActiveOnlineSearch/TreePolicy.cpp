@@ -9,7 +9,7 @@
 
 #include <util/util.h>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using util::random_select;
@@ -32,62 +32,68 @@ namespace tree_policy {
     typedef Environment::state_t      state_t;
     typedef Environment::reward_t     reward_t;
 
-    TreePolicy::TreePolicy(std::shared_ptr<const Environment> environment,
-                           const graph_t & graph,
-                           const node_info_map_t & node_info_map,
-                           const mcts_node_info_map_t & mcts_node_info_map):
-        environment(environment),
-        graph(graph),
-        node_info_map(node_info_map),
-        mcts_node_info_map(mcts_node_info_map)
-    {}
-
-
-    Uniform::Uniform(std::shared_ptr<const Environment> environment,
-                     const graph_t & graph,
-                     const node_info_map_t & node_info_map,
-                     const mcts_node_info_map_t & mcts_node_info_map):
-        TreePolicy(environment, graph, node_info_map, mcts_node_info_map)
-    {}
-
-    action_t Uniform::next(const node_t &) {
-        action_t action = random_select(environment->actions);
-        DEBUG_OUT(1,"Select action: " << environment->action_name(action));
+    action_t Uniform::operator()(const node_t & state_node,
+                                 const Environment & environment,
+                                 const graph_t & graph,
+                                 const node_info_map_t & node_info_map,
+                                 const mcts_node_info_map_t & mcts_node_info_map,
+                                 const mcts_arc_info_map_t & mcts_arc_info_map) const {
+        action_t action = random_select(environment.actions);
+        DEBUG_OUT(1,"Select action: " << environment.action_name(action));
         return action;
     }
 
-    UCB1::UCB1(std::shared_ptr<const Environment> environment,
-               const graph_t & graph,
-               const node_info_map_t & node_info_map,
-               const mcts_node_info_map_t & mcts_node_info_map):
-        TreePolicy(environment, graph, node_info_map, mcts_node_info_map)
-    {}
+    UCB1::UCB1(double Cp): Cp(Cp) {}
 
-    action_t UCB1::next(const node_t & state_node) {
+    action_t UCB1::operator()(const node_t & state_node,
+                              const Environment & environment,
+                              const graph_t & graph,
+                              const node_info_map_t & node_info_map,
+                              const mcts_node_info_map_t & mcts_node_info_map,
+                              const mcts_arc_info_map_t & mcts_arc_info_map) const {
+
         // get set of actions
-        set<action_t> action_set(environment->actions.begin(), environment->actions.end());
+        set<action_t> action_set(environment.actions.begin(), environment.actions.end());
 
         // prepare vector for computing upper bounds
         vector<pair<reward_t,action_t>> upper_bounds;
 
         // comput upper bounds
+        DEBUG_OUT(3,"Computing upper bound for state node " << graph.id(state_node));
         int state_counts = mcts_node_info_map[state_node].counts;
-        for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc) {
-            node_t action_node = graph.target(arc);
+        for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
+            node_t action_node = graph.target(to_action_arc);
             action_t action = node_info_map[action_node].action;
-            reward_t upper = mcts_node_info_map[action_node].value;
-            upper += sqrt(2*log(state_counts)/mcts_node_info_map[action_node].counts);
+            // upper bound = value + 2 Cp sqrt( 2 log n / nj) where n and nj are
+            // the counts of the state node and action node, respectively.
+            reward_t upper = mcts_node_info_map[action_node].value
+                + 2*Cp*sqrt(2*log(state_counts)/mcts_arc_info_map[to_action_arc].counts);
             upper_bounds.push_back(make_pair(upper,action));
+            DEBUG_OUT(3,"    upper bound for action node " <<
+                      graph.id(action_node) << " is " << upper <<
+                      " (n=" << state_counts <<
+                      ", nj=" << mcts_arc_info_map[to_action_arc].counts << ")");
             // erase this action from set
             action_set.erase(action);
         }
 
         // select unsampled action if there are any left
         if(action_set.size()>0) {
-            return random_select(action_set);
+            action_t action = random_select(action_set);
+            DEBUG_OUT(2,"Selecting unsampled action: " << environment.action_name(action));
+            return action;
+        } else {
+            DEBUG_OUT(2,"No unsampled actions.");
         }
 
         // use UCB1 otherwise
+        IF_DEBUG(3) {
+            DEBUG_OUT(3,"Use UCB1 to choose between:");
+            for(auto bound_action : upper_bounds) {
+                DEBUG_OUT(3,"    '" << environment.action_name(bound_action.second) <<
+                          "' with bound " << bound_action.first);
+            }
+        }
         DEBUG_EXPECT(1,upper_bounds.size()>0);
         reward_t max_upper_bound = -DBL_MAX;
         vector<action_t> max_upper_bound_actions;
@@ -102,7 +108,9 @@ namespace tree_policy {
         }
 
         // random tie breaking between action with equal upper bound
-        return random_select(max_upper_bound_actions);
+        action_t action = random_select(max_upper_bound_actions);
+        DEBUG_OUT(2,"Choosing action " << environment.action_name(action) << " with upper bound " << max_upper_bound );
+        return action;
     }
 
 } // end namespace tree_policy

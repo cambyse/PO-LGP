@@ -25,7 +25,7 @@ using std::make_tuple;
 using lemon::INVALID;
 using util::random_select;
 
-UCT::UCT(const state_t & state, std::shared_ptr<Environment> environment, double discount):
+UCT::UCT(const state_t & state, Environment & environment, double discount):
     SearchTree(state,environment,discount),
     uct_node_info_map(graph),
     uct_arc_info_map(graph)
@@ -41,10 +41,10 @@ void UCT::perform_rollout() {
     bool is_terminal = false;
     while(!is_terminal) {
         action_t action = tree_policy(state_node, is_terminal);
-        auto state_reward = environment->sample(node_info_map[state_node].state, action);
+        auto state_reward = environment.sample(node_info_map[state_node].state, action);
         state_t state = std::get<0>(state_reward);
         reward_t reward = std::get<1>(state_reward);
-        is_terminal = is_terminal || environment->is_terminal_state(state);
+        is_terminal = is_terminal || environment.is_terminal_state(state);
         auto item = add_sample(state_node, action, state, reward);
         state_node = std::get<4>(item);
         trajectory.push_front(item);
@@ -280,7 +280,7 @@ UCT::action_t UCT::tree_policy(const node_t & state_node, bool & is_terminal) co
     set<action_t> action_set;
     vector<tuple<double,action_t>> upper_bounds;
     {
-        for(action_t a : environment->actions) {
+        for(action_t a : environment.actions) {
             action_set.insert(a);
         }
         int state_counts = uct_node_info_map[state_node].counts;

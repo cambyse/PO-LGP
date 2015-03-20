@@ -18,6 +18,13 @@ void AbstractMonteCarloTreeSearch::prune(const action_t & a, const state_t & s) 
                                                                                     lemon::INVALID);
 }
 
+AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(const state_t & root_state,
+                                                           Environment & environment,
+                                                           double discount):
+    SearchTree(root_state, environment, discount),
+    mcts_node_info_map(graph),
+    mcts_arc_info_map(graph){}
+
 void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
 
     //-----------------------------------------//

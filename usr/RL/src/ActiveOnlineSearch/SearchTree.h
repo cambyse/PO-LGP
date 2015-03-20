@@ -22,6 +22,17 @@ public:
     typedef graph_t::ArcIt                    arc_it_t;
     typedef graph_t::InArcIt                  in_arc_it_t;
     typedef graph_t::OutArcIt                 out_arc_it_t;
+    /**
+     * Different types of graphs. */
+    enum GRAPH_TYPE {
+        TREE,           ///< A simple tree.
+        PARTIAL_DAG,    ///< A directed acyclig graph (DAG) where identical
+                        /// states that were reached from the same state node by
+                        /// performing different actions are bundled into one
+                        /// node.
+        FULL_DAG        ///< A DAG where identical states at the same depth from
+                        /// the root node are bundled into one node.
+    };
 
     /**
      * Basic information about a node. That is, its type (state or action) and
@@ -55,7 +66,11 @@ protected:
     double discount;
     /**
      * Pointer to the environment. */
-    std::shared_ptr<Environment> environment;
+    Environment & environment;
+
+    /**
+     * What type of graph to use. */
+    GRAPH_TYPE graph_type = TREE;
 
     /**
      * Whether to use square-root scale for colors in PDF output. */
@@ -63,7 +78,10 @@ protected:
 
     //----methods----//
 public:
-    SearchTree(const state_t &, std::shared_ptr<Environment> env, double d = 0.9);
+    SearchTree(const state_t & root_state,
+               Environment & environment,
+               double discount = 0.9,
+               GRAPH_TYPE graph_type = PARTIAL_DAG);
     virtual ~SearchTree() = default;
     /**
      * Initializes an empty search tree with the root node set to \e s. This
@@ -88,7 +106,21 @@ public:
      * util::graph_to_pdf(). */
     virtual void toPdf(const char* file_name) const;
 protected:
-    virtual bool is_leaf(const node_t & n) const {return out_arc_it_t(graph,n)==lemon::INVALID;}
+    /**
+     * Counts the number of children by iterating over outgoing arcs. */
+    virtual size_t number_of_children(const node_t & state_node) const;
+    /**
+     * Returns \c true \e iff number_of_children() is equal to
+     * environment.actions.size(). */
+    virtual bool is_fully_expanded(const node_t & state_node) const;
+    /**
+     * Returns \c true \e iff number_of_children() is larger than zero but
+     * smaller than environment.actions.size(). */
+    virtual bool is_partially_expanded(const node_t & state_node) const;
+    /**
+     * Returns \c true \e iff number_of_children() is zero. This function does
+     * not call number_of_children() to avoid iterating over all arcs. */
+    virtual bool is_not_expanded(const node_t & state_node) const;
     virtual QString str(const node_t &) const;
     virtual QString str_rich(const node_t &) const;
     virtual double color_rescale(const double&) const;
@@ -96,7 +128,6 @@ protected:
                                                      const state_t & state);
     virtual std::tuple<arc_t,node_t> find_action_node(const node_t & state_node,
                                                       const action_t & action);
-    virtual void expand_leaf(const node_t & state_node);
 };
 
 #endif /* SEARCHTREE_H_ */

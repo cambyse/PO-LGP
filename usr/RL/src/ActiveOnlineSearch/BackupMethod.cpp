@@ -3,32 +3,17 @@
 #include <float.h>
 #include <algorithm>
 
+using lemon::INVALID;
+
 namespace backup_method {
 
-    using lemon::INVALID;
-
-    BackupMethod::BackupMethod(double discount,
-                               std::shared_ptr<const Environment> environment,
-                               const graph_t & graph,
-                               mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map):
-        discount(discount),
-        environment(environment),
-        graph(graph),
-        mcts_node_info_map(mcts_node_info_map),
-        mcts_arc_info_map(mcts_arc_info_map)
-    {}
-
-    Bellman::Bellman(double discount,
-                     std::shared_ptr<const Environment> environment,
-                     const graph_t & graph,
-                     mcts_node_info_map_t & mcts_node_info_map,
-                     const mcts_arc_info_map_t & mcts_arc_info_map):
-        BackupMethod(discount, environment, graph, mcts_node_info_map, mcts_arc_info_map)
-    {}
-
-    void Bellman::backup(const node_t & state_node,
-                         const node_t & action_node) {
+    void Bellman::operator()(const node_t & state_node,
+                             const node_t & action_node,
+                             double discount,
+                             const Environment & environment,
+                             const graph_t & graph,
+                             mcts_node_info_map_t & mcts_node_info_map,
+                             const mcts_arc_info_map_t & mcts_arc_info_map) const {
         // compute action value
         {
             reward_t value = 0;

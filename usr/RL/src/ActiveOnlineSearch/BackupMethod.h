@@ -22,37 +22,27 @@ namespace backup_method {
      * visited a backup will be performed. This usually are either Monte-Carlo
      * backups using rollouts from that node or dynamic programming backups. */
     class BackupMethod {
-        //----typedefs/classes----//
-
-        //----members----//
-    protected:
-        double discount;
-        std::shared_ptr<const Environment> environment;
-        const graph_t & graph;
-        mcts_node_info_map_t & mcts_node_info_map;
-        const mcts_arc_info_map_t & mcts_arc_info_map;
-        //----methods----//
     public:
-        BackupMethod(double discount,
-                     std::shared_ptr<const Environment> environment,
-                     const graph_t & graph,
-                     mcts_node_info_map_t & mcts_node_info_map,
-                     const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & from_state_node,
-                            const node_t & action_node) = 0;
+        virtual void operator()(const node_t & state_node,
+                                const node_t & action_node,
+                                double discount,
+                                const Environment & environment,
+                                const graph_t & graph,
+                                mcts_node_info_map_t & mcts_node_info_map,
+                                const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
     };
 
     /**
      * Performs Bellman backups. */
     class Bellman: public BackupMethod {
     public:
-        Bellman(double discount,
-                std::shared_ptr<const Environment> environment,
-                const graph_t & graph,
-                mcts_node_info_map_t & mcts_node_info_map,
-                const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & state_node,
-                            const node_t & action_node) override;
+        virtual void operator()(const node_t & state_node,
+                                const node_t & action_node,
+                                double discount,
+                                const Environment & environment,
+                                const graph_t & graph,
+                                mcts_node_info_map_t & mcts_node_info_map,
+                                const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     };
 
 } // namespace backup_method

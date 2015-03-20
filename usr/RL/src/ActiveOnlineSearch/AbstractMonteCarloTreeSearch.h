@@ -58,11 +58,8 @@ protected:
     //----methods----//
 public:
     AbstractMonteCarloTreeSearch(const state_t & root_state,
-                                 std::shared_ptr<Environment> environment,
-                                 double discount):
-    SearchTree(root_state, environment, discount),
-        mcts_node_info_map(graph),
-        mcts_arc_info_map(graph){}
+                                 Environment & environment,
+                                 double discount);
     virtual ~AbstractMonteCarloTreeSearch() = default;
     virtual void prune(const action_t & a, const state_t & s) override;
     void toPdf(const char* file_name) const override;

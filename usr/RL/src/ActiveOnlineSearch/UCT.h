@@ -59,7 +59,7 @@ protected:
 
     //----methods----//
 public:
-    UCT(const state_t &, std::shared_ptr<Environment>, double d = 0.9);
+    UCT(const state_t &, Environment &, double d = 0.9);
     virtual ~UCT() = default;
     void next() override { perform_rollout(); }
     void perform_rollout();

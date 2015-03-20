@@ -192,10 +192,15 @@ int main(int argn, char ** args) {
         state_t root_state = environment->default_state();
         shared_ptr<SearchTree> tree;
         if(mode_arg.getValue()=="UCT") {
-            tree.reset(new UCT(root_state, environment, 0.9));
+            tree.reset(new UCT(root_state, *environment, 0.9));
             cout << "Running UCT..." << endl;
         } else if(mode_arg.getValue()=="MCTS") {
-            tree.reset(new MonteCarloTreeSearch<UCB1,Zero,Bellman>(root_state, environment, 0.9));
+            tree.reset(new MonteCarloTreeSearch(root_state,
+                                                *environment,
+                                                0.9,
+                                                UCB1(),
+                                                Zero(),
+                                                Bellman()));
             cout << "Running MCTS..." << endl;
         } else DEBUG_DEAD_LINE;
         for(int step : Range(0,step_n_arg.getValue())) {
@@ -210,11 +215,15 @@ int main(int argn, char ** args) {
                     getchar();
                 }
             }
-            if(step<step_n_arg.getValue()) {
+            if(step<step_n_arg.getValue()) { // don't prune in last step
                 auto action = tree->recommend_action();
                 auto state_reward = environment->sample(root_state,action);
                 auto state = std::get<0>(state_reward);
                 auto reward = std::get<1>(state_reward);
+                if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
+                    tree->toPdf("tree.pdf");
+                    getchar();
+                }
                 tree->prune(action,state);
                 if(watch_progress_arg.getValue()>=2) {
                     if(!no_graphics_arg.getValue()) {
@@ -238,9 +247,14 @@ int main(int argn, char ** args) {
         state_t root_state = environment->default_state();
         shared_ptr<SearchTree> tree;
         if(mode_arg.getValue()=="UCT_EVAL") {
-            tree.reset(new UCT(root_state, environment, 0.9));
+            tree.reset(new UCT(root_state, *environment, 0.9));
         } else if(mode_arg.getValue()=="MCTS_EVAL") {
-            tree.reset(new MonteCarloTreeSearch<UCB1,Zero,Bellman>(root_state, environment, 0.9));
+            tree.reset(new MonteCarloTreeSearch(root_state,
+                                                *environment,
+                                                0.9,
+                                                UCB1(),
+                                                Zero(),
+                                                Bellman()));
         } else DEBUG_DEAD_LINE;
         // print header
         cout << "mean reward,number of roll-outs,run" << endl;

@@ -21,28 +21,19 @@ namespace value_heuristic {
      * case of intermediate reward this may also be a PartialRollout of fixed
      * length \e k or OneStep rollout. */
     class ValueHeuristic {
-        //----typedefs/classes----//
-
-        //----members----//
-    protected:
-        std::shared_ptr<const Environment> environment;
-        mcts_node_info_map_t & mcts_node_info_map;
-        //----methods----//
     public:
-        ValueHeuristic(std::shared_ptr<const Environment> environment,
-                       mcts_node_info_map_t & mcts_node_info_map);
-        ~ValueHeuristic() = default;
-        virtual void get_value(const node_t &) const = 0;
+        virtual void operator()(const node_t & state_node,
+                                const Environment & environment,
+                                mcts_node_info_map_t & mcts_node_info_map) const = 0;
     };
 
     /**
      * This heuristic initializes the value to zero. */
     class Zero: public ValueHeuristic {
     public:
-        Zero(std::shared_ptr<const Environment> environment,
-             mcts_node_info_map_t & mcts_node_info_map);
-        ~Zero() = default;
-        virtual void get_value(const node_t &) const override;
+        virtual void operator()(const node_t & state_node,
+                                const Environment & environment,
+                                mcts_node_info_map_t & mcts_node_info_map) const override;
     };
 
 } // end namespace value_heuristic
