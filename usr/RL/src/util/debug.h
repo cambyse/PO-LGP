@@ -70,5 +70,6 @@
         {call;}                                                 \
         EXPECT_EQ("[35m" msg "[0m\n", stream.get_text());   \
     }
-
+#else
+#warning Including this file multiple times is usually not a good idea
 #endif /* DEBUG_H_ */
