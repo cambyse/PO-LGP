@@ -1,0 +1,9 @@
+# Define the goal
+string[] literal
+string parameters
+---
+# Define the result
+string result # conv, timeout, fail
+---
+# Define a feedback message
+float32 percentage_complete
