@@ -257,9 +257,7 @@ bool applySubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Gr
   return hasEffects;
 }
 
-bool applyEffectLiterals(Graph& facts, Item* effectliterals, const ItemL& subst, Graph* subst_scope){
-  CHECK(effectliterals->getValueType()==typeid(Graph), "");
-  Graph &effects = *effectliterals->getValue<Graph>();
+bool applyEffectLiterals(Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope){
   bool hasEffects=false;
   for(Item *lit:effects){
     bool e = applySubstitutedLiteral(facts, lit, subst, subst_scope);
@@ -405,7 +403,7 @@ bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose){
       for(uint s=0;s<subs.d0;s++){
         Item *effect = rule->kvg().last();
         if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
-        bool e = applyEffectLiterals(state, effect, subs[s], &rule->kvg());
+        bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg());
         if(verbose){
           if(e) cout <<"NEW STATE = " <<state <<endl;
           else cout <<"DID NOT CHANGE STATE" <<endl;

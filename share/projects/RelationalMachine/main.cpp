@@ -5,11 +5,9 @@
 int main(int argc, char** argv) {
   ros::init(argc, argv, "hello_world_node");
 
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("ThirdHand");
 
-  ros::Publisher pub = nh.advertise<RelationalMachine::Literal>("/RelationalMachine/ActionCommand", 1000);
-
-  sleep(1); //IMPORTANT :-(
+  ros::Publisher pub = nh.advertise<RelationalMachine::Literal>("ActionCommand", 10, true);
 
   RelationalMachine::Literal actionCommand;
   actionCommand.literal={"hello", "world"};
@@ -19,9 +17,11 @@ int main(int argc, char** argv) {
 
   pub.publish(actionCommand);
 
-
-  ros::spin();
-  ros::shutdown();
+  ros::Rate loop_rate(100);
+  for(uint i=0;i<10;i++){
+    loop_rate.sleep();
+    ros::spinOnce();
+  }
 
   return 0;
 }

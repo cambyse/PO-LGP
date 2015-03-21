@@ -14,6 +14,15 @@ rosmsgs:
 	-p $(shell basename `pwd`) \
 	-e /opt/ros/$(ROS_DISTRO)/share/gencpp \
 	-I "std_msgs:/opt/ros/$(ROS_DISTRO)/share/std_msgs/msg" \
-	-I "geometry_msgs:/opt/ros/$(ROS_DISTRO)/share/geometry_msgs/msg" \
-	-o $(BASE)/include/ros_msg
+	-o $(BASE)/include/ros_msg\
+	
+	python2 /opt/ros/$(ROS_DISTRO)/share/rospy/rosbuild/scripts/genmsg_py.py --noinitpy \
+	$(MSGFILE)\
+	
+	python2 /opt/ros/$(ROS_DISTRO)/share/rospy/rosbuild/scripts/genmsg_py.py --initpy \
+	$(MSGFILE)
+
+
+
+
 

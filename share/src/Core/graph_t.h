@@ -48,6 +48,7 @@ struct Item_typed:Item {
   /// directly store pointer to value
   Item_typed(Graph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
+    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
   /// directly store pointer to value
@@ -55,6 +56,7 @@ struct Item_typed:Item {
     : Item(container, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     keys=_keys;
+    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
   /// copy value
@@ -62,6 +64,7 @@ struct Item_typed:Item {
     : Item(container, parents), value(NULL), ownsValue(true) {
     value = new T(_value);
     keys=_keys;
+    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
   virtual ~Item_typed(){
@@ -192,7 +195,7 @@ template<class T> Item *Graph::append(T *x, bool ownsValue) {
 
 template<class T> Item *Graph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
   Item *it = new Item_typed<T>(*this, keys, parents, x, ownsValue);
-  if(typeid(T)==typeid(Graph)) it->kvg().isItemOfParentKvg = it;
+
   return it;
 }
 
