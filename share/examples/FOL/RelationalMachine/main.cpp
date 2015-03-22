@@ -4,33 +4,32 @@
 
 void TEST(RM){
   RelationalMachine RM("machine.fol");
+  RM.verbose=true;
 
   cout <<"symbols = " <<RM.getSymbols() <<endl;
   cout <<"rules = " <<RM.getRules() <<endl;
-
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.applyEffect("(init)");
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.fwdChainRules();
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.applyEffect("(alignHand conv) (positionHand conv)");  //msg from the actions
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.fwdChainRules();
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.applyEffect("(lowerHand conv)");  //msg from the actions
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.fwdChainRules();
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.applyEffect("(controlForce timeout)");  //msg from the actions
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.fwdChainRules();
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.applyEffect("(homing conv)");  //msg from the actions
-  cout <<"state = " <<RM.getState() <<endl;
-  RM.fwdChainRules();
   cout <<"state = " <<RM.getState() <<endl;
 
-  RM.applyEffect("(undefined)");  //generates error
+  RM <<"(init)";
+  RM.fwdChainRules();
+
+  RM <<"(alignHand conv) (positionHand conv)";  //return msg from the actions
+  RM.fwdChainRules();
+
+  RM <<"(lowerHand conv)";  //return msg from the actions
+  RM.fwdChainRules();
+
+  cout <<"(homing) condition?" <<RM.queryCondition("(homing)") <<endl;
+
+  RM <<"(controlForce timeout)";  //return msg from the actions
+  RM.fwdChainRules();
+
+  cout <<"(homing) condition?" <<RM.queryCondition("(homing)") <<endl;
+
+  RM <<"(homing conv)";  //return msg from the actions
+  RM.fwdChainRules();
+
+  RM <<"(undefined)";  //generates error
 
 }
 

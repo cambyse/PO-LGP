@@ -1,6 +1,6 @@
 #include "relationalMachine.h"
 
-RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL){
+RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), verbose(false){
   MT::FileToken fil(filename);
   if(fil.exists()){
     fil >>KB;
@@ -15,32 +15,53 @@ RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL
 
 bool RelationalMachine::queryCondition(MT::String query){
   tmp->clear();
+  bool q=false;
   try{
     query >>*tmp;
     tmp->checkConsistency();
+    q=allFactsHaveEqualsInScope(*state, *tmp);
   }catch(...){
     MT_MSG("queryCondition "<<query <<" -- syntax error of query:" );
     return false;
   }
-
-  return allFactsHaveEqualsInScope(*state, *tmp);
+  if(verbose){
+    cout <<__FUNCTION__ <<":";
+    cout <<"\n  query="; tmp->write(cout, " ");
+    cout <<"\n  outcome=" <<(q?"TRUE":"FALSE") <<endl;
+  }
+  return q;
 }
 
 bool RelationalMachine::applyEffect(MT::String effect){
   tmp->clear();
+  bool e=false;
   try{
     effect >>*tmp;
     tmp->checkConsistency();
+    e = applyEffectLiterals(*state, *tmp, {}, NULL);
   }catch(...){
     MT_MSG("applyEffect "<<effect <<" -- syntax error of query");
-    return false;
+//    return false;
   }
-
-  return applyEffectLiterals(*state, *tmp, {}, NULL);
+  if(verbose){
+    cout <<__FUNCTION__ <<":";
+    cout <<"\n  effects="; tmp->write(cout, " ");
+    cout <<"\n  new state="; state->write(cout, " ");
+    cout <<endl;
+  }
+  return e;
 }
 
-bool RelationalMachine::fwdChainRules(){
-  return forwardChaining_FOL(KB, NULL, false);
+ItemL RelationalMachine::fwdChainRules(){
+  tmp->clear();
+  forwardChaining_FOL(KB, NULL, *tmp, false);
+  if(verbose){
+    cout <<__FUNCTION__ <<":";
+    cout <<"\n  changes="; tmp->write(cout, " ");
+    cout <<"\n  new state="; state->write(cout, " ");
+    cout <<endl;
+  }
+  return *tmp;
 }
 
 MT::String RelationalMachine::getState(){

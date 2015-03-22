@@ -31,11 +31,12 @@ ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, bool verbose
 //----------- adding facts
 
 Item *createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope);
-bool applyEffectLiterals(Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope);
+bool applySubstitutedLiteral(Graph& facts, Item*  literal, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
+bool applyEffectLiterals    (Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose=false);
+bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes=NoGraph, bool verbose=false);
 bool forwardChaining_propositional(Graph& KB, Item* q);
 
 //### Level 1 class

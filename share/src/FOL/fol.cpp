@@ -217,7 +217,7 @@ Item* createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subs
   return fact;
 }
 
-bool applySubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope){
+bool applySubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope, Graph& changes){
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
@@ -233,17 +233,20 @@ bool applySubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Gr
 
   if(trueValue){
     if(!matches.N){
-      createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
+      Item *newItem = createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
       hasEffects=true;
+      if(&changes) newItem->newClone(changes);
     }else{
       for(Item *m:matches){
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
           *m->getValue<double>() += *literal->getValue<double>();
           hasEffects=true;
+          if(&changes) m->newClone(changes);
         }else{
           if(!m->hasEqualValue(literal)){
             m->copyValue(literal);
             hasEffects=true;
+            if(&changes) m->newClone(changes);
           }
         }
       }
@@ -251,16 +254,19 @@ bool applySubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Gr
     //TODO: remove double!
   }else{
     //delete all matching facts!
-    for(Item *fact:matches) delete fact;
-    if(matches.N) hasEffects=true;
+    for(Item *fact:matches){
+      hasEffects=true;
+      if(&changes){ Item *it=fact->newClone(changes); if(it->getValueType()==typeid(bool)) it->V<bool>()=false; }
+      delete fact;
+    }
   }
   return hasEffects;
 }
 
-bool applyEffectLiterals(Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope){
+bool applyEffectLiterals(Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope, Graph& changes){
   bool hasEffects=false;
   for(Item *lit:effects){
-    bool e = applySubstitutedLiteral(facts, lit, subst, subst_scope);
+    bool e = applySubstitutedLiteral(facts, lit, subst, subst_scope, changes);
     hasEffects = hasEffects || e;
   }
   return hasEffects;
@@ -389,7 +395,7 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbos
 }
 
 
-bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose){
+bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes, bool verbose){
   ItemL rules = KB.getItems("Rule");
   ItemL constants = KB.getItems("Constant");
   Graph& state = KB.getItem("STATE")->kvg();
@@ -403,7 +409,7 @@ bool forwardChaining_FOL(Graph& KB, Item* query, bool verbose){
       for(uint s=0;s<subs.d0;s++){
         Item *effect = rule->kvg().last();
         if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
-        bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg());
+        bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg(), changes);
         if(verbose){
           if(e) cout <<"NEW STATE = " <<state <<endl;
           else cout <<"DID NOT CHANGE STATE" <<endl;
