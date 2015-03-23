@@ -1,7 +1,6 @@
 #include "SearchTree.h"
 
 #include <algorithm> // for std::max
-#include <set>
 
 #include <lemon/dfs.h>
 
@@ -12,27 +11,29 @@
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include <util/debug.h>
 
 using std::vector;
 using std::list;
-using std::set;
 using std::get;
 using std::tuple;
 using std::make_tuple;
-using std::make_tuple;
+using std::make_pair;
 using lemon::INVALID;
 using util::random_select;
+
+typedef SearchTree::node_t node_t;
+typedef SearchTree::arc_t arc_t;
 
 SearchTree::SearchTree(const state_t & root_state,
                        Environment & environment,
                        double discount,
                        GRAPH_TYPE graph_type):
-    node_info_map(graph),
-    discount(discount),
     environment(environment),
-    graph_type(graph_type)
+    discount(discount),
+    graph_type(graph_type),
+    node_info_map(graph)
 {
     init(root_state);
 }
@@ -41,6 +42,10 @@ void SearchTree::init(const state_t & s) {
     graph.clear();
     root_node = graph.addNode();
     node_info_map[root_node].state=s;
+    if(graph_type==FULL_DAG) {
+        level_map_list.assign({level_map_t({make_pair(s,root_node)})});
+        node_info_map[root_node].level_map_it = level_map_list.begin();
+    }
 }
 
 void SearchTree::prune(const action_t & action, const state_t & state) {
@@ -67,9 +72,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
     if(new_root_node==INVALID) {
         DEBUG_OUT(1, "No branch for (state --> action --> state) = ("
                   << node_info_map[root_node].state << " --> " << action << " --> " << state << ")");
-        graph.clear();
-        root_node = graph.addNode();
-        node_info_map[root_node].state=state;
+        init(state);
         return;
     }
 
@@ -99,7 +102,15 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
         if(!reached[node]) nodes_to_erase.push_back(node);
     }
     for(node_t node : nodes_to_erase) {
+        if(graph_type==FULL_DAG && type(node)==STATE_NODE) {
+            node_info_map[node].level_map_it->erase(node_info_map[node].state);
+        }
         graph.erase(node);
+    }
+
+    // pop front of level set list
+    if(graph_type==FULL_DAG) {
+        level_map_list.pop_front();
     }
 }
 
@@ -129,10 +140,34 @@ void SearchTree::toPdf(const char* file_name) const {
                        &arc_map);
 }
 
+const node_t & SearchTree::root() const {
+    return root_node;
+}
+
+const SearchTree::graph_t & SearchTree::get_graph() const {
+    return graph;
+}
+
+const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
+    return node_info_map;
+}
+
+const SearchTree::state_t SearchTree::state(const node_t & state_node) const {
+    DEBUG_EXPECT(1,node_info_map[state_node].type==STATE_NODE);
+    return node_info_map[state_node].state;
+}
+
+const SearchTree::action_t SearchTree::action(const node_t & action_node) const {
+    DEBUG_EXPECT(1,node_info_map[action_node].type==ACTION_NODE);
+    return node_info_map[action_node].action;
+}
+
+const SearchTree::NODE_TYPE SearchTree::type(const node_t & node) const {
+    return node_info_map[node].type;
+}
+
 size_t SearchTree::number_of_children(const node_t & state_node) const {
-    size_t action_node_counter = 0;
-    for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc, ++action_node_counter){}
-    return action_node_counter;
+    return countOutArcs(graph, state_node);
 }
 
 bool SearchTree::is_fully_expanded(const node_t & state_node) const {
@@ -175,74 +210,57 @@ double SearchTree::color_rescale(const double& d) const {
     }
 }
 
-tuple<SearchTree::arc_t,SearchTree::node_t> SearchTree::find_state_node(const node_t & action_node,
-                                                                        const state_t & state) {
+tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_node,
+                                                          const state_t & state) {
     DEBUG_OUT(3,"Find state node (action node (" << graph.id(action_node) << "): " <<
               environment.action_name(node_info_map[action_node].action) << ", state: " <<
               environment.state_name(state) << ")");
-    switch(graph_type) {
-    case TREE:
-        // just look through children of this action node
-        DEBUG_OUT(4,"    (TREE mode)");
-        for(out_arc_it_t arc(graph, action_node); arc!=lemon::INVALID; ++arc) {
-            node_t state_node = graph.target(arc);
-            if(node_info_map[state_node].state==state) {
-                return make_tuple(arc, state_node);
-            }
-        }
-        break;
-    case PARTIAL_DAG: {
-        // first look through children of this action node
-        DEBUG_OUT(4,"    (TREE mode)");
-        for(out_arc_it_t arc(graph, action_node); arc!=lemon::INVALID; ++arc) {
-            node_t state_node = graph.target(arc);
-            if(node_info_map[state_node].state==state) {
-                return make_tuple(arc, state_node);
-            }
-        }
-        // then look through all children of this action nodes its siblings
-        DEBUG_OUT(4,"    (PARTIAL_DAG mode)");
-        node_t parent_node = graph.source(in_arc_it_t(graph,action_node));
-        for(out_arc_it_t to_action_arc(graph,parent_node); to_action_arc!=INVALID; ++to_action_arc) {
-            node_t sibling_node = graph.target(to_action_arc);
-            if(sibling_node==action_node) continue;
-            for(out_arc_it_t to_state_arc(graph, sibling_node); to_state_arc!=lemon::INVALID; ++to_state_arc) {
-                node_t state_node = graph.target(to_state_arc);
-                if(node_info_map[state_node].state==state) {
-                    if(node_info_map[sibling_node].action==node_info_map[action_node].action) {
-                        DEBUG_OUT(5,"    Found existing arc from " <<
-                                  graph.id(action_node) << " to " << graph.id(state_node));
-                        return make_tuple(to_state_arc, state_node);
-                    } else {
-                        DEBUG_OUT(5,"    Creating new arc from " <<
-                                  graph.id(action_node) << " to " << graph.id(state_node) <<
-                                  " (sibling " << graph.id(sibling_node) << ")");
-                        arc_t new_arc = graph.addArc(action_node, state_node);
-                        return make_tuple(new_arc, state_node);
-                    }
-                }
-            }
-        }
-        break;
+
+    // have node and arc both as separate variables and as tuple of references
+    node_t state_node;
+    arc_t state_arc;
+    tuple<arc_t&,node_t&> arc_node_pair(state_arc,state_node);
+
+    // look through children of this action node
+    arc_node_pair = find_state_node_among_children(action_node, state);
+    if(state_node!=INVALID) {
+        return arc_node_pair;
     }
-    case FULL_DAG:
-        DEBUG_OUT(4,"    (FULL_DAG mode)");
-    default:
-        DEBUG_DEAD_LINE;
+
+    // look through all children of the action node's siblings
+    if(graph_type==PARTIAL_DAG ||
+       graph_type==FULL_DAG) {
+        state_node = find_state_node_among_siblings_children(action_node, state);
+        if(state_node!=INVALID) {
+            state_arc = graph.addArc(action_node,state_node);
+            return arc_node_pair;
+        }
+    }
+
+    // look for existing node at same depth
+    if(graph_type==FULL_DAG) {
+        state_node = find_state_node_at_same_depth(action_node, state);
+        if(state_node!=INVALID) {
+            state_arc = graph.addArc(action_node,state_node);
+            return arc_node_pair;
+        }
     }
 
     // state node doesn't exist --> create
-    node_t state_node = graph.addNode();
+    state_node = graph.addNode();
     node_info_map[state_node].type = STATE_NODE;
     node_info_map[state_node].state = state;
-    arc_t state_arc = graph.addArc(action_node, state_node);
+    state_arc = graph.addArc(action_node, state_node);
+    if(graph_type==FULL_DAG) {
+        add_state_node_to_level_map(state_node);
+    }
     DEBUG_OUT(3,"    adding state node (" << graph.id(state_node) << "): " <<
               environment.state_name(state));
-    return make_tuple(state_arc, state_node);
+    return arc_node_pair;
 }
 
-tuple<SearchTree::arc_t,SearchTree::node_t> SearchTree::find_action_node(const node_t & state_node,
-                                                                         const action_t & action) {
+tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_node,
+                                                           const action_t & action) {
     for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc) {
         node_t action_node = graph.target(arc);
         if(node_info_map[action_node].action==action) {
@@ -257,4 +275,83 @@ tuple<SearchTree::arc_t,SearchTree::node_t> SearchTree::find_action_node(const n
     DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
               environment.action_name(action));
     return make_tuple(action_arc, action_node);
+}
+
+tuple<arc_t,node_t> SearchTree::find_state_node_among_children(const node_t & action_node,
+                                                               const state_t & state) const {
+    for(out_arc_it_t arc(graph, action_node); arc!=INVALID; ++arc) {
+        node_t state_node = graph.target(arc);
+        if(node_info_map[state_node].state==state) {
+            return make_tuple(arc, state_node);
+        }
+    }
+    return tuple<arc_t,node_t>(INVALID, INVALID);
+}
+
+node_t SearchTree::find_state_node_among_siblings_children(const node_t & action_node,
+                                                           const state_t & state) const {
+    // get common parent node
+    node_t parent_node = graph.source(in_arc_it_t(graph,action_node));
+
+    // iterate through siblings
+    for(out_arc_it_t to_action_arc(graph,parent_node); to_action_arc!=INVALID; ++to_action_arc) {
+        node_t sibling_node = graph.target(to_action_arc);
+        // skip the given node
+        if(sibling_node==action_node) continue;
+
+        // iterate through siblings children
+        for(out_arc_it_t to_state_arc(graph, sibling_node); to_state_arc!=lemon::INVALID; ++to_state_arc) {
+            node_t state_node = graph.target(to_state_arc);
+            if(node_info_map[state_node].state==state) {
+                return state_node;
+            }
+        }
+    }
+    return INVALID;
+}
+
+node_t SearchTree::find_state_node_at_same_depth(const node_t & action_node,
+                                                 const state_t & state) const {
+    // first get state node at lower level
+    node_t lower_level_state_node = graph.source(in_arc_it_t(graph, action_node));
+    // get level set iterator
+    auto level_map_it = node_info_map[lower_level_state_node].level_map_it;
+    // go to next level
+    ++level_map_it;
+    // return INVALID if there are no nodes on this level
+    if(level_map_it==level_map_list.end()) {
+        return INVALID;
+    }
+    // find correct state node or return INVALID
+    auto it = level_map_it->find(state);
+    if(it!=level_map_it->end()) {
+        return it->second;
+    } else {
+        return INVALID;
+    }
+}
+
+void SearchTree::add_state_node_to_level_map(const node_t & state_node) {
+    if(state_node==root_node) {
+        DEBUG_ERROR("Request to add root node to level set, which should be done in init() function. Calling init() instead.");
+        init(state(state_node));
+    }
+    // first get state node at lower level
+    node_t action_node = graph.source(in_arc_it_t(graph, state_node));
+    node_t lower_level_state_node = graph.source(in_arc_it_t(graph, action_node));
+    auto lower_level_map_it = node_info_map[lower_level_state_node].level_map_it;
+    // go to higher level set (the one state_node needs to be inserted in) and
+    // insert state_node or create new level with state_node as only element
+    auto higher_level_map_it = lower_level_map_it;
+    ++higher_level_map_it;
+    if(higher_level_map_it==level_map_list.end()) {
+        level_map_list.push_back(level_map_t({make_pair(state(state_node),state_node)}));
+        higher_level_map_it = lower_level_map_it;
+        ++higher_level_map_it;
+        DEBUG_EXPECT(1,higher_level_map_it!=level_map_list.end());
+    } else {
+        (*higher_level_map_it)[state(state_node)] = state_node;
+    }
+    // update node info
+    node_info_map[state_node].level_map_it = higher_level_map_it;
 }

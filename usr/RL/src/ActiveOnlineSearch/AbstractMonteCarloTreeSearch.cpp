@@ -12,7 +12,7 @@ AbstractMonteCarloTreeSearch::MCTSNodeInfo::MCTSNodeInfo():
 
 void AbstractMonteCarloTreeSearch::prune(const action_t & a, const state_t & s) {
     SearchTree::prune(a,s);
-    mcts_node_info_map[root_node].backtrace = std::make_tuple<node_t,arc_t,node_t,arc_t>(lemon::INVALID,
+    mcts_node_info_map[root()].backtrace = std::make_tuple<node_t,arc_t,node_t,arc_t>(lemon::INVALID,
                                                                                     lemon::INVALID,
                                                                                     lemon::INVALID,
                                                                                     lemon::INVALID);
@@ -20,8 +20,10 @@ void AbstractMonteCarloTreeSearch::prune(const action_t & a, const state_t & s) 
 
 AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(const state_t & root_state,
                                                            Environment & environment,
-                                                           double discount):
-    SearchTree(root_state, environment, discount),
+                                                           double discount,
+                                                           GRAPH_TYPE graph_type):
+    SearchTree(root_state, environment, discount, graph_type),
+    graph(this->get_graph()),
     mcts_node_info_map(graph),
     mcts_arc_info_map(graph){}
 
@@ -39,7 +41,7 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
         max_counts = std::max(max_counts, mcts_node_info_map[node].counts);
     }
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
-        if(node_info_map[graph.source(arc)].type==ACTION_NODE) {
+        if(type(graph.source(arc))==ACTION_NODE) {
             min_val = std::min(min_val, mcts_arc_info_map[arc].reward_sum/mcts_arc_info_map[arc].counts);
             max_val = std::max(max_val, mcts_arc_info_map[arc].reward_sum/mcts_arc_info_map[arc].counts);
         }
@@ -51,7 +53,7 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
     for(node_it_t node(graph); node!=INVALID; ++node) {
         double norm_val = mcts_node_info_map[node].value/norm;
         node_map[node] = QString("shape=%1 label=<%2<BR/>#%3<BR/>%5> fillcolor=\"%4 %5 1\" penwidth=%6").
-            arg(node_info_map[node].type==STATE_NODE?"square":"circle").
+            arg(type(node)==STATE_NODE?"square":"circle").
             arg(str_rich(node)).
             arg(mcts_node_info_map[node].counts).
             arg(norm_val>0?0.3:0).
@@ -63,7 +65,7 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         node_t source = graph.source(arc);
         double norm_val = mcts_arc_info_map[arc].reward_sum/mcts_arc_info_map[arc].counts/norm;
-        if(node_info_map[source].type==STATE_NODE) {
+        if(type(source)==STATE_NODE) {
             arc_map[arc] = QString("style=dashed label=<#%1> color=\"%2 %3 %3\"").
                 arg(mcts_arc_info_map[arc].counts).
                 arg(norm_val>0?0.3:0).

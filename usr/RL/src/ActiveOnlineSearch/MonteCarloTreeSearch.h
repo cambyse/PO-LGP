@@ -28,6 +28,7 @@ public:
     MonteCarloTreeSearch(const state_t & root_state,
                          Environment & environment,
                          double discount,
+                         GRAPH_TYPE graph_type,
                          const tree_policy::TreePolicy & tree_policy,
                          const value_heuristic::ValueHeuristic & value_heuristic,
                          const backup_method::BackupMethod & backup_method);

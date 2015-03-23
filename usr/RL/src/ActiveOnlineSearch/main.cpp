@@ -12,7 +12,6 @@
 #include <util/QtUtil.h>
 
 #include "SearchTree.h"
-#include "UCT.h"
 #include "MonteCarloTreeSearch.h"
 #include "TightRope.h"
 #include "DynamicTightRope.h"
@@ -36,15 +35,16 @@ using namespace backup_method;
 
 static const std::set<std::string> mode_set = {"SAMPLE",
                                                "UCT",
-                                               "UCT_EVAL",
-                                               "MCTS",
-                                               "MCTS_EVAL"};
+                                               "UCT_EVAL"};
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
                                                       "GamblingHall"};
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
                                                      "max"};
+static const std::set<std::string> graph_type_set = {"TREE",
+                                                     "PARTIAL_DAG",
+                                                     "FULL_DAG"};
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
@@ -87,8 +87,12 @@ static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
 static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      "How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
                                                      , false, "mean", "string");
+static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
+                                                     "How to graph type values "+util::container_to_str(graph_type_set,", ","(",")")+"." \
+                                                     , false, "FULL_DAG", "string");
 
 bool check_arguments();
+SearchTree::GRAPH_TYPE get_graph_type();
 
 int main(int argn, char ** args) {
 
@@ -96,6 +100,7 @@ int main(int argn, char ** args) {
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
         cmd.add(accumulate_arg);
+        cmd.add(graph_type_arg);
         cmd.add(no_graphics_arg);
         cmd.add(watch_progress_arg);
         cmd.add(run_n_arg);
@@ -187,22 +192,17 @@ int main(int argn, char ** args) {
         } else {
             DEBUG_ERROR("Unexpected environment");
         }
-    } else if(mode_arg.getValue()=="UCT" ||
-              mode_arg.getValue()=="MCTS") {
+    } else if(mode_arg.getValue()=="UCT") {
         state_t root_state = environment->default_state();
         shared_ptr<SearchTree> tree;
-        if(mode_arg.getValue()=="UCT") {
-            tree.reset(new UCT(root_state, *environment, 0.9));
-            cout << "Running UCT..." << endl;
-        } else if(mode_arg.getValue()=="MCTS") {
-            tree.reset(new MonteCarloTreeSearch(root_state,
-                                                *environment,
-                                                0.9,
-                                                UCB1(),
-                                                Zero(),
-                                                Bellman()));
-            cout << "Running MCTS..." << endl;
-        } else DEBUG_DEAD_LINE;
+        tree.reset(new MonteCarloTreeSearch(root_state,
+                                            *environment,
+                                            0.9,
+                                            get_graph_type(),
+                                            UCB1(),
+                                            Zero(),
+                                            Bellman()));
+        cout << "Running UCT..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
             if(environment->is_terminal_state(root_state)) break;
             for(int sample : Range(sample_n_arg.getValue())) {
@@ -242,20 +242,16 @@ int main(int argn, char ** args) {
         if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
             tree->toPdf("tree.pdf");
         }
-    } else if(mode_arg.getValue()=="UCT_EVAL" ||
-              mode_arg.getValue()=="MCTS_EVAL") {
+    } else if(mode_arg.getValue()=="UCT_EVAL") {
         state_t root_state = environment->default_state();
         shared_ptr<SearchTree> tree;
-        if(mode_arg.getValue()=="UCT_EVAL") {
-            tree.reset(new UCT(root_state, *environment, 0.9));
-        } else if(mode_arg.getValue()=="MCTS_EVAL") {
-            tree.reset(new MonteCarloTreeSearch(root_state,
-                                                *environment,
-                                                0.9,
-                                                UCB1(),
-                                                Zero(),
-                                                Bellman()));
-        } else DEBUG_DEAD_LINE;
+        tree.reset(new MonteCarloTreeSearch(root_state,
+                                            *environment,
+                                            0.9,
+                                            get_graph_type(),
+                                            UCB1(),
+                                            Zero(),
+                                            Bellman()));
         // print header
         cout << "mean reward,number of roll-outs,run" << endl;
         // several runs
@@ -320,5 +316,18 @@ bool check_arguments() {
         ok = false;
         cout << "Accumulation must be one of:" << util::container_to_str(accumulate_set,"\n\t","\n\t") << endl;
     }
+    // check graph type
+    if(graph_type_set.find(graph_type_arg.getValue())==graph_type_set.end()) {
+        ok = false;
+        cout << "Graph type must be one of:" << util::container_to_str(graph_type_set,"\n\t","\n\t") << endl;
+    }
     return ok;
+}
+
+SearchTree::GRAPH_TYPE get_graph_type() {
+    if(graph_type_arg.getValue()=="TREE") return SearchTree::TREE;
+    if(graph_type_arg.getValue()=="PARTIAL_DAG") return SearchTree::PARTIAL_DAG;
+    if(graph_type_arg.getValue()=="FULL_DAG") return SearchTree::FULL_DAG;
+    DEBUG_DEAD_LINE;
+    return SearchTree::TREE;
 }

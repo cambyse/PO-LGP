@@ -19,8 +19,6 @@ add_executable(main
     ComputationalGraph.cpp
     SearchTree.h
     SearchTree.cpp
-    UCT.h
-    UCT.cpp
     AbstractMonteCarloTreeSearch.h
     AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h
@@ -55,8 +53,6 @@ add_library(ActiveOnlineSearch
     ComputationalGraph.cpp
     SearchTree.h
     SearchTree.cpp
-    UCT.h
-    UCT.cpp
     AbstractMonteCarloTreeSearch.h
     AbstractMonteCarloTreeSearch.cpp
     MonteCarloTreeSearch.h

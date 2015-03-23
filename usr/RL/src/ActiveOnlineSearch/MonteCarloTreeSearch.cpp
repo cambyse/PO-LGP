@@ -18,10 +18,11 @@ using backup_method::BackupMethod;
 MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
                                            Environment & environment,
                                            double discount,
+                                           GRAPH_TYPE graph_type,
                                            const TreePolicy & tree_policy,
                                            const ValueHeuristic & value_heuristic,
                                            const BackupMethod & backup_method):
-    AbstractMonteCarloTreeSearch(root_state, environment, discount),
+    AbstractMonteCarloTreeSearch(root_state, environment, discount, graph_type),
     tree_policy(tree_policy),
     value_heuristic(value_heuristic),
     backup_method(backup_method)
@@ -33,7 +34,7 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
 
 void MonteCarloTreeSearch::next() {
 
-    node_t current_node = root_node;
+    node_t current_node = root();
 
     /* ========================================================================
        (1) follow tree-policy to leaf-node (2) go one more step to expand this
@@ -63,18 +64,18 @@ void MonteCarloTreeSearch::next() {
         action_t action = tree_policy(current_node,
                                       environment,
                                       graph,
-                                      node_info_map,
+                                      get_node_info_map(),
                                       mcts_node_info_map,
                                       mcts_arc_info_map);
 
-        // find action node
-        T(arc_t, to_action_arc, node_t, action_node) = find_action_node(current_node, action);
+        // find or create action node
+        T(arc_t, to_action_arc, node_t, action_node) = find_or_create_action_node(current_node, action);
 
         // sample state
-        T(state_t, state_to, reward_t, reward) = environment.sample(node_info_map[current_node].state, action);
+        T(state_t, state_to, reward_t, reward) = environment.sample(state(current_node), action);
 
-        // find state node / update current state
-        T(arc_t, to_state_arc, node_t, state_node) = find_state_node(action_node, state_to);
+        // find or create state node / update current state
+        T(arc_t, to_state_arc, node_t, state_node) = find_or_create_state_node(action_node, state_to);
 
         // update maps
         mcts_node_info_map[current_node].counts += 1;
@@ -129,7 +130,7 @@ void MonteCarloTreeSearch::next() {
 Environment::action_t MonteCarloTreeSearch::recommend_action() const {
     std::vector<action_t> optimal_actions({*(environment.actions.begin())});
     double max_value = -DBL_MAX;
-    for(out_arc_it_t arc(graph, root_node); arc!=lemon::INVALID; ++arc) {
+    for(out_arc_it_t arc(graph, root()); arc!=lemon::INVALID; ++arc) {
         node_t action_node = graph.target(arc);
         double value = mcts_node_info_map[action_node].value;
         if(value>max_value) {
@@ -137,7 +138,7 @@ Environment::action_t MonteCarloTreeSearch::recommend_action() const {
             max_value = value;
         }
         if(value>=max_value) {
-            optimal_actions.push_back(node_info_map[action_node].action);
+            optimal_actions.push_back(action(action_node));
         }
     }
     return util::random_select(optimal_actions);

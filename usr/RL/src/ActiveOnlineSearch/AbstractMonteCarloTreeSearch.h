@@ -49,6 +49,9 @@ public:
     //----members----//
 protected:
     /**
+     * Const reference to graph of SearchTree basis class. */
+    const graph_t & graph;
+    /**
      * Map holding node-specific information of type MCTSNodeInfo . */
     mcts_node_info_map_t mcts_node_info_map;
     /**
@@ -59,7 +62,8 @@ protected:
 public:
     AbstractMonteCarloTreeSearch(const state_t & root_state,
                                  Environment & environment,
-                                 double discount);
+                                 double discount,
+                                 GRAPH_TYPE graph_type);
     virtual ~AbstractMonteCarloTreeSearch() = default;
     virtual void prune(const action_t & a, const state_t & s) override;
     void toPdf(const char* file_name) const override;
