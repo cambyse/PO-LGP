@@ -26,7 +26,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                const Environment & environment,
+                                std::shared_ptr<const Environment> environment,
                                 const graph_t & graph,
                                 mcts_node_info_map_t & mcts_node_info_map,
                                 const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
@@ -39,7 +39,20 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                const Environment & environment,
+                                std::shared_ptr<const Environment> environment,
+                                const graph_t & graph,
+                                mcts_node_info_map_t & mcts_node_info_map,
+                                const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+    };
+
+    /**
+     * Performs Monte-Carlo backups. */
+    class MonteCarlo: public BackupMethod {
+    public:
+        virtual void operator()(const node_t & state_node,
+                                const node_t & action_node,
+                                double discount,
+                                std::shared_ptr<const Environment> environment,
                                 const graph_t & graph,
                                 mcts_node_info_map_t & mcts_node_info_map,
                                 const mcts_arc_info_map_t & mcts_arc_info_map) const override;

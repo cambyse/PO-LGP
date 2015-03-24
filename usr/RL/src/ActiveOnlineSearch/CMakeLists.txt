@@ -13,6 +13,7 @@ add_executable(main
     TightRope.cpp
     DynamicTightRope.h
     DynamicTightRope.cpp
+    UnitTestEnvironment.h
     GamblingHall.h
     GamblingHall.cpp
     ComputationalGraph.h
@@ -47,6 +48,7 @@ add_library(ActiveOnlineSearch
     TightRope.cpp
     DynamicTightRope.h
     DynamicTightRope.cpp
+    UnitTestEnvironment.h
     GamblingHall.h
     GamblingHall.cpp
     ComputationalGraph.h

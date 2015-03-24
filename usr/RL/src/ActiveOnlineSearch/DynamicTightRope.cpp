@@ -67,10 +67,10 @@ DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s
         //---------//
 
         // you hurt yourself (the more the faster you go)
-        r = -vel;
+        r = -vel*vel;
 
         // falling brings velocity to zero (position stays the same)
-        vel = 0;
+        //vel = 0;
     }
 
     return state_reward_pair_t(convert_ND_to_1D_index({pos,vel},{position_n,velocity_n}),r);

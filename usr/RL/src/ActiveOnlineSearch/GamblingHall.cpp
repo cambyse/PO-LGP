@@ -6,9 +6,10 @@
 //#define VARIANT 0 // go to a machine or play current machine, infinitely often
 #define VARIANT 1 // go to a machine within the first n steps, then play it once
 
-#if 0
+#if VARIANT == 0
 
 GamblingHall::GamblingHall(int machine_n, double tolerance):
+    Environment({},{}), // set actions and states later!!
     machine_n(machine_n),
     tolerance(tolerance)
 {
@@ -65,9 +66,10 @@ QString GamblingHall::state_name(const state_t & s) const {
     return Environment::state_name(s);
 }
 
-#elif 1
+#elif VARIANT == 1
 
 GamblingHall::GamblingHall(int machine_n, double tolerance):
+    Environment({},{}), // set actions and states later!!
     machine_n(machine_n),
     tolerance(tolerance)
 {

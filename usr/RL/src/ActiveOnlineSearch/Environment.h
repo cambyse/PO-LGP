@@ -17,6 +17,7 @@ public:
     typedef std::tuple<state_t,reward_t> state_reward_pair_t;
 
     //----members----//
+protected:
     std::vector<action_t> actions;
     std::vector<state_t> states;
 
@@ -28,10 +29,12 @@ public:
     virtual bool has_terminal_state() const = 0;
     virtual bool is_terminal_state(state_t) const = 0;
     virtual state_t default_state() const {return 0;}
+    const std::vector<action_t> & get_actions() const {return actions;};
+    const std::vector<state_t> & get_states() const {return states;};
 
 public:
-    Environment(const std::vector<action_t> & a = std::vector<action_t>(),
-                const std::vector<state_t> & s = std::vector<state_t>()):
+    Environment(const std::vector<action_t> & a,
+                const std::vector<state_t> & s):
     actions(a), states(s) {}
     virtual ~Environment() = default;
 };

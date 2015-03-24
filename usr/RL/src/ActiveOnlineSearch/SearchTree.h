@@ -64,7 +64,7 @@ public:
 protected:
     /**
      * Pointer to the environment. */
-    Environment & environment;
+    std::shared_ptr<const Environment> environment;
     /**
      * Discount factor for computing the value. */
     const double discount;
@@ -94,7 +94,7 @@ private:
     //----methods----//
 public:
     SearchTree(const state_t & root_state,
-               Environment & environment,
+               std::shared_ptr<const Environment> environment,
                double discount,
                GRAPH_TYPE graph_type);
     virtual ~SearchTree() = default;

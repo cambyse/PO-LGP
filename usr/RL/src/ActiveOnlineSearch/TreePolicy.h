@@ -21,7 +21,7 @@ namespace tree_policy {
     class TreePolicy {
     public:
         virtual action_t operator()(const node_t & state_node,
-                                    const Environment & environment,
+                                    std::shared_ptr<const Environment> environment,
                                     const graph_t & graph,
                                     const node_info_map_t & node_info_map,
                                     const mcts_node_info_map_t & mcts_node_info_map,
@@ -33,7 +33,7 @@ namespace tree_policy {
     class Uniform: public TreePolicy {
     public:
         virtual action_t operator()(const node_t & state_node,
-                                    const Environment & environment,
+                                    std::shared_ptr<const Environment> environment,
                                     const graph_t & graph,
                                     const node_info_map_t & node_info_map,
                                     const mcts_node_info_map_t & mcts_node_info_map,
@@ -50,7 +50,7 @@ namespace tree_policy {
          * and Szepesvári to satisfy the Hoeffding ineqality. */
         UCB1(double Cp = 0.70710678118654746);
         virtual action_t operator()(const node_t & state_node,
-                                    const Environment & environment,
+                                    std::shared_ptr<const Environment> environment,
                                     const graph_t & graph,
                                     const node_info_map_t & node_info_map,
                                     const mcts_node_info_map_t & mcts_node_info_map,

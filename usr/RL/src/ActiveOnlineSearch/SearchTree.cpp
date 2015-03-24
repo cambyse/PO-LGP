@@ -1,8 +1,11 @@
 #include "SearchTree.h"
 
 #include <algorithm> // for std::max
+#include <queue> // std::queue
 
 #include <lemon/dfs.h>
+#include <lemon/bfs.h>
+#include <lemon/adaptors.h>
 
 #include <QFile>
 #include <QTextStream>
@@ -11,11 +14,12 @@
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using std::vector;
 using std::list;
+using std::queue;
 using std::get;
 using std::tuple;
 using std::make_tuple;
@@ -27,7 +31,7 @@ typedef SearchTree::node_t node_t;
 typedef SearchTree::arc_t arc_t;
 
 SearchTree::SearchTree(const state_t & root_state,
-                       Environment & environment,
+                       std::shared_ptr<const Environment> environment,
                        double discount,
                        GRAPH_TYPE graph_type):
     environment(environment),
@@ -80,16 +84,17 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
     // prune tree //
     //------------//
 
-    // set new root node and remove incoming arcs from new root node to split
-    // graph in two connected components
+#if 0
+    /* This approach is OK but searches the whole graph. However usually only
+     * few (as compared to the graph size) nodes have to be removed. */
+
+    // set new root node and remove old one, which splits graph in two connected
+    // components
+    if(graph_type==FULL_DAG) {
+        node_info_map[root_node].level_map_it->erase(node_info_map[root_node].state);
+    }
+    graph.erase(root_node);
     root_node = new_root_node;
-    vector<arc_t> arcs_to_erase;
-    for(in_arc_it_t arc(graph, new_root_node); arc!=INVALID; ++arc) {
-        arcs_to_erase.push_back(arc);
-    }
-    for(auto arc : arcs_to_erase) {
-        graph.erase(arc);
-    }
 
     // find nodes that are reachable from new root node
     graph_t::NodeMap<bool> reached(graph);
@@ -107,6 +112,61 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
         }
         graph.erase(node);
     }
+#else
+    /* This alternative approach only searches through the parts of the graph
+     * that are close to the root. This might be less efficient for very small
+     * graphs but should be much more efficient for large graphs. */
+
+    DEBUG_OUT(2,"Pruning graph...");
+
+    // add all children of the old root node to list of nodes to_be_processed
+    queue<node_t> to_be_processed;
+    for(out_arc_it_t arc(graph,root_node); arc!=INVALID; ++arc) {
+        node_t node = graph.target(arc);
+        DEBUG_OUT(3,"    add node " << graph.id(node) << " to kick-off nodes");
+        to_be_processed.push(node);
+    }
+
+    // remove old root and set new root
+    if(graph_type==FULL_DAG) {
+        node_info_map[root_node].level_map_it->erase(node_info_map[root_node].state);
+    }
+    graph.erase(root_node);
+    root_node = new_root_node;
+
+    // try to find a reverse (!) path from all nodes to_be_processed to the
+    // (new) root_node and erase the ones such a path does not exist for. this
+    // should be efficient since we are close to the root.
+    auto reverse_graph = reverseDigraph(graph);
+    while(!to_be_processed.empty()) {
+        node_t node = to_be_processed.front();
+        to_be_processed.pop();
+        DEBUG_OUT(3,"    checking node " << graph.id(node));
+        if(graph.valid(node) && !bfs(reverse_graph).run(node,root_node)) {
+            // no path to root node: erase from graph and add children to nodes
+            // to_be_processed
+            DEBUG_OUT(3,"        didn't find path to root");
+            for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+                DEBUG_OUT(4,"            adding child node " << graph.id(graph.target(arc)));
+                to_be_processed.push(graph.target(arc));
+            }
+            DEBUG_OUT(3,"        erasing node " << graph.id(node));
+            if(graph_type==FULL_DAG && type(node)==STATE_NODE) {
+                node_info_map[node].level_map_it->erase(node_info_map[node].state);
+            }
+            graph.erase(node);
+        } else {
+            IF_DEBUG(3) {
+                if(graph.valid(node)) {
+                    DEBUG_OUT(3,"        found path to root");
+                } else {
+                    DEBUG_OUT(3,"        already erased, skipping node");
+                }
+            }
+        }
+    }
+
+#endif
 
     // pop front of level set list
     if(graph_type==FULL_DAG) {
@@ -154,6 +214,10 @@ const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
 
 const SearchTree::state_t SearchTree::state(const node_t & state_node) const {
     DEBUG_EXPECT(1,node_info_map[state_node].type==STATE_NODE);
+    if(node_info_map[state_node].type!=STATE_NODE) {
+        DEBUG_WARNING("Node " << graph.id(state_node) << " is not a state node");
+        toPdf("tree.pdf.debug1");
+    }
     return node_info_map[state_node].state;
 }
 
@@ -172,13 +236,17 @@ size_t SearchTree::number_of_children(const node_t & state_node) const {
 
 bool SearchTree::is_fully_expanded(const node_t & state_node) const {
     DEBUG_EXPECT(1,node_info_map[state_node].type==STATE_NODE);
-    return number_of_children(state_node)==environment.actions.size();
+    if(node_info_map[state_node].type!=STATE_NODE) {
+        DEBUG_WARNING("Node " << graph.id(state_node) << " is not a state node");
+        toPdf("tree.pdf.debug2");
+    }
+    return number_of_children(state_node)==environment->get_actions().size();
 }
 
 bool SearchTree::is_partially_expanded(const node_t & state_node) const {
     DEBUG_EXPECT(1,node_info_map[state_node].type==STATE_NODE);
     size_t action_node_counter = number_of_children(state_node);
-    return action_node_counter>0 && action_node_counter<environment.actions.size();
+    return action_node_counter>0 && action_node_counter<environment->get_actions().size();
 }
 
 bool SearchTree::is_not_expanded(const node_t & state_node) const {
@@ -199,7 +267,7 @@ QString SearchTree::str_rich(const node_t & n) const {
     // return QString("<i>%1</i>=%2").
     //     arg(is_state_node?"s":"a").
     //     arg(is_state_node?node_info_map[n].state:node_info_map[n].action);
-    return QString("%1").arg(is_state_node?environment.state_name(node_info_map[n].state):environment.action_name(node_info_map[n].action));
+    return QString("%1").arg(is_state_node?environment->state_name(node_info_map[n].state):environment->action_name(node_info_map[n].action));
 }
 
 double SearchTree::color_rescale(const double& d) const {
@@ -213,8 +281,8 @@ double SearchTree::color_rescale(const double& d) const {
 tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_node,
                                                           const state_t & state) {
     DEBUG_OUT(3,"Find state node (action node (" << graph.id(action_node) << "): " <<
-              environment.action_name(node_info_map[action_node].action) << ", state: " <<
-              environment.state_name(state) << ")");
+              environment->action_name(node_info_map[action_node].action) << ", state: " <<
+              environment->state_name(state) << ")");
 
     // have node and arc both as separate variables and as tuple of references
     node_t state_node;
@@ -255,7 +323,7 @@ tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_
         add_state_node_to_level_map(state_node);
     }
     DEBUG_OUT(3,"    adding state node (" << graph.id(state_node) << "): " <<
-              environment.state_name(state));
+              environment->state_name(state));
     return arc_node_pair;
 }
 
@@ -273,7 +341,7 @@ tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_
     node_info_map[action_node].action = action;
     arc_t action_arc = graph.addArc(state_node, action_node);
     DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
-              environment.action_name(action));
+              environment->action_name(action));
     return make_tuple(action_arc, action_node);
 }
 
