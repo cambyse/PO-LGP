@@ -6,8 +6,6 @@
   </description>
   <author>mt</author>
   <depend package="std_msgs"/>
-  <depend package="actionlib"/>
-  <depend package="actionlib_msgs"/>
   <export>
   </export>
 </package>
