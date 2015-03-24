@@ -4,10 +4,10 @@
  * of rules (classically clauses, here 1st-order rules which may represent a stationary policy, script, or policy tree).
  *
  * Two situations change the state:
- * 1) An external client (sensor, action feedback, or planner) explicitly adds a fact via 'applyEffect'
+ * 1) An external process (sensor, action feedback, or planner) explicitly adds a fact via 'applyEffect'
  * 2) Within 'fwdChainRules', all rules are checked for their condition and if they hold, their effects are applied to the state
  *
- * The standard usage is nothing but alternating 'applyEffect' (triggered from external clients) and 'fwdChainRules'/
+ * The standard usage is nothing but alternating 'applyEffect' (triggered from external processes) and 'fwdChainRules'/
  *
  */
 struct RelationalMachine{
