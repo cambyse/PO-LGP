@@ -22,10 +22,10 @@ struct RelationalMachineNode{
   RelationalMachineNode():RM("machine.fol"), nh("ThirdHand"){
     RM.verbose=true;
 
-    pub_state      = nh.advertise<std_msgs::String>("RelationalState", 10, true);
-    pub_command    = nh.advertise<std_msgs::String>("RelationalCommand", 10, true);
-    pub_symbols    = nh.advertise<std_msgs::String>("RelationalSymbols", 10, true);
-    sub_newEffect  = nh.subscribe("RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
+    pub_state      = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalState", 10, true);
+    pub_command    = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalCommand", 10, true);
+    pub_symbols    = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalSymbols", 10, true);
+    sub_newEffect  = nh.subscribe("/RelationalMachine/RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
 
     MT::wait(.1);
     publishSymbols();
