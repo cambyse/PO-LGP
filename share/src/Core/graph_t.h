@@ -33,6 +33,8 @@ template <typename B, typename D> struct MLR_is_base_of {
 };
 ///////////////STOP
 
+struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType, more tricks are possible
+
 //===========================================================================
 //
 //  typed Item
@@ -59,13 +61,13 @@ struct Item_typed:Item {
     if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
-  /// copy value
-  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, const T& _value)
-    : Item(container, parents), value(NULL), ownsValue(true) {
-    value = new T(_value);
-    keys=_keys;
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
-  }
+//  /// copy value
+//  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, const T& _value)
+//    : Item(container, parents), value(NULL), ownsValue(true) {
+//    value = new T(_value);
+//    keys=_keys;
+//    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+//  }
 
   virtual ~Item_typed(){
     if(ownsValue) delete value;

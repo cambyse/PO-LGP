@@ -278,7 +278,7 @@ void ors::Shape::parseAts() {
     Vector c = mesh.center();
     if(!ats.getValue<bool>("rel_includes_mesh_center")){
       rel.addRelativeTranslation(c);
-      ats.append<bool>("rel_includes_mesh_center",new bool(true), true);
+      ats.append<bool>({"rel_includes_mesh_center"}, {}, new bool(true), true);
     }
     mesh_radius = mesh.getRadius();
   }

@@ -15,13 +15,13 @@ void runMonteCarlo(Graph& G){
   Graph& actionSequence = G["actionSequence"]->kvg();
   Item *papSymbol = G["pap"];
   Item *depthSymbol = G["depth"];
+  Graph& state = G["STATE"]->kvg();
   //    Graph& terminal = G.getItem("terminal")->kvg();
 
   for(uint h=0;h<100;h++){
     if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;
 
-    ItemL state = getLiteralsOfScope(G);
-    if(verbose>2){ cout <<"*** state = "; listWrite(state, cout); cout<<endl; }
+    if(verbose>2){ cout <<"*** state = "; state.write(cout, " ", "{}"); cout<<endl; }
     if(verbose>2){ cout <<"*** actionSequence = "; actionSequence.write(cout," ","{}"); cout<<endl; }
 
     {
@@ -30,7 +30,7 @@ void runMonteCarlo(Graph& G){
       for(Item* rule:rules){
         //      cout <<"*** RULE: " <<*rule <<endl;
         //      cout <<  "Substitutions:" <<endl;
-        ItemL subs = getRuleSubstitutions(G, rule, constants, (verbose>4) );
+        ItemL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
         for(uint s=0;s<subs.d0;s++){
           decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
         }
@@ -52,14 +52,14 @@ void runMonteCarlo(Graph& G){
 
         Item *effect = d.first->kvg().last();
         if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
-        applyEffectLiterals(G, effect, d.second, &d.first->kvg());
+        applyEffectLiterals(state, effect->kvg(), d.second, &d.first->kvg());
 
         //hack: apply depth effect:
         Item *depth0=NULL, *depth1=NULL;
-        for(Item *fact:d.second(0)->parentOf) if(&fact->container==&G && fact->parents(0)==depthSymbol){
+        for(Item *fact:d.second(0)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
           depth0=fact; break;
         }
-        for(Item *fact:d.second(1)->parentOf) if(&fact->container==&G && fact->parents(0)==depthSymbol){
+        for(Item *fact:d.second(1)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
           depth1=fact; break;
         }
         if(depth0 && depth1){

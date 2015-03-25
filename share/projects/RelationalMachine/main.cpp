@@ -19,13 +19,13 @@ struct RelationalMachineNode{
   ros::Publisher pub_symbols;
   ros::Subscriber sub_newEffect;
 
-  RelationalMachineNode():RM("machine.fol"), nh("ThirdHand"){
+  RelationalMachineNode():RM("machine.fol"), nh("ThirdHand/RelationalMachine"){
     RM.verbose=true;
 
-    pub_state      = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalState", 10, true);
-    pub_command    = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalCommand", 10, true);
-    pub_symbols    = nh.advertise<std_msgs::String>("/RelationalMachine/RelationalSymbols", 10, true);
-    sub_newEffect  = nh.subscribe("/RelationalMachine/RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
+    pub_state     = nh.advertise<std_msgs::String>("RelationalState", 10, true);
+    pub_command   = nh.advertise<std_msgs::String>("RelationalCommand", 10, true);
+    pub_symbols   = nh.advertise<std_msgs::String>("RelationalSymbols", 10, true);
+    sub_newEffect = nh.subscribe("RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
 
     MT::wait(.1);
     publishSymbols();
@@ -71,9 +71,11 @@ struct RelationalMachineNode{
 
 void RelationalMachineNode::cb_newEffect(const std_msgs::String::ConstPtr& msg){
   MT::String effect = msg->data.c_str();
+  if(!effect.N) return;
   RM_lock.writeLock();
   RM.applyEffect(effect);
   RM_lock.unlock();
+  fwdChainRules();
 }
 
 //===========================================================================
