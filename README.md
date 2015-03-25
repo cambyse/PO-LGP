@@ -1,5 +1,7 @@
 # MLR Repository
 
+Infos for students: README.student.md
+
 Doxygen documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
 
 Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
