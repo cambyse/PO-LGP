@@ -18,12 +18,12 @@ public:
         int get_transition_counts() const {return transition_counts;}
         int get_rollout_counts() const {return rollout_counts;}
         reward_t get_value() const {return value;}
-        reward_t get_value_err() const {return value_err;}
+        reward_t get_value_variance() const {return value_variance;}
         reward_t get_return_sum() const {return return_sum;}
         reward_t get_squared_return_sum() const {return squared_return_sum;}
-        void set_value(reward_t val, reward_t val_err) {
+        void set_value(reward_t val, reward_t val_variance) {
             value=val;
-            value_err=val_err;
+            value_variance=val_variance;
         }
         void add_separate_rollout(reward_t ret) {
             ++rollout_counts;
@@ -47,8 +47,8 @@ public:
          * Value of this action/state. */
         reward_t value = 0;
         /**
-         * Standard error of the value.. */
-        reward_t value_err = 0;
+         * Variance of the value.. */
+        reward_t value_variance = 0;
         /**
          * The sum of returns for all rollouts passing through this
          * node. Monte-Carlo backups compute the \e value as \e

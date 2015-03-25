@@ -43,14 +43,13 @@ namespace tree_policy {
         return action;
     }
 
-    UCB1::UCB1(double Cp): Cp(Cp) {}
 
-    action_t UCB1::operator()(const node_t & state_node,
-                              std::shared_ptr<const Environment> environment,
-                              const graph_t & graph,
-                              const node_info_map_t & node_info_map,
-                              const mcts_node_info_map_t & mcts_node_info_map,
-                              const mcts_arc_info_map_t & mcts_arc_info_map) const {
+    action_t UpperBoundPolicy::operator()(const node_t & state_node,
+                                          std::shared_ptr<const Environment> environment,
+                                          const graph_t & graph,
+                                          const node_info_map_t & node_info_map,
+                                          const mcts_node_info_map_t & mcts_node_info_map,
+                                          const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // get set of actions
         set<action_t> action_set(environment->get_actions().begin(), environment->get_actions().end());
@@ -60,19 +59,18 @@ namespace tree_policy {
 
         // comput upper bounds
         DEBUG_OUT(3,"Computing upper bound for state node " << graph.id(state_node));
-        int state_counts = mcts_node_info_map[state_node].get_transition_counts();
         for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph.target(to_action_arc);
             action_t action = node_info_map[action_node].action;
-            // upper bound = value + 2 Cp sqrt( 2 log n / nj) where n and nj are
-            // the counts of the state node and action node, respectively.
-            reward_t upper = mcts_node_info_map[action_node].get_value()
-                + 2*Cp*sqrt(2*log(state_counts)/mcts_arc_info_map[to_action_arc].get_counts());
+            reward_t upper = upper_bound(state_node,
+                                         to_action_arc,
+                                         action_node,
+                                         environment,
+                                         graph,
+                                         node_info_map,
+                                         mcts_node_info_map,
+                                         mcts_arc_info_map);
             upper_bounds.push_back(make_pair(upper,action));
-            DEBUG_OUT(3,"    upper bound for action node " <<
-                      graph.id(action_node) << " is " << upper <<
-                      " (n=" << state_counts <<
-                      ", nj=" << mcts_arc_info_map[to_action_arc].get_counts() << ")");
             // erase this action from set
             action_set.erase(action);
         }
@@ -86,9 +84,9 @@ namespace tree_policy {
             DEBUG_OUT(2,"No unsampled actions.");
         }
 
-        // use UCB1 otherwise
+        // select max upper bound action otherwise
         IF_DEBUG(3) {
-            DEBUG_OUT(3,"Use UCB1 to choose between:");
+            DEBUG_OUT(3,"Use upper bound to choose between:");
             for(auto bound_action : upper_bounds) {
                 DEBUG_OUT(3,"    '" << environment->action_name(bound_action.second) <<
                           "' with bound " << bound_action.first);
@@ -111,6 +109,47 @@ namespace tree_policy {
         action_t action = random_select(max_upper_bound_actions);
         DEBUG_OUT(2,"Choosing action " << environment->action_name(action) << " with upper bound " << max_upper_bound );
         return action;
+    }
+
+    UCB1::UCB1(double Cp): Cp(Cp) {}
+
+    reward_t UCB1::upper_bound(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node,
+                               std::shared_ptr<const Environment> environment,
+                               const graph_t & graph,
+                               const node_info_map_t & node_info_map,
+                               const mcts_node_info_map_t & mcts_node_info_map,
+                               const mcts_arc_info_map_t & mcts_arc_info_map) const {
+
+        // upper bound = value + 2 Cp sqrt( 2 log n / nj) where n and nj are the
+        // counts of the state node and the arc to the action node,
+        // respectively.
+        return mcts_node_info_map[action_node].get_value() +
+            2*Cp*sqrt(
+                2*log(mcts_node_info_map[state_node].get_transition_counts())/
+                mcts_arc_info_map[to_action_arc].get_counts()
+                );
+    }
+
+    UCB_Plus::UCB_Plus(double Cp): Cp(Cp) {}
+
+    reward_t UCB_Plus::upper_bound(const node_t & state_node,
+                                   const arc_t & to_action_arc,
+                                   const node_t & action_node,
+                                   std::shared_ptr<const Environment> environment,
+                                   const graph_t & graph,
+                                   const node_info_map_t & node_info_map,
+                                   const mcts_node_info_map_t & mcts_node_info_map,
+                                   const mcts_arc_info_map_t & mcts_arc_info_map) const {
+
+        // upper bound = value + Cp sqrt( value_variance / n) where n is the
+        // number of times this action was taken.
+        return mcts_node_info_map[action_node].get_value() +
+            Cp*sqrt(
+                mcts_node_info_map[action_node].get_value_variance()/
+                mcts_arc_info_map[to_action_arc].get_counts()
+                );
     }
 
 } // end namespace tree_policy

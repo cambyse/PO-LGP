@@ -53,7 +53,8 @@ static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "MonteCarlo"};
 static const std::set<std::string> value_heuristic_set = {"Zero",
                                                           "Rollout"};
-static const std::set<std::string> tree_policy_set = {"UCB1"};
+static const std::set<std::string> tree_policy_set = {"UCB1",
+                                                      "UCB_Plus"};
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
@@ -189,7 +190,7 @@ int main(int argn, char ** args) {
     } else if(environment_arg.getValue()=="DynamicTightRope") {
         environment.reset(new DynamicTightRope(50, 10));
     } else if(environment_arg.getValue()=="GamblingHall") {
-        environment.reset(new GamblingHall(3, 0.7));
+        environment.reset(new GamblingHall(3, 0.9));
     } else if(environment_arg.getValue()=="UnitTest") {
         environment.reset(new UnitTestEnvironment());
     } else {
@@ -210,6 +211,8 @@ int main(int argn, char ** args) {
     // set tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
         tree_policy.reset(new UCB1(exploration_arg.getValue()));
+    } else if(tree_policy_arg.getValue()=="UCB_Plus") {
+        tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
     } else DEBUG_DEAD_LINE;
     // set value heuristic
     if(value_heuristic_arg.getValue()=="Zero") {

@@ -14,6 +14,7 @@ namespace backup_method {
     typedef AbstractMonteCarloTreeSearch::node_t               node_t;
     typedef AbstractMonteCarloTreeSearch::arc_t                arc_t;
     typedef AbstractMonteCarloTreeSearch::out_arc_it_t         out_arc_it_t;
+    typedef AbstractMonteCarloTreeSearch::in_arc_it_t          in_arc_it_t;
     typedef AbstractMonteCarloTreeSearch::action_t             action_t;
     typedef AbstractMonteCarloTreeSearch::reward_t             reward_t;
 
@@ -33,7 +34,8 @@ namespace backup_method {
     };
 
     /**
-     * Performs Bellman backups. */
+     * Performs Bellman backups. Currently rewards are assumed to depend only on
+     * the source state and the action, not on the tartet state! */
     class Bellman: public BackupMethod {
     public:
         virtual void operator()(const node_t & state_node,

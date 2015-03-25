@@ -44,17 +44,18 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
     graph_t::NodeMap<QString> node_map(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
         double value = mcts_node_info_map[node].get_value();
-        node_map[node] = QString("shape=%1 label=<%2<BR/>id=%5<BR/>#%3/%10<BR/>V=%4<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
+        node_map[node] = QString("shape=%1 label=<%2<BR/>id=%5<BR/>#%3/%10<BR/>V=%4 +/- %11<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
             arg(type(node)==STATE_NODE?"square":"circle").
             arg(str_rich(node)).
             arg(mcts_node_info_map[node].get_transition_counts()).
-            arg(value).
+            arg(value,0,'g',2).
             arg(graph.id(node)).
             arg(value>0?0.3:0).
             arg(color_rescale(fabs(value/norm))).
             arg(10.*mcts_node_info_map[node].get_transition_counts()/max_counts+0.1).
             arg(mcts_node_info_map[node].get_return_sum()).
-            arg(mcts_node_info_map[node].get_rollout_counts());
+            arg(mcts_node_info_map[node].get_rollout_counts()).
+            arg(sqrt(mcts_node_info_map[node].get_value_variance()/mcts_node_info_map[node].get_rollout_counts()),0,'g',2);
     }
 
     graph_t::ArcMap<QString> arc_map(graph);
