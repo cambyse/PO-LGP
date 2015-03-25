@@ -13,7 +13,7 @@ For Students
 You should make yourselves familiar with git before you proceed!
 
 This is how you get access to the `mlr_repo`. Your supervisor will give you
-access to the gitlab server which host the code.
+access to the gitlab server which hosts the code.
 Login here: https://sully.informatik.uni-stuttgart.de/gitlab/
 Add your ssh-key in you profile.
 
