@@ -71,6 +71,7 @@ QString GamblingHall::state_name(const state_t & s) const {
 GamblingHall::GamblingHall(int machine_n, double tolerance):
     Environment({},{}), // set actions and states later!!
     machine_n(machine_n),
+    time_n(machine_n),
     tolerance(tolerance)
 {
     if(tolerance<0) {
@@ -83,8 +84,8 @@ GamblingHall::GamblingHall(int machine_n, double tolerance):
     }
     actions = {-1,0,1}; // go one machine left, right, or stay
     for(int machine : util::Range(machine_n)) {
-        for(int time : util::Range(machine_n+1)) {
-            states.push_back(util::convert_ND_to_1D_index({machine,time},{machine_n,machine_n+1}));
+        for(int time : util::Range(time_n)) {
+            states.push_back(util::convert_ND_to_1D_index({machine,time},{machine_n,time_n}));
         }
     }
 }
@@ -92,21 +93,23 @@ GamblingHall::GamblingHall(int machine_n, double tolerance):
 GamblingHall::state_reward_pair_t GamblingHall::sample(const state_t & s,
                                                        const action_t & a) const {
     reward_t reward;
-    auto machine_and_time = util::convert_1D_to_ND_index(s,{machine_n,machine_n+1});
+    auto machine_and_time = util::convert_1D_to_ND_index(s,{machine_n,time_n});
     int machine = machine_and_time[0];
     const int time = machine_and_time[1];
-    if(time<machine_n-1) {
+    if(time<time_n-2) {
         // you move to another machine
         machine = util::clamp(0,machine_n-1,machine+a);
         reward = 0;
     } else {
-        // you play a machine (independently of action)
+        // you move to another machine
+        machine = util::clamp(0,machine_n-1,machine+a);
+        // and you play that machine
         // p = (1/2 - tolerance/2) for machine == 0
         // p = (1/2 + tolerance/2) for machine == (number of machines - 1)
         double p = (1. - tolerance)/2. + tolerance*machine/(machine_n-1);
         reward = drand48()<p?1:0;
     }
-    return state_reward_pair_t(util::convert_ND_to_1D_index({machine,time+1},{machine_n,machine_n+1}), reward);
+    return state_reward_pair_t(util::convert_ND_to_1D_index({machine,time+1},{machine_n,time_n}), reward);
 }
 
 bool GamblingHall::has_terminal_state() const {
@@ -114,11 +117,11 @@ bool GamblingHall::has_terminal_state() const {
 }
 
 bool GamblingHall::is_terminal_state(state_t s) const {
-    return util::convert_1D_to_ND_index(s,{machine_n,machine_n+1})[1]==machine_n;
+    return util::convert_1D_to_ND_index(s,{machine_n,time_n})[1]==time_n-1;
 }
 
 QString GamblingHall::state_name(const state_t & s) const {
-    auto machine_and_time = util::convert_1D_to_ND_index(s,{machine_n,machine_n+1});
+    auto machine_and_time = util::convert_1D_to_ND_index(s,{machine_n,time_n});
     return QString("m=%1, t=%2").
         arg(machine_and_time[0]).
         arg(machine_and_time[1]);

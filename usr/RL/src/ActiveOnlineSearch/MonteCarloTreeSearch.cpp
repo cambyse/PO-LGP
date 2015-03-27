@@ -146,6 +146,7 @@ void MonteCarloTreeSearch::next() {
                                  discount,
                                  environment,
                                  graph,
+                                 get_node_info_map(),
                                  mcts_node_info_map,
                                  mcts_arc_info_map);
             }
@@ -184,6 +185,7 @@ void MonteCarloTreeSearch::next() {
                                      discount,
                                      environment,
                                      graph,
+                                     get_node_info_map(),
                                      mcts_node_info_map,
                                      mcts_arc_info_map);
                     DEBUG_OUT(2,QString("    update state-node(%1):	counts=%2/%3	return_sum=%4").

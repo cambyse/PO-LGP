@@ -50,11 +50,13 @@ static const std::set<std::string> graph_type_set = {"TREE",
 static const std::set<std::string> backup_type_set = {"BACKUP_TRACE",
                                                       "BACKUP_ALL"};
 static const std::set<std::string> backup_method_set = {"Bellman",
+                                                        "BellmanTreePolicy",
                                                         "MonteCarlo"};
 static const std::set<std::string> value_heuristic_set = {"Zero",
                                                           "Rollout"};
 static const std::set<std::string> tree_policy_set = {"UCB1",
-                                                      "UCB_Plus"};
+                                                      "UCB_Plus",
+                                                      "Uniform"};
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
@@ -114,7 +116,7 @@ static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      , false, "UCB1", "string");
 static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "Discount for the returns"
                                                      , false, 0.9, "double");
-static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "Exploration for the returns"
+static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "Length of rollouts from leaf nodes. Use negative values for rollouts to \
 terminal state if there is one and one-step if there is no terminal state."
@@ -190,7 +192,7 @@ int main(int argn, char ** args) {
     } else if(environment_arg.getValue()=="DynamicTightRope") {
         environment.reset(new DynamicTightRope(50, 10));
     } else if(environment_arg.getValue()=="GamblingHall") {
-        environment.reset(new GamblingHall(3, 0.9));
+        environment.reset(new GamblingHall(10, 1));
     } else if(environment_arg.getValue()=="UnitTest") {
         environment.reset(new UnitTestEnvironment());
     } else {
@@ -213,6 +215,8 @@ int main(int argn, char ** args) {
         tree_policy.reset(new UCB1(exploration_arg.getValue()));
     } else if(tree_policy_arg.getValue()=="UCB_Plus") {
         tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
+    } else if(tree_policy_arg.getValue()=="Uniform") {
+        tree_policy.reset(new Uniform());
     } else DEBUG_DEAD_LINE;
     // set value heuristic
     if(value_heuristic_arg.getValue()=="Zero") {
@@ -223,6 +227,8 @@ int main(int argn, char ** args) {
     // set backup method
     if(backup_method_arg.getValue()=="Bellman") {
         backup_method.reset(new Bellman());
+    } else if(backup_method_arg.getValue()=="BellmanTreePolicy") {
+        backup_method.reset(new Bellman(tree_policy));
     } else if(backup_method_arg.getValue()=="MonteCarlo") {
         backup_method.reset(new MonteCarlo());
     } else DEBUG_DEAD_LINE;
@@ -331,7 +337,7 @@ int main(int argn, char ** args) {
         }
         // string describing method
         QString tree_policy_string = tree_policy_arg.getValue().c_str();
-        if(tree_policy_string=="UCB1") {
+        if(tree_policy_string=="UCB1" || tree_policy_string=="UCB_Plus") {
             tree_policy_string += QString("(%1)").arg(exploration_arg.getValue());
         }
         QString value_heuristic_string = value_heuristic_arg.getValue().c_str();
@@ -345,6 +351,9 @@ int main(int argn, char ** args) {
             arg(graph_type_arg.getValue().c_str()).
             arg(backup_type_arg.getValue().c_str());
         // several runs
+#ifdef USE_OMP
+#pragma omp parallel for schedule(dynamic,1) collapse(2)
+#endif
         for(int run : Range(run_n_arg.getValue())) {
             DEBUG_OUT(1, "Run # " << run);
             // with one trial for a different number of samples
@@ -376,6 +385,9 @@ int main(int argn, char ** args) {
                     root_state = state;
                     ++step;
                 }
+#ifdef USE_OMP
+#pragma omp critical (BatchWorker)
+#endif
                 cout << QString("%1,%2,%3,%4").
                     arg(reward_sum/step).
                     arg(sample_n).

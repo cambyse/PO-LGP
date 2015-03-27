@@ -43,34 +43,33 @@ namespace tree_policy {
         return action;
     }
 
-
-    action_t UpperBoundPolicy::operator()(const node_t & state_node,
-                                          std::shared_ptr<const Environment> environment,
-                                          const graph_t & graph,
-                                          const node_info_map_t & node_info_map,
-                                          const mcts_node_info_map_t & mcts_node_info_map,
-                                          const mcts_arc_info_map_t & mcts_arc_info_map) const {
+    action_t MaxPolicy::operator()(const node_t & state_node,
+                                   std::shared_ptr<const Environment> environment,
+                                   const graph_t & graph,
+                                   const node_info_map_t & node_info_map,
+                                   const mcts_node_info_map_t & mcts_node_info_map,
+                                   const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // get set of actions
         set<action_t> action_set(environment->get_actions().begin(), environment->get_actions().end());
 
         // prepare vector for computing upper bounds
-        vector<pair<reward_t,action_t>> upper_bounds;
+        vector<pair<reward_t,action_t>> scores;
 
         // comput upper bounds
         DEBUG_OUT(3,"Computing upper bound for state node " << graph.id(state_node));
         for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph.target(to_action_arc);
             action_t action = node_info_map[action_node].action;
-            reward_t upper = upper_bound(state_node,
-                                         to_action_arc,
-                                         action_node,
-                                         environment,
-                                         graph,
-                                         node_info_map,
-                                         mcts_node_info_map,
-                                         mcts_arc_info_map);
-            upper_bounds.push_back(make_pair(upper,action));
+            reward_t upper = score(state_node,
+                                   to_action_arc,
+                                   action_node,
+                                   environment,
+                                   graph,
+                                   node_info_map,
+                                   mcts_node_info_map,
+                                   mcts_arc_info_map);
+            scores.push_back(make_pair(upper,action));
             // erase this action from set
             action_set.erase(action);
         }
@@ -87,40 +86,51 @@ namespace tree_policy {
         // select max upper bound action otherwise
         IF_DEBUG(3) {
             DEBUG_OUT(3,"Use upper bound to choose between:");
-            for(auto bound_action : upper_bounds) {
+            for(auto bound_action : scores) {
                 DEBUG_OUT(3,"    '" << environment->action_name(bound_action.second) <<
                           "' with bound " << bound_action.first);
             }
         }
-        DEBUG_EXPECT(1,upper_bounds.size()>0);
-        reward_t max_upper_bound = -DBL_MAX;
-        vector<action_t> max_upper_bound_actions;
-        for(auto bound_action : upper_bounds) {
-            if(bound_action.first>max_upper_bound) {
-                max_upper_bound_actions.clear();
+        DEBUG_EXPECT(1,scores.size()>0);
+        reward_t max_score = -DBL_MAX;
+        vector<action_t> max_score_actions;
+        for(auto bound_action : scores) {
+            if(bound_action.first>max_score) {
+                max_score_actions.clear();
             }
-            if(bound_action.first>=max_upper_bound) {
-                max_upper_bound = bound_action.first;
-                max_upper_bound_actions.push_back(bound_action.second);
+            if(bound_action.first>=max_score) {
+                max_score = bound_action.first;
+                max_score_actions.push_back(bound_action.second);
             }
         }
 
         // random tie breaking between action with equal upper bound
-        action_t action = random_select(max_upper_bound_actions);
-        DEBUG_OUT(2,"Choosing action " << environment->action_name(action) << " with upper bound " << max_upper_bound );
+        action_t action = random_select(max_score_actions);
+        DEBUG_OUT(2,"Choosing action " << environment->action_name(action) << " with upper bound " << max_score );
         return action;
+    }
+
+    reward_t Optimal::score(const node_t & state_node,
+                            const arc_t & to_action_arc,
+                            const node_t & action_node,
+                            std::shared_ptr<const Environment> environment,
+                            const graph_t & graph,
+                            const node_info_map_t & node_info_map,
+                            const mcts_node_info_map_t & mcts_node_info_map,
+                            const mcts_arc_info_map_t & mcts_arc_info_map) const {
+        return mcts_node_info_map[action_node].get_value();
     }
 
     UCB1::UCB1(double Cp): Cp(Cp) {}
 
-    reward_t UCB1::upper_bound(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<const Environment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const {
+    reward_t UCB1::score(const node_t & state_node,
+                         const arc_t & to_action_arc,
+                         const node_t & action_node,
+                         std::shared_ptr<const Environment> environment,
+                         const graph_t & graph,
+                         const node_info_map_t & node_info_map,
+                         const mcts_node_info_map_t & mcts_node_info_map,
+                         const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // upper bound = value + 2 Cp sqrt( 2 log n / nj) where n and nj are the
         // counts of the state node and the arc to the action node,
@@ -134,22 +144,19 @@ namespace tree_policy {
 
     UCB_Plus::UCB_Plus(double Cp): Cp(Cp) {}
 
-    reward_t UCB_Plus::upper_bound(const node_t & state_node,
-                                   const arc_t & to_action_arc,
-                                   const node_t & action_node,
-                                   std::shared_ptr<const Environment> environment,
-                                   const graph_t & graph,
-                                   const node_info_map_t & node_info_map,
-                                   const mcts_node_info_map_t & mcts_node_info_map,
-                                   const mcts_arc_info_map_t & mcts_arc_info_map) const {
+    reward_t UCB_Plus::score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node,
+                             std::shared_ptr<const Environment> environment,
+                             const graph_t & graph,
+                             const node_info_map_t & node_info_map,
+                             const mcts_node_info_map_t & mcts_node_info_map,
+                             const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // upper bound = value + Cp sqrt( value_variance / n) where n is the
         // number of times this action was taken.
         return mcts_node_info_map[action_node].get_value() +
-            Cp*sqrt(
-                mcts_node_info_map[action_node].get_value_variance()/
-                mcts_arc_info_map[to_action_arc].get_counts()
-                );
+            Cp*sqrt(mcts_node_info_map[action_node].get_value_variance());
     }
 
 } // end namespace tree_policy

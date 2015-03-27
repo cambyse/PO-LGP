@@ -73,7 +73,7 @@ protected:
     const GRAPH_TYPE graph_type;
     /**
      * Whether to use square-root scale for colors in PDF output. */
-    static const bool use_sqrt_scale = true;
+    static const bool use_sqrt_scale = false;
 private:
     /**
      * The seach tree. */

@@ -1,7 +1,11 @@
 #ifndef BACKUPMETHOD_H_
 #define BACKUPMETHOD_H_
 
+#include <memory>
+
 #include "AbstractMonteCarloTreeSearch.h"
+
+#include "TreePolicy.h"
 
 class Environment;
 
@@ -29,6 +33,7 @@ namespace backup_method {
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 const graph_t & graph,
+                                const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
                                 const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
     };
@@ -38,13 +43,17 @@ namespace backup_method {
      * the source state and the action, not on the tartet state! */
     class Bellman: public BackupMethod {
     public:
+        Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr);
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 const graph_t & graph,
+                                const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
                                 const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+    protected:
+        std::shared_ptr<const tree_policy::TreePolicy> tree_policy;
     };
 
     /**
@@ -56,6 +65,7 @@ namespace backup_method {
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 const graph_t & graph,
+                                const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
                                 const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     };

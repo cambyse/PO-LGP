@@ -43,8 +43,9 @@ namespace tree_policy {
     };
 
     /**
-     * Basis class for policies the sample upper bounds. */
-    class UpperBoundPolicy: public TreePolicy {
+     * Basis class for policies that choose the action by maximizing some
+     * quantity (like value or upper bound). */
+    class MaxPolicy: public TreePolicy {
     public:
         virtual action_t operator()(const node_t & state_node,
                                     std::shared_ptr<const Environment> environment,
@@ -52,60 +53,75 @@ namespace tree_policy {
                                     const node_info_map_t & node_info_map,
                                     const mcts_node_info_map_t & mcts_node_info_map,
                                     const mcts_arc_info_map_t & mcts_arc_info_map) const override final;
-        virtual reward_t upper_bound(const node_t & state_node,
-                                     const arc_t & to_action_arc,
-                                     const node_t & action_node,
-                                     std::shared_ptr<const Environment> environment,
-                                     const graph_t & graph,
-                                     const node_info_map_t & node_info_map,
-                                     const mcts_node_info_map_t & mcts_node_info_map,
-                                     const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+        virtual reward_t score(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node,
+                               std::shared_ptr<const Environment> environment,
+                               const graph_t & graph,
+                               const node_info_map_t & node_info_map,
+                               const mcts_node_info_map_t & mcts_node_info_map,
+                               const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+    };
+
+    /**
+     * Sample the action with highes value. */
+    class Optimal: public MaxPolicy {
+    public:
+        virtual reward_t score(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node,
+                               std::shared_ptr<const Environment> environment,
+                               const graph_t & graph,
+                               const node_info_map_t & node_info_map,
+                               const mcts_node_info_map_t & mcts_node_info_map,
+                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     };
 
     /**
      * Sample actions according to UCB1 policy. */
-    class UCB1: public UpperBoundPolicy {
+    class UCB1: public MaxPolicy {
     public:
         /**
          * Constructor. @param Cp This is the scaling parameter for
          * exploration. The default value is Cp=1/√2, which was shown by Kocsis
          * and Szepesvári to satisfy the Hoeffding ineqality. */
         UCB1(double Cp = 0.70710678118654746);
-        virtual reward_t upper_bound(const node_t & state_node,
-                                     const arc_t & to_action_arc,
-                                     const node_t & action_node,
-                                     std::shared_ptr<const Environment> environment,
-                                     const graph_t & graph,
-                                     const node_info_map_t & node_info_map,
-                                     const mcts_node_info_map_t & mcts_node_info_map,
-                                     const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual reward_t score(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node,
+                               std::shared_ptr<const Environment> environment,
+                               const graph_t & graph,
+                               const node_info_map_t & node_info_map,
+                               const mcts_node_info_map_t & mcts_node_info_map,
+                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     protected:
         double Cp;
     };
 
     /**
      * Sample action with maximum upper bound. This is similar to UCB1 except
-     * that the bound is computed as \f[ Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p
-     * \sqrt{\frac{\widetilde{Q}_{(s,a)}}{n_{(s,a)}}} \f] where
-     * \f$\widehat{Q}_{(s,a)}\f$ is the mean value, \f$\widetilde{Q}_{(s,a)}\f$
-     * is the variance of the value, \f$n_{(s,a)}\f$ is the number times action
-     * \e a was taken from state \e s and \f$C_p\f$ (as in UCB1) balances
-     * exploration and exploitation. These bounds take into account uncertainty
-     * further down in the tree. */
-    class UCB_Plus: public UpperBoundPolicy {
+     * that the bound is computed as \f[
+     *
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p * \sqrt{\widetilde{Q}_{(s,a)}}
+     *
+     * \f] where \f$\widehat{Q}_{(s,a)}\f$ is the mean value,
+     * \f$\widetilde{Q}_{(s,a)}\f$ is the variance of the value, and \f$C_p\f$
+     * (as in UCB1) balances exploration and exploitation. These bounds take
+     * into account uncertainty further down in the tree. */
+    class UCB_Plus: public MaxPolicy {
     public:
         /**
          * Constructor. @param Cp This is the scaling parameter for
          * exploration.*/
         UCB_Plus(double Cp = 1);
-        virtual reward_t upper_bound(const node_t & state_node,
-                                     const arc_t & to_action_arc,
-                                     const node_t & action_node,
-                                     std::shared_ptr<const Environment> environment,
-                                     const graph_t & graph,
-                                     const node_info_map_t & node_info_map,
-                                     const mcts_node_info_map_t & mcts_node_info_map,
-                                     const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual reward_t score(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node,
+                               std::shared_ptr<const Environment> environment,
+                               const graph_t & graph,
+                               const node_info_map_t & node_info_map,
+                               const mcts_node_info_map_t & mcts_node_info_map,
+                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     protected:
         double Cp;
     };

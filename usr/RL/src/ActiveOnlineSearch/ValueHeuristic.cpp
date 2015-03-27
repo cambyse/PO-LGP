@@ -60,7 +60,10 @@ namespace value_heuristic {
                       "	R=" << discounted_return << "	d=" << discount_factor);
         }
         mcts_node_info_map[state_node].add_separate_rollout(discounted_return);
-        mcts_node_info_map[state_node].set_value(discounted_return,std::numeric_limits<double>::infinity());
+        mcts_node_info_map[state_node].set_value(discounted_return,
+                                                 environment->is_terminal_state(start_state)?
+                                                 0:
+                                                 std::numeric_limits<double>::infinity());
     }
 
 } // end namespace value_heuristic

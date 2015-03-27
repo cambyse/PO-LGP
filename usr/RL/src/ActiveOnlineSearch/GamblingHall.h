@@ -8,7 +8,7 @@ class GamblingHall: public Environment {
 
     //----members----//
 private:
-    int machine_n;
+    int machine_n, time_n;
     double tolerance;
 
     //----methods----//
