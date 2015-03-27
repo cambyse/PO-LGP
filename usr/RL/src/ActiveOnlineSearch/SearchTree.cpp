@@ -93,7 +93,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
     if(graph_type==FULL_DAG) {
         node_info_map[root_node].level_map_it->erase(node_info_map[root_node].state);
     }
-    graph.erase(root_node);
+    erase_node(root_node);
     root_node = new_root_node;
 
     // find nodes that are reachable from new root node
@@ -110,7 +110,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
         if(graph_type==FULL_DAG && type(node)==STATE_NODE) {
             node_info_map[node].level_map_it->erase(node_info_map[node].state);
         }
-        graph.erase(node);
+        erase_node(node);
     }
 #else
     /* This alternative approach only searches through the parts of the graph
@@ -131,7 +131,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
     if(graph_type==FULL_DAG) {
         node_info_map[root_node].level_map_it->erase(node_info_map[root_node].state);
     }
-    graph.erase(root_node);
+    erase_node(root_node);
     root_node = new_root_node;
 
     // try to find a reverse (!) path from all nodes to_be_processed to the
@@ -154,7 +154,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
             if(graph_type==FULL_DAG && type(node)==STATE_NODE) {
                 node_info_map[node].level_map_it->erase(node_info_map[node].state);
             }
-            graph.erase(node);
+            erase_node(node);
         } else {
             IF_DEBUG(3) {
                 if(graph.valid(node)) {
@@ -200,7 +200,7 @@ void SearchTree::toPdf(const char* file_name) const {
                        &arc_map);
 }
 
-const node_t & SearchTree::root() const {
+const node_t & SearchTree::get_root_node() const {
     return root_node;
 }
 
@@ -315,16 +315,7 @@ tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_
     }
 
     // state node doesn't exist --> create
-    state_node = graph.addNode();
-    node_info_map[state_node].type = STATE_NODE;
-    node_info_map[state_node].state = state;
-    state_arc = graph.addArc(action_node, state_node);
-    if(graph_type==FULL_DAG) {
-        add_state_node_to_level_map(state_node);
-    }
-    DEBUG_OUT(3,"    adding state node (" << graph.id(state_node) << "): " <<
-              environment->state_name(state));
-    return arc_node_pair;
+    return add_state_node(state, action_node);
 }
 
 tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_node,
@@ -336,6 +327,23 @@ tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_
         }
     }
     // action node doesn't exist --> create
+    return add_action_node(action, state_node);
+}
+
+std::tuple<arc_t,node_t> SearchTree::add_state_node(state_t state, node_t action_node) {
+    node_t state_node = graph.addNode();
+    node_info_map[state_node].type = STATE_NODE;
+    node_info_map[state_node].state = state;
+    arc_t state_arc = graph.addArc(action_node, state_node);
+    if(graph_type==FULL_DAG) {
+        add_state_node_to_level_map(state_node);
+    }
+    DEBUG_OUT(3,"    adding state node (" << graph.id(state_node) << "): " <<
+              environment->state_name(state));
+    return make_tuple(state_arc, state_node);
+}
+
+std::tuple<arc_t,node_t> SearchTree::add_action_node(action_t action, node_t state_node) {
     node_t action_node = graph.addNode();
     node_info_map[action_node].type = ACTION_NODE;
     node_info_map[action_node].action = action;
@@ -343,6 +351,10 @@ tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_
     DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
               environment->action_name(action));
     return make_tuple(action_arc, action_node);
+}
+
+void SearchTree::erase_node(node_t node) {
+    graph.erase(node);
 }
 
 tuple<arc_t,node_t> SearchTree::find_state_node_among_children(const node_t & action_node,

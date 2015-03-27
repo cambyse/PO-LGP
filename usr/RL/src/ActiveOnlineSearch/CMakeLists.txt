@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 find_package(Qt5Core)
 
+add_definitions(-fopenmp)
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 ## executable
@@ -16,6 +17,8 @@ add_executable(main
     UnitTestEnvironment.h
     GamblingHall.h
     GamblingHall.cpp
+    BottleNeckHallway.h
+    BottleNeckHallway.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     SearchTree.h
@@ -38,6 +41,7 @@ target_link_libraries(main
     util
     -lemon
     -larmadillo
+    -lgomp
 )
 
 ## library
@@ -51,6 +55,8 @@ add_library(ActiveOnlineSearch
     UnitTestEnvironment.h
     GamblingHall.h
     GamblingHall.cpp
+    BottleNeckHallway.h
+    BottleNeckHallway.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     SearchTree.h

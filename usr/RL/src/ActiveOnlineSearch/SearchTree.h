@@ -122,7 +122,7 @@ public:
     virtual void toPdf(const char* file_name) const;
     /**
      * Get const reference to root node. */
-    const node_t & root() const;
+    const node_t & get_root_node() const;
     /**
      * Get const reference to graph. */
     const graph_t & get_graph() const;
@@ -161,6 +161,9 @@ protected:
                                                                const state_t & state);
     virtual std::tuple<arc_t,node_t> find_or_create_action_node(const node_t & state_node,
                                                                 const action_t & action);
+    virtual std::tuple<arc_t,node_t> add_state_node(state_t state, node_t action_node);
+    virtual std::tuple<arc_t,node_t> add_action_node(action_t action, node_t state_node);
+    virtual void erase_node(node_t);
 private:
     std::tuple<arc_t,node_t> find_state_node_among_children(const node_t & action_node,
                                                             const state_t & state) const;

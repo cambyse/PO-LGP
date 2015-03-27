@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <tuple>
-#include <unordered_set>
 #include <functional>
 
 #include <util/util.h>
@@ -17,8 +16,8 @@ using lemon::INVALID;
 using tree_policy::TreePolicy;
 using value_heuristic::ValueHeuristic;
 using backup_method::BackupMethod;
-using std::unordered_set;
 using std::tuple;
+using std::make_tuple;
 using std::vector;
 
 MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
@@ -33,9 +32,17 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
     tree_policy(tree_policy),
     value_heuristic(value_heuristic),
     backup_method(backup_method),
-    backup_type(backup_type)
+    distance_map(graph),
+    backup_type(backup_type),
+    node_hash(0)
+    //node_hash([&](node_t n){return graph.id(n);})
 {}
 
+void MonteCarloTreeSearch::init(const state_t & s) {
+    SearchTree::init(s);
+    state_node_map.clear();
+    state_node_map[s] = node_set_t({get_root_node()},0,node_hash);
+}
 
 void MonteCarloTreeSearch::next() {
 
@@ -51,7 +58,7 @@ void MonteCarloTreeSearch::next() {
     node_t leaf_node = INVALID;
     {
         DEBUG_OUT(2,"Follow tree-policy...");
-        node_t current_node = root();
+        node_t current_node = get_root_node();
         bool did_expansion = false;
         bool is_inner_node = is_fully_expanded(current_node);
         bool was_visited_before = false;
@@ -162,9 +169,8 @@ void MonteCarloTreeSearch::next() {
 
         // hash sets that contain all state nodes that changed so that their
         // ancestors need to be backed up
-        typedef unordered_set<node_t,std::function<int(node_t)>> node_set_t;
-        node_set_t currently_active_state_nodes(0,[&](node_t n){return graph.id(n);});
-        node_set_t next_active_state_nodes({leaf_node},1,[&](node_t n){return graph.id(n);});
+        node_set_t currently_active_state_nodes(0,node_hash);
+        node_set_t next_active_state_nodes({leaf_node},0,node_hash);
 
         // process nodes
         while(!next_active_state_nodes.empty()) {
@@ -210,7 +216,7 @@ void MonteCarloTreeSearch::next() {
 Environment::action_t MonteCarloTreeSearch::recommend_action() const {
     std::vector<action_t> optimal_actions({*(environment->get_actions().begin())});
     double max_value = -DBL_MAX;
-    for(out_arc_it_t arc(graph, root()); arc!=lemon::INVALID; ++arc) {
+    for(out_arc_it_t arc(graph, get_root_node()); arc!=INVALID; ++arc) {
         node_t action_node = graph.target(arc);
         double value = mcts_node_info_map[action_node].get_value();
         if(value>max_value) {
@@ -222,4 +228,39 @@ Environment::action_t MonteCarloTreeSearch::recommend_action() const {
         }
     }
     return util::random_select(optimal_actions);
+}
+
+void MonteCarloTreeSearch::prune(const action_t & action,
+                                 const state_t & state) {
+    SearchTree::prune(action,state);
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        --distance_map[node];
+    }
+}
+
+std::tuple<SearchTree::arc_t,SearchTree::node_t>
+MonteCarloTreeSearch::add_state_node(state_t state,
+                                     node_t action_node) {
+    TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_state_node(state,action_node);
+    distance_map[node] = distance_map[action_node]+1;
+    auto& node_set = state_node_map[state];
+    if(node_set.size()==0) {
+        node_set = node_set_t({node},0,node_hash);
+    } else {
+        node_set.insert(node);
+    }
+    return arc_node_tuple;
+}
+
+std::tuple<SearchTree::arc_t,SearchTree::node_t>
+MonteCarloTreeSearch::add_action_node(action_t action,
+                                      node_t state_node) {
+    TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_action_node(action,state_node);
+    distance_map[node] = distance_map[state_node]+1;
+    return arc_node_tuple;
+}
+
+void MonteCarloTreeSearch::erase_node(node_t node) {
+    state_node_map[state(node)].erase(node);
+    SearchTree::erase_node(node);
 }

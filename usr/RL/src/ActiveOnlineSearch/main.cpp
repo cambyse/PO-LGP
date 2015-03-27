@@ -9,6 +9,7 @@
 #include <tclap/CmdLine.h>
 
 #include <util/util.h>
+#include <util/return_tuple.h>
 #include <util/QtUtil.h>
 
 #include "SearchTree.h"
@@ -17,6 +18,10 @@
 #include "DynamicTightRope.h"
 #include "UnitTestEnvironment.h"
 #include "GamblingHall.h"
+#include "BottleNeckHallway.h"
+
+#include <omp.h>
+#define USE_OMP
 
 #include <util/return_tuple.h>
 #include <util/pretty_printer.h>
@@ -25,6 +30,8 @@
 #include <util/debug.h>
 
 using std::vector;
+using std::tuple;
+using std::make_tuple;
 using std::cout;
 using std::endl;
 using std::shared_ptr;
@@ -34,12 +41,17 @@ using namespace tree_policy;
 using namespace value_heuristic;
 using namespace backup_method;
 
+typedef Environment::state_t state_t;
+typedef Environment::action_t action_t;
+typedef Environment::reward_t reward_t;
+
 static const std::set<std::string> mode_set = {"SAMPLE",
                                                "WATCH",
                                                "EVAL"};
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
                                                       "GamblingHall",
+                                                      "BottleNeckHallway",
                                                       "UnitTest"};
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
@@ -127,16 +139,28 @@ static TCLAP::ValueArg<int> random_seed_arg(         "", "random_seed", \
 static TCLAP::SwitchArg no_header_arg(               "", "no_header",\
                                                      "In EVAL mode (-m EVAL) don't print a head line containing the column names."\
                                                      , false);
+static TCLAP::ValueArg<int> threads_arg(             "t", "threads", \
+                                                     "Maximum number of threads to use by calling omp_set_num_threads(). A value of \
+Zero (default) or below does not restict the number of threads so the \
+OMP_NUM_THREADS environment variable will take effect (if set).", \
+                                                     false, 0, "int" );
 
 bool check_arguments();
 SearchTree::GRAPH_TYPE get_graph_type();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
+tuple<shared_ptr<SearchTree>,
+      shared_ptr<TreePolicy>,
+      shared_ptr<ValueHeuristic>,
+      shared_ptr<BackupMethod>,
+      shared_ptr<Environment>,
+      state_t> setup();
 
 int main(int argn, char ** args) {
 
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(threads_arg);
         cmd.add(no_header_arg);
         cmd.add(random_seed_arg);
         cmd.add(accumulate_arg);
@@ -185,66 +209,15 @@ int main(int argn, char ** args) {
         }
     }
 
-    // set up environment
-    std::shared_ptr<Environment> environment;
-    if(environment_arg.getValue()=="TightRope") {
-        environment.reset(new TightRope(15));
-    } else if(environment_arg.getValue()=="DynamicTightRope") {
-        environment.reset(new DynamicTightRope(50, 10));
-    } else if(environment_arg.getValue()=="GamblingHall") {
-        environment.reset(new GamblingHall(10, 1));
-    } else if(environment_arg.getValue()=="UnitTest") {
-        environment.reset(new UnitTestEnvironment());
-    } else {
-        cout << "Unknown environment" << endl;
-        DEBUG_DEAD_LINE;
-    }
-    DEBUG_OUT(1, "States: " << environment->get_states());
-    DEBUG_OUT(1, "Actions: " << environment->get_actions());
-    typedef Environment::state_t state_t;
-    typedef Environment::action_t action_t;
-    typedef Environment::reward_t reward_t;
-
-    // set up search tree
-    shared_ptr<SearchTree>      search_tree;
-    shared_ptr<TreePolicy>      tree_policy;
-    shared_ptr<ValueHeuristic>  value_heuristic;
-    shared_ptr<BackupMethod>    backup_method;
-    // set tree policy
-    if(tree_policy_arg.getValue()=="UCB1") {
-        tree_policy.reset(new UCB1(exploration_arg.getValue()));
-    } else if(tree_policy_arg.getValue()=="UCB_Plus") {
-        tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
-    } else if(tree_policy_arg.getValue()=="Uniform") {
-        tree_policy.reset(new Uniform());
-    } else DEBUG_DEAD_LINE;
-    // set value heuristic
-    if(value_heuristic_arg.getValue()=="Zero") {
-        value_heuristic.reset(new Zero());
-    } else if(value_heuristic_arg.getValue()=="Rollout") {
-        value_heuristic.reset(new Rollout(rollout_length_arg.getValue()));
-    } else DEBUG_DEAD_LINE;
-    // set backup method
-    if(backup_method_arg.getValue()=="Bellman") {
-        backup_method.reset(new Bellman());
-    } else if(backup_method_arg.getValue()=="BellmanTreePolicy") {
-        backup_method.reset(new Bellman(tree_policy));
-    } else if(backup_method_arg.getValue()=="MonteCarlo") {
-        backup_method.reset(new MonteCarlo());
-    } else DEBUG_DEAD_LINE;
-    // set search tree
-    state_t root_state = environment->default_state();
-    search_tree.reset(new MonteCarloTreeSearch(root_state,
-                                               environment,
-                                               discount_arg.getValue(),
-                                               get_graph_type(),
-                                               tree_policy,
-                                               value_heuristic,
-                                               backup_method,
-                                               get_backup_type()));
-
     // different modes
     if(mode_arg.getValue()=="SAMPLE") {
+        // set up
+        RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
+                     shared_ptr<TreePolicy>, tree_policy,
+                     shared_ptr<ValueHeuristic>, value_heuristic,
+                     shared_ptr<BackupMethod>, backup_method,
+                     shared_ptr<Environment>, environment,
+                     state_t, root_state) = setup();
         if(environment_arg.getValue()!="DynamicTightRope") {
             cout << "run,state,action,reward" << endl;
             for(int run : Range(sample_n_arg.getValue())) {
@@ -290,6 +263,13 @@ int main(int argn, char ** args) {
             }
         }
     } else if(mode_arg.getValue()=="WATCH") {
+        // set up
+        RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
+                     shared_ptr<TreePolicy>, tree_policy,
+                     shared_ptr<ValueHeuristic>, value_heuristic,
+                     shared_ptr<BackupMethod>, backup_method,
+                     shared_ptr<Environment>, environment,
+                     state_t, root_state) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
             if(environment->is_terminal_state(root_state)) break;
@@ -350,15 +330,29 @@ int main(int argn, char ** args) {
             arg(backup_method_arg.getValue().c_str()).
             arg(graph_type_arg.getValue().c_str()).
             arg(backup_type_arg.getValue().c_str());
-        // several runs
+        // limit number of threads if required
+        if(threads_arg.getValue()>0) {
+            omp_set_num_threads(threads_arg.getValue());
+        }
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
-        for(int run : Range(run_n_arg.getValue())) {
-            DEBUG_OUT(1, "Run # " << run);
+        // several runs
+        for(int run=0; run<run_n_arg.getValue(); ++run) {
+
             // with one trial for a different number of samples
-            for(int sample_n : Range(sample_n_arg.getValue(), sample_max_arg.getValue(), sample_incr_arg.getValue())) {
-                DEBUG_OUT(1, "Samples: " << sample_n);
+            for(int sample_n=sample_n_arg.getValue(); sample_n<=sample_max_arg.getValue(); sample_n+=sample_incr_arg.getValue()) {
+
+                DEBUG_OUT(1, "run # " << run << ", samples: " << sample_n);
+
+                // set up
+                RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
+                             shared_ptr<TreePolicy>, tree_policy,
+                             shared_ptr<ValueHeuristic>, value_heuristic,
+                             shared_ptr<BackupMethod>, backup_method,
+                             shared_ptr<Environment>, environment,
+                             state_t, root_state) = setup();
+
                 double reward_sum = 0;
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
@@ -471,4 +465,76 @@ MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
     if(backup_type_arg.getValue()=="BACKUP_ALL") return MonteCarloTreeSearch::BACKUP_ALL;
     DEBUG_DEAD_LINE;
     return MonteCarloTreeSearch::BACKUP_TRACE;
+}
+
+tuple<shared_ptr<SearchTree>,
+      shared_ptr<TreePolicy>,
+      shared_ptr<ValueHeuristic>,
+      shared_ptr<BackupMethod>,
+      shared_ptr<Environment>,
+      state_t> setup() {
+
+    // return variables
+    shared_ptr<SearchTree>      search_tree;
+    shared_ptr<TreePolicy>      tree_policy;
+    shared_ptr<ValueHeuristic>  value_heuristic;
+    shared_ptr<BackupMethod>    backup_method;
+    shared_ptr<Environment>     environment;
+    state_t                     root_state;
+    // set up environment
+    if(environment_arg.getValue()=="TightRope") {
+        environment.reset(new TightRope(15));
+    } else if(environment_arg.getValue()=="DynamicTightRope") {
+        environment.reset(new DynamicTightRope(50, 10));
+    } else if(environment_arg.getValue()=="GamblingHall") {
+        environment.reset(new GamblingHall(10, 1));
+    } else if(environment_arg.getValue()=="BottleNeckHallway") {
+        environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
+    } else if(environment_arg.getValue()=="UnitTest") {
+        environment.reset(new UnitTestEnvironment());
+    } else {
+        cout << "Unknown environment" << endl;
+        DEBUG_DEAD_LINE;
+    }
+    DEBUG_OUT(1, "States: " << environment->get_states());
+    DEBUG_OUT(1, "Actions: " << environment->get_actions());
+    // set up tree policy
+    if(tree_policy_arg.getValue()=="UCB1") {
+        tree_policy.reset(new UCB1(exploration_arg.getValue()));
+    } else if(tree_policy_arg.getValue()=="UCB_Plus") {
+        tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
+    } else if(tree_policy_arg.getValue()=="Uniform") {
+        tree_policy.reset(new Uniform());
+    } else DEBUG_DEAD_LINE;
+    // set up value heuristic
+    if(value_heuristic_arg.getValue()=="Zero") {
+        value_heuristic.reset(new Zero());
+    } else if(value_heuristic_arg.getValue()=="Rollout") {
+        value_heuristic.reset(new Rollout(rollout_length_arg.getValue()));
+    } else DEBUG_DEAD_LINE;
+    // set up backup method
+    if(backup_method_arg.getValue()=="Bellman") {
+        backup_method.reset(new Bellman());
+    } else if(backup_method_arg.getValue()=="BellmanTreePolicy") {
+        backup_method.reset(new Bellman(tree_policy));
+    } else if(backup_method_arg.getValue()=="MonteCarlo") {
+        backup_method.reset(new MonteCarlo());
+    } else DEBUG_DEAD_LINE;
+    // set up search tree
+    root_state = environment->default_state();
+    search_tree.reset(new MonteCarloTreeSearch(root_state,
+                                               environment,
+                                               discount_arg.getValue(),
+                                               get_graph_type(),
+                                               tree_policy,
+                                               value_heuristic,
+                                               backup_method,
+                                               get_backup_type()));
+    // return
+    return make_tuple(search_tree,
+                      tree_policy,
+                      value_heuristic,
+                      backup_method,
+                      environment,
+                      root_state);
 }

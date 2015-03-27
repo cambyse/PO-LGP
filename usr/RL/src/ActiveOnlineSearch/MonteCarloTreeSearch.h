@@ -2,6 +2,8 @@
 #define MONTECARLOTREESEARCH_H_
 
 #include <memory>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "AbstractMonteCarloTreeSearch.h"
 #include "TreePolicy.h"
@@ -11,8 +13,15 @@
 class MonteCarloTreeSearch: public AbstractMonteCarloTreeSearch {
 
     //----typedefs/classes----//
+protected:
+    //typedef std::function<int(node_t)> node_hash_t;
+    struct node_hash_t {
+        node_hash_t(int){}
+        int operator()(node_t)const{return 0;}
+    };
+    typedef std::unordered_set<node_t,node_hash_t> node_set_t;
 public:
-    enum BACKUP_TYPE { BACKUP_TRACE, BACKUP_ALL };
+    enum BACKUP_TYPE { BACKUP_TRACE, BACKUP_ALL, BACKUP_GLOBAL };
 
     //----members----//
 protected:
@@ -25,8 +34,17 @@ protected:
     /**
      * The backup method that is being used. */
     std::shared_ptr<const backup_method::BackupMethod> backup_method;
+    /**
+     * Distance from the root node. This is needed to determine the order in
+     * global backups (backup_type==BACKUP_GLOBAL). */
+    graph_t::NodeMap<int> distance_map;
+    /**
+     * Stores all nodes for a specific state. */
+    std::unordered_map<state_t,node_set_t> state_node_map;
 
     const BACKUP_TYPE backup_type;
+
+    const node_hash_t node_hash;
 
     //----methods----//
 public:
@@ -39,8 +57,14 @@ public:
                          std::shared_ptr<const backup_method::BackupMethod> backup_method,
                          BACKUP_TYPE backup_type = BACKUP_ALL);
     virtual ~MonteCarloTreeSearch() = default;
+    void init(const state_t & s) override;
     void next() override;
     action_t recommend_action() const override;
+    virtual void prune(const action_t &, const state_t &) override;
+protected:
+    virtual std::tuple<arc_t,node_t> add_state_node(state_t state, node_t action_node) override;
+    virtual std::tuple<arc_t,node_t> add_action_node(action_t action, node_t state_node) override;
+    virtual void erase_node(node_t) override;
 };
 
 #endif /* MONTECARLOTREESEARCH_H_ */
