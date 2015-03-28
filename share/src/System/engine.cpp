@@ -45,157 +45,157 @@ void Module_Thread::step(){
 // Variable
 //
 
-struct sVariable {
-  virtual ~sVariable(){}
-  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
-  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
+//struct sVariable {
+//  virtual ~sVariable(){}
+//  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
+//  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
 
-  virtual void serializeToString(MT::String &string) const;
-  virtual void deSerializeFromString(const MT::String &string);
+//  virtual void serializeToString(MT::String &string) const;
+//  virtual void deSerializeFromString(const MT::String &string);
 
-  sVariable():loggerData(NULL){}
-};
+//  sVariable():loggerData(NULL){}
+//};
 
-Variable_SharedMemory::Variable_SharedMemory(const char *_name):Variable(_name), s(NULL), revision(0) {
-  s = new sVariable();
-  listeners.memMove=true;
-  //MT logValues = false;
-  //MT dbDrivenReplay = false;
-  //MT pthread_mutex_init(&replay_mutex, NULL);
-//  if(&(biros()) != NULL) { //-> birosInfo itself will not be registered!
-//    biros().writeAccess(NULL);
-//    biros().variables.memMove = true;
-//    biros().variables.append(this);
-//    biros().deAccess(NULL);
+//Variable_SharedMemory::Variable_SharedMemory(const char *_name):Variable(_name), s(NULL), revision(0) {
+//  s = new sVariable();
+//  listeners.memMove=true;
+//  //MT logValues = false;
+//  //MT dbDrivenReplay = false;
+//  //MT pthread_mutex_init(&replay_mutex, NULL);
+////  if(&(biros()) != NULL) { //-> birosInfo itself will not be registered!
+////    biros().writeAccess(NULL);
+////    biros().variables.memMove = true;
+////    biros().variables.append(this);
+////    biros().deAccess(NULL);
+////  }
+//}
+
+//Variable_SharedMemory::~Variable_SharedMemory() {
+////  if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
+////    biros().writeAccess(NULL);
+////    biros().variables.removeValue(this);
+////    biros().deAccess(NULL);
+////  }
+//  //for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
+
+//  //MT pthread_mutex_destroy(&replay_mutex);
+
+//  delete s;
+//}
+
+//int Variable_SharedMemory::readAccess(Module *m) {
+//  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
+//  engine().acc->queryReadAccess(this, p);
+//  rwlock.readLock();
+//  engine().acc->logReadAccess(this, p);
+//  return revision.getValue();
+//}
+
+//int Variable_SharedMemory::writeAccess(Module *m) {
+//  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
+//  engine().acc->queryWriteAccess(this, p);
+//  rwlock.writeLock();
+//  int r = revision.incrementValue();
+//  revision_time = MT::clockTime();
+//  engine().acc->logWriteAccess(this, p);
+//  for(Module *l: listeners) if(l!=m) engine().step(*l, true);
+//  return r;
+//}
+
+//int Variable_SharedMemory::deAccess(Module *m) {
+//  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
+//  if(rwlock.state == -1) { //log a revision after write access
+//    //MT logService.logRevision(this);
+//    //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
+//    engine().acc->logWriteDeAccess(this,p);
+//  } else {
+//    engine().acc->logReadDeAccess(this,p);
 //  }
-}
+//  int rev=revision.getValue();
+//  rwlock.unlock();
+//  return rev;
+//}
 
-Variable_SharedMemory::~Variable_SharedMemory() {
-//  if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
-//    biros().writeAccess(NULL);
-//    biros().variables.removeValue(this);
-//    biros().deAccess(NULL);
+//double Variable_SharedMemory::revisionTime(){
+//  return revision_time;
+//}
+
+//int Variable_SharedMemory::revisionNumber(){
+//  return revision.getValue();
+//}
+
+//int Variable_SharedMemory::waitForNextRevision(){
+//  revision.lock();
+//  revision.waitForSignal(true);
+//  int rev = revision.value;
+//  revision.unlock();
+//  return rev;
+//}
+
+//int Variable_SharedMemory::waitForRevisionGreaterThan(int rev) {
+//  revision.lock();
+//  revision.waitForValueGreaterThan(rev, true);
+//  rev = revision.value;
+//  revision.unlock();
+//  return rev;
+//}
+
+//FieldRegistration& Variable_SharedMemory::get_field(uint i) const{
+//  return *s->fields(i);
+//}
+
+//void sVariable::serializeToString(MT::String &string) const {
+//#if 0
+//  string.clear();
+//  MT::String field_string;
+//  field_string.clear();
+
+//  // go through fields
+//  for (uint i=0; i < fields.N; i++) {
+
+//    fields(i)->writeValue(field_string);
+
+//    // replace every occurence of "\" by "\\"
+//    for (uint j=0; j < field_string.N; j++) {
+//      char c = field_string(j);
+//      if('\\' == c) string << '\\';
+//      string << c;
+//    }
+
+//    // add seperator after field
+//    string << "\\,";
 //  }
-  //for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
+//#endif
+//  NIY
+//}
 
-  //MT pthread_mutex_destroy(&replay_mutex);
-
-  delete s;
-}
-
-int Variable_SharedMemory::readAccess(Module *m) {
-  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
-  engine().acc->queryReadAccess(this, p);
-  rwlock.readLock();
-  engine().acc->logReadAccess(this, p);
-  return revision.getValue();
-}
-
-int Variable_SharedMemory::writeAccess(Module *m) {
-  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
-  engine().acc->queryWriteAccess(this, p);
-  rwlock.writeLock();
-  int r = revision.incrementValue();
-  revision_time = MT::clockTime();
-  engine().acc->logWriteAccess(this, p);
-  for(Module *l: listeners) if(l!=m) engine().step(*l, true);
-  return r;
-}
-
-int Variable_SharedMemory::deAccess(Module *m) {
-  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
-  if(rwlock.state == -1) { //log a revision after write access
-    //MT logService.logRevision(this);
-    //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
-    engine().acc->logWriteDeAccess(this,p);
-  } else {
-    engine().acc->logReadDeAccess(this,p);
-  }
-  int rev=revision.getValue();
-  rwlock.unlock();
-  return rev;
-}
-
-double Variable_SharedMemory::revisionTime(){
-  return revision_time;
-}
-
-int Variable_SharedMemory::revisionNumber(){
-  return revision.getValue();
-}
-
-int Variable_SharedMemory::waitForNextRevision(){
-  revision.lock();
-  revision.waitForSignal(true);
-  int rev = revision.value;
-  revision.unlock();
-  return rev;
-}
-
-int Variable_SharedMemory::waitForRevisionGreaterThan(int rev) {
-  revision.lock();
-  revision.waitForValueGreaterThan(rev, true);
-  rev = revision.value;
-  revision.unlock();
-  return rev;
-}
-
-FieldRegistration& Variable_SharedMemory::get_field(uint i) const{
-  return *s->fields(i);
-}
-
-void sVariable::serializeToString(MT::String &string) const {
-#if 0
-  string.clear();
-  MT::String field_string;
-  field_string.clear();
-
-  // go through fields
-  for (uint i=0; i < fields.N; i++) {
-
-    fields(i)->writeValue(field_string);
-
-    // replace every occurence of "\" by "\\"
-    for (uint j=0; j < field_string.N; j++) {
-      char c = field_string(j);
-      if('\\' == c) string << '\\';
-      string << c;
-    }
-
-    // add seperator after field
-    string << "\\,";
-  }
-#endif
-  NIY
-}
-
-void sVariable::deSerializeFromString(const MT::String &string) {
-#if 0
-  MT::String string_copy(string), field_string;
-  field_string.clear();
-  uint j = 0;
-  for (uint i=0; i< fields.N; i++) {
-    // get field strings from string (seperated by "\\,")
-    bool escaped = false; // true if previous char was '\\'
-    while (j < string_copy.N) {
-      char c = string_copy(j++);
-      if('\\' == c) {
-        escaped = true;
-      } else {
-        if(escaped) {
-          if(',' == c) {
-            break;
-          }
-        }
-        escaped = false;
-        field_string << c;
-      }
-    }
-    fields(i)->readValue(field_string);
-  }
-#endif
-  NIY
-}
+//void sVariable::deSerializeFromString(const MT::String &string) {
+//#if 0
+//  MT::String string_copy(string), field_string;
+//  field_string.clear();
+//  uint j = 0;
+//  for (uint i=0; i< fields.N; i++) {
+//    // get field strings from string (seperated by "\\,")
+//    bool escaped = false; // true if previous char was '\\'
+//    while (j < string_copy.N) {
+//      char c = string_copy(j++);
+//      if('\\' == c) {
+//        escaped = true;
+//      } else {
+//        if(escaped) {
+//          if(',' == c) {
+//            break;
+//          }
+//        }
+//        escaped = false;
+//        field_string << c;
+//      }
+//    }
+//    fields(i)->readValue(field_string);
+//  }
+//#endif
+//  NIY
+//}
 
 
 //===========================================================================
@@ -235,17 +235,15 @@ Module* System::addModule(const char *dclName, const char *name, const StringA& 
   return m;
 }
 
-Variable_SharedMemory* System::connect(Access& acc, const char *variable_name){
-  Variable_SharedMemory *v = listFindByName(vars, variable_name);
-  if(v){ //variable exists -> check type
-    if(*v->type != *acc.type) HALT("trying to connect an access '" <<acc.name <<*acc.type <<" with a variable " <<v->name <<*v->type);
-    //good: just connect
-    acc.var = v;
+VariableContainer* System::connect(Access& acc, const char *variable_name){
+  VariableContainer *v = listFindByName(vars, variable_name);
+  if(v){ //variable exists -> link it
+    acc.linkToVariable(v);
   }else{ //variable does not exist yet
-    acc.var = v = addVariable(acc);
-    v->name = variable_name; //give it the name that it is supposed to have!
+    acc.createVariable(variable_name);
+    vars.append(acc.var);
   }
-  return v;
+  return acc.var;
 }
 
 void System::connect(){
@@ -257,14 +255,14 @@ void System::connect(){
 
   for(Access *a: accs){
     Module *m=a->module;
-    Variable_SharedMemory *v = NULL;
+    VariableContainer *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
-    else v = dynamic_cast<Variable_SharedMemory*>(a->var);
+    else v = a->var;
 
     if(m->thread &&
        ( m->thread->mode==Module_Thread::listenAll ||
          (m->thread->mode==Module_Thread::listenFirst && a==m->accesses(0)) ) ){
-      v->listeners.setAppend(m);
+      v->listeners.setAppend(m->thread);
     }
   }
 }
@@ -279,16 +277,16 @@ VariableL createVariables(const ModuleL& ms){
 
 Graph System::graph() const{
   Graph g;
-  g.append<bool>("SystemModule", name, NULL, false);
+  g.append<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
-  std::map<Variable*, Item*> vit;
-  for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v, false);
+  std::map<VariableContainer*, Item*> vit;
+  for(VariableContainer *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: mts){
-    Item *mit = g.append("Module", m->name, &m, false);
+    Item *mit = g.append({"Module", m->name}, {}, &m, false);
     g.checkConsistency();
     for(Access *a: m->accesses){
-      Item *ait = g.append("Access", a->name, &a, false);
+      Item *ait = g.append({"Access", a->name}, {}, &a, false);
       ait->parents.append(mit);
       mit->parentOf.append(ait);
       if(a->var){
@@ -529,7 +527,7 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
   delete c;
 }
 
-void EventController::queryReadAccess(Variable_SharedMemory *v, const Module_Thread *p){
+void EventController::queryReadAccess(VariableContainer *v, const Module_Thread *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -542,7 +540,7 @@ void EventController::queryReadAccess(Variable_SharedMemory *v, const Module_Thr
   blockMode.unlock();
 }
 
-void EventController::queryWriteAccess(Variable_SharedMemory *v, const Module_Thread *p){
+void EventController::queryWriteAccess(VariableContainer *v, const Module_Thread *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -555,7 +553,7 @@ void EventController::queryWriteAccess(Variable_SharedMemory *v, const Module_Th
   blockMode.unlock();
 }
 
-void EventController::logReadAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
+void EventController::logReadAccess(const VariableContainer *v, const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -564,7 +562,7 @@ void EventController::logReadAccess(const Variable_SharedMemory *v, const Module
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logWriteAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
+void EventController::logWriteAccess(const VariableContainer *v, const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -573,13 +571,13 @@ void EventController::logWriteAccess(const Variable_SharedMemory *v, const Modul
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logReadDeAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
+void EventController::logReadDeAccess(const VariableContainer *v, const Module_Thread *p) {
   //do something if in replay mode
   if(getVariableData(v)->controllerBlocksRead)
     breakpointSleep();
 }
 
-void EventController::logWriteDeAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
+void EventController::logWriteDeAccess(const VariableContainer *v, const Module_Thread *p) {
   //do something if in replay mode
   //do something if enableDataLog
   if(getVariableData(v)->controllerBlocksWrite)
@@ -653,9 +651,11 @@ void EventController::dumpEventList(){
   writeEventList(*eventsFile, false, 0, true);
 }
 
-LoggerVariableData* EventController::getVariableData(const Variable_SharedMemory* v){
-  if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
-  return v->s->loggerData;
+LoggerVariableData* EventController::getVariableData(const VariableContainer* v){
+//  if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
+//  return v->s->loggerData;
+  NIY;
+  return NULL;
 }
 
 

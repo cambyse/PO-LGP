@@ -33,8 +33,8 @@ void way1(){
   S.connect(); //this will create the respective variables!
   cout <<S <<endl;
 
-  Access_typed<arr> *x = S.getAccess<arr>("x");
-  Access_typed<double> *s = S.getAccess<double>("s");
+  Access_typed<arr> x = S.getAccess<arr>("x");
+  Access_typed<double> s = S.getAccess<double>("s");
 
 #if 0
   ComputeSum C;
@@ -45,7 +45,7 @@ void way1(){
   S.addVariable(&s, "s");
 #endif
 
-  x->set() = {1., 2., 3.};
+  x.set() = {1., 2., 3.};
 
 #if 1 //serial
   m->open();
@@ -58,7 +58,7 @@ void way1(){
   mt->threadClose();
 #endif
 
-  cout <<"result = " <<s->get() <<endl;
+  cout <<"result = " <<s.get() <<endl;
 
 }
 

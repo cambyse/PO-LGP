@@ -33,6 +33,7 @@
 
 #include <Core/array.h>
 #include <Core/registry.h>
+#include <Core/thread.h>
 
 struct Access;
 struct Module;
@@ -45,20 +46,20 @@ typedef MT::Array<Access*> AccessL;
     shared memory (mutexed and revisioned) is used. ROS topics could
     equally be used. */
 
-struct Variable{
-  MT::String name;  ///< Variable name
-  Type *type;       ///< Variable type
-  void *data;       ///< pointer to data struct; Access_typed knows how to cast it [alternative 'virtual template' not possible]
-  double data_time; ///< time of origin of the data  --- MT: this is redundant to the revision_time?? or have virtual dataTime()
-  Variable(const char* _name):name(_name), type(NULL), data(NULL)/*, data_time(0.)*/{}
-  virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
-  virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
-  virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
-  virtual double revisionTime() = 0;
-  virtual int revisionNumber() = 0;
-  virtual int waitForNextRevision() = 0; ///< the calling process will wait for the next revision; returns the new revision
-  virtual int waitForRevisionGreaterThan(int rev) = 0; ///< the calling process will wait for the desired or greater revision; returns the new revision
-};
+//struct Variable{
+//  MT::String name;  ///< Variable name
+//  Type *type;       ///< Variable type
+//  void *data;       ///< pointer to data struct; Access_typed knows how to cast it [alternative 'virtual template' not possible]
+//  double data_time; ///< time of origin of the data  --- MT: this is redundant to the revision_time?? or have virtual dataTime()
+//  Variable(const char* _name):name(_name), type(NULL), data(NULL)/*, data_time(0.)*/{}
+//  virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
+//  virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
+//  virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
+//  virtual double revisionTime() = 0;
+//  virtual int revisionNumber() = 0;
+//  virtual int waitForNextRevision() = 0; ///< the calling process will wait for the next revision; returns the new revision
+//  virtual int waitForRevisionGreaterThan(int rev) = 0; ///< the calling process will wait for the desired or greater revision; returns the new revision
+//};
 
 extern Module *currentlyCreating;
 
@@ -113,13 +114,16 @@ struct Access{
   MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
-  Variable *var;   ///< which variable does it access
-  Access(const char* _name, Type *_type, Module *_module, Variable *_var):name(_name), type(_type), module(_module), var(_var){}
-  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess(module); }
-  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess(module); }
-  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess(module); }
+  VariableContainer *var;   ///< which variable does it access
+  Access(const char* _name, Type *_type, Module *_module, VariableContainer *_var):name(_name), type(_type), module(_module), var(_var){}
+  virtual ~Access(){}
+  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module->thread); }
+  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module->thread); }
+  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module->thread); }
   int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
   int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
+  virtual void createVariable(const char *name) = 0;
+  virtual void linkToVariable(VariableContainer *v) = 0;
 };
 
 
@@ -128,33 +132,38 @@ struct Access{
     the variable's content */
 template<class T>
 struct Access_typed:Access{
-  struct ReadToken{
-    Access_typed<T> *a;
-    ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
-    ~ReadToken(){ a->deAccess(); }
-    const T* operator->(){ return a->data(); }
-    operator const T&(){ return *a->data(); }
-    const T& operator()(){ return *a->data(); }
-  };
-  struct WriteToken{
-    Access_typed<T> *a;
-    WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
-    ~WriteToken(){ a->deAccess(); }
-    WriteToken& operator=(const T& x){ (*a->data()) = x; return *this; }
-    T* operator->(){ return a->data(); }
-    operator T&(){ return *a->data(); }
-    T& operator()(){ return *a->data(); }
-  };
+  Variable<T> *v;
 
-  Access_typed(const char* name, Variable *v=NULL):Access(name, new Type_typed<T, void>(), currentlyCreating, v){
+//  struct ReadToken{
+//    Access_typed<T> *a;
+//    ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
+//    ~ReadToken(){ a->deAccess(); }
+//    const T* operator->(){ return a->data(); }
+//    operator const T&(){ return *a->data(); }
+//    const T& operator()(){ return *a->data(); }
+//  };
+//  struct WriteToken{
+//    Access_typed<T> *a;
+//    WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
+//    ~WriteToken(){ a->deAccess(); }
+//    WriteToken& operator=(const T& x){ (*a->data()) = x; return *this; }
+//    T* operator->(){ return a->data(); }
+//    operator T&(){ return *a->data(); }
+//    T& operator()(){ return *a->data(); }
+//  };
+
+  Access_typed(const char* name, Variable<T> *v=NULL)
+    : Access(name, new Type_typed<T, void>(), currentlyCreating, (VariableContainer*)v), v(v){
     if(module) module->accesses.append(this);
   }
   ~Access_typed(){ delete type; }
-  T* data(){ CHECK(var && var->data,""); return ((T*)var->data); }
+  T* data(){ CHECK(v,""); return v->data; }
   T& operator()(){ return *data(); }
-  ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
-  WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
-  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
+  typename Variable<T>::ReadToken get(){ return v->get(module?(Thread*)module->thread:NULL); } ///< read access to the variable's data
+  typename Variable<T>::WriteToken set(){ return v->set(module?(Thread*)module->thread:NULL); } ///< write access to the variable's data
+  virtual void createVariable(const char *name){ CHECK(!v &&!var,"");  v=new Variable<T>(name);  var=(VariableContainer*)v; }
+  virtual void linkToVariable(VariableContainer *_var){ v = dynamic_cast<Variable<T>*>(_var);  CHECK(v,"");  var=_var;  }
+//  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
 };
 
 
