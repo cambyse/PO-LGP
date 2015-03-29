@@ -10,20 +10,20 @@ void TEST(ModuleVision) {
   cout <<registry() <<endl;
 
   System S;
-  S.addModule("OpencvCamera", NULL, Module_Thread::loopFull);
+  S.addModule("OpencvCamera", NULL, Module::loopFull);
   S.addModule("CvtGray");
   S.addModule("MotionFilter");
   S.addModule("DifferenceFilter", NULL, {"rgb", "ground", "diffImage"});
   S.addModule("CannyFilter", NULL, {"gray", "canny"});
-  S.addModule("Patcher", NULL, {"rgb", "patches"});
-  //  S.addModule("SURFer", NULL, {"gray", "features"});
+//  S.addModule("Patcher", NULL, {"rgb", "patches"});
+//  //  S.addModule("SURFer", NULL, {"gray", "features"});
 
   S.addModule("ImageViewer", NULL, {"rgb"});
   S.addModule("ImageViewer", NULL, {"gray"});
   S.addModule("ImageViewer", NULL, {"motion"});
   S.addModule("ImageViewer", NULL, {"diffImage"});
   S.addModule("ImageViewer", NULL, {"canny"});
-  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
+//  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
 //  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, {"features"});
 
   //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module_Thread::listenFirst);
@@ -40,7 +40,7 @@ void TEST(ModuleVision) {
   engine().open(S);
 
   Graph g = S.graph();
-  GraphView gv(g); gv.update();
+//  GraphView gv(g); gv.update();
 
   if(engine().mode==Engine::serial){
     for(uint i=0;i<100;i++){ engine().step(S); }
