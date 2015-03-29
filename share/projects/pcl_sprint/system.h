@@ -29,21 +29,21 @@ struct PCL_ModuleSystem:System{
   PCL_ModuleSystem(){
 #ifdef MT_ROS
     if(MT::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
     }else{
 #endif
-      addModule<KinectPoller>(NULL, Module_Thread::loopWithBeat, .1); //this is callback driven...
+      addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
 #ifdef MT_ROS
     }
 #endif
 
-    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module_Thread::listenFirst);
-//      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
-//      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module_Thread::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module_Thread::listenFirst);
-    addModule<ArrCloud2PclCloud>(NULL, Module_Thread::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
+//      addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
+//      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
+    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
+    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+    addModule<ArrCloud2PclCloud>(NULL, Module::listenFirst);
     connect();
   }
 };

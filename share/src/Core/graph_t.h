@@ -195,10 +195,12 @@ template<class T> Item *Graph::append(T *x, bool ownsValue) {
   return new Item_typed<T>(*this, x, ownsValue);
 }
 
-template<class T> Item *Graph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
-  Item *it = new Item_typed<T>(*this, keys, parents, x, ownsValue);
+template<class T> Item *Graph::append(const char* key, T *x, bool ownsValue) {
+  return new Item_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+}
 
-  return it;
+template<class T> Item *Graph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
+  return new Item_typed<T>(*this, keys, parents, x, ownsValue);
 }
 
 template <class T> MT::Array<T*> Graph::getDerivedValues() {

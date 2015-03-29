@@ -99,8 +99,8 @@ struct Access{
   int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module); }
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
-//  int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
-//  int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
+  int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
+  int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
   virtual void createVariable(const char *name) = 0;
   virtual void linkToVariable(VariableContainer *v) = 0;
   double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.

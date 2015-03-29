@@ -16,9 +16,9 @@ struct MySystem:System{
   ACCESS(arr, marker_pose);
   MySystem(){
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ARMarkerSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ARMarkerSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }

@@ -75,12 +75,12 @@ struct ActionSystem : System{
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
-    machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
-    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    machine = addModule<ActionMachine>(NULL, Module::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-//      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+//      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }

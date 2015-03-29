@@ -8,7 +8,7 @@ void TEST(Gamepad){
   struct MySystem:System{
     ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<GamepadInterface>("GamepadInterface", Module_Thread::loopWithBeat, 0.01);
+      addModule<GamepadInterface>("GamepadInterface", Module::loopWithBeat, 0.01);
       connect();
     }
   } S;
@@ -36,11 +36,11 @@ void run(){
     ACCESS(arr, controls);
     ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
-      //addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", Module_Thread::loopFull);
-      addModule<GamepadInterface>("GamepadInterface", Module_Thread::loopWithBeat, 0.01);
+      addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
+      //addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module::loopFull);
+      addModule<GamepadInterface>("GamepadInterface", Module::loopWithBeat, 0.01);
       connect();
     }
   } S;

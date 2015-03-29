@@ -257,7 +257,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
 
   if(changes || forceChaining){
     cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
-    forwardChaining_FOL(KB(), NULL, false);
+    forwardChaining_FOL(KB(), NULL, NoGraph, false);
 //    state = getLiteralsOfScope(KB());
     cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
 

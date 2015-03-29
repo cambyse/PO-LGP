@@ -18,7 +18,7 @@ void miniTest(){
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Poller", "G4Poller", Module_Thread::loopWithBeat, .001);
+    addModule("G4Poller", "G4Poller", Module::loopWithBeat, .001);
     connect();
   }
 };

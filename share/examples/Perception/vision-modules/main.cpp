@@ -26,8 +26,8 @@ void TEST(ModuleVision) {
 //  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
 //  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, {"features"});
 
-  //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module_Thread::listenFirst);
-  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"}, Module_Thread::listenFirst);
+  //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module::listenFirst);
+  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"}, Module::listenFirst);
 
   S.connect();
 

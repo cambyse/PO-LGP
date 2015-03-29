@@ -73,13 +73,13 @@ struct System : Module{
   //-- add modules
   template<class T> T* addModule(const char *name=NULL, Module::StepMode mode=Module::listenFirst, double beat=0.){
     T *m = new T;
+    CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
     currentlyCreating=NULL;
     for(Access *a: m->accesses) a->module = m;
     modules.append(m);
 
-    m->thread = new Module(m, name);
-    m->thread->mode = mode;
-    m->thread->beat = beat;
+    m->mode = mode;
+    m->beat = beat;
     return m;
   }
 

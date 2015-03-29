@@ -22,7 +22,7 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
 //  new CoreTasks(*s->activity.machine);
 
   s->KB.writeAccess();
-  s->KB().append<Graph>("STATE", new Graph(), true);
+  s->KB().append<Graph>({"STATE"}, {}, new Graph(), true);
   s->KB().checkConsistency();
   s->KB.deAccess();
 
