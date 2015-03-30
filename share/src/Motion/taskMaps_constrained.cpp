@@ -137,8 +137,12 @@ void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   if(&J) {
     arr Ji, Jj;
     G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
-    G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
-    J = Ji - Jj;
+    if(body_j){
+      G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
+      J = Ji - Jj;
+    }else{
+      J = Ji;
+    }
   }
 }
 

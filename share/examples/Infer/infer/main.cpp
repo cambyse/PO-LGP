@@ -318,9 +318,9 @@ void testGridBP2(){
 
 #include "rndNetBP.inc"
 void TEST(RndNetBP){
-  uint order=MT::Parameter<uint>("order");
-  uint N    =MT::Parameter<uint>("N");
-  double conn =MT::Parameter<double>("conn");
+  uint order=MT::getParameter<uint>("order");
+  uint N    =MT::getParameter<uint>("N");
+  double conn =MT::getParameter<double>("conn");
   rndNetBPwithExcludeEchoMessages(N,2,conn,order);
 }
 
