@@ -163,7 +163,7 @@ struct PairCollisionConstraint:TaskMap {
     : i(-1), j(-1), margin(_margin){
     type=ineqTT;
   }
-  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin)
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin=.02)
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
       margin(_margin) {
