@@ -123,13 +123,16 @@ void executeTrajectoryWholeBody(String scene){
   // Plan Trajectory
   makeConvexHulls(world.shapes);
   MotionProblem P(world);
-  P.loadTransitionParameters();
+  Task *c;
+  c = P.addTask("transition", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
 
   arr Rgoal = ARRAY(P.world.getBodyByName("RgoalRef")->X.pos);
   arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
   c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -352,22 +355,23 @@ void executeTrajectoryRightArm(String scene){
   world.gl().resize(800, 800);
 #endif
 
-  arr q0 = {0.,0.,0.,0.,-0.2,-0.2,0.};
-  world.setJointState(q0,0.*q0);
-
   arr q, qdot;
   world.getJointState(q, qdot);
+  arr q0 = q;
 
-
+  world.watch(true);
   // Plan Trajectory
   makeConvexHulls(world.shapes);
   MotionProblem P(world);
-  P.loadTransitionParameters();
+  Task *c;
+  c = P.addTask("transition", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
 
   arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
@@ -387,7 +391,7 @@ void executeTrajectoryRightArm(String scene){
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = {0.,0.,0.,0.,-0.3,-0.3,0.};
+  P.x0 = q0;
 
   MotionProblemFunction F(P);
   uint T=F.get_T();
