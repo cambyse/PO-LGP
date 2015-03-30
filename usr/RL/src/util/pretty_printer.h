@@ -23,8 +23,8 @@ namespace util {
     template <class C>
         std::string container_to_str(const C & container,
                                      const char* separator = " ",
-                                     const char* start = "",
-                                     const char* end = "") {
+                                     const char* start = "<",
+                                     const char* end = ">") {
         std::stringstream ss;
         bool first = true;
         ss << start;
