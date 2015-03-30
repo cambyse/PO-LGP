@@ -33,8 +33,8 @@ void way1(){
   S.connect(); //this will create the respective variables!
   cout <<S <<endl;
 
-  Access_typed<arr> x = S.getAccess<arr>("x");
-  Access_typed<double> s = S.getAccess<double>("s");
+  Access_typed<arr> x = S.getConnectedAccess<arr>("x");
+  Access_typed<double> s = S.getConnectedAccess<double>("s");
 
 #if 0
   ComputeSum C;

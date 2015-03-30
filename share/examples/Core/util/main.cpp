@@ -60,7 +60,7 @@ void TEST(Timer){
 }
 
 void TEST(Logging){
-  LOG(1) <<"HALLO";
+//  LOG(1) <<"HALLO";
   MT::log() <<"bla" <<endl;
 }
 

@@ -59,7 +59,7 @@ struct Module : Thread{
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL):Thread(name), mode(listenFirst), beat(1.){ currentlyCreating=this; }
+  Module(const char* _name=NULL):Thread(_name), mode(listenFirst), beat(1.){ currentlyCreating=this; }
   virtual ~Module(){}
 
   /** The most important method of all of this: step does the actual

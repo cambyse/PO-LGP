@@ -26,7 +26,7 @@ void testFol(){
   cout <<G <<endl;
 
   Item *terminal=G["Terminal"]->kvg()(0);
-  forwardChaining_FOL(G, terminal, true);
+  forwardChaining_FOL(G, terminal, NoGraph, true);
 
 }
 

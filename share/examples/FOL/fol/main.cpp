@@ -92,7 +92,7 @@ void testFolSubstitution(){
     for(uint s=0;s<subs.d0;s++){
       Item *effect = rule->kvg().last();
       { cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
-      applyEffectLiterals(state, effect, subs[s], &rule->kvg());
+      applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg());
       cout <<"AFTER state="; state.write(cout, " "); cout <<endl;
     }
   }
@@ -146,7 +146,7 @@ void testMonteCarlo(){
 
           Item *effect = d.first->kvg().last();
           if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
-          applyEffectLiterals(state, effect, d.second, &d.first->kvg());
+          applyEffectLiterals(state, effect->kvg(), d.second, &d.first->kvg());
         }
       }else{
         decideWait=true;
@@ -190,7 +190,7 @@ void testMonteCarlo(){
             for(uint i=0;i<vars.N;i++) subs(i) = act->parents(i+1);
 
             if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs, cout); cout <<endl; }
-            applyEffectLiterals(state, effect, subs, &rule->kvg());
+            applyEffectLiterals(state, effect->kvg(), subs, &rule->kvg());
           }
         }
       }
@@ -209,10 +209,10 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-//  testFolLoadFile();
-//  testPolFwdChaining();
-//  testFolFwdChaining();
+  testFolLoadFile();
+  testPolFwdChaining();
+  testFolFwdChaining();
 //  testFolDisplay();
-//  testFolSubstitution();
-//  testMonteCarlo();
+  testFolSubstitution();
+  testMonteCarlo();
 }

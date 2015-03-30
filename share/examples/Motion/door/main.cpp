@@ -34,7 +34,7 @@ void TEST(Door1){
   t->setCostSpecs(MP.T, MP.T, {-.4}, 1e2);
 
   t = MP.addTask("door_fix", new TaskMap_qItself(G.getJointByName("door_joint")->qIndex, G.joints.N));
-  t->setCostSpecs(0, MP.T/2, {0}, 1e2);
+  t->setCostSpecs(0, MP.T/2, {0.}, 1e2);
 
   t = MP.addTask("contact", new PointEqualityConstraint(G, "endeff",NoVector, "target",NoVector));
   t->setCostSpecs(MP.T/2., MP.T, {0.}, 1.);

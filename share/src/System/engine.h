@@ -41,15 +41,17 @@ template<class T> void connect(Access& acc, T& x){
  * A list of Modules and Variables that can be autoconnected and, as a group, opened, stepped and closed
  */
 
-struct System : Module{
+struct System{
   ModuleL modules;
   VariableL vars;
+  AccessL accesses;
+  MT::String name;
 
-  System(const char* name=NULL):Module(name){}
+  System(const char* name=NULL):name(name){}
 
-  virtual void step(){  for(Module *m: modules) m->step();  }
-  virtual void open(){  for(Module *m: modules) m->open();  }
-  virtual void close(){  for(Module *m: modules) m->close();  }
+//  virtual void step(){  for(Module *m: modules) m->step();  }
+//  virtual void open(){  for(Module *m: modules) m->open();  }
+//  virtual void close(){  for(Module *m: modules) m->close();  }
 
   //-- add variables
   template<class T> Variable<T>* addVariable(const char *name){
@@ -59,6 +61,7 @@ struct System : Module{
   }
 
   //-- access vars
+  template<class T> Variable<T>* getVar(uint i){ return dynamic_cast<Variable<T>* >(vars.elem(i)); }
   template<class T> Access_typed<T> getConnectedAccess(const char* varName){
     Access_typed<T> acc(varName);
     VariableContainer *v = listFindByName(vars, varName);

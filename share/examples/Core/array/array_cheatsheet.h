@@ -19,7 +19,7 @@ void TEST(CheatSheet) {
   A = ones(3,3);
   arr I = eye(4);
   // or fill the matrix manually with an initialization list
-  A = {1, 3, 7, 8};
+  A = {1., 3., 7., 8.};
 
   cout << "\n##### MISC" << endl;
   // you can reshape matrices

@@ -138,7 +138,7 @@ void idle2() {
   new CoreTasks(*activity.machine);
   engine().open(activity);
   
-  auto t = new OrientationQuat(*activity.machine, "endeffR", {1, 1, 0, 0});
+  auto t = new OrientationQuat(*activity.machine, "endeffR", {1., 1., 0., 0.});
   activity.machine->waitForActionCompletion(t);
   cout << "Done waiting" << endl;
   
@@ -163,7 +163,7 @@ void test_record() {
   engine().open(activity);
 
   Action *t = new Relax(*activity.machine, "relax");
-  core->actionState = inactive;
+  core->active = false;
   activity.machine->s->feedbackController.useSwift=false;
   activity.ctrl_obs.waitForNextRevision();
   cout << "\nStart relax " << endl;
@@ -184,7 +184,7 @@ void test_record() {
   cout << "End recording" << endl;
 
   activity.machine->removeAction(t);
-  core->actionState = active;
+  core->active = true;
 
   write(LIST<arr>(trajX),"trajX.data");
   write(LIST<arr>(trajQ),"trajQ.data");

@@ -132,7 +132,7 @@ void TEST(SimpleIterators) {
 
 void TEST(InitializationList) {
   cout << "Use c++11 initialization list to initialize arrays by hand" << endl;
-  arr a = {1, 3, 2, 5};
+  arr a = {1., 3., 2., 5.};
   cout << a << endl;
 }
 
@@ -398,7 +398,7 @@ void TEST(PCA) {
   // (and they are ok).
 
   cout <<"\n*** principal component analysis\n";
-  arr x = { 1, -2, 1, -1, 1, 1, 1, 2 };
+  arr x = { 1., -2., 1., -1., 1., 1., 1., 2. };
   x.reshape(4, 2);
   cout << "x = " << x << endl;
 
@@ -409,7 +409,7 @@ void TEST(PCA) {
   cout << "v = " << v << endl;
   cout << "w = " << w << endl;
 
-  arr y = { 1, 1, -1, 1, -1, -1, 1, -1 };
+  arr y = { 1., 1., -1., 1., -1., -1., 1., -1. };
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
