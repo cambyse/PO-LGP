@@ -78,14 +78,13 @@ struct MySystem:System{
 
 void way2(){
   MySystem S;
-
   cout <<S <<endl;
 
   S.x.set() = {1., 2., 3.};
 
-  S.open();
-  S.step();
-  S.close();
+  S.openAll();
+  S.stepAll();
+  S.closeAll();
 
   cout <<"result = " <<S.s.get() <<endl;
 };

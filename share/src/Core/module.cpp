@@ -19,3 +19,4 @@
 #include "module.h"
 
 Module *currentlyCreating = NULL;
+AccessL *currentlyCreatingAccessL = NULL;

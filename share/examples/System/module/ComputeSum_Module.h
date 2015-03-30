@@ -4,7 +4,7 @@ struct MyType{
   int i;
 };
 
-struct ComputeSum:Module {
+struct ComputeSum : Module {
   ACCESS(arr, x);    //input
   ACCESS(double, s); //output
   ACCESS(MyType, i);

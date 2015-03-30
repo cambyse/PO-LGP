@@ -47,11 +47,13 @@ struct System{
   AccessL accesses;
   MT::String name;
 
-  System(const char* name=NULL):name(name){}
+  System(const char* _name=NULL):name(_name){
+    currentlyCreatingAccessL=&accesses;
+  }
 
-//  virtual void step(){  for(Module *m: modules) m->step();  }
-//  virtual void open(){  for(Module *m: modules) m->open();  }
-//  virtual void close(){  for(Module *m: modules) m->close();  }
+  virtual void stepAll(){  for(Module *m: modules) m->step();  }
+  virtual void openAll(){  for(Module *m: modules) m->open();  }
+  virtual void closeAll(){  for(Module *m: modules) m->close();  }
 
   //-- add variables
   template<class T> Variable<T>* addVariable(const char *name){

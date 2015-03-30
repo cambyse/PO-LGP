@@ -39,6 +39,7 @@ struct Access;
 struct Module;
 typedef MT::Array<Access*> AccessL;
 extern Module *currentlyCreating;
+extern AccessL *currentlyCreatingAccessL;
 
 //===========================================================================
 //
@@ -117,6 +118,7 @@ struct Access_typed:Access{
   Access_typed(const char* name, Variable<T> *v=NULL)
     : Access(name, new Type_typed<T, void>(), currentlyCreating, (VariableContainer*)v), v(v){
     if(module) module->accesses.append(this);
+    else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
   }
   ~Access_typed(){ delete type; }
   T& operator()(){ CHECK(v && var,"");  return v->data; }
