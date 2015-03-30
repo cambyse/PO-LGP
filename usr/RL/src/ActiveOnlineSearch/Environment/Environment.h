@@ -18,8 +18,8 @@ public:
 
     //----members----//
 protected:
-    std::vector<action_t> actions;
-    std::vector<state_t> states;
+    const std::vector<action_t> actions;
+    const std::vector<state_t> states;
 
     //----methods----//
 public:
@@ -33,9 +33,9 @@ public:
     const std::vector<state_t> & get_states() const {return states;};
 
 public:
-    Environment(const std::vector<action_t> & a,
-                const std::vector<state_t> & s):
-    actions(a), states(s) {}
+    Environment(const std::vector<action_t> & actions,
+                const std::vector<state_t> & states):
+    actions(actions), states(states) {}
     virtual ~Environment() = default;
 };
 

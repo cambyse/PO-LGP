@@ -9,7 +9,7 @@ BottleNeckHallway::BottleNeckHallway(int length,
                                      int action_n,
                                      double min_prob,
                                      double max_prob):
-    Environment({},{}), // filled below
+    Environment(util::range_vector(action_n), util::range_vector(length)),
     length(length),
     action_n(action_n),
     min_prob(min_prob),
@@ -19,12 +19,6 @@ BottleNeckHallway::BottleNeckHallway(int length,
     DEBUG_EXPECT(0,action_n>0);
     DEBUG_EXPECT(0,min_prob>=0 && min_prob<=1);
     DEBUG_EXPECT(0,max_prob>=0 && max_prob<=1);
-    for(int action : Range(action_n)) {
-        actions.push_back(action);
-    }
-    for(int position : Range(length)) {
-        states.push_back(position);
-    }
 }
 
 BottleNeckHallway::state_reward_pair_t BottleNeckHallway::sample(const state_t & state,

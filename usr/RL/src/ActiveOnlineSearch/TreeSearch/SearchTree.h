@@ -93,16 +93,15 @@ private:
 
     //----methods----//
 public:
-    SearchTree(const state_t & root_state,
-               std::shared_ptr<const Environment> environment,
+    SearchTree(std::shared_ptr<const Environment> environment,
                double discount,
                GRAPH_TYPE graph_type);
     virtual ~SearchTree() = default;
     /**
      * Initializes an empty search tree with the root node set to \e s. This
-     * function is called by the constructor and may also be used to reset
-     * everything. */
-    virtual void init(const state_t & s);
+     * function must be called before using the SearchTree and may also be used
+     * to reset everything. */
+    virtual void init(const state_t & root_state);
     /**
      * Proceed with planning. In MonteCarloTreeSearch methods this will initiate
      * a new rollout. */
@@ -122,22 +121,22 @@ public:
     virtual void toPdf(const char* file_name) const;
     /**
      * Get const reference to root node. */
-    const node_t & get_root_node() const;
+    virtual const node_t & get_root_node() const final;
     /**
      * Get const reference to graph. */
-    const graph_t & get_graph() const;
+    virtual const graph_t & get_graph() const final;
     /**
      * Get const reference to node_info_map. */
-    const node_info_map_t & get_node_info_map() const;
+    virtual const node_info_map_t & get_node_info_map() const final;
     /**
      * Get state of a node. */
-    const state_t state(const node_t & state_node) const;
+    virtual const state_t state(const node_t & state_node) const final;
     /**
      * Get action of a node. */
-    const action_t action(const node_t & action_node) const;
+    virtual const action_t action(const node_t & action_node) const final;
     /**
      * Get type of a node. */
-    const NODE_TYPE type(const node_t & node) const;
+    virtual const NODE_TYPE type(const node_t & node) const final;
 protected:
     /**
      * Counts the number of children by iterating over outgoing arcs. */

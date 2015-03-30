@@ -22,23 +22,25 @@ using std::make_tuple;
 using std::vector;
 using std::shared_ptr;
 
-MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
-                                           std::shared_ptr<const Environment> environment,
+MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
                                            double discount,
                                            GRAPH_TYPE graph_type,
                                            std::shared_ptr<const TreePolicy> tree_policy,
                                            std::shared_ptr<const ValueHeuristic> value_heuristic,
                                            std::shared_ptr<const BackupMethod> backup_method,
-                                           BACKUP_TYPE backup_type):
-    AbstractMonteCarloTreeSearch(root_state, environment, discount, graph_type),
+                                           BACKUP_TYPE _backup_type):
+    AbstractMonteCarloTreeSearch(environment, discount, graph_type),
     tree_policy(tree_policy),
     value_heuristic(value_heuristic),
     backup_method(backup_method),
     distance_map(graph),
-    backup_type(backup_type),
+    backup_type(_backup_type==BACKUP_GLOBAL?BACKUP_ALL:_backup_type),
     node_hash(graph)
-    //node_hash([&](node_t n){return graph.id(n);})
-{}
+{
+    if(_backup_type==BACKUP_GLOBAL) {
+        DEBUG_WARNING("This backup method is not implemented as yet. Using BACKUP_ALL instead.");
+    }
+}
 
 void MonteCarloTreeSearch::init(const state_t & s) {
     SearchTree::init(s);
@@ -267,10 +269,11 @@ MonteCarloTreeSearch::add_action_node(action_t action,
 }
 
 void MonteCarloTreeSearch::erase_node(node_t node) {
-    auto it = state_node_map.find(state(node));
-    if(it==state_node_map.end()) {
-        DEBUG_EXPECT(0,type(node)==ACTION_NODE);
-    } else {
+    if(type(node)==STATE_NODE) {
+        auto it = state_node_map.find(state(node));
+        if(it==state_node_map.end()) {
+            DEBUG_ERROR("Cannot find node-set for node:" << graph.id(node) << "/state:" << state(node));
+        }
         it->second.erase(node);
     }
     SearchTree::erase_node(node);

@@ -62,8 +62,7 @@ protected:
 
     //----methods----//
 public:
-    MonteCarloTreeSearch(const state_t & root_state,
-                         std::shared_ptr<const Environment> environment,
+    MonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
                          double discount,
                          GRAPH_TYPE graph_type,
                          std::shared_ptr<const tree_policy::TreePolicy> tree_policy,
@@ -71,9 +70,9 @@ public:
                          std::shared_ptr<const backup_method::BackupMethod> backup_method,
                          BACKUP_TYPE backup_type = BACKUP_ALL);
     virtual ~MonteCarloTreeSearch() = default;
-    void init(const state_t & s) override;
-    void next() override;
-    action_t recommend_action() const override;
+    virtual void init(const state_t & s) override;
+    virtual void next() override;
+    virtual action_t recommend_action() const override;
     virtual void prune(const action_t &, const state_t &) override;
 protected:
     virtual std::tuple<arc_t,node_t> add_state_node(state_t state, node_t action_node) override;

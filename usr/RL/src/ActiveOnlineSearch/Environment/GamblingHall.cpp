@@ -69,7 +69,7 @@ QString GamblingHall::state_name(const state_t & s) const {
 #elif VARIANT == 1
 
 GamblingHall::GamblingHall(int machine_n, double tolerance):
-    Environment({},{}), // set actions and states later!!
+    Environment({-1,0,1},util::range_vector(machine_n*machine_n)),
     machine_n(machine_n),
     time_n(machine_n),
     tolerance(tolerance)
@@ -81,12 +81,6 @@ GamblingHall::GamblingHall(int machine_n, double tolerance):
     if(tolerance>1) {
         DEBUG_ERROR("Tolerance should be in [0,1] but is " << tolerance);
         tolerance = 1;
-    }
-    actions = {-1,0,1}; // go one machine left, right, or stay
-    for(int machine : util::Range(machine_n)) {
-        for(int time : util::Range(time_n)) {
-            states.push_back(util::convert_ND_to_1D_index({machine,time},{machine_n,time_n}));
-        }
     }
 }
 

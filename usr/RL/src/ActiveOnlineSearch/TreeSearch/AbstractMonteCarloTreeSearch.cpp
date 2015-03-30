@@ -10,11 +10,10 @@ void AbstractMonteCarloTreeSearch::prune(const action_t & a, const state_t & s) 
     SearchTree::prune(a,s);
 }
 
-AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(const state_t & root_state,
-                                                           std::shared_ptr<const Environment> environment,
+AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
                                                            double discount,
                                                            GRAPH_TYPE graph_type):
-    SearchTree(root_state, environment, discount, graph_type),
+    SearchTree(environment, discount, graph_type),
     graph(this->get_graph()),
     mcts_node_info_map(graph),
     mcts_arc_info_map(graph){}

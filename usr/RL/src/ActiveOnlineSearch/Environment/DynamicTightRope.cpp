@@ -9,22 +9,20 @@
 using util::Range;
 using util::get_ND_index;
 using util::convert_ND_to_1D_index;
+using util::convert_1D_to_ND_index;
 using util::clamp;
 using std::tuple;
 using std::vector;
 
 DynamicTightRope::DynamicTightRope(int pos, int vel):
-    Environment({0,1,2}, vector<state_t>(vel*pos)),
+    Environment(util::range_vector(3), util::range_vector(vel*pos)),
     position_n(pos),
     velocity_n(vel),
-    action_names({"accel", "keep", "decel"}),
-    state_names(velocity_n*position_n) {
-    for(int pos : Range(position_n)) {
-        for(int vel : Range(velocity_n)) {
-            int linear_idx = convert_ND_to_1D_index({pos,vel},{position_n,velocity_n});
-            states[linear_idx] = linear_idx;
-            state_names[linear_idx] = QString("pos %1, vel %2").arg(pos).arg(vel);
-        }
+    action_names({"accel", "keep", "decel"})
+{
+    for(state_t state : states) {
+        auto pos_vel = convert_1D_to_ND_index(state,{pos,vel});
+        state_names[state] = QString("pos %1, vel %2").arg(pos_vel[0]).arg(pos_vel[1]);
     }
 }
 

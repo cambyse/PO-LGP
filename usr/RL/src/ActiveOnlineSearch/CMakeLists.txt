@@ -19,6 +19,8 @@ add_executable(main
     Environment/GamblingHall.cpp
     Environment/BottleNeckHallway.h
     Environment/BottleNeckHallway.cpp
+    Environment/DelayedUncertainty.h
+    Environment/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     TreeSearch/SearchTree.h
@@ -57,6 +59,8 @@ add_library(ActiveOnlineSearch
     Environment/GamblingHall.cpp
     Environment/BottleNeckHallway.h
     Environment/BottleNeckHallway.cpp
+    Environment/DelayedUncertainty.h
+    Environment/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     TreeSearch/SearchTree.h

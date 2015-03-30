@@ -9,11 +9,10 @@ using std::tuple;
 using std::vector;
 
 TightRope::TightRope(int n):
-    Environment({0,1}, vector<state_t>(n)),
+    Environment({0,1}, util::range_vector(n)),
     action_names({"forward", "fast_forward"}),
     state_names(n) {
-    for(int i : util::Range(n)) {
-        states[i] = i;
+    for(int i : states) {
         state_names[i] = QString(i);
     }
 }

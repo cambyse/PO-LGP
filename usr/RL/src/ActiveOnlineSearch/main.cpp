@@ -19,6 +19,7 @@
 #include "Environment/UnitTestEnvironment.h"
 #include "Environment/GamblingHall.h"
 #include "Environment/BottleNeckHallway.h"
+#include "Environment/DelayedUncertainty.h"
 
 #include <omp.h>
 #define USE_OMP
@@ -52,6 +53,7 @@ static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
                                                       "GamblingHall",
                                                       "BottleNeckHallway",
+                                                      "DelayedUncertainty",
                                                       "UnitTest"};
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
@@ -60,7 +62,8 @@ static const std::set<std::string> graph_type_set = {"TREE",
                                                      "PARTIAL_DAG",
                                                      "FULL_DAG"};
 static const std::set<std::string> backup_type_set = {"BACKUP_TRACE",
-                                                      "BACKUP_ALL"};
+                                                      "BACKUP_ALL",
+                                                      "BACKUP_GLOBAL"};
 static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "BellmanTreePolicy",
                                                         "MonteCarlo"};
@@ -463,6 +466,7 @@ SearchTree::GRAPH_TYPE get_graph_type() {
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
     if(backup_type_arg.getValue()=="BACKUP_TRACE") return MonteCarloTreeSearch::BACKUP_TRACE;
     if(backup_type_arg.getValue()=="BACKUP_ALL") return MonteCarloTreeSearch::BACKUP_ALL;
+    if(backup_type_arg.getValue()=="BACKUP_GLOBAL") return MonteCarloTreeSearch::BACKUP_GLOBAL;
     DEBUG_DEAD_LINE;
     return MonteCarloTreeSearch::BACKUP_TRACE;
 }
@@ -490,6 +494,8 @@ tuple<shared_ptr<SearchTree>,
         environment.reset(new GamblingHall(10, 1));
     } else if(environment_arg.getValue()=="BottleNeckHallway") {
         environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
+    } else if(environment_arg.getValue()=="DelayedUncertainty") {
+        environment.reset(new DelayedUncertainty(2,10));
     } else if(environment_arg.getValue()=="UnitTest") {
         environment.reset(new UnitTestEnvironment());
     } else {
@@ -522,14 +528,14 @@ tuple<shared_ptr<SearchTree>,
     } else DEBUG_DEAD_LINE;
     // set up search tree
     root_state = environment->default_state();
-    search_tree.reset(new MonteCarloTreeSearch(root_state,
-                                               environment,
+    search_tree.reset(new MonteCarloTreeSearch(environment,
                                                discount_arg.getValue(),
                                                get_graph_type(),
                                                tree_policy,
                                                value_heuristic,
                                                backup_method,
                                                get_backup_type()));
+    search_tree->init(root_state);
     // return
     return make_tuple(search_tree,
                       tree_policy,

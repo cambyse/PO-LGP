@@ -30,17 +30,14 @@ using util::random_select;
 typedef SearchTree::node_t node_t;
 typedef SearchTree::arc_t arc_t;
 
-SearchTree::SearchTree(const state_t & root_state,
-                       std::shared_ptr<const Environment> environment,
+SearchTree::SearchTree(std::shared_ptr<const Environment> environment,
                        double discount,
                        GRAPH_TYPE graph_type):
     environment(environment),
     discount(discount),
     graph_type(graph_type),
     node_info_map(graph)
-{
-    init(root_state);
-}
+{}
 
 void SearchTree::init(const state_t & s) {
     graph.clear();
