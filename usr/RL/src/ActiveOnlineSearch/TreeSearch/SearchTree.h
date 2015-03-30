@@ -8,7 +8,7 @@
 
 #include <lemon/list_graph.h>
 
-#include "Environment.h"
+#include "../Environment/Environment.h"
 
 class SearchTree {
     //----typedefs/classes----//

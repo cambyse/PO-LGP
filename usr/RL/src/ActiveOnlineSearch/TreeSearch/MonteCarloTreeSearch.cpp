@@ -3,6 +3,7 @@
 #include <vector>
 #include <tuple>
 #include <functional>
+#include <memory>
 
 #include <util/util.h>
 
@@ -19,6 +20,7 @@ using backup_method::BackupMethod;
 using std::tuple;
 using std::make_tuple;
 using std::vector;
+using std::shared_ptr;
 
 MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
                                            std::shared_ptr<const Environment> environment,
@@ -34,14 +36,14 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(const state_t & root_state,
     backup_method(backup_method),
     distance_map(graph),
     backup_type(backup_type),
-    node_hash(0)
+    node_hash(graph)
     //node_hash([&](node_t n){return graph.id(n);})
 {}
 
 void MonteCarloTreeSearch::init(const state_t & s) {
     SearchTree::init(s);
     state_node_map.clear();
-    state_node_map[s] = node_set_t({get_root_node()},0,node_hash);
+    state_node_map.insert(make_pair(s, node_set_t({get_root_node()},0,node_hash)));
 }
 
 void MonteCarloTreeSearch::next() {
@@ -169,15 +171,15 @@ void MonteCarloTreeSearch::next() {
 
         // hash sets that contain all state nodes that changed so that their
         // ancestors need to be backed up
-        node_set_t currently_active_state_nodes(0,node_hash);
-        node_set_t next_active_state_nodes({leaf_node},0,node_hash);
+        shared_ptr<node_set_t> currently_active_state_nodes(new node_set_t(0,node_hash));
+        shared_ptr<node_set_t> next_active_state_nodes(new node_set_t({leaf_node},0,node_hash));
 
         // process nodes
-        while(!next_active_state_nodes.empty()) {
+        while(!next_active_state_nodes->empty()) {
             // swap sets
             currently_active_state_nodes.swap(next_active_state_nodes);
-            next_active_state_nodes.clear();
-            for(node_t current_node : currently_active_state_nodes) {
+            next_active_state_nodes->clear();
+            for(node_t current_node : *currently_active_state_nodes) {
                 // iterate through all state-action pairs that can lead to this
                 // state node
                 for(in_arc_it_t to_state_arc(graph,current_node);
@@ -205,7 +207,7 @@ void MonteCarloTreeSearch::next() {
                               arg(mcts_node_info_map[action_node].get_rollout_counts()).
                               arg(mcts_node_info_map[action_node].get_return_sum()));
                     // add state node to queue
-                    next_active_state_nodes.insert(state_node);
+                    next_active_state_nodes->insert(state_node);
                 }
             }
         }
@@ -243,11 +245,15 @@ MonteCarloTreeSearch::add_state_node(state_t state,
                                      node_t action_node) {
     TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_state_node(state,action_node);
     distance_map[node] = distance_map[action_node]+1;
-    auto& node_set = state_node_map[state];
-    if(node_set.size()==0) {
-        node_set = node_set_t({node},0,node_hash);
+    auto it = state_node_map.find(state);
+    if(it==state_node_map.end()) {
+        // this state does not have an associated set yet --> insert a new set
+        // with node as only element
+        state_node_map.insert(make_pair(state, node_set_t({node},0,node_hash)));
     } else {
-        node_set.insert(node);
+        // this state DOES have an associated set --> insert node into existing
+        // set
+        it->second.insert(node);
     }
     return arc_node_tuple;
 }
@@ -261,6 +267,11 @@ MonteCarloTreeSearch::add_action_node(action_t action,
 }
 
 void MonteCarloTreeSearch::erase_node(node_t node) {
-    state_node_map[state(node)].erase(node);
+    auto it = state_node_map.find(state(node));
+    if(it==state_node_map.end()) {
+        DEBUG_EXPECT(0,type(node)==ACTION_NODE);
+    } else {
+        it->second.erase(node);
+    }
     SearchTree::erase_node(node);
 }

@@ -4,7 +4,7 @@
 #include <vector>
 #include <utility>
 
-#include "Environment.h"
+#include "../Environment/Environment.h"
 #include "AbstractMonteCarloTreeSearch.h"
 
 #include <util/util.h>

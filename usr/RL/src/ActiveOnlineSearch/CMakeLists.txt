@@ -9,30 +9,30 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 add_executable(main
     main.cpp
-    Environment.h
-    TightRope.h
-    TightRope.cpp
-    DynamicTightRope.h
-    DynamicTightRope.cpp
-    UnitTestEnvironment.h
-    GamblingHall.h
-    GamblingHall.cpp
-    BottleNeckHallway.h
-    BottleNeckHallway.cpp
+    Environment/Environment.h
+    Environment/TightRope.h
+    Environment/TightRope.cpp
+    Environment/DynamicTightRope.h
+    Environment/DynamicTightRope.cpp
+    Environment/UnitTestEnvironment.h
+    Environment/GamblingHall.h
+    Environment/GamblingHall.cpp
+    Environment/BottleNeckHallway.h
+    Environment/BottleNeckHallway.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
-    SearchTree.h
-    SearchTree.cpp
-    AbstractMonteCarloTreeSearch.h
-    AbstractMonteCarloTreeSearch.cpp
-    MonteCarloTreeSearch.h
-    MonteCarloTreeSearch.cpp
-    TreePolicy.h
-    TreePolicy.cpp
-    ValueHeuristic.h
-    ValueHeuristic.cpp
-    BackupMethod.h
-    BackupMethod.cpp
+    TreeSearch/SearchTree.h
+    TreeSearch/SearchTree.cpp
+    TreeSearch/AbstractMonteCarloTreeSearch.h
+    TreeSearch/AbstractMonteCarloTreeSearch.cpp
+    TreeSearch/MonteCarloTreeSearch.h
+    TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/TreePolicy.h
+    TreeSearch/TreePolicy.cpp
+    TreeSearch/ValueHeuristic.h
+    TreeSearch/ValueHeuristic.cpp
+    TreeSearch/BackupMethod.h
+    TreeSearch/BackupMethod.cpp
 )
 
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -47,30 +47,30 @@ target_link_libraries(main
 ## library
 
 add_library(ActiveOnlineSearch
-    Environment.h
-    TightRope.h
-    TightRope.cpp
-    DynamicTightRope.h
-    DynamicTightRope.cpp
-    UnitTestEnvironment.h
-    GamblingHall.h
-    GamblingHall.cpp
-    BottleNeckHallway.h
-    BottleNeckHallway.cpp
+    Environment/Environment.h
+    Environment/TightRope.h
+    Environment/TightRope.cpp
+    Environment/DynamicTightRope.h
+    Environment/DynamicTightRope.cpp
+    Environment/UnitTestEnvironment.h
+    Environment/GamblingHall.h
+    Environment/GamblingHall.cpp
+    Environment/BottleNeckHallway.h
+    Environment/BottleNeckHallway.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
-    SearchTree.h
-    SearchTree.cpp
-    AbstractMonteCarloTreeSearch.h
-    AbstractMonteCarloTreeSearch.cpp
-    MonteCarloTreeSearch.h
-    MonteCarloTreeSearch.cpp
-    TreePolicy.h
-    TreePolicy.cpp
-    ValueHeuristic.h
-    ValueHeuristic.cpp
-    BackupMethod.h
-    BackupMethod.cpp
+    TreeSearch/SearchTree.h
+    TreeSearch/SearchTree.cpp
+    TreeSearch/AbstractMonteCarloTreeSearch.h
+    TreeSearch/AbstractMonteCarloTreeSearch.cpp
+    TreeSearch/MonteCarloTreeSearch.h
+    TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/TreePolicy.h
+    TreeSearch/TreePolicy.cpp
+    TreeSearch/ValueHeuristic.h
+    TreeSearch/ValueHeuristic.cpp
+    TreeSearch/BackupMethod.h
+    TreeSearch/BackupMethod.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

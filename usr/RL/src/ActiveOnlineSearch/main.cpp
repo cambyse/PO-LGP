@@ -12,13 +12,13 @@
 #include <util/return_tuple.h>
 #include <util/QtUtil.h>
 
-#include "SearchTree.h"
-#include "MonteCarloTreeSearch.h"
-#include "TightRope.h"
-#include "DynamicTightRope.h"
-#include "UnitTestEnvironment.h"
-#include "GamblingHall.h"
-#include "BottleNeckHallway.h"
+#include "TreeSearch/SearchTree.h"
+#include "TreeSearch/MonteCarloTreeSearch.h"
+#include "Environment/TightRope.h"
+#include "Environment/DynamicTightRope.h"
+#include "Environment/UnitTestEnvironment.h"
+#include "Environment/GamblingHall.h"
+#include "Environment/BottleNeckHallway.h"
 
 #include <omp.h>
 #define USE_OMP

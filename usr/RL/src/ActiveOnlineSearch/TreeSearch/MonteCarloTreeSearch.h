@@ -14,12 +14,26 @@ class MonteCarloTreeSearch: public AbstractMonteCarloTreeSearch {
 
     //----typedefs/classes----//
 protected:
-    //typedef std::function<int(node_t)> node_hash_t;
-    struct node_hash_t {
-        node_hash_t(int){}
-        int operator()(node_t)const{return 0;}
+    //typedef std::function<int(node_t)> NodeHashFunction;
+    /**
+     * Computes a hash for nodes. This class returns the node ID given the used
+     * graph. It could be a std::function<int(node_t)> initialized with a lambda
+     * function like @code [&](node_t n){return graph.id(n);} @endcode. However,
+     * std::function has a default constructor while it is important to always
+     * have the graph object handed over. Using std::function thus implies a
+     * certain risk of misuse if people use the operator::[] on state_node_map
+     * without checking if the corresponding node_set_t need to be initialized
+     * with a proper NodeHashFunction object (which would result in a
+     * std::bad_function_call exception). This is not possible given a separate
+     * class without default constructor. */
+    struct NodeHashFunction {
+    public:
+        NodeHashFunction(const graph_t & graph): graph(graph) {}
+        int operator()(const node_t & node)const{return graph.id(node);}
+    private:
+        const graph_t & graph;
     };
-    typedef std::unordered_set<node_t,node_hash_t> node_set_t;
+    typedef std::unordered_set<node_t,NodeHashFunction> node_set_t;
 public:
     enum BACKUP_TYPE { BACKUP_TRACE, BACKUP_ALL, BACKUP_GLOBAL };
 
@@ -44,7 +58,7 @@ protected:
 
     const BACKUP_TYPE backup_type;
 
-    const node_hash_t node_hash;
+    const NodeHashFunction node_hash;
 
     //----methods----//
 public:
