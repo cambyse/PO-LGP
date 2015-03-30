@@ -289,7 +289,7 @@ void eight_BM(){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x = repmat(~MP.x0,T+1,1);
-  optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,allowOverstep=true));
+  optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-3,allowOverstep=true));
 
   cout << q0 << endl;
   cout << x[0] << endl;

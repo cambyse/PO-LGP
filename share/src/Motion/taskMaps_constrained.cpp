@@ -173,7 +173,7 @@ VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
   target = _target;
 }
 
-void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau) {
+void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau, int t) {
   uint k=order;
 
   // compute body j orientation

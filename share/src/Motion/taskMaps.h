@@ -254,7 +254,7 @@ struct VelAlignConstraint:TaskMap {
                      const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector, double _target = 0.);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1) { } ;
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 

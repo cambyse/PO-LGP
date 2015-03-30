@@ -183,8 +183,8 @@ void TEST(Door3){
   t = MP.addTask("handle_fixation", new qItselfConstraint(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()));
   t->setCostSpecs(0.,contactT, {0.}, 1.);
 
-  //  t = MP.addTask("direction1", new VelAlignConstraint(G, "endeffL",NoVector, "handle", ors::Vector(0.,0.,-1.),0.7));
-  //  t->setCostSpecs(MP.T/2.+5., MP.T/2.+10., {0.}, 1.);
+//  t = MP.addTask("direction1", new VelAlignConstraint(G, "endeffL",NoVector, "handle", ors::Vector(0.,0.,-1.),0.7));
+//  t->setCostSpecs(MP.T/2.+5., MP.T/2.+10., {0.}, 1.);
 
 //  t = MP.addTask("collision", new CollisionConstraint(0.05));
   ShapeL except = G.getBodyByName("l_wrist_roll_link")->shapes;
