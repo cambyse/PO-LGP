@@ -61,10 +61,14 @@ void scenario2() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(world);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
@@ -140,10 +144,13 @@ void scenario3() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
@@ -259,10 +266,13 @@ void scenario4() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,

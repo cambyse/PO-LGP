@@ -53,9 +53,6 @@ void MPC::replan(arr &_goal, arr &_q) {
   c2->map.order=1;
   P.setInterpolatingCosts(c2,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-  c2 = P.addTask("contact", new ProxyTaskMap(allPTMT, {}, {0.1}));
-  P.setInterpolatingCosts(c2, MotionProblem::constant, {0.}, 1e0);
-
   x = x.rows(1,x.d0);
   MotionProblemFunction F(P);
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));

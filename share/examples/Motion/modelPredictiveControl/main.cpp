@@ -128,11 +128,15 @@ void scenario1() {
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
+
 
   cout << "Loaded scene: " << endl;
 
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -179,11 +183,14 @@ void scenario2() {
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
 
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -271,15 +278,19 @@ void scenario3() {
   /*
   ** Plan Trajectory
   */
-  makeConvexHulls(world.shapes);
+
   MotionProblem P(world);
 
-  P.loadTransitionParameters();
+
 
   arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));

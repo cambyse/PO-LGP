@@ -1075,7 +1075,7 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
   if(!b){
     MT_MSG("WARNING: calling kinematics for NULL body");
-    y.resize(3).setZero();
+    if(&y) y.resize(3).setZero();
     if(&J) J.resize(3, getJointStateDimension()).setZero();
     return;
   }
