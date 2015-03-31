@@ -10,6 +10,8 @@
 
 #include <util/util.h>
 #include <util/return_tuple.h>
+
+#include <QDateTime>
 #include <util/QtUtil.h>
 
 #include "TreeSearch/SearchTree.h"
@@ -157,6 +159,7 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<BackupMethod>,
       shared_ptr<Environment>,
       state_t> setup();
+QString header(int argn, char ** args);
 
 int main(int argn, char ** args) {
 
@@ -213,6 +216,7 @@ int main(int argn, char ** args) {
     }
 
     // different modes
+    cout << header(argn,args) << endl;
     if(mode_arg.getValue()=="SAMPLE") {
         // set up
         RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
@@ -222,13 +226,18 @@ int main(int argn, char ** args) {
                      shared_ptr<Environment>, environment,
                      state_t, root_state) = setup();
         if(environment_arg.getValue()!="DynamicTightRope") {
-            cout << "run,state,action,reward" << endl;
+            cout << "run,state (from),action,reward,state (to)" << endl;
             for(int run : Range(sample_n_arg.getValue())) {
                 for(auto state_from : environment->get_states()) {
                     if(environment->is_terminal_state(state_from)) continue;
                     for(auto action : environment->get_actions()) {
                         RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
-                        cout << QString("%1,%2,%3,%4").arg(run).arg(state_from).arg(action).arg(reward) << endl;
+                        cout << QString("%1,%2,%3,%4,%5").
+                            arg(run).
+                            arg(state_from).
+                            arg(action).
+                            arg(reward).
+                            arg(state_to) << endl;
                     }
                 }
             }
@@ -495,7 +504,7 @@ tuple<shared_ptr<SearchTree>,
     } else if(environment_arg.getValue()=="BottleNeckHallway") {
         environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
     } else if(environment_arg.getValue()=="DelayedUncertainty") {
-        environment.reset(new DelayedUncertainty(2,10));
+        environment.reset(new DelayedUncertainty(2,3));
     } else if(environment_arg.getValue()=="UnitTest") {
         environment.reset(new UnitTestEnvironment());
     } else {
@@ -543,4 +552,20 @@ tuple<shared_ptr<SearchTree>,
                       backup_method,
                       environment,
                       root_state);
+}
+
+QString header(int argn, char ** args) {
+    QString str;
+    // date and time
+    str += "# Date/Time: ";
+    str += QDateTime::currentDateTime().toString("yyyy-MM-dd_hh:mm:ss");
+    // command line arguments
+    str += "\n# Command: ";
+    for(int arg=0; arg<argn; ++arg) {
+        str += args[arg];
+        if(arg<argn-1) {
+            str += " ";
+        }
+    }
+    return str;
 }

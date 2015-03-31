@@ -10,13 +10,13 @@ class DelayedUncertainty: public Environment {
 
     //----members----//
 private:
-    int branch_n, action_n, time_horizon;
+    int branch_n, action_n, time_steps_n;
     ND_vector::vec_double_2D probabilities;
 
     //----methods----//
 public:
     DelayedUncertainty(int options,
-                       int time_horizon ,
+                       int time_steps_n ,
                        ND_vector::vec_double_2D probabilities = {});
     virtual ~DelayedUncertainty() = default;
     virtual state_reward_pair_t sample(const state_t &, const action_t &) const override;
