@@ -131,10 +131,6 @@ namespace tree_policy {
                          const node_info_map_t & node_info_map,
                          const mcts_node_info_map_t & mcts_node_info_map,
                          const mcts_arc_info_map_t & mcts_arc_info_map) const {
-
-        // upper bound = value + 2 Cp sqrt( 2 log n / nj) where n and nj are the
-        // counts of the state node and the arc to the action node,
-        // respectively.
         return mcts_node_info_map[action_node].get_value() +
             2*Cp*sqrt(
                 2*log(mcts_node_info_map[state_node].get_transition_counts())/

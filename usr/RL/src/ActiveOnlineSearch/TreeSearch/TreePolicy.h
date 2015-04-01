@@ -78,7 +78,13 @@ namespace tree_policy {
     };
 
     /**
-     * Sample actions according to UCB1 policy. */
+     * Sample actions according to UCB1 policy. The upper bound is computed as
+     * \f[
+     *
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + 2 C_p \sqrt{2\log n / n_j}
+     *
+     * \f] where \f$n\f$ and \f$n_j\f$ are the counts of the state node and the arc
+     * to the action node, respectively. */
     class UCB1: public MaxPolicy {
     public:
         /**
@@ -102,7 +108,7 @@ namespace tree_policy {
      * Sample action with maximum upper bound. This is similar to UCB1 except
      * that the bound is computed as \f[
      *
-     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p * \sqrt{\widetilde{Q}_{(s,a)}}
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p \sqrt{\widetilde{Q}_{(s,a)}}
      *
      * \f] where \f$\widehat{Q}_{(s,a)}\f$ is the mean value,
      * \f$\widetilde{Q}_{(s,a)}\f$ is the variance of the value, and \f$C_p\f$
