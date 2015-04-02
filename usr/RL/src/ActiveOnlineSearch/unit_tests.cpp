@@ -94,6 +94,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     typedef ComputationalGraph::node_t node_t;
     typedef lemon::ListDigraph graph_t;
 
+    // use external graph object
     graph_t graph;
     ComputationalGraph cg(graph);
 
@@ -317,8 +318,8 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
     typedef ComputationalGraph::node_t node_t;
     typedef lemon::ListDigraph graph_t;
 
-    graph_t graph;
-    ComputationalGraph cg(graph);
+    // use default constructor here so the class manages its own graph object
+    ComputationalGraph cg;
 
     // create the graph
     node_t in_node = cg.add_node("in");

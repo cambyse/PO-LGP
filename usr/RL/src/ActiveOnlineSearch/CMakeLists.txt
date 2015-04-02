@@ -23,6 +23,8 @@ add_executable(main
     Environment/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    ComputationalConstGraph.h
+    ComputationalConstGraph.cpp
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
     TreeSearch/AbstractMonteCarloTreeSearch.h
@@ -63,6 +65,8 @@ add_library(ActiveOnlineSearch
     Environment/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    ComputationalConstGraph.h
+    ComputationalConstGraph.cpp
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
     TreeSearch/AbstractMonteCarloTreeSearch.h
