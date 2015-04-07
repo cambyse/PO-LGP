@@ -11,7 +11,7 @@
 /** A class for constructing and using a computational graph for computing
  * function values and derivatives.
  *
- * The unit test unit_tests.cpp implement the following graph
+ * The unit tests unit_tests.cpp implement the following graph
  *
  * \htmlonly <img src="graph.jpg" width="20%"/> \endhtmlonly
  * */

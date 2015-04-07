@@ -52,7 +52,7 @@
 #define DEBUG_EXPECT(level, condition) {                \
         IF_DEBUG(level) {                               \
             if(!(condition)) {                          \
-                DEBUG_ERROR("Condition not fulfilled"); \
+                DEBUG_ERROR("Condition '" << #condition << "' is not fulfilled"); \
             }                                           \
         }                                               \
     }                                                   \
@@ -71,5 +71,5 @@
         EXPECT_EQ("[35m" msg "[0m\n", stream.get_text());   \
     }
 #else
-#warning Including this file multiple times is usually not a good idea
+static_assert(false, "Including this file multiple times is usually not a good idea. Include 'debug_exclude.h' to exclude.");
 #endif /* DEBUG_H_ */

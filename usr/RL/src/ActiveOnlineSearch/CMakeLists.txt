@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.0)
 
 find_package(Qt5Core)
 
-add_definitions(-fopenmp)
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+add_definitions(-fopenmp -std=c++0x)
 
 ## executable
 
 add_executable(main
     main.cpp
+    graph_util.h
     Environment/Environment.h
     Environment/TightRope.h
     Environment/TightRope.cpp
@@ -51,6 +51,7 @@ target_link_libraries(main
 ## library
 
 add_library(ActiveOnlineSearch
+    graph_util.h
     Environment/Environment.h
     Environment/TightRope.h
     Environment/TightRope.cpp

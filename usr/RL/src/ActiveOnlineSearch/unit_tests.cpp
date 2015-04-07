@@ -6,9 +6,13 @@
 
 #include "../util/pretty_printer.h"
 #include "../util/util.h"
+#include "../util/QtUtil.h"
 #include "../util/ND_vector.h"
+#include "../util/graph_plotting.h"
 
-#define DEBUG_LEVEL 1
+#include "graph_util.h"
+
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 #include <ActiveOnlineSearch/ComputationalGraph.h>
@@ -354,4 +358,166 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
         reverse_accumulation({1},{2}).
         get_input_differentials();
     EXPECT_EQ(v1,v2);
+}
+
+graph_util::GraphPropagation<lemon::ListDigraph>
+make_graph_for_graph_propagation_tests(lemon::ListDigraph & graph,
+                                       lemon::ListDigraph::NodeMap<QString> & node_names) {
+    // add nodes
+#define NEW_NODE(name)                          \
+    auto name = graph.addNode();                \
+    node_names[name] = #name;                   \
+
+    NEW_NODE(n0);
+    NEW_NODE(n1);
+    NEW_NODE(n2);
+    NEW_NODE(n3);
+    NEW_NODE(n4);
+    NEW_NODE(n5);
+    NEW_NODE(n6);
+    NEW_NODE(n7);
+    NEW_NODE(n8);
+    NEW_NODE(n9);
+
+#undef NEW_NODE
+
+    // add arcs
+    graph.addArc(n0,n3);
+
+    graph.addArc(n1,n2);
+    graph.addArc(n2,n3);
+    graph.addArc(n3,n4);
+    graph.addArc(n4,n5);
+    graph.addArc(n5,n6);
+    graph.addArc(n6,n7);
+    graph.addArc(n7,n8);
+
+    graph.addArc(n3,n9);
+    graph.addArc(n9,n7);
+    graph.addArc(n9,n4);
+
+    graph.addArc(n8,n2);
+
+    typedef lemon::ListDigraph graph_t;
+    graph_t::NodeMap<QString> node_property_map(graph);
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        node_property_map[node] = QString("label=<<B>%1</B><BR/>id=%2>").
+            arg(node_names[node]).
+            arg(graph.id(node));
+    }
+
+    graph_util::GraphPropagation<graph_t> graph_propagation(graph);
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        if(node_names[node]=="n0" || node_names[node]=="n2") {
+            graph_propagation.add_source(node);
+            node_property_map[node] += " style=filled fillcolor=\"#ffaaaa\" penwidth=4";
+        }
+    }
+
+    util::graph_to_pdf("graph.pdf", graph, "", &node_property_map);
+
+    return graph_propagation;
+}
+
+TEST(GraphPropagation, Reachability) {
+    typedef lemon::ListDigraph graph_t;
+    graph_t graph;
+    graph_t::NodeMap<bool> reachable_map(graph);
+    graph_t::NodeMap<QString> node_names(graph);
+    auto graph_propagation = make_graph_for_graph_propagation_tests(graph, node_names);
+    graph_propagation.set_reachable_map(reachable_map).init().find_reachable_nodes();
+
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        DEBUG_OUT(1,"Node " << node_names[node] << (reachable_map[node]?" was reached":" was not reached"));
+        EXPECT_EQ(reachable_map[node], graph_propagation.is_reachable(node));
+        if(node_names[node]=="n0" || node_names[node]=="n1") EXPECT_FALSE(reachable_map[node]);
+        else EXPECT_TRUE(reachable_map[node]);
+    }
+}
+
+TEST(GraphPropagation, Next) {
+    typedef lemon::ListDigraph graph_t;
+    graph_t graph;
+    graph_t::NodeMap<QString> node_names(graph);
+    auto graph_propagation = make_graph_for_graph_propagation_tests(graph, node_names);
+    graph_propagation.init();
+
+    QString node_chain;
+    for(auto next_node=graph_propagation.next();
+        next_node!=lemon::INVALID;
+        next_node=graph_propagation.next()) {
+        node_chain+=node_names[next_node];
+        DEBUG_OUT(1,"Next node: " << node_names[next_node]);
+    }
+    EXPECT_EQ("n3n9n4n5n6n7n8n2n3",node_chain) << "node_chain='" << node_chain << "'";
+
+    EXPECT_TRUE(graph_propagation.check_pending_nodes());
+
+    EXPECT_TRUE(graph_propagation.check_pending_nodes());
+}
+
+TEST(GraphPropagation, Diffusion) {
+
+    // runs diffusion updates in a loopy graph with custom check-changed
+    // function
+
+    typedef lemon::ListDigraph graph_t;
+    graph_t graph;
+    graph_t::NodeMap<QString> node_names(graph);
+    auto graph_propagation = make_graph_for_graph_propagation_tests(graph, node_names);
+    graph_t::NodeMap<double> node_values(graph,0);
+    graph_t::NodeMap<double> old_node_values(graph,0);
+    std::function<bool(graph_t::Node node)> check_changed_function = [&](graph_t::Node node)->bool{
+        static graph_t::NodeMap<bool> changed(graph,true);
+        bool return_value = changed[node] || fabs(node_values[node]-old_node_values[node])>1e-10;
+        changed[node] = false;
+        old_node_values[node] = node_values[node];
+        return return_value;
+    };
+    graph_propagation.set_check_change_function(check_changed_function).init();
+
+    // set inital values and "sabotage" propagation by setting one node to the
+    // value it has after the first iteration so propagation will stop if the
+    // check-changed function is not chosen correctly
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        if(node_names[node]=="n0" || node_names[node]=="n1") {
+            node_values[node] = 1;
+            old_node_values[node] = 1;
+        }
+        if(node_names[node]=="n3") {
+            node_values[node] = 0.5;
+            old_node_values[node] = 0.5;
+        }
+    }
+
+    // propagate diffusion through graph
+    int counter = 0;
+    for(auto next_node=graph_propagation.next();
+        next_node!=lemon::INVALID;
+        next_node=graph_propagation.next()) {
+        double val = 0;
+        int pred = 0;
+        for(graph_t::InArcIt arc(graph,next_node); arc!=lemon::INVALID; ++arc) {
+            val += node_values[graph.source(arc)];
+            ++pred;
+        }
+        val /= pred;
+        node_values[next_node] = val;
+        DEBUG_OUT(1,"Next node: " << node_names[next_node]);
+        DEBUG_OUT(1,"    value=" << node_values[next_node]);
+        DEBUG_OUT(1,"    old value=" << old_node_values[next_node]);
+        ++counter;
+    }
+
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        if(node_names[node]=="n0" || node_names[node]=="n1") {
+            EXPECT_EQ(1,node_values[node]);
+        } else {
+            EXPECT_NEAR(1,node_values[node],1e-5) << "Failed for node " << node_names[node];
+            EXPECT_NE(1,node_values[node]);
+        }
+    }
+    EXPECT_GT(counter, 20);
+
+    EXPECT_TRUE(graph_propagation.check_pending_nodes());
 }
