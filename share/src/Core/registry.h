@@ -56,8 +56,8 @@ void initRegistry(int argc, char *argv[]);
 
 struct Type:RootType {
   MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
-  virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
-  virtual struct Item* readItem(Graph& container, istream&) const {NIY}; //TODO -> readIntoNewItem
+  virtual const std::type_info& typeId() const {NIY} //TODO -> typeid()
+  virtual struct Item* readItem(Graph& container, istream&) const {NIY} //TODO -> readIntoNewItem
   virtual void* newInstance() const {NIY}
   virtual Type* clone() const {NIY}
   void write(std::ostream& os) const {
@@ -68,7 +68,7 @@ struct Type:RootType {
       cout <<" ]";
     }
   }
-  void read(std::istream& is) const { NIY; }
+  void read(std::istream& is) const {NIY}
 };
 stdPipes(Type);
 

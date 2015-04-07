@@ -63,10 +63,11 @@ arr getG()
 
 ** Logging:
 
-LOG(1) <<"message on level 1 (normal verbose level)";
-LOG(0) <<"warning -- replaces as MT_MSG(...)";
-LOG(-1) <<"error -- throws error, replaces as HALT(...)";
-LOG(-2) <<"error -- exits, replaces as HALT(...)";
+LOG(3) <<"all messages, including system/util/file opening, etc";
+LOG(0) <<"message on level 1 (normal verbose level)";
+LOG(-1) <<"warning -- replaces as MT_MSG(...)";
+LOG(-2) <<"error -- throws error, replaces as HALT(...)";
+LOG(-3) <<"error -- exits, replaces as HALT(...)";
 
 #define LOG(log_level) LogToken(__FILE, log_level, __FILE__, __LINE__)
 

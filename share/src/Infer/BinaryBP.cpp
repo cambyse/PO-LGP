@@ -43,7 +43,7 @@ double RATIO(double a, double b){
   //if(fabs(d)<1e-5) cout <<"low quotient! 1/x, x=" <<d;
   return c/d;
 }
-double LOG(double x){ //return log(x);
+double myLog(double x){ //return log(x);
   if(x<1e-10) return -23.02585093;
   if(x>1e+10) return +23.02585093;
   return log(x);
