@@ -13,9 +13,8 @@ struct Derived:NewType{
 
 REGISTER_TYPE(NewType)
 REGISTER_TYPE(double)
-REGISTER_ITEM(double, mykey, 3.)
+REGISTER_ITEM(double, mykey, new double(3.), true)
 REGISTER_TYPE_DERIVED(Derived, NewType)
-
 
 void TEST(Registry){
   cout <<"** REGISTRY:\n" <<registry() <<endl;
@@ -35,6 +34,8 @@ void TEST(Registry){
 }
 
 int MAIN(int argc,char** argv){
+  initRegistry(argc, argv);
+
   testRegistry();
 
   return 0;

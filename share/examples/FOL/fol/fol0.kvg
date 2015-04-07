@@ -16,7 +16,7 @@ Literals{
 }
 
 
-State{
+STATE {
  (incity, 22) =false
  (gas) = 3
 }

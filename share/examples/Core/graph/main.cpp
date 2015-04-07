@@ -1,4 +1,4 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Core/registry.h>
 
 //const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
@@ -7,10 +7,12 @@ const char *filename=NULL;
 //===========================================================================
 
 void TEST(Read){
-  KeyValueGraph G;
+  Graph G;
 
+  G.checkConsistency();
   cout <<"\n** reading graph..." <<flush;
   G <<FILE(filename?filename:"example.kvg");
+  G.checkConsistency();
   cout <<"\ndone" <<endl;
   cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
@@ -18,20 +20,32 @@ void TEST(Read){
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
+  G.checkConsistency();
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
-  cout <<*G["k"]->getValue<KeyValueGraph>() <<endl;
-  cout <<*G["val"]->getValue<double>() <<endl;
-  cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
+  cout <<G["k"]->kvg() <<endl;
+  cout <<G["val"]->V<double>() <<endl;
+  cout <<G["k"]->kvg()["z"]->V<MT::String>() <<endl;
+  cout <<"DONE" <<endl;
+}
+
+//===========================================================================
+
+void TEST(Init){
+  Graph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", MT::String("BLA")} };
+  cout <<G <<endl;
+  G.checkConsistency();
 }
 
 //===========================================================================
 
 void TEST(Dot){
-  KeyValueGraph G;
+  Graph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
-  G.sortByDotOrder();
+  G.checkConsistency();
+//  G.sortByDotOrder();
+//  G.checkConsistency();
   G.writeDot(FILE("z.dot").getOs());
 }
 
@@ -47,8 +61,8 @@ void operator>>(istream& is, Something& s){ is >>s.x; }
 REGISTER_TYPE(Something)
 
 void TEST(Manual){
-  KeyValueGraph G;
-  G.append(STRINGS("hallo"), ItemL(), new Something(3));
+  Graph G;
+  G.append({"hallo"}, {}, new Something(3), true);
   cout <<G <<endl;
 }
 
@@ -60,8 +74,9 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-//  testRead();
-  testDot();
+    testRead();
+//  testInit();
+//  testDot();
 
 //  if(!filename) testManual();
 

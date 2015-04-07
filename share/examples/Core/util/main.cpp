@@ -59,6 +59,12 @@ void TEST(Timer){
   CHECK(cpuTime>=0. && cpuTime<1.,"no cpu time measured");
 }
 
+void TEST(Logging){
+  LOG(-1) <<"HALLO";
+  LOG(-3) <<"bye";
+//  MT::log() <<"bla" <<endl;
+}
+
 int MAIN(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
@@ -66,9 +72,10 @@ int MAIN(int argc,char** argv){
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
   
-  testString();
-  testParameter();
-  testTimer();
+//  testString();
+//  testParameter();
+//  testTimer();
+  testLogging();
 
   return 0;
 }

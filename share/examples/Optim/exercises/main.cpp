@@ -138,7 +138,7 @@ void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
   arr x(d);
   if(&x_start) x=x_start;
   else{
-    if(method==logBarrier) x = ARRAY(.3, .3); //log barrier needs a starting point
+    if(method==logBarrier) x = {.3, .3}; //log barrier needs a starting point
     else rndUniform(x, -1., 1.);
   }
   cout <<"x0=" <<x <<endl;
@@ -217,7 +217,7 @@ void testPhaseOne(ConstrainedProblem& f){
   PhaseOneProblem metaF(f);
 
   arr x;
-  x = ARRAY(1., 1., 10.);
+  x = {1., 1., 10.};
 
   testConstraint(metaF.f_phaseOne, x, 1);
   //one iteration of phase one should be enough

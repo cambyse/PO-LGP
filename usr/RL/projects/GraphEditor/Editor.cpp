@@ -143,7 +143,7 @@ void Editor::kvg_to_visual()
     remove(svg_file_name.toLatin1());
 }
 
-QTreeWidgetItem *Editor::item_to_tree_item(const Parser::KeyValueGraph::Item &item)
+QTreeWidgetItem *Editor::item_to_tree_item(const Parser::Graph::Item &item)
 {
     // construct key string
     QString key_string;
@@ -179,38 +179,38 @@ QTreeWidgetItem *Editor::item_to_tree_item(const Parser::KeyValueGraph::Item &it
     // construct value type string
     QString value_type_string;
     switch (item.value_type) {
-    case Parser::KeyValueGraph::Item::BOOL:
+    case Parser::Graph::Item::BOOL:
         value_type_string = "BOOL";
         break;
-    case Parser::KeyValueGraph::Item::STRING:
+    case Parser::Graph::Item::STRING:
         value_type_string = "STRING";
         break;
-    case Parser::KeyValueGraph::Item::FILE:
+    case Parser::Graph::Item::FILE:
         value_type_string = "FILE";
         break;
-    case Parser::KeyValueGraph::Item::DOUBLE:
+    case Parser::Graph::Item::DOUBLE:
         value_type_string = "DOUBLE";
         break;
-    case Parser::KeyValueGraph::Item::ARRAY:
+    case Parser::Graph::Item::ARRAY:
         value_type_string = "ARRAY";
         break;
-    case Parser::KeyValueGraph::Item::LIST:
+    case Parser::Graph::Item::LIST:
         value_type_string = "LIST";
         break;
-    case Parser::KeyValueGraph::Item::SPECIAL:
+    case Parser::Graph::Item::SPECIAL:
         value_type_string = "SPECIAL";
         break;
-    case Parser::KeyValueGraph::Item::KVG:
+    case Parser::Graph::Item::KVG:
         value_type_string = "KVG";
         break;
-    case Parser::KeyValueGraph::Item::NONE:
+    case Parser::Graph::Item::NONE:
         value_type_string = "ERROR: NONE";
         break;
     }
     // construct item
     auto new_item = new QTreeWidgetItem(QStringList({key_string, parent_string, value_string, value_type_string}));
     // add sub-items if value is KVG
-    if(item.value_type==Parser::KeyValueGraph::Item::KVG) {
+    if(item.value_type==Parser::Graph::Item::KVG) {
         for(auto& sub_item : item.sub_graph->items) {
             new_item->addChild(item_to_tree_item(sub_item));
         }
@@ -293,7 +293,7 @@ void Editor::tree_item_clicked(QTreeWidgetItem * item, int column)
         ++child_it;
     }
     // traverse sub-graphs
-    std::shared_ptr<Parser::KeyValueGraph> sub_graph(new Parser::KeyValueGraph(key_value_graph));
+    std::shared_ptr<Parser::Graph> sub_graph(new Parser::Graph(key_value_graph));
     auto item_it = sub_graph->items.begin();
     for(auto idx_it=idx_list.begin(); idx_it!=idx_list.end();) {
         item_it = sub_graph->items.begin();
@@ -301,7 +301,7 @@ void Editor::tree_item_clicked(QTreeWidgetItem * item, int column)
             ++item_it;
         }
         ++idx_it;
-        if(item_it->value_type!=Parser::KeyValueGraph::Item::KVG && idx_it!=idx_list.end()) {
+        if(item_it->value_type!=Parser::Graph::Item::KVG && idx_it!=idx_list.end()) {
             ERROR("Not KVG");
         }
         sub_graph = item_it->sub_graph;

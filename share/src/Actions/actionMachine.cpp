@@ -1,7 +1,8 @@
 #include "actionMachine_internal.h"
 
-#include <Hardware/gamepad/gamepad.h>
+//#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
+#include <FOL/fol.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -17,11 +18,12 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 // ActionMachine
 //
 
-ActionMachine::ActionMachine():Module("ActionMachine"){
+ActionMachine::ActionMachine():Module("ActionMachine"), initStateFromRos(false){
   ActionL::memMove=true;
-  Kq_gainFactor = ARR(1.);
-  Kd_gainFactor = ARR(1.);
+  Kp = ARR(1.);
+  Kd = ARR(1.);
   s = new sActionMachine();
+  world = &s->world;
 }
 
 ActionMachine::~ActionMachine(){
@@ -31,47 +33,83 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->feedbackController.H_rate_diag = pr2_reasonable_W(s->world);
+  s->feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
   s->feedbackController.qitselfPD.y_ref = s->q;
+  s->feedbackController.qitselfPD.setGains(.0,10.);
 
-//  s->MP.qitselfPD.setGains(1.,10.);
-
-  if(MT::getParameter<bool>("useRos",false)){
-	//-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
-      ctrl_obs.var->waitForNextRevision();
-      if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
-         && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N)
-        break;
+  {
+    MT::FileToken fil("machine.fol");
+    if(fil.exists()){
+      KB.writeAccess();
+      fil >> KB();
+      KB().checkConsistency();
+      KB()>> FILE("z.initialKB");
+      KB.deAccess();
     }
-
-    //-- set current state
-    cout <<"** GO!" <<endl;
-    s->q = ctrl_obs.get()->q;
-    s->qdot = ctrl_obs.get()->qdot;
-    s->feedbackController.setState(s->q, s->qdot);
   }
-  //arr fL_base = S.fL_obs.get();
+
+  KB.readAccess();
+  Item *tasks = KB()["Tasks"];
+  if(tasks){
+    parseTaskDescriptions(tasks->kvg());
+  }
+  KB.deAccess();
+
+  MT::open(fil,"z.actionMachine");
+
+  bool useRos = MT::getParameter<bool>("useRos",false);
+  if(useRos){
+    initStateFromRos=true;
+  }
 }
 
 void ActionMachine::step(){
   static uint t=0;
   t++;
+  if(initStateFromRos){
+    //-- wait for first q observation!
+    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
 
-  if(!(t%10))
+    ctrl_obs.waitForNextRevision();
+    cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
+    cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+
+    if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
+       && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N){ //all is good
+      //-- set current state
+      s->q = ctrl_obs.get()->q;
+      s->qdot = ctrl_obs.get()->qdot;
+      s->feedbackController.setState(s->q, s->qdot);
+      cout <<"** GO!" <<endl;
+      initStateFromRos = false;
+    }else{
+      if(t>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
+    }
+  }
+
+  if(!(t%5))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
-  transition();
+//  transition();
+  transitionFOL( .01*t,  (t<=1) );
 
   //-- set gains to default value (can be overwritten by other actions)
-  Kq_gainFactor=ARR(1.);
-  Kd_gainFactor=ARR(1.);
+  Kp=ARR(1.);
+  Kd=ARR(1.);
 
   //-- check the gamepad
   arr gamepad = gamepadState.get();
-  if(stopButtons(gamepad)) engine().shutdown.incrementValue();
+  if(stopButtons(gamepad)){
+    cout <<"STOP" <<endl;
+    KB.writeAccess();
+    Item *quitSymbol = KB()["quit"];
+    KB().getItem("STATE")->kvg().append<bool>({},{quitSymbol}, NULL, false);
+    KB.deAccess();
+//    engine().shutdown.incrementValue();
+  }
 
   //-- get access to the list of actions
   A.writeAccess();
@@ -79,21 +117,44 @@ void ActionMachine::step(){
   //  cout <<"** active actions:";
 //  reportActions(A());
 
-  //-- call the step method for each action
-  for(Action *a : A()) {
-    if(a->actionState==ActionState::active){
-      a->step(*this);
-      for(PDtask *t:a->tasks) t->active=true;
-      a->actionTime += .01;
-    } else {
-      for(PDtask *t:a->tasks) t->active=false;
+  // report on force:
+//  arr fL = wrenchL.get()();
+//  fil <<"wrenchL=" <<fL <<' ' <<length(fL) <<endl;
+
+
+  //-- code to output force signals
+  if(true){
+    ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
+    arr fLobs = ctrl_obs.get()->fL;
+    arr uobs =  ctrl_obs.get()->u_bias;
+//    cout <<fLobs <<endl;
+    if(fLobs.N && uobs.N){
+      arr Jft, J;
+      world->kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
+      world->kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,world->getShapeByName("l_ft_sensor"));
+      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
+      J = inverse_SymPosDef(J*~J)*J;
+      MT::arrayBrackets="  ";
+      fil <<t <<' ' <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
+      MT::arrayBrackets="[]";
     }
   }
 
-  //-- compute the feedback controller step
+  //-- call the step method for each action
+  for(Action *a : A()) {
+    if(a->active){
+      a->step(*this);
+      for(CtrlTask *t:a->tasks) t->active=true;
+      a->actionTime += .01;
+    } else {
+      for(CtrlTask *t:a->tasks) t->active=false;
+    }
+  }
+
+  //-- compute the feedback controller step and iterate to compute a forward reference
   //first collect all tasks of all actions into the feedback controller:
   s->feedbackController.tasks.clear();
-  for(Action *a : A()) for(PDtask *t:a->tasks) s->feedbackController.tasks.append(t);
+  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->feedbackController.tasks.append(t);
   //now operational space control
   for(uint tt=0;tt<10;tt++){
     arr a = s->feedbackController.operationalSpaceControl();
@@ -102,80 +163,127 @@ void ActionMachine::step(){
     s->feedbackController.setState(s->q, s->qdot);
   }
 
+  //-- first zero references
+  s->refs.Kp = ARR(1.); //Kp;
+  s->refs.Kd = ARR(1.); //Kd;
+  s->refs.fL = zeros(6);
+  s->refs.fR = zeros(6);
+  s->refs.Ki.clear();
+  s->refs.J_ft_inv.clear();
+  s->refs.u_bias = zeros(s->q.N);
+
+  //-- compute the force feedback control coefficients
+  uint count=0;
+  for(Action *a : A()) {
+    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
+      count++;
+      if(count!=1) HALT("you have multiple active force control tasks - NIY");
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+    }
+  }
+  if(count==1) s->refs.Kp = .5;
+
+
   // s->MP.reportCurrentState();
   A.deAccess();
 
   //-- send the computed movement to the robot
-  s->refs.fR = ARR(0., 0., 0.);
-  s->refs.Kq_gainFactor = Kq_gainFactor;
-  s->refs.Kd_gainFactor = Kd_gainFactor;
-
-  s->refs.q=s->q;
+  s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
-  s->refs.u_bias = zeros(s->q.N);
   s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
 
 void ActionMachine::close(){
+  fil.close();
 }
 
-void ActionMachine::add_sequence(Action *action1,
-                                 Action *action2,
-                                 Action *action3,
-                                 Action *action4)
-{
-  action2->actionState = ActionState::queued;
-  action2->dependsOnCompletion.append(action1);
-  if (action3) {
-    action3->actionState = ActionState::queued;
-    action3->dependsOnCompletion.append(action2);
-  }
-  if (action4) {
-    action4->actionState = ActionState::queued;
-    action4->dependsOnCompletion.append(action3);
+void ActionMachine::parseTaskDescription(Graph& td){
+  Item *t = td.isItemOfParentKvg;
+  MT::String type=td["type"]->V<MT::String>();
+  if(type=="homing"){
+    new Homing(*this, t->parents(0)->keys.last());
+  }else if(type=="forceCtrl"){
+    new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+  }else{
+    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
+    task->active=false;
+    new FollowReference(*this, t->parents(0)->keys.last(), task);
   }
 }
 
-void ActionMachine::removeGroundedAction(Action* a, bool hasLock){
+void ActionMachine::parseTaskDescriptions(const Graph& tds){
+  cout <<"Instantiating task descriptions:\n" <<tds <<endl;
+  for(Item *t:tds) parseTaskDescription(t->kvg());
+}
+
+void ActionMachine::removeAction(Action* a, bool hasLock){
   if(!hasLock) A.set()->removeValue(a);
   else A().removeValue(a);
   delete a;
 }
 
-void ActionMachine::transition(){
-  A.writeAccess();
 
-  //-- first remove all old successes and fails
-  for_list_rev(Action, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
-    removeGroundedAction(a, true);
-    a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
-  }
-
-  //-- check new successes and fails
-  for(Action *a:A()) if(a->actionState==ActionState::active){
-    if(a->finishedSuccess(*this)) a->actionState=ActionState::success;
-    if(a->finishedFail(*this)) a->actionState=ActionState::failed;
-  }
-
-  //-- progress with queued
-  for(Action *a:A()) if(a->actionState==ActionState::queued){
-    bool fail=false, succ=true;
-    for(Action *b:a->dependsOnCompletion){
-      if(b->actionState==ActionState::failed) fail=true;
-      if(b->actionState!=ActionState::success) succ=false;
+void ActionMachine::transitionFOL(double time, bool forceChaining){
+  bool changes=false;
+  KB.writeAccess();
+  KB().checkConsistency();
+  //-- check new successes and fails and add to symbolic state
+  Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
+  Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
+  Item* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
+  Graph& state = KB().getItem("STATE")->kvg();
+  A.readAccess();
+  for(Action *a:A()) if(a->active){
+    if(a->finishedSuccess(*this)){
+      Item *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
+      else changes=true;
     }
-    if(fail) a->actionState=ActionState::failed; //if ONE dependence failed -> fail
-    if(succ) a->actionState=ActionState::active; //if ALL dependences succ -> active
-    //in all other cases -> queued
+    if(a->indicateTimeout(*this)){
+      Item *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
+      else changes=true;
+    }
   }
-
+//  if(getContactForce()>5.){
+//    Item *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
+//    if(getEqualFactInKB(KB(), newit)) delete newit;
+//    else changes=true;
+//  }
   A.deAccess();
+  KB().checkConsistency();
+
+  if(changes || forceChaining){
+    cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
+    forwardChaining_FOL(KB(), NULL, NoGraph, false);
+//    state = getLiteralsOfScope(KB());
+    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
+
+    A.writeAccess();
+    for(Action *a:A()){
+      if(!a->symbol){ a->active=false;  continue; }
+      bool act=false;
+      for(Item *lit:a->symbol->parentOf){
+        if(&lit->container==&state && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
+      }
+      if(act) a->active=true;
+      else a->active=false;
+    }
+    A.deAccess();
+  }
+  KB.deAccess();
+}
+
+double ActionMachine::getContactForce(){
+  arr fL = ctrl_obs.get()->fL;
+  return length(fL);
 }
 
 void ActionMachine::waitForActionCompletion(Action* a){
   for(bool cont=true;cont;){
-    A.var->waitForNextRevision();
+    A.waitForNextRevision();
     A.readAccess();
     if(!A().contains(a)) cont=false;
     A.deAccess();
@@ -185,7 +293,7 @@ void ActionMachine::waitForActionCompletion(Action* a){
 void ActionMachine::waitForActionCompletion() {
   bool cont = true;
   while (cont) {
-    A.var->waitForNextRevision();
+    A.waitForNextRevision();
     A.readAccess();
     if (A().N == 0 || (A().N == 1 && A()(0)->name == "CoreTasks")) {
       cont=false;
@@ -193,27 +301,22 @@ void ActionMachine::waitForActionCompletion() {
     A.deAccess();
   }
 }
-//===========================================================================
-// GroundedAction
-//
 
-Action::Action(ActionMachine& actionMachine, const char* name, ActionState actionState)
-  : name(name), actionState(actionState), actionTime(0.){
-  actionMachine.A.set()->append(this);
-}
-
-Action::~Action(){
-//  for (PDtask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
-  listDelete(tasks);
-}
-
-void Action::reportState(ostream& os){
-  os <<"Action '" <<name
-    <<"':  actionState=" << getActionStateString(actionState)
-    <<"  actionTime=" << actionTime
-    <<"  PDtasks:" <<endl;
-  for(PDtask* t: tasks) t->reportState(os);
-  reportDetails(os);
+void ActionMachine::waitForQuitSymbol() {
+  bool cont = true;
+  while (cont) {
+    KB.waitForNextRevision();
+    KB.readAccess();
+    Item* quitSymbol = KB().getItem("quit");
+    if(!quitSymbol){
+      MT_MSG("WARNING: no quit symbol!");
+      return;
+    }
+    for(Item *f:quitSymbol->parentOf){
+      if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
+    }
+    KB.deAccess();
+  }
 }
 
 //===========================================================================

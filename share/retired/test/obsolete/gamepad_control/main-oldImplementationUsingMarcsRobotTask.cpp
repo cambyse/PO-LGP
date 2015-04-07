@@ -113,7 +113,7 @@ void testSequence_move(MarcsRobotTask& R,const char *objShape,const char *fromSh
 #endif
   R.followTrajectory();
   R.openHand(objShape);
-  R.reactivateCollisions(ARRAY(objShape,fromShape,toShape));
+  R.reactivateCollisions({objShape,fromShape,toShape});
 }
 
 void testSequence(){

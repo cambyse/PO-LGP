@@ -4,7 +4,7 @@
 #include <Ors/ors.h>
 #include <Perception/g4data.h>
 
-typedef MT::Array<KeyValueGraph*> kvgL;
+typedef MT::Array<Graph*> kvgL;
 
 struct KeyFramer {
   struct sKeyFramer;
@@ -36,40 +36,40 @@ struct KeyFramer {
 
   void computeDist();
   void computeDist(uint f);
-  void testDist(KeyValueGraph &kvg, const String &a, const String &b);
+  void testDist(Graph &kvg, const String &a, const String &b);
 
-  void EM_z(KeyValueGraph &kvg, const StringA &bAs, const String &bB);
-  void EM_z(KeyValueGraph &kvg, const String &bA, const String &bB);
-  void EM_z_with_c(KeyValueGraph &kvg, const String &bA, const String &bB);
-  void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
-  void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
-  void EM_m(KeyValueGraph &kvg, const String &b);
+  void EM_z(Graph &kvg, const StringA &bAs, const String &bB);
+  void EM_z(Graph &kvg, const String &bA, const String &bB);
+  void EM_z_with_c(Graph &kvg, const String &bA, const String &bB);
+  void EM_c(Graph &kvg, const String &bA, const String &bB);
+  void EM_r(Graph &kvg, const String &bA, const String &bB);
+  void EM_m(Graph &kvg, const String &b);
 
-  void testSmoothing(KeyValueGraph &kvg, const String &b, double alpha);
+  void testSmoothing(Graph &kvg, const String &b, double alpha);
 
   void getVitSeq(arr &vit, const String &b1, const String &b2);
   void getVitSeq(arr &vit, const StringA &b1s, const String &b2);
-  void vitLogicMachine(KeyValueGraph &kvg, arr &vit2, const arr &vit);
+  void vitLogicMachine(Graph &kvg, arr &vit2, const arr &vit);
   void getCtrlSeq(kvgL &ctrls, const String &b1, const String &b2);
   void getCtrlSeq_old(kvgL &ctrls, const String &b1, const String &b2);
   void getDeltaSeq(kvgL &deltas, kvgL ctrls);
   void getDeltaCluster(kvgL &deltas, kvgL ctrls);
 
-  void objFeatures(KeyValueGraph &feats, const String &b, uint fnum);
+  void objFeatures(Graph &feats, const String &b, uint fnum);
   void trainOnDeltas(const kvgL &deltas);
 
   // High-level methods: can be invoked on any level of subject
-  void process(KeyValueGraph &kvg, const String &subj, const String &obj);
-  void process(KeyValueGraph &kvg, const StringA &subj, const StringA &objs);
+  void process(Graph &kvg, const String &subj, const String &obj);
+  void process(Graph &kvg, const StringA &subj, const StringA &objs);
   void play();
-  void playScene(KeyValueGraph &kvg, const String &name_subj, bool record = false);
-  void playScene(KeyValueGraph &kvg, const StringA &name_subj, bool record = false);
+  void playScene(Graph &kvg, const String &name_subj, bool record = false);
+  void playScene(Graph &kvg, const StringA &name_subj, bool record = false);
 
   arr annOf(const String &sensor1, const String &sensor2);
   void load_ann(const String &dir);
 
   void dlib_train(const String &basedir, const String &traindir, uint wlen);
-  void dlib_test(KeyValueGraph &kvg, const String &name_subj, const String &name_obj, uint wlen);
+  void dlib_test(Graph &kvg, const String &name_subj, const String &name_obj, uint wlen);
 
 };
 

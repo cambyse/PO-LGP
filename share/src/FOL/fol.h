@@ -1,57 +1,48 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 
-/// given a scope (a subKvg, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
+//### Level 0 routines
+
 ItemL getLiteralsOfScope(Graph& KB);
+ItemL getSymbolsOfScope(Graph& KB);
+ItemL getVariables(Item* literal, Graph* varScope);
+uint getNumOfVariables(Item* literal, Graph* varScope);
+Item *getFirstVariable(Item* literal, Graph* varScope);
+//Item *getFirstSymbol(Item* literal, Graph* varScope);
 
-/// return all variables (defined by degree=0)
-ItemL getVariablesOfScope(Graph& KB);
+//---------- checking equality of facts or literals
 
-/// returns all variables of the literal
-ItemL getVariables(Item *literal);
+bool factsAreEqual(Item *fact0, Item *fact1, bool checkAlsoValue=false);
+bool factsAreEqual(Item *fact0, ItemL& fact1);
+bool factsAreEqual(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=false);
+Item *getEqualFactInKB(Graph& facts, Item *fact, bool checkAlsoValue=true);
+Item *getEqualFactInKB(Graph& facts, ItemL& fact);
+Item *getEqualFactInKB(Graph& facts, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=true);
+Item *getEqualFactInList(Item *fact, ItemL& facts);
+bool allFactsHaveEqualsInScope(Graph& KB, ItemL& facts);
 
-uint getNumOfVariables(Item* literal);
+bool matchingFactsAreEqual(Graph& facts, Item *it1, Item *it2, const ItemL& subst, Graph* subst_scope);
 
-/// ONLY for a literal with one free variable: remove all infeasible values from the domain
-/// this is meant to be used as basic 'constraint propagation' for order-1 constraints
-void removeInfeasible(ItemL& domain, Item *literal, bool checkAlsoValue=false);
+//---------- finding possible variable substitutions
 
-/// check if these are literally equal (all arguments are identical, be they vars or consts)
-bool match(Item *literal0, Item *literal1);
+void removeInfeasibleSymbolsFromDomain(Graph& facts, ItemL& domain, Item *literal, Graph* varScope);
+ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbose=false);
+ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, bool verbose=false);
 
-/// try to find a literal within 'scope' that is exactly equal to 'literal'
-Item *getMatchInScope(Item *literal, Graph* scope);
+//----------- adding facts
 
-/// check if all literals in 'literals' can be matched with one in scope
-bool checkAllMatchesInScope(ItemL& literals, Graph* scope);
+Item *createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope);
+bool applySubstitutedLiteral(Graph& facts, Item*  literal, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
+bool applyEffectLiterals    (Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 
-/// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
-ItemL getFactMatches(Item *literal, ItemL& literals);
+//------------ fwd chaining
 
-/// check match, where all variables of literal are replaced by subst(var->index)
-bool match(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=false);
+bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes=NoGraph, bool verbose=false);
+bool forwardChaining_propositional(Graph& KB, Item* q);
 
-/// create a new literal by substituting all variables with subst(var->index) (if non-NULL)
-/// add the new literal to KB
-Item *createNewSubstitutedLiteral(Graph& KB, Item* literal, const ItemL& subst, Graph* subst_scope);
+//### Level 1 class
 
-void applyEffectLiterals(Graph& KB, Item* effectliterals, const ItemL& subst, Graph* subst_scope);
-
-/// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
-bool checkTruth(Item *literal, const ItemL& subst, Graph* subst_scope);
-
-/// the list of literals is a conjunctive clause (e.g. precondition)
-/// all literals must be in the same scope (element of the same subKvg)
-/// we return all feasible substitutions of the literal's variables by constants
-/// the return value is an array: for every item of the literal's scope:
-/// if item=variable the array contains a pointer to the constant
-/// if item=non-variable the arrach contains a NULL pointer
-ItemL getSubstitutions(ItemL& literals, ItemL& state, ItemL& constants, bool verbose=false);
-
-/// extracts the preconditions of the rule, then returns substitutions
-ItemL getRuleSubstitutions(Item *rule, ItemL& state, ItemL& constants, bool verbose=false);
+//struct FOL: Graph{
+//  Graph& state;
 
 
-bool forwardChaining_FOL(KeyValueGraph& KB, Item* query);
-
-// actually propositional logic:
-bool forwardChaining_propositional(KeyValueGraph& KB, Item* q);
+//};

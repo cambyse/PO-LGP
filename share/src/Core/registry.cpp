@@ -24,6 +24,39 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<KeyValueGraph> SingleRegistry;
+Singleton<Graph> SingleRegistry;
 
-KeyValueGraph& registry(){ return SingleRegistry(); }
+Graph& registry(){ return SingleRegistry(); }
+
+namespace MT {
+extern std::ifstream cfgFile;
+extern bool cfgFileOpen;
+extern Mutex cfgFileMutex;
+}
+
+extern Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, Graph* parentGraph, MT::String prefixedKey);
+
+void initRegistry(int argc, char* argv[]){
+
+  int n;
+  for(n=1; n<argc; n++){
+    if(argv[n][0]=='-'){
+      MT::String key(argv[n]+1);
+      if(n+1<argc && argv[n+1][0]!='-'){
+        MT::String value;
+        value <<'=' <<argv[n+1];
+        readItem(registry(), value, false, NULL, key);
+//        new Item_typed<MT::String>(registry(), {key}, {}, new MT::String(argv[n+1]), true);
+        n++;
+      }else{
+        new Item_typed<bool>(registry(), {key}, {}, new bool(true), true);
+      }
+    }else{
+      MT_MSG("non-parsed cmd line argument:" <<argv[n]);
+    }
+  }
+
+  MT::openConfigFile();
+  MT::cfgFile >>registry();
+
+}

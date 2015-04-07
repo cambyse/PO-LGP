@@ -36,7 +36,7 @@ void ors::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint 
       y = lo+j*(hi-lo)/res;
       for(i=0; i<res; i++) {
         x = lo+i*(hi-lo)/res;
-        mc.set_data(f(NoArr, NoArr, ARR(x, y, z)), i, j, k) ;
+        mc.set_data(f(NoArr, NoArr, ARR((double)x, (double)y, (double)z)), i, j, k) ;
       }
     }
   }

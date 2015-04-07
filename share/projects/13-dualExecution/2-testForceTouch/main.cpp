@@ -16,7 +16,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
                           ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+  P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
   Task *cont = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
@@ -54,12 +54,12 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   FeedbackMotionControl MC(world);
   MC.qitselfPD.active=false;
 
-  PDtask *pd_y=
+  CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
                     new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   pd_y->prec = 10.;
 
-  PDtask *pd_x=
+  CtrlTask *pd_x=
       MC.addPDTask("pose", .1, .8,
                     new TaskMap_qItself());
   pd_x->prec = .1;

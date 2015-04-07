@@ -69,7 +69,7 @@ uint ors::KinematicWorld::setJointStateCount = 0;
 ors::Body& NoBody = *((ors::Body*)NULL);
 ors::Shape& NoShape = *((ors::Shape*)NULL);
 ors::Joint& NoJoint = *((ors::Joint*)NULL);
-ors::KinematicWorld& NoGraph = *((ors::KinematicWorld*)NULL);
+ors::KinematicWorld& NoWorld = *((ors::KinematicWorld*)NULL);
 
 //===========================================================================
 //
@@ -106,7 +106,7 @@ void ors::Body::reset() {
   inertia.setZero();
 }
 
-void ors::Body::parseAts(KinematicWorld& G) {
+void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
   MT::String str;
@@ -138,12 +138,12 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
     // if mesh is not .obj we only have one shape
     if(!file->name.endsWith("obj")) {
-      new Shape(G, *this);
+      new Shape(world, *this);
     }else{  // if .obj file create Shape for all submeshes
       auto subMeshPositions = getSubMeshPositions(file->name);
       for(uint i=0;i<subMeshPositions.d0;i++){
         auto parsing_pos = subMeshPositions[i];
-        Shape *s = new Shape(G, *this);
+        Shape *s = new Shape(world, *this);
         s->mesh.parsing_pos_start = parsing_pos(0);
         s->mesh.parsing_pos_end = parsing_pos(1);
         s->mesh.readObjFile(file->getIs());
@@ -155,7 +155,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
   // add shape if there is no shape exists yet
   if(ats.getItem("type") && !shapes.N){
-    Shape *s = new Shape(G, *this);
+    Shape *s = new Shape(world, *this);
     s->name = name;
   }
 
@@ -179,7 +179,7 @@ void ors::Body::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
-  parseAts(NoGraph);
+  parseAts();
 }
 
 namespace ors {
@@ -278,7 +278,7 @@ void ors::Shape::parseAts() {
     Vector c = mesh.center();
     if(!ats.getValue<bool>("rel_includes_mesh_center")){
       rel.addRelativeTranslation(c);
-      ats.append<bool>("rel_includes_mesh_center",new bool(true), true);
+      ats.append<bool>({"rel_includes_mesh_center"}, {}, new bool(true), true);
     }
     mesh_radius = mesh.getRadius();
   }
@@ -766,9 +766,9 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
 /** @brief returns the joint (actuator) dimensionality */
 uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   if(agent==-1) agent=q_agent;
-  CHECK(agent!=UINT_MAX,"");
-  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(UINT_MAX);
-  if(qdim(agent)==UINT_MAX){
+  CHECK(agent!=INT_MAX,"");
+  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(INT_MAX);
+  if(qdim(agent)==INT_MAX){
     uint qd=0;
     for(Joint *j: joints) if(j->agent==(uint)agent){
       CHECK(j->type!=JT_none,"joint type is uninitialized");
@@ -1075,7 +1075,7 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
   if(!b){
     MT_MSG("WARNING: calling kinematics for NULL body");
-    y.resize(3).setZero();
+    if(&y) y.resize(3).setZero();
     if(&J) J.resize(3, getJointStateDimension()).setZero();
     return;
   }
@@ -1672,7 +1672,7 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
-  KeyValueGraph G;
+  Graph G;
   
   G.read(is);
   G.checkConsistency();
@@ -1683,19 +1683,19 @@ void ors::KinematicWorld::read(std::istream& is) {
   ItemL bs = G.getItems("body");
   for_list(Item,  it,  bs) {
     CHECK_EQ(it->keys(0),"body","");
-    CHECK(it->getValueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats = *it->getValue<KeyValueGraph>();
-    b->parseAts(*this);
+    b->ats = *it->getValue<Graph>();
+    b->parseAts();
   }
   
   ItemL ss = G.getItems("shape");
   for(Item *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
-    CHECK(it->getValueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(Graph),"shape must have value Graph");
     
     Shape *s;
     if(it->parents.N==1){
@@ -1706,7 +1706,7 @@ void ors::KinematicWorld::read(std::istream& is) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats = *it->getValue<KeyValueGraph>();
+    s->ats = *it->getValue<Graph>();
     s->parseAts();
   }
   
@@ -1715,7 +1715,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   for(Item *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");
-    CHECK(it->getValueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(Graph),"joints must have value Graph");
     
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
@@ -1723,7 +1723,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats = *it->getValue<KeyValueGraph>();
+    j->ats = *it->getValue<Graph>();
     j->parseAts();
 
     //if the joint is coupled to another:
@@ -2317,7 +2317,6 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 //-- template instantiations
 
 #include <Core/util_t.h>
-template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
 template MT::Array<ors::Shape*>::Array(uint);

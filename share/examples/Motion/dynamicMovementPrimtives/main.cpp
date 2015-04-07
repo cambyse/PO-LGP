@@ -19,7 +19,7 @@ void scenario1() {
   uint i;
   double n = 100;
   for (i=0;i<n;i++) {
-    traj.append(~ARRAY(sin(i/n*PI/2*3),2+cos(PI*i/n)));
+    traj.append(~ARR(sin(i/n*PI/2*3),2+cos(PI*i/n)));
   }
 
   // Create DMP
@@ -39,7 +39,7 @@ void scenario1() {
   d.reset();
 
   // Simulate DMP
-  d.changeGoal(ARRAY(2.,2.));
+  d.changeGoal({2.,2.});
 
   // Simulate DMP
   for (i=0;i<300;i++) {
@@ -61,20 +61,24 @@ void scenario2() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(world);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
@@ -140,20 +144,23 @@ void scenario3() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
@@ -259,26 +266,29 @@ void scenario4() {
   cout << "Loaded scene: " << endl;
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   if (useOrientation) {
     c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(1.,0.,0.), 1e3,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {1.,0.,0.}, 1e3,
+                            {0.,0.,0.}, 1e-3);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)

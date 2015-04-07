@@ -43,7 +43,7 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0, arr &x) {
   TaskCost *c;
 
   c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
-  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e3);
+  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
   c->map.order=1;
 
   c = MP.addTask("position_right_hand", new DefaultTaskMap(qItselfTMT,world));

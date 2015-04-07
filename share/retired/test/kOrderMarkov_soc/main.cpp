@@ -24,7 +24,7 @@ int main(int argc,char** argv){
   TaskVariable *qtv = new DefaultTaskVariable("qitself", sys.getOrs(), qItselfTVT, 0, 0, 0, 0, 0);
   qtv->y_target.setZero();
 
-  sys.setTaskVariables(ARRAY(pos,col,qtv));
+  sys.setTaskVariables({pos,col,qtv});
 
   //-- planning (AICO) to generate an optimal (kinematic) trajectory
   sys.setTox0();

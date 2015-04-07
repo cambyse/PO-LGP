@@ -22,7 +22,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Core/geo.h>
 #include <Gui/mesh.h>
 
@@ -80,7 +80,7 @@ struct Body {
   
   MT::String name;     ///< name
   Transformation X;    ///< body's absolute pose
-  KeyValueGraph ats;   ///< list of any-type attributes
+  Graph ats;   ///< list of any-type attributes
   
   //dynamic properties
   BodyType type;          ///< is globally fixed?
@@ -98,7 +98,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts(KinematicWorld& G);
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -127,7 +127,7 @@ struct Joint {
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
   arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
   double H;             ///< control cost factor
-  KeyValueGraph ats;    ///< list of any-type attributes
+  Graph ats;    ///< list of any-type attributes
   
   Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
@@ -163,7 +163,7 @@ struct Shape {
   Mesh mesh;
   double mesh_radius;
   bool cont;           ///< are contacts registered (or filtered in the callback)
-  KeyValueGraph ats;   ///< list of any-type attributes
+  Graph ats;   ///< list of any-type attributes
   
   Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   ~Shape();
@@ -349,7 +349,7 @@ struct GraphOperator{
 extern ors::Body& NoBody;
 extern ors::Shape& NoShape;
 extern ors::Joint& NoJoint;
-extern ors::KinematicWorld& NoGraph;
+extern ors::KinematicWorld& NoWorld;
 
 
 //===========================================================================

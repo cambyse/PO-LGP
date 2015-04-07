@@ -166,21 +166,21 @@ void mdp::convert(MDP_structured& mdp, MDP& mdp_flat){
   infer::Variable *a  = new infer::Variable(da , "action");
   infer::Variable *x_ = new infer::Variable(dx , "state'");
   infer::Variable *y_ = new infer::Variable(dy , "obs'");
-  mdp.vars      = ARRAY(y_, x_, a, x);
-  mdp.leftVars  = ARRAY(x);
-  mdp.rightVars = ARRAY(x_);
-  mdp.obsVars   = ARRAY(y_);
-  mdp.ctrlVars  = ARRAY(a);
+  mdp.vars      = {y_, x_, a, x};
+  mdp.leftVars  = {x};
+  mdp.rightVars = {x_};
+  mdp.obsVars   = {y_};
+  mdp.ctrlVars  = {a};
   
-  infer::Factor *Fxax = new infer::Factor(ARRAY(x_, a, x), "Ftrans");  Fxax->setP(mdp_flat.Pxax);
-  infer::Factor *Fyxa = new infer::Factor(ARRAY(y_, x_, a), "Fobs");   Fyxa->setP(mdp_flat.Pyxa);
-  infer::Factor *Fx   = new infer::Factor(ARRAY(x), "Finit");        Fx->setP(mdp_flat.Px);
-  infer::Factor *FRax = new infer::Factor(ARRAY(a, x), "Freward");    FRax->setP(mdp_flat.Rax);
-  mdp.facs       = ARRAY(Fyxa, Fxax, Fx, FRax);
-  mdp.transFacs  = ARRAY(Fxax);
-  mdp.initFacs   = ARRAY(Fx);
-  mdp.rewardFacs = ARRAY(FRax);
-  mdp.obsFacs    = ARRAY(Fyxa);
+  infer::Factor *Fxax = new infer::Factor({x_, a, x}, "Ftrans");  Fxax->setP(mdp_flat.Pxax);
+  infer::Factor *Fyxa = new infer::Factor({y_, x_, a}, "Fobs");   Fyxa->setP(mdp_flat.Pyxa);
+  infer::Factor *Fx   = new infer::Factor({x}, "Finit");        Fx->setP(mdp_flat.Px);
+  infer::Factor *FRax = new infer::Factor({a, x}, "Freward");    FRax->setP(mdp_flat.Rax);
+  mdp.facs       = {Fyxa, Fxax, Fx, FRax};
+  mdp.transFacs  = {Fxax};
+  mdp.initFacs   = {Fx};
+  mdp.rewardFacs = {FRax};
+  mdp.obsFacs    = {Fyxa};
   
   mdp.gamma=mdp_flat.gamma;
 }
@@ -239,7 +239,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   
 #else //old code depending on hypergraph
   clearMDP(mdp);
-  KeyValueGraph H;
+  Graph H;
   H <<FILE(filename);
   //cout <<"read hypergraph: " <<H <<endl;
   uint d;
@@ -363,7 +363,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     CHECK_EQ(strings.N,v->dim, "");
     for(j=0; j<strings.N; j++) strings(j).resetIstream() >>val(j);
     //cout <<"reward values = " <<strings <<' ' <<val <<endl;
-    infer::Factor R(ARRAY(v));
+    infer::Factor R({v});
     R.setP(val);
     for_list(infer::Factor, f,  mdp.rewardFacs) if(f->variables.findValue(v)!=-1){
       //cout <<*f <<endl;
@@ -748,7 +748,7 @@ void mdp::collapseToFlat(MDP& mdpUn, const MDP_structured& mdp){
   
   infer::VariableList obsvars=cat(mdp.obsVars, mdp.rightVars, mdp.ctrlVars);
   infer::Factor dummy(obsvars);
-  eliminationAlgorithm(post, cat(ARRAY(&dummy), mdp.obsFacs), obsvars);
+  eliminationAlgorithm(post, cat({&dummy}, mdp.obsFacs), obsvars);
   post.getP(mdpUn.Pyxa);
   mdpUn.Pyxa.reshape(dy, dx, da);
   
@@ -758,7 +758,7 @@ void mdp::collapseToFlat(MDP& mdpUn, const MDP_structured& mdp){
   
   infer::VariableList rewardvars=cat(mdp.ctrlVars, mdp.leftVars);
   infer::Factor dummy2(rewardvars);
-  eliminationAlgorithm(post, cat(ARRAY(&dummy2), mdp.rewardFacs), rewardvars);
+  eliminationAlgorithm(post, cat({&dummy2}, mdp.rewardFacs), rewardvars);
   //eliminationAlgorithm(post, mdp.rewardFacs, ids(cat(mdp.ctrlVars, mdp.leftVars)));
   //listWrite(mdp.rewardFacs, cout);
   post.getP(mdpUn.Rax);
@@ -886,16 +886,16 @@ void mdp::standardInitFsc_structured_lev1(FSC_structured& fsc, const MDP& mdp, u
   infer::Variable *x_ = new infer::Variable(dx , "state(t+1)");
   infer::Variable *y_ = new infer::Variable(dy , "observation(t+1)");
   infer::Variable *n0_= new infer::Variable(d0 , "node0(t+1)");
-  fsc.vars     = ARRAY(n0_, y_, x_, a, n0, y, x);
-  fsc.leftVars = ARRAY(n0);
-  fsc.rightVars= ARRAY(n0_);
+  fsc.vars     = {n0_, y_, x_, a, n0, y, x};
+  fsc.leftVars = {n0};
+  fsc.rightVars= {n0_};
   
-  infer::Factor *F0   = new infer::Factor(ARRAY(n0));
-  infer::Factor *Fa0  = new infer::Factor(ARRAY(a, n0));
-  infer::Factor *F0y0 = new infer::Factor(ARRAY(n0_, y_, n0));
-  fsc.facs     = ARRAY(F0y0, Fa0, F0);
-  fsc.initFacs = ARRAY(F0);
-  fsc.transFacs= ARRAY(F0y0, Fa0);
+  infer::Factor *F0   = new infer::Factor({n0});
+  infer::Factor *Fa0  = new infer::Factor({a, n0});
+  infer::Factor *F0y0 = new infer::Factor({n0_, y_, n0});
+  fsc.facs     = {F0y0, Fa0, F0};
+  fsc.initFacs = {F0};
+  fsc.transFacs= {F0y0, Fa0};
   
   oneNodeOneAction(Fa0->P, da, d0, 1., 1., 100.);
   generalNodeTransitions(F0y0->P, .1, .1, 0.);
@@ -913,16 +913,16 @@ void mdp::standardInitFsc_structured_react(FSC_structured& fsc, const MDP& mdp, 
   infer::Variable *x_ = new infer::Variable(dx , "state(t+1)");
   infer::Variable *y_ = new infer::Variable(dy , "observation(t+1)");
   infer::Variable *n0_= new infer::Variable(d0 , "node0(t+1)");
-  fsc.vars     = ARRAY(n0_, y_, x_, a, n0, y, x);
-  fsc.leftVars = ARRAY(n0);
-  fsc.rightVars= ARRAY(n0_);
+  fsc.vars     = {n0_, y_, x_, a, n0, y, x};
+  fsc.leftVars = {n0};
+  fsc.rightVars= {n0_};
   
-  infer::Factor *F0    = new infer::Factor(ARRAY(n0));
-  infer::Factor *Fa0y  = new infer::Factor(ARRAY(a, n0, y));
-  infer::Factor *F0ya0 = new infer::Factor(ARRAY(n0_, y_, n0));
-  fsc.facs      = ARRAY(F0ya0, Fa0y, F0);
-  fsc.initFacs  = ARRAY(F0);
-  fsc.transFacs = ARRAY(F0ya0, Fa0y);
+  infer::Factor *F0    = new infer::Factor({n0});
+  infer::Factor *Fa0y  = new infer::Factor({a, n0, y});
+  infer::Factor *F0ya0 = new infer::Factor({n0_, y_, n0});
+  fsc.facs      = {F0ya0, Fa0y, F0};
+  fsc.initFacs  = {F0};
+  fsc.transFacs = {F0ya0, Fa0y};
   
   generalRandTransitions(Fa0y->P, 1., 1.);
   generalNodeTransition(F0ya0->P, .1, .1, 0.);
@@ -943,18 +943,18 @@ void mdp::standardInitFsc_structured_lev2(FSC_structured& fsc, const MDP& mdp, u
   infer::Variable *y_ = new infer::Variable(dy , "observation(t+1)");
   infer::Variable *n1_= new infer::Variable(d1 , "node1(t+1)");
   infer::Variable *n0_= new infer::Variable(d0 , "node0(t+1)");
-  fsc.vars     = ARRAY(n0_, n1_, y_, x_, a, n0, n1, y, x);
-  fsc.leftVars = ARRAY(n0 , n1);
-  fsc.rightVars= ARRAY(n0_, n1_);
+  fsc.vars     = {n0_, n1_, y_, x_, a, n0, n1, y, x};
+  fsc.leftVars = {n0 , n1};
+  fsc.rightVars= {n0_, n1_};
   
-  infer::Factor *F0   = new infer::Factor(ARRAY(n0));
-  infer::Factor *F1   = new infer::Factor(ARRAY(n1));
-  infer::Factor *Fa0  = new infer::Factor(ARRAY(a, n0));
-  infer::Factor *F01y0 = new infer::Factor(ARRAY(n0_, n1_, y_, n0));
-  infer::Factor *F1y01 = new infer::Factor(ARRAY(n1_, y_ , n0, n1));
-  fsc.facs      = ARRAY(F01y0, F1y01, Fa0, F0, F1);
-  fsc.initFacs  = ARRAY(F0, F1);
-  fsc.transFacs = ARRAY(F01y0, F1y01, Fa0);
+  infer::Factor *F0   = new infer::Factor({n0});
+  infer::Factor *F1   = new infer::Factor({n1});
+  infer::Factor *Fa0  = new infer::Factor({a, n0});
+  infer::Factor *F01y0 = new infer::Factor({n0_, n1_, y_, n0});
+  infer::Factor *F1y01 = new infer::Factor({n1_, y_ , n0, n1});
+  fsc.facs      = {F01y0, F1y01, Fa0, F0, F1};
+  fsc.initFacs  = {F0, F1};
+  fsc.transFacs = {F01y0, F1y01, Fa0};
   
   oneNodeOneAction(Fa0->P, da, d0, 1., 1., 100.);
   generalNodeTransitions(F01y0->P, .1, .1, 0.);
@@ -977,23 +977,23 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP& mdp,
   infer::Variable *x_ = new infer::Variable(dx , "state(t+1)");
   infer::Variable *y_ = new infer::Variable(dy , "observation(t+1)");
   for(i=m; i--;) nodes_(i) = new infer::Variable(levels(i) , STRING("node" <<i <<"(t+1)"));
-  fsc.vars     = cat(nodes_, ARRAY(y_, x_, a), nodes, ARRAY(y, x));
+  fsc.vars     = cat(nodes_, {y_, x_, a}, nodes, {y, x});
   fsc.leftVars = nodes ;
   fsc.rightVars= nodes_;
   
   infer::FactorList Finit(m), Ftran(m);
-  for(i=m; i--;) Finit(i) = new infer::Factor(ARRAY(nodes(i)));
-  infer::Factor *Fa0  = new infer::Factor(ARRAY(a, nodes(0)));
+  for(i=m; i--;) Finit(i) = new infer::Factor({nodes(i)});
+  infer::Factor *Fa0  = new infer::Factor({a, nodes(0)});
   if(m==1){
-    i=0;               Ftran(i) = new infer::Factor(ARRAY(nodes_(i), y_, nodes(i)));
+    i=0;               Ftran(i) = new infer::Factor({nodes_(i), y_, nodes(i)});
   }else{
-    i=m-1;             Ftran(i) = new infer::Factor(ARRAY(nodes_(i), y_ , nodes(i-1), nodes(i))); //top node
-    for(i=m-2; i>0; i--) Ftran(i) = new infer::Factor(ARRAY(nodes_(i), nodes(i+1), y_ , nodes(i-1), nodes(i))); //middle nodes
-    i=0;               Ftran(i) = new infer::Factor(ARRAY(nodes_(i), nodes(i+1), y_ , nodes(i))); //bottom node
+    i=m-1;             Ftran(i) = new infer::Factor({nodes_(i), y_ , nodes(i-1), nodes(i)}); //top node
+    for(i=m-2; i>0; i--) Ftran(i) = new infer::Factor({nodes_(i), nodes(i+1), y_ , nodes(i-1), nodes(i)}); //middle nodes
+    i=0;               Ftran(i) = new infer::Factor({nodes_(i), nodes(i+1), y_ , nodes(i)}); //bottom node
   }
-  fsc.facs      = cat(Ftran, ARRAY(Fa0), Finit);
+  fsc.facs      = cat(Ftran, {Fa0}, Finit);
   fsc.initFacs  = Finit;
-  fsc.transFacs = cat(Ftran, ARRAY(Fa0));
+  fsc.transFacs = cat(Ftran, {Fa0});
   
   oneNodeOneAction(Fa0->P, da, levels(0), 1., 1., 100.);
   for(i=0; i<m; i++){
@@ -1027,18 +1027,18 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP_struc
   fsc.rightVars= nodes_;
   
   infer::FactorList Finit(m), Ftran(m);
-  for(i=m; i--;) Finit(i) = new infer::Factor(ARRAY(nodes(i)), STRING("Finit" <<i));
-  infer::Factor *Fa0  = new infer::Factor(cat(mdp.ctrlVars, ARRAY(nodes(0))), STRING("Faction"));
+  for(i=m; i--;) Finit(i) = new infer::Factor({nodes(i)}, STRING("Finit" <<i));
+  infer::Factor *Fa0  = new infer::Factor(cat(mdp.ctrlVars, {nodes(0)}), STRING("Faction"));
   if(m==1){
-    i=0;               Ftran(i) = new infer::Factor(cat(ARRAY(nodes_(i)), mdp.obsVars, ARRAY(nodes(i))), STRING("Ftrans" <<i));
+    i=0;               Ftran(i) = new infer::Factor(cat({nodes_(i)}, mdp.obsVars, {nodes(i)}), STRING("Ftrans" <<i));
   }else{
-    i=m-1;             Ftran(i) = new infer::Factor(cat(ARRAY(nodes_(i)), mdp.obsVars, ARRAY(nodes(i-1), nodes(i))), STRING("Ftrans" <<i)); //top node
-    for(i=m-2; i>0; i--) Ftran(i) = new infer::Factor(cat(ARRAY(nodes_(i), nodes(i+1)), mdp.obsVars, ARRAY(nodes(i-1), nodes(i))), STRING("Ftrans" <<i)); //middle nodes
-    i=0;               Ftran(i) = new infer::Factor(cat(ARRAY(nodes_(i), nodes(i+1)), mdp.obsVars, ARRAY(nodes(i))), STRING("Ftrans" <<i)); //bottom node
+    i=m-1;             Ftran(i) = new infer::Factor(cat({nodes_(i)}, mdp.obsVars, {nodes(i-1), nodes(i)}), STRING("Ftrans" <<i)); //top node
+    for(i=m-2; i>0; i--) Ftran(i) = new infer::Factor(cat({nodes_(i), nodes(i+1)}, mdp.obsVars, {nodes(i-1), nodes(i)}), STRING("Ftrans" <<i)); //middle nodes
+    i=0;               Ftran(i) = new infer::Factor(cat({nodes_(i), nodes(i+1)}, mdp.obsVars, {nodes(i)}), STRING("Ftrans" <<i)); //bottom node
   }
-  fsc.facs      = cat(Ftran, ARRAY(Fa0), Finit);
+  fsc.facs      = cat(Ftran, {Fa0}, Finit);
   fsc.initFacs  = Finit;
-  fsc.transFacs = cat(Ftran, ARRAY(Fa0));
+  fsc.transFacs = cat(Ftran, {Fa0});
   
   oneNodeOneAction(Fa0->P, adim, levels(0), 1., 1., 100.);
   for(i=0; i<m; i++){

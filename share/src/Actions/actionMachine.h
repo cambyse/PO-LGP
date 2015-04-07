@@ -3,6 +3,7 @@
 #include <Core/array.h>
 #include <System/engine.h>
 #include <pr2/roscom.h>
+#include <Hardware/gamepad/gamepad.h>
 
 #include "actions.h"
 
@@ -24,12 +25,16 @@ struct ActionMachine : Module {
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
+  ACCESS(Graph, KB);
 
   ActionMachine();
   ~ActionMachine();
 
-  arr Kq_gainFactor, Kd_gainFactor;
+  arr Kp, Kd;
   //-- user methods
+  const ors::KinematicWorld *world;
+  ofstream fil;
+  bool initStateFromRos;
 
   /** Add a sequence of actions started one after the other..
    * The first one is started right away, the others depend on
@@ -41,11 +46,16 @@ struct ActionMachine : Module {
                     Action *action3=NULL,
                     Action *action4=NULL);
 
-  void removeGroundedAction(Action* a, bool hasLock=false);
+  void removeAction(Action* a, bool hasLock=false);
   /// Block till the given action `a` is done
   void waitForActionCompletion(Action* a);
   /// Block till all actions (excluding CoreTasks) are done
   void waitForActionCompletion();
+  /// Block till the quit symbol is true in the KB
+  void waitForQuitSymbol();
+
+  void parseTaskDescription(Graph& td);
+  void parseTaskDescriptions(const Graph& tds);
 
   /// @name module implementations
   void open();
@@ -53,6 +63,8 @@ struct ActionMachine : Module {
   void close();
 
   void transition();
+  void transitionFOL(double time, bool forceChaining);
+  double getContactForce();
 };
 
 //===========================================================================
@@ -63,10 +75,12 @@ struct ActionSystem : System{
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem():machine(NULL){
-    machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
+    machine = addModule<ActionMachine>(NULL, Module::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+//      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }

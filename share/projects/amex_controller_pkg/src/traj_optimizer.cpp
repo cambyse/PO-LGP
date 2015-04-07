@@ -23,10 +23,10 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
 
 //  c = MP.addTask("qLimits", new TaskMap_qLimits());
-//  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
+//  MP.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0,{0.},1e0);
 
   c = MP.addTask("final_vel", new TaskMap_qItself());
-  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e3);
+  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
   c->map.order=1;
 
   //-- create the Optimization problem (of type kOrderMarkov)

@@ -4,7 +4,6 @@
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 
 void pickandplace(arr finalpos){
@@ -28,8 +27,7 @@ current = 5-i*2;
 #if 1
   MotionProblem MP(G);
 //G.watch(true);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
+
 
   ors::Shape *s = G.getShapeByName(targets(current));
  
@@ -67,8 +65,7 @@ cout << "DIM = "<<G.getJointStateDimension();
  //  G.watch(true);
 
   MotionProblem MP2(G);
-  MP2.loadTransitionParameters();
-  MP2.H_rate_diag = pr2_reasonable_W(G);
+
     arr  xT2;
 cout <<"DIM =" <<G.getJointStateDimension();
 //x2=x;
@@ -77,6 +74,11 @@ cout <<"DIM =" <<G.getJointStateDimension();
   //-- setup the motion problem
 finalpos(0) -= 0.2 * i;
   Task *c;
+
+  c = MP2.addTask("transition",	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
  c = MP2.addTask("position", new DefaultTaskMap(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
  MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
@@ -96,7 +98,7 @@ if (current<5) orient.set(0,1,0);
 //if (current<5) MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
  // MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
   //c = MP2.addTask("orientation", new DefaultTaskMap(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
-  //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,1.), 1e3);
+  //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,1.}, 1e3);
 /*
   c = MP2.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -104,7 +106,7 @@ if (current<5) orient.set(0,1,0);
 */
  //   c = MP2.addTask("collision",
  //                  new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
- //   MP2.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+ //   MP2.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
  
 cout << "TEST\n";
    MotionProblemFunction MF2(MP2);
@@ -147,14 +149,13 @@ void testPickAndPlace(const char* target,arr finalpos){
   G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
+
 
   arr x, xT;
   MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
 
 for (uint i=0;i<5;i++)  {
-   // finalpos = ARRAY(0.0,-1.0,0.8);
+   // finalpos = {0.0,-1.0,0.8};
 //    finalpos = ARRAY(G.getBodyByName("chair_sitting")->X.pos);
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName(targets(i))->index, 2);
@@ -193,6 +194,10 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 
 
   Task *c;
+  c = MP.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
   double shift; if (i>3) shift=0; else shift =  -0.18;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
@@ -277,8 +282,7 @@ void AssembleChair(){
 //  G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
+
 
   arr x, xT;
   MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
@@ -331,6 +335,10 @@ for (uint i=0;i<5;i++)  {
          cout << "POS = "<< finalpos<< endl;
 
       Task *c;
+      c = MP.addTask("transition", 	new TransitionTaskMap(G));
+      c->map.order=2; //make this an acceleration task!
+      c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
       c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,0)));
       MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
@@ -414,10 +422,10 @@ for (uint i=0;i<5;i++)  {
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-// testPickAndPlace("leg4",ARRAY(0.0,-1.0,0.8));
-  AssembleChair();
+ testPickAndPlace("leg4",{0.0,-1.0,0.8});
+//  AssembleChair();
 // test_Loading_submeshes();
-//testPickAndPlace("leg4",ARRAY(1.0,-1.0,0.5));
- // pickandplace(ARRAY(1.0,1.0,0.5));
+//testPickAndPlace("leg4",{1.0,-1.0,0.5});
+ // pickandplace({1.0,1.0,0.5});
   return 0;
 }

@@ -807,7 +807,7 @@ void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
               cvScalar(threshold), cvScalar(threshold),
               &component, CV_FLOODFILL_FIXED_RANGE|CV_FLOODFILL_MASK_ONLY, CVMAT(mask));
               
-  box=ARRAY<uint>(component.rect.x, component.rect.y,
+  box=TUP(component.rect.x, component.rect.y,
                   component.rect.x+component.rect.width, component.rect.y+component.rect.height);
                   
   //if(box(2)-box(0)>theta.d0*0.95 || box(3)-box(1)>theta.d0*0.95) return;

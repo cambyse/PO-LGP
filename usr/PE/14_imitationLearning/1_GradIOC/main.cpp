@@ -58,7 +58,7 @@ struct Dfdw:ConstrainedProblem {
 
     // compute matrix dWdx
     if (Dwdx.d0<1.) {
-      arr tmp = ARRAY(1.,0.,0.);
+      arr tmp = {1.,0.,0.};
       tmp = repmat(tmp,x0.d0,1);
       tmp.append(repmat(ARR(0.),3,1));
       Dwdx = ~tmp;
@@ -201,7 +201,7 @@ void simpleMotion(){
   arr w = sqr(PHI/(PHIo+1e-12));
   //  checkGradient(dfdw,x,1e-3);
   w = w.subRange(w.d0-6,w.d0-3);
-  //  w=ARRAY(1.,2.,3.,4.);
+  //  w={1.,2.,3.,4.};
   w = randn(4,1)+2.;
   w.reshape(w.N);
   w = ARR(2.25127, 1.0321, 1.90551, 1.13059);

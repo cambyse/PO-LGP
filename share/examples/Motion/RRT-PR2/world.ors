@@ -1,7 +1,7 @@
 # door1 {{{
 body door1-frame {
   type=3
-  mesh="door_model/frame_hacd.obj"
+  mesh='door_model/frame_hacd.obj'
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
@@ -41,7 +41,7 @@ joint (door1-door, door1-handle) {
 body door2-frame {
   X=<T t(-2 -2 0) d(90 0 0 1)>
   type=3
-  mesh="door_model/frame_hacd.obj"
+  mesh='door_model/frame_hacd.obj'
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
@@ -82,7 +82,7 @@ joint (door2-door, door2-handle) {
 body door3-frame {
   X=<T t(2 0 0)>
   type=3
-  mesh="door_model/frame_hacd.obj"
+  mesh='door_model/frame_hacd.obj'
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed

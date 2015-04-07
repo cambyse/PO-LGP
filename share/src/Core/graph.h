@@ -26,33 +26,35 @@
 #define MT_keyValueGraph_h
 
 #include "array.h"
+#include <map>
 
 struct Item;
-struct KeyValueGraph;
+struct Graph;
 typedef MT::Array<Item*> ItemL;
-typedef MT::Array<MT::String> StringA;
-extern const ItemL& NoItemL;
-struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType, more tricks are possible
-inline std::istream& operator>>(std::istream&, RootType&) { NIY; }
-inline std::ostream& operator<<(std::ostream&, const RootType&) { NIY; }
+extern ItemL& NoItemL; //this is a pointer to NULL! I use it for optional arguments
+extern Graph& NoGraph; //this is a pointer to NULL! I use it for optional arguments
+
+//===========================================================================
 
 struct Item {
-  KeyValueGraph& container;
+  Graph& container;
   StringA keys;
   ItemL parents;
   ItemL parentOf;
   uint index;
-  Item(KeyValueGraph& _container);
-  Item(KeyValueGraph& _container, const ItemL& _parents);
+  Item(Graph& _container);
+  Item(Graph& _container, const ItemL& _parents);
   virtual ~Item();
   template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
   template<class T> const T *getValue() const; ///< as above
+  template<class T> T& V(){ T *x=getValue<T>(); CHECK(x,"wrong type"); return *x; }
+
   bool matches(const char *key);
   bool matches(const StringA &query_keys);
   void write(std::ostream &os) const;
-  KeyValueGraph ParentOf();
+  Graph ParentOf();
   //-- specific standard values TODO: make return pointer!
-  KeyValueGraph& kvg(){ KeyValueGraph *kvg=getValue<KeyValueGraph>(); CHECK(kvg,""); return *kvg; }
+  Graph& kvg(){ Graph *kvg=getValue<Graph>(); CHECK(kvg,""); return *kvg; }
 
   //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY}
@@ -63,62 +65,76 @@ struct Item {
   virtual void copyValue(Item*) {NIY}
   virtual void takeoverValue(Item*) {NIY}
   virtual bool hasEqualValue(Item*) {NIY}
-  virtual Item *newClone(KeyValueGraph& container) const {NIY}
+  virtual Item *newClone(Graph& container) const {NIY}
 };
 stdOutPipe(Item);
 
+//===========================================================================
 
-struct KeyValueGraph:ItemL {
+struct ItemInitializer{
+  ItemInitializer(const char* key);
+  template<class T> ItemInitializer(const char* key, const T& x);
+  template<class T> ItemInitializer(const char* key, const StringA& parents, const T& x);
+  Item *it;
+  StringA parents;
+};
+
+//===========================================================================
+
+struct Graph:ItemL {
   struct sKeyValueGraph *s;
-  KeyValueGraph* isReferringToItemsOf;
+  Graph* isReferringToItemsOf; //TODO: remove
   Item *isItemOfParentKvg;
   
-  KeyValueGraph();
-  KeyValueGraph(const char* filename);
-  KeyValueGraph(const KeyValueGraph& G);
-  KeyValueGraph(Item *itemOfParentKvg);
-  ~KeyValueGraph();
+  Graph();
+  explicit Graph(const char* filename);
+  Graph(const std::map<std::string, std::string>& dict);
+  Graph(std::initializer_list<ItemInitializer> list);
+  Graph(const Graph& G);
+//  Graph(Item *itemOfParentKvg);
+  ~Graph();
   
-  KeyValueGraph& operator=(const KeyValueGraph&);
+  Graph& operator=(const Graph&);
+  void clear();
   ItemL& list() { return *this; }
   
-  //-- get values directly
+  //-- get items
+  Item* getItem(const char *key) const;
+  Item* getItem(const char *key1, const char *key2);
+  Item* getItem(const StringA &keys);
+  Item* operator[](const char *key) { return getItem(key); }
+  Item& I(const char *key) { Item *it=getItem(key); CHECK(it,"item '" <<key <<"' does not exist"); return *it; }
+  Item* getChild(Item *p1, Item *p2) const;
+
+  //-- get lists of items (TODO: return ItemL, not referring Graph)
+  Graph getItems(const char* key);
+  Graph getItemsOfDegree(uint deg);
+  Graph getTypedItems(const char* key, const std::type_info& type);
+  template<class T> Graph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
+  template<class T> ItemL getDerivedItems();
+
+  //-- get values directly (TODO: remove)
   template<class T> T* getValue(const char *key);
   template<class T> T* getValue(const StringA &keys);
   template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
   template<class T> bool getValue(T& x, const StringA &keys) { T* y=getValue<T>(keys); if(y) { x=*y; return true; } return false; }
 
-  //-- get items
-  Item* getItem(const char *key);
-  Item* getItem(const char *key1, const char *key2);
-  Item* getItem(const StringA &keys);
-  Item* operator[](const char *key) { return getItem(key); }
-  Item* getChild(Item *p1, Item *p2) const;
-
-  //-- get lists of items
-  KeyValueGraph getItems(const char* key);
-  KeyValueGraph getItemsOfDegree(uint deg);
-  KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
-  template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
-  template<class T> ItemL getDerivedItems();
-
-  //-- get lists of values
+  //-- get lists of all values of a certain type T (or derived from T)
   template<class T> MT::Array<T*> getTypedValues(const char* key);
   template<class T> MT::Array<T*> getDerivedValues();
   
-  //-- removing items
-  Item *appendItem(Item* it) { HALT("the constructor of Item should have done this!"); it->index=ItemL::N;  ItemL::append(it);  return it;}
-  void removeItem(Item* it){ delete it; }
-
   //-- adding items
   template<class T> Item *append(T *x, bool ownsValue);
+  template<class T> Item *append(const char* key, T *x, bool ownsValue);
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue);
-  template<class T> Item *append(const StringA& keys, T *x, bool ownsValue) { return append(keys, ItemL(), x, ownsValue); }
-  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x, ownsValue); }
-  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x, ownsValue); }
+//  template<class T> Item *append(const StringA& keys, T *x, bool ownsValue) { return append(keys, ItemL(), x, ownsValue); }
+//  template<class T> Item *append(const char *key, T *x, bool ownsValue) { return append({MT::String(key)}, ItemL(), x, ownsValue); }
+//  template<class T> Item *append(const char *key1, const char* key2, T *x, bool ownsValue) {  return append({MT::String(key1), MT::String(key2)}, ItemL(), x, ownsValue); }
   Item *append(const uintA& parentIdxs);
 
-  //-- merging items
+  void appendDict(const std::map<std::string, std::string>& dict);
+
+  //-- merging items  //TODO: explain better
   Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
   void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
@@ -126,7 +142,7 @@ struct KeyValueGraph:ItemL {
   bool checkConsistency() const;
 
   //-- indexing
-  uint index(bool subKVG=false, uint start=0);
+  uint index(bool subKVG=false, uint start=0); //TODO: make private
 
   //-- I/O
   void sortByDotOrder();
@@ -135,39 +151,39 @@ struct KeyValueGraph:ItemL {
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
   void writeDot(std::ostream& os, bool withoutHeader=false, bool defaultEdges=false, int nodesOrEdges=0);
 };
-stdPipes(KeyValueGraph);
+stdPipes(Graph);
 
-typedef KeyValueGraph Graph;
+//===========================================================================
 
-inline Graph GRAPH(const ItemL& L){
+inline Graph GRAPH(const ItemL& L){ //TODO: remove
   Graph G;
   G.isReferringToItemsOf = (Graph*)(1);
   G.ItemL::operator=(L);
   return G;
 }
 
-inline bool ItemComp(Item* const& a, Item* const& b){
+inline bool ItemComp(Item* const& a, Item* const& b){ //TODO: why?
   return a < b;
 }
 
-#include "keyValueGraph_t.h"
+#include "graph_t.h"
 
 //===========================================================================
 //
-// Andrea's util based on KeyValueGraph
+// Andrea's util based on Graph
 // (would put in util.h, but creates inclusion loop which breaks compilation)
 //
 
 // Params {{{
-#include "keyValueGraph.h"
+#include "graph.h"
 struct Params {
-  KeyValueGraph kvg;
+  Graph kvg;
 
   template<class T>
   void set(const char *key, const T &value) {
     Item *i = kvg.getItem(key);
     if(i) *i->getValue<T>() = value;
-    else kvg.append(key, new T(value));
+    else kvg.append({key}, {}, new T(value), true);
   }
 
   template<class T>
@@ -177,17 +193,20 @@ struct Params {
   T* get(const char *key) { return kvg.getValue<T>(key); }
 
   void clear() { kvg.clear(); }
+
   bool remove(const char *key) {
+    delete kvg[key];
     Item *i = kvg.getItem(key);
     if(!i) return false;
-    // TODO is list() here necessary?
-    kvg.list().remove(i->index);
+    delete i;
+//    // TODO is list() here necessary?
+//    kvg.list().remove(i->index);
     return true;
   }
 
   void write(std::ostream &os = std::cout) const {
     os << "params = {" << std::endl;
-    for(Item *i: kvg) os << "  " << *i << std::endl;
+    kvg.write(os, " ");
     os << "}" << std::endl;
   }
 };

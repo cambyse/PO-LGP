@@ -35,19 +35,19 @@ static const QString key_chars =      R"([a-zA-Z0-9_])";
 static const QString parent_chars =   R"([a-zA-Z0-9_])";
 static const QString value_chars =    R"([a-zA-Z0-9_.])";
 
-Parser::KeyValueGraph Parser::parse_graph(const QString &input, QString &output)
+Parser::Graph Parser::parse_graph(const QString &input, QString &output)
 {
     // remove errors from end of input
     QString clean_input = input;
     clean_input.remove(QRegExp("("+premature_end+"\\s*)+$"));
     // hand over to parser
     PosIt in_it(clean_input);
-    KeyValueGraph kvg;
+    Graph kvg;
     parse_graph(clean_input, output, in_it, kvg, true);
     return kvg;
 }
 
-void Parser::fill_missing_positions(KeyValueGraph & kvg)
+void Parser::fill_missing_positions(Graph & kvg)
 {
     for(auto& item : kvg.items) {
         // no keys
@@ -66,13 +66,13 @@ void Parser::fill_missing_positions(KeyValueGraph & kvg)
             item.value_end = item.parents_end;
         }
         // call recursively
-        if(item.value_type==KeyValueGraph::Item::KVG) {
+        if(item.value_type==Graph::Item::KVG) {
             fill_missing_positions(*(item.sub_graph));
         }
     }
 }
 
-void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg, bool first_level)
+void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Graph & kvg, bool first_level)
 {
     // what comes next?
     enum STATE { START, KEYS, PARENTS, VALUE, SIMPLE_VALUE, GRAPH_VALUE} state = START;
@@ -107,12 +107,12 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
             case START:
                 if(is(c,key_chars)) {
                     // keys
-                    kvg.items.push_back(KeyValueGraph::Item());
+                    kvg.items.push_back(Graph::Item());
                     parse_key(input, output, in_it, kvg);
                     state = KEYS;
                 } else if(is(c,R"(\()")) {
                     // no keys but parents
-                    kvg.items.push_back(KeyValueGraph::Item());
+                    kvg.items.push_back(Graph::Item());
                     output += par_sep_color + toHtml(c) + close_span;
                     ++in_it;
                     state = PARENTS;
@@ -330,16 +330,16 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
                     // set end position
                     kvg.items.back().value_end = in_it.pos();
                 } else {
-                    KeyValueGraph sub_graph;
+                    Graph sub_graph;
                     parse_graph(input, output, in_it, sub_graph, false);
                     // set value in key-value-graph
                     auto& item = kvg.items.back();
-                    if(item.value_type!=KeyValueGraph::Item::NONE) {
+                    if(item.value_type!=Graph::Item::NONE) {
                         ERROR("Overwriting value");
                     }
                     item.value = "";
                     *(item.sub_graph) = sub_graph;
-                    item.value_type = KeyValueGraph::Item::KVG;
+                    item.value_type = Graph::Item::KVG;
                 }
                 break;
             }
@@ -347,15 +347,15 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     }
 
     // set missing values to default (true)
-    list<KeyValueGraph*> kvg_list({&kvg});
+    list<Graph*> kvg_list({&kvg});
     while(!kvg_list.empty()) {
         for(auto& item : kvg_list.front()->items) {
             switch(item.value_type) {
-            case KeyValueGraph::Item::NONE:
+            case Graph::Item::NONE:
                 item.value = "true";
-                item.value_type = KeyValueGraph::Item::BOOL;
+                item.value_type = Graph::Item::BOOL;
                 break;
-            case KeyValueGraph::Item::KVG:
+            case Graph::Item::KVG:
                 kvg_list.push_back(item.sub_graph.get());
                 break;
             default:
@@ -407,7 +407,7 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Ke
     }
 }
 
-void Parser::parse_comment(const QString &input, QString &output, PosIt &in_it, KeyValueGraph &)
+void Parser::parse_comment(const QString &input, QString &output, PosIt &in_it, Graph &)
 {
     QString com;
     while(in_it!=input.end() && *in_it!='\n') {
@@ -419,7 +419,7 @@ void Parser::parse_comment(const QString &input, QString &output, PosIt &in_it, 
     output += comment_color + com + close_span;
 }
 
-void Parser::parse_error(const QString &input, QString &output, PosIt &in_it, KeyValueGraph &)
+void Parser::parse_error(const QString &input, QString &output, PosIt &in_it, Graph &)
 {
     QString error;
     bool parsed_something = false;
@@ -438,7 +438,7 @@ void Parser::parse_error(const QString &input, QString &output, PosIt &in_it, Ke
     output += error_color + error + close_span;
 }
 
-void Parser::parse_key(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_key(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse key
     QString key;
@@ -489,7 +489,7 @@ void Parser::parse_key(const QString &input, QString &output, PosIt &in_it, KeyV
     }
 }
 
-void Parser::parse_parent(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_parent(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse parent
     QString parent;
@@ -525,7 +525,7 @@ void Parser::parse_parent(const QString &input, QString &output, PosIt &in_it, K
     }
 }
 
-void Parser::parse_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse value
     QString value;
@@ -537,15 +537,15 @@ void Parser::parse_value(const QString &input, QString &output, PosIt &in_it, Ke
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = value;
-    item.value_type = KeyValueGraph::Item::STRING;
+    item.value_type = Graph::Item::STRING;
 
     // convert to bool if necessary
     if(value=="true" || value=="false") {
-        item.value_type = KeyValueGraph::Item::BOOL;
+        item.value_type = Graph::Item::BOOL;
     }
 
     // format as HTML
@@ -553,7 +553,7 @@ void Parser::parse_value(const QString &input, QString &output, PosIt &in_it, Ke
     output += value_color + value + close_span;
 }
 
-void Parser::parse_string_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_string_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse value
     QString string;
@@ -565,18 +565,18 @@ void Parser::parse_string_value(const QString &input, QString &output, PosIt &in
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = string;
-    item.value_type = KeyValueGraph::Item::STRING;
+    item.value_type = Graph::Item::STRING;
 
     // format as HTML
     toHtml(string);
     output += value_color + string + close_span;
 }
 
-void Parser::parse_file_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_file_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parsing value
     QString file;
@@ -588,18 +588,18 @@ void Parser::parse_file_value(const QString &input, QString &output, PosIt &in_i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = file;
-    item.value_type = KeyValueGraph::Item::FILE;
+    item.value_type = Graph::Item::FILE;
 
     // format as HTML
     toHtml(file);
     output += value_color + file + close_span;
 }
 
-void Parser::parse_double_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_double_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parsing value
     QString d;
@@ -630,11 +630,11 @@ void Parser::parse_double_value(const QString &input, QString &output, PosIt &in
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = d;
-    item.value_type = KeyValueGraph::Item::DOUBLE;
+    item.value_type = Graph::Item::DOUBLE;
 
     // format as HTML
     toHtml(d);
@@ -646,7 +646,7 @@ void Parser::parse_double_value(const QString &input, QString &output, PosIt &in
     }
 }
 
-void Parser::parse_array_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_array_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse value
     QString array;
@@ -658,18 +658,18 @@ void Parser::parse_array_value(const QString &input, QString &output, PosIt &in_
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = array;
-    item.value_type = KeyValueGraph::Item::ARRAY;
+    item.value_type = Graph::Item::ARRAY;
 
     // format as HTML
     toHtml(array);
     output += value_color + array + close_span;
 }
 
-void Parser::parse_list_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_list_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse value
     QString list;
@@ -681,18 +681,18 @@ void Parser::parse_list_value(const QString &input, QString &output, PosIt &in_i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = list;
-    item.value_type = KeyValueGraph::Item::LIST;
+    item.value_type = Graph::Item::LIST;
 
     // format as HTML
     toHtml(list);
     output += value_color + list + close_span;
 }
 
-void Parser::parse_special_value(const QString &input, QString &output, PosIt &in_it, KeyValueGraph & kvg)
+void Parser::parse_special_value(const QString &input, QString &output, PosIt &in_it, Graph & kvg)
 {
     // parse value
     QString special;
@@ -704,11 +704,11 @@ void Parser::parse_special_value(const QString &input, QString &output, PosIt &i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=KeyValueGraph::Item::NONE) {
+    if(item.value_type!=Graph::Item::NONE) {
         ERROR("Overwriting value");
     }
     item.value = special;
-    item.value_type = KeyValueGraph::Item::SPECIAL;
+    item.value_type = Graph::Item::SPECIAL;
 
     // format as HTML
     toHtml(special);
@@ -729,7 +729,7 @@ QString Parser::toHtml(QChar c)
 }
 
 
-QString Parser::KeyValueGraph::dot()
+QString Parser::Graph::dot()
 {
     // to find the identifiers of all items with a given key
     int node_counter = 0;
@@ -737,8 +737,8 @@ QString Parser::KeyValueGraph::dot()
     vector<int> cluster_level_counts({0});
     bool missing_parents = false;
     QString output;
-    std::function<void(const KeyValueGraph * kvg, QString cluster_name)> parse_kvg;
-    parse_kvg = [&](const KeyValueGraph * kvg, QString cluster_name) {
+    std::function<void(const Graph * kvg, QString cluster_name)> parse_kvg;
+    parse_kvg = [&](const Graph * kvg, QString cluster_name) {
         multimap<QString, QString> key_id_map;
         QString indentation = QString("    ").repeated(cluster_level+1);
         bool first_node = true;

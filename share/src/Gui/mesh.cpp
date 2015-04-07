@@ -1374,7 +1374,7 @@ uintA getSubMeshPositions(const char* filename) {
       case 'v': {
         if (flag > 0) {
           end_pos = ftell(file) - 1;
-          result.append(ARRAY<uint>(start_pos, end_pos));
+          result.append(TUP((uint)start_pos, (uint)end_pos));
           start_pos = end_pos;
           flag =0; }
       } break;
@@ -1385,7 +1385,7 @@ uintA getSubMeshPositions(const char* filename) {
   }
 
   end_pos = ftell(file) - 1;
-  result.append(ARRAY<uint>(start_pos, end_pos));
+  result.append(TUP((uint)start_pos, (uint)end_pos));
   result.reshape(result.N/2,2);
   return result;
 }

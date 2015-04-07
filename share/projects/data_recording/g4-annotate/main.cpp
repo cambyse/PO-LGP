@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 
 #include <fstream>
 
@@ -9,7 +9,7 @@ int main(int argc, char ** argv) {
 
   String dir;
   ifstream ann_g4;
-  KeyValueGraph kvg, *subkvg, *lock;
+  Graph kvg, *subkvg, *lock;
   Item *item;
 
   MT::getParameter(dir, "dir");
@@ -34,19 +34,19 @@ int main(int argc, char ** argv) {
     if(*from_frame < 0 || *to_frame < 0)
       break;
 
-    lock = new KeyValueGraph();
+    lock = new Graph();
     lock->append("from", from_frame);
     lock->append("to", to_frame);
 
     item = kvg.getItem(o1, o2);
     if(item) {
-      subkvg = item->getValue<KeyValueGraph>();
+      subkvg = item->getValue<Graph>();
       subkvg->append("lock", lock);
     }
     else {
-      subkvg = new KeyValueGraph();
+      subkvg = new Graph();
       subkvg->append("lock", lock);
-      kvg.append(STRINGS(o1, o2), subkvg);
+      kvg.append({o1, o2}, subkvg);
     }
   }
 

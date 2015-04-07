@@ -1,4 +1,4 @@
-variable Location { dim=2, dot_order=0 }
+./x	variable Location { dim=2, dot_order=0 }
 variable Location_mod { dim=2, dot_order=36 }
 variable Location' { dim=2, dot_order=65 }
 variable Coffee { dim=2, dot_order=1 }
@@ -39,8 +39,8 @@ variable rule4 { dim=2, dot_order=22 }
 variable rule5 { dim=2, dot_order=23 }
 variable rule6 { dim=2, dot_order=24 }
 factor CHANGE (Location Location_mod Location') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -50,8 +50,8 @@ dot_order=47
 }
 
 factor CHANGE (Coffee Coffee_mod Coffee') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -61,8 +61,8 @@ dot_order=48
 }
 
 factor CHANGE (Umbrella Umbrella_mod Umbrella') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -72,8 +72,8 @@ dot_order=49
 }
 
 factor CHANGE (Rain Rain_mod Rain') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -83,8 +83,8 @@ dot_order=50
 }
 
 factor CHANGE (HasCoffee HasCoffee_mod HasCoffee') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -94,8 +94,8 @@ dot_order=51
 }
 
 factor CHANGE (Wet Wet_mod Wet') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -105,8 +105,8 @@ dot_order=52
 }
 
 factor CHANGE (Reward Reward_mod Reward') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -116,8 +116,8 @@ dot_order=53
 }
 
 factor CHANGE (Action_buyCoffee Action_buyCoffee_mod Action_buyCoffee') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -127,8 +127,8 @@ dot_order=54
 }
 
 factor CHANGE (Action_detachCoffee Action_detachCoffee_mod Action_detachCoffee') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -138,8 +138,8 @@ dot_order=55
 }
 
 factor CHANGE (Action_takeUmbrella Action_takeUmbrella_mod Action_takeUmbrella') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -149,8 +149,8 @@ dot_order=56
 }
 
 factor CHANGE (Action_go Action_go_mod Action_go') {
-P=
-[ 0 1
+P=[
+  0 1
   1 1
  
   0 1
@@ -162,8 +162,8 @@ dot_order=57
 factor AND (Action_buyCoffee Location rule0) { specialType=1, dot_order=11 }
 
 factor rule_out (rule0 Coffee') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=58
 }
@@ -171,8 +171,8 @@ dot_order=58
 factor AND (Action_detachCoffee Coffee Location rule1) { specialType=1, dot_order=12 }
 
 factor rule_out (rule1 HasCoffee') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=59
 }
@@ -180,8 +180,8 @@ dot_order=59
 factor AND (Action_takeUmbrella Location rule2) { specialType=1, dot_order=13 }
 
 factor rule_out (rule2 Umbrella') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=60
 }
@@ -189,8 +189,8 @@ dot_order=60
 factor AND (Action_go Umbrella Rain rule3) { specialType=1, dot_order=14 }
 
 factor rule_out (rule3 Wet') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=61
 }
@@ -198,8 +198,8 @@ dot_order=61
 factor AND (Action_go Location rule4) { specialType=1, dot_order=15 }
 
 factor rule_out (rule4 Location') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=62
 }
@@ -207,8 +207,8 @@ dot_order=62
 factor AND (Action_go Location rule5) { specialType=1, dot_order=16 }
 
 factor rule_out (rule5 Location') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=63
 }
@@ -216,8 +216,8 @@ dot_order=63
 factor AND (HasCoffee Wet rule6) { specialType=1, dot_order=17 }
 
 factor rule_out (rule6 Reward') {
-P=
-[ 1 1
+P=[
+  1 1
   0.367879 2.71828 ],
 dot_order=64
 }

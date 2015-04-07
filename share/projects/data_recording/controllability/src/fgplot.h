@@ -56,16 +56,16 @@ struct FGPlot {
   StreamCollector operator()();
 };
 
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 struct FGPlots {
   struct sFGPlots;
 
   sFGPlots *s;
-  const KeyValueGraph *kvg;
+  const Graph *kvg;
   FGPlots();
   ~FGPlots();
 
-  void open(const KeyValueGraph &kvg);
+  void open(const Graph &kvg);
   void step(uint t);
   void replot();
   void exit();

@@ -68,9 +68,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   
   //finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-    ARRAY<const char*>("tip1Shape",
-                       "tip2Shape",
-                       "tip3Shape"), sys.ors->shapes);
+    {"tip1Shape", "tip2Shape", "tip3Shape"}, sys.ors->shapes);
   shapes.append(shapeId);shapes.append(shapeId);shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .05, true);
@@ -85,7 +83,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   sys.vars.append(V);
 
   //collisions with other objects
-  shapes = ARRAY(shapeId);
+  shapes = {shapeId};
   V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
   V->y_target = ARR(0.);  V->v_target = ARR(.0);
   V->y_prec = colPrec;

@@ -65,7 +65,7 @@ int main(int argc,char** argv){
   }else{
     c = MP.addTask("collision",
                    new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
-    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+    MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)

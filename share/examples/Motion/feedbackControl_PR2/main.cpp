@@ -123,36 +123,39 @@ void executeTrajectoryWholeBody(String scene){
   // Plan Trajectory
   makeConvexHulls(world.shapes);
   MotionProblem P(world);
-  P.loadTransitionParameters();
+  Task *c;
+  c = P.addTask("transition", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
 
   arr Rgoal = ARRAY(P.world.getBodyByName("RgoalRef")->X.pos);
   arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
   c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   c = P.addTask("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Lgoal, 1e5);
   c = P.addTask("position_left_hand_vel", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   //  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   c = P.addTask("qLimits", new TaskMap_qLimits());
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
+  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e1);
 
   c = P.addTask("homing", new TaskMap_qItself());
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
+  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -205,15 +208,15 @@ void executeTrajectoryWholeBody(String scene){
   double t = 0.;
   double t_final = T*dt;
 
-  arr dirR = ARRAY(0.,0.,-1.);
-  arr dirL = ARRAY(0.,0.,0.);
+  arr dirR = {0.,0.,-1.};
+  arr dirL = {0.,0.,0.};
 
   MObject goalMO_R(&world, MT::String("Rgoal"), MObject::GOAL , 0.0005, dirL);
   MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
-  PDtask *taskPosL, *taskVecL;
+  CtrlTask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
+  CtrlTask *taskPosL, *taskVecL;
   //double regularization = 1e-2;
 
   // initialize controllers
@@ -251,7 +254,7 @@ void executeTrajectoryWholeBody(String scene){
   world.gl().add(drawPlanTraj,&(amexL->trajRef->points));
   world.gl().add(drawActTraj,&(amexR->traj));
   world.gl().add(drawPlanTraj,&(amexR->trajRef->points));
-  arr current_dir = ARRAY(1.,1.,1.,0.,0.,0.);
+  arr current_dir = {1.,1.,1.,0.,0.,0.};
   world.gl().add(drawCurrentDir,&current_dir);
   arr des_dir = current_dir;
   world.gl().add(drawDesiredDir,&(des_dir));
@@ -352,42 +355,43 @@ void executeTrajectoryRightArm(String scene){
   world.gl().resize(800, 800);
 #endif
 
-  arr q0 = {0.,0.,0.,0.,-0.2,-0.2,0.};
-  world.setJointState(q0,0.*q0);
-
   arr q, qdot;
   world.getJointState(q, qdot);
+  arr q0 = q;
 
-
+  world.watch(true);
   // Plan Trajectory
   makeConvexHulls(world.shapes);
   MotionProblem P(world);
-  P.loadTransitionParameters();
+  Task *c;
+  c = P.addTask("transition", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
 
   arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  Task *c;
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
-  //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   c = P.addTask("qLimits", new TaskMap_qLimits());
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
-//  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
+  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0,{0.},1e0);
+//  P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e-1);
 
   c = P.addTask("homing", new TaskMap_qItself());
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
+  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},0);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,{0.},1e2);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = {0.,0.,0.,0.,-0.3,-0.3,0.};
+  P.x0 = q0;
 
   MotionProblemFunction F(P);
   uint T=F.get_T();
@@ -429,13 +433,13 @@ void executeTrajectoryRightArm(String scene){
   double t = 0.;
   double t_final = T*dt;
 
-  arr dirR = ARRAY(0.,0.,-1.);
-  arr dirL = ARRAY(0.,0.,0.);
+  arr dirR = {0.,0.,-1.};
+  arr dirL = {0.,0.,0.};
 
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *qitself;
+  CtrlTask *taskPosR, *taskVecR, *qitself;
   //double regularization = 1e-2;
 
   // initialize controllers
@@ -469,7 +473,7 @@ void executeTrajectoryRightArm(String scene){
   world.gl().add(drawPoint,&(taskPosR->y_ref));
   world.gl().add(drawActTraj,&(amexR->traj));
   world.gl().add(drawPlanTraj,&(amexR->trajRef->points));
-  arr current_dir = ARRAY(1.,1.,1.,0.,0.,0.);
+  arr current_dir = {1.,1.,1.,0.,0.,0.};
   world.gl().add(drawCurrentDir,&current_dir);
   arr des_dir = current_dir;
   world.gl().add(drawDesiredDir,&(des_dir));

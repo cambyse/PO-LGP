@@ -17,7 +17,7 @@ void problem1(){
   
   //setup the task
   TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
-  sys.setTaskVariables(ARRAY(pos));
+  sys.setTaskVariables({pos});
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
@@ -62,7 +62,7 @@ void problem2(){
   
   //setup the task
   TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
-  sys.setTaskVariables(ARRAY(pos));
+  sys.setTaskVariables({pos});
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,
                                            MT::getParameter<double>("reachPlanMidPrec"),

@@ -45,14 +45,14 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
 
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1e4);
+  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1e4);
 
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint());
-  P.setInterpolatingCosts(collision, MotionProblem::constant, ARRAY(0.), 1.);
+  P.setInterpolatingCosts(collision, MotionProblem::constant, {0.}, 1.);
 
 
 
@@ -130,15 +130,15 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-    PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
     pd_y->prec = 10.;
 
     //joint space PD task
-    PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+    CtrlTask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
     pd_x->prec = .1;
 
 
-    //PDtask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+    //CtrlTask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
     //  coll->y_ref.setZero();
     //  coll->v_ref.setZero();
 
@@ -251,15 +251,15 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-  PDtask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = activity.machine->s->MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
-  //PDtask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  //CtrlTask* coll = activity.machine->s->MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   //  coll->y_ref.setZero();
   //  coll->v_ref.setZero();
 
@@ -354,11 +354,11 @@ struct MySystem:System{
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
@@ -431,24 +431,24 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
 
 
-  PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
 /*/
 
-  PDtask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
+  CtrlTask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
   //tasks.append(limits);
 
-  PDtask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  CtrlTask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   coll->y_ref.setZero();
   coll->v_ref.setZero();/*/
 

@@ -27,7 +27,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
   head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
   limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
-  coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
+  coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
   gripperR = MP.addPDTask("gripperR", 2., .8, new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
 }
@@ -39,7 +39,7 @@ double gamepadSignalMap(double x){
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   if(stopButtons(gamepadState)) return true;
 
-  for(PDtask* pdt:MP.tasks) pdt->active=false;
+  for(CtrlTask* pdt:MP.tasks) pdt->active=false;
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
 
@@ -68,12 +68,12 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
-      PDtask *pdt=NULL, *pdt_rot=NULL;
+      CtrlTask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
-        case right:  pdt=endeffR;  break;
-        case left:   pdt=endeffL;  break;
-        case up:     pdt=head;    break;
-        case down:   pdt=base;   break;
+        case right:  pdt=endeffR;  cout <<"effR control" <<endl;  break;
+        case left:   pdt=endeffL;  cout <<"effL control" <<endl;  break;
+        case up:     pdt=head;  cout <<"head control" <<endl;  break;
+        case down:   pdt=base;  cout <<"base control" <<endl;  break;
         case none:   pdt=NULL;  break;
         case downRot: break;
       }
@@ -122,7 +122,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     case 4:
     case 8:{ //open/close hand
       cout <<"open/close hand" <<endl;
-      PDtask *pdt=NULL;
+      CtrlTask *pdt=NULL;
       switch(sel){
         case right:  pdt=gripperR;  break;
         case left:   pdt=gripperL;  break;

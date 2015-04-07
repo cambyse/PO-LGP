@@ -33,8 +33,8 @@ void way1(){
   S.connect(); //this will create the respective variables!
   cout <<S <<endl;
 
-  Access_typed<arr> *x = S.getAccess<arr>("x");
-  Access_typed<double> *s = S.getAccess<double>("s");
+  Access_typed<arr> x = S.getConnectedAccess<arr>("x");
+  Access_typed<double> s = S.getConnectedAccess<double>("s");
 
 #if 0
   ComputeSum C;
@@ -45,7 +45,7 @@ void way1(){
   S.addVariable(&s, "s");
 #endif
 
-  x->set() = ARRAY(1., 2., 3.);
+  x.set() = {1., 2., 3.};
 
 #if 1 //serial
   m->open();
@@ -58,7 +58,7 @@ void way1(){
   mt->threadClose();
 #endif
 
-  cout <<"result = " <<s->get() <<endl;
+  cout <<"result = " <<s.get() <<endl;
 
 }
 
@@ -78,14 +78,13 @@ struct MySystem:System{
 
 void way2(){
   MySystem S;
-
   cout <<S <<endl;
 
-  S.x.set() = ARRAY(1., 2., 3.);
+  S.x.set() = {1., 2., 3.};
 
-  S.open();
-  S.step();
-  S.close();
+  S.openAll();
+  S.stepAll();
+  S.closeAll();
 
   cout <<"result = " <<S.s.get() <<endl;
 };
@@ -111,7 +110,7 @@ void TEST(SystemConnect) {
   engine().test(S);
 
   cout <<registry() <<endl;
-  KeyValueGraph g = S.graph();
+  Graph g = S.graph();
   GraphView gv(g);
   gv.watch();
 }

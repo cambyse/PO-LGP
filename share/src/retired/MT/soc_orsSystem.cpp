@@ -182,7 +182,7 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
     col = new DefaultTaskVariable("collision", *s->ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *com = new DefaultTaskVariable("balance", *s->ors, comTVT, 0, 0, 0, 0, ARR());
-  setTaskVariables(ARRAY(pos, col, com));
+  setTaskVariables({pos, col, com});
 
   pos->y_target = ARRAY(s->ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
@@ -266,7 +266,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   TaskVariable *col;
   if(!useTruncation) col = new DefaultTaskVariable("collision", *s->ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else               col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
-  setTaskVariables(ARRAY(pos, col));
+  setTaskVariables({pos, col});
 
   pos->y_target = ARRAY(s->ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);

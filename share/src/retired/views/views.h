@@ -38,7 +38,7 @@ inline void operator>>(istream&,View&){NIY}
 inline void operator<<(ostream&,const View&){NIY}
 
 #define REGISTER_VIEW(ViewT, AppliesOnT)\
-  Item_typed<Type> ViewT##_ViewRegistryEntry(ARRAY<MT::String>(MT::String("View"),MT::String(#ViewT),MT::String(typeid(AppliesOnT).name())), ItemL(), new Type_typed<ViewT KO void>(NULL,NULL), &registry());
+  Item_typed<Type> ViewT##_ViewRegistryEntry({"View", #ViewT, typeid(AppliesOnT).name()}, ItemL(), new Type_typed<ViewT KO void>(NULL,NULL), &registry());
 
 
 

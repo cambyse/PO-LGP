@@ -1,0 +1,6 @@
+set style data lines
+
+plot './z.forces' us 1:5 t 'fx',\
+'' us 1:6 t 'fy',\
+'' us 1:7 t 'fz'
+

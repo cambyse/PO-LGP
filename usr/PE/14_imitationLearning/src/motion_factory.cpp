@@ -133,7 +133,7 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
-  arr param = ARRAY(1.,1e3);
+  arr param = {1.,1e3};
   uint pC = 0;
   // transition costs
   Task *t;
@@ -152,7 +152,7 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
 
 //  param.append(1e2);
 //  t =s.MP->addTask("vec", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
-//  t->setCostSpecs(s.MP->T,s.MP->T,ARRAY(0.,0.,-1.),param(pC));
+//  t->setCostSpecs(s.MP->T,s.MP->T,{0.,0.,-1.},param(pC));
 //  weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
 //  pC++;
 
@@ -291,9 +291,9 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
   s.world->setJointState(x0);
 
   /// Set task costs
-//  arr param = ARRAY(1.,1e2,1e2,1e2,1e2);
-  arr param = ARRAY(.1,1e2,1e2,1e2,1e2,1e2,1e1);
-//  arr param = ARRAY(0.0423369, 96.5584, 7.91922, 33.2956);
+//  arr param = {1.,1e2,1e2,1e2,1e2};
+  arr param = {.1,1e2,1e2,1e2,1e2,1e2,1e1};
+//  arr param = {0.0423369, 96.5584, 7.91922, 33.2956};
   param = param/length(param)*costScale;
   uint pC = 0;
   // transition costs
@@ -417,7 +417,7 @@ void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
-  arr param = ARRAY(1.,1e2);
+  arr param = {1.,1e2};
   arr w;
   uint pC = 0;
   // transition costs
@@ -500,8 +500,8 @@ void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
-//  arr param = ARRAY(1.,1e3,80.);
-  arr param = ARRAY(1.);
+//  arr param = {1.,1e3,80.};
+  arr param = {1.};
   param.append(zeros(20));
   param(19) = 1e0;
   param(18) = 1e1;
@@ -601,7 +601,7 @@ void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
-  arr param = ARRAY(1.,1e2,90.,1.5);
+  arr param = {1.,1e2,90.,1.5};
   arr w;
   uint pC = 0;
   // transition costs
@@ -679,7 +679,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
   mObjQuat = mObjQuat %(markerQuatDem[0]/fabs(markerQuatDem[0]));
   ors::Quaternion objQuat = refFrameQuat*ors::Quaternion(mObjQuat);//markerQuatDem[0]);
 
-  arr markerOffset = objQuat.getArr()*ARRAY(-0.126,0.0,0.0415);
+  arr markerOffset = objQuat.getArr()*{-0.126,0.0,0.0415};
 
   arr q0 = xDem[0];
   arr objPos0 = refFrame + markerOffset + markerDem[0];
@@ -687,23 +687,23 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
 
   s.world->getBodyByName("drawer1")->X.rot =  objQuat;
   if (i==2){
-    objPosT = objPosT - ARRAY(0.,0.33+0.024,0.);
-    objPos0 = objPos0 - ARRAY(0.,0.33+0.024,0.);
+    objPosT = objPosT - {0.,0.33+0.024,0.};
+    objPos0 = objPos0 - {0.,0.33+0.024,0.};
     s.world->getBodyByName("drawer1")->X.pos =  objPos0;
   } else if (i==3) {
-    objPosT = objPosT - ARRAY(0.,0.,0.163+0.005);
-    objPos0 = objPos0 - ARRAY(0.,0.,0.163+0.005);
+    objPosT = objPosT - {0.,0.,0.163+0.005};
+    objPos0 = objPos0 - {0.,0.,0.163+0.005};
     s.world->getBodyByName("drawer1")->X.pos =  objPos0;
     q0(1)+=0.5;
     q0(0)-=0.2;
   } else if (i==4) {
-    objPosT = objPosT - ARRAY(0.,0.33+0.024,0.163+0.005);
-    objPos0 = objPos0 - ARRAY(0.,0.33+0.024,0.163+0.005);
+    objPosT = objPosT - {0.,0.33+0.024,0.163+0.005};
+    objPos0 = objPos0 - {0.,0.33+0.024,0.163+0.005};
     s.world->getBodyByName("drawer1")->X.pos =  objPos0;
   }
 
-  s.world->getBodyByName("wall1")->X.pos =  objPosT+ARRAY(-0.1,0.165+0.026+0.03,-0.);
-  s.world->getBodyByName("wall2")->X.pos =  objPosT+ARRAY(-0.1,0.,0.0815+0.07);
+  s.world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,0.165+0.026+0.03,-0.};
+  s.world->getBodyByName("wall2")->X.pos =  objPosT+{-0.1,0.,0.0815+0.07};
 
   s.world->getBodyByName("goalDrawer1")->X.rot = objQuat;
   s.world->getBodyByName("goalDrawer1")->X.pos = objPosT;
@@ -892,7 +892,7 @@ void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
-  arr param = ARRAY(1.,1e3);
+  arr param = {1.,1e3};
   uint pC = 0;
   // transition costs
   s.MP->H_rate_diag = param(pC);
@@ -949,7 +949,7 @@ void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint 
   for (uint t =0;t<xDem.d0;t+=10) {
     s.world->setJointState(xDem[t]);
     s.world->getBodyByName("target")->X.rot =  refFrameRot*objQuat;
-    s.world->getBodyByName("target")->X.pos = refFrame + markerDem[t]+s.world->getBodyByName("target")->X.rot.getArr()*ARRAY(-0.1,0.,0.05);
+    s.world->getBodyByName("target")->X.pos = refFrame + markerDem[t]+s.world->getBodyByName("target")->X.rot.getArr()*{-0.1,0.,0.05};
     s.world->getBodyByName("targetRef")->X.pos = refFrame+ markerDem[t];
 
     s.world->gl().update(STRING(t));
@@ -964,35 +964,35 @@ arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
 
 
 ors::Quaternion torso_rot = s.world->getBodyByName("torso_lift_link")->X.rot;
-s.world->getBodyByName("marker")->X.pos = ARRAY(1.,1.,0.1);
+s.world->getBodyByName("marker")->X.pos = {1.,1.,0.1};
 s.world->getBodyByName("marker")->X.rot = torso_rot;
 
 ors::Quaternion world_rot = s.world->getBodyByName("world")->X.rot;
-s.world->getBodyByName("marker2")->X.pos = ARRAY(1.,1.,.5);
+s.world->getBodyByName("marker2")->X.pos = {1.,1.,.5};
 s.world->getBodyByName("marker2")->X.rot = world_rot;
 
 ors::Quaternion obj_rot = s.world->getBodyByName("door")->X.rot;
-s.world->getBodyByName("marker3")->X.pos = ARRAY(1.,1.,1.);
+s.world->getBodyByName("marker3")->X.pos = {1.,1.,1.};
 s.world->getBodyByName("marker3")->X.rot = obj_rot;
 
 ors::Quaternion door1_rot = ors::Quaternion(markerQuat0[1]);
-s.world->getBodyByName("marker4")->X.pos = ARRAY(1.,1.,1.5);
+s.world->getBodyByName("marker4")->X.pos = {1.,1.,1.5};
 s.world->getBodyByName("marker4")->X.rot = door1_rot;
 
 ors::Quaternion door1_trans = torso_rot*door1_rot;
-s.world->getBodyByName("marker5")->X.pos = ARRAY(1.,1.,2.);
+s.world->getBodyByName("marker5")->X.pos = {1.,1.,2.};
 s.world->getBodyByName("marker5")->X.rot = door1_trans;
 
 ors::Quaternion door1_xRot; door1_xRot.setRad(M_PI_2,ors::Vector(1.,0.,0.));
 ors::Quaternion door1_trans2 = door1_xRot*door1_trans;
-s.world->getBodyByName("marker6")->X.pos = ARRAY(1.,1.,2.5);
+s.world->getBodyByName("marker6")->X.pos = {1.,1.,2.5};
 s.world->getBodyByName("marker6")->X.rot = door1_trans2;
 
 ors::Quaternion door1_xRot2; door1_xRot2.setRad(M_PI_2,door1_trans2.getY());
 ors::Quaternion door1_trans3 = door1_xRot2*door1_trans2;
 ors::Quaternion door1_zRot; door1_zRot.setRad(M_PI_2,door1_trans3.getZ());
 door1_trans3 =door1_trans3*door1_zRot;
-s.world->getBodyByName("marker7")->X.pos = ARRAY(1.,1.,3.);
+s.world->getBodyByName("marker7")->X.pos = {1.,1.,3.};
 s.world->getBodyByName("marker7")->X.rot = door1_trans3;
 
 s.world->getJointByName("world_door")->A.pos = refFrame + marker0[1] + door1_trans3.getArr()*ARR(0.,0.375*2,0.);

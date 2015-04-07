@@ -28,13 +28,13 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   x = P.getInitialization();
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector));//, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos.x,target->X.pos.y,target->X.pos.z), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos), 1e3);
 
 
 
   // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
 
 
   if(stickyness){
@@ -104,13 +104,13 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-  PDtask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector));//, "target"));
+  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector));//, "target"));
   pd_y->prec = 10.;
   pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
 
 
   //joint space PD task
-  PDtask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = MC.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
   //plane constraint task

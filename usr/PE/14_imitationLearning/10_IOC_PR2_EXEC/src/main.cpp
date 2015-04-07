@@ -136,36 +136,36 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   arr refFrame = ARRAY(world->getBodyByName("torso_lift_link")->X.pos);
   ors::Quaternion refFrameQuat = world->getBodyByName("torso_lift_link")->X.rot;
   ors::Quaternion objQuat = refFrameQuat*markerQuat;
-  arr markerOffset = objQuat.getArr()*ARRAY(0.126,0.0,0.0415);
+  arr markerOffset = objQuat.getArr()*{0.126,0.0,0.0415};
 
-  markerOffset= markerOffset + ARRAY(0.01,0.,0.);
+  markerOffset= markerOffset + {0.01,0.,0.};
 
   arr objPos0 = refFrame + markerOffset + markerPos;
-  arr objPosT = refFrame + markerOffset + markerPos + ARRAY(0.21,0.,0.);
+  arr objPosT = refFrame + markerOffset + markerPos + {0.21,0.,0.};
   arr objVec0;
   arr objVecT;
 
   /// define drawer position
   uint i = MT::getParameter<uint>("drawerId");
   world->getBodyByName("drawer1")->X.rot =  objQuat;
-  world->getBodyByName("wall1")->X.pos =  objPosT+ARRAY(-0.1,0.165+0.026+0.03,-0.);
+  world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,0.165+0.026+0.03,-0.};
 
   if (i==2){
-    objPosT = objPosT - ARRAY(0.21,0.33+0.024,0.);
-    objPos0 = objPos0 - ARRAY(0.21,0.33+0.024,0.);
-    world->getBodyByName("wall1")->X.pos =  objPosT+ARRAY(-0.1,-0.165-0.026-0.03,-0.);
+    objPosT = objPosT - {0.21,0.33+0.024,0.};
+    objPos0 = objPos0 - {0.21,0.33+0.024,0.};
+    world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,-0.165-0.026-0.03,-0.};
   } else if (i==3) {
-    objPosT = objPosT - ARRAY(0.21,0.,0.163+0.005);
-    objPos0 = objPos0 - ARRAY(0.21,0.,0.163+0.005);
-    world->getBodyByName("wall1")->X.pos =  objPosT+ARRAY(-0.1,0.165+0.026+0.03,-0.);
-    world->getBodyByName("wall2")->X.pos =  objPosT+ARRAY(-0.1,0.,-0.0815-0.1);
+    objPosT = objPosT - {0.21,0.,0.163+0.005};
+    objPos0 = objPos0 - {0.21,0.,0.163+0.005};
+    world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,0.165+0.026+0.03,-0.};
+    world->getBodyByName("wall2")->X.pos =  objPosT+{-0.1,0.,-0.0815-0.1};
   } else if (i==4) {
-    objPosT = objPosT - ARRAY(0.21,0.33+0.024,0.163+0.005);
-    objPos0 = objPos0 - ARRAY(0.21,0.33+0.024,0.163+0.005);
-    world->getBodyByName("wall1")->X.pos =  objPosT+ARRAY(-0.1,-0.165-0.026-0.03,-0.);
+    objPosT = objPosT - {0.21,0.33+0.024,0.163+0.005};
+    objPos0 = objPos0 - {0.21,0.33+0.024,0.163+0.005};
+    world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,-0.165-0.026-0.03,-0.};
   }
 
-//  world->getBodyByName("wall2")->X.pos =  objPosT+ARRAY(-0.1,0.,0.0815+0.07);
+//  world->getBodyByName("wall2")->X.pos =  objPosT+{-0.1,0.,0.0815+0.07};
 
   world->getBodyByName("drawer1")->X.pos =  objPos0;
   world->getBodyByName("targetRef")->X.pos =  refFrame + markerPos;

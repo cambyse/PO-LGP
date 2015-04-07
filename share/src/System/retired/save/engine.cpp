@@ -25,20 +25,20 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
   m->type = modReg->value<Type>();
   m->mode = mode;
   m->beat = beat;
-  Item* modIt = system.append<ModuleEntry>(STRINGS("Module", (name?name:modReg->keys(1))), m);
+  Item* modIt = system.append<ModuleEntry>({"Module", (name?name:modReg->keys(1))}, m);
 
   for(Item *accReg: modReg->parentOf){
     AccessEntry *a = new AccessEntry;
     a->reg = accReg;
     a->type = accReg->value<Type>();
     if(!&vars || !vars.N){
-      system.append<AccessEntry>(STRINGS("Access", accReg->keys(1)), ARRAY(modIt), a);
+      system.append<AccessEntry>({MT::String("Access"), accReg->keys(1)}, {modIt}, a);
     }else{
       Item *varIt = vars(accReg_COUNT);
       VariableEntry *v = varIt->value<VariableEntry>();
       cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
            <<" with Variable (" <<*(v->type) <<")" <<endl;
-      system.append<AccessEntry>(STRINGS("Access", varIt->keys(1)), ARRAY(modIt, varIt), new AccessEntry());
+      system.append<AccessEntry>({MT::String("Access"), varIt->keys(1)}, {modIt, varIt}, new AccessEntry());
     }
   }
 }
@@ -58,14 +58,14 @@ void SystemDescription::complete(){
           cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
           v = new SystemDescription::VariableEntry;
           v->type = acc->value<Type>();
-          varIt = system.append<VariableEntry>(STRINGS("Variable", acc->keys(1)), v);
+          varIt = system.append<VariableEntry>({MT::String("Variable"}, acc->keys(1)}, v);
         }else{
           v = varIt->value<VariableEntry>();
         }
         cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
              <<" with Variable " <<varIt->keys(1) <<"(" <<*(v->type) <<")" <<endl;
         m->accs.append(v);
-        system.append<AccessEntry>(STRINGS("Access", acc->keys(1)), ARRAY(it, varIt), new AccessEntry());
+        system.append<AccessEntry>({MT::String("Access"), acc->keys(1)}, {it, varIt}, new AccessEntry());
       }
     }
   }
@@ -81,7 +81,7 @@ void SystemDescription::complete(){
         cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
         v = new SystemDescription::VariableEntry;
         v->type = a->type;
-        varIt = system.append<VariableEntry>(STRINGS("Variable", accIt->keys(1)), v);
+        varIt = system.append<VariableEntry>({MT::String("Variable"), accIt->keys(1)}, v);
       }else{
         v = varIt->value<VariableEntry>();
       }

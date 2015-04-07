@@ -25,7 +25,7 @@ void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tipHook3", 0, 0);
    TaskVariable *TV_up   = new DefaultTaskVariable("up1", *sys.ors, zalignTVT, "arm20", "<d(90 0 1 0)>", 0, 0, 0);
   TaskVariableList TVs;
-  TVs.append(ARRAY( TV_z1, TV_z2, TV_f1, TV_f2, TV_f3,TV_up,TV_q));
+  TVs.append({ TV_z1, TV_z2, TV_f1, TV_f2, TV_f3,TV_up,TV_q});
   sys.setTaskVariables(TVs);
 }
 
@@ -161,7 +161,7 @@ int problem4(){
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
   reach->setInterpolatedTargetsEndPrecisions(T, 0., 1e1, 0., 0.);//1e1
- // arr pr = ARRAY(0.,0.,0.,0.,1e0);  
+ // arr pr = {0.,0.,0.,0.,1e0};  
   //reach->setIntervalPrecisions(T,pr,pr); 
   //! end of reach
  // Tlist.append(wr);

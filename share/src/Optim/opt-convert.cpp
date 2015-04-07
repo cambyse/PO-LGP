@@ -601,9 +601,7 @@ ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovF
 
 //===========================================================================
 
-struct RUN_ON_INIT{
-  RUN_ON_INIT(){
-    MT::Array<TermType>::memMove=true;
-  }
-} dummy;
+RUN_ON_INIT_BEGIN()
+  MT::Array<TermType>::memMove=true;
+RUN_ON_INIT_END()
 

@@ -104,17 +104,11 @@ body endeffBase { type=2 size=[0 0 0 .01] contact, }
 
 
 joint r_shoulder_pan_joint (torso_lift_link r_shoulder_pan_link){ from=<T 0 -0.188 0 1 0 0 0 >  type=0 q=-1  limits=[ -2.2854 0.714602 ]  ctrl_limits=[ 2.088 30 ]  }
-
 joint r_shoulder_lift_joint (r_shoulder_pan_link r_shoulder_lift_link){ from=<T 2.22045e-17 0 -0.1 -0.5 -0.5 -0.5 -0.5 >  type=0 q=.5 limits=[ -0.5236 1.3963 ]  ctrl_limits=[ 2.082 30 ]  }
-
 joint r_upper_arm_roll_joint (r_shoulder_lift_link r_upper_arm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-1  limits=[ -3.9 0.8 ]  ctrl_limits=[ 3.27 30 ]  }
-
 joint r_elbow_flex_joint (r_upper_arm_roll_link r_elbow_flex_link){ from=<T 0.4 0 0 0.707107 0 0 0.707107 >  type=0 q=-2 limits=[ -2.3213 0 ]  ctrl_limits=[ 3.3 30 ]  }
-
 joint r_forearm_roll_joint (r_elbow_flex_link r_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-1.5 ctrl_limits=[ 3.6 30 ]  }
-
-joint r_wrist_flex_joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0  limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  }
-
+joint r_wrist_flex_joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0 q=-.5 limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  }
 joint r_wrist_roll_joint (r_wrist_flex_link r_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-.5 ctrl_limits=[ 3.6 10 ]  }
 
 joint endeffR_joint  (r_wrist_roll_link endeffR){ A=<T t(0.21 0 0) d(0 0 0 0)> B=<T t(0 0 0)>  Q=<T d(1 0 0 0)> type=10  }

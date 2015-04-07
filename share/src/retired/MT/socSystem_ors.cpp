@@ -173,7 +173,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
     col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, ARR());
-  setTaskVariables(ARRAY(pos, col, com));
+  setTaskVariables({pos, col, com});
 
   pos->y_target = ARRAY(ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
@@ -257,7 +257,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   TaskVariable *col;
   if(!useTruncation) col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else               col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
-  setTaskVariables(ARRAY(pos, col));
+  setTaskVariables({pos, col});
 
   pos->y_target = ARRAY(ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
@@ -306,7 +306,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , "effector", 0, 0, 0, 0);
   x1 = new TaskVariable("COM",       *sys.ors, comTVT , 0, 0, 0, 0, 0);
   x2 = new TaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(.02));
-  sys.vars = ARRAY(x0, x1, x2);
+  sys.vars = {x0, x1, x2};
 
   updateState(globalSpace);
   //reportAll(globalSpace, cout);
@@ -620,7 +620,7 @@ void drawOrsSocEnv(void*){
   //set task variables
   TaskVariable *x0;
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , "eff", "t(0 0 .15)", 0, 0, 0);
-  sys.vars = ARRAY(x0);
+  sys.vars = {x0};
 
   updateState(sys.vars);
   //reportAll(globalSpace, cout);
@@ -660,7 +660,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
   TaskVariable *x0, *x1;
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , endeffector_name, "", 0, 0, 0);
   x1 = new TaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, 0);
-  sys.vars = ARRAY(x0, x1);
+  sys.vars = {x0, x1};
 
   updateState(sys.vars);
   //reportAll(globalSpace, cout);
