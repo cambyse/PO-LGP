@@ -265,7 +265,9 @@ namespace graph_util {
         }
 
         bool check_pending_nodes() const {
-            static_assert(DEBUG_LEVEL>0, "To use this function compile with DEBUG_LEVEL greater than zero");
+            if(DEBUG_LEVEL<=0) {
+                DEBUG_ERROR("For this function to work properly recompile with DEBUG_LEVEL greater than zero.");
+            }
             IF_DEBUG(2) {
                 DEBUG_OUT(0,"Pending nodes:");
                 for(node_t node : pending_nodes) {
