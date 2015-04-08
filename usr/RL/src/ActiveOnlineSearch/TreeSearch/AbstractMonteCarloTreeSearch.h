@@ -47,7 +47,7 @@ public:
          * Value of this action/state. */
         reward_t value = 0;
         /**
-         * Variance of the value.. */
+         * Variance of the value. */
         reward_t value_variance = 0;
         /**
          * The sum of returns for all rollouts passing through this

@@ -2,7 +2,6 @@
 
 #include <lemon/maps.h>
 #include <lemon/connectivity.h>
-#include <lemon/bfs.h>
 #include <lemon/adaptors.h>
 #include <lemon/concepts/digraph.h>
 
@@ -13,10 +12,13 @@
 #include <util/graph_plotting.h>
 #include <util/QtUtil.h>
 
-#define DEBUG_LEVEL 0
+#include "graph_util.h"
+
+#define DEBUG_LEVEL 3
 #include <util/debug.h>
 
 using namespace lemon;
+using namespace graph_util;
 using std::vector;
 using std::set;
 using util::Range;
@@ -55,181 +57,222 @@ void CG::assign_differentials(std::vector<double> values, std::vector<node_t> no
     }
 }
 
+// void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
+
+//     switch(p) {
+//     case VALUES:
+//         DEBUG_OUT(1, "Propagating values...");
+//         break;
+//     case FORWARD:
+//         DEBUG_OUT(1, "Propagating differentials (forward)...");
+//         break;
+//     case REVERSE:
+//         DEBUG_OUT(1, "Propagating differentials (reverse)...");
+//         break;
+//     default:
+//         DEBUG_DEAD_LINE;
+//     }
+
+//     // status of the nodes
+//     set<node_t> active_nodes;
+//     set<node_t> pending_nodes;
+
+//     // find nodes that have to be processed
+//     graph_t::NodeMap<bool> to_be_processed(graph,true);
+//     switch(p) {
+//     case VALUES:
+//     case FORWARD: {
+//         // simple depth first search from changed nodes
+//         Dfs<graph_t> search(graph);
+//         search.reachedMap(to_be_processed).init();
+//         for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+//         search.start();
+//         break;
+//     }
+//     case REVERSE: {
+//         // depth first search in reverse graph from changed nodes TODO: Somehow
+//         // directly use to_be_processed map as ReachedMap as above (type does
+//         // not match) to avoid the for loop for copying the values.
+//         typedef ReverseDigraph<const graph_t> rev_graph_t;
+//         Dfs<rev_graph_t> search(reverseDigraph(graph));
+//         search.init();
+//         for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
+//         search.start();
+//         for(node_it_t node(graph); node!=INVALID; ++node) {
+//             to_be_processed[node] = search.reached(node);
+//         }
+//         break;
+//     }
+//     default:
+//         DEBUG_DEAD_LINE;
+//     }
+
+//     // kick off propagation from changed nodes and remove changed nodes from
+//     // to-be-processed
+//     DEBUG_OUT(2, "    Kick-off from changed nodes...");
+//     for(node_t node : changed_nodes) {
+//         to_be_processed[node] = false;
+//         DEBUG_OUT(3, "        '" << node_labels[node] << "'");
+//         switch(p) {
+//         case VALUES:
+//         case FORWARD:
+//             for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                 node_t target_node = graph.target(arc);
+//                 active_nodes.insert(target_node);
+//                 DEBUG_OUT(3, "            add '" << node_labels[target_node] << "' to active set");
+//             }
+//             break;
+//         case REVERSE:
+//             for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                 node_t source_node = graph.source(arc);
+//                 active_nodes.insert(source_node);
+//                 DEBUG_OUT(3, "            add '" << node_labels[source_node] << "' to active set");
+//             }
+//             break;
+//         default:
+//             DEBUG_DEAD_LINE;
+//         }
+//     }
+
+//     // print nodes to be processed
+//     IF_DEBUG(3) {
+//         DEBUG_OUT(3,"    Nodes to be processed:");
+//         for(node_it_t node(graph); node!=INVALID; ++node) {
+//             if(to_be_processed[node]) {
+//                 DEBUG_OUT(3,"        '" << node_labels[node] << "'");
+//             }
+//         }
+//     }
+
+//     // keep processing active nodes till end
+//     DEBUG_OUT(2, "    Looping through active nodes...");
+//     while(active_nodes.size()>0) {
+//         DEBUG_OUT(2, "    New iteration...");
+//         set<node_t> new_active_nodes;
+//         set<node_t> new_processed;
+//         set<node_t> move_to_pending;
+//         for(node_t node : active_nodes) {
+//             DEBUG_OUT(2, "            Checking active node '" << node_labels[node] << "'");
+//             bool all_inputs_available = true;
+//             switch(p) {
+//             case VALUES:
+//             case FORWARD:
+//                 for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                     if(to_be_processed[graph.source(arc)]) {
+//                         all_inputs_available = false;
+//                         break;
+//                     }
+//                 }
+//                 break;
+//             case REVERSE:
+//                 for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                     if(to_be_processed[graph.target(arc)]) {
+//                         all_inputs_available = false;
+//                         break;
+//                     }
+//                 }
+//                 break;
+//             default:
+//                 DEBUG_DEAD_LINE;
+//             }
+//             if(all_inputs_available) {
+//                 to_be_processed[node] = false;
+//                 new_processed.insert(node);
+//                 double val = evaluate_node(node, p);
+//                 DEBUG_OUT(3, "                All inputs available --> compute value (" << val << ")");
+//                 switch(p) {
+//                 case VALUES:
+//                 case FORWARD:
+//                     for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                         node_t target_node = graph.target(arc);
+//                         new_active_nodes.insert(target_node);
+//                         DEBUG_OUT(4, "                    add '" << node_labels[target_node] << "' to active set");
+//                     }
+//                     break;
+//                 case REVERSE:
+//                     for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
+//                         node_t source_node = graph.source(arc);
+//                         new_active_nodes.insert(source_node);
+//                         DEBUG_OUT(4, "                    add '" << node_labels[source_node] << "' to active set");
+//                     }
+//                     break;
+//                 default:
+//                     DEBUG_DEAD_LINE;
+//                 }
+//             } else {
+//                 DEBUG_OUT(3, "                Some input pending --> move node to pending set");
+//                 move_to_pending.insert(node);
+//             }
+//         }
+//         //-------------//
+//         // update sets //
+//         //-------------//
+//         // swap old and new active
+//         active_nodes.swap(new_active_nodes);
+//         // remove processed nodes from active and pending (this may also include
+//         // new active nodes that were already processed in the same iteration)
+//         DEBUG_OUT(4,"    Processed nodes:" << (new_processed.size()==0?" NONE":""));
+//         for(node_t node : new_processed) {
+//             DEBUG_OUT(4,"        " << node_labels[node]);
+//             active_nodes.erase(node);
+//             pending_nodes.erase(node);
+//         }
+//         // print new active nodes
+//         IF_DEBUG(4) {
+//             DEBUG_OUT(4,"    New active nodes:" << (active_nodes.size()==0?" NONE":""));
+//             for(node_t node : active_nodes) {
+//                 DEBUG_OUT(4,"        " << node_labels[node]);
+//             }
+//         }
+//         DEBUG_OUT(4,"    Move to pending:" << (move_to_pending.size()==0?" NONE":""));
+//         for(node_t node : move_to_pending) {
+//             DEBUG_OUT(4,"        " << node_labels[node]);
+//             pending_nodes.insert(node);
+//         }
+//     }
+//     if(pending_nodes.size()>0 || active_nodes.size()>0) {
+//         DEBUG_ERROR("Propagating values did not complete");
+//     }
+// }
+
 void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
 
     switch(p) {
-    case VALUES:
+    case VALUES: {
         DEBUG_OUT(1, "Propagating values...");
+        auto prop = GraphPropagationFactory(graph);
+        for(node_t node : changed_nodes) prop.add_source(node);
+        prop.init();
+        for(node_t node=prop.next(); node!=lemon::INVALID; node=prop.next()) {
+            double val = evaluate_node(node, p);
+            DEBUG_OUT(3, "    compute value for " << node_labels[node] << ": " << val);
+        }
         break;
-    case FORWARD:
-        DEBUG_OUT(1, "Propagating differentials (forward)...");
-        break;
-    case REVERSE:
-        DEBUG_OUT(1, "Propagating differentials (reverse)...");
-        break;
-    default:
-        DEBUG_DEAD_LINE;
     }
-
-    // status of the nodes
-    set<node_t> active_nodes;
-    set<node_t> pending_nodes;
-
-    // find nodes that have to be processed
-    graph_t::NodeMap<bool> to_be_processed(graph,true);
-    switch(p) {
-    case VALUES:
     case FORWARD: {
-        // simple depth first search from changed nodes
-        Dfs<graph_t> search(graph);
-        search.reachedMap(to_be_processed).init();
-        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
-        search.start();
+        DEBUG_OUT(1, "Propagating differentials (forward)...");
+        auto prop = GraphPropagationFactory(graph);
+        for(node_t node : changed_nodes) prop.add_source(node);
+        prop.init();
+        for(node_t node=prop.next(); node!=lemon::INVALID; node=prop.next()) {
+            double val = evaluate_node(node, p);
+            DEBUG_OUT(3, "    compute value for " << node_labels[node] << ": " << val);
+        }
         break;
     }
     case REVERSE: {
-        // depth first search in reverse graph from changed nodes TODO: Somehow
-        // directly use to_be_processed map as ReachedMap as above (type does
-        // not match) to avoid the for loop for copying the values.
-        typedef ReverseDigraph<const graph_t> rev_graph_t;
-        Dfs<rev_graph_t> search(reverseDigraph(graph));
-        search.init();
-        for_each(changed_nodes.begin(), changed_nodes.end(), [&](node_t n){search.addSource(n);});
-        search.start();
-        for(node_it_t node(graph); node!=INVALID; ++node) {
-            to_be_processed[node] = search.reached(node);
+        DEBUG_OUT(1, "Propagating differentials (reverse)...");
+        auto prop = GraphPropagationFactory(reverseDigraph(graph));
+        for(node_t node : changed_nodes) prop.add_source(node);
+        prop.init();
+        for(node_t node=prop.next(); node!=lemon::INVALID; node=prop.next()) {
+            double val = evaluate_node(node, p);
+            DEBUG_OUT(3, "    compute value for " << node_labels[node] << ": " << val);
         }
         break;
     }
     default:
         DEBUG_DEAD_LINE;
-    }
-
-    // kick off propagation from changed nodes and remove changed nodes from
-    // to-be-processed
-    DEBUG_OUT(2, "    Kick-off from changed nodes...");
-    for(node_t node : changed_nodes) {
-        to_be_processed[node] = false;
-        DEBUG_OUT(3, "        '" << node_labels[node] << "'");
-        switch(p) {
-        case VALUES:
-        case FORWARD:
-            for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                node_t target_node = graph.target(arc);
-                active_nodes.insert(target_node);
-                DEBUG_OUT(3, "            add '" << node_labels[target_node] << "' to active set");
-            }
-            break;
-        case REVERSE:
-            for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                node_t source_node = graph.source(arc);
-                active_nodes.insert(source_node);
-                DEBUG_OUT(3, "            add '" << node_labels[source_node] << "' to active set");
-            }
-            break;
-        default:
-            DEBUG_DEAD_LINE;
-        }
-    }
-
-    // print nodes to be processed
-    IF_DEBUG(3) {
-        DEBUG_OUT(3,"    Nodes to be processed:");
-        for(node_it_t node(graph); node!=INVALID; ++node) {
-            if(to_be_processed[node]) {
-                DEBUG_OUT(3,"        '" << node_labels[node] << "'");
-            }
-        }
-    }
-
-    // keep processing active nodes till end
-    DEBUG_OUT(2, "    Looping through active nodes...");
-    while(active_nodes.size()>0) {
-        DEBUG_OUT(2, "    New iteration...");
-        set<node_t> new_active_nodes;
-        set<node_t> new_processed;
-        set<node_t> move_to_pending;
-        for(node_t node : active_nodes) {
-            DEBUG_OUT(2, "            Checking active node '" << node_labels[node] << "'");
-            bool all_inputs_available = true;
-            switch(p) {
-            case VALUES:
-            case FORWARD:
-                for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(to_be_processed[graph.source(arc)]) {
-                        all_inputs_available = false;
-                        break;
-                    }
-                }
-                break;
-            case REVERSE:
-                for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                    if(to_be_processed[graph.target(arc)]) {
-                        all_inputs_available = false;
-                        break;
-                    }
-                }
-                break;
-            default:
-                DEBUG_DEAD_LINE;
-            }
-            if(all_inputs_available) {
-                to_be_processed[node] = false;
-                new_processed.insert(node);
-                double val = evaluate_node(node, p);
-                DEBUG_OUT(3, "                All inputs available --> compute value (" << val << ")");
-                switch(p) {
-                case VALUES:
-                case FORWARD:
-                    for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                        node_t target_node = graph.target(arc);
-                        new_active_nodes.insert(target_node);
-                        DEBUG_OUT(4, "                    add '" << node_labels[target_node] << "' to active set");
-                    }
-                    break;
-                case REVERSE:
-                    for(in_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-                        node_t source_node = graph.source(arc);
-                        new_active_nodes.insert(source_node);
-                        DEBUG_OUT(4, "                    add '" << node_labels[source_node] << "' to active set");
-                    }
-                    break;
-                default:
-                    DEBUG_DEAD_LINE;
-                }
-            } else {
-                DEBUG_OUT(3, "                Some input pending --> move node to pending set");
-                move_to_pending.insert(node);
-            }
-        }
-        //-------------//
-        // update sets //
-        //-------------//
-        // swap old and new active
-        active_nodes.swap(new_active_nodes);
-        // remove processed nodes from active and pending (this may also include
-        // new active nodes that were already processed in the same iteration)
-        DEBUG_OUT(4,"    Processed nodes:" << (new_processed.size()==0?" NONE":""));
-        for(node_t node : new_processed) {
-            DEBUG_OUT(4,"        " << node_labels[node]);
-            active_nodes.erase(node);
-            pending_nodes.erase(node);
-        }
-        // print new active nodes
-        IF_DEBUG(4) {
-            DEBUG_OUT(4,"    New active nodes:" << (active_nodes.size()==0?" NONE":""));
-            for(node_t node : active_nodes) {
-                DEBUG_OUT(4,"        " << node_labels[node]);
-            }
-        }
-        DEBUG_OUT(4,"    Move to pending:" << (move_to_pending.size()==0?" NONE":""));
-        for(node_t node : move_to_pending) {
-            DEBUG_OUT(4,"        " << node_labels[node]);
-            pending_nodes.insert(node);
-        }
-    }
-    if(pending_nodes.size()>0 || active_nodes.size()>0) {
-        DEBUG_ERROR("Propagating values did not complete");
     }
 }
 
@@ -357,10 +400,12 @@ bool CG::check_derivatives(std::vector<double> values,
 CG & CG::plot_graph(const char* file_name) {
     graph_t::NodeMap<QString> node_properties(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
-        node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
+        //node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3>").
+        node_properties[node] = QString("label=<%1=%2<BR/><I>d</I>%1=%3<BR/>id=%4>").
             arg(node_labels[node]).
             arg(node_values[node]).
-            arg(node_differentials[node]);
+            arg(node_differentials[node]).
+            arg(graph.id(node));
     }
     graph_t::ArcMap<QString> arc_properties(graph);
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {

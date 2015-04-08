@@ -48,6 +48,14 @@ target_link_libraries(main
     -lgomp
 )
 
+## example
+
+add_executable(GraphPropagationExample
+    examples/GraphPropagationExample.cpp
+    graph_util.h
+)
+target_link_libraries(GraphPropagationExample util -lemon)
+
 ## library
 
 add_library(ActiveOnlineSearch
