@@ -549,3 +549,42 @@ TEST(GraphPropagation, ProcessingOrder) {
     }
     EXPECT_EQ(node_chain,"1 2 3 4 5 6 7 8 9 10 11 ") << "node_chain='" << node_chain << "'";
 }
+
+TEST(Lemon, Dfs) {
+
+    typedef lemon::ListDigraph graph_t;
+    typedef graph_t::Node Node;
+    typedef graph_t::NodeIt NodeIt;
+
+    graph_t graph;
+
+    Node n0 = graph.addNode();
+    Node n1 = graph.addNode();
+    Node n2 = graph.addNode();
+    Node n3 = graph.addNode();
+
+    graph.addArc(n0, n3);
+    graph.addArc(n1, n2);
+
+    util::graph_to_pdf("graph.pdf", graph);
+
+    std::vector<Node> list_1({n1,n0});
+    std::vector<Node> list_2({n0,n1});
+    for(auto list : {list_1,list_2}) {
+        lemon::Dfs<graph_t> search(graph);
+        search.init();
+        for(Node node : list) {
+            cout << "add node " << graph.id(node) << endl;
+            search.addSource(node);
+        }
+        search.start();
+        for(NodeIt node(graph); node!=lemon::INVALID; ++node) {
+            if(search.reached(node)) {
+                cout << "node " << graph.id(node) << ": reached" << endl;
+            } else {
+                cout << "node " << graph.id(node) << ": NOT reached" << endl;
+            }
+        }
+        cout << endl;
+    }
+}
