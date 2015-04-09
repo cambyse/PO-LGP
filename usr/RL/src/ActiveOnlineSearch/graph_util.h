@@ -3,21 +3,16 @@
 
 #include <vector>
 #include <queue>
+#include <stack>
 #include <functional>
 #include <unordered_set>
 
-#include <lemon/list_graph.h>
-#include <lemon/maps.h>
-#include <lemon/connectivity.h>
-#include <lemon/dfs.h>
-#include <lemon/adaptors.h>
-#include <lemon/concepts/digraph.h>
+#include <util/graph_plotting.h>
 
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 namespace graph_util {
-
 
     /**
      * Computes a hash for nodes. This class returns the node ID given the used
@@ -34,6 +29,53 @@ namespace graph_util {
     private:
         const graph_t & graph;
     };
+
+    template<class graph_t>
+        class GraphFlooding {
+    public:
+        typedef typename graph_t::Node node_t;
+        typedef typename graph_t::NodeIt node_it_t;
+        typedef typename graph_t::OutArcIt out_arc_it_t;
+        template<class T>
+            using node_map_t = typename graph_t::template NodeMap<T>;
+
+        const graph_t & graph;
+        node_map_t<bool> & reached;
+        std::stack<node_t> unprocessed_nodes;
+
+    GraphFlooding(const graph_t & graph, node_map_t<bool> & reached):
+        graph(graph),
+            reached(reached)
+            {}
+
+        GraphFlooding & add_source(node_t node) {
+            unprocessed_nodes.push(node);
+            return *this;
+        }
+
+        void flood() {
+            // init reached to false
+            for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+                reached[node] = false;
+            }
+            // process
+            while(!unprocessed_nodes.empty()) {
+                node_t current_node = unprocessed_nodes.top();
+                unprocessed_nodes.pop();
+                for(out_arc_it_t arc(graph,current_node); arc!=lemon::INVALID; ++arc) {
+                    node_t other_node = graph.target(arc);
+                    if(!reached[other_node]) unprocessed_nodes.push(other_node);
+                }
+                reached[current_node] = true;
+            }
+        }
+    };
+
+    template<class graph_t>
+        GraphFlooding<graph_t> graph_flooding(const graph_t & graph,
+                                              typename graph_t::template NodeMap<bool> & reached) {
+        return GraphFlooding<graph_t>(graph,reached);
+    }
 
     /**
      * \example GraphPropagationExample.cpp This is an example of how to use the
@@ -65,7 +107,6 @@ namespace graph_util {
         std::deque<node_t> unprocessed_nodes_queue;
         bool local_reachable_map         = false;
         bool local_processed_map         = false;
-        bool reachable_nodes_computed    = false;
         node_map_t<bool> * reachable_map                = nullptr;
         check_change_function_t * check_change_function = nullptr;
         node_map_t<bool> * processed_map                = nullptr;
@@ -103,10 +144,8 @@ namespace graph_util {
                 local_processed_map = true;
             } else DEBUG_OUT(1,"Using external processed map");
             // compute reachable nodes
-            if(!reachable_nodes_computed) {
-                DEBUG_OUT(1,"Computing reachable nodes");
-                find_reachable_nodes();
-            } else DEBUG_OUT(1,"Reachable already computed");
+            DEBUG_OUT(1,"Computing reachable nodes");
+            find_reachable_nodes();
             // mark all nodes as unprocessed
             for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
                 DEBUG_OUT(3,"Mark node " << graph.id(node) << " as unprocessed");
@@ -176,26 +215,8 @@ namespace graph_util {
         }
 
         /**
-         * Performs a depth-first search to determine all nodes reachable from
-         * the source nodes. If not called explicitly, this function is called
-         * by init(). \warning If you add source nodes using add_source() after
-         * calling find_reachable_nodes() init() will not update the reachable
-         * nodes. */
-        GraphPropagation & find_reachable_nodes() {
-            lemon::Dfs<graph_t> search(graph);
-            search.init();
-            for(node_t node : source_nodes) {
-                search.addSource(node);
-            }
-            search.reachedMap(*reachable_map).start();
-            reachable_nodes_computed = true;
-            return *this;
-        }
-
-        /**
-         * Returns true if the given node is reachable.  \pre
-         * find_reachable_nodes() or init() should be run before using this
-         * function. */
+         * Returns true if the given node is reachable. \pre init() should be
+         * run before using this function. */
         bool is_reachable(node_t node) const { return (*reachable_map)[node]; }
 
         /**
@@ -239,8 +260,11 @@ namespace graph_util {
                 DEBUG_OUT(2,"    checking inputs...");
                 for(in_arc_it_t arc(graph,next_node); arc!=lemon::INVALID; ++arc) {
                     node_t source_node = graph.source(arc);
+                    DEBUG_OUT(3,"    node " << graph.id(source_node) << " is " <<
+                              (is_reachable(source_node)?"reachable":"not reachable") << " and " <<
+                              (was_processed(source_node)?"was processed":"was not processed") );
                     if(is_reachable(source_node) && !was_processed(source_node)) {
-                        DEBUG_OUT(3,"    node " << graph.id(source_node) << " not available");
+                        DEBUG_OUT(3,"    node " << graph.id(source_node) << "is not available");
                         inputs_available = false;
                         break;
                     } else DEBUG_OUT(3,"    node " << graph.id(source_node) << " is available");
@@ -258,11 +282,26 @@ namespace graph_util {
             return next_node;
         }
 
-        private:
-            bool changed(node_t node) const {
-                if(check_change_function) return (*check_change_function)(node);
-                else return !was_processed(node);
+    private:
+
+        /**
+         * Performs a depth-first search to determine all nodes reachable from
+         * the source nodes. This function is called by init(). */
+        GraphPropagation & find_reachable_nodes() {
+            DEBUG_OUT(1,"Find reachable nodes by flooding...");
+            auto flood = graph_flooding(graph,*reachable_map);
+            for(node_t node : source_nodes) {
+                DEBUG_OUT(2,"    add node " << graph.id(node) << " to source nodes");
+                flood.add_source(node);
             }
+            flood.flood();
+            return *this;
+        }
+
+        bool changed(node_t node) const {
+            if(check_change_function) return (*check_change_function)(node);
+            else return !was_processed(node);
+        }
     };
 
     template<class graph_t>

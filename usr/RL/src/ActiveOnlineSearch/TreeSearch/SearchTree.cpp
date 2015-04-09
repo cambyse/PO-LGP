@@ -3,12 +3,13 @@
 #include <algorithm> // for std::max
 #include <queue> // std::queue
 
-#include <lemon/dfs.h>
 #include <lemon/bfs.h>
 #include <lemon/adaptors.h>
 
 #include <QFile>
 #include <QTextStream>
+
+#include "../graph_util.h"
 
 #include <util/util.h>
 #include <util/graph_plotting.h>
@@ -95,7 +96,7 @@ void SearchTree::prune(const action_t & action, const state_t & state) {
 
     // find nodes that are reachable from new root node
     graph_t::NodeMap<bool> reached(graph);
-    lemon::dfs(graph).reachedMap(reached).run(root_node);
+    graph_util::graph_flooding(graph,reached).add_source(root_node).flood();
 
     // erase those that cannot be reached (but don't iterate AND erase at the
     // same time)

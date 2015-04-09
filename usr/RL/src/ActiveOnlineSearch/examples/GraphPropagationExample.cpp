@@ -1,4 +1,5 @@
 #include <iostream>
+#include <lemon/list_graph.h>
 #include "../graph_util.h"
 #include <util/util.h>
 #include <util/graph_plotting.h>

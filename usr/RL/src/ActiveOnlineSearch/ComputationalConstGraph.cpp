@@ -14,7 +14,7 @@
 
 #include "graph_util.h"
 
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using namespace lemon;

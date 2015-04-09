@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <lemon/dfs.h>
+
 #include "../util/pretty_printer.h"
 #include "../util/util.h"
 #include "../util/QtUtil.h"
@@ -12,7 +14,7 @@
 
 #include "graph_util.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 #include <ActiveOnlineSearch/ComputationalGraph.h>
@@ -179,7 +181,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     }
 
     // check derivatives
-    //EXPECT_TRUE(cg.check_derivatives({VALUES}));
+    EXPECT_TRUE(cg.check_derivatives({VALUES}));
 
 
     /*=============================================
@@ -195,11 +197,9 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     vec_double_1D input_diff_2( {dy_dalpha(VALUES), dy_dw(VALUES), dy_dt(VALUES)});
 
     // compute values and check
-    //DISTURB_ALL;
+    DISTURB_ALL;
     expect_near(cg.compute_values({VALUES}).get_output_values(),
                 output_values);
-    cg.plot_graph("graph.pdf");
-    return;
     DISTURB_ALL;
     expect_near(cg.update_values({VALUES},input_nodes).get_output_values(),
                 output_values);
@@ -437,12 +437,12 @@ TEST(GraphPropagation, Reachability) {
     NodeMap<bool> reachable_map(graph);
     NodeMap<QString> node_names(graph);
     auto graph_propagation = make_graph_for_graph_propagation_tests(graph, node_names);
-    graph_propagation.set_reachable_map(reachable_map).init().find_reachable_nodes();
+    graph_propagation.set_reachable_map(reachable_map).init();
 
     for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
         DEBUG_OUT(1,"Node " << node_names[node] << (reachable_map[node]?" was reached":" was not reached"));
         EXPECT_EQ(reachable_map[node], graph_propagation.is_reachable(node));
-        if(node_names[node]=="n0" || node_names[node]=="n1") EXPECT_FALSE(reachable_map[node]);
+        if(node_names[node]=="n1") EXPECT_FALSE(reachable_map[node]);
         else EXPECT_TRUE(reachable_map[node]);
     }
 }
