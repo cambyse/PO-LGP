@@ -1,10 +1,62 @@
-BASE   = ../..
-NAME   = lib$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so
-
-DEPEND = Core System Motion Ors Gui System
-
+LIB_NAME  = swig
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
+INTFCS = $(shell find . -maxdepth 1 -name '*.i' )
+WRAP_OBJS = $(INTFCS:%.i=%_wrap.o)
+WRAP_CXX = $(INTFCS:%.i=%_wrap.cxx)
+PY_INC = -I/usr/include/python2.7 -I$(MLR_PATH)/share/src
+BASE   = ../../
+NAME   = lib$(shell basename `pwd`)
+LIB_PATH = -L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
+MLR_PATH = $(HOME)/git/mlr
+SWIG_INCLUDE = -I$(MLR_PATH)/share/src
 
-include $(BASE)/gofMake/generic.mk
+#PLIB = 1
+#ROS = 0
+
+#DEPEND = Core System Motion Ors Gui System FOL pr2 Algo Hardware Hardware_gamepad Optim Perception relational Infer devTools MCTS MDP 
+DEPEND = pr2 System  Motion Ors Core FOL Hardware Hardware_gamepad Gui 
+
+
+OUTPUT = $(BASE)/lib/$(NAME).so
+mega:
+	make clean
+	make swig_clean
+	make all
+	make swig
+	make test
+
+swig: _$(LIB_NAME).so
+
+include $(BASE)gofMake/generic.mk
+
+_$(LIB_NAME).so: $(WRAP_OBJS) 
+	g++  -shared $< $(LIB_PATH) $(PY_INC) -lpython2.7  $(DEPEND:%=-l%) -lActions -o $@ 
+
+test:
+	python -i test.py
+
+
+#%.o: %.cpp
+#	gcc -fPIC -c $< -o $@
+
+#%.o: %.cxx
+#	gcc -fPIC -c $< -o $@ $(PY_INC)
+
+#%_wrap.cxx: %.i
+#	swig -python -c++ $<
+
+swig_info:
+	@echo "LIB_NAME =" "$(LIB_NAME)"
+	@echo "SRCS =" "$(SRCS)"
+	@echo "OBJS =" "$(OBJS)"
+	@echo "INTFCS =" "$(INTFCS)"
+	@echo "WRAP_OBJS =" "$(WRAP_OBJS)"
+	@echo "WRAP_CXX =" "$(WRAP_CXX)"
+	@echo "PY_INC =" "$(PY_INC)"
+	@echo "LIB_NAME =" "$(LIB_NAME)"
+
+.PHONY: all swig test clean mega
+
+swig_clean:
+	-rm $(INTFCS:%.i=%.py) $(WRAP_OBJS) _$(LIB_NAME).so $(OBJS) $(WRAP_CXX) -rf
