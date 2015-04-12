@@ -229,8 +229,8 @@ all: default
 %_wrap.o: %_wrap.cxx
 	$(CXX) $(SWC_CXXFLAGS) $<
 
-%py.so: %_wrap.o
-	$(CXX) $(SWC_LDFLAGS) $< -o $(MODULE_NAME)py.so
+_%.so: %_wrap.o
+	$(CXX) $< $(SWC_LDFLAGS) -o $@
 
 %py.py: 
 

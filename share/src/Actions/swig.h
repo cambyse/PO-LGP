@@ -30,7 +30,7 @@ struct ActionSwigInterface{
 
 
   //-- methods to modify the activity state (also sequence actions)
-  void startActivity(intV literal, dict parameters=dict());
+  void startActivity(intV literal, dict parameters={});
   void waitForCondition(intV literal);
   int  waitForOrCondition(std::vector<intV> literals);
   void waitForQuitSymbol();
@@ -43,7 +43,7 @@ struct ActionSwigInterface{
   int createNewSymbol(string symbolName);
 
   //-- methods to define tasks/actions
-  int defineNewTaskSpaceControlAction(string symbolName, dict parameters=dict());
+  int defineNewTaskSpaceControlAction(string symbolName, dict parameters={});
 
 //  int defineNewTaskSpaceControlAction(
 //      string symbolName,

@@ -3,15 +3,9 @@
 %{
 
 #include "swig.h"
-#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
-typedef std::vector<double> doubleV;
-typedef std::vector<int> intV;
-typedef std::vector<std::string> stringV;
-typedef std::map<std::string, std::string> dict;
-
 
 %}
 
