@@ -1,6 +1,6 @@
 
-%include ../../../../share/data/pr2_model/pr2_clean.ors
-%include ../../../../share/data/pr2_model/pr2_modifications2.ors
+Include = '../../../../share/data/pr2_model/pr2_clean.ors'
+Include = '../../../../share/data/pr2_model/pr2_modifications2.ors'
 
 # FIX unused joints
 Merge r_shoulder_pan_joint {type=10 limits =[]}

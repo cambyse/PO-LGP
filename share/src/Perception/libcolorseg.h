@@ -27,7 +27,8 @@ void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap);
 void random_colorMap(floatA& pch_colormap, uint np);
 uint incremental_patch_ids(uintA& pch);
 void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np);
-void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np);
+void patch_color_statistics(arr& stats, const uintA& patches, const byteA& image);
+void get_patch_centroids(arr& pch_cen, uintA& pch, uint np);
 
 uint get_single_color_segmentation(uintA& segmentation,  // segmented image
 				   const byteA& image,   // input image
@@ -44,9 +45,7 @@ uint get_single_color_segmentation_rgb(uintA& segmentation,  // segmented image
 				       int min = 200         // min. no. of pixels per segment
 				       );
 
-void get_patch_centers(arr& centers, const uintA& patches);
 
-void patch_color_statistics(arr& stats, const uintA& patches, const byteA& image);
 
 void colorize_patches(byteA& coloration, const uintA& patches, const arr& stats);
 
