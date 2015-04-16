@@ -23,7 +23,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //-- match ROS and ORS joint ids
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
-  ROS_INFO("*** ORS model loaded");
+  ROS_INFO("%s",STRING("*** ORS model loaded: " <<world.q.N <<"joints -- saved in 'z.model.kvg'").p);
+  world >>FILE("z.model.kvg");
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
   Kp_base.resize(world.q.N).setZero();
