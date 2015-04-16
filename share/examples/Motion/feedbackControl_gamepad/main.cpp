@@ -16,8 +16,8 @@ void TEST(Simulator){
     ACCESS(arr, qdot_obs);
     ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<PR2Simulator>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+      addModule<PR2Simulator>(NULL, Module::loopWithBeat, .001);
+      addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
       connect();
     }
   } S;

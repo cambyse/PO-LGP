@@ -51,9 +51,9 @@ void TEST(Basics){
   CHECK_EQ(a[1],a[2],"");
 
   //setting arrays ``by hand''
-  a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
+  a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to MT::Array<double>({ ... })
   cout <<"\nset by hand:\n" <<a <<endl;
-  ints = ARRAY<int>(0, -1, -2, -3, -4);
+  ints = { 0, -1, -2, -3, -4 };
   cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
   CHECK_EQ(a(2),-2,"");
@@ -132,7 +132,7 @@ void TEST(SimpleIterators) {
 
 void TEST(InitializationList) {
   cout << "Use c++11 initialization list to initialize arrays by hand" << endl;
-  arr a = {1, 3, 2, 5};
+  arr a = {1., 3., 2., 5.};
   cout << a << endl;
 }
 
@@ -398,7 +398,7 @@ void TEST(PCA) {
   // (and they are ok).
 
   cout <<"\n*** principal component analysis\n";
-  arr x = { 1, -2, 1, -1, 1, 1, 1, 2 };
+  arr x = { 1., -2., 1., -1., 1., 1., 1., 2. };
   x.reshape(4, 2);
   cout << "x = " << x << endl;
 
@@ -409,7 +409,7 @@ void TEST(PCA) {
   cout << "v = " << v << endl;
   cout << "w = " << w << endl;
 
-  arr y = { 1, 1, -1, 1, -1, -1, 1, -1 };
+  arr y = { 1., 1., -1., 1., -1., -1., 1., -1. };
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 

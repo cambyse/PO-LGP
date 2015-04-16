@@ -1,0 +1,6 @@
+set style data lines
+
+plot './z.actionMachine' us 5 t 'fx',\
+'' us 6 t 'fy',\
+'' us 7 t 'fz'
+

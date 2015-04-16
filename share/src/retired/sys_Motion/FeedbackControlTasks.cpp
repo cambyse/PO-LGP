@@ -17,7 +17,7 @@ void DoNothing_FeedbackControlTask::updateTaskVariableGoals(const ors::Kinematic
 void Stop_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TVs = ARRAY<TaskVariable*>(q);
+  TVs = {q};
   activateAll(TVs, true);
   q->y_prec=0.;
   q->v_prec=1e2;
@@ -37,7 +37,7 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& or
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TVs = ARRAY<TaskVariable*>(q, col, lim);
+  TVs = {q, col, lim};
   activateAll(TVs, true);
   q->y_prec=0;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e0);
@@ -65,7 +65,7 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& 
   count=0;
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TVs = ARRAY<TaskVariable*>(q);
+  TVs = {q};
   activateAll(TVs, true);
   q->y_prec=1e1;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e-1);
@@ -100,7 +100,7 @@ void CloseHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld&
   skinIndex(5) = ors.getBodyByName("fing2")->index;
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TVs = ARRAY<TaskVariable*>(q, skin);
+  TVs = {q, skin};
   activateAll(TVs, true);
   q->y_prec=0;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e-2);
@@ -134,7 +134,7 @@ void Reach_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors
   TaskVariable *eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TVs = ARRAY<TaskVariable*>(eff, col, lim);
+  TVs = {eff, col, lim};
   activateAll(TVs, true);
   eff->y_prec= 0.;
   eff->v_prec= 1e-1;
@@ -181,7 +181,7 @@ void Gamepad_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& o
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
   TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TVs = ARRAY<TaskVariable*>(eff, q, rot, col, lim, skin);
+  TVs = {eff, q, rot, col, lim, skin};
   activateAll(TVs, true);
   eff->y_prec=0.; //biros().getParameter<double>("TV_eff_yprec", 1e3);
   eff->v_prec=defaultEff_vprec=biros().getParameter<double>("TV_eff_vprec", 1e1);

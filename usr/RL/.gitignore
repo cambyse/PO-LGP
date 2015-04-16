@@ -4,7 +4,9 @@ moc_*.cpp
 
 ## qtcreator files
 *.pro.user
-build-*
 
 ## backup file of vue
 .~*.vue
+
+## ipython notebook
+**/.ipynb_checkpoints/**

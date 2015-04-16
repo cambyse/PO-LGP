@@ -12,11 +12,11 @@ struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
@@ -83,7 +83,7 @@ void TEST(Gamepad){
   MT::arrayBrackets="  ";
 
   for(uint t=0;;t++){
-//    S.gamepadState.var->waitForNextRevision();
+    S.gamepadState.var->waitForNextRevision();
     arr gamepadState = S.gamepadState.get();
     bool shutdown = j2t.updateTasks(gamepadState);
     if(t>10 && shutdown) engine().shutdown.incrementValue();
@@ -117,7 +117,7 @@ void TEST(Gamepad){
       refs.Kp = ARR(.3);
 #else // apply force in direction fe
       arr f_des = ARR(0.,0.,-5.);
-      double alpha = .01;
+      double alpha = .003;
       ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
       arr J_ft, J;
       MP.world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
@@ -125,9 +125,8 @@ void TEST(Gamepad){
 
       refs.u_bias = ~J*f_des;
       refs.fL = f_des;
-      arr J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
       refs.Ki = alpha*~J;
-      refs.J_ft_inv = J_ft_inv;
+      refs.J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
 
       J = inverse_SymPosDef(J*~J)*J;
 

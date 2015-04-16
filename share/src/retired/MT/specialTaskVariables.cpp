@@ -48,8 +48,8 @@ void createStandardRobotTaskVariables(OrsSystem& sys){
 #endif
   TaskVariable *TV_qhand= new DefaultTaskVariable("qhand", sys.getOrs(), qLinearTVT, 0, 0, 0, 0, I2);
   TaskVariableList TVs;
-  TVs.append(ARRAY(TV_eff, TV_q, TV_rot, TV_col, TV_lim)); //TV_skin
-  TVs.append(ARRAY(TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3, TV_qhand));
+  TVs.append({TV_eff, TV_q, TV_rot, TV_col, TV_lim}); //TV_skin
+  TVs.append({TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3, TV_qhand});
   sys.setTaskVariables(TVs);
 }
 

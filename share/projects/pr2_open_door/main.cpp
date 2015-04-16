@@ -16,9 +16,9 @@ struct MySystem:System{
   ACCESS(arr, marker_pose);
   MySystem(){
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ARMarkerSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ARMarkerSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
@@ -33,8 +33,8 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   /// load parameter from file
 
   double costScale = 1e2;
-//  arr param = ARRAY(.1,1e2,1e2,1e2,1e2,1e2,1e1);
-  arr param = ARRAY(0.22899,44.0754,0.115977,0.447064, 0.0262478, 63.4698 ,63.4825);
+//  arr param = {.1,1e2,1e2,1e2,1e2,1e2,1e1};
+  arr param = {0.22899,44.0754,0.115977,0.447064, 0.0262478, 63.4698 ,63.4825};
 
   param = param/length(param)*costScale;
   uint pC = 0;

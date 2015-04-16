@@ -311,8 +311,8 @@ void simpleMotion(){
   MotionProblem MP(world,false);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getBodyByName("box")->X.pos)+ARRAY(0.,0.3,0.);
-  arr refGoal2 = ARRAY(MP.world.getBodyByName("box")->X.pos)+ARRAY(0.,-0.2,0.);
+  arr refGoal1 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
+  arr refGoal2 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
   cout << refGoal1 << refGoal2 << endl;
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
@@ -326,7 +326,7 @@ void simpleMotion(){
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, zeros(MP.world.getJointStateDimension(),1), 1e3);
   c->map.order=1;
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.0));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
   MP.x0 = {0.,0.,0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -397,7 +397,7 @@ void simpleMotion(){
 //  c4->target = lambdaTraj*0.;
 
   TaskCost *c5 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"box","endeff",0.0));
-  MP2.setInterpolatingCosts(c5, MotionProblem::constant, ARRAY(0.), 1.);
+  MP2.setInterpolatingCosts(c5, MotionProblem::constant, {0.}, 1.);
 
 
   MP2.x0 = {0.,0.,0.,0.,0.};

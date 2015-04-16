@@ -658,7 +658,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     MT::String a;
-    a<< MT::String(" with p title '")<<data.legend(i)<<MT::String("' ");
+    if(i<data.legend.N) a<< " with p title '" <<data.legend(i) <<"' ";
     PLOTEVERY(block, a);
     block++;
   }

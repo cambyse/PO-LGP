@@ -8,14 +8,14 @@ struct SystemDescription{
   struct VariableEntry{ Type* type; Variable *var; };
   struct AccessEntry{ Item* reg; Type* type; Access *acc; };
   struct ModuleEntry{ Item* reg; Type* type; Module *mod; StepMode mode; double beat; };
-  KeyValueGraph system;
+  Graph system;
 
   SystemDescription() {}
 
   template<class T> void addVar(const char *name){
     VariableEntry *v = new VariableEntry;
     v->type = new Type_typed<T, void>();
-    system.append<VariableEntry>(STRINGS("Variable", name), v);
+    system.append<VariableEntry>({"Variable", name}, v);
   }
   Item* getVariableEntry(const Access& acc);
   Item* getVariableEntry(const char* name, const Type& typeinfo);
@@ -32,7 +32,7 @@ struct SystemDescription{
 struct Engine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
-  KeyValueGraph *system;
+  Graph *system;
 
   Engine();
   ~Engine();

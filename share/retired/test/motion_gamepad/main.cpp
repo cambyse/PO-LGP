@@ -21,7 +21,7 @@ int main(int argc,char** argv){
 
   ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, *gamepad);
 
-  ProcessL P=ARRAY(controller);
+  ProcessL P={controller};
 
   new InsideOut;
 

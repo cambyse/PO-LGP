@@ -1,3 +1,5 @@
+break /home/mtoussai/git/mlr/share/src/Core/util.h:321
+
 python
 
 import math
@@ -107,7 +109,7 @@ def qdump__Item_typed(d, value):
 def qdump__ItemL(d, value):
     qdump__LIST(d,value)
 
-def qdump__KeyValueGraph(d, value):
+def qdump__Graph(d, value):
     p = value["p"]
     N = value["N"]
     s = "<%i>" %N

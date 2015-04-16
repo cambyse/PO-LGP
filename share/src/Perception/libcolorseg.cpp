@@ -22,16 +22,7 @@
 #ifdef MT_extern_libcolorseg
 
 // Felzenszwalb's files
-#include <extern/libcolorseg/misc.h>
-#include <extern/libcolorseg/convolve.h>
-#include <extern/libcolorseg/disjoint-set.h>
-#include <extern/libcolorseg/filter.h>
 #include <extern/libcolorseg/image.h>
-#include <extern/libcolorseg/imconv.h>
-#include <extern/libcolorseg/imutil.h>
-#include <extern/libcolorseg/misc.h>
-#include <extern/libcolorseg/pnmfile.h>
-#include <extern/libcolorseg/segment-graph.h>
 #include <extern/libcolorseg/segment-image.h>
 
 // Unsupervised graph-cut-based segmentation (single-scale)
@@ -43,7 +34,7 @@
 //    int min                    - minimum size of segments
 //
 // OUTPUT
-//    uintA& segmentation        - segmented input image
+//    uintA& segmentation        - segmented output image
 //    uint                       - number of segments
 //
 // NOTE
@@ -51,14 +42,12 @@
 //  the number of segments can be queried by
 //    uint num_segments = segmentation.p[segmentation.maxIndex()];
 //
-uint get_single_color_segmentation(
-                                               uintA& segmentation,  // segmented image
-                                               const byteA& image,   // input image
-                                               float sigma,          // (Gaussian!?) blurring factor
-                                               float k,              // similarity threshold
-                                               int min               // min. no. of pixels per segment
-                                              )
-{
+uint get_single_color_segmentation(uintA& segmentation,  // segmented image
+                                   const byteA& image,   // input image
+                                   float sigma,          // (Gaussian!?) blurring factor
+                                   float k,              // similarity threshold
+                                   int min               // min. no. of pixels per segment
+                                   ){
    // wrap Felzenszwalb's data around Marc's array class data
    felzenszwalb::image<felzenszwalb::rgb>* image_pff = new felzenszwalb::image<felzenszwalb::rgb>(image.d1, image.d0, -1);
    image_pff->data = (felzenszwalb::rgb*) image.p;
@@ -68,27 +57,21 @@ uint get_single_color_segmentation(
 
    // apply segmentation
    int num_segments = 0;
-   intA lut(image.d0 * image.d1);                     // look-up table for consecutive segment enumeration
-   lut = -1;
    felzenszwalb::image<unsigned int>* seg_pff = segment_image(image_pff, sigma, k, min, &num_segments);
    uint* data = seg_pff->data;
-   if (segmentation.N != image.d0 * image.d1)
-      segmentation.resize(image.d0, image.d1);
 
-   int idx = -1, seg_counter = 0;
-   for (uint i = 0; i < segmentation.N; i++)
-   {
-      idx = data[i];
-      if (lut(idx) == -1)
-        lut(idx) = seg_counter++;
+   //extract segmentation with consecutive indices
+   segmentation.resize(image.d0, image.d1);
+   intA lut(image.d0 * image.d1);                     // look-up table for consecutive segment enumeration
+   lut = -1;
+   int seg_counter = 0;
+   for (uint i = 0; i < segmentation.N; i++){
+      int idx = data[i];
+      if(lut(idx) == -1) lut(idx) = seg_counter++;
       segmentation.p[i] = (uint) lut(idx);
    }
 
-   if (seg_counter != num_segments)
-   {
-     std::cout << "seg_counter == " << seg_counter << " num_segments == " << num_segments << std::endl;
-     HALT("LUT assignment: seg_counter != (num_segments+1)");
-   }
+   CHECK_EQ(seg_counter, num_segments, "LUT assignment: seg_counter != (num_segments+1)");
 
    // unwrap data and clean up
    image_pff->data = NULL;
@@ -100,15 +83,13 @@ uint get_single_color_segmentation(
    return num_segments;
 }
 
-uint get_single_color_segmentation_rgb(
-                                               uintA& segmentation,  // segmented image
-                                               byteA& rgb,
-                                               const byteA& image,   // input image
-                                               float sigma,          // (Gaussian!?) blurring factor
-                                               float k,              // similarity threshold
-                                               int min               // min. no. of pixels per segment
-                                              )
-{
+uint get_single_color_segmentation_rgb(uintA& segmentation,  // segmented image
+                                       byteA& rgb,
+                                       const byteA& image,   // input image
+                                       float sigma,          // (Gaussian!?) blurring factor
+                                       float k,              // similarity threshold
+                                       int min               // min. no. of pixels per segment
+                                       ){
   // get the normal segmentation of the image
   int num_segments = get_single_color_segmentation(segmentation, image, sigma, k, min);
 
@@ -153,38 +134,20 @@ uint get_single_color_segmentation_rgb(
   return (uint) num_segments;
 }
 
-// Compute centers of gravity for a set of patches
-//
-// INPUT
-//
-// OUTPUT
-//
-void get_patch_centers(doubleA& centers, const uintA& patches)
-{
-  int num_patches = patches.p[patches.maxIndex()] + 1;
-  int x = patches.d1, y = patches.d0;
-  centers.resize(num_patches, 2);
-  centers = 0;
 
-  intA patch_sizes(num_patches);
-  patch_sizes = 0;
-  int patch_id = -1;
-
-  for (int i = 0; i < x; i++)
-  {
-    for (int j = 0; j < y; j++)
-    {
-      patch_id = patches(j,i);
-      patch_sizes(patch_id) += 1;
-      centers(patch_id, 0) += i;
-      centers(patch_id, 1) += j;
+void get_patch_centroids(arr& pch_cen, uintA& pch, uint np){
+  uint x, y, Y=pch.d0, X=pch.d1;
+  pch_cen.resize(np, 2);  pch_cen.setZero();
+  uintA  pch_size(np);    pch_size.setZero();
+  for(y=0; y<Y; y++) for(x=0; x<X; x++){
+      pch_cen(pch(y, x), 0) += (double)x;
+      pch_cen(pch(y, x), 1) += (double)y;
+      pch_size(pch(y, x))++;
     }
-  }
-
-  for (int i = 0; i < num_patches; i++)
-    for (int j = 0; j < 2; j++)
-      centers(i,j) /= patch_sizes(i);
+  for(uint i=0; i<np; i++)
+    if(pch_size(i)) pch_cen[i]()/=(double)pch_size(i);
 }
+
 
 // Determine per patch color statistics: mean RGB + standard deviation
 //
@@ -240,6 +203,24 @@ void patch_color_statistics(doubleA& stats, const uintA& patches, const byteA& i
     if (patch_sizes(i) > 0)
       for (int j = 3; j < 6; j++)
         stats(i, j) = sqrt(stats(i, j) / (double) patch_sizes(i));
+}
+
+void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np){
+  uint i, Y=img.d0, X=img.d1, N=img.d0*img.d1;
+  pch.reshape(N);
+  img.reshape(N, 3);
+  pch_col.resize(np, 3);  pch_col.setZero();
+  uintA  pch_size(np);    pch_size.setZero();
+  for(i=0; i<N; i++){
+    pch_col(pch(i), 0) += (float)img(i, 0);
+    pch_col(pch(i), 1) += (float)img(i, 1);
+    pch_col(pch(i), 2) += (float)img(i, 2);
+    pch_size(pch(i))++;
+  }
+  for(i=0; i<np; i++)
+    if(pch_size(i)) pch_col[i]()/=(float)pch_size(i);
+  img.reshape(Y, X, 3);
+  pch.reshape(Y, X);
 }
 
 // Assign the average RGB values as color for each patch
@@ -335,39 +316,6 @@ void random_colorMap(floatA& pch_col, uint np){
   pch_col.resize(np, 3);
   rndUniform(pch_col, 0, 255);
 }
-
-
-void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np){
-  uint i, Y=img.d0, X=img.d1, N=img.d0*img.d1;
-  pch.reshape(N);
-  img.reshape(N, 3);
-  pch_col.resize(np, 3);  pch_col.setZero();
-  uintA  pch_size(np);    pch_size.setZero();
-  for(i=0; i<N; i++){
-    pch_col(pch(i), 0) += (float)img(i, 0);
-    pch_col(pch(i), 1) += (float)img(i, 1);
-    pch_col(pch(i), 2) += (float)img(i, 2);
-    pch_size(pch(i))++;
-  }
-  for(i=0; i<np; i++)
-    if(pch_size(i)) pch_col[i]()/=(float)pch_size(i);
-  img.reshape(Y, X, 3);
-  pch.reshape(Y, X);
-}
-
-void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){
-  uint x, y, Y=img.d0, X=img.d1;
-  pch_cen.resize(np, 2);  pch_cen.setZero();
-  uintA  pch_size(np);    pch_size.setZero();
-  for(y=0; y<Y; y++) for(x=0; x<X; x++){
-      pch_cen(pch(y, x), 0) += (double)x;
-      pch_cen(pch(y, x), 1) += (double)y;
-      pch_size(pch(y, x))++;
-    }
-  for(uint i=0; i<np; i++)
-    if(pch_size(i)) pch_cen[i]()/=(double)pch_size(i);
-}
-
 
 #else
 

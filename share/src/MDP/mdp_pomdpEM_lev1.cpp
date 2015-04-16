@@ -77,25 +77,25 @@ double mdp::pomdpEM_lev1(
   infer::Variable y_(dy , "observation(t+1)");
   infer::Variable n0_(d0 , "node0(t+1)");
   //start
-  infer::Factor Fx(ARRAY(&x)        , mdp.Px);
-  infer::Factor Fy(ARRAY(&y));      Fy.setUniform();
-  infer::Factor F0(ARRAY(&n0)       , fsc.P0);
+  infer::Factor Fx({&x}        , mdp.Px);
+  infer::Factor Fy({&y});      Fy.setUniform();
+  infer::Factor F0({&n0}       , fsc.P0);
   //transition
-  infer::Factor Fa0(ARRAY(&a, &n0)     , fsc.Pa0);
-  infer::Factor Fxax(ARRAY(&x_, &a, &x)   , mdp.Pxax);
-  infer::Factor Fyxa(ARRAY(&y_, &x_, &a)  , mdp.Pyxa);
-  infer::Factor F0y0(ARRAY(&n0_, &y_, &n0), fsc.P0y0);
+  infer::Factor Fa0({&a, &n0}     , fsc.Pa0);
+  infer::Factor Fxax({&x_, &a, &x}   , mdp.Pxax);
+  infer::Factor Fyxa({&y_, &x_, &a}  , mdp.Pyxa);
+  infer::Factor F0y0({&n0_, &y_, &n0}, fsc.P0y0);
   //reward
-  infer::Factor FRax(ARRAY(&a, &x)      , mdp_Rax);
+  infer::Factor FRax({&a, &x}      , mdp_Rax);
   
-  infer::VariableList leftVars=ARRAY(&n0 , &x);
-  infer::VariableList rightVars=ARRAY(&n0_, &x_);
+  infer::VariableList leftVars={&n0 , &x};
+  infer::VariableList rightVars={&n0_, &x_};
   infer::VariableList tail_headVars=cat(rightVars, leftVars);
   
-  //infer::FactorList allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
-  infer::FactorList allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
-  infer::FactorList allRewards = ARRAY(&FRax, &Fa0);
-  infer::FactorList allInits = ARRAY(&F0, &Fx, &Fy);
+  //infer::FactorList allTransitions={&Fa0, &Fxax, &Fyxa, &F0y0};
+  infer::FactorList allTransitions = {&F0y0, &Fyxa, &Fxax, &Fa0};
+  infer::FactorList allRewards = {&FRax, &Fa0};
+  infer::FactorList allInits = {&F0, &Fx, &Fy};
   
   infer::Factor Falpha(leftVars);
   infer::Factor Fbeta(rightVars);
@@ -168,20 +168,20 @@ double mdp::pomdpEM_lev1(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  infer::FactorList twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
+  infer::FactorList twotimeslice = {&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta};
   
   infer::Factor X0y0_term2;
-  eliminationAlgorithm(X0y0_term2, twotimeslice, ARRAY(&n0_, &y_, &n0));
+  eliminationAlgorithm(X0y0_term2, twotimeslice, {&n0_, &y_, &n0});
   infer::Factor Xa0_term2;
-  eliminationAlgorithm(Xa0_term2, twotimeslice, ARRAY(&a, &n0));
+  eliminationAlgorithm(Xa0_term2, twotimeslice, {&a, &n0});
   
   //consider the 1st term (alpha*R_x)
-  infer::FactorList immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
+  infer::FactorList immediateR   = {&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax};
   
   infer::Factor X0y0_term1;
-  eliminationAlgorithm(X0y0_term1 , immediateR, ARRAY(&n0_, &y_, &n0));
+  eliminationAlgorithm(X0y0_term1 , immediateR, {&n0_, &y_, &n0});
   infer::Factor Xa0_term1;
-  eliminationAlgorithm(Xa0_term1, immediateR, ARRAY(&a, &n0));
+  eliminationAlgorithm(Xa0_term1, immediateR, {&a, &n0});
   
   arr X0y0;
 #if 0 //this parameter does not depend on immediate reward (only term2 is relevant)

@@ -68,10 +68,10 @@ void cptest() {
   arr pcp = cp.pcp();
   cout << "pcp: " << pcp << endl;
 
-  KeyValueGraph kvg, *plot;
+  Graph kvg, *plot;
   kvg.append("data", "data", new arr(data));
   kvg.append("data", "pcp", new arr(pcp));
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String(STRING("Data")));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 #endif
 
   KeyFramer kf;
-  KeyValueGraph kvg, *plot;
+  Graph kvg, *plot;
   arr vit, vit2;
   kvgL ctrls, deltas;
   FGPlots fgp;
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 
       //kvg.clear();
       //kvg.append("data", "vit", new arr(vit2));
-      //plot = new KeyValueGraph();
+      //plot = new Graph();
       //plot->append("title", new String("Vit Logic Machine"));
       //plot->append("dataid", new bool(true));
       //plot->append("autolegend", new bool(true));

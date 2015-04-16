@@ -32,11 +32,11 @@ int main(int argc,char** argv) {
   View *v1 = newView(v.rgb);       //find a view from the list
 
   //set some values for the variables
-  v.set_rgb(ARRAY<byte>(0,0,0), NULL);
+  v.set_rgb({0,0,0}, NULL);
   v.set_i(1, NULL);
   v.set_i(2, NULL);
   
-  v.set_rgb(ARRAY<byte>(100,200,80), NULL);
+  v.set_rgb({100,200,80}, NULL);
   
   v.writeAccess(NULL);
   v.mesh.setBox();

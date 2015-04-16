@@ -1,9 +1,9 @@
 body world { fixed }
 
-%include ors_models/handR.ors
-%include ors_models/handL.ors
-%include ors_models/sbox.ors
-%include ors_models/bottle.ors
-%include ors_models/book_old.ors
-%include ors_models/ball.ors
-%include ors_models/bbox.ors
+Include = 'ors_models/handR.ors'
+Include = 'ors_models/handL.ors'
+Include = 'ors_models/sbox.ors'
+Include = 'ors_models/bottle.ors'
+Include = 'ors_models/book_old.ors'
+Include = 'ors_models/ball.ors'
+Include = 'ors_models/bbox.ors'

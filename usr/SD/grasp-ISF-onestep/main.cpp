@@ -73,8 +73,8 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_q    = listFindByName(sys.vars,"qitself"); 
   TV_lim  = listFindByName(sys.vars,"limits"); 
 
-  TVs_all.append(ARRAY( TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm ));
-  TVs_all.append(ARRAY( TV_palmAlignDir, TV_palmAlignField, TV_tipAlign, TV_col, TV_lim, TV_q));
+  TVs_all.append({ TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm });
+  TVs_all.append({ TV_palmAlignDir, TV_palmAlignField, TV_tipAlign, TV_col, TV_lim, TV_q});
 
   sys.setTaskVariables(TVs_all);
 

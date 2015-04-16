@@ -37,7 +37,7 @@ arr moveTo(ors::KinematicWorld& world,
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
     t->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{ //cost term
-    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
+    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, margin));
     t->setCostSpecs(0, MP.T, {0.}, colPrec);
   }
 

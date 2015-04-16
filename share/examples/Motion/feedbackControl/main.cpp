@@ -41,12 +41,10 @@ void test_quatTMT() {
   FeedbackMotionControl MP(world, false);
 
   auto effOrientationL = MP.addPDTask("orientationL", 1., .8, quatTMT, "handL", {0, 0, 0});
-  effOrientationL->y_ref = {1, 0, 0, 0};
-  effOrientationL->flipTargetScalarProduct = true;
+  effOrientationL->y_ref = ARR(1, 0, 0, 0);
 
   auto effOrientationR = MP.addPDTask("orientationR", 1., .8, quatTMT, "handR", {0, 0, 0});
-  effOrientationR->y_ref = {0, 1, 0, 0};
-  effOrientationR->flipTargetScalarProduct = true;
+  effOrientationR->y_ref = ARR(0, 1, 0, 0);
 
   run(MP, world);
 }
@@ -108,11 +106,11 @@ int main(int argc,char **argv)
 {
   MT::initCmdLine(argc,argv);
 
+//   test_reach();
+//   checkAnalytics();
+//   test_quatTMT();
   // test_reach();
-  // checkAnalytics();
-  // test_quatTMT();
-  // test_reach();
-  test_qSingleTMT();
+   test_qSingleTMT();
 
   return 0;
 }

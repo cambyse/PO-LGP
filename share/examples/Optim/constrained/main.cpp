@@ -30,7 +30,7 @@ void testPhaseOne(const ConstrainedProblem& f, uint dim_x){
   PhaseOneProblem metaF(f);
 
   arr x;
-  x = ARRAY(1., 1., 10.);
+  x = {1., 1., 10.};
 
   testConstraint(metaF, dim_x, x, 1);
   //one iteration of phase one should be enough

@@ -141,9 +141,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
 
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-                   ARRAY<const char*>("tip1Shape",
-                                      "tip2Shape",
-                                      "tip3Shape"), MP.world.shapes);
+                      {"tip1Shape", "tip2Shape", "tip3Shape"}, MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
   c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
@@ -157,7 +155,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   }
   
   //-- collisions with other objects
-  shapes = ARRAY<uint>(shapeId);
+  shapes = {shapeId};
   c = MP.addTask("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, colPrec, target, colPrec);
@@ -267,8 +265,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-                   ARRAY<const char*>("l_gripper_l_finger_tip_link_0",
-                                      "l_gripper_r_finger_tip_link_0"), MP.world.shapes);
+               {"l_gripper_l_finger_tip_link_0", "l_gripper_r_finger_tip_link_0"}, MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
   c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
@@ -284,7 +281,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
 #if 1
   //-- collisions with other objects
-  shapes = ARRAY<uint>(shapeId);
+  shapes = {shapeId};
   c = MP.addTask("otherCollisions",
                  new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
@@ -402,7 +399,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   MP.vars().append(V);
   
   //collisions except obj-from and obj-to
-  uintA shapes = ARRAY<uint>(shapeId, shapeId, belowToShapeId);
+  uintA shapes = {shapeId, shapeId, belowToShapeId};
   V = new ProxyTaskVariable("otherCollisions", MP.world, allExceptListedPTMT, shapes, .04, true);
   V->y_target = ARR(0.);  V->v_target = ARR(.0);
   V->y_prec = colPrec;

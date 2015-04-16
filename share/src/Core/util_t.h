@@ -103,28 +103,28 @@ bool getFromMap(T& x, const char* tag) {
 
 template<class T>
 bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default) {
-  log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
-  log().flush();
+  LOG(3) <<std::setw(20) <<tag <<" = " <<std::setw(5);
+  LOG(3).flush();
   
   if(getFromMap<T>(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"] (map!)" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"] (map!)" <<std::endl;
     return true;
   }
   
   if(getFromCmdLine(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
     return true;
   }
   
   if(getFromCfgFile(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
     return true;
   }
   
   if(hasDefault) {
     if(Default) {
       x=*Default;
-      log() <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
+      LOG(3) <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
     }
     return false;
   }

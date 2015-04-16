@@ -25,6 +25,12 @@ void TEST(GraspHeuristic){
 
     threeStepGraspHeuristic(xT, MP, s->index, 2);
 
+    Task *c;
+    c = MP.addTask("transition", new TransitionTaskMap(G));
+    c->map.order=2; //make this an acceleration task!
+    c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
+
     MotionProblemFunction F(MP);
 
     sineProfile(x, MP.x0, xT, MP.T);
@@ -70,6 +76,12 @@ void TEST(PickAndPlace){
   arr x, xT;
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName("target1")->index, 2);
+  Task *t;
+  t = MP.addTask("transition", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
+
 
   MotionProblemFunction MF(MP);
   sineProfile(x, MP.x0, xT, MP.T);
@@ -100,7 +112,7 @@ void TEST(PickAndPlace){
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
   MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
 
   //initialize trajectory
@@ -130,7 +142,7 @@ void TEST(PickAndPlace){
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
   MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
 
   //initialize trajectory

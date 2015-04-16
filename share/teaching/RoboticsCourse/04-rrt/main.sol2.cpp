@@ -93,7 +93,7 @@ void RTTplan(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
-  arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
+  arr qT = {0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356};
   arr q0, y_col, q;
   S.getJointAngles(q0);
   q=q0;

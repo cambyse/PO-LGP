@@ -1,6 +1,6 @@
 #include "actionMachine_internal.h"
 
-#include <Hardware/gamepad/gamepad.h>
+//#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
 
@@ -37,11 +37,16 @@ void ActionMachine::open(){
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
 
-  KB.writeAccess();
-  FILE("machine.fol") >> KB();
-  KB().checkConsistency();
-  KB()>> FILE("z.initialKB");
-  KB.deAccess();
+  {
+    MT::FileToken fil("machine.fol");
+    if(fil.exists()){
+      KB.writeAccess();
+      fil >> KB();
+      KB().checkConsistency();
+      KB()>> FILE("z.initialKB");
+      KB.deAccess();
+    }
+  }
 
   KB.readAccess();
   Item *tasks = KB()["Tasks"];
@@ -84,7 +89,7 @@ void ActionMachine::step(){
     }
   }
 
-  if(!(t%20))
+  if(!(t%5))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
@@ -97,7 +102,14 @@ void ActionMachine::step(){
 
   //-- check the gamepad
   arr gamepad = gamepadState.get();
-  if(stopButtons(gamepad)) engine().shutdown.incrementValue();
+  if(stopButtons(gamepad)){
+    cout <<"STOP" <<endl;
+    KB.writeAccess();
+    Item *quitSymbol = KB()["quit"];
+    KB().getItem("STATE")->kvg().append<bool>({},{quitSymbol}, NULL, false);
+    KB.deAccess();
+//    engine().shutdown.incrementValue();
+  }
 
   //-- get access to the list of actions
   A.writeAccess();
@@ -151,27 +163,32 @@ void ActionMachine::step(){
     s->feedbackController.setState(s->q, s->qdot);
   }
 
+  //-- first zero references
+  s->refs.Kp = ARR(1.); //Kp;
+  s->refs.Kd = ARR(1.); //Kd;
+  s->refs.fL = zeros(6);
+  s->refs.fR = zeros(6);
+  s->refs.Ki.clear();
+  s->refs.J_ft_inv.clear();
+  s->refs.u_bias = zeros(s->q.N);
+
   //-- compute the force feedback control coefficients
-//  uint count=0;
-//  for(Action *a : A()) {
-//    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
-//      count++;
-//      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-//      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
-//    }
-//  }
+  uint count=0;
+  for(Action *a : A()) {
+    if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
+      count++;
+      if(count!=1) HALT("you have multiple active force control tasks - NIY");
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+    }
+  }
+  if(count==1) s->refs.Kp = .5;
 
 
   // s->MP.reportCurrentState();
   A.deAccess();
 
   //-- send the computed movement to the robot
-  s->refs.Kp = ARR(1.); //Kp;
-  s->refs.Kd = ARR(1.); //Kd;
-  s->refs.fR = ARR(0., 0., 0.);
-  s->refs.u_bias = zeros(s->q.N);
-
-  s->refs.q =  zeros(s->q.N);//s->q;
+  s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
   s->refs.gamma = 1.;
   ctrl_ref.set() = s->refs;
@@ -181,21 +198,24 @@ void ActionMachine::close(){
   fil.close();
 }
 
-void ActionMachine::parseTaskDescriptions(const KeyValueGraph& T){
-  cout <<"Instantiating task descriptions:\n" <<T <<endl;
-  for(Item *t:T){
-    Graph &td = t->kvg();
-    MT::String type=td["type"]->V<MT::String>();
-    if(type=="homing"){
-      new Homing(*this, t->parents(0)->keys(1));
-    }else if(type=="forceCtrl"){
-      new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
-    }else{
-      DefaultTaskMap *map = new DefaultTaskMap(td, *world);
-      CtrlTask* task = new CtrlTask(t->parents(0)->keys(1), *map, td);
-      new FollowReference(*this, t->parents(0)->keys(1), task);
-    }
+void ActionMachine::parseTaskDescription(Graph& td){
+  Item *t = td.isItemOfParentKvg;
+  MT::String type=td["type"]->V<MT::String>();
+  if(type=="homing"){
+    new Homing(*this, t->parents(0)->keys.last());
+  }else if(type=="forceCtrl"){
+    new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+  }else{
+    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
+    task->active=false;
+    new FollowReference(*this, t->parents(0)->keys.last(), task);
   }
+}
+
+void ActionMachine::parseTaskDescriptions(const Graph& tds){
+  cout <<"Instantiating task descriptions:\n" <<tds <<endl;
+  for(Item *t:tds) parseTaskDescription(t->kvg());
 }
 
 void ActionMachine::removeAction(Action* a, bool hasLock){
@@ -208,42 +228,45 @@ void ActionMachine::removeAction(Action* a, bool hasLock){
 void ActionMachine::transitionFOL(double time, bool forceChaining){
   bool changes=false;
   KB.writeAccess();
+  KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
-  Item* convSymbol = KB().getItem("conv");
-  Item* contactSymbol = KB().getItem("contact");
-  Item* timeoutSymbol = KB().getItem("timeout");
+  Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
+  Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
+  Item* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
+  Graph& state = KB().getItem("STATE")->kvg();
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
-      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, convSymbol}, new bool(true), true);
-      if(getEqualFactInKB(KB(), newit)) delete newit;
+      Item *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
     if(a->indicateTimeout(*this)){
-      Item *newit = KB.data()->append<bool>(STRINGS_0(), {a->symbol, timeoutSymbol}, new bool(true), true);
-      if(getEqualFactInKB(KB(), newit)) delete newit;
+      Item *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
+      if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
   }
 //  if(getContactForce()>5.){
-//    Item *newit = KB.data()->append<bool>(STRINGS_0(), {contactSymbol}, new bool(true), true);
+//    Item *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
 //    if(getEqualFactInKB(KB(), newit)) delete newit;
 //    else changes=true;
 //  }
   A.deAccess();
+  KB().checkConsistency();
 
   if(changes || forceChaining){
-    ItemL state = getLiteralsOfScope(KB());
-    cout <<"STATE (changed by real world at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
-    forwardChaining_FOL(KB(), NULL, false);
-    state = getLiteralsOfScope(KB());
-    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; listWrite(state, cout); cout <<endl;
+    cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
+    forwardChaining_FOL(KB(), NULL, NoGraph, false);
+//    state = getLiteralsOfScope(KB());
+    cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
 
     A.writeAccess();
     for(Action *a:A()){
+      if(!a->symbol){ a->active=false;  continue; }
       bool act=false;
       for(Item *lit:a->symbol->parentOf){
-        if(&lit->container==&KB() && lit->parents.N==1){ act=true; break; }
+        if(&lit->container==&state && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
       }
       if(act) a->active=true;
       else a->active=false;
@@ -285,6 +308,10 @@ void ActionMachine::waitForQuitSymbol() {
     KB.waitForNextRevision();
     KB.readAccess();
     Item* quitSymbol = KB().getItem("quit");
+    if(!quitSymbol){
+      MT_MSG("WARNING: no quit symbol!");
+      return;
+    }
     for(Item *f:quitSymbol->parentOf){
       if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
     }

@@ -1,5 +1,5 @@
 #pragma once
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include "util.h"
 
 // FGP {{{

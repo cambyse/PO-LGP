@@ -277,7 +277,7 @@ void simpleMotion(){
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e4);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","obstacle",0.1));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
+  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
 
   MP.x0 = {0.,0.,0.};
 
@@ -317,7 +317,7 @@ void simpleMotion(){
   c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);
   c2 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","obstacle",0.1));
-  MP2.setInterpolatingCosts(c2, MotionProblem::constant, ARRAY(0.), 1.);
+  MP2.setInterpolatingCosts(c2, MotionProblem::constant, {0.}, 1.);
 
   MP2.x0 = {0.,0.,0.};
   MotionProblemFunction MPF2(MP2);

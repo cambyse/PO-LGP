@@ -22,145 +22,92 @@
 #include <Core/thread.h>
 #include <Core/module.h>
 
-struct Variable_SharedMemory;
-struct Module_Thread;
+struct Module;
 typedef MT::Array<Module*> ModuleL;
-typedef MT::Array<Module_Thread*> Module_ThreadL;
-typedef MT::Array<Variable_SharedMemory*> VariableL;
-typedef MT::Array<Access*> AccessL;
+typedef MT::Array<VariableContainer*> VariableL;
 
 //===========================================================================
 
-VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
+//VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
 
-//===========================================================================
-/**
- * Implements a Module as a Thread
- */
-struct Module_Thread:Thread{
-  enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull, dontLoop };
-  Module *m;
-  uint step_count;
-  StepMode mode; double beat;
-
-  /// @name c'tor/d'tor
-  Module_Thread(Module* _m, const char* _name=NULL):Thread(_name?_name:_m->name),m(_m),step_count(0){ m->name = _name; }
-
-  virtual void open(){ m->open(); }
-  virtual void step();
-  virtual void close(){ m->close(); }
-};
-//inline void operator>>(istream& is, Module_Thread& m){  }
-inline void operator<<(ostream& os, const Module_Thread& m){ os <<"Module_Thread " <<m.name <<' ' <<m.step_count; }
-
-
-//===========================================================================
-/**
- * Implements a Variable (something that Modules can access) as mutex shared memory
- */
-
-struct Variable_SharedMemory : Variable {
-  struct sVariable *s;        ///< private
-  RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
-  ConditionVariable revision; ///< revision (= number of write accesses) number
-  double revision_time;       ///< clock time of last write access
-  ModuleL listeners;          ///< list of modules that are being signaled a threadStep on write access
-
-  /// @name c'tor/d'tor
-  Variable_SharedMemory(const char* name);
-  virtual ~Variable_SharedMemory();
-
-  /// @name access control
-  /// to be called by a processes before access, returns the revision
-  int readAccess(Module*);  //might set the caller to sleep
-  int writeAccess(Module*); //might set the caller to sleep
-  int deAccess(Module*);
-
-  /// @name syncing via a variable
-  /// the caller is set to sleep
-  int waitForNextRevision();
-  int waitForRevisionGreaterThan(int rev); //returns the revision
-  double revisionTime();
-  int revisionNumber();
-
-  /// @name info (fields are currently not used anymore)
-  struct FieldRegistration& get_field(uint i) const;
-};
-inline void operator<<(ostream& os, const Variable_SharedMemory& v){ os <<"Variable " <<v.name <<' ' <<*v.type; }
-
-template<class T> void connect(Access& acc, T& x){
-  acc.var = new Variable_SharedMemory(acc.name);
-  acc.var->data = &x;
-}
+//template<class T> void connect(Access& acc, T& x){
+//  HALT("strange code...");
+//  acc.var = new Variable<T>(acc.name);
+//}
 
 //===========================================================================
 /**
  * A list of Modules and Variables that can be autoconnected and, as a group, opened, stepped and closed
  */
 
-struct System:Module{
-  ModuleL mts;
+struct System{
+  ModuleL modules;
   VariableL vars;
+  AccessL accesses;
+  MT::String name;
 
-  System(const char* name=NULL):Module(name){}
+  System(const char* _name=NULL):name(_name){
+    currentlyCreatingAccessL=&accesses;
+  }
 
-  virtual void step(){  for(Module *m: mts) m->step();  }
-  virtual void open(){  for(Module *m: mts) m->open();  }
-  virtual void close(){  for(Module *m: mts) m->close();  }
+  virtual void stepAll(){  for(Module *m: modules) m->step();  }
+  virtual void openAll(){  for(Module *m: modules) m->open();  }
+  virtual void closeAll(){  for(Module *m: modules) m->close();  }
 
   //-- add variables
-  Variable_SharedMemory* addVariable(const char *name, Type *type){
-    Variable_SharedMemory *v = new Variable_SharedMemory(name);
-    v->type = type->clone();
-    v->data = type->newInstance();
+  template<class T> Variable<T>* addVariable(const char *name){
+    Variable<T> *v = new Variable<T>(name);
     vars.append(v);
     return v;
   }
 
-  Variable_SharedMemory* addVariable(Access& acc){ return addVariable(acc.name, acc.type); }
-  template<class T> Variable_SharedMemory* addVariable(const char *name){ return addVariable(name, new Type_typed<T, void>()); }
-
   //-- access vars
-  template<class T> T& getVar(uint i){ return *((T*)vars(i)->data); }
-
-  template<class T> Access_typed<T>* getAccess(const char* varName){
-    Variable_SharedMemory *v = listFindByName(vars, varName);
-    return new Access_typed<T>(varName, v);
+  template<class T> Variable<T>* getVar(uint i){ return dynamic_cast<Variable<T>* >(vars.elem(i)); }
+  template<class T> Access_typed<T> getConnectedAccess(const char* varName){
+    Access_typed<T> acc(varName);
+    VariableContainer *v = listFindByName(vars, varName);
+    if(v){ //variable exists -> link it
+      acc.linkToVariable(v);
+    }else{ //variable does not exist yet
+      acc.createVariable(varName);
+    }
+    return acc;
   }
 
   //-- add modules
-  template<class T> T* addModule(const char *name=NULL, Module_Thread::StepMode mode=Module_Thread::listenFirst, double beat=0.){
+  template<class T> T* addModule(const char *name=NULL, Module::StepMode mode=Module::listenFirst, double beat=0.){
     T *m = new T;
+    CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
     currentlyCreating=NULL;
     for(Access *a: m->accesses) a->module = m;
-    mts.append(m);
+    modules.append(m);
 
-    m->thread = new Module_Thread(m, name);
-    m->thread->mode = mode;
-    m->thread->beat = beat;
+    m->mode = mode;
+    m->beat = beat;
     return m;
   }
 
   //-- add modules
-  template<class T> T* addModule(const char *name, const StringA& accessConnectRules, Module_Thread::StepMode mode=Module_Thread::listenFirst, double beat=0.){
+  template<class T> T* addModule(const char *name, const StringA& accessConnectRules, Module::StepMode mode=Module::listenFirst, double beat=0.){
     T *m = addModule<T>(name, mode, beat);
     if(accessConnectRules.N != m->accesses.N) HALT("given and needed #acc in accessConnectRules cmismatch");
     for_list(Access, a, m->accesses) connect(*a, accessConnectRules(a_COUNT));
     return m;
   }
 
-  Module* addModule(const char *dclName, const char *name=NULL, Module_Thread::StepMode mode=Module_Thread::listenFirst, double beat=0.);
-  Module* addModule(const char *dclName, const char *name, const uintA& accIdxs, Module_Thread::StepMode mode=Module_Thread::listenFirst, double beat=0.);
-  Module* addModule(const char *dclName, const char *name, const StringA& accRenamings, Module_Thread::StepMode mode=Module_Thread::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name=NULL, Module::StepMode mode=Module::listenFirst, double beat=0.);
+//  Module* addModule(const char *dclName, const char *name, const uintA& accIdxs, Module::StepMode mode=Module::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name, const StringA& accRenamings, Module::StepMode mode=Module::listenFirst, double beat=0.);
 
   /** instantiate all the necessary variables for the list of modules, i.e.,
    *  check all accesses they have, match their names and types, create
    *  the necessary variables, and link the accesses to them  */
   void connect();
-  // [sort of private] check if Variable with variable_name and acc.type exists; if not, create one; then connect
-  Variable_SharedMemory* connect(Access& acc, const char *variable_name);
 
-  KeyValueGraph graph() const;
+  // [sort of private] check if Variable with variable_name and acc.type exists; if not, create one; then connect
+  VariableContainer* connect(Access& acc, const char *variable_name);
+
+  Graph graph() const;
   void write(ostream& os) const;
 };
 stdOutPipe(System);
@@ -170,7 +117,7 @@ extern System& NoSystem;
 
 //===========================================================================
 /**
- * A singleton that can run systems, here implemented using threads
+ * A singleton that can run systems
  */
 
 struct Engine{
@@ -189,6 +136,8 @@ struct Engine{
   void test(System& S=NoSystem);
   void close(System& S=NoSystem);
   void cancel(System& S=NoSystem);
+
+  void waitForShutdownSignal(){ shutdown.waitForValueGreaterThan(0); }
 
   /// @name event control
   void enableAccessLog();
@@ -209,13 +158,13 @@ Engine& engine();
  */
 
 struct EventRecord{
-  const Variable_SharedMemory *variable;
-  const Module_Thread *module;
+  const VariableContainer *variable;
+  const Module *module;
   enum EventType{ read, write, stepBegin, stepEnd } type;
   uint revision;
   uint procStep;
   double time;
-  EventRecord(const Variable_SharedMemory *v, const Module_Thread *m, EventType _type, uint _revision, uint _procStep, double _time):
+  EventRecord(const VariableContainer *v, const Module *m, EventType _type, uint _revision, uint _procStep, double _time):
     variable(v), module(m), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
@@ -244,21 +193,21 @@ struct EventController{
   EventController();
   ~EventController();
 
-  struct LoggerVariableData* getVariableData(const Variable_SharedMemory *v);
+  struct LoggerVariableData* getVariableData(const VariableContainer *v);
 
   //writing into a file
   void writeEventList(ostream& os, bool blockedEvents, uint max=0, bool clear=false);
   void dumpEventList();
 
   //methods called during write/read access from WITHIN the Variable
-  void queryReadAccess(Variable_SharedMemory *v, const Module_Thread *p);
-  void queryWriteAccess(Variable_SharedMemory *v, const Module_Thread *p);
-  void logReadAccess(const Variable_SharedMemory *v, const Module_Thread *p);
-  void logReadDeAccess(const Variable_SharedMemory *v, const Module_Thread *p);
-  void logWriteAccess(const Variable_SharedMemory *v, const Module_Thread *p);
-  void logWriteDeAccess(const Variable_SharedMemory *v, const Module_Thread *p);
-  void logStepBegin(const Module_Thread *p);
-  void logStepEnd(const Module_Thread *p);
+  void queryReadAccess(VariableContainer *v, const Module *p);
+  void queryWriteAccess(VariableContainer *v, const Module *p);
+  void logReadAccess(const VariableContainer *v, const Module *p);
+  void logReadDeAccess(const VariableContainer *v, const Module *p);
+  void logWriteAccess(const VariableContainer *v, const Module *p);
+  void logWriteDeAccess(const VariableContainer *v, const Module *p);
+  void logStepBegin(const Module *p);
+  void logStepEnd(const Module *p);
 
   MT::Array<ConditionVariable*> breakpointQueue;
   Mutex breakpointMutex;

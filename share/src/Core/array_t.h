@@ -713,9 +713,9 @@ template<class T> T& MT::Array<T>::scalar() const {
 }
 
 /// reference to the last element
-template<class T> T& MT::Array<T>::last() const {
-  CHECK(N, "can't take last from empty");
-  return p[N-1];
+template<class T> T& MT::Array<T>::last(int i) const {
+  CHECK((int)N+i>=0, "can't take last ("<<i<<") from " <<N <<" elements");
+  return p[N+i];
 }
 
 /// 1D access (throws an error if not 1D or out of range)
@@ -3323,6 +3323,17 @@ template<class T> void listResize(MT::Array<T*>& L, uint N) {
   L.resize(N);
   uint i;
   for(i=0; i<N; i++) L(i)=new T();
+}
+
+template<class T> void listResizeCopy(MT::Array<T*>& L, uint N) {
+  if(L.N<N){
+    uint n=L.N;
+    L.resizeCopy(N);
+    for(uint i=n;i<N;i++) L(i)=new T();
+  }else{
+    for(uint i=N;i<L.N;i++) delete L(i);
+    L.resizeCopy(N);
+  }
 }
 
 template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {

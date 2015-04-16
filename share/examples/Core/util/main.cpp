@@ -60,8 +60,9 @@ void TEST(Timer){
 }
 
 void TEST(Logging){
-  LOG(1) <<"HALLO";
-  MT::log() <<"bla" <<endl;
+  LOG(-1) <<"HALLO";
+  LOG(-3) <<"bye";
+//  MT::log() <<"bla" <<endl;
 }
 
 int MAIN(int argc,char** argv){
@@ -72,9 +73,9 @@ int MAIN(int argc,char** argv){
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
   
 //  testString();
-  testParameter();
+//  testParameter();
 //  testTimer();
-//  testLogging();
+  testLogging();
 
   return 0;
 }

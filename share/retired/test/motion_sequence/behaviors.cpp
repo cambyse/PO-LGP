@@ -82,7 +82,7 @@ void reach(const char* shapeName, const arr& posGoal, double maxVel){
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
   
-  s->robotProcesses.ctrl.sys.setTaskVariables(ARRAY<TaskVariable*>(&TV, task->TV_col, task->TV_lim, task->TV_q)); //non-thread safe: task variable list needs a lock
+  s->robotProcesses.ctrl.sys.setTaskVariables({&TV, task->TV_col, task->TV_lim, task->TV_q}); //non-thread safe: task variable list needs a lock
   s->robotProcesses.ctrl.taskLock.unlock();
   
   for(; !schunkShutdown;){
@@ -125,7 +125,7 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
   
-  s->robotProcesses.ctrl.sys.setTaskVariables(ARRAY<TaskVariable*>(&TV, &TValign, task->TV_col, task->TV_lim, task->TV_q));
+  s->robotProcesses.ctrl.sys.setTaskVariables({&TV, &TValign, task->TV_col, task->TV_lim, task->TV_q});
   s->robotProcesses.ctrl.taskLock.unlock();
   
   for(; !schunkShutdown;){

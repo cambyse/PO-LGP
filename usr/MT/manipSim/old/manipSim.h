@@ -49,7 +49,7 @@ typedef MT::Array<Pose*> PoseL;
 //===========================================================================
 
 struct State{
-  KeyValueGraph G;
+  Graph G;
   Action preAction;
 
   void compControllable();

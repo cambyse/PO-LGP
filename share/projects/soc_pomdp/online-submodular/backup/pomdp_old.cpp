@@ -175,17 +175,17 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
   //-- setup the motion problem
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
 //                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-//  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+//  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
-    P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+    P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
 
  //P.addTask("collisionConstraints", new CollisionConstraint());
   //Task *coll = P.addTask("collisionConstraints", new CollisionConstraint());
 
-  //P.setInterpolatingCosts(coll, MotionProblem::constant, ARRAY(0.), 1.);
+  //P.setInterpolatingCosts(coll, MotionProblem::constant, {0.}, 1.);
 
     if(stickyness){
         stickyWeight = 10.;

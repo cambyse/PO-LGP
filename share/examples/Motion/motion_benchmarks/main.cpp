@@ -3,8 +3,7 @@
 
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
 #include <GL/glu.h>
 
 #include <Ors/ors_swift.h>
@@ -40,10 +39,9 @@ void circle_BM(){
 
   // Create Motion Problem
   MotionProblem MP(world);
-  MP.loadTransitionParameters();
+//  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
-  TaskCost *c;
 
   arr traj0;
   world.kinematicsPos(traj0,NoArr,world.getBodyByName("endeffR"));
@@ -60,13 +58,17 @@ void circle_BM(){
   arr y_traj = cos(t*2.*turns*M_PI)*radius;
   arr traj = catCol(traj0(0)+0.*x_traj,traj0(1)+y_traj-radius,traj0(2)+x_traj);
 
+  Task *c;
+  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e4);
   c->target = traj;
   c->prec.subRange(0,20)=0.;
 
-  c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
+  c = MP.addTask("q_limit",new TaskMap_qLimits());
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -81,7 +83,7 @@ void circle_BM(){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x = repmat(~MP.x0,T+1,1);
-  optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,allowOverstep=true));
+  optNewton(x, Convert(MPF), OPT(verbose=2,stopTolerance=1e-2,allowOverstep=true));
 
   MP.costReport(true);
 
@@ -99,11 +101,9 @@ void star_BM(){
 
   // Create Motion Problem
   MotionProblem MP(world);
-  MP.loadTransitionParameters();
+//  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
-  TaskCost *c;
-
 
   arr traj0;
   world.kinematicsPos(traj0,NoArr,world.getBodyByName("endeffR"));
@@ -160,12 +160,17 @@ void star_BM(){
   traj.append(traj[traj.d0-1]);
 
 
+  Task *c;
+  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
   c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
-  c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
+  c = MP.addTask("q_limit",new TaskMap_qLimits());
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -184,7 +189,7 @@ void star_BM(){
   optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,allowOverstep=true));
   MP.costReport(true);
 
-  double TRef = dt*T;
+//  double TRef = dt*T;
 
   arr lim = world.getLimits();
   for (uint i = 0;i<x.d1;i++) {
@@ -208,18 +213,16 @@ void eight_BM(){
 
   // Create Motion Problem
   MotionProblem MP(world);
-  MP.loadTransitionParameters();
+//  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
-  TaskCost *c;
-
 
   arr traj0;
   world.kinematicsPos(traj0,NoArr,world.getBodyByName("endeffR"));
 
   cout << "traj0: " <<traj0 << endl;
 
-  double l = 0.15;
+//  double l = 0.15;
 
   double off = 0.1;
   double radius = 0.2;
@@ -260,12 +263,17 @@ void eight_BM(){
 
   MP.T = traj.d0-1;
 
+  Task *c;
+  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
   c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
-  c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
+  c = MP.addTask("q_limit",new TaskMap_qLimits());
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -281,7 +289,7 @@ void eight_BM(){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x = repmat(~MP.x0,T+1,1);
-  optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,allowOverstep=true));
+  optNewton(x, Convert(MPF), OPT(verbose=0,stopTolerance=1e-3,allowOverstep=true));
 
   cout << q0 << endl;
   cout << x[0] << endl;
@@ -312,9 +320,9 @@ void eight_BM(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-//  circle_BM();
+  circle_BM();
 //  star_BM();
-  eight_BM();
+//  eight_BM();
 
   return 0;
 }

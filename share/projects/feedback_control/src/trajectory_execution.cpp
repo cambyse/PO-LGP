@@ -62,7 +62,7 @@ public:
     yCol_deviation = 3e-1;
     w_reg = 100.;
 
-    x0_opt = ARRAY(0., 0. ,0. ,0. ,-0.2 ,-0.2 ,0.);
+    x0_opt = {0., 0. ,0. ,0. ,-0.2 ,-0.2 ,0.};
 
   while(!traj_client_->waitForServer(ros::Duration(5.0))){
     ROS_INFO("Waiting for the joint_trajectory_action server");
@@ -95,21 +95,21 @@ public:
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                               ARRAY(0.,0.,0.), 1e3,
-                               ARRAY(0.,0.,0.), 0.);
+                               {0.,0.,0.}, 1e3,
+                               {0.,0.,0.}, 0.);
 
     if (useOrientation) {
       c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
       P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                              ARRAY(0.,0.,-1.), 1e4,
-                              ARRAY(0.,0.,0.), 1e-3);
+                              {0.,0.,-1.}, 1e4,
+                              {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
       c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-      P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+      P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
     }
 
     //-- set start position for optimizer

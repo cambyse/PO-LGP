@@ -108,7 +108,7 @@ joint r_shoulder_lift_joint (r_shoulder_pan_link r_shoulder_lift_link){ from=<T 
 joint r_upper_arm_roll_joint (r_shoulder_lift_link r_upper_arm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-1  limits=[ -3.9 0.8 ]  ctrl_limits=[ 3.27 30 ]  }
 joint r_forearm_roll_joint (r_elbow_flex_link r_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-1.5 ctrl_limits=[ 3.6 30 ]  }
 joint r_elbow_flex_joint (r_upper_arm_roll_link r_elbow_flex_link){ from=<T 0.4 0 0 0.707107 0 0 0.707107 >  type=0 q=-2 limits=[ -2.3213 0 ]  ctrl_limits=[ 3.3 30 ]  }
-joint r_wrist_flex_joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0  limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  }
+joint r_wrist_flex_joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0 q=-.5  limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  }
 joint r_wrist_roll_joint (r_wrist_flex_link r_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-.5 ctrl_limits=[ 3.6 10 ]  }
 
 #joint endeffR_joint (r_wrist_roll_link endeffR){ from=<T 0 0 0>  type=10}

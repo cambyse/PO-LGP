@@ -39,7 +39,7 @@ struct KeyFramer::sKeyFramer {
 
   arr ood, dird, indd; // distance matrices
 
-  KeyValueGraph ann_kvg;
+  Graph ann_kvg;
   arr ann;
 
   graph_labeler<vector_type> labeler;
@@ -541,8 +541,8 @@ void KeyFramer::computeDist() {
 }
 // }}}
 // testDist {{{
-void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
-  KeyValueGraph *plot;
+void KeyFramer::testDist(Graph &kvg, const String &a, const String &o) {
+  Graph *plot;
   arr dir_d, ind_d;
 
   computeDist();
@@ -558,7 +558,7 @@ void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
   }
   kvg.append("data", "dird", new arr(dir_d));
   kvg.append("data", "indd", new arr(ind_d));
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String(STRING("Dist " << a << "-" << o)));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -571,7 +571,7 @@ void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
 
 // getVitSeq {{{
 void KeyFramer::getVitSeq(arr &vit, const String &a, const String &o) {
-  KeyValueGraph data_kvg;
+  Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
   vit = *data_kvg.getValue<arr>("vit");
 }
@@ -587,7 +587,7 @@ void KeyFramer::getVitSeq(arr &vit, const StringA &as, const String &o) {
 }
 // }}}
 // vitLogicMachine {{{
-void KeyFramer::vitLogicMachine(KeyValueGraph &kvg, arr &vit2, const arr &vit) {
+void KeyFramer::vitLogicMachine(Graph &kvg, arr &vit2, const arr &vit) {
   uint N = vit.d0;
   uint T = vit.d1;
 
@@ -605,25 +605,25 @@ void KeyFramer::vitLogicMachine(KeyValueGraph &kvg, arr &vit2, const arr &vit) {
 // }}}
 // getCtrlSeq_old {{{
 void KeyFramer::getCtrlSeq_old(kvgL &ctrls, const String &a, const String &o) {
-  KeyValueGraph data_kvg;
+  Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
   arr *vit = data_kvg.getValue<arr>("vit");
 
-  KeyValueGraph *kf, *feats;
+  Graph *kf, *feats;
   bool kf_flag = false;
   for(uint f = 0; f < vit->d0; f++) {
     if(!kf_flag && vit->elem(f)) { // inset
-      feats = new KeyValueGraph();
+      feats = new Graph();
       objFeatures(*feats, o, f);
-      kf = new KeyValueGraph();
+      kf = new Graph();
       kf->append("inset", feats);
       kf_flag = true;
     }
     else if(kf_flag && !vit->elem(f)) { // offset
-      feats = new KeyValueGraph();
+      feats = new Graph();
       objFeatures(*feats, o, f);
       kf->append("offset", feats);
-      ctrls.append(new KeyValueGraph(*kf));
+      ctrls.append(new Graph(*kf));
       kf_flag = false;
     }
   }
@@ -631,15 +631,15 @@ void KeyFramer::getCtrlSeq_old(kvgL &ctrls, const String &a, const String &o) {
 // }}}
 // getCtrlSeq {{{
 void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
-  KeyValueGraph data_kvg;
+  Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
   arr *vit = data_kvg.getValue<arr>("vit");
 
-  KeyValueGraph *kf;
+  Graph *kf;
   bool kf_flag = false;
   for(uint f = 0; f < vit->d0; f++) {
     if(!kf_flag && vit->elem(f)) { // inset
-      kf = new KeyValueGraph();
+      kf = new Graph();
       kf->append("fnum", new double(f));
       kf->append("type", "on");
       // TODO agents
@@ -648,7 +648,7 @@ void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
       kf_flag = true;
     }
     else if(kf_flag && !vit->elem(f)) { // offset
-      kf = new KeyValueGraph();
+      kf = new Graph();
       kf->append("fnum", new double(f));
       kf->append("type", "off");
       // TODO agents
@@ -661,13 +661,13 @@ void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
 // }}}
 // getDeltaSeq {{{
 void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
-  KeyValueGraph *inset, *offset, *delta;
+  Graph *inset, *offset, *delta;
   arr *posi, *poso;
   uint fi, fo;
 
   for(auto ctrl: ctrls) {
-    inset = ctrl->getValue<KeyValueGraph>("inset");
-    offset = ctrl->getValue<KeyValueGraph>("offset");
+    inset = ctrl->getValue<Graph>("inset");
+    offset = ctrl->getValue<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
@@ -675,7 +675,7 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
     fo = *offset->getValue<double>("fnum");
     poso = offset->getValue<arr>("f_pos");
 
-    delta = new KeyValueGraph();
+    delta = new Graph();
     delta->append("fi", new double(fi));
     delta->append("fo", new double(fo));
     delta->append("f_dpos", new arr(*poso - *posi));
@@ -685,14 +685,14 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
 // }}}
 // getDeltaCluster {{{
 void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
-  KeyValueGraph *inset, *offset, *delta;
+  Graph *inset, *offset, *delta;
   arr *posi, *poso;
   uint fi, fo;
 
   cout << "#ctrls: " << ctrls.N << endl;
   for(auto ctrl: ctrls) {
-    inset = ctrl->getValue<KeyValueGraph>("inset");
-    offset = ctrl->getValue<KeyValueGraph>("offset");
+    inset = ctrl->getValue<Graph>("inset");
+    offset = ctrl->getValue<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
@@ -700,7 +700,7 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
     fo = *offset->getValue<double>("fnum");
     poso = offset->getValue<arr>("f_pos");
 
-    delta = new KeyValueGraph();
+    delta = new Graph();
     delta->append("fi", new double(fi));
     delta->append("fo", new double(fo));
     delta->append("f_dpos", new arr(*poso - *posi));
@@ -726,7 +726,7 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
 #define update_sigma_dpVar
 //#define update_mu_dqVar
 #define update_sigma_dqVar
-void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen) {
+void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
   // Computing other BAMS {{{
   cout << " * computing posVar" << endl;
   computeVar(STRING("pos"), wlen);
@@ -986,9 +986,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   kvg.append("data", "dpVar", new arr(dpVar));
   kvg.append("data", "dqVar", new arr(dqVar));
   
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Viterbi + Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -1002,7 +1002,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   plot->append("data", new String("vitz"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Motion A"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -1030,7 +1030,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 //#define update_sigma_dp // TODO
 //#define update_mu_dq // TODO
 //#define update_sigma_dq // TODO
-void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen) {
+void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
   // Computing other BAMS {{{
   cout << " * computing posVar" << endl;
   computeVar(STRING("pos"), wlen);
@@ -1328,9 +1328,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   kvg.append("data", "dp", new arr(dp));
   kvg.append("data", "dq", new arr(dq));
   
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Viterbi + Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -1358,7 +1358,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 //#define update_sigma_dpVar
 #define update_mu_dqVar
 //#define update_sigma_dqVar
-void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint wlen) {
+void KeyFramer::EM(Graph &kvg, const String &b1, const String &b2, uint wlen) {
   // Observations {{{
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
@@ -1591,9 +1591,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint 
   kvg.append("data", "dpVar", new arr(dpVar));
   kvg.append("data", "dqVar", new arr(dqVar));
   
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Viterbi + Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -1615,7 +1615,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint 
 //#define update_sigma_pVar
 #define update_mu_qVar
 //#define update_sigma_qVar
-void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
+void KeyFramer::EM(Graph &kvg, const String &bb, uint wlen) {
   // Computing other BAMS {{{
   cout << " * computing posVar" << endl;
   computeVar(STRING("pos"));
@@ -1797,9 +1797,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
   kvg.append("data", "pVar", new arr(pVar));
   kvg.append("data", "qVar", new arr(qVar));
   
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Viterbi + Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -1820,7 +1820,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
 //#define update_sigma_pSpeedGP
 //#define update_mu_qSpeedGP
 //#define update_sigma_qSpeedGP
-void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
+void KeyFramer::EM_m(Graph &kvg, const String &bb) {
   // Computing other BAMS {{{
   cout << " * computing posSpeed" << endl;
   computeSpeed(STRING("pos"));
@@ -2040,9 +2040,9 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   kvg.append("data", "vit", new arr(vit));
   kvg.append("data", "pSpeedGP", new arr(pSpeedGP));
   kvg.append("data", "qSpeedGP", new arr(qSpeedGP));
-  KeyValueGraph *plot;
+  Graph *plot;
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Movement: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2052,7 +2052,7 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   plot->append("data", new String("vit"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2072,7 +2072,7 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
 //#define update_sigma_dpSpeedGP
 //#define update_mu_dqSpeedGP
 //#define update_sigma_dqSpeedGP
-void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
+void KeyFramer::EM_r(Graph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
@@ -2310,9 +2310,9 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("data", "vit", new arr(vit));
   kvg.append("data", "dpSpeedGP", new arr(dpSpeedGP));
   kvg.append("data", "dqSpeedGP", new arr(dqSpeedGP));
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Rigidity: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2322,7 +2322,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   plot->append("data", new String("vit"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2340,7 +2340,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 // EM_c {{{
 //#define update_mu_dist
 //#define update_sigma_dist
-void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
+void KeyFramer::EM_c(Graph &kvg, const String &bA, const String &bB) {
   CHECK(g4d().id().digits().contains(bA), "First body must be agent.");
   CHECK(g4d().id().objects().contains(bB), "First body must be object.");
   // Computing other BAMS {{{
@@ -2482,9 +2482,9 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Return results as KVG {{{
   kvg.append("data", "vit", new arr(vit));
   kvg.append("data", "dist", new arr(dist));
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Contact: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2494,7 +2494,7 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   plot->append("data", new String("vit"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Observations"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2518,14 +2518,14 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_sigma_dp
 //#define update_mu_dq
 //#define update_sigma_dq
-void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String &obj) {
+void KeyFramer::EM_z_with_c(Graph &kvg, const String &subj, const String &obj) {
   CHECK(g4d().id().digits().contains(subj), "First body must be agent.");
   CHECK(g4d().id().objects().contains(obj), "First body must be object.");
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   String subj_dPos = STRING(subj << "_dPos");
   String subj_dQuat = STRING(subj << "_dQuat");
@@ -2919,9 +2919,9 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   ind_obj = g4d().id().objects().findValue(obj);
   kvg.getValue<arr>("vit")->subDim(ind_subj, ind_obj)() = vit;
 
-  KeyValueGraph *hmm, *plot;
+  Graph *hmm, *plot;
   
-  hmm = new KeyValueGraph;
+  hmm = new Graph;
   hmm->append("data", "vit", new arr(vit));
   hmm->append("data", "dist", new arr(dist));
   hmm->append("data", "dpSpeed", new arr(dpSpeed));
@@ -2929,7 +2929,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   hmm->append("data", "pSpeed", new arr(pSpeed));
   hmm->append("data", "qSpeed", new arr(qSpeed));
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Full System: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2939,7 +2939,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   plot->append("data", new String("vit"));
   hmm->append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("dist"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2947,7 +2947,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   plot->append("data", new String("dist"));
   hmm->append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("dp, dq"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2956,7 +2956,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   plot->append("data", new String("dqSpeed"));
   hmm->append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("p, q"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2969,7 +2969,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   hmm->append("data", "pBSpeed", new arr(pBSpeed));
   hmm->append("data", "qBSpeed", new arr(qBSpeed));
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("pBSpeed, qBSpeed"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -2979,7 +2979,7 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   kvg.append("plot", plot);
 #endif
 
-  kvg.append(STRINGS("hmm", subj, obj), hmm);
+  kvg.append({"hmm", subj, obj}, hmm);
   // }}}
 }
 #undef with_object_emission
@@ -3002,12 +3002,12 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
 //#define update_sigma_dp
 //#define update_mu_dq
 //#define update_sigma_dq
-void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
+void KeyFramer::EM_z(Graph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
@@ -3352,9 +3352,9 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("data", "qSpeed", new arr(qSpeed));
   kvg.append("data", "dpSpeed", new arr(dpSpeed));
   kvg.append("data", "dqSpeed", new arr(dqSpeed));
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Full System: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3364,7 +3364,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   plot->append("data", new String("vit"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("p, q"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3377,7 +3377,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("data", "pBSpeed", new arr(pBSpeed));
   kvg.append("data", "qBSpeed", new arr(qBSpeed));
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("pBSpeed, qBSpeed"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3387,7 +3387,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("plot", plot);
 #endif
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("dp, dq"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3417,12 +3417,12 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_sigma_dp
 //#define update_mu_dq
 //#define update_sigma_dq
-void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
+void KeyFramer::EM_z(Graph &kvg, const StringA &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
-  computeSmooth(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+  computeSmooth({"pos", "quat"}, alpha, force);
+  computeSpeed({"posSmooth", "quatSmooth"}, force);
 
   StringA bA_dPos, bA_dQuat, bA_dPosSmooth, bA_dQuatSmooth, bA_dPosSmoothSpeed, bA_dQuatSmoothSpeed;
 
@@ -3792,9 +3792,9 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   kvg.append("data", "qSpeed", new arr(qSpeed));
   kvg.append("data", "dpSpeed", new arr(dpSpeed));
   kvg.append("data", "dqSpeed", new arr(dqSpeed));
-  KeyValueGraph *plot;
+  Graph *plot;
   
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("Full System: Viterbi"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3804,7 +3804,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   plot->append("data", new String("vit"));
   kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("p, q"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3817,7 +3817,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   kvg.append("data", "pBSpeed", new arr(pBSpeed));
   kvg.append("data", "qBSpeed", new arr(qBSpeed));
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("pBSpeed, qBSpeed"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3827,7 +3827,7 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   kvg.append("plot", plot);
 #endif
 
-  plot = new KeyValueGraph();
+  plot = new Graph();
   plot->append("title", new String("dp, dq"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3848,17 +3848,17 @@ void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
 #undef update_sigma_dq
 // }}}
 
-void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha) {
+void KeyFramer::testSmoothing(Graph &kvg, const String &bA, double alpha) {
   computeFilter(STRING("pos"), alpha, true);
   computeSmooth(STRING("pos"), alpha, true);
-  computeSpeed(STRINGS("pos", "posFilter", "posSmooth"), true);
+  computeSpeed({"pos", "posFilter", "posSmooth"}, true);
   arr pSpeed_orig = g4d().query("posSpeed", bA);
   arr pSpeed_smooth = g4d().query("posSmoothSpeed", bA);
   arr pSpeed_filter = g4d().query("posFilterSpeed", bA);
   kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
   kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
   kvg.append("data", "pSpeed_filter", new arr(pSpeed_filter));
-  KeyValueGraph *plot = new KeyValueGraph();
+  Graph *plot = new Graph();
   plot->append("title", new String("Smoothing"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
@@ -3869,7 +3869,7 @@ void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha
   kvg.append("plot", plot);
 }
 
-void KeyFramer::objFeatures(KeyValueGraph &feats, const String &b, uint fnum) {
+void KeyFramer::objFeatures(Graph &feats, const String &b, uint fnum) {
   feats.clear();
 
   feats.append("fnum", new double(fnum));
@@ -3878,14 +3878,14 @@ void KeyFramer::objFeatures(KeyValueGraph &feats, const String &b, uint fnum) {
   feats.append("f_pos", new arr(pos.sub(0, 1)));
 }
 
-void KeyFramer::process(KeyValueGraph &kvg, const StringA &name_subjs, const StringA &name_objs) {
+void KeyFramer::process(Graph &kvg, const StringA &name_subjs, const StringA &name_objs) {
   for(auto name_subj: name_subjs)
     for(auto name_obj: name_objs)
       process(kvg, name_subj, name_obj);
 }
 
 // process {{{
-void KeyFramer::process(KeyValueGraph &kvg, const String &name_subj, const String &name_obj) {
+void KeyFramer::process(Graph &kvg, const String &name_subj, const String &name_obj) {
   if(g4d().id().digits().contains(name_subj)) {
     EM_z_with_c(kvg, name_subj, name_obj);
     return;
@@ -3932,7 +3932,7 @@ void KeyFramer::play() {
   }
 }
 
-void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool record) {
+void KeyFramer::playScene(Graph &kvg, const StringA &name_subjs, bool record) {
   CHECK(name_subjs.N <= 6, "Not done yet this many colors");
   VideoEncoder_x264_simple *vid;
   if(record)
@@ -3983,7 +3983,7 @@ void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool re
     vid->close();
 }
 
-void KeyFramer::playScene(KeyValueGraph &kvg, const String &name_subj, bool record) {
+void KeyFramer::playScene(Graph &kvg, const String &name_subj, bool record) {
   VideoEncoder_x264_simple *vid;
   if(record) vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
 
@@ -4149,9 +4149,9 @@ void KeyFramer::load_ann(const String &dir) {
       for(String part1: g4d().id().sensorsof(obj1)) {
         for(String part2: g4d().id().sensorsof(obj2)) {
           ann_ref.referTo(annOf(part1, part2));
-          for(Item *lock: *pair->getValue<KeyValueGraph>()) {
-            from = (uint)*lock->getValue<KeyValueGraph>()->getValue<double>("from");
-            to = (uint)*lock->getValue<KeyValueGraph>()->getValue<double>("to");
+          for(Item *lock: *pair->getValue<Graph>()) {
+            from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
+            to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
             ann_ref.subRange(from, to) = 1;
           }
         }
@@ -4174,7 +4174,7 @@ arr KeyFramer::annOf(const String &sensor1, const String &sensor2) {
   return s->ann[i];
 }
 
-void KeyFramer::dlib_test(KeyValueGraph &kvg, const String &name_subj, const String &name_obj, uint wlen) {
+void KeyFramer::dlib_test(Graph &kvg, const String &name_subj, const String &name_obj, uint wlen) {
   // observations
   computeVar(STRING("pos"), wlen);
   computeVar(STRING("quat"), wlen);

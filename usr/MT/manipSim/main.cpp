@@ -14,7 +14,7 @@
 void sample();
 void testMonteCarlo();
 
-void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
+void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
   W.qdim.clear();
   W.q.clear();
   W.qdot.clear();
@@ -29,21 +29,21 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const KeyValueGraph& G){
 
   //  //do this first to ensure they have the same indexing
   //  for(ors::Body *b:world->bodies){
-  //    G.append<ors::Body>(STRINGS("body", b->name), b);
+  //    G.append<ors::Body>({"body", b->name}, b);
   //  }
 
   //  for(ors::Body *b:world->bodies){
-  //    G.append<ors::Transformation>(STRINGS("pose"), ARRAY(G(b->index)), new ors::Transformation(b->X));
-  ////    if(b->ats["ctrlable"]) G.append<bool>(STRINGS("controllable"), ARRAY(G(b->index)), NULL);
-  //    if(b->ats["canGrasp"]) G.append<bool>(STRINGS("canGrasp"), ARRAY(G(b->index)), NULL);
-  //    if(b->ats["fixed"])    G.append<bool>(STRINGS("fixed"), ARRAY(G(b->index)), NULL);
+  //    G.append<ors::Transformation>({"pose"}, ARRAY(G(b->index)), new ors::Transformation(b->X));
+  ////    if(b->ats["ctrlable"]) G.append<bool>({"controllable"}, ARRAY(G(b->index)), NULL);
+  //    if(b->ats["canGrasp"]) G.append<bool>({"canGrasp"}, ARRAY(G(b->index)), NULL);
+  //    if(b->ats["fixed"])    G.append<bool>({"fixed"}, ARRAY(G(b->index)), NULL);
   //  }
 
   //  for(ors::Joint *j:world->joints){
   //    if(j->type==ors::JT_fixed)
-  //      G.append<bool>(STRINGS("rigid"), ARRAY(G(j->from->index), G(j->to->index)), NULL);
+  //      G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //    if(j->type==ors::JT_transXYPhi)
-  //      G.append<bool>(STRINGS("support"), ARRAY(G(j->from->index), G(j->to->index)), NULL);
+  //      G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //  }
 
 }
@@ -106,9 +106,12 @@ void solveProblem(ors::KinematicWorld& world, Graph& symbols){
 //===========================================================================
 
 void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
+  symbols.checkConsistency();
   Item *CYLIN = symbols["Cylin"];
   Item *BOARD = symbols["Board"];
   Item *DEPTH = symbols["depth"];
+  Graph& state = symbols["STATE"]->kvg();
+
   uint n = 10+rnd(20);
   double x=-1.6, y=-1.;
   for(uint i=0;i<n;i++){
@@ -139,16 +142,23 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Item *o = symbols.append<bool>("Object", s->name, new bool(true), true);
+    Item *o = symbols.append<bool>({"Object", s->name}, {}, new bool(true), true);
     if(s->type==ors::cylinderST){
-      symbols.append<bool>(STRINGS_0(), {CYLIN ,o}, new bool(true), true);
+      state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
     }else{
-      symbols.append<bool>(STRINGS_0(), {BOARD, o}, new bool(true), true);
+      state.append<bool>({}, {BOARD, o}, new bool(true), true);
     }
-    symbols.append<double>(STRINGS_0(), {DEPTH, o}, new double(0.), true);
+    state.append<double>({}, {DEPTH, o}, new double(0.), true);
   }
 
+  symbols.checkConsistency();
+
   //HACK: move the actionSequence item to the end...
+  Item *ss = symbols["STATE"];
+  symbols.ItemL::append(ss);
+  symbols.ItemL::remove(ss->index);
+  symbols.index();
+
   Item *as = symbols["actionSequence"];
   symbols.ItemL::append(as);
   symbols.ItemL::remove(as->index);
@@ -163,7 +173,9 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
   //-- find max depth
   double depth=0.;
   Item *depthSymbol=symbols["depth"];
-  for(Item *dep:depthSymbol->parentOf) if(&dep->container==&depthSymbol->container){
+  Graph& state =symbols["STATE"]->kvg();
+
+  for(Item *dep:depthSymbol->parentOf) if(&dep->container==&state){
     double *d = dep->getValue<double>();
     CHECK(d,"");
     if(*d>depth) depth=*d;

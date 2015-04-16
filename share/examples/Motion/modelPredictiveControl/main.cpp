@@ -128,20 +128,24 @@ void scenario1() {
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
+
 
   cout << "Loaded scene: " << endl;
 
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position_vel", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   MotionProblemFunction F(P);
   uint T=F.get_T();
@@ -179,20 +183,23 @@ void scenario2() {
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
 
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   MotionProblemFunction F(P);
   uint T=F.get_T(); uint k=F.get_k(); uint n=F.dim_x(); double dt=P.tau;
@@ -228,12 +235,12 @@ void scenario2() {
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c2->map.order=1;
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0);
 
   arr prefix(2,n);
   prefix[1] = xRef[i-1];
@@ -271,26 +278,30 @@ void scenario3() {
   /*
   ** Plan Trajectory
   */
-  makeConvexHulls(world.shapes);
+
   MotionProblem P(world);
 
-  P.loadTransitionParameters();
+
 
   arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
   c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.,0.,0.}, 1e4);
   c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
   P.x0 = 0.1;
 
@@ -326,7 +337,7 @@ void scenario3() {
   double t = 0.;
   double t_final = T*dt;
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, {0.,0.,1.});
   MPC mpc(P,x);
   world.setJointState(q);
   world.getJointState(q);
