@@ -15,7 +15,7 @@ private:
   ors::KinematicWorld world;
 
   // Ors related variables
-  arr u, Kd, Kp;
+  arr u;
   arr q, qd;
   arr q_ref, qdot_ref;
   arr Kp, Kd, Ki;
