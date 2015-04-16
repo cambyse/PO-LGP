@@ -23,18 +23,19 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //-- match ROS and ORS joint ids
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
-  ROS_INFO("*** ORS model loaded");
+  ROS_INFO("%s",STRING("*** ORS model loaded: " <<world.q.N <<"joints -- saved in 'z.model.kvg'").p);
+  world >>FILE("z.model.kvg");
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
-  Kp.resize(world.q.N).setZero();
-  Kd.resize(world.q.N).setZero();
+  Kp_base.resize(world.q.N).setZero();
+  Kd_base.resize(world.q.N).setZero();
   Kp=Kd=ARR(1.);
   Ki.clear();
   limits.resize(world.q.N,4).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
-    info = j->ats.getValue<arr>("gains");  if(info){ Kp(j->qIndex)=info->elem(0); Kd(j->qIndex)=info->elem(1); }
+    info = j->ats.getValue<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
     info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
     } }
@@ -49,7 +50,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       q(j->qIndex) = pr2_joint->position_;
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
 		      <<"' \tq=" <<q(j->qIndex)
-		      <<" \tgains=" <<Kp(j->qIndex) <<' '<<Kd(j->qIndex)
+		      <<" \tgains=" <<Kp_base(j->qIndex) <<' '<<Kd_base(j->qIndex)
 		      <<" \tlimits=" <<limits[j->qIndex]).p);
     }else{
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' not matched in pr2").p);
@@ -115,11 +116,11 @@ void TreeControllerClass::update() {
 
     u = zeros(q.N);
     if(Kp.N==1 && Kd.N==1){
-      u += Kp.scalar()*(Kp % (q_ref - q));
-      u += Kd.scalar()*(Kd % (qdot_ref - qd));
+      u += Kp.scalar()*(Kp_base % (q_ref - q));
+      u += Kd.scalar()*(Kd_base % (qdot_ref - qd));
     }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
-      u += Kp % (Kp*(q_ref - q)); //matrix multiplication!
-      u += Kd.scalar()*(Kd % (qdot_ref - qd));
+      u += Kp_base % (Kp*(q_ref - q)); //matrix multiplication!
+      u += Kd.scalar()*(Kd_base % (qdot_ref - qd));
     }
     u += u_bias;
 
