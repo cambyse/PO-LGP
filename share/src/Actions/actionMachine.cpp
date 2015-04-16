@@ -313,7 +313,7 @@ void ActionMachine::waitForQuitSymbol() {
       return;
     }
     for(Item *f:quitSymbol->parentOf){
-      if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
+      if(f->container.isItemOfParentKvg && f->container.isItemOfParentKvg->keys.N && f->container.isItemOfParentKvg->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();
   }
