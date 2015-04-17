@@ -1,0 +1,48 @@
+// #include <pr2/actionMachine.h>
+// #include <pr2/actions.h>
+#include <Motion/feedbackControl.h>
+#include <Hardware/gamepad/gamepad.h>
+#include <Hardware/G4/G4.h>
+#include <Hardware/G4/module_G4Publisher.h>
+#include <Hardware/G4/module_G4Recorder.h>
+#include <Hardware/G4/module_G4Debugger.h>
+
+#include "calibrator_module.h"
+#include "pd_executor_module.h"
+
+// ============================================================================
+struct PR2G4Control:System {
+  PR2G4Control() {
+    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .05);
+    addModule<G4Poller>(NULL, Module_Thread::loopWithBeat, .05);
+    // auto g4debug = addModule<G4Debugger>(NULL, Module_Thread::listenFirst);
+    // g4debug->id().load("g4mapping.kvg");
+    addModule<Calibrator>("Calibrator", Module_Thread::loopWithBeat, .05);
+    // auto pd_executor = addModule<PDExecutor>(NULL, Module_Thread::loopWithBeat, .05);
+    addModule<PDExecutor>("PDExecutor", Module_Thread::loopWithBeat, .05);
+#ifdef WITH_ROS
+    // ROS
+    if (MT::getParameter<bool>("useRos", false)) {
+      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+      // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module_Thread::loopWithBeat, .001);
+      // pd_executor->roscom = roscom;
+    }
+#endif
+    connect();
+  };
+};
+
+
+// ============================================================================
+int main(int argc, char** argv) {
+  MT::initCmdLine(argc, argv);
+
+  PR2G4Control system;
+  engine().open(system);
+  engine().shutdown.waitForSignal();
+  engine().close(system);
+
+  return 0;
+}
+
