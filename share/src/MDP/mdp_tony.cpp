@@ -24,7 +24,7 @@
 #include "mdp.h"
 
 void MatrixToArray(arr& X, Matrix M, uint d0, uint d1){
-  CHECK(d0==(uint)M->num_rows, "given dimensionality not consistent");
+  CHECK_EQ(d0,(uint)M->num_rows, "given dimensionality not consistent");
   X.resize(d0, d1);
   X.setZero();
   uint i, j;

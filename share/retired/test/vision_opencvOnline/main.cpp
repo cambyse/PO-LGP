@@ -15,7 +15,7 @@ ENABLE_CVMAT
 
 Process* camera = NULL;
 
-void test(){
+void TEST(){
   Image imgL("CameraL"), imgR("CameraR");
   camera = newUVCCamera();
 

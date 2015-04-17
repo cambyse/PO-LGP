@@ -3,7 +3,7 @@
 #include <MT/soc_orsSystem.h>
 #include <MT/aico.h>
 
-void test(){
+void TEST(){
 
   ControlledSystem_PointMass sys;
   sys.os = &cout;

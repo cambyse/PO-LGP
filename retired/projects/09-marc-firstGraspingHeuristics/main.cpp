@@ -25,7 +25,7 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
   //set task variables
   TaskVariable *x0 = new TaskVariable("finger-tip",ors,posTVT ,"effector","<t(0 0 .2)>",0,0,0);
   TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
-  soci.setTaskVariables(ARRAY(x0,x1));
+  soci.setTaskVariables({x0,x1});
 
   double midPrec,endPrec,balPrec,colPrec;
   MT::getParameter(midPrec,"midPrec");
@@ -42,7 +42,7 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
   if(!colPrec) x1->active=false;
 }
 
-void testSoc(){
+void TEST(Soc){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
@@ -77,7 +77,7 @@ void testSoc(){
   bool pseudoDynamic;
 };*/
 
-void testGradients(){
+void TEST(Gradients){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
@@ -96,7 +96,7 @@ void testGradients(){
   TaskVariable *p1  = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2  = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
   TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
-  soci.setTaskVariables(ARRAY(arm,n1,n2,p1,p2,col));
+  soci.setTaskVariables({arm,n1,n2,p1,p2,col});
   
   //n1->setGains(.001,0.);
   //n2->setGains(.001,0.);
@@ -152,7 +152,7 @@ void testGradients(){
 
 }
 
-void testPlan(){
+void TEST(Plan){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
@@ -180,7 +180,7 @@ void testPlan(){
   TaskVariable *p1 = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2 = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
   TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
-  soci.setTaskVariables(ARRAY(n1,n2,za,p1,p2,col));
+  soci.setTaskVariables({n1,n2,za,p1,p2,col});
 
   //n1->x_target = -n2->x; //ARR(1.,0.,0.);
   //n2->x_target = -n1->x;

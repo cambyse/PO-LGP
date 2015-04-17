@@ -1,6 +1,6 @@
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
 #include <Ors/ors.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>
@@ -33,9 +33,9 @@ RRTPlannerTest::RRTPlannerTest() {
   P.T = 1;
 
   // add a collision cost with threshold 0 to avoid collisions
-  uintA shapes = ARRAY<uint>(P.world.getBodyByName("endeff")->shapes(0)->index);
-  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+  uintA shapes = {P.world.getBodyByName("endeff")->shapes(0)->index};
+  Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
   c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);

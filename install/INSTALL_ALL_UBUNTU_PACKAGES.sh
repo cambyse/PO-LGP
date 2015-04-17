@@ -20,6 +20,7 @@ libcv-dev \
 libcvaux-dev \
 libdc1394-22-dev \
 libf2c2-dev \
+libglew-dev \
 libgtest-dev \
 libgtkglext1-dev \
 libhighgui-dev \
@@ -45,6 +46,10 @@ libfreenect-dev \
 libavcodec-extra-54 \
 libqt4-dev-bin \
 libusb-dev
+libavcodec-extra-53 \
+libavdevice-dev \
+libavfilter-dev \
+libx264-dev
 
 # install google test
 cd /usr/src/gtest

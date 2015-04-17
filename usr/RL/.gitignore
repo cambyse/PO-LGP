@@ -1,4 +1,12 @@
 Makefile*
 ui_*.h
 moc_*.cpp
+
+## qtcreator files
 *.pro.user
+
+## backup file of vue
+.~*.vue
+
+## ipython notebook
+**/.ipynb_checkpoints/**

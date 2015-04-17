@@ -19,7 +19,7 @@ void TEST(CheatSheet) {
   A = ones(3,3);
   arr I = eye(4);
   // or fill the matrix manually with an initialization list
-  A = {1, 3, 7, 8};
+  A = {1., 3., 7., 8.};
 
   cout << "\n##### MISC" << endl;
   // you can reshape matrices
@@ -53,10 +53,10 @@ void TEST(CheatSheet) {
   // Work as you'd expect
   A = randn(2, 2);
   I = eye(2);
-  CHECK(A * I == A, "");
-  CHECK(A + A == A * 2., "");
+  CHECK_EQ(A * I , A, "");
+  CHECK_EQ(A + A , A * 2., "");
   // transpose
-  CHECK(A == ~(~A), "A = A^T^T");
+  CHECK_EQ(A , ~(~A), "A = A^T^T");
   // inplace transpose
   cout <<"before inplace transpose:\n" <<A <<endl;
   transpose(A);

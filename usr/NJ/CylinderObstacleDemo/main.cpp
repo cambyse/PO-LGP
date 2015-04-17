@@ -245,7 +245,7 @@ int main(int argc,char** argv){
     robotProcesses.step();
     perc.threadStepOrSkip(0);
     //  robot.gui.gl->watch();
-    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
+    if(robotProcesses.gamepad.state(0)==16 || robotProcesses.gamepad.state(0)==32) break;
     //cout <<task.TV_eff->y <<endl;
   }
   robotProcesses.close();

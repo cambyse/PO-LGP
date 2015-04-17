@@ -1,0 +1,10 @@
+*.output
+*.MTS
+*.pdf
+*.mat
+evaluation
+logs
+data
+bin
+out
+log

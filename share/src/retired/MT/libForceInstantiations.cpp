@@ -76,7 +76,7 @@ template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
 #define T uint
 #  include <Core/array_instantiate.cxx>
 #undef T
-#define T uint16
+#define T uint16_t
 #  include <Core/array_instantiate.cxx>
 #undef T
 #define T int

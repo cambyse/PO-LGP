@@ -31,20 +31,20 @@ struct XimeaCam:XimeaCam_Base{
 
     DWORD dwNumberOfDevices = 0;
     res = xiGetNumberDevices(&dwNumberOfDevices);
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
     CHECK(dwNumberOfDevices,"No camera found");
 
     res = xiOpenDevice(0, &xiH);
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
 
     res = xiSetParamInt(xiH, XI_PRM_EXPOSURE, 10000);
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
 
     res = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_RGB24);
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
 
     // res = xiSetParamInt(xiH, XI_PRM_DOWNSAMPLING, 2);
-  //  CHECK(res==XI_OK, "Error "<<res);
+  //  CHECK_EQ(res,XI_OK, "Error "<<res);
 
     float min_fps,max_fps;
     xiGetParamFloat(xiH, XI_PRM_FRAMERATE XI_PRM_INFO_MIN, &min_fps);
@@ -61,7 +61,7 @@ struct XimeaCam:XimeaCam_Base{
 
     // Start acquisition
     res = xiStartAcquisition(xiH);
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
   }
 
   ~XimeaCam(){
@@ -71,7 +71,7 @@ struct XimeaCam:XimeaCam_Base{
   void step(){
     XI_RETURN res = xiGetImage(xiH, 5000, &image);
     cout <<"image received: height=" <<image.height <<" width=" <<image.width <<" bp=" <<image.bp <<" bp_size=" <<image.bp_size <<" nframe=" <<image.nframe <<" format=" <<image.frm <<endl;
-    CHECK(res==XI_OK, "Error "<<res);
+    CHECK_EQ(res,XI_OK, "Error "<<res);
     byteA img;
     if(image.frm==XI_MONO8){
       img.referTo((byte*)image.bp, image.height*image.width);

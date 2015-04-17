@@ -1,0 +1,29 @@
+#!/bin/bash
+
+dir=$1
+ann_cfg=$dir/ann.cfg
+ann=$dir/ann.txt
+ann_g4=$dir/ann_g4.txt
+
+video_times=$dir/$(head -1 $dir/ann.cfg)
+g4_times=$dir/$(tail -1 $dir/ann.cfg)
+
+video_start_time=$(head -1 $video_times | cut -d ' ' -f 2)
+> $ann_g4
+
+while read ann
+do
+  objs=$(echo $ann | cut -d ' ' -f 1-2)
+  from_video_time=$(echo $ann | cut -d ' ' -f 3)
+  to_video_time=$(echo $ann | cut -d ' ' -f 4)
+
+  echo "---------------------------"
+  echo $from_video_time+$video_start_time
+  from_g4_frame=$(awk '$2>=('$from_video_time'+'$video_start_time'){ print NR; exit 0}' $g4_times)
+  to_g4_frame=$(awk '$2>=('$to_video_time'+'$video_start_time'){print NR+1; exit 0}' $g4_times)
+  echo $from_g4_frame
+
+  echo $objs $from_g4_frame $to_g4_frame
+  echo $objs $from_g4_frame $to_g4_frame >> $ann_g4
+done < $ann
+

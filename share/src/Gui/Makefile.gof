@@ -1,7 +1,7 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT = $(BASE)/lib/$(NAME).so
--include $(BASE)/make-config
+-include $(BASE)/gofMake/config.mk
 
 ifndef MLR_RoboticsCourse
 GTK = 1

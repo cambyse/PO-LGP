@@ -14,6 +14,6 @@ agent { name = "human"
   }
 }
 
-object { name = "bbox:body", hid = 3, sid = 1 }
-object { name = "bbox:lid", hid = 3, sid = 2 }
+object { name = "bbox:body", hid = 3, sid = 1, structured }
+object { name = "bbox:lid", hid = 3, sid = 2, structured }
 object { name = "ball", hid = 3, sid = 0 }

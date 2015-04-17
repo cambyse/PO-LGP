@@ -65,29 +65,29 @@ public:
     MotionProblem P(&G);
     P.loadTransitionParameters();
 
-    TaskCost *c;
+    Task *c;
     c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
-                               ARRAY(0.,0.,0.), 1e3,
-                               ARRAY(0.,0.,0.), 0.);
+                               {0.,0.,0.}, 1e3,
+                               {0.,0.,0.}, 0.);
 
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {
       c = P.addDefaultTaskMap_Bodies("orientation", zoriTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
       P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                              ARRAY(0.,0.,-1.), 1e4,
-                              ARRAY(0.,0.,0.), 1e-3);
+                              {0.,0.,-1.}, 1e4,
+                              {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
       c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-      P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e0);
+      P.setInterpolatingCosts(c, MotionProblem::constFinalMid, {0.}, 1e0);
     }
 
     MotionProblemFunction F(P);
@@ -125,7 +125,7 @@ public:
       xRef = ~cat(~xRef,~xRefVec);
     }
 
-    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, ARRAY(0.,1.,0.));
+    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
     x0 = xRef[0];
 
     pfc = new Pfc(G, xRef,T,x0, *goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);

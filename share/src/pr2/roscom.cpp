@@ -1,16 +1,20 @@
 #include "roscom.h"
 
 #ifdef MT_ROS
+
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
+#ifdef MLR_AR_TRACK
+#  include <ar_track_alvar/AlvarMarkers.h>
+#endif
 
 //===========================================================================
 
 void rosCheckInit(){
-  ros::init(MT::argc, MT::argv, "pr2_module");
+  ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
 }
 
 bool rosOk(){
@@ -40,8 +44,8 @@ struct sRosCom_ControllerSync{
   ros::Subscriber sub_jointState;
   ros::Publisher pub_jointReference;
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
-  //  cout <<"** joinstState_callback" <<endl;
-    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias));
+    //  cout <<"** joinstState_callback" <<endl;
+    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
 };
@@ -52,8 +56,8 @@ void RosCom_ControllerSync::open(){
   s->base=this;
   s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom_ControllerSync::joinstState_callback, s);
   s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
-//  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
-//  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
+  //  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
+  //  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
 }
 
 void RosCom_ControllerSync::step(){
@@ -63,11 +67,14 @@ void RosCom_ControllerSync::step(){
   jointRef.q = VECTOR(m.q);
   jointRef.qdot= VECTOR(m.qdot);
   jointRef.fL = VECTOR(m.fL);
-  jointRef.fR = VECTOR(m.fR);
   jointRef.u_bias = VECTOR(m.u_bias);
-  jointRef.Kq_gainFactor = VECTOR(m.Kq_gainFactor);
-  jointRef.Kd_gainFactor = VECTOR(m.Kd_gainFactor);
-  jointRef.Kf_gainFactor = VECTOR(m.Kf_gainFactor);
+  jointRef.Kp = VECTOR(m.Kp);
+  jointRef.Kd = VECTOR(m.Kd);
+  jointRef.Ki = VECTOR(m.Ki);
+  jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
+  jointRef.velLimitRatio = m.velLimitRatio;
+  jointRef.effLimitRatio = m.effLimitRatio;
+  jointRef.gamma = m.gamma;
   s->pub_jointReference.publish(jointRef);
 }
 
@@ -85,11 +92,11 @@ struct sRosCom_KinectSync{
   ros::Subscriber sub_depth;
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    base->kinect_rgb.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
+    base->kinect_rgb.set() = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
   }
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    byteA data = ARRAY<byte>(msg->data);
+    byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
     base->kinect_depth.set() = ref;
@@ -195,8 +202,8 @@ void RosCom_ForceSensorSync::open(){
   rosCheckInit();
   s = new sRosCom_ForceSensorSync;
   s->base = this;
-  s->sub_left  = s->nh.subscribe("/ft/l_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_left, s);
-  s->sub_right = s->nh.subscribe("/ft/r_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_right, s);
+  s->sub_left  = s->nh.subscribe("/ft_sensor/ft_compensated", 1, &sRosCom_ForceSensorSync::cb_left, s);  // /ft/l_gripper_motor
+//  s->sub_right = s->nh.subscribe("/ft_sensor/r_ft_compensated", 1, &sRosCom_ForceSensorSync::cb_right, s); // /ft/r_gripper_motor
 }
 
 void RosCom_ForceSensorSync::step(){
@@ -208,7 +215,73 @@ void RosCom_ForceSensorSync::close(){
 
 //===========================================================================
 
+#ifdef MLR_AR_TRACK
+
+struct sRosCom_ARMarkerSync{
+  RosCom_ARMarkerSync *base;
+  ros::NodeHandle nh;
+  ros::Subscriber ar_marker;
+  void cb_sync(const ar_track_alvar::AlvarMarkers::ConstPtr& msg){
+    uint N = 20;
+    arr marker_pose;
+    if (marker_pose.N==0){
+      marker_pose = zeros(N,7);
+    }else{
+      marker_pose = base->marker_pose.get();
+    }
+    for (uint i = 0; i<msg->markers.size();i++) {
+      const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
+      marker_pose[m.id] = ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
+    }
+    base->marker_pose.set() = marker_pose;
+  }
+};
+
+void RosCom_ARMarkerSync::open(){
+  rosCheckInit();
+  s = new sRosCom_ARMarkerSync;
+  s->base = this;
+  s->ar_marker  = s->nh.subscribe("/ar_pose_marker", 1, &sRosCom_ARMarkerSync::cb_sync, s);
+}
+
+void RosCom_ARMarkerSync::step(){
+}
+
+void RosCom_ARMarkerSync::close(){
+  s->nh.shutdown();
+}
+
+#else
+
+void RosCom_ARMarkerSync::open(){
+  MT_MSG("compiler flags do not enable ARMarkers")
+}
+
+void RosCom_ARMarkerSync::step(){
+}
+
+void RosCom_ARMarkerSync::close(){
+  MT_MSG("compiler flags do not enable disabled ARMarkers")
+}
+
+#endif
+
+//===========================================================================
+
 #else //MT_ROS
+
+void RosCom_Spinner::open(){ NICO }
+void RosCom_Spinner::step(){ NICO }
+void RosCom_Spinner::close(){ NICO }
+
+void RosCom_ControllerSync::open(){ NICO }
+void RosCom_ControllerSync::step(){ NICO }
+void RosCom_ControllerSync::close(){ NICO }
+
+void RosCom_ForceSensorSync::open(){ NICO }
+void RosCom_ForceSensorSync::step(){ NICO }
+void RosCom_ForceSensorSync::close(){ NICO }
+
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)

@@ -105,7 +105,7 @@ void MyDemo::followTrajectory(RobotProcessGroup *robotProcesses){
       MT::IOraw=true;
       f6 <<  vision << " " << robotProcesses->ctrl.q_reference << " " <<   robotProcesses->ctrl.ors.getShapeByName("tennisBall")->X.pos << ' ' <<robotProcesses->stepCounter <<' ' <<MT::realTime() <<endl;
     }
-    if(robotProcesses->joy.state(0)==16 || robotProcesses->joy.state(0)==32) break;
+    if(robotProcesses->gamepad.state(0)==16 || robotProcesses->gamepad.state(0)==32) break;
     if (q_index == q.d0-2) {
       break;
       started_trajectory = false;

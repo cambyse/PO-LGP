@@ -20,8 +20,6 @@ arr GetJacoB(CarSimulator & S, const arr & u,const arr & x){
 
 //ok, works
 void testKalman(){
-  double theta = 0.3;
-  
   CarSimulator Sim;
   Sim.gl->watch();
   
@@ -56,7 +54,8 @@ void testKalman(){
     Sim.gaussiansToDraw.resize(1);
     Sim.gaussiansToDraw(0).A=K.b_var.sub(0,1,0,1);
     Sim.gaussiansToDraw(0).a=K.b_mean.sub(0,1);
-    //sanity check of the linear observation model -- don't use this code in the solution!
+
+    //tracking error
     cout << "estim error " <<maxDiff(K.b_mean, ARR(Sim.x, Sim.y, Sim.theta)) << endl;
   }
 }

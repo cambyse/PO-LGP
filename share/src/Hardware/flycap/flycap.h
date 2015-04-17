@@ -18,8 +18,11 @@ public:
 	/**
 	 * Creates flycap-based if for the given camera. If you don't know the camera ids,
 	 * use the "flycap_serials" example, or call get_flycap_ids yourself.
+	 *
+	 * WARNING: Grabbing raw and asking for YUV as output DOES NOT WORK. It seems to be a missing feature in
+	 * the flycapture library. If you grab RAW, either use the raw image directly, or convert to RGB/BGR.
 	 */
-	FlycapInterface(int cameraID, MLR::PixelFormat capture_format = MLR::PIXEL_FORMAT_BGR8, MLR::PixelFormat output_fmt = MLR::PIXEL_FORMAT_BGR8);
+	FlycapInterface(int cameraID, MLR::PixelFormat capture_format = MLR::PIXEL_FORMAT_RAW8, MLR::PixelFormat output_fmt = MLR::PIXEL_FORMAT_BGR8);
 	~FlycapInterface();
 
 	void startStreaming();

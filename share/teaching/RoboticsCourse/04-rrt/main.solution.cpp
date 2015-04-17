@@ -89,7 +89,7 @@ void RTTplan(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
-  arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
+  arr qT = {0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356};
   arr q0, y_col, q;
   S.getJointAngles(q0);
   q=q0;
@@ -245,7 +245,7 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode", 1)){
+  switch(MT::getParameter<int>("mode", 0)){
   case 0: RTTplan(); //break;
   case 1: optim(); break;
   }
@@ -260,8 +260,8 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
   double col_prec=1e-1;
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
   phi.resize(m);

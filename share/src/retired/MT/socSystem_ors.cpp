@@ -117,7 +117,7 @@ void soc::SocSystem_Ors::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_
   if(W){
     if(W->nd==1){
       if(W->N > s->q0.N){ W->resizeCopy(s->q0.N); MT_MSG("truncating W diagonal..."); }
-      CHECK(W->N==s->q0.N, "");
+      CHECK_EQ(W->N,s->q0.N, "");
       W_rate.setDiag(*W);
     } else NIY;
   }else{
@@ -173,7 +173,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
     col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, ARR());
-  setTaskVariables(ARRAY(pos, col, com));
+  setTaskVariables({pos, col, com});
 
   pos->y_target = ARRAY(ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
@@ -257,7 +257,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   TaskVariable *col;
   if(!useTruncation) col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else               col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
-  setTaskVariables(ARRAY(pos, col));
+  setTaskVariables({pos, col});
 
   pos->y_target = ARRAY(ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
@@ -297,7 +297,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   MT_MSG("Warning - need to change this");
   Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
   //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
-  CHECK(Wdiag.N==sys.s->q0.N, "wrong W matrix!");
+  CHECK_EQ(Wdiag.N,sys.s->q0.N, "wrong W matrix!");
   sys.s->W.setDiag(Wdiag);
   sys.s->H_rate = sys.s->W;
 
@@ -306,7 +306,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , "effector", 0, 0, 0, 0);
   x1 = new TaskVariable("COM",       *sys.ors, comTVT , 0, 0, 0, 0, 0);
   x2 = new TaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(.02));
-  sys.vars = ARRAY(x0, x1, x2);
+  sys.vars = {x0, x1, x2};
 
   updateState(globalSpace);
   //reportAll(globalSpace, cout);
@@ -477,7 +477,7 @@ void soc::SocSystem_Ors::setx(const arr& x, uint t){
     setq(x);
   }else{
     uint n=x.N/2;
-    CHECK(x.N==2*n, "");
+    CHECK_EQ(x.N,2*n, "");
     arr q, v;
     q.referToSubRange(x, 0, n-1);
     v.referToSubRange(x, n, 2*n-1);
@@ -620,7 +620,7 @@ void drawOrsSocEnv(void*){
   //set task variables
   TaskVariable *x0;
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , "eff", "t(0 0 .15)", 0, 0, 0);
-  sys.vars = ARRAY(x0);
+  sys.vars = {x0};
 
   updateState(sys.vars);
   //reportAll(globalSpace, cout);
@@ -660,7 +660,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
   TaskVariable *x0, *x1;
   x0 = new TaskVariable("finger-tip", *sys.ors, posTVT , endeffector_name, "", 0, 0, 0);
   x1 = new TaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, 0);
-  sys.vars = ARRAY(x0, x1);
+  sys.vars = {x0, x1};
 
   updateState(sys.vars);
   //reportAll(globalSpace, cout);

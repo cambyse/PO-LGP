@@ -8,6 +8,8 @@ using namespace std;
 
 bool DoubleComp(const double& a,const double& b){ return a<b; }
 
+//===========================================================================
+
 void TEST(Basics){
   cout <<"\n*** basic manipulations\n";
   arr a;     //'arr' is a macro for MT::Array<double>
@@ -18,7 +20,7 @@ void TEST(Basics){
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a <<endl;
   cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1) <<endl;
-  CHECK(a.last()==a.N-1,"");
+  CHECK_EQ(a.last(),a.N-1,"");
 
   //easier looping:
   cout <<"\neasier looping:\n";
@@ -36,8 +38,8 @@ void TEST(Basics){
   cout <<"\n2 columns deleted at 1:\n" <<a <<endl;
   a.insColumns(1,3);
   cout <<"\n3 columns inserted at 1:\n" <<a <<endl;
-  CHECK(a.d1==6,"");
-  CHECK(a(0,1)==0,"non-zeros inserted");
+  CHECK_EQ(a.d1,6,"");
+  CHECK_EQ(a(0,1),0,"non-zeros inserted");
 
   //access:
   cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
@@ -45,16 +47,16 @@ void TEST(Basics){
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
   cout <<"\nrows manipulated:\n" <<a <<endl;
-  CHECK(a(2,1)==7.,"");
-  CHECK(a[1]==a[2],"");
+  CHECK_EQ(a(2,1),7.,"");
+  CHECK_EQ(a[1],a[2],"");
 
   //setting arrays ``by hand''
-  a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
+  a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to MT::Array<double>({ ... })
   cout <<"\nset by hand:\n" <<a <<endl;
-  ints = ARRAY<int>(0, -1, -2, -3, -4);
+  ints = { 0, -1, -2, -3, -4 };
   cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
-  CHECK(a(2)==-2,"");
+  CHECK_EQ(a(2),-2,"");
 
   //TRY DEBUGGING with GDB:
   //set a breakpoint here
@@ -86,6 +88,8 @@ void TEST(Basics){
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
+//===========================================================================
+
 void TEST(StdVectorCompat) {
   std::vector<double> x(3);
   x[0]=1.;
@@ -95,6 +99,8 @@ void TEST(StdVectorCompat) {
   x=VECTOR(y);
   cout <<"arr -> std::vector -> arr = " <<ARRAY(x) <<endl;
 }
+
+//===========================================================================
 
 void TEST(SimpleIterators) {
   // This test shows how to use the iterators
@@ -126,9 +132,11 @@ void TEST(SimpleIterators) {
 
 void TEST(InitializationList) {
   cout << "Use c++11 initialization list to initialize arrays by hand" << endl;
-  arr a = {1, 3, 2, 5};
+  arr a = {1., 3., 2., 5.};
   cout << a << endl;
 }
+
+//===========================================================================
 
 void TEST(RowsAndColumsAccess) {
   // access rows and columns easily
@@ -153,13 +161,15 @@ void TEST(RowsAndColumsAccess) {
   cout << A.cols(1, 3) << endl;
 }
 
+//===========================================================================
+
 void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
 
   x = eye(5);
   cout <<"\neye(5)" <<x <<endl;
-  for(uint i=0;i<x.d0;i++) CHECK(x(i,i)==1.,"is not eye");
+  for(uint i=0;i<x.d0;i++) CHECK_EQ(x(i,i),1.,"is not eye");
 
   uintA p = randperm(5);
   cout <<"\nrandperm(5)" <<p <<endl;
@@ -169,6 +179,8 @@ void TEST(Matlab){
   cout <<"\nA=" <<A <<endl;
   cout <<"\nrepmat(A,2,3)" <<B <<endl;
 }
+
+//===========================================================================
 
 void TEST(Exception){
   cout <<"\n*** exception handling\n";
@@ -200,6 +212,8 @@ void TEST(MemoryBound){
   MT::globalMemoryBound=1ull<<30;
 }
 
+//===========================================================================
+
 void TEST(BinaryIO){
   cout <<"\n*** acsii and binary IO\n";
   arr a,b; a.resize(10000,100); rndUniform(a,0.,1.,false);
@@ -229,9 +243,11 @@ void TEST(BinaryIO){
   cout <<"binary read time: " <<MT::timerRead() <<"sec" <<endl;
   bin.close();
 
-  CHECK(a==b,"binary IO failed!");
+  CHECK_EQ(a,b,"binary IO failed!");
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
+
+//===========================================================================
 
 void TEST(Expression){
   cout <<"\n*** matrix expressions\n";
@@ -249,6 +265,8 @@ void TEST(Expression){
   cout <<"\nlonger expression\n" <<2.*a + 3.*a;
   cout <<"\nlonger expression\n" <<2.*a + ~b;
 }
+
+//===========================================================================
 
 void TEST(Permutation){
   cout <<"\n*** permutation\n";
@@ -268,6 +286,8 @@ void TEST(Permutation){
   for(uint i=0;i<p.N;i++) cout <<i <<":" <<p(i) <<"\n";
 }
 
+//===========================================================================
+
 void TEST(Gnuplot){
   cout <<"\n*** gnuplot\n";
   uint i,j;
@@ -285,6 +305,8 @@ void TEST(Gnuplot){
   MT::wait(1.);
 }
 
+//===========================================================================
+
 void TEST(Determinant){
   cout <<"\n*** determinant computation\n";
   arr a = ARR(1,1,2,1,1,0,0,-2,3);
@@ -300,6 +322,8 @@ void TEST(Determinant){
   //  CHECK(fabs(d-c00*a(0,0))<1e-10,"");
   //  CHECK(fabs(d-c11*a(1,0))<1e-10,"");
 }
+
+//===========================================================================
 
 void TEST(MM){
   cout <<"\n*** matrix multiplication speeds\n";
@@ -330,6 +354,8 @@ void TEST(MM){
   CHECK_ZERO(maxDiff(C,D), 1e-10, "blas MM is not equivalent to native matrix multiplication");
   CHECK(t_blas < t_native,"blas MM is slower than native");
 }
+
+//===========================================================================
 
 void TEST(SVD){
   cout <<"\n*** singular value decomposition\n";
@@ -365,12 +391,14 @@ void TEST(SVD){
   CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "Lapack SVD failed");
 }
 
+//===========================================================================
+
 void TEST(PCA) {
   // TODO: not really checking values automatically, just visualizing them
   // (and they are ok).
 
   cout <<"\n*** principal component analysis\n";
-  arr x = { 1, -2, 1, -1, 1, 1, 1, 2 };
+  arr x = { 1., -2., 1., -1., 1., 1., 1., 2. };
   x.reshape(4, 2);
   cout << "x = " << x << endl;
 
@@ -381,13 +409,15 @@ void TEST(PCA) {
   cout << "v = " << v << endl;
   cout << "w = " << w << endl;
 
-  arr y = { 1, 1, -1, 1, -1, -1, 1, -1 };
+  arr y = { 1., 1., -1., 1., -1., -1., 1., -1. };
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
   arr yp = y * w;
   cout << "yp = " << yp << endl;
 }
+
+//===========================================================================
 
 void TEST(Inverse){
   cout <<"\n*** matrix inverse\n";
@@ -448,6 +478,8 @@ void TEST(Inverse){
   CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");
 }
 
+//===========================================================================
+
 void TEST(GaussElimintation) {
   cout << "\n*** Gaussian elimination with partial pivoting \n";
   if (MT::lapackSupported) {
@@ -467,58 +499,7 @@ void TEST(GaussElimintation) {
   }
 }
 
-//------------------------------------------------------------------------------
-//
-// alternative operator notation -- TRASH THIS?
-//
-
-/*enum ArrayOpType { exProduct, inProduct, elemProduct };
-class ArrayOp{
-public:
-  ArrayOpType type;
-  const arr *left,*right;
-  ArrayOp(ArrayOpType typ){ type=typ; left=right=0; }
-  void assign(arr &x){
-    CHECK(left && right,"mist");
-    switch(type){
-    case inProduct:
-      cout <<"inner Product between " <<*left <<" and " <<*right <<endl;
-      innerProduct(x,*left,*right);
-      return;
-    case exProduct:
-      cout <<"outer Product between " <<*left <<" and " <<*right <<endl;
-      outerProduct(x,*left,*right);
-      return;
-    case elemProduct:
-      cout <<"element-wise Product between " <<*left <<" and " <<*right <<endl;
-      x = *left % *right;
-      return;
-    }
-    left=right=0;
-    HALT("something went wrong");
-    return;
-  }
-};
-ArrayOp &operator%(const arr &z,ArrayOp &op){ op.left=&z; return op; }
-ArrayOp &operator%(ArrayOp &op,const arr &z){ op.right=&z; return op; }
-ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; return os; }
-//arr &operator=(arr &x,ArrayOp &op){ op.assign(x); return x; }
-
-#define PROD % ArrayOp(inProduct) %
-#define PROD % ArrayOp(inProduct) %
-#define MUL  % ArrayOp(elemProduct) %
-*/
-
-/*void TEST(NewOp){
-  arr x(2,3),y(3,4);
-  rndInt(x,0,5);
-  rndInt(y,0,5);
-  cout <<x <<y <<x PROD y <<x MUL x;
-  //x = x MUL x;
-  }*/
-
-
-//------------------------------------------------------------------------------
+//===========================================================================
 
 void TEST(Tensor){
   cout <<"\n*** tensor manipulations\n";
@@ -533,21 +514,21 @@ void TEST(Tensor){
     rndUniform(B,0.,1.,false);
     C=A;
     tensorMultiply(C,B,TUP(1,0));
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
     C=A;
     tensorMultiply_old(C,B,TUP(C.d0,C.d1),TUP(1,0));
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
     tensorEquation(C,A,TUP(0,1),B,TUP(1,0),0);
-    CHECK(C==A%~B,"");
+    CHECK_EQ(C,A%~B,"");
 
     //matrix product
     C.resize(A.d0,A.d0);
     tensorEquation(C,A,TUP(0,2),B,TUP(2,1),1);
-    CHECK(C==A*B,"");
+    CHECK_EQ(C,A*B,"");
 
     C.resize(A.d1,A.d1);
     tensorEquation(C,A,TUP(2,0),B,TUP(1,2),1);
-    CHECK(C==~A*~B,"");
+    CHECK_EQ(C,~A*~B,"");
   }
   cout <<"\n... tensor tests successful\n";
 
@@ -558,7 +539,7 @@ void TEST(Tensor){
   cout <<A <<endl <<B <<endl;
 }
 
-//------------------------------------------------------------------------------
+//===========================================================================
 
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
@@ -576,19 +557,20 @@ void TEST(RowShiftedPackedMatrix){
   rndInteger(J,0,9);
   for(uint i=0;i<J.d0;i++) Jaux->rowShift(i) = i/3;
   Jaux->computeColPatches(false);
-  write(*Jaux);
+  write(castRowShiftedPackedMatrix(J));
 
   //constructor compressing an array
   arr K =  packRowShifted(unpack(J));
-  write(*((RowShiftedPackedMatrix*)K.aux));
+  write(castRowShiftedPackedMatrix(K));
   
   cout <<"-----------------------" <<endl;
 
-  //--randomized check
+  //-- randomized checks
   for(uint k=0;k<100;k++){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
+//    RowShiftedPackedMatrix& Yaux = castRowShiftedPackedMatrix(Y);
 //    write(castRowShiftedPackedMatrix(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
@@ -599,20 +581,26 @@ void TEST(RowShiftedPackedMatrix){
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
 //    arr tmp =comp_A_At(Y);
-//    //write(*((RowShiftedPackedMatrix*)tmp.aux));
+//    //write(castRowShiftedPackedMatrix(tmp));
 //    cout <<X*~X <<endl <<unpack(comp_A_At(Y)) <<endl;
     CHECK_ZERO(maxDiff(X*~X, unpack(comp_A_At(Y))), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
     CHECK_ZERO(maxDiff(X*x2, comp_A_x(Y,x2)), 1e-10, "");
+
+    //cholesky:
+    arr H = comp_A_At(Y);
+    addDiag(H, 1.);
+    arr Hchol;
+    lapack_choleskySymPosDef(Hchol, H);
+    CHECK_ZERO(maxDiff(comp_At_A(Hchol), H), 1e-10, "");
+    CHECK_ZERO(maxDiff(unpack(comp_At_A(Hchol)), unpack(H)), 1e-10, "");
   }
 }
 
-//------------------------------------------------------------------------------
+//===========================================================================
 
 int MAIN(int argc, char *argv[]){
 
-  testRowShiftedPackedMatrix();
-  return 0;
   testBasics();
   testCheatSheet();
   testInitializationList();

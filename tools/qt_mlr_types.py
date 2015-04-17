@@ -1,3 +1,5 @@
+break /home/mtoussai/git/mlr/share/src/Core/util.h:321
+
 python
 
 import math
@@ -101,12 +103,30 @@ def qdump__Item_typed(d, value):
             d.putSubItem("parents", value["parents"])
             d.putSubItem("parentOf", value["parentOf"])
             d.putSubItem("index", value["index"])
+            d.putSubItem("container", value["container"])
+            d.putSubItem("keys", value["keys"])
 
 def qdump__ItemL(d, value):
     qdump__LIST(d,value)
 
-def qdump__KeyValueGraph(d, value):
-    qdump__LIST(d,value)
+def qdump__Graph(d, value):
+    p = value["p"]
+    N = value["N"]
+    s = "<%i>" %N
+    d.putValue(s)
+    m=N
+    if m>10:
+        m=10
+    d.putNumChild(m+1)
+    if d.isExpanded():
+        with Children(d):
+            i=0
+            while (i<m):
+                s = "(%i)" %i
+                d.putSubItem(s, (p+i).dereference().dereference())
+                i = i+1
+            d.putSubItem("p", p)
+            d.putSubItem("isItemOfParentKvg", value["isItemOfParentKvg"])
 
 def qdump__BodyL(d, value):
     qdump__LIST(d,value)

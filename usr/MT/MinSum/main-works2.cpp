@@ -46,7 +46,7 @@ void test(){
       VERBOSE(2,cout <<"reapproximating potentials at node "<<i <<" at " <<hat_x_i <<endl);
       for(k=0;k<del(i).N;k++){
         m=del(i)(k);
-        CHECK(E(m,1)==i,"");
+        CHECK_EQ(E(m,1),i,"");
         if(E(m,0)==i){ //node potential
           fij(m).A=A[i];
           fij(m).a=a[i];

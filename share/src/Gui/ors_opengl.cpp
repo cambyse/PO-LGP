@@ -33,7 +33,7 @@
 #include "opengl.h"
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
+bool orsDrawJoints=false, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 double orsDrawAlpha=1.00;
 uint orsDrawLimit=0;

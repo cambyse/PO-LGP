@@ -1,0 +1,13 @@
+digraph G {
+0[label=a];
+1[label=b];
+2[label=c];
+3[label=d];
+4[label=e];
+3->1 [label="5", taillabel="4"];
+2->0 [label="5", taillabel="4"];
+3->0 [label="5", taillabel="4"];
+1->2 [label="5", taillabel="4"];
+4->1 [label="5", taillabel="4"];
+2->0 [label="5", taillabel="4"];
+}

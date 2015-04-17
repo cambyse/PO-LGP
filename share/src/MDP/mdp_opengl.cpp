@@ -22,7 +22,7 @@
 #  include <Gui/opengl.h>
 #  include <Gui/plot.h>
 
-#ifdef MT_GL
+//#ifdef MT_GL
 
 OpenGL *globalGL=NULL;
 
@@ -55,8 +55,8 @@ void mdp::showAB(const arr& alpha, const arr& beta){
     }
   img.reshape(alpha.N, 3);
   double aM=alpha.max(), bM=beta.max();
-  for(x=0; x<alpha.N; x++) if(alpha(x)) mix(img[x](), ARRAY<byte>(0, 0, 255), alpha(x)/aM);
-  for(x=0; x<alpha.N; x++) if(beta(x)) mix(img[x](), ARRAY<byte>(255, 0, 0), beta(x)/bM);
+  for(x=0; x<alpha.N; x++) if(alpha(x)) mix(img[x](), {(byte)0, 0, 255}, alpha(x)/aM);
+  for(x=0; x<alpha.N; x++) if(beta(x)) mix(img[x](), {(byte)255, 0, 0}, beta(x)/bM);
   img.reshape(maze.d0, maze.d1, 3);
   flip_image(img);
   static OpenGL *gl=NULL;
@@ -84,13 +84,13 @@ void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool w
   plot(wait);
 }
 
-#else //MT_GL
+// #else //MT_GL
 
-#include <Core/util.h>
-void mdp::showMaze(){ MT_MSG("display only implemented when compiling with some glut"); }
-void mdp::showAB(const arr& alpha, const arr& beta){}
-void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}
-void mdp::glDisplayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){}
-void mdp::glDisplayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win){}
+// #include <Core/util.h>
+// void mdp::showMaze(){ MT_MSG("display only implemented when compiling with some GL"); }
+// void mdp::showAB(const arr& alpha, const arr& beta){}
+// void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}
+// void mdp::glDisplayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){}
+// void mdp::glDisplayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win){}
 
-#endif
+// #endif

@@ -11,8 +11,8 @@
 #endif
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Core/thread.h>
@@ -47,7 +47,7 @@ void moveArm(const arr& x0){
 
   std::vector<double> desired_joint_positions;
   desired_joint_positions.resize(joint_names.size(),0.0);
-  CHECK(x0.N == joint_names.size(), "wrong #joints");
+  CHECK_EQ(x0.N , joint_names.size(), "wrong #joints");
 
   std::vector<double> desired_velocities = desired_joint_positions;
   std::vector<double> desired_accelerations = desired_joint_positions;

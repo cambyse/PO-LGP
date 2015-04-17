@@ -3,12 +3,12 @@
 
 #include <Motion/motionHeuristics.h>
 #include <Motion/pr2_heuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 
 #include <Ors/ors_swift.h>
 
-void testGraspHeuristic(){
+void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
@@ -17,8 +17,6 @@ void testGraspHeuristic(){
   G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   ors::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -26,6 +24,12 @@ void testGraspHeuristic(){
     arr x, xT;
 
     threeStepGraspHeuristic(xT, MP, s->index, 2);
+
+    Task *c;
+    c = MP.addTask("transition", new TransitionTaskMap(G));
+    c->map.order=2; //make this an acceleration task!
+    c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
 
     MotionProblemFunction F(MP);
 
@@ -59,7 +63,7 @@ void testGraspHeuristic(){
 
 //===========================================================================
 
-void testPickAndPlace(){
+void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
@@ -68,12 +72,16 @@ void testPickAndPlace(){
 //  G.watch(true);
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W(G);
 
   arr x, xT;
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName("target1")->index, 2);
+  Task *t;
+  t = MP.addTask("transition", new TransitionTaskMap(G));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+
+
 
   MotionProblemFunction MF(MP);
   sineProfile(x, MP.x0, xT, MP.T);
@@ -96,15 +104,15 @@ void testPickAndPlace(){
   listDelete(MP.taskCosts);
   MP.x0 = x[MP.T-1];
 
-  TaskCost *c;
+  Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
   MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
 
   //initialize trajectory
@@ -130,11 +138,11 @@ void testPickAndPlace(){
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
   MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
 
   //initialize trajectory

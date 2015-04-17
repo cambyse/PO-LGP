@@ -72,8 +72,8 @@ arr kBinv,b;
   col->y_prec=1e-0;
   col->y_target = ARR(0.);
 
-  sys.setTaskVariables(ARRAY(pos,col)); 
-  sys_one.setTaskVariables(ARRAY(pos,col)); 
+  sys.setTaskVariables({pos,col}); 
+  sys_one.setTaskVariables({pos,col}); 
   
   pos->setInterpolatedTargetsEndPrecisions(T,reachPlanMidPrec,reachPlanEndPrec,0.,reachPlanEndVelPrec);
   col->setInterpolatedTargetsConstPrecisions(T,reachPlanColPrec,0.);

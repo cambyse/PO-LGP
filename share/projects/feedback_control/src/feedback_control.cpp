@@ -16,8 +16,8 @@
 #include <Core/util.h>
 #include <Ors/ors.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <GL/glu.h>
 #include <Optim/optimization.h>
@@ -64,7 +64,7 @@ public:
     yCol_deviation = 3e-1;
     w_reg = 100.;
 
-    x0_opt = ARRAY(0., 0. ,0. ,0. ,-0.2 ,-0.2 ,0.);
+    x0_opt = {0., 0. ,0. ,0. ,-0.2 ,-0.2 ,0.};
 
     goal.trajectory.joint_names.push_back("r_shoulder_pan_joint");
     goal.trajectory.joint_names.push_back("r_shoulder_lift_joint");
@@ -101,26 +101,26 @@ public:
     MotionProblem P(&G);
     P.loadTransitionParameters();
 
-    TaskCost *c;
+    Task *c;
     c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                               ARRAY(0.,0.,0.), 1e3,
-                               ARRAY(0.,0.,0.), 0.);
+                               {0.,0.,0.}, 1e3,
+                               {0.,0.,0.}, 0.);
 
     if (useOrientation) {
       c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
       P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                              ARRAY(0.,0.,-1.), 1e4,
-                              ARRAY(0.,0.,0.), 1e-3);
+                              {0.,0.,-1.}, 1e4,
+                              {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
       c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-      P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+      P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
     }
 
     //-- set start position for optimizer
@@ -161,7 +161,7 @@ public:
       xRef = ~cat(~xRef,~xRefVec);
     }
 
-    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, ARRAY(0.,1.,0.));
+    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
 
     x0 = xRef[0]; // TODO: READ FROM SENSORS
     cout << x0 << endl;

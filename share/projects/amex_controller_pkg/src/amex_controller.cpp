@@ -14,7 +14,7 @@ AmexController::AmexController(ros::NodeHandle &_nh, ors::KinematicWorld &_world
   TRef = _TRef;
   NUM_JOINTS = q0.d0;
 
-  goalMO = new MObject(&world, MT::String("goal"), MObject::GOAL , 0.000, ARRAY(1.,0.,0.));
+  goalMO = new MObject(&world, MT::String("goal"), MObject::GOAL , 0.000, {1.,0.,0.});
   amex = new AdaptiveMotionExecution(world,refPlan,dtAmex,TRef,x0,q0,*goalMO,true);
 
   world.setJointState(q0,qd0);
@@ -57,7 +57,7 @@ void AmexController::runAmex(double dtReal) {
   /// get current goal
   if (useGoalPub) {
     getGoalClient.call(getGoalSrv);
-    goalMO->setPosition(refFrame + ARRAY(getGoalSrv.response.x,getGoalSrv.response.y,getGoalSrv.response.z));
+    goalMO->setPosition(refFrame + ARR(getGoalSrv.response.x,getGoalSrv.response.y,getGoalSrv.response.z));
   }
 
   /// get current state of real time controllers

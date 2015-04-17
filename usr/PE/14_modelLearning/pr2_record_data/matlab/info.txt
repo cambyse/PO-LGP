@@ -1,0 +1,26 @@
+# joint names 
+r_shoulder_pan_joint
+r_shoulder_lift_joint 
+r_upper_arm_roll_joint 
+r_elbow_flex_joint 
+r_forearm_roll_joint 
+r_wrist_flex_joint 
+r_wrist_roll_joint 
+
+# lower joint limits
+-2.2854
+-0.5236
+-3.9
+-1.7
+-3.14
+-2
+-3.14
+
+# upper joint limits
+0.714602
+0.6
+0.8
+0.
+3.14
+0.
+3.14

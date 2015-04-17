@@ -19,7 +19,7 @@
 #include "opt-rprop.h"
 
 /// minimizes \f$f(x)\f$ using its gradient only
-uint optRprop(arr& x, ScalarFunction& f, OptOptions o) {
+uint optRprop(arr& x, const ScalarFunction& f, OptOptions o) {
   return Rprop().loop(x, f, o.fmin_return, o.stopTolerance, o.initStep, o.stopEvals, o.verbose);
 }
 
@@ -69,8 +69,8 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
     lastGrad.setZero();
     stepSize = delta0;
   }
-  CHECK(grad.N==stepSize.N, "Rprop: gradient dimensionality changed!");
-  CHECK(w.N==stepSize.N   , "Rprop: parameter dimensionality changed!");
+  CHECK_EQ(grad.N,stepSize.N, "Rprop: gradient dimensionality changed!");
+  CHECK_EQ(w.N,stepSize.N   , "Rprop: parameter dimensionality changed!");
 
   uint i=0, I=w.N;
   if(singleI) { i=*(singleI); I=i+1; }
@@ -93,15 +93,15 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
   return stepSize.max() < incr*dMin;
 }
 
-bool Rprop::step(arr& x, ScalarFunction& f) {
+bool Rprop::step(arr& x, const ScalarFunction& f) {
   arr grad;
-  f.fs(grad, NoArr, x);
+  f(grad, NoArr, x);
   return s->step(x, grad, NULL);
 }
 
 //----- the rprop wrapped with stopping criteria
 uint Rprop::loop(arr& _x,
-                 ScalarFunction& f,
+                 const ScalarFunction& f,
                  double *fmin_return,
                  double stoppingTolerance,
                  double initialStepSize,
@@ -123,7 +123,7 @@ uint Rprop::loop(arr& _x,
   for(;;) {
     //checkGradient(p, x, stoppingTolerance);
     //compute value and gradient at x
-    fx = f.fs(J, NoArr, x);  evals++;
+    fx = f(J, NoArr, x);  evals++;
 
     if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<' ' <<x <<endl;
     if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<x <<endl;

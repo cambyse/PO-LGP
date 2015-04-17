@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+#include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -71,36 +71,39 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   cout << "Loaded scene: " << scene << endl;
 
   MotionProblem P(world);
-  P.loadTransitionParameters();
 
 
   //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
+  Task *c;
+  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c->map.order=2; //make this an acceleration task!
+  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARRAY(0.,0.,0.), 1e-3);
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e3,
-                             ARRAY(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   if (useOrientation) {
     c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(0.,0.,1.), 1e4,
-                            ARRAY(0.,0.,0.), 1e-3);
+                            {0.,0.,1.}, 1e4,
+                            {0.,0.,0.}, 1e-3);
   }
 
   if (useCollAvoid) {
 //    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-//    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+//    P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
+  P.x0 = {0.,0.,0.,0.,-0.2,-.2,0.};
 
   MotionProblemFunction F(P);
   uint T=F.get_T();

@@ -65,7 +65,7 @@ void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
 /// simply get the q-trajectory from a (q, v)-trajectory
 void soc::getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
-  CHECK(2*n==_q.d1, "")
+  CHECK_EQ(2*n,_q.d1, "")
   q.resize(T, n);
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
@@ -234,7 +234,7 @@ double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, ui
       }
   }else{
     uint n2=2*n;
-    CHECK(xt.N==n2,"");
+    CHECK_EQ(xt.N,n2,"");
     arr phi_qhat, Jqd, J, Jt, y, v, Ri, ri, qt;
     qt=xt.sub(0, n-1);
     double prec, precv;
@@ -285,7 +285,7 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
     if(dynamic){
       getJqd(phi_v, i);
       getTargetV(v, precv, i, t <<scalePower);
-      //CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
+      //CHECK_EQ(xt.N,2*Jac.d1, ""); //x is a dynamic state
       //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
 
@@ -406,7 +406,7 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
         con++;
       }
       /*
-      CHECK(phi_qhat.N==1, "so far, constraints work only on 1D task variables!");
+      CHECK_EQ(phi_qhat.N,1, "so far, constraints work only on 1D task variables!");
       if(phi_qhat(0)>0.){ //potential violation, else discard
         getJJt(J, Jt, i);
         cdir.append(-J);

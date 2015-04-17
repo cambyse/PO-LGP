@@ -32,7 +32,7 @@ void loadUSPS(arr& X,arr& y,const char* filename){
   //cout <<X <<y <<endl;
 }
 
-void testUsps(){
+void TEST(Usps){
   rnd.seed(1);
   arr X,Phi,y;
   arr beta;

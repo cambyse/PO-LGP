@@ -15,8 +15,8 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, cons
   uint T=get_T(), n=get_n(), k=get_k(), m=get_m(t);
 
   //assert some dimensions
-  CHECK(x_bar.d0==k+1,"");
-  CHECK(x_bar.d1==n,"");
+  CHECK_EQ(x_bar.d0,k+1,"");
+  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T-k,"");
 
   phi.resize(m);

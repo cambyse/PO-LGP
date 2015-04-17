@@ -3,14 +3,14 @@
 
 #include <Hardware/racer/modules.h>
 
-void testIMU(){
+void TEST(IMU){
   struct MySystem:System{
     ACCESS(arr, imuData);
     ACCESS(arr, stateEstimate);
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
       connect();
     }
   } S;
@@ -37,11 +37,11 @@ void testIMU(){
   cout <<"bye bye" <<endl;
 }
 
-void testMotors(){
+void TEST(Motors){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
-      addModule<Motors>("Motors", Module_Thread::loopFull);
+      addModule<Motors>("Motors", Module::loopFull);
       connect();
     }
   } S;
@@ -66,17 +66,17 @@ void testMotors(){
   cout <<"bye bye" <<endl;
 }
 
-void testBalance(){
+void TEST(Balance){
   struct MySystem:System{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate);
     ACCESS(arr, encoderData)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
-      //      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", Module_Thread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
+      //      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module::loopFull);
       connect();
     }
   } S;

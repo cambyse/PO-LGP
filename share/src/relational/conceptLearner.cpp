@@ -55,7 +55,7 @@
 
 bool my_local_contains(const PredL& pa, const TL::Predicate& p) {
     uint i;
-    CHECK(p.category == category_derived, "");
+    CHECK_EQ(p.category , category_derived, "");
     FOR1D(pa, i) {
         if ((*pa(i)) == p)
             return true;
@@ -531,7 +531,7 @@ void generateSCP_twoBases(PredL& ps, uint arity, TL::Predicate* p1, TL::Predicat
 
 
 void generateSCP_twoBases(PredL& ps_invented, uint arity, uint arity1, uint arity2, const PredL& ps_old, uintA& baseArgs, bool freeAllQuantified, const char* prefix) {
-    CHECK(baseArgs.N == arity1+arity2, "insufficient arguments")
+    CHECK_EQ(baseArgs.N , arity1+arity2, "insufficient arguments")
             PredL pos_pos, neg_pos, pos_neg, neg_neg;
     uint i, k;
     boolA usedCombos(ps_old.N, ps_old.N);

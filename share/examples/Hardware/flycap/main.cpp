@@ -28,7 +28,10 @@ int main(int argc, char* argv[])
 		while(true) {
 			double timestamp;
 			if(flycap.grab(gl.background, timestamp)) {
-				gl.update();
+				double w_ratio = (double)gl.width / (double)gl.background.d0;
+				double h_ratio = (double)gl.height / (double)gl.background.d1;
+				gl.backgroundZoom = min(w_ratio, h_ratio);
+				gl.update(NULL, false, false, false);
 				++count;
 			}
 			if((count % 100) == 0) {

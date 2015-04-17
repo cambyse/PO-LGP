@@ -85,7 +85,7 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
   MT::String line_state;
   in >> line_state;
   if (DEBUG>1) {PRINT(line_state);}
-  CHECK(line_state(2) == 'i', "");
+  CHECK_EQ(line_state(2) , 'i', "");
   MT::skipUntil(line_state, " ");
   while (MT::peerNextChar(line_state) != ')') {
 //     MT::skip(in);
@@ -116,7 +116,7 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
     MT::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
-    CHECK(line_reward(2) == 'g', "");
+    CHECK_EQ(line_reward(2) , 'g', "");
     MT::skipUntil(line_reward, " "); // skipping "(:reward"
     cast_reward->lits.clear();
     while (MT::peerNextChar(line_reward) != ')') {
@@ -136,7 +136,7 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
     MT::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
-    CHECK(line_reward(2) == 'g', "");
+    CHECK_EQ(line_reward(2) , 'g', "");
     MT::skipUntil(line_reward, " "); // skipping "(:reward"
     // CountFunction
     if (MT::peerNextChar(line_reward) == 'C') {
@@ -340,7 +340,7 @@ void writeRulesAsPPDDL(const RuleSet& rules, bool all_outcome, ostream& out) {
       out<<"  ";
     }
     // explicitely set all args to be different from drefs
-    CHECK(rule->action->pred->d == 1, "");
+    CHECK_EQ(rule->action->pred->d , 1, "");
     FOR1D(drefs, k) {
       out << "(not (= ?" << vars(0) << " ?" << vars(k+1) << "))  ";
     }

@@ -62,7 +62,7 @@ void soc::getPhaseTrajectory(arr& _q, const arr& q, double tau){
 /// simply get the q-trajectory from a (q, v)-trajectory
 void soc::getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
-  CHECK(2*n==_q.d1, "")
+  CHECK_EQ(2*n,_q.d1, "")
   q.resize(T, n);
   for(t=0;t<T;t++) for(i=0;i<n;i++) q(t, i)=_q(t, i);
 }
@@ -292,7 +292,7 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
       getTarget    (x, prec , i, t <<scalePower);
       getTargetV   (v, precv, i, t <<scalePower);
       getJJt       (Jac, JacT, i);
-      CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
+      CHECK_EQ(xt.N,2*Jac.d1, ""); //x is a dynamic state
       phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       uint n=phi_q.N;
 
@@ -353,7 +353,7 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
       con++;
     }
     /*
-    CHECK(phi_qhat.N==1, "so far, constraints work only on 1D task variables!");
+    CHECK_EQ(phi_qhat.N,1, "so far, constraints work only on 1D task variables!");
     if(phi_qhat(0)>0.){ //potential violation, else discard
       getJJt(J, Jt, i);
       cdir.append(-J);
@@ -793,7 +793,7 @@ double getFilterCostMeassure(soc::SocSystemAbstraction& soci, arr& q, double& co
       cost2 += scalarProduct(Qinv, tmp1, tmp1);
     }
     if(t>0){ d=q[t]-q[t-1]; length += ::sqrt(scalarProduct(W, d, d)); }
-    CHECK(soci.dynamic==false, "");
+    CHECK_EQ(soci.dynamic,false, "");
     cost1 += cost_t = taskCost(soci, t);
   }
   if(os){

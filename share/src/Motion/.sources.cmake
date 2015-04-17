@@ -1,1 +1,3 @@
-set(SOURCES ./gamepad2tasks.cpp ./komo.cpp ./mobject.cpp ./feedbackControl.h ./rrt_planner.cpp ./taskMap_constrained.cpp ./taskMap_proxy.cpp ./pr2_heuristics.h ./rrt_planner.h ./komo.h ./adaptiveMotionExecution.cpp ./taskMap_default.h ./motionHeuristics.h ./pr2_heuristics.cpp ./dynamicMovementPrimitives.cpp ./mobject.h ./taskMap_constrained.h ./dynamicMovementPrimitives.h ./motion.cpp ./motion.h ./gamepad2tasks.h ./taskMap_default.cpp ./motionHeuristics.cpp ./feedbackControl.cpp ./adaptiveMotionExecution.h ./taskMap_proxy.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

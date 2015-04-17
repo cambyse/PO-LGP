@@ -2,6 +2,8 @@
 #
 # updates the "sources to compile" include
 #
+# NOTE: changed to just use GLOB, works just fine
+# 
 
 incname=.sources.cmake
 tmpname=${incname}.tmp
@@ -18,26 +20,14 @@ do
     cd "$dir"
     # clear out tmp file
     echo -n > $tmpname
-    # look for C++ source
-    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c'|grep -v './ui_')
-    # check source dir, too
-    if [ -d src ]
+    # now just uses glob
+    echo "file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)" >> $tmpname
+    echo 'string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")' >> $tmpname
+    if echo $dir | grep -q -E '(examples|teaching)'
     then
-    	CPP_SOURCES+=$(find src -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+	echo 'set(SOURCES ${SOURCES} main.cpp)' >> $tmpname
     fi
-    if [ ! -z "$CPP_SOURCES" ]
-    then
-      SOURCES=$(echo ${CPP_SOURCES}|sort -u)
-      echo "set(SOURCES ${SOURCES})" >> $tmpname
-    else
-      rm -f $tmpname      
-    fi
-    # if no output, remove existing definition, if any, and skip rest
-    if [ ! -f "$tmpname" ]
-    then
-      rm -f $incname
-      continue
-    fi
+    echo '#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})' >> $tmpname
     # only update include if content changed, to prevent unnecessary cmake calls
     if cmp $incname $tmpname >/dev/null 2>&1
     then

@@ -73,7 +73,7 @@ return coeff * pow(x,int(i)) * pow(1.0-x, int(n-i));
 }
 
 void BezierSurface(const arr control,arr& result){
-  CHECK(result.nd==3,"WRONG DIMENSIONS");
+  CHECK_EQ(result.nd,3,"WRONG DIMENSIONS");
   arr bern_n = zeros(result.d0,control.d0);
   arr bern_m = zeros(result.d1,control.d1);
   for (uint i=0;i<result.d0;i++)  

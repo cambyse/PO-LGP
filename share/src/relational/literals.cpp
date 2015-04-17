@@ -518,7 +518,7 @@ bool Literal::isNegated() const {
 
 
 Literal* Literal::getNegated() {
-  CHECK(s->range_type == Symbol::binary, "only defined for binary symbols")
+  CHECK_EQ(s->range_type , Symbol::binary, "only defined for binary symbols")
   return Literal::get(s, args, (TL::isZero(value) ? 1. : 0.));
 }
 
@@ -555,7 +555,7 @@ bool Literal::nonContradicting(const LitL& l1, const LitL& l2) {
 
 bool Literal::typeCheck() {
   if (s->arg_types.N == 0) return true;   //no types specified
-  CHECK(args.N == s->arg_types.N, "Unexpected nmber of arguments!");
+  CHECK_EQ(args.N , s->arg_types.N, "Unexpected nmber of arguments!");
   uint i;
   FOR1D(args, i) {
     if (!s->arg_types(i)->subsumes(*reason::getArgumentTypeOfObject(args(i))))
@@ -670,6 +670,7 @@ void Literal::sort(LitL& lits) {
   // Stelle 8: negative
   FOR1D(lits, i) {
     uint key = 0;
+    if (DEBUG>1) {cout<<"("<<i<<") "<<*lits(i)<<endl;}
     // Stellen 1-4: arguments
     if (lits(i)->s->arity > 0) {
       CHECK(lits(i)->args(0) < 100, "");
@@ -927,7 +928,7 @@ void SymbolicState::filterState_atleastOne(SymbolicState& s_filtered, const Symb
 
 
 uint SymbolicState::getArgument(const SymbolicState& state, const Symbol& s) {
-  CHECK(s.arity == 1, "");
+  CHECK_EQ(s.arity , 1, "");
   uintA args;
   getArguments(args, state, s);
   if (args.N == 1)
@@ -963,6 +964,16 @@ void SymbolicState::getValues(arr& values, const SymbolicState& state, const Sym
       values.append(state.lits(i)->value);
   }
 }
+void SymbolicState::getValuesIDs(arr& values, arr& indexes, const SymbolicState& state, const Symbol& s, const uintA& objs){
+    uint i;
+    FOR1D(state.lits, i) {
+      if (state.lits(i)->s != &s) continue;
+      if (numberSharedElements(state.lits(i)->args, objs) == objs.N){
+        values.append(state.lits(i)->value);
+        indexes.append(i);
+      }
+    }
+  }
 
 
 void SymbolicState::getRelatedConstants(uintA& constants_related, uint id, bool id_covers_first, const Symbol& s, const SymbolicState& state) {

@@ -49,7 +49,7 @@ loopy_...:
 
 //===========================================================================
 
-void testTensorOperations(){
+void TEST(TensorOperations){
   infer::Variable
     x(3, "x"),
     y(4, "y"),
@@ -87,7 +87,7 @@ void testTensorOperations(){
 
 //===========================================================================
 
-void testBurglary() {
+void TEST(Burglary){
   infer::Variable
     bl(2, "burglary"),
     eq(2, "earthquake"),
@@ -216,9 +216,9 @@ void testHMMInference(uint T) {
   vars.append(obs);
   
   // Specifying some evidence
-  factors.append(new infer::Factor(ARRAY(states(0)), ARR(0.0, 1.0)));
-  factors.append(new infer::Factor(ARRAY(states(1)), ARR(1.0, 0.0)));
-  factors.append(new infer::Factor(ARRAY(states(5)), ARR(1.0, 0.0)));
+  factors.append(new infer::Factor({states(0)}, ARR(0.0, 1.0)));
+  factors.append(new infer::Factor({states(1)}, ARR(1.0, 0.0)));
+  factors.append(new infer::Factor({states(5)}, ARR(1.0, 0.0)));
 
   arr p1,p2;
 
@@ -245,7 +245,7 @@ void testHMMInference(uint T) {
 
 
 // loopy graphical model tested with JunctionTree und LoopyBP
-void testLoop(){
+void TEST(Loop){
   infer::Variable A(2, "A");
   infer::Variable B(2, "B");
   infer::Variable C(2, "C");
@@ -277,7 +277,7 @@ void testLoop(){
 
 #include "gridBP.inc"
             
-void testGridBP(){
+void TEST(GridBP){
   uint i,j,k;
   
   //Gaussian weigh list
@@ -317,14 +317,14 @@ void testGridBP2(){
 
 
 #include "rndNetBP.inc"
-void testRndNetBP(){
-  uint order=MT::Parameter<uint>("order");
-  uint N    =MT::Parameter<uint>("N");
-  double conn =MT::Parameter<double>("conn");
+void TEST(RndNetBP){
+  uint order=MT::getParameter<uint>("order");
+  uint N    =MT::getParameter<uint>("N");
+  double conn =MT::getParameter<double>("conn");
   rndNetBPwithExcludeEchoMessages(N,2,conn,order);
 }
 
-void testPairBP(){
+void TEST(PairBP){
   infer::FactorList facs;
   infer::VariableList vars;
   randomPairNet(vars,facs,3,2,1);
@@ -342,7 +342,7 @@ void testPairBP(){
 }
 
 #ifdef MT_DAI
-void testDai(){
+void TEST(Dai){
   infer::FactorList facs;
   infer::VariableList vars;
   randomPairNet(vars,facs,10,2,1);

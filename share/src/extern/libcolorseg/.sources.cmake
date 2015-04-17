@@ -1,1 +1,3 @@
-set(SOURCES ./imutil.h ./imutil.cpp ./image.cpp ./disjoint-set.cpp ./convolve.cpp ./segment-image.cpp ./imconv.cpp ./segment-graph.h ./disjoint-set.h ./filter.cpp ./misc.h ./image.h ./pnmfile.cpp ./segment-image.h ./pnmfile.h ./filter.h ./imconv.h ./segment-graph.cpp ./convolve.h)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

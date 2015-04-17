@@ -1,8 +1,9 @@
 set(CURRENT_SLICE 
- controllability
+  # controllability
+g4-annotate
 g4-recorder
 g4-segment
-g4-video
+# g4-video
 tomsy-recorder
 3rdhand-recorder
  )

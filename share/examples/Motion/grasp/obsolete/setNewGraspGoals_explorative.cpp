@@ -15,7 +15,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   }
   
   //set the time horizon
-  CHECK(T==sys.get_T(), "");
+  CHECK_EQ(T,sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -132,9 +132,9 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   */
 
   uintA shapes = stringListToShapeIndices(
-    ARRAY<const char*>("tip1Shape", "target",
+    {"tip1Shape", "target",
                        "tip2Shape", "target",
-                       "tip3Shape", "target"), sys.ors->shapes);
+                       "tip3Shape", "target"}, sys.ors->shapes);
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
   V->y_target = ARR(.9,.9,.9);  V->v_target = ARR(.9,.9,.9);
   V->y_prec = colPrec;

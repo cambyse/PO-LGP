@@ -104,7 +104,7 @@ void MinSumGaussNewton::go(){
           fy += mu(m).abs + (~y*mu(m).A*y -2.*~mu(m).a*y)(0);
         }
         VERBOSE(2,cout /*<<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \talpha="<< alpha <<std::flush);
-        CHECK(fy==fy,"cost seems to be NAN: f(y)=" <<fy);
+        CHECK_EQ(fy,fy,"cost seems to be NAN: f(y)=" <<fy);
         if(fy <= fx) break;
         //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
         //decrease stepsize
@@ -177,7 +177,7 @@ void test(){
       VERBOSE(2,cout <<"reapproximating all messages for node "<<i <<endl);
       for(k=0;k<del(i).N;k++){
         m=del(i)(k);
-        CHECK(Msgs(m,1)==i,"");  j=Msgs(m,0);
+        CHECK_EQ(Msgs(m,1),i,"");  j=Msgs(m,0);
         VERBOSE(3,cout <<"  reapproximating message "<<m <<":" <<j <<"->" <<i <<endl);
         if(j==i){ //node potential
           mu(m).A=A[i];
@@ -189,7 +189,7 @@ void test(){
           abs_sum=0.;
           for(l=0;l<del(j).N;l++){
             mm=del(j)(l);
-            CHECK(Msgs(mm,1)==j,"");
+            CHECK_EQ(Msgs(mm,1),j,"");
             if(E(mm,0)==i) continue; //(exclude i->j)
             VERBOSE(3,cout <<"    collecting message "<<mm <<":" <<Msgs(mm,0) <<"->" <<j <<endl);
             abs_sum += mu(mm).abs;

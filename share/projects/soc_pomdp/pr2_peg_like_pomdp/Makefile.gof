@@ -1,0 +1,12 @@
+BASE = ../../..
+
+PLIB = 1
+DEPEND = Algo Core Gui Ors Motion Optim System pr2 Hardware_joystick
+
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
+
+LPATHS += /opt/ros/groovy/lib
+
+
+include $(BASE)/gofMake/generic.mk

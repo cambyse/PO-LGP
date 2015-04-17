@@ -12,7 +12,7 @@ void fun(doubleA& x){
 }
 
 uint N=2;
-void testUT(){
+void TEST(UT){
   Gaussian a;
   a.c.setUni(0.,N);  //1./::sqrt(N);
   a.C.setDiag(1.,N); //A(1,0)=.5;
@@ -29,7 +29,7 @@ void testUT(){
 }
 
 
-void testMult(){
+void TEST(Mult){
   Gaussian d,e,c,b;
   c.c <<"[0 0]"; c.C <<"[1. .9; .9 1.]";
   b.c <<"[.5]";  b.C.setDiag(.1,1);
@@ -57,7 +57,7 @@ void testMult(){
 
 }
 
-void testGradient() {
+void TEST(Gradient){
   arr cov = eye(2);
   arr mu = ARR(0., 0.);
 
@@ -71,7 +71,7 @@ void testGradient() {
   cout << "Gradient: " << grad << endl;
 }
 
-void testSdv(){
+void TEST(Sdv){
   arr X;
   Gaussian a;
   a.c <<"[0 0]"; a.C <<"[1. 0; 0. 1.]";
@@ -84,7 +84,7 @@ void testSdv(){
   cout <<d <<' ' <<sqrt(d) <<endl;
 }
 
-void testPullback(){
+void TEST(Pullback){
   Gaussian a,b;
   a <<"[0] [1.;]";
   cout <<"Gaussian a = " <<a;
@@ -113,7 +113,7 @@ void testPullback(){
 
 }
 
-void testConditional(){
+void TEST(Conditional){
   Gaussian g1,g2,g1m,g2m,y;
   uint t,k=2,l=1,T=10;
   double eps=1e-3;
@@ -179,7 +179,7 @@ void testConditional(){
   cout <<"marginal made with U:" <<g2m;
 }
 
-void testEvaluate() {
+void TEST(Evaluate){
 	Gaussian g;
   g.setDiagonal(1, 1);
 	double p = 0;
@@ -200,7 +200,7 @@ double px(const arr& x){
   return 0.;
 }
 
-void testWeightedSampling(){
+void TEST(WeightedSampling){
   Gaussian g;
   g.setDiagonal(3,1.);
   arr M(g.c.N,g.c.N); rndUniform(M,0.,1.,false); g.C=M*g.C*~M;
@@ -226,7 +226,7 @@ void testWeightedSampling(){
   plot();
 }
 
-void testMarginal(){
+void TEST(Marginal){
   Gaussian g,m1,m2;
   g.setRandom(10);
 
@@ -243,7 +243,7 @@ void testMarginal(){
     <<endl;
 }
 
-void testKLD(){
+void TEST(KLD){
   Gaussian A,B;
   A.setRandom(3);
   B.setRandom(3);
@@ -254,7 +254,7 @@ void testKLD(){
   cout <<d <<endl;
 }
 
-void testProduct(){
+void TEST(Product){
   uint k;
   double l1,l2;
   Gaussian a,b,c1,c2,b1,b2;
@@ -282,7 +282,7 @@ void testProduct(){
   }
 }
 
-void testReduction(){
+void TEST(Reduction){
   uint n=100,m=10;
   GaussianA f(n),g;
   for(uint i=0;i<n;i++) f(i).setRandom(5);

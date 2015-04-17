@@ -4,8 +4,7 @@ set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
 if(FLYCAPTURE_LIBRARY)
 
-	include(.sources.cmake)
-	add_executable(x_${NAME} ${SOURCES})
+	add_executable(x_${NAME} main.cpp)
 	add_executable(flycap_serials flycap_serials.cpp)
 	
 	target_link_libraries(x_${NAME} Hardware_flycap Gui Core)

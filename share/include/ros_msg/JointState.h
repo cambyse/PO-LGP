@@ -62,9 +62,13 @@ struct JointState_
     , fL()
     , fR()
     , u_bias()
-    , Kq_gainFactor()
-    , Kd_gainFactor()
-    , Kf_gainFactor()  {
+    , J_ft_inv()
+    , Kp()
+    , Kd()
+    , Ki()
+    , velLimitRatio(0.0)
+    , effLimitRatio(0.0)
+    , gamma(0.0)  {
     }
   JointState_(const ContainerAllocator& _alloc)
     : q(_alloc)
@@ -72,9 +76,13 @@ struct JointState_
     , fL(_alloc)
     , fR(_alloc)
     , u_bias(_alloc)
-    , Kq_gainFactor(_alloc)
-    , Kd_gainFactor(_alloc)
-    , Kf_gainFactor(_alloc)  {
+    , J_ft_inv(_alloc)
+    , Kp(_alloc)
+    , Kd(_alloc)
+    , Ki(_alloc)
+    , velLimitRatio(0.0)
+    , effLimitRatio(0.0)
+    , gamma(0.0)  {
     }
 
 
@@ -94,14 +102,26 @@ struct JointState_
    typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _u_bias_type;
   _u_bias_type u_bias;
 
-   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kq_gainFactor_type;
-  _Kq_gainFactor_type Kq_gainFactor;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _J_ft_inv_type;
+  _J_ft_inv_type J_ft_inv;
 
-   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kd_gainFactor_type;
-  _Kd_gainFactor_type Kd_gainFactor;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kp_type;
+  _Kp_type Kp;
 
-   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kf_gainFactor_type;
-  _Kf_gainFactor_type Kf_gainFactor;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kd_type;
+  _Kd_type Kd;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Ki_type;
+  _Ki_type Ki;
+
+   typedef double _velLimitRatio_type;
+  _velLimitRatio_type velLimitRatio;
+
+   typedef double _effLimitRatio_type;
+  _effLimitRatio_type effLimitRatio;
+
+   typedef double _gamma_type;
+  _gamma_type gamma;
 
 
 
@@ -181,12 +201,12 @@ struct MD5Sum< ::marc_controller_pkg::JointState_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "d11554e6fcc1e2b2448fd4d8fdc39425";
+    return "60e819c78ded6b36346c46299217d686";
   }
 
   static const char* value(const ::marc_controller_pkg::JointState_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xd11554e6fcc1e2b2ULL;
-  static const uint64_t static_value2 = 0x448fd4d8fdc39425ULL;
+  static const uint64_t static_value1 = 0x60e819c78ded6b36ULL;
+  static const uint64_t static_value2 = 0x346c46299217d686ULL;
 };
 
 template<class ContainerAllocator>
@@ -210,10 +230,13 @@ float64[] qdot\n\
 float64[] fL\n\
 float64[] fR\n\
 float64[] u_bias\n\
-float64[] Kq_gainFactor\n\
-float64[] Kd_gainFactor\n\
-float64[] Kf_gainFactor\n\
-\n\
+float64[] J_ft_inv\n\
+float64[] Kp\n\
+float64[] Kd\n\
+float64[] Ki\n\
+float64 velLimitRatio\n\
+float64 effLimitRatio\n\
+float64 gamma\n\
 ";
   }
 
@@ -237,9 +260,13 @@ namespace serialization
       stream.next(m.fL);
       stream.next(m.fR);
       stream.next(m.u_bias);
-      stream.next(m.Kq_gainFactor);
-      stream.next(m.Kd_gainFactor);
-      stream.next(m.Kf_gainFactor);
+      stream.next(m.J_ft_inv);
+      stream.next(m.Kp);
+      stream.next(m.Kd);
+      stream.next(m.Ki);
+      stream.next(m.velLimitRatio);
+      stream.next(m.effLimitRatio);
+      stream.next(m.gamma);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -288,24 +315,36 @@ struct Printer< ::marc_controller_pkg::JointState_<ContainerAllocator> >
       s << indent << "  u_bias[" << i << "]: ";
       Printer<double>::stream(s, indent + "  ", v.u_bias[i]);
     }
-    s << indent << "Kq_gainFactor[]" << std::endl;
-    for (size_t i = 0; i < v.Kq_gainFactor.size(); ++i)
+    s << indent << "J_ft_inv[]" << std::endl;
+    for (size_t i = 0; i < v.J_ft_inv.size(); ++i)
     {
-      s << indent << "  Kq_gainFactor[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.Kq_gainFactor[i]);
+      s << indent << "  J_ft_inv[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.J_ft_inv[i]);
     }
-    s << indent << "Kd_gainFactor[]" << std::endl;
-    for (size_t i = 0; i < v.Kd_gainFactor.size(); ++i)
+    s << indent << "Kp[]" << std::endl;
+    for (size_t i = 0; i < v.Kp.size(); ++i)
     {
-      s << indent << "  Kd_gainFactor[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.Kd_gainFactor[i]);
+      s << indent << "  Kp[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.Kp[i]);
     }
-    s << indent << "Kf_gainFactor[]" << std::endl;
-    for (size_t i = 0; i < v.Kf_gainFactor.size(); ++i)
+    s << indent << "Kd[]" << std::endl;
+    for (size_t i = 0; i < v.Kd.size(); ++i)
     {
-      s << indent << "  Kf_gainFactor[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.Kf_gainFactor[i]);
+      s << indent << "  Kd[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.Kd[i]);
     }
+    s << indent << "Ki[]" << std::endl;
+    for (size_t i = 0; i < v.Ki.size(); ++i)
+    {
+      s << indent << "  Ki[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.Ki[i]);
+    }
+    s << indent << "velLimitRatio: ";
+    Printer<double>::stream(s, indent + "  ", v.velLimitRatio);
+    s << indent << "effLimitRatio: ";
+    Printer<double>::stream(s, indent + "  ", v.effLimitRatio);
+    s << indent << "gamma: ";
+    Printer<double>::stream(s, indent + "  ", v.gamma);
   }
 };
 

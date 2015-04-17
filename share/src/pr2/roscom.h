@@ -9,6 +9,7 @@
 //
 
 bool rosOk();
+void rosCheckInit();
 
 //===========================================================================
 //
@@ -17,32 +18,37 @@ bool rosOk();
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
-  arr q, qdot, fL, fR, u_bias;
-  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
-  CtrlMsg():Kq_gainFactor(ARR(1.)), Kd_gainFactor(ARR(1.)), Kf_gainFactor(ARR(0.)){}
-  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias):q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias){}
+  arr q, qdot, fL, fR, u_bias, J_ft_inv;
+  arr Kp, Kd, Ki;
+  double velLimitRatio, effLimitRatio, gamma;
+  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
+  CtrlMsg(const arr& q, const arr& qdot,
+          const arr& fL, const arr& fR,
+          const arr& u_bias, const arr& J_ft_inv,
+          double velLimitRatio, double effLimitRatio, double gamma)
+    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
 };
-inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
-inline void operator>>(istream& os, CtrlMsg& m){  }
+//inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
+//inline void operator>>(istream& os, CtrlMsg& m){  }
 
 //===========================================================================
 
-//-- the message that defines the motor level controller: feedback regulators on q, q_dot, fL and fR
-struct JointControllerRefsMsg{
-  arr q_ref, qdot_ref, fL_ref, fR_ref, u_bias;
-  arr Kq_matrix, Kd_matrix, KfL_matrix, KfR_matrix;
-};
-inline void operator<<(ostream& os, const JointControllerRefsMsg& m){ os<<"JointControllerRefsMsg - NIY"; }
-inline void operator>>(istream& os, JointControllerRefsMsg& m){  }
+////-- the message that defines the motor level controller: feedback regulators on q, q_dot, fL and fR
+//struct JointControllerRefsMsg{
+//  arr q_ref, qdot_ref, fL_ref, fR_ref, u_bias;
+//  arr Kq_matrix, Kd_matrix, KfL_matrix, KfR_matrix;
+//};
+//inline void operator<<(ostream& os, const JointControllerRefsMsg& m){ os<<"JointControllerRefsMsg - NIY"; }
+//inline void operator>>(istream& os, JointControllerRefsMsg& m){  }
 
-//===========================================================================
+////===========================================================================
 
-//-- the message that defines the state (of the controller) on the joint level
-struct JointControllerStateMsg{
-  arr q_real, qdot_real, fL_real, fR_real, u_cmd, u_real;
-};
-inline void operator<<(ostream& os, const JointControllerStateMsg& m){ os<<"JointControllerStateMsg - NIY"; }
-inline void operator>>(istream& os, JointControllerStateMsg& m){  }
+////-- the message that defines the state (of the controller) on the joint level
+//struct JointControllerStateMsg{
+//  arr q_real, qdot_real, fL_real, fR_real, u_cmd, u_real;
+//};
+//inline void operator<<(ostream& os, const JointControllerStateMsg& m){ os<<"JointControllerStateMsg - NIY"; }
+//inline void operator>>(istream& os, JointControllerStateMsg& m){  }
 
 //===========================================================================
 //
@@ -107,6 +113,12 @@ END_MODULE()
 BEGIN_MODULE(RosCom_ForceSensorSync)
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
+END_MODULE()
+
+//===========================================================================
+
+BEGIN_MODULE(RosCom_ARMarkerSync)
+  ACCESS(arr, marker_pose)
 END_MODULE()
 
 //===========================================================================

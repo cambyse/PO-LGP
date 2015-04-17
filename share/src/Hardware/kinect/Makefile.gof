@@ -2,8 +2,7 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-CXXFLAGS += -I/usr/local/include/libfreenect
-LIBS += -lfreenect
+FREENECT = 1
 DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

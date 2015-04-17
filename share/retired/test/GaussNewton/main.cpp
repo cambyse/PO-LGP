@@ -6,7 +6,7 @@ struct ExampleFunction:public VectorFunction{
   double q;
   ExampleFunction(){ q = MT::getParameter<double>("q",10.); }
   void fv(arr& phi, arr& J,const arr& x){
-    CHECK(x.N==1,"");
+    CHECK_EQ(x.N,1,"");
     phi.resize(1);
     if(&J) J.resize(1);
 #if 0
@@ -21,7 +21,7 @@ struct ExampleFunction:public VectorFunction{
 };
 
 
-void testGaussNewton(){
+void TEST(GaussNewton){
   cout <<"For this function (gnuplot: plot 1-1/(x**10+1)) the initial step size is\n\
   much too large (because of the plateau at the starting point x=10). Therefore the initial\n\
   steps are rejected. Later, convergence is fast." <<endl;

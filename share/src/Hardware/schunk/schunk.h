@@ -108,7 +108,7 @@ struct SchunkHand:Module {
 //===========================================================================
 struct SchunkSkin:public Module {
   //OUTPUT
-  MT::Array<uint16> emul_data;
+  uint16A emul_data;
   ACCESS(arr, y_real);
 
   //Parameter

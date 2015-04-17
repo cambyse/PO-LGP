@@ -33,7 +33,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   TaskVariable *qtv = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
   qtv->y_target.setZero();
 
-  sys.setTaskVariables(ARRAY(pos,col,qtv));
+  sys.setTaskVariables({pos,col,qtv});
   
   arr q,dq,x;
   if(testFeedbackControl){

@@ -92,9 +92,9 @@ int QIT_NUMBER = 4;
   col->y_prec=1e0;//1e-0;// 
   col->y_target = ARR(0.);  
  
-//  soc.setTaskVariables(ARRAY(wr,col));  
- //  soc.setTaskVariables(ARRAY(wr,col)); 
-  soc.setTaskVariables(ARRAY(qit,col));  
+//  soc.setTaskVariables({wr,col});  
+ //  soc.setTaskVariables({wr,col}); 
+  soc.setTaskVariables({qit,col});  
  
   //-- feedback control (kinematic or dynamic) to reach the targets
   arr dq,qv;
@@ -129,13 +129,13 @@ int QIT_NUMBER = 4;
    WJ = arr(10,10);   
  
   for (int i=1;i<12;i++) {   
-    rope2.append( ARRAY(-0.1,-0.27*i, 1.85));
-    rope1.append( ARRAY(-0.1-0.1*i,-0.28*i, 2.15-0.1*i));
+    rope2.append( {-0.1,-0.27*i, 1.85});
+    rope1.append( {-0.1-0.1*i,-0.28*i, 2.15-0.1*i});
 
     col->ors->jacobianPos(J,11,NULL);
-    //points.append( ARRAY(0.,0., 0.1));
+    //points.append( {0.,0., 0.1});
   
-    points.append( ARRAY(J(0,i-1),J(1,i-1),J(2,i-1 )));
+    points.append( {J(0,i-1),J(1,i-1),J(2,i-1 )});
                 
   }  
   GetWritheMatrix(WM,rope1,rope2);
@@ -164,8 +164,8 @@ for (int tt=9;tt>5; tt--){
   //for (int t=7-tt;t<10;t++) wr->y_target(t,t)=0.0;  
   wr->params(0) = tt;
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);
-  soc.setTaskVariables(ARRAY(wr,col)); 
-//soc.setTaskVariables(ARRAY(qit,col)); 
+  soc.setTaskVariables({wr,col}); 
+//soc.setTaskVariables({qit,col}); 
   soc.gl->watch();   
   AICO aico(soc); 
   aico.iterate_to_convergence(); 
@@ -177,7 +177,7 @@ for (int tt=9;tt>5; tt--){
   soc.setq0AsCurrent();
   wr->params(0) = 6;
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);
-  soc.setTaskVariables(ARRAY(wr,col)); 
+  soc.setTaskVariables({wr,col}); 
   soc.gl->watch();  
   
   AICO aico2(soc);

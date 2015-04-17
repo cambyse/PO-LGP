@@ -2,7 +2,7 @@
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <Core/array.h>
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Ors/roboticsCourse.h>
 #include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
@@ -198,7 +198,7 @@ int main(int argc, char** argv)
   // Init the ROS node
   ros::init(argc, argv, "robot_driver");
 
-  KeyValueGraph G;
+  Graph G;
   G.sortByDotOrder();
 
   RobotArm arm;

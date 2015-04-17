@@ -238,7 +238,7 @@ void extractMode() {
   MotionPrimitive controllerTask;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
-  JoystickState joystickState;
+  GamepadState gamepadState;
 
   PointCloudVar kinectData3d("KinectData3D");
   //Image kinectDataRGB("KinectDataRGB");
@@ -246,7 +246,7 @@ void extractMode() {
   //// processes
   Process* controller = newMotionController(&hardwareReference, &controllerTask, NULL);
 
-  Joystick joystick;
+  Gamepad gamepad;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
@@ -265,14 +265,14 @@ void extractMode() {
   ObjectFitterWorker worker;
   ObjectFilter filter("Object Filter");
 
-  ProcessL hardware = LIST<Process>(schunkArm, schunkHand, schunkSkin, joystick);
+  ProcessL hardware = LIST<Process>(schunkArm, schunkHand, schunkSkin, gamepad);
   ProcessL P; P.append(controller); //, view); //, , schunkSkin, 
 
   new PoseView(hardwareReference.fields(0), NULL);
 
-  cout <<"** setting controller to joystick mode" <<endl;
-  Joystick_FeedbackControlTask joyTask;
-  controllerTask.setFeedbackTask(joyTask, true, false, NULL);
+  cout <<"** setting controller to gamepad mode" <<endl;
+  Gamepad_FeedbackControlTask gamepadTask;
+  controllerTask.setFeedbackTask(gamepadTask, true, false, NULL);
 
   loopWithBeat(hardware, .01); // hardware must be started before the controller
   loopWithBeat(P,.01);
@@ -286,14 +286,14 @@ void extractMode() {
   //MotionFuture motionFuture;
   //HardwareReference hardwareReference;
   //SkinPressure skinPressure;
-  //JoystickState joystickState;
+  //GamepadState gamepadState;
 
   //PointCloudVar kinectData3d("KinectData3D");
   //Image kinectDataRGB("KinectDataRGB");
 
   //// processes
   //Controller controller;
-  //Joystick joystick;
+  //Gamepad gamepad;
   //SchunkArm schunkArm;
   //SchunkHand schunkHand;
 
@@ -301,13 +301,13 @@ void extractMode() {
 
   //PoseViewer<HardwareReference> view(hardwareReference);
 
-  //ProcessL hardware=LIST<Process>(schunkArm, schunkHand, joystick);
+  //ProcessL hardware=LIST<Process>(schunkArm, schunkHand, gamepad);
 
   //ProcessL P=LIST<Process>(controller, view); //, , schunkSkin, 
 
-  //cout <<"** setting controller to joystick mode" <<endl;
-  //Joystick_FeedbackControlTask joyTask;
-  //controllerTask.setFeedbackTask(joyTask, true, false, NULL);
+  //cout <<"** setting controller to gamepad mode" <<endl;
+  //Gamepad_FeedbackControlTask gamepadTask;
+  //controllerTask.setFeedbackTask(gamepadTask, true, false, NULL);
   //loopWithBeat(hardware, .01); // hardware must be started before the controller
   //loopWithBeat(P,.01);
 

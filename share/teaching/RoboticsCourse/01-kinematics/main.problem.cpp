@@ -60,7 +60,8 @@ void reach(){
   arr q,W;
   uint n = S.getJointDimension();
   S.getJointAngles(q);
-  W.setId(n);  //W is equal the Id_n matrix
+  double w = MT::getParameter("w",1e-4);
+  W.setDiag(w,n);  //W is equal the Id_n matrix times scalar w
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
   S.watch();        //pause and watch initial posture
@@ -68,14 +69,13 @@ void reach(){
   arr y_target,y,J;
   for(uint i=0;i<10;i++){
     //1st task:
-    y_target = ARR(-0.2, -0.4, 1.1); 
+    y_target = {-0.2, -0.4, 1.1}; 
     S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
     S.jacobianPos  (J,"handR");
 
     //compute joint updates
-    q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
+    q += inverse(~J*J + W)*~J*(y_target - y); 
     //NOTATION: ~J is the transpose of J
-    //the 1e-4 corresponds to C=1e4*Id
     
     //sets joint angles AND computes all frames AND updates display
     S.setJointAngles(q);

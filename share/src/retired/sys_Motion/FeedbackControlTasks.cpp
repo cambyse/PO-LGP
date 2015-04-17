@@ -17,7 +17,7 @@ void DoNothing_FeedbackControlTask::updateTaskVariableGoals(const ors::Kinematic
 void Stop_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TVs = ARRAY<TaskVariable*>(q);
+  TVs = {q};
   activateAll(TVs, true);
   q->y_prec=0.;
   q->v_prec=1e2;
@@ -37,7 +37,7 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& or
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TVs = ARRAY<TaskVariable*>(q, col, lim);
+  TVs = {q, col, lim};
   activateAll(TVs, true);
   q->y_prec=0;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e0);
@@ -65,7 +65,7 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& 
   count=0;
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TVs = ARRAY<TaskVariable*>(q);
+  TVs = {q};
   activateAll(TVs, true);
   q->y_prec=1e1;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e-1);
@@ -100,7 +100,7 @@ void CloseHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld&
   skinIndex(5) = ors.getBodyByName("fing2")->index;
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TVs = ARRAY<TaskVariable*>(q, skin);
+  TVs = {q, skin};
   activateAll(TVs, true);
   q->y_prec=0;
   q->v_prec=biros().getParameter<double>("TV_q_vprec", 1e-2);
@@ -134,7 +134,7 @@ void Reach_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors
   TaskVariable *eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TVs = ARRAY<TaskVariable*>(eff, col, lim);
+  TVs = {eff, col, lim};
   activateAll(TVs, true);
   eff->y_prec= 0.;
   eff->v_prec= 1e-1;
@@ -158,11 +158,11 @@ void Reach_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorl
   if (v>vmax) eff->v_target*=vmax/v;
 }
 
-void Joystick_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
-  //access the joystick Variable
-  biros().getVariable(joyState, "JoystickState", NULL); //TODO get process pid
+void Gamepad_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
+  //access the gamepad Variable
+  biros().getVariable(gamepadState, "GamepadState", NULL); //TODO get process pid
   biros().getVariable(skinPressure, "SkinPressure", NULL);
-  joyRate = biros().getParameter<double>("JoystickRate");
+  gamepadRate = biros().getParameter<double>("GamepadRate");
   
   double margin = biros().getParameter<double>("TV_margin", .03);
   arr limits = biros().getParameter<arr>("TV_limits");
@@ -181,7 +181,7 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& 
   TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
   TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TVs = ARRAY<TaskVariable*>(eff, q, rot, col, lim, skin);
+  TVs = {eff, q, rot, col, lim, skin};
   activateAll(TVs, true);
   eff->y_prec=0.; //biros().getParameter<double>("TV_eff_yprec", 1e3);
   eff->v_prec=defaultEff_vprec=biros().getParameter<double>("TV_eff_vprec", 1e1);
@@ -202,7 +202,7 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& 
   requiresInit = false;
 }
 
-void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
+void Gamepad_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   TaskVariable *eff = TVs(0);
   TaskVariable *q = TVs(1);
   TaskVariable *rot = TVs(2);
@@ -219,18 +219,18 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicW
   eff->v_prec=defaultEff_vprec;
   
   arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
-  intA joys = joyState->get_state(NULL);
-  if (joys.N<8) { joys.resize(8);  joys.setZero(); }
+  intA gamepads = gamepadState->get_state(NULL);
+  if (gamepads.N<8) { gamepads.resize(8);  gamepads.setZero(); }
   
-  prepare_skin(skin, skinState, joys(0)!=2);
+  prepare_skin(skin, skinState, gamepads(0)!=2);
   
-  switch (joys(0)) {
+  switch (gamepads(0)) {
     case 0: { //(NIL) motion rate control
       eff->active=true;
       eff->y_target = eff->y;
-      eff->v_target(0) = -joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
-      eff->v_target(1) = +joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
-      eff->v_target(2) = -joyRate*MT::sign(joys(2))*(.25*(exp(MT::sqr(joys(2))/10000.)-1.));
+      eff->v_target(0) = -gamepadRate*MT::sign(gamepads(3))*(.25*(exp(MT::sqr(gamepads(3))/10000.)-1.));
+      eff->v_target(1) = +gamepadRate*MT::sign(gamepads(6))*(.25*(exp(MT::sqr(gamepads(6))/10000.)-1.));
+      eff->v_target(2) = -gamepadRate*MT::sign(gamepads(2))*(.25*(exp(MT::sqr(gamepads(2))/10000.)-1.));
       break;
     }
     case 1: { //(1) homing
@@ -250,9 +250,9 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicW
       eff->active=true;
       eff->v_target = 0.;      eff->v_prec = 1e5;
       rot->active=true;
-      rot->v_target(0) = -3.*joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
-      rot->v_target(1) = +3.*joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
-      rot->v_target(2) = -3.*joyRate*MT::sign(joys(1))*(.25*(exp(MT::sqr(joys(1))/10000.)-1.));
+      rot->v_target(0) = -3.*gamepadRate*MT::sign(gamepads(3))*(.25*(exp(MT::sqr(gamepads(3))/10000.)-1.));
+      rot->v_target(1) = +3.*gamepadRate*MT::sign(gamepads(6))*(.25*(exp(MT::sqr(gamepads(6))/10000.)-1.));
+      rot->v_target(2) = -3.*gamepadRate*MT::sign(gamepads(1))*(.25*(exp(MT::sqr(gamepads(1))/10000.)-1.));
       break;
     }
     case 8: { //(4) motion rate without rotation

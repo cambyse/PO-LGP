@@ -55,7 +55,7 @@ void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../conf
 }
 
 
-void testSchunk(){
+void TEST(Schunk){
   SchunkArm schunk;
   schunk.open();
   schunk.reportParameters(cout);
@@ -64,7 +64,7 @@ void testSchunk(){
   printf( "That's all folks!\n" );
 }
 
-// void testControl(){
+// void TEST(Control){
 //   OpenGL gl;
   
 //   OrsSystem sys;
@@ -101,7 +101,7 @@ void testSchunk(){
 //   DefaultTaskVariable TV_eff("endeffector", *sys.ors, posTVT,"m9","<t(0 0 -.24)>",0,0,0);
 //   TV_eff.setGainsAsAttractor(20,.2);
 //   TV_eff.y_prec=1000.;
-//   sys.setTaskVariables(ARRAY((TaskVariable*)&TV_eff));
+//   sys.setTaskVariables({(TaskVariable*)&TV_eff});
 //   double mean=TV_eff.y(2);
 
   

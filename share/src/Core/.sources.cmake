@@ -1,1 +1,3 @@
-set(SOURCES ./module.h ./registry.h ./util_t.h ./array_t.h ./thread.h ./core.cpp ./module.cpp ./array.h ./geo.cpp ./keyValueGraph.h ./array_lapack.cpp ./cygwin_compat.h ./util.h ./module_FloatA_Recorder.cpp ./module_FloatA_Recorder.h ./keyValueGraph_t.h ./array.cpp ./thread.cpp ./registry.cpp ./util.cpp ./array-vector.h ./geo.h ./keyValueGraph.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

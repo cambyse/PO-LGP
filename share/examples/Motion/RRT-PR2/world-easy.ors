@@ -1,4 +1,4 @@
-%include pr2_model/pr2_left_arm.ors
+Include = 'pr2_model/pr2_left_arm.ors'
 
 body obstacle { X=<T t(.5 -.2 .8)> type=0 size=[.5 .05 .5 .5] color=[.9 .1 .1] contact }
 

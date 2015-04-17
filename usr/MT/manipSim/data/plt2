@@ -1,0 +1,18 @@
+set key autotitle columnhead
+set key top left
+
+set key samplen 1
+set key nobox
+set log y
+
+set xlabel 'number of objects'
+set ylabel 'seconds'
+plot [:][0.9:] 'samples.datkeys2'\
+ us 2:6 lw 2 t 'time for single keyframes optimization',\
+'samples.dat'\
+ us 2:6 lw 2 t 'time for full path optimization'
+
+set terminal pdfcairo size 4,2
+set output "times2.pdf"
+replot
+set terminal wxt

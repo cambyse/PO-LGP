@@ -106,7 +106,7 @@ struct SchunkHandModule:public Process {
 struct SchunkSkinModule:public Process {
   SkinPressureVar *var;
   
-  MT::Array<uint16> emul_data;
+  uint16A emul_data;
   
   //INTERNAL
   SDH::cDSA* ts;

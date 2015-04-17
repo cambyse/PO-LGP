@@ -1,0 +1,3 @@
+rosrun pr2_controller_manager pr2_controller_manager start l_arm_controller r_arm_controller head_traj_controller
+rosrun pr2_controller_manager pr2_controller_manager stop marc_rt_controller
+rosrun pr2_controller_manager pr2_controller_manager list

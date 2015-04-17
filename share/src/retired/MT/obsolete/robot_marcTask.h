@@ -48,8 +48,8 @@ struct MarcsRobotTask:public RobotProcessGroup, public TaskAbstraction { //one c
   //interactive
   void watch();
   void watchTrajectory();
-  void joystick();
-  void waitJoyClean();
+  void gamepad();
+  void waitGamepadClean();
   
   //vision
   arr objectPosition;

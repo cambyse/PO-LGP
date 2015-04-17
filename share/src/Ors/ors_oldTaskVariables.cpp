@@ -371,7 +371,8 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       break;
     case zoriTVT:
       if(j==-1) {
-        ors.kinematicsVec(y, J, bi, &irel.rot.getZ(vi));
+        vi = irel.rot.getZ();
+        ors.kinematicsVec(y, J, bi, &vi);
         break;
       }
       //relative
@@ -379,8 +380,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       fi = bi->X; fi.appendTransformation(irel);
       fj = bj->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
-      f.rot.getZ(c);
-      y = ARRAY(c);
+      y = ARRAY(f.rot.getZ());
       NIY; //TODO: Jacobian?
       break;
     case rotTVT:       y.resize(3);  ors.jacobianR(J, bi);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
@@ -411,7 +411,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       for(k=0; k<params.N; k++) {
         l=(uint)params(k);
         ors.kinematicsPos(NoArr, Ji, ors.bodies(l), NULL);
-        ors.bodies(l)->X.rot.getY(vi);
+        vi = -ors.bodies(l)->X.rot.getY();
         vi *= -1.;
         zi = ARRAY(vi);
         J.append(~zi*Ji);
@@ -419,7 +419,8 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors.kinematicsVec(zi, Ji, bi, &irel.rot.getZ(vi));
+      vi = irel.rot.getZ();
+      ors.kinematicsVec(zi, Ji, bi, &vi);
       if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
@@ -427,7 +428,8 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
         Jj.resizeAs(Ji);
         Jj.setZero();
       } else {
-        ors.kinematicsVec(zj, Jj, bj, &jrel.rot.getZ(vj));
+        vj = jrel.rot.getZ();
+        ors.kinematicsVec(zj, Jj, bj, &vj);
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -475,8 +477,8 @@ void TaskVariable::updateChange(int t, double tau) {
     yt.referTo(y_target);
     vt.referTo(v_target);
   }
-  CHECK(yt.N==y.N, "targets have wrong dimension -- perhaps need to be set before");
-  CHECK(vt.N==v.N, "targets have wrong dimension -- perhaps need to be set before");
+  CHECK_EQ(yt.N,y.N, "targets have wrong dimension -- perhaps need to be set before");
+  CHECK_EQ(vt.N,v.N, "targets have wrong dimension -- perhaps need to be set before");
   switch(targetType) {
     case trajectoryTT:
     case directTT: {
@@ -859,7 +861,7 @@ void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, 
       }
       m+=j;
     }
-    CHECK(m==y.d1,"");
+    CHECK_EQ(m,y.d1,"");
   }
 }
 

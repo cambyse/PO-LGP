@@ -4,10 +4,10 @@ share/src/Gui
 share/src/Ors
 share/src/System
 share/src/Hardware/racer
-share/src/Hardware/joystick
+share/src/Hardware/gamepad
 
 share/projects/racer
-share/examples/Hardware/joystick
+share/examples/Hardware/gamepad
 share/examples/Core
 
 share/include/lapack

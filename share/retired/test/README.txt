@@ -49,9 +49,9 @@ Demonstrates the feedback controller which is based on Gaussian process
 implicit surfaces (GP-IS)
 
 
-*** joystick_control
+*** gamepad_control
 Marc Toussaint
-Controlling Grobi with the joystick
+Controlling Grobi with the gamepad
 
 
 *** perception

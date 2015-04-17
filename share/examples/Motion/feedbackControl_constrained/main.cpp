@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
 
 void reach(){
   ors::KinematicWorld world("man.ors");
@@ -9,7 +9,7 @@ void reach(){
 
   FeedbackMotionControl MP(world, true);
   MP.addPDTask("endeff1", .3, .8, posTMT, "handR", NoVector, "rightTarget");
-//  PDtask *t = MP.addPDTask("endeff1", .1, .8, posTMT, "handL");
+//  CtrlTask *t = MP.addPDTask("endeff1", .1, .8, posTMT, "handL");
 //  t->y_ref=ARR(0,-.5,1);
 
 //  ConstraintForceTask *ct = MP.addConstraintForceTask("touchTable", new PlaneConstraint(world, "handL", ARR(0,0,-1,.5)));

@@ -1,9 +1,11 @@
 set(CURRENT_SLICE 
  audioEncoder
 bench_rgb2yuv
+kinect2surfels
+rewrite-times
+surfels
 videoEncoder
 videoEncoder_threaded
 vision-modules
 vision-opencvRaw
-rewrite-times
  )

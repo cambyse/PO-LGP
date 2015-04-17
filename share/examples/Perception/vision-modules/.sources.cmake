@@ -1,1 +1,4 @@
-set(SOURCES ./main.cpp)
+file(GLOB CANDIDATE_SOURCES *.cpp *.c src/*.cpp)
+string(REGEX REPLACE main\\.[a-zA-Z0-9_.-]+.cpp "" SOURCES "${CANDIDATE_SOURCES}")
+set(SOURCES ${SOURCES} main.cpp)
+#message(STATUS ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

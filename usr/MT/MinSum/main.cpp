@@ -10,7 +10,7 @@
 // two competing 1D potentials
 //
 
-void testDifficultPair(){
+void TEST(DifficultPair){
   struct MyProblem:MinSumGaussNewton{
     MyProblem(){
       tolerance = 1e-5;
@@ -97,7 +97,7 @@ struct RndNetProblem:public MinSumGaussNewton{
   }
 };
 
-void testRndNet(){
+void TEST(RndNet){
   RndNetProblem f(4,3);
   
   f.init();

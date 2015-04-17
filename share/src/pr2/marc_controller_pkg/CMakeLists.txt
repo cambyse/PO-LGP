@@ -23,7 +23,6 @@ include_directories( ${MLR_PATH}/share/src )
 rosbuild_add_library(marc_controller_lib src/marc_controller.cpp include/marc_controller_pkg/marc_controller.h)
 
 target_link_libraries(marc_controller_lib 
-${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
 ${MLR_PATH}/share/lib/libCore.so)
 

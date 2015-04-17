@@ -1,7 +1,7 @@
 #include <Ors/roboticsCourse.h>
 
 
-void testDynamicSimulation(){
+void TEST(DynamicSimulation){
   Simulator S("arm3.ors");
   arr q,qdot,qddot;
   arr M,Minv,F,tau;

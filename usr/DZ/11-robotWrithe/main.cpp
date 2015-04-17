@@ -37,8 +37,8 @@ void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 
  // TaskVariable *TV_qhand= new DefaultTaskVariable("qhand", *sys.ors, qLinearTVT, 0, 0, 0, 0, I2);
   TaskVariableList TVs;
-  TVs.append(ARRAY(TV_eff, TV_q, TV_rot, TV_col)); //TV_skin
-  TVs.append(ARRAY(TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3));
+  TVs.append({TV_eff, TV_q, TV_rot, TV_col}); //TV_skin
+  TVs.append({TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3});
   sys.setTaskVariables(TVs);
 }
 
@@ -59,7 +59,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
   } 
     
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK_EQ(T,sys.nTime(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);

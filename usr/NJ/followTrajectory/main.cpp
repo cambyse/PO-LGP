@@ -83,7 +83,7 @@ void MyDemo::followTrajectory(RobotProcessGroup *robot){
 		if (q_index%100 == 1) {cout<<q_index << "  of " << q.d0 << endl;}
 		positions_file <<TV_eff->y <<endl;
     robot->step();
-   if(robot->joy.state(0)==16 || robot->joy.state(0)==32) break;
+   if(robot->gamepad.state(0)==16 || robot->gamepad.state(0)==32) break;
 	if (q_index == q.d0-1) {
 			started_trajectory = false;
 			q_index = 0;

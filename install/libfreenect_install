@@ -18,6 +18,7 @@ cd $MLR_LIBPATH/src
 rm -rf libfreenect
 git clone git://github.com/OpenKinect/libfreenect.git
 cd libfreenect
+git reset --hard d071095a3e671c47ffbab4580a620edb33fb9ee4
 
 echo "Building..."
 mkdir build

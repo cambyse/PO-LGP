@@ -22,7 +22,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Core/geo.h>
 #include <Gui/mesh.h>
 
@@ -80,7 +80,7 @@ struct Body {
   
   MT::String name;     ///< name
   Transformation X;    ///< body's absolute pose
-  KeyValueGraph ats;   ///< list of any-type attributes
+  Graph ats;   ///< list of any-type attributes
   
   //dynamic properties
   BodyType type;          ///< is globally fixed?
@@ -98,7 +98,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts(KinematicWorld& G);
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -127,7 +127,7 @@ struct Joint {
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
   arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
   double H;             ///< control cost factor
-  KeyValueGraph ats;    ///< list of any-type attributes
+  Graph ats;    ///< list of any-type attributes
   
   Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
@@ -163,7 +163,7 @@ struct Shape {
   Mesh mesh;
   double mesh_radius;
   bool cont;           ///< are contacts registered (or filtered in the callback)
-  KeyValueGraph ats;   ///< list of any-type attributes
+  Graph ats;   ///< list of any-type attributes
   
   Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   ~Shape();
@@ -180,7 +180,7 @@ struct Shape {
 /// as return value from external collision libs
 struct Proxy {
   //TODO: have a ProxyL& L as above...
-  int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
+  int a;              ///< index of shape A (-1==world) //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
   Vector posA, cenA;  ///< contact or closest point position on surface of shape A (in world coordinates)
   Vector posB, cenB;  ///< contact or closest point position on surface of shape B (in world coordinates)
@@ -242,7 +242,7 @@ struct KinematicWorld {
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); /*for(Shape *s: shapes) if(s->body) s->ibody=s->body->index;*/ }
+  void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
@@ -259,10 +259,8 @@ struct KinematicWorld {
 
   /// @name get state
   uint getJointStateDimension(int agent=-1) const;
-  void getJointState(arr &_q, arr& _qdot=NoArr) const {
-    _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
-  }
-  arr getJointState() const { return q; }
+  void getJointState(arr &_q, arr& _qdot=NoArr) const;
+  arr getJointState() const;
   arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   arr getLimits() const;
 
@@ -276,11 +274,14 @@ struct KinematicWorld {
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
   void jacobianR(arr& J, Body *b) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const;
+  void kinematicsRelVec (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const;
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
-  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
-  void kinematicsContactConstraints(arr& y, arr &J) const;
+  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02) const;
+  void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: deprecated?
+  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
@@ -322,7 +323,7 @@ struct KinematicWorld {
   void read(std::istream& is);
   void glDraw();
 
-  void reportProxies(std::ostream *os=&std::cout);
+  void reportProxies(std::ostream *os=&std::cout, double belowMargin=-1.);
   void writePlyFile(const char* filename) const; //TODO: move outside
 };
 
@@ -348,7 +349,7 @@ struct GraphOperator{
 extern ors::Body& NoBody;
 extern ors::Shape& NoShape;
 extern ors::Joint& NoJoint;
-extern ors::KinematicWorld& NoGraph;
+extern ors::KinematicWorld& NoWorld;
 
 
 //===========================================================================
@@ -379,6 +380,7 @@ void glDrawGraph(void *classP);
 #ifndef MT_ORS_ONLY_BASICS
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
+uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -405,12 +407,13 @@ struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
-void animateConfiguration(ors::KinematicWorld& G);
+void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /// @} // END of group ors_interface_opengl
