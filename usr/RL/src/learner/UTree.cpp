@@ -2,6 +2,7 @@
 #include "../util/util.h"
 #include "../util/KolmogorovSmirnovTest.h"
 #include "../util/ChiSquareTest.h"
+#include <util/graph_plotting.h>
 #include <representation/DoublyLinkedInstance.h>
 
 #include <queue>
@@ -403,6 +404,41 @@ void UTree::print_features() {
         cout << endl;
     }
     DEBUG_OUT(0,"========================================");
+}
+
+void UTree::to_pdf(QString file_name) {
+
+    if(root_node==INVALID) {
+        DEBUG_ERROR("Cannot print tree, root_node is INVALID");
+        return;
+    }
+
+
+    graph_t::NodeMap<QString> node_map(graph);
+    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+        f_ptr_t fPtr = node_info_map[node].feature;
+        if(fPtr==nullptr) {
+            node_map[node] = QString("label=< > shape=square");
+        } else {
+            node_map[node] = QString("label=<%1> shape=circle").
+                arg(fPtr->identifier().c_str());
+        }
+    }
+
+    graph_t::ArcMap<QString> arc_map(graph);
+    for(graph_t::ArcIt arc(graph); arc!=INVALID; ++arc) {
+        node_t target = graph.target(arc);
+        arc_map[arc] = QString("label=<%1>").
+            arg(node_info_map[target].parent_return_value);
+    }
+
+    util::graph_to_pdf(file_name.toLatin1(),
+                       graph,
+                       "style=filled truecolor=true",
+                       &node_map,
+                       "",
+                       &arc_map,
+                       false);
 }
 
 void UTree::clear_tree() {

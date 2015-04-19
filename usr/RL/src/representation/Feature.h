@@ -50,8 +50,14 @@ public:
      * o observation @param r reward.  */
     virtual feature_return_t evaluate(const_instance_ptr_t ins, action_ptr_t a, observation_ptr_t o, reward_ptr_t r) const final;
     virtual feature_return_t evaluate(const look_up_map_t&) const final;
+    /**
+     * Return an identifyer/descriptor for the feature. */
     virtual std::string identifier() const;
+    /**
+     * Stream identifyer() to ostream. */
     friend std::ostream& operator<<(std::ostream&, const Feature&);
+    /**
+     * Returns identifyer(). */
     virtual operator std::string() const final {return util::string_from_ostream(*this);}
     /** \brief Compare features based on their type. */
     virtual bool operator==(const Feature& other) const;
