@@ -117,6 +117,7 @@ void PdfPresentation::read_directory() {
         }
         ++slide_counter;
     }
+    qApp->processEvents();
 }
 
 bool PdfPresentation::same_id_prefix(const std::vector<int> &v1, const std::vector<int> &v2) const {
@@ -171,6 +172,7 @@ void PdfPresentation::generate_slides() {
             system(command.toLatin1());
             INFO(command);
         }
+        qApp->processEvents();
     }
 }
 
