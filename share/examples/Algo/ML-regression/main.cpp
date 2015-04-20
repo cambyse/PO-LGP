@@ -38,6 +38,7 @@ void testLinReg(const char *datafile=NULL) {
   if(X.d1==1){
     plotGnuplot();
     plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    //plotFunction(X_grid, y_grid);
     plotPoints(X,y);
     plot(true);
   }

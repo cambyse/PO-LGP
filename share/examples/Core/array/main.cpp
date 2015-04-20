@@ -608,7 +608,7 @@ int MAIN(int argc, char *argv[]){
   testRowsAndColumsAccess();
   testStdVectorCompat();
   testMatlab();
-  testException();
+//  testException();
   testMemoryBound();
   testBinaryIO();
   testExpression();
