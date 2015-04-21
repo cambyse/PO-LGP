@@ -65,6 +65,14 @@ void TEST(Logging){
 //  MT::log() <<"bla" <<endl;
 }
 
+void TEST(Exception){
+  try{
+    CHECK_EQ(2,1,"bla")
+  }catch(const char* err){
+    LOG(0) <<"Exception caught: " <<err;
+  }
+}
+
 int MAIN(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
@@ -75,7 +83,8 @@ int MAIN(int argc,char** argv){
 //  testString();
 //  testParameter();
 //  testTimer();
-  testLogging();
+//  testLogging();
+  testException();
 
   return 0;
 }

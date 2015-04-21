@@ -1,16 +1,13 @@
-#include <Algo/MLcourse.h>
-#include <Gui/plot.h>
+#include <Core/array.h>
 
 //===========================================================================
 
 void gettingStarted() {
-  MT::arrayBrackets="  ";
+  //load the data
+  arr D = FILE("../01-linearModels/dataLinReg2D.txt");
 
-  arr D;
-  FILE("../01-linearModels/dataLinReg2D.txt") >>D;
-
-  //first plot it
-  D >>FILE("z.1");
+  //plot it
+  FILE("z.1") <<D;
   gnuplot("splot 'z.1' us 1:2:3 w p", true);
 
   //decompose in input and output
@@ -31,7 +28,7 @@ void gettingStarted() {
 
   arr Y_grid = X_grid * beta;
   cout <<"Y_grid dim = " <<Y_grid.dim() <<endl;
-  Y_grid.reshape(31,31) >>FILE("z.2");
+  FILE("z.2") <<Y_grid.reshape(31,31);
   gnuplot("splot 'z.1' us 1:2:3 w p, 'z.2' matrix us ($1/5-3):($2/5-3):3 w l", true);
 
 }

@@ -30,8 +30,6 @@ struct CudaInterface {
 };
 
 
-
-
 #ifdef  MT_IMPLEMENTATION
 #  include "cudaModules.cpp"
 #endif
