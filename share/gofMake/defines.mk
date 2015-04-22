@@ -253,6 +253,7 @@ endif
 
 ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
+CPATH := $(CPATH):/usr/include/libusb-1.0
 LIBS += -lfreenect -lusb-1.0
 endif
 

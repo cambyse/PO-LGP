@@ -6,6 +6,8 @@
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 
+//================================================================================
+
 void TEST(KinectModules) {
   struct MySystem:System{
     MySystem(){
@@ -22,7 +24,7 @@ void TEST(KinectModules) {
     }
   } S;
 
-//  cout <<S <<endl;
+  cout <<S <<endl;
 
   engine().enableAccessLog();
   engine().open(S);
@@ -33,22 +35,27 @@ void TEST(KinectModules) {
   cout <<"bye bye" <<endl;
 }
 
+//================================================================================
+
 void TEST(KinectRaw) {
   OpenGL gl;
   KinectPoller kin;
-  byteA kinect_rgb;
-  uint16A kinect_depth;
+  Variable<byteA> kinect_rgb;
+  Variable<uint16A> kinect_depth;
   connect(kin.kinect_rgb, kinect_rgb);
   connect(kin.kinect_depth, kinect_depth);
 
   kin.open();
   for(uint t=0;t<100;t++){
     kin.step();
-    gl.watchImage(kinect_rgb, false, 1.);
+    gl.watchImage(kinect_rgb.get(), false, 1.);
   }
-  cout <<"hello" <<endl;
+  cout <<"closing..." <<endl;
   kin.close();
+  cout <<"bye bye" <<endl;
 }
+
+//================================================================================
 
 int main(int argc,char **argv){
 //  testKinectRaw();

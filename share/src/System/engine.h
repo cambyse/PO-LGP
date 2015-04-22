@@ -30,10 +30,10 @@ typedef MT::Array<VariableContainer*> VariableL;
 
 //VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
 
-//template<class T> void connect(Access& acc, T& x){
-//  HALT("strange code...");
-//  acc.var = new Variable<T>(acc.name);
-//}
+template<class T> void connect(Access_typed<T>& acc, Variable<T>& x){
+  acc.var = &x;
+  acc.v = &x;
+}
 
 //===========================================================================
 /**
