@@ -6,18 +6,19 @@
 
 #include <lemon/dfs.h>
 
-#include "../util/pretty_printer.h"
-#include "../util/util.h"
-#include "../util/QtUtil.h"
-#include "../util/ND_vector.h"
-#include "../util/graph_plotting.h"
+#include <util/pretty_printer.h>
+#include <util/util.h>
+#include <util/QtUtil.h>
+#include <util/ND_vector.h>
+#include <util/graph_plotting.h>
 
 #include "graph_util.h"
 
-#define DEBUG_LEVEL 0
-#include "../util/debug.h"
+#include <MCTS_Environment/AbstractEnvironment.h>
+#include "ComputationalGraph.h"
 
-#include <ActiveOnlineSearch/ComputationalGraph.h>
+#define DEBUG_LEVEL 0
+#include <util/debug.h>
 
 using namespace ND_vector;
 using util::Range;
@@ -587,4 +588,30 @@ TEST(Lemon, Dfs) {
         }
         cout << endl;
     }
+}
+
+class ConcreteEnvironment: public AbstractEnvironment {
+public:
+    ConcreteEnvironment() = default;
+    virtual ~ConcreteEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        return observation_reward_pair_t(observation_handle_t(),reward_t());
+    }
+    virtual const action_container_t get_actions() override {
+        return action_container_t({action_handle_t()});
+    }
+    virtual const state_handle_t get_state_handle() override {return state_handle_t();}
+    virtual void set_state(const state_handle_t & state_handle) override {return;}
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return false;}
+    virtual reward_t max_reward() const override {return reward_t();}
+    virtual bool has_min_reward() const override {return false;}
+    virtual reward_t min_reward() const override {return reward_t();}
+    virtual bool is_markov() const override {return true;}
+};
+
+TEST(MCTS, DeriveAbstractEnvironment) {
+    ConcreteEnvironment env;
 }

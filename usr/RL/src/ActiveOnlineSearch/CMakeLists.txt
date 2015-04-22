@@ -4,6 +4,8 @@ find_package(Qt5Core)
 
 add_definitions(-fopenmp -std=c++0x)
 
+include_directories(/home/robert/MLR_git/share/include)
+
 ## executable
 
 add_executable(main
