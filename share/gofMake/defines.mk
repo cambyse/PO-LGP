@@ -13,7 +13,7 @@ endif
 
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
-NXX = $(MLR_LIBPATH)/cuda/bin/nvcc
+NXX = nvcc #$(MLR_LIBPATH)/cuda/bin/
 CPATH   := $(CPATH):$(MLR_LIBPATH)/cuda/include:$(MLR_LIBPATH)/cudaSDK/C/common/inc
 ifeq ($(ARCH),x86_64)
 LPATHS += $(MLR_LIBPATH)/cuda/lib64 $(MLR_LIBPATH)/cudaSDK/lib
@@ -27,7 +27,7 @@ NXXFLAGS = -g -deviceemu
 LIBS += -lcudart -lcublasemu -lcutil
 else
 NXXFLAGS = -O0 -Xcompiler -fPIC
-LIBS += -lcudart -lcublas -lcutil
+LIBS += -lcudart -lcublas #-lcutil
 endif
 endif
 
