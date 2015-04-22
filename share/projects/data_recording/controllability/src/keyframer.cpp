@@ -4197,12 +4197,12 @@ void KeyFramer::dlib_test(Graph &kvg, const String &name_subj, const String &nam
   arr delta_quatVar = g4d().query(subj_dQuatVar, name_obj);
 
   cout << "numFrames: " << g4d().numFrames() << endl;
-  cout << "subj_posVar: " << subj_posVar.getDim() << endl;
-  cout << "subj_quatVar: " << subj_quatVar.getDim() << endl;
-  cout << "obj_posVar: " << obj_posVar.getDim() << endl;
-  cout << "obj_quatVar: " << obj_quatVar.getDim() << endl;
-  cout << "delta_posVar: " << delta_posVar.getDim() << endl;
-  cout << "delta_quatVar: " << delta_quatVar.getDim() << endl;
+  cout << "subj_posVar: " << subj_posVar.dim() << endl;
+  cout << "subj_quatVar: " << subj_quatVar.dim() << endl;
+  cout << "obj_posVar: " << obj_posVar.dim() << endl;
+  cout << "obj_quatVar: " << obj_quatVar.dim() << endl;
+  cout << "delta_posVar: " << delta_posVar.dim() << endl;
+  cout << "delta_quatVar: " << delta_quatVar.dim() << endl;
 
   // annotations / labels
   arr ann_ref;

@@ -689,7 +689,7 @@ template<class T> void MT::Array<T>::resizeDim(uint k, uint dk) {
 //***** access operations
 
 /// return a uint-Array that contains (acutally refers to) the dimensions of 'this'
-template<class T> MT::Array<uint> MT::Array<T>::getDim() const {
+template<class T> MT::Array<uint> MT::Array<T>::dim() const {
   Array<uint> dims(d, nd);
   dims.dereference();
   return dims;
@@ -1820,7 +1820,7 @@ template<class T> void checkNan(const MT::Array<T>& x) {
 
 template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   arr x;
-  uintA d=A.getDim();
+  uintA d=A.dim();
   d.prepend(d0);
   x.resize(d);
   if(x.memMove){
@@ -2064,7 +2064,7 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   }
   //any other index (includes the previous cases, but marginally slower)
   uintA IV, IS, dimV, dimS;
-  dimV = v.getDim();
+  dimV = v.dim();
   dimS.resize(dimV.N-1);
   for(i = 0, j = 0; i < dimS.N; i++, j++) {
     if(i == d) j++;
@@ -2308,13 +2308,13 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
     for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
     return;
   }
-  if(y.getDim() == z.getDim()) { //matrix x matrix -> element-wise
+  if(y.dim() == z.dim()) { //matrix x matrix -> element-wise
     x = y;
     for(uint i = 0; i < x.N; i++)
       x.elem(i) *= z.elem(i);
     return;
   }
-  HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+  HALT("operator% not implemented for "<<y.dim() <<"%" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
 }
 
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
@@ -2694,7 +2694,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   
@@ -2725,7 +2725,7 @@ template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X,
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   
   //loop
@@ -2745,7 +2745,7 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   HALT("WRONG IMPLEMENTATION! - zero don't guarantee max...");
@@ -2770,7 +2770,7 @@ template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, con
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   
@@ -2815,7 +2815,7 @@ template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, co
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
@@ -2838,7 +2838,7 @@ template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, cons
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
@@ -2859,7 +2859,7 @@ template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const u
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {

@@ -159,8 +159,16 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }
   if(INFO) {
-    HALT("lapack_Ainv_b_sym error info = " <<INFO
-         <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
+    uint k=(N>3?3:N); //number of required eigenvalues
+    MT::Array<integer> IWORK(5*N), IFAIL(N);
+    arr WORK(7*N);
+    integer M, IL=1, IU=k, LDQ=0, LDZ=1;
+    double VL=0., VU=0., ABSTOL=1e-8;
+    arr w(k);
+    dsbevx_((char*)"N", (char*)"I", (char*)"L", &N, &KD, Acol.p, &LDAB, (double*)NULL, &LDQ, &VL, &VU, &IL, &IU, &ABSTOL, &M, w.p, (double*)NULL, &LDZ, WORK.p, IWORK.p, IFAIL.p, &INFO);
+
+    THROW("lapack_Ainv_b_sym error info = " <<INFO
+         <<"\n typically this is because A is not pos-def,\nA=" <<A <<"\nb=" <<b <<"\neigenvalues=" <<w);
   }
 #if 0
   arr y = inverse(A)*b;

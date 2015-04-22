@@ -17,19 +17,25 @@
     -----------------------------------------------------------------  */
 
 
-#include <Core/array.h>
+#ifndef MT_vision_cuda_h
+#define MT_vision_cuda_h
 
-struct CudaInterface {
-  void initMapping();
-  void resizeMapping(arr& X, int N);
-  
-  void alloc(arr& X);
-  void upload(const arr& X);
-  void download(arr& X);
-  void free(arr& X);
+typedef unsigned char byte;
+
+#undef W
+#undef N
+
+
+struct CudaWorkspace {
+  int N, W;
+  byte *rgb, *rgbLast, *rgbRight;
+  int hsvColors;
+  float *hsvTheta, *hsvThetaRight, *hsvTargets;
+  float *motionTheta, motion_tol;
+  //float *integTheta, integ_hsv, integ_motion;
+  float *BP, *BPmsg, tanh_J;
 };
 
+void earlyVision(CudaWorkspace WS, int N, int threads_per_block);
 
-#ifdef  MT_IMPLEMENTATION
-#  include "cudaModules.cpp"
 #endif

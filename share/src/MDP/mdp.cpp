@@ -1090,7 +1090,7 @@ void mdp::generalNodeTransition(arr& P, double uni, double noise, double stay){
   uint m=P.N/(n*n);
   uint i, j;
   uintA org_dim;
-  org_dim = P.getDim();
+  org_dim = P.dim();
   P.reshape(n, m, n);
   P = uni;
   rndUniform(P, .0, noise, true);
@@ -1104,7 +1104,7 @@ void mdp::generalNodeTransition(arr& P, double uni, double noise, double stay){
 void mdp::generalNodeTransitions(arr& P0y0, double uni, double noise, double stay){
   CHECK(P0y0.nd>=3 && P0y0.d0==P0y0.d[P0y0.nd-1], "array must be sized before this...");
   uintA oldDim;
-  oldDim=P0y0.getDim();
+  oldDim=P0y0.dim();
   uint d0=P0y0.d0;
   uint dy=P0y0.N/(d0*d0);
   P0y0.resize(d0, dy, d0);
