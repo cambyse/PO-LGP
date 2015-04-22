@@ -44,7 +44,7 @@ public:
     virtual const state_handle_t get_state_handle() = 0;
     /**
      * Set the environment's state the the given state. */
-    virtual const state_handle_t set_state(const state_handle_t & state_handle) = 0;
+    virtual void set_state(const state_handle_t & state_handle) = 0;
     /**
      * Return whether the environment has a terminal state. */
     virtual bool has_terminal_state() const = 0;
