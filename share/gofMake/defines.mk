@@ -24,7 +24,7 @@ CUDA_EMU = 1
 endif
 ifeq ($(CUDA_EMU),1)  #emulation mode!!
 NXXFLAGS = -g -deviceemu
-LIBS += -lcudart -lcublasemu -lcutil
+LIBS += -lcudart -lcublasemu #-lcutil
 else
 NXXFLAGS = -O0 -Xcompiler -fPIC
 LIBS += -lcudart -lcublas #-lcutil
