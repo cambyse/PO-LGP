@@ -14,19 +14,19 @@ public:
     struct Observation {
         virtual ~Observation() = default;
         virtual bool operator==(const Observation & other) const = 0;
-        virtual bool operator!=(const Observation & other) const {return !*this==other;}
+        virtual bool operator!=(const Observation & other) const {return !(*this==other);}
     };
     struct State {
         virtual ~State() = default;
         virtual bool operator==(const State & other) const = 0;
-        virtual bool operator!=(const State & other) const {return !*this==other;}
+        virtual bool operator!=(const State & other) const {return !(*this==other);}
     };
-    typedef std::shared_ptr<const Action> ActionHandle;
-    typedef std::shared_ptr<const Observation> ObservationHandle;
-    typedef std::shared_ptr<const State> StateHandle;
-    typedef std::vector<ActionHandle> ActionContainer;
+    typedef std::shared_ptr<const Action> action_handle_t;
+    typedef std::shared_ptr<const Observation> observation_handle_t;
+    typedef std::shared_ptr<const State> state_handle_t;
+    typedef std::vector<action_handle_t> action_container_t;
     typedef double reward_t;
-    typedef std::tuple<ObservationHandle,reward_t> observation_reward_pair_t;
+    typedef std::tuple<observation_handle_t,reward_t> observation_reward_pair_t;
 
     //----methods----//
 public:
@@ -35,16 +35,16 @@ public:
     /**
      * Perform a transition by execution the given action and return the
      * resulting observation and reward. */
-    virtual observation_reward_pair_t transition(const ActionHandle & action) = 0;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) = 0;
     /**
      * Get the available actions in the current state. */
-    virtual const ActionContainer get_actions() = 0;
+    virtual const action_container_t get_actions() = 0;
     /**
      * Get the current state. */
-    virtual const StateHandle get_state_handle() = 0;
+    virtual const state_handle_t get_state_handle() = 0;
     /**
      * Set the environment's state the the given state. */
-    virtual const StateHandle set_state(const StateHandle & state_handle) = 0;
+    virtual const state_handle_t set_state(const state_handle_t & state_handle) = 0;
     /**
      * Return whether the environment has a terminal state. */
     virtual bool has_terminal_state() const = 0;
