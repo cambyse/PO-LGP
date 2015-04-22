@@ -15,6 +15,48 @@
 
 namespace util {
 
+    /** Plots a graph to a PDF file. An example of how to use this function
+     * would be
+     *
+     * @code
+     * #include <lemon/list_graph.h>
+     * #include <util/graph_plotting.h>
+     * @endcode
+     *
+     * \snippet ./unit_tests.cpp graph_to_pdf example
+     *
+     * which results in this PDF
+     *
+     * \htmlonly <img src="graph.png" width="200pt"/> \endhtmlonly
+     *
+     * @tparam GRAPH_T The type of the graph that is used. This should be a
+     * directed graph conforming to the lemon::concepts::Digraph concept.
+     *
+     * @tparam STRING_1_T, STRING_2_T, STRING_3_T, STRING_4_T Types of the
+     * different string arguments (or maps of strings).
+     *
+     * @param file_name Name of the file that will be created.
+     *
+     * @param graph The graph that will be plotted.
+     *
+     * @param general_node_properties A string that will be added to all node
+     * properties.
+     *
+     * @param node_properties Pointer to a map with strings that will be added
+     * to the properties of individual nodes.
+     *
+     * @param general_arc_properties A string that will be added to all arc
+     * properties.
+     *
+     * @param arc_properties Pointer to a map with strings that will be added to
+     * the properties of individual nodes.
+     *
+     * @param delete_dot_file Whether to delete the dot file that is created at
+     * an intermediate step. The name of the dot file will be a 50 character
+     * random string with '.dot' appended if it is deleted afterwards or \p
+     * file_name with '.dot' appended if \p delete_dot_file is \c false.
+     *
+     * */
     template <class GRAPH_T,
         class STRING_1_T = QString,
         class STRING_2_T = QString,
@@ -22,17 +64,18 @@ namespace util {
         class STRING_4_T = QString>
         void graph_to_pdf(const char* file_name,
                           const GRAPH_T & graph,
-                          const STRING_2_T general_node_properties = "",
-                          const typename GRAPH_T::template NodeMap<STRING_1_T> * node_properties = nullptr,
-                          const STRING_4_T general_arc_properties = "",
-                          const typename GRAPH_T::template ArcMap<STRING_3_T> * arc_properties = nullptr,
+                          const STRING_1_T general_node_properties = "",
+                          const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
+                          const STRING_3_T general_arc_properties = "",
+                          const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
                           bool delete_dot_file = true) {
 
         //-------------------//
         // random file names //
         //-------------------//
-        QString dot_file_name = util::random_alpha_num(50)+".dot";
-        //QString dot_file_name = QString("%1%2").arg(file_name).arg(".dot");
+        QString dot_file_name(delete_dot_file?
+                              util::random_alpha_num(50)+".dot":
+                              QString("%1%2").arg(file_name).arg(".dot"));
         QString graphics_file_name = file_name;
 
         //------------------//
