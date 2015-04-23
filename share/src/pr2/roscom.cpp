@@ -84,6 +84,49 @@ void RosCom_ControllerSync::close(){
 }
 
 //===========================================================================
+// Helper function so sync ors with the real PR2
+void initialSyncJointStateWithROS(ors::KinematicWorld& world,
+    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
+
+  if (not useRos) { return; }
+
+  //-- wait for first q observation!
+  cout << "** Waiting for ROS message of joints for initial configuration.." << endl
+       << "   If nothing is happening: is the controller running?" << endl;
+
+  for (uint trials = 0; trials < 20; trials++) {
+    ctrl_obs.var->waitForNextRevision();
+    cout << "REMOTE joint dimension=" << ctrl_obs.get()->q.N << endl;
+    cout << "LOCAL  joint dimension=" << world.q.N << endl;
+
+    if (ctrl_obs.get()->q.N == world.q.N and ctrl_obs.get()->qdot.N == world.q.N) {
+      // set current state
+      cout << "** Updating world state" << endl;
+      world.setJointState(ctrl_obs.get()->q, ctrl_obs.get()->qdot);
+      return;
+    }
+    cout << "retrying..." << endl;
+  }
+  HALT("sync'ing real PR2 with simulated failed");
+}
+
+void syncJointStateWitROS(ors::KinematicWorld& world,
+    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
+
+  if (not useRos) { return; }
+
+  for (uint trials = 0; trials < 2; trials++) {
+    ctrl_obs.var->waitForNextRevision();
+
+    if (ctrl_obs.get()->q.N == world.q.N and ctrl_obs.get()->qdot.N == world.q.N) {
+      // set current state
+      world.setJointState(ctrl_obs.get()->q, ctrl_obs.get()->qdot);
+      return;
+    }
+  }
+  HALT("sync'ing real PR2 with simulated failed");
+}
+//===========================================================================
 
 struct sRosCom_KinectSync{
   RosCom_KinectSync *base;

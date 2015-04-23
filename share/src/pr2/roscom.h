@@ -2,6 +2,7 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
+#include <Ors/ors.h>
 
 //===========================================================================
 //
@@ -66,8 +67,6 @@ TODO: allow modules to set default loopWithBeat, listenFirst, etc
 options. (In their constructor?)
 
 */
-
-
 //===========================================================================
 
 /// This module only calls ros:spinOnce() in step() and loops full speed -- to sync the process with the ros server
@@ -83,6 +82,25 @@ BEGIN_MODULE(RosCom_ControllerSync)
 //  ACCESS(JointControllerRefsMsg, ctrl_refs)
 //  ACCESS(JointControllerStateMsg, ctrl_state)
 END_MODULE()
+
+
+// Helper function so sync ors with the real PR2
+/**
+ * This starts the initial sync of the world with ctrl_obs from the robot.
+ *
+ * This is verbose (helps debugging) and retries to connect to the robot multiple times.
+ *
+ * If useRos==false then nothing happens.
+ */
+void initialSyncJointStateWithROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
+
+/**
+ * Sync the world with ctrl_obs from the robot.
+ *
+ * If useRos==false then nothing happens.
+ */
+void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
+
 
 //===========================================================================
 
