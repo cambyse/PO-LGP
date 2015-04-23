@@ -26,7 +26,7 @@ struct MySystem:System {
  *
  * If useRos==false then nothing happens.
  */
-void initial_sync_PR2_with_world(ors::KinematicWorld& world,
+void initialSyncJointStateWithROS(ors::KinematicWorld& world,
     Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
 
   if (not useRos) { return; }
@@ -56,7 +56,7 @@ void initial_sync_PR2_with_world(ors::KinematicWorld& world,
  *
  * If useRos==false then nothing happens.
  */
-void sync_PR2_with_world(ors::KinematicWorld& world,
+void syncJointStateWitROS(ors::KinematicWorld& world,
     Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
 
   if (not useRos) { return; }
@@ -90,10 +90,10 @@ int main(int argc, char** argv){
     cout << "NOT using ROS" << endl;
   }
 
-  initial_sync_PR2_with_world(world, system.ctrl_obs, useRos);
+  initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
 
   for (int i = 0; true; i++) {
-    sync_PR2_with_world(world, system.ctrl_obs, useRos);
+    syncJointStateWitROS(world, system.ctrl_obs, useRos);
     world.gl().update(STRING("frame " << i), false, false, false);
     MT::wait(0.01);
   }
