@@ -63,6 +63,8 @@ public:
 
     void print_features();
 
+    void to_pdf(QString file_name);
+
     /** \brief Clear the tree but not the data (instances). */
     void clear_tree();
 

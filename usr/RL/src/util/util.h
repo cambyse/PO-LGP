@@ -635,6 +635,34 @@ namespace util {
     //========================================================//
 
 
+    /**
+     * Construct a vector with elements from \p min to \p max (inclusive) with
+     * increment \p incr. */
+    template<class T>
+        std::vector<T> range_vector(const T & min, const T & max, const T & incr) {
+        std::vector<T> vec;
+        for(T val = min; (max-val)*incr>=0; val+=incr) {
+            vec.push_back(val);
+        }
+        return vec;
+    }
+
+    /**
+     * Construct vector with elements from \p min to \p max (inclusive) with
+     * increment 1. */
+    template<class T>
+        std::vector<T> range_vector(const T & min, const T & max) {
+        return range_vector(min,max,1);
+    }
+
+    /**
+     * Construct vector with \p counts elements starting at zero incremented by
+     * 1. */
+    template<class T>
+        std::vector<T> range_vector(const T & counts) {
+        return range_vector(0,counts-1,1);
+    }
+
     /** \brief Simple helper function that returns \a value clamped to the
      * interval [\a lower,\a upper].
      *

@@ -16,6 +16,7 @@ EXAMPLE_PATH           = ActiveOnlineSearch/doc \
 			 planning/doc \
 			 representation/doc \
 			 util/doc
+IMAGE_PATH	       = doc/img
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 EXTRACT_ALL            = YES
@@ -28,16 +29,4 @@ UML_LOOK               = YES
 TAGFILES	       = \
 		       	 representation/doc/doxy.tag=../../representation/doc/html \
 		       	 ActiveOnlineSearch/doc/doxy.tag=../../ActiveOnlineSearch/doc/html
-
-#		       util/doc/utility_library.tag=../../util/doc/html
-# 		       ButtonWorld/doc/doxy.tag=../../ButtonWorld/doc/html \
-#		       CheeseMaze/doc/doxy.tag=../../CheeseMaze/doc/html \
-#		       GTest/doc/doxy.tag=../../GTest/doc/html \
-#		       Maze/doc/doxy.tag=../../Maze/doc/html \
-#		       batchworker/doc/doxy.tag=../../batchworker/doc/html \
-#		       config/doc/doxy.tag=../../config/doc/html \
-#		       environment/doc/doxy.tag=../../environment/doc/html \
-#		       gui/doc/doxy.tag=../../gui/doc/html \
-#		       learner/doc/doxy.tag=../../learner/doc/html \
-#		       optimization/doc/doxy.tag=../../optimization/doc/html \
-#		       planning/doc/doxy.tag=../../planning/doc/html \
+PROJECT_LOGO	       = ./doc/img/icon.gif

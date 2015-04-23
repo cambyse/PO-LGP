@@ -28,6 +28,7 @@ add_library(util
     QtUtil.cpp
     QtUtil.h
     return_tuple.h
+    return_tuple_macros.h
     template_lib.h
     util.cpp
     util.h
