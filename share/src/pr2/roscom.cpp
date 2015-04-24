@@ -6,7 +6,6 @@
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include <ar_track_alvar_msgs/AlvarMarkers.h>
 
 //===========================================================================
 
@@ -256,29 +255,6 @@ void RosCom_ForceSensorSync::close(){
 }
 
 //===========================================================================
-// RosCom_ARMarkerSync
-struct sRosCom_ARMarkerSync{
-  RosCom_ARMarkerSync *base;
-  ros::NodeHandle nh;
-  ros::Subscriber ar_marker;
-
-  void cb_sync(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg) {
-    NICO
-  }
-};
-
-void RosCom_ARMarkerSync::open(){
-  NICO
-}
-
-void RosCom_ARMarkerSync::step(){
-}
-
-void RosCom_ARMarkerSync::close(){
-  NICO
-}
-
-//===========================================================================
 #else // MT_ROS no defined
 
 void RosCom_Spinner::open(){ NICO }
@@ -292,10 +268,6 @@ void RosCom_ControllerSync::close(){ NICO }
 void RosCom_ForceSensorSync::open(){ NICO }
 void RosCom_ForceSensorSync::step(){ NICO }
 void RosCom_ForceSensorSync::close(){ NICO }
-
-void RosCom_ARMarkerSync::open(){ NICO }
-void RosCom_ARMarkerSync::step(){ NICO }
-void RosCom_ARMarkerSync::close(){ NICO }
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)

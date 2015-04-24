@@ -5,6 +5,8 @@
 #include <Core/array.h>
 #include <Core/geo.h>
 #include <Ors/ors.h>
+#include <ar_track_alvar_msgs/AlvarMarkers.h>
+
 
 //===========================================================================
 //
@@ -160,9 +162,6 @@ END_MODULE()
 
 //===========================================================================
 /// Sync the AR maker alvar
-BEGIN_MODULE(RosCom_ARMarkerSync)
-  // ACCESS(arr, marker_pose)
-  // ACCESS(AlvarMarkers, alvar_marker)
-END_MODULE()
+ROSSUB("/ar_pose_marker", ar_track_alvar_msgs::AlvarMarkers, ar_pose_marker)
 
 //===========================================================================
