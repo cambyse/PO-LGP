@@ -5,47 +5,22 @@
 #include <std_msgs/String.h>
 
 //===========================================================================
-#define ROSSUB(topic_name, msg_type, var_name) \
-  class ROSSUB_##var_name : public Module { \
-  private: \
-    ros::NodeHandle* _nh; \
-    ros::Subscriber _sub; \
-    \
-  public: \
-    ACCESS(msg_type, var_name) \
-    ROSSUB_##var_name() : Module(#var_name) {} \
-    void open() { \
-      rosCheckInit(); \
-      this->_nh = new ros::NodeHandle; \
-      this->_sub  = this->_nh->subscribe( \
-        topic_name, 1, &ROSSUB_##var_name::callback, this); \
-    } \
-    void step() {} \
-    void close() { \
-      this->_nh->shutdown(); \
-      delete _nh; \
-    } \
-    void callback(const msg_type::ConstPtr& msg) { \
-      this->var_name.set() = *msg; \
-    } \
-  };
-
-//===========================================================================
 ROSSUB("/hello_world", std_msgs::String, hello_world);
-// --> ROSSUB_hello_world
+// This create ROSSUB_hello_world module
+// Then:
+//  - add the Module to your system
+//  - add the ACCESS variable to your system
 
 
 // =================================================================================================
 struct MySystem:System {
-  // Access Variables
+  //  - add the ACCESS variable to your system
   ACCESS(std_msgs::String, hello_world)
 
   MySystem() {
-    if (MT::getParameter<bool>("useRos", true)){
-      cout << "using ROS" << endl;
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<ROSSUB_hello_world>(NULL, Module::listenFirst, .1);
-    }
+    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .01);
+    //  - add the Module to your system
+    addModule<ROSSUB_hello_world>(NULL, Module::listenFirst, .1);
     connect();
   }
 };
@@ -60,9 +35,10 @@ int main(int argc, char** argv){
   cout << "Engine open " << endl;
 
   for (int i = 0; true; i++) {
+    // print the data on the /hello_world topic
     system.hello_world.waitForNextRevision();
     std_msgs::String d = system.hello_world.get();
-    cout << d << endl;
+    cout << "step[" << i << "]: "<< d.data << endl;
   }
 
   engine().close(system);

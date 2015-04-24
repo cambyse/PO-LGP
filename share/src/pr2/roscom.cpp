@@ -1,15 +1,12 @@
 #include "roscom.h"
 
 #ifdef MT_ROS
-
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
-#ifdef MLR_AR_TRACK
-#  include <ar_track_alvar/AlvarMarkers.h>
-#endif
+#include <ar_track_alvar_msgs/AlvarMarkers.h>
 
 //===========================================================================
 
@@ -22,7 +19,7 @@ bool rosOk(){
 }
 
 //===========================================================================
-
+// RosCom_Spinner
 struct sRosCom_Spinner{
 };
 
@@ -37,12 +34,13 @@ void RosCom_Spinner::step(){
 void RosCom_Spinner::close(){}
 
 //===========================================================================
-
+// CosCom_ControllerSync
 struct sRosCom_ControllerSync{
   RosCom_ControllerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber sub_jointState;
   ros::Publisher pub_jointReference;
+
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
     //  cout <<"** joinstState_callback" <<endl;
     CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
@@ -126,8 +124,9 @@ void syncJointStateWitROS(ors::KinematicWorld& world,
   }
   HALT("sync'ing real PR2 with simulated failed");
 }
-//===========================================================================
 
+//===========================================================================
+// RosCom_KinectSync
 struct sRosCom_KinectSync{
   RosCom_KinectSync *base;
   ros::NodeHandle nh;
@@ -162,7 +161,7 @@ void RosCom_KinectSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_CamsSync
 struct sRosCom_CamsSync{
   RosCom_CamsSync *base;
   ros::NodeHandle nh;
@@ -192,7 +191,7 @@ void RosCom_CamsSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_ArmCamsSync
 struct sRosCom_ArmCamsSync{
   RosCom_ArmCamsSync *base;
   ros::NodeHandle nh;
@@ -222,7 +221,7 @@ void RosCom_ArmCamsSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_ForceSensorSync
 struct sRosCom_ForceSensorSync{
   RosCom_ForceSensorSync *base;
   ros::NodeHandle nh;
@@ -257,61 +256,30 @@ void RosCom_ForceSensorSync::close(){
 }
 
 //===========================================================================
-
-#ifdef MLR_AR_TRACK
-
+// RosCom_ARMarkerSync
 struct sRosCom_ARMarkerSync{
   RosCom_ARMarkerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber ar_marker;
-  void cb_sync(const ar_track_alvar::AlvarMarkers::ConstPtr& msg){
-    uint N = 20;
-    arr marker_pose;
-    if (marker_pose.N==0){
-      marker_pose = zeros(N,7);
-    }else{
-      marker_pose = base->marker_pose.get();
-    }
-    for (uint i = 0; i<msg->markers.size();i++) {
-      const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
-      marker_pose[m.id] = ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
-    }
-    base->marker_pose.set() = marker_pose;
+
+  void cb_sync(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg) {
+    NICO
   }
 };
 
 void RosCom_ARMarkerSync::open(){
-  rosCheckInit();
-  s = new sRosCom_ARMarkerSync;
-  s->base = this;
-  s->ar_marker  = s->nh.subscribe("/ar_pose_marker", 1, &sRosCom_ARMarkerSync::cb_sync, s);
+  NICO
 }
 
 void RosCom_ARMarkerSync::step(){
 }
 
 void RosCom_ARMarkerSync::close(){
-  s->nh.shutdown();
+  NICO
 }
-
-#else
-
-void RosCom_ARMarkerSync::open(){
-  MT_MSG("compiler flags do not enable ARMarkers")
-}
-
-void RosCom_ARMarkerSync::step(){
-}
-
-void RosCom_ARMarkerSync::close(){
-  MT_MSG("compiler flags do not enable disabled ARMarkers")
-}
-
-#endif
 
 //===========================================================================
-
-#else //MT_ROS
+#else // MT_ROS no defined
 
 void RosCom_Spinner::open(){ NICO }
 void RosCom_Spinner::step(){ NICO }
@@ -325,6 +293,9 @@ void RosCom_ForceSensorSync::open(){ NICO }
 void RosCom_ForceSensorSync::step(){ NICO }
 void RosCom_ForceSensorSync::close(){ NICO }
 
+void RosCom_ARMarkerSync::open(){ NICO }
+void RosCom_ARMarkerSync::step(){ NICO }
+void RosCom_ARMarkerSync::close(){ NICO }
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)
