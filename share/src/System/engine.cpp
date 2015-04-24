@@ -254,13 +254,13 @@ void System::connect(){
   }
 }
 
-VariableL createVariables(const ModuleL& ms){
-  System S;
-  S.modules=ms;
-  S.connect();
-  cout <<"completed system: " <<S <<endl;
-  return S.vars;
-}
+//VariableL createVariables(const ModuleL& ms){
+//  System S;
+//  S.modules=ms;
+//  S.connect();
+////  cout <<"completed system: " <<S <<endl;
+//  return S.vars;
+//}
 
 Graph System::graph() const{
   Graph g;
@@ -288,7 +288,7 @@ Graph System::graph() const{
 }
 
 void System::write(ostream& os) const{
-  cout <<graph() <<endl;
+  os <<graph() <<endl;
 }
 
 
@@ -301,25 +301,25 @@ void signalhandler(int s){
   int calls = engine().shutdown.incrementValue();
   cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
   if(calls==1){
-    cout <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
+    LOG(0) <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
   }
   if(calls==2){
-    cout <<" -- smoothly closing modules directly" <<endl;
+    LOG(0) <<" -- smoothly closing modules directly" <<endl;
     engine().close(); //might lead to a hangup of the main loop, but processes should close
   }
   if(calls==3){
-    cout <<" -- cancelling threads to force closing" <<endl;
+    LOG(0) <<" -- cancelling threads to force closing" <<endl;
     engine().cancel();
   }
   if(calls>3){
-    cerr <<" ** shutdown failed - hard exit!" <<endl;
+    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
     exit(1);
   }
 }
 
 Engine& engine(){  return SingleEngine(); }
 
-Engine::Engine(): mode(none), system(NULL), shutdown(false) {
+Engine::Engine(): mode(none), system(NULL), shutdown(0) {
   acc = new EventController;
 };
 

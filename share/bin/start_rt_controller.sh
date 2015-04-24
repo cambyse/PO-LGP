@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Start Marc's controller
-# 
-# Don't forget to:
-# export ROS_PACKAGE_PATH="${HOME}/git/mlr/share/src/pr2:${ROS_PACKAGE_PATH}"
+# Start the real time controller
+
+# abort on errors
+set -e
 
 echo ==========================================================================
 echo "Current controllers"
@@ -19,4 +19,4 @@ rosrun pr2_controller_manager pr2_controller_manager list
 
 echo ==========================================================================
 echo "Starting Marc's controller"
-roslaunch marc_rt_controller.launch
+roslaunch marc_controller_pkg marc_rt_controller.launch

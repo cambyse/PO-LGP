@@ -523,6 +523,10 @@ void TestMaze_II::initialize_commands() {
                 utree->print_features();
                 return {true,"printed UTree features"};
             }, "print UTree features");
+        command_center.add_command(top_model_learn_utree,{"utree-to-pdf"}, [this](QString file_name)->ret_t{
+                utree->to_pdf(file_name);
+                return {true,"printed UTree to PDF file"};
+            }, "print UTree to PDF file");
         command_center.add_command(top_model_learn_utree,{"prune dead"}, [this]()->ret_t{
                 utree->prune_dead_branches();
                 return {true,"pruned dead UTree branches"};
@@ -1899,7 +1903,10 @@ void TestMaze_II::process_console_input() {
     QString input = ui._wConsoleInput->text();
     ui._wConsoleInput->setText("");
     to_console(input,INPUT_STYLE);
-    console_history.push_back(input);
+    if(console_history.back()!=input) {
+        // only append new commands
+        console_history.push_back(input);
+    }
     history_position = console_history.size();
     QTextStream history_file_stream(&history_file);
     history_file_stream << input << "\n";
