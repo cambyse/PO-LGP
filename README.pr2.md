@@ -15,6 +15,8 @@ ln -s ~/git/mlr/share/projects/pr2_gamepadControl/model.kvg ~/.ros/model.kvg
 ln -s ~/git/mlr/share/data/pr2_model ~/.ros/
 ```
 
+[MT: Maybe we should link ~/.ros to ~/git/mlr/rospath ????]
+
 Put the following in your `~.bashrc`
 ```
 export ROS_DISTRO=indigo
@@ -35,8 +37,10 @@ Now compile `src/pr2/`
 cd ~/git/mlr/share/src/pr2/marc_controller_pkg/
 make -f Makefile.gof  # create the c++ header from the msg
 cd ..
-make  # actually compile roscom etc
+make -f # actually compile roscom etc
 ```
+
+[MT: usually the C++ headers from msg should be checked in]
 
 Compile `marc_pr2_controller`. (This also builds python msgs so you can use
 rostopic etc.)
@@ -72,8 +76,13 @@ Also start the PR2 dashboard.
 rosrun pr2_dashboard pr2_dashboard
 ```
 
+[MT: we should replace this with using a common script, like robStart (->mlr-start-robot.sh) that also starts the ft sensor recalib]
+
 Start our realtime controller. In `~/git/mlr/share/bin` there is
 `start_rt_controller.sh`
+
+
+[MT: missing: info on downloading and compiling the ft sensor git stuff]
 
 
 Troubleshooting
