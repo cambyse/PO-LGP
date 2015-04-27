@@ -29,7 +29,8 @@ void rosCheckInit();
  *
  *  See ../../examples/pr2/generic_ros_sync/main.cpp for more.
  *
- *  TODO refactor to avoid includes in header files
+ *  TODO Refactor to avoid includes in header files. But we need the type of
+ *  the msg. Is it even possible?
  */
 #define ROSSUB(topic_name, msg_type, var_name) \
   class ROSSUB_##var_name : public Module { \
