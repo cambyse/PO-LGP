@@ -21,7 +21,7 @@ struct Calibrator: Module {
   bool calibration_phase; ///< indicates if we're in the calibration phase
 
   // floatA posesFront, posesSide, posesOpen, posesClosed;
-  floatA posesSide, posesOpen, posesClosed;
+  floatA posesSide, posesOpen, posesClosed,posesFront;
 
   floatA center;
   float radius;

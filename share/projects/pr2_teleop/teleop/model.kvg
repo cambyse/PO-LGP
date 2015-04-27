@@ -21,4 +21,12 @@ shape sensor_rh_index(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
 shape sensor_lh_thumb(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
 shape sensor_lh_index(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
 
+shape sensor_rh_wrist(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
+shape sensor_lh_wrist(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
+
+shape sensor_t_chest(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
+
+shape sensor_rl_foot(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
+
+
 Merge worldTranslationRotation{ type=10}

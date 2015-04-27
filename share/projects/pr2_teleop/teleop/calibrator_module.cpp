@@ -35,8 +35,8 @@ void Calibrator::step() {
   }
 
   // pusblish raw sensor data
-  poses_rh.set() = mid.query(tmpPoses, STRINGS("/human/rh/thumb", "/human/rh/index"));
-  poses_lh.set() = mid.query(tmpPoses, STRINGS("/human/lh/thumb", "/human/lh/index"));
+  poses_rh.set() = mid.query(tmpPoses, STRINGS("/human/rh/thumb", "/human/rh/index","/human/rh/wrist"));
+  poses_lh.set() = mid.query(tmpPoses, STRINGS("/human/lh/thumb", "/human/lh/index","/human/lh/wrist"));
 
   // discard lost frames
   if (length(tmpPoses.row(0)) == 0 || length(tmpPoses.row(1)) == 0 ||
@@ -44,12 +44,13 @@ void Calibrator::step() {
     return;
 
   // Calibration logic
-  if (calibration_phase) {
-    // if (button & BTN_Y) {
-    //   cout << "calibrating front" << endl;
-    //   posesFront = tmpPoses;
-    // }
-    if (button & BTN_B) {
+  if (calibration_phase)
+ {
+     if (button & BTN_Y) {
+       cout << "calibrating front" << endl;
+       posesFront = tmpPoses;
+     }
+    else if (button & BTN_B) {
       cout << "calibrating side" << endl;
       posesSide = tmpPoses;
     }
@@ -61,16 +62,17 @@ void Calibrator::step() {
       cout << "calibrating closed gripper" << endl;
       posesClosed = tmpPoses;
     }
-    else if (button & BTN_BACK
+    else if (button & BTN_BACK)
+	{
              && posesSide.N != 0
-             // && posesFront.N != 0
+             && posesFront.N != 0
              && posesOpen.N != 0
              && posesClosed.N != 0)
-    {
+    }
       cout << "calibrating done" << endl;
       calibrate();
       calibration_phase = false;
-    }
+    
   }
   else {
     transform(tmpPoses);
@@ -80,7 +82,7 @@ void Calibrator::step() {
       cout << "calibrating start" << endl;
       calibration_phase = true;
       posesSide.resize(0);
-      // posesFront.resize(0);
+      posesFront.resize(0);
       posesOpen.resize(0);
       posesClosed.resize(0);
     }
@@ -101,8 +103,8 @@ void Calibrator::calibrate() {
 
   p_side_rh = mid.query(posesSide, STRING("/human/rh/index")).subRange(0, 2);
   p_side_lh = mid.query(posesSide, STRING("/human/lh/index")).subRange(0, 2);
-  center = .5f * (p_side_rh + p_side_lh);
-  radius = .5f * length(p_side_rh - p_side_lh);
+  center = mid.query(posesSide, STRING(" /human/torso/chest")).subRange(0, 2);
+  //radius = .5f * length(p_side_rh - p_side_lh);
 
 // Older calibration code
 //   // RIGHT HAND
