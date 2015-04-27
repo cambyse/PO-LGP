@@ -35,22 +35,22 @@ struct PDExecutor: Module {
 #endif
 
   // Tasks
-  PDtask* limits;
-  PDtask* collision;
+  CtrlTask* limits;
+  CtrlTask* collision;
 
-  PDtask* effPosR;
-  PDtask* gripperR;
-  PDtask* effOrientationR;
-  // PDtask* effOrientationRX;
-  // PDtask* effOrientationRY;
-  // PDtask* effOrientationRZ;
+  CtrlTask* effPosR;
+  CtrlTask* gripperR;
+  CtrlTask* effOrientationR;
+  // CtrlTask* effOrientationRX;
+  // CtrlTask* effOrientationRY;
+  // CtrlTask* effOrientationRZ;
 
-  PDtask* effPosL;
-  PDtask* gripperL;
-  PDtask* effOrientationL;
-  // PDtask* effOrientationLX;
-  // PDtask* effOrientationLY;
-  // PDtask* effOrientationLZ;
+  CtrlTask* effPosL;
+  CtrlTask* gripperL;
+  CtrlTask* effOrientationL;
+  // CtrlTask* effOrientationLX;
+  // CtrlTask* effOrientationLY;
+  // CtrlTask* effOrientationLZ;
 
   PDExecutor();
 

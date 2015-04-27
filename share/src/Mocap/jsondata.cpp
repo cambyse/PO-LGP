@@ -212,12 +212,13 @@ void JsonRec::load(const char *recdir) {
           }
 
           targetkvg.append("ann", &ann);
-          kvgann.append(STRINGS(target, agent, object), &targetkvg);
+          // kvgann.append(STRINGS(target, agent, object), &targetkvg);
+          kvgann.append({target, agent, object}, {}, &targetkvg, false);
         }
       }
 
-      agent_targets.append(target, &a_targets);
-      object_targets.append(target, &o_targets);
+      agent_targets.append((char*)target, &a_targets);
+      object_targets.append((char*)target, &o_targets);
 
       // ann = new arr(nframes);
       // ann->setZero();

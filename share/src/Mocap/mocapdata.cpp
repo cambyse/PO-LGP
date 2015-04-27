@@ -622,7 +622,8 @@ uint MocapRec::numFrames(Thickness thickness) const {
       HALT("No Thickness of this type");
   }
 }
-uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(STRINGS("bam", bam))->d2; }
+// uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(STRINGS("bam", bam))->d2; }
+uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(StringA({"bam", bam}))->d2; }
 
 void MocapRec::appendBam(const char *bam, const arr &data) {
   Item *i = kvg.getItem("bam", bam);
@@ -638,11 +639,13 @@ void MocapRec::appendBam(const char *bam, const arr &data) {
 }
 
 bool MocapRec::hasBam(const char *bam) {
-  return kvg.getItem(STRINGS("bam", bam)) != NULL;
+  // return kvg.getItem(STRINGS("bam", bam)) != NULL;
+  return kvg.getItem(StringA({"bam", bam})) != NULL;
 }
 
 arr MocapRec::query(const char *bam) {
-  Item *i = kvg.getItem(STRINGS("bam", bam));
+  // Item *i = kvg.getItem(STRINGS("bam", bam));
+  Item *i = kvg.getItem(StringA({"bam", bam}));
   CHECK(i != nullptr, STRING("BAM '" << bam << "' does not exist."));
 
   // if(0 == strcmp(bam, "pose")) {
@@ -655,11 +658,13 @@ arr MocapRec::query(const char *bam) {
   //   data.reshape(nsensors, nframes, 7);
   //   return data;
   // }
-  return *kvg.getValue<arr>(STRINGS("bam", bam));
+  // return *kvg.getValue<arr>(STRINGS("bam", bam));
+  return *kvg.getValue<arr>(StringA({"bam", bam}));
 }
 
 arr MocapRec::query(const char *type, const char *sensor) {
-  Item *i = kvg.getItem(STRINGS("bam", type));
+  // Item *i = kvg.getItem(STRINGS("bam", type));
+  Item *i = kvg.getItem(StringA({"bam", type}));
   CHECK(i != nullptr, STRING("BAM '" << type << "' does not exist."));
 
   int is = mid.sensor_id(sensor);
@@ -686,7 +691,8 @@ arr MocapRec::query(const char *type, const char *sensor) {
 }
 
 arr MocapRec::query(const char *type, const char *sensor, uint f) {
-  Item *i = kvg.getItem(STRINGS("bam", type));
+  // Item *i = kvg.getItem(STRINGS("bam", type));
+  Item *i = kvg.getItem(StringA({"bam", type}));
   CHECK(i != nullptr, STRING("BAM '" << type << "' does not exist."));
 
   int is = mid.sensor_id(sensor);
@@ -1330,7 +1336,7 @@ MocapRec &MocapData::rec(const char *recdir) {
         cout << "found at: " << dir << endl;
         MocapRec *mrec = recp->clone();
         mrec->load(dir);
-        kvg.append(dir, mrec);
+        kvg.append((char*)dir, mrec);
         return *mrec;
       }
     }
@@ -1366,7 +1372,8 @@ void MocapSeq::init(const char *sens1, const char *sens2) {
   sensor1 = STRING(sens1);
   sensor2 = STRING(sens2);
 
-  rawdata = rec.query("pose", STRINGS(sens1, sens2));
+  // rawdata = rec.query("pose", STRINGS(sens1, sens2))
+  rawdata = rec.query("pose", StringA({sens1, sens2}));
   clearFeatData();
 
   uint thinning = *rec.params.get<uint>("thinning");
@@ -1377,7 +1384,8 @@ void MocapSeq::init(const char *sens1, const char *sens2) {
 }
 
 void MocapSeq::setAnn(const String &target) {
-  arr &ann = *rec.label().getValue<arr>(STRINGS(target, sensor1, sensor2));
+  // arr &ann = *rec.label().getValue<arr>(STRINGS(target, sensor1, sensor2));
+  arr &ann = *rec.label().getValue<arr>(StringA({target, sensor1, sensor2}));
   if(!ann.N)
     ann_thin.resize(0);
   else {
@@ -1451,7 +1459,7 @@ void MocapSeq::appendObs() {
 // }
 
 void MocapSeq::appendVarPast() {
-  rec.computeVarPast(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  rec.computeVarPast(StringA({"pos", "quat"}), StringA({sensor1, sensor2}));
 
   String sensor1_dPos, sensor1_dQuat, sensor1_dPosVarPast, sensor1_dQuatVarPast, sensor1_dPosVarPastObs;
   sensor1_dPos << sensor1 << "_dPos";
@@ -1491,7 +1499,8 @@ void MocapSeq::appendVarPast() {
 }
 
 void MocapSeq::appendLinCoeffPast(bool sqr_feats) {
-  rec.computeLinCoeffPast(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  // rec.computeLinCoeffPast(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  rec.computeLinCoeffPast(StringA({"pos", "quat"}), StringA({sensor1, sensor2}));
 
   String sensor1_dPos, sensor1_dQuat, sensor1_dPosLinCoeffPast, sensor1_dQuatLinCoeffPast, sensor1_dPosLinCoeffPastObs;
   sensor1_dPos << sensor1 << "_dPos";
@@ -1549,7 +1558,8 @@ void MocapSeq::appendLinCoeffPast(bool sqr_feats) {
 }
 
 void MocapSeq::appendVarFuture() {
-  rec.computeVarFuture(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  // rec.computeVarFuture(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  rec.computeVarFuture(StringA({"pos", "quat"}), StringA({sensor1, sensor2}));
 
   String sensor1_dPos, sensor1_dQuat, sensor1_dPosVarFuture, sensor1_dQuatVarFuture, sensor1_dPosVarFutureObs;
   sensor1_dPos << sensor1 << "_dPos";
@@ -1589,7 +1599,8 @@ void MocapSeq::appendVarFuture() {
 }
 
 void MocapSeq::appendLinCoeffFuture(bool sqr_feats) {
-  rec.computeLinCoeffFuture(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  // rec.computeLinCoeffFuture(STRINGS("pos", "quat"), STRINGS(sensor1, sensor2));
+  rec.computeLinCoeffFuture(StringA({"pos", "quat"}), StringA({sensor1, sensor2}));
 
   String sensor1_dPos, sensor1_dQuat, sensor1_dPosLinCoeffFuture, sensor1_dQuatLinCoeffFuture, sensor1_dPosLinCoeffFutureObs;
   sensor1_dPos << sensor1 << "_dPos";
