@@ -209,9 +209,10 @@ void OptiRec::load(const char *recdir) {
       targets.append(pair->keys(0));
 
     if(!agent_targets.getItem(pair->keys(0)))
-      agent_targets.append(pair->keys(0), new StringA());
+      // agent_targets.append(pair->keys(0), new StringA());
+      agent_targets.append((char*)pair->keys(0), new StringA());
     if(!object_targets.getItem(pair->keys(0)))
-      object_targets.append(pair->keys(0), new StringA());
+      object_targets.append((char*)pair->keys(0), new StringA());
     StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
     StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
     if(!a_targets.contains(pair->keys(1)))

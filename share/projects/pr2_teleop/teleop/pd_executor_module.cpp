@@ -22,6 +22,7 @@ PDExecutor::PDExecutor()
   limits->prec = 100.;
 
   // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
   collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
   collision->y_ref.setZero();
   collision->v_ref.setZero();
@@ -43,11 +44,11 @@ PDExecutor::PDExecutor()
   // Orientation
   effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
   effOrientationR->y_ref = {1, 0, 0, 0};
-  effOrientationR->flipTargetScalarProduct = true;
+  effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
   effOrientationL->y_ref = {1, 0, 0, 0};
-  effOrientationL->flipTargetScalarProduct = true;
+  effOrientationL->flipTargetSignOnNegScalarProduct = true;
 }
 
 void PDExecutor::visualizeSensors()
@@ -92,7 +93,9 @@ void PDExecutor::step()
   // pos = { x, y, z };
   // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
   // effPosR->setTarget(pos_shoulder_frame);
-  x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
+  // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
+  x = cal_pose_rh(0) * 1.2;
+  clip(x, 0., 1.2);
   y = cal_pose_rh(1) * 1.2;
   z = cal_pose_rh(2) * .75 - .05;
   pos = ARR(x, y, z) + ARR(0, 0, 1);
@@ -106,7 +109,9 @@ void PDExecutor::step()
   world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
 
   // avoid going behind your back
-  x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
+  // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
+  x = cal_pose_lh(0) * 1.2;
+  clip(x, 0., 1.2);
   y = cal_pose_lh(1) * 1.2;
   z = cal_pose_lh(2) * .75 - .05;
   pos = ARR(x, y, z) + ARR(0, 0, 1);

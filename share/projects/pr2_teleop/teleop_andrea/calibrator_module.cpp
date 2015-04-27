@@ -35,8 +35,8 @@ void Calibrator::step() {
   }
 
   // pusblish raw sensor data
-  poses_rh.set() = mid.query(tmpPoses, STRINGS("/human/rh/thumb", "/human/rh/index"));
-  poses_lh.set() = mid.query(tmpPoses, STRINGS("/human/lh/thumb", "/human/lh/index"));
+  poses_rh.set() = mid.query(tmpPoses, {"/human/rh/thumb", "/human/rh/index"});
+  poses_lh.set() = mid.query(tmpPoses, {"/human/lh/thumb", "/human/lh/index"});
 
   // discard lost frames
   if (length(tmpPoses.row(0)) == 0 || length(tmpPoses.row(1)) == 0 ||
@@ -153,8 +153,8 @@ void Calibrator::calibrate() {
 
   // RIGHT GRIPPER
   // ===========================================================================
-  p_open = mid.query(posesOpen, STRINGS("/human/rh/thumb", "/human/rh/index")).cols(0, 3);
-  p_closed = mid.query(posesClosed, STRINGS("/human/rh/thumb", "/human/rh/index")).cols(0, 3);
+  p_open = mid.query(posesOpen, {"/human/rh/thumb", "/human/rh/index"}).cols(0, 3);
+  p_closed = mid.query(posesClosed, {"/human/rh/thumb", "/human/rh/index"}).cols(0, 3);
   dist_open = length(p_open[0] - p_open[1]);
   dist_closed = length(p_closed[0] - p_closed[1]);
   m_rh = 1 / (dist_open - dist_closed);
@@ -162,8 +162,8 @@ void Calibrator::calibrate() {
 
   // LEFT GRIPPER
   // ===========================================================================
-  p_open = mid.query(posesOpen, STRINGS("/human/lh/thumb", "/human/rh/index")).cols(0, 3);
-  p_closed = mid.query(posesClosed, STRINGS("/human/lh/thumb", "/human/lh/index")).cols(0, 3);
+  p_open = mid.query(posesOpen, {"/human/lh/thumb", "/human/rh/index"}).cols(0, 3);
+  p_closed = mid.query(posesClosed, {"/human/lh/thumb", "/human/lh/index"}).cols(0, 3);
   dist_open = length(p_open[0] - p_open[1]);
   dist_closed = length(p_closed[0] - p_closed[1]);
   m_lh = 1 / (dist_open - dist_closed);
@@ -250,12 +250,19 @@ void Calibrator::transform(const floatA& poses_raw) {
   cal_pose_lh.append(transformOrientation(poses_thumb_lh, poses_index_lh));
 
   // Gripper
-  calibrated_gripper_rh.set() = clip(
-      length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
-      0.f, 1.f);
-  calibrated_gripper_lh.set() = clip(
-      length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
-      0.f, 1.f);
+  float dummy;
+  // calibrated_gripper_rh.set() = clip(
+  //     length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
+  //     0.f, 1.f);
+  dummy = length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh;
+  clip(dummy, 0.f, 1.f);
+  calibrated_gripper_rh.set() = dummy;
+  // calibrated_gripper_lh.set() = clip(
+  //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
+  //     0.f, 1.f);
+  dummy = length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_rh + q_rh;
+  clip(dummy, 0.f, 1.f);
+  calibrated_gripper_rh.set() = dummy;
 
   // setting access variables
   calibrated_pose_rh.set() = cal_pose_rh;
