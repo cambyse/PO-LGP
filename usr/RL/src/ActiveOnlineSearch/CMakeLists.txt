@@ -8,7 +8,7 @@ include_directories(/home/robert/MLR_git/share/include)
 
 ## executable
 
-add_executable(main
+add_executable(main_ActiveOnlineSearch
     main.cpp
     graph_util.h
     Environment/Environment.h
@@ -41,9 +41,9 @@ add_executable(main
     TreeSearch/BackupMethod.cpp
 )
 
-target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(main
+target_link_libraries(main_ActiveOnlineSearch
     util
     -lemon
     -larmadillo
