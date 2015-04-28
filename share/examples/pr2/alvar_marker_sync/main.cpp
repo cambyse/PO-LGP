@@ -7,7 +7,7 @@
 struct MySystem:System {
   // Access Variables
   ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(ar_track_alvar_msgs::AlvarMarkers, ar_pose_marker)
+  ACCESS(AlvarMarkers, ar_pose_marker)
 
   MySystem() {
     addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
   for (int i = 0; true; i++) {
     syncJointStateWitROS(world, system.ctrl_obs, useRos);
 
-    ar_track_alvar_msgs::AlvarMarkers markers = system.ar_pose_marker.get();
+    AlvarMarkers markers = system.ar_pose_marker.get();
     syncMarkers(world, markers);
 
     // world.calc_fwdPropagateFrames();
