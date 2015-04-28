@@ -43,7 +43,10 @@ void run() {
 
   ikmo.costReport(param,param0);
 
-  mf->execMotion(ikmo,trainScenes(0),param,visTest);
+  ikmo.setParam(*trainScenes(0).MP,param);
+  mf->execMotion2(trainScenes(0),visTest);
+
+//  mf->execMotion(ikmo,trainScenes(0),param,visTest);
 
   /*
   /// 3. Evaluate code on test scenarios

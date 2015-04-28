@@ -62,6 +62,26 @@ void TEST(GradCheck) {
   cout << ~dy*R[2] << endl;
 }
 
+
+//  arr phi, grad;
+//  TermTypeA tt;
+//  ConstrainedProblemMix v = Convert(MPF);
+//  ConstrainedProblemMix UCP = Convert(MPF);
+//  UCP(phi, grad, tt, x);
+//  grad = unpack(grad);
+//  cout << ~phi*phi << endl;
+//  cout << "phi" << phi << endl;
+//  cout << "grad " << grad << endl;
+//  cout << ~grad*grad << endl;
+//  cout << "c " << 4.*~phi*grad*~grad*phi << endl;
+
+
+// std::ofstream fil;
+//   MT::open(fil, filename);
+// fil.precision(30);
+//   catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
+  // fil.close();
+
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 //  testMatrices();

@@ -205,7 +205,6 @@ void CostWeight::compConstraints(arr &gL, arr &gU, arr &gS, arr &JgL, arr &JgU, 
       }
       break;
   }
-
 }
 
 void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonlinearParam) {
@@ -582,10 +581,12 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
 
 void IKMO::setParam(MotionProblem &MP, const arr &param)
 {
+  arr paramNorm = costScale*param/length(param);
+
   for (uint c=0;c<MP.taskCosts.N;c++) {
     if (MP.taskCosts(c)->map.type == sumOfSqrTT) {
       arr w;
-      weights(c).compWeights(w,NoArr,NoArr,param.subRange(c,c+weights(c).numParam - 1),true);
+      weights(c).compWeights(w,NoArr,NoArr,paramNorm.subRange(c,c+weights(c).numParam - 1),true);
       if (weights(c).type==CostWeight::Block){
         MP.taskCosts(c)->prec.subRange(weights(c).fixedParam(0),weights(c).fixedParam(1)) = w;//fabs(w(0));
       }else {

@@ -39,4 +39,6 @@ struct SearchCMA{
   /// first call: generate initial random samples
   /// further calls: costs needs to contain the cost function values for all elements in samples; returns a new set of samples
   void step(arr& samples, arr& costs);
+
+  void getBestSample(arr& sample);
 };

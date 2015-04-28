@@ -3,9 +3,9 @@
 
 #include <Core/array.h>
 #include <Motion/motion.h>
-#include "ikmo_bretl.h"
+//#include "ikmo_bretl.h"
 //#include "ikmo_cma.h"
-//#include "ikmo.h"
+#include "ikmo.h"
 
 
 struct MotionFactory {
@@ -18,7 +18,8 @@ struct MotionFactory {
   MotionFactory() {
   }
 
-  void execMotion(IKMO &ikmo, Scene &s, arr param, bool vis=false, uint verbose=0, arr &x = NoArr);
+  void execMotion(IKMO &ikmo, Scene &s, arr param, bool vis=false, uint verbose=0);
+  void execMotion2(Scene &s, bool vis=false, uint verbose=0);
   void createScenes(uint sID, MT::Array<Scene> &trainScenes, MT::Array<Scene> &testScenes, MT::Array<CostWeight> &weights);
   void createSceneTest(Scene &s, MT::Array<CostWeight> &weights, uint i);
   void createSceneTestRBF(Scene &s, MT::Array<CostWeight> &weights, uint i);

@@ -70,3 +70,8 @@ void SearchCMA::step(arr& samples, arr& costs){
   double *const*rgx = cmaes_SampleDistribution(&s->evo, NULL);
   for(uint i=0;i<samples.d0;i++) samples[i].setCarray(rgx[i], samples.d1);
 }
+
+void SearchCMA::getBestSample(arr &sample) {
+  sample.resize(s->evo.sp.N);
+  sample.setCarray(s->evo.rgxbestever,sample.N);
+}

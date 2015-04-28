@@ -8,7 +8,7 @@
 #include <Motion/motion.h>
 
 
-void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint verbose, arr &x) {
+void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint verbose) {
   param = costScale*param/length(param);
   ikmo.setParam(*s.MP,param);
 
@@ -35,8 +35,51 @@ void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint ve
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = s.MP->tau;
 //  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<s.MP->world.getJointStateDimension()<<endl;
   /*arr x(T+1,n); x.setZero();*/arr lambda;
-  x.resize(T+1,n);
-  x = repmat(~s.MP->x0,T+1,1);
+//  x.resize(T+1,n);
+  arr x = repmat(~s.MP->x0,T+1,1);
+//  x = randn(T+1,n);
+//  x = s.xInit;
+  optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
+
+
+  // visualize trajectory
+  if (vis) {
+    if (optConstraintsParam)
+//      cout <<  "lambda: " << lambda << endl;
+    s.MP->costReport(true);
+//    for (;;)
+      displayTrajectory(x,s.MP->T,s.MP->world,"world");
+  }
+}
+
+void MotionFactory::execMotion2(Scene &s, bool vis, uint verbose) {
+
+
+  // reset motion problem
+//  s.world->swift().initActivations(*s.world);
+  s.MP->prefix.clear();
+  s.MP->phiMatrix.clear();
+  s.MP->ttMatrix.clear();
+
+  // add transition costs
+  if (!ikmo.optLearnTransParam) {
+    Task *t;
+    t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+    t->map.order=1;
+    t->setCostSpecs(0, s.MP->T, ARR(0.), 1e-1*ikmo.costScale);
+  }
+
+  s.MP->x0 = s.xDem[0];
+  s.MP->world.setJointState(s.xDem[0]);
+//  cout << "x0: " << s.MP->x0 << endl;
+
+  // optimize the motion problem
+  MotionProblemFunction MPF(*s.MP);
+  uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = s.MP->tau;
+//  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<s.MP->world.getJointStateDimension()<<endl;
+  /*arr x(T+1,n); x.setZero();*/arr lambda;
+//  x.resize(T+1,n);
+  arr x = repmat(~s.MP->x0,T+1,1);
 //  x = randn(T+1,n);
 //  x = s.xInit;
   optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -213,7 +256,6 @@ void MotionFactory::createSceneTest(Scene &s, MT::Array<CostWeight> &weights, ui
   s.xDem = x;
   s.lambdaRef = lambda;
   s.paramRef = param;
-
 }
 
 void MotionFactory::createSceneBoxSliding(Scene &s, MT::Array<CostWeight> &weights, uint i) {
