@@ -41,7 +41,7 @@ struct MObject {
   arr positionHistory; // save positions of object
   arr orientationHistory;
 
-  MObject(ors::KinematicWorld *_world,MT::String _name, ObjectType _objectType, double _stepLength=0.001, const arr& _direction = {1.,0.,0.});
+  MObject(ors::KinematicWorld *_world,MT::String _name, ObjectType _objectType, double _stepLength, const arr& _direction);
   ~MObject();
 
   void predict(uint _T); // predict _T time steps ahead
