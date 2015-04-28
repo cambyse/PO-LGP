@@ -5,15 +5,11 @@
 
 // =================================================================================================
 struct MySystem:System {
-  // Access Variables
-  // ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs)
 
   MySystem() {
-    if (MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-    }
+    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
     connect();
   }
 };
@@ -27,15 +23,8 @@ int main(int argc, char** argv){
   engine().open(system);
 
   ors::KinematicWorld world("model.kvg");
-  // makeConvexHulls(world.shapes);
 
-  bool useRos = MT::getParameter<bool>("useRos", false);
-  if (useRos) {
-    cout << "Using ROS" << endl;
-  } else {
-    cout << "NOT using ROS" << endl;
-  }
-
+  bool useRos = true;
   initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
 
   for (int i = 0; true; i++) {

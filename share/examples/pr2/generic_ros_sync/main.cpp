@@ -2,6 +2,7 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
+#include <pr2/rosmacro.h>
 #include <std_msgs/String.h>
 
 //===========================================================================
