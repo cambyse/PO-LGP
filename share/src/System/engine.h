@@ -30,11 +30,6 @@ typedef MT::Array<VariableContainer*> VariableL;
 
 //VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
 
-template<class T> void connect(Access_typed<T>& acc, Variable<T>& x){
-  acc.var = &x;
-  acc.v = &x;
-}
-
 //===========================================================================
 /**
  * A list of Modules and Variables that can be autoconnected and, as a group, opened, stepped and closed

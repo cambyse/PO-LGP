@@ -324,6 +324,9 @@ template<class T> void MT::Array<T>::makeSparse() {
 
 //***** internal memory routines (probably not for external use)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   if(n==N && Mforce<0) return; //no change
@@ -1831,6 +1834,7 @@ template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   return x;
 }
 
+#pragma clang diagnostic pop
 
 //===========================================================================
 //
@@ -3471,7 +3475,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
   
   CHECK_EQ((N*d)%2,0, "");
   
-  uint i, j;
+  uint i;
   for(i=0; i<N; i++) V.append(new vert);
   
   bool ready = false;

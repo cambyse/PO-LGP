@@ -254,14 +254,6 @@ void System::connect(){
   }
 }
 
-//VariableL createVariables(const ModuleL& ms){
-//  System S;
-//  S.modules=ms;
-//  S.connect();
-////  cout <<"completed system: " <<S <<endl;
-//  return S.vars;
-//}
-
 Graph System::graph() const{
   Graph g;
   g.append<bool>({"SystemModule", name}, {}, NULL, false);

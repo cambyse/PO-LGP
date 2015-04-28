@@ -102,7 +102,11 @@ struct Item_typed:Item {
     Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     if(!itt->value || !value) return false;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
     return memcmp(itt->value, value, sizeof(T))==0;
+#pragma clang diagnostic pop
+
   }
 
   virtual void writeValue(std::ostream &os) const {
