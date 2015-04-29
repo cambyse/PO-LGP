@@ -20,7 +20,7 @@ The constraint is always as in exercise 3\n";
 
 void testGradDescent(const ScalarFunction& F){
   displayFunction(ChoiceFunction());
-//  MT::wait();
+  MT::wait();
   uint d=MT::getParameter<uint>("dim", 2);
   arr x(d),x0;
   rnd.clockSeed();
@@ -34,19 +34,19 @@ void testGradDescent(const ScalarFunction& F){
     optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-//    MT::wait();
+    MT::wait();
 
     x=x0;
     optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-//    MT::wait();
+    MT::wait();
 
     x=x0;
     optNewton(x, F, OPT(verbose=3, dampingDec=.7, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-//    MT::wait();
+    MT::wait();
   }
 }
 

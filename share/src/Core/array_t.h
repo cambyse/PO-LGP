@@ -324,8 +324,10 @@ template<class T> void MT::Array<T>::makeSparse() {
 
 //***** internal memory routines (probably not for external use)
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+#ifdef MLR_CLANG
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+#endif
 
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
@@ -711,7 +713,7 @@ template<class T> T& MT::Array<T>::rndElem() const {
 
 /// scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
-  CHECK(nd<=1 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
+  CHECK(nd<=2 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 
@@ -1834,7 +1836,9 @@ template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   return x;
 }
 
-#pragma clang diagnostic pop
+#ifdef MT_CLANG
+#  pragma clang diagnostic pop
+#endif
 
 //===========================================================================
 //
