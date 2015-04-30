@@ -15,11 +15,19 @@ struct PR2G4Control:System {
   PR2G4Control() {
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
+
+    addModule<G4HuToRoMap>("G4HuToRoMap", Module::loopWithBeat mode=Module::listenFirst , .05);
+    addModule<G4MoveRecon>("G4MoveRecon". Module::loopWithBeat mode=Module::listenFirst , .05);
+
+
+
+
+
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
-    addModule<Calibrator>("Calibrator", Module::loopWithBeat, .05);
     // auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
-    addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
+    // addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
+    //
 #ifdef WITH_ROS
     // ROS
     if (MT::getParameter<bool>("useRos", false)) {
