@@ -2097,6 +2097,32 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
   }
 }
 
+/// Compute the new configuration q such that body is located at ytarget (with deplacement rel).
+void ors::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
+                                               ors::Vector *rel_offset, int max_iter) {
+  arr q0, q;
+  getJointState(q0);
+  q = q0;
+  arr y; // endeff pos
+  arr J; // Jacobian
+  arr invJ;
+  arr I = eye(q.N);
+
+  // general inverse kinematic update
+  // first iteration: $q* = q' + J^# (y* - y')$
+  // next iterations: $q* = q' + J^# (y* - y') + (I - J# J)(q0 - q')$
+  for (int i = 0; i < max_iter; i++) {
+    kinematicsPos(y, J, &body, rel_offset);
+    invJ = ~J * inverse(J * ~J);  // inverse_SymPosDef should work!?
+    q = q + invJ * (ytarget - y);
+
+    if (i > 0) {
+      q += (I - invJ * J) * (q0 - q);
+    }
+    setJointState(q);
+  }
+}
+
 /// center of mass of the whole configuration (3 vector)
 double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
   double M=0.;
