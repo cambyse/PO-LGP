@@ -19,7 +19,7 @@ struct RelationalMachineNode{
   ros::Publisher pub_symbols;
   ros::Subscriber sub_newEffect;
 
-  RelationalMachineNode():RM("machine.fol"), nh("ThirdHand/RelationalMachine"){
+  RelationalMachineNode():RM("assembly_chair.fol"), nh("ThirdHand/RelationalMachine"){
     RM.verbose=true;
 
     pub_state     = nh.advertise<std_msgs::String>("RelationalState", 10, true);
