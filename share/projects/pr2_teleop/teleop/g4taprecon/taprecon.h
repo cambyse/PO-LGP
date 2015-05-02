@@ -7,27 +7,8 @@
 #include <Mocap/mocapdata.h>
 
 // ============================================================================
-struct G4MoveRecon:Module
-{
 
-    ACCESS(floatA, poses);
-    ACCESS(floatA, KeyReconFrame);
-    ACCESS(bool, ReconPositive);
-    floatA G4DataInput;
-
-    G4MoveRecon();
-    MocapID mid;
-    floatA normG4DataInput;
-
-    void doSomeCalc();
-    void open();
-    void close();
-    void step();
-
-};
-
-
-struct initG4MoveRecon:Thread
+struct initG4MoveRecon: Thread
 {
 
 
@@ -36,9 +17,11 @@ struct initG4MoveRecon:Thread
     ACCESS(floatA, KeyReconFrame);
 
     Metronome *metronome;
+   
+    initG4MoveRecon('e');//:Thread(STRING("initG4MoveRecon_")){}
+    
+//    ~initG4MoveRecon(){}
 
-    initG4MoveRecon();
-    ~initG4MoveRecon();
     floatA sample;
 
 
@@ -61,5 +44,27 @@ struct initG4MoveRecon:Thread
 
 
 };
+
+
+
+struct G4MoveRecon:Module
+{
+
+    ACCESS(floatA, poses);
+    ACCESS(floatA, KeyReconFrame);
+    ACCESS(bool, ReconPositive);
+    floatA G4DataInput;
+
+    G4MoveRecon();
+    MocapID mid;
+    floatA normG4DataInput;
+
+    void doSomeCalc();
+    void open();
+    void close();
+    void step();
+
+};
+
 
 

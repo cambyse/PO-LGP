@@ -3,16 +3,15 @@
 #include <Ors/ors.h>
 #include <Mocap/mocapdata.h>
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Core/thread.h>
 
 // ############################################################################
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////Thread Init////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
-
 
 void initG4MoveRecon::LoopWithBeatAndWaitForClose(double sec)
 {
@@ -129,10 +128,10 @@ G4MoveRecon::G4MoveRecon()
 void G4MoveRecon::open()
 {
     mid.load("g4mapping.kvg");
-    initG4MoveRecon InitThread;
+    initG4MoveRecon *it1 = new initG4MoveRecon();
     ReconPositive.set()=false;
     cout<<"G4MoveRecon calibrating_thread Start"<<endl;
-    InitThread.LoopWithBeatAndWaitForClose(0.05);
+    it1->LoopWithBeatAndWaitForClose(0.05); 
     cout<<"G4MoveRecon calibrating_thread Finish"<<endl;
 }
 void G4MoveRecon::step()
