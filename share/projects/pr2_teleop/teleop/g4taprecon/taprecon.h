@@ -1,5 +1,5 @@
 #pragma once
-
+#include <Core/thread.h>
 #include <Motion/feedbackControl.h>
 #include <System/engine.h>
 // #include <pr2/actionMachine.h>
@@ -19,7 +19,7 @@ struct G4MoveRecon:Module
     MocapID mid;
     floatA normG4DataInput;
 
-    void doSomeCalc()
+    void doSomeCalc();
     void open();
     void close();
     void step();
@@ -31,14 +31,14 @@ struct initG4MoveRecon:Thread
 {
 
 
-    ACCESS(float, poses);
+    ACCESS(floatA, poses);
     ACCESS(arr, gamepadState);
     ACCESS(floatA, KeyReconFrame);
 
     Metronome *metronome;
 
-    initG4MoveRecon(){}
-
+    initG4MoveRecon();
+    ~initG4MoveRecon();
     floatA sample;
 
 

@@ -7,8 +7,9 @@
 #include <Hardware/G4/module_G4Recorder.h>
 // #include <Hardware/G4/module_G4Debugger.h>
 
-#include "calibrator_module.h"
-#include "pd_executor_module.h"
+#include "g4mapper/calibrator_module.h"
+#include "g4taprecon/taprecon.h"
+//#include "pd_executor_module.h"
 
 // ============================================================================
 struct PR2G4Control:System {
@@ -16,8 +17,8 @@ struct PR2G4Control:System {
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
 
-    addModule<G4HuToRoMap>("G4HuToRoMap", Module::loopWithBeat mode=Module::listenFirst , .05);
-    addModule<G4MoveRecon>("G4MoveRecon". Module::loopWithBeat mode=Module::listenFirst , .05);
+    addModule<G4HuToRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
+    addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
 
 
 

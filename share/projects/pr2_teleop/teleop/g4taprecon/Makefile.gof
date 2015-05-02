@@ -1,9 +1,9 @@
-BASE = ../../..
+BASE = ../../../..
 
 PLIB = 1
 
-OBJS = main.o g4taprecon/taprecon.o g4mapper/calibrator_module.o
-DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors #Perception
+OBJS =  taprecon.o 
+DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception
 
 # comment/uncomment to disable/enable ROS
 # ROS = 1

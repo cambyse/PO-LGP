@@ -32,7 +32,7 @@ struct initG4Mapper:Thread
 {
 
 
-    ACCESS(float, poses);
+    ACCESS(floatA, poses);
     ACCESS(arr, gamepadState);
     ACCESS(floatA, calibrated_pose_rh);
     ACCESS(floatA, calibrated_pose_lh);
@@ -47,12 +47,10 @@ struct initG4Mapper:Thread
 
     initG4Mapper();
 
-    floatA posesSide, posesOpen, posesClosed,posesFront;
-    floatA center;
-    float radius;
-
-    float m_rh, m_lh;
-    float q_rh, q_lh;
+    floatA  poselhthumbmaxopen  , poselhindexmaxopen;
+    float distlhmaxopen = 0;
+    floatA  poserhthumbmaxopen  , poserhindexmaxopen;
+    float distrhmaxopen = 0;
 
     MocapID mid;
     void LoopWithBeatAndWaitForClose(double sec); //<- own mode
