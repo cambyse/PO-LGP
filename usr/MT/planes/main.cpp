@@ -2,7 +2,7 @@
 #include <Core/util.h>
 #include <Gui/plot.h>
 
-double lambda = .5;
+double lambda = .01;
 uint width=100;
 
 arr generateRandomData(uint n=20, double sig=.03){
@@ -65,7 +65,11 @@ struct Cell{
   }
 
   double E(){
-    return scalarProduct(beta,phi);
+    int cuts=0;
+    for(Cell *n:neighbors) if(n){
+      if(n->s!=s) cuts++;
+    }
+    return MT::sqr(scalarProduct(beta,phi)) + lambda*cuts;
   }
   arr f(){
     if(!beta.N) return zeros(phi.N);
@@ -73,7 +77,7 @@ struct Cell{
   }
 
   arr dE_dbeta(){
-    return 2.*phi;
+    return 2.*scalarProduct(beta,phi)*phi;
   }
 
 //  void comp_invxx(){  invxx = inverse_SymPosDef(xx[s]);  }
@@ -104,8 +108,8 @@ struct Cell{
     }
 
     double deltaE=0.;
-    deltaE += scalarProduct(phi, s_new->s->beta); //adding the cell to the new segment
-    deltaE -= scalarProduct(phi, this ->s->beta); //removing the cell from the old segment
+    deltaE += MT::sqr(scalarProduct(phi, s_new->s->beta)); //adding the cell to the new segment
+    deltaE -= MT::sqr(scalarProduct(phi, this ->s->beta)); //removing the cell from the old segment
     deltaE += lambda * (cuts_new - cuts_old);
     return deltaE;
   }
@@ -128,7 +132,7 @@ struct Cell{
 
   void recomputeEig(){
     arr Sig, Beta;
-    lapack_EigenDecomp(X, Sig, Beta);
+    lapack_EigenDecomp(s->X, Sig, Beta);
     sig = Sig(0);
     beta = Beta[0];
   }
@@ -175,10 +179,10 @@ void planes(){
 //    for(Cell &c:cells) c.step_average();
 //    for(Cell &c:cells) c.step_decide();
     for(uint i=0;i<cells.N;i++) { cells(i).recomputeEig();  x(i) = cells(i).f()(1);  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
-    cout <<x <<endl;
-    cout <<e <<endl;
+    cout <<"x=" <<x <<endl;
+    cout <<"e=" <<e <<endl;
     cout <<sum(e) <<endl;
-    cout <<s <<endl;
+    cout <<"s=" <<s <<endl;
     plotClear();
     plotFunction(data);
     plotFunction(x);
