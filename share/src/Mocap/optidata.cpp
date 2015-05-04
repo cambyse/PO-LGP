@@ -68,7 +68,7 @@ void OptiRec::load(const char *recdir) {
       missing.append(m);
       observed.append(!m);
       if(m)
-        data.append(ARR(0, 0, 0, 0, 0, 0, 0));
+        data.append({0., 0., 0., 0., 0., 0., 0.});
       else {
         ors::Transformation T;
         T.setZero();
@@ -178,10 +178,10 @@ void OptiRec::load(const char *recdir) {
 
   // setting up default BAMs
   arr pose, obs;
-  tensorPermutation(pose, data, {1, 0, 2});
+  tensorPermutation(pose, data, {1u, 0u, 2u});
   arr pos = pose.sub(0, -1, 0, -1, 0, 2);
   arr quat = pose.sub(0, -1, 0, -1, 3, -1);
-  tensorPermutation(obs, observed, {1, 0});
+  tensorPermutation(obs, observed, {1u, 0u});
 
   // organizing data about this dir
   appendBam("pos", pos);

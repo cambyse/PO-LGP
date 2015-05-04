@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <Core/array.h>
 #include <Core/graph.h>
 #include <Ors/ors.h>

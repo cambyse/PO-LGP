@@ -77,7 +77,7 @@ void JsonRec::load(const char *recdir) {
       // T.setZero();
       // T.addRelativeRotationDeg(90, 1, 0, 0);
 
-      data[f][sid]() = ARR(
+      data[f][sid]() = {
         frame["poses"][sensor]["pose"][0][0].asDouble(),
         frame["poses"][sensor]["pose"][0][1].asDouble(),
         frame["poses"][sensor]["pose"][0][2].asDouble(),
@@ -85,7 +85,16 @@ void JsonRec::load(const char *recdir) {
         frame["poses"][sensor]["pose"][1][0].asDouble(),
         frame["poses"][sensor]["pose"][1][1].asDouble(),
         frame["poses"][sensor]["pose"][1][2].asDouble()
-      );
+      };
+      // data[f][sid]() = ARR(
+      //   frame["poses"][sensor]["pose"][0][0].asDouble(),
+      //   frame["poses"][sensor]["pose"][0][1].asDouble(),
+      //   frame["poses"][sensor]["pose"][0][2].asDouble(),
+      //   frame["poses"][sensor]["pose"][1][3].asDouble(),
+      //   frame["poses"][sensor]["pose"][1][0].asDouble(),
+      //   frame["poses"][sensor]["pose"][1][1].asDouble(),
+      //   frame["poses"][sensor]["pose"][1][2].asDouble()
+      // );
     }
 
   //   // TODO append stuff, and then set it according to the indices in ID.
@@ -157,10 +166,10 @@ void JsonRec::load(const char *recdir) {
 
   // setting up default BAMs
   arr pose, obs;
-  tensorPermutation(pose, data, {1, 0, 2});
+  tensorPermutation(pose, data, {1u, 0u, 2u});
   arr pos = pose.sub(0, -1, 0, -1, 0, 2);
   arr quat = pose.sub(0, -1, 0, -1, 3, -1);
-  tensorPermutation(obs, observed, {1, 0});
+  tensorPermutation(obs, observed, {1u, 0u});
 
   // organizing data about this dir
   appendBam("pos", pos);

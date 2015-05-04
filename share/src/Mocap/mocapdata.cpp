@@ -251,23 +251,23 @@ void MocapID::clear() {
   s->object_parts.clear();
 }
 
-void readItem(Graph *i, uintA &hsitoi, uintA &itohsi, int ind) {
-  uint hid, sid, hsi, hsitoiN;
+// void readItem(Graph *i, uintA &hsitoi, uintA &itohsi, int ind) {
+//   uint hid, sid, hsi, hsitoiN;
   
-  hid = (uint)*i->getValue<double>("hid");
-  sid = (uint)*i->getValue<double>("sid");
-  hsi = HSI(hid, sid);
+//   hid = (uint)*i->getValue<double>("hid");
+//   sid = (uint)*i->getValue<double>("sid");
+//   hsi = HSI(hid, sid);
 
-  if(hsi >= hsitoi.N) {
-    hsitoiN = hsitoi.N;
-    hsitoi.resizeCopy(hsi+1);
-    hsitoi.subRange(hsitoiN, hsi)() = -1;
-  }
-  hsitoi(hsi) = ind;
-  itohsi.append(hsi);
+//   if(hsi >= hsitoi.N) {
+//     hsitoiN = hsitoi.N;
+//     hsitoi.resizeCopy(hsi+1);
+//     // hsitoi.subRange(hsitoiN, hsi)() = -1;
+//   }
+//   hsitoi(hsi) = ind;
+//   itohsi.append(hsi);
 
-  // cout << "mapping hsi " << hsi << " i " << *i << endl;
-}
+//   // cout << "mapping hsi " << hsi << " i " << *i << endl;
+// }
 
 void MocapID::load(const char *meta) {
   String name_agent, name_limb, name_digit, name_object, name_part;
@@ -706,7 +706,8 @@ arr MocapRec::query(const char *type, const char *sensor, uint f) {
   // }
   arr &x = *i->getValue<arr>();
   if(x.nd == 2)
-    return ARR(x(is, f));
+    // return ARR(x(is, f));
+    return {x(is, f)};
   return x.subDim(is, f);
 }
 
@@ -800,7 +801,7 @@ void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
       qX.set(quatX[f].p);
       pYX.set(posYX[f].p);
       dpos = qX.invert() * pYX;
-      bamDPosis[f]() = ARR(dpos.x, dpos.y, dpos.z);
+      bamDPosis[f]() = {dpos.x, dpos.y, dpos.z};
       bamDPosObsis(f) = 1;
     }
   }
@@ -814,7 +815,7 @@ void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
     qX.set(quatX[f].p);
     pYX.set(posYX[f].p);
     dpos = qX.invert() * pYX;
-    bamDPosis[f]() = ARR(dpos.x, dpos.y, dpos.z);
+    bamDPosis[f]() = {dpos.x, dpos.y, dpos.z};
   }
 #endif
 
@@ -1048,7 +1049,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
 
   arr T(wlen, 2), TT, O(wlen, wlen), beta;
   for(uint t = 0; t < wlen; t++)
-    T[t]() = ARR(1, t+1);
+    T[t]() = {1., t+1.};
   TT = ~T;
   O.setZero();
   for(uint f_thin = 0; f_thin < nframes_thin; f_thin++) {
@@ -1069,7 +1070,8 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
 #else
   arr T(wlen, 2), TTTITT, beta;
   for(uint t = 0; t < wlen; t++)
-    T[t]() = ARR(1, t+1);
+    T[t]() = {1., t+1.};
+    // T[t]() = ARR(1, t+1);
   TTTITT = inverse(~T * T) * ~T;
   for(uint f_thin = 0; f_thin < nframes_thin; f_thin++) {
     uint f = (f_thin + 1) * thinning - 1;
@@ -1214,7 +1216,7 @@ void MocapRec::computeLinCoeffFuture(const char *type, const char *sensor) {
     for(uint ff = MT::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
       if(bamObsis(ff)) {
       // if(bamObsis(nframes-ff)) {
-        phi_ff = ARR(1, ff);
+        // phi_ff = ARR(1, ff);
         // phi_ff = ARR(1, nframes-ff);
         TTT += (phi_ff ^ phi_ff);
         TTw += (phi_ff ^ bamis[ff]);
@@ -1237,7 +1239,7 @@ void MocapRec::computeLinCoeffFuture(const char *type, const char *sensor) {
     if(f >= nframes - 1)
       continue;
     for(uint ff = MT::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
-      phi_ff = ARR(1, nframes-ff);
+      phi_ff = {1., (double)(nframes-ff)};
       TTT += (phi_ff ^ phi_ff);
       TTw += (phi_ff ^ bamis[ff]);
     }
