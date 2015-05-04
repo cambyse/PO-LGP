@@ -38,8 +38,6 @@ struct Cell;
 typedef MT::Array<Cell> CellA;
 typedef MT::Array<Cell*> CellL;
 
-arr xx, xy, g_xx, g_xy;
-
 struct Cell{
   uint id;
   Cell *s;
@@ -69,6 +67,11 @@ struct Cell{
   double E(){
     return scalarProduct(beta,phi);
   }
+  arr f(){
+    if(!beta.N) return zeros(phi.N);
+    return -beta(0)/beta;
+  }
+
   arr dE_dbeta(){
     return 2.*phi;
   }
@@ -91,15 +94,13 @@ struct Cell{
   double delta_E(Cell *s_new){
 //    if(s_new->s == s) return 0.; TODO: check!
 
-    uint r = s_new->s;
-
     arr delta_X_new = X_loc;
     arr delta_X_old = -X_loc;
 
     int cuts_old=0, cuts_new=0;
     for(Cell *n:neighbors) if(n){
-      if(n->s!=s) cuts_old++;
-      if(n->s!=r) cuts_new++;
+      if(n->s!=this->s) cuts_old++;
+      if(n->s!=s_new->s) cuts_new++;
     }
 
     double deltaE=0.;
@@ -119,24 +120,22 @@ struct Cell{
     if(!s_new || s_new->s==s) return;
     double deltaE = delta_E(s_new);
     if(deltaE<0.){ //we switch!
-      xx[s]() -= xx_loc;
-      xy[s]() -= xy_loc;
+      s->X -= X_loc;
       s = s_new->s;
-      xx[s]() += xx_loc;
-      xy[s]() += xy_loc;
+      s->X += X_loc;
     }
   }
 
   void recomputeEig(){
-    arr Dig, Beta;
+    arr Sig, Beta;
     lapack_EigenDecomp(X, Sig, Beta);
-    sig = Sig[0];
+    sig = Sig(0);
     beta = Beta[0];
   }
 
   void report(){
     cout <<id <<'[' <<(eq?eq->id:0) <<']'
-        <<" x=" <<y
+//        <<" x=" <<y
         <<" xm=" <<beta
 //       <<" dEdbeta=" <<dEdbeta
 //      <<" beta_sum=" <<beta_sum
@@ -164,13 +163,8 @@ void planes(){
   cout <<"avg=" <<sum(data)/(double)data.N <<endl;
   arr x(cells.N), e(cells.N);
   uintA s(cells.N);
-  for(uint i=0;i<cells.N;i++) x(i) = cells(i).xm;
+  for(uint i=0;i<cells.N;i++) x(i) = cells(i).f()(1);
   cout <<x <<endl;
-
-  xx = g_xx = zeros(cells.N, cells(0).xx_loc.d0,  cells(0).xx_loc.d1 );
-  xy = g_xy = zeros(cells.N, cells(0).xy_loc.d0,  cells(0).xy_loc.d1 );
-  for(uint i=0;i<cells.N;i++){ xx[i]() += cells(i).xx_loc; xy[i]() += cells(i).xy_loc; }
-
 
   for(uint k=0;k<15;k++){
 //    for(Cell &c:cells) c.report();
@@ -180,7 +174,7 @@ void planes(){
 
 //    for(Cell &c:cells) c.step_average();
 //    for(Cell &c:cells) c.step_decide();
-    for(uint i=0;i<cells.N;i++) { cells(i).comp_invxx();  x(i) = cells(i).f();  e(i) = cells(i).costs(); s(i) = cells(i).s; }
+    for(uint i=0;i<cells.N;i++) { cells(i).recomputeEig();  x(i) = cells(i).f()(1);  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
     cout <<x <<endl;
     cout <<e <<endl;
     cout <<sum(e) <<endl;
@@ -191,8 +185,6 @@ void planes(){
     plot(false);
     MT::wait();
 
-    g_xx.setZero();  g_xy.setZero();
-    for(Cell &c:cells) c.recomputeEig();
     for(Cell &c:cells) c.step_decide(k);
 
     //    for(Cell &c:cells) c.report();
