@@ -8,19 +8,19 @@
 
 // ============================================================================
 
-struct initG4MoveRecon: Thread
+ struct initG4MoveRecon:Thread
 {
 
-
+    const char* name = "trit";
     ACCESS(floatA, poses);
     ACCESS(arr, gamepadState);
     ACCESS(floatA, KeyReconFrame);
-
+    uint n=1;
     Metronome *metronome;
-   
-    initG4MoveRecon('e');//:Thread(STRING("initG4MoveRecon_")){}
-    
-//    ~initG4MoveRecon(){}
+    //const char* name ='3';
+    initG4MoveRecon(uint n):Thread(STRING(name+n)), n(n) {};
+
+    //    ~initG4MoveRecon(){}
 
     floatA sample;
 
@@ -47,6 +47,7 @@ struct initG4MoveRecon: Thread
 
 
 
+
 struct G4MoveRecon:Module
 {
 
@@ -54,7 +55,7 @@ struct G4MoveRecon:Module
     ACCESS(floatA, KeyReconFrame);
     ACCESS(bool, ReconPositive);
     floatA G4DataInput;
-
+    initG4MoveRecon *inth;
     G4MoveRecon();
     MocapID mid;
     floatA normG4DataInput;

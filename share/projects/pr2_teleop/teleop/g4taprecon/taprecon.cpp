@@ -8,11 +8,16 @@
 // ############################################################################
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////Thread Init////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+
+//initG4MoveRecon::initG4MoveRecon(const char* name)
+//{
+//initG4MoveRecon::Thread("123");
+
+//}
 void initG4MoveRecon::LoopWithBeatAndWaitForClose(double sec)
 {
       if(!metronome)
@@ -128,11 +133,16 @@ G4MoveRecon::G4MoveRecon()
 void G4MoveRecon::open()
 {
     mid.load("g4mapping.kvg");
-    initG4MoveRecon *it1 = new initG4MoveRecon();
+
+    
     ReconPositive.set()=false;
     cout<<"G4MoveRecon calibrating_thread Start"<<endl;
-    it1->LoopWithBeatAndWaitForClose(0.05); 
+    inth->LoopWithBeatAndWaitForClose(0.05);
     cout<<"G4MoveRecon calibrating_thread Finish"<<endl;
+}
+void G4MoveRecon::close()
+{
+
 }
 void G4MoveRecon::step()
 {
@@ -165,7 +175,7 @@ void G4MoveRecon::step()
     floatA crossCORR = KeyReconFrametemp*normG4DataInput;
     if(sqrt(crossCORR(0,0)*crossCORR(1,1)) >0.8f)
     {
-        ReconPositive.set() = true; 
+        ReconPositive.set() = true;
     }
 
 
