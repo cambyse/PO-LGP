@@ -42,14 +42,23 @@ arr xx, xy, g_xx, g_xy;
 
 struct Cell{
   uint id;
-  Cell *s;
+  uint s;
+  arr y;
+  arr yf;
+  arr xn;
+  arr xhat;
+  arr xm;
 
   arr phi; //location features
-  arr X_loc; //local statistics
-  arr X; //global statistics
-  arr beta; //min eig vec
-  arr sig; //min eig value
+  arr xx_loc, xy_loc; //local statistics
+  arr g_xx_loc, g_xy_loc; //local gradient
+  arr g;
+  arr invxx;
+  arr msg;
 
+  boolA equal;
+  arr dEdbeta;
+  arr beta, beta_sum, dEdbeta_sum;
   CellL neighbors;
   Cell *eq;
 
@@ -57,44 +66,56 @@ struct Cell{
 
   Cell():eq(NULL){}
 
-  void init(uint _id, const arr& y, const CellL& _neighbors){
+  void init(uint _id, const arr& _x, const CellL& _neighbors){
     id=_id;
-    s = this;
+    s = id;
+    y = _x;
     neighbors = _neighbors;
+    xn = zeros(2);
+    xhat = zeros(2,y.N);
+    xm = y;
+    equal.resize(neighbors.N)=false;
+    beta = cat({1.}, y);
+    dEdbeta = zeros(beta.N);
 
-    phi = cat(ARR(1.), y); //features for constant modelling
-    X = X_loc = phi*~phi;
+    phi = ARR(1.); //features for constant modelling
+    xx_loc = phi*~phi;
+    xy_loc = phi*~y; //local contribution to the statistics
+    msg = zeros(2,2*(xx_loc.N+xy_loc.N));
   }
 
   double E(){
-    return scalarProduct(beta,phi);
+    return sumOfSqr(beta-y);
   }
   arr dE_dbeta(){
-    return 2.*phi;
+    return 2.*(beta-y);
   }
 
-//  void comp_invxx(){  invxx = inverse_SymPosDef(xx[s]);  }
-//  arr f(){      yf = phi * invxx * xy[s]; return yf; }
-//  arr Jf_xx(){  return - phi * invxx * invxx * xy[s];  }
-//  arr Jf_xy(){  return phi * invxx;  }
-//  double d(){   return sumOfSqr(f() - y); }
-//  arr d_xx(){   return 2.*(f() - y)*Jf_xx(); }
-//  arr d_xy(){   return 2.*(f() - y)*Jf_xy(); }
-//  double costs(){
-//    int cuts=0;
-//    for(Cell *n:neighbors) if(n){
-//      if(n->s!=s) cuts++;
-//    }
-//    return d() + lambda*cuts;
-//  }
+  void comp_invxx(){  invxx = inverse_SymPosDef(xx[s]);  }
+  arr f(){      yf = phi * invxx * xy[s]; return yf; }
+  arr Jf_xx(){  return - phi * invxx * invxx * xy[s];  }
+  arr Jf_xy(){  return phi * invxx;  }
+  double d(){   return sumOfSqr(f() - y); }
+  arr d_xx(){   return 2.*(f() - y)*Jf_xx(); }
+  arr d_xy(){   return 2.*(f() - y)*Jf_xy(); }
+  double costs(){
+    int cuts=0;
+    for(Cell *n:neighbors) if(n){
+      if(n->s!=s) cuts++;
+    }
+    return d() + lambda*cuts;
+  }
 
   double delta_E(Cell *s_new){
 //    if(s_new->s == s) return 0.; TODO: check!
 
     uint r = s_new->s;
 
-    arr delta_X_new = X_loc;
-    arr delta_X_old = -X_loc;
+    arr delta_xx_new = xx_loc;
+    arr delta_xy_new = xy_loc;
+
+    arr delta_xx_old = -xx_loc;
+    arr delta_xy_old = -xy_loc;
 
     int cuts_old=0, cuts_new=0;
     for(Cell *n:neighbors) if(n){
@@ -103,10 +124,31 @@ struct Cell{
     }
 
     double deltaE=0.;
-    deltaE += scalarProduct(phi, s_new->s->beta); //adding the cell to the new segment
-    deltaE -= scalarProduct(phi, this ->s->beta); //removing the cell from the old segment
+    deltaE += g_xx[r] * delta_xx_new + g_xy[r] * delta_xy_new; //adding the cell to the new segment
+    deltaE += g_xx[s] * delta_xx_old + g_xy[s] * delta_xy_old; //removing the cell from the old segment
+    deltaE += sumOfSqr(s_new->f()-y)  - sumOfSqr(f() - y); //change in cost arising by switching THIS cell alone;  TODO:this is only approximate!
     deltaE += lambda * (cuts_new - cuts_old);
     return deltaE;
+  }
+
+  void step_average(){
+//    xm = zeros(x.N);
+    double N=0.;
+    for(uint i=0;i<neighbors.N;i++){
+      Cell *n=neighbors(i);
+      if(n){
+        n->xhat[i] = xhat[i] + y;
+        n->xn(i) = xn(i) + 1.;
+        //      xm += xhat[i];
+        //      N += xn(i);
+      }
+      if(n && equal(i)){
+        n->xm = xm = .5*(xm + n->xm);
+      }
+    }
+//    xm += x;
+//    N += 1.;
+//    xm /= N;
   }
 
   void step_decide(uint t){
@@ -127,11 +169,55 @@ struct Cell{
     }
   }
 
-  void recomputeEig(){
-    arr Dig, Beta;
-    lapack_EigenDecomp(X, Sig, Beta);
-    sig = Sig[0];
-    beta = Beta[0];
+  void reaccumulate_grads(){
+    comp_invxx();
+    g_xx[s]() += d_xx();
+    g_xy[s]() += d_xy();
+  }
+
+
+
+  void step_collectCumulates(){
+    if(!eq) return;
+    eq->beta_sum = cat({-1.},-y);
+    eq->dEdbeta_sum = dE_dbeta();
+    for(Cell *n:neighbors) if(n->eq==this){
+      eq->beta_sum += n-> beta_sum;
+      dEdbeta_sum += n->dEdbeta_sum;
+    }
+  }
+
+  void step_propagateBeta(){
+    if(!eq){ //root!
+      beta = beta_sum;
+      dEdbeta = dEdbeta_sum;
+    }else{
+      beta = eq->beta;
+      dEdbeta = eq->dEdbeta;
+    }
+  }
+
+  void step_switchNeighbor(){
+    double dEzero=-lambda;
+    arr dbeta;
+    if(eq){
+      //cell is linked to neighbor -> compute deletion
+      dbeta = cat({-1.},-y);
+      dEzero = ~eq->dEdbeta * dbeta;
+    }
+    arr dE = zeros(neighbors.N);
+    dbeta = cat({1.},y);
+    for(uint i=0;i<neighbors.N;i++){
+      Cell *n = neighbors(i);
+      dE(i) = ~n->dEdbeta * dbeta;
+    }
+    //choose best:
+    uint j = argmin(dE);
+    if(dEzero + dE(j) < 0.){ //energy would decrease
+      if(eq) eq->beta -= dbeta;
+      eq=neighbors(j);
+      eq->beta += dbeta;
+    }
   }
 
   void report(){
@@ -192,7 +278,7 @@ void planes(){
     MT::wait();
 
     g_xx.setZero();  g_xy.setZero();
-    for(Cell &c:cells) c.recomputeEig();
+    for(Cell &c:cells) c.reaccumulate_grads();
     for(Cell &c:cells) c.step_decide(k);
 
     //    for(Cell &c:cells) c.report();

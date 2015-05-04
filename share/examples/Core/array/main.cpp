@@ -599,7 +599,50 @@ void TEST(RowShiftedPackedMatrix){
 
 //===========================================================================
 
+void TEST(EigenValues){
+  rnd.clockSeed();
+  arr C(30,8);
+  rndUniform(C,-1., 1.);
+  arr H=~C*C;
+
+  //lapack:
+  arr lambda, x;
+  lapack_EigenDecomp(H, lambda, x);
+  cout <<"eigwenvalues=" <<lambda <<endl;
+  cout <<"eigenvectors=" <<x <<endl;
+
+  //power method
+  arr x_hi = 2.*rand(H.d0)-1.;  x_hi/=length(x_hi);
+  arr x_lo = 2.*rand(H.d0)-1.;  x_lo/=length(x_lo);
+  arr I = eye(H.d0);
+  double lambda_hi, lambda_lo;
+  for(uint k=0;k<10;k++){
+    x_hi = H*x_hi;
+    lambda_hi=length(x_hi);
+    x_hi /= lambda_hi;
+
+    x_lo = (H-lambda_hi*I) * x_lo;
+    lambda_lo=length(x_lo);
+    x_lo /= lambda_lo;
+    lambda_lo = lambda_hi - lambda_lo;
+  }
+  //flip signs
+  if(x_hi.last()*x.last()<0.) x_hi *= -1.;
+  if(x_lo.elem(0)*x.elem(0)<0.) x_lo *= -1.;
+  cout <<"power method:" <<endl;
+  cout <<lambda_hi <<" : " <<x_hi <<endl;
+  cout <<lambda_lo <<" : " <<x_lo <<endl;
+  cout <<"errors:" <<endl;
+  cout <<fabs(lambda_hi-lambda.last()) <<" " <<sqrDistance(x_hi, x[x.d0-1]) <<endl;
+  cout <<fabs(lambda_lo-lambda(0)) <<" " <<sqrDistance(x_lo, x[0]) <<endl;
+}
+
+//===========================================================================
+
 int MAIN(int argc, char *argv[]){
+
+  testEigenValues();;
+  return 0;
 
   testBasics();
   testCheatSheet();
