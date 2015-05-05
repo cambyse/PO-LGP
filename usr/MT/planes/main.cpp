@@ -2,7 +2,8 @@
 #include <Core/util.h>
 #include <Gui/plot.h>
 
-double lambda = .01;
+double lambda = .05;
+double lambda_reg = 1e-10;
 uint width=100;
 
 arr generateRandomData(uint n=20, double sig=.03){
@@ -12,7 +13,7 @@ arr generateRandomData(uint n=20, double sig=.03){
       lo = rnd.uni();
       hi = lo + .2*rnd.uni();
       b0 = rnd.uni(-1.,1.);
-      b1 = 0.; //rnd.uni(-10.,10.);
+      b1 = rnd.uni(-10.,10.);
       b0-= rnd.uni()*b1;
     }
   };
@@ -46,7 +47,7 @@ struct Cell{
   arr X_loc; //local statistics
   arr X; //global statistics
   arr beta; //min eig vec
-  arr sig; //min eig value
+  double sig; //min eig value
 
   CellL neighbors;
   Cell *eq;
@@ -55,13 +56,18 @@ struct Cell{
 
   Cell():eq(NULL){}
 
-  void init(uint _id, const arr& y, const CellL& _neighbors){
+  void init(uint _id, const arr& _phi, const CellL& _neighbors){
     id=_id;
     s = this;
     neighbors = _neighbors;
 
-    phi = cat(ARR(1.), y); //features for constant modelling
+//    phi = cat(ARR(1.), y); //features for constant modelling
+    phi = _phi;
     X = X_loc = phi*~phi;
+    arr reg = eye(phi.N);
+    reg(0,0) = reg(phi.N-1,phi.N-1) = 0.;
+    X += lambda_reg * reg;
+    sig=0.;
   }
 
   double E(){
@@ -69,15 +75,16 @@ struct Cell{
     for(Cell *n:neighbors) if(n){
       if(n->s!=s) cuts++;
     }
-    return MT::sqr(scalarProduct(beta,phi)) + lambda*cuts;
+    return MT::sqr(scalarProduct(s->beta,phi)) + lambda*cuts;
   }
-  arr f(){
-    if(!beta.N) return zeros(phi.N);
-    return -beta(0)/beta;
+  double f(){
+    if(!s->beta.N) return 0.;
+    double y_pred = -(~phi.sub(0,-2)*s->beta.sub(0,-2)).scalar()/s->beta.last();
+    return y_pred;
   }
 
   arr dE_dbeta(){
-    return 2.*scalarProduct(beta,phi)*phi;
+    return 2.*scalarProduct(s->beta,phi)*phi;
   }
 
 //  void comp_invxx(){  invxx = inverse_SymPosDef(xx[s]);  }
@@ -131,16 +138,18 @@ struct Cell{
   }
 
   void recomputeEig(){
-    arr Sig, Beta;
-    lapack_EigenDecomp(s->X, Sig, Beta);
-    sig = Sig(0);
-    beta = Beta[0];
+    if(s==this){
+      arr Sig, Beta;
+      lapack_EigenDecomp(s->X, Sig, Beta);
+      sig = Sig(0);
+      beta = Beta[0];
+    }
   }
 
   void report(){
     cout <<id <<'[' <<(eq?eq->id:0) <<']'
 //        <<" x=" <<y
-        <<" xm=" <<beta
+        <<" xm=" <<s->beta
 //       <<" dEdbeta=" <<dEdbeta
 //      <<" beta_sum=" <<beta_sum
 //     <<" dEdbeta_sum=" <<dEdbeta_sum
@@ -159,15 +168,16 @@ void planes(){
 
   CellA cells(data.N);
   for(uint i=0;i<cells.N;i++){
-    if(i && i<cells.N-1) cells(i).init(i, data[i], {&cells(i-1), &cells(i+1)});
-    else if(i)  cells(i).init(i, data[i], {&cells(i-1), NULL});
-    else        cells(i).init(i, data[i], {NULL, &cells(i+1)});
+    arr phi=cat({1.},{double(i)/(cells.N-1)}, data[i]);
+    if(i && i<cells.N-1) cells(i).init(i, phi, {&cells(i-1), &cells(i+1)});
+    else if(i)  cells(i).init(i, phi, {&cells(i-1), NULL});
+    else        cells(i).init(i, phi, {NULL, &cells(i+1)});
   }
 
   cout <<"avg=" <<sum(data)/(double)data.N <<endl;
   arr x(cells.N), e(cells.N);
   uintA s(cells.N);
-  for(uint i=0;i<cells.N;i++) x(i) = cells(i).f()(1);
+  for(uint i=0;i<cells.N;i++) x(i) = cells(i).f();
   cout <<x <<endl;
 
   for(uint k=0;k<15;k++){
@@ -178,7 +188,7 @@ void planes(){
 
 //    for(Cell &c:cells) c.step_average();
 //    for(Cell &c:cells) c.step_decide();
-    for(uint i=0;i<cells.N;i++) { cells(i).recomputeEig();  x(i) = cells(i).f()(1);  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
+    for(uint i=0;i<cells.N;i++) { cells(i).recomputeEig();  x(i) = cells(i).f();  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
     cout <<"x=" <<x <<endl;
     cout <<"e=" <<e <<endl;
     cout <<sum(e) <<endl;

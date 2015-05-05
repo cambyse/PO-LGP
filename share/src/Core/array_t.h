@@ -885,7 +885,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1);
   int k;
-  for(k=i; k<=I; k++) x(k-i)=operator()(k);
+  for(k=i; k<=I; k++) x(k-i)=operator()(k); //TODO: memmove (also below!)
   return x;
 }
 
@@ -1060,6 +1060,7 @@ template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>&
 template<class T> MT::Array<T>& MT::Array<T>::operator=(const T& v) {
   uint i;
   //if(memMove && typeid(T)==typeid(T)) memset(p, *((int*)&v), N); else
+  CHECK(N,"assigning constant to empty array");
   for(i=0; i<N; i++) p[i]=v;
   return *this;
 }
