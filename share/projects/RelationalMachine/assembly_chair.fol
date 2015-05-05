@@ -24,7 +24,7 @@ Rule { { (grasp leg1 handL conv) (grasp leg2 handR conv) }
                               (grasp leg2 handR)! (grasp leg2 handR conv)! } }
 
 Rule { { (assemble leg1 leg2 conv) }
-       { (release leg1 handL) (release leg2 handR) } }
+       { (release leg1 handL) (release leg2 handR) (assemble leg1 leg2)! (assemble leg1 leg2 conv)! } }
 
 Rule { { (release leg1 handL conv) (release leg2 handR conv) }
        { (homing) (release leg1 handL)! (release leg1 handL conv)!

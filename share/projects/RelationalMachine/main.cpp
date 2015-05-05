@@ -14,6 +14,7 @@ struct RelationalMachineNode{
   RelationalMachine RM;
 
   ros::NodeHandle nh;
+  ros::Publisher pub_knowledge;
   ros::Publisher pub_state;
   ros::Publisher pub_command;
   ros::Publisher pub_symbols;
@@ -23,12 +24,14 @@ struct RelationalMachineNode{
     RM.verbose=true;
 
     pub_state     = nh.advertise<std_msgs::String>("RelationalState", 10, true);
+    pub_knowledge = nh.advertise<std_msgs::String>("RelationalKnowledge", 10, true);
     pub_command   = nh.advertise<std_msgs::String>("RelationalCommand", 10, true);
     pub_symbols   = nh.advertise<std_msgs::String>("RelationalSymbols", 10, true);
     sub_newEffect = nh.subscribe("RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
 
     MT::wait(.1);
     publishSymbols();
+    publishKnowledge();
     publishState();
     fwdChainRules();
   }
@@ -36,6 +39,12 @@ struct RelationalMachineNode{
   void publishState(){
     RM_lock.readLock();
     pub_state.publish(MSG(RM.getState()));
+    RM_lock.unlock();
+  }
+
+  void publishKnowledge(){
+    RM_lock.readLock();
+    pub_knowledge.publish(MSG(RM.getKB()));
     RM_lock.unlock();
   }
 
@@ -60,6 +69,7 @@ struct RelationalMachineNode{
     RM.fwdChainRules();
     RM_lock.unlock();
     publishCommand();
+    publishKnowledge();
     publishState();
   }
 
