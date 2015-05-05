@@ -19,7 +19,9 @@ struct ActionSwigInterface{
   stringV getShapeList();
   doubleV getQ();
   doubleV getForceTorqueMeasurement();
-
+  dict getBodyByName (string bodyName);
+  dict getShapeByName (string shapeName);
+  dict getJointByName (string jointName);
   //-- symbolic state access
   stringV getSymbols();
   int getSymbolInteger(string symbolName);
