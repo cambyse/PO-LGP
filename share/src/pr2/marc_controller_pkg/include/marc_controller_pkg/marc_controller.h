@@ -15,7 +15,7 @@ private:
   ors::KinematicWorld world;
 
   // Ors related variables
-  arr u, Kd, Kp;
+  arr u, Kd_base, Kp_base;
   arr q, qd;
   arr q_ref, qdot_ref;
   arr Kp, Kd, Ki;
@@ -35,7 +35,8 @@ private:
   ros::Publisher jointState_publisher;
   ros::Publisher baseCommand_publisher;
   ros::Subscriber jointReference_subscriber;
-  ros::Subscriber forceSensor_subscriber;
+  ros::Subscriber l_ft_subscriber;
+  ros::Subscriber r_ft_subscriber;
   marc_controller_pkg::JointState jointStateMsg;
 
   // Limits
@@ -55,7 +56,8 @@ public:
   virtual void stopping();
 
   void jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg);
-  void forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
+  void l_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
+  void r_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
 };
 
 }

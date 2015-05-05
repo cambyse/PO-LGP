@@ -1,7 +1,7 @@
 
-%include ../../../data/pr2_model/pr2-3-comfi.ors
+Include = '../../../data/pr2_model/pr2-3-comfi.ors'
 
-%include pr2_augmentations.ors
+Include = 'pr2_augmentations.ors'
 
 
 #body  OBJECTS{ X=<T t(.5 .2 .7)> }

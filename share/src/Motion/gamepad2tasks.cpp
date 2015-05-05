@@ -42,7 +42,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   for(CtrlTask* pdt:MP.tasks) pdt->active=false;
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
-
+  MP.qitselfPD.active=true;
   limits->active=true;
   coll->active=true;
 
