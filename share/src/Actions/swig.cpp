@@ -33,6 +33,24 @@ ActionSwigInterface::~ActionSwigInterface(){
   engine().close(s->activity);
 }
 
+stringV ActionSwigInterface::getShapeList(){
+stringV S;
+for(ors::Shape *shape: s->activity.machine->world->shapes) S.push_back(std::to_string(*shape->name));
+return S;
+}
+
+stringV ActionSwigInterface::getBodyList(){
+stringV S;
+for(ors::Body *body: s->activity.machine->world->bodies) S.push_back(std::to_string(*body->name));
+return S;
+}
+
+stringV ActionSwigInterface::getJointList(){
+stringV S;
+for(ors::Joint *joint: s->activity.machine->world->joints) S.push_back(std::to_string(*joint->name));
+return S;
+}
+
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
 dict D;
 ors::Body *body = s->activity.machine->world->getBodyByName(bodyName.c_str());

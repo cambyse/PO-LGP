@@ -17,6 +17,8 @@ struct ActionSwigInterface{
 
   //-- robot data access
   stringV getShapeList();
+  stringV getBodyList();
+  stringV getJointList();
   doubleV getQ();
   doubleV getForceTorqueMeasurement();
   dict getBodyByName (string bodyName);
