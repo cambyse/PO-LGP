@@ -2,8 +2,8 @@
 #include <Core/util.h>
 #include <Gui/plot.h>
 
-double lambda = .05;
-double lambda_reg = 1e-10;
+double lambda = .01;
+double lambda_reg = 1e-1;
 uint width=100;
 
 arr generateRandomData(uint n=20, double sig=.03){
@@ -46,6 +46,8 @@ struct Cell{
   arr phi; //location features
   arr X_loc; //local statistics
   arr X; //global statistics
+  arr X_mean;
+  double X_n;
   arr beta; //min eig vec
   double sig; //min eig value
 
@@ -60,13 +62,12 @@ struct Cell{
     id=_id;
     s = this;
     neighbors = _neighbors;
-
-//    phi = cat(ARR(1.), y); //features for constant modelling
     phi = _phi;
-    X = X_loc = phi*~phi;
-    arr reg = eye(phi.N);
-    reg(0,0) = reg(phi.N-1,phi.N-1) = 0.;
-    X += lambda_reg * reg;
+    X_loc = phi*~phi;
+    resetStatistics();
+    X += X_loc;
+    X_mean = phi;
+    X_n = 1.;
     sig=0.;
   }
 
@@ -75,32 +76,20 @@ struct Cell{
     for(Cell *n:neighbors) if(n){
       if(n->s!=s) cuts++;
     }
-    return MT::sqr(scalarProduct(s->beta,phi)) + lambda*cuts;
+//    return MT::sqr(scalarProduct(s->beta,phi));// + lambda*cuts;
+    return MT::sqr(f() - phi.last());// + lambda*cuts;
   }
   double f(){
     if(!s->beta.N) return 0.;
-    double y_pred = -(~phi.sub(0,-2)*s->beta.sub(0,-2)).scalar()/s->beta.last();
+//    double y_pred = -(~phi.sub(0,-2)*s->beta.sub(0,-2)).scalar()/s->beta.last();
+    arr mean=s->X_mean/s->X_n;
+    double y_pred = mean.last() - (~(phi.sub(0,-2)-mean.sub(0,-2))*s->beta.sub(0,-2))/s->beta.last();
     return y_pred;
   }
 
   arr dE_dbeta(){
     return 2.*scalarProduct(s->beta,phi)*phi;
   }
-
-//  void comp_invxx(){  invxx = inverse_SymPosDef(xx[s]);  }
-//  arr f(){      yf = phi * invxx * xy[s]; return yf; }
-//  arr Jf_xx(){  return - phi * invxx * invxx * xy[s];  }
-//  arr Jf_xy(){  return phi * invxx;  }
-//  double d(){   return sumOfSqr(f() - y); }
-//  arr d_xx(){   return 2.*(f() - y)*Jf_xx(); }
-//  arr d_xy(){   return 2.*(f() - y)*Jf_xy(); }
-//  double costs(){
-//    int cuts=0;
-//    for(Cell *n:neighbors) if(n){
-//      if(n->s!=s) cuts++;
-//    }
-//    return d() + lambda*cuts;
-//  }
 
   double delta_E(Cell *s_new){
 //    if(s_new->s == s) return 0.; TODO: check!
@@ -115,8 +104,8 @@ struct Cell{
     }
 
     double deltaE=0.;
-    deltaE += MT::sqr(scalarProduct(phi, s_new->s->beta)); //adding the cell to the new segment
-    deltaE -= MT::sqr(scalarProduct(phi, this ->s->beta)); //removing the cell from the old segment
+    deltaE += MT::sqr(scalarProduct(phi-s_new->s->X_mean/s_new->s->X_n, s_new->s->beta)); //adding the cell to the new segment
+    deltaE -= MT::sqr(scalarProduct(phi-this ->s->X_mean/this ->s->X_n, this ->s->beta)); //removing the cell from the old segment
     deltaE += lambda * (cuts_new - cuts_old);
     return deltaE;
   }
@@ -140,21 +129,27 @@ struct Cell{
   void recomputeEig(){
     if(s==this){
       arr Sig, Beta;
-      lapack_EigenDecomp(s->X, Sig, Beta);
+      lapack_EigenDecomp(X - X_mean*~(X_mean/X_n), Sig, Beta);
       sig = Sig(0);
-      beta = Beta[0];
+      if(sig>1e-10) beta = Beta[0];
+      else{ beta = zeros(phi.N); beta.last()=1.; }
+      cout <<"compEig: " <<id <<':' <<Sig <<':' <<Beta <<endl;
     }
   }
 
-  void report(){
-    cout <<id <<'[' <<(eq?eq->id:0) <<']'
-//        <<" x=" <<y
-        <<" xm=" <<s->beta
-//       <<" dEdbeta=" <<dEdbeta
-//      <<" beta_sum=" <<beta_sum
-//     <<" dEdbeta_sum=" <<dEdbeta_sum
-    <<endl;
+  void resetStatistics(){
+    X_mean = zeros(phi.N);
+    X_n = 0.;
+    X = lambda_reg * eye(phi.N);
+    X(0,0) = X(phi.N-1,phi.N-1) = 0.;
   }
+
+  void resubmitStatistics(){
+    s->X_n += 1.;
+    s->X_mean += phi;
+    s->X += X_loc;
+  }
+
 };
 
 void planes(){
@@ -162,13 +157,12 @@ void planes(){
   plotFunction(data);
   plotGnuplot();
   plot(false);
-//  FILE("z.data") <<data;
-//  gnuplot("plot 'z.data' us 0:1", true);
 
 
   CellA cells(data.N);
   for(uint i=0;i<cells.N;i++){
-    arr phi=cat({1.},{double(i)/(cells.N-1)}, data[i]);
+    arr x={double(i)};
+    arr phi=cat(x, x%x, data[i]);
     if(i && i<cells.N-1) cells(i).init(i, phi, {&cells(i-1), &cells(i+1)});
     else if(i)  cells(i).init(i, phi, {&cells(i-1), NULL});
     else        cells(i).init(i, phi, {NULL, &cells(i+1)});
@@ -181,30 +175,27 @@ void planes(){
   cout <<x <<endl;
 
   for(uint k=0;k<15;k++){
-//    for(Cell &c:cells) c.report();
-    //  MT::wait();
-//    for(Cell &c:cells) c.step_collectCumulates();
-//    for(Cell &c:cells) c.step_propagateBeta();
+    for(Cell &c:cells){ c.resetStatistics(); }
+    for(Cell &c:cells){ c.resubmitStatistics(); }
+    for(Cell &c:cells){ c.recomputeEig(); }
 
-//    for(Cell &c:cells) c.step_average();
-//    for(Cell &c:cells) c.step_decide();
-    for(uint i=0;i<cells.N;i++) { cells(i).recomputeEig();  x(i) = cells(i).f();  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
+    for(uint i=0;i<cells.N;i++) { x(i) = cells(i).f();  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
     cout <<"x=" <<x <<endl;
     cout <<"e=" <<e <<endl;
     cout <<sum(e) <<endl;
     cout <<"s=" <<s <<endl;
+    for(Cell &c:cells) if(c.s==&c){
+      cout <<c.id <<':' <<c.X <<':' <<c.sig <<endl;
+    }
     plotClear();
     plotFunction(data);
     plotFunction(x);
     plot(false);
-    MT::wait();
+    MT::wait(.5);
+//    MT::wait();
 
     for(Cell &c:cells) c.step_decide(k);
-
-    //    for(Cell &c:cells) c.report();
-//    for(Cell &c:cells) c.step_collectCumulates();
   }
-  //  MT::wait();
 
 
 }
