@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <cassert>
 
 class AbstractEnvironment {
     //----typedefs/classes----//
