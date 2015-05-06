@@ -31,7 +31,7 @@ using util::random_select;
 typedef SearchTree::node_t node_t;
 typedef SearchTree::arc_t arc_t;
 
-SearchTree::SearchTree(std::shared_ptr<const Environment> environment,
+SearchTree::SearchTree(std::shared_ptr<Environment> environment,
                        double discount,
                        GRAPH_TYPE graph_type):
     environment(environment),

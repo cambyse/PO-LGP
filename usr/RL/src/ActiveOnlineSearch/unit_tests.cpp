@@ -6,18 +6,20 @@
 
 #include <lemon/dfs.h>
 
-#include "../util/pretty_printer.h"
-#include "../util/util.h"
-#include "../util/QtUtil.h"
-#include "../util/ND_vector.h"
-#include "../util/graph_plotting.h"
+#include <util/pretty_printer.h>
+#include <util/util.h>
+#include <util/QtUtil.h>
+#include <util/ND_vector.h>
+#include <util/graph_plotting.h>
 
 #include "graph_util.h"
 
-#define DEBUG_LEVEL 0
-#include "../util/debug.h"
+#include <MCTS_Environment/AbstractEnvironment.h>
+#include <MCTS_Environment/AbstractFiniteEnvironment.h>
+#include "ComputationalGraph.h"
 
-#include <ActiveOnlineSearch/ComputationalGraph.h>
+#define DEBUG_LEVEL 0
+#include <util/debug.h>
 
 using namespace ND_vector;
 using util::Range;
@@ -587,4 +589,54 @@ TEST(Lemon, Dfs) {
         }
         cout << endl;
     }
+}
+
+class ConcreteEnvironment: public AbstractEnvironment {
+public:
+    ConcreteEnvironment() = default;
+    virtual ~ConcreteEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        return observation_reward_pair_t(observation_handle_t(),reward_t());
+    }
+    virtual const action_container_t get_actions() override {
+        return action_container_t({action_handle_t()});
+    }
+    virtual const state_handle_t get_state_handle() override {return state_handle_t();}
+    virtual void set_state(const state_handle_t & state_handle) override {return;}
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return false;}
+    virtual reward_t max_reward() const override {return reward_t();}
+    virtual bool has_min_reward() const override {return false;}
+    virtual reward_t min_reward() const override {return reward_t();}
+    virtual bool is_markov() const override {return true;}
+};
+
+class FiniteEnvironment: public AbstractFiniteEnvironment<int,int> {
+public:
+    FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
+    virtual std::pair<state_t,reward_t> transition(const state_t state, const action_t action) {
+        if(action==0) {
+            return state_reward_pair_t(state,0);
+        } else {
+            return state_reward_pair_t((state+1)%2,1);
+        }
+    }
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+};
+
+TEST(MCTS, DeriveAbstractEnvironment) {
+    ConcreteEnvironment env;
+    FiniteEnvironment f_env;
+    DEBUG_OUT(0,"state/action 0/0 --> " << f_env.transition(0,0).first);
+    DEBUG_OUT(0,"state/action 0/1 --> " << f_env.transition(0,1).first);
+    DEBUG_OUT(0,"state/action 1/0 --> " << f_env.transition(1,0).first);
+    DEBUG_OUT(0,"state/action 1/1 --> " << f_env.transition(1,1).first);
 }

@@ -12,9 +12,10 @@ namespace value_heuristic {
     typedef AbstractMonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
     typedef AbstractMonteCarloTreeSearch::node_info_map_t      node_info_map_t;
     typedef AbstractMonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractMonteCarloTreeSearch::state_t              state_t;
-    typedef AbstractMonteCarloTreeSearch::action_t             action_t;
-    typedef AbstractMonteCarloTreeSearch::reward_t             reward_t;
+    typedef AbstractEnvironment::action_handle_t               action_handle_t;
+    typedef AbstractEnvironment::observation_handle_t          observation_handle_t;
+    typedef AbstractEnvironment::state_handle_t                state_handle_t;
+    typedef AbstractEnvironment::reward_t                      reward_t;
 
     /**
      * Abstract basis class for heuristics that compute value and return for new
@@ -25,7 +26,7 @@ namespace value_heuristic {
     class ValueHeuristic {
     public:
         virtual void operator()(const node_t & state_node,
-                                const state_t & state,
+                                const state_handle_t & state,
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const = 0;
@@ -36,7 +37,7 @@ namespace value_heuristic {
     class Zero: public ValueHeuristic {
     public:
         virtual void operator()(const node_t & state_node,
-                                const state_t & state,
+                                const state_handle_t & state,
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const override;
@@ -48,7 +49,7 @@ namespace value_heuristic {
     public:
         Rollout(int rollout_length = -1);
         virtual void operator()(const node_t & state_node,
-                                const state_t & state,
+                                const state_handle_t & state,
                                 double discount,
                                 std::shared_ptr<const Environment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const override;

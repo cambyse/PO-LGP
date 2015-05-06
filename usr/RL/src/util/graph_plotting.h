@@ -61,14 +61,18 @@ namespace util {
         class STRING_1_T = QString,
         class STRING_2_T = QString,
         class STRING_3_T = QString,
-        class STRING_4_T = QString>
+        class STRING_4_T = QString,
+        class STRING_5_T = QString,
+        class STRING_6_T = QString>
         void graph_to_pdf(const char* file_name,
                           const GRAPH_T & graph,
                           const STRING_1_T general_node_properties = "",
                           const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
                           const STRING_3_T general_arc_properties = "",
                           const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
-                          bool delete_dot_file = true) {
+                          bool delete_dot_file = true,
+                          const STRING_5_T command = "dot",
+                          const STRING_6_T parameters = "-Tpdf") {
 
         //-------------------//
         // random file names //
@@ -117,7 +121,11 @@ namespace util {
         //------------------------------//
         // call dot to generate graphic //
         //------------------------------//
-        system(QString("dot -Tpdf -o %1 %2").arg(graphics_file_name).arg(dot_file_name).toLatin1());
+        system(QString("%1 %2 -o %3 %4").
+               arg(command).
+               arg(parameters).
+               arg(graphics_file_name).
+               arg(dot_file_name).toLatin1());
 
         //-----------------//
         // remove dot file //

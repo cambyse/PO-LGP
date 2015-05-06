@@ -19,8 +19,10 @@ namespace backup_method {
     typedef AbstractMonteCarloTreeSearch::arc_t                arc_t;
     typedef AbstractMonteCarloTreeSearch::out_arc_it_t         out_arc_it_t;
     typedef AbstractMonteCarloTreeSearch::in_arc_it_t          in_arc_it_t;
-    typedef AbstractMonteCarloTreeSearch::action_t             action_t;
-    typedef AbstractMonteCarloTreeSearch::reward_t             reward_t;
+    typedef AbstractEnvironment::action_handle_t               action_handle_t;
+    typedef AbstractEnvironment::observation_handle_t          observation_handle_t;
+    typedef AbstractEnvironment::state_handle_t                state_handle_t;
+    typedef AbstractEnvironment::reward_t                      reward_t;
 
     /**
      * Abstract basis class for backup methods. For each internal node that was
@@ -31,7 +33,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<Environment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
@@ -47,7 +49,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<Environment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
@@ -63,7 +65,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<Environment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,

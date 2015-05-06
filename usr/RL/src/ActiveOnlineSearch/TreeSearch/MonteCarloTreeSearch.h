@@ -38,7 +38,7 @@ protected:
     graph_t::NodeMap<int> distance_map;
     /**
      * Stores all nodes for a specific state. */
-    std::unordered_map<state_t,node_set_t> state_node_map;
+    std::unordered_map<state_t,node_set_t,state_t::hash> state_node_map;
 
     const BACKUP_TYPE backup_type;
 
@@ -46,7 +46,7 @@ protected:
 
     //----methods----//
 public:
-    MonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
+    MonteCarloTreeSearch(std::shared_ptr<Environment> environment,
                          double discount,
                          GRAPH_TYPE graph_type,
                          std::shared_ptr<const tree_policy::TreePolicy> tree_policy,
