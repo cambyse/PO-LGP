@@ -69,14 +69,14 @@ void TEST(BSpline){
   plotPoints(S.points);
   plot();
 
-//  for(double lambda = 0.; lambda < .1; lambda += .001) {
-//    path = S.smooth(lambda);
-//    plotClear();
-//    plotFunction(path);
-//    plotFunction(S.points);
-//    plotPoints(S.points);
-//    plot();
-//  }
+  for(double lambda = 0.; lambda < .1; lambda += .001) {
+    path = S.smooth(lambda);
+    plotClear();
+    plotFunction(path);
+    plotFunction(S.points);
+    plotPoints(S.points);
+    plot();
+  }
 
   ofstream fil("z.test");
   for(uint t=0;t<=1000;t++){
@@ -145,8 +145,8 @@ void TEST(Path){
   }
 
   //-- transform spline
-  P.transform_CurrentBecomes_EndFixed(ARR(1.), .25);
-  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
+//  P.transform_CurrentBecomes_EndFixed(ARR(1.), .25);
+//  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
 
   //-- write spline
   MT::arrayBrackets="  ";
@@ -158,7 +158,7 @@ void TEST(Path){
     fil <<time <<' ' <<P.getPosition(time) <<' ' <<P.getVelocity(time) <<endl;
   }
   fil.close();
-  gnuplot("plot 'z.test' us 1:2, '' us 1:3, 'z.points' us ($0/10):1 w p", true);
+  gnuplot("plot 'z.test' us 1:2 t 'pos', '' us 1:3 t 'vel', 'z.points' us ($0/10):1 w p", true);
 
 }
 
