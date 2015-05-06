@@ -12,9 +12,15 @@ public:
 
     template <class C, class T>
     class TypeWrapper {
+        // types
     public:
         typedef T value_t;
-    TypeWrapper(const T& val): value(val) {}
+        struct hash {
+            size_t operator()(const TypeWrapper & x) const {return std::hash<int>((int)x);}
+        };
+        // methods
+    public:
+        TypeWrapper(const T& val): value(val) {}
         operator T() const {return value;}
         C& operator=(const T &rhs) {this->value=rhs; return *this;}
         bool operator==(const T &other) const {return this->value==other;}
@@ -68,6 +74,8 @@ public:
     };
     typedef FiniteObservation observation_t;
 
+    typedef std::pair<state_t,reward_t> state_reward_pair_t;
+
     //----members----//
 
 public:
@@ -89,7 +97,21 @@ public:
     state(state_list[0])
     {}
 
+    AbstractFiniteEnvironment(const std::vector<ACTION> action_list,
+                              const std::vector<STATE> state_list):
+        AbstractFiniteEnvironment(convert_vector<ACTION,action_t>(action_list),
+                                  convert_vector<STATE,state_t>(state_list)) {}
+
     virtual ~AbstractFiniteEnvironment() = default;
+
+    template<class FROM, class TO>
+    static std::vector<TO> convert_vector(const std::vector<FROM> & vec) {
+        std::vector<TO> ret;
+        for(auto elem : vec) {
+            ret.push_back((TO)elem);
+        }
+        return ret;
+    }
 
     static action_container_t construct_action_container(const std::vector<action_t> & action_list) {
         action_container_t action_handle_list;
@@ -99,7 +121,7 @@ public:
         return action_handle_list;
     }
 
-    virtual std::pair<state_t,reward_t> transition(const state_t state, const action_t action) = 0;
+    virtual state_reward_pair_t transition(const state_t state, const action_t action) = 0;
 
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) final {
         auto action = std::dynamic_pointer_cast<const action_t>(action_handle);
