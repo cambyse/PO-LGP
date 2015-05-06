@@ -15,6 +15,7 @@
 #include "graph_util.h"
 
 #include <MCTS_Environment/AbstractEnvironment.h>
+#include <MCTS_Environment/AbstractFiniteEnvironment.h>
 #include "ComputationalGraph.h"
 
 #define DEBUG_LEVEL 0
@@ -612,6 +613,30 @@ public:
     virtual bool is_markov() const override {return true;}
 };
 
+class FiniteEnvironment: public AbstractFiniteEnvironment<int,int> {
+public:
+    FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
+    virtual std::pair<state_t,reward_t> transition(const state_t state, const action_t action) {
+        if(action==0) {
+            return std::pair<state_t,reward_t>(state,0);
+        } else {
+            return std::pair<state_t,reward_t>((state+1)%2,1);
+        }
+    }
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+};
+
 TEST(MCTS, DeriveAbstractEnvironment) {
     ConcreteEnvironment env;
+    FiniteEnvironment f_env;
+    DEBUG_OUT(0,"state/action 0/0 --> " << f_env.transition(0,0).first);
+    DEBUG_OUT(0,"state/action 0/1 --> " << f_env.transition(0,1).first);
+    DEBUG_OUT(0,"state/action 1/0 --> " << f_env.transition(1,0).first);
+    DEBUG_OUT(0,"state/action 1/1 --> " << f_env.transition(1,1).first);
 }
