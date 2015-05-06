@@ -618,9 +618,9 @@ public:
     FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
     virtual std::pair<state_t,reward_t> transition(const state_t state, const action_t action) {
         if(action==0) {
-            return std::pair<state_t,reward_t>(state,0);
+            return state_reward_pair_t(state,0);
         } else {
-            return std::pair<state_t,reward_t>((state+1)%2,1);
+            return state_reward_pair_t((state+1)%2,1);
         }
     }
     virtual bool has_terminal_state() const override {return false;}
