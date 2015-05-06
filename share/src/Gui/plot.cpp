@@ -685,7 +685,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   gnuplotdata.close();
   
   //call gnuplot
-  gnuplot(gnuplotcmd, pauseMouse, true, "z.pdf");
+  gnuplot(gnuplotcmd, pauseMouse, false, "z.pdf");
 }
 
 
