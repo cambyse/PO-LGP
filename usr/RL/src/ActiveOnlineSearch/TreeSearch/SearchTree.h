@@ -26,7 +26,7 @@ public:
     typedef graph_t::OutArcIt                  out_arc_it_t;
     /**
      * Type for state-->node maps for nodes at the same depth. */
-    typedef std::unordered_map<state_t,node_t> level_map_t;
+    typedef std::unordered_map<state_t,node_t,state_t::hash> level_map_t;
     typedef std::list<level_map_t>             level_map_list_t;
     /**
      * Different types of graphs. */
@@ -64,7 +64,7 @@ public:
 protected:
     /**
      * Pointer to the environment. */
-    std::shared_ptr<const Environment> environment;
+    std::shared_ptr<Environment> environment;
     /**
      * Discount factor for computing the value. */
     const double discount;
@@ -93,7 +93,7 @@ private:
 
     //----methods----//
 public:
-    SearchTree(std::shared_ptr<const Environment> environment,
+    SearchTree(std::shared_ptr<Environment> environment,
                double discount,
                GRAPH_TYPE graph_type);
     virtual ~SearchTree() = default;

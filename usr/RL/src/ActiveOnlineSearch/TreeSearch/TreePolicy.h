@@ -13,8 +13,10 @@ namespace tree_policy {
     typedef AbstractMonteCarloTreeSearch::mcts_arc_info_map_t  mcts_arc_info_map_t;
     typedef AbstractMonteCarloTreeSearch::node_t               node_t;
     typedef AbstractMonteCarloTreeSearch::arc_t                arc_t;
-    typedef AbstractMonteCarloTreeSearch::action_t             action_t;
-    typedef AbstractMonteCarloTreeSearch::reward_t             reward_t;
+    typedef AbstractEnvironment::action_handle_t               action_handle_t;
+    typedef AbstractEnvironment::observation_handle_t          observation_handle_t;
+    typedef AbstractEnvironment::state_handle_t                state_handle_t;
+    typedef AbstractEnvironment::reward_t                      reward_t;
 
     /**
      * Abstract basis class for tree policies. The job of the tree policy is to
@@ -22,24 +24,24 @@ namespace tree_policy {
      * common tree policy is UCB1 but a Uniform policy may also be used. */
     class TreePolicy {
     public:
-        virtual action_t operator()(const node_t & state_node,
-                                    std::shared_ptr<const Environment> environment,
-                                    const graph_t & graph,
-                                    const node_info_map_t & node_info_map,
-                                    const mcts_node_info_map_t & mcts_node_info_map,
-                                    const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+        virtual action_handle_t operator()(const node_t & state_node,
+                                           std::shared_ptr<Environment> environment,
+                                           const graph_t & graph,
+                                           const node_info_map_t & node_info_map,
+                                           const mcts_node_info_map_t & mcts_node_info_map,
+                                           const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
     };
 
     /**
      * Sample actions uniformly from available action nodes. */
     class Uniform: public TreePolicy {
     public:
-        virtual action_t operator()(const node_t & state_node,
-                                    std::shared_ptr<const Environment> environment,
-                                    const graph_t & graph,
-                                    const node_info_map_t & node_info_map,
-                                    const mcts_node_info_map_t & mcts_node_info_map,
-                                    const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual action_handle_t operator()(const node_t & state_node,
+                                           std::shared_ptr<Environment> environment,
+                                           const graph_t & graph,
+                                           const node_info_map_t & node_info_map,
+                                           const mcts_node_info_map_t & mcts_node_info_map,
+                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override;
     };
 
     /**
@@ -47,16 +49,16 @@ namespace tree_policy {
      * quantity (like value or upper bound). */
     class MaxPolicy: public TreePolicy {
     public:
-        virtual action_t operator()(const node_t & state_node,
-                                    std::shared_ptr<const Environment> environment,
-                                    const graph_t & graph,
-                                    const node_info_map_t & node_info_map,
-                                    const mcts_node_info_map_t & mcts_node_info_map,
-                                    const mcts_arc_info_map_t & mcts_arc_info_map) const override final;
+        virtual action_handle_t operator()(const node_t & state_node,
+                                           std::shared_ptr<Environment> environment,
+                                           const graph_t & graph,
+                                           const node_info_map_t & node_info_map,
+                                           const mcts_node_info_map_t & mcts_node_info_map,
+                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override final;
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<const Environment> environment,
+                               std::shared_ptr<Environment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -70,7 +72,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<const Environment> environment,
+                               std::shared_ptr<Environment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -95,7 +97,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<const Environment> environment,
+                               std::shared_ptr<Environment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -123,7 +125,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<const Environment> environment,
+                               std::shared_ptr<Environment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,

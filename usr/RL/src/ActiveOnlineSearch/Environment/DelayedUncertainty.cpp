@@ -31,16 +31,16 @@ DelayedUncertainty::DelayedUncertainty(int options,
         }
     }
     DEBUG_OUT(1,"Probabilities " << probabilities);
-    DEBUG_OUT(1,"Actions " << actions);
+    DEBUG_OUT(1,"Actions " << action_list);
         DEBUG_OUT(1,"States");
-    for(auto s : states) {
+    for(auto s : state_list) {
         DEBUG_OUT(1,"    " << s << ": " << state_name(s));
     }
 }
 
-DelayedUncertainty::state_reward_pair_t DelayedUncertainty::sample(const state_t & state,
-                                                                   const action_t & action) const {
-    auto branch_time = convert_1D_to_ND_index(state,{branch_n,time_steps_n});
+DelayedUncertainty::state_reward_pair_t DelayedUncertainty::transition(const state_t & state,
+                                                                       const action_t & action) const {
+    auto branch_time = convert_1D_to_ND_index((int)state,{branch_n,time_steps_n});
     DEBUG_OUT(2, "state: " << state << "(" << state_name(state) << ")");
     DEBUG_OUT(2, "branch_time: " << branch_time);
     DEBUG_OUT(2, "probabilities: " << probabilities);
@@ -64,10 +64,10 @@ DelayedUncertainty::state_reward_pair_t DelayedUncertainty::sample(const state_t
 }
 
 bool DelayedUncertainty::is_terminal_state(state_t state) const {
-    return convert_1D_to_ND_index(state,{branch_n,time_steps_n})[1]>=(time_steps_n-1);
+    return convert_1D_to_ND_index((int)state,{branch_n,time_steps_n})[1]>=(time_steps_n-1);
 }
 
 QString DelayedUncertainty::state_name(const state_t & state) const {
-    auto branch_time = convert_1D_to_ND_index(state,{branch_n,time_steps_n});
+    auto branch_time = convert_1D_to_ND_index((int)state,{branch_n,time_steps_n});
     return QString("b=%1, t=%2").arg(branch_time[0]).arg(branch_time[1]);
 }

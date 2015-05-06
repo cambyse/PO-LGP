@@ -109,7 +109,7 @@ protected:
 
     //----methods----//
 public:
-    AbstractMonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
+    AbstractMonteCarloTreeSearch(std::shared_ptr<Environment> environment,
                                  double discount,
                                  GRAPH_TYPE graph_type);
     virtual ~AbstractMonteCarloTreeSearch() = default;

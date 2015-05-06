@@ -13,7 +13,7 @@
 namespace value_heuristic {
 
     void Zero::operator()(const node_t & state_node,
-                          const state_t &,
+                          const state_handle_t &,
                           double,
                           std::shared_ptr<const Environment>,
                           mcts_node_info_map_t & mcts_node_info_map) const {
@@ -24,7 +24,7 @@ namespace value_heuristic {
     Rollout::Rollout(int rollout_length): rollout_length(rollout_length) {}
 
     void Rollout::operator()(const node_t & state_node,
-                             const state_t & start_state,
+                             const state_handle_t & start_state,
                              double discount,
                              std::shared_ptr<const Environment> environment,
                              mcts_node_info_map_t & mcts_node_info_map) const {
@@ -38,13 +38,13 @@ namespace value_heuristic {
         if(length<0 && !environment->has_terminal_state()) {
             length = 1;
         }
-        state_t state = start_state;
-        action_t action;
+        state_handle_t state = start_state;
+        action_handle_t action;
         reward_t reward;
         reward_t discounted_return = 0;
         double discount_factor = discount;
         int k=0;
-        DEBUG_OUT(1,"Rollout from state '" << environment->state_name(state) << "'");
+        DEBUG_OUT(1,"Rollout from state '" << environment->state_name(*state) << "'");
         while((length<0 || k<length) && !environment->is_terminal_state(state)) {
             // select action uniformly from available actions
             action = util::random_select(environment->get_actions());

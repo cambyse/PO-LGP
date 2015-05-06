@@ -20,16 +20,16 @@ DynamicTightRope::DynamicTightRope(int pos, int vel):
     velocity_n(vel),
     action_names({"accel", "keep", "decel"})
 {
-    for(state_t state : states) {
-        auto pos_vel = convert_1D_to_ND_index(state,{pos,vel});
+    for(state_t state : state_list) {
+        auto pos_vel = convert_1D_to_ND_index((int)state,{pos,vel});
         state_names[state] = QString("pos %1, vel %2").arg(pos_vel[0]).arg(pos_vel[1]);
     }
 }
 
-DynamicTightRope::state_reward_pair_t DynamicTightRope::sample(const state_t & s,
-                                                               const action_t & a) const {
+DynamicTightRope::state_reward_pair_t DynamicTightRope::transition(const state_t & s,
+                                                                   const action_t & a) const {
     // position/velocity
-    RETURN_TUPLE(int,pos,int,vel) = get_ND_index<2>::from(s,{position_n,velocity_n});
+    RETURN_TUPLE(int,pos,int,vel) = get_ND_index<2>::from((int)s,{position_n,velocity_n});
     DEBUG_OUT(1,"pos = " << pos << ", vel = " << vel);
 
     // reward
@@ -83,7 +83,7 @@ QString DynamicTightRope::state_name(const state_t & s) const {
 }
 
 std::tuple<int,int> DynamicTightRope::get_position_and_velocity(const state_t & state) const {
-    return get_ND_index<2>::from(state,{position_n,velocity_n});
+    return get_ND_index<2>::from((int)state,{position_n,velocity_n});
 }
 
 double DynamicTightRope::success_probability(const int & pos, const int & vel) const {
