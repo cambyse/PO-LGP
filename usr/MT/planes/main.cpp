@@ -2,8 +2,8 @@
 #include <Core/util.h>
 #include <Gui/plot.h>
 
-double lambda = .01;
-double lambda_reg = 1e-1;
+double lambda = .05;
+double lambda_reg = 1e-10;
 uint width=100;
 
 arr generateRandomData(uint n=20, double sig=.03){
@@ -83,7 +83,8 @@ struct Cell{
     if(!s->beta.N) return 0.;
 //    double y_pred = -(~phi.sub(0,-2)*s->beta.sub(0,-2)).scalar()/s->beta.last();
     arr mean=s->X_mean/s->X_n;
-    double y_pred = mean.last() - (~(phi.sub(0,-2)-mean.sub(0,-2))*s->beta.sub(0,-2))/s->beta.last();
+    double y_pred = mean.last();
+    if(mean.N>1) y_pred -= (~(phi.sub(0,-2)-mean.sub(0,-2))*s->beta.sub(0,-2))/s->beta.last();
     return y_pred;
   }
 
@@ -162,7 +163,7 @@ void planes(){
   CellA cells(data.N);
   for(uint i=0;i<cells.N;i++){
     arr x={double(i)};
-    arr phi=cat(x, x%x, data[i]);
+    arr phi=cat(x, data[i]);
     if(i && i<cells.N-1) cells(i).init(i, phi, {&cells(i-1), &cells(i+1)});
     else if(i)  cells(i).init(i, phi, {&cells(i-1), NULL});
     else        cells(i).init(i, phi, {NULL, &cells(i+1)});
@@ -191,7 +192,7 @@ void planes(){
     plotFunction(data);
     plotFunction(x);
     plot(false);
-    MT::wait(.5);
+    MT::wait(1.5);
 //    MT::wait();
 
     for(Cell &c:cells) c.step_decide(k);
