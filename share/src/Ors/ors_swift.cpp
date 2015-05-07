@@ -64,9 +64,9 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
   INDEXswift2shape.resize(world.shapes.N);  INDEXswift2shape=-1;
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
-  cout <<" -- SwiftInterface init";
+  //cout <<" -- SwiftInterface init";
   for_list(ors::Shape, s,  world.shapes) {
-    cout <<'.' <<flush;
+    //cout <<'.' <<flush;
     add=true;
     switch(s->type) {
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
@@ -97,6 +97,32 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
         break;
     }
     if(add) {
+      if(!s->mesh.V.d0){
+        switch(s->type) {
+          case ors::boxST:
+            s->mesh.setBox();
+            s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+            break;
+          case ors::sphereST:
+            s->mesh.setSphere();
+            s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+            break;
+          case ors::cylinderST:
+            CHECK(s->size[3]>1e-10,"");
+            s->mesh.setCylinder(s->size[3], s->size[2]);
+            break;
+          case ors::cappedCylinderST:
+            CHECK(s->size[3]>1e-10,"");
+            s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+            break;
+          case ors::SSBoxST:
+            s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
+            break;
+          default:
+            break;
+        }
+        s->mesh_radius = s->mesh.getRadius();
+      }
       CHECK(s->mesh.V.d0,"no mesh to add to SWIFT, something was wrongly initialized");
       r=scene->Add_Convex_Object(
           s->mesh.V.p, (int*)s->mesh.T.p,
@@ -112,7 +138,7 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
   initActivations(world);
   
   pushToSwift(world);
-  cout <<"...done" <<endl;
+  //cout <<"...done" <<endl;
 }
 
 void SwiftInterface::reinitShape(const ors::Shape *s) {
@@ -154,8 +180,8 @@ void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint pare
   for(ors::Body *b: world.bodies) deactivate(b->shapes);
   //deactivate along edges...
   for_list(ors::Joint, e, world.joints) {
-    //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
-    deactivate(ARRAY(e->from, e->to));
+    //cout <<"deactivating edge pair"; listWriteNames({e->from, e->to}, cout); cout <<endl;
+    deactivate(MT::Array<ors::Body*>({ e->from, e->to }));
   }
   //deactivate along trees...
   for_list(ors::Body,  b,  world.bodies) {

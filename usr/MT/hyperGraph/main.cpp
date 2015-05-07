@@ -1,8 +1,8 @@
-#include <Core/keyValueGraph.h>
+#include <Core/graph.h>
 #include <Gui/graphview.h>
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
-  KeyValueGraph H;
+  Graph H;
 
   cout <<"reading graph..." <<endl;
   H <<FILE(filename);
@@ -17,7 +17,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 }
 
 void TEST(Basic){
-  KeyValueGraph G;
+  Graph G;
   G.append(TUP());
   cout <<G <<"\n--------------------------" <<endl;
   G.append(TUP());

@@ -113,7 +113,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){
     resize(left, left, 0.5);
     resize(right, right, 0.5);
     
-    vision::detect(D, left, right, ARRAY(obj), t_det, t_outlier, t_nn, num_nn, camera_calibration);
+    vision::detect(D, left, right, {obj}, t_det, t_outlier, t_nn, num_nn, camera_calibration);
     
     if(D.N > 0){
       avg_c3d += D(0)->c_3D;

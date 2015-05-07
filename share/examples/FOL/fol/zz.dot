@@ -1,0 +1,118 @@
+digraph new_graph {
+	graph [bb="0 0 118 907",
+		rankdir=LR,
+		ranksep=0.05
+	];
+	node [fontsize=11,
+		height=.3,
+		width=.3
+	];
+	edge [arrowhead=none,
+		arrowsize=.5,
+		fontsize=6
+	];
+	"0_Constant
+M1"	 [label="Constant
+M1",
+		shape=ellipse];
+	"13_-"	 [fontsize=6,
+		height=.1,
+		shape=box,
+		width=.1];
+	"0_Constant
+M1" -> "13_-" [key="Constant
+M1---",
+	label=13];
+"14_-" [fontsize=6,
+	height=.1,
+	shape=box,
+	width=.1];
+"0_Constant
+M1" -> "14_-" [key="Constant
+M1---",
+label=14];
+"1_Constant
+M2" [label="Constant
+M2",
+shape=ellipse];
+"15_-" [fontsize=6,
+height=.1,
+shape=box,
+width=.1];
+"1_Constant
+M2" -> "15_-" [key="Constant
+M2---",
+label=15];
+"2_Constant
+Nono" [label="Constant
+Nono",
+shape=ellipse];
+"2_Constant
+Nono" -> "13_-" [key="Constant
+Nono---",
+label=13];
+"17_-" [fontsize=6,
+height=.1,
+shape=box,
+width=.1];
+"2_Constant
+Nono" -> "17_-" [key="Constant
+Nono---",
+label=17];
+"3_Constant
+America" [label="Constant
+America",
+shape=ellipse];
+"3_Constant
+America" -> "17_-" [key="Constant
+America---",
+label=17];
+"4_Constant
+West" [label="Constant
+West",
+shape=ellipse];
+"16_-" [fontsize=6,
+height=.1,
+shape=box,
+width=.1];
+"4_Constant
+West" -> "16_-" [key="Constant
+West---",
+label=16];
+"5_American" [label=American,
+shape=ellipse];
+"5_American" -> "16_-" [key="American---",
+label=16];
+"6_Weapon" [label=Weapon,
+shape=ellipse];
+"7_Sells" [label=Sells,
+shape=ellipse];
+"8_Hostile" [label=Hostile,
+shape=ellipse];
+"9_Criminal" [label=Criminal,
+shape=ellipse];
+"10_Missile" [label=Missile,
+shape=ellipse];
+"10_Missile" -> "14_-" [key="Missile---",
+label=14];
+"10_Missile" -> "15_-" [key="Missile---",
+label=15];
+"11_Owns" [label=Owns,
+shape=ellipse];
+"11_Owns" -> "13_-" [key="Owns---",
+label=13];
+"12_Enemy" [label=Enemy,
+shape=ellipse];
+"12_Enemy" -> "17_-" [key="Enemy---",
+label=17];
+"18_Query" [label=Query,
+shape=ellipse];
+"19_Rule" [label=Rule,
+shape=ellipse];
+"20_Rule" [label=Rule,
+shape=ellipse];
+"21_Rule" [label=Rule,
+shape=ellipse];
+"22_Rule" [label=Rule,
+shape=ellipse];
+}

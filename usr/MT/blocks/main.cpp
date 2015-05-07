@@ -61,10 +61,11 @@ int main(int argc,char** argv){
   bool con=true;
   if(con){
     c = MP.addTask("collisionConstraints", new CollisionConstraint(.02));
+    c->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{
     c = MP.addTask("collision",
                    new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
-    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+    MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)

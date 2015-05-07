@@ -1,0 +1,12 @@
+<<<<<<< HEAD
+useRos = 0
+=======
+useRos = 1
+
+transitionType = 1
+Hrate = 1e-0
+timeSteps = 200
+duration = 5.
+
+gamepadRate = .5
+>>>>>>> 77886bd4e4ec4ebd5f53c2c9c47e32f8aeb124a4

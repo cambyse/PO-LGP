@@ -31,25 +31,25 @@ struct MySystem:System{
   ACCESS(byteA, rgb_rightArm)
 
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module_Thread::loopWithBeat, 1.);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
-      addModule<RosCom_CamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
-      addModule<RosCom_ArmCamsSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<RosCom_CamsSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<RosCom_ArmCamsSync>(NULL, Module::loopWithBeat, 1.);
     }
-//    addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftArm"), Module_Thread::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightArm"), Module_Thread::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_leftEye"), Module_Thread::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", STRINGS("rgb_rightEye"), Module_Thread::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module_Thread::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
-    addModule<Pr2GamepadController>(NULL, Module_Thread::loopWithBeat, .01);
+//    addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
+//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftArm"}, Module::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightArm"}, Module::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftEye"}, Module::listenFirst);
+    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module::listenFirst);
+    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
+    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+    addModule<Pr2GamepadController>(NULL, Module::loopWithBeat, .01);
     connect();
   }
 };

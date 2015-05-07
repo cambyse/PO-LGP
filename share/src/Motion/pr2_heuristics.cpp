@@ -46,7 +46,7 @@ arr pr2_reasonable_W(ors::KinematicWorld& world){
     double h=j->H;
     for(uint k=0;k<j->qDim();k++) W(j->qIndex+k)=h;
   }
-  cout <<W <<endl;
+//  cout <<W <<endl;
 #endif
   return W;
 }

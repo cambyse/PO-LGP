@@ -291,8 +291,6 @@ int MAIN(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
   testOfflineRendering();
-  return 0;
-
   testTeapot();
   testGrab();
   testMultipleViews();

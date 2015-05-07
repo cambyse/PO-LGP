@@ -37,8 +37,8 @@
 struct TaskMap {
   TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
   uint order;       ///< 0=position, 1=vel, etc
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0; ///< this needs to be overloaded
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau); ///< if not overloaded this computes the generic pos/vel/acc depending on order
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
   TaskMap():type(sumOfSqrTT),order(0) {}
@@ -66,7 +66,6 @@ struct Task {
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
-
 };
 
 

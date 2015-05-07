@@ -10,10 +10,10 @@
 struct G4System:System {
   ACCESS(floatA, poses);
   G4System(){
-    addModule<G4Poller>("POLLER", Module_Thread::loopWithBeat, .001);//8333); // 120Hz
-    addModule<G4Display>("DISPLAY", Module_Thread::loopWithBeat, .033); // 30Hz
-    // addModule<G4Recorder>("RECORDER", Module_Thread::listenFirst, .1);
-    // addModule<G4Printer>("PRINTER", Module_Thread::loopWithBeat, 1);
+    addModule<G4Poller>("POLLER", Module::loopWithBeat, .001);//8333); // 120Hz
+    addModule<G4Display>("DISPLAY", Module::loopWithBeat, .033); // 30Hz
+    // addModule<G4Recorder>("RECORDER", Module::listenFirst, .1);
+    // addModule<G4Printer>("PRINTER", Module::loopWithBeat, 1);
     connect();
   }
 };

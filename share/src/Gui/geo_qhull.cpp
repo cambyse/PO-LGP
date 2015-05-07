@@ -311,7 +311,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
     dFdX.reshape(TUP(C.d0, S, origin.N));
     dXdC.reshape(TUP(C.d0, S, origin.N, 3));
     dFdC->resize(TUP(C.d0, 3));
-    tensorEquation(*dFdC, dFdX, TUP(0, 2, 3), dXdC, TUP(0, 2, 3, 1), 2);
+    tensorEquation(*dFdC, dFdX, TUP(0u, 2u, 3u), dXdC, TUP(0u, 2u, 3u, 1u), 2);
   }
   return d;
 }
@@ -383,7 +383,7 @@ void getDelaunayEdges(uintA& E, const arr& V) {
       FOREACHvertex_(facet->vertices) face[i++]=qh_pointid(vertex->point);//vertex->id;
       CHECK_EQ(i,dim+1, "strange number of vertices of a facet!");
       for(j=0; j<dim+1; j++) for(k=j+1; k<dim+1; k++) {
-          E.append(ARRAY<uint>(face[j], face[k]));
+          E.append(TUP(face[j], face[k]));
         }
     }
   }

@@ -13,7 +13,7 @@ void TEST(Matrices) {
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
   MP.world.getBodyByName("target")->X.rot.setRandom();
-  arr dir = ARRAY(2.,1.,0.);
+  arr dir = {2.,1.,0.};
   ors::Quaternion quat;
   quat.setDiff(ors::Vector(1.,0.,0.),dir);
   arr R = ~quat.getArr();
@@ -41,7 +41,7 @@ void TEST(GradCheck) {
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
   MP.world.getBodyByName("target")->X.rot.setRandom();
-  arr dir = ARRAY(2.,1.,0.);
+  arr dir = {2.,1.,0.};
   ors::Quaternion quat;
   quat.setDiff(ors::Vector(1.,0.,0.),dir);
   arr R = ~quat.getArr();

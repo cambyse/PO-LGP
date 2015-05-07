@@ -157,15 +157,15 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
       Jaux->nextInSum = Jz; //this is crucial: the returned J contains a quite hidden link to Jz
     }
   }
-  tt.resize(dim_phi).setZero();
+  if(&tt) tt.resize(dim_phi).setZero();
 
   //loop over time t
   uint M=0;
   for(uint t=0; t<=T; t++) {
     uint dimphi_t = f.dim_phi(t);
-    uint dimg_t   = f.dim_g(t);
-    uint dimh_t   = f.dim_h(t);
-    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
+//    uint dimg_t   = f.dim_g(t);
+//    uint dimh_t   = f.dim_h(t);
+//    uint dimf_t   = dimphi_t - dimg_t - dimh_t;
     if(!dimphi_t) continue;
 
     //construct x_bar
@@ -193,7 +193,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
     f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t, x_bar);
     CHECK_EQ(phi_t.N,dimphi_t,"");
     phi.setVectorBlock(phi_t, M);
-    tt.setVectorBlock(tt_t, M);
+    if(&tt) tt.setVectorBlock(tt_t, M);
 
     //if the jacobian is returned
     if(&J) {
@@ -601,9 +601,7 @@ ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovF
 
 //===========================================================================
 
-struct RUN_ON_INIT{
-  RUN_ON_INIT(){
-    MT::Array<TermType>::memMove=true;
-  }
-} dummy;
+RUN_ON_INIT_BEGIN()
+  MT::Array<TermType>::memMove=true;
+RUN_ON_INIT_END()
 

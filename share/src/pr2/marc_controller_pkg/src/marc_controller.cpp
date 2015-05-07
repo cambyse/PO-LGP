@@ -23,18 +23,19 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //-- match ROS and ORS joint ids
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
-  ROS_INFO("*** ORS model loaded");
+  ROS_INFO("%s",STRING("*** ORS model loaded: " <<world.q.N <<"joints -- saved in 'z.model.kvg'").p);
+  world >>FILE("z.model.kvg");
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
-  Kp.resize(world.q.N).setZero();
-  Kd.resize(world.q.N).setZero();
-  Kq_gainFactor=Kd_gainFactor=ARR(1.);
-  KfL_gainFactor.clear();
+  Kp_base.resize(world.q.N).setZero();
+  Kd_base.resize(world.q.N).setZero();
+  Kp=Kd=ARR(1.);
+  Ki.clear();
   limits.resize(world.q.N,4).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
-    info = j->ats.getValue<arr>("gains");  if(info){ Kp(j->qIndex)=info->elem(0); Kd(j->qIndex)=info->elem(1); }
+    info = j->ats.getValue<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
     info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
     } }
@@ -49,7 +50,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       q(j->qIndex) = pr2_joint->position_;
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
 		      <<"' \tq=" <<q(j->qIndex)
-		      <<" \tgains=" <<Kp(j->qIndex) <<' '<<Kd(j->qIndex)
+		      <<" \tgains=" <<Kp_base(j->qIndex) <<' '<<Kd_base(j->qIndex)
 		      <<" \tlimits=" <<limits[j->qIndex]).p);
     }else{
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' not matched in pr2").p);
@@ -64,7 +65,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   baseCommand_publisher = nh.advertise<geometry_msgs::Twist>("/base_controller/command", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
-  forceSensor_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
+  l_ft_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::l_ft_subscriber_callback, this);
+  r_ft_subscriber = nh.subscribe("/ft_sensor/r_ft_compensated", 1, &TreeControllerClass::r_ft_subscriber_callback, this);
 
   ROS_INFO("*** TreeControllerClass Started");
 
@@ -78,7 +80,7 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
-  fL_error = zeros(3);
+  err = zeros(3);
   q_filt = 0.;
   qd_filt = 0.95;
   gamma = 1.;
@@ -114,22 +116,22 @@ void TreeControllerClass::update() {
     }
 
     u = zeros(q.N);
-    if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
-      u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
-      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
-    }else if(Kq_gainFactor.d0==q.N && Kq_gainFactor.d1==q.N && Kd_gainFactor.N==1){
-      u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
-      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
+    if(Kp.N==1 && Kd.N==1){
+      u += Kp_base % (Kp.scalar() * (q_ref - q));
+      u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
+    }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
+      u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
+      u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }
     u += u_bias;
 
     // torque PD for left ft sensor
-    if (KfL_gainFactor.N==0) {
-      fL_error = fL_error*0.;    // reset integral error
+    //double ft_norm = length(fL_obs);
+    if (/*ft_norm<2. ||*/ !Ki.N) {   // no contact or Ki gain -> don't use the integral term
+      err = err*0.;              // reset integral error
     } else {
-      fL_error = gamma*fL_error + (fL_ref - EfL*fL_obs);
-//       ROS_INFO("%s",STRING("KfL_gainFactor * fL_error: " << KfL_gainFactor * fL_error).p);
-      u += KfL_gainFactor * fL_error;
+      err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
+      u += Ki * err;
     }
 
     //-- command efforts to KDL
@@ -160,6 +162,7 @@ void TreeControllerClass::update() {
   jointStateMsg.q = VECTOR(q);
   jointStateMsg.qdot = VECTOR(qd);
   jointStateMsg.fL = VECTOR(fL_obs);
+  jointStateMsg.fR = VECTOR(fR_obs);
   jointStateMsg.u_bias = VECTOR(u);
 
   jointState_publisher.publish(jointStateMsg);
@@ -174,25 +177,30 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);
-//  fL_ref = ARRAY(msg->fL);
-//  EfL = ARRAY(msg->EfL);
-//  KfL_gainFactor = ARRAY(msg->KfL_gainFactor);
-  if (KfL_gainFactor.N>0) KfL_gainFactor.reshape(q_ref.N,3);
-  if (EfL.N>0) EfL.reshape(3,6);
+  fL_ref = ARRAY(msg->fL);
+  fR_ref = ARRAY(msg->fR);
+  J_ft_inv = ARRAY(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
 #define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
-  CP(Kq_gainFactor);
-  CP(Kd_gainFactor);
+  CP(Kp);
+  CP(Kd);
 #undef CP
+  Ki = ARRAY(msg->Ki);             if (Ki.N>0) Ki.reshape(q_ref.N, 3);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   gamma = msg->gamma;
   mutex.unlock();
 }
 
-void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
+void TreeControllerClass::l_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
   const geometry_msgs::Vector3 &f=msg->wrench.force;
   const geometry_msgs::Vector3 &t=msg->wrench.torque;
   fL_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
+}
+
+void TreeControllerClass::r_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
+  const geometry_msgs::Vector3 &f=msg->wrench.force;
+  const geometry_msgs::Vector3 &t=msg->wrench.torque;
+  fR_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
 }
 
 } // namespace

@@ -115,14 +115,14 @@ void executeTrajectory(String scene, ControlType cType){
   Task *c;
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goal, 1e4);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
   c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.,0.,0.}, 1e4);
+  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
 //  c = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
-//  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+//  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -173,7 +173,7 @@ void executeTrajectory(String scene, ControlType cType){
     dir = ARRAY(world.getBodyByName("dir")->X.pos);
     cout << dir << endl;
   } else {
-    dir = ARRAY(1.,0.,0.);
+    dir = {1.,0.,0.};
   }
 
   std::vector<MObject*> mobstacles;
@@ -186,7 +186,7 @@ void executeTrajectory(String scene, ControlType cType){
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dir);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
+  CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
   double regularization = 1e-3;
 
   // initialize controllers

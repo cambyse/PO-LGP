@@ -499,7 +499,7 @@ void Quaternion::setInterpolate(double t, const Quaternion& a, const Quaternion 
   y=a.y+t*(sign*b.y-a.y);
   z=a.z+t*(sign*b.z-a.z);
   normalize();
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 /// assigns the rotation to \c a DEGREES around the vector (x, y, z)
@@ -509,6 +509,7 @@ void Quaternion::setDeg(double degree, const Vector& vec) { setRad(degree*MT_PI/
 
 /// assigns the rotation to \c a RADIANTS (2*PI-units) around the vector (x, y, z)
 void Quaternion::setRad(double angle, double _x, double _y, double _z) {
+  if(!angle){ setZero(); return; }
   double l = _x*_x + _y*_y + _z*_z;
   if(l<1e-15) { setZero(); return; }
   angle/=2.;
@@ -517,7 +518,7 @@ void Quaternion::setRad(double angle, double _x, double _y, double _z) {
   x=_x*l;
   y=_y*l;
   z=_z*l;
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 /// ..
@@ -527,6 +528,7 @@ void Quaternion::setRad(double angle, const Vector &axis) {
 
 /// assigns the rotation to \c a RADIANTS (2*PI-units) around the current axis
 void Quaternion::setRad(double angle) {
+  if(!angle){ setZero(); return; }
   double l = x*x + y*y + z*z;
   if(l<1e-15) { setZero(); return; }
   angle/=2.;
@@ -535,34 +537,37 @@ void Quaternion::setRad(double angle) {
   x*=l;
   y*=l;
   z*=l;
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 /// rotation around X-axis by given radiants
 void Quaternion::setRadX(double angle) {
+  if(!angle){ setZero(); return; }
   angle/=2.;
   w=cos(angle);
   x=sin(angle);
   y=z=0.;
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 /// rotation around Y-axis by given radiants
 void Quaternion::setRadY(double angle) {
+  if(!angle){ setZero(); return; }
   angle/=2.;
   w=cos(angle);
   y=sin(angle);
   x=z=0.;
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 /// rotation around Z-axis by given radiants
 void Quaternion::setRadZ(double angle) {
+  if(!angle){ setZero(); return; }
   angle/=2.;
   w=cos(angle);
   z=sin(angle);
   x=y=0.;
-  isZero=(w==1. || w==-1.);
+  isZero=false;
 }
 
 Quaternion& Quaternion::setRpy(double r, double p, double y) {

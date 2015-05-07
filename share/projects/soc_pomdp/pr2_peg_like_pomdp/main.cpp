@@ -42,11 +42,11 @@ struct MySystem:System{
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<JoystickInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
@@ -114,25 +114,25 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
 
 
-  PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target"));
   pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
+  CtrlTask *pd_x = MP.addPDTask("pose", .1, .8, new TaskMap_qItself());
   pd_x->prec = .1;
 
 
 /*/
 
-  PDtask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
+  CtrlTask* limits = MP.addPDTask("limits", .1, .8, new TaskMap_qLimits());
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
   //tasks.append(limits);
 
-  PDtask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  CtrlTask* coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   coll->y_ref.setZero();
   coll->v_ref.setZero();/*/
 

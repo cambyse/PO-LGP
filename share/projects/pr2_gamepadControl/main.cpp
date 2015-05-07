@@ -12,11 +12,11 @@ struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
@@ -47,18 +47,24 @@ void TEST(Gamepad){
   Gamepad2Tasks j2t(MP);
 
   bool useRos = MT::getParameter<bool>("useRos", false);
+  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
-
+    uint trials=0;
+    for(;useRos;){
       S.ctrl_obs.var->waitForNextRevision();
-      cout << S.ctrl_obs.get()->q.N << endl;
-      cout << MP.world.q.N << endl;
+      cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
+      cout <<"LOCAL  joint dimension=" <<MP.world.q.N <<endl;
 
       if(S.ctrl_obs.get()->q.N==MP.world.q.N
          && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
         break;
+
+      trials++;
+      if(trials>20){
+        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
     }
 
     //-- set current state
@@ -77,7 +83,7 @@ void TEST(Gamepad){
   MT::arrayBrackets="  ";
 
   for(uint t=0;;t++){
-//    S.gamepadState.var->waitForNextRevision();
+    S.gamepadState.var->waitForNextRevision();
     arr gamepadState = S.gamepadState.get();
     bool shutdown = j2t.updateTasks(gamepadState);
     if(t>10 && shutdown) engine().shutdown.incrementValue();
@@ -93,8 +99,8 @@ void TEST(Gamepad){
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
-    cout <<t <<endl;
-//    MP.reportCurrentState();
+//    cout <<t <<endl;
+    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
     if(!(t%4))
@@ -108,29 +114,23 @@ void TEST(Gamepad){
 #if 0 // set a feew fwd force task
       refs.fL = ARR(10., 0., 0.);
       refs.u_bias = 1.*(~J_fL * refs.fL);
-      refs.Kq_gainFactor = ARR(.3);
+      refs.Kp = ARR(.3);
 #else // apply force in direction fe
-      arr fe = ARR(0.,0.,-5.);
-      double alpha = .01;
+      arr f_des = ARR(0.,0.,-5.);
+      double alpha = .003;
       ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-      arr JeFT,Jeq;
-      MP.world.kinematicsPos(NoArr,Jeq,ftL_shape->body,&ftL_shape->rel.pos);
-      MP.world.kinematicsPos_wrtFrame(NoArr,JeFT,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
+      arr J_ft, J;
+      MP.world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
+      MP.world.kinematicsPos_wrtFrame(NoArr,J_ft,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
 
-      JeFT = inverse_SymPosDef(JeFT*~JeFT)*JeFT;
+      refs.u_bias = ~J*f_des;
+      refs.fL = f_des;
+      refs.Ki = alpha*~J;
+      refs.J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
 
-      // compute u_bias
-      refs.u_bias = ~Jeq*fe;
-//      refs.u_bias = zeros(q.N);
+      J = inverse_SymPosDef(J*~J)*J;
 
-      // compute force feedback
-      refs.fL = fe;
-      refs.KfL_gainFactor = alpha*~Jeq;
-      refs.EfL = JeFT;
-
-      Jeq = inverse_SymPosDef(Jeq*~Jeq)*Jeq;
-
-      fil <<t <<' ' <<fe <<' ' << JeFT*fLobs << " " << Jeq*uobs << endl;
+      fil <<t <<' ' <<f_des <<' ' << J_ft*fLobs << " " << J*uobs << endl;
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
@@ -143,44 +143,40 @@ void TEST(Gamepad){
 //      arr J_fL0 = R*Jeq;
 //      J_fL0[0]=0.;
 
-//      refs.Kq_gainFactor = ~Jeq*inverse(Jeq * ~Jeq)*J_fL0;
-//      refs.Kq_gainFactor = 10.*refs.Kq_gainFactor + 0.1*eye(q.N);
+//      refs.Kp = ~Jeq*inverse(Jeq * ~Jeq)*J_fL0;
+//      refs.Kp = 10.*refs.Kp + 0.1*eye(q.N);
 
 //       test gains
 //      arr dq;
 //      MP.world.getJointState(dq);
 //      dq = dq*0.+0.1;
-//      cout << refs.Kq_gainFactor*dq << endl;
+//      cout << refs.Kp*dq << endl;
 //      cout << ~R*J_fL0*dq << endl;
-//      arr dy = ~R*Jeq*refs.Kq_gainFactor*dq;
+//      arr dy = ~R*Jeq*refs.Kp*dq;
 //      cout << R*dy << endl;
 
 #endif
     }else{
-      refs.fL = ARR(0., 0., 0.,0.,0.,0.);
-      refs.KfL_gainFactor.clear();
-      refs.EfL.clear();
+      refs.fL = zeros(6);
+      refs.Ki.clear();
+      refs.J_ft_inv.clear();
       refs.u_bias = zeros(q.N);
     }
-    refs.Kq_gainFactor = 1.;
-    refs.Kd_gainFactor = 0.;
+    refs.Kp = 1.;
+    if(mode==2) refs.Kp = .1;
+    refs.Kd = 1.;
     refs.gamma = 1.;
 
     refs.q=q;
     refs.qdot=zero_qdot;
-    if(trans && trans->qDim()==3){
+    if(sendBaseMotion && trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-      if(false){ //no translations!
-        refs.qdot(trans->qIndex+0) = 0.;
-        refs.qdot(trans->qIndex+1) = 0.;
-        refs.qdot(trans->qIndex+2) = 0.;
-      }
     }
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
-    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
+//    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
     S.ctrl_ref.set() = refs;
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;

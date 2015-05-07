@@ -1,5 +1,8 @@
 # MLR Repository
 
+- Infos for students:  README.student.md
+- Infos about the PR2: README.PR2.md
+
 Doxygen documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
 
 Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
@@ -142,6 +145,7 @@ When creating new projects:
 -- perhaps you need to copy dlls around - (don't know how to set the
    path globally)
 
+
 # Run on Virtual Machines
 
 Setting up this software to run on a virtual machine is an option for whoever
@@ -188,3 +192,8 @@ break at some point, transfer the code you've written (either using some
 versioning tool, or a USB stick) to the most recent snapshot of the VM and
 proceed working.
 
+
+# MISC
+
+* Installing portaudio19-dev: Currently has broken links in
+  ubuntu. Solution: first install libjack-jackd2-dev

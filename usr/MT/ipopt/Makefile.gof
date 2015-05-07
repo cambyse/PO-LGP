@@ -1,0 +1,11 @@
+BASE = ../../../share
+
+OBJS = main.o prob.o
+
+CXX = mpic++
+
+#DEPEND = Core MCTS Gui
+
+LIBS += -lipopt
+
+include $(BASE)/gofMake/generic.mk

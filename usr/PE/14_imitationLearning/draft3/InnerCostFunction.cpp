@@ -53,7 +53,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 //    //  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
 //    //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(0.,1.,0.), param(1));
 //    //  c = MP.addTask("final_vel", new TaskMap_qItself());
-//    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),param(2));
+//    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
 //    //  c->map.order=1;
 //  }
 

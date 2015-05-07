@@ -34,7 +34,7 @@ void TEST(Door1){
   t->setCostSpecs(MP.T, MP.T, {-.4}, 1e2);
 
   t = MP.addTask("door_fix", new TaskMap_qItself(G.getJointByName("door_joint")->qIndex, G.joints.N));
-  t->setCostSpecs(0, MP.T/2, {0}, 1e2);
+  t->setCostSpecs(0, MP.T/2, {0.}, 1e2);
 
   t = MP.addTask("contact", new PointEqualityConstraint(G, "endeff",NoVector, "target",NoVector));
   t->setCostSpecs(MP.T/2., MP.T, {0.}, 1.);
@@ -147,6 +147,11 @@ void TEST(Door3){
   G.watch(false);
   MotionProblem MP(G);
   cout <<"joint dimensionality=" <<q.N <<endl;
+//  MP.useSwift=false;
+
+//  arr y,lim=G.getLimits();
+//  G.kinematicsLimitsCost(y, NoArr, lim);
+//  cout <<catCol(q,lim) <<endl <<y <<endl;
 
   //-- setup the motion problem
   Task *t;
@@ -169,8 +174,8 @@ void TEST(Door3){
   t = MP.addTask("contact", new PointEqualityConstraint(G, "endeffL",NoVector, "target",NoVector));
   t->setCostSpecs(contactT, MP.T, {0.}, 1.);
 
-  t = MP.addTask("direction2", new VelAlignConstraint(G, "endeffL",NoVector, "door", ors::Vector(-1.,0.,0.),0.4));
-  t->setCostSpecs(contactT, MP.T, {0.}, 1.);
+//  t = MP.addTask("direction2", new VelAlignConstraint(G, "endeffL",NoVector, "door", ors::Vector(-1.,0.,0.),0.4));
+//  t->setCostSpecs(contactT+0., MP.T, {0.}, 1.);
 
   t = MP.addTask("door_fixation", new qItselfConstraint(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()));
   t->setCostSpecs(0.,contactT+10, {0.}, 1.);
@@ -178,6 +183,10 @@ void TEST(Door3){
   t = MP.addTask("handle_fixation", new qItselfConstraint(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()));
   t->setCostSpecs(0.,contactT, {0.}, 1.);
 
+//  t = MP.addTask("direction1", new VelAlignConstraint(G, "endeffL",NoVector, "handle", ors::Vector(0.,0.,-1.),0.7));
+//  t->setCostSpecs(MP.T/2.+5., MP.T/2.+10., {0.}, 1.);
+
+//  t = MP.addTask("collision", new CollisionConstraint(0.05));
   ShapeL except = G.getBodyByName("l_wrist_roll_link")->shapes;
   t = MP.addTask("collision", new ProxyConstraint(allExceptListedPTMT, shapesToShapeIndices(except), 0.05));
   t->setCostSpecs(0., MP.T, {0.}, 1.);
@@ -188,10 +197,14 @@ void TEST(Door3){
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
+  arr lambda = zeros(x.d0,2);
 
   optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+//  optConstrained(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-1));
+//  optConstrained(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-3));
 //  checkGradient(Convert(MF),x,1e-3);
 
+//  cout << lambda << endl;
   MP.costReport();
   for(;;) {displayTrajectory(x, 1, G, "planned trajectory");}
 }

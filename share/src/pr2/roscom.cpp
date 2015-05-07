@@ -1,13 +1,11 @@
 #include "roscom.h"
 
 #ifdef MT_ROS
-
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include <ar_track_alvar/AlvarMarkers.h>
 
 //===========================================================================
 
@@ -20,7 +18,7 @@ bool rosOk(){
 }
 
 //===========================================================================
-
+// RosCom_Spinner
 struct sRosCom_Spinner{
 };
 
@@ -35,15 +33,16 @@ void RosCom_Spinner::step(){
 void RosCom_Spinner::close(){}
 
 //===========================================================================
-
+// CosCom_ControllerSync
 struct sRosCom_ControllerSync{
   RosCom_ControllerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber sub_jointState;
   ros::Publisher pub_jointReference;
+
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
     //  cout <<"** joinstState_callback" <<endl;
-    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->u_bias), ARRAY(msg->EfL), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
+    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
 };
@@ -66,10 +65,10 @@ void RosCom_ControllerSync::step(){
   jointRef.qdot= VECTOR(m.qdot);
   jointRef.fL = VECTOR(m.fL);
   jointRef.u_bias = VECTOR(m.u_bias);
-  jointRef.Kq_gainFactor = VECTOR(m.Kq_gainFactor);
-  jointRef.Kd_gainFactor = VECTOR(m.Kd_gainFactor);
-  jointRef.KfL_gainFactor = VECTOR(m.KfL_gainFactor);
-  jointRef.EfL = VECTOR(m.EfL);
+  jointRef.Kp = VECTOR(m.Kp);
+  jointRef.Kd = VECTOR(m.Kd);
+  jointRef.Ki = VECTOR(m.Ki);
+  jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
   jointRef.velLimitRatio = m.velLimitRatio;
   jointRef.effLimitRatio = m.effLimitRatio;
   jointRef.gamma = m.gamma;
@@ -82,7 +81,51 @@ void RosCom_ControllerSync::close(){
 }
 
 //===========================================================================
+// Helper function so sync ors with the real PR2
+void initialSyncJointStateWithROS(ors::KinematicWorld& world,
+    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
 
+  if (not useRos) { return; }
+
+  //-- wait for first q observation!
+  cout << "** Waiting for ROS message of joints for initial configuration.." << endl
+       << "   If nothing is happening: is the controller running?" << endl;
+
+  for (uint trials = 0; trials < 20; trials++) {
+    ctrl_obs.var->waitForNextRevision();
+    cout << "REMOTE joint dimension=" << ctrl_obs.get()->q.N << endl;
+    cout << "LOCAL  joint dimension=" << world.q.N << endl;
+
+    if (ctrl_obs.get()->q.N == world.q.N and ctrl_obs.get()->qdot.N == world.q.N) {
+      // set current state
+      cout << "** Updating world state" << endl;
+      world.setJointState(ctrl_obs.get()->q, ctrl_obs.get()->qdot);
+      return;
+    }
+    cout << "retrying..." << endl;
+  }
+  HALT("sync'ing real PR2 with simulated failed");
+}
+
+void syncJointStateWitROS(ors::KinematicWorld& world,
+    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
+
+  if (not useRos) { return; }
+
+  for (uint trials = 0; trials < 2; trials++) {
+    ctrl_obs.var->waitForNextRevision();
+
+    if (ctrl_obs.get()->q.N == world.q.N and ctrl_obs.get()->qdot.N == world.q.N) {
+      // set current state
+      world.setJointState(ctrl_obs.get()->q, ctrl_obs.get()->qdot);
+      return;
+    }
+  }
+  HALT("sync'ing real PR2 with simulated failed");
+}
+
+//===========================================================================
+// RosCom_KinectSync
 struct sRosCom_KinectSync{
   RosCom_KinectSync *base;
   ros::NodeHandle nh;
@@ -90,11 +133,11 @@ struct sRosCom_KinectSync{
   ros::Subscriber sub_depth;
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    base->kinect_rgb.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
+    base->kinect_rgb.set() = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
   }
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    byteA data = ARRAY<byte>(msg->data);
+    byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
     base->kinect_depth.set() = ref;
@@ -117,7 +160,7 @@ void RosCom_KinectSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_CamsSync
 struct sRosCom_CamsSync{
   RosCom_CamsSync *base;
   ros::NodeHandle nh;
@@ -147,7 +190,7 @@ void RosCom_CamsSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_ArmCamsSync
 struct sRosCom_ArmCamsSync{
   RosCom_ArmCamsSync *base;
   ros::NodeHandle nh;
@@ -177,7 +220,7 @@ void RosCom_ArmCamsSync::close(){
 }
 
 //===========================================================================
-
+// RosCom_ForceSensorSync
 struct sRosCom_ForceSensorSync{
   RosCom_ForceSensorSync *base;
   ros::NodeHandle nh;
@@ -200,8 +243,8 @@ void RosCom_ForceSensorSync::open(){
   rosCheckInit();
   s = new sRosCom_ForceSensorSync;
   s->base = this;
-  s->sub_left  = s->nh.subscribe("/ft/l_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_left, s);
-  s->sub_right = s->nh.subscribe("/ft/r_gripper_motor", 1, &sRosCom_ForceSensorSync::cb_right, s);
+  s->sub_left  = s->nh.subscribe("/ft_sensor/ft_compensated", 1, &sRosCom_ForceSensorSync::cb_left, s);  // /ft/l_gripper_motor
+//  s->sub_right = s->nh.subscribe("/ft_sensor/r_ft_compensated", 1, &sRosCom_ForceSensorSync::cb_right, s); // /ft/r_gripper_motor
 }
 
 void RosCom_ForceSensorSync::step(){
@@ -212,51 +255,7 @@ void RosCom_ForceSensorSync::close(){
 }
 
 //===========================================================================
-
-struct sRosCom_ARMarkerSync{
-  RosCom_ARMarkerSync *base;
-  ros::NodeHandle nh;
-  ros::Subscriber ar_marker;
-  arr marker_pose;
-  void cb_sync(const ar_track_alvar::AlvarMarkers::ConstPtr& msg){
-    uint N = 20;
-    double f;
-    if (marker_pose.N==0){
-      marker_pose = zeros(N,7);
-       f = 0.;
-    }else{
-      marker_pose = base->marker_pose.get();
-      f = 0.9;
-    }
-
-    if (msg->markers.size()==4){ // only update if all 4 markers are visible
-      for (uint i = 0; i<msg->markers.size();i++) {
-        const ar_track_alvar::AlvarMarker m = msg->markers.at(i);
-        marker_pose[m.id] = marker_pose[m.id]*f+(1.-f)*ARR(m.pose.pose.position.x, m.pose.pose.position.y, m.pose.pose.position.z,m.pose.pose.orientation.x, m.pose.pose.orientation.y, m.pose.pose.orientation.z, m.pose.pose.orientation.w);
-      }
-      base->marker_pose.set() = marker_pose;
-    }
-  }
-};
-
-void RosCom_ARMarkerSync::open(){
-  rosCheckInit();
-  s = new sRosCom_ARMarkerSync;
-  s->base = this;
-  s->ar_marker  = s->nh.subscribe("/ar_pose_marker", 1, &sRosCom_ARMarkerSync::cb_sync, s);
-}
-
-void RosCom_ARMarkerSync::step(){
-}
-
-void RosCom_ARMarkerSync::close(){
-  s->nh.shutdown();
-}
-
-
-//===========================================================================
-
-#else //MT_ROS
+#else // MT_ROS no defined
 
 void RosCom_Spinner::open(){ NICO }
 void RosCom_Spinner::step(){ NICO }
@@ -269,7 +268,6 @@ void RosCom_ControllerSync::close(){ NICO }
 void RosCom_ForceSensorSync::open(){ NICO }
 void RosCom_ForceSensorSync::step(){ NICO }
 void RosCom_ForceSensorSync::close(){ NICO }
-
 #endif
 
 //REGISTER_MODULE(RosCom_Spinner)

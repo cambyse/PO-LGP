@@ -1,5 +1,5 @@
 
-%include ../../../data/apollo_model/apollo_right3.ors
+Include = '../../../data/apollo_model/apollo_right3.ors'
 
 body table { X=<T t(0 0 .7)>  type=0 size=[2 2 .05 0] color=[1 0 0] contact fixed }
 

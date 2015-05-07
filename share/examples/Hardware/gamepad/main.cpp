@@ -5,7 +5,7 @@ void threadedRun() {
   struct MySystem:System{
     ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<GamepadInterface>(NULL, Module_Thread::loopWithBeat, .01);
+      addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
       connect();
     }
   } S;

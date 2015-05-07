@@ -1,5 +1,6 @@
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
+#include <Motion/taskMaps.h>
 
 #include <Motion/motionHeuristics.h>
 
@@ -11,7 +12,7 @@ void TEST(GraspHeuristic){
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
   MotionProblem P(G);
-  P.loadTransitionParameters();
+
 
 //  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
 //  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
@@ -27,8 +28,14 @@ void TEST(GraspHeuristic){
   for(uint k=0;k<10;k++){
 
 #if 1
+
     arr x, xT;
     threeStepGraspHeuristic(xT, P, s->index, 2);
+
+    Task *c;
+    c = P.addTask("transition", new TransitionTaskMap(G));
+    c->map.order=2; //make this an acceleration task!
+    c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
     MotionProblemFunction F(P);
 

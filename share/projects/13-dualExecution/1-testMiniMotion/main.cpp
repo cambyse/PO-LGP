@@ -16,7 +16,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
 c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   MotionProblemFunction MF(P);
   arr x = P.getInitialization();

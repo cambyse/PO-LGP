@@ -37,34 +37,6 @@ extern Mutex cfgFileMutex;
 }
 
 namespace MT {
-/** @brief a standard method to save an object into a file. The same as
-  std::ofstream file; MT::open(file, filename); file <<x;
-  file.close(); */
-template<class T> void save(const T& x, const char *filename) {
-  std::ofstream file;
-  open(file, filename);
-  file <<x;
-  file.close();
-}
-
-/** @brief a standard method to load object from a file. The same as
-std::ifstream file; MT::open(file, filename); file >>x;
-file.close(); */
-template<class T> void load(T& x, const char *filename, bool change_directory) {
-#ifdef MT_MSVC
-  if(change_directory) MT_MSG("can't handle change_directory with MSVC");
-  change_directory = false;
-#endif
-  if(!change_directory) {
-    std::ifstream file;
-    open(file, filename);
-    file >>x;
-    file.close();
-  } else {
-    FILE(filename) >>x;
-  }
-}
-
 /** @brief Search for a command line option \c -tag and, if found, pipe the
  next command line option into \c value by the
  \c operator>>(istream&, type&). Returns false on failure. */
@@ -131,28 +103,28 @@ bool getFromMap(T& x, const char* tag) {
 
 template<class T>
 bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default) {
-  log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
-  log().flush();
+  LOG(3) <<std::setw(20) <<tag <<" = " <<std::setw(5);
+  LOG(3).flush();
   
   if(getFromMap<T>(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"] (map!)" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"] (map!)" <<std::endl;
     return true;
   }
   
   if(getFromCmdLine(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
     return true;
   }
   
   if(getFromCfgFile(x, tag)) {
-    log() <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
+    LOG(3) <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
     return true;
   }
   
   if(hasDefault) {
     if(Default) {
       x=*Default;
-      log() <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
+      LOG(3) <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
     }
     return false;
   }
@@ -182,12 +154,6 @@ template<class T> void getParameter(T& x, const char *tag) {
 template<class T> bool checkParameter(const char *tag) {
   T x;
   return getParameterBase(x, tag, true, (T*)NULL);
-}
-template<class T> void Parameter<T>::initialize() {
-  if(!initialized) {
-    getParameterBase(value, tag, hasDefault, &Default);
-    initialized = true;
-  }
 }
 }
 

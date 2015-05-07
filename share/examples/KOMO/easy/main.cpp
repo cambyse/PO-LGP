@@ -1,4 +1,5 @@
 #include <Ors/ors.h>
+#include <Gui/opengl.h>
 #include <Motion/komo.h>
 
 //===========================================================================
@@ -15,6 +16,12 @@ void TEST(Easy){
 void TEST(EasyPR2){
   //NOTE: this uses a 25-DOF whole-body-motion model of the PR2
   ors::KinematicWorld G("model.kvg");
+  G.meldFixedJoints();
+  G.removeUselessBodies();
+//  ors::KinematicWorld G2=G;
+//  G2.meldFixedJoints();
+//  G2.removeUselessBodies();
+//  G2 >>FILE("z.ors");
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
   cout <<"configuration space dim=" <<G.q.N <<endl;

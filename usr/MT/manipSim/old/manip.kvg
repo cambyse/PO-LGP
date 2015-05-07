@@ -1,0 +1,90 @@
+fluent
+object
+loaded
+ANY
+
+Symbol table1
+Symbol table2
+Symbol block1
+Symbol block2
+Symbol block3
+Symbol block4
+Symbol board1
+Symbol board2
+
+# predicates
+Symbol fixed
+Symbol on
+Symbol movable
+Symbol canGrasp
+
+#non-fluent facts
+(fluent on)
+(fluent movable)
+(object table1)
+(object table2)
+(object block1)
+(object block2)
+(object block3)
+(object block4)
+(object board1)
+(object board2)
+
+(fixed table1)
+(fixed table2)
+
+
+#initial state (fluent-facts)
+#(movable hand)
+#(canGrasp hand)
+#(on table1 block1)
+#(on table1 block2)
+#(on table2 board1)
+#(on table2 board2)
+#(on table1 block3)
+#(on table1 block4)
+
+#(on table1 block1)
+#(on table1 block2)
+#(on block1 board1)
+#(on block2 board1)
+#(on board1 block3)
+#(on board1 block4)
+#(on block3 board2)
+#(on block4 board2)
+
+
+### RULES
+
+Rule break {
+     X, SYM, Y
+     (X SYM Y) (fluent SYM) (object X) (object Y)
+     out1 { (X SYM Y)! }
+}
+
+Rule create_on{
+  X, Y,
+  (loaded X)! (fixed X)! (object X) (object Y)
+  out1 { (X on Y) (loaded Y) (movable X) }
+}
+
+#Rule create {
+#     SYM, X, Y
+#     (SYM X Y)! (fluent SYM) (object X) (object Y)
+#     out1 { (SYM X Y) (movable X) }
+#}
+
+
+
+###
+
+#NegConstraint {
+# X, Y, Z
+# (on X Y) (on Y Z) (on X Z)
+#
+
+#Constraint {
+# X, Y, Z
+# (on X Y) (on Y Z) (on X Z)
+#}
+

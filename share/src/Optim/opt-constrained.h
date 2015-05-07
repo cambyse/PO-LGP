@@ -19,6 +19,7 @@
 #pragma once
 
 #include "optimization.h"
+#include "opt-newton.h"
 
 extern const char* MethodName[];
 
@@ -82,10 +83,19 @@ struct UnconstrainedProblemMix:ScalarFunction{
   arr phi_x, J_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblemMix(const ConstrainedProblemMix &P):P(P), muLB(0.), mu(0.), nu(0.) {
+  UnconstrainedProblemMix(const ConstrainedProblemMix &P,ConstrainedMethodType method):P(P), muLB(0.), mu(0.), nu(0.) {
     ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
       return this->lagrangian(dL, HL, x);
     } );
+    //switch on penalty terms
+    nu=1.;
+    switch(method){
+      case squaredPenalty: mu=1.;  break;
+      case augmentedLag:   mu=1.;  break;
+      case anyTimeAula:    mu=1.;  /*stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.);*/ break;
+      case logBarrier:     muLB=.1;  break;
+      case noMethod: HALT("need to set method before");  break;
+    }
   }
 
   double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
@@ -128,6 +138,21 @@ struct PhaseOneProblem{
 
 uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
 uint optConstrainedMix(arr& x, arr &dual, const ConstrainedProblemMix& P, OptOptions opt=NOOPT);
+
+struct OptConstrained{
+  UnconstrainedProblemMix UCP;
+  OptNewton newton;
+  arr &dual;
+  OptOptions opt;
+  uint its;
+  ofstream fil;
+
+  OptConstrained(arr& x, arr &dual, const ConstrainedProblemMix& P, OptOptions opt=NOOPT);
+  ~OptConstrained();
+  bool step();
+  void run();
+//  void reinit();
+};
 
 
 //==============================================================================

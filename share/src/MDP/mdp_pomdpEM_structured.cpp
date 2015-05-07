@@ -137,10 +137,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
+  infer::FactorList twotimeslice = cat({&Fbeta}, fsc.transFacs, mdp.obsFacs, mdp.transFacs, {&Falpha});
   
   //term1: derived from the immediate reward model
-  infer::FactorList immediateR = cat(mdp.rewardFacs, fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
+  infer::FactorList immediateR = cat(mdp.rewardFacs, fsc.transFacs, mdp.obsFacs, mdp.transFacs, {&Falpha});
   
   //loop through all transition factors of the controller
   for(i=0; i<fsc.transFacs.N; i++){

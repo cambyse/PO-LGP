@@ -1,0 +1,21 @@
+
+* Your motion primitives should ADD predicates: when the MP converged, failed, timeout
+
+* When a predicate is true, you should execute the motion primitive
+
+* The rules (in the current version) implement a stationary policy (i.e., trigger the activation of new MPs depending on the current state
+
+
+
+* Innsbruck should ADD primitives that indicate the state of the other agent
+
+
+
+* Our MCTS code should compute posteriors over what might happen next
+
+
+
+* Thibaut will provide a Q-function over decisions; which is also a sort of probability over what might happen next
+
+
+

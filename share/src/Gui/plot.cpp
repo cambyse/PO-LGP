@@ -642,7 +642,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     if(data.lines(i).d1!=4) {
-      PLOTEVERY(block, " with l notitle");
+      PLOTEVERY(block, " with l t");
     } else { //with filled error curves
       PLOTEVERY(block,
                 " using 1:2:3 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle, \\\n ");
@@ -657,7 +657,9 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     data.points(i).write(gnuplotdata," ","\n","  ",false,false);
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
-    PLOTEVERY(block, " with p notitle");
+    MT::String a;
+    if(i<data.legend.N) a<< " with p title '" <<data.legend(i) <<"' ";
+    PLOTEVERY(block, a);
     block++;
   }
   

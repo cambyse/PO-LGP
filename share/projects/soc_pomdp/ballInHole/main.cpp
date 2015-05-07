@@ -149,14 +149,14 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   //-- setup the motion problem
   Task *pos = P.addTask("position",
                             new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
 
   //-- convert
   MotionProblemFunction MF(P);
@@ -208,13 +208,13 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   MC.qitselfPD.active=true;
 
   //position PD task
-  PDtask *pd_y=
+  CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x=
+  CtrlTask *pd_x=
       MC.addPDTask("pose", .1, .8,
                     new TaskMap_qItself());
   pd_x->prec = .1;

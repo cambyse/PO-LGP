@@ -1,17 +1,38 @@
 #include <Core/thread.h>
 
 TStream tout(cout);
+Mutex m;
+//===========================================================================
 
 // Normal Thread struct
 struct MyThread: Thread{
-  uint n,i;
-  MyThread(uint _n):Thread(STRING("MyThread_"<<n)), n(_n), i(0) {}
+  Variable<double>& x;
+  uint n;
+  MyThread(Variable<double>& x, uint n):Thread(STRING("MyThread_"<<n)), x(x), n(n){}
   void open(){}
   void close(){}
   void step(){
-    cout <<"Thread " <<n <<" is counting:" <<i++ <<endl;
+    x.set(this)++;
+    COUT <<MT::realTime() <<"sec Thread " <<n <<" is counting:" <<x.get() <<endl;
   }
 };
+
+void TEST(Thread){
+  Variable<double> x(0.);
+  MyThread t1(x, 1), t2(x, 2);
+
+  t1.threadLoopWithBeat(.5);
+  t2.listenTo(x); //whenever t1 modifies x, t2 is stepped
+  
+  MT::wait(3.);
+
+  t1.threadClose();
+  t2.threadClose();
+
+  CHECK(x.get()>=11. && x.get()<=15.,"");
+}
+
+//===========================================================================
 
 // Thread struct with throut
 struct MyOtherThread: Thread {
@@ -29,20 +50,7 @@ struct MyOtherThread: Thread {
   }
 };
 
-void TEST(Thread){
-  MyThread t1(1), t2(2);
-
-  t1.threadLoopWithBeat(.1);
-  t2.threadLoopWithBeat(1.);
-  
-  MT::wait(3.);
-
-  t1.threadClose();
-  t2.threadClose();
-
-  CHECK(t1.i>=29 && t1.i<=31,"");
-  CHECK(t2.i>=2 && t2.i<=4,"");
-
+void TEST(Throut){
   // tout example
   int nThreads = 2;
   MyOtherThread *tp[nThreads];
@@ -92,8 +100,13 @@ void TEST(Thread){
   tout(&j) << "test " << j << endl;
 }
 
+//===========================================================================
+
 int MAIN(int argc,char** argv){
+  MT::initCmdLine(argc, argv);
   testThread();
+//  testVariable();
+//  testThrout();
 
   return 0;
 }

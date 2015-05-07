@@ -10,10 +10,15 @@ VideoEncoder_libav_simple *vid;
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   MotionProblem MP(world, false);
-  MP.loadTransitionParameters();
   x = MP.getInitialization();
 
   //-- setup the motion problem
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+
+
   Task *pos = MP.addTask("position",
                             new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
@@ -67,13 +72,13 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   MC.qitselfPD.active=true;
 
   //position PD task
-  PDtask *pd_y=
+  CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
-  PDtask *pd_x=
+  CtrlTask *pd_x=
       MC.addPDTask("pose", 1., .8,
                     new TaskMap_qItself());
   pd_x->prec = .1;

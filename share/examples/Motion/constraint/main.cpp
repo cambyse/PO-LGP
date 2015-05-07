@@ -96,6 +96,7 @@ void TEST(EqualityConstraints){
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
+  cout << x << endl;
   optConstrained(x, MP.dualMatrix, Convert(MF));
   MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
@@ -286,11 +287,11 @@ void TEST(qItselfConstraint){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 //  testStickiness();
-//  testEqualityConstraints();
+  testEqualityConstraints();
 //  testClosedKinematicChain();
 //  testContactConstraint();
 //  testVelConstraint();
-  testqItselfConstraint();
+//  testqItselfConstraint();
   return 0;
 }
 
