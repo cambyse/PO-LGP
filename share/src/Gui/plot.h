@@ -57,7 +57,7 @@ void plot(bool wait=true, const char* txt=0);
 
 void plotClear();
 void plotFunction(const arr& f, double x0=0., double x1=0.);
-void plotFunctionPoints(const arr& x, const arr& f, MT::String title);
+void plotFunctionPoints(const arr& x, const arr& f);
 void plotFunctions(const arr& f, double x0=0., double x1=0.);
 void plotFunction(const arr& x, const arr& f);
 void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& l);
