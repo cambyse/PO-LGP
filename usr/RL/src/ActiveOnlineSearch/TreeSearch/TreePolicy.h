@@ -3,8 +3,6 @@
 
 #include "AbstractMonteCarloTreeSearch.h"
 
-class Environment;
-
 namespace tree_policy {
 
     typedef AbstractMonteCarloTreeSearch::graph_t              graph_t;
@@ -25,7 +23,7 @@ namespace tree_policy {
     class TreePolicy {
     public:
         virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
+                                           std::shared_ptr<AbstractEnvironment> environment,
                                            const graph_t & graph,
                                            const node_info_map_t & node_info_map,
                                            const mcts_node_info_map_t & mcts_node_info_map,
@@ -37,7 +35,7 @@ namespace tree_policy {
     class Uniform: public TreePolicy {
     public:
         virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
+                                           std::shared_ptr<AbstractEnvironment> environment,
                                            const graph_t & graph,
                                            const node_info_map_t & node_info_map,
                                            const mcts_node_info_map_t & mcts_node_info_map,
@@ -50,7 +48,7 @@ namespace tree_policy {
     class MaxPolicy: public TreePolicy {
     public:
         virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
+                                           std::shared_ptr<AbstractEnvironment> environment,
                                            const graph_t & graph,
                                            const node_info_map_t & node_info_map,
                                            const mcts_node_info_map_t & mcts_node_info_map,
@@ -58,7 +56,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
+                               std::shared_ptr<AbstractEnvironment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -72,7 +70,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
+                               std::shared_ptr<AbstractEnvironment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -97,7 +95,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
+                               std::shared_ptr<AbstractEnvironment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,
@@ -125,7 +123,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
+                               std::shared_ptr<AbstractEnvironment> environment,
                                const graph_t & graph,
                                const node_info_map_t & node_info_map,
                                const mcts_node_info_map_t & mcts_node_info_map,

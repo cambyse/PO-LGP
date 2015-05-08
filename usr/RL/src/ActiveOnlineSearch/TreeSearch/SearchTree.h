@@ -8,14 +8,17 @@
 
 #include <lemon/list_graph.h>
 
-#include "../Environment/Environment.h"
+#include <QString>
+
+#include <MCTS_Environment/AbstractEnvironment.h>
 
 class SearchTree {
     //----typedefs/classes----//
 public:
-    typedef Environment::state_t state_t;
-    typedef Environment::action_t action_t;
-    typedef Environment::reward_t reward_t;
+    typedef AbstractEnvironment::action_handle_t      action_handle_t;
+    typedef AbstractEnvironment::state_handle_t       state_handle_t;
+    typedef AbstractEnvironment::observation_handle_t observation_handle_t;
+    typedef AbstractEnvironment::reward_t             reward_t;
     enum NODE_TYPE {STATE_NODE, ACTION_NODE};
     typedef lemon::ListDigraph                 graph_t;
     typedef graph_t::Node                      node_t;
@@ -26,8 +29,11 @@ public:
     typedef graph_t::OutArcIt                  out_arc_it_t;
     /**
      * Type for state-->node maps for nodes at the same depth. */
-    typedef std::unordered_map<state_t,node_t,state_t::hash> level_map_t;
-    typedef std::list<level_map_t>             level_map_list_t;
+    typedef std::unordered_map<
+        state_handle_t,
+        node_t,
+        AbstractEnvironment::hash<state_handle_t>> level_map_t;
+    typedef std::list<level_map_t>                 level_map_list_t;
     /**
      * Different types of graphs. */
     enum GRAPH_TYPE {
@@ -49,10 +55,10 @@ public:
         NODE_TYPE type = STATE_NODE;
         /**
          * Only valid for ACTION_NODE: the action the node corresponds to. */
-        action_t action = -1;
+        action_handle_t action = nullptr;
         /**
          * Only valid for STATE_NODE: the state the node corresponds to. */
-        state_t state = -1;
+        state_handle_t state = nullptr;
         /**
          * Only valid for STATE_NODE: Iterator to the map in #level_map_list,
          * which this node is an element of. */
@@ -64,7 +70,7 @@ public:
 protected:
     /**
      * Pointer to the environment. */
-    std::shared_ptr<Environment> environment;
+    std::shared_ptr<AbstractEnvironment> environment;
     /**
      * Discount factor for computing the value. */
     const double discount;
@@ -93,7 +99,7 @@ private:
 
     //----methods----//
 public:
-    SearchTree(std::shared_ptr<Environment> environment,
+    SearchTree(std::shared_ptr<AbstractEnvironment> environment,
                double discount,
                GRAPH_TYPE graph_type);
     virtual ~SearchTree() = default;
@@ -101,20 +107,20 @@ public:
      * Initializes an empty search tree with the root node set to \e s. This
      * function must be called before using the SearchTree and may also be used
      * to reset everything. */
-    virtual void init(const state_t & root_state);
+    virtual void init(const state_handle_t & root_state);
     /**
      * Proceed with planning. In MonteCarloTreeSearch methods this will initiate
      * a new rollout. */
     virtual void next() = 0;
     /**
      * Returns a recommendation for an action for the root node. */
-    virtual action_t recommend_action() const = 0;
+    virtual action_handle_t recommend_action() const = 0;
     /**
      * Prunes the tree according to the given action and state. This function
      * may be called after an action was actually performed in the environment
      * to reuse the relevant rest of the tree instead of resetting it with
      * init().*/
-    virtual void prune(const action_t &, const state_t &);
+    virtual void prune(const action_handle_t &, const state_handle_t &);
     /**
      * Prints the graph to a PDF file with given name. Internally uses
      * util::graph_to_pdf(). */
@@ -130,10 +136,10 @@ public:
     virtual const node_info_map_t & get_node_info_map() const final;
     /**
      * Get state of a node. */
-    virtual const state_t state(const node_t & state_node) const final;
+    virtual const state_handle_t state(const node_t & state_node) const final;
     /**
      * Get action of a node. */
-    virtual const action_t action(const node_t & action_node) const final;
+    virtual const action_handle_t action(const node_t & action_node) const final;
     /**
      * Get type of a node. */
     virtual const NODE_TYPE type(const node_t & node) const final;
@@ -157,19 +163,19 @@ protected:
     virtual QString str_rich(const node_t &) const;
     virtual double color_rescale(const double&) const;
     virtual std::tuple<arc_t,node_t> find_or_create_state_node(const node_t & action_node,
-                                                               const state_t & state);
+                                                               const state_handle_t & state);
     virtual std::tuple<arc_t,node_t> find_or_create_action_node(const node_t & state_node,
-                                                                const action_t & action);
-    virtual std::tuple<arc_t,node_t> add_state_node(state_t state, node_t action_node);
-    virtual std::tuple<arc_t,node_t> add_action_node(action_t action, node_t state_node);
+                                                                const action_handle_t & action);
+    virtual std::tuple<arc_t,node_t> add_state_node(state_handle_t state, node_t action_node);
+    virtual std::tuple<arc_t,node_t> add_action_node(action_handle_t action, node_t state_node);
     virtual void erase_node(node_t);
 private:
     std::tuple<arc_t,node_t> find_state_node_among_children(const node_t & action_node,
-                                                            const state_t & state) const;
+                                                            const state_handle_t & state) const;
     node_t find_state_node_among_siblings_children(const node_t & action_node,
-                                                   const state_t & state) const;
+                                                   const state_handle_t & state) const;
     node_t find_state_node_at_same_depth(const node_t & action_node,
-                                         const state_t & state) const;
+                                         const state_handle_t & state) const;
     void add_state_node_to_level_map(const node_t & state_node);
 };
 

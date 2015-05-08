@@ -7,8 +7,6 @@
 
 #include "TreePolicy.h"
 
-class Environment;
-
 namespace backup_method {
 
     typedef AbstractMonteCarloTreeSearch::graph_t              graph_t;
@@ -33,7 +31,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
@@ -49,7 +47,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,
@@ -65,7 +63,7 @@ namespace backup_method {
         virtual void operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,

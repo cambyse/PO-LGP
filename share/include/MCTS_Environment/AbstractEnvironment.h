@@ -10,15 +10,24 @@ class AbstractEnvironment {
     //----typedefs/classes----//
 public:
     struct Action {
+        struct hash {
+            size_t operator()(const Action & a) const {return a.get_hash();}
+        };
         virtual ~Action() = default;
+        virtual size_t get_hash() const = 0;
     };
     struct Observation {
+        struct hash {
+            size_t operator()(const Observation & o) const {return o.get_hash();}
+        };
         virtual ~Observation() = default;
         virtual bool operator==(const Observation & other) const = 0;
         virtual bool operator!=(const Observation & other) const {return !(*this==other);}
+        virtual size_t get_hash() const = 0;
     };
     struct State {
         virtual ~State() = default;
+    protected:
         virtual bool operator==(const State & other) const = 0;
         virtual bool operator!=(const State & other) const {return !(*this==other);}
     };
@@ -28,6 +37,8 @@ public:
     typedef std::vector<action_handle_t> action_container_t;
     typedef double reward_t;
     typedef std::tuple<observation_handle_t,reward_t> observation_reward_pair_t;
+    template<typename C>
+        struct hash: public std::hash<C> {};
 
     //----methods----//
 public:
@@ -38,11 +49,21 @@ public:
      * resulting observation and reward. */
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) = 0;
     /**
+     * Perform a transition from the given state without actually changing the environment. */
+    virtual observation_reward_pair_t transition(const state_handle_t & state_handle,
+                                                 const action_handle_t & action_handle) {
+        auto current_state = get_state_handle();
+        this->set_state(state_handle);
+        auto return_value = transition(action_handle);
+        this->set_state(current_state);
+        return return_value;
+    }
+    /**
      * Get the available actions in the current state. */
-    virtual const action_container_t get_actions() = 0;
+    virtual action_container_t get_actions() = 0;
     /**
      * Get the current state. */
-    virtual const state_handle_t get_state_handle() = 0;
+    virtual state_handle_t get_state_handle() = 0;
     /**
      * Set the environment's state the the given state. */
     virtual void set_state(const state_handle_t & state_handle) = 0;
@@ -52,6 +73,15 @@ public:
     /**
      * Return whether the current state is a terminal state. */
     virtual bool is_terminal_state() const = 0;
+    /**
+     * Return whether the given state is a terminal state. */
+    virtual bool is_terminal_state(const state_handle_t & state_handle) {
+        auto current_state = get_state_handle();
+        this->set_state(state_handle);
+        auto return_value = is_terminal_state();
+        this->set_state(current_state);
+        return return_value;
+    }
     /**
      * Return whether the environment has deterministic transitions and rewards. */
     virtual bool is_deterministic() const = 0;
@@ -93,6 +123,30 @@ public:
         auto base_ptr = std::dynamic_pointer_cast<const State>(derived_ptr);
         assert(base_ptr!=nullptr);
         return base_ptr;
+    }
+};
+
+template<>
+struct AbstractEnvironment::hash<AbstractEnvironment::Action>:
+public AbstractEnvironment::Action::hash {};
+
+template<>
+struct AbstractEnvironment::hash<AbstractEnvironment::Observation>:
+public AbstractEnvironment::Observation::hash {};
+
+template<>
+struct AbstractEnvironment::hash<AbstractEnvironment::action_handle_t>:
+public AbstractEnvironment::Action::hash {
+    size_t operator()(const action_handle_t & a) const {
+        return a->get_hash();
+    }
+};
+
+template<>
+struct AbstractEnvironment::hash<AbstractEnvironment::observation_handle_t>:
+public AbstractEnvironment::Observation::hash {
+    size_t operator()(const observation_handle_t & o) const {
+        return o->get_hash();
     }
 };
 

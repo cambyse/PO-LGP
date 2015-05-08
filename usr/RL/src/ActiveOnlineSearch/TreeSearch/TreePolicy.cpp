@@ -30,18 +30,18 @@ namespace tree_policy {
     typedef AbstractMonteCarloTreeSearch::out_arc_it_t  out_arc_it_t;
 
     action_handle_t Uniform::operator()(const node_t & state_node,
-                                 std::shared_ptr<Environment> environment,
+                                 std::shared_ptr<AbstractEnvironment> environment,
                                  const graph_t & graph,
                                  const node_info_map_t & node_info_map,
                                  const mcts_node_info_map_t & mcts_node_info_map,
                                  const mcts_arc_info_map_t & mcts_arc_info_map) const {
         action_handle_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << environment->action_name(*action));
+        DEBUG_OUT(1,"Select action: " << Environment::name(*environment,action));
         return action;
     }
 
     action_handle_t MaxPolicy::operator()(const node_t & state_node,
-                                   std::shared_ptr<Environment> environment,
+                                   std::shared_ptr<AbstractEnvironment> environment,
                                    const graph_t & graph,
                                    const node_info_map_t & node_info_map,
                                    const mcts_node_info_map_t & mcts_node_info_map,
@@ -74,7 +74,7 @@ namespace tree_policy {
         // select unsampled action if there are any left
         if(action_set.size()>0) {
             action_handle_t action = random_select(action_set);
-            DEBUG_OUT(2,"Selecting unsampled action: " << environment->action_name(action));
+            DEBUG_OUT(2,"Selecting unsampled action: " << Environment::name(*environment,action));
             return action;
         } else {
             DEBUG_OUT(2,"No unsampled actions.");
@@ -84,7 +84,7 @@ namespace tree_policy {
         IF_DEBUG(3) {
             DEBUG_OUT(3,"Use upper bound to choose between:");
             for(auto bound_action : scores) {
-                DEBUG_OUT(3,"    '" << environment->action_name(bound_action.second) <<
+                DEBUG_OUT(3,"    '" << Environment::name(*environment,bound_action.second) <<
                           "' with bound " << bound_action.first);
             }
         }
@@ -103,14 +103,14 @@ namespace tree_policy {
 
         // random tie breaking between action with equal upper bound
         action_handle_t action = random_select(max_score_actions);
-        DEBUG_OUT(2,"Choosing action " << environment->action_name(action) << " with upper bound " << max_score );
+        DEBUG_OUT(2,"Choosing action " << Environment::name(*environment,action) << " with upper bound " << max_score );
         return action;
     }
 
     reward_t Optimal::score(const node_t & state_node,
                             const arc_t & to_action_arc,
                             const node_t & action_node,
-                            std::shared_ptr<Environment> environment,
+                            std::shared_ptr<AbstractEnvironment> environment,
                             const graph_t & graph,
                             const node_info_map_t & node_info_map,
                             const mcts_node_info_map_t & mcts_node_info_map,
@@ -123,7 +123,7 @@ namespace tree_policy {
     reward_t UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node,
-                         std::shared_ptr<Environment> environment,
+                         std::shared_ptr<AbstractEnvironment> environment,
                          const graph_t & graph,
                          const node_info_map_t & node_info_map,
                          const mcts_node_info_map_t & mcts_node_info_map,
@@ -140,7 +140,7 @@ namespace tree_policy {
     reward_t UCB_Plus::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node,
-                             std::shared_ptr<Environment> environment,
+                             std::shared_ptr<AbstractEnvironment> environment,
                              const graph_t & graph,
                              const node_info_map_t & node_info_map,
                              const mcts_node_info_map_t & mcts_node_info_map,

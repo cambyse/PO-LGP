@@ -44,9 +44,9 @@ using namespace tree_policy;
 using namespace value_heuristic;
 using namespace backup_method;
 
-typedef Environment::state_t state_t;
-typedef Environment::action_t action_t;
-typedef Environment::reward_t reward_t;
+typedef AbstractEnvironment::state_handle_t  state_handle_t;
+typedef AbstractEnvironment::action_handle_t action_handle_t;
+typedef AbstractEnvironment::reward_t        reward_t;
 
 static const std::set<std::string> mode_set = {"SAMPLE",
                                                "WATCH",
@@ -157,8 +157,8 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<Environment>,
-      state_t> setup();
+      shared_ptr<AbstractEnvironment>,
+      state_handle_t> setup();
 QString header(int argn, char ** args);
 
 int main(int argn, char ** args) {
@@ -223,21 +223,21 @@ int main(int argn, char ** args) {
                      shared_ptr<TreePolicy>, tree_policy,
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
-                     shared_ptr<Environment>, environment,
-                     state_t, root_state) = setup();
+                     shared_ptr<AbstractEnvironment>, environment,
+                     state_handle_t, root_state) = setup();
         if(environment_arg.getValue()!="DynamicTightRope") {
             cout << "run,state (from),action,reward,state (to)" << endl;
             for(int run : Range(sample_n_arg.getValue())) {
-                for(auto state_from : environment->get_states()) {
+                for(auto state_from : Environment::get_states(*environment)) {
                     if(environment->is_terminal_state(state_from)) continue;
                     for(auto action : environment->get_actions()) {
-                        RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->transition(state_from, action);
                         cout << QString("%1,%2,%3,%4,%5").
                             arg(run).
-                            arg(state_from).
-                            arg(action).
+                            arg(Environment::name(*environment,state_from)).
+                            arg(Environment::name(*environment,action)).
                             arg(reward).
-                            arg(state_to) << endl;
+                            arg(Environment::name(*environment,state_to)) << endl;
                     }
                 }
             }
@@ -259,7 +259,7 @@ int main(int argn, char ** args) {
                         DEBUG_DEAD_LINE;
                     }
                     for(auto action : environment->get_actions()) {
-                        RETURN_TUPLE(state_t,state_to,reward_t,reward) = environment->sample(state_from, action);
+                        RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->sample(state_from, action);
                         if(accumulate_arg.getValue()=="min") {
                             accum_reward = std::min(reward,accum_reward);
                         } else if(accumulate_arg.getValue()=="max") {
@@ -280,8 +280,8 @@ int main(int argn, char ** args) {
                      shared_ptr<TreePolicy>, tree_policy,
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
-                     shared_ptr<Environment>, environment,
-                     state_t, root_state) = setup();
+                     shared_ptr<AbstractEnvironment>, environment,
+                     state_handle_t, root_state) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
             if(environment->is_terminal_state(root_state)) break;
@@ -362,8 +362,8 @@ int main(int argn, char ** args) {
                              shared_ptr<TreePolicy>, tree_policy,
                              shared_ptr<ValueHeuristic>, value_heuristic,
                              shared_ptr<BackupMethod>, backup_method,
-                             shared_ptr<Environment>, environment,
-                             state_t, root_state) = setup();
+                             shared_ptr<AbstractEnvironment>, environment,
+                             state_handle_t, root_state) = setup();
 
                 double reward_sum = 0;
                 // for each number of samples a number of steps (or until
@@ -484,16 +484,16 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<Environment>,
-      state_t> setup() {
+      shared_ptr<AbstractEnvironment>,
+      state_handle_t> setup() {
 
     // return variables
     shared_ptr<SearchTree>      search_tree;
     shared_ptr<TreePolicy>      tree_policy;
     shared_ptr<ValueHeuristic>  value_heuristic;
     shared_ptr<BackupMethod>    backup_method;
-    shared_ptr<Environment>     environment;
-    state_t                     root_state;
+    shared_ptr<AbstractEnvironment> environment;
+    state_handle_t              root_state;
     // set up environment
     if(environment_arg.getValue()=="TightRope") {
         environment.reset(new TightRope(15));

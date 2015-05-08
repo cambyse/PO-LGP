@@ -1,5 +1,7 @@
 #include "ValueHeuristic.h"
 
+#include "../Environment/Environment.h"
+
 #include <limits>
 
 #include <util/util.h>
@@ -15,7 +17,7 @@ namespace value_heuristic {
     void Zero::operator()(const node_t & state_node,
                           const state_handle_t &,
                           double,
-                          std::shared_ptr<const Environment>,
+                          std::shared_ptr<AbstractEnvironment>,
                           mcts_node_info_map_t & mcts_node_info_map) const {
         mcts_node_info_map[state_node].add_separate_rollout(0);
         mcts_node_info_map[state_node].set_value(0,0);
@@ -26,7 +28,7 @@ namespace value_heuristic {
     void Rollout::operator()(const node_t & state_node,
                              const state_handle_t & start_state,
                              double discount,
-                             std::shared_ptr<const Environment> environment,
+                             std::shared_ptr<AbstractEnvironment> environment,
                              mcts_node_info_map_t & mcts_node_info_map) const {
 
         // Do rollout of specified length (rollout_length).
@@ -38,25 +40,26 @@ namespace value_heuristic {
         if(length<0 && !environment->has_terminal_state()) {
             length = 1;
         }
-        state_handle_t state = start_state;
+        observation_handle_t observation;
         action_handle_t action;
         reward_t reward;
         reward_t discounted_return = 0;
         double discount_factor = discount;
         int k=0;
-        DEBUG_OUT(1,"Rollout from state '" << environment->state_name(*state) << "'");
-        while((length<0 || k<length) && !environment->is_terminal_state(state)) {
+        DEBUG_OUT(1,"Rollout from state '" << Environment::name(*environment,start_state) << "'");
+        environment->set_state(start_state);
+        while((length<0 || k<length) && !environment->is_terminal_state()) {
             // select action uniformly from available actions
             action = util::random_select(environment->get_actions());
             // sample transition
-            t(state,reward) = environment->sample(state,action);
+            t(observation,reward) = environment->transition(action);
             // update return
             discounted_return += discount_factor*reward;
             // update counter and discount factor
             ++k;
             discount_factor*=discount;
-            DEBUG_OUT(2,"    action '" << environment->action_name(action) <<
-                      "'	--> state '" << environment->state_name(state) << "':	r=" << reward <<
+            DEBUG_OUT(2,"    action '" << Environment::name(*environment,action) <<
+                      "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
                       "	R=" << discounted_return << "	d=" << discount_factor);
         }
         mcts_node_info_map[state_node].add_separate_rollout(discounted_return);

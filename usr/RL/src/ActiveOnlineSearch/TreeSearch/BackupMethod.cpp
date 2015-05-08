@@ -1,5 +1,7 @@
 #include "BackupMethod.h"
 
+#include <util/QtUtil.h>
+
 #include <float.h>
 #include <limits>
 #include <algorithm>
@@ -20,7 +22,7 @@ namespace backup_method {
     void Bellman::operator()(const node_t & state_node,
                              const node_t & action_node,
                              double discount,
-                             std::shared_ptr<Environment> environment,
+                             std::shared_ptr<AbstractEnvironment> environment,
                              const graph_t & graph,
                              const node_info_map_t & node_info_map,
                              mcts_node_info_map_t & mcts_node_info_map,
@@ -147,7 +149,7 @@ namespace backup_method {
     void MonteCarlo::operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,

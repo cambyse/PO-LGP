@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 
+#include <util/QtUtil.h>
 #include <util/util.h>
 
 #define DEBUG_LEVEL 0
@@ -22,7 +23,7 @@ using std::make_tuple;
 using std::vector;
 using std::shared_ptr;
 
-MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
+MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                                            double discount,
                                            GRAPH_TYPE graph_type,
                                            std::shared_ptr<const TreePolicy> tree_policy,
@@ -42,7 +43,7 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<const Environment> en
     }
 }
 
-void MonteCarloTreeSearch::init(const state_t & s) {
+void MonteCarloTreeSearch::init(const state_handle_t & s) {
     SearchTree::init(s);
     state_node_map.clear();
     state_node_map.insert(make_pair(s, node_set_t({get_root_node()},0,node_hash)));
@@ -69,18 +70,18 @@ void MonteCarloTreeSearch::next() {
         while(is_inner_node || !did_expansion || was_visited_before) {
 
             // get tree-policy action
-            action_t action = (*tree_policy)(current_node,
-                                             environment,
-                                             graph,
-                                             get_node_info_map(),
-                                             mcts_node_info_map,
-                                             mcts_arc_info_map);
+            action_handle_t action = (*tree_policy)(current_node,
+                                                    environment,
+                                                    graph,
+                                                    get_node_info_map(),
+                                                    mcts_node_info_map,
+                                                    mcts_arc_info_map);
 
             // find or create action node
             T(arc_t, to_action_arc, node_t, action_node) = find_or_create_action_node(current_node, action);
 
             // sample state
-            T(state_t, state_to, reward_t, reward) = environment->sample(state(current_node), action);
+            T(state_handle_t, state_to, reward_t, reward) = environment->transition(state(current_node), action);
 
             // find or create state node / update current state
             T(arc_t, to_state_arc, node_t, state_node) = find_or_create_state_node(action_node, state_to);
@@ -217,8 +218,8 @@ void MonteCarloTreeSearch::next() {
 }
 
 
-Environment::action_t MonteCarloTreeSearch::recommend_action() const {
-    std::vector<action_t> optimal_actions({*(environment->get_actions().begin())});
+MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() const {
+    std::vector<action_handle_t> optimal_actions({*(environment->get_actions().begin())});
     double max_value = -DBL_MAX;
     for(out_arc_it_t arc(graph, get_root_node()); arc!=INVALID; ++arc) {
         node_t action_node = graph.target(arc);
@@ -234,8 +235,8 @@ Environment::action_t MonteCarloTreeSearch::recommend_action() const {
     return util::random_select(optimal_actions);
 }
 
-void MonteCarloTreeSearch::prune(const action_t & action,
-                                 const state_t & state) {
+void MonteCarloTreeSearch::prune(const action_handle_t & action,
+                                 const state_handle_t & state) {
     SearchTree::prune(action,state);
     for(node_it_t node(graph); node!=INVALID; ++node) {
         --distance_map[node];
@@ -243,7 +244,7 @@ void MonteCarloTreeSearch::prune(const action_t & action,
 }
 
 std::tuple<SearchTree::arc_t,SearchTree::node_t>
-MonteCarloTreeSearch::add_state_node(state_t state,
+MonteCarloTreeSearch::add_state_node(state_handle_t state,
                                      node_t action_node) {
     TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_state_node(state,action_node);
     distance_map[node] = distance_map[action_node]+1;
@@ -261,7 +262,7 @@ MonteCarloTreeSearch::add_state_node(state_t state,
 }
 
 std::tuple<SearchTree::arc_t,SearchTree::node_t>
-MonteCarloTreeSearch::add_action_node(action_t action,
+MonteCarloTreeSearch::add_action_node(action_handle_t action,
                                       node_t state_node) {
     TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_action_node(action,state_node);
     distance_map[node] = distance_map[state_node]+1;

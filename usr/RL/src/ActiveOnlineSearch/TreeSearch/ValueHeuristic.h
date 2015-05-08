@@ -3,8 +3,6 @@
 
 #include "AbstractMonteCarloTreeSearch.h"
 
-class Environment;
-
 namespace value_heuristic {
 
 
@@ -28,7 +26,7 @@ namespace value_heuristic {
         virtual void operator()(const node_t & state_node,
                                 const state_handle_t & state,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const = 0;
     };
 
@@ -39,7 +37,7 @@ namespace value_heuristic {
         virtual void operator()(const node_t & state_node,
                                 const state_handle_t & state,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const override;
     };
 
@@ -51,7 +49,7 @@ namespace value_heuristic {
         virtual void operator()(const node_t & state_node,
                                 const state_handle_t & state,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<AbstractEnvironment> environment,
                                 mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         int rollout_length;

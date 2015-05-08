@@ -109,11 +109,11 @@ protected:
 
     //----methods----//
 public:
-    AbstractMonteCarloTreeSearch(std::shared_ptr<Environment> environment,
+    AbstractMonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                                  double discount,
                                  GRAPH_TYPE graph_type);
     virtual ~AbstractMonteCarloTreeSearch() = default;
-    virtual void prune(const action_t & a, const state_t & s) override;
+    virtual void prune(const action_handle_t & a, const state_handle_t & s) override;
     void toPdf(const char* file_name) const override;
 };
 

@@ -6,11 +6,11 @@
 
 using lemon::INVALID;
 
-void AbstractMonteCarloTreeSearch::prune(const action_t & a, const state_t & s) {
+void AbstractMonteCarloTreeSearch::prune(const action_handle_t & a, const state_handle_t & s) {
     SearchTree::prune(a,s);
 }
 
-AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(std::shared_ptr<const Environment> environment,
+AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                                                            double discount,
                                                            GRAPH_TYPE graph_type):
     SearchTree(environment, discount, graph_type),

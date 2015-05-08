@@ -9,6 +9,8 @@
 #include <QFile>
 #include <QTextStream>
 
+#include "../Environment/Environment.h"
+
 #include "../graph_util.h"
 
 #include <util/util.h>
@@ -31,7 +33,7 @@ using util::random_select;
 typedef SearchTree::node_t node_t;
 typedef SearchTree::arc_t arc_t;
 
-SearchTree::SearchTree(std::shared_ptr<Environment> environment,
+SearchTree::SearchTree(std::shared_ptr<AbstractEnvironment> environment,
                        double discount,
                        GRAPH_TYPE graph_type):
     environment(environment),
@@ -40,7 +42,7 @@ SearchTree::SearchTree(std::shared_ptr<Environment> environment,
     node_info_map(graph)
 {}
 
-void SearchTree::init(const state_t & s) {
+void SearchTree::init(const state_handle_t & s) {
     graph.clear();
     root_node = graph.addNode();
     node_info_map[root_node].state=s;
@@ -50,7 +52,7 @@ void SearchTree::init(const state_t & s) {
     }
 }
 
-void SearchTree::prune(const action_t & action, const state_t & state) {
+void SearchTree::prune(const action_handle_t & action, const state_handle_t & state) {
     //--------------------//
     // find new root node //
     //--------------------//
@@ -210,7 +212,7 @@ const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
     return node_info_map;
 }
 
-const SearchTree::state_t SearchTree::state(const node_t & state_node) const {
+const SearchTree::state_handle_t SearchTree::state(const node_t & state_node) const {
     DEBUG_EXPECT(1,node_info_map[state_node].type==STATE_NODE);
     if(node_info_map[state_node].type!=STATE_NODE) {
         DEBUG_WARNING("Node " << graph.id(state_node) << " is not a state node");
@@ -219,7 +221,7 @@ const SearchTree::state_t SearchTree::state(const node_t & state_node) const {
     return node_info_map[state_node].state;
 }
 
-const SearchTree::action_t SearchTree::action(const node_t & action_node) const {
+const SearchTree::action_handle_t SearchTree::action(const node_t & action_node) const {
     DEBUG_EXPECT(1,node_info_map[action_node].type==ACTION_NODE);
     return node_info_map[action_node].action;
 }
@@ -257,7 +259,9 @@ QString SearchTree::str(const node_t & n) const {
     bool is_state_node = node_info_map[n].type==STATE_NODE;
     return QString("%1 (%2)").
         arg(is_state_node?"STATE":"ACTION").
-        arg(is_state_node?node_info_map[n].state:node_info_map[n].action);
+        arg(is_state_node?
+            Environment::name(*environment,node_info_map[n].state):
+            Environment::name(*environment,node_info_map[n].action));
 }
 
 QString SearchTree::str_rich(const node_t & n) const {
@@ -265,7 +269,7 @@ QString SearchTree::str_rich(const node_t & n) const {
     // return QString("<i>%1</i>=%2").
     //     arg(is_state_node?"s":"a").
     //     arg(is_state_node?node_info_map[n].state:node_info_map[n].action);
-    return QString("%1").arg(is_state_node?environment->state_name(node_info_map[n].state):environment->action_name(node_info_map[n].action));
+    return QString("%1").arg(is_state_node?Environment::name(*environment,node_info_map[n].state):Environment::name(*environment,node_info_map[n].action));
 }
 
 double SearchTree::color_rescale(const double& d) const {
@@ -277,10 +281,10 @@ double SearchTree::color_rescale(const double& d) const {
 }
 
 tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_node,
-                                                          const state_t & state) {
+                                                          const state_handle_t & state) {
     DEBUG_OUT(3,"Find state node (action node (" << graph.id(action_node) << "): " <<
-              environment->action_name(node_info_map[action_node].action) << ", state: " <<
-              environment->state_name(state) << ")");
+              Environment::name(*environment,node_info_map[action_node].action) << ", state: " <<
+              Environment::name(*environment,state) << ")");
 
     // have node and arc both as separate variables and as tuple of references
     node_t state_node;
@@ -317,7 +321,7 @@ tuple<arc_t,node_t> SearchTree::find_or_create_state_node(const node_t & action_
 }
 
 tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_node,
-                                                           const action_t & action) {
+                                                           const action_handle_t & action) {
     for(out_arc_it_t arc(graph, state_node); arc!=INVALID; ++arc) {
         node_t action_node = graph.target(arc);
         if(node_info_map[action_node].action==action) {
@@ -328,7 +332,7 @@ tuple<arc_t,node_t> SearchTree::find_or_create_action_node(const node_t & state_
     return add_action_node(action, state_node);
 }
 
-std::tuple<arc_t,node_t> SearchTree::add_state_node(state_t state, node_t action_node) {
+std::tuple<arc_t,node_t> SearchTree::add_state_node(state_handle_t state, node_t action_node) {
     node_t state_node = graph.addNode();
     node_info_map[state_node].type = STATE_NODE;
     node_info_map[state_node].state = state;
@@ -337,17 +341,17 @@ std::tuple<arc_t,node_t> SearchTree::add_state_node(state_t state, node_t action
         add_state_node_to_level_map(state_node);
     }
     DEBUG_OUT(3,"    adding state node (" << graph.id(state_node) << "): " <<
-              environment->state_name(state));
+              Environment::name(*environment,state));
     return make_tuple(state_arc, state_node);
 }
 
-std::tuple<arc_t,node_t> SearchTree::add_action_node(action_t action, node_t state_node) {
+std::tuple<arc_t,node_t> SearchTree::add_action_node(action_handle_t action, node_t state_node) {
     node_t action_node = graph.addNode();
     node_info_map[action_node].type = ACTION_NODE;
     node_info_map[action_node].action = action;
     arc_t action_arc = graph.addArc(state_node, action_node);
     DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
-              environment->action_name(action));
+              Environment::name(*environment,action));
     return make_tuple(action_arc, action_node);
 }
 
@@ -356,7 +360,7 @@ void SearchTree::erase_node(node_t node) {
 }
 
 tuple<arc_t,node_t> SearchTree::find_state_node_among_children(const node_t & action_node,
-                                                               const state_t & state) const {
+                                                               const state_handle_t & state) const {
     for(out_arc_it_t arc(graph, action_node); arc!=INVALID; ++arc) {
         node_t state_node = graph.target(arc);
         if(node_info_map[state_node].state==state) {
@@ -367,7 +371,7 @@ tuple<arc_t,node_t> SearchTree::find_state_node_among_children(const node_t & ac
 }
 
 node_t SearchTree::find_state_node_among_siblings_children(const node_t & action_node,
-                                                           const state_t & state) const {
+                                                           const state_handle_t & state) const {
     // get common parent node
     node_t parent_node = graph.source(in_arc_it_t(graph,action_node));
 
@@ -389,7 +393,7 @@ node_t SearchTree::find_state_node_among_siblings_children(const node_t & action
 }
 
 node_t SearchTree::find_state_node_at_same_depth(const node_t & action_node,
-                                                 const state_t & state) const {
+                                                 const state_handle_t & state) const {
     // first get state node at lower level
     node_t lower_level_state_node = graph.source(in_arc_it_t(graph, action_node));
     // get level set iterator
