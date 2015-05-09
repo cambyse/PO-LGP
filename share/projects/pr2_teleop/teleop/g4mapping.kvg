@@ -1,10 +1,8 @@
 agents {
   /human/rh/thumb = { type = "digit", rn = 0, hid = 0, sid = 0 }
   /human/rh/index = { type = "digit", rn = 1, hid = 0, sid = 1 }
-  /human/rh/wrist = { type = "digit", rn = 2, hid = 0, sid = 2 }
+  /human/rl/rf = { type = "digit", rn = 2, hid = 0, sid = 2 }
   /human/lh/thumb = { type = "digit", rn = 3, hid = 1, sid = 0 }
   /human/lh/index = { type = "digit", rn = 4, hid = 1, sid = 1 }
-  /human/lh/wrist = { type = "digit", rn = 5, hid = 1, sid = 2 }
-  /human/torso/chest = { type = "digit", rn = 6, hid = 2, sid = 0 }
-  /human/rl/rf = { type = "digit", rn = 7, hid = 2, sid = 1 }
+  /human/torso/chest = { type = "digit", rn = 5, hid = 1, sid = 2 }
 }
