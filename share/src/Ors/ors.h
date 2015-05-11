@@ -285,6 +285,9 @@ struct KinematicWorld {
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
+  /// @name High level (inverse) kinematics
+  void inverseKinematicsPos(Body& body, const arr& ytarget, ors::Vector* rel_offset=NULL, int max_iter=3);
+
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
