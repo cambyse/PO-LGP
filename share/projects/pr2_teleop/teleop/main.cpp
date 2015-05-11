@@ -16,7 +16,7 @@ struct PR2G4Control:System {
   PR2G4Control() {
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
-
+    
   //  addModule<G4HuToRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
     addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
 
