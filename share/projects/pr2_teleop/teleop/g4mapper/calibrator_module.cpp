@@ -9,50 +9,41 @@
 
 
 
-void initG4Mapper::LoopWithBeatAndWaitForClose(double sec)
+void G4HutoRoMap::doinit(floatA tempData,int button)
 {
-      if(!metronome)
-         metronome=new Metronome("threadTiccer", sec);
-      else
-         metronome->reset(sec);
-      if(isClosed()) threadOpen();
-        state.setValue(tsBEATING);
+    cout<<cout<<"\x1B[2J\x1B[H";
 
-
-        state.waitForValueEq(tsCLOSE);
-
-}
-
-void initG4Mapper::open()
-{
-    mid.load("g4mapping.kvg");
-}
-void initG4Mapper::step()
-{
-
-    system("clear");
     cout<<"Max dist open"<<endl;
     cout<<"left hand: " <<distlhmaxopen<< " right hand: "<<distrhmaxopen<<endl;
-    floatA tempPoses = poses.get();
 
-    if(tempPoses.N == 0 )
-        return;
-    floatA tempPoslhIndex = mid.query(tempPoses,STRING( "/human/lh/index")).cols(0, 3);
-    floatA tempPoslhThumb =  mid.query(tempPoses,STRING("/human/lh/thumb")).cols(0, 3);
+    floatA tempPoslhIndex = mid.query(tempData,STRING( "/human/lh/index")).subRange(0, 2);
+    floatA tempPoslhThumb =  mid.query(tempData,STRING("/human/lh/thumb")).subRange(0, 2);
     if(length(tempPoslhThumb-tempPoslhIndex) > distlhmaxopen)
     {
         poselhthumbmaxopen = tempPoslhThumb;
         poselhindexmaxopen = tempPoslhIndex;
-
+        distlhmaxopen =length(tempPoslhThumb-tempPoslhIndex);
     }
-    floatA tempPosrhIndex = mid.query(tempPoses,STRING( "/human/rh/index")).cols(0, 3);
-    floatA tempPosrhThumb =  mid.query(tempPoses,STRING("/human/rh/thumb")).cols(0, 3);
+    floatA tempPosrhIndex = mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2);
+    floatA tempPosrhThumb =  mid.query(tempData,STRING("/human/rh/thumb")).subRange(0,2);
     if(length(tempPosrhThumb-tempPosrhIndex) > distrhmaxopen)
     {
         poserhthumbmaxopen = tempPosrhThumb;
         poserhindexmaxopen = tempPosrhIndex;
+        distrhmaxopen =length(tempPosrhThumb-tempPosrhIndex);
 
     }
+
+if(button & BTN_Y)
+{
+
+        poselhthumbmaxopen.clear();
+        poselhindexmaxopen.clear();
+        distlhmaxopen =0;
+        poserhthumbmaxopen.clear();
+        poserhindexmaxopen.clear();
+        distrhmaxopen =0;
+}
 
 
 
@@ -126,13 +117,8 @@ if (calibration_phase)
 
 }
 
-void initG4Mapper::close()
-{
-
-}
-
-void initG4Mapper::calibrate()
-{
+//void initG4Mapper::calibrate()
+//{
          /* // arm position
           // assuming posesFront and poses2 only contain 1 position
           // floatA p_front, p_side;
@@ -166,29 +152,56 @@ void initG4Mapper::calibrate()
           dist_closed = length(p_closed[0] - p_closed[1]);
           m_lh = 1 / (dist_open - dist_closed);
           q_lh = - dist_closed * m_lh;*/
-}
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////G4 HUMAN TO ROBOT MAPPER///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-G4HuToRoMap::G4HuToRoMap()
+G4HutoRoMap::G4HutoRoMap()
 {
 }
-void G4HuToRoMap::open()
+void G4HutoRoMap::open()
 {
     mid.load("g4mapping.kvg");
-    initG4Mapper InitThread;
-    cout<<"InitThread mapper Start"<<endl;
-    cout<<"Start Moving freely"<<endl;
-    InitThread.LoopWithBeatAndWaitForClose(0.05);
-    cout<<"InitThread mapper Stop"<<endl;
+    cout<<"----------------------InitThread mapper Start-----------------"<<endl;
+    cout<<"----------------Start moving freely,press Y for reset---------"<<endl;
 }
-void G4HuToRoMap::step()
+void G4HutoRoMap::step()
 {
+
+    /////////InPut Check///////
+    arr gpstate = gamepadState.get();
+    CHECK(gpstate.N, "ERROR: No GamePad found");
+    int button = gpstate(0);
+    floatA tempData = poses.get();
+    if(tempData.N == 0)
+     return;
+   // else
+   // tempData = mid.query(tempData,STRING("/human/rl/rf"));
+    ///////////////////////////
+
+
+
+
+    if(initphase)
+    {
+        doinit(tempData,button);
+        return;
+
+    }
+    else
+    {
+
+
+    }
+
   //  transformPosition();
   //   transformOrientatiob();
+}
+void G4HutoRoMap::close()
+{
 }
 
 /// Transform the human hand position into the unit sphere.
@@ -243,8 +256,8 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index) 
   return {(float)quat.w, (float)quat.x, (float)quat.y, (float)quat.z};
 }
 */
-void G4HuToRoMap::transform(const floatA& poses_raw)
-{
+//void G4HuToRoMap::transform(const floatA& poses_raw)
+//{
 
    /*   floatA cal_pose_rh, cal_pose_lh;
 
@@ -279,7 +292,7 @@ void G4HuToRoMap::transform(const floatA& poses_raw)
       // setting access variables
       calibrated_pose_rh.set() = cal_pose_rh;
       calibrated_pose_lh.set() = cal_pose_lh;*/
-}
+//}
 
 
 

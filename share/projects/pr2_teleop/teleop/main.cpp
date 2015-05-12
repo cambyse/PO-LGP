@@ -5,10 +5,11 @@
 #include <Hardware/G4/G4.h>
 #include <Hardware/G4/module_G4Publisher.h>
 #include <Hardware/G4/module_G4Recorder.h>
+#include <Hardware/G4/module_G4Display.h>
 // #include <Hardware/G4/module_G4Debugger.h>
 
-//#include "g4mapper/calibrator_module.h"
-#include "g4taprecon/taprecon.h"
+#include "g4mapper/calibrator_module.h"
+//#include "g4taprecon/taprecon.h"
 //#include "pd_executor_module.h"
 
 // ============================================================================
@@ -16,9 +17,9 @@ struct PR2G4Control:System {
   PR2G4Control() {
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
-    
-  //  addModule<G4HuToRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
-    addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
+  //  addModule<G4Display>(NULL,Module::loopWithBeat,0.05);
+    addModule<G4HutoRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
+  //  addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
 
 
 
