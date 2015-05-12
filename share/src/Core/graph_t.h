@@ -50,15 +50,14 @@ struct Item_typed:Item {
   /// directly store pointer to value
   Item_typed(Graph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
   /// directly store pointer to value
-  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, T *value, bool ownsValue)
-    : Item(container, parents), value(value), ownsValue(ownsValue) {
+  Item_typed(Graph& container, const StringA& keys, const ItemL& parents, T *value, bool ownsValue)
+    : Item(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    keys=_keys;
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
   }
 
 //  /// copy value
@@ -71,6 +70,7 @@ struct Item_typed:Item {
 
   virtual ~Item_typed(){
     if(ownsValue) delete value;
+    value=NULL;
   }
 
   virtual bool hasValue() const {
