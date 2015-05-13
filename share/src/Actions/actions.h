@@ -65,8 +65,11 @@ struct Action {
 };
 
 //===========================================================================
-// Helper functions
+// Helper
 void reportActions(ActionL& A);
+
+// indicator for the LEFT and RIGHT
+enum SIDE { LEFT, RIGHT };
 
 //===========================================================================
 struct FollowReference : Action {
@@ -93,6 +96,18 @@ struct CoreTasks : Action {
 //===========================================================================
 struct Homing : Action {
   Homing(ActionMachine& actionMachine, const char* name);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
+struct OpenGripper : Action {
+  OpenGripper(ActionMachine& actionMachine, const SIDE);
+  virtual bool finishedSuccess(ActionMachine& M);
+};
+
+//===========================================================================
+struct CloseGripper : Action {
+  CloseGripper(ActionMachine& actionMachine, const SIDE);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
