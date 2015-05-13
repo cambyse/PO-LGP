@@ -69,7 +69,7 @@ struct Action {
 void reportActions(ActionL& A);
 
 // indicator for the LEFT and RIGHT
-enum SIDE { LEFT, RIGHT };
+enum class Side { LEFT, RIGHT };
 
 //===========================================================================
 struct FollowReference : Action {
@@ -101,13 +101,13 @@ struct Homing : Action {
 
 //===========================================================================
 struct OpenGripper : Action {
-  OpenGripper(ActionMachine& actionMachine, const SIDE);
+  OpenGripper(ActionMachine& actionMachine, const Side side);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 
 //===========================================================================
 struct CloseGripper : Action {
-  CloseGripper(ActionMachine& actionMachine, const SIDE);
+  CloseGripper(ActionMachine& actionMachine, const Side side);
   virtual bool finishedSuccess(ActionMachine& M);
 };
 

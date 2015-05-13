@@ -135,13 +135,13 @@ bool Homing::finishedSuccess(ActionMachine& M){
 
 // ============================================================================
 // OpenGripper
-OpenGripper::OpenGripper(ActionMachine& actionMachine, const SIDE side)
+OpenGripper::OpenGripper(ActionMachine& actionMachine, const Side side)
     : Action(actionMachine, "OpenGripper") {
 
-  const char* jointName = (side == SIDE::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
+  const char* jointName = (side == Side::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
   int jointID = actionMachine.s->world.getJointByName(jointName)->qIndex;
   cout << "joint id" << jointID << endl;
-  auto task = new CtrlTask(STRING("OpenGripper_" << side),
+  auto task = new CtrlTask(STRING("OpenGripper_"),
                            new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
                            2, .8, 1., 1.);
   task->setTarget({.0});
@@ -158,13 +158,13 @@ bool OpenGripper::finishedSuccess(ActionMachine& M) {
 
 // ============================================================================
 // CloseGripper
-CloseGripper::CloseGripper(ActionMachine& actionMachine, const SIDE side)
+CloseGripper::CloseGripper(ActionMachine& actionMachine, const Side side)
     : Action(actionMachine, "CloseGripper") {
 
-  const char* jointName = (side == SIDE::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
+  const char* jointName = (side == Side::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
   int jointID = actionMachine.s->world.getJointByName(jointName)->qIndex;
   cout << "joint id" << jointID << endl;
-  auto task = new CtrlTask(STRING("CloseGripper_" << side),
+  auto task = new CtrlTask(STRING("CloseGripper_"),
                            new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
                            2, .8, 1., 1.);
   task->setTarget({.0});

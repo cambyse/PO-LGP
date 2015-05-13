@@ -10,8 +10,8 @@ void gripper() {
   new CoreTasks(*activity.machine);
   engine().open(activity);
 
-  Action* open_left = new OpenGripper(*activity.machine, SIDE::LEFT);
-  Action* open_right = new OpenGripper(*activity.machine, SIDE::RIGHT);
+  Action* open_left = new OpenGripper(*activity.machine, Side::LEFT);
+  Action* open_right = new OpenGripper(*activity.machine, Side::RIGHT);
   activity.machine->waitForActionCompletion(open_left);
   activity.machine->waitForActionCompletion(open_right);
   engine().close(activity);
