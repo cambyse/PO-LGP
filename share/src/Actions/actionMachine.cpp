@@ -45,6 +45,17 @@ void ActionMachine::open(){
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
+    }else{
+      KB.writeAccess();
+      new Item_typed<bool>(KB(), {"conv"}, {}, NULL, false);
+      new Item_typed<bool>(KB(), {"contact"}, {}, NULL, false);
+      new Item_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
+//new Item_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
+//new Item_typed<bool>(KB(), {"moving"}, {}, NULL, false);
+      new Item_typed<Graph>(KB(), {"STATE"}, {}, new Graph(), true);
+      KB().checkConsistency();
+      KB()>> FILE("z.initialKB");
+      KB.deAccess();
     }
   }
 

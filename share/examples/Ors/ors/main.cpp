@@ -553,6 +553,7 @@ void TEST(InverseKinematics) {
 }
 
 // =============================================================================
+
 int MAIN(int argc,char **argv){
 
   testKinematics();

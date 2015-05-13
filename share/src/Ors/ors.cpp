@@ -1672,26 +1672,25 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
-  Graph G;
-  
-  G.read(is);
-  G.checkConsistency();
+  Graph *G = new Graph();
+  G->read(is);
+  G->checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
   
   clear();
   
-  ItemL bs = G.getItems("body");
+  ItemL bs = G->getItems("body");
   for_list(Item,  it,  bs) {
     CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats = *it->getValue<Graph>();
+    b->ats.copy(*it->getValue<Graph>(), false);
     b->parseAts();
   }
-  
-  ItemL ss = G.getItems("shape");
+
+  ItemL ss = G->getItems("shape");
   for(Item *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
@@ -1706,12 +1705,12 @@ void ors::KinematicWorld::read(std::istream& is) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats = *it->getValue<Graph>();
+    s->ats.copy(*it->getValue<Graph>(), false);
     s->parseAts();
   }
   
   uint nCoupledJoints=0;
-  ItemL js = G.getItems("joint");
+  ItemL js = G->getItems("joint");
   for(Item *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");
@@ -1723,7 +1722,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats = *it->getValue<Graph>();
+    j->ats.copy(*it->getValue<Graph>(), false);
     j->parseAts();
 
     //if the joint is coupled to another:
@@ -1742,6 +1741,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
 
   //-- clean up the graph
+  delete G;
   checkConsistency();
   topSort();
   //makeLinkTree();
@@ -2218,6 +2218,7 @@ bool ors::KinematicWorld::checkConsistency(){
     for(Joint *j: b->outLinks) CHECK_EQ(j->from,b,"");
     for(Joint *j: b->inLinks)  CHECK_EQ(j->to,b,"");
     for(Shape *s: b->shapes)   CHECK_EQ(s->body,b,"");
+    b->ats.checkConsistency();
   }
   for(Joint *j: joints){
     CHECK(&j->world && j->from && j->to, "");
@@ -2225,12 +2226,14 @@ bool ors::KinematicWorld::checkConsistency(){
     CHECK_EQ(j,joints(j->index),"");
     CHECK(j->from->outLinks.findValue(j)>=0,"");
     CHECK(j->to->inLinks.findValue(j)>=0,"");
+    j->ats.checkConsistency();
   }
   for(Shape *s: shapes){
     CHECK(&s->world, "");
     CHECK(&s->world==this,"");
     CHECK_EQ(s,shapes(s->index),"");
     if(s->body) CHECK(s->body->shapes.findValue(s)>=0,"");
+    s->ats.checkConsistency();
   }
   return true;
 }
