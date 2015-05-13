@@ -27,9 +27,6 @@ public:
     };
     struct State {
         virtual ~State() = default;
-    protected:
-        virtual bool operator==(const State & other) const = 0;
-        virtual bool operator!=(const State & other) const {return !(*this==other);}
     };
     typedef std::shared_ptr<const Action> action_handle_t;
     typedef std::shared_ptr<const Observation> observation_handle_t;

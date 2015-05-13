@@ -6,10 +6,6 @@
 
 using lemon::INVALID;
 
-void AbstractMonteCarloTreeSearch::prune(const action_handle_t & a, const state_handle_t & s) {
-    SearchTree::prune(a,s);
-}
-
 AbstractMonteCarloTreeSearch::AbstractMonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                                                            double discount,
                                                            GRAPH_TYPE graph_type):
@@ -45,7 +41,7 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
         double value = mcts_node_info_map[node].get_value();
         node_map[node] = QString("shape=%1 label=<%2<BR/>id=%5<BR/>#%3/%10<BR/>V=%4 +/- %11<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
             //node_map[node] = QString("shape=%1 label=<%2<BR/>#%3/%10<BR/>V=%4 +/- %11<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
-            arg(type(node)==STATE_NODE?"square":"circle").
+            arg(type(node)==OBSERVATION_NODE?"square":"circle").
             arg(str_rich(node)).
             arg(mcts_node_info_map[node].get_transition_counts()).
             arg(value,0,'g',2).
@@ -62,7 +58,7 @@ void AbstractMonteCarloTreeSearch::toPdf(const char* file_name) const {
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         node_t source = graph.source(arc);
         double value = mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts();
-        if(type(source)==STATE_NODE) {
+        if(type(source)==OBSERVATION_NODE) {
             arc_map[arc] = QString("style=dashed label=<#%1<BR/>r=%4> color=\"%2 %3 %3\"").
                 arg(mcts_arc_info_map[arc].get_counts()).
                 arg(value>0?0.3:0).

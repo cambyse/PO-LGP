@@ -37,10 +37,10 @@ protected:
      * global backups (backup_type==BACKUP_GLOBAL). */
     graph_t::NodeMap<int> distance_map;
     /**
-     * Stores all nodes for a specific state. */
-    std::unordered_map<state_handle_t,
+     * Stores all nodes for a specific observation. */
+    std::unordered_map<observation_handle_t,
         node_set_t,
-        AbstractEnvironment::hash<state_handle_t>> state_node_map;
+        AbstractEnvironment::hash<observation_handle_t>> observation_node_map;
 
     const BACKUP_TYPE backup_type;
 
@@ -56,13 +56,18 @@ public:
                          std::shared_ptr<const backup_method::BackupMethod> backup_method,
                          BACKUP_TYPE backup_type = BACKUP_ALL);
     virtual ~MonteCarloTreeSearch() = default;
-    virtual void init(const state_handle_t & s) override;
+    virtual void init(const observation_handle_t & o,
+                      const state_handle_t & s) override;
     virtual void next() override;
     virtual action_handle_t recommend_action() const override;
-    virtual void prune(const action_handle_t &, const state_handle_t &) override;
+    virtual void prune(const action_handle_t &,
+                       const observation_handle_t &,
+                       const state_handle_t &) override;
 protected:
-    virtual std::tuple<arc_t,node_t> add_state_node(state_handle_t state, node_t action_node) override;
-    virtual std::tuple<arc_t,node_t> add_action_node(action_handle_t action, node_t state_node) override;
+    virtual std::tuple<arc_t,node_t> add_observation_node(observation_handle_t observation,
+                                                          node_t action_node) override;
+    virtual std::tuple<arc_t,node_t> add_action_node(action_handle_t action,
+                                                     node_t observation_node) override;
     virtual void erase_node(node_t) override;
 };
 

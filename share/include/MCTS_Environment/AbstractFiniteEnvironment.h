@@ -146,7 +146,7 @@ public:
         return state_handle_list;
     }
 
-    virtual state_reward_pair_t transition(const state_t state, const action_t action) = 0;
+    virtual state_reward_pair_t transition(const state_t &, const action_t &) const = 0;
 
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override final {
         auto action = std::dynamic_pointer_cast<const action_t>(action_handle);

@@ -30,7 +30,6 @@ public:
                 const std::initializer_list<int> state_list):
         AbstractFiniteEnvironment<int,int>(action_list,state_list) {}
     virtual ~Environment() = default;
-    virtual state_reward_pair_t transition(const state_t &, const action_t &) const = 0;
     static QString name(const AbstractEnvironment & abstract_environment,
                         const action_handle_t & x) {
         auto environment = dynamic_cast<const Environment *>(&abstract_environment);

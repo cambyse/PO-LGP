@@ -60,6 +60,14 @@ TightRope::state_reward_pair_t TightRope::transition(const state_t & s, const ac
     return state_reward_pair_t(ss,r);
 }
 
+TightRope::reward_t TightRope::max_reward() const {
+    return 2;
+}
+
+TightRope::reward_t TightRope::min_reward() const {
+    return -1;
+}
+
 QString TightRope::action_name(const action_t & a) const {
     return action_names[a];
 }
