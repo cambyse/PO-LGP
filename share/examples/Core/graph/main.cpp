@@ -54,7 +54,9 @@ Graph& rndSubgraph(Graph& G){
   while(rnd.uni()<.8){
     ItemL subgraphs = g->getTypedItems<Graph>(NULL);
     if(!subgraphs.N) break;
-    g = &subgraphs.rndElem()->kvg();
+    Item *subgraph=subgraphs.rndElem();
+    if(!subgraph->getValue<Graph>()) break;
+    g = &subgraph->kvg();
   }
   return *g;
 }
@@ -90,14 +92,18 @@ void rndModify(Graph& G){
 void TEST(Random){
   Graph A,B;
 
-  for(uint k=0;k<2000;k++){
+  for(uint k=0;k<1000;k++){
     rndModify(rndSubgraph(A));
+    Graph *C = new Graph(rndSubgraph(A));
 
-    cout <<"---" <<endl <<A <<endl;
+//    cout <<"---" <<endl <<A <<endl;
 
     A.checkConsistency();
+    C->checkConsistency();
     B = A;
     B.checkConsistency();
+    if(C->isItemOfParentKvg) delete C->isItemOfParentKvg; else delete C;
+    A.checkConsistency();
   }
   A.clear();
   A.checkConsistency();
