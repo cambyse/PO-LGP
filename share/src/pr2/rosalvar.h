@@ -1,16 +1,17 @@
 #pragma once
+
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
 #ifdef MT_ROS_INDIGO
-#include <ar_track_alvar_msgs/AlvarMarkers.h>
-using namespace ar_track_alvar_msgs;
-#elif MT_ROS_GROOVY
-#include <ar_track_alvar/AlvarMarkers.h>
-using namespace ar_track_alvar;
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  using namespace ar_track_alvar_msgs;
 #endif
-
+#if MT_ROS_GROOVY
+  #include <ar_track_alvar/AlvarMarkers.h>
+  using namespace ar_track_alvar;
+#endif
 
 
 //===========================================================================
