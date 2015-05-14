@@ -559,10 +559,10 @@ public:
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         return observation_reward_pair_t(observation_handle_t(),reward_t());
     }
-    virtual const action_container_t get_actions() override {
+    virtual action_container_t get_actions() override {
         return action_container_t({action_handle_t()});
     }
-    virtual const state_handle_t get_state_handle() override {return state_handle_t();}
+    virtual state_handle_t get_state_handle() override {return state_handle_t();}
     virtual void set_state(const state_handle_t & state_handle) override {return;}
     virtual bool has_terminal_state() const override {return false;}
     virtual bool is_terminal_state() const override {return false;}
@@ -577,7 +577,8 @@ public:
 class FiniteEnvironment: public AbstractFiniteEnvironment<int,int> {
 public:
     FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
-    virtual std::pair<state_t,reward_t> transition(const state_t state, const action_t action) {
+    virtual state_reward_pair_t transition(const state_t & state,
+                                           const action_t & action) const override {
         if(action==0) {
             return state_reward_pair_t(state,0);
         } else {
