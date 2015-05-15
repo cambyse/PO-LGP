@@ -6,33 +6,161 @@
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////INIT THREAD/////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
+floatA G4HutoRoMap::getshoulderpos(floatA tempshoulderpos,floatA &p_i)
+{
+    floatA pmean(3,1);
+    //float  pdistmean;
+    p_i.append(~(-centerpos+tempshoulderpos));
+    if(p_i.d0 == SN)
+    {
+    }
+    else if(p_i.d0>SN)
+    {
+        floatA tempshift = p_i;
+        p_i.clear();
+        for(uint i = 1;i<=SN;i++)
+        {
+            p_i.append(tempshift.row(i));
+        }
 
+    }
+    else
+    {
+
+        return  {0.f};
+    }
+    cout<<"\x1B[2J\x1B[H";
+
+  //  cout<<"Max dist open             Min dist open"<<endl;
+  //  cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
+  //  cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
+
+       floatA temp(p_i);
+       temp =1;
+       temp = (~p_i*temp);
+       pmean(0,0)= temp(0,0);
+       pmean(1,0)= temp(1,1);
+       pmean(2,0)= temp(2,2);
+       pmean = 1.f/SN*pmean;
+
+
+     //  pdistmean = 1.f/SN*trace(~p_i*p_i);
+
+
+       floatA pipitpi(3,1);
+       pipitpi = 0 ;
+       float pitpi=0;
+
+
+
+       floatA P_i(3,3);
+       P_i = 0;
+
+
+       for(uint i = 0; i<SN;i++)
+       {
+           pitpi = pitpi + (~p_i[i]*p_i[i])(0);
+           P_i =P_i+p_i[i]*~p_i[i];
+           pipitpi = pipitpi+ p_i[i]*~p_i[i]*p_i[i];
+       }
+       pitpi = 1.f/SN*(pitpi);
+        pipitpi = 1.f/SN*(pipitpi);
+        P_i = 1.f/SN*(P_i);
+
+
+       floatA P =(pmean*~pmean-P_i);
+       arr douP(P.d0,P.d1);
+       for(uint i = 0;i<P.d0;i++)
+           for(uint j = 0 ;j<P.d1;j++)
+               douP(i,j)=(double)(P(i,j));
+       douP = inverse(douP);
+       for(uint i = 0;i<P.d0;i++)
+           for(uint j = 0 ;j<P.d1;j++)
+               P(i,j)=(float)(douP(i,j));
+
+
+
+        return (0.5f*P*(pitpi*pmean-pipitpi));
+
+/*
+  //-------------------- ???------------------
+       floatA temp(p_i);
+       temp =1;
+       temp = (~p_i*temp);
+       pmean(0,0)= temp(0,0);
+       pmean(1,0)= temp(1,1);
+       pmean(2,0)= temp(2,2);
+       pmean = 1.f/SN*pmean;
+
+
+       pdistmean = 1.f/SN*trace(~p_i*p_i);
+       floatA I;
+       I.setDiag(pdistmean,3);
+       floatA P =I-pmean*~pmean;
+       arr douP(P.d0,P.d1);
+       for(uint i = 0;i<P.d0;i++)
+           for(uint j = 0 ;j<P.d1;j++)
+               douP(i,j)=(double)(P(i,j));
+       douP = inverse(douP);
+       for(uint i = 0;i<P.d0;i++)
+           for(uint j = 0 ;j<P.d1;j++)
+               P(i,j)=(float)(douP(i,j));
+
+
+
+        return ~(0.5f*pdistmean*(~pmean*P));
+//----------------------------------------------------
+*/
+    // cout<<"----P matrix----"<<endl<<pmean<<endl;
+    // cout<<"----p_i   vektor----"<<endl<<p_i<<endl;
+    // cout<<"---- pdistmean------"<<endl<<pdistmean<<endl;
+
+    // cout<<"----q ---"<<endl<<q<<endl;
+
+
+
+}
+void G4HutoRoMap::gripperinit(floatA tempgripperPos)
+{
+   // floatA tempPoslhIndex = mid.query(tempData,STRING( "/human/lh/index")).subRange(0, 2);
+   // floatA tempPoslhThumb =  mid.query(tempData,STRING("/human/lh/thumb")).subRange(0, 2);
+    if(length(tempgripperPos[0]-tempgripperPos[1]) > distlhmaxopen)
+    {
+        poselhthumbmaxopen = tempgripperPos[0];
+        poselhindexmaxopen = tempgripperPos[1];
+        distlhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
+    }
+ //   floatA tempPosrhIndex = mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2);
+ //   floatA tempPosrhThumb =  mid.query(tempData,STRING("/human/rh/thumb")).subRange(0,2);
+    if(length(tempgripperPos[2]-tempgripperPos[3]) > distrhmaxopen)
+    {
+        poserhthumbmaxopen = tempgripperPos[2];
+        poserhindexmaxopen = tempgripperPos[3];
+        distrhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
+    }
+
+
+
+}
 
 
 void G4HutoRoMap::doinit(floatA tempData,int button)
 {
     cout<<cout<<"\x1B[2J\x1B[H";
+//cout<<lp_i<<endl<<rp_i<<endl;
+    cout<<"Max dist open             Min dist open"<<endl;
+    cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
+    cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
+    cout<<"----RS vektor----"<<endl<<"ABS_RS  "<<length(shoulderR)<<"  "<<shoulderR<<endl<<"-----LS vektor----"<<endl<<"ABS_LS  "<<length(shoulderL)<<"  "<<shoulderL<<endl;
+    cout<<"----- CENTERPOS-----"<<endl<<centerpos<<endl;
 
-    cout<<"Max dist open"<<endl;
-    cout<<"left hand: " <<distlhmaxopen<< " right hand: "<<distrhmaxopen<<endl;
 
-    floatA tempPoslhIndex = mid.query(tempData,STRING( "/human/lh/index")).subRange(0, 2);
-    floatA tempPoslhThumb =  mid.query(tempData,STRING("/human/lh/thumb")).subRange(0, 2);
-    if(length(tempPoslhThumb-tempPoslhIndex) > distlhmaxopen)
-    {
-        poselhthumbmaxopen = tempPoslhThumb;
-        poselhindexmaxopen = tempPoslhIndex;
-        distlhmaxopen =length(tempPoslhThumb-tempPoslhIndex);
-    }
-    floatA tempPosrhIndex = mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2);
-    floatA tempPosrhThumb =  mid.query(tempData,STRING("/human/rh/thumb")).subRange(0,2);
-    if(length(tempPosrhThumb-tempPosrhIndex) > distrhmaxopen)
-    {
-        poserhthumbmaxopen = tempPosrhThumb;
-        poserhindexmaxopen = tempPosrhIndex;
-        distrhmaxopen =length(tempPosrhThumb-tempPosrhIndex);
+    //gripperinit(mid.query(tempData,{ "/human/lh/index","/human/lh/thumb","/human/rh/index","/human/rh/thumb"}).cols(0,2));
 
-    }
+    shoulderL=getshoulderpos(mid.query(tempData,STRING( "/human/lh/index")).subRange(0,2),lp_i);
+    shoulderR=getshoulderpos(mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2),rp_i);
+
+
 
 if(button & BTN_Y)
 {
@@ -182,6 +310,7 @@ void G4HutoRoMap::step()
    // tempData = mid.query(tempData,STRING("/human/rl/rf"));
     ///////////////////////////
 
+    centerpos =  mid.query(tempData,STRING("/human/torso/chest")).subRange(0,2);
 
 
 

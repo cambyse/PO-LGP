@@ -9,7 +9,7 @@
 // #include <Hardware/G4/module_G4Debugger.h>
 
 #include "g4mapper/calibrator_module.h"
-//#include "g4taprecon/taprecon.h"
+#include "g4taprecon/taprecon.h"
 //#include "pd_executor_module.h"
 
 // ============================================================================

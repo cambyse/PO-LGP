@@ -29,14 +29,18 @@ struct G4HutoRoMap:Module
     float distlhmaxopen = 0;
     floatA  poserhthumbmaxopen  , poserhindexmaxopen;
     float distrhmaxopen = 0;
-
+    uint SN =150;
+    floatA shoulderL,shoulderR;
+    floatA lp_i;
+    floatA rp_i;
+   // void doshouldercalc();
     void doinit(floatA a,int button);
-
-
+    void gripperinit(floatA a);
+    floatA getshoulderpos(floatA a,floatA &b);
 /////////////////////////////////////////////
     G4HutoRoMap();
     MocapID mid;
-
+    floatA centerpos;
     void open();
     void step();
     void close();
