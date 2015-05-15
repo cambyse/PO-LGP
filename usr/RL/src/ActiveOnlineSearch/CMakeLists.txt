@@ -78,8 +78,10 @@ add_library(ActiveOnlineSearch
     ComputationalGraph.cpp
     ComputationalConstGraph.h
     ComputationalConstGraph.cpp
+    TreeSearch/AbstractSearchTree.h
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
+    TreeSearch/NodeFinder.h
 #    TreeSearch/AbstractMonteCarloTreeSearch.h
 #    TreeSearch/AbstractMonteCarloTreeSearch.cpp
 #    TreeSearch/MonteCarloTreeSearch.h

@@ -6,17 +6,25 @@
 
 #include <lemon/dfs.h>
 
+#include <map>
+#include <queue>
+
 #include <util/pretty_printer.h>
 #include <util/util.h>
 #include <util/QtUtil.h>
 #include <util/ND_vector.h>
 #include <util/graph_plotting.h>
+#include <util/return_tuple.h>
 
 #include "graph_util.h"
 
 #include <MCTS_Environment/AbstractEnvironment.h>
 #include <MCTS_Environment/AbstractFiniteEnvironment.h>
+
+#include "Environment/Environment.h"
 #include "ComputationalGraph.h"
+#include "TreeSearch/SearchTree.h"
+#include "TreeSearch/NodeFinder.h"
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -577,8 +585,8 @@ public:
 class FiniteEnvironment: public AbstractFiniteEnvironment<int,int> {
 public:
     FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
-    virtual state_reward_pair_t transition(const state_t & state,
-                                           const action_t & action) const override {
+    virtual state_reward_pair_t finite_transition(const state_t & state,
+                                                  const action_t & action) const override {
         if(action==0) {
             return state_reward_pair_t(state,0);
         } else {
@@ -597,8 +605,105 @@ public:
 TEST(MCTS, DeriveAbstractEnvironment) {
     ConcreteEnvironment env;
     FiniteEnvironment f_env;
-    DEBUG_OUT(0,"state/action 0/0 --> " << f_env.transition(0,0).first);
-    DEBUG_OUT(0,"state/action 0/1 --> " << f_env.transition(0,1).first);
-    DEBUG_OUT(0,"state/action 1/0 --> " << f_env.transition(1,0).first);
-    DEBUG_OUT(0,"state/action 1/1 --> " << f_env.transition(1,1).first);
+    DEBUG_OUT(0,"state/action 0/0 --> " << f_env.finite_transition(0,0).first);
+    DEBUG_OUT(0,"state/action 0/1 --> " << f_env.finite_transition(0,1).first);
+    DEBUG_OUT(0,"state/action 1/0 --> " << f_env.finite_transition(1,0).first);
+    DEBUG_OUT(0,"state/action 1/1 --> " << f_env.finite_transition(1,1).first);
+}
+
+class MockEnvironment: public Environment {
+public:
+    MockEnvironment(): Environment({0,1},{0,1}) {}
+    virtual ~MockEnvironment() = default;
+    virtual state_reward_pair_t finite_transition(const state_t & state,
+                                                  const action_t & action) const override {
+        if(action==0 || state==1) {
+            return state_reward_pair_t(state,0);
+        } else {
+            return state_reward_pair_t((state+1)%2,1);
+        }
+    }
+    bool has_terminal_state() const override {return false;}
+    bool is_terminal_state(state_t) const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+};
+
+class MockSearchTree: public SearchTree {
+public:
+    MockSearchTree(std::shared_ptr<AbstractEnvironment> environment,
+                   double discount,
+                   std::shared_ptr<NodeFinder> node_finder):
+        SearchTree(environment,
+                   discount,
+                   node_finder) {}
+    virtual ~MockSearchTree() = default;
+    virtual void next() {
+        using namespace return_tuple;
+        environment->set_state(root_state);
+        auto action_list = environment->get_actions();
+        std::map<node_t, state_handle_t> state_map;
+        state_map[root_node] = root_state;
+        std::queue<node_t> observation_node_queue;
+        observation_node_queue.push(root_node);
+        int counter = 0;
+        while(!observation_node_queue.empty() && 3>counter++) {
+            node_t current_observation_node = observation_node_queue.front();
+            observation_node_queue.pop();
+            // add all action nodes and resulting observation nodes to
+            // current_observation_node
+            for(auto action : action_list) {
+                // add action node
+                node_t action_node;
+                arc_t to_action_arc;
+                t(to_action_arc, action_node) = find_or_create_action_node(current_observation_node, action);
+                // perform transition
+                environment->set_state(state_map[current_observation_node]);
+                observation_handle_t observation;
+                reward_t reward;
+                t(observation,reward) = environment->transition(action);
+                // add observation node
+                node_t observation_node;
+                arc_t to_observation_arc;
+                t(to_observation_arc, observation_node) = find_or_create_observation_node(action_node, observation);
+                state_map[observation_node] = environment->get_state_handle();
+                observation_node_queue.push(observation_node);
+            }
+        }
+    }
+    virtual action_handle_t recommend_action() const {return action_handle_t();}
+};
+
+TEST(SearchTree, NodeFinder) {
+    using namespace return_tuple;
+    auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
+    for(auto node_finder : {
+                std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullTree),
+                std::shared_ptr<node_finder::NodeFinder>(new node_finder::ObservationTree),
+                std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullDAG)}) {
+        std::shared_ptr<AbstractSearchTree> search_tree(new MockSearchTree(environment,
+                                                                           0.9,
+                                                                           node_finder));
+        AbstractEnvironment::state_handle_t state = environment->get_state_handle();
+        search_tree->init(environment->get_states()[0]);
+
+        search_tree->next();
+        search_tree->toPdf("graph.pdf");
+        getchar();
+
+        environment->set_state(state);
+        AbstractEnvironment::action_handle_t action = environment->get_actions()[0];
+        AbstractEnvironment::observation_handle_t observation;
+        AbstractEnvironment::reward_t reward;
+        t(observation,reward) = environment->transition(action);
+        state = environment->get_state_handle();
+        search_tree->prune(action, observation, state);
+
+        search_tree->next();
+        search_tree->toPdf("graph.pdf");
+        getchar();
+    }
 }

@@ -9,6 +9,8 @@
 
 #include <MCTS_Environment/AbstractFiniteEnvironment.h>
 
+#include <util/debug.h>
+
 class Environment: public AbstractFiniteEnvironment<int,int> {
 
     //----typedefs/classes----//
@@ -34,33 +36,47 @@ public:
                         const action_handle_t & x) {
         auto environment = dynamic_cast<const Environment *>(&abstract_environment);
         auto action = dynamic_cast<const action_t *>(&(*x));
-        assert(environment!=nullptr && action!=nullptr);
-        return environment->action_name(*action);
+        if(environment!=nullptr && action!=nullptr) {
+            return environment->action_name(*action);
+        } else {
+            DEBUG_ERROR("Pointer cast failed (" << environment << "/" << action << ")");
+            return "a";
+        }
     }
     static QString name(const AbstractEnvironment & abstract_environment,
                         const observation_handle_t & x) {
         auto environment = dynamic_cast<const Environment *>(&abstract_environment);
         auto observation = dynamic_cast<const observation_t *>(&(*x));
-        assert(environment!=nullptr && observation!=nullptr);
-        return environment->observation_name(*observation);
+        if(environment!=nullptr && observation!=nullptr) {
+            return environment->observation_name(*observation);
+        } else {
+            DEBUG_ERROR("Pointer cast failed (" << environment << "/" << observation << ")");
+            return "o";
+        }
     }
     static QString name(const AbstractEnvironment & abstract_environment,
                         const state_handle_t & x) {
         auto environment = dynamic_cast<const Environment *>(&abstract_environment);
         auto state = dynamic_cast<const state_t *>(&(*x));
-        assert(environment!=nullptr && state!=nullptr);
-        return environment->state_name(*state);
+        if(environment!=nullptr && state!=nullptr) {
+            return environment->state_name(*state);
+        } else {
+            DEBUG_ERROR("Pointer cast failed (" << environment << "/" << state << ")");
+            return "s";
+        }
     }
-    static state_container_t get_states(AbstractEnvironment & abstract_environment) {
-        auto environment = static_cast<AbstractFiniteEnvironment<int,int> *>(&abstract_environment);
-        assert(environment!=nullptr);
-        return environment->get_states();
-    }
+    /* static state_container_t get_states(AbstractEnvironment & abstract_environment) { */
+    /*     auto environment = static_cast<AbstractFiniteEnvironment<int,int> *>(&abstract_environment); */
+    /*     assert(environment!=nullptr); */
+    /*     return environment->get_states(); */
+    /* } */
     virtual QString action_name(const action_t & a) const {return QString::number(a);}
     virtual QString state_name(const state_t & s) const {return QString::number(s);}
     virtual QString observation_name(const observation_t & o) const {return state_name((int)o);}
     virtual bool is_terminal_state() const override final {return is_terminal_state(state);}
     virtual bool is_terminal_state(state_t s) const = 0;
 };
+
+#include <util/debug_exclude.h>
 
 #endif /* ENVIRONMENT_H_ */

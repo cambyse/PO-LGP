@@ -133,7 +133,7 @@ public:
     static action_container_t construct_action_container(const std::vector<action_t> & action_list) {
         action_container_t action_handle_list;
         for(action_t action : action_list) {
-            action_handle_list.push_back(make_action_handle(action));
+            action_handle_list.push_back(action_handle_t(std::make_shared<action_t>(action)));
         }
         return action_handle_list;
     }
@@ -141,26 +141,26 @@ public:
     static state_container_t construct_state_container(const std::vector<state_t> & state_list) {
         state_container_t state_handle_list;
         for(state_t state : state_list) {
-            state_handle_list.push_back(make_state_handle(state));
+            state_handle_list.push_back(state_handle_t(std::make_shared<state_t>(state)));
         }
         return state_handle_list;
     }
 
-    virtual state_reward_pair_t transition(const state_t &, const action_t &) const = 0;
+    virtual state_reward_pair_t finite_transition(const state_t &, const action_t &) const = 0;
 
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override final {
         auto action = std::dynamic_pointer_cast<const action_t>(action_handle);
         assert(action!=nullptr);
-        auto state_reward = transition(state,*action);
+        auto state_reward = finite_transition(state,*action);
         state = state_reward.first;
-        return observation_reward_pair_t(make_observation_handle(state_reward.first),state_reward.second);
+        return observation_reward_pair_t(observation_handle_t(std::make_shared<observation_t>(state_reward.first)),state_reward.second);
     }
 
     virtual action_container_t get_actions() override final {return action_handle_list;}
 
     virtual state_container_t get_states() final {return construct_state_container(state_list);}
 
-    virtual state_handle_t get_state_handle() override final {return make_state_handle(state);}
+    virtual state_handle_t get_state_handle() override final {return state_handle_t(std::make_shared<state_t>(state));}
 
     virtual void set_state(const state_handle_t & state_handle) override final {
         auto finite_state = std::dynamic_pointer_cast<const state_t>(state_handle);

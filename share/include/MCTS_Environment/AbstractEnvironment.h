@@ -14,6 +14,8 @@ public:
             size_t operator()(const Action & a) const {return a.get_hash();}
         };
         virtual ~Action() = default;
+        virtual bool operator==(const Action & other) const = 0;
+        virtual bool operator!=(const Action & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
     };
     struct Observation {
@@ -99,28 +101,6 @@ public:
     /**
      * Return whether the environment is Markov. */
     virtual bool is_markov() const = 0;
-
-    template<class DerivedAction>
-    static action_handle_t make_action_handle(const DerivedAction & action) {
-        auto derived_ptr = std::make_shared<const DerivedAction>(action);
-        auto base_ptr = std::dynamic_pointer_cast<const Action>(derived_ptr);
-        assert(base_ptr!=nullptr);
-        return base_ptr;
-    }
-    template<class DerivedObservation>
-    static observation_handle_t make_observation_handle(const DerivedObservation & observation) {
-        auto derived_ptr = std::make_shared<const DerivedObservation>(observation);
-        auto base_ptr = std::dynamic_pointer_cast<const Observation>(derived_ptr);
-        assert(base_ptr!=nullptr);
-        return base_ptr;
-    }
-    template<class DerivedState>
-    static state_handle_t make_state_handle(const DerivedState & state) {
-        auto derived_ptr = std::make_shared<const DerivedState>(state);
-        auto base_ptr = std::dynamic_pointer_cast<const State>(derived_ptr);
-        assert(base_ptr!=nullptr);
-        return base_ptr;
-    }
 };
 
 template<>
