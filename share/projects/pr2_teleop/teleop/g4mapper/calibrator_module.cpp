@@ -6,117 +6,95 @@
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////INIT THREAD/////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-floatA G4HutoRoMap::getshoulderpos(floatA tempshoulderpos,floatA &p_i)
+void G4HutoRoMap::getshoulderpos(floatA tempshoulderpos)
 {
-    floatA pmean(3,1);
-    //float  pdistmean;
-    p_i.append(~(-centerpos+tempshoulderpos));
-    if(p_i.d0 == SN)
+
+    tempshoulderpos.reshape(6);
+   // cout<<"\x1B[2J\x1B[H";
+floatA tempcenter = centerpos;
+tempcenter.append(centerpos);
+           arr temp(6);
+       for(uint j = 0 ;j<tempshoulderpos.N;j++)
+         temp(j)=(double)(tempshoulderpos(j)-tempcenter(j));
+
+
+
+ //cout<<"dp_i  "<<endl<<dp_i<<endl<<"temp "<<temp<<endl;
+
+
+
+    dp_i.append(~temp);
+    if(dp_i.d0 == SN)
     {
+        rpmean =rpmean+(1./SN)*~(temp.subRange(0,2));
+        lpmean =lpmean+(1./SN)*~(temp.subRange(3,5));
+        rP=rP+(1./SN)*((temp.subRange(0,2))*~temp.subRange(0,2));
+        lP=lP+(1./SN)*((temp.subRange(3,5))*~temp.subRange(3,5));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)))(0);
     }
-    else if(p_i.d0>SN)
+    else if(dp_i.d0>SN)
     {
-        floatA tempshift = p_i;
-        p_i.clear();
+        rpmean =rpmean+(1./SN)*(~(temp.subRange(0,2))-~(dp_i[0].subRange(0,2)));
+        lpmean =lpmean+(1./SN)*(~(temp.subRange(3,5))-~(dp_i[0].subRange(3,5)));
+        rP=rP+((1./SN)*(((temp.subRange(0,2))*~(temp.subRange(0,2)))-((dp_i[0].subRange(0,2))*~(dp_i[0].subRange(0,2)))));
+        lP=lP+((1./SN)*(((temp.subRange(3,5))*~(temp.subRange(3,5)))-((dp_i[0].subRange(3,5))*~(dp_i[0].subRange(3,5)))));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)) -(dp_i[0].subRange(0,2)*~dp_i[0].subRange(0,2)*dp_i[0].subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)) -(dp_i[0].subRange(3,5)*~dp_i[0].subRange(3,5)*dp_i[0].subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)-~dp_i[0].subRange(0,2)*dp_i[0].subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)-~dp_i[0].subRange(3,5)*dp_i[0].subRange(3,5)))(0);
+
+       arr tempshift = dp_i;
+
+        dp_i.clear();
+
         for(uint i = 1;i<=SN;i++)
         {
-            p_i.append(tempshift.row(i));
+           dp_i.append(tempshift.row(i));
+
         }
 
     }
     else
     {
-
-        return  {0.f};
+        rpmean =rpmean+(1./SN)*~(temp.subRange(0,2));
+        lpmean =lpmean+(1./SN)*~(temp.subRange(3,5));
+        rP=rP+(1./SN)*((temp.subRange(0,2))*~temp.subRange(0,2));
+        lP=lP+(1./SN)*((temp.subRange(3,5))*~temp.subRange(3,5));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)))(0);
+       return;
     }
-    cout<<"\x1B[2J\x1B[H";
 
-  //  cout<<"Max dist open             Min dist open"<<endl;
+
+ 
+    rPmean = rpmean*~rpmean;
+    lPmean = lpmean*~lpmean;
+    arr sr=0.5*(inverse(rPmean-rP)*(rpp*rpmean-rp));
+
+    arr sl=0.5*(inverse(lPmean-lP)*(lpp*lpmean-lp));
+    shoulderR.resize(3,1);
+    shoulderL.resize(3,1);
+    for(uint i = 0 ; i<3;i++)
+    {
+      shoulderR(i,0)=(float)(sr(i,0));
+      shoulderL(i,0)=(float)(sl(i,0));
+    }
+/*
+cout<<"dp_i  "<<dp_i<<endl<<"rpmean "<<rpmean<<endl<<"lpmean "<<lpmean<<endl;
+cout<<"rPmean  "<<rPmean<<endl<<"lPmean "<<lPmean<<endl;
+cout<<"rP  "<<rP<<endl<<"lP "<<lP<<endl;
+cout<<"rp  "<<rp<<endl<<"lp "<<lp<<endl;
+cout<<"rpp  "<<rpp<<endl<<"lpp "<<lpp<<endl;
+//cout<<"sr  "<<sr<<endl<<"sl "<<sl<<endl;*/
+//cout<<"S_R  "<<shoulderR<<length(shoulderR)<<endl<<"S_L "<<shoulderL<<length(shoulderL)<<endl;
+
   //  cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
   //  cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
-
-       floatA temp(p_i);
-       temp =1;
-       temp = (~p_i*temp);
-       pmean(0,0)= temp(0,0);
-       pmean(1,0)= temp(1,1);
-       pmean(2,0)= temp(2,2);
-       pmean = 1.f/SN*pmean;
-
-
-     //  pdistmean = 1.f/SN*trace(~p_i*p_i);
-
-
-       floatA pipitpi(3,1);
-       pipitpi = 0 ;
-       float pitpi=0;
-
-
-
-       floatA P_i(3,3);
-       P_i = 0;
-
-
-       for(uint i = 0; i<SN;i++)
-       {
-           pitpi = pitpi + (~p_i[i]*p_i[i])(0);
-           P_i =P_i+p_i[i]*~p_i[i];
-           pipitpi = pipitpi+ p_i[i]*~p_i[i]*p_i[i];
-       }
-       pitpi = 1.f/SN*(pitpi);
-        pipitpi = 1.f/SN*(pipitpi);
-        P_i = 1.f/SN*(P_i);
-
-
-       floatA P =(pmean*~pmean-P_i);
-       arr douP(P.d0,P.d1);
-       for(uint i = 0;i<P.d0;i++)
-           for(uint j = 0 ;j<P.d1;j++)
-               douP(i,j)=(double)(P(i,j));
-       douP = inverse(douP);
-       for(uint i = 0;i<P.d0;i++)
-           for(uint j = 0 ;j<P.d1;j++)
-               P(i,j)=(float)(douP(i,j));
-
-
-
-        return (0.5f*P*(pitpi*pmean-pipitpi));
-
-/*
-  //-------------------- ???------------------
-       floatA temp(p_i);
-       temp =1;
-       temp = (~p_i*temp);
-       pmean(0,0)= temp(0,0);
-       pmean(1,0)= temp(1,1);
-       pmean(2,0)= temp(2,2);
-       pmean = 1.f/SN*pmean;
-
-
-       pdistmean = 1.f/SN*trace(~p_i*p_i);
-       floatA I;
-       I.setDiag(pdistmean,3);
-       floatA P =I-pmean*~pmean;
-       arr douP(P.d0,P.d1);
-       for(uint i = 0;i<P.d0;i++)
-           for(uint j = 0 ;j<P.d1;j++)
-               douP(i,j)=(double)(P(i,j));
-       douP = inverse(douP);
-       for(uint i = 0;i<P.d0;i++)
-           for(uint j = 0 ;j<P.d1;j++)
-               P(i,j)=(float)(douP(i,j));
-
-
-
-        return ~(0.5f*pdistmean*(~pmean*P));
-//----------------------------------------------------
-*/
-    // cout<<"----P matrix----"<<endl<<pmean<<endl;
-    // cout<<"----p_i   vektor----"<<endl<<p_i<<endl;
-    // cout<<"---- pdistmean------"<<endl<<pdistmean<<endl;
-
-    // cout<<"----q ---"<<endl<<q<<endl;
-
 
 
 }
@@ -124,19 +102,19 @@ void G4HutoRoMap::gripperinit(floatA tempgripperPos)
 {
    // floatA tempPoslhIndex = mid.query(tempData,STRING( "/human/lh/index")).subRange(0, 2);
    // floatA tempPoslhThumb =  mid.query(tempData,STRING("/human/lh/thumb")).subRange(0, 2);
-    if(length(tempgripperPos[0]-tempgripperPos[1]) > distlhmaxopen)
+    if(length(tempgripperPos[0]-tempgripperPos[1]) > distrhmaxopen)
     {
-        poselhthumbmaxopen = tempgripperPos[0];
-        poselhindexmaxopen = tempgripperPos[1];
-        distlhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
+        poserhthumbmaxopen = tempgripperPos[0];
+        poserhindexmaxopen = tempgripperPos[1];
+        distrhmaxopen =length(poserhthumbmaxopen-poserhindexmaxopen);
     }
  //   floatA tempPosrhIndex = mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2);
  //   floatA tempPosrhThumb =  mid.query(tempData,STRING("/human/rh/thumb")).subRange(0,2);
-    if(length(tempgripperPos[2]-tempgripperPos[3]) > distrhmaxopen)
+    if(length(tempgripperPos[2]-tempgripperPos[3]) > distlhmaxopen)
     {
-        poserhthumbmaxopen = tempgripperPos[2];
-        poserhindexmaxopen = tempgripperPos[3];
-        distrhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
+        poselhthumbmaxopen = tempgripperPos[2];
+        poselhindexmaxopen = tempgripperPos[3];
+        distlhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
     }
 
 
@@ -147,7 +125,7 @@ void G4HutoRoMap::gripperinit(floatA tempgripperPos)
 void G4HutoRoMap::doinit(floatA tempData,int button)
 {
     cout<<cout<<"\x1B[2J\x1B[H";
-//cout<<lp_i<<endl<<rp_i<<endl;
+    //cout<<lp_i<<endl<<rp_i<<endl;
     cout<<"Max dist open             Min dist open"<<endl;
     cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
     cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
@@ -155,10 +133,10 @@ void G4HutoRoMap::doinit(floatA tempData,int button)
     cout<<"----- CENTERPOS-----"<<endl<<centerpos<<endl;
 
 
-    //gripperinit(mid.query(tempData,{ "/human/lh/index","/human/lh/thumb","/human/rh/index","/human/rh/thumb"}).cols(0,2));
+    gripperinit(mid.query(tempData,{ "/human/rh/index","/human/rh/thumb","/human/lh/index","/human/lh/thumb"}).cols(0,2));
 
-    shoulderL=getshoulderpos(mid.query(tempData,STRING( "/human/lh/index")).subRange(0,2),lp_i);
-    shoulderR=getshoulderpos(mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2),rp_i);
+    getshoulderpos(mid.query(tempData,{ "/human/rh/index","/human/lh/index"}).cols(0,3));
+
 
 
 
@@ -292,6 +270,22 @@ G4HutoRoMap::G4HutoRoMap()
 }
 void G4HutoRoMap::open()
 {
+    rP.resize(3,3);
+    rP = 0;
+    lP.resize(3,3);
+    lP = 0;
+    rp.resize(3,1);
+    rp = 0;
+    lp.resize(3,1);
+    lp = 0;
+    rPmean.resize(3,3);
+    lPmean.resize(3,3);
+    rpmean.resize(3,1);
+    rpmean=0;
+    lpmean.resize(3,1);
+    lpmean=0;
+    rpp = 0;
+    lpp = 0;
     mid.load("g4mapping.kvg");
     cout<<"----------------------InitThread mapper Start-----------------"<<endl;
     cout<<"----------------Start moving freely,press Y for reset---------"<<endl;
