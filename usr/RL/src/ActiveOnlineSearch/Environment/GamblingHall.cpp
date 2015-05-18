@@ -84,8 +84,8 @@ GamblingHall::GamblingHall(int machine_n, double tolerance):
     }
 }
 
-GamblingHall::state_reward_pair_t GamblingHall::transition(const state_t & s,
-                                                           const action_t & a) const {
+GamblingHall::state_reward_pair_t GamblingHall::finite_transition(const state_t & s,
+                                                                  const action_t & a) const {
     reward_t reward;
     auto machine_and_time = util::convert_1D_to_ND_index((int)s,{machine_n,time_n});
     int machine = machine_and_time[0];

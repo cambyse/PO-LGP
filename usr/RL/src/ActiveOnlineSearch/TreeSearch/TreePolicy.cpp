@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "../Environment/Environment.h"
-#include "AbstractMonteCarloTreeSearch.h"
 
 #include <util/util.h>
 
@@ -21,13 +20,13 @@ using lemon::INVALID;
 
 namespace tree_policy {
 
-    typedef AbstractMonteCarloTreeSearch::graph_t       graph_t;
-    typedef AbstractMonteCarloTreeSearch::node_t        node_t;
-    typedef AbstractMonteCarloTreeSearch::arc_t         arc_t;
-    typedef AbstractMonteCarloTreeSearch::node_it_t     node_it_t;
-    typedef AbstractMonteCarloTreeSearch::arc_it_t      arc_it_t;
-    typedef AbstractMonteCarloTreeSearch::in_arc_it_t   in_arc_it_t;
-    typedef AbstractMonteCarloTreeSearch::out_arc_it_t  out_arc_it_t;
+    typedef MonteCarloTreeSearch::graph_t       graph_t;
+    typedef MonteCarloTreeSearch::node_t        node_t;
+    typedef MonteCarloTreeSearch::arc_t         arc_t;
+    typedef MonteCarloTreeSearch::node_it_t     node_it_t;
+    typedef MonteCarloTreeSearch::arc_it_t      arc_it_t;
+    typedef MonteCarloTreeSearch::in_arc_it_t   in_arc_it_t;
+    typedef MonteCarloTreeSearch::out_arc_it_t  out_arc_it_t;
 
     action_handle_t Uniform::operator()(const node_t & state_node,
                                  std::shared_ptr<AbstractEnvironment> environment,

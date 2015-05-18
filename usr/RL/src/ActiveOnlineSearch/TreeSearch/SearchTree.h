@@ -114,8 +114,7 @@ protected:
     /*  * not call number_of_children() to avoid iterating over all arcs. *\/ */
     /* virtual bool is_not_expanded(const node_t & observation_node) const; */
     /* virtual QString str(const node_t &) const; */
-    virtual QString beautiful_description(const node_t &) const;
-    /* virtual double color_rescale(const double&) const; */
+    virtual QString str_html(const node_t &) const;
     virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
                                                                      const observation_handle_t & observation);
     virtual arc_node_t find_or_create_action_node(const node_t & observation_node,

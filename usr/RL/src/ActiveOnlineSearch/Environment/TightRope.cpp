@@ -17,7 +17,8 @@ TightRope::TightRope(int n):
     }
 }
 
-TightRope::state_reward_pair_t TightRope::transition(const state_t & s, const action_t & a) const {
+TightRope::state_reward_pair_t TightRope::finite_transition(const state_t & s,
+                                                            const action_t & a) const {
     // return values
     state_t ss = 0;
     reward_t r = 0;

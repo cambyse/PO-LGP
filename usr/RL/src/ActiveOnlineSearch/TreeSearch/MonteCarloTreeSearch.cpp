@@ -1,10 +1,15 @@
 #include "MonteCarloTreeSearch.h"
 
+#include "TreePolicy.h"
+#include "ValueHeuristic.h"
+#include "BackupMethod.h"
+
 #include <vector>
 #include <tuple>
 #include <functional>
 #include <memory>
 
+#include "../graph_util.h"
 #include <util/QtUtil.h>
 #include <util/util.h>
 
@@ -15,40 +20,102 @@
 #include <util/return_tuple_macros.h>
 
 using lemon::INVALID;
-using tree_policy::TreePolicy;
-using value_heuristic::ValueHeuristic;
-using backup_method::BackupMethod;
 using std::tuple;
 using std::make_tuple;
 using std::vector;
 using std::shared_ptr;
 
-MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
-                                           double discount,
-                                           GRAPH_TYPE graph_type,
-                                           std::shared_ptr<const TreePolicy> tree_policy,
-                                           std::shared_ptr<const ValueHeuristic> value_heuristic,
-                                           std::shared_ptr<const BackupMethod> backup_method,
-                                           BACKUP_TYPE _backup_type):
-    AbstractMonteCarloTreeSearch(environment, discount, graph_type),
-    tree_policy(tree_policy),
-    value_heuristic(value_heuristic),
-    backup_method(backup_method),
-    distance_map(graph),
-    backup_type(_backup_type==BACKUP_GLOBAL?BACKUP_ALL:_backup_type),
-    node_hash(graph)
-{
-    if(_backup_type==BACKUP_GLOBAL) {
-        DEBUG_WARNING("This backup method is not implemented as yet. Using BACKUP_ALL instead.");
+int MonteCarloTreeSearch::MCTSNodeInfo::get_transition_counts() const {
+    return transition_counts;
+}
+
+int MonteCarloTreeSearch::MCTSNodeInfo::get_rollout_counts() const {
+    return rollout_counts;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_value() const {
+    return value;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_value_variance() const {
+    return value_variance;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_return_sum() const {
+    return return_sum;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_squared_return_sum() const {
+    return squared_return_sum;
+}
+
+void MonteCarloTreeSearch::MCTSNodeInfo::set_value(reward_t val, reward_t val_variance) {
+    value=val;
+    value_variance=val_variance;
+}
+void MonteCarloTreeSearch::MCTSNodeInfo::add_separate_rollout(reward_t ret) {
+    ++rollout_counts;
+    return_sum+=ret;
+    squared_return_sum+=ret*ret;
+}
+void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_on_trajectory(reward_t ret) {
+    add_separate_rollout(ret);
+    ++transition_counts;
+}
+
+void MonteCarloTreeSearch::MCTSNodeInfo::set_action_list(action_container_t & container) {
+    DEBUG_EXPECT(0,unused_actions.size()==0);
+    DEBUG_EXPECT(0,used_actions.size()==0);
+    for(action_handle_t action : container) {
+        unused_actions.insert(action);
     }
 }
 
-void MonteCarloTreeSearch::init(const observation_handle_t & o,
-                                const state_handle_t & s) {
-    SearchTree::init(o,s);
-    observation_node_map.clear();
-    observation_node_map.insert(make_pair(o, node_set_t({get_root_node()},0,node_hash)));
+MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::MCTSNodeInfo::use_random_action() {
+    action_handle_t action = util::random_select(unused_actions);
+    unused_actions.erase(action);
+    used_actions.insert(action);
+    return action;
 }
+
+bool MonteCarloTreeSearch::MCTSNodeInfo::is_fully_expanded() const {
+    return unused_actions.size()==0;
+}
+
+int MonteCarloTreeSearch::MCTSArcInfo::get_counts() const {
+    return counts;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSArcInfo::get_reward_sum() const {
+    return reward_sum;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSArcInfo::get_squared_reward_sum() const {
+    return squared_reward_sum;
+}
+
+void MonteCarloTreeSearch::MCTSArcInfo::add_transition(reward_t reward) {
+    ++counts;
+    reward_sum+=reward;
+    squared_reward_sum+=reward*reward;
+}
+
+MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
+                                           double discount,
+                                           std::shared_ptr<NodeFinder> node_finder,
+                                           std::shared_ptr<tree_policy::TreePolicy> tree_policy,
+                                           std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
+                                           std::shared_ptr<backup_method::BackupMethod> backup_method,
+                                           BACKUP_TYPE backup_type_):
+    SearchTree(environment, discount, node_finder),
+    mcts_node_info_map(graph),
+    mcts_arc_info_map(graph),
+    tree_policy(tree_policy),
+    value_heuristic(value_heuristic),
+    backup_method(backup_method),
+    backup_type(backup_type_),
+    node_hash(graph)
+{}
 
 void MonteCarloTreeSearch::next() {
 
@@ -65,10 +132,10 @@ void MonteCarloTreeSearch::next() {
     state_handle_t leaf_state = nullptr;
     {
         DEBUG_OUT(2,"Follow tree-policy...");
-        node_t current_node = get_root_node();
-        state_handle_t current_state = get_root_state();
+        node_t current_node = root_node;
+        state_handle_t current_state = root_state;
         bool did_expansion = false;
-        bool is_inner_node = is_fully_expanded(current_node);
+        bool is_inner_node = mcts_node_info_map[current_node].is_fully_expanded();
         bool was_visited_before = false;
         while(is_inner_node || !did_expansion || was_visited_before) {
 
@@ -76,7 +143,7 @@ void MonteCarloTreeSearch::next() {
             action_handle_t action = (*tree_policy)(current_node,
                                                     environment,
                                                     graph,
-                                                    get_node_info_map(),
+                                                    node_info_map,
                                                     mcts_node_info_map,
                                                     mcts_arc_info_map);
 
@@ -99,7 +166,7 @@ void MonteCarloTreeSearch::next() {
             // update halting conditions (last step was an expansion if the node was
             // not an inner node)
             did_expansion = !is_inner_node;
-            is_inner_node = is_fully_expanded(current_node);
+            is_inner_node = mcts_node_info_map[current_node].is_fully_expanded();
             if(environment->is_terminal_state(current_state)) {
                 break;
             }
@@ -163,7 +230,7 @@ void MonteCarloTreeSearch::next() {
                                  discount,
                                  environment,
                                  graph,
-                                 get_node_info_map(),
+                                 node_info_map,
                                  mcts_node_info_map,
                                  mcts_arc_info_map);
             }
@@ -201,7 +268,7 @@ void MonteCarloTreeSearch::next() {
                                      discount,
                                      environment,
                                      graph,
-                                     get_node_info_map(),
+                                     node_info_map,
                                      mcts_node_info_map,
                                      mcts_arc_info_map);
                     DEBUG_OUT(2,QString("    update observation-node(%1):	counts=%2/%3	return_sum=%4").
@@ -226,7 +293,7 @@ void MonteCarloTreeSearch::next() {
 MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() const {
     std::vector<action_handle_t> optimal_actions({*(environment->get_actions().begin())});
     double max_value = -DBL_MAX;
-    for(out_arc_it_t arc(graph, get_root_node()); arc!=INVALID; ++arc) {
+    for(out_arc_it_t arc(graph, root_node); arc!=INVALID; ++arc) {
         node_t action_node = graph.target(arc);
         double value = mcts_node_info_map[action_node].get_value();
         if(value>max_value) {
@@ -234,55 +301,84 @@ MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() c
             max_value = value;
         }
         if(value>=max_value) {
-            optimal_actions.push_back(action(action_node));
+            optimal_actions.push_back(node_info_map[action_node].action);
         }
     }
     return util::random_select(optimal_actions);
 }
 
-void MonteCarloTreeSearch::prune(const action_handle_t & action,
-                                 const observation_handle_t & observation,
-                                 const state_handle_t & state) {
-    SearchTree::prune(action,observation,state);
+void MonteCarloTreeSearch::toPdf(const char* file_name) const {
+
+    //-----------------------------------------//
+    // get min and max value/reward and counts //
+    //-----------------------------------------//
+    double min_val = DBL_MAX;
+    double max_val = -DBL_MAX;
+    int max_counts = 0;
     for(node_it_t node(graph); node!=INVALID; ++node) {
-        --distance_map[node];
+        min_val = std::min(min_val, mcts_node_info_map[node].get_value());
+        max_val = std::max(max_val, mcts_node_info_map[node].get_value());
+        max_counts = std::max(max_counts, mcts_node_info_map[node].get_transition_counts());
     }
-}
-
-std::tuple<SearchTree::arc_t,SearchTree::node_t>
-MonteCarloTreeSearch::add_observation_node(observation_handle_t observation,
-                                           node_t action_node) {
-    TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_observation_node(observation,
-                                                                                action_node);
-    distance_map[node] = distance_map[action_node]+1;
-    auto it = observation_node_map.find(observation);
-    if(it==observation_node_map.end()) {
-        // this observation does not have an associated set yet --> insert a new set
-        // with node as only element
-        observation_node_map.insert(make_pair(observation, node_set_t({node},0,node_hash)));
-    } else {
-        // this observation DOES have an associated set --> insert node into existing
-        // set
-        it->second.insert(node);
-    }
-    return arc_node_tuple;
-}
-
-std::tuple<SearchTree::arc_t,SearchTree::node_t>
-MonteCarloTreeSearch::add_action_node(action_handle_t action,
-                                      node_t observation_node) {
-    TN(arc_node_tuple,arc_t,arc,node_t,node) = SearchTree::add_action_node(action,observation_node);
-    distance_map[node] = distance_map[observation_node]+1;
-    return arc_node_tuple;
-}
-
-void MonteCarloTreeSearch::erase_node(node_t node) {
-    if(type(node)==OBSERVATION_NODE) {
-        auto it = observation_node_map.find(observation(node));
-        if(it==observation_node_map.end()) {
-            DEBUG_ERROR("Cannot find node-set for node:" << graph.id(node) << "/observation:" << observation(node));
+    for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
+        if(node_info_map[graph.source(arc)].type==ACTION_NODE) {
+            min_val = std::min(min_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts());
+            max_val = std::max(max_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts());
         }
-        it->second.erase(node);
     }
-    SearchTree::erase_node(node);
+    double norm = std::max(fabs(min_val), fabs(max_val));
+    norm = norm==0?1:norm;
+
+    graph_t::NodeMap<QString> node_map(graph);
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        double value = mcts_node_info_map[node].get_value();
+        node_map[node] = QString("shape=%1 label=<%2<BR/>id=%5<BR/>#%3/%10<BR/>V=%4 +/- %11<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
+            //node_map[node] = QString("shape=%1 label=<%2<BR/>#%3/%10<BR/>V=%4 +/- %11<BR/>R=%9> fillcolor=\"%6 %7 1\" penwidth=%8").
+            arg(node_info_map[node].type==OBSERVATION_NODE?"square":"circle").
+            arg(str_html(node)).
+            arg(mcts_node_info_map[node].get_transition_counts()).
+            arg(value,0,'g',2).
+            arg(graph.id(node)).
+            arg(value>0?0.3:0).
+            arg(color_rescale(fabs(value/norm))).
+            arg(10.*mcts_node_info_map[node].get_transition_counts()/max_counts+0.1).
+            arg(mcts_node_info_map[node].get_return_sum()).
+            arg(mcts_node_info_map[node].get_rollout_counts()).
+            arg(sqrt(mcts_node_info_map[node].get_value_variance()),0,'g',2);
+    }
+
+    graph_t::ArcMap<QString> arc_map(graph);
+    for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
+        node_t source = graph.source(arc);
+        double value = mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts();
+        if(node_info_map[source].type==OBSERVATION_NODE) {
+            arc_map[arc] = QString("style=dashed label=<#%1<BR/>r=%4> color=\"%2 %3 %3\"").
+                arg(mcts_arc_info_map[arc].get_counts()).
+                arg(value>0?0.3:0).
+                arg(color_rescale(fabs(value/norm))).
+                arg(mcts_arc_info_map[arc].get_reward_sum());
+        } else {
+            arc_map[arc] = QString("style=solid label=<#%2<BR/>r=%6> penwidth=%3 color=\"%4 %5 %5\"").
+                arg(mcts_arc_info_map[arc].get_counts()).
+                arg(5.*mcts_arc_info_map[arc].get_counts()/mcts_node_info_map[source].get_transition_counts()+0.1).
+                arg(value>0?0.3:0).
+                arg(color_rescale(fabs(value/norm))).
+                arg(mcts_arc_info_map[arc].get_reward_sum());
+        }
+    }
+
+    util::graph_to_pdf(file_name,
+                       graph,
+                       "style=filled truecolor=true",
+                       &node_map,
+                       "",
+                       &arc_map);
+}
+
+double MonteCarloTreeSearch::color_rescale(const double& d) const {
+    if(use_sqrt_scale) {
+        return sqrt(d);
+    } else {
+        return d;
+    }
 }

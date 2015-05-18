@@ -144,7 +144,7 @@ void SearchTree::toPdf(const char* file_name) const {
     for(node_it_t node(graph); node!=INVALID; ++node) {
         node_map[node] = QString("shape=%2 label=<%3>").
             arg(node_info_map[node].type==OBSERVATION_NODE?"square":"circle").
-            arg(beautiful_description(node));
+            arg(str_html(node));
     }
 
     graph_t::ArcMap<QString> arc_map(graph);
@@ -232,7 +232,7 @@ void SearchTree::toPdf(const char* file_name) const {
 //             Environment::name(*environment,node_info_map[n].action));
 // }
 
-QString SearchTree::beautiful_description(const node_t & n) const {
+QString SearchTree::str_html(const node_t & n) const {
     QString label;
     if(n==root_node) {
         label = "root";
@@ -249,14 +249,6 @@ QString SearchTree::beautiful_description(const node_t & n) const {
     //     arg(is_observation_node?node_info_map[n].observation:node_info_map[n].action);
     //return QString("%1").arg(is_observation_node?Environment::name(*environment,node_info_map[n].observation):Environment::name(*environment,node_info_map[n].action));
 }
-
-// double SearchTree::color_rescale(const double& d) const {
-//     if(use_sqrt_scale) {
-//         return sqrt(d);
-//     } else {
-//         return d;
-//     }
-// }
 
 SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t & action_node,
                                                                    const observation_handle_t & observation) {

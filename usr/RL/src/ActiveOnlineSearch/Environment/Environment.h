@@ -70,6 +70,12 @@ public:
     virtual QString observation_name(const observation_t & o) const {return state_name((int)o);}
     virtual bool is_terminal_state() const override final {return is_terminal_state(state);}
     virtual bool is_terminal_state(state_t s) const = 0;
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return false;}
+    virtual bool has_min_reward() const override {return false;}
+    virtual reward_t max_reward() const override {return 0;}
+    virtual reward_t min_reward() const override {return 0;}
+
 };
 
 #include <util/debug_exclude.h>

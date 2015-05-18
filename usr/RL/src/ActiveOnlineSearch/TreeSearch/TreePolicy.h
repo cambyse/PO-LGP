@@ -1,20 +1,20 @@
 #ifndef TREEPOLICY_H_
 #define TREEPOLICY_H_
 
-#include "AbstractMonteCarloTreeSearch.h"
+#include "MonteCarloTreeSearch.h"
 
 namespace tree_policy {
 
-    typedef AbstractMonteCarloTreeSearch::graph_t              graph_t;
-    typedef AbstractMonteCarloTreeSearch::node_info_map_t      node_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::mcts_arc_info_map_t  mcts_arc_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractMonteCarloTreeSearch::arc_t                arc_t;
-    typedef AbstractEnvironment::action_handle_t               action_handle_t;
-    typedef AbstractEnvironment::observation_handle_t          observation_handle_t;
-    typedef AbstractEnvironment::state_handle_t                state_handle_t;
-    typedef AbstractEnvironment::reward_t                      reward_t;
+    typedef MonteCarloTreeSearch::graph_t              graph_t;
+    typedef MonteCarloTreeSearch::node_info_map_t      node_info_map_t;
+    typedef MonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
+    typedef MonteCarloTreeSearch::mcts_arc_info_map_t  mcts_arc_info_map_t;
+    typedef MonteCarloTreeSearch::node_t               node_t;
+    typedef MonteCarloTreeSearch::arc_t                arc_t;
+    typedef AbstractEnvironment::action_handle_t       action_handle_t;
+    typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
+    typedef AbstractEnvironment::state_handle_t        state_handle_t;
+    typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
      * Abstract basis class for tree policies. The job of the tree policy is to

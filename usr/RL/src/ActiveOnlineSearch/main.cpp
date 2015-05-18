@@ -16,6 +16,10 @@
 
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/MonteCarloTreeSearch.h"
+#include "TreeSearch/NodeFinder.h"
+#include "TreeSearch/TreePolicy.h"
+#include "TreeSearch/ValueHeuristic.h"
+#include "TreeSearch/BackupMethod.h"
 #include "Environment/TightRope.h"
 #include "Environment/DynamicTightRope.h"
 #include "Environment/UnitTestEnvironment.h"
@@ -40,6 +44,7 @@ using std::endl;
 using std::shared_ptr;
 using util::Range;
 
+using namespace node_finder;
 using namespace tree_policy;
 using namespace value_heuristic;
 using namespace backup_method;
@@ -61,12 +66,12 @@ static const std::set<std::string> environment_set = {"TightRope",
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
                                                      "max"};
-static const std::set<std::string> graph_type_set = {"TREE",
-                                                     "PARTIAL_DAG",
-                                                     "FULL_DAG"};
+static const std::set<std::string> graph_type_set = {"FullTree",
+                                                     "FullDAG",
+                                                     "FullGraph",
+                                                     "ObservationTree"};
 static const std::set<std::string> backup_type_set = {"BACKUP_TRACE",
-                                                      "BACKUP_ALL",
-                                                      "BACKUP_GLOBAL"};
+                                                      "BACKUP_ALL"};
 static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "BellmanTreePolicy",
                                                         "MonteCarlo"};
@@ -152,7 +157,7 @@ OMP_NUM_THREADS environment variable will take effect (if set).", \
                                                      false, 0, "int" );
 
 bool check_arguments();
-SearchTree::GRAPH_TYPE get_graph_type();
+shared_ptr<NodeFinder> get_node_finder();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
 tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
@@ -375,7 +380,7 @@ int main(int argn, char ** args) {
                 int step = 1;
                 // initialize tree
                 current_state = environment->get_state_handle();
-                search_tree->init(current_observation,current_state);
+                search_tree->init(current_state);
                 while(true) {
                     // build tree
                     repeat(sample_n) {
@@ -469,18 +474,22 @@ bool check_arguments() {
     return ok;
 }
 
-SearchTree::GRAPH_TYPE get_graph_type() {
-    if(graph_type_arg.getValue()=="TREE") return SearchTree::TREE;
-    if(graph_type_arg.getValue()=="PARTIAL_DAG") return SearchTree::PARTIAL_DAG;
-    if(graph_type_arg.getValue()=="FULL_DAG") return SearchTree::FULL_DAG;
+shared_ptr<NodeFinder> get_node_finder() {
+    if(graph_type_arg.getValue()=="FullTree")
+        return shared_ptr<NodeFinder>(new FullTree());
+    if(graph_type_arg.getValue()=="FullDAG")
+        return shared_ptr<NodeFinder>(new FullDAG());
+    if(graph_type_arg.getValue()=="FullGraph")
+        return shared_ptr<NodeFinder>(new FullGraph());
+    if(graph_type_arg.getValue()=="ObservationTree")
+        return shared_ptr<NodeFinder>(new ObservationTree());
     DEBUG_DEAD_LINE;
-    return SearchTree::TREE;
+    return shared_ptr<NodeFinder>(new FullTree());
 }
 
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
     if(backup_type_arg.getValue()=="BACKUP_TRACE") return MonteCarloTreeSearch::BACKUP_TRACE;
     if(backup_type_arg.getValue()=="BACKUP_ALL") return MonteCarloTreeSearch::BACKUP_ALL;
-    if(backup_type_arg.getValue()=="BACKUP_GLOBAL") return MonteCarloTreeSearch::BACKUP_GLOBAL;
     DEBUG_DEAD_LINE;
     return MonteCarloTreeSearch::BACKUP_TRACE;
 }
@@ -545,7 +554,7 @@ tuple<shared_ptr<SearchTree>,
     current_state = environment->default_state();
     search_tree.reset(new MonteCarloTreeSearch(environment,
                                                discount_arg.getValue(),
-                                               get_graph_type(),
+                                               get_node_finder(),
                                                tree_policy,
                                                value_heuristic,
                                                backup_method,

@@ -15,7 +15,8 @@ private:
 public:
     GamblingHall(int machine_n, double tolerance = 0.1);
     virtual ~GamblingHall() = default;
-    virtual state_reward_pair_t transition(const state_t &, const action_t &) const override;
+    virtual state_reward_pair_t finite_transition(const state_t &,
+                                                  const action_t &) const override;
     virtual bool has_terminal_state() const override;
     virtual bool is_terminal_state(state_t s) const override;
     virtual QString state_name(const state_t &) const override;
