@@ -65,11 +65,6 @@ public:
             return "s";
         }
     }
-    /* static state_container_t get_states(AbstractEnvironment & abstract_environment) { */
-    /*     auto environment = static_cast<AbstractFiniteEnvironment<int,int> *>(&abstract_environment); */
-    /*     assert(environment!=nullptr); */
-    /*     return environment->get_states(); */
-    /* } */
     virtual QString action_name(const action_t & a) const {return QString::number(a);}
     virtual QString state_name(const state_t & s) const {return QString::number(s);}
     virtual QString observation_name(const observation_t & o) const {return state_name((int)o);}

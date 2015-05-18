@@ -133,7 +133,7 @@ public:
     static action_container_t construct_action_container(const std::vector<action_t> & action_list) {
         action_container_t action_handle_list;
         for(action_t action : action_list) {
-            action_handle_list.push_back(action_handle_t(std::make_shared<action_t>(action)));
+            action_handle_list.push_back(action_handle_t(new action_t((action_t)action)));
         }
         return action_handle_list;
     }
@@ -141,7 +141,7 @@ public:
     static state_container_t construct_state_container(const std::vector<state_t> & state_list) {
         state_container_t state_handle_list;
         for(state_t state : state_list) {
-            state_handle_list.push_back(state_handle_t(std::make_shared<state_t>(state)));
+            state_handle_list.push_back(state_handle_t(new state_t((state_t)state)));
         }
         return state_handle_list;
     }

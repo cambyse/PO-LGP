@@ -7,6 +7,7 @@
 #include <lemon/dfs.h>
 
 #include <map>
+#include <deque>
 #include <queue>
 
 #include <util/pretty_printer.h>
@@ -641,69 +642,190 @@ public:
                    discount,
                    node_finder) {}
     virtual ~MockSearchTree() = default;
+    graph_t & get_graph() {return graph;}
     virtual void next() {
         using namespace return_tuple;
-        environment->set_state(root_state);
-        auto action_list = environment->get_actions();
-        std::map<node_t, state_handle_t> state_map;
-        state_map[root_node] = root_state;
-        std::queue<node_t> observation_node_queue;
-        observation_node_queue.push(root_node);
-        int counter = 0;
-        while(!observation_node_queue.empty() && 3>counter++) {
-            node_t current_observation_node = observation_node_queue.front();
-            observation_node_queue.pop();
-            // add all action nodes and resulting observation nodes to
-            // current_observation_node
-            for(auto action : action_list) {
+        typedef std::vector<action_handle_t> action_sequence_t;
+        typedef std::deque<action_sequence_t> action_sequence_list_t;
+        typedef std::tuple<action_handle_t,observation_handle_t> transition_t;
+        typedef std::vector<transition_t> trajectory_t;
+        typedef std::deque<trajectory_t> trajectory_list_t;
+        // construct list with all possible trajectories of fixed length
+        // starting at root node
+        int length = 2;
+        trajectory_list_t trajectory_list;
+        {
+            // construct a list with all possible action sequences of a given length
+            auto action_list = environment->get_actions();
+            action_sequence_list_t action_sequence_list(1,action_sequence_t());
+            while((int)action_sequence_list.front().size()<length) {
+                action_sequence_t short_action_sequence = action_sequence_list.front();
+                DEBUG_OUT(1,"Expand action sequence of length " << short_action_sequence.size());
+                for(action_handle_t action : action_list) {
+                    DEBUG_OUT(1,"    add action " << Environment::name(*environment,action));
+                    action_sequence_t short_action_sequence_copy = short_action_sequence;
+                    short_action_sequence_copy.push_back(action);
+                    DEBUG_OUT(1,"        now has length " << short_action_sequence_copy.size());
+                    DEBUG_OUT(1,"Now have " << action_sequence_list.size() << " action sequences");
+                    action_sequence_list.push_back(short_action_sequence_copy);
+                    DEBUG_OUT(1,"Now have " << action_sequence_list.size() << " action sequences");
+                }
+                DEBUG_OUT(1,"Now have " << action_sequence_list.size() << " action sequences");
+                action_sequence_list.pop_front();
+                DEBUG_OUT(1,"Now have " << action_sequence_list.size() << " action sequences");
+            }
+            // perform all action sequences
+            DEBUG_OUT(1,"Have " << action_sequence_list.size() << " action sequences");
+            for(action_sequence_t action_sequence : action_sequence_list) {
+                DEBUG_OUT(1,"Next action sequence (length=" << action_sequence.size() << "):");
+                environment->set_state(root_state);
+                trajectory_t trajectory;
+                for(action_handle_t action : action_sequence) {
+                    observation_handle_t observation;
+                    reward_t reward;
+                    t(observation,reward) = environment->transition(action);
+                    transition_t transition(action,observation);
+                    trajectory.push_back(transition);
+                    DEBUG_OUT(1,"        <"
+                              << Environment::name(*environment,action) << ","
+                              << Environment::name(*environment,observation) << ">"
+                        );
+                }
+                trajectory_list.push_back(trajectory);
+            }
+        }
+        // roll out all trajectories from root node
+        DEBUG_OUT(1,"Using trajectories:");
+        for(trajectory_t trajectory : trajectory_list) {
+            DEBUG_OUT(1,"    trajectory:");
+            node_t current_observation_node = root_node;
+            for(transition_t transition : trajectory) {
+                action_handle_t action;
+                observation_handle_t observation;
+                t(action,observation) = transition;
+                DEBUG_OUT(1,"        <"
+                          << Environment::name(*environment,action) << ","
+                          << Environment::name(*environment,observation) << ">"
+                    );
                 // add action node
                 node_t action_node;
                 arc_t to_action_arc;
                 t(to_action_arc, action_node) = find_or_create_action_node(current_observation_node, action);
-                // perform transition
-                environment->set_state(state_map[current_observation_node]);
-                observation_handle_t observation;
-                reward_t reward;
-                t(observation,reward) = environment->transition(action);
                 // add observation node
                 node_t observation_node;
                 arc_t to_observation_arc;
                 t(to_observation_arc, observation_node) = find_or_create_observation_node(action_node, observation);
-                state_map[observation_node] = environment->get_state_handle();
-                observation_node_queue.push(observation_node);
+                // continue at new observation node
+                current_observation_node = observation_node;
             }
         }
     }
     virtual action_handle_t recommend_action() const {return action_handle_t();}
 };
 
+TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
+    typedef node_finder::graph_t graph_t;
+    typedef node_finder::node_t node_t;
+    typedef node_finder::node_info_map_t node_info_map_t;
+    typedef node_finder::action_handle_t action_handle_t;
+    typedef node_finder::observation_handle_t observation_handle_t;
+    typedef node_finder::FullDAG::depth_t depth_t;
+
+    // set up everything
+    auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
+    graph_t graph;
+    node_info_map_t node_info_map(graph);
+    node_finder::FullDAG finder;
+    finder.init(graph,node_info_map);
+
+    // initialize
+    MockEnvironment::reward_t reward;
+    action_handle_t action = *(environment->get_actions().begin());
+    observation_handle_t observation;
+    return_tuple::t(observation,reward) = environment->transition(action);
+    node_t action_node, observation_node_1, observation_node_2;
+    observation_node_1 = graph.addNode();
+    node_info_map[observation_node_1].observation = observation;
+    finder.add_observation_node(observation_node_1);
+    // to check offset removal
+    depth_t old_depth = finder.get_true_depth(observation_node_1);
+    bool found_discontinuity = false;
+    for(int i=0; i<std::numeric_limits<depth_t>::max(); ++i) {
+        // add new nodes to graph
+        action_node = graph.addNode();
+        observation_node_2 = graph.addNode();
+        graph.addArc(observation_node_1,action_node);
+        graph.addArc(action_node,observation_node_2);
+        // add valid action and observation in node_info_map
+        action = *(environment->get_actions().begin());
+        return_tuple::t(observation,reward) = environment->transition(action);
+        node_info_map[action_node].action = action;
+        node_info_map[observation_node_2].observation = observation;
+        // add new nodes in finder
+        finder.add_action_node(action_node);
+        finder.add_observation_node(observation_node_2);
+        // check depth
+        if(old_depth/2>finder.get_true_depth(observation_node_2)) {
+            found_discontinuity = true;
+        }
+        old_depth = finder.get_true_depth(observation_node_2);
+        // erase old nodes from finder
+        finder.erase_observation_node(observation_node_1);
+        finder.erase_action_node(action_node);
+        // erase old nodes from graph
+        graph.erase(observation_node_1);
+        graph.erase(action_node);
+        // swap observation nodes
+        observation_node_1 = observation_node_2;
+    }
+    EXPECT_TRUE(found_discontinuity);
+}
+
 TEST(SearchTree, NodeFinder) {
     using namespace return_tuple;
-    auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
-    for(auto node_finder : {
-                std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullTree),
-                std::shared_ptr<node_finder::NodeFinder>(new node_finder::ObservationTree),
-                std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullDAG)}) {
-        std::shared_ptr<AbstractSearchTree> search_tree(new MockSearchTree(environment,
-                                                                           0.9,
-                                                                           node_finder));
+    typedef std::tuple<int,int,int,int,std::shared_ptr<node_finder::NodeFinder>> check_tuple;
+    for(auto tup : {
+            check_tuple(13,12,13,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullTree)),
+                check_tuple(12,12,12,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::ObservationTree)),
+                check_tuple(11,12,11,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullDAG)),
+                check_tuple(9,12,6,8,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullGraph))}) {
+
+        std::shared_ptr<node_finder::NodeFinder> node_finder;
+        int nodes_1, arcs_1, nodes_2, arcs_2;
+        return_tuple::t(nodes_1, arcs_1, nodes_2, arcs_2, node_finder) = tup;
+
+        // setup environment and search tree
+        auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
+        std::shared_ptr<MockSearchTree> mock_search_tree(new MockSearchTree(environment,
+                                                                            0.9,
+                                                                            node_finder));
+        std::shared_ptr<AbstractSearchTree> search_tree(mock_search_tree);
         AbstractEnvironment::state_handle_t state = environment->get_state_handle();
         search_tree->init(environment->get_states()[0]);
 
+        // build tree
         search_tree->next();
-        search_tree->toPdf("graph.pdf");
-        getchar();
+        EXPECT_EQ(nodes_1,lemon::countNodes(mock_search_tree->get_graph()));
+        EXPECT_EQ(arcs_1,lemon::countArcs(mock_search_tree->get_graph()));
+        // search_tree->toPdf("graph.pdf");
+        // getchar();
 
+        // perform transition
         environment->set_state(state);
         AbstractEnvironment::action_handle_t action = environment->get_actions()[0];
         AbstractEnvironment::observation_handle_t observation;
         AbstractEnvironment::reward_t reward;
         t(observation,reward) = environment->transition(action);
         state = environment->get_state_handle();
+
+        // prune tree
         search_tree->prune(action, observation, state);
 
+        // build tree anew
         search_tree->next();
-        search_tree->toPdf("graph.pdf");
-        getchar();
+        EXPECT_EQ(nodes_2,lemon::countNodes(mock_search_tree->get_graph()));
+        EXPECT_EQ(arcs_2,lemon::countArcs(mock_search_tree->get_graph()));
+        // search_tree->toPdf("graph.pdf");
+        // getchar();
     }
 }

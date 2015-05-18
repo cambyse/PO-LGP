@@ -10,18 +10,12 @@ class AbstractEnvironment {
     //----typedefs/classes----//
 public:
     struct Action {
-        struct hash {
-            size_t operator()(const Action & a) const {return a.get_hash();}
-        };
         virtual ~Action() = default;
         virtual bool operator==(const Action & other) const = 0;
         virtual bool operator!=(const Action & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
     };
     struct Observation {
-        struct hash {
-            size_t operator()(const Observation & o) const {return o.get_hash();}
-        };
         virtual ~Observation() = default;
         virtual bool operator==(const Observation & other) const = 0;
         virtual bool operator!=(const Observation & other) const {return !(*this==other);}
@@ -36,8 +30,28 @@ public:
     typedef std::vector<action_handle_t> action_container_t;
     typedef double reward_t;
     typedef std::tuple<observation_handle_t,reward_t> observation_reward_pair_t;
-    template<typename C>
-        struct hash: public std::hash<C> {};
+    struct ActionHash {
+        size_t operator()(const action_handle_t & action) const {
+            return action->get_hash();
+        }
+    };
+    struct ObservationHash {
+        size_t operator()(const observation_handle_t & observation) const {
+            return observation->get_hash();
+        }
+    };
+    struct ActionEq {
+        size_t operator()(const action_handle_t & action1,
+                          const action_handle_t & action2) const {
+            return *(action1)==*(action2);
+        }
+    };
+    struct ObservationEq {
+        size_t operator()(const observation_handle_t & observation1,
+                          const observation_handle_t & observation2) const {
+            return *(observation1)==*(observation2);
+        }
+    };
 
     //----methods----//
 public:
@@ -101,30 +115,6 @@ public:
     /**
      * Return whether the environment is Markov. */
     virtual bool is_markov() const = 0;
-};
-
-template<>
-struct AbstractEnvironment::hash<AbstractEnvironment::Action>:
-public AbstractEnvironment::Action::hash {};
-
-template<>
-struct AbstractEnvironment::hash<AbstractEnvironment::Observation>:
-public AbstractEnvironment::Observation::hash {};
-
-template<>
-struct AbstractEnvironment::hash<AbstractEnvironment::action_handle_t>:
-public AbstractEnvironment::Action::hash {
-    size_t operator()(const action_handle_t & a) const {
-        return a->get_hash();
-    }
-};
-
-template<>
-struct AbstractEnvironment::hash<AbstractEnvironment::observation_handle_t>:
-public AbstractEnvironment::Observation::hash {
-    size_t operator()(const observation_handle_t & o) const {
-        return o->get_hash();
-    }
 };
 
 #endif /* ABSTRACTENVIRONMENT_H_ */

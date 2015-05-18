@@ -82,6 +82,7 @@ add_library(ActiveOnlineSearch
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
     TreeSearch/NodeFinder.h
+    TreeSearch/NodeFinder.cpp
 #    TreeSearch/AbstractMonteCarloTreeSearch.h
 #    TreeSearch/AbstractMonteCarloTreeSearch.cpp
 #    TreeSearch/MonteCarloTreeSearch.h

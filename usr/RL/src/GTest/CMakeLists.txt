@@ -34,6 +34,7 @@ add_executable(GTest
     MinimalEnvironmentExample/MinimalReward.h
     ../util/unit_tests.cpp
     ../ActiveOnlineSearch/unit_tests.cpp
+    ../../../../share/include/MCTS_Environment/unit_tests.cpp
 )
 
 target_include_directories(GTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

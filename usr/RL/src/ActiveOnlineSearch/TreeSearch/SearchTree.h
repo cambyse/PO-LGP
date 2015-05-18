@@ -51,7 +51,7 @@ protected:
     static const bool use_sqrt_scale = false;
     /**
      * Class for identifying existing nodes. */
-    std::shared_ptr<NodeFinder> node_finder;
+    const std::shared_ptr<NodeFinder> node_finder;
     /**
      * The seach tree. */
     graph_t graph;

@@ -6,29 +6,14 @@
 #include <deque>
 #include <unordered_map>
 
-#include <util/return_tuple.h>
-
-#define DEBUG_LEVEL 2
-#include <util/debug.h>
-
 namespace node_finder {
 
     typedef SearchTree::graph_t              graph_t;
     typedef SearchTree::node_t               node_t;
-    typedef SearchTree::arc_t                arc_t;
-    typedef SearchTree::node_it_t            node_it_t;
-    typedef SearchTree::arc_it_t             arc_it_t;
-    typedef SearchTree::in_arc_it_t          in_arc_it_t;
-    typedef SearchTree::out_arc_it_t         out_arc_it_t;
-    typedef SearchTree::arc_node_t           arc_node_t;
-    typedef SearchTree::NODE_TYPE            NODE_TYPE;
     typedef SearchTree::node_info_map_t      node_info_map_t;
     typedef SearchTree::action_handle_t      action_handle_t;
-    typedef SearchTree::state_handle_t       state_handle_t;
     typedef SearchTree::observation_handle_t observation_handle_t;
-    typedef SearchTree::reward_t             reward_t;
-
-    using lemon::INVALID;
+    typedef SearchTree::arc_node_t           arc_node_t;
 
     /**
      * Class for identifying existing nodes in a SearchTree. The different
@@ -39,103 +24,80 @@ namespace node_finder {
         NodeFinder() = default;
         virtual ~NodeFinder() = default;
         /**
+         * Initialize the object with used graph and node info map. \warning
+         * This function must be calld before calling any other functions. */
+        virtual void init(const graph_t & graph,
+                          const node_info_map_t & node_info_map) = 0;
+        /**
          * Try to find the corresponding action node.
          * @param graph the search tree
          * @param observation_node the ancestor observation node
          * @param action the action to find a node for
          * @param node_info_map the map containing the NodeInfo */
-        virtual arc_node_t find_action_node(const graph_t & graph,
-                                            const node_t & observation_node,
-                                            const action_handle_t & action,
-                                            const node_info_map_t & node_info_map) const = 0;
+        virtual arc_node_t find_action_node(const node_t & observation_node,
+                                            const action_handle_t & action) = 0;
         /**
          * Try to find the corresponding observation node.
          * @param graph the search tree
          * @param action_node the ancestor action node
          * @param observation the observation to find a node for
          * @param node_info_map the map containing the NodeInfo */
-        virtual arc_node_t find_observation_node(const graph_t & graph,
-                                                 const node_t & action_node,
-                                                 const observation_handle_t & observation,
-                                                 const node_info_map_t & node_info_map) const = 0;
+        virtual arc_node_t find_observation_node(const node_t & action_node,
+                                                 const observation_handle_t & observation) = 0;
         /**
          * Call back function to inform the class of a new action node.
          * @param graph the search tree
          * @param action_node the newly added action node
-         * @param node_info_map the map containing the NodeInfo */
-        virtual void add_action_node(const graph_t & graph,
-                                     const node_t & action_node,
-                                     const node_info_map_t & node_info_map) = 0;
+         * @param node_info_map the map containing the NodeInfo
+         * \warning This function should be call \e after the node and all
+         * connections have been added in the graph. */
+        virtual void add_action_node(const node_t & action_node) = 0;
         /**
          * Call back function to inform the class of a new observation node.
          * @param graph the search tree
          * @param observation_node the newly added observation node
-         * @param node_info_map the map containing the NodeInfo */
-        virtual void add_observation_node(const graph_t & graph,
-                                          const node_t & observation_node,
-                                          const node_info_map_t & node_info_map) = 0;
+         * @param node_info_map the map containing the NodeInfo
+         * \warning This function should be call \e after the node and all
+         * connections have been added in the graph. */
+        virtual void add_observation_node(const node_t & observation_node) = 0;
         /**
          * Call back function to inform the class of a action node to be erased.
          * @param graph the search tree
          * @param action_node the action node that will be erased
-         * @param node_info_map the map containing the NodeInfo */
-        virtual void erase_action_node(const graph_t & graph,
-                                       const node_t & action_node,
-                                       const node_info_map_t & node_info_map) = 0;
+         * @param node_info_map the map containing the NodeInfo
+         * \warning This function should be call \e before the node or any
+         * connections were removed in the graph. */
+        virtual void erase_action_node(const node_t & action_node) = 0;
         /**
          * Call back function to inform the class of a observation node to be
          * erased.
          * @param graph the search tree
          * @param observation_node the observation node that will be erased
-         * @param node_info_map the map containing the NodeInfo */
-        virtual void erase_observation_node(const graph_t & graph,
-                                            const node_t & observation_node,
-                                            const node_info_map_t & node_info_map) = 0;
+         * @param node_info_map the map containing the NodeInfo
+         * \warning This function should be call \e before the node or any
+         * connections were removed in the graph. */
+        virtual void erase_observation_node(const node_t & observation_node) = 0;
     };
 
     /**
      * Builds a full tree without reconnecting any nodes. */
     class FullTree: public NodeFinder {
+    protected:
+        //----members----//
+        const graph_t * graph = nullptr;
+        const node_info_map_t * node_info_map = nullptr;
+        //----methods----//
     public:
-        virtual arc_node_t find_action_node(const graph_t & graph,
-                                            const node_t & observation_node,
-                                            const action_handle_t & action,
-                                            const node_info_map_t & node_info_map) const override {
-            DEBUG_EXPECT(0,node_info_map[observation_node].type==NODE_TYPE::OBSERVATION_NODE);
-            for(out_arc_it_t arc(graph,observation_node); arc!=INVALID; ++arc) {
-                node_t action_node = graph.target(arc);
-                if(node_info_map[action_node].action==action) {
-                    return arc_node_t(arc,action_node);
-                }
-            }
-            return arc_node_t(INVALID,INVALID);
-        }
-        virtual arc_node_t find_observation_node(const graph_t & graph,
-                                                 const node_t & action_node,
-                                                 const observation_handle_t & observation,
-                                                 const node_info_map_t & node_info_map) const override {
-            DEBUG_OUT(1,"Find observation node: FullTree");
-            DEBUG_EXPECT(0,node_info_map[action_node].type==NODE_TYPE::ACTION_NODE);
-            for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
-                node_t observation_node = graph.target(arc);
-                if(node_info_map[observation_node].observation==observation) {
-                    return arc_node_t(arc,observation_node);
-                }
-            }
-            return arc_node_t(INVALID,INVALID);
-        }
-        virtual void add_action_node(const graph_t & graph,
-                                     const node_t & action_node,
-                                     const node_info_map_t & node_info_map) override {}
-        virtual void add_observation_node(const graph_t & graph,
-                                          const node_t & observation_node,
-                                          const node_info_map_t & node_info_map) override {}
-        virtual void erase_action_node(const graph_t & graph,
-                                       const node_t & action_node,
-                                       const node_info_map_t & node_info_map) override {}
-        virtual void erase_observation_node(const graph_t & graph,
-                                            const node_t & observation_node,
-                                            const node_info_map_t & node_info_map) override {}
+        virtual void init(const graph_t & g,
+                          const node_info_map_t & m) override;
+        virtual arc_node_t find_action_node(const node_t & observation_node,
+                                            const action_handle_t & action) override;
+        virtual arc_node_t find_observation_node(const node_t & action_node,
+                                                 const observation_handle_t & observation) override;
+        virtual void add_action_node(const node_t & action_node) override {}
+        virtual void add_observation_node(const node_t & observation_node) override {}
+        virtual void erase_action_node(const node_t & action_node) override {}
+        virtual void erase_observation_node(const node_t & observation_node) override {}
     };
 
     /**
@@ -144,119 +106,79 @@ namespace node_finder {
      * represented by the same observation node. */
     class ObservationTree: public FullTree {
     public:
-        virtual arc_node_t find_observation_node(const graph_t & graph,
-                                                 const node_t & action_node,
-                                                 const observation_handle_t & observation,
-                                                 const node_info_map_t & node_info_map) const override {
-
-            // first try "standard approach"
-            {
-                arc_t arc;
-                node_t node;
-                return_tuple::t(arc,node) = FullTree::find_observation_node(graph,action_node,observation,node_info_map);
-                if(arc!=INVALID && node!=INVALID) {
-                    DEBUG_OUT(2,"Found existing observation node (id=" << graph.id(node) << ") for action node (id=" << graph.id(action_node) << ")");
-                    return arc_node_t(arc,node);
-                }
-                DEBUG_OUT(2,"Didn't find existing observation node for action node (id=" << graph.id(action_node) << ")");
-            }
-
-            DEBUG_OUT(1,"Find observation node: ObservationTree");
-            DEBUG_EXPECT(0,node_info_map[action_node].type==NODE_TYPE::ACTION_NODE);
-
-            for(in_arc_it_t arc_from_parent_observation_node(graph,action_node);
-                arc_from_parent_observation_node!=INVALID;
-                ++arc_from_parent_observation_node) {
-
-                node_t parent_observation_node = graph.source(arc_from_parent_observation_node);
-
-                for(out_arc_it_t arc_to_sibling_action_node(graph,parent_observation_node);
-                    arc_to_sibling_action_node!=INVALID;
-                    ++arc_to_sibling_action_node) {
-
-                    node_t sibling_action_node = graph.target(arc_to_sibling_action_node);
-                    // don't recheck (was in "standard approach" done above)
-                    if(sibling_action_node==action_node) continue;
-
-                    for(out_arc_it_t arc_to_observation_node(graph,sibling_action_node);
-                        arc_to_observation_node!=INVALID;
-                        ++arc_to_observation_node) {
-
-                        node_t observation_node = graph.target(arc_to_observation_node);
-
-                        if(*(node_info_map[observation_node].observation)==*(observation)) {
-                            // return node but not arc, which comes from wrong action node
-                            DEBUG_OUT(2,"Found existing observation node (id=" << graph.id(observation_node) << ") for action node (id=" << graph.id(action_node) << ")");
-                            return arc_node_t(INVALID,observation_node);
-                        } else {
-                            DEBUG_OUT(2,"Didn't find existing observation node for action node (id=" << graph.id(action_node) << ")");
-                        }
-                    }
-                }
-            }
-            return arc_node_t(INVALID,INVALID);
-        }
+        virtual arc_node_t find_observation_node(const node_t & action_node,
+                                                 const observation_handle_t & observation) override;
     };
 
     /**
-     * Modifies the FullTree implementation. Any identical observations at the
-     * same depth of the SearchTree are represented by the same node. This makes
-     * it necessary to globally keep track of observation nodes and their
-     * depths. */
-    class FullDAG: public FullTree {
+     * Modifies the ObservationTree implementation. Any identical observations
+     * at the same depth of the SearchTree are represented by the same
+     * node. This makes it necessary to globally keep track of observation nodes
+     * and their depths. */
+    class FullDAG: public ObservationTree {
     public:
+        //----typedefs----//
+#ifdef UNIT_TESTS
+        typedef char depth_t;
+#else
+        typedef int depth_t;
+#endif
         //----members----//
+
         typedef std::unordered_map<
             observation_handle_t,
             node_t,
-            AbstractEnvironment::hash<observation_handle_t>> observation_map_t;
+            AbstractEnvironment::ObservationHash,
+            AbstractEnvironment::ObservationEq> observation_map_t;
+        /**
+         * List with maps of existing observations and the corresponding nodes. */
         std::deque<observation_map_t> observation_maps;
-        #warning compute depth
-        int depth = 0;
+        /**
+         * Map with depth of every node. #depth_offset must be subtracted to get
+         * the true depth. */
+        graph_t::NodeMap<depth_t> * depth_map = nullptr;
+        /**
+         * Offset of the #depth_map. Using an offset avoids decrementing the
+         * depth for all nodes when the root node is erased. */
+        depth_t depth_offset = 0;
 
         //----methods----//
-        virtual arc_node_t find_observation_node(const graph_t & graph,
-                                                 const node_t & action_node,
-                                                 const observation_handle_t & observation,
-                                                 const node_info_map_t & node_info_map) const override {
-            DEBUG_OUT(1,"Find observation node: FullDAG");
-            DEBUG_EXPECT(0,node_info_map[action_node].type==NODE_TYPE::ACTION_NODE);
-            if((int)observation_maps.size()>depth) {
-                auto& map = observation_maps[depth];
-                auto observation_node_it = map.find(observation);
-                if(observation_node_it!=map.end()) {
-                    node_t observation_node = observation_node_it->second;
-                    for(in_arc_it_t arc(graph,observation_node); arc!=INVALID; ++arc) {
-                        if(graph.source(arc)==action_node) {
-                            return arc_node_t(arc,observation_node);
-                        }
-                    }
-                    return arc_node_t(INVALID,observation_node);
-                }
-            }
-            return arc_node_t(INVALID,INVALID);
-        }
-        virtual void add_observation_node(const graph_t & graph,
-                                          const node_t & observation_node,
-                                          const node_info_map_t & node_info_map) override {
-            while((int)observation_maps.size()<=depth) observation_maps.push_back(observation_map_t());
-            observation_maps[depth][node_info_map[observation_node].observation] = observation_node;
-        }
-        virtual void erase_observation_node(const graph_t & graph,
-                                            const node_t & observation_node,
-                                            const node_info_map_t & node_info_map) override {
-            DEBUG_EXPECT(0,(int)observation_maps.size()>depth);
-            int n = observation_maps[depth].erase(node_info_map[observation_node].observation);
-            DEBUG_EXPECT(0,n==1);
-            if(depth==0) { // root node will be erased
-                DEBUG_EXPECT(0,observation_maps[0].size()==0);
-                observation_maps.pop_front();
-            }
-        }
+    public:
+        FullDAG() = default;
+        virtual ~FullDAG();
+        virtual void init(const graph_t & g,
+                          const node_info_map_t & m) override;
+        virtual depth_t get_depth(node_t node);
+#ifdef UNIT_TESTS
+        int get_true_depth(node_t node) {return(*depth_map)[node];}
+#endif
+        virtual void remove_depth_offset();
+        virtual arc_node_t find_observation_node(const node_t & action_node,
+                                                 const observation_handle_t & observation) override;
+        virtual void add_observation_node(const node_t & observation_node) override;
+        virtual void erase_observation_node(const node_t & observation_node) override;
+    };
+
+    /**
+     * Modifies the ObservationTree implementation. Any identical observations
+     * (independent of their depth) are represented by the same node. This makes
+     * it necessary to globally keep track of observation nodes. */
+    class FullGraph: public ObservationTree {
+    public:
+        //----members----//
+        std::unordered_map<
+            observation_handle_t,
+            node_t,
+            AbstractEnvironment::ObservationHash,
+            AbstractEnvironment::ObservationEq> observation_map;
+
+        //----methods----//
+        virtual arc_node_t find_observation_node(const node_t & action_node,
+                                                 const observation_handle_t & observation) override;
+        virtual void add_observation_node(const node_t & observation_node) override;
+        virtual void erase_observation_node(const node_t & observation_node) override;
     };
 
 }; // end namespace node_finder
-
-#include <util/debug_exclude.h>
 
 #endif /* NODEFINDER_H_ */

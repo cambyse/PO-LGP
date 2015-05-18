@@ -20,7 +20,7 @@
 #include <util/QtUtil.h>
 #include <util/return_tuple.h>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 using std::vector;
@@ -42,13 +42,17 @@ SearchTree::SearchTree(std::shared_ptr<AbstractEnvironment> environment,
     AbstractSearchTree(environment,discount),
     node_finder(node_finder),
     node_info_map(graph)
-{}
+{
+    node_finder->init(graph,node_info_map);
+}
 
 void SearchTree::init(const state_handle_t & state) {
     graph.clear();
-    auto arc_node_tuple = add_observation_node(observation_handle_t(),INVALID);
-    root_node = get<1>(arc_node_tuple);
+    root_node = graph.addNode();
+    node_info_map[root_node].type = OBSERVATION_NODE;
+    node_info_map[root_node].observation = observation_handle_t();
     root_state = state;
+    node_finder->add_observation_node(root_node);
 }
 
 void SearchTree::prune(const action_handle_t & action,
@@ -75,8 +79,9 @@ void SearchTree::prune(const action_handle_t & action,
 
     // check if new root node was found
     if(new_root_node==INVALID) {
-        DEBUG_ERROR("No branch for (observation --> action --> observation) = ("
-                    << node_info_map[root_node].observation << " --> " << action << " --> " << observation << ")");
+        DEBUG_ERROR("No branch for (action --> observation) = ("
+                    << Environment::name(*environment,action)
+                    << " --> " << Environment::name(*environment,observation) << ")");
         init(state);
         return;
     }
@@ -85,36 +90,6 @@ void SearchTree::prune(const action_handle_t & action,
     // prune tree //
     //------------//
 
-#if 0
-    /* This approach is OK but searches the whole graph. However usually only
-     * few (as compared to the graph size) nodes have to be removed. */
-
-    // set new root node and remove old one, which splits graph in two connected
-    // components
-    if(graph_type==FULL_DAG) {
-        node_info_map[root_node].level_map_it->erase(node_info_map[root_node].observation);
-    }
-    erase_node(root_node);
-    root_node = new_root_node;
-    root_state = state;
-
-    // find nodes that are reachable from new root node
-    graph_t::NodeMap<bool> reached(graph);
-    graph_util::graph_flooding(graph,reached).add_source(root_node).flood();
-
-    // erase those that cannot be reached (but don't iterate AND erase at the
-    // same time)
-    vector<node_t> nodes_to_erase;
-    for(node_it_t node(graph); node!=INVALID; ++node) {
-        if(!reached[node]) nodes_to_erase.push_back(node);
-    }
-    for(node_t node : nodes_to_erase) {
-        if(graph_type==FULL_DAG && type(node)==OBSERVATION_NODE) {
-            node_info_map[node].level_map_it->erase(node_info_map[node].observation);
-        }
-        erase_node(node);
-    }
-#else
     /* This alternative approach only searches through the parts of the graph
      * that are close to the root. This might be less efficient for very small
      * graphs but should be much more efficient for large graphs. */
@@ -162,8 +137,6 @@ void SearchTree::prune(const action_handle_t & action,
             }
         }
     }
-
-#endif
 }
 
 void SearchTree::toPdf(const char* file_name) const {
@@ -288,13 +261,13 @@ QString SearchTree::beautiful_description(const node_t & n) const {
 SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t & action_node,
                                                                    const observation_handle_t & observation) {
     DEBUG_OUT(1,"find_or_create_observation_node()");
+    DEBUG_OUT(2,"    action_node: " << graph.id(action_node));
+    DEBUG_OUT(2,"    observation: " << Environment::name(*environment,observation));
     using namespace return_tuple;
     node_t observation_node;
     arc_t to_observation_arc;
-    t(to_observation_arc, observation_node) = node_finder->find_observation_node(graph,
-                                                                                 action_node,
-                                                                                 observation,
-                                                                                 node_info_map);
+    t(to_observation_arc, observation_node) = node_finder->find_observation_node(action_node,
+                                                                                 observation);
     if(observation_node==INVALID) {
         // observation node doesn't exist --> create
         DEBUG_OUT(2,"    node and arc both don't exist");
@@ -319,10 +292,8 @@ SearchTree::arc_node_t SearchTree::find_or_create_action_node(const node_t & obs
     using namespace return_tuple;
     node_t action_node;
     arc_t to_action_arc;
-    t(to_action_arc, action_node) = node_finder->find_action_node(graph,
-                                                                  observation_node,
-                                                                  action,
-                                                                  node_info_map);
+    t(to_action_arc, action_node) = node_finder->find_action_node(observation_node,
+                                                                  action);
     if(action_node==INVALID) {
         // action node doesn't exist --> create
         return add_action_node(action, observation_node);
@@ -342,29 +313,32 @@ SearchTree::arc_node_t SearchTree::find_or_create_action_node(const node_t & obs
 SearchTree::arc_node_t SearchTree::add_observation_node(observation_handle_t observation,
                                                         node_t action_node) {
     node_t observation_node = graph.addNode();
+    arc_t observation_arc = graph.addArc(action_node, observation_node);
     node_info_map[observation_node].type = OBSERVATION_NODE;
     node_info_map[observation_node].observation = observation;
+    node_finder->add_observation_node(observation_node);
     DEBUG_OUT(3,"    adding observation node (" << graph.id(observation_node) << "): " <<
               Environment::name(*environment,observation));
-    if(action_node!=INVALID) {
-        arc_t observation_arc = graph.addArc(action_node, observation_node);
-        return make_tuple(observation_arc, observation_node);
-    } else {
-        return make_tuple(INVALID, observation_node);
-    }
+    return make_tuple(observation_arc, observation_node);
 }
 
 SearchTree::arc_node_t SearchTree::add_action_node(action_handle_t action, node_t observation_node) {
     node_t action_node = graph.addNode();
+    arc_t action_arc = graph.addArc(observation_node, action_node);
     node_info_map[action_node].type = ACTION_NODE;
     node_info_map[action_node].action = action;
-    arc_t action_arc = graph.addArc(observation_node, action_node);
+    node_finder->add_action_node(action_node);
     DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
               Environment::name(*environment,action));
     return make_tuple(action_arc, action_node);
 }
 
 void SearchTree::erase_node(node_t node) {
+    if(node_info_map[node].type==ACTION_NODE) {
+        node_finder->erase_action_node(node);
+    } else {
+        node_finder->erase_observation_node(node);
+    }
     graph.erase(node);
 }
 
