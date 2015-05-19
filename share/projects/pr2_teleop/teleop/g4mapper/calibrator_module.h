@@ -25,10 +25,12 @@ struct G4HutoRoMap:Module
 
 /////////////////////INIT////////////////////
     bool initphase = true;
-    floatA  poselhthumbmaxopen  , poselhindexmaxopen;
+    floatA  poselhthumbmaxopen  , poselhindexmaxopen, poselhthumbminopen  , poselhindexminopen;
     float distlhmaxopen = 0;
-    floatA  poserhthumbmaxopen  , poserhindexmaxopen;
+    float distlhminopen = 50;
+    floatA  poserhthumbmaxopen  , poserhindexmaxopen, poserhthumbminopen  , poserhindexminopen;
     float distrhmaxopen = 0;
+    float distrhminopen = 50;
 
 
     uint SN =50;
@@ -43,6 +45,7 @@ struct G4HutoRoMap:Module
     arr lP;
     arr rp;
     arr lp;
+    arr sr;
     double rpp;
     double lpp;
     
@@ -51,6 +54,7 @@ struct G4HutoRoMap:Module
     void gripperinit(floatA a);
     void getshoulderpos(floatA a);
 /////////////////////////////////////////////
+
     G4HutoRoMap();
     MocapID mid;
     floatA centerpos;

@@ -74,7 +74,7 @@ tempcenter.append(centerpos);
  
     rPmean = rpmean*~rpmean;
     lPmean = lpmean*~lpmean;
-    arr sr=0.5*(inverse(rPmean-rP)*(rpp*rpmean-rp));
+     sr=0.5*(inverse(rPmean-rP)*(rpp*rpmean-rp));
 
     arr sl=0.5*(inverse(lPmean-lP)*(lpp*lpmean-lp));
     shoulderR.resize(3,1);
@@ -100,23 +100,31 @@ cout<<"rpp  "<<rpp<<endl<<"lpp "<<lpp<<endl;
 }
 void G4HutoRoMap::gripperinit(floatA tempgripperPos)
 {
-   // floatA tempPoslhIndex = mid.query(tempData,STRING( "/human/lh/index")).subRange(0, 2);
-   // floatA tempPoslhThumb =  mid.query(tempData,STRING("/human/lh/thumb")).subRange(0, 2);
     if(length(tempgripperPos[0]-tempgripperPos[1]) > distrhmaxopen)
     {
         poserhthumbmaxopen = tempgripperPos[0];
         poserhindexmaxopen = tempgripperPos[1];
         distrhmaxopen =length(poserhthumbmaxopen-poserhindexmaxopen);
     }
- //   floatA tempPosrhIndex = mid.query(tempData,STRING( "/human/rh/index")).subRange(0,2);
- //   floatA tempPosrhThumb =  mid.query(tempData,STRING("/human/rh/thumb")).subRange(0,2);
+    if(length(tempgripperPos[0]-tempgripperPos[1]) < distrhminopen)
+    {
+        poserhthumbminopen = tempgripperPos[0];
+        poserhindexminopen = tempgripperPos[1];
+        distrhminopen =length(poserhthumbminopen-poserhindexminopen);
+    }
+
     if(length(tempgripperPos[2]-tempgripperPos[3]) > distlhmaxopen)
     {
         poselhthumbmaxopen = tempgripperPos[2];
         poselhindexmaxopen = tempgripperPos[3];
         distlhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
     }
-
+    if(length(tempgripperPos[2]-tempgripperPos[3]) < distlhminopen)
+    {
+        poselhthumbminopen = tempgripperPos[2];
+        poselhindexminopen = tempgripperPos[3];
+        distlhminopen =length(poselhthumbminopen-poselhindexminopen);
+    }
 
 
 }
@@ -127,13 +135,16 @@ void G4HutoRoMap::doinit(floatA tempData,int button)
     cout<<cout<<"\x1B[2J\x1B[H";
     //cout<<lp_i<<endl<<rp_i<<endl;
     cout<<"Max dist open             Min dist open"<<endl;
-    cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
-    cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
-    cout<<"----RS vektor----"<<endl<<"ABS_RS  "<<length(shoulderR)<<"  "<<shoulderR<<endl<<"-----LS vektor----"<<endl<<"ABS_LS  "<<length(shoulderL)<<"  "<<shoulderL<<endl;
+    cout<<"left hand : "<<distlhmaxopen<<"          "<<distlhminopen<<endl;
+    cout<<"right hand: "<<distrhmaxopen<<"          "<<distrhminopen<<endl<<endl;
+    cout<<"----RS vektor----"<<endl<<"ABS_RS  "<<length(shoulderR)<<shoulderR<<"  "<<endl<<"-----LS vektor----"<<endl<<"ABS_LS  "<<length(shoulderL)<<"  "<<shoulderL<<endl;
+
     cout<<"----- CENTERPOS-----"<<endl<<centerpos<<endl;
+//    floatA test = mid.query(tempData,STRING("/human/rh/index")).subRange(0,2);//-centerpos);
+//    test = (test-centerpos).resize(3,1);
+    cout<<"-----RARM RADIUS-----"<<endl<<length(rpmean-sr)<<endl;
 
-
-    gripperinit(mid.query(tempData,{ "/human/rh/index","/human/rh/thumb","/human/lh/index","/human/lh/thumb"}).cols(0,2));
+    //gripperinit(mid.query(tempData,{ "/human/rh/thumb","/human/rh/index","/human/lh/thumb","/human/lh/index"}).cols(0,3));
 
     getshoulderpos(mid.query(tempData,{ "/human/rh/index","/human/lh/index"}).cols(0,3));
 
@@ -145,10 +156,16 @@ if(button & BTN_Y)
 
         poselhthumbmaxopen.clear();
         poselhindexmaxopen.clear();
+        poselhthumbminopen.clear();
+        poselhindexminopen.clear();
         distlhmaxopen =0;
+        distlhminopen =0;
         poserhthumbmaxopen.clear();
         poserhindexmaxopen.clear();
-        distrhmaxopen =0;
+        poserhthumbminopen.clear();
+        poserhindexminopen.clear();
+        distrhmaxopen = 0;
+        distrhminopen = 0;
 }
 
 
@@ -270,6 +287,8 @@ G4HutoRoMap::G4HutoRoMap()
 }
 void G4HutoRoMap::open()
 {
+    sr.resize(3,1);
+    shoulderR.resize(3,1);
     rP.resize(3,3);
     rP = 0;
     lP.resize(3,3);
@@ -300,6 +319,7 @@ void G4HutoRoMap::step()
     floatA tempData = poses.get();
     if(tempData.N == 0)
      return;
+     
    // else
    // tempData = mid.query(tempData,STRING("/human/rl/rf"));
     ///////////////////////////

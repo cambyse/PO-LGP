@@ -19,7 +19,7 @@ struct PR2G4Control:System {
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
   //  addModule<G4Display>(NULL,Module::loopWithBeat,0.05);
     addModule<G4HutoRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
-  //  addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
+ //  addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
 
 
 
