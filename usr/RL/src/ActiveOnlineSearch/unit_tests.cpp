@@ -724,6 +724,14 @@ public:
 };
 
 TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
+    // The FullDAG class uses a depth map. To avoid recomputing all depth if the
+    // root node is removed it uses a global offset that is incremented
+    // instead. Therefore depth value just keep on increasing. To avoid an
+    // overflow depth values are recomputed with zero offset once half-max of
+    // the specific depth-type is reached. For unit tests (#ifdef UNIT_TESTS)
+    // the class uses 'char' as depth type. This test check if this is actually
+    // working.
+
     typedef node_finder::graph_t graph_t;
     typedef node_finder::node_t node_t;
     typedef node_finder::node_info_map_t node_info_map_t;
@@ -782,6 +790,8 @@ TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
 }
 
 TEST(SearchTree, NodeFinder) {
+    // This test checks the expected tree sizes for the different node finder
+    // classes.
     using namespace return_tuple;
     typedef std::tuple<int,int,int,int,std::shared_ptr<node_finder::NodeFinder>> check_tuple;
     for(auto tup : {
@@ -828,4 +838,65 @@ TEST(SearchTree, NodeFinder) {
         // search_tree->toPdf("graph.pdf");
         // getchar();
     }
+}
+
+class LineEnvironment: public AbstractEnvironment {
+    struct LineAction: public Action {
+        LineAction(int a): action(a) {}
+        virtual bool operator==(const Action & other) const {
+            auto line_action = dynamic_cast<const LineAction*>(&other);
+            return line_action!=nullptr && line_action->action==action;
+        }
+        virtual void write(std::ostream & out) const {
+            out << action;
+        }
+        int action;
+    };
+    struct LineObservation: public Observation {
+        virtual bool operator==(const Observation & other) const {
+            return dynamic_cast<const LineObservation*>(&other)!=nullptr;
+        }
+        virtual void write(std::ostream & out) const {
+            out << "x";
+        }
+    };
+    struct LineState: public State {
+        LineState(int s): state(s) {}
+        int state;
+    };
+
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+        auto line_action = std::dynamic_pointer_cast<const LineAction>(action_handle);
+        EXPECT_NE(nullptr,line_action);
+        state += line_action->action;
+    }
+    virtual action_container_t get_actions() {
+        LineAction up(+1);
+        LineAction down(-1);
+        return action_container_t({action_handle_t(new LineAction(up)),
+                    action_handle_t(new LineAction(down))});
+    }
+    virtual state_handle_t get_state_handle() {
+        return std::shared_ptr<State>(new LineState(state));
+    }
+    virtual void set_state(const state_handle_t & state_handle) {
+        auto line_state = dynamic_pointer_cast<const LineState>(state_handle);
+        EXPECT_NE(nullptr,line_state);
+        state = line_state->state;
+    }
+    virtual bool has_terminal_state() const {return false;}
+    virtual bool is_terminal_state() const {return false;}
+    virtual bool is_deterministic() const {return true;}
+    virtual bool has_max_reward() const {return true;}
+    virtual reward_t max_reward() const {return 1;}
+    virtual bool has_min_reward() const {return true;}
+    virtual reward_t min_reward() const {return 0;}
+    virtual bool is_markov() const {return false;}
+private:
+    int state;
+};
+
+TEST(MonteCarloTreeSearch, Simple) {
+
+
 }

@@ -5,6 +5,7 @@
 #include <memory>
 #include <tuple>
 #include <cassert>
+#include <ostream>
 
 class AbstractEnvironment {
     //----typedefs/classes----//
@@ -14,12 +15,22 @@ public:
         virtual bool operator==(const Action & other) const = 0;
         virtual bool operator!=(const Action & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
+        friend std::ostream& operator<<(std::ostream & out, const Action & action) {
+            action.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
     struct Observation {
         virtual ~Observation() = default;
         virtual bool operator==(const Observation & other) const = 0;
         virtual bool operator!=(const Observation & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
+        friend std::ostream& operator<<(std::ostream & out, const Observation & observation) {
+            observation.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
     struct State {
         virtual ~State() = default;

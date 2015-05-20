@@ -53,13 +53,14 @@ void MonteCarloTreeSearch::MCTSNodeInfo::set_value(reward_t val, reward_t val_va
     value=val;
     value_variance=val_variance;
 }
-void MonteCarloTreeSearch::MCTSNodeInfo::add_separate_rollout(reward_t ret) {
+
+void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_return(reward_t ret) {
     ++rollout_counts;
     return_sum+=ret;
     squared_return_sum+=ret*ret;
 }
-void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_on_trajectory(reward_t ret) {
-    add_separate_rollout(ret);
+
+void MonteCarloTreeSearch::MCTSNodeInfo::add_transition() {
     ++transition_counts;
 }
 
@@ -82,8 +83,12 @@ bool MonteCarloTreeSearch::MCTSNodeInfo::is_fully_expanded() const {
     return unused_actions.size()==0;
 }
 
-int MonteCarloTreeSearch::MCTSArcInfo::get_counts() const {
-    return counts;
+int MonteCarloTreeSearch::MCTSArcInfo::get_rollout_counts() const {
+    return rollout_counts;
+}
+
+int MonteCarloTreeSearch::MCTSArcInfo::get_transition_counts() const {
+    return transition_counts;
 }
 
 MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSArcInfo::get_reward_sum() const {
@@ -94,10 +99,14 @@ MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSArcInfo::get_squared_re
     return squared_reward_sum;
 }
 
-void MonteCarloTreeSearch::MCTSArcInfo::add_transition(reward_t reward) {
-    ++counts;
+void MonteCarloTreeSearch::MCTSArcInfo::add_rollout_return(reward_t reward) {
+    ++rollout_counts;
     reward_sum+=reward;
     squared_reward_sum+=reward*reward;
+}
+
+void MonteCarloTreeSearch::MCTSArcInfo::add_transition() {
+    ++transition_counts;
 }
 
 MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
@@ -106,14 +115,14 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
                                            std::shared_ptr<tree_policy::TreePolicy> tree_policy,
                                            std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                                            std::shared_ptr<backup_method::BackupMethod> backup_method,
-                                           BACKUP_TYPE backup_type_):
+                                           BACKUP_TYPE backup_type):
     SearchTree(environment, discount, node_finder),
     mcts_node_info_map(graph),
     mcts_arc_info_map(graph),
     tree_policy(tree_policy),
     value_heuristic(value_heuristic),
     backup_method(backup_method),
-    backup_type(backup_type_),
+    backup_type(backup_type),
     node_hash(graph)
 {}
 
@@ -194,9 +203,8 @@ void MonteCarloTreeSearch::next() {
 
     /* We need to propagate back the returns to allow MC backups. If backup_type
      * is BACKUP_TRACE we also do the backups here. In that case only nodes that
-     * lie on the trajectory will be backed up. If graph_type is TREE this
-     * cannot be done differently but in a DAG we could backup more nodes (see
-     * BACKUP_ALL). */
+     * lie on the trajectory will be backed up. (In trees this is the only way
+     * but in general BACKUP_ALL will backup more nodes.) */
     {
         // initialize discounted return of this rollout with leaf-node's return
         reward_t discounted_return = mcts_node_info_map[leaf_node].get_return_sum()/mcts_node_info_map[leaf_node].get_rollout_counts();
@@ -208,10 +216,14 @@ void MonteCarloTreeSearch::next() {
             t(observation_node,to_action_arc,action_node,to_observation_arc,reward) = *transition;
             discounted_return = reward + discount*discounted_return;
             // update counts, reward, and return
-            mcts_node_info_map[observation_node  ].add_rollout_on_trajectory(discounted_return);
-            mcts_node_info_map[action_node       ].add_rollout_on_trajectory(discounted_return);
-            mcts_arc_info_map[to_action_arc      ].add_transition(reward);
-            mcts_arc_info_map[to_observation_arc ].add_transition(reward);
+            mcts_node_info_map[observation_node  ].add_rollout_return(discounted_return);
+            mcts_node_info_map[action_node       ].add_rollout_return(discounted_return);
+            mcts_node_info_map[observation_node  ].add_transition();
+            mcts_node_info_map[action_node       ].add_transition();
+            mcts_arc_info_map[to_action_arc      ].add_rollout_return(reward);
+            mcts_arc_info_map[to_observation_arc ].add_rollout_return(reward);
+            mcts_arc_info_map[to_action_arc      ].add_transition();
+            mcts_arc_info_map[to_observation_arc ].add_transition();
             DEBUG_OUT(2,QString("    update observation-node(%1):	counts=%2/%3	return_sum=%4").
                       arg(graph.id(observation_node)).
                       arg(mcts_node_info_map[observation_node].get_transition_counts()).
@@ -322,8 +334,8 @@ void MonteCarloTreeSearch::toPdf(const char* file_name) const {
     }
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         if(node_info_map[graph.source(arc)].type==ACTION_NODE) {
-            min_val = std::min(min_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts());
-            max_val = std::max(max_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts());
+            min_val = std::min(min_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_rollout_counts());
+            max_val = std::max(max_val, mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_rollout_counts());
         }
     }
     double norm = std::max(fabs(min_val), fabs(max_val));
@@ -350,17 +362,17 @@ void MonteCarloTreeSearch::toPdf(const char* file_name) const {
     graph_t::ArcMap<QString> arc_map(graph);
     for(arc_it_t arc(graph); arc!=INVALID; ++arc) {
         node_t source = graph.source(arc);
-        double value = mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_counts();
+        double value = mcts_arc_info_map[arc].get_reward_sum()/mcts_arc_info_map[arc].get_rollout_counts();
         if(node_info_map[source].type==OBSERVATION_NODE) {
             arc_map[arc] = QString("style=dashed label=<#%1<BR/>r=%4> color=\"%2 %3 %3\"").
-                arg(mcts_arc_info_map[arc].get_counts()).
+                arg(mcts_arc_info_map[arc].get_rollout_counts()).
                 arg(value>0?0.3:0).
                 arg(color_rescale(fabs(value/norm))).
                 arg(mcts_arc_info_map[arc].get_reward_sum());
         } else {
             arc_map[arc] = QString("style=solid label=<#%2<BR/>r=%6> penwidth=%3 color=\"%4 %5 %5\"").
-                arg(mcts_arc_info_map[arc].get_counts()).
-                arg(5.*mcts_arc_info_map[arc].get_counts()/mcts_node_info_map[source].get_transition_counts()+0.1).
+                arg(mcts_arc_info_map[arc].get_rollout_counts()).
+                arg(5.*mcts_arc_info_map[arc].get_transition_counts()/mcts_node_info_map[source].get_transition_counts()+0.1).
                 arg(value>0?0.3:0).
                 arg(color_rescale(fabs(value/norm))).
                 arg(mcts_arc_info_map[arc].get_reward_sum());

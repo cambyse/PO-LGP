@@ -4,6 +4,7 @@
 
 #include <algorithm> // for std::max
 #include <queue> // std::queue
+#include <sstream> // std::stringstream
 
 #include <lemon/bfs.h>
 #include <lemon/adaptors.h>
@@ -164,90 +165,30 @@ void SearchTree::toPdf(const char* file_name) const {
                        &arc_map);
 }
 
-// const node_t & SearchTree::get_root_node() const {
-//     return root_node;
-// }
-
-// const SearchTree::state_handle_t & SearchTree::get_root_state() const {
-//     return root_state;
-// }
-
-// const SearchTree::graph_t & SearchTree::get_graph() const {
-//     return graph;
-// }
-
-// const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
-//     return node_info_map;
-// }
-
-// const SearchTree::observation_handle_t SearchTree::observation(const node_t & observation_node) const {
-//     DEBUG_EXPECT(1,node_info_map[observation_node].type==OBSERVATION_NODE);
-//     if(node_info_map[observation_node].type!=OBSERVATION_NODE) {
-//         DEBUG_WARNING("Node " << graph.id(observation_node) << " is not a observation node");
-//         toPdf("tree.pdf.debug1");
-//     }
-//     return node_info_map[observation_node].observation;
-// }
-
-// const SearchTree::action_handle_t SearchTree::action(const node_t & action_node) const {
-//     DEBUG_EXPECT(1,node_info_map[action_node].type==ACTION_NODE);
-//     return node_info_map[action_node].action;
-// }
-
-// const SearchTree::NODE_TYPE SearchTree::type(const node_t & node) const {
-//     return node_info_map[node].type;
-// }
-
-// size_t SearchTree::number_of_children(const node_t & observation_node) const {
-//     return countOutArcs(graph, observation_node);
-// }
-
-// bool SearchTree::is_fully_expanded(const node_t & observation_node) const {
-//     DEBUG_EXPECT(1,node_info_map[observation_node].type==OBSERVATION_NODE);
-//     if(node_info_map[observation_node].type!=OBSERVATION_NODE) {
-//         DEBUG_WARNING("Node " << graph.id(observation_node) << " is not a observation node");
-//         toPdf("tree.pdf.debug2");
-//     }
-//     return number_of_children(observation_node)==environment->get_actions().size();
-// }
-
-// bool SearchTree::is_partially_expanded(const node_t & observation_node) const {
-//     DEBUG_EXPECT(1,node_info_map[observation_node].type==OBSERVATION_NODE);
-//     size_t action_node_counter = number_of_children(observation_node);
-//     return action_node_counter>0 && action_node_counter<environment->get_actions().size();
-// }
-
-// bool SearchTree::is_not_expanded(const node_t & observation_node) const {
-//     DEBUG_EXPECT(1,node_info_map[observation_node].type==OBSERVATION_NODE);
-//     return out_arc_it_t(graph,observation_node)==INVALID;
-// }
-
-
-// QString SearchTree::str(const node_t & n) const {
-//     bool is_observation_node = node_info_map[n].type==OBSERVATION_NODE;
-//     return QString("%1 (%2)").
-//         arg(is_observation_node?"OBSERVATION":"ACTION").
-//         arg(is_observation_node?
-//             Environment::name(*environment,node_info_map[n].observation):
-//             Environment::name(*environment,node_info_map[n].action));
-// }
-
 QString SearchTree::str_html(const node_t & n) const {
     QString label;
+    std::stringstream s;
+    auto env = std::dynamic_pointer_cast<Environment>(environment);
     if(n==root_node) {
         label = "root";
     } else if(node_info_map[n].type==OBSERVATION_NODE) {
-        label = Environment::name(*environment,node_info_map[n].observation);
+        if(env!=nullptr) {
+            label = Environment::name(*environment,node_info_map[n].observation);
+        } else {
+            s << node_info_map[n].observation;
+            label = s.str().c_str();
+        }
     } else {
-        label = Environment::name(*environment,node_info_map[n].action);
+        if(env!=nullptr) {
+            label = Environment::name(*environment,node_info_map[n].action);
+        } else {
+            s << node_info_map[n].action;
+            label = s.str().c_str();
+        }
     }
     return QString("%1<BR/>id=%2").
         arg(label).
         arg(graph.id(n));
-    // return QString("<i>%1</i>=%2").
-    //     arg(is_observation_node?"s":"a").
-    //     arg(is_observation_node?node_info_map[n].observation:node_info_map[n].action);
-    //return QString("%1").arg(is_observation_node?Environment::name(*environment,node_info_map[n].observation):Environment::name(*environment,node_info_map[n].action));
 }
 
 SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t & action_node,
@@ -333,82 +274,3 @@ void SearchTree::erase_node(node_t node) {
     }
     graph.erase(node);
 }
-
-// arc_node_t SearchTree::find_observation_node_among_children(const node_t & action_node,
-//                                                                      const observation_handle_t & observation) const {
-//     for(out_arc_it_t arc(graph, action_node); arc!=INVALID; ++arc) {
-//         node_t observation_node = graph.target(arc);
-//         if(*(node_info_map[observation_node].observation)==*observation) {
-//             return make_tuple(arc, observation_node);
-//         }
-//     }
-//     return arc_node_t(INVALID, INVALID);
-// }
-
-// node_t SearchTree::find_observation_node_among_siblings_children(const node_t & action_node,
-//                                                                  const observation_handle_t & observation) const {
-//     // get common parent node
-//     node_t parent_node = graph.source(in_arc_it_t(graph,action_node));
-
-//     // iterate through siblings
-//     for(out_arc_it_t to_action_arc(graph,parent_node); to_action_arc!=INVALID; ++to_action_arc) {
-//         node_t sibling_node = graph.target(to_action_arc);
-//         // skip the given node
-//         if(sibling_node==action_node) continue;
-
-//         // iterate through siblings children
-//         for(out_arc_it_t to_observation_arc(graph, sibling_node); to_observation_arc!=lemon::INVALID; ++to_observation_arc) {
-//             node_t observation_node = graph.target(to_observation_arc);
-//             if(*(node_info_map[observation_node].observation)==*observation) {
-//                 return observation_node;
-//             }
-//         }
-//     }
-//     return INVALID;
-// }
-
-// node_t SearchTree::find_observation_node_at_same_depth(const node_t & action_node,
-//                                                        const observation_handle_t & observation) const {
-//     // first get observation node at lower level
-//     node_t lower_level_observation_node = graph.source(in_arc_it_t(graph, action_node));
-//     // get level set iterator
-//     auto level_map_it = node_info_map[lower_level_observation_node].level_map_it;
-//     // go to next level
-//     ++level_map_it;
-//     // return INVALID if there are no nodes on this level
-//     if(level_map_it==level_map_list.end()) {
-//         return INVALID;
-//     }
-//     // find correct observation node or return INVALID
-//     auto it = level_map_it->find(observation);
-//     if(it!=level_map_it->end()) {
-//         return it->second;
-//     } else {
-//         return INVALID;
-//     }
-// }
-
-// void SearchTree::add_observation_node_to_level_map(const node_t & observation_node) {
-//     if(observation_node==root_node) {
-//         DEBUG_ERROR("Request to add root node to level set, which should be done in init() function.");
-//         return;
-//     }
-//     // first get observation node at lower level
-//     node_t action_node = graph.source(in_arc_it_t(graph, observation_node));
-//     node_t lower_level_observation_node = graph.source(in_arc_it_t(graph, action_node));
-//     auto lower_level_map_it = node_info_map[lower_level_observation_node].level_map_it;
-//     // go to higher level set (the one observation_node needs to be inserted in) and
-//     // insert observation_node or create new level with observation_node as only element
-//     auto higher_level_map_it = lower_level_map_it;
-//     ++higher_level_map_it;
-//     if(higher_level_map_it==level_map_list.end()) {
-//         level_map_list.push_back(level_map_t({make_pair(observation(observation_node),observation_node)}));
-//         higher_level_map_it = lower_level_map_it;
-//         ++higher_level_map_it;
-//         DEBUG_EXPECT(1,higher_level_map_it!=level_map_list.end());
-//     } else {
-//         (*higher_level_map_it)[observation(observation_node)] = observation_node;
-//     }
-//     // update node info
-//     node_info_map[observation_node].level_map_it = higher_level_map_it;
-// }

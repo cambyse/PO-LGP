@@ -130,7 +130,7 @@ namespace tree_policy {
         return mcts_node_info_map[action_node].get_value() +
             2*Cp*sqrt(
                 2*log(mcts_node_info_map[state_node].get_transition_counts())/
-                mcts_arc_info_map[to_action_arc].get_counts()
+                mcts_arc_info_map[to_action_arc].get_transition_counts()
                 );
     }
 

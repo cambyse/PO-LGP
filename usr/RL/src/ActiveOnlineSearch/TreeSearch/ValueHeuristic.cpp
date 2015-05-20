@@ -19,7 +19,7 @@ namespace value_heuristic {
                           double,
                           std::shared_ptr<AbstractEnvironment>,
                           mcts_node_info_map_t & mcts_node_info_map) const {
-        mcts_node_info_map[state_node].add_separate_rollout(0);
+        mcts_node_info_map[state_node].add_rollout_return(0);
         mcts_node_info_map[state_node].set_value(0,0);
     }
 
@@ -62,7 +62,7 @@ namespace value_heuristic {
                       "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
                       "	R=" << discounted_return << "	d=" << discount_factor);
         }
-        mcts_node_info_map[state_node].add_separate_rollout(discounted_return);
+        mcts_node_info_map[state_node].add_rollout_return(discounted_return);
         mcts_node_info_map[state_node].set_value(discounted_return,
                                                  environment->is_terminal_state(start_state)?
                                                  0:

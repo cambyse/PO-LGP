@@ -31,14 +31,15 @@ namespace backup_method {
         {
             DEBUG_OUT(1,"Backup action node " << graph.id(action_node));
             arc_t to_action_arc = in_arc_it_t(graph,action_node);
-            int action_counts = mcts_arc_info_map[to_action_arc].get_counts();
-            reward_t mean_reward = mcts_arc_info_map[to_action_arc].get_reward_sum()/action_counts;
-            reward_t mean_squared_reward = mcts_arc_info_map[to_action_arc].get_squared_reward_sum()/action_counts;
+            int action_transition_counts = mcts_arc_info_map[to_action_arc].get_transition_counts();
+            int action_rollout_counts = mcts_arc_info_map[to_action_arc].get_rollout_counts();
+            reward_t mean_reward = mcts_arc_info_map[to_action_arc].get_reward_sum()/action_rollout_counts;
+            reward_t mean_squared_reward = mcts_arc_info_map[to_action_arc].get_squared_reward_sum()/action_rollout_counts;
             reward_t mean_reward_variance;
-            if(action_counts<2) {
+            if(action_rollout_counts<2) {
                 mean_reward_variance = std::numeric_limits<double>::infinity();
             } else {
-                mean_reward_variance = (mean_squared_reward - mean_reward*mean_reward)/(action_counts-1);
+                mean_reward_variance = (mean_squared_reward - mean_reward*mean_reward)/(action_rollout_counts-1);
             }
             DEBUG_OUT(2,"    ^r=" << mean_reward << ", ~r=" << mean_reward_variance);
             reward_t action_value = mean_reward;
@@ -46,8 +47,8 @@ namespace backup_method {
             for(out_arc_it_t to_state_arc_1(graph, action_node); to_state_arc_1!=INVALID; ++to_state_arc_1) {
 
                 node_t target_state_node_1 = graph.target(to_state_arc_1);
-                double prob_1 = mcts_arc_info_map[to_state_arc_1].get_counts()/action_counts;
-                double prob_variance_1 = prob_1*(1-prob_1)/(action_counts+1);
+                double prob_1 = mcts_arc_info_map[to_state_arc_1].get_transition_counts()/action_transition_counts;
+                double prob_variance_1 = prob_1*(1-prob_1)/(action_transition_counts+1);
                 reward_t state_value_1 = mcts_node_info_map[target_state_node_1].get_value();
                 reward_t state_value_variance_1 = mcts_node_info_map[target_state_node_1].get_value_variance();
                 DEBUG_OUT(2,"    transition to state node " << graph.id(target_state_node_1));
@@ -66,12 +67,12 @@ namespace backup_method {
                 for(out_arc_it_t to_state_arc_2(graph, action_node); to_state_arc_2!=INVALID; ++to_state_arc_2) {
 
                     node_t target_state_node_2 = graph.target(to_state_arc_2);
-                    double prob_2 = mcts_arc_info_map[to_state_arc_2].get_counts()/action_counts;
+                    double prob_2 = mcts_arc_info_map[to_state_arc_2].get_transition_counts()/action_transition_counts;
                     reward_t state_value_2 = mcts_node_info_map[target_state_node_2].get_value();
 
                     double prob_covariance = target_state_node_1==target_state_node_2?
-                        prob_2*(1-prob_2)/(action_counts+1):
-                        -prob_1*prob_2/(action_counts+1);
+                        prob_2*(1-prob_2)/(action_transition_counts+1):
+                        -prob_1*prob_2/(action_transition_counts+1);
                     DEBUG_OUT(2,"        transition-pair to state nodes " << graph.id(target_state_node_1) << "/" << graph.id(target_state_node_2));
                     DEBUG_OUT(2,"        ^p=" << prob_1 << "/" << prob_2 << ", ~p=" << prob_covariance);
                     DEBUG_OUT(2,"        ^V=" << state_value_1 << "/" << state_value_2);

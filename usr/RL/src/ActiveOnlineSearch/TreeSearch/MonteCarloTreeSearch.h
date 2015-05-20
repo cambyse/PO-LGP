@@ -31,8 +31,8 @@ public:
         reward_t get_return_sum() const;
         reward_t get_squared_return_sum() const;
         void set_value(reward_t val, reward_t val_variance);
-        void add_separate_rollout(reward_t ret);
-        void add_rollout_on_trajectory(reward_t ret);
+        void add_rollout_return(reward_t ret);
+        void add_transition();
         void set_action_list(action_container_t & container);
         action_handle_t use_random_action();
         bool is_fully_expanded() const;
@@ -79,17 +79,22 @@ public:
     public:
         MCTSArcInfo() = default;
         ~MCTSArcInfo() = default;
-        int get_counts() const;
+        int get_transition_counts() const;
+        int get_rollout_counts() const;
         reward_t get_reward_sum() const;
         reward_t get_squared_reward_sum() const;
-        void add_transition(reward_t reward);
+        void add_rollout_return(reward_t reward);
+        void add_transition();
     protected:
         /**
-         * Number of times this arc was taken on a rollout. For
+         * Number of times this arc was taken on a transition rollout. For
          * action-->state arcs this corresponds to the (unnormalized) transition
          * probability. For state-->action arcs this correpsonds to the
          * (unnormalized) policy. */
-        int counts = 0;
+        int transition_counts = 0;
+        /**
+         * Nr of times a rollout passed through this arc. */
+        int rollout_counts = 0;
         /**
          * Sum of rewards of all transitions taking this arc. For action-->state
          * arcs this corresponds to the (unnormalized) expected reward as a

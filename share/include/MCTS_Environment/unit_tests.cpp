@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <iostream>
+
 #include "AbstractFiniteEnvironment.h"
 
 #include <unordered_map>
@@ -54,5 +56,21 @@ TEST(AbstractEnvironment, UnorderedSets) {
         observation_set.insert(observation);
         EXPECT_LE(action_set.size(),2);
         EXPECT_LE(observation_set.size(),2);
+    }
+}
+
+TEST(AbstractEnvironment, OstremOperator) {
+    std::shared_ptr<AbstractEnvironment> env(new TestEnvironment);
+    typedef AbstractEnvironment::action_handle_t action_handle_t;
+    typedef AbstractEnvironment::state_handle_t state_handle_t;
+    typedef AbstractEnvironment::observation_handle_t observation_handle_t;
+
+    state_handle_t state = env->get_state_handle();
+    auto action_list = env->get_actions();
+    for(action_handle_t action : action_list) {
+        auto observation_reward = env->transition(action);
+        observation_handle_t observation = get<0>(observation_reward);
+        cout << "Action " << *action << " / Observation " << *observation << endl;
+        env->set_state(state);
     }
 }

@@ -164,7 +164,6 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
       shared_ptr<AbstractEnvironment>,
-      observation_handle_t,
       state_handle_t> setup();
 QString header(int argn, char ** args);
 
@@ -288,7 +287,6 @@ int main(int argn, char ** args) {
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
                      shared_ptr<AbstractEnvironment>, environment,
-                     observation_handle_t, current_observation,
                      state_handle_t, current_state) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
@@ -371,7 +369,6 @@ int main(int argn, char ** args) {
                              shared_ptr<ValueHeuristic>, value_heuristic,
                              shared_ptr<BackupMethod>, backup_method,
                              shared_ptr<AbstractEnvironment>, environment,
-                             observation_handle_t, current_observation,
                              state_handle_t, current_state) = setup();
 
                 double reward_sum = 0;
@@ -499,7 +496,6 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
       shared_ptr<AbstractEnvironment>,
-      observation_handle_t,
       state_handle_t> setup() {
 
     // return variables
@@ -526,7 +522,11 @@ tuple<shared_ptr<SearchTree>,
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
     }
-    DEBUG_OUT(1, "States: " << environment->get_states());
+    // print info
+    auto env = std::dynamic_pointer_cast<Environment>(environment);
+    if(env!=nullptr) {
+        DEBUG_OUT(1, "States: " << env->get_states());
+    }
     DEBUG_OUT(1, "Actions: " << environment->get_actions());
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
@@ -551,7 +551,7 @@ tuple<shared_ptr<SearchTree>,
         backup_method.reset(new MonteCarlo());
     } else DEBUG_DEAD_LINE;
     // set up search tree
-    current_state = environment->default_state();
+    current_state = environment->get_state_handle();
     search_tree.reset(new MonteCarloTreeSearch(environment,
                                                discount_arg.getValue(),
                                                get_node_finder(),

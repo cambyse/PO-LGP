@@ -47,6 +47,9 @@ public:
         virtual size_t get_hash() const override {
             return std::hash<ACTION>()((ACTION)*this);
         }
+        virtual void write(std::ostream & out) const override {
+            out << (ACTION)*this;
+        }
     };
     typedef FiniteAction action_t;
 
@@ -75,6 +78,9 @@ public:
         }
         virtual size_t get_hash() const override {
             return std::hash<OBSERVATION>()((OBSERVATION)*this);
+        }
+        void write(std::ostream & out) const override {
+            out << (OBSERVATION)*this;
         }
     };
     typedef FiniteObservation observation_t;
