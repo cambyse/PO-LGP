@@ -3,6 +3,7 @@
 #include <Core/array.h>
 #include <System/engine.h>
 #include <pr2/roscom.h>
+#include <pr2/rosalvar.h>
 #include <Hardware/gamepad/gamepad.h>
 
 #include "actions.h"
@@ -26,6 +27,7 @@ struct ActionMachine : Module {
   ACCESS(arr, gamepadState);
   ACCESS(ActionL, A);
   ACCESS(Graph, KB);
+  ACCESS(AlvarMarkers, ar_pose_marker);
 
   ActionMachine();
   ~ActionMachine();
@@ -73,16 +75,21 @@ struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
+  ACCESS(AlvarMarkers, ar_pose_marker)
+
   ActionMachine *machine;
-  ActionSystem():machine(NULL){
+
+  ActionSystem() : machine(NULL) {
     machine = addModule<ActionMachine>(NULL, Module::loopWithBeat, .01);
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos",false)){
+
+    if(MT::getParameter<bool>("useRos",false)) {
+      cout << "USING ROS" <<endl;
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-//      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.1);
+      // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }
 };
-
