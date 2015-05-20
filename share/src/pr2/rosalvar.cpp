@@ -1,5 +1,6 @@
 #include "rosalvar.h"
 
+
 void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
@@ -11,15 +12,18 @@ void setBody(ors::Body& body, const AlvarMarker& marker) {
 }
 
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
+  bool createdNewMarkers = false;
+
   // transform: torso_lift_link is the reference frame_id
   ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
 
   for (AlvarMarker& marker : markers.markers) {
     MT::String marker_name = STRING("marker" << marker.id);
+
     ors::Body *body = world.getBodyByName(marker_name);
     if (not body) {
+      createdNewMarkers = true;
       cout << marker_name << " does not exist yet; adding it..." << endl;
-      cout << marker << endl;
       body = new ors::Body(world);
       body->name = marker_name;
       ors::Shape *shape = new ors::Shape(world, *body);
@@ -29,5 +33,9 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     setBody(*body, marker);
     // transform: torso_lift_link is the reference frame_id
     body->X.pos += refFrame;  // TODO is this the proper way to do it?
+  }
+
+  if (createdNewMarkers) {
+    world.swiftDelete();
   }
 }
