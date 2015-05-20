@@ -34,21 +34,39 @@ ActionSwigInterface::~ActionSwigInterface(){
 }
 
 stringV ActionSwigInterface::getShapeList(){
-stringV S;
-for(ors::Shape *shape: s->activity.machine->world->shapes) S.push_back(std::to_string(*shape->name));
-return S;
+  stringV S;
+  std::stringstream tmp;
+  for(ors::Shape *shape: s->activity.machine->world->shapes){
+    tmp.str(""),
+    tmp.clear();
+    tmp << shape->name;
+    S.push_back(tmp.str());
+  }
+  return S;
 }
 
 stringV ActionSwigInterface::getBodyList(){
-stringV S;
-for(ors::Body *body: s->activity.machine->world->bodies) S.push_back(std::to_string(*body->name));
-return S;
+  stringV S;
+  std::stringstream tmp;
+  for(ors::Body *body: s->activity.machine->world->bodies){
+    tmp.str(""),
+    tmp.clear();
+    tmp << body->name;
+    S.push_back(tmp.str());
+  }
+  return S;
 }
 
 stringV ActionSwigInterface::getJointList(){
-stringV S;
-for(ors::Joint *joint: s->activity.machine->world->joints) S.push_back(std::to_string(*joint->name));
-return S;
+  stringV S;
+  std::stringstream tmp;
+  for(ors::Joint *joint: s->activity.machine->world->joints){
+    tmp.str(""),
+    tmp.clear();
+    tmp << joint->name;
+    S.push_back(tmp.str());
+  }
+  return S;
 }
 
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
@@ -82,6 +100,15 @@ intV ActionSwigInterface::lit(stringV symbolNames){
   intV I;
   for(auto& s:symbolNames) I.push_back(getSymbolInteger(s));
   return I;
+}
+
+stringV ActionSwigInterface::getSymbols(){
+  stringV S;
+  s->KB.readAccess();
+  s->KB().checkConsistency();
+  cout <<s->KB() <<endl;
+  s->KB.deAccess();
+  return S;
 }
 
 
