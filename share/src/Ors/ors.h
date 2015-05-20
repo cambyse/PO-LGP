@@ -313,6 +313,7 @@ struct KinematicWorld {
   /// @name extensions on demand
   OpenGL& gl();
   SwiftInterface& swift();
+  void swiftDelete();
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);

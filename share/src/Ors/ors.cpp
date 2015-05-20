@@ -1571,6 +1571,11 @@ SwiftInterface& ors::KinematicWorld::swift(){
   return *s->swift;
 }
 
+void ors::KinematicWorld::swiftDelete() {
+  delete s->swift;
+  s->swift = nullptr;
+}
+
 /// return a PhysX extension
 PhysXInterface& ors::KinematicWorld::physx(){
   if(!s->physx){
