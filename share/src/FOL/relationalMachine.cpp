@@ -1,6 +1,13 @@
 #include "relationalMachine.h"
 
+RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), verbose(false){
+}
+
 RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), verbose(false){
+  init(filename);
+}
+
+void RelationalMachine::init(const char* filename){
   MT::FileToken fil(filename);
   if(fil.exists()){
     fil >>KB;

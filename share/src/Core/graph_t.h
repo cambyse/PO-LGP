@@ -113,8 +113,12 @@ struct Item_typed:Item {
   }
 
   virtual void writeValue(std::ostream &os) const {
-    if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
-    else os <<*value;
+    if(value){
+      if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
+      else os <<*value;
+    }else{
+      os <<"<" <<typeid(T).name() <<">";
+    }
   }
   
   virtual const std::type_info& getValueType() const {
@@ -125,7 +129,7 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone(Graph& container) const {
+  virtual Item* newClone(Graph& container) const {
     if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL, false);
     if(getValueType()==typeid(Graph)) return (new Graph(*((Graph*)value)))->isItemOfParentKvg;
     return new Item_typed<T>(container, keys, parents, new T(*value), true);

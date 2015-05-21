@@ -22,6 +22,7 @@ struct ActionSwigInterface{
   dict getBodyByName (string bodyName);
   dict getShapeByName (string shapeName);
   dict getJointByName (string jointName);
+
   //-- symbolic state access
   stringV getSymbols();
   int getSymbolInteger(string symbolName);
@@ -29,7 +30,6 @@ struct ActionSwigInterface{
   std::vector<intV> getStateLiterals();
   bool isTrue(intV literal);
   dict getLiteralParameters(intV literal);
-
 
   //-- methods to modify the activity state (also sequence actions)
   void startActivity(intV literal, dict parameters=dict());

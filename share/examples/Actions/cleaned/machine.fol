@@ -1,0 +1,13 @@
+Symbol conv
+Symbol timeout
+Symbol contact
+Symbol quit
+
+Action FollowReferenceActivity
+
+STATE { (FollowReferenceActivity){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] } }
+
+Rule{
+  { (conv FollowReferenceActivity) }
+  { (quit) }
+}
