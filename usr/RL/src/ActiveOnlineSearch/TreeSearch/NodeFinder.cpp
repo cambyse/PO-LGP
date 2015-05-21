@@ -26,46 +26,47 @@ namespace node_finder {
 
     using lemon::INVALID;
 
-    void FullTree::init(const graph_t & g,
+    void PlainTree::init(const graph_t & g,
                         const node_info_map_t & m) {
         graph = &g;
         node_info_map = &m;
     }
-    arc_node_t FullTree::find_action_node(const node_t & observation_node,
+    arc_node_t PlainTree::find_action_node(const node_t & observation_node,
                                           const action_handle_t & action) {
         DEBUG_EXPECT(0,(*node_info_map)[observation_node].type==NODE_TYPE::OBSERVATION_NODE);
         for(out_arc_it_t arc(*graph,observation_node); arc!=INVALID; ++arc) {
             node_t action_node = graph->target(arc);
             if(*((*node_info_map)[action_node].action)==*action) {
-                return arc_node_t(arc,action_node);
+                return arc_node_t(arc,action_node,false,false);
             }
         }
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
-    arc_node_t FullTree::find_observation_node(const node_t & action_node,
+    arc_node_t PlainTree::find_observation_node(const node_t & action_node,
                                                const observation_handle_t & observation) {
-        DEBUG_OUT(1,"Find observation node: FullTree");
+        DEBUG_OUT(1,"Find observation node: PlainTree");
         DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
         for(out_arc_it_t arc(*graph,action_node); arc!=INVALID; ++arc) {
             node_t observation_node = graph->target(arc);
             if(*((*node_info_map)[observation_node].observation)==*observation) {
-                return arc_node_t(arc,observation_node);
+                return arc_node_t(arc,observation_node,false,false);
             }
         }
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
 
 
     arc_node_t ObservationTree::find_observation_node(const node_t & action_node,
                                                       const observation_handle_t & observation) {
 
-        // first try "standard approach" of FullTree
+        // first try "standard approach" of PlainTree
         {
             arc_t arc;
             node_t node;
-            return_tuple::t(arc,node) = FullTree::find_observation_node(action_node,observation);
+            bool new_arc, new_node;
+            return_tuple::t(arc,node,new_arc,new_node) = PlainTree::find_observation_node(action_node,observation);
             if(node!=INVALID) {
-                return arc_node_t(arc,node);
+                return arc_node_t(arc,node,new_arc,new_node);
             }
         }
 
@@ -94,12 +95,12 @@ namespace node_finder {
 
                     if(*((*node_info_map)[observation_node].observation)==*(observation)) {
                         // return node but not arc, which comes from wrong action node
-                        return arc_node_t(INVALID,observation_node);
+                        return arc_node_t(INVALID,observation_node,false,false);
                     }
                 }
             }
         }
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
     FullDAG::~FullDAG() {
         delete depth_map;
@@ -131,9 +132,10 @@ namespace node_finder {
         {
             arc_t arc;
             node_t node;
-            return_tuple::t(arc,node) = ObservationTree::find_observation_node(action_node,observation);
+            bool new_arc, new_node;
+            return_tuple::t(arc,node,new_arc,new_node) = ObservationTree::find_observation_node(action_node,observation);
             if(node!=INVALID) {
-                return arc_node_t(arc,node);
+                return arc_node_t(arc,node,new_arc,new_node);
             }
         }
 
@@ -145,10 +147,10 @@ namespace node_finder {
             auto& map = observation_maps[depth];
             auto observation_node_it = map.find(observation);
             if(observation_node_it!=map.end()) {
-                return arc_node_t(INVALID,observation_node_it->second);
+                return arc_node_t(INVALID,observation_node_it->second,false,false);
             }
         }
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
     void FullDAG::add_observation_node(const node_t & observation_node) {
         // get depth from ancestor observation node and set in map
@@ -201,9 +203,10 @@ namespace node_finder {
         {
             arc_t arc;
             node_t node;
-            return_tuple::t(arc,node) = ObservationTree::find_observation_node(action_node,observation);
+            bool new_arc, new_node;
+            return_tuple::t(arc,node,new_arc,new_node) = ObservationTree::find_observation_node(action_node,observation);
             if(node!=INVALID) {
-                return arc_node_t(arc,node);
+                return arc_node_t(arc,node,new_arc,new_node);
             }
         }
 
@@ -212,9 +215,9 @@ namespace node_finder {
         DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
         auto observation_node_it = observation_map.find(observation);
         if(observation_node_it!=observation_map.end()) {
-            return arc_node_t(INVALID,observation_node_it->second);
+            return arc_node_t(INVALID,observation_node_it->second,false,false);
         }
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
     void FullGraph::add_observation_node(const node_t & observation_node) {
         observation_handle_t observation = (*node_info_map)[observation_node].observation;

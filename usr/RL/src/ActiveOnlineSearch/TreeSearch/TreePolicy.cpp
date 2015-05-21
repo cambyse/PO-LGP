@@ -60,14 +60,7 @@ namespace tree_policy {
         for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph.target(to_action_arc);
             action_handle_t action = node_info_map[action_node].action;
-            reward_t upper = score(state_node,
-                                   to_action_arc,
-                                   action_node,
-                                   environment,
-                                   graph,
-                                   node_info_map,
-                                   mcts_node_info_map,
-                                   mcts_arc_info_map);
+            reward_t upper = score(state_node, to_action_arc, action_node, environment, graph, node_info_map, mcts_node_info_map, mcts_arc_info_map);
             scores.push_back(make_pair(upper,action));
             // erase this action from set
             action_set.erase(action);

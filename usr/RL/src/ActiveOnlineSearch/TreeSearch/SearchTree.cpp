@@ -175,6 +175,10 @@ void SearchTree::toPdf(const char* file_name) const {
                        &arc_map);
 }
 
+const SearchTree::graph_t & SearchTree::get_graph() const {
+    return graph;
+}
+
 QString SearchTree::str_html(const node_t & n) const {
     QString label;
     std::stringstream s;
@@ -207,8 +211,9 @@ SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t 
     using namespace return_tuple;
     node_t observation_node;
     arc_t to_observation_arc;
-    t(to_observation_arc, observation_node) = node_finder->find_observation_node(action_node,
-                                                                                 observation);
+    bool new_arc, new_node;
+    t(to_observation_arc, observation_node, new_arc, new_node)
+        = node_finder->find_observation_node(action_node, observation);
     if(observation_node==INVALID) {
         // observation node doesn't exist --> create
         DEBUG_OUT(2,"    node and arc both don't exist");
@@ -217,14 +222,15 @@ SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t 
         // observation node DOES exist but not the connecting arc --> add arc
         DEBUG_OUT(2,"    node DOES exist, arc doesn't exist");
         arc_t arc = graph.addArc(action_node, observation_node);
-        return arc_node_t(arc, observation_node);
+        return arc_node_t(arc, observation_node, true, false);
     } else if(observation_node!=INVALID && to_observation_arc!=INVALID) {
         // observation node AND connecting arc were found --> just return them
         DEBUG_OUT(2,"    node and arc exist");
-        return arc_node_t(to_observation_arc, observation_node);
+        DEBUG_EXPECT(0,!new_arc && !new_node);
+        return arc_node_t(to_observation_arc, observation_node, new_arc, new_node);
     } else {
         DEBUG_DEAD_LINE;
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
 }
 
@@ -233,21 +239,23 @@ SearchTree::arc_node_t SearchTree::find_or_create_action_node(const node_t & obs
     using namespace return_tuple;
     node_t action_node;
     arc_t to_action_arc;
-    t(to_action_arc, action_node) = node_finder->find_action_node(observation_node,
-                                                                  action);
+    bool new_arc, new_node;
+    t(to_action_arc, action_node, new_arc, new_node)
+        = node_finder->find_action_node(observation_node, action);
     if(action_node==INVALID) {
         // action node doesn't exist --> create
         return add_action_node(action, observation_node);
     } else if(to_action_arc==INVALID) {
         // action node DOES exist but not the connecting arc --> add arc
         arc_t arc = graph.addArc(observation_node, action_node);
-        return arc_node_t(arc, observation_node);
+        return arc_node_t(arc, observation_node, true, false);
     } else if(action_node!=INVALID && to_action_arc!=INVALID) {
         // action node AND connecting arc were found --> just return them
-        return arc_node_t(to_action_arc, action_node);
+        DEBUG_EXPECT(0,!new_arc && !new_node);
+        return arc_node_t(to_action_arc, action_node, new_arc, new_node);
     } else {
         DEBUG_DEAD_LINE;
-        return arc_node_t(INVALID,INVALID);
+        return arc_node_t(INVALID,INVALID,false,false);
     }
 }
 
@@ -258,9 +266,8 @@ SearchTree::arc_node_t SearchTree::add_observation_node(observation_handle_t obs
     node_info_map[observation_node].type = OBSERVATION_NODE;
     node_info_map[observation_node].observation = observation;
     node_finder->add_observation_node(observation_node);
-    DEBUG_OUT(3,"    adding observation node (" << graph.id(observation_node) << "): " <<
-              Environment::name(*environment,observation));
-    return make_tuple(observation_arc, observation_node);
+    DEBUG_OUT(3,"    adding observation node (" << graph.id(observation_node) << "): " << *observation);
+    return arc_node_t(observation_arc, observation_node,true,true);
 }
 
 SearchTree::arc_node_t SearchTree::add_action_node(action_handle_t action, node_t observation_node) {
@@ -269,9 +276,8 @@ SearchTree::arc_node_t SearchTree::add_action_node(action_handle_t action, node_
     node_info_map[action_node].type = ACTION_NODE;
     node_info_map[action_node].action = action;
     node_finder->add_action_node(action_node);
-    DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " <<
-              Environment::name(*environment,action));
-    return make_tuple(action_arc, action_node);
+    DEBUG_OUT(3,"    adding action node (" << graph.id(action_node) << "): " << *action);
+    return arc_node_t(action_arc, action_node,true,true);
 }
 
 void SearchTree::erase_node(node_t node) {

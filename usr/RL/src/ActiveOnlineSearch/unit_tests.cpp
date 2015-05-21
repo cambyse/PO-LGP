@@ -710,14 +710,15 @@ public:
                           << Environment::name(*environment,action) << ","
                           << Environment::name(*environment,observation) << ">"
                     );
+                bool new_arc, new_node;
                 // add action node
                 node_t action_node;
                 arc_t to_action_arc;
-                t(to_action_arc, action_node) = find_or_create_action_node(current_observation_node, action);
+                t(to_action_arc, action_node, new_arc, new_node) = find_or_create_action_node(current_observation_node, action);
                 // add observation node
                 node_t observation_node;
                 arc_t to_observation_arc;
-                t(to_observation_arc, observation_node) = find_or_create_observation_node(action_node, observation);
+                t(to_observation_arc, observation_node, new_arc, new_node) = find_or_create_observation_node(action_node, observation);
                 // continue at new observation node
                 current_observation_node = observation_node;
             }
@@ -798,7 +799,7 @@ TEST(SearchTree, NodeFinder) {
     using namespace return_tuple;
     typedef std::tuple<int,int,int,int,std::shared_ptr<node_finder::NodeFinder>> check_tuple;
     for(auto tup : {
-            check_tuple(13,12,13,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullTree)),
+            check_tuple(13,12,13,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::PlainTree)),
                 check_tuple(12,12,12,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::ObservationTree)),
                 check_tuple(11,12,11,12,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullDAG)),
                 check_tuple(9,12,6,8,std::shared_ptr<node_finder::NodeFinder>(new node_finder::FullGraph))}) {
@@ -843,6 +844,140 @@ TEST(SearchTree, NodeFinder) {
     }
 }
 
+class DepthEnvironment: public AbstractEnvironment {
+public:
+    struct DepthAction: public Action {
+        DepthAction(int action): action(action) {}
+        virtual ~DepthAction() = default;
+        virtual bool operator==(const Action & other) const {
+            auto depth_action = dynamic_cast<const DepthAction*>(&other);
+            return depth_action!=nullptr && depth_action->action==action;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(action);
+        }
+        virtual void write(std::ostream & out) const {
+            out << action;
+        }
+        int action;
+    };
+    struct DepthObservation: public Observation {
+        DepthObservation(int observation): observation(observation) {}
+        virtual ~DepthObservation() = default;
+        virtual bool operator==(const Observation & other) const {
+            auto depth_observation = dynamic_cast<const DepthObservation*>(&other);
+            return depth_observation!=nullptr && depth_observation->observation==observation;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(observation);
+        }
+        virtual void write(std::ostream & out) const {
+            out << observation;
+        }
+        int observation;
+    };
+    struct DepthState: public State {
+        DepthState(int s): state(s) {}
+        int state;
+    };
+public:
+    DepthEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
+    virtual ~DepthEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+        auto depth_action = std::dynamic_pointer_cast<const DepthAction>(action_handle);
+        EXPECT_NE(nullptr,depth_action);
+        ++state;
+        DEBUG_OUT(1,"Transition to " << state);
+        return observation_reward_pair_t(observation_handle_t(new DepthObservation(state)),
+                                         state>=reward_depth?1:0);
+    }
+    virtual action_container_t get_actions() {
+        return action_container_t({action_handle_t(new DepthAction(-1)),
+                    action_handle_t(new DepthAction(1))});
+    }
+    virtual state_handle_t get_state_handle() {
+        return std::shared_ptr<State>(new DepthState(state));
+    }
+    virtual void set_state(const state_handle_t & state_handle) {
+        auto depth_state = std::dynamic_pointer_cast<const DepthState>(state_handle);
+        EXPECT_NE(nullptr,depth_state);
+        state = depth_state->state;
+        DEBUG_OUT(1,"Set state to " << state);
+    }
+    virtual bool has_terminal_state() const {return false;}
+    virtual bool is_terminal_state() const {return false;}
+    virtual bool is_deterministic() const {return true;}
+    virtual bool has_max_reward() const {return true;}
+    virtual reward_t max_reward() const {return 1;}
+    virtual bool has_min_reward() const {return true;}
+    virtual reward_t min_reward() const {return 0;}
+    virtual bool is_markov() const {return true;}
+private:
+    int reward_depth;
+    int state;
+};
+
+TEST(MonteCarloTreeSearch, PlainTree) {
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(int depth : {5,6}) {
+        auto environment = std::shared_ptr<AbstractEnvironment>(new DepthEnvironment(7));
+        MonteCarloTreeSearch search(environment,
+                                    1,
+                                    std::shared_ptr<NodeFinder>(new PlainTree()),
+                                    std::shared_ptr<TreePolicy>(new UCB1()),
+                                    std::shared_ptr<ValueHeuristic>(new Rollout()),
+                                    std::shared_ptr<BackupMethod>(new MonteCarlo()),
+                                    MonteCarloTreeSearch::BACKUP_TRACE);
+        // do as many iterations as would be necessary to build a tree with
+        // uniform depth
+        int iterations = pow(2,depth+1)-2;
+        for(int i=0; i<iterations; ++i) {
+            search.next();
+        }
+        // compute some stuff to perform checks
+        typedef MonteCarloTreeSearch::graph_t graph_t;
+        typedef MonteCarloTreeSearch::node_t node_t;
+        typedef MonteCarloTreeSearch::node_it_t node_it_t;
+        typedef MonteCarloTreeSearch::arc_t arc_t;
+        typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+        typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+        typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+        const graph_t & graph = search.get_graph();
+        // find the root node
+        node_t root;
+        for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+            if(in_arc_it_t(graph,node)==lemon::INVALID) {
+                root = node;
+                break;
+            }
+        }
+        // compute distances to all nodes
+        graph_t::NodeMap<int> dists(graph);
+        lemon::dfs(graph).distMap(dists).run(root);
+        // find maximum distance, which is the depth of the tree
+        int max_dist = 0;
+        for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+            max_dist = std::max(max_dist,dists[node]);
+        }
+        EXPECT_EQ(2*iterations+1,lemon::countNodes(graph));
+        EXPECT_EQ(2*iterations,lemon::countArcs(graph));
+        if(depth==5) {
+            EXPECT_EQ(2*depth,max_dist);
+        } else if(depth==6) {
+            // This relies on UCB1 focusing on the first reward and not
+            // exploring uniformly. Increasing the exploration coefficient would
+            // devaluate this test.
+            EXPECT_LT(2*depth,max_dist);
+        } else EXPECT_TRUE(false) << "Unhandled depth value";
+        // visual output
+        // search.toPdf("graph.pdf");
+        // getchar();
+    }
+}
+
 class LineEnvironment: public AbstractEnvironment {
 public:
     struct LineAction: public Action {
@@ -861,34 +996,40 @@ public:
         int action;
     };
     struct LineObservation: public Observation {
+        LineObservation(int observation): observation(observation) {}
+        virtual ~LineObservation() = default;
         virtual bool operator==(const Observation & other) const {
-            return dynamic_cast<const LineObservation*>(&other)!=nullptr;
+            auto line_observation = dynamic_cast<const LineObservation*>(&other);
+            return line_observation!=nullptr && line_observation->observation==observation;
         }
         virtual size_t get_hash() const {
-            return 0;
+            return std::hash<int>()(observation);
         }
         virtual void write(std::ostream & out) const {
-            out << "o";
+            out << observation;
         }
+        int observation;
     };
     struct LineState: public State {
         LineState(int s): state(s) {}
         int state;
     };
 public:
-    LineEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
+    LineEnvironment(int line_width): line_width(line_width), state(0) {}
     virtual ~LineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
         auto line_action = std::dynamic_pointer_cast<const LineAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
-        ++state;
-        DEBUG_OUT(0,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new LineObservation()),
-                                         state>=reward_depth?1:0);
+        state += line_action->action;
+        if(state>line_width) state = line_width;
+        if(-state>line_width) state = -line_width;
+        DEBUG_OUT(1,"Transition to " << state);
+        return observation_reward_pair_t(observation_handle_t(new LineObservation(state)), state);
     }
     virtual action_container_t get_actions() {
         return action_container_t({action_handle_t(new LineAction(-1)),
-                    action_handle_t(new LineAction(-1))});
+                    action_handle_t(new LineAction(0)),
+                    action_handle_t(new LineAction(1))});
     }
     virtual state_handle_t get_state_handle() {
         return std::shared_ptr<State>(new LineState(state));
@@ -897,37 +1038,108 @@ public:
         auto line_state = std::dynamic_pointer_cast<const LineState>(state_handle);
         EXPECT_NE(nullptr,line_state);
         state = line_state->state;
-        DEBUG_OUT(0,"Set state to " << state);
+        DEBUG_OUT(1,"Set state to " << state);
     }
-    virtual bool has_terminal_state() const {return false;}
-    virtual bool is_terminal_state() const {return false;}
+    virtual bool has_terminal_state() const {return true;}
+    virtual bool is_terminal_state() const {return state==line_width;}
     virtual bool is_deterministic() const {return true;}
-    virtual bool has_max_reward() const {return true;}
-    virtual reward_t max_reward() const {return 1;}
+    virtual bool has_max_reward() const {return false;}
+    virtual reward_t max_reward() const {return 0;}
     virtual bool has_min_reward() const {return true;}
     virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return false;}
+    virtual bool is_markov() const {return true;}
 private:
-    int reward_depth;
+    int line_width;
     int state;
 };
 
-TEST(MonteCarloTreeSearch, Simple) {
+TEST(MonteCarloTreeSearch, NodeFinder) {
     using namespace node_finder;
     using namespace tree_policy;
     using namespace value_heuristic;
     using namespace backup_method;
-    auto environment = std::shared_ptr<AbstractEnvironment>(new LineEnvironment(5));
-    MonteCarloTreeSearch search(environment,
-                                1,
-                                std::shared_ptr<NodeFinder>(new FullTree()),
-                                std::shared_ptr<TreePolicy>(new UCB1()),
-                                std::shared_ptr<ValueHeuristic>(new Rollout()),
-                                std::shared_ptr<BackupMethod>(new MonteCarlo()),
-                                MonteCarloTreeSearch::BACKUP_TRACE);
-    auto a = environment->get_actions();
-    for(int i=0; i<64; ++i) {
-        search.next();
+    vector<int> actual_depths;
+    vector<int> node_counts;
+    vector<int> arc_counts;
+    int depth = 3;
+    for(auto node_finder : {std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())}) {
+        auto environment = std::shared_ptr<AbstractEnvironment>(new LineEnvironment(2));
+        MonteCarloTreeSearch search(environment,
+                                    1,
+                                    node_finder,
+                                    std::shared_ptr<TreePolicy>(new UCB1(1000)),
+                                    std::shared_ptr<ValueHeuristic>(new Rollout()),
+                                    std::shared_ptr<BackupMethod>(new MonteCarlo()),
+                                    MonteCarloTreeSearch::BACKUP_TRACE);
+        // do as many iterations as would be necessary to build a tree with
+        // uniform depth
+        int iterations = (pow(3,depth+1)-1)/2 - 1;
+        for(int i=0; i<iterations; ++i) {
+            search.next();
+        }
+        // compute some stuff to perform checks
+        typedef MonteCarloTreeSearch::graph_t graph_t;
+        typedef MonteCarloTreeSearch::node_t node_t;
+        typedef MonteCarloTreeSearch::node_it_t node_it_t;
+        typedef MonteCarloTreeSearch::arc_t arc_t;
+        typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+        typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+        typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+        const graph_t & graph = search.get_graph();
+        // find the root node
+        node_t root = lemon::INVALID;
+        for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+            if(in_arc_it_t(graph,node)==lemon::INVALID) {
+                root = node;
+                break;
+            }
+        }
+        // compute distances to all nodes
+        graph_t::NodeMap<int> dists(graph);
+        lemon::dfs(graph).distMap(dists).run(root);
+        // find maximum distance, which is the depth of the tree
+        int max_dist = 0;
+        for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+            max_dist = std::max(max_dist,dists[node]);
+        }
+        actual_depths.push_back(max_dist);
+        node_counts.push_back(lemon::countNodes(graph));
+        arc_counts.push_back(lemon::countArcs(graph));
+        // visual output
+        // search.toPdf("graph.pdf");
+        // getchar();
     }
-    search.toPdf("graph.pdf");
+    // some checks
+    for(int idx=0; idx<4; ++idx) {
+        vector<int> actual_depths_expected({6,8,-1,-1});
+        vector<int> node_counts_expected({73,74,-1,21});
+        vector<int> arc_counts_expected({72,74,-1,30});
+        if(idx==0 || idx==1) { // PlainTree, ObservationTree
+            EXPECT_EQ(actual_depths_expected[idx],actual_depths[idx]);
+            EXPECT_EQ(node_counts_expected[idx],node_counts[idx]);
+            EXPECT_EQ(arc_counts_expected[idx],arc_counts[idx]);
+        } else if(idx==2) { // FullDAG
+            // is random size but in any case the largest because it adds more
+            // action nodes (without terminating a rollout because it reuses the
+            // observation nodes)
+            EXPECT_LT(actual_depths[idx-1],actual_depths[idx]);
+            EXPECT_LT(actual_depths[idx-2],actual_depths[idx]);
+            EXPECT_LT(actual_depths[idx+1],actual_depths[idx]);
+            EXPECT_LT(node_counts[idx-1],node_counts[idx]);
+            EXPECT_LT(node_counts[idx-2],node_counts[idx]);
+            EXPECT_LT(node_counts[idx+1],node_counts[idx]);
+            EXPECT_LT(arc_counts[idx-1],arc_counts[idx]);
+            EXPECT_LT(arc_counts[idx-2],arc_counts[idx]);
+            EXPECT_LT(arc_counts[idx+1],arc_counts[idx]);
+        } else if(idx==3) { // FullGraph
+            EXPECT_TRUE(actual_depths[idx]==7
+                        || actual_depths[idx]==8
+                        || actual_depths[idx]==9) << "Depth is " << actual_depths[idx];
+            EXPECT_EQ(node_counts_expected[idx],node_counts[idx]);
+            EXPECT_EQ(arc_counts_expected[idx],arc_counts[idx]);
+        } else EXPECT_TRUE(false) << "This line should never occur";
+    }
 }

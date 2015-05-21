@@ -128,6 +128,8 @@ protected:
 
     const node_hash_function_t node_hash;
 
+    int max_depth;
+
     //----methods----//
 public:
     MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
@@ -136,11 +138,14 @@ public:
                          std::shared_ptr<tree_policy::TreePolicy> tree_policy,
                          std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                          std::shared_ptr<backup_method::BackupMethod> backup_method,
-                         BACKUP_TYPE backup_type = BACKUP_ALL);
+                         BACKUP_TYPE backup_type = BACKUP_ALL,
+                         int max_depth = -1);
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
     void toPdf(const char* file_name) const override;
+    int get_max_depth() const {return max_depth;}
+    void set_max_depth(int depth) {max_depth = depth;}
 protected:
     virtual double color_rescale(const double&) const;
 };

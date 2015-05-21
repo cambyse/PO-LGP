@@ -66,7 +66,7 @@ static const std::set<std::string> environment_set = {"TightRope",
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
                                                      "max"};
-static const std::set<std::string> graph_type_set = {"FullTree",
+static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "FullDAG",
                                                      "FullGraph",
                                                      "ObservationTree"};
@@ -472,8 +472,8 @@ bool check_arguments() {
 }
 
 shared_ptr<NodeFinder> get_node_finder() {
-    if(graph_type_arg.getValue()=="FullTree")
-        return shared_ptr<NodeFinder>(new FullTree());
+    if(graph_type_arg.getValue()=="PlainTree")
+        return shared_ptr<NodeFinder>(new PlainTree());
     if(graph_type_arg.getValue()=="FullDAG")
         return shared_ptr<NodeFinder>(new FullDAG());
     if(graph_type_arg.getValue()=="FullGraph")
@@ -481,7 +481,7 @@ shared_ptr<NodeFinder> get_node_finder() {
     if(graph_type_arg.getValue()=="ObservationTree")
         return shared_ptr<NodeFinder>(new ObservationTree());
     DEBUG_DEAD_LINE;
-    return shared_ptr<NodeFinder>(new FullTree());
+    return shared_ptr<NodeFinder>(new PlainTree());
 }
 
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {

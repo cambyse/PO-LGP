@@ -104,7 +104,8 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
                                            std::shared_ptr<tree_policy::TreePolicy> tree_policy,
                                            std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                                            std::shared_ptr<backup_method::BackupMethod> backup_method,
-                                           BACKUP_TYPE backup_type):
+                                           BACKUP_TYPE backup_type,
+                                           int max_depth):
     SearchTree(environment, discount, node_finder),
     mcts_node_info_map(graph),
     mcts_arc_info_map(graph),
@@ -112,11 +113,11 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
     value_heuristic(value_heuristic),
     backup_method(backup_method),
     backup_type(backup_type),
-    node_hash(graph)
+    node_hash(graph),
+    max_depth(max_depth)
 {}
 
 void MonteCarloTreeSearch::next_do() {
-
     // remember the trajectory
     typedef tuple<state_handle_t,node_t,arc_t,node_t,arc_t,reward_t> trajectory_item_t;
     vector<trajectory_item_t> trajectory;
@@ -133,10 +134,9 @@ void MonteCarloTreeSearch::next_do() {
         node_t current_node = root_node;
         state_handle_t current_state = root_state;
         environment->set_state(root_state);
-        bool did_expansion = false;
-        bool is_inner_node = (int)environment->get_actions().size()==lemon::countOutArcs(graph,current_node);
-        bool has_second_ancestor = false;
-        while(is_inner_node || !did_expansion || has_second_ancestor) {
+        node_set_t node_set({root_node},0,node_hash);
+        DEBUG_OUT(2,"    Starting at node " << graph.id(root_node));
+        for(int depth=0; max_depth<0 || depth<max_depth; ++depth) {
 
             // get tree-policy action
             action_handle_t action = (*tree_policy)(current_node,
@@ -147,13 +147,23 @@ void MonteCarloTreeSearch::next_do() {
                                                     mcts_arc_info_map);
 
             // find or create action node
-            T(arc_t, to_action_arc, node_t, action_node) = find_or_create_action_node(current_node, action);
+            T(arc_t, to_action_arc,
+              node_t, action_node,
+              bool, new_action_arc,
+              bool, new_action_node) = find_or_create_action_node(current_node, action);
 
             // perfrom transition
-            T(observation_handle_t, observation_to, reward_t, reward) = environment->transition(current_state, action);
+            T(observation_handle_t, observation_to, reward_t, reward) = environment->transition(action);
 
             // find or create observation node
-            T(arc_t, to_observation_arc, node_t, observation_node) = find_or_create_observation_node(action_node, observation_to);
+            T(arc_t, to_observation_arc,
+              node_t, observation_node,
+              bool, new_observation_arc,
+              bool, new_observation_node) = find_or_create_observation_node(action_node, observation_to);
+            DEBUG_OUT(2,"    Transition:");
+            DEBUG_OUT(2,"        action " << *action << " / node " << graph.id(action_node));
+            DEBUG_OUT(2,"        observation " << *observation_to << " / node " << graph.id(observation_node));
+            DEBUG_OUT(2,"        reward " << reward);
 
             // add to trajectory
             trajectory.push_back(trajectory_item_t(current_state, current_node, to_action_arc, action_node, to_observation_arc, reward));
@@ -162,16 +172,18 @@ void MonteCarloTreeSearch::next_do() {
             current_node = observation_node;
             current_state = environment->get_state_handle();
 
-            // break in terminal nodes or update halting conditions (last step
-            // was an expansion if the node was not an inner node)
-            if(environment->is_terminal_state()) {
-                break;
-            }
-            did_expansion = !is_inner_node;
-            is_inner_node = (int)environment->get_actions().size()==lemon::countOutArcs(graph,current_node);
-            has_second_ancestor = (++(in_arc_it_t(graph,current_node)))!=INVALID;
+            // break in terminal nodes
+            if(environment->is_terminal_state()) break;
+            // did if new observation node was added
+            if(new_observation_node) break;
+            // break if a node was visited before during this rollout (this can
+            // happen in the case of FullGraph node finder, the problem is that
+            // the node data is not up-to-date because it depends on the current
+            // rollout) or update node set
+            if(node_set.find(current_node)!=node_set.end()) break;
+            node_set.insert(current_node);
         }
-        DEBUG_OUT(2,"...reached leaf-node");
+        DEBUG_OUT(2,"...reached leaf-node (or loop closure)");
         leaf_node = current_node;
         leaf_state = current_state;
     }

@@ -81,7 +81,7 @@ namespace node_finder {
 
     /**
      * Builds a full tree without reconnecting any nodes. */
-    class FullTree: public NodeFinder {
+    class PlainTree: public NodeFinder {
     protected:
         //----members----//
         const graph_t * graph = nullptr;
@@ -101,10 +101,11 @@ namespace node_finder {
     };
 
     /**
-     * Modifies the FullTree implementation. Identical observations that were
+     * Modifies the PlainTree implementation. Identical observations that were
      * reached by different actions but from the same ancestor observation are
-     * represented by the same observation node. */
-    class ObservationTree: public FullTree {
+     * represented by the same observation node. Taking only observation nodes
+     * into accout the resulting graph is again a tree. */
+    class ObservationTree: public PlainTree {
     public:
         virtual arc_node_t find_observation_node(const node_t & action_node,
                                                  const observation_handle_t & observation) override;
@@ -113,8 +114,8 @@ namespace node_finder {
     /**
      * Modifies the ObservationTree implementation. Any identical observations
      * at the same depth of the SearchTree are represented by the same
-     * node. This makes it necessary to globally keep track of observation nodes
-     * and their depths. */
+     * node. That is, observations and the depth of the corresponding nodes are
+     * tracked globally. */
     class FullDAG: public ObservationTree {
     public:
         //----typedefs----//
@@ -161,8 +162,8 @@ namespace node_finder {
 
     /**
      * Modifies the ObservationTree implementation. Any identical observations
-     * (independent of their depth) are represented by the same node. This makes
-     * it necessary to globally keep track of observation nodes. */
+     *  are represented by the same node. In contrast to the FullDAG
+     *  implementation this is done independently of their depth. */
     class FullGraph: public ObservationTree {
     public:
         //----members----//
