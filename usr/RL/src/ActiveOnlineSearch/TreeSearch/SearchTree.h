@@ -72,6 +72,10 @@ public:
                std::shared_ptr<NodeFinder> node_finder);
     virtual ~SearchTree() = default;
     virtual void init(const state_handle_t & root_state) override;
+    /**
+     * Calls init() if necessary, then calls next_do() */
+    virtual void next() override final;
+    virtual void next_do() = 0;
     virtual void prune(const action_handle_t &,
                        const observation_handle_t &,
                        const state_handle_t &) override;

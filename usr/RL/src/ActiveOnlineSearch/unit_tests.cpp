@@ -26,6 +26,9 @@
 #include "ComputationalGraph.h"
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/NodeFinder.h"
+#include "TreeSearch/TreePolicy.h"
+#include "TreeSearch/ValueHeuristic.h"
+#include "TreeSearch/BackupMethod.h"
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -643,7 +646,7 @@ public:
                    node_finder) {}
     virtual ~MockSearchTree() = default;
     graph_t & get_graph() {return graph;}
-    virtual void next() {
+    virtual void next_do() {
         using namespace return_tuple;
         typedef std::vector<action_handle_t> action_sequence_t;
         typedef std::deque<action_sequence_t> action_sequence_list_t;
@@ -841,11 +844,16 @@ TEST(SearchTree, NodeFinder) {
 }
 
 class LineEnvironment: public AbstractEnvironment {
+public:
     struct LineAction: public Action {
-        LineAction(int a): action(a) {}
+        LineAction(int action): action(action) {}
+        virtual ~LineAction() = default;
         virtual bool operator==(const Action & other) const {
             auto line_action = dynamic_cast<const LineAction*>(&other);
             return line_action!=nullptr && line_action->action==action;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(action);
         }
         virtual void write(std::ostream & out) const {
             out << action;
@@ -856,33 +864,40 @@ class LineEnvironment: public AbstractEnvironment {
         virtual bool operator==(const Observation & other) const {
             return dynamic_cast<const LineObservation*>(&other)!=nullptr;
         }
+        virtual size_t get_hash() const {
+            return 0;
+        }
         virtual void write(std::ostream & out) const {
-            out << "x";
+            out << "o";
         }
     };
     struct LineState: public State {
         LineState(int s): state(s) {}
         int state;
     };
-
+public:
+    LineEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
+    virtual ~LineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
         auto line_action = std::dynamic_pointer_cast<const LineAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
-        state += line_action->action;
+        ++state;
+        DEBUG_OUT(0,"Transition to " << state);
+        return observation_reward_pair_t(observation_handle_t(new LineObservation()),
+                                         state>=reward_depth?1:0);
     }
     virtual action_container_t get_actions() {
-        LineAction up(+1);
-        LineAction down(-1);
-        return action_container_t({action_handle_t(new LineAction(up)),
-                    action_handle_t(new LineAction(down))});
+        return action_container_t({action_handle_t(new LineAction(-1)),
+                    action_handle_t(new LineAction(-1))});
     }
     virtual state_handle_t get_state_handle() {
         return std::shared_ptr<State>(new LineState(state));
     }
     virtual void set_state(const state_handle_t & state_handle) {
-        auto line_state = dynamic_pointer_cast<const LineState>(state_handle);
+        auto line_state = std::dynamic_pointer_cast<const LineState>(state_handle);
         EXPECT_NE(nullptr,line_state);
         state = line_state->state;
+        DEBUG_OUT(0,"Set state to " << state);
     }
     virtual bool has_terminal_state() const {return false;}
     virtual bool is_terminal_state() const {return false;}
@@ -893,10 +908,26 @@ class LineEnvironment: public AbstractEnvironment {
     virtual reward_t min_reward() const {return 0;}
     virtual bool is_markov() const {return false;}
 private:
+    int reward_depth;
     int state;
 };
 
 TEST(MonteCarloTreeSearch, Simple) {
-
-
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    auto environment = std::shared_ptr<AbstractEnvironment>(new LineEnvironment(5));
+    MonteCarloTreeSearch search(environment,
+                                1,
+                                std::shared_ptr<NodeFinder>(new FullTree()),
+                                std::shared_ptr<TreePolicy>(new UCB1()),
+                                std::shared_ptr<ValueHeuristic>(new Rollout()),
+                                std::shared_ptr<BackupMethod>(new MonteCarlo()),
+                                MonteCarloTreeSearch::BACKUP_TRACE);
+    auto a = environment->get_actions();
+    for(int i=0; i<64; ++i) {
+        search.next();
+    }
+    search.toPdf("graph.pdf");
 }

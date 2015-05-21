@@ -29,8 +29,9 @@ public:
         discount(discount) {}
     virtual ~AbstractSearchTree() = default;
     /**
-     * Initializes an empty search tree. This function must be called before
-     * using the AbstractSearchTree and may also be used to reset everything. */
+     * Initializes an empty search tree. This function may be used to reset
+     * everything and, depending on the implementation, may need to be called
+     * before using the AbstractSearchTree. */
     virtual void init(const state_handle_t & root_state) = 0;
     /**
      * Proceed with planning. Performs the next iteration in the planning

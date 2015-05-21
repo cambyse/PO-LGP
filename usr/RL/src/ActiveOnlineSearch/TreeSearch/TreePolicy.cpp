@@ -1,6 +1,6 @@
 #include "TreePolicy.h"
 
-#include <set>
+#include <unordered_set>
 #include <vector>
 #include <utility>
 
@@ -12,7 +12,7 @@
 #include <util/debug.h>
 
 using util::random_select;
-using std::set;
+using std::unordered_set;
 using std::vector;
 using std::pair;
 using std::make_pair;
@@ -35,7 +35,7 @@ namespace tree_policy {
                                  const mcts_node_info_map_t & mcts_node_info_map,
                                  const mcts_arc_info_map_t & mcts_arc_info_map) const {
         action_handle_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << Environment::name(*environment,action));
+        DEBUG_OUT(1,"Select action: " << *action);
         return action;
     }
 
@@ -47,12 +47,15 @@ namespace tree_policy {
                                    const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // get set of actions
-        set<action_handle_t> action_set(environment->get_actions().begin(), environment->get_actions().end());
+        auto actions = environment->get_actions();
+        unordered_set<action_handle_t,
+                      AbstractEnvironment::ActionHash,
+                      AbstractEnvironment::ActionEq> action_set(actions.begin(), actions.end());
 
         // prepare vector for computing upper bounds
         vector<pair<reward_t,action_handle_t>> scores;
 
-        // comput upper bounds
+        // compute upper bounds
         DEBUG_OUT(3,"Computing upper bound for state node " << graph.id(state_node));
         for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph.target(to_action_arc);
@@ -73,7 +76,7 @@ namespace tree_policy {
         // select unsampled action if there are any left
         if(action_set.size()>0) {
             action_handle_t action = random_select(action_set);
-            DEBUG_OUT(2,"Selecting unsampled action: " << Environment::name(*environment,action));
+            DEBUG_OUT(2,"Selecting unsampled action: " << *action);
             return action;
         } else {
             DEBUG_OUT(2,"No unsampled actions.");
@@ -83,8 +86,7 @@ namespace tree_policy {
         IF_DEBUG(3) {
             DEBUG_OUT(3,"Use upper bound to choose between:");
             for(auto bound_action : scores) {
-                DEBUG_OUT(3,"    '" << Environment::name(*environment,bound_action.second) <<
-                          "' with bound " << bound_action.first);
+                DEBUG_OUT(3,"    '" << *(bound_action.second) << "' with bound " << bound_action.first);
             }
         }
         DEBUG_EXPECT(1,scores.size()>0);
@@ -102,7 +104,7 @@ namespace tree_policy {
 
         // random tie breaking between action with equal upper bound
         action_handle_t action = random_select(max_score_actions);
-        DEBUG_OUT(2,"Choosing action " << Environment::name(*environment,action) << " with upper bound " << max_score );
+        DEBUG_OUT(2,"Choosing action " << *action << " with upper bound " << max_score );
         return action;
     }
 

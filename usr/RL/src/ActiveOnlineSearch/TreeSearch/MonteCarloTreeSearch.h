@@ -33,9 +33,8 @@ public:
         void set_value(reward_t val, reward_t val_variance);
         void add_rollout_return(reward_t ret);
         void add_transition();
-        void set_action_list(action_container_t & container);
-        action_handle_t use_random_action();
-        bool is_fully_expanded() const;
+        state_handle_t get_state_from_last_visit() const;
+        void set_state_from_last_visit(state_handle_t state);
     protected:
         /**
          * Nr of times a transition from this node (state or action) was
@@ -61,15 +60,9 @@ public:
          * node. */
         reward_t squared_return_sum = 0;
         /**
-         * For observation nodes: set of actions that were already executed. */
-        std::unordered_set<action_handle_t,
-            AbstractEnvironment::ActionHash,
-            AbstractEnvironment::ActionEq> used_actions;
-        /**
-         * For observation nodes: set of actions that were not yet executed. */
-        std::unordered_set<action_handle_t,
-            AbstractEnvironment::ActionHash,
-            AbstractEnvironment::ActionEq> unused_actions;
+         * Holds a state handle to the state from the last time the node was
+         * visited. */
+        state_handle_t state_from_last_visit;
     };
     typedef graph_t::NodeMap<MCTSNodeInfo> mcts_node_info_map_t;
 
@@ -145,7 +138,7 @@ public:
                          std::shared_ptr<backup_method::BackupMethod> backup_method,
                          BACKUP_TYPE backup_type = BACKUP_ALL);
     virtual ~MonteCarloTreeSearch() = default;
-    virtual void next() override;
+    virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
     void toPdf(const char* file_name) const override;
 protected:

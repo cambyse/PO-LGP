@@ -36,7 +36,7 @@ namespace value_heuristic {
 
         // If rollout_length is not specified (smaller than zero) and
         // environment does not have a terminal state do one-step
-        // rollout. Otherwise do infinite rollout.
+        // rollout. Otherwise do infinite rollout (util terminal state).
         if(length<0 && !environment->has_terminal_state()) {
             length = 1;
         }

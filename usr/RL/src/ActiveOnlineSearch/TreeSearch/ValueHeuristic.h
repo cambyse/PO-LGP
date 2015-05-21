@@ -44,6 +44,10 @@ namespace value_heuristic {
      * This heuristic does a rollout to initialize value/return. */
     class Rollout: public ValueHeuristic {
     public:
+        /**
+         * Constructor with rollout length. For negative values the rollout is
+         * either one step (if the environment does not have a terminal state)
+         * or infinite until reaching a terminal state. */
         Rollout(int rollout_length = -1);
         virtual void operator()(const node_t & state_node,
                                 const state_handle_t & state,

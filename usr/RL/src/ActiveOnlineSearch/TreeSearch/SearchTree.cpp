@@ -56,6 +56,16 @@ void SearchTree::init(const state_handle_t & state) {
     node_finder->add_observation_node(root_node);
 }
 
+void SearchTree::next() {
+    // check is graph was initialized
+    if(node_it_t(graph)==INVALID) {
+        init(environment->get_state_handle());
+    }
+    // call actual function
+    next_do();
+}
+
+
 void SearchTree::prune(const action_handle_t & action,
                        const observation_handle_t & observation,
                        const state_handle_t & state) {
@@ -175,20 +185,18 @@ QString SearchTree::str_html(const node_t & n) const {
         if(env!=nullptr) {
             label = Environment::name(*environment,node_info_map[n].observation);
         } else {
-            s << node_info_map[n].observation;
+            s << *(node_info_map[n].observation);
             label = s.str().c_str();
         }
     } else {
         if(env!=nullptr) {
             label = Environment::name(*environment,node_info_map[n].action);
         } else {
-            s << node_info_map[n].action;
+            s << *(node_info_map[n].action);
             label = s.str().c_str();
         }
     }
-    return QString("%1<BR/>id=%2").
-        arg(label).
-        arg(graph.id(n));
+    return label;
 }
 
 SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t & action_node,

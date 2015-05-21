@@ -64,23 +64,12 @@ void MonteCarloTreeSearch::MCTSNodeInfo::add_transition() {
     ++transition_counts;
 }
 
-void MonteCarloTreeSearch::MCTSNodeInfo::set_action_list(action_container_t & container) {
-    DEBUG_EXPECT(0,unused_actions.size()==0);
-    DEBUG_EXPECT(0,used_actions.size()==0);
-    for(action_handle_t action : container) {
-        unused_actions.insert(action);
-    }
+MonteCarloTreeSearch::state_handle_t MonteCarloTreeSearch::MCTSNodeInfo::get_state_from_last_visit() const {
+    return state_from_last_visit;
 }
 
-MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::MCTSNodeInfo::use_random_action() {
-    action_handle_t action = util::random_select(unused_actions);
-    unused_actions.erase(action);
-    used_actions.insert(action);
-    return action;
-}
-
-bool MonteCarloTreeSearch::MCTSNodeInfo::is_fully_expanded() const {
-    return unused_actions.size()==0;
+void MonteCarloTreeSearch::MCTSNodeInfo::set_state_from_last_visit(state_handle_t state) {
+    state_from_last_visit = state;
 }
 
 int MonteCarloTreeSearch::MCTSArcInfo::get_rollout_counts() const {
@@ -126,10 +115,10 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
     node_hash(graph)
 {}
 
-void MonteCarloTreeSearch::next() {
+void MonteCarloTreeSearch::next_do() {
 
     // remember the trajectory
-    typedef tuple<node_t,arc_t,node_t,arc_t,reward_t> trajectory_item_t;
+    typedef tuple<state_handle_t,node_t,arc_t,node_t,arc_t,reward_t> trajectory_item_t;
     vector<trajectory_item_t> trajectory;
 
     /* ========================================================================
@@ -143,10 +132,11 @@ void MonteCarloTreeSearch::next() {
         DEBUG_OUT(2,"Follow tree-policy...");
         node_t current_node = root_node;
         state_handle_t current_state = root_state;
+        environment->set_state(root_state);
         bool did_expansion = false;
-        bool is_inner_node = mcts_node_info_map[current_node].is_fully_expanded();
-        bool was_visited_before = false;
-        while(is_inner_node || !did_expansion || was_visited_before) {
+        bool is_inner_node = (int)environment->get_actions().size()==lemon::countOutArcs(graph,current_node);
+        bool has_second_ancestor = false;
+        while(is_inner_node || !did_expansion || has_second_ancestor) {
 
             // get tree-policy action
             action_handle_t action = (*tree_policy)(current_node,
@@ -166,20 +156,20 @@ void MonteCarloTreeSearch::next() {
             T(arc_t, to_observation_arc, node_t, observation_node) = find_or_create_observation_node(action_node, observation_to);
 
             // add to trajectory
-            trajectory.push_back(trajectory_item_t(current_node, to_action_arc, action_node, to_observation_arc, reward));
+            trajectory.push_back(trajectory_item_t(current_state, current_node, to_action_arc, action_node, to_observation_arc, reward));
 
-            // update node and state
+            // update current node and state
             current_node = observation_node;
             current_state = environment->get_state_handle();
 
-            // update halting conditions (last step was an expansion if the node was
-            // not an inner node)
-            did_expansion = !is_inner_node;
-            is_inner_node = mcts_node_info_map[current_node].is_fully_expanded();
-            if(environment->is_terminal_state(current_state)) {
+            // break in terminal nodes or update halting conditions (last step
+            // was an expansion if the node was not an inner node)
+            if(environment->is_terminal_state()) {
                 break;
             }
-            was_visited_before = (++(in_arc_it_t(graph,current_node)))!=INVALID;
+            did_expansion = !is_inner_node;
+            is_inner_node = (int)environment->get_actions().size()==lemon::countOutArcs(graph,current_node);
+            has_second_ancestor = (++(in_arc_it_t(graph,current_node)))!=INVALID;
         }
         DEBUG_OUT(2,"...reached leaf-node");
         leaf_node = current_node;
@@ -209,11 +199,13 @@ void MonteCarloTreeSearch::next() {
         // initialize discounted return of this rollout with leaf-node's return
         reward_t discounted_return = mcts_node_info_map[leaf_node].get_return_sum()/mcts_node_info_map[leaf_node].get_rollout_counts();
         // follow the trace back to root node
+        state_handle_t state;
         node_t observation_node, action_node;
         arc_t to_action_arc, to_observation_arc;
         reward_t reward;
         for(auto transition=trajectory.rbegin(); transition!=trajectory.rend(); ++transition) {
-            t(observation_node,to_action_arc,action_node,to_observation_arc,reward) = *transition;
+            t(state,observation_node,to_action_arc,action_node,to_observation_arc,reward) = *transition;
+            // calculate discounted return
             discounted_return = reward + discount*discounted_return;
             // update counts, reward, and return
             mcts_node_info_map[observation_node  ].add_rollout_return(discounted_return);
@@ -235,7 +227,10 @@ void MonteCarloTreeSearch::next() {
                       arg(mcts_node_info_map[action_node].get_rollout_counts()).
                       arg(mcts_node_info_map[action_node].get_return_sum()));
             DEBUG_OUT(2,QString("    reward=%1, return=%2").arg(reward).arg(discounted_return));
+            // update state
+            mcts_node_info_map[observation_node].set_state_from_last_visit(state);
             // backup if back_type is BACKUP_TRACE
+            environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
             if(backup_type==BACKUP_TRACE) {
                 (*backup_method)(observation_node,
                                  action_node,
@@ -275,6 +270,7 @@ void MonteCarloTreeSearch::next() {
                     node_t action_node = graph.source(to_observation_arc);
                     arc_t to_action_arc = in_arc_it_t(graph,action_node);
                     node_t observation_node = graph.source(to_action_arc);
+                    environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
                     (*backup_method)(observation_node,
                                      action_node,
                                      discount,
