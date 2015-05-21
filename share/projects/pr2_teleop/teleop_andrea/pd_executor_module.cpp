@@ -23,7 +23,7 @@ PDExecutor::PDExecutor()
 
   // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
-  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
+  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   collision->y_ref.setZero();
   collision->v_ref.setZero();
 
@@ -43,11 +43,11 @@ PDExecutor::PDExecutor()
 
   // Orientation
   effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  effOrientationR->y_ref = {1, 0, 0, 0};
+  effOrientationR->y_ref = {1., 0., 0., 0.};
   effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
-  effOrientationL->y_ref = {1, 0, 0, 0};
+  effOrientationL->y_ref = {1., 0., 0., 0.};
   effOrientationL->flipTargetSignOnNegScalarProduct = true;
 }
 
@@ -80,6 +80,7 @@ void PDExecutor::step()
 
   // cout << "============" << endl;
   // cout << "cal_pose_rh: " << cal_pose_rh << endl;
+
   // cout << "cal_pose_lh: " << cal_pose_lh << endl;
 
   // set arm poses
@@ -102,7 +103,12 @@ void PDExecutor::step()
   effPosR->setTarget(pos);
 
   // orientation
-  quat = { cal_pose_rh(3), cal_pose_rh(4), cal_pose_rh(5), cal_pose_rh(6) };
+  quat = {
+    (double)cal_pose_rh(3),
+    (double)cal_pose_rh(4),
+    (double)cal_pose_rh(5),
+    (double)cal_pose_rh(6)
+  };
   effOrientationR->setTarget(quat);
 
   world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
@@ -118,17 +124,22 @@ void PDExecutor::step()
   effPosL->setTarget(pos);
 
   // orientation
-  quat = { cal_pose_lh(3), cal_pose_lh(4), cal_pose_lh(5), cal_pose_lh(6) };
+  quat = {
+    (double)cal_pose_lh(3),
+    (double)cal_pose_lh(4),
+    (double)cal_pose_lh(5),
+    (double)cal_pose_lh(6)
+  };
   effOrientationL->setTarget(quat);
 
   // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
   // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
-  float cal_gripper;
-  cal_gripper = calibrated_gripper_rh.get() * 8 / 100;
+  double cal_gripper;
+  cal_gripper = calibrated_gripper_rh.get() * 8. / 100.;
   gripperR->setTarget({cal_gripper});
-  cal_gripper = calibrated_gripper_lh.get() * 8 / 100;
+  cal_gripper = calibrated_gripper_lh.get() * 8. / 100.;
   gripperL->setTarget({cal_gripper});
 
   // update fmc/ors

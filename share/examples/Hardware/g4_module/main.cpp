@@ -1,4 +1,5 @@
 #include <Hardware/G4/G4.h>
+#include <Hardware/G4/module_G4Display.h>
 #include <System/engine.h>
 
 void miniTest(){
@@ -19,6 +20,9 @@ struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
     addModule("G4Poller", "G4Poller", Module::loopWithBeat, .001);
+    display = addModule("G4Display", "G4Display", Module::loopWithBeat, .001);
+    display.mid().load("./g4mapping.kvg");
+    display.kw().load();
     connect();
   }
 };
