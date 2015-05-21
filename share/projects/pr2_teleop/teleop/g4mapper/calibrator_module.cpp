@@ -6,53 +6,167 @@
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////INIT THREAD/////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-
-
-
-void initG4Mapper::LoopWithBeatAndWaitForClose(double sec)
+void G4HutoRoMap::getshoulderpos(floatA tempshoulderpos)
 {
-      if(!metronome)
-         metronome=new Metronome("threadTiccer", sec);
-      else
-         metronome->reset(sec);
-      if(isClosed()) threadOpen();
-        state.setValue(tsBEATING);
+
+    tempshoulderpos.reshape(6);
+   // cout<<"\x1B[2J\x1B[H";
+floatA tempcenter = centerpos;
+tempcenter.append(centerpos);
+           arr temp(6);
+       for(uint j = 0 ;j<tempshoulderpos.N;j++)
+         temp(j)=(double)(tempshoulderpos(j)-tempcenter(j));
 
 
-        state.waitForValueEq(tsCLOSE);
+
+ //cout<<"dp_i  "<<endl<<dp_i<<endl<<"temp "<<temp<<endl;
+
+
+
+    dp_i.append(~temp);
+    if(dp_i.d0 == SN)
+    {
+        rpmean =rpmean+(1./SN)*~(temp.subRange(0,2));
+        lpmean =lpmean+(1./SN)*~(temp.subRange(3,5));
+        rP=rP+(1./SN)*((temp.subRange(0,2))*~temp.subRange(0,2));
+        lP=lP+(1./SN)*((temp.subRange(3,5))*~temp.subRange(3,5));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)))(0);
+    }
+    else if(dp_i.d0>SN)
+    {
+        rpmean =rpmean+(1./SN)*(~(temp.subRange(0,2))-~(dp_i[0].subRange(0,2)));
+        lpmean =lpmean+(1./SN)*(~(temp.subRange(3,5))-~(dp_i[0].subRange(3,5)));
+        rP=rP+((1./SN)*(((temp.subRange(0,2))*~(temp.subRange(0,2)))-((dp_i[0].subRange(0,2))*~(dp_i[0].subRange(0,2)))));
+        lP=lP+((1./SN)*(((temp.subRange(3,5))*~(temp.subRange(3,5)))-((dp_i[0].subRange(3,5))*~(dp_i[0].subRange(3,5)))));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)) -(dp_i[0].subRange(0,2)*~dp_i[0].subRange(0,2)*dp_i[0].subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)) -(dp_i[0].subRange(3,5)*~dp_i[0].subRange(3,5)*dp_i[0].subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)-~dp_i[0].subRange(0,2)*dp_i[0].subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)-~dp_i[0].subRange(3,5)*dp_i[0].subRange(3,5)))(0);
+
+       arr tempshift = dp_i;
+
+        dp_i.clear();
+
+        for(uint i = 1;i<=SN;i++)
+        {
+           dp_i.append(tempshift.row(i));
+
+        }
+
+    }
+    else
+    {
+        rpmean =rpmean+(1./SN)*~(temp.subRange(0,2));
+        lpmean =lpmean+(1./SN)*~(temp.subRange(3,5));
+        rP=rP+(1./SN)*((temp.subRange(0,2))*~temp.subRange(0,2));
+        lP=lP+(1./SN)*((temp.subRange(3,5))*~temp.subRange(3,5));
+        rp=rp+(1./SN)*((temp.subRange(0,2)*~temp.subRange(0,2)*temp.subRange(0,2)));
+        lp=lp+(1./SN)*((temp.subRange(3,5)*~temp.subRange(3,5)*temp.subRange(3,5)));
+        rpp=rpp+((1./SN)*(~temp.subRange(0,2)*temp.subRange(0,2)))(0);
+        lpp=lpp+((1./SN)*(~temp.subRange(3,5)*temp.subRange(3,5)))(0);
+       return;
+    }
+
+
+ 
+    rPmean = rpmean*~rpmean;
+    lPmean = lpmean*~lpmean;
+     sr=0.5*(inverse(rPmean-rP)*(rpp*rpmean-rp));
+
+    arr sl=0.5*(inverse(lPmean-lP)*(lpp*lpmean-lp));
+    shoulderR.resize(3,1);
+    shoulderL.resize(3,1);
+    for(uint i = 0 ; i<3;i++)
+    {
+      shoulderR(i,0)=(float)(sr(i,0));
+      shoulderL(i,0)=(float)(sl(i,0));
+    }
+/*
+cout<<"dp_i  "<<dp_i<<endl<<"rpmean "<<rpmean<<endl<<"lpmean "<<lpmean<<endl;
+cout<<"rPmean  "<<rPmean<<endl<<"lPmean "<<lPmean<<endl;
+cout<<"rP  "<<rP<<endl<<"lP "<<lP<<endl;
+cout<<"rp  "<<rp<<endl<<"lp "<<lp<<endl;
+cout<<"rpp  "<<rpp<<endl<<"lpp "<<lpp<<endl;
+//cout<<"sr  "<<sr<<endl<<"sl "<<sl<<endl;*/
+//cout<<"S_R  "<<shoulderR<<length(shoulderR)<<endl<<"S_L "<<shoulderL<<length(shoulderL)<<endl;
+
+  //  cout<<"left hand :"<<distlhmaxopen<<"          "<<endl;
+  //  cout<<"right hand: "<<distrhmaxopen<<"          "<<endl<<endl;
+
+
+}
+void G4HutoRoMap::gripperinit(floatA tempgripperPos)
+{
+    if(length(tempgripperPos[0]-tempgripperPos[1]) > distrhmaxopen)
+    {
+        poserhthumbmaxopen = tempgripperPos[0];
+        poserhindexmaxopen = tempgripperPos[1];
+        distrhmaxopen =length(poserhthumbmaxopen-poserhindexmaxopen);
+    }
+    if(length(tempgripperPos[0]-tempgripperPos[1]) < distrhminopen)
+    {
+        poserhthumbminopen = tempgripperPos[0];
+        poserhindexminopen = tempgripperPos[1];
+        distrhminopen =length(poserhthumbminopen-poserhindexminopen);
+    }
+
+    if(length(tempgripperPos[2]-tempgripperPos[3]) > distlhmaxopen)
+    {
+        poselhthumbmaxopen = tempgripperPos[2];
+        poselhindexmaxopen = tempgripperPos[3];
+        distlhmaxopen =length(poselhthumbmaxopen-poselhindexmaxopen);
+    }
+    if(length(tempgripperPos[2]-tempgripperPos[3]) < distlhminopen)
+    {
+        poselhthumbminopen = tempgripperPos[2];
+        poselhindexminopen = tempgripperPos[3];
+        distlhminopen =length(poselhthumbminopen-poselhindexminopen);
+    }
+
 
 }
 
-void initG4Mapper::open()
+
+void G4HutoRoMap::doinit(floatA tempData,int button)
 {
-    mid.load("g4mapping.kvg");
+    cout<<cout<<"\x1B[2J\x1B[H";
+    //cout<<lp_i<<endl<<rp_i<<endl;
+    cout<<"Max dist open             Min dist open"<<endl;
+    cout<<"left hand : "<<distlhmaxopen<<"          "<<distlhminopen<<endl;
+    cout<<"right hand: "<<distrhmaxopen<<"          "<<distrhminopen<<endl<<endl;
+    cout<<"----RS vektor----"<<endl<<"ABS_RS  "<<length(shoulderR)<<shoulderR<<"  "<<endl<<"-----LS vektor----"<<endl<<"ABS_LS  "<<length(shoulderL)<<"  "<<shoulderL<<endl;
+
+    cout<<"----- CENTERPOS-----"<<endl<<centerpos<<endl;
+//    floatA test = mid.query(tempData,STRING("/human/rh/index")).subRange(0,2);//-centerpos);
+//    test = (test-centerpos).resize(3,1);
+    cout<<"-----RARM RADIUS-----"<<endl<<length(rpmean-sr)<<endl;
+
+    //gripperinit(mid.query(tempData,{ "/human/rh/thumb","/human/rh/index","/human/lh/thumb","/human/lh/index"}).cols(0,3));
+
+    getshoulderpos(mid.query(tempData,{ "/human/rh/index","/human/lh/index"}).cols(0,3));
+
+
+
+
+if(button & BTN_Y)
+{
+
+        poselhthumbmaxopen.clear();
+        poselhindexmaxopen.clear();
+        poselhthumbminopen.clear();
+        poselhindexminopen.clear();
+        distlhmaxopen =0;
+        distlhminopen =0;
+        poserhthumbmaxopen.clear();
+        poserhindexmaxopen.clear();
+        poserhthumbminopen.clear();
+        poserhindexminopen.clear();
+        distrhmaxopen = 0;
+        distrhminopen = 0;
 }
-void initG4Mapper::step()
-{
-
-    system("clear");
-    cout<<"Max dist open"<<endl;
-    cout<<"left hand: " <<distlhmaxopen<< " right hand: "<<distrhmaxopen<<endl;
-    floatA tempPoses = poses.get();
-
-    if(tempPoses.N == 0 )
-        return;
-    floatA tempPoslhIndex = mid.query(tempPoses,STRING( "/human/lh/index")).cols(0, 3);
-    floatA tempPoslhThumb =  mid.query(tempPoses,STRING("/human/lh/thumb")).cols(0, 3);
-    if(length(tempPoslhThumb-tempPoslhIndex) > distlhmaxopen)
-    {
-        poselhthumbmaxopen = tempPoslhThumb;
-        poselhindexmaxopen = tempPoslhIndex;
-
-    }
-    floatA tempPosrhIndex = mid.query(tempPoses,STRING( "/human/rh/index")).cols(0, 3);
-    floatA tempPosrhThumb =  mid.query(tempPoses,STRING("/human/rh/thumb")).cols(0, 3);
-    if(length(tempPosrhThumb-tempPosrhIndex) > distrhmaxopen)
-    {
-        poserhthumbmaxopen = tempPosrhThumb;
-        poserhindexmaxopen = tempPosrhIndex;
-
-    }
 
 
 
@@ -126,13 +240,8 @@ if (calibration_phase)
 
 }
 
-void initG4Mapper::close()
-{
-
-}
-
-void initG4Mapper::calibrate()
-{
+//void initG4Mapper::calibrate()
+//{
          /* // arm position
           // assuming posesFront and poses2 only contain 1 position
           // floatA p_front, p_side;
@@ -166,29 +275,76 @@ void initG4Mapper::calibrate()
           dist_closed = length(p_closed[0] - p_closed[1]);
           m_lh = 1 / (dist_open - dist_closed);
           q_lh = - dist_closed * m_lh;*/
-}
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////G4 HUMAN TO ROBOT MAPPER///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-G4HuToRoMap::G4HuToRoMap()
+G4HutoRoMap::G4HutoRoMap()
 {
 }
-void G4HuToRoMap::open()
+void G4HutoRoMap::open()
 {
+    sr.resize(3,1);
+    shoulderR.resize(3,1);
+    rP.resize(3,3);
+    rP = 0;
+    lP.resize(3,3);
+    lP = 0;
+    rp.resize(3,1);
+    rp = 0;
+    lp.resize(3,1);
+    lp = 0;
+    rPmean.resize(3,3);
+    lPmean.resize(3,3);
+    rpmean.resize(3,1);
+    rpmean=0;
+    lpmean.resize(3,1);
+    lpmean=0;
+    rpp = 0;
+    lpp = 0;
     mid.load("g4mapping.kvg");
-    initG4Mapper InitThread;
-    cout<<"InitThread mapper Start"<<endl;
-    cout<<"Start Moving freely"<<endl;
-    InitThread.LoopWithBeatAndWaitForClose(0.05);
-    cout<<"InitThread mapper Stop"<<endl;
+    cout<<"----------------------InitThread mapper Start-----------------"<<endl;
+    cout<<"----------------Start moving freely,press Y for reset---------"<<endl;
 }
-void G4HuToRoMap::step()
+void G4HutoRoMap::step()
 {
+
+    /////////InPut Check///////
+    arr gpstate = gamepadState.get();
+    CHECK(gpstate.N, "ERROR: No GamePad found");
+    int button = gpstate(0);
+    floatA tempData = poses.get();
+    if(tempData.N == 0)
+     return;
+     
+   // else
+   // tempData = mid.query(tempData,STRING("/human/rl/rf"));
+    ///////////////////////////
+
+    centerpos =  mid.query(tempData,STRING("/human/torso/chest")).subRange(0,2);
+
+
+
+    if(initphase)
+    {
+        doinit(tempData,button);
+        return;
+
+    }
+    else
+    {
+
+
+    }
+
   //  transformPosition();
   //   transformOrientatiob();
+}
+void G4HutoRoMap::close()
+{
 }
 
 /// Transform the human hand position into the unit sphere.
@@ -243,8 +399,8 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index) 
   return {(float)quat.w, (float)quat.x, (float)quat.y, (float)quat.z};
 }
 */
-void G4HuToRoMap::transform(const floatA& poses_raw)
-{
+//void G4HuToRoMap::transform(const floatA& poses_raw)
+//{
 
    /*   floatA cal_pose_rh, cal_pose_lh;
 
@@ -279,7 +435,7 @@ void G4HuToRoMap::transform(const floatA& poses_raw)
       // setting access variables
       calibrated_pose_rh.set() = cal_pose_rh;
       calibrated_pose_lh.set() = cal_pose_lh;*/
-}
+//}
 
 
 
