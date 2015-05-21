@@ -69,7 +69,7 @@ public:
     AbstractEnvironment() = default;
     virtual ~AbstractEnvironment() = default;
     /**
-     * Perform a transition by execution the given action and return the
+     * Perform a transition by executing the given action and return the
      * resulting observation and reward. */
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) = 0;
     /**
@@ -83,7 +83,21 @@ public:
         return return_value;
     }
     /**
-     * Get the available actions in the current state. */
+     * Get the available actions in the current state. \warning Note that the
+     * returned action container may be constructed ad-hoc so writing @code
+     for(auto action_it = environment.get_actions().begin(); action_it!=environment.get_actions().end(); ++action_it) {
+         ...
+     }
+     * @endcode is not safe, whereas @code
+     auto actions = environment.get_actions();
+     for(auto action_it = actions().begin(); action_it!=actions().end(); ++action_it) {
+         ...
+     }
+     * @endcode or @code
+     for(auto action : environment.get_actions()) {
+         ...
+     }
+     * @endcode is. */
     virtual action_container_t get_actions() = 0;
     /**
      * Get the current state. */
