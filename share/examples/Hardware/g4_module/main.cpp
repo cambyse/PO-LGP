@@ -1,6 +1,6 @@
+#include <System/engine.h>
 #include <Hardware/G4/G4.h>
 #include <Hardware/G4/module_G4Display.h>
-#include <System/engine.h>
 
 void miniTest(){
   G4Poller g4;
@@ -19,10 +19,12 @@ void miniTest(){
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Poller", "G4Poller", Module::loopWithBeat, .001);
-    display = addModule("G4Display", "G4Display", Module::loopWithBeat, .001);
-    display.mid().load("./g4mapping.kvg");
-    display.kw().load();
+    addModule<G4Poller>("G4Poller", Module::loopWithBeat, .001);
+    G4Display &display = *addModule<G4Display>("G4Display", Module::loopWithBeat, .001);
+
+    // display.mid().load("./g4mapping.kvg");
+    // display.kw().init("./world.ors");
+
     connect();
   }
 };
@@ -30,13 +32,13 @@ struct G4System:System{
 void serialRun(){
   G4System S;
 
-  S.open();
+  S.openAll();
   for(uint i=0;i<100;i++){
-    S.step();
+    S.stepAll();
     MT::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
-  S.close();
+  S.closeAll();
 }
 
 
@@ -53,9 +55,9 @@ void threadedRun(){
 
 int main(int argc, char **argv) {
 
-//  miniTest();
-//  serialRun();
-  threadedRun();
+ // miniTest();
+ serialRun();
+  // threadedRun();
   return 0;
 }
 

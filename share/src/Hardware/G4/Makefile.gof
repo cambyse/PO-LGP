@@ -2,7 +2,7 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-DEPEND = Core Ors Gui
+DEPEND = Core Ors Gui Mocap
 
 G4 = 1
 
