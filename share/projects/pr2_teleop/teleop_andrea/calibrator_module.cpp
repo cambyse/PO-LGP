@@ -162,7 +162,7 @@ void Calibrator::calibrate() {
 
   // LEFT GRIPPER
   // ===========================================================================
-  p_open = mid.query(posesOpen, {"/human/lh/thumb", "/human/rh/index"}).cols(0, 3);
+  p_open = mid.query(posesOpen, {"/human/lh/thumb", "/human/lh/index"}).cols(0, 3);
   p_closed = mid.query(posesClosed, {"/human/lh/thumb", "/human/lh/index"}).cols(0, 3);
   dist_open = length(p_open[0] - p_open[1]);
   dist_closed = length(p_closed[0] - p_closed[1]);
@@ -262,7 +262,7 @@ void Calibrator::transform(const floatA& poses_raw) {
   //     0.f, 1.f);
   dummy = length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_rh + q_rh;
   clip(dummy, 0.f, 1.f);
-  calibrated_gripper_rh.set() = dummy;
+  calibrated_gripper_lh.set() = dummy;
 
   // setting access variables
   calibrated_pose_rh.set() = cal_pose_rh;
