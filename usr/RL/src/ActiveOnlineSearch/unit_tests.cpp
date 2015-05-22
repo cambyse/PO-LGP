@@ -36,6 +36,8 @@
 using namespace ND_vector;
 using util::Range;
 using std::vector;
+using std::tuple;
+using std::pair;
 using std::cout;
 using std::endl;
 
@@ -887,6 +889,7 @@ public:
         auto depth_action = std::dynamic_pointer_cast<const DepthAction>(action_handle);
         EXPECT_NE(nullptr,depth_action);
         ++state;
+        if(state>reward_depth) state = reward_depth;
         DEBUG_OUT(1,"Transition to " << state);
         return observation_reward_pair_t(observation_handle_t(new DepthObservation(state)),
                                          state>=reward_depth?1:0);
@@ -1143,3 +1146,114 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
         } else EXPECT_TRUE(false) << "This line should never occur";
     }
 }
+
+class DepthLineEnvironment: public AbstractEnvironment {
+public:
+    struct DepthLineAction: public Action {
+        DepthLineAction(int action): action(action) {}
+        virtual ~DepthLineAction() = default;
+        virtual bool operator==(const Action & other) const {
+            auto depth_line_action = dynamic_cast<const DepthLineAction*>(&other);
+            return depth_line_action!=nullptr && depth_line_action->action==action;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(action);
+        }
+        virtual void write(std::ostream & out) const {
+            out << action;
+        }
+        int action;
+    };
+    struct DepthLineObservation: public Observation {
+        DepthLineObservation(int observation): observation(observation) {}
+        virtual ~DepthLineObservation() = default;
+        virtual bool operator==(const Observation & other) const {
+            auto depth_line_observation = dynamic_cast<const DepthLineObservation*>(&other);
+            return depth_line_observation!=nullptr && depth_line_observation->observation==observation;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(observation);
+        }
+        virtual void write(std::ostream & out) const {
+            out << observation;
+        }
+        int observation;
+    };
+    struct DepthLineState: public State {
+        DepthLineState(int s): state(s) {}
+        int state;
+    };
+public:
+    DepthLineEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
+    virtual ~DepthLineEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+        auto depth_line_action = std::dynamic_pointer_cast<const DepthLineAction>(action_handle);
+        EXPECT_NE(nullptr,depth_line_action);
+        reward_t reward = state>=reward_depth?1:0;
+        if(state>=reward_depth) {
+            state = reward_depth + 1;
+        } else {
+            state += depth_line_action->action;
+        }
+        DEBUG_OUT(1,"Transition to " << state);
+        return observation_reward_pair_t(observation_handle_t(new DepthLineObservation(state>=reward_depth?reward_depth:state)), reward);
+    }
+    virtual action_container_t get_actions() {
+        return action_container_t({action_handle_t(new DepthLineAction(0)),
+                    action_handle_t(new DepthLineAction(1))});
+    }
+    virtual state_handle_t get_state_handle() {
+        return std::shared_ptr<State>(new DepthLineState(state));
+    }
+    virtual void set_state(const state_handle_t & state_handle) {
+        auto depth_line_state = std::dynamic_pointer_cast<const DepthLineState>(state_handle);
+        EXPECT_NE(nullptr,depth_line_state);
+        state = depth_line_state->state;
+        DEBUG_OUT(1,"Set state to " << state);
+    }
+    virtual bool has_terminal_state() const {return true;}
+    virtual bool is_terminal_state() const {return state>reward_depth;}
+    virtual bool is_deterministic() const {return true;}
+    virtual bool has_max_reward() const {return true;}
+    virtual reward_t max_reward() const {return 1;}
+    virtual bool has_min_reward() const {return true;}
+    virtual reward_t min_reward() const {return 0;}
+    virtual bool is_markov() const {return false;}
+private:
+    int reward_depth;
+    int state;
+};
+
+
+// This is not really working because building the trees is random (not because
+// the environment is stochastic but because the order of actions in UCB1 is
+// with random tie-breaking).
+TEST(MonteCarloTreeSearch, Backup) {
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
+                {std::shared_ptr<NodeFinder>(new PlainTree()),30},
+                {std::shared_ptr<NodeFinder>(new ObservationTree()),29},
+                {std::shared_ptr<NodeFinder>(new FullDAG()),100},
+                {std::shared_ptr<NodeFinder>(new FullGraph()),100}
+            }}) {
+        RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
+        auto environment = std::shared_ptr<AbstractEnvironment>(new DepthLineEnvironment(3));
+        MonteCarloTreeSearch search(environment,
+                                    1,
+                                    node_finder,
+                                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
+                                    std::shared_ptr<ValueHeuristic>(new Rollout(0)),
+                                    std::shared_ptr<BackupMethod>(new Bellman()),
+                                    MonteCarloTreeSearch::BACKUP_TRACE);
+        for(int i=0; i<iterations; ++i) {
+            search.next();
+        }
+        // visual output
+        search.toPdf("graph.pdf");
+        getchar();
+    }
+}
+
