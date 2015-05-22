@@ -5,6 +5,7 @@
 
 #ifdef WITH_ROS
   #include <Actions/actions.h>
+  #include <pr2/roscom.h>
 #endif
 
 // ============================================================================
