@@ -1686,7 +1686,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats.copy(*it->getValue<Graph>(), false);
+    b->ats.copy(*it->getValue<Graph>(), NULL);
     b->parseAts();
   }
 
@@ -1705,7 +1705,7 @@ void ors::KinematicWorld::read(std::istream& is) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats.copy(*it->getValue<Graph>(), false);
+    s->ats.copy(*it->getValue<Graph>(), NULL);
     s->parseAts();
   }
   
@@ -1722,7 +1722,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats.copy(*it->getValue<Graph>(), false);
+    j->ats.copy(*it->getValue<Graph>(), NULL);
     j->parseAts();
 
     //if the joint is coupled to another:

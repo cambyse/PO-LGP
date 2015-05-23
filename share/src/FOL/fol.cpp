@@ -298,6 +298,12 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbos
   Item* EQ = facts["EQ"];
   ItemL vars = getSymbolsOfScope(varScope);
 
+//  if(!vars.N){
+//    cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" WITHOUT variables!" <<endl;
+//    ItemL subs(1u,0u);
+//    return subs;
+//  }
+
   if(verbose){
     cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
 //    cout <<"   with facts " <<facts <<" and domain "; listWrite(domain, cout); cout <<'\'' <<endl;
@@ -385,7 +391,7 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbos
   substitutions.reshape(subN,vars.N);
 
   if(verbose){
-    cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;
+    cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
     for(uint s=0;s<substitutions.d0;s++){
       for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
         cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
@@ -414,7 +420,10 @@ bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes, bool verbose){
         if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
         bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg(), changes);
         if(verbose){
-          if(e) cout <<"NEW STATE = " <<state <<endl;
+          if(e){
+            cout <<"NEW STATE = " <<state <<endl;
+            if(&changes) cout <<"CHANGES = " <<changes <<endl;
+          }
           else cout <<"DID NOT CHANGE STATE" <<endl;
         }
         newFacts |= e;

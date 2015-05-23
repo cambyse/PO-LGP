@@ -8,7 +8,7 @@ TaskControllerModule *taskControllerModule(){
 
 TaskControllerModule::TaskControllerModule()
   : Module("TaskControllerModule"), realWorld("model.kvg"), modelWorld(realWorld),
-    feedbackController(modelWorld, true), q0(modelWorld.q), useRos(false), syncModelStateWithRos(false){
+    feedbackController(modelWorld, true), q0(modelWorld.q), useRos(false), syncModelStateWithRos(false), verbose(false){
   globalTaskControllerModule=this;
 }
 
@@ -85,7 +85,8 @@ void TaskControllerModule::step(){
   }
 
   //-- copy the task to the local controller
-  feedbackController.tasks = ctrlTasks.get();
+  ctrlTasks.readAccess();
+  feedbackController.tasks = ctrlTasks();
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   //now operational space control
@@ -95,15 +96,16 @@ void TaskControllerModule::step(){
     qdot_model += .001*a;
     feedbackController.setState(q_model, qdot_model);
   }
-//  feedbackController.reportCurrentState();
+  if(verbose) feedbackController.reportCurrentState();
+  ctrlTasks.deAccess();
 
   //-- first zero references
   CtrlMsg refs;
   refs.q =  q_model;
   refs.qdot = zeros(q_model.N);
   refs.gamma = 1.;
-  refs.Kp = ARR(1.); //Kp;
-  refs.Kd = ARR(1.); //Kd;
+  refs.Kp = ARR(1.);
+  refs.Kd = ARR(1.);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.Ki.clear();
@@ -112,6 +114,8 @@ void TaskControllerModule::step(){
 
   //-- compute the force feedback control coefficients
   uint count=0;
+  ctrlTasks.readAccess();
+  feedbackController.tasks = ctrlTasks();
   for(CtrlTask *t : feedbackController.tasks) {
     if(t->active && t->f_ref.N){
       count++;
@@ -120,6 +124,7 @@ void TaskControllerModule::step(){
     }
   }
   if(count==1) refs.Kp = .5;
+  ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot
   ctrl_ref.set() = refs;

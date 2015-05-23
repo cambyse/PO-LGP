@@ -12,6 +12,7 @@ struct MySystem : System{
   ACCESS(bool, quitSignal)
   ACCESS(RelationalMachine, RM)
   ACCESS(MT::String, effects)
+  ACCESS(MT::String, state)
   MySystem(){
     addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     addModule<RelationalMachineModule>(NULL, Module::loopWithBeat, .01);
@@ -28,15 +29,18 @@ struct MySystem : System{
 // ============================================================================
 int main(int argc, char** argv) {
   registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
+  registerActivity<HomingActivity>("HomingActivity");
 
   MySystem S;
-  engine().open(S);
+  engine().open(S, true);
 
+  taskControllerModule()->verbose=false;
   for(;;){
-    S.quitSignal.waitForNextRevision();
-    if(S.quitSignal.get()==true) break;
-//    S.RM.waitForNextRevision();
-//    if(S.RM.set()->queryCondition("(quit)")) break;
+    //    S.quitSignal.waitForNextRevision();
+    //    if(S.quitSignal.get()==true) break;
+    S.state.waitForNextRevision();
+    cout <<"new state: " <<S.state.get()() <<endl;
+    if(S.RM.set()->queryCondition("(quit)")) break;
   }
 
   engine().close(S);

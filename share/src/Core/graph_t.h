@@ -131,7 +131,11 @@ struct Item_typed:Item {
   
   virtual Item* newClone(Graph& container) const {
     if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL, false);
-    if(getValueType()==typeid(Graph)) return (new Graph(*((Graph*)value)))->isItemOfParentKvg;
+    if(getValueType()==typeid(Graph)){
+      Graph *g = new Graph();
+      g->copy(*getValue<Graph>(), &container);
+      return g->isItemOfParentKvg;
+    }
     return new Item_typed<T>(container, keys, parents, new T(*value), true);
   }
 };

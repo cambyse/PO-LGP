@@ -23,6 +23,7 @@ struct TaskControllerModule : Module {
   ofstream fil; //< file for diagnostics
   bool useRos;
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
+  bool verbose;
 
   TaskControllerModule();
   ~TaskControllerModule();

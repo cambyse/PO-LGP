@@ -10,9 +10,24 @@ struct FollowReferenceActivity : Activity {
   bool conv;
 
   FollowReferenceActivity(){}
-  ~FollowReferenceActivity(){}
+  ~FollowReferenceActivity();
   virtual void configure(Item *fact);
   virtual void step(RelationalMachine& RM, double dt);
   void write(ostream &os) const;
 };
 stdOutPipe(FollowReferenceActivity)
+
+struct HomingActivity : Activity {
+  struct TaskControllerModule *taskController;
+  struct TaskMap *map;
+  struct CtrlTask* task;
+  double stopTolerance;
+  bool conv;
+
+  HomingActivity(){}
+  ~HomingActivity();
+  virtual void configure(Item *fact);
+  virtual void step(RelationalMachine& RM, double dt);
+  void write(ostream &os) const;
+};
+stdOutPipe(HomingActivity)
