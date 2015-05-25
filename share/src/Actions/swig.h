@@ -10,7 +10,7 @@ using std::string;
 
 
 struct ActionSwigInterface{
-  struct sActionSwigInterface *s;
+  struct SwigSystem *S;
 
   ActionSwigInterface(bool useRos); //instantiates the ActionMachineSystem, runs it
   ~ActionSwigInterface();
@@ -26,14 +26,18 @@ struct ActionSwigInterface{
   //-- symbolic state access
   stringV getSymbols();
   int getSymbolInteger(string symbolName);
-  intV lit(stringV symbolNames);
+  intV str2lit(stringV symbolNames);
+  stringV lit2str(intV literals);
   std::vector<intV> getStateLiterals();
   bool isTrue(intV literal);
   dict getLiteralParameters(intV literal);
 
   //-- methods to modify the activity state (also sequence actions)
-  void startActivity(intV literal, dict parameters=dict());
-  void waitForCondition(intV literal);
+  void startActivity(const stringV& literals, const dict& parameters=dict());
+  void waitForCondition(const stringV& literals);
+
+//  void startActivity(intV literal, const dict& parameters=dict());
+//  void waitForCondition(intV literal);
   int  waitForOrCondition(std::vector<intV> literals);
   void waitForQuitSymbol();
 
@@ -45,7 +49,7 @@ struct ActionSwigInterface{
   int createNewSymbol(string symbolName);
 
   //-- methods to define tasks/actions
-  int defineNewTaskSpaceControlAction(string symbolName, dict parameters=dict());
+  int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());
 
 //  int defineNewTaskSpaceControlAction(
 //      string symbolName,

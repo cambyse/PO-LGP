@@ -37,16 +37,18 @@ void RelationalMachineModule::step(){
     //-- sync with activities
     Graph &state = *RM().state;
     MT::Array<Activity*> it2act(state.N);
-    it2act = NULL;
-    cout <<"MATCHES" <<endl;
-    for(Activity *act:A()){
-      uint idx = act->fact->index;
-      if(idx>=state.N || state(idx)!=act->fact){
-        act->fact=NULL;
-        cout <<"Activity '" <<*act <<"' has no fact match" <<endl;
-      }else{
-        it2act(idx) = act;
-        cout <<"Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'" <<endl;
+    if(state.N){
+      it2act = NULL;
+      cout <<"MATCHES" <<endl;
+      for(Activity *act:A()){
+        uint idx = act->fact->index;
+        if(idx>=state.N || state(idx)!=act->fact){
+          act->fact=NULL;
+          cout <<"Activity '" <<*act <<"' has no fact match" <<endl;
+        }else{
+          it2act(idx) = act;
+          cout <<"Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'" <<endl;
+        }
       }
     }
 

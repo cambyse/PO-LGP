@@ -71,6 +71,13 @@ ItemL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
+Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+
+Item* RelationalMachine::declareNewSymbol(MT::String symbol){
+  Item *it = readItem(KB, symbol, false, false);
+  return it;
+}
+
 MT::String RelationalMachine::getKB() {
   MT::String str;
   KB.write(str, " ");
