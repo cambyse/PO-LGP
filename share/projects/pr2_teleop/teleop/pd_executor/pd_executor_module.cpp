@@ -23,7 +23,7 @@ PDExecutor::PDExecutor()
 
   // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
-  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0}, .1));
+  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   collision->y_ref.setZero();
   collision->v_ref.setZero();
 
@@ -43,11 +43,11 @@ PDExecutor::PDExecutor()
 
   // Orientation
   effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  effOrientationR->y_ref = {1, 0, 0, 0};
+  effOrientationR->y_ref = {1., 0., 0., 0.};
   effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
-  effOrientationL->y_ref = {1, 0, 0, 0};
+  effOrientationL->y_ref = {1., 0., 0., 0.};
   effOrientationL->flipTargetSignOnNegScalarProduct = true;
 }
 
@@ -69,7 +69,7 @@ void PDExecutor::step()
 {
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
-  // world.watch(false);
+   world.watch(false);
 
   floatA cal_pose_rh = calibrated_pose_rh.get();
   floatA cal_pose_lh = calibrated_pose_lh.get();
@@ -80,6 +80,7 @@ void PDExecutor::step()
 
   // cout << "============" << endl;
   // cout << "cal_pose_rh: " << cal_pose_rh << endl;
+
   // cout << "cal_pose_lh: " << cal_pose_lh << endl;
 
   // set arm poses
@@ -94,15 +95,20 @@ void PDExecutor::step()
   // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
   // effPosR->setTarget(pos_shoulder_frame);
   // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
-  x = cal_pose_rh(0) * 1.2;
+  x = cal_pose_rh(0) * 1;
   clip(x, 0., 1.2);
-  y = cal_pose_rh(1) * 1.2;
-  z = cal_pose_rh(2) * .75 - .05;
-  pos = ARR(x, y, z) + ARR(0, 0, 1);
+  y = cal_pose_rh(1) * 1;
+  z = cal_pose_rh(2) * 1 ;
+  pos = ARR(x, y, z) + ARR(0, -0.25, 1);
   effPosR->setTarget(pos);
 
   // orientation
-  quat = { cal_pose_rh(3), cal_pose_rh(4), cal_pose_rh(5), cal_pose_rh(6) };
+  quat = {
+    (double)cal_pose_rh(3),
+    (double)cal_pose_rh(4),
+    (double)cal_pose_rh(5),
+    (double)cal_pose_rh(6)
+  };
   effOrientationR->setTarget(quat);
 
   world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
@@ -110,30 +116,35 @@ void PDExecutor::step()
 
   // avoid going behind your back
   // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
-  x = cal_pose_lh(0) * 1.2;
+  x = cal_pose_lh(0) * 1;
   clip(x, 0., 1.2);
-  y = cal_pose_lh(1) * 1.2;
-  z = cal_pose_lh(2) * .75 - .05;
-  pos = ARR(x, y, z) + ARR(0, 0, 1);
+  y = cal_pose_lh(1) * 1;
+  z = cal_pose_lh(2) * 1;
+  pos = ARR(x, y, z) + ARR(0, 0.25, 1);
   effPosL->setTarget(pos);
 
   // orientation
-  quat = { cal_pose_lh(3), cal_pose_lh(4), cal_pose_lh(5), cal_pose_lh(6) };
+  quat = {
+    (double)cal_pose_lh(3),
+    (double)cal_pose_lh(4),
+    (double)cal_pose_lh(5),
+    (double)cal_pose_lh(6)
+  };
   effOrientationL->setTarget(quat);
 
-  // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
-  // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+  world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
+  world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
-  float cal_gripper;
-  cal_gripper = calibrated_gripper_rh.get() * 8 / 100;
+  double cal_gripper;
+  cal_gripper = calibrated_gripper_rh.get() * 8. / 100.;
   gripperR->setTarget({cal_gripper});
-  cal_gripper = calibrated_gripper_lh.get() * 8 / 100;
+  cal_gripper = calibrated_gripper_lh.get() * 8. / 100.;
   gripperL->setTarget({cal_gripper});
 
   // update fmc/ors
-  double tau = 0.001;
-  for (uint t = 0; t < 20; t++) {
+  double tau = 0.01;
+  for (uint t = 0; t < 30; t++) {
     arr a = fmc.operationalSpaceControl();
     q += tau * qdot;
     qdot += tau * a;
