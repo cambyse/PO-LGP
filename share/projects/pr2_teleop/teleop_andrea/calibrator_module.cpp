@@ -28,11 +28,13 @@ void Calibrator::step() {
   int button = gpstate(0);
 
   floatA tmpPoses = poses.get();
-  // cout << tmpPoses << endl;
 
   if(tmpPoses.N == 0) {
     return;
   }
+
+  // changing the coordinate system
+  fixCoordinates(tmpPoses);
 
   // pusblish raw sensor data
   poses_rh.set() = mid.query(tmpPoses, {"/human/rh/thumb", "/human/rh/index"});
@@ -186,7 +188,7 @@ void Calibrator::calibrate() {
 floatA transformPosition(const floatA& thumb, const floatA& index, const floatA& center, float radius) {
   // pos
   floatA pos_mean = (thumb.sub(0, 2) + index.sub(0, 2)) / 2.f - center;
-  if (length(pos_mean) >= radius)
+  if(length(pos_mean) >= radius)
     pos_mean /= length(pos_mean);
   else
     pos_mean /= radius;
@@ -251,20 +253,37 @@ void Calibrator::transform(const floatA& poses_raw) {
 
   // Gripper
   float dummy;
-  // calibrated_gripper_rh.set() = clip(
-  //     length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
-  //     0.f, 1.f);
+
   dummy = length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh;
   clip(dummy, 0.f, 1.f);
   calibrated_gripper_rh.set() = dummy;
-  // calibrated_gripper_lh.set() = clip(
-  //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
-  //     0.f, 1.f);
-  dummy = length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_rh + q_rh;
+
+  dummy = length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh;
   clip(dummy, 0.f, 1.f);
   calibrated_gripper_lh.set() = dummy;
 
   // setting access variables
   calibrated_pose_rh.set() = cal_pose_rh;
   calibrated_pose_lh.set() = cal_pose_lh;
+}
+
+void Calibrator::fixCoordinates(floatA &poses) {
+  ors::Transformation T, Tfix;
+  Tfix.setZero();
+  Tfix.addRelativeRotationDeg(-90, 0, 0, 1);
+
+  for(uint i = 0; i < poses.d0; i++) {
+    T.setZero();
+    T.pos.set(poses(i, 0), poses(i, 1), poses(i, 2));
+    T.rot.set(poses(i, 3), poses(i, 4), poses(i, 5), poses(i, 6));
+    T = Tfix * T;
+
+    poses(i, 0) = T.pos.x;
+    poses(i, 1) = T.pos.y;
+    poses(i, 2) = T.pos.z;
+    poses(i, 3) = T.rot.w;
+    poses(i, 4) = T.rot.x;
+    poses(i, 5) = T.rot.y;
+    poses(i, 6) = T.rot.z;
+  }
 }

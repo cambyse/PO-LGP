@@ -69,7 +69,7 @@ void PDExecutor::step()
 {
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
-  // world.watch(false);
+  world.watch(false);
 
   floatA cal_pose_rh = calibrated_pose_rh.get();
   floatA cal_pose_lh = calibrated_pose_lh.get();
@@ -94,7 +94,6 @@ void PDExecutor::step()
   // pos = { x, y, z };
   // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
   // effPosR->setTarget(pos_shoulder_frame);
-  // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
   x = cal_pose_rh(0) * 1.2;
   clip(x, 0., 1.2);
   y = cal_pose_rh(1) * 1.2;
@@ -115,7 +114,6 @@ void PDExecutor::step()
   world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
 
   // avoid going behind your back
-  // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
   x = cal_pose_lh(0) * 1.2;
   clip(x, 0., 1.2);
   y = cal_pose_lh(1) * 1.2;
@@ -132,8 +130,8 @@ void PDExecutor::step()
   };
   effOrientationL->setTarget(quat);
 
-  // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
-  // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+  world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
+  world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
   double cal_gripper;

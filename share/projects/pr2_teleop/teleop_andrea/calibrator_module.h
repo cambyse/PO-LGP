@@ -37,6 +37,7 @@ struct Calibrator: Module {
   void close() {}
   void step();
 
+  void fixCoordinates(floatA &poses);
   void calibrate();
   void transform(const floatA& poses_raw);
 };
