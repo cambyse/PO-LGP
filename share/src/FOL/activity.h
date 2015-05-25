@@ -5,25 +5,27 @@
 #include <Core/registry.h>
 
 struct Activity {
-  Item *fact; ///< pointer to the fact in the state of a KB
+  MT::String name;     ///< name, just for reporting
+  Item *fact;          ///< pointer to the fact in the state of a KB
+  double activityTime; ///< for how long it this activity running yet
 
-  bool active; ///< whether this activity is active (TODO: redundant?)
-  double actionTime; ///< for how long it this activity running yet
-
-  Activity():fact(NULL), active(true), actionTime(0.){}
-//  Activity(Item *fact):fact(NULL), active(true), actionTime(0.){}
+  Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
   virtual void configure(Item *fact) = 0;
-  virtual void step(RelationalMachine& RM, double dt) = 0;
-  virtual void write(ostream& os) const { os <<"Activity (t=" <<actionTime <<") "; if(fact) os <<*fact; else os <<"()"; }
+  virtual void step(double dt) = 0;
+  void write(ostream& os) const { os <<"Activity '" <<name <<"' (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
 };
 stdOutPipe(Activity)
 
 typedef MT::Array<Activity*> ActivityL;
 
+/// global registry of activity classes/types (implementations)
 Graph& activityRegistry();
+
+/// register an activity class/type
 template<class T> void registerActivity(const char* key){
   new Item_typed<Type>(activityRegistry(), {key}, {}, new Type_typed<T,void>, true);
 }
 
+/// create/launch a new activity based on the fact
 Activity* newActivity(Item *fact);

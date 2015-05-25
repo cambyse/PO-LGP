@@ -25,3 +25,8 @@ Rule {
   { (lowerHand) (conv lowerHand) }
   { (homing) (lowerHand)! (conv lowerHand)! (gazeAtHand)! (alignHand)! (conv alignHand)! }
 }
+
+Rule{
+  { (homing) (conv homing) }
+  { (quit) (homing)! (conv homing)! }
+}

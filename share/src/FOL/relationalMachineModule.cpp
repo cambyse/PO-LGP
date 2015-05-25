@@ -18,7 +18,7 @@ void RelationalMachineModule::step(){
 
   //-- step all activities
   A.readAccess();
-  for(Activity *act:A()) act->step(RM(), 0.01);
+  for(Activity *act:A()) act->step(0.01);
   A.deAccess();
 
   effects.writeAccess();
@@ -38,21 +38,27 @@ void RelationalMachineModule::step(){
     Graph &state = *RM().state;
     MT::Array<Activity*> it2act(state.N);
     it2act = NULL;
+    cout <<"MATCHES" <<endl;
     for(Activity *act:A()){
       uint idx = act->fact->index;
       if(idx>=state.N || state(idx)!=act->fact){
         act->fact=NULL;
+        cout <<"Activity '" <<*act <<"' has no fact match" <<endl;
       }else{
         it2act(idx) = act;
+        cout <<"Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'" <<endl;
       }
     }
 
     A.writeAccess();
     //-- del NULL activities
-    for(Activity *act:A()) if(act->fact==NULL){
-      LOG(-1) <<"removing activity '" <<*act <<"'";
-      A().removeValue(act);
-      delete act;
+    for(uint i=A().N; i--;){
+      Activity *act =A()(i);
+      if(act->fact==NULL){
+        LOG(-1) <<"removing activity '" <<*act <<"'";
+        A().removeValue(act);
+        delete act;
+      }
     }
 
     //-- add activities for non-associated
@@ -61,8 +67,12 @@ void RelationalMachineModule::step(){
         Activity *act = newActivity(it);
         if(act){
           A().append(act);
-          LOG(-1) <<"added activity '" <<*act <<"'";
+          cout <<"added activity '" <<*act <<"' for fact '" <<*it <<"'" <<endl;
+        }else{
+          cout <<"Fact '" <<*it <<"' cannot be matched/created with an activity" <<endl;
         }
+      }else{
+        cout <<"Fact '" <<*it <<"' matches activity '" <<*it2act(it->index) <<"'" <<endl;
       }
     }
     A.deAccess();
