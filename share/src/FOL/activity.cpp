@@ -13,7 +13,7 @@ Activity* newActivity(Item *fact){
 
   Item *actType = activityRegistry().getItem(symbol->keys.last());
   if(!actType){
-    LOG(-1) <<"cannot create activity " <<*fact <<endl;
+    LOG(-1) <<"cannot create activity " <<*fact << "(symbol=" <<*symbol <<", specs=" <<*specs <<")";
     return NULL;
   }
   CHECK(actType->getValueType()==typeid(Type),"");

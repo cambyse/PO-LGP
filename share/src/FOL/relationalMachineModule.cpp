@@ -9,13 +9,11 @@ RelationalMachineModule::~RelationalMachineModule(){
 void RelationalMachineModule::open(){
   MT::open(fil,"z.RelationalMachineModule");
   RM.set()->init("machine.fol");
-  RM.set()->verbose = true;
+  RM.set()->verbose = false;
   threadStep(1);
 }
 
 void RelationalMachineModule::step(){
-  RM.writeAccess();
-
   //-- step all activities
   A.readAccess();
   for(Activity *act:A()) act->step(0.01);
@@ -25,10 +23,13 @@ void RelationalMachineModule::step(){
   MT::String effs = effects();
   effects().clear();
   effects.deAccess();
+  if(!effs.N) return;
 
+  RM.writeAccess();
   if(effs.N){
     RM().applyEffect(effs);
     RM().fwdChainRules();
+    fil <<RM.var->revision.getValue() <<endl <<effs <<endl <<RM().getState() <<endl <<RM().getKB() << endl;
   }
 
   if(!step_count || effs.N){
@@ -39,15 +40,15 @@ void RelationalMachineModule::step(){
     MT::Array<Activity*> it2act(state.N);
     if(state.N){
       it2act = NULL;
-      cout <<"MATCHES" <<endl;
+      LOG(2) <<"Syncing facts with activities..";
       for(Activity *act:A()){
         uint idx = act->fact->index;
         if(idx>=state.N || state(idx)!=act->fact){
           act->fact=NULL;
-          cout <<"Activity '" <<*act <<"' has no fact match" <<endl;
+          LOG(2) <<"  Activity '" <<*act <<"' has no fact match";
         }else{
           it2act(idx) = act;
-          cout <<"Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'" <<endl;
+          LOG(2) <<"  Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'";
         }
       }
     }
@@ -57,7 +58,7 @@ void RelationalMachineModule::step(){
     for(uint i=A().N; i--;){
       Activity *act =A()(i);
       if(act->fact==NULL){
-        LOG(-1) <<"removing activity '" <<*act <<"'";
+        LOG(2) <<"removing activity '" <<*act <<"'";
         A().removeValue(act);
         delete act;
       }
@@ -69,12 +70,12 @@ void RelationalMachineModule::step(){
         Activity *act = newActivity(it);
         if(act){
           A().append(act);
-          cout <<"added activity '" <<*act <<"' for fact '" <<*it <<"'" <<endl;
+          LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
         }else{
-          cout <<"Fact '" <<*it <<"' cannot be matched/created with an activity" <<endl;
+          LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
         }
       }else{
-        cout <<"Fact '" <<*it <<"' matches activity '" <<*it2act(it->index) <<"'" <<endl;
+        LOG(2) <<"Fact '" <<*it <<"' matches activity '" <<*it2act(it->index) <<"'";
       }
     }
     A.deAccess();

@@ -48,17 +48,19 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 ActionSwigInterface::ActionSwigInterface(bool useRos){
   S = new SwigSystem();
-  engine().open(*S);
+  engine().open(*S, true);
+
+  taskControllerModule()->verbose=false;
 
   createNewSymbol("conv");
   createNewSymbol("contact");
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
-  S->RM.writeAccess();
-  S->RM().KB.append<Graph>({"STATE"}, {}, new Graph(), true);
-  S->RM().KB.checkConsistency();
-  S->RM.deAccess();
+//  S->RM.writeAccess();
+//  S->RM().KB.append<Graph>({"STATE"}, {}, new Graph(), true);
+//  S->RM().KB.checkConsistency();
+//  S->RM.deAccess();
 }
 
 ActionSwigInterface::~ActionSwigInterface(){
@@ -111,50 +113,50 @@ stringV ActionSwigInterface::lit2str(intV literals){
 }
 
 void ActionSwigInterface::startActivity(const stringV& literals, const dict& parameters){
-  S->RM.set()->applyEffect(lits2str(literals, parameters));
+  S->effects.set()() <<lits2str(literals, parameters) <<", ";
 }
 
 void ActionSwigInterface::waitForCondition(const stringV& literals){
   MT::String query = lits2str(literals);
   for(;;){
-    if(S->RM.set()->queryCondition(query)) return;
+    if(S->RM.get()->queryCondition(query)) return;
     S->state.waitForNextRevision();
   }
 }
 
-void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
-#if 1
-  startActivity(lit2str(literal), parameters);
-#else
-  S->RM.writeAccess();
-  Graph& state=S->RM().getItem("STATE")->kvg();
-  ItemL parents;
-  for(auto i:literal) parents.append(S->RM().elem(i));
-  state.append<bool>({}, parents, NULL, false);
-  S->RM.deAccess();
-#endif
-}
+//void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
+//#if 1
+//  startActivity(lit2str(literal), parameters);
+//#else
+//  S->RM.writeAccess();
+//  Graph& state=S->RM().getItem("STATE")->kvg();
+//  ItemL parents;
+//  for(auto i:literal) parents.append(S->RM().elem(i));
+//  state.append<bool>({}, parents, NULL, false);
+//  S->RM.deAccess();
+//#endif
+//}
 
-void ActionSwigInterface::waitForCondition(intV literals){
-#if 1
-  waitForCondition(lit2str(literals));
-#else
-  S->RM.readAccess();
-  Graph& state=S->RM().getItem("STATE")->kvg();
-  ItemL lit;
-  for(auto i:literal) lit.append(S->RM().elem(i));
-  S->RM.deAccess();
+//void ActionSwigInterface::waitForCondition(intV literals){
+//#if 1
+//  waitForCondition(lit2str(literals));
+//#else
+//  S->RM.readAccess();
+//  Graph& state=S->RM().getItem("STATE")->kvg();
+//  ItemL lit;
+//  for(auto i:literal) lit.append(S->RM().elem(i));
+//  S->RM.deAccess();
 
-  bool cont = true;
-  while (cont) {
-    S->RM.waitForNextRevision();
-    S->RM.readAccess();
-    Item *it = getEqualFactInKB(state, lit);
-    if(it) cont=false;
-    S->RM.deAccess();
-  }
-#endif
-}
+//  bool cont = true;
+//  while (cont) {
+//    S->RM.waitForNextRevision();
+//    S->RM.readAccess();
+//    Item *it = getEqualFactInKB(state, lit);
+//    if(it) cont=false;
+//    S->RM.deAccess();
+//  }
+//#endif
+//}
 
 void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));

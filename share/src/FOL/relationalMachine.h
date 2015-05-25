@@ -22,7 +22,7 @@ struct RelationalMachine{
   RelationalMachine(const char* filename);
   void init(const char* filename);
 
-  bool queryCondition(MT::String query); ///< return indicates coverage of the condition
+  bool queryCondition(MT::String query) const; ///< return indicates coverage of the condition
   bool applyEffect(MT::String effect);   ///< return indicates change of state
   ItemL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 

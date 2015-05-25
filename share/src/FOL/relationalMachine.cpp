@@ -20,7 +20,7 @@ void RelationalMachine::init(const char* filename){
   tmp   = &KB["TMP"]->kvg();
 }
 
-bool RelationalMachine::queryCondition(MT::String query){
+bool RelationalMachine::queryCondition(MT::String query) const{
   tmp->clear();
   bool q=false;
   try{

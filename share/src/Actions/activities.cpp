@@ -85,4 +85,9 @@ bool HomingActivity::isConv(){
       && maxDiff(task->v, task->v_ref)<stopTolerance;
 }
 
+//===========================================================================
 
+RUN_ON_INIT_BEGIN(Activities)
+registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
+registerActivity<HomingActivity>("HomingActivity");
+RUN_ON_INIT_END(Activities)
