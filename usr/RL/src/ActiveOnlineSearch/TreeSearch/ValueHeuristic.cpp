@@ -14,22 +14,24 @@
 
 namespace value_heuristic {
 
-    void Zero::operator()(const node_t & state_node,
-                          const state_handle_t &,
-                          double,
-                          std::shared_ptr<AbstractEnvironment>,
-                          mcts_node_info_map_t & mcts_node_info_map) const {
+    void ValueHeuristic::init(double disc,
+                              std::shared_ptr<AbstractEnvironment> env) {
+        discount = disc;
+        environment = env;
+    }
+
+    void Zero::get_value(const node_t & state_node,
+                         const state_handle_t &,
+                         mcts_node_info_map_t & mcts_node_info_map) const {
         mcts_node_info_map[state_node].add_rollout_return(0);
         mcts_node_info_map[state_node].set_value(0,0);
     }
 
     Rollout::Rollout(int rollout_length): rollout_length(rollout_length) {}
 
-    void Rollout::operator()(const node_t & state_node,
-                             const state_handle_t & start_state,
-                             double discount,
-                             std::shared_ptr<AbstractEnvironment> environment,
-                             mcts_node_info_map_t & mcts_node_info_map) const {
+    void Rollout::get_value(const node_t & state_node,
+                            const state_handle_t & start_state,
+                            mcts_node_info_map_t & mcts_node_info_map) const {
 
         // Do rollout of specified length (rollout_length).
         int length = rollout_length;

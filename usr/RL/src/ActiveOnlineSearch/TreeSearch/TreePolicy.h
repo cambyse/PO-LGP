@@ -22,24 +22,27 @@ namespace tree_policy {
      * common tree policy is UCB1 but a Uniform policy may also be used. */
     class TreePolicy {
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<AbstractEnvironment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+        //----members----//
+        std::shared_ptr<AbstractEnvironment> environment = nullptr;
+        const graph_t * graph = nullptr;
+        const node_info_map_t * node_info_map = nullptr;
+        const mcts_node_info_map_t * mcts_node_info_map = nullptr;
+        const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+    public:
+        //----methods----//
+        virtual void init(std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
+        virtual action_handle_t get_action(const node_t & state_node) const = 0;
     };
 
     /**
      * Sample actions uniformly from available action nodes. */
     class Uniform: public TreePolicy {
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<AbstractEnvironment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual action_handle_t get_action(const node_t & state_node) const override;
     };
 
     /**
@@ -47,20 +50,10 @@ namespace tree_policy {
      * quantity (like value or upper bound). */
     class MaxPolicy: public TreePolicy {
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<AbstractEnvironment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override final;
+        virtual action_handle_t get_action(const node_t & state_node) const override final;
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<AbstractEnvironment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+                               const node_t & action_node) const = 0;
     };
 
     /**
@@ -69,12 +62,7 @@ namespace tree_policy {
     public:
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<AbstractEnvironment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
     };
 
     /**
@@ -94,12 +82,7 @@ namespace tree_policy {
         UCB1(double Cp = 0.70710678118654746);
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<AbstractEnvironment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
     protected:
         double Cp;
     };
@@ -122,12 +105,7 @@ namespace tree_policy {
         UCB_Plus(double Cp = 1);
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<AbstractEnvironment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
     protected:
         double Cp;
     };

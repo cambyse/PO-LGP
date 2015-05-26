@@ -115,7 +115,11 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
     backup_type(backup_type),
     node_hash(graph),
     max_depth(max_depth)
-{}
+{
+    tree_policy->init(environment,graph,node_info_map,mcts_node_info_map,mcts_arc_info_map);
+    value_heuristic->init(discount,environment);
+    backup_method->init(discount,environment,graph,node_info_map,mcts_arc_info_map);
+}
 
 void MonteCarloTreeSearch::next_do() {
     // remember the trajectory
@@ -139,12 +143,7 @@ void MonteCarloTreeSearch::next_do() {
         for(int depth=0; max_depth<0 || depth<max_depth; ++depth) {
 
             // get tree-policy action
-            action_handle_t action = (*tree_policy)(current_node,
-                                                    environment,
-                                                    graph,
-                                                    node_info_map,
-                                                    mcts_node_info_map,
-                                                    mcts_arc_info_map);
+            action_handle_t action = tree_policy->get_action(current_node);
 
             // find or create action node
             T(arc_t, to_action_arc,
@@ -191,11 +190,9 @@ void MonteCarloTreeSearch::next_do() {
     /* =======================================
        get a heuristic value estimate
        ======================================= */
-    (*value_heuristic)(leaf_node,
-                       leaf_state,
-                       discount,
-                       environment,
-                       mcts_node_info_map);
+    value_heuristic->get_value(leaf_node,
+                               leaf_state,
+                               mcts_node_info_map);
 
     /* =======================================
        backpropagate
@@ -244,14 +241,9 @@ void MonteCarloTreeSearch::next_do() {
             // backup if back_type is BACKUP_TRACE
             environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
             if(backup_type==BACKUP_TRACE) {
-                (*backup_method)(observation_node,
-                                 action_node,
-                                 discount,
-                                 environment,
-                                 graph,
-                                 node_info_map,
-                                 mcts_node_info_map,
-                                 mcts_arc_info_map);
+                backup_method->backup(observation_node,
+                                      action_node,
+                                      mcts_node_info_map);
             }
         }
     }
@@ -283,14 +275,9 @@ void MonteCarloTreeSearch::next_do() {
                     arc_t to_action_arc = in_arc_it_t(graph,action_node);
                     node_t observation_node = graph.source(to_action_arc);
                     environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
-                    (*backup_method)(observation_node,
-                                     action_node,
-                                     discount,
-                                     environment,
-                                     graph,
-                                     node_info_map,
-                                     mcts_node_info_map,
-                                     mcts_arc_info_map);
+                    backup_method->backup(observation_node,
+                                          action_node,
+                                          mcts_node_info_map);
                     DEBUG_OUT(2,QString("    update observation-node(%1):	counts=%2/%3	return_sum=%4").
                               arg(graph.id(observation_node)).
                               arg(mcts_node_info_map[observation_node].get_transition_counts()).

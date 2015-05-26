@@ -28,14 +28,22 @@ namespace backup_method {
      * backups using rollouts from that node or dynamic programming backups. */
     class BackupMethod {
     public:
-        virtual void operator()(const node_t & state_node,
-                                const node_t & action_node,
-                                double discount,
-                                std::shared_ptr<AbstractEnvironment> environment,
-                                const graph_t & graph,
-                                const node_info_map_t & node_info_map,
-                                mcts_node_info_map_t & mcts_node_info_map,
-                                const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+        //----members----//
+        double discount = 0;
+        std::shared_ptr<AbstractEnvironment> environment;
+        const graph_t * graph = nullptr;
+        const node_info_map_t * node_info_map = nullptr;
+        const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+    public:
+        //----methods----//
+        virtual void init(double discount,
+                          std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
+        virtual void backup(const node_t & state_node,
+                            const node_t & action_node,
+                            mcts_node_info_map_t & mcts_node_info_map) const = 0;
     };
 
     /**
@@ -44,14 +52,9 @@ namespace backup_method {
     class Bellman: public BackupMethod {
     public:
         Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr);
-        virtual void operator()(const node_t & state_node,
-                                const node_t & action_node,
-                                double discount,
-                                std::shared_ptr<AbstractEnvironment> environment,
-                                const graph_t & graph,
-                                const node_info_map_t & node_info_map,
-                                mcts_node_info_map_t & mcts_node_info_map,
-                                const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual void backup(const node_t & state_node,
+                            const node_t & action_node,
+                            mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         std::shared_ptr<const tree_policy::TreePolicy> tree_policy;
     };
@@ -60,14 +63,9 @@ namespace backup_method {
      * Performs Monte-Carlo backups. */
     class MonteCarlo: public BackupMethod {
     public:
-        virtual void operator()(const node_t & state_node,
-                                const node_t & action_node,
-                                double discount,
-                                std::shared_ptr<AbstractEnvironment> environment,
-                                const graph_t & graph,
-                                const node_info_map_t & node_info_map,
-                                mcts_node_info_map_t & mcts_node_info_map,
-                                const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual void backup(const node_t & state_node,
+                            const node_t & action_node,
+                            mcts_node_info_map_t & mcts_node_info_map) const override;
     };
 
 } // namespace backup_method
