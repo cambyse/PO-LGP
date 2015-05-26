@@ -51,6 +51,7 @@ struct Item_typed:Item {
   Item_typed(Graph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
@@ -58,17 +59,11 @@ struct Item_typed:Item {
     : Item(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
-//  /// copy value
-//  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, const T& _value)
-//    : Item(container, parents), value(NULL), ownsValue(true) {
-//    value = new T(_value);
-//    keys=_keys;
-//    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
-//  }
-
   virtual ~Item_typed(){
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
     if(ownsValue) delete value;
     value=NULL;
   }
