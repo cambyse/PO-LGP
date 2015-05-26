@@ -44,6 +44,8 @@ namespace backup_method {
         virtual void backup(const node_t & state_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const = 0;
+        virtual void backup_root(const node_t & state_node,
+                                 mcts_node_info_map_t & mcts_node_info_map) const {};
     };
 
     /**

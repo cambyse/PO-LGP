@@ -294,6 +294,10 @@ void MonteCarloTreeSearch::next_do() {
             }
         }
     } else DEBUG_DEAD_LINE;
+
+    // backup root node (for global models)
+    backup_method->backup_root(root_node,
+                               mcts_node_info_map);
 }
 
 
