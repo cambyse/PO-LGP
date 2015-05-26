@@ -23,6 +23,7 @@ struct RelationalMachine{
   ItemL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
   void declareNewSymbol(MT::String symbol);
+  MT::String getKB();
   MT::String getState();
   MT::String getRules();
   StringA getSymbols();

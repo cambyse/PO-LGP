@@ -6,6 +6,8 @@ find_package(Qt5Svg)
 
 add_definitions(-std=c++0x)
 
+include_directories(/home/robert/MLR_git/share/include)
+
 add_executable(GTest
     main.cpp
     CommanderTest.cpp

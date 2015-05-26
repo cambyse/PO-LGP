@@ -20,7 +20,7 @@ namespace backup_method {
     void Bellman::operator()(const node_t & state_node,
                              const node_t & action_node,
                              double discount,
-                             std::shared_ptr<const Environment> environment,
+                             std::shared_ptr<Environment> environment,
                              const graph_t & graph,
                              const node_info_map_t & node_info_map,
                              mcts_node_info_map_t & mcts_node_info_map,
@@ -86,12 +86,12 @@ namespace backup_method {
         // compute state value
         if(tree_policy!=nullptr) {
             // get an action from the tree policy
-            action_t action = (*tree_policy)(state_node,
-                                             environment,
-                                             graph,
-                                             node_info_map,
-                                             mcts_node_info_map,
-                                             mcts_arc_info_map);
+            action_handle_t action = (*tree_policy)(state_node,
+                                                    environment,
+                                                    graph,
+                                                    node_info_map,
+                                                    mcts_node_info_map,
+                                                    mcts_arc_info_map);
             // find corresponding action node or take averave over available
             // actions
             vector<node_t> actions_to_use;
@@ -147,7 +147,7 @@ namespace backup_method {
     void MonteCarlo::operator()(const node_t & state_node,
                                 const node_t & action_node,
                                 double discount,
-                                std::shared_ptr<const Environment> environment,
+                                std::shared_ptr<Environment> environment,
                                 const graph_t & graph,
                                 const node_info_map_t & node_info_map,
                                 mcts_node_info_map_t & mcts_node_info_map,

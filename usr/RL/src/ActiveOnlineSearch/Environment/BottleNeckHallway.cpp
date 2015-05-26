@@ -21,8 +21,8 @@ BottleNeckHallway::BottleNeckHallway(int length,
     DEBUG_EXPECT(0,max_prob>=0 && max_prob<=1);
 }
 
-BottleNeckHallway::state_reward_pair_t BottleNeckHallway::sample(const state_t & state,
-                                                                 const action_t & action) const {
+BottleNeckHallway::state_reward_pair_t BottleNeckHallway::transition(const state_t & state,
+                                                                     const action_t & action) const {
     if(state>=length-1) {
         // in terminal state (or beyond)
         return state_reward_pair_t(state,0);
@@ -32,7 +32,7 @@ BottleNeckHallway::state_reward_pair_t BottleNeckHallway::sample(const state_t &
     } else {
         // at bottle-neck
         DEBUG_EXPECT(0,state==length-2);
-        double prob = min_prob + (max_prob-min_prob)*action/(actions.size()-1);
+        double prob = min_prob + (max_prob-min_prob)*action/(action_list.size()-1);
         if(drand48()<prob) {
             return state_reward_pair_t(state+1,1);
         } else {

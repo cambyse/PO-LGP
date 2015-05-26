@@ -28,39 +28,36 @@ namespace tree_policy {
     typedef AbstractMonteCarloTreeSearch::arc_it_t      arc_it_t;
     typedef AbstractMonteCarloTreeSearch::in_arc_it_t   in_arc_it_t;
     typedef AbstractMonteCarloTreeSearch::out_arc_it_t  out_arc_it_t;
-    typedef Environment::action_t     action_t;
-    typedef Environment::state_t      state_t;
-    typedef Environment::reward_t     reward_t;
 
-    action_t Uniform::operator()(const node_t & state_node,
-                                 std::shared_ptr<const Environment> environment,
+    action_handle_t Uniform::operator()(const node_t & state_node,
+                                 std::shared_ptr<Environment> environment,
                                  const graph_t & graph,
                                  const node_info_map_t & node_info_map,
                                  const mcts_node_info_map_t & mcts_node_info_map,
                                  const mcts_arc_info_map_t & mcts_arc_info_map) const {
-        action_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << environment->action_name(action));
+        action_handle_t action = random_select(environment->get_actions());
+        DEBUG_OUT(1,"Select action: " << environment->action_name(*action));
         return action;
     }
 
-    action_t MaxPolicy::operator()(const node_t & state_node,
-                                   std::shared_ptr<const Environment> environment,
+    action_handle_t MaxPolicy::operator()(const node_t & state_node,
+                                   std::shared_ptr<Environment> environment,
                                    const graph_t & graph,
                                    const node_info_map_t & node_info_map,
                                    const mcts_node_info_map_t & mcts_node_info_map,
                                    const mcts_arc_info_map_t & mcts_arc_info_map) const {
 
         // get set of actions
-        set<action_t> action_set(environment->get_actions().begin(), environment->get_actions().end());
+        set<action_handle_t> action_set(environment->get_actions().begin(), environment->get_actions().end());
 
         // prepare vector for computing upper bounds
-        vector<pair<reward_t,action_t>> scores;
+        vector<pair<reward_t,action_handle_t>> scores;
 
         // comput upper bounds
         DEBUG_OUT(3,"Computing upper bound for state node " << graph.id(state_node));
         for(out_arc_it_t to_action_arc(graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph.target(to_action_arc);
-            action_t action = node_info_map[action_node].action;
+            action_handle_t action = node_info_map[action_node].action;
             reward_t upper = score(state_node,
                                    to_action_arc,
                                    action_node,
@@ -76,7 +73,7 @@ namespace tree_policy {
 
         // select unsampled action if there are any left
         if(action_set.size()>0) {
-            action_t action = random_select(action_set);
+            action_handle_t action = random_select(action_set);
             DEBUG_OUT(2,"Selecting unsampled action: " << environment->action_name(action));
             return action;
         } else {
@@ -93,7 +90,7 @@ namespace tree_policy {
         }
         DEBUG_EXPECT(1,scores.size()>0);
         reward_t max_score = -DBL_MAX;
-        vector<action_t> max_score_actions;
+        vector<action_handle_t> max_score_actions;
         for(auto bound_action : scores) {
             if(bound_action.first>max_score) {
                 max_score_actions.clear();
@@ -105,7 +102,7 @@ namespace tree_policy {
         }
 
         // random tie breaking between action with equal upper bound
-        action_t action = random_select(max_score_actions);
+        action_handle_t action = random_select(max_score_actions);
         DEBUG_OUT(2,"Choosing action " << environment->action_name(action) << " with upper bound " << max_score );
         return action;
     }
@@ -113,7 +110,7 @@ namespace tree_policy {
     reward_t Optimal::score(const node_t & state_node,
                             const arc_t & to_action_arc,
                             const node_t & action_node,
-                            std::shared_ptr<const Environment> environment,
+                            std::shared_ptr<Environment> environment,
                             const graph_t & graph,
                             const node_info_map_t & node_info_map,
                             const mcts_node_info_map_t & mcts_node_info_map,
@@ -126,7 +123,7 @@ namespace tree_policy {
     reward_t UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node,
-                         std::shared_ptr<const Environment> environment,
+                         std::shared_ptr<Environment> environment,
                          const graph_t & graph,
                          const node_info_map_t & node_info_map,
                          const mcts_node_info_map_t & mcts_node_info_map,
@@ -143,7 +140,7 @@ namespace tree_policy {
     reward_t UCB_Plus::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node,
-                             std::shared_ptr<const Environment> environment,
+                             std::shared_ptr<Environment> environment,
                              const graph_t & graph,
                              const node_info_map_t & node_info_map,
                              const mcts_node_info_map_t & mcts_node_info_map,
