@@ -224,7 +224,9 @@ namespace graph_util {
         bool was_processed(node_t node) const { return (*processed_map)[node]; }
 
         /**
-         * Returns the next node to be updated. */
+         * Returns the next node to be updated. \note The source nodes added
+         * using add_source() are assumed to be up-to-date and are thus \e not
+         * returned once more by the next() function. */
         node_t next() {
             DEBUG_OUT(1,"Find next node...");
             // check for changes
