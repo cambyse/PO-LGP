@@ -10,7 +10,7 @@
 
 #include "g4mapper/calibrator_module.h"
 #include "g4taprecon/taprecon.h"
-//#include "pd_executor_module.h"
+#include "pd_executor/pd_executor_module.h"
 
 // ============================================================================
 struct PR2G4Control:System {
@@ -27,8 +27,8 @@ struct PR2G4Control:System {
 
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
-    // auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
-    // addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
+    //auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
+    addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
     //
 #ifdef WITH_ROS
     // ROS
