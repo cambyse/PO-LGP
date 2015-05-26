@@ -32,14 +32,17 @@ void TaskCtrlActivity::step(double dt){
   step2(dt);
 
   //potentially report on stopping criteria
+  MT::String convStr = "(conv ";
+  for(Item *p:fact->parents) convStr <<' ' <<p->keys.last();
+  convStr <<")";
   if(isConv()){
     if(!conv){
-      if(fact) taskController->effects.set()() <<"(conv " <<fact->parents(0)->keys.last() <<"), ";
+      if(fact) taskController->effects.set()() <<convStr <<", ";
       conv=true;
     }
   }else{
     if(conv){
-      if(fact) taskController->effects.set()() <<"(conv " <<fact->parents(0)->keys.last() <<")!, ";
+      if(fact) taskController->effects.set()() <<convStr <<"!, ";
       conv=false;
     }
   }

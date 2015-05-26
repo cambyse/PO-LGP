@@ -33,6 +33,8 @@ struct ActionSwigInterface{
   dict getLiteralParameters(intV literal);
 
   //-- methods to modify the activity state (also sequence actions)
+  void setFact(const char* fact);
+  void waitForCondition(const char* query);
   void startActivity(const stringV& literals, const dict& parameters=dict());
   void waitForCondition(const stringV& literals);
 

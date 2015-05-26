@@ -112,16 +112,23 @@ stringV ActionSwigInterface::lit2str(intV literals){
   return strs;
 }
 
-void ActionSwigInterface::startActivity(const stringV& literals, const dict& parameters){
-  S->effects.set()() <<lits2str(literals, parameters) <<", ";
+void ActionSwigInterface::setFact(const char* fact){
+  S->effects.set()() <<fact <<", ";
 }
 
-void ActionSwigInterface::waitForCondition(const stringV& literals){
-  MT::String query = lits2str(literals);
+void ActionSwigInterface::startActivity(const stringV& literals, const dict& parameters){
+  setFact(lits2str(literals, parameters));
+}
+
+void ActionSwigInterface::waitForCondition(const char* query){
   for(;;){
     if(S->RM.get()->queryCondition(query)) return;
     S->state.waitForNextRevision();
   }
+}
+
+void ActionSwigInterface::waitForCondition(const stringV& literals){
+  waitForCondition(lits2str(literals));
 }
 
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){

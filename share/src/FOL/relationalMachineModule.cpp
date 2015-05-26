@@ -9,7 +9,7 @@ RelationalMachineModule::~RelationalMachineModule(){
 void RelationalMachineModule::open(){
   MT::open(fil,"z.RelationalMachineModule");
   RM.set()->init("machine.fol");
-  RM.set()->verbose = false;
+  RM.set()->verbose = true;
   threadStep(1);
 }
 
@@ -23,7 +23,7 @@ void RelationalMachineModule::step(){
   MT::String effs = effects();
   effects().clear();
   effects.deAccess();
-  if(!effs.N) return;
+  if(!effs.N && step_count) return; //on 1st iteration we need a step!
 
   RM.writeAccess();
   if(effs.N){
@@ -48,7 +48,7 @@ void RelationalMachineModule::step(){
           LOG(2) <<"  Activity '" <<*act <<"' has no fact match";
         }else{
           it2act(idx) = act;
-          LOG(2) <<"  Activity '" <<*act <<"' matches fact '" <<&act->fact <<"'";
+          LOG(2) <<"  Activity '" <<*act <<"' matches fact '" <<*act->fact <<"'";
         }
       }
     }

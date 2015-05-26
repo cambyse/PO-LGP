@@ -28,8 +28,6 @@ struct MySystem : System{
 
 // ============================================================================
 int main(int argc, char** argv) {
-  registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
-  registerActivity<HomingActivity>("HomingActivity");
 
   MySystem S;
   engine().open(S, true);

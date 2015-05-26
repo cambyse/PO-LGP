@@ -147,9 +147,9 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-  //  testRandom();
-  //    testRead();
-  //  testInit();
+  testRandom();
+  testRead();
+  testInit();
   testDot();
 
 //  if(!filename) testManual();
