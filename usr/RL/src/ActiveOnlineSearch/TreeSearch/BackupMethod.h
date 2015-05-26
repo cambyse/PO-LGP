@@ -41,10 +41,10 @@ namespace backup_method {
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & state_node,
+        virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const = 0;
-        virtual void backup_root(const node_t & state_node,
+        virtual void backup_root(const node_t & observation_node,
                                  mcts_node_info_map_t & mcts_node_info_map) const {};
     };
 
@@ -54,7 +54,7 @@ namespace backup_method {
     class Bellman: public BackupMethod {
     public:
         Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr);
-        virtual void backup(const node_t & state_node,
+        virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
@@ -65,7 +65,7 @@ namespace backup_method {
      * Performs Monte-Carlo backups. */
     class MonteCarlo: public BackupMethod {
     public:
-        virtual void backup(const node_t & state_node,
+        virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;
     };

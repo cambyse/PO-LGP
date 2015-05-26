@@ -31,7 +31,7 @@ namespace backup_method {
         tree_policy(tree_policy)
     {}
 
-    void Bellman::backup(const node_t & state_node,
+    void Bellman::backup(const node_t & observation_node,
                          const node_t & action_node,
                          mcts_node_info_map_t & mcts_node_info_map) const {
         // compute action value
@@ -96,11 +96,11 @@ namespace backup_method {
         // compute state value
         if(tree_policy!=nullptr) {
             // get an action from the tree policy
-            action_handle_t action = tree_policy->get_action(state_node);
+            action_handle_t action = tree_policy->get_action(observation_node);
             // find corresponding action node or take averave over available
             // actions
             vector<node_t> actions_to_use;
-            for(out_arc_it_t to_action_arc(*graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
+            for(out_arc_it_t to_action_arc(*graph, observation_node); to_action_arc!=INVALID; ++to_action_arc) {
                 node_t action_node = graph->target(to_action_arc);
                 if((*node_info_map)[action_node].action==action) {
                     actions_to_use.assign(1,action_node);
@@ -118,12 +118,12 @@ namespace backup_method {
             value /= actions_to_use.size();
             value_variance /= actions_to_use.size();
             // assign
-            mcts_node_info_map[state_node].set_value(value, value_variance);
+            mcts_node_info_map[observation_node].set_value(value, value_variance);
         } else {
             // find maximum value and set of max-value actions
             reward_t max_value = -DBL_MAX;
             vector<node_t> max_value_actions;
-            for(out_arc_it_t to_action_arc(*graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
+            for(out_arc_it_t to_action_arc(*graph, observation_node); to_action_arc!=INVALID; ++to_action_arc) {
                 node_t action_node = graph->target(to_action_arc);
                 reward_t value = mcts_node_info_map[action_node].get_value();
                 if(value>max_value) {
@@ -145,15 +145,15 @@ namespace backup_method {
             value_variance /= max_value_actions.size();
 
             // assign
-            mcts_node_info_map[state_node].set_value(max_value, value_variance);
+            mcts_node_info_map[observation_node].set_value(max_value, value_variance);
         }
     }
 
-    void MonteCarlo::backup(const node_t & state_node,
+    void MonteCarlo::backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const {
         // compute action and state value and variance
-        for(auto * info : {&mcts_node_info_map[action_node], &mcts_node_info_map[state_node]}) {
+        for(auto * info : {&mcts_node_info_map[action_node], &mcts_node_info_map[observation_node]}) {
             int counts = info->get_rollout_counts();
             reward_t expected_return = info->get_return_sum()/counts;
             reward_t return_variance;
@@ -166,9 +166,9 @@ namespace backup_method {
             info->set_value(expected_return, return_variance/counts);
         }
 
-        DEBUG_OUT(1,QString("    backup state-node(%1):	value=%2").
-                  arg(graph->id(state_node)).
-                  arg(mcts_node_info_map[state_node].get_value()));
+        DEBUG_OUT(1,QString("    backup observation-node(%1):	value=%2").
+                  arg(graph->id(observation_node)).
+                  arg(mcts_node_info_map[observation_node].get_value()));
         DEBUG_OUT(1,QString("    backup action-node(%1):	value=%2").
                   arg(graph->id(action_node)).
                   arg(mcts_node_info_map[action_node].get_value()));
