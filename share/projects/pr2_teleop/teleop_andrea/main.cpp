@@ -20,7 +20,7 @@ struct PR2G4Control:System {
     addModule<Calibrator>("Calibrator", Module::loopWithBeat, .05);
     // auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
-#ifdef WITH_ROS
+// #ifdef WITH_ROS
     // ROS
     if (MT::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
@@ -29,7 +29,7 @@ struct PR2G4Control:System {
       // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
       // pd_executor->roscom = roscom;
     }
-#endif
+// #endif
     connect();
   };
 };
