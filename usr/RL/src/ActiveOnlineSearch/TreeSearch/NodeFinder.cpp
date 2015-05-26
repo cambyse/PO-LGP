@@ -108,8 +108,10 @@ namespace node_finder {
     void FullDAG::init(const graph_t & g,
                        const node_info_map_t & m) {
         ObservationTree::init(g,m);
+        observation_maps.clear();
         delete depth_map;
         depth_map = new graph_t::NodeMap<depth_t>(g);
+        depth_offset = 0;
     }
     FullDAG::depth_t FullDAG::get_depth(node_t node) {
         DEBUG_OUT(1,"depth=" << (int)((*depth_map)[node] - depth_offset));
@@ -195,6 +197,12 @@ namespace node_finder {
         }
         DEBUG_OUT(1,"Erased observation node (id=" << graph->id(observation_node)
                   << ") at depth " << depth);
+    }
+
+    void FullGraph::init(const graph_t & g,
+                         const node_info_map_t & m) {
+        ObservationTree::init(g,m);
+        observation_map.clear();
     }
 
     arc_node_t FullGraph::find_observation_node(const node_t & action_node,

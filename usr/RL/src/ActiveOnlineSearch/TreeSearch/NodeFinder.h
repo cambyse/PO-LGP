@@ -174,6 +174,8 @@ namespace node_finder {
             AbstractEnvironment::ObservationEq> observation_map;
 
         //----methods----//
+        virtual void init(const graph_t & g,
+                          const node_info_map_t & m) override;
         virtual arc_node_t find_observation_node(const node_t & action_node,
                                                  const observation_handle_t & observation) override;
         virtual void add_observation_node(const node_t & observation_node) override;
