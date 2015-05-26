@@ -71,7 +71,7 @@ static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "FullGraph",
                                                      "ObservationTree"};
 static const std::set<std::string> backup_type_set = {"BACKUP_TRACE",
-                                                      "BACKUP_ALL"};
+                                                      "BACKUP_PROPAGATE"};
 static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "BellmanTreePolicy",
                                                         "MonteCarlo"};
@@ -127,7 +127,7 @@ static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
                                                      , false, "FULL_DAG", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
-                                                     , false, "BACKUP_ALL", "string");
+                                                     , false, "BACKUP_PROPAGATE", "string");
 static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
@@ -486,7 +486,7 @@ shared_ptr<NodeFinder> get_node_finder() {
 
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
     if(backup_type_arg.getValue()=="BACKUP_TRACE") return MonteCarloTreeSearch::BACKUP_TRACE;
-    if(backup_type_arg.getValue()=="BACKUP_ALL") return MonteCarloTreeSearch::BACKUP_ALL;
+    if(backup_type_arg.getValue()=="BACKUP_PROPAGATE") return MonteCarloTreeSearch::BACKUP_PROPAGATE;
     DEBUG_DEAD_LINE;
     return MonteCarloTreeSearch::BACKUP_TRACE;
 }

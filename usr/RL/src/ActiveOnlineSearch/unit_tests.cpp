@@ -1239,21 +1239,26 @@ TEST(MonteCarloTreeSearch, Backup) {
                 {std::shared_ptr<NodeFinder>(new FullDAG()),100},
                 {std::shared_ptr<NodeFinder>(new FullGraph()),100}
             }}) {
-        RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
-        auto environment = std::shared_ptr<AbstractEnvironment>(new DepthLineEnvironment(3));
-        MonteCarloTreeSearch search(environment,
-                                    1,
-                                    node_finder,
-                                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
-                                    std::shared_ptr<ValueHeuristic>(new Rollout(0)),
-                                    std::shared_ptr<BackupMethod>(new Bellman()),
-                                    MonteCarloTreeSearch::BACKUP_TRACE);
-        for(int i=0; i<iterations; ++i) {
-            search.next();
+        for(auto backup_type : {
+                MonteCarloTreeSearch::BACKUP_TRACE,
+                    MonteCarloTreeSearch::BACKUP_PROPAGATE
+                    }) {
+            RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
+            auto environment = std::shared_ptr<AbstractEnvironment>(new DepthLineEnvironment(3));
+            MonteCarloTreeSearch search(environment,
+                                        1,
+                                        node_finder,
+                                        std::shared_ptr<TreePolicy>(new UCB1(1e10)),
+                                        std::shared_ptr<ValueHeuristic>(new Rollout(0)),
+                                        std::shared_ptr<BackupMethod>(new Bellman()),
+                                        backup_type);
+            for(int i=0; i<iterations; ++i) {
+                search.next();
+            }
+            // visual output
+            search.toPdf("graph.pdf");
+            getchar();
         }
-        // visual output
-        search.toPdf("graph.pdf");
-        getchar();
     }
 }
 

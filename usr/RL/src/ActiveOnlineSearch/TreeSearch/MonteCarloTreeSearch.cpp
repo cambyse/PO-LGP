@@ -9,6 +9,8 @@
 #include <functional>
 #include <memory>
 
+#include <lemon/adaptors.h> // reverseDigraph()
+
 #include "../graph_util.h"
 #include <util/QtUtil.h>
 #include <util/util.h>
@@ -211,7 +213,7 @@ void MonteCarloTreeSearch::next_do() {
     /* We need to propagate back the returns to allow MC backups. If backup_type
      * is BACKUP_TRACE we also do the backups here. In that case only nodes that
      * lie on the trajectory will be backed up. (In trees this is the only way
-     * but in general BACKUP_ALL will backup more nodes.) */
+     * but in general BACKUP_PROPAGATE will backup more nodes.) */
     {
         // initialize discounted return of this rollout with leaf-node's return
         reward_t discounted_return = mcts_node_info_map[leaf_node].get_return_sum()/mcts_node_info_map[leaf_node].get_rollout_counts();
@@ -258,27 +260,26 @@ void MonteCarloTreeSearch::next_do() {
 
     if(backup_type==BACKUP_TRACE) {
         // backups were done above
-    } else if(backup_type==BACKUP_ALL) {
-        /* Backups will be performed for all nodes thay lie on a path from the
-         * root node to the current node. For graph_type TREE this is identical
-         * to BACKUP_TRACE but for DAGs it is not. */
+    } else if(backup_type==BACKUP_PROPAGATE) {
+        /* Backups will be propagated through the graph. */
 
-        // hash sets that contain all observation nodes that changed so that their
-        // ancestors need to be backed up
-        shared_ptr<node_set_t> currently_active_observation_nodes(new node_set_t(0,node_hash));
-        shared_ptr<node_set_t> next_active_observation_nodes(new node_set_t({leaf_node},0,node_hash));
+        // construct and initialize graph propagation object
+        auto graph_propagation = graph_util::GraphPropagationFactory(lemon::reverseDigraph(graph));
+        graph_propagation.add_source(leaf_node).init();
 
         // process nodes
-        while(!next_active_observation_nodes->empty()) {
-            // swap sets
-            currently_active_observation_nodes.swap(next_active_observation_nodes);
-            next_active_observation_nodes->clear();
-            for(node_t current_node : *currently_active_observation_nodes) {
-                // iterate through all observation-action pairs that can lead to this
-                // observation node
-                for(in_arc_it_t to_observation_arc(graph,current_node);
-                    to_observation_arc!=INVALID;
-                    ++to_observation_arc) {
+        for(node_t next_node = leaf_node;
+            next_node!=INVALID;
+            next_node = graph_propagation.next()) {
+
+            // skip action nodes (will be backed up via observation nodes)
+            if(node_info_map[next_node].type==ACTION_NODE) continue;
+
+            // iterate through all observation-action pairs that can lead to
+            // this observation node
+            for(in_arc_it_t to_observation_arc(graph,next_node);
+                to_observation_arc!=INVALID;
+                ++to_observation_arc) {
                     node_t action_node = graph.source(to_observation_arc);
                     arc_t to_action_arc = in_arc_it_t(graph,action_node);
                     node_t observation_node = graph.source(to_action_arc);
@@ -296,10 +297,8 @@ void MonteCarloTreeSearch::next_do() {
                               arg(mcts_node_info_map[action_node].get_transition_counts()).
                               arg(mcts_node_info_map[action_node].get_rollout_counts()).
                               arg(mcts_node_info_map[action_node].get_return_sum()));
-                    // add observation node to queue
-                    next_active_observation_nodes->insert(observation_node);
-                }
             }
+
         }
     } else DEBUG_DEAD_LINE;
 

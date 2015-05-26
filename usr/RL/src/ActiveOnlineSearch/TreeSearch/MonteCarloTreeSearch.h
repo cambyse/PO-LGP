@@ -106,7 +106,7 @@ protected:
     typedef graph_util::NodeHashFunction<graph_t> node_hash_function_t;
     typedef std::unordered_set<node_t,node_hash_function_t> node_set_t;
 public:
-    enum BACKUP_TYPE { BACKUP_TRACE, BACKUP_ALL};
+    enum BACKUP_TYPE { BACKUP_TRACE, BACKUP_PROPAGATE};
 
     //----members----//
 protected:
@@ -140,7 +140,7 @@ public:
                          std::shared_ptr<tree_policy::TreePolicy> tree_policy,
                          std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                          std::shared_ptr<backup_method::BackupMethod> backup_method,
-                         BACKUP_TYPE backup_type = BACKUP_ALL,
+                         BACKUP_TYPE backup_type = BACKUP_PROPAGATE,
                          int max_depth = -1);
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
