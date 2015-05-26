@@ -3,6 +3,7 @@
 #include <Core/graph.h>
 #include "relationalMachine.h"
 #include <Core/registry.h>
+#include <Core/module.h>
 
 struct Activity {
   MT::String name;     ///< name, just for reporting
@@ -29,3 +30,17 @@ template<class T> void registerActivity(const char* key){
 
 /// create/launch a new activity based on the fact
 Activity* newActivity(Item *fact);
+
+
+struct ActivitySpinnerModule : Module{
+  ACCESS(ActivityL, A)
+
+  /// @name module implementations
+  void open(){}
+  void step(){
+    A.readAccess();
+    for(Activity *act:A()) act->step(0.01);
+    A.deAccess();
+  }
+  void close(){}
+};

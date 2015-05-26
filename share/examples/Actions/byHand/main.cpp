@@ -38,17 +38,27 @@ int main(int argc, char** argv) {
   ActionSwigInterface S(false);
 
   S.createNewSymbol("MyTask");
+  S.createNewSymbol("HomingActivity");
   S.createNewSymbol("endeffR");
   S.createNewSymbol("endeffL");
 
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv MyTask endeffL)");
-  S.waitForCondition("(conv MyTask endeffR)");
+
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!");
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(quit)");
+  S.waitForCondition("(conv MyTask endeffL)");
+
+  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!");
+  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv MyTask endeffL)");
+
+  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!");
+  S.setFact("(HomingActivity)");
+  S.waitForCondition("(conv HomingActivity)");
 
   return 0;
 }

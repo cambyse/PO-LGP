@@ -10,9 +10,10 @@ void TaskCtrlActivity::configure(Item *fact) {
   taskController = taskControllerModule();
   CHECK(taskController,"");
   Activity::fact = fact;
-  Graph &specs = fact->kvg();
+  Graph *specs = &NoGraph;
+  if(fact->getValueType()==typeid(Graph)) specs = &fact->kvg();
   taskController->mutex.lock();
-  configure2(fact->parents(0)->keys.last(), specs, taskController->modelWorld);
+  configure2(name, *specs, taskController->modelWorld);
   taskController->ctrlTasks.set()->append(task);
   taskController->mutex.unlock();
   conv=false;

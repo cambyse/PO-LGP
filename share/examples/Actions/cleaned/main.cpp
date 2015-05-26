@@ -15,7 +15,9 @@ struct MySystem : System{
   ACCESS(MT::String, state)
   MySystem(){
     addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-    addModule<RelationalMachineModule>(NULL, Module::loopWithBeat, .01);
+    addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
+    addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
+
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);

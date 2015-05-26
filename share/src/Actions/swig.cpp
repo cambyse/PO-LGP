@@ -20,7 +20,9 @@ struct SwigSystem : System{
   TaskControllerModule *tcm;
   SwigSystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-    addModule<RelationalMachineModule>(NULL, Module::loopWithBeat, .01);
+    addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
+    addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
+
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
@@ -114,6 +116,7 @@ stringV ActionSwigInterface::lit2str(intV literals){
 
 void ActionSwigInterface::setFact(const char* fact){
   S->effects.set()() <<fact <<", ";
+  S->state.waitForNextRevision();
 }
 
 void ActionSwigInterface::startActivity(const stringV& literals, const dict& parameters){

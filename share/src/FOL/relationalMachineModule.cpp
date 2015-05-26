@@ -45,64 +45,44 @@ void RelationalMachineModule::close(){
 }
 
 void RelationalMachineModule::step(){
-  //-- step all activities
-  A.readAccess();
-  for(Activity *act:A()) act->step(0.01);
-  A.deAccess();
-
   effects.writeAccess();
   MT::String effs = effects();
   effects().clear();
   effects.deAccess();
+  fil <<RM.var->revision.getValue() <<endl <<"EFFECTS = " <<effs <<endl;
   if(!effs.N && step_count) return; //on 1st iteration we need a step!
 
   RM.writeAccess();
+  A.writeAccess();
   if(effs.N){
     RM().applyEffect(effs);
     RM().fwdChainRules();
-    fil <<RM.var->revision.getValue() <<endl <<effs <<endl <<RM().getState() <<endl <<RM().getKB() << endl;
+    fil <<"STATE = " <<RM().getState() <<endl <<"KB = " <<RM().getKB() << endl;
   }
 
   if(!step_count || effs.N){
     state.set() = RM().getState();
 
-    //-- sync with activities
+    //-- sync with activities: add activities for non-associated
     Graph &state = *RM().state;
-    MT::Array<Activity*> it2act(state.N);
-    it2act.setUni(NULL);
+    MT::Array<Activity*> fact2act(state.N);
+    fact2act.setUni(NULL);
     LOG(2) <<"Syncing facts with activities..";
     for(Activity *act:A()){
       CHECK(act->fact == state(act->fact->index),"SOMETHING'S WRONG!");
-      it2act(act->fact->index) = act;
+      fact2act(act->fact->index) = act;
     }
-
-    A.writeAccess();
-//    //-- del NULL activities
-//    for(uint i=A().N; i--;){
-//      Activity *act =A()(i);
-//      if(act->fact==NULL){
-//        LOG(2) <<"removing activity '" <<*act <<"'";
-//        A().removeValue(act);
-//        delete act;
-//      }
-//    }
-
-    //-- add activities for non-associated
-    for(Item *it:state){
-      if(it2act(it->index)==NULL){
-        Activity *act = newActivity(it);
-        if(act){
-          A().append(act);
-          LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
-        }else{
-          LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
-        }
+    for(Item *it:state) if(fact2act(it->index)==NULL){ //fact is not associated yet
+      Activity *act = newActivity(it);
+      if(act){
+        A().append(act);
+        LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
       }else{
-        LOG(2) <<"Fact '" <<*it <<"' matches activity '" <<*it2act(it->index) <<"'";
+        LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
       }
     }
-    A.deAccess();
   }
+  A.deAccess();
   RM.deAccess();
 
   //TODO: cleanup? remove NULL facts from state?
