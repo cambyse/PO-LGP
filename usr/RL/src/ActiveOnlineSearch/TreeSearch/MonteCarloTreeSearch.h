@@ -35,6 +35,8 @@ public:
         void add_transition();
         state_handle_t get_state_from_last_visit() const;
         void set_state_from_last_visit(state_handle_t state);
+        reward_t get_rollout_return_sum() const;
+        reward_t get_squared_rollout_return_sum() const;
     protected:
         /**
          * Nr of times a transition from this node (state or action) was

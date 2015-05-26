@@ -29,18 +29,18 @@ namespace value_heuristic {
         //----methods----//
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
-        virtual void get_value(const node_t & state_node,
-                               const state_handle_t & state,
-                               mcts_node_info_map_t & mcts_node_info_map) const = 0;
+        virtual void add_value_estimate(const node_t & state_node,
+                                        const state_handle_t & state,
+                                        mcts_node_info_map_t & mcts_node_info_map) const = 0;
     };
 
     /**
      * This heuristic uses zero to initialize value/return. */
     class Zero: public ValueHeuristic {
     public:
-        virtual void get_value(const node_t & state_node,
-                               const state_handle_t & state,
-                               mcts_node_info_map_t & mcts_node_info_map) const override;
+        virtual void add_value_estimate(const node_t & state_node,
+                                        const state_handle_t & state,
+                                        mcts_node_info_map_t & mcts_node_info_map) const override;
     };
 
     /**
@@ -52,9 +52,9 @@ namespace value_heuristic {
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
         Rollout(int rollout_length = -1);
-        virtual void get_value(const node_t & state_node,
-                               const state_handle_t & state,
-                               mcts_node_info_map_t & mcts_node_info_map) const override;
+        virtual void add_value_estimate(const node_t & state_node,
+                                        const state_handle_t & state,
+                                        mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         int rollout_length;
     };

@@ -72,6 +72,14 @@ void MonteCarloTreeSearch::MCTSNodeInfo::set_state_from_last_visit(state_handle_
     state_from_last_visit = state;
 }
 
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_rollout_return_sum() const {
+    return return_sum;
+}
+
+MonteCarloTreeSearch::reward_t MonteCarloTreeSearch::MCTSNodeInfo::get_squared_rollout_return_sum() const {
+    return squared_return_sum;
+}
+
 int MonteCarloTreeSearch::MCTSArcInfo::get_rollout_counts() const {
     return rollout_counts;
 }
