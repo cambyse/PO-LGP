@@ -28,7 +28,7 @@ struct ActionSwigInterface{
   stringV getSymbols();
   int getSymbolInteger(string symbolName);
   intV lit(stringV symbolNames);
-  std::vector<intV> getStateLiterals();
+  intV getStateLiterals();
   bool isTrue(intV literal);
   dict getLiteralParameters(intV literal);
 
@@ -36,7 +36,7 @@ struct ActionSwigInterface{
   //-- methods to modify the activity state (also sequence actions)
   void startActivity(intV literal, dict parameters={});
   void waitForCondition(intV literal);
-  int  waitForOrCondition(std::vector<intV> literals);
+  //int  waitForOrCondition(intV literal);
   void waitForQuitSymbol();
 
 //  void activateAction(string symbolName); //"(reachAt A)"

@@ -73,6 +73,10 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
 dict D;
 ors::Body *body = s->activity.machine->world->getBodyByName(bodyName.c_str());
 D["pos"] = "[" + std::to_string(body->X.pos.x) + ", " + std::to_string(body->X.pos.y) + ", " + std::to_string(body->X.pos.z) + "]";
+D["name"]= bodyName;
+D["type"] = std::to_string(body->type);
+D["Q"] = "[" + std::to_string(body->X.rot.w) + ", " + std::to_string(body->X.pos.x) + ", " + std::to_string(body->X.pos.y) + ", " + std::to_string(body->X.pos.z) + "]";
+cout << std::to_string(body->X.pos.x) << endl;
 return D;
 }
 
@@ -80,6 +84,9 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
 dict D;
 ors::Shape *shape = s->activity.machine->world->getShapeByName(shapeName.c_str());
 D["pos"] = "[" + std::to_string(shape->X.pos.x) + ", " + std::to_string(shape->X.pos.y) + ", " + std::to_string(shape->X.pos.z) + "]";
+D["name"]= shapeName;
+D["type"] = std::to_string(shape->type);
+D["Q"] = "[" + std::to_string(shape->X.rot.w) + ", " + std::to_string(shape->X.pos.x) + ", " + std::to_string(shape->X.pos.y) + ", " + std::to_string(shape->X.pos.z) + "]";
 return D;
 }
 
@@ -87,6 +94,9 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
 dict D;
 ors::Joint *joint = s->activity.machine->world->getJointByName(jointName.c_str());
 D["pos"] = "[" + std::to_string(joint->X.pos.x) + ", " + std::to_string(joint->X.pos.y) + ", " + std::to_string(joint->X.pos.z) + "]";
+D["name"]= jointName;
+D["type"] = std::to_string(joint->type);
+D["Q"] = "[" + std::to_string(joint->X.rot.w) + ", " + std::to_string(joint->X.pos.x) + ", " + std::to_string(joint->X.pos.y) + ", " + std::to_string(joint->X.pos.z) + "]";
 return D;
 }
 
@@ -104,13 +114,17 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 
 stringV ActionSwigInterface::getSymbols(){
   stringV S;
+  std::stringstream tmp;
   s->KB.readAccess();
-  s->KB().checkConsistency();
-  cout <<s->KB() <<endl;
+  for (auto& i:s->KB()){
+    tmp.str(""),
+    tmp.clear();
+    tmp << i->keys(0);
+    S.push_back(tmp.str());
+  }
   s->KB.deAccess();
   return S;
 }
-
 
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
   s->KB.writeAccess();
@@ -138,6 +152,14 @@ void ActionSwigInterface::waitForCondition(intV literal){
   }
 }
 
+intV ActionSwigInterface::getStateLiterals(){
+  intV I;
+  s->KB.readAccess();
+  Item* state=s->KB().getItem("STATE");
+  cout << s->KB()<< endl;
+  return I;
+}
+
 void ActionSwigInterface::waitForQuitSymbol(){
   s->activity.machine->waitForQuitSymbol();
 }
@@ -154,7 +176,6 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   Graph *td = new Graph(parameters);
   s->KB().append<Graph>({"Task"}, {symbol}, td, true);
   s->KB().checkConsistency();
-  //cout <<s->KB() <<endl;
   s->KB.deAccess();
   s->activity.machine->parseTaskDescription(*td);
   return symbol->index;

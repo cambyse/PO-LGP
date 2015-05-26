@@ -27,10 +27,8 @@ namespace std{
 
 %ignore getQ();
 %ignore getForceTorqueMeasurement();
-%ignore getStateLiterals();
 %ignore isTrue(intV literal);
 %ignore getLiteralParameters(intV literal);
-%ignore waitForOrCondition(std::vector<intV> literals);
 
 
 
