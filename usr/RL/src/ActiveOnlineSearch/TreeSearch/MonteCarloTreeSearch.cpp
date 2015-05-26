@@ -400,6 +400,13 @@ void MonteCarloTreeSearch::toPdf(const char* file_name) const {
                        &arc_map);
 }
 
+const MonteCarloTreeSearch::mcts_node_info_map_t & MonteCarloTreeSearch::get_mcts_node_info_map() const {
+    return mcts_node_info_map;
+}
+const MonteCarloTreeSearch::mcts_arc_info_map_t & MonteCarloTreeSearch::get_mcts_arc_info_map() const {
+    return mcts_arc_info_map;
+}
+
 double MonteCarloTreeSearch::color_rescale(const double& d) const {
     if(use_sqrt_scale) {
         return sqrt(d);

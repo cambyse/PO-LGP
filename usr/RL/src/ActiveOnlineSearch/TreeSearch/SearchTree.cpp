@@ -179,6 +179,10 @@ const SearchTree::graph_t & SearchTree::get_graph() const {
     return graph;
 }
 
+const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
+    return node_info_map;
+}
+
 QString SearchTree::str_html(const node_t & n) const {
     QString label;
     std::stringstream s;

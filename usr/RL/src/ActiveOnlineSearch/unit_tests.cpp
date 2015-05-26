@@ -1073,7 +1073,7 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
         MonteCarloTreeSearch search(environment,
                                     1,
                                     node_finder,
-                                    std::shared_ptr<TreePolicy>(new UCB1(1000)),
+                                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
                                     std::shared_ptr<ValueHeuristic>(new Rollout()),
                                     std::shared_ptr<BackupMethod>(new MonteCarlo()),
                                     MonteCarloTreeSearch::BACKUP_TRACE);
@@ -1147,14 +1147,14 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
     }
 }
 
-class DepthLineEnvironment: public AbstractEnvironment {
+class FiniteLineEnvironment: public AbstractEnvironment {
 public:
-    struct DepthLineAction: public Action {
-        DepthLineAction(int action): action(action) {}
-        virtual ~DepthLineAction() = default;
+    struct FiniteLineAction: public Action {
+        FiniteLineAction(int action): action(action) {}
+        virtual ~FiniteLineAction() = default;
         virtual bool operator==(const Action & other) const {
-            auto depth_line_action = dynamic_cast<const DepthLineAction*>(&other);
-            return depth_line_action!=nullptr && depth_line_action->action==action;
+            auto line_action = dynamic_cast<const FiniteLineAction*>(&other);
+            return line_action!=nullptr && line_action->action==action;
         }
         virtual size_t get_hash() const {
             return std::hash<int>()(action);
@@ -1164,12 +1164,12 @@ public:
         }
         int action;
     };
-    struct DepthLineObservation: public Observation {
-        DepthLineObservation(int observation): observation(observation) {}
-        virtual ~DepthLineObservation() = default;
+    struct FiniteLineObservation: public Observation {
+        FiniteLineObservation(int observation): observation(observation) {}
+        virtual ~FiniteLineObservation() = default;
         virtual bool operator==(const Observation & other) const {
-            auto depth_line_observation = dynamic_cast<const DepthLineObservation*>(&other);
-            return depth_line_observation!=nullptr && depth_line_observation->observation==observation;
+            auto line_observation = dynamic_cast<const FiniteLineObservation*>(&other);
+            return line_observation!=nullptr && line_observation->observation==observation;
         }
         virtual size_t get_hash() const {
             return std::hash<int>()(observation);
@@ -1179,72 +1179,68 @@ public:
         }
         int observation;
     };
-    struct DepthLineState: public State {
-        DepthLineState(int s): state(s) {}
+    struct FiniteLineState: public State {
+        FiniteLineState(int s): state(s) {}
         int state;
     };
 public:
-    DepthLineEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
-    virtual ~DepthLineEnvironment() = default;
+    FiniteLineEnvironment(int line_width): line_width(line_width), state(0) {}
+    virtual ~FiniteLineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
-        auto depth_line_action = std::dynamic_pointer_cast<const DepthLineAction>(action_handle);
-        EXPECT_NE(nullptr,depth_line_action);
-        reward_t reward = state>=reward_depth?1:0;
-        if(state>=reward_depth) {
-            state = reward_depth + 1;
-        } else {
-            state += depth_line_action->action;
-        }
+        auto line_action = std::dynamic_pointer_cast<const FiniteLineAction>(action_handle);
+        EXPECT_NE(nullptr,line_action);
+        //state += (line_action->action>0?1:0);
+        state += line_action->action;
+        if(state>line_width) state = line_width;
+        if(state<0) state = 0;
+        reward_t reward = state==line_width?1:0;
         DEBUG_OUT(1,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new DepthLineObservation(state>=reward_depth?reward_depth:state)), reward);
+        return observation_reward_pair_t(observation_handle_t(new FiniteLineObservation(state)), reward);
     }
     virtual action_container_t get_actions() {
-        return action_container_t({action_handle_t(new DepthLineAction(0)),
-                    action_handle_t(new DepthLineAction(1))});
+        return action_container_t({action_handle_t(new FiniteLineAction(-1)),
+                    action_handle_t(new FiniteLineAction(0)),
+                    action_handle_t(new FiniteLineAction(1))});
     }
     virtual state_handle_t get_state_handle() {
-        return std::shared_ptr<State>(new DepthLineState(state));
+        return std::shared_ptr<State>(new FiniteLineState(state));
     }
     virtual void set_state(const state_handle_t & state_handle) {
-        auto depth_line_state = std::dynamic_pointer_cast<const DepthLineState>(state_handle);
-        EXPECT_NE(nullptr,depth_line_state);
-        state = depth_line_state->state;
+        auto line_state = std::dynamic_pointer_cast<const FiniteLineState>(state_handle);
+        EXPECT_NE(nullptr,line_state);
+        state = line_state->state;
         DEBUG_OUT(1,"Set state to " << state);
     }
     virtual bool has_terminal_state() const {return true;}
-    virtual bool is_terminal_state() const {return state>reward_depth;}
+    virtual bool is_terminal_state() const {return state==line_width;}
     virtual bool is_deterministic() const {return true;}
     virtual bool has_max_reward() const {return true;}
     virtual reward_t max_reward() const {return 1;}
     virtual bool has_min_reward() const {return true;}
     virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return false;}
+    virtual bool is_markov() const {return true;}
 private:
-    int reward_depth;
+    int line_width;
     int state;
 };
 
-
-// This is not really working because building the trees is random (not because
-// the environment is stochastic but because the order of actions in UCB1 is
-// with random tie-breaking).
 TEST(MonteCarloTreeSearch, Backup) {
     using namespace node_finder;
     using namespace tree_policy;
     using namespace value_heuristic;
     using namespace backup_method;
     for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
-                {std::shared_ptr<NodeFinder>(new PlainTree()),30},
-                {std::shared_ptr<NodeFinder>(new ObservationTree()),29},
-                {std::shared_ptr<NodeFinder>(new FullDAG()),100},
-                {std::shared_ptr<NodeFinder>(new FullGraph()),100}
+                // {std::shared_ptr<NodeFinder>(new PlainTree()),12},
+                // {std::shared_ptr<NodeFinder>(new ObservationTree()),11},
+                {std::shared_ptr<NodeFinder>(new FullDAG()),8},
+                {std::shared_ptr<NodeFinder>(new FullGraph()),5}
             }}) {
         for(auto backup_type : {
                 MonteCarloTreeSearch::BACKUP_TRACE,
                     MonteCarloTreeSearch::BACKUP_PROPAGATE
                     }) {
             RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
-            auto environment = std::shared_ptr<AbstractEnvironment>(new DepthLineEnvironment(3));
+            auto environment = std::shared_ptr<AbstractEnvironment>(new FiniteLineEnvironment(2));
             MonteCarloTreeSearch search(environment,
                                         1,
                                         node_finder,
@@ -1255,10 +1251,43 @@ TEST(MonteCarloTreeSearch, Backup) {
             for(int i=0; i<iterations; ++i) {
                 search.next();
             }
+            // some tests
+            typedef MonteCarloTreeSearch::graph_t graph_t;
+            typedef MonteCarloTreeSearch::node_t node_t;
+            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+            typedef MonteCarloTreeSearch::arc_t arc_t;
+            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+            const graph_t & graph = search.get_graph();
+            auto & info = search.get_node_info_map();
+            auto & mcts_info = search.get_mcts_node_info_map();
+            int non_matching_action_values = 0;
+            for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+                int local_non_matching_action_values = 0;
+                if(info[node].type==MonteCarloTreeSearch::ACTION_NODE) continue;
+                double value = -1;
+                for(in_arc_it_t arc(graph,node); arc!=lemon::INVALID; ++arc) {
+                    if(value==-1) {
+                        value = mcts_info[graph.source(arc)].get_value();
+                    } else {
+                        if(value!=mcts_info[graph.source(arc)].get_value()) {
+                            ++local_non_matching_action_values;
+                        }
+                    }
+                }
+                DEBUG_OUT(1,local_non_matching_action_values << " non-matching action values for node "
+                          << graph.id(node));
+                non_matching_action_values += local_non_matching_action_values;
+            }
+            if(backup_type==MonteCarloTreeSearch::BACKUP_TRACE) {
+                EXPECT_GT(non_matching_action_values,0);
+            } else if(backup_type==MonteCarloTreeSearch::BACKUP_PROPAGATE) {
+                EXPECT_EQ(non_matching_action_values,0);
+            } else EXPECT_TRUE(false) << "This line should not be reached";
             // visual output
-            search.toPdf("graph.pdf");
-            getchar();
+            // search.toPdf("graph.pdf");
+            // getchar();
         }
     }
 }
-

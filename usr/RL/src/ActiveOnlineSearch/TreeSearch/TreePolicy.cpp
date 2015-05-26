@@ -71,7 +71,11 @@ namespace tree_policy {
 
         // select unsampled action if there are any left
         if(action_set.size()>0) {
+#ifdef UNIT_TESTS
+            action_handle_t action = *(action_set.begin());
+#else
             action_handle_t action = random_select(action_set);
+#endif
             DEBUG_OUT(2,"Selecting unsampled action: " << *action);
             return action;
         } else {
@@ -99,7 +103,11 @@ namespace tree_policy {
         }
 
         // random tie breaking between action with equal upper bound
+#ifdef UNIT_TESTS
+        action_handle_t action = max_score_actions.back();
+#else
         action_handle_t action = random_select(max_score_actions);
+#endif
         DEBUG_OUT(2,"Choosing action " << *action << " with upper bound " << max_score );
         return action;
     }

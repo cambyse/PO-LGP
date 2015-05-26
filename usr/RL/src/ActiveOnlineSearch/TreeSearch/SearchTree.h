@@ -81,6 +81,7 @@ public:
                        const state_handle_t &) override;
     virtual void toPdf(const char* file_name) const override;
     virtual const graph_t & get_graph() const;
+    virtual const node_info_map_t & get_node_info_map() const;
 protected:
     virtual QString str_html(const node_t &) const;
     /**

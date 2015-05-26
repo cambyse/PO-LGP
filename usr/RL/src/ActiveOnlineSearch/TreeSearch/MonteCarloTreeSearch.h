@@ -148,6 +148,8 @@ public:
     void toPdf(const char* file_name) const override;
     int get_max_depth() const {return max_depth;}
     void set_max_depth(int depth) {max_depth = depth;}
+    virtual const mcts_node_info_map_t & get_mcts_node_info_map() const;
+    virtual const mcts_arc_info_map_t & get_mcts_arc_info_map() const;
 protected:
     virtual double color_rescale(const double&) const;
 };
