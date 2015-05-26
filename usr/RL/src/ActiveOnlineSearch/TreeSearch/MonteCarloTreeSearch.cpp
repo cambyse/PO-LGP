@@ -143,6 +143,7 @@ void MonteCarloTreeSearch::next_do() {
        ======================================================================== */
     node_t leaf_node = INVALID;
     state_handle_t leaf_state = nullptr;
+    bool is_real_leaf_node = true;
     {
         DEBUG_OUT(2,"Follow tree-policy...");
         node_t current_node = root_node;
@@ -183,16 +184,20 @@ void MonteCarloTreeSearch::next_do() {
 
             // break in terminal nodes
             if(environment->is_terminal_state()) break;
-            // did if new observation node was added
+            // break if new observation node was added
             if(new_observation_node) break;
             // break if a node was visited before during this rollout (this can
             // happen in the case of FullGraph node finder, the problem is that
             // the node data is not up-to-date because it depends on the current
             // rollout) or update node set
-            if(node_set.find(current_node)!=node_set.end()) break;
-            node_set.insert(current_node);
+            if(node_set.find(current_node)!=node_set.end()) {
+                is_real_leaf_node = false;
+                break;
+            } else {
+                node_set.insert(current_node);
+            }
         }
-        DEBUG_OUT(2,"...reached leaf-node (or loop closure)");
+        DEBUG_OUT(2,(is_real_leaf_node?"...reached leaf-node":"...reached closed loop"));
         leaf_node = current_node;
         leaf_state = current_state;
     }
@@ -200,9 +205,11 @@ void MonteCarloTreeSearch::next_do() {
     /* =======================================
        get a heuristic value estimate
        ======================================= */
-    value_heuristic->get_value(leaf_node,
-                               leaf_state,
-                               mcts_node_info_map);
+    if(is_real_leaf_node) {
+        value_heuristic->add_value_estimate(leaf_node,
+                                            leaf_state,
+                                            mcts_node_info_map);
+    }
 
     /* =======================================
        backpropagate
