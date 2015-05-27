@@ -450,6 +450,7 @@ uint ors::Joint::qDim() {
   if(type>=JT_hingeX && type<=JT_transZ) return 1;
   if(type==JT_transXY) return 2;
   if(type==JT_transXYPhi) return 3;
+  if(type==JT_phiTransXY) return 3;
   if(type==JT_trans3) return 3;
   if(type==JT_universal) return 2;
   if(type==JT_quatBall) return 4;
@@ -609,21 +610,6 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
   ors::Transformation f;
   BodyL todoBodies = bodies;
   for(Body *b: todoBodies) {
-#if 0 //this does not work if not topsorted!!
-    CHECK(n->inLinks.N<=1,"loopy geometry - body '" <<n->name <<"' has more than 1 input link");
-    for_list(Joint,  e,  n->inLinks) {
-      f = e->from->X;
-      f.appendTransformation(e->A);
-      e->X = f;
-      if(e->type==JT_hingeX || e->type==JT_transX)  e->X.rot.getX(e->axis);
-      if(e->type==JT_hingeY || e->type==JT_transY)  e->X.rot.getY(e->axis);
-      if(e->type==JT_hingeZ || e->type==JT_transZ)  e->X.rot.getZ(e->axis);
-      if(e->type==JT_transXYPhi)  e->X.rot.getZ(e->axis);
-      f.appendTransformation(e->Q);
-      if(!isLinkTree) f.appendTransformation(e->B);
-      n->X=f;
-    }
-#else
     for(Joint *j:b->outLinks){ //this has no bailout for loopy graphs!
       f = b->X;
       f.appendTransformation(j->A);
@@ -632,12 +618,12 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
       if(j->type==JT_hingeY || j->type==JT_transY)  j->axis = j->X.rot.getY();
       if(j->type==JT_hingeZ || j->type==JT_transZ)  j->axis = j->X.rot.getZ();
       if(j->type==JT_transXYPhi)  j->axis = j->X.rot.getZ();
+      if(j->type==JT_phiTransXY)  j->axis = j->X.rot.getZ();
       f.appendTransformation(j->Q);
       if(!isLinkTree) f.appendTransformation(j->B);
       j->to->X=f;
       todoBodies.setAppend(j->to);
     }
-#endif
   }
   calc_fwdPropagateShapeFrames();
 }
@@ -925,6 +911,23 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
         }
         n+=3;
       } break;
+      case JT_phiTransXY: {
+        ors::Vector rotv;
+        j->Q.rot.getRad(q(n), rotv);
+        if(q(n)>MT_PI) q(n)-=MT_2PI;
+        if(rotv*Vector_z<0.) q(n)=-q(n);
+        ors::Vector relpos = j->Q.rot/j->Q.pos;
+        q(n+1)=relpos.x;
+        q(n+2)=relpos.y;
+        if(calcVels){
+          qdot(n)=j->Q.angvel.length();
+          if(j->Q.angvel*Vector_z<0.) qdot(n)=-qdot(n);
+          ors::Vector relvel = j->Q.rot/j->Q.vel;
+          qdot(n+1)=relvel.x;
+          qdot(n+2)=relvel.y;
+        }
+        n+=3;
+      } break;
       case JT_trans3: {
         q(n)=j->Q.pos.x;
         q(n+1)=j->Q.pos.y;
@@ -1028,6 +1031,16 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
           n+=3;
         } break;
 
+        case JT_phiTransXY: {
+          j->Q.rot.setRadZ(q(n));
+          j->Q.pos = j->Q.rot*Vector(q(n+1), q(n+2), 0.);
+          if(calcVels){
+            j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;
+            j->Q.vel = j->Q.rot*Vector(qdot(n+1), qdot(n+2), 0.);  j->Q.zeroVels=false;
+          }
+          n+=3;
+        } break;
+
         case JT_glue:
         case JT_fixed:
           j->Q.setZero();
@@ -1119,6 +1132,15 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
           J(0, j_idx+2) += tmp.x;
           J(1, j_idx+2) += tmp.y;
           J(2, j_idx+2) += tmp.z;
+        }
+        else if(j->type==JT_phiTransXY) {
+          if(j->mimic) NIY;
+          ors::Vector tmp = j->axis ^ (pos_world-j->X.pos);
+          J(0, j_idx) += tmp.x;
+          J(1, j_idx) += tmp.y;
+          J(2, j_idx) += tmp.z;
+          arr R = (j->X.rot*j->Q.rot).getArr();
+          J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx+1);
         }
         else if(j->type==JT_trans3) {
           if(j->mimic) NIY;
@@ -1229,7 +1251,7 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
         else if(j1->type==JT_transXY && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
           NIY;
         }
-        else if(j1->type==JT_transXYPhi && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
+        else if(j1->type==JT_transXYPhi && j1->type==JT_phiTransXY && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
           NIY;
         }
         else if(j1->type==JT_trans3 && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
@@ -1309,7 +1331,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
       uint j_idx=j->qIndex;
       if(j->agent==q_agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==q_agent && j_idx<N){
-        if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi) {
+        if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi || j->type==JT_phiTransXY) {
           if(j->type==JT_transXYPhi) j_idx += 2; //refer to the phi only
           J(0, j_idx) += j->axis.x;
           J(1, j_idx) += j->axis.y;

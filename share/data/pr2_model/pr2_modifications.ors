@@ -60,7 +60,7 @@ Merge torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
 ## HEAD
 Merge head_pan_joint {    gains=[20 2] }
-Merge head_tilt_joint {   gains=[60 4] }
+Merge head_tilt_joint {   q=.4 gains=[60 4] }
 
 ## RIGHT
 Merge r_shoulder_pan_joint { q=-1   gains=[150 10]  }

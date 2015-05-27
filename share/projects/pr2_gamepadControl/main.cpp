@@ -8,9 +8,9 @@
 #include <Core/array-vector.h>
 
 struct MySystem:System{
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, gamepadState);
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(arr, gamepadState)
   MySystem(){
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){

@@ -6,8 +6,8 @@
 //#include <Motion/motionHeuristics.h>
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <pr2/TaskControllerModule.h>
-#include <pr2/RelationalMachineModule.h>
+#include "TaskControllerModule.h"
+#include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 
