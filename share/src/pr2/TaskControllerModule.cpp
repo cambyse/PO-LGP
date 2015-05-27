@@ -7,8 +7,9 @@ TaskControllerModule *taskControllerModule(){
 }
 
 TaskControllerModule::TaskControllerModule()
-  : Module("TaskControllerModule"), realWorld("model.kvg"), modelWorld(realWorld),
-    feedbackController(modelWorld, true), q0(modelWorld.q), useRos(false), syncModelStateWithRos(false), verbose(false){
+  : Module("TaskControllerModule"), realWorld("model.kvg"), __modelWorld__(realWorld),
+    feedbackController(__modelWorld__, true), q0(__modelWorld__.q), useRos(false), syncModelStateWithRos(false), verbose(false){
+  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>(__modelWorld__));
   globalTaskControllerModule=this;
 }
 
@@ -16,9 +17,9 @@ TaskControllerModule::~TaskControllerModule(){
 }
 
 void TaskControllerModule::open(){
-  modelWorld.getJointState(q_model, qdot_model);
+  modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld);
+  feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController.qitselfPD.y_ref = q0;
   feedbackController.qitselfPD.setGains(.0,10.);
 
@@ -46,7 +47,7 @@ void TaskControllerModule::step(){
       if(syncModelStateWithRos){
         q_model = q_real;
         qdot_model = qdot_real;
-        modelWorld.setJointState(q_model, qdot_model);
+        modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
         syncModelStateWithRos = false;
       }
@@ -62,7 +63,7 @@ void TaskControllerModule::step(){
   }
 
   if(!(t%5)){
-    modelWorld.watch(false, STRING("model world state t="<<(double)t/100.));
+    __modelWorld__.watch(false, STRING("model world state t="<<(double)t/100.));
   }
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
@@ -86,6 +87,7 @@ void TaskControllerModule::step(){
 
   //-- copy the task to the local controller
   ctrlTasks.readAccess();
+  modelWorld.writeAccess();
   feedbackController.tasks = ctrlTasks();
 
   //-- compute the feedback controller step and iterate to compute a forward reference
@@ -97,6 +99,7 @@ void TaskControllerModule::step(){
     feedbackController.setState(q_model, qdot_model);
   }
   if(verbose) feedbackController.reportCurrentState();
+  modelWorld.deAccess();
   ctrlTasks.deAccess();
 
   //-- first zero references

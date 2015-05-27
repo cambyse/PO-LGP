@@ -6,8 +6,8 @@
 //#include <Motion/motionHeuristics.h>
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <Actions/TaskControllerModule.h>
-#include <FOL/relationalMachineModule.h>
+#include <pr2/TaskControllerModule.h>
+#include <pr2/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 
@@ -17,6 +17,8 @@ struct SwigSystem : System{
   ACCESS(RelationalMachine, RM)
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
+  ACCESS(ors::KinematicWorld, modelWorld)
+
   TaskControllerModule *tcm;
   SwigSystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
@@ -50,9 +52,8 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 ActionSwigInterface::ActionSwigInterface(bool useRos){
   S = new SwigSystem();
+  S->tcm->verbose=false;
   engine().open(*S, true);
-
-  taskControllerModule()->verbose=false;
 
   createNewSymbol("conv");
   createNewSymbol("contact");
@@ -71,28 +72,28 @@ ActionSwigInterface::~ActionSwigInterface(){
 
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
-  S->tcm->mutex.lock();
-  ors::Body *body = S->tcm->modelWorld.getBodyByName(bodyName.c_str());
+  S->tcm->modelWorld.readAccess();
+  ors::Body *body = S->tcm->modelWorld().getBodyByName(bodyName.c_str());
   D["pos"] = STRING('[' <<body->X.pos <<']');
-  S->tcm->mutex.unlock();
+  S->tcm->modelWorld.deAccess();
   return D;
 }
 
 dict ActionSwigInterface::getShapeByName(std::string shapeName){
   dict D;
-  S->tcm->mutex.lock();
-  ors::Shape *shape = S->tcm->modelWorld.getShapeByName(shapeName.c_str());
+  S->tcm->modelWorld.readAccess();
+  ors::Shape *shape = S->tcm->modelWorld().getShapeByName(shapeName.c_str());
   D["pos"] = STRING('[' <<shape->X.pos <<']');
-  S->tcm->mutex.unlock();
+  S->tcm->modelWorld.deAccess();
   return D;
 }
 
 dict ActionSwigInterface::getJointByName(std::string jointName){
   dict D;
-  S->tcm->mutex.lock();
-  ors::Joint *joint = S->tcm->modelWorld.getJointByName(jointName.c_str());
+  S->tcm->modelWorld.readAccess();
+  ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
   D["pos"] = STRING('[' <<joint->X.pos <<']');
-  S->tcm->mutex.unlock();
+  S->tcm->modelWorld.deAccess();
   return D;
 }
 

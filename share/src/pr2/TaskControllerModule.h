@@ -1,3 +1,4 @@
+#pragma once
 
 #include <Core/module.h>
 #include <Motion/feedbackControl.h>
@@ -5,17 +6,20 @@
 
 extern struct TaskControllerModule *taskControllerModule();
 
+/// The task controller generates the message send to the RT_Controller
+/// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
   //protected access points
   ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
   ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
   ACCESS(MT::Array<CtrlTask*>, ctrlTasks)
   ACCESS(MT::String, effects)
+  ACCESS(ors::KinematicWorld, modelWorld)
 
   //non-protected members
-  Mutex mutex;
+//private:
   ors::KinematicWorld realWorld;
-  ors::KinematicWorld modelWorld;
+  ors::KinematicWorld __modelWorld__;
   FeedbackMotionControl feedbackController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
@@ -25,6 +29,7 @@ struct TaskControllerModule : Module {
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
   bool verbose;
 
+public:
   TaskControllerModule();
   ~TaskControllerModule();
 

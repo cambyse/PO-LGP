@@ -1,8 +1,6 @@
 #pragma once
 
 #include <Core/graph.h>
-#include "relationalMachine.h"
-#include <Core/registry.h>
 #include <Core/module.h>
 
 struct Activity {
@@ -18,6 +16,8 @@ struct Activity {
 };
 stdOutPipe(Activity)
 
+//===========================================================================
+
 typedef MT::Array<Activity*> ActivityL;
 
 /// global registry of activity classes/types (implementations)
@@ -31,6 +31,7 @@ template<class T> void registerActivity(const char* key){
 /// create/launch a new activity based on the fact
 Activity* newActivity(Item *fact);
 
+//===========================================================================
 
 struct ActivitySpinnerModule : Module{
   ACCESS(ActivityL, A)

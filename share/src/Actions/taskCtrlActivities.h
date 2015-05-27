@@ -1,4 +1,5 @@
-#include <FOL/activity.h>
+#include <Ors/ors.h>
+#include "activity.h"
 
 /// A typical 'control activity' that adds a CtrlTask to the task list of the task controller.
 /// Der

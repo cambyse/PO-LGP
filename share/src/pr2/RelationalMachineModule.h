@@ -1,6 +1,8 @@
+#pragma once
+
 #include <Core/module.h>
-#include "activity.h"
-#include "relationalMachine.h"
+#include <FOL/relationalMachine.h>
+#include <Actions/activity.h>
 
 struct RelationalMachineModule : Module{
   ACCESS(MT::String, effects)

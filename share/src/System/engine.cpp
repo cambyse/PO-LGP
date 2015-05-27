@@ -222,8 +222,8 @@ Module* System::addModule(const char *dclName, const char *name, const StringA& 
   return m;
 }
 
-VariableContainer* System::connect(Access& acc, const char *variable_name){
-  VariableContainer *v = listFindByName(vars, variable_name);
+RevisionedAccessGatedClass* System::connect(Access& acc, const char *variable_name){
+  RevisionedAccessGatedClass *v = listFindByName(vars, variable_name);
   if(v){ //variable exists -> link it
     acc.linkToVariable(v);
   }else{ //variable does not exist yet
@@ -242,7 +242,7 @@ void System::connect(){
 
   for(Access *a: accs){
     Module *m=a->module;
-    VariableContainer *v = NULL;
+    RevisionedAccessGatedClass *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
     else v = a->var;
 
@@ -258,8 +258,8 @@ Graph System::graph() const{
   Graph g;
   g.append<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
-  std::map<VariableContainer*, Item*> vit;
-  for(VariableContainer *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
+  std::map<RevisionedAccessGatedClass*, Item*> vit;
+  for(RevisionedAccessGatedClass *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: modules){
     Item *mit = g.append({"Module", m->name}, {}, &m, false);
@@ -461,7 +461,7 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
   delete c;
 }
 
-void EventController::queryReadAccess(VariableContainer *v, const Module *p){
+void EventController::queryReadAccess(RevisionedAccessGatedClass *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -474,7 +474,7 @@ void EventController::queryReadAccess(VariableContainer *v, const Module *p){
   blockMode.unlock();
 }
 
-void EventController::queryWriteAccess(VariableContainer *v, const Module *p){
+void EventController::queryWriteAccess(RevisionedAccessGatedClass *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -487,7 +487,7 @@ void EventController::queryWriteAccess(VariableContainer *v, const Module *p){
   blockMode.unlock();
 }
 
-void EventController::logReadAccess(const VariableContainer *v, const Module *p) {
+void EventController::logReadAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -496,7 +496,7 @@ void EventController::logReadAccess(const VariableContainer *v, const Module *p)
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logWriteAccess(const VariableContainer *v, const Module *p) {
+void EventController::logWriteAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -505,13 +505,13 @@ void EventController::logWriteAccess(const VariableContainer *v, const Module *p
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logReadDeAccess(const VariableContainer *v, const Module *p) {
+void EventController::logReadDeAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   //do something if in replay mode
   if(getVariableData(v)->controllerBlocksRead)
     breakpointSleep();
 }
 
-void EventController::logWriteDeAccess(const VariableContainer *v, const Module *p) {
+void EventController::logWriteDeAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   //do something if in replay mode
   //do something if enableDataLog
   if(getVariableData(v)->controllerBlocksWrite)
@@ -585,7 +585,7 @@ void EventController::dumpEventList(){
   writeEventList(*eventsFile, false, 0, true);
 }
 
-LoggerVariableData* EventController::getVariableData(const VariableContainer* v){
+LoggerVariableData* EventController::getVariableData(const RevisionedAccessGatedClass* v){
 //  if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
 //  return v->s->loggerData;
   NIY;

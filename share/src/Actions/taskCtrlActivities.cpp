@@ -1,6 +1,7 @@
 #include <Motion/feedbackControl.h>
-#include "activities.h"
-#include <TaskControllerModule.h>
+#include <pr2/TaskControllerModule.h>
+
+#include "taskCtrlActivities.h"
 
 extern TaskControllerModule *taskControllerModule();
 
@@ -12,17 +13,13 @@ void TaskCtrlActivity::configure(Item *fact) {
   Activity::fact = fact;
   Graph *specs = &NoGraph;
   if(fact->getValueType()==typeid(Graph)) specs = &fact->kvg();
-  taskController->mutex.lock();
-  configure2(name, *specs, taskController->modelWorld);
+  configure2(name, *specs, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
-  taskController->mutex.unlock();
   conv=false;
 }
 
 TaskCtrlActivity::~TaskCtrlActivity(){
-  taskController->mutex.lock();
   taskController->ctrlTasks.set()->removeValue(task);
-  taskController->mutex.unlock();
   delete task;
   delete map;
 }
@@ -52,7 +49,7 @@ void TaskCtrlActivity::step(double dt){
 //===========================================================================
 
 void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  map = new DefaultTaskMap(specs, taskController->modelWorld);
+  map = new DefaultTaskMap(specs, world);
   task = new CtrlTask(name, *map, specs);
   stopTolerance=1e-2; //TODO: overwrite from specs
 }

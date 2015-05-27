@@ -1,8 +1,8 @@
 #include <Actions/swig.h>
-#include <Actions/TaskControllerModule.h>
-#include <Actions/activities.h>
+#include <pr2/TaskControllerModule.h>
+#include <Actions/taskCtrlActivities.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <FOL/relationalMachineModule.h>
+#include <pr2/RelationalMachineModule.h>
 
 #include <Core/util.h>
 #include <System/engine.h>
@@ -13,8 +13,9 @@ struct MySystem : System{
   ACCESS(RelationalMachine, RM)
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
+  TaskControllerModule *tcm;
   MySystem(){
-    addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
     addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
@@ -32,9 +33,9 @@ struct MySystem : System{
 int main(int argc, char** argv) {
 
   MySystem S;
+  S.tcm->verbose=false;
   engine().open(S, true);
 
-  taskControllerModule()->verbose=false;
   for(;;){
     //    S.quitSignal.waitForNextRevision();
     //    if(S.quitSignal.get()==true) break;

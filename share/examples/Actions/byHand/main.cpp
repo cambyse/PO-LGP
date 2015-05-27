@@ -1,28 +1,19 @@
-#include <Actions/TaskControllerModule.h>
+#include <Motion/feedbackControl.h>
+#include <Actions/taskCtrlActivities.h>
 #include <Actions/swig.h>
-#include <Actions/activities.h>
-#include <Hardware/gamepad/gamepad.h>
-#include <FOL/relationalMachineModule.h>
-
-#include <Core/util.h>
-#include <System/engine.h>
 
 // ============================================================================
 
 struct MyTask : TaskCtrlActivity {
-
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt);
+  virtual void step2(double dt){}
   virtual bool isConv();
 };
 
 void MyTask::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  map = new DefaultTaskMap(specs, taskController->modelWorld);
+  map = new DefaultTaskMap(specs, world);
   task = new CtrlTask(name, *map, specs);
   stopTolerance=1e-2; //TODO: overwrite from specs
-}
-
-void MyTask::step2(double dt){
 }
 
 bool MyTask::isConv(){
@@ -32,15 +23,16 @@ bool MyTask::isConv(){
 }
 
 // ============================================================================
+
 int main(int argc, char** argv) {
   registerActivity<MyTask>("MyTask");
 
   ActionSwigInterface S(false);
 
   S.createNewSymbol("MyTask");
-  S.createNewSymbol("HomingActivity");
-  S.createNewSymbol("endeffR");
-  S.createNewSymbol("endeffL");
+  S.createNewSymbol("HomingActivity"); //-> wird automatisiert
+  S.createNewSymbol("endeffR"); //-> wird automatisiert
+  S.createNewSymbol("endeffL"); //-> wird automatisiert
 
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
