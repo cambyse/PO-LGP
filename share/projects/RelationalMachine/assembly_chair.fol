@@ -1,0 +1,35 @@
+Symbol conv
+Symbol timeout
+Symbol contact
+Symbol init
+Symbol quit
+
+Symbol handL
+Symbol handR
+Symbol leg1
+Symbol leg2
+
+Action grasp
+Action release
+Action assemble
+Action homing
+
+STATE { (init) }
+
+Rule { { (init) }
+       { (init)! (grasp leg1 handL) (grasp leg2 handR) } }
+
+Rule { { (grasp leg1 handL conv) (grasp leg2 handR conv) }
+       { (assemble leg1 leg2) (grasp leg1 handL)! (grasp leg1 handL conv)!
+                              (grasp leg2 handR)! (grasp leg2 handR conv)! } }
+
+Rule { { (assemble leg1 leg2 conv) }
+       { (release leg1 handL) (release leg2 handR) (assemble leg1 leg2)! (assemble leg1 leg2 conv)! } }
+
+Rule { { (release leg1 handL conv) (release leg2 handR conv) }
+       { (homing) (release leg1 handL)! (release leg1 handL conv)!
+                  (release leg2 handR)! (release leg2 handR conv)! } }
+
+Rule { { (homing conv) }
+       { (quit) (homing)! (homing conv)! } }
+

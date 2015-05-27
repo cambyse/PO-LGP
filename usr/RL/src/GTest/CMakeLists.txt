@@ -4,7 +4,9 @@ find_package(Qt5Core)
 find_package(Qt5Widgets)
 find_package(Qt5Svg)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+add_definitions(-std=c++0x)
+
+include_directories(/home/robert/MLR_git/share/include)
 
 add_executable(GTest
     main.cpp

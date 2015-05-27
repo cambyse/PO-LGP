@@ -1,7 +1,11 @@
 #pragma once
-
+// roscom makes MLR speak with ROS.
+//===========================================================================
 #include <Core/module.h>
 #include <Core/array.h>
+#include <Core/geo.h>
+#include <Ors/ors.h>
+
 
 //===========================================================================
 //
@@ -54,28 +58,15 @@ struct CtrlMsg{
 //
 // modules
 //
-
-/* Modules:
-- RosSpinner
-- RosCtrlMsg
-- RosForceMsg
-- RosKinectMsg
-- RosCameraMsg
-
-TODO: allow modules to set default loopWithBeat, listenFirst, etc
+/* TODO: allow modules to set default loopWithBeat, listenFirst, etc
 options. (In their constructor?)
-
 */
-
-
 //===========================================================================
-
 /// This module only calls ros:spinOnce() in step() and loops full speed -- to sync the process with the ros server
 BEGIN_MODULE(RosCom_Spinner)
 END_MODULE()
 
 //===========================================================================
-
 /// This module syncs the controller state and refs with the real time hardware controller (marc_controller_...)
 BEGIN_MODULE(RosCom_ControllerSync)
   ACCESS(CtrlMsg, ctrl_ref)
@@ -84,8 +75,24 @@ BEGIN_MODULE(RosCom_ControllerSync)
 //  ACCESS(JointControllerStateMsg, ctrl_state)
 END_MODULE()
 
-//===========================================================================
+// Helper function so sync ors with the real PR2
+/**
+ * This starts the initial sync of the world with ctrl_obs from the robot.
+ *
+ * This is verbose (helps debugging) and retries to connect to the robot multiple times.
+ *
+ * If useRos==false then nothing happens.
+ */
+void initialSyncJointStateWithROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
 
+/**
+ * Sync the world with ctrl_obs from the robot.
+ *
+ * If useRos==false then nothing happens.
+ */
+void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
+
+//===========================================================================
 /// This module syncs the kinect
 BEGIN_MODULE(RosCom_KinectSync)
   ACCESS(byteA, kinect_rgb)
@@ -93,7 +100,6 @@ BEGIN_MODULE(RosCom_KinectSync)
 END_MODULE()
 
 //===========================================================================
-
 /// This module syncs the left & right eye
 BEGIN_MODULE(RosCom_CamsSync)
   ACCESS(byteA, rgb_leftEye)
@@ -101,7 +107,6 @@ BEGIN_MODULE(RosCom_CamsSync)
 END_MODULE()
 
 //===========================================================================
-
 /// This module syncs the left & right arm cams
 BEGIN_MODULE(RosCom_ArmCamsSync)
   ACCESS(byteA, rgb_leftArm)
@@ -109,16 +114,10 @@ BEGIN_MODULE(RosCom_ArmCamsSync)
 END_MODULE()
 
 //===========================================================================
-
+/// Sync the FT sensor
 BEGIN_MODULE(RosCom_ForceSensorSync)
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
-END_MODULE()
-
-//===========================================================================
-
-BEGIN_MODULE(RosCom_ARMarkerSync)
-  ACCESS(arr, marker_pose)
 END_MODULE()
 
 //===========================================================================
