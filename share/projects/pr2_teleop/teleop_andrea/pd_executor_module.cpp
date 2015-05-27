@@ -2,53 +2,58 @@
 #include <Ors/ors.h>
 #include <Motion/pr2_heuristics.h>
 
-#ifdef WITH_ROS
-  // #include <pr2/roscom.h>
-#endif
-
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"), fmc(world, true) {
+    : world("model.kvg"), fmc(world, true), inited(false), useros(false) {
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
   fmc.qitselfPD.y_ref = q;
+  fmc.qitselfPD.setGains(.0, 10.);
 
   // INIT TASKS
   limits = fmc.addPDTask("limits", .1, .8, new TaskMap_qLimits);
-  limits->v_ref.setZero();
-  limits->v_ref.setZero();
-  limits->prec = 100.;
+  limits->y_ref.setZero();
+  // limits->prec = 100.;
+  limits->prec = 0;
 
   // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
   collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   collision->y_ref.setZero();
   collision->v_ref.setZero();
+  // collision->prec = 0;
 
   effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
   effPosR->y_ref = {.4, .4, 1.2};
+  // effPosR->prec = 0;
 
   effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
   effPosL->y_ref = {-.4, .4, 1.2};
+  // effPosL->prec = 0;
 
   int jointID = world.getJointByName("r_gripper_joint")->qIndex;
   gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
   gripperR->y_ref = .08;  // open gripper 8cm
+  // gripperR->prec = 0;
 
   jointID = world.getJointByName("l_gripper_joint")->qIndex;
   gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
   gripperL->y_ref = .08;  // open gripper 8cm
+  // gripperL->prec = 0;
 
-  // Orientation
+  // // Orientation
+  effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
   effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
   effOrientationR->y_ref = {1., 0., 0., 0.};
   effOrientationR->flipTargetSignOnNegScalarProduct = true;
+  // effOrientationR->prec = 0;
 
   effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
   effOrientationL->y_ref = {1., 0., 0., 0.};
   effOrientationL->flipTargetSignOnNegScalarProduct = true;
+  // effOrientationL->prec = 0;
 }
 
 void PDExecutor::visualizeSensors()
@@ -67,6 +72,13 @@ void PDExecutor::visualizeSensors()
 
 void PDExecutor::step()
 {
+  if (useros && !inited) {
+    cout << "STARTING TO OPEN" << endl;
+    initRos();
+    cout << "FINISHED TO OPEN" << endl;
+    inited = true;
+  }
+
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
   world.watch(false);
@@ -80,7 +92,6 @@ void PDExecutor::step()
 
   // cout << "============" << endl;
   // cout << "cal_pose_rh: " << cal_pose_rh << endl;
-
   // cout << "cal_pose_lh: " << cal_pose_lh << endl;
 
   // set arm poses
@@ -160,7 +171,7 @@ void PDExecutor::step()
 
 void PDExecutor::sendRosCtrlMsg()
 {
-#ifdef WITH_ROS
+// #ifdef WITH_ROS
   // if (roscom == nullptr)
   //   return;
 
@@ -170,24 +181,38 @@ void PDExecutor::sendRosCtrlMsg()
   qdotzero.resizeAs(q).setZero();
   ref.qdot = qdotzero;
 
+<<<<<<< HEAD
   ref.fL = ARR(0., 0., 0., 0., 0., 0.);
   // ref.KfL_gainFactor.clear();
   // ref.EfL.clear();
   ref.u_bias = zeros(q.N);
   // ref.Kq_gainFactor = 1.;
   // ref.Kd_gainFactor = 1.;
+=======
+  ref.fL = zeros(6);
+  ref.fR = zeros(6);
+
+  ref.Kp = {1.};
+  ref.Ki.clear();
+  ref.Kd = {1.};
+
+>>>>>>> b0b2422c10c07277a6f5253fe020f40054a74546
   ref.gamma = 1.;
-  ref.velLimitRatio = .1;
-  ref.effLimitRatio = 1.;
+  ref.J_ft_inv.clear();
+  ref.u_bias = zeros(q.N);
+
+  // not actually used in controller
+  // ref.velLimitRatio = .1;
+  // ref.effLimitRatio = 1.;
 
   ctrl_ref.set() = ref;
   // roscom->publishJointReference();
-#endif
+// #endif
 }
 
 void PDExecutor::initRos()
 {
-#ifdef WITH_ROS
+// #ifdef WITH_ROS
   // if (roscom == nullptr)
   //   return;
 
@@ -215,14 +240,12 @@ void PDExecutor::initRos()
   qdot = ctrl_obs.get()->qdot;
   fmc.setState(q, qdot);
   cout << "DONE" << endl;
-#endif
+// #endif
 }
 
 void PDExecutor::open()
 {
-  cout << "STARTING TO OPEN" << endl;
-  initRos();
-  cout << "FINISHED TO OPEN" << endl;
+  useros = MT::getParameter<bool>("useRos", false);
 }
 
 void PDExecutor::close()
