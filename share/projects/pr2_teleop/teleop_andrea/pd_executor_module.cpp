@@ -171,11 +171,11 @@ void PDExecutor::sendRosCtrlMsg()
   ref.qdot = qdotzero;
 
   ref.fL = ARR(0., 0., 0., 0., 0., 0.);
-  ref.KfL_gainFactor.clear();
-  ref.EfL.clear();
+  // ref.KfL_gainFactor.clear();
+  // ref.EfL.clear();
   ref.u_bias = zeros(q.N);
-  ref.Kq_gainFactor = 1.;
-  ref.Kd_gainFactor = 1.;
+  // ref.Kq_gainFactor = 1.;
+  // ref.Kd_gainFactor = 1.;
   ref.gamma = 1.;
   ref.velLimitRatio = .1;
   ref.effLimitRatio = 1.;

@@ -3,7 +3,7 @@
 #include <Motion/pr2_heuristics.h>
 
 #ifdef WITH_ROS
-  // #include <pr2/roscom.h>
+   // #include <pr2/roscom.h>
 #endif
 
 // ############################################################################
@@ -173,11 +173,11 @@ void PDExecutor::sendRosCtrlMsg()
   ref.qdot = qdotzero;
 
   ref.fL = ARR(0., 0., 0., 0., 0., 0.);
-  ref.KfL_gainFactor.clear();
-  ref.EfL.clear();
+  ref.fL.clear();
+  ref.fL.clear();
   ref.u_bias = zeros(q.N);
-  ref.Kq_gainFactor = 1.;
-  ref.Kd_gainFactor = 1.;
+  ref.Kp = 1.;
+  ref.Kd = 1.;
   ref.gamma = 1.;
   ref.velLimitRatio = .1;
   ref.effLimitRatio = 1.;
