@@ -40,6 +40,79 @@ void TEST(Init){
 
 //===========================================================================
 
+const Graph& rndContainer(const Graph& G){
+  const Graph *g=&G;
+  while(rnd.uni()<.8){
+    if(!g->isItemOfParentKvg) break;
+    g = &g->isItemOfParentKvg->container;
+  }
+  return *g;
+}
+
+Graph& rndSubgraph(Graph& G){
+  Graph *g=&G;
+  while(rnd.uni()<.8){
+    ItemL subgraphs = g->getTypedItems<Graph>(NULL);
+    if(!subgraphs.N) break;
+    Item *subgraph=subgraphs.rndElem();
+    if(!subgraph->getValue<Graph>()) break;
+    g = &subgraph->kvg();
+  }
+  return *g;
+}
+
+ItemL rndParents(const Graph& G){
+  if(!G.N) return {};
+  uint nparents=rnd(0,10);
+  ItemL par;
+  for(uint i=0;i<nparents;i++){
+    par.append(rndContainer(G).rndElem());
+  }
+  return par;
+}
+
+void rndModify(Graph& G){
+  switch(rnd(4)){
+    case 0://add bool item
+      new Item_typed<bool>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new bool(true), true);
+      break;
+    case 1://add Subgraph item
+      new Item_typed<Graph>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new Graph(), true);
+      break;
+    case 2://delete item
+      if(G.N) delete G.rndElem();
+      break;
+    case 3://clone an item
+      if(G.N) G.rndElem()->newClone(G);
+      break;
+    default:HALT("");
+  }
+}
+
+void TEST(Random){
+  Graph A,B;
+
+  for(uint k=0;k<1000;k++){
+    rndModify(rndSubgraph(A));
+    Graph *C = new Graph(rndSubgraph(A));
+
+//    cout <<"---" <<endl <<A <<endl;
+
+    A.checkConsistency();
+    C->checkConsistency();
+    B = A;
+    B.checkConsistency();
+    if(C->isItemOfParentKvg) delete C->isItemOfParentKvg; else delete C;
+    A.checkConsistency();
+  }
+  A.clear();
+  A.checkConsistency();
+  B.clear();
+  B.checkConsistency();
+}
+
+//===========================================================================
+
 void TEST(Dot){
   Graph G;
   G <<FILE(filename?filename:"coffee_shop.fg");
@@ -74,9 +147,10 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-    testRead();
-//  testInit();
-//  testDot();
+  testRandom();
+  testRead();
+  testInit();
+  testDot();
 
 //  if(!filename) testManual();
 

@@ -43,7 +43,7 @@ namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall, JT_glue };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
 
@@ -133,7 +133,7 @@ struct Joint {
   ~Joint();
   Joint(const Joint &j);
   void operator=(const Joint& j) {
-    qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
+    qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
     locker=j.locker;

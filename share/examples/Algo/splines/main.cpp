@@ -49,12 +49,14 @@ ScalarFunction cost = [](arr &g, arr &H, const arr &x) -> double{
 
 
 void TEST(BSpline){
-  uint K=5,T=100; //6 spline point, path of length T=100
+  uint K=6,T=100; //6 spline point, path of length T=100
 
-  arr X(K+1,2); //spline points
+  arr X(K,2); //spline points
   rndUniform(X,-1,1,false);
 
-  MT::Spline S(T, X);
+  MT::Spline S(T, X, 2);
+
+  cout <<"times = " <<S.times <<endl;
 
   plotOpengl();
   plotModule.drawBox=true;
@@ -81,7 +83,7 @@ void TEST(BSpline){
     fil <<(double)t/1000 <<' ' <<S.eval(t/10) <<' ' <<S.eval((double)t/1000) <<endl;
   }
   fil.close();
-  gnuplot("plot 'z.test' us 1:3, '' us 1:7",true);
+  gnuplot("plot 'z.test' us 1:2, '' us 1:4", true);
 
   //Cost cost;
 
@@ -143,8 +145,8 @@ void TEST(Path){
   }
 
   //-- transform spline
-  P.transform_CurrentBecomes_EndFixed(ARR(1.), .25);
-  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
+//  P.transform_CurrentBecomes_EndFixed(ARR(1.), .25);
+//  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
 
   //-- write spline
   MT::arrayBrackets="  ";
@@ -156,15 +158,15 @@ void TEST(Path){
     fil <<time <<' ' <<P.getPosition(time) <<' ' <<P.getVelocity(time) <<endl;
   }
   fil.close();
-  gnuplot("plot 'z.test' us 1:2, '' us 1:3, 'z.points' us ($0/10):1 w p", true);
+  gnuplot("plot 'z.test' us 1:2 t 'pos', '' us 1:3 t 'vel', 'z.points' us ($0/10):1 w p", true);
 
 }
 
 int MAIN(int argc,char** argv){
   MT::initCmdLine(argc, argv);
 
-//  testBSpline();
-  testPath();
+  testBSpline();
+//  testPath();
 
 
   return 0;

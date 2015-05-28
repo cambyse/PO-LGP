@@ -76,7 +76,7 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
 #if 0
 arr X;
 X <<FILE("/home/mtoussai/share/data/USPS-handwritten-digits/usps-ascii.arr");
-cout <<X.getDim() <<endl;
+cout <<X.dim() <<endl;
 
 byteA tmp;
 copy(tmp, X);

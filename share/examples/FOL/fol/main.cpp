@@ -215,4 +215,5 @@ int main(int argn, char** argv){
 //  testFolDisplay();
   testFolSubstitution();
   testMonteCarlo();
+  cout <<"BYE BYE" <<endl;
 }

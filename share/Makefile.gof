@@ -83,7 +83,7 @@ reformatSources:
 	cp -f gofMake/config.mk.mine gofMake/config.mk
 	mv -f ../README.mlr.md ../README.md
 		
-	rm -Rf $*; mkdir $*; cd $*; tar xvzf ~/git/mlr/$*.tgz
+	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<

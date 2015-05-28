@@ -129,6 +129,11 @@ int main(int argc,char** argv){
   ros::init(argc, argv, "TestJointTrajectoryGenerator");
   ros::AsyncSpinner spinner(4);
   spinner.start();
+<<<<<<< HEAD
+
+#ifdef USE_SL
+=======
+>>>>>>> 567fa0bb3cefc3dd9cc2ba21f81e6338d4eeed80
   sl_controller_interface::init();
 
 

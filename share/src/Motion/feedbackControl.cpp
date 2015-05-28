@@ -60,6 +60,7 @@ void CtrlTask::setGains(double pgain, double dgain) {
 }
 
 void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
+  CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
   Pgain = MT::sqr(1./lambda);

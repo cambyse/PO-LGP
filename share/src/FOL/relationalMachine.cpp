@@ -1,6 +1,13 @@
 #include "relationalMachine.h"
 
+RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), verbose(false){
+}
+
 RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), verbose(false){
+  init(filename);
+}
+
+void RelationalMachine::init(const char* filename){
   MT::FileToken fil(filename);
   if(fil.exists()){
     fil >>KB;
@@ -13,7 +20,7 @@ RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL
   tmp   = &KB["TMP"]->kvg();
 }
 
-bool RelationalMachine::queryCondition(MT::String query){
+bool RelationalMachine::queryCondition(MT::String query) const{
   tmp->clear();
   bool q=false;
   try{
@@ -62,6 +69,13 @@ ItemL RelationalMachine::fwdChainRules(){
     cout <<endl;
   }
   return *tmp;
+}
+
+Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+
+Item* RelationalMachine::declareNewSymbol(MT::String symbol){
+  Item *it = readItem(KB, symbol, false, false);
+  return it;
 }
 
 MT::String RelationalMachine::getKB() {
