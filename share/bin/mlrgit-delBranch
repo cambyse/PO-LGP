@@ -1,2 +1,5 @@
-git push origin :$1
-git branch -d $1
+git branch --delete --remotes origin/$1
+git fetch origin --prune
+
+#git push origin --delete origin/$1
+#git branch -d $1
