@@ -37,7 +37,7 @@ void testMonteCarlo(){
 
         if(verbose>2) cout <<"*** # possible decisions: " <<decisions.N <<endl;
         if(verbose>3) for(auto d:decisions){
-          cout <<"rule " <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl;
+          cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
         }
 
         if(!decisions.N){
@@ -46,7 +46,7 @@ void testMonteCarlo(){
           //-- pick a random decision
           uint deci = MT::rnd(decisions.N);
           std::pair<Item*, ItemL>& d = decisions(deci);
-          if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
+          if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl; }
 
           Item *effect = d.first->kvg().last();
           if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
@@ -115,7 +115,7 @@ void testMonteCarlo(){
 
 void testMCTS(){
   FOL_World world("boxes.kvg");
-  world.verbose=1;
+  world.verbose=4;
   MCTS mcts(world);
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
