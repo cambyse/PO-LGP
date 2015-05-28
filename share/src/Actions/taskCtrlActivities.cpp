@@ -49,9 +49,18 @@ void TaskCtrlActivity::step(double dt){
 //===========================================================================
 
 void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  map = new DefaultTaskMap(specs, world);
+  Item *it;
+  if((it=specs["type"])){
+    if(it->V<MT::String>()=="wheels"){
+      map = new TaskMap_qItself(world, "worldTranslationRotation");
+    }else{
+      map = new DefaultTaskMap(specs, world);
+    }
+  }else{
+    HALT("need a type (the map type) in the specs");
+  }
   task = new CtrlTask(name, *map, specs);
-  stopTolerance=1e-2; //TODO: overwrite from specs
+  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 }
 
 void FollowReferenceActivity::step2(double dt){
