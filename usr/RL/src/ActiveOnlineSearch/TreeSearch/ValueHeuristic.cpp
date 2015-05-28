@@ -1,7 +1,5 @@
 #include "ValueHeuristic.h"
 
-#include "../Environment/Environment.h"
-
 #include <limits>
 
 #include <util/util.h>
@@ -48,7 +46,7 @@ namespace value_heuristic {
         reward_t discounted_return = 0;
         double discount_factor = discount;
         int k=0;
-        DEBUG_OUT(1,"Rollout from state '" << Environment::name(*environment,start_state) << "'");
+        //DEBUG_OUT(1,"Rollout from state '" << Environment::name(*environment,start_state) << "'");
         environment->set_state(start_state);
         while((length<0 || k<length) && !environment->is_terminal_state()) {
             // select action uniformly from available actions
@@ -60,9 +58,9 @@ namespace value_heuristic {
             // update counter and discount factor
             ++k;
             discount_factor*=discount;
-            DEBUG_OUT(2,"    action '" << Environment::name(*environment,action) <<
-                      "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
-                      "	R=" << discounted_return << "	d=" << discount_factor);
+            // DEBUG_OUT(2,"    action '" << Environment::name(*environment,action) <<
+            //           "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
+            //           "	R=" << discounted_return << "	d=" << discount_factor);
         }
         mcts_node_info_map[state_node].add_rollout_return(discounted_return);
 

@@ -12,8 +12,6 @@
 #include <QFile>
 #include <QTextStream>
 
-#include "../Environment/Environment.h"
-
 #include "../graph_util.h"
 
 #include <util/util.h>
@@ -91,8 +89,7 @@ void SearchTree::prune(const action_handle_t & action,
     // check if new root node was found
     if(new_root_node==INVALID) {
         DEBUG_ERROR("No branch for (action --> observation) = ("
-                    << Environment::name(*environment,action)
-                    << " --> " << Environment::name(*environment,observation) << ")");
+                    << *action << " --> " << *observation << ")");
         init(state);
         return;
     }
@@ -186,23 +183,14 @@ const SearchTree::node_info_map_t & SearchTree::get_node_info_map() const {
 QString SearchTree::str_html(const node_t & n) const {
     QString label;
     std::stringstream s;
-    auto env = std::dynamic_pointer_cast<Environment>(environment);
-    if(n==root_node) {
+    if(n==root_node && node_info_map[n].observation==nullptr) {
         label = "root";
     } else if(node_info_map[n].type==OBSERVATION_NODE) {
-        if(env!=nullptr) {
-            label = Environment::name(*environment,node_info_map[n].observation);
-        } else {
-            s << *(node_info_map[n].observation);
-            label = s.str().c_str();
-        }
+        s << *(node_info_map[n].observation);
+        label = s.str().c_str();
     } else {
-        if(env!=nullptr) {
-            label = Environment::name(*environment,node_info_map[n].action);
-        } else {
-            s << *(node_info_map[n].action);
-            label = s.str().c_str();
-        }
+        s << *(node_info_map[n].action);
+        label = s.str().c_str();
     }
     return label;
 }
@@ -211,7 +199,7 @@ SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t 
                                                                    const observation_handle_t & observation) {
     DEBUG_OUT(1,"find_or_create_observation_node()");
     DEBUG_OUT(2,"    action_node: " << graph.id(action_node));
-    DEBUG_OUT(2,"    observation: " << Environment::name(*environment,observation));
+    DEBUG_OUT(2,"    observation: " << *observation);
     using namespace return_tuple;
     node_t observation_node;
     arc_t to_observation_arc;

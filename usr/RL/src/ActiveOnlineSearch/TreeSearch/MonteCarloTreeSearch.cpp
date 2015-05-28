@@ -256,7 +256,6 @@ void MonteCarloTreeSearch::next_do() {
             // update state
             mcts_node_info_map[observation_node].set_state_from_last_visit(state);
             // backup if back_type is BACKUP_TRACE
-            environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
             if(backup_type==BACKUP_TRACE) {
                 backup_method->backup(observation_node,
                                       action_node,
@@ -290,7 +289,6 @@ void MonteCarloTreeSearch::next_do() {
                     node_t action_node = graph.source(to_observation_arc);
                     arc_t to_action_arc = in_arc_it_t(graph,action_node);
                     node_t observation_node = graph.source(to_action_arc);
-                    environment->set_state(mcts_node_info_map[observation_node].get_state_from_last_visit());
                     backup_method->backup(observation_node,
                                           action_node,
                                           mcts_node_info_map);

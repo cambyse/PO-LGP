@@ -124,7 +124,7 @@ static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      , false, "mean", "string");
 static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
                                                      "Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
-                                                     , false, "FULL_DAG", "string");
+                                                     , false, "FullDAG", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "BACKUP_PROPAGATE", "string");
@@ -302,8 +302,9 @@ int main(int argn, char ** args) {
                 }
             }
             if(step<step_n_arg.getValue()) { // don't prune in last step
+                environment->set_state(current_state);
                 auto action = search_tree->recommend_action();
-                auto observation_reward = environment->transition(current_state,action);
+                auto observation_reward = environment->transition(action);
                 auto observation = std::get<0>(observation_reward);
                 auto reward = std::get<1>(observation_reward);
                 current_state = environment->get_state_handle();
@@ -317,10 +318,13 @@ int main(int argn, char ** args) {
                         search_tree->toPdf("tree.pdf");
                     }
                     cout << "Step # " << step+1 <<
-                        ": (action --> state, reward) = (" <<
-                        Environment::name(*environment,action) << " --> " <<
-                        Environment::name(*environment,current_state) << ", " <<
+                        ": (action --> observation, reward) = (" <<
+                        *action << " --> " <<
+                        *observation << ", " <<
                         reward << ")" << endl;
+                    if(environment->is_terminal_state(current_state)) {
+                        cout << "Terminal state!" << endl;
+                    }
                     getchar();
                 }
             }

@@ -4,8 +4,6 @@
 #include <vector>
 #include <utility>
 
-#include "../Environment/Environment.h"
-
 #include <util/util.h>
 
 #define DEBUG_LEVEL 0
