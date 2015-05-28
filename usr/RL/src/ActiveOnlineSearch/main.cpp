@@ -20,12 +20,12 @@
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
-#include "Environment/TightRope.h"
-#include "Environment/DynamicTightRope.h"
-#include "Environment/UnitTestEnvironment.h"
+#include "Environment_old/TightRope.h"
+#include "Environment_old/DynamicTightRope.h"
+#include "Environment_old/UnitTestEnvironment.h"
 #include "Environment/GamblingHall.h"
-#include "Environment/BottleNeckHallway.h"
-#include "Environment/DelayedUncertainty.h"
+#include "Environment_old/BottleNeckHallway.h"
+#include "Environment_old/DelayedUncertainty.h"
 
 #include <omp.h>
 #define USE_OMP

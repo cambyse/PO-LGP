@@ -11,18 +11,18 @@ include_directories(/home/robert/MLR_git/share/include)
 add_executable(main_ActiveOnlineSearch
     main.cpp
     graph_util.h
-    Environment/Environment.h
-    Environment/TightRope.h
-    Environment/TightRope.cpp
-    Environment/DynamicTightRope.h
-    Environment/DynamicTightRope.cpp
-    Environment/UnitTestEnvironment.h
+    Environment_old/Environment.h
+    Environment_old/TightRope.h
+    Environment_old/TightRope.cpp
+    Environment_old/DynamicTightRope.h
+    Environment_old/DynamicTightRope.cpp
+    Environment_old/UnitTestEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
-    Environment/BottleNeckHallway.h
-    Environment/BottleNeckHallway.cpp
-    Environment/DelayedUncertainty.h
-    Environment/DelayedUncertainty.cpp
+    Environment_old/BottleNeckHallway.h
+    Environment_old/BottleNeckHallway.cpp
+    Environment_old/DelayedUncertainty.h
+    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     ComputationalConstGraph.h
@@ -63,18 +63,18 @@ target_link_libraries(GraphPropagationExample util -lemon)
 
 add_library(ActiveOnlineSearch
     graph_util.h
-    Environment/Environment.h
-    Environment/TightRope.h
-    Environment/TightRope.cpp
-    Environment/DynamicTightRope.h
-    Environment/DynamicTightRope.cpp
-    Environment/UnitTestEnvironment.h
+    Environment_old/Environment.h
+    Environment_old/TightRope.h
+    Environment_old/TightRope.cpp
+    Environment_old/DynamicTightRope.h
+    Environment_old/DynamicTightRope.cpp
+    Environment_old/UnitTestEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
-    Environment/BottleNeckHallway.h
-    Environment/BottleNeckHallway.cpp
-    Environment/DelayedUncertainty.h
-    Environment/DelayedUncertainty.cpp
+    Environment_old/BottleNeckHallway.h
+    Environment_old/BottleNeckHallway.cpp
+    Environment_old/DelayedUncertainty.h
+    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     ComputationalConstGraph.h
