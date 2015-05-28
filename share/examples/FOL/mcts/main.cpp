@@ -115,8 +115,9 @@ void testMonteCarlo(){
 
 void testMCTS(){
   FOL_World world("boxes.kvg");
-  world.verbose=4;
   MCTS mcts(world);
+  world.verbose=4;
+  mcts.verbose=1;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
   for(uint k=0;k<100;k++){

@@ -36,6 +36,7 @@ struct sPlotModule {
   MT::Array<arr> images;
   MT::Array<arr> points;
   MT::Array<arr> lines;
+  MT::Array<MT::String> legend;
 #ifdef MT_geo_h
   MT::Array<ors::Vector> planes;
   ors::Mesh mesh;
