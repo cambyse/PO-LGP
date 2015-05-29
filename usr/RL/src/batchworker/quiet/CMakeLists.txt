@@ -5,7 +5,7 @@ find_package(Qt5Svg)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
-add_definitions(-DBATCH_MODE_QUIET)
+add_definitions(-fopenmp -DBATCH_MODE_QUIET)
 
 add_executable(BatchWorker_quiet
     ../main.cpp

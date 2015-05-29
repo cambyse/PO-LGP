@@ -100,7 +100,7 @@ void TEST(Gamepad){
     q += .01*qdot;
     qdot += .01*a;
 //    cout <<t <<endl;
-//    MP.reportCurrentState();
+    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
     if(!(t%4))

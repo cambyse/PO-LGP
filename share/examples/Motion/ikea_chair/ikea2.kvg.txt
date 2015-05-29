@@ -1,7 +1,7 @@
 
-%include ../../../data/pr2_model/pr2_model.ors
+Include = '../../../data/pr2_model/pr2_model.ors'
 
-%include pr2_augmentations.ors
+Include = 'pr2_augmentations.ors'
 
 #body reference{X=<T d(180 0 0 1) d(90 0 0 1)>}
 body reference{}

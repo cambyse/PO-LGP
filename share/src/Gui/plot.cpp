@@ -36,7 +36,6 @@ struct sPlotModule {
   MT::Array<arr> images;
   MT::Array<arr> points;
   MT::Array<arr> lines;
-  MT::Array<MT::String> legend;
 #ifdef MT_geo_h
   MT::Array<ors::Vector> planes;
   ors::Mesh mesh;
@@ -178,7 +177,7 @@ void plotFunctions(const arr& F, double x0, double x1) {
   for(uint j=0; j<tF.d0; j++) plotFunction(tF[j], x0, x1);
 }
 
-void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
+void plotFunctionPoints(const arr& x, const arr& f) {
   CHECK_EQ(x.d0,f.d0, "Domain and image of function have different size!")
   arr X(x.d0, x.d1+1);
   uint i, j;
@@ -187,7 +186,6 @@ void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
     X(i, j)=f(i);
   }
   plotModule.s->points.append(X);
-  plotModule.s->legend.append(title);
 }
 
 void plotFunction(const arr& x, const arr& f) {
@@ -658,7 +656,6 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     MT::String a;
-    if(i<data.legend.N) a<< " with p title '" <<data.legend(i) <<"' ";
     PLOTEVERY(block, a);
     block++;
   }

@@ -64,6 +64,12 @@ ItemL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
+MT::String RelationalMachine::getKB() {
+  MT::String str;
+  KB.write(str, " ");
+  return str;
+}
+
 MT::String RelationalMachine::getState(){
   MT::String str;
   state->write(str, " ");

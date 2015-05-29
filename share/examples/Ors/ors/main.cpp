@@ -516,9 +516,47 @@ void TEST(BlenderImport){
 }
 #endif
 
+// =============================================================================
+void TEST(InverseKinematics) {
+  // we're testing some big steps / target positions, some of which are not
+  // reachable to check if the IK handle it
+  ors::KinematicWorld world("drawer.ors");
+
+  ors::Body* drawer = world.getBodyByName("cabinet_drawer");
+  ors::Body* marker = world.getBodyByName("marker");
+  arr destination = ARRAY(marker->X.pos);
+
+  cout << "destination: " << destination << endl;
+  cout << "world state: " << world.q << endl;
+  world.watch(true, STRING("press key to continue"));
+
+  world.inverseKinematicsPos(*drawer, destination);
+  cout << "destination: " << destination << endl;
+  cout << "world state: " << world.q << endl;
+  world.watch(true, STRING("press key to continue"));
+
+  cout << "moving destination (can't be reached)" << endl;
+  marker->X.pos.set(2., 1., 1);
+  destination = ARRAY(marker->X.pos);
+  world.inverseKinematicsPos(*drawer, destination);
+  cout << "destination: " << destination << endl;
+  cout << "world state: " << world.q << endl;
+  world.watch(true, STRING("press key to continue"));
+
+  cout << "moving destination (can't be reached)" << endl;
+  marker->X.pos.set(-2., 0.1, 1.2);
+  destination = ARRAY(marker->X.pos);
+  world.inverseKinematicsPos(*drawer, destination);
+  cout << "destination: " << destination << endl;
+  cout << "world state: " << world.q << endl;
+  world.watch(true, STRING("press key to continue"));
+}
+
+// =============================================================================
 int MAIN(int argc,char **argv){
-  
+
   testKinematics();
+  testInverseKinematics();
   testLoadSave();
   testCopy();
   testPlayStateSequence();

@@ -28,13 +28,12 @@ typedef MT::Array<VariableContainer*> VariableL;
 
 //===========================================================================
 
-VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
+//VariableL createVariables(const ModuleL& ms); ///< internally calls System::connect();
 
-
-template<class T> void connect(Access& acc, T& x){
-  HALT("strange code...");
-  acc.var = new Variable<T>(acc.name);  
-}
+//template<class T> void connect(Access& acc, T& x){
+//  HALT("strange code...");
+//  acc.var = new Variable<T>(acc.name);
+//}
 
 //===========================================================================
 /**
@@ -137,6 +136,8 @@ struct Engine{
   void test(System& S=NoSystem);
   void close(System& S=NoSystem);
   void cancel(System& S=NoSystem);
+
+  void waitForShutdownSignal(){ shutdown.waitForValueGreaterThan(0); }
 
   /// @name event control
   void enableAccessLog();

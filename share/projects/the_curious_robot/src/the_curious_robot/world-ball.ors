@@ -19,4 +19,4 @@ joint (base robot) {
 }
 # }}}
 #
-%include world.ors
+Include = 'world.ors'
