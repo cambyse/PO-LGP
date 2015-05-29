@@ -1,0 +1,107 @@
+
+## Syntactic keywords
+Terminate
+#Rule
+
+## activities
+grasp
+graspScrew
+release
+releaseScrew
+fix
+
+## basic predicates
+agent
+hand
+object
+
+busy
+free
+held
+grasped
+hasScrew
+fixed
+
+## constants
+Constant 1
+Constant 2
+Constant 3
+Constant 11
+Constant 12
+
+## initial state
+START_STATE {
+(agent 1)
+(hand 1)
+(free 1)
+(agent 2)
+(hand 2)
+(free 2)
+(agent 3)
+(hand 3)
+(free 3)
+(object 11)
+(object 12)
+}
+
+### terminal state
+
+terminal { (fixed 11 12) }
+
+### RULES
+
+Rule activate_grasp {
+  X, Y
+  { (grasp X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
+  { (grasp X Y)=1.0 (busy X) (busy Y) }
+}
+
+Term (Terminate grasp) {
+  X, Y
+  { (grasp X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
+}
+
+Rule activate_release {
+  X, Y
+  { (release X Y)! (agent X) (object Y) (grasped X Y) (busy X)! (busy Y)! }
+  { (release X Y)=1.0 (busy X) (busy Y) }
+}
+
+Term (Terminate release) {
+  X, Y
+  { (release X Y)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+}
+
+Rule activate_graspScrew {
+  X
+  { (graspScrew X)! (agent X) (free X) (busy X)! }
+  { (graspScrew X)=1.0 (busy X) }
+}
+
+Term (Terminate graspScrew) {
+  X
+  { (graspScrew X)! (free X)! (hasScrew X) (busy X)! }
+}
+
+Rule activate_releaseScrew {
+  X
+  { (releaseScrew X)! (agent X) (hasScrew X) (busy X)! }
+  { (releaseScrew X)=1.0 (busy X) }
+}
+
+Term (Terminate releaseScrew) {
+  X
+  { (releaseScrew X)! (hasScrew X)! (free X) (busy X)! }
+}
+
+Rule activate_fix {
+  X, Y, Z
+  { (fix X Y Z)! (object X) (object Y) (agent Z) (fixed X Y)! (held X) (held Y) (hasScrew Z) (busy X)! (busy Y)! }
+  { (fix X Y Z)=1.0 (busy X) (busy Y) }
+}
+
+Term (Terminate fix) {
+  X, Y, Z
+  { (fix X Y Z)! (fixed X Y) (hasScrew Z)! (busy X)! (busy Y)! }
+}
+

@@ -6,7 +6,7 @@
 
 void testMonteCarlo(){
   Graph Gorig;
-  FILE("boxes.kvg") >>Gorig;
+  FILE("boxes_new.kvg") >>Gorig;
   MT::rnd.seed(3);
   uint verbose=3;
 
@@ -114,7 +114,7 @@ void testMonteCarlo(){
 #include "fol_mcts_world.h"
 
 void testMCTS(){
-  FOL_World world("boxes.kvg");
+  FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=4;
   mcts.verbose=1;
