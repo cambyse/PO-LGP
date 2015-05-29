@@ -484,7 +484,7 @@ double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int i){
 
 double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
   uint t, T=get_T();
-  CHECK(q.nd==2 && q.d0==T+1 && q.d1==qDim(), "q has wrong dimension: " <<q.getDim());
+  CHECK(q.nd==2 && q.d0==T+1 && q.d1==qDim(), "q has wrong dimension: " <<q.dim());
   arr W, H, M, Mt, F;
   double tau=getTau();
   double tau_1 = 1./tau, tau_2 = tau_1*tau_1;

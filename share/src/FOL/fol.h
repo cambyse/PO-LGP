@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Core/graph.h>
 
 //### Level 0 routines

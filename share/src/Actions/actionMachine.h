@@ -21,11 +21,11 @@
 struct ActionMachine : Module {
   struct sActionMachine *s;
 
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, gamepadState);
-  ACCESS(ActionL, A);
-  ACCESS(Graph, KB);
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(arr, gamepadState)
+  ACCESS(ActionL, A)
+  ACCESS(Graph, KB)
 
   ActionMachine();
   ~ActionMachine();

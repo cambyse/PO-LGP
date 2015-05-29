@@ -120,8 +120,6 @@ KinectPoller::KinectPoller() : Module("KinectPoller"), s(NULL){
 }
 
 KinectPoller::~KinectPoller() {
-  if(freenect) delete freenect;
-  freenect=NULL;
 }
 
 void KinectPoller::open() {
@@ -146,5 +144,7 @@ void KinectPoller::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);
+  if(freenect) delete freenect;
+  freenect=NULL;
   s = NULL;
 }

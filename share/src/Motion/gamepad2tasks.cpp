@@ -21,11 +21,11 @@
 #include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
-  endeffR = MP.addPDTask("endeffR", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffR"));
-  endeffL = MP.addPDTask("endeffL", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffL"));
-  base = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffBase"));
-  baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
-  head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(vecTMT, MP.world, "endeffHead", ors::Vector(1., 0., 0.)));
+  endeffR = MP.addPDTask("endeffR", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"));
+  endeffL = MP.addPDTask("endeffL", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"));
+  base = MP.addPDTask("endeffBase", .2, .8, new TaskMap_qItself(MP.world, "worldTranslationRotation"));
+//  baseQuat = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(quatTMT, MP.world, "endeffBase"));
+  head = MP.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, MP.world, "endeffHead", Vector_x, "base_footprint"));
   limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
   coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
@@ -43,8 +43,8 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
   MP.qitselfPD.active=true;
-  limits->active=true;
-  coll->active=true;
+//  limits->active=true;
+//  coll->active=true;
 
   if(gamepadState.N<6) return false;
 
@@ -53,7 +53,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   double gamepadLeftRight   = -gamepadRate*gamepadSignalMap(gamepadState(4));
   double gamepadForwardBack = -gamepadRate*gamepadSignalMap(gamepadState(3));
   double gamepadUpDown      = -gamepadRate*gamepadSignalMap(gamepadState(2));
-  double gamepadRotate   = -1.*gamepadRate*gamepadSignalMap(gamepadState(1));
+  double gamepadRotate      = -gamepadRate*gamepadSignalMap(gamepadState(1));
 
   uint mode = uint(gamepadState(0));
 
@@ -68,11 +68,12 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
-      CtrlTask *pdt=NULL, *pdt_rot=NULL;
+      CtrlTask *pdt=NULL;
       switch(sel){
         case right:  pdt=endeffR;  cout <<"effR control" <<endl;  break;
         case left:   pdt=endeffL;  cout <<"effL control" <<endl;  break;
-        case up:     pdt=head;  cout <<"head control" <<endl;  break;
+//        case up:     pdt=head;  cout <<"head control" <<endl;  break;
+        case up:     cout <<"head control disabled" <<endl;  break;
         case down:   pdt=base;  cout <<"base control" <<endl;  break;
         case none:   pdt=NULL;  break;
         case downRot: break;
@@ -84,7 +85,11 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         pdt->v_ref.resizeAs(pdt->y);
       }
       ors::Vector vel(gamepadLeftRight, gamepadForwardBack, gamepadUpDown);
-      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
+      if(sel==down){
+        vel.set ( gamepadLeftRight, gamepadRotate, gamepadForwardBack );
+        vel *= .5;
+      }
+//      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
       pdt->y_ref = pdt->y + 0.01*ARRAY(vel);
       pdt->v_ref = ARRAY(vel); //setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
@@ -92,30 +97,39 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       //-- left right: gaze control
       if(sel==left || sel==right){
         head->active=true;
-        arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
-        gaze /= length(gaze);
-        head->y_ref = gaze;
-        head->v_ref.setZero();
+        dynamic_cast<DefaultTaskMap*>(&head->map)->jvec = pdt->y;
+//        dynamic_cast<DefaultTaskMap*>(&head->map)->j = dynamic_cast<DefaultTaskMap*>(&pdt->map)->i;
+//        head->active=true;
+//        arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
+//        gaze /= length(gaze);
+//        head->y_ref = gaze;
+//        head->v_ref.setZero();
       }
 
       //-- if down: also control rotation
-      if(sel==down && fabs(gamepadRotate)>0.){
-        pdt_rot=baseQuat;
-        pdt_rot->active=true;
-        if(!pdt_rot->y.N || !pdt_rot->v.N){
-          pdt_rot->map.phi(pdt_rot->y, NoArr, MP.world);
-          pdt_rot->v_ref.resizeAs(pdt_rot->y);
-        }
-        ors::Quaternion vel(0., 0., 0., gamepadRotate);
-        vel = vel*ors::Quaternion(pdt_rot->y);
-        pdt_rot->y_ref = pdt_rot->y + 0.01*ARRAY(vel);
-        pdt_rot->v_ref = ARRAY(vel); //.setZero();
-      }
+//      if(sel==down && fabs(gamepadRotate)>0.){
+//        pdt_rot=baseQuat;
+//        pdt_rot->active=true;
+//        if(!pdt_rot->y.N || !pdt_rot->v.N){
+//          pdt_rot->map.phi(pdt_rot->y, NoArr, MP.world);
+//          pdt_rot->v_ref.resizeAs(pdt_rot->y);
+//        }
+//        ors::Quaternion vel(0., 0., 0., gamepadRotate);
+//        vel = vel*ors::Quaternion(pdt_rot->y);
+//        pdt_rot->y_ref = pdt_rot->y + 0.01*ARRAY(vel);
+//        pdt_rot->v_ref = ARRAY(vel); //.setZero();
+//      }
 
       break;
     }
     case 1: { //homing
       cout <<"homing" <<endl;
+      ors::Joint *j = MP.world.getJointByName("worldTranslationRotation");
+      arr b = base->y_ref;
+      if(b.N && j && j->qDim()){
+        for(uint i=0;i<j->qDim();i++)
+          MP.qitselfPD.y_ref(j->qIndex+i) = b(i);
+      }
       MP.qitselfPD.setGainsAsNatural(2.,1.);
       break;
     }

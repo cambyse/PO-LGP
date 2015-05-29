@@ -64,7 +64,7 @@ bool factsAreEqual(Item* fact0, Item* fact1, bool checkAlsoValue){
   return true;
 }
 
-/// check if these are literally equal (all arguments are identical, be they vars or consts)
+/// check if these are literally equal (all arguments are identical, be they vars or consts) -- fact1 is only a tuple, not an node of the graph
 bool factsAreEqual(Item *fact0, ItemL& fact1){
   if(fact0->parents.N!=fact1.N) return false;
   for(uint i=0;i<fact0->parents.N;i++){
@@ -118,6 +118,7 @@ Item *getEqualFactInKB(Graph& facts, ItemL& fact){
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
 Item *getEqualFactInKB(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue){
+  //TODO: this should construct the tuple, call the above method, then additionally checkForValue -> write a method that checks value only
   ItemL candidates = literal->parents(0)->parentOf;
 //  ItemL candidates = getLiteralsOfScope(KB);
   for(Item *fact:candidates) if(&fact->container==&facts && fact!=literal){
@@ -134,7 +135,8 @@ Item *getEqualFactInList(Item* fact, ItemL& facts){
   return NULL;
 }
 
-/// check if all literals in 'literals' can be matched with one in scope
+/// check if all facts can be matched with one in scope
+//TODO: option value
 bool allFactsHaveEqualsInScope(Graph& KB, ItemL& facts){
   for(Item *fact:facts){
     if(!getEqualFactInKB(KB, fact)) return false;
@@ -142,6 +144,7 @@ bool allFactsHaveEqualsInScope(Graph& KB, ItemL& facts){
   return true;
 }
 
+//TODO: it*->literal*
 bool matchingFactsAreEqual(Graph& facts, Item *it1, Item *it2, const ItemL& subst, Graph* subst_scope){
   CHECK(&it1->container==&it2->container,"");
   if(it1->getValueType()!=it2->getValueType()) return false;
@@ -198,7 +201,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, ItemL& domain, Item* litera
 
 
 
-/// create a new literal by substituting all variables with subst(var->index) (if non-NULL)
+/// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
 /// add the new literal to KB
 Item* createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope){
   Item *fact = literal->newClone(facts);
@@ -295,6 +298,12 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbos
   Item* EQ = facts["EQ"];
   ItemL vars = getSymbolsOfScope(varScope);
 
+//  if(!vars.N){
+//    cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" WITHOUT variables!" <<endl;
+//    ItemL subs(1u,0u);
+//    return subs;
+//  }
+
   if(verbose){
     cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
 //    cout <<"   with facts " <<facts <<" and domain "; listWrite(domain, cout); cout <<'\'' <<endl;
@@ -382,7 +391,7 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbos
   substitutions.reshape(subN,vars.N);
 
   if(verbose){
-    cout <<"POSSIBLE SUBSTITUTIONS:" <<endl;
+    cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
     for(uint s=0;s<substitutions.d0;s++){
       for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
         cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
@@ -411,7 +420,10 @@ bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes, bool verbose){
         if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
         bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg(), changes);
         if(verbose){
-          if(e) cout <<"NEW STATE = " <<state <<endl;
+          if(e){
+            cout <<"NEW STATE = " <<state <<endl;
+            if(&changes) cout <<"CHANGES = " <<changes <<endl;
+          }
           else cout <<"DID NOT CHANGE STATE" <<endl;
         }
         newFacts |= e;

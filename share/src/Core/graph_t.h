@@ -50,27 +50,22 @@ struct Item_typed:Item {
   /// directly store pointer to value
   Item_typed(Graph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
-  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, T *value, bool ownsValue)
-    : Item(container, parents), value(value), ownsValue(ownsValue) {
+  Item_typed(Graph& container, const StringA& keys, const ItemL& parents, T *value, bool ownsValue)
+    : Item(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    keys=_keys;
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
-//  /// copy value
-//  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, const T& _value)
-//    : Item(container, parents), value(NULL), ownsValue(true) {
-//    value = new T(_value);
-//    keys=_keys;
-//    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
-//  }
-
   virtual ~Item_typed(){
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
     if(ownsValue) delete value;
+    value=NULL;
   }
 
   virtual bool hasValue() const {
@@ -102,12 +97,23 @@ struct Item_typed:Item {
     Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     if(!itt->value || !value) return false;
+#ifdef MT_CLANG
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+#endif
     return memcmp(itt->value, value, sizeof(T))==0;
+#ifdef MT_CLANG
+#  pragma clang diagnostic pop
+#endif
   }
 
   virtual void writeValue(std::ostream &os) const {
-    if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
-    else os <<*value;
+    if(value){
+      if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
+      else os <<*value;
+    }else{
+      os <<"<" <<typeid(T).name() <<">";
+    }
   }
   
   virtual const std::type_info& getValueType() const {
@@ -118,8 +124,13 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone(Graph& container) const {
+  virtual Item* newClone(Graph& container) const {
     if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL, false);
+    if(getValueType()==typeid(Graph)){
+      Graph *g = new Graph();
+      g->copy(*getValue<Graph>(), &container);
+      return g->isItemOfParentKvg;
+    }
     return new Item_typed<T>(container, keys, parents, new T(*value), true);
   }
 };

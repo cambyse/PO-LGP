@@ -35,7 +35,7 @@
 /**
  * A CtrlTask defines a motion in operational space.
  */
-struct CtrlTask{
+struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) in task spaces
   TaskMap& map;
   MT::String name;
   bool active;

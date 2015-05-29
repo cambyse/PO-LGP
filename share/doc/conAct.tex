@@ -1,0 +1,393 @@
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newenvironment{items}{
+\par\small
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+\input{macros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pdflatex
+\usepackage{framed}
+  \definecolor{shadecolor}{gray}{0.9}
+  \setlength{\FrameSep}{3pt}
+\usepackage{fancyvrb}
+
+%\DefineShortVerb{\@}
+
+\newcommand{\go}{{\texttt{go}}}
+
+\title{A Simple Concurrent Action Formalism}
+\author{Marc Toussaint}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+There are many existing formalisms and approaches to 1) describe
+concurrent (multi-agent) action domains and problems (including PDDL
+level 4); 2) to reduce such domains to normal Markovian (or
+semi-Markov) domains; and 3) solve the resulting temporal \emph{planning}
+problems. \cite{*}
+
+I see the situation as follows: Basic research was already done more
+than a decade ago. Now, the issues are rather:
+\begin{itemize}
+\item What is an efficient formalism that allows us
+  to integrate it with our existing relational RL and robot control
+  frameworks?
+\item What is an approach to also compute \emph{posteriors} (e.g., for
+  anticipation) rather than ``only'' solve (usually deterministic)
+  planning problems
+\item What is a formulation that allows us to leverage Monte-Carlo
+  Tree Search methods (UCT)?
+\end{itemize}
+
+In the following I propose a simple approach. Questions w.r.t.\ this
+approach are:
+\begin{itemize}
+\item Is it equally general (can cope with the same range of domains)
+as other formalisms?
+\item What notions of optimality are there, also in the stochastic
+duration case?
+\item More thoroughly formalism also the stochastic case.
+\item Optimality and theory on MCTS within this framework.
+\end{itemize}
+
+
+
+\section{From Actions to Initiation \& Termination Decisions}
+
+The classical formulations still think of the ``actions''
+as the decision variables. In the concurrent case, they lift this to
+joint actions, i.e., making decisions about action tuples. But this
+raises ugly isues when actions have variable or even stochastic
+durations. All that led to the ideas of temporal planning, etc.
+
+Much easier is the following process definition. We
+first describe \emph{deterministic domains}:
+
+\subsection{Initiation \& termination operators}
+
+Assume we have $n$ action symbols (activity would be a better word,
+but too long). For each action symbol $a$ we have \emph{two} operators
+(instead of one, as with standard action operators):
+\begin{itemize}
+\item The \emph{initiation operator}
+$$a_I(X):~ \text{precond}(X) \to \go(a,X)=d_a, \text{other\_effects}$$
+\item The \emph{termination operator}
+$$a_T(X):~ \quad  \to \neg\go(a,X),  \text{other\_effects}$$
+\end{itemize}
+
+Both of these operators change the current relational
+state \emph{instantly}.
+
+The \go-predicate is the core: A $\go(a,X)$-predicate in the current
+state indicates that the action $a$ with arguments $X$ is currently
+active. Further, the \go-predicate is \emph{real-valued}! Its current
+value is the \textbf{time-to-go} until this activity will terminate
+and change the relational state. The initiation operator initialized
+the value of the \go-predicate to the (here deterministic) duration
+$d_a$ of that action.
+
+If multiple initiation operators initiate multiple actions instantly
+at the same point in time, they're all concurrently active, perhaps
+with different times-to-go.
+
+\subsection{Initiation \& wait decisions}
+
+The resulting \emph{decision} process is Markovian: The process is a
+series of two types of decisions: \emph{initiation decisions}
+and \emph{wait decisions}.
+
+Each initiation decision might refer to a different agent (indicated
+by the argment $X$ to an action $a$). Initiation decisions are
+instantaneous, have no real-time duration. Therefore, although they
+``increase the step-counter'' of the Markov Decision Process---or the
+depth of the search tree---real-time does not progress.
+
+The wait decision [[refer to previous literature on these within
+sMDP]] is a unique thing, has no arguments $X$ or $a$, and does not
+really refer to a particular agent---it rather expresses
+that \emph{all agents decide not to initiate anything further in the
+current relational state}. Therefore, the wait decision progresses
+real-time \emph{until the relational state changes}. In real-world,
+there may be different ``reasons'' the relational state changes:
+\begin{items}
+\item A currently active activity may return feedback, e.g. on its
+convergence, failure, termination, change-in-success-probability,
+anything. In all of these cases the activity just adds a predicate to
+the relational state encoding the novel information.
+\item A sensor signal might add and observation predicate to the
+relational state. (Actually, if one thinks of the activity of sensors
+also as an action, then this case is no different to the first.)
+\end{items}
+
+However, in model-based planning we assume to have a model of the
+world. Therefore we assume to know (at least in the deterministic
+case) at what time an activity will change the
+relational state. The wait decision is therefore realized by a very
+particular operator on the relational state, which is not expressed by
+a rule with preconditions and effects, but by the following little
+``procedure'':
+\begin{enumerate}
+\item Find the \go-predicate with the minimal time-to-go value $d_{min}$.
+\item Decrement all \go-predicate-values by $d_{min}$.
+\item For all $\go(a,X)$ predicates with $\go(a,X)=0$ call
+the \emph{termination operator} $a_T(X)$
+\end{enumerate}
+
+\subsection{Redundancies in the decision tree}
+
+Consider the decision tree for this process. There is undesirable
+redundancy in this tree: When multiple initiation decisions are made,
+their order should not patter. (At least in the classical formalisms they
+don't---in my formalisms there could be interesting preconditions to
+allow/disallow certain orders.) If the order does not matter, we can
+identify the resulting nodes as equal.
+
+\section{Example}
+
+Here is an example domain: the box assembly. The initial part simply
+declares a number of symbols which can later be used to formulate
+literals (nothing but tuples of symbols or variables, in this
+representation).
+
+The initial state is a set (conjunction) of literals.
+
+The terminal condition is a set (conjunction) of literals.
+
+For every action symbol (activity) an initiation and termination
+operator is defined. Each operator first declares variables (arguments
+of the operator), the precondition as a set of literals, and the
+effect as a set of literals.
+
+Note that for this example we had to introduce symbols to that allow
+us to indicate mutexes between activities, like busy (that hand is
+busy and can't do something else), etc. We played with this a lot and
+think that also the classical formulations are by no means better or
+easier: They have to introduce a lot of extra formalism to indicate
+various types of mutexes (eternal, etc). Here, all mutexing is
+represented in the preconditions of initiation operators.
+
+[The file syntax is actually a hierarchical hypergraph syntax, with
+tuples being hypernodes/edges. We interally implement all first order
+logic operations (esp.\ computing feasible variable substitutions) on
+such a generalized graph representation.]
+
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+## Syntactic keywords
+Terminate
+#Rule
+
+## activities
+pickingup
+positioning
+screwing
+releasing
+busy
+inhandNil
+
+## basic predicates
+table
+on
+wall
+screw
+ground
+object
+material
+humR
+humL
+rob
+hand
+used
+inPosition
+inhand
+fixed
+
+## constants
+Constant 67
+Constant 71
+Constant 72
+Constant 76
+Constant 77
+Constant 78
+
+## initial state
+(screw 67)
+(object 67)
+(ground 71)
+(material 71)
+(object 71)
+(wall 72)
+(material 72)
+(object 72)
+(humR 76)
+(hand 76)
+(humL 77)
+(hand 77)
+(rob 78)
+(hand 78)
+(inhandNil 76)
+(inhandNil 77)
+(inhandNil 78)
+
+### terminal state
+
+terminal { (used 67) (inPosition 71) (inPosition 72) }
+
+### RULES
+
+Rule activate_pickingup {
+     X, Y
+     (pickingup X Y)! (hand X) (object Y) (inhandNil X) (busy X)! (busy Y)!
+     effect { (go pickingup X Y)=2.1 (busy X) (busy Y) }
+}
+
+Term (Terminate pickingup) {
+     X, Y
+     effect { (go pickingup X Y)! (inhand X Y) (inhandNil X)! (busy X)! }
+}
+
+Rule activate_positioning {
+     X, Y
+     (positioning X Y)! (hand X) (object Y) (inhand X Y) (material Y) (inPosition Y)! (busy X)!
+     effect { (go positioning X Y)=3.5 (busy X) }
+}
+
+Term (Terminate positioning) {
+     X, Y
+     effect { (go positioning X Y)! (inPosition Y)  (busy X)! }
+}
+
+Rule activate_releasing {
+     X, Y
+     (releasing X Y)! (hand X) (object Y) (inhand X Y) (material Y) (busy X)!
+     effect { (go releasing X Y)=1.0 (busy X) }
+}
+
+Term (Terminate releasing){
+     X, Y
+     effect { (go releasing X Y)! (inhand X Y)! (inhandNil X) (busy X)! (busy Y)! }
+}
+
+Rule activate_screwing {
+     X, Y, Z, U, V, W
+     (screwing X Y Z U V W)! (hand X) (screw Y) (inhand X Y) (wall Z) (ground W) (inPosition Z) (inPosition W) (hand U) (inhand U Z) (hand V) (inhand V W) (fixed Z W)! (busy X)! (busy U)! (busy V)!  (used Y)!
+     effect { (go screwing X Y Z U V W)=8.0 (busy X) (busy U) (busy V) (inPosition Z) (inPosition W) }
+}
+
+Term (Terminate screwing) {
+     X, Y, Z, U, V, W
+     effect { (go screwing X Y Z U V W)! (fixed Z W) (used Y) (inPosition Z) (inPosition W) (busy X)! (busy U)! (busy V)! (inhand X Y)! (inhandNil X) }
+}
+
+\end{Verbatim}
+\end{shaded}
+
+\bibliography{conAct.bib}
+
+\end{document}
+
+%% \subsection{Deterministic effect and duration}
+
+%% TODO: compare to PDDL level 4!
+
+%% We assume we are in relational setting. The current state is described
+%% by 1st-order logic sentence.
+
+%% The transitino dynamics of the domain are desribed by a set of
+%% (ConAct-STRIPS) rules, where each rule is a 5 tupe
+%% \begin{itemize}
+%% \item The action predicate $a(\{X_i\})$ with logical variables
+%%   $\{X_i\}$ as arguments
+%% \item The precondition $\phi(\{X_i\},\{Z_i\})$ (a logic sentence) that
+%%   may depend on deictic variables $\{Z_i\}$
+%% \item The effect $\O(\{X_i\},\{Z_i\})$, that defines a state
+%%   transition under the frame assumption
+%% \item A mutex list of action predicates $\{b(\{X_i\})\}$ which
+%%   indicates that execution of $a(\{X_i\})$ is not allowed if any of
+%%   $b(\{X_i\})$ are currently active
+%% \item A deterministic duration $d\in\RRR$
+%% \end{itemize}
+
+
+%% \section{Overview of reductions}
+
+%% \begin{description}
+%% \item[Activation decisions] We think of the current activity $A$ (the
+%%   set of all currently active actions) as part of the state. As the
+%%   ``new action space'' we introduce the decision to activate a certain
+%%   action, i.e., to add a certain action to $A$. Executing concurrent
+%%   actions then is a sequence of decision. (details below)
+
+%% \item[Combinatorial actionset decisions] We chop the everything in
+%%   separate episodes. In each episode we need to make a decision about
+%%   the combinatorial concurrent action set $A$.
+%% \end{description}
+
+
+%% \section{Activation decisions}
+
+%% The original state $s$ is a sentence in a relational language. For
+%% every action predicate $a(\{X_i\})$ we introduce a new function
+%% $timeToGo(a,\{X_i\})$ which evaluates to $0$ if the action is
+%% currently inactive and non-zero otherwise.
+
+%% Also, for every action predicate $a(\{X_i\})$ we introduce activation
+%% decision predicates $activate(a,\{X_i\})$. Each (grounded) decision
+%% predicate uniquely defines a state transition in the extended state
+%% space:
+%% \begin{verbatim}
+%% activate(a,X):
+%% PRE: timeToGo(a,X)=0, \forall_b in MUTEX(a,X): timeToGo(b,X)=0
+%% POST: timeToGo(a,X)=a.duration
+%% \end{verbatim}
+
+%% \textbf{These activation decision predicates to not progress time}
+
+%% Additionally, we introduce one more decision, which is the
+%% \texttt{waitForNextHappening}, which uniquely defines a state
+%% transition in the extended state space by searching for the smallest
+%% non-zero time-to-go and decrementing \emph{all} time-to-gos by that
+%% amount.
+
+%% \textbf{This single decision is the only one to progress time}
+
+%% Now everything should become a problem of finding a sequence of
+%% decisions in the extended state space, right?
+
+
+
+
+
+
+
+
+
+
+

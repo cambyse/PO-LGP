@@ -13,7 +13,7 @@ endif
 
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
-NXX = $(MLR_LIBPATH)/cuda/bin/nvcc
+NXX = nvcc #$(MLR_LIBPATH)/cuda/bin/
 CPATH   := $(CPATH):$(MLR_LIBPATH)/cuda/include:$(MLR_LIBPATH)/cudaSDK/C/common/inc
 ifeq ($(ARCH),x86_64)
 LPATHS += $(MLR_LIBPATH)/cuda/lib64 $(MLR_LIBPATH)/cudaSDK/lib
@@ -24,10 +24,10 @@ CUDA_EMU = 1
 endif
 ifeq ($(CUDA_EMU),1)  #emulation mode!!
 NXXFLAGS = -g -deviceemu
-LIBS += -lcudart -lcublasemu -lcutil
+LIBS += -lcudart -lcublasemu #-lcutil
 else
 NXXFLAGS = -O0 -Xcompiler -fPIC
-LIBS += -lcudart -lcublas -lcutil
+LIBS += -lcudart -lcublas #-lcutil
 endif
 endif
 
@@ -133,9 +133,10 @@ endif
 ifeq ($(QHULL),1)
 CXXFLAGS  += -DMT_QHULL
 LIBS      += -lqhull
+endif
+
 ifeq ($(ARCH_LINUX),1)
 CXXFLAGS += -DARCH_LINUX
-endif
 endif
 
 ifeq ($(OpenML),1)
@@ -253,6 +254,7 @@ endif
 
 ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
+CPATH := $(CPATH):/usr/include/libusb-1.0
 LIBS += -lfreenect -lusb-1.0
 endif
 
