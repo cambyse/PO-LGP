@@ -269,7 +269,7 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
       } else {
         scenario.weights(i).compWeights(w,NoArr,NoArr,param.subRange(c,c+scenario.weights(i).numParam-1),true);
       }
-      plotFunctionPoints(t,log(w+1.),scenario.scenes(0).MP->taskCosts(i)->name);
+      plotFunctionPoints(t,log(w+1.));//,scenario.scenes(0).MP->taskCosts(i)->name);
 //      plotFunctionPoints(t,w,scenario.scenes(0).MP->taskCosts(i)->name);
       c = c+scenario.weights(i).numParam;
     }

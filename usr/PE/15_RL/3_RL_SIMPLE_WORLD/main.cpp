@@ -11,7 +11,7 @@
 #include "../src/cost_weight.h"
 #include "../src/inverse_motion.h"
 #include "../src/plotUtil.h"
-#include "traj_factory.h"
+#include "../src/traj_factory.h"
 
 void testPathIMP() {
   /// create reference motion
