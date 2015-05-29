@@ -149,9 +149,9 @@ void TreeControllerClass::update() {
     //-- command twist to base
     if(j_worldTranslationRotation && j_worldTranslationRotation->qDim()==3){
       geometry_msgs::Twist base_cmd;
-      base_cmd.linear.x = qdot_ref(j_worldTranslationRotation->qIndex+0);
-      base_cmd.linear.y = qdot_ref(j_worldTranslationRotation->qIndex+1);
-      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+2);
+      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+0);
+      base_cmd.linear.x = qdot_ref(j_worldTranslationRotation->qIndex+1);
+      base_cmd.linear.y = qdot_ref(j_worldTranslationRotation->qIndex+2);
       baseCommand_publisher.publish(base_cmd);
     }
   }
