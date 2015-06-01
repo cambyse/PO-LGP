@@ -5,7 +5,7 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"), fmc(world, true), inited(false), useros(false) {
+    : world("model.kvg"), fmc(world, true), started(false), useros(false) {
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
@@ -56,35 +56,37 @@ PDExecutor::PDExecutor()
   // effOrientationL->prec = 0;
 }
 
-void PDExecutor::visualizeSensors()
-{
-  floatA rh = poses_rh.get();
+void PDExecutor::visualizeSensors() {
+  arrf rh = poses_rh.get();
   if(rh.N) {
-    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+    // world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
+    // world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh[0]);
+    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh[1]);
   }
-  floatA lh = poses_lh.get();
+  arrf lh = poses_lh.get();
   if(lh.N) {
-    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+    // world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
+    // world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh[0]);
+    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh[1]);
   }
 }
 
-void PDExecutor::step()
-{
-  if (useros && !inited) {
+void PDExecutor::step() {
+  if(useros && !started) {
     cout << "STARTING TO OPEN" << endl;
     initRos();
     cout << "FINISHED TO OPEN" << endl;
-    inited = true;
+    started = true;
   }
 
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
   world.watch(false);
 
-  floatA cal_pose_rh = calibrated_pose_rh.get();
-  floatA cal_pose_lh = calibrated_pose_lh.get();
+  arrf cal_pose_rh = calibrated_pose_rh.get();
+  arrf cal_pose_lh = calibrated_pose_lh.get();
 
   // only work with calibrated data
   if (cal_pose_rh.N == 0 || cal_pose_lh.N == 0)
@@ -169,12 +171,7 @@ void PDExecutor::step()
   // fmc.reportCurrentState();
 }
 
-void PDExecutor::sendRosCtrlMsg()
-{
-// #ifdef WITH_ROS
-  // if (roscom == nullptr)
-  //   return;
-
+void PDExecutor::sendRosCtrlMsg() {
   CtrlMsg ref;
   ref.q = q;
   arr qdotzero;
@@ -197,16 +194,9 @@ void PDExecutor::sendRosCtrlMsg()
   // ref.effLimitRatio = 1.;
 
   ctrl_ref.set() = ref;
-  // roscom->publishJointReference();
-// #endif
 }
 
-void PDExecutor::initRos()
-{
-// #ifdef WITH_ROS
-  // if (roscom == nullptr)
-  //   return;
-
+void PDExecutor::initRos() {
   cout << "** Waiting for ROS message on initial configuration.." << endl;
   // get robot state from the robot
   for (;;) {
@@ -231,14 +221,11 @@ void PDExecutor::initRos()
   qdot = ctrl_obs.get()->qdot;
   fmc.setState(q, qdot);
   cout << "DONE" << endl;
-// #endif
 }
 
-void PDExecutor::open()
-{
+void PDExecutor::open() {
   useros = MT::getParameter<bool>("useRos", false);
 }
 
-void PDExecutor::close()
-{
+void PDExecutor::close() {
 }
