@@ -18,24 +18,27 @@ struct MCTS_Environment{
       virtual void write(ostream& os) const { os <<"NIL_SAO"; }
     };
     typedef std::shared_ptr<const SAO> Handle;
+    typedef Handle ActionH;      ///< only to clarify semantics in the declarations below
+    typedef Handle ObservationH; ///< only to clarify semantics in the declarations below
+    typedef Handle StateH;       ///< only to clarify semantics in the declarations below
 
     MCTS_Environment() = default;
     virtual ~MCTS_Environment() = default;
 
     /// Perform the action; return the resulting observation and reward
-    virtual std::pair<Handle, double> transition(const Handle& action) = 0;
+    virtual std::pair<ObservationH, double> transition(const ActionH& action) = 0;
 
     /// Perform a random action
-    virtual std::pair<Handle, double> transition_randomly(){
-      std::vector<Handle> actions = get_actions();
+    virtual std::pair<ObservationH, double> transition_randomly(){
+      std::vector<ActionH> actions = get_actions();
       return transition(actions[rand()%actions.size()]);
     }
 
     /// Get the available actions in the current state
-    virtual const std::vector<Handle> get_actions() = 0;
+    virtual const std::vector<ActionH> get_actions() = 0;
 
     /// Get the current state
-    virtual const Handle get_state() = 0;
+    virtual const StateH get_state() = 0;
 
     /// Return whether the current state is a terminal state
     virtual bool is_terminal_state() const = 0;
@@ -43,7 +46,7 @@ struct MCTS_Environment{
     virtual double get_terminal_reward() const { return 0.; }
 
     /// Set the environment's state to the given state -- DEBATABLE!
-    virtual void set_state(const Handle& state) = 0;
+    virtual void set_state(const StateH& state) = 0;
 
     /// Reset the environment's state to the start state
     virtual void reset_state() = 0;

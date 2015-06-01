@@ -120,9 +120,9 @@ void testMCTS(){
   mcts.verbose=1;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<1;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
-    mcts.addRollout();
+    mcts.addRollout(10);
 //    G = mcts.getGraph();
 //    if(!(k%1)) gv.update();
   }

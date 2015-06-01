@@ -20,6 +20,13 @@ FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), v
   constants = KB.getItems("Constant");
   Terminate_keyword = KB["Terminate"];
 
+  if(verbose>1){
+    cout <<"****************** FOL_World: creation info:" <<endl;
+    cout <<"*** start_state=" <<*start_state <<endl;
+    cout <<"*** terminal query=" <<*terminal <<endl;
+    cout <<"*** constants = "; listWrite(constants, cout); cout <<endl;
+    cout <<"*** rules = "; listWrite(rules, cout); cout <<endl;
+  }
   reset_state();
 }
 
