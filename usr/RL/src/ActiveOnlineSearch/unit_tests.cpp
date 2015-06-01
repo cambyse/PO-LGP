@@ -22,7 +22,7 @@
 #include <MCTS_Environment/AbstractEnvironment.h>
 #include <MCTS_Environment/AbstractFiniteEnvironment.h>
 
-#include "Environment/Environment.h"
+#include "Environment_old/Environment.h"
 #include "ComputationalGraph.h"
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/NodeFinder.h"
@@ -611,10 +611,10 @@ public:
 TEST(MCTS, DeriveAbstractEnvironment) {
     ConcreteEnvironment env;
     FiniteEnvironment f_env;
-    DEBUG_OUT(0,"state/action 0/0 --> " << f_env.finite_transition(0,0).first);
-    DEBUG_OUT(0,"state/action 0/1 --> " << f_env.finite_transition(0,1).first);
-    DEBUG_OUT(0,"state/action 1/0 --> " << f_env.finite_transition(1,0).first);
-    DEBUG_OUT(0,"state/action 1/1 --> " << f_env.finite_transition(1,1).first);
+    DEBUG_OUT(1,"state/action 0/0 --> " << f_env.finite_transition(0,0).first);
+    DEBUG_OUT(1,"state/action 0/1 --> " << f_env.finite_transition(0,1).first);
+    DEBUG_OUT(1,"state/action 1/0 --> " << f_env.finite_transition(1,0).first);
+    DEBUG_OUT(1,"state/action 1/1 --> " << f_env.finite_transition(1,1).first);
 }
 
 class MockEnvironment: public Environment {

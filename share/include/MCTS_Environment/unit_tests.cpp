@@ -70,7 +70,7 @@ TEST(AbstractEnvironment, OstremOperator) {
     for(action_handle_t action : action_list) {
         auto observation_reward = env->transition(action);
         observation_handle_t observation = get<0>(observation_reward);
-        cout << "Action " << *action << " / Observation " << *observation << endl;
+        //cout << "Action " << *action << " / Observation " << *observation << endl;
         env->set_state(state);
     }
 }

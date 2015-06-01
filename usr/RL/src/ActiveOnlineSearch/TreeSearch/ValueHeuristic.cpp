@@ -70,8 +70,9 @@ namespace value_heuristic {
         auto rollout_counts = mcts_node_info_map[state_node].get_rollout_counts();
         DEBUG_EXPECT(0,rollout_counts>=1);
         if(rollout_counts==1) {
+            environment->set_state(start_state);
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
-                                                     environment->is_terminal_state(start_state)?
+                                                     environment->is_terminal_state()?
                                                      0:
                                                      std::numeric_limits<double>::infinity());
         } else {
