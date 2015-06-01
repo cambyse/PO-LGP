@@ -94,7 +94,7 @@ void ActionMachine::step(){
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
-  transitionFOL( .01*t,  (t<=1) );
+  transitionFOL( .01*t, true);// (t<=1) );
 
   //-- set gains to default value (can be overwritten by other actions)
   Kp=ARR(1.);
@@ -313,7 +313,7 @@ void ActionMachine::waitForQuitSymbol() {
       return;
     }
     for(Item *f:quitSymbol->parentOf){
-      if(&f->container==&KB() && f->parents.N==1){ cont=false; break; }
+      if(f->container.isItemOfParentKvg && f->container.isItemOfParentKvg->keys.N && f->container.isItemOfParentKvg->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();
   }

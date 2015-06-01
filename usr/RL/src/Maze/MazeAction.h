@@ -3,6 +3,8 @@
 
 #include <representation/AbstractAction.h>
 
+/** Action in a Maze environment. This class implements the AbstractAction
+ * concept. */
 class MazeAction: public AbstractAction {
 public:
     enum class ACTION { UP, DOWN, LEFT, RIGHT, STAY, END };

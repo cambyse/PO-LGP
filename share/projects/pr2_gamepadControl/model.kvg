@@ -1,5 +1,5 @@
-%include pr2_model/pr2_clean.ors
-%include pr2_model/pr2_modifications.ors
+Include = 'pr2_model/pr2_clean.ors'
+Include = 'pr2_model/pr2_modifications.ors'
 
 shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
@@ -20,4 +20,4 @@ shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] si
 
 shape mymarker(world){ type=5 color=[1 1 0] size=[.2 0 0 0]}
 
-Merge worldTranslationRotation{ type=10 }
+#Merge worldTranslationRotation{ type=10 }

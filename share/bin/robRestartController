@@ -1,3 +1,4 @@
+robStopController
 robot stop
 robot start
 rosrun pr2_dashboard pr2_dashboard &
