@@ -219,7 +219,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     expect_near(cg.compute_values({VALUES}).get_output_values(),
                 output_values);
     DISTURB_ALL;
-    expect_near(cg.update_values({VALUES},input_nodes).get_output_values(),
+    expect_near(cg.update_values(input_nodes,{VALUES}).get_output_values(),
                 output_values);
 
 
@@ -228,19 +228,19 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     expect_near(cg.forward_accumulation({VALUES},{1,0,0}).get_output_differentials(),
                 output_diff_1);
     DISTURB_DIFFERENTIALS;
-    expect_near(cg.update_differentials_forward({1,0,0},input_nodes).get_output_differentials(),
+    expect_near(cg.update_differentials_forward(input_nodes,{1,0,0}).get_output_differentials(),
                 output_diff_1);
     DISTURB_DIFFERENTIALS;
     expect_near(cg.forward_accumulation({VALUES},{0,1,0}).get_output_differentials(),
                 output_diff_2);
     DISTURB_DIFFERENTIALS;
-    expect_near(cg.update_differentials_forward({0,1,0},input_nodes).get_output_differentials(),
+    expect_near(cg.update_differentials_forward(input_nodes,{0,1,0}).get_output_differentials(),
                 output_diff_2);
     DISTURB_DIFFERENTIALS;
     expect_near(cg.forward_accumulation({VALUES},{0,0,1}).get_output_differentials(),
                 output_diff_3);
     DISTURB_DIFFERENTIALS;
-    expect_near(cg.update_differentials_forward({0,0,1},input_nodes).get_output_differentials(),
+    expect_near(cg.update_differentials_forward(input_nodes,{0,0,1}).get_output_differentials(),
                 output_diff_3);
 
     // compute derivatives via reverse accumulation
@@ -248,13 +248,13 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     expect_near(cg.reverse_accumulation({VALUES},{1,0}).get_input_differentials(),
                 input_diff_1);
     DISTURB_DIFFERENTIALS;
-    expect_near(cg.update_differentials_reverse({1,0},output_nodes).get_input_differentials(),
+    expect_near(cg.update_differentials_reverse(output_nodes,{1,0}).get_input_differentials(),
                 input_diff_1);
     DISTURB_DIFFERENTIALS;
     expect_near(cg.reverse_accumulation({VALUES},{0,1}).get_input_differentials(),
                 input_diff_2);
     DISTURB_DIFFERENTIALS;
-    expect_near(cg.update_differentials_reverse({0,1},output_nodes).get_input_differentials(),
+    expect_near(cg.update_differentials_reverse(output_nodes,{0,1}).get_input_differentials(),
                 input_diff_2);
 
 
@@ -265,19 +265,19 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     // values
     {
         // change alpha
-        auto v1 = cg.compute_values({0.1,3,30}).update_values({0.2},{alpha_node}).get_output_values();
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({alpha_node},{0.2}).get_output_values();
         auto v2 = cg.compute_values({0.2,3,30}).get_output_values();
         EXPECT_EQ(v1,v2);
     }
     {
         // change w
-        auto v1 = cg.compute_values({0.1,3,30}).update_values({4},{w_node}).get_output_values();
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({w_node},{4}).get_output_values();
         auto v2 = cg.compute_values({0.1,4,30}).get_output_values();
         EXPECT_EQ(v1,v2);
     }
     {
         // change t
-        auto v1 = cg.compute_values({0.1,3,30}).update_values({40},{t_node}).get_output_values();
+        auto v1 = cg.compute_values({0.1,3,30}).update_values({t_node},{40}).get_output_values();
         auto v2 = cg.compute_values({0.1,3,40}).get_output_values();
         EXPECT_EQ(v1,v2);
     }
@@ -287,7 +287,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
         // change alpha
         auto v1 = cg.
             forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
-            update_differentials_forward({0.2},{alpha_node}).
+            update_differentials_forward({alpha_node},{0.2}).
             get_output_differentials();
         auto v2 = cg.
             forward_accumulation({0.1,3,30},{0.2,0.1,0.1}).
@@ -298,7 +298,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
         // change w
         auto v1 = cg.
             forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
-            update_differentials_forward({0.2},{w_node}).
+            update_differentials_forward({w_node},{0.2}).
             get_output_differentials();
         auto v2 = cg.
             forward_accumulation({0.1,3,30},{0.1,0.2,0.1}).
@@ -309,7 +309,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
         // change t
         auto v1 = cg.
             forward_accumulation({0.1,3,30},{0.1,0.1,0.1}).
-            update_differentials_forward({0.2},{t_node}).
+            update_differentials_forward({t_node},{0.2}).
             get_output_differentials();
         auto v2 = cg.
             forward_accumulation({0.1,3,30},{0.1,0.1,0.2}).
@@ -322,7 +322,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
         // change x
         auto v1 = cg.
             reverse_accumulation({0.1,3,30},{0.1,0.1}).
-            update_differentials_reverse({0.2},{x_node}).
+            update_differentials_reverse({x_node},{0.2}).
             get_input_differentials();
         auto v2 = cg.
             reverse_accumulation({0.1,3,30},{0.2,0.1}).
@@ -333,7 +333,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
         // change y
         auto v1 = cg.
             reverse_accumulation({0.1,3,30},{0.1,0.1}).
-            update_differentials_reverse({0.2},{y_node}).
+            update_differentials_reverse({y_node},{0.2}).
             get_input_differentials();
         auto v2 = cg.
             reverse_accumulation({0.1,3,30},{0.1,0.2}).
@@ -383,7 +383,7 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
     // update reverse accumulation
     vec_double_1D v1 = cg.
         reverse_accumulation({1},{1}).
-        update_differentials_reverse({2},{out_node}).
+        update_differentials_reverse({out_node},{2}).
         get_input_differentials();
     vec_double_1D v2 = cg.
         reverse_accumulation({1},{2}).
@@ -644,7 +644,7 @@ class MockSearchTree: public SearchTree {
 public:
     MockSearchTree(std::shared_ptr<AbstractEnvironment> environment,
                    double discount,
-                   std::shared_ptr<NodeFinder> node_finder):
+                   std::shared_ptr<node_finder::NodeFinder> node_finder):
         SearchTree(environment,
                    discount,
                    node_finder) {}

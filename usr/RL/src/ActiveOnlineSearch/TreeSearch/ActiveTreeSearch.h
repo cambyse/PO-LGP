@@ -2,6 +2,7 @@
 #define ACTIVETREESEARCH_H_
 
 #include "SearchTree.h"
+#include "../ComputationalConstGraph.h"
 
 #include <vector>
 #include <map>
@@ -19,15 +20,18 @@ class ActiveTreeSearch: public SearchTree {
     //----members----//
 protected:
     graph_t c_graph;
+    node_t c_root_node = lemon::INVALID;
     graph_t::NodeMap<VariableInfo> variable_info_map;
     graph_t::NodeMap<node_t> base_node;
     graph_t::NodeMap<QString> c_node_name;
+    graph_t::ArcMap<int> counts;
+    ComputationalConstGraph computer;
 
     //----methods----//
 public:
     ActiveTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                      double discount,
-                     std::shared_ptr<NodeFinder> node_finder);
+                     std::shared_ptr<node_finder::NodeFinder> node_finder);
     virtual ~ActiveTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
@@ -36,6 +40,9 @@ public:
     virtual arc_node_t add_observation_node(observation_handle_t observation, node_t action_node) override;
     virtual arc_node_t add_action_node(action_handle_t action, node_t observation_node) override;
     virtual void erase_node(node_t) override;
+    virtual void update_c_node_connections(node_t action_node);
+    virtual void update_c_node_values(node_t action_node);
+    virtual void update_c_root_connections();
 };
 
 #endif /* ACTIVETREESEARCH_H_ */

@@ -118,42 +118,42 @@ public:
     /**
      * Compute all values. Assign values to input variables and compute values
      * and partial derivatives of all nodes and arcs. */
-    virtual ComputationalConstGraph & compute_values(std::vector<double> values);
+    virtual ComputationalConstGraph & compute_values(std::vector<double> values = std::vector<double>());
     /**
      * Compute values and total derivatives. Assign values to input variables
      * and their differentials, compute values and partial derivatives, and
      * compute differentials and total derivatives of output variables via
      * forward accumulation. */
-    virtual ComputationalConstGraph & forward_accumulation(std::vector<double> values,
-                                                           std::vector<double> differentials);
+    virtual ComputationalConstGraph & forward_accumulation(std::vector<double> values = std::vector<double>(),
+                                                           std::vector<double> differentials = std::vector<double>());
     /**
      * Compute values and total derivatives. Assign values to input variables
      * and their differentials, compute values and partial derivatives, and
      * compute differentials and total derivatives of output variables via
      * reverse accumulation. */
-    virtual ComputationalConstGraph & reverse_accumulation(std::vector<double> values,
-                                                           std::vector<double> differentials);
+    virtual ComputationalConstGraph & reverse_accumulation(std::vector<double> values = std::vector<double>(),
+                                                           std::vector<double> differentials = std::vector<double>());
     /**
      * Like compute_values() but only update changed values. Actually
      * compute_values() is just a shorthand for calling update_values() on all
      * input nodes. */
-    virtual ComputationalConstGraph & update_values(std::vector<double> values,
-                                                    std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_values(std::vector<node_t> nodes,
+                                                    std::vector<double> values = std::vector<double>(),
                                                     bool input_nodes_only = true);
     /**
      * Like forward_accumulation() but only update changed values. Actually
      * forward_accumulation() is just a shorthand for calling compute_values()
      * and update_differentials_forward() on the input nodes. */
-    virtual ComputationalConstGraph & update_differentials_forward(std::vector<double> differentials,
-                                                                   std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_differentials_forward(std::vector<node_t> nodes,
+                                                                   std::vector<double> differentials = std::vector<double>(),
                                                                    bool input_nodes_only = true);
     /**
      * Like reverse_accumulation() but only update changed values. Actually
      * reverse_accumulation() is just a shorthand for calling compute_values()
      * on the input nodes and update_differentials_reverse() on the output
      * nodes. */
-    virtual ComputationalConstGraph & update_differentials_reverse(std::vector<double> differentials,
-                                                                   std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_differentials_reverse(std::vector<node_t> nodes,
+                                                                   std::vector<double> differentials = std::vector<double>(),
                                                                    bool output_nodes_only = true);
     /**
      * Checks the derivatives via finite differences. The function changes every
@@ -226,6 +226,12 @@ public:
      * duplicates). */
     virtual bool check_graph_structure(bool reset_input_nodes = false,
                                        bool reset_output_nodes = false);
+    virtual double get_node_value(node_t) const;
+    virtual double get_node_differential(node_t) const;
+    virtual double get_arc_value(arc_t) const;
+    virtual void set_node_value(node_t,double);
+    virtual void set_node_differential(node_t,double);
+    virtual void set_arc_value(arc_t,double);
 private:
     /**
      * Propagate values/differentials from changed nodes.

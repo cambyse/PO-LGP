@@ -110,7 +110,7 @@ void MonteCarloTreeSearch::MCTSArcInfo::add_transition() {
 
 MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
                                            double discount,
-                                           std::shared_ptr<NodeFinder> node_finder,
+                                           std::shared_ptr<node_finder::NodeFinder> node_finder,
                                            std::shared_ptr<tree_policy::TreePolicy> tree_policy,
                                            std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                                            std::shared_ptr<backup_method::BackupMethod> backup_method,

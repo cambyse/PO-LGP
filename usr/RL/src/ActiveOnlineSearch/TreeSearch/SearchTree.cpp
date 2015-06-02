@@ -37,7 +37,7 @@ typedef SearchTree::arc_t arc_t;
 
 SearchTree::SearchTree(std::shared_ptr<AbstractEnvironment> environment,
                        double discount,
-                       std::shared_ptr<NodeFinder> node_finder):
+                       std::shared_ptr<node_finder::NodeFinder> node_finder):
     AbstractSearchTree(environment,discount),
     node_finder(node_finder),
     node_info_map(graph)

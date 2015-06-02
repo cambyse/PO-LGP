@@ -26,7 +26,6 @@ public:
     typedef graph_t::ArcIt     arc_it_t;
     typedef graph_t::InArcIt   in_arc_it_t;
     typedef graph_t::OutArcIt  out_arc_it_t;
-    typedef node_finder::NodeFinder NodeFinder;
     typedef std::tuple<arc_t,node_t,bool,bool> arc_node_t;
     /**
      * Basic information about a node. That is, its type (observation or action) and
@@ -51,7 +50,7 @@ protected:
     static const bool use_sqrt_scale = false;
     /**
      * Class for identifying existing nodes. */
-    const std::shared_ptr<NodeFinder> node_finder;
+    const std::shared_ptr<node_finder::NodeFinder> node_finder;
     /**
      * The seach tree. */
     graph_t graph;
@@ -69,7 +68,7 @@ protected:
 public:
     SearchTree(std::shared_ptr<AbstractEnvironment> environment,
                double discount,
-               std::shared_ptr<NodeFinder> node_finder);
+               std::shared_ptr<node_finder::NodeFinder> node_finder);
     virtual ~SearchTree() = default;
     virtual void init(const state_handle_t & root_state) override;
     /**
