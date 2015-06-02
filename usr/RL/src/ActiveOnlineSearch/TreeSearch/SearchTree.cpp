@@ -51,6 +51,7 @@ void SearchTree::init(const state_handle_t & state) {
     node_info_map[root_node].type = OBSERVATION_NODE;
     node_info_map[root_node].observation = observation_handle_t();
     root_state = state;
+    node_finder->init(graph,node_info_map);
     node_finder->add_observation_node(root_node);
 }
 

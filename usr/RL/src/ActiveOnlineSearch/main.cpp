@@ -295,7 +295,8 @@ int main(int argn, char ** args) {
                      state_handle_t, current_state) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
-            if(environment->is_terminal_state(current_state)) break;
+            environment->set_state(current_state);
+            if(environment->is_terminal_state()) break;
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
                 if(watch_progress_arg.getValue()>=3) {
@@ -327,7 +328,8 @@ int main(int argn, char ** args) {
                         *action << " --> " <<
                         *observation << ", " <<
                         reward << ")" << endl;
-                    if(environment->is_terminal_state(current_state)) {
+                    environment->set_state(current_state);
+                    if(environment->is_terminal_state()) {
                         cout << "Terminal state!" << endl;
                     }
                     getchar();
@@ -393,8 +395,9 @@ int main(int argn, char ** args) {
                         search_tree->next();
                     }
                     // perform step
+                    environment->set_state(current_state);
                     auto action = search_tree->recommend_action();
-                    auto observation_reward = environment->transition(current_state,action);
+                    auto observation_reward = environment->transition(action);
                     auto observation = std::get<0>(observation_reward);
                     current_state = environment->get_state_handle();
                     reward_sum += std::get<1>(observation_reward);

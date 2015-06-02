@@ -73,16 +73,6 @@ public:
      * resulting observation and reward. */
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) = 0;
     /**
-     * Perform a transition from the given state without actually changing the environment. */
-    virtual observation_reward_pair_t transition(const state_handle_t & state_handle,
-                                                 const action_handle_t & action_handle) {
-        auto current_state = get_state_handle();
-        this->set_state(state_handle);
-        auto return_value = transition(action_handle);
-        this->set_state(current_state);
-        return return_value;
-    }
-    /**
      * Get the available actions in the current state. \warning Note that the
      * returned action container may be constructed ad-hoc so writing @code
      for(auto action_it = environment.get_actions().begin(); action_it!=environment.get_actions().end(); ++action_it) {
@@ -111,15 +101,6 @@ public:
     /**
      * Return whether the current state is a terminal state. */
     virtual bool is_terminal_state() const = 0;
-    /**
-     * Return whether the given state is a terminal state. */
-    virtual bool is_terminal_state(const state_handle_t & state_handle) {
-        auto current_state = get_state_handle();
-        this->set_state(state_handle);
-        auto return_value = is_terminal_state();
-        this->set_state(current_state);
-        return return_value;
-    }
     /**
      * Return whether the environment has deterministic transitions and rewards. */
     virtual bool is_deterministic() const = 0;
