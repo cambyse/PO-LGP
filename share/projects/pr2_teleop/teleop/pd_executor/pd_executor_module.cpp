@@ -2,9 +2,9 @@
 #include <Ors/ors.h>
 #include <Motion/pr2_heuristics.h>
 
-#ifdef WITH_ROS
-   // #include <pr2/roscom.h>
-#endif
+//#ifdef WITH_ROS
+    #include <pr2/roscom.h>
+//#endif
 
 // ############################################################################
 // Executor
@@ -143,8 +143,8 @@ void PDExecutor::step()
   gripperL->setTarget({cal_gripper});
 
   // update fmc/ors
-  double tau = 0.01;
-  for (uint t = 0; t < 30; t++) {
+  double tau = 0.001;
+  for (uint t = 0; t < 20; t++) {
     arr a = fmc.operationalSpaceControl();
     q += tau * qdot;
     qdot += tau * a;
@@ -162,7 +162,7 @@ void PDExecutor::step()
 
 void PDExecutor::sendRosCtrlMsg()
 {
-#ifdef WITH_ROS
+//#ifdef WITH_ROS
   // if (roscom == nullptr)
   //   return;
 
@@ -174,7 +174,7 @@ void PDExecutor::sendRosCtrlMsg()
 
   ref.fL = ARR(0., 0., 0., 0., 0., 0.);
   ref.fL.clear();
-  ref.fL.clear();
+  ref.fR.clear();
   ref.u_bias = zeros(q.N);
   ref.Kp = 1.;
   ref.Kd = 1.;
@@ -184,12 +184,12 @@ void PDExecutor::sendRosCtrlMsg()
 
   ctrl_ref.set() = ref;
   // roscom->publishJointReference();
-#endif
+//#endif
 }
 
 void PDExecutor::initRos()
 {
-#ifdef WITH_ROS
+//#ifdef WITH_ROS
   // if (roscom == nullptr)
   //   return;
 
@@ -217,7 +217,7 @@ void PDExecutor::initRos()
   qdot = ctrl_obs.get()->qdot;
   fmc.setState(q, qdot);
   cout << "DONE" << endl;
-#endif
+//#endif
 }
 
 void PDExecutor::open()

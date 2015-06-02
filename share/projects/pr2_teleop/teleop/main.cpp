@@ -1,5 +1,5 @@
-// #include <pr2/actionMachine.h>
-// #include <pr2/actions.h>
+ //#include <pr2/actionMachine.h>
+ //#include <pr2/actions.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Hardware/G4/G4.h>
@@ -30,15 +30,15 @@ struct PR2G4Control:System {
     //auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
     //
-#ifdef WITH_ROS
+//#ifdef WITH_ROS
     // ROS
-    if (MT::getParameter<bool>("useRos", false)) {
+   // if (MT::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
       // pd_executor->roscom = roscom;
-    }
-#endif
+  //  }
+//#endif
     connect();
   };
 };
