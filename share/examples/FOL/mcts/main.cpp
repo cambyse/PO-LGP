@@ -116,17 +116,19 @@ void testMonteCarlo(){
 void testMCTS(){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
-  world.verbose=4;
-  mcts.verbose=1;
+  world.verbose=0;
+  mcts.verbose=0;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
-  for(uint k=0;k<1;k++){
+  for(uint k=0;k<1000;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
-    mcts.addRollout(10);
+    mcts.addRollout(100);
 //    G = mcts.getGraph();
 //    if(!(k%1)) gv.update();
   }
   cout <<mcts.Qfunction() <<endl;
+  mcts.reportQ(cout); cout <<endl;
+  cout <<"MCTS #nodes=" <<mcts.Nnodes() <<endl;
 
 }
 

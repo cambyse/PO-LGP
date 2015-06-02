@@ -3,11 +3,19 @@
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
-    os <<"WAIT" <<endl;
+    os <<"WAIT()";
   }else{
+#if 0
     os <<"RULE '" <<rule->keys(1) <<"' SUB ";
-    listWrite(substitution, os);
-    os <<endl;
+    Graph &r=rule->kvg();
+    for(uint i=0;i<substitution.N;i++){
+      os <<r.elem(i)->keys.last() <<'/' <<substitution.elem(i)->keys.last() <<' ';
+    }
+#else
+    os <<rule->keys.last() <<"( ";
+    for(uint i=0;i<substitution.N;i++){ if(i) os <<", ";  os <<substitution.elem(i)->keys.last(); }
+    os <<" )";
+#endif
   }
 }
 
@@ -16,7 +24,7 @@ FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), v
   KB.checkConsistency();
   start_state = &KB["START_STATE"]->kvg();
   terminal = &KB["terminal"]->kvg(); //TODO: replace by QUIT state predicate!
-  rules = KB.getItems("Rule");
+  decisionRules = KB.getItems("DecisionRule");
   constants = KB.getItems("Constant");
   Terminate_keyword = KB["Terminate"];
 
@@ -25,8 +33,10 @@ FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), v
     cout <<"*** start_state=" <<*start_state <<endl;
     cout <<"*** terminal query=" <<*terminal <<endl;
     cout <<"*** constants = "; listWrite(constants, cout); cout <<endl;
-    cout <<"*** rules = "; listWrite(rules, cout); cout <<endl;
+    cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
+  MT::open(fil, "z.FOL_World");
+
   reset_state();
 }
 
@@ -49,9 +59,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     if(verbose>2) cout <<"*** real time progress = " <<w <<endl;
 
     if(w==1e10){
-//      HALT("BLA");
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
-//      if(forceWait){ cout <<"*** STUCK - NO FEASIBLE SOLUTION FOUND" <<endl;  break; }
+      if(Ndecisions==1) deadEnd=true;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
@@ -66,6 +75,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
       //-- for all these activities call the terminate operator
       for(Item *act:terminatingActivities){
+#if 0
         Item *predicate = act->parents(0);
         Item *rule = KB.getChild(Terminate_keyword, predicate);
         if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
@@ -78,6 +88,12 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
         if(verbose>2) cout <<"*** terminating activity '" <<*act <<"' with rule '" <<*rule <<endl;
         if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(subs, cout); cout <<endl; }
         applyEffectLiterals(*state, effect->kvg(), subs, &rule->kvg());
+#else
+        ItemL symbols;
+        symbols.append(Terminate_keyword);
+        symbols.append(act->parents);
+        createNewFact(*state, symbols);
+#endif
       }
     }
   }else{
@@ -86,7 +102,15 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     applyEffectLiterals(*state, effect->kvg(), d->substitution, &d->rule->kvg());
   }
 
+#if 1 //generic world transitioning
+  forwardChaining_FOL(KB, NULL, NoGraph, false);
+#endif
+
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
+  fil <<"--\n  T_step=" <<T_step;
+  fil <<"\n  decision="; d->write(fil);
+  fil <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}");
+  fil <<"\n  reward=0" <<endl;
 
   return {Handle(NULL), 0.};
 }
@@ -95,7 +119,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
   MT::Array<Handle> decisions; //tuples of rule and substitution
   decisions.append(Handle(new Decision(true, NULL, {}))); //the wait decision (true as first argument, no rule, no substitution)
-  for(Item* rule:rules){
+  for(Item* rule:decisionRules){
     ItemL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     for(uint s=0;s<subs.d0;s++){
       decisions.append(Handle(new Decision(false, rule, subs[s]))); //a grounded rule decision (abstract rule with substution)
@@ -104,7 +128,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"-- # possible decisions: " <<decisions.N <<endl;
   if(verbose>3) for(Handle& d:decisions) d.get()->write(cout);
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
-
+  Ndecisions=decisions.N;
   return VECTOR(decisions);
 }
 
@@ -113,17 +137,31 @@ const MCTS_Environment::Handle FOL_World::get_state(){
 }
 
 bool FOL_World::is_terminal_state() const{
+  if(deadEnd){
+    if(verbose>0) cout <<"************* FOL_World: DEAD END STATE (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
+    if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
+    (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
+    (*((ofstream*)&fil)) <<"\n  reward=" <<get_terminal_reward() <<endl;
+    return true;
+  }
   //-- test the terminal state
   if(allFactsHaveEqualsInScope(*state, *terminal)){
     if(verbose>0) cout <<"************* FOL_World: TERMINAL STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
+    (*((ofstream*)&fil)) <<"--\n  TERMINAL STATE";
+    (*((ofstream*)&fil)) <<"\n  reward=" <<get_terminal_reward() <<endl;
     return true;
   }
   return false;
 }
 
 double FOL_World::get_terminal_reward() const {
-  return -T_real;
+  double r=0.;
+  r -= T_real;
+  r -= 0.1 * T_step;
+  if(deadEnd) r-=30;
+  r/=30;
+  return r;
 }
 
 void FOL_World::set_state(const Handle& state){
@@ -134,6 +172,8 @@ void FOL_World::reset_state(){
   FILE("z.before") <<KB;
   T_step=0;
   T_real=0.;
+  deadEnd=false;
+  Ndecisions=0;
 #if 1
   KB.checkConsistency();
   if(state){
@@ -157,6 +197,9 @@ void FOL_World::reset_state(){
 
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
+
+  fil <<"*** reset ***" <<endl;
+  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; start_state->write(fil," ","{}"); fil <<endl;
 }
 
 bool FOL_World::get_info(InfoTag tag) const{

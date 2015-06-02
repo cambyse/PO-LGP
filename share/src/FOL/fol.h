@@ -32,6 +32,7 @@ ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, bool verbose
 
 //----------- adding facts
 
+Item *createNewFact(Graph& facts, const ItemL& symbols);
 Item *createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope);
 bool applySubstitutedLiteral(Graph& facts, Item*  literal, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 bool applyEffectLiterals    (Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);

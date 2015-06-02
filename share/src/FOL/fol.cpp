@@ -200,6 +200,10 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, ItemL& domain, Item* litera
 }
 
 
+/// directly create a new fact
+Item *createNewFact(Graph& facts, const ItemL& symbols){
+  return new Item_typed<bool>(facts, {}, symbols, new bool(true), true);
+}
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
 /// add the new literal to KB
