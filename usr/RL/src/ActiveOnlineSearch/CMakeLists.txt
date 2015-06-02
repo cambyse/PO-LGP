@@ -34,6 +34,8 @@ add_executable(main_ActiveOnlineSearch
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h
     TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/ActiveTreeSearch.h
+    TreeSearch/ActiveTreeSearch.cpp
     TreeSearch/TreePolicy.h
     TreeSearch/TreePolicy.cpp
     TreeSearch/ValueHeuristic.h
@@ -86,6 +88,8 @@ add_library(ActiveOnlineSearch
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h
     TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/ActiveTreeSearch.h
+    TreeSearch/ActiveTreeSearch.cpp
     TreeSearch/TreePolicy.h
     TreeSearch/TreePolicy.cpp
     TreeSearch/ValueHeuristic.h

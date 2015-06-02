@@ -23,12 +23,14 @@
 #include <MCTS_Environment/AbstractFiniteEnvironment.h>
 
 #include "Environment_old/Environment.h"
+#include "Environment/GamblingHall.h"
 #include "ComputationalGraph.h"
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/NodeFinder.h"
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
+#include "TreeSearch/ActiveTreeSearch.h"
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -1288,6 +1290,109 @@ TEST(MonteCarloTreeSearch, Backup) {
             // visual output
             // search.toPdf("graph.pdf");
             // getchar();
+        }
+    }
+}
+
+class StochasticFiniteLineEnvironment: public AbstractEnvironment {
+public:
+    struct StochasticFiniteLineAction: public Action {
+        StochasticFiniteLineAction(int action): action(action) {}
+        virtual ~StochasticFiniteLineAction() = default;
+        virtual bool operator==(const Action & other) const {
+            auto line_action = dynamic_cast<const StochasticFiniteLineAction*>(&other);
+            return line_action!=nullptr && line_action->action==action;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(action);
+        }
+        virtual void write(std::ostream & out) const {
+            out << action;
+        }
+        int action;
+    };
+    struct StochasticFiniteLineObservation: public Observation {
+        StochasticFiniteLineObservation(int observation): observation(observation) {}
+        virtual ~StochasticFiniteLineObservation() = default;
+        virtual bool operator==(const Observation & other) const {
+            auto line_observation = dynamic_cast<const StochasticFiniteLineObservation*>(&other);
+            return line_observation!=nullptr && line_observation->observation==observation;
+        }
+        virtual size_t get_hash() const {
+            return std::hash<int>()(observation);
+        }
+        virtual void write(std::ostream & out) const {
+            out << observation;
+        }
+        int observation;
+    };
+    struct StochasticFiniteLineState: public State {
+        StochasticFiniteLineState(int s): state(s) {}
+        int state;
+    };
+public:
+    StochasticFiniteLineEnvironment(int line_width): line_width(line_width), state(0) {}
+    virtual ~StochasticFiniteLineEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+        auto line_action = std::dynamic_pointer_cast<const StochasticFiniteLineAction>(action_handle);
+        EXPECT_NE(nullptr,line_action);
+        //state += (line_action->action>0?1:0);
+        if(rand()%2==0) {
+            // only change state in 50% of the cases
+            state += line_action->action;
+        }
+        if(state>line_width) state = line_width;
+        if(state<0) state = 0;
+        reward_t reward = state==line_width?1:0;
+        DEBUG_OUT(1,"Transition to " << state);
+        return observation_reward_pair_t(observation_handle_t(new StochasticFiniteLineObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() {
+        return action_container_t({action_handle_t(new StochasticFiniteLineAction(-1)),
+                    action_handle_t(new StochasticFiniteLineAction(0)),
+                    action_handle_t(new StochasticFiniteLineAction(1))});
+    }
+    virtual state_handle_t get_state_handle() {
+        return std::shared_ptr<State>(new StochasticFiniteLineState(state));
+    }
+    virtual void set_state(const state_handle_t & state_handle) {
+        auto line_state = std::dynamic_pointer_cast<const StochasticFiniteLineState>(state_handle);
+        EXPECT_NE(nullptr,line_state);
+        state = line_state->state;
+        DEBUG_OUT(1,"Set state to " << state);
+    }
+    virtual bool has_terminal_state() const {return true;}
+    virtual bool is_terminal_state() const {return state==line_width;}
+    virtual bool is_deterministic() const {return false;}
+    virtual bool has_max_reward() const {return true;}
+    virtual reward_t max_reward() const {return 1;}
+    virtual bool has_min_reward() const {return true;}
+    virtual reward_t min_reward() const {return 0;}
+    virtual bool is_markov() const {return true;}
+private:
+    int line_width;
+    int state;
+};
+
+TEST(ActiveTreeSearch, Test) {
+    using namespace node_finder;
+    for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
+                {std::shared_ptr<NodeFinder>(new PlainTree()),10}
+                // {std::shared_ptr<NodeFinder>(new ObservationTree()),11},
+                // {std::shared_ptr<NodeFinder>(new FullDAG()),8},
+                // {std::shared_ptr<NodeFinder>(new FullGraph()),5}
+            }}) {
+        RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
+        auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
+        //auto environment = std::shared_ptr<AbstractEnvironment>(new GamblingHall(10, 1));
+        ActiveTreeSearch search(environment,
+                                1,
+                                node_finder);
+        for(int i=0; i<iterations; ++i) {
+            search.next();
+            // visual output
+            search.toPdf("graph.pdf");
+            getchar();
         }
     }
 }

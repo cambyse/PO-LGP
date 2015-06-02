@@ -27,7 +27,7 @@ namespace node_finder {
     using lemon::INVALID;
 
     void PlainTree::init(const graph_t & g,
-                        const node_info_map_t & m) {
+                         const node_info_map_t & m) {
         graph = &g;
         node_info_map = &m;
     }
