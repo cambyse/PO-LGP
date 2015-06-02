@@ -16,6 +16,7 @@
 
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/MonteCarloTreeSearch.h"
+#include "TreeSearch/ActiveTreeSearch.h"
 #include "TreeSearch/NodeFinder.h"
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
@@ -155,6 +156,9 @@ static TCLAP::ValueArg<int> threads_arg(             "t", "threads", \
 Zero (default) or below does not restict the number of threads so the \
 OMP_NUM_THREADS environment variable will take effect (if set).", \
                                                      false, 0, "int" );
+static TCLAP::SwitchArg active_arg(                  "", "active",\
+                                                     "Use active tree search."\
+                                                     , false);
 
 bool check_arguments();
 shared_ptr<NodeFinder> get_node_finder();
@@ -172,6 +176,7 @@ int main(int argn, char ** args) {
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(active_arg);
         cmd.add(threads_arg);
         cmd.add(no_header_arg);
         cmd.add(random_seed_arg);
@@ -556,13 +561,19 @@ tuple<shared_ptr<SearchTree>,
     } else DEBUG_DEAD_LINE;
     // set up search tree
     current_state = environment->get_state_handle();
-    search_tree.reset(new MonteCarloTreeSearch(environment,
+    if(active_arg.getValue()) {
+        search_tree.reset(new ActiveTreeSearch(environment,
                                                discount_arg.getValue(),
-                                               get_node_finder(),
-                                               tree_policy,
-                                               value_heuristic,
-                                               backup_method,
-                                               get_backup_type()));
+                                               get_node_finder()));
+    } else {
+        search_tree.reset(new MonteCarloTreeSearch(environment,
+                                                   discount_arg.getValue(),
+                                                   get_node_finder(),
+                                                   tree_policy,
+                                                   value_heuristic,
+                                                   backup_method,
+                                                   get_backup_type()));
+    }
     search_tree->init(current_state);
     // return
     return make_tuple(search_tree,
