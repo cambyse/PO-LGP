@@ -3,13 +3,13 @@
 #include <Motion/pr2_heuristics.h>
 
 //#ifdef WITH_ROS
-    #include <pr2/roscom.h>
+  //  #include <pr2/roscom.h>
 //#endif
 
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"), fmc(world, true) {
+        : world("model.kvg"), fmc(world, true), inited(false), useros(false) {
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
@@ -21,8 +21,8 @@ PDExecutor::PDExecutor()
   limits->v_ref.setZero();
   limits->prec = 100.;
 
-  // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
-  // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
+  //collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  //collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
   collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   collision->y_ref.setZero();
   collision->v_ref.setZero();
@@ -67,6 +67,12 @@ void PDExecutor::visualizeSensors()
 
 void PDExecutor::step()
 {
+  if (useros && !inited) {
+    cout << "STARTING TO OPEN" << endl;
+    initRos();
+    cout << "FINISHED TO OPEN" << endl;
+    inited = true;
+  }
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
    world.watch(false);
@@ -111,8 +117,8 @@ void PDExecutor::step()
   };
   effOrientationR->setTarget(quat);
 
-  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
-  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
+//  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
+//  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
 
   // avoid going behind your back
   // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
@@ -132,8 +138,8 @@ void PDExecutor::step()
   };
   effOrientationL->setTarget(quat);
 
-  world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
-  world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+ // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
+ // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
@@ -157,7 +163,7 @@ void PDExecutor::step()
   // set state
   sendRosCtrlMsg();
 
-  // fmc.reportCurrentState();
+   fmc.reportCurrentState();
 }
 
 void PDExecutor::sendRosCtrlMsg()
@@ -183,7 +189,7 @@ void PDExecutor::sendRosCtrlMsg()
   ref.effLimitRatio = 1.;
 
   ctrl_ref.set() = ref;
-  // roscom->publishJointReference();
+ //  roscom->publishJointReference();
 //#endif
 }
 
@@ -222,9 +228,7 @@ void PDExecutor::initRos()
 
 void PDExecutor::open()
 {
-  cout << "STARTING TO OPEN" << endl;
-  initRos();
-  cout << "FINISHED TO OPEN" << endl;
+  useros = MT::getParameter<bool>("useRos", false);
 }
 
 void PDExecutor::close()
