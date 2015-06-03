@@ -27,8 +27,8 @@ bool matchingFactsAreEqual(Graph& facts, Item *it1, Item *it2, const ItemL& subs
 //---------- finding possible variable substitutions
 
 void removeInfeasibleSymbolsFromDomain(Graph& facts, ItemL& domain, Item *literal, Graph* varScope);
-ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbose=false);
-ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, bool verbose=false);
+ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose=0);
+ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, int verbose=0);
 
 //----------- adding facts
 
@@ -39,7 +39,7 @@ bool applyEffectLiterals    (Graph& facts, Graph& effects, const ItemL& subst, G
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes=NoGraph, bool verbose=false);
+bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes=NoGraph, int verbose=0);
 bool forwardChaining_propositional(Graph& KB, Item* q);
 
 //### Level 1 class

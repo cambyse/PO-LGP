@@ -49,16 +49,13 @@ void testFolFwdChaining(){
 
   FILE("fol.kvg") >>G;
 
-//  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
-
-  ItemL consts = G.getItems("Constant");
-  ItemL rules = G.getItems("Rule");
   Graph& state = G.getItem("STATE")->kvg();
 
-  cout <<"INIT STATE = " <<GRAPH(state) <<endl;
+  cout <<"INIT STATE = " <<state <<endl;
 
   Item *query=G["Query"]->kvg()(0);
   forwardChaining_FOL(G, query);
+//  cout <<"FINAL STATE = " <<state <<endl;
 }
 
 //===========================================================================
@@ -209,11 +206,11 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-  testFolLoadFile();
-  testPolFwdChaining();
+//  testFolLoadFile();
+//  testPolFwdChaining();
   testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
-  testMonteCarlo();
+//  testFolSubstitution();
+//  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 }

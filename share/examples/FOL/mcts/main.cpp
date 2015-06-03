@@ -117,7 +117,8 @@ void testMCTS(){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=0;
-  mcts.verbose=0;
+  mcts.verbose=1;
+  mcts.beta=100.;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
   for(uint k=0;k<1000;k++){
@@ -130,6 +131,15 @@ void testMCTS(){
   mcts.reportQ(cout); cout <<endl;
   cout <<"MCTS #nodes=" <<mcts.Nnodes() <<endl;
 
+  //--- generate some playouts of the optimal (non optimistic) policy
+  world.fil.close();
+  MT::open(world.fil,"z.demos");
+  mcts.beta=1.;
+  world.verbose=4;
+  for(uint k=0;k<10;k++){
+    cout <<"******************************************** ROLLOUT " <<k <<endl;
+    mcts.addRollout(100);
+  }
 }
 
 //===========================================================================

@@ -53,6 +53,8 @@ Rule {
   X, Y
   { (Terminate grasping X Y) }
   { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
+  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
+  p=[.5 .5]
 }
 
 DecisionRule activate_releasing {

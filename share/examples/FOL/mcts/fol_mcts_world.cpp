@@ -41,12 +41,16 @@ FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), v
 }
 
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
+  double reward=0.;
   T_step++;
+  reward -= 0.1;
+
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
 
+
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
-  if(verbose>2){ cout <<"*** decision = ";  d->write(cout); }
+  if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
   if(d->waitDecision){
     //-- find minimal wait time
     double w=1e10;
@@ -64,6 +68,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
+      reward -= w;
       ItemL terminatingActivities;
       for(Item *i:*state){
         if(i->getValueType()==typeid(double)){
@@ -97,22 +102,31 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       }
     }
   }else{
+    //first check if probabilistic
     Item *effect = d->rule->kvg().last();
+    if(effect->getValueType()==typeid(arr)){
+      arr p = effect->V<arr>();
+      uint r = sampleMultinomial(p);
+      effect = d->rule->kvg().elem(-1-p.N+r);
+    }
     if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(d->substitution, cout); cout <<endl; }
     applyEffectLiterals(*state, effect->kvg(), d->substitution, &d->rule->kvg());
   }
 
 #if 1 //generic world transitioning
-  forwardChaining_FOL(KB, NULL, NoGraph, false);
+  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3);
 #endif
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
   fil <<"--\n  T_step=" <<T_step;
   fil <<"\n  decision="; d->write(fil);
   fil <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}");
-  fil <<"\n  reward=0" <<endl;
+  fil <<"\n  reward=" <<reward <<endl;
 
-  return {Handle(NULL), 0.};
+  reward=0;
+  R_total += reward;
+
+  return {Handle(NULL), reward};
 }
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
@@ -126,7 +140,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
     }
   }
   if(verbose>2) cout <<"-- # possible decisions: " <<decisions.N <<endl;
-  if(verbose>3) for(Handle& d:decisions) d.get()->write(cout);
+  if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
   Ndecisions=decisions.N;
   return VECTOR(decisions);
@@ -141,7 +155,9 @@ bool FOL_World::is_terminal_state() const{
     if(verbose>0) cout <<"************* FOL_World: DEAD END STATE (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
     (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
-    (*((ofstream*)&fil)) <<"\n  reward=" <<get_terminal_reward() <<endl;
+    double r=get_terminal_reward();
+    (*((ofstream*)&fil)) <<"\n  terminal reward=" <<r;
+    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
     return true;
   }
   //-- test the terminal state
@@ -149,7 +165,9 @@ bool FOL_World::is_terminal_state() const{
     if(verbose>0) cout <<"************* FOL_World: TERMINAL STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
     (*((ofstream*)&fil)) <<"--\n  TERMINAL STATE";
-    (*((ofstream*)&fil)) <<"\n  reward=" <<get_terminal_reward() <<endl;
+    double r=get_terminal_reward();
+    (*((ofstream*)&fil)) <<"\n  terminal reward=" <<r;
+    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
     return true;
   }
   return false;
@@ -160,7 +178,6 @@ double FOL_World::get_terminal_reward() const {
   r -= T_real;
   r -= 0.1 * T_step;
   if(deadEnd) r-=30;
-  r/=30;
   return r;
 }
 
@@ -172,6 +189,7 @@ void FOL_World::reset_state(){
   FILE("z.before") <<KB;
   T_step=0;
   T_real=0.;
+  R_total=0.;
   deadEnd=false;
   Ndecisions=0;
 #if 1
