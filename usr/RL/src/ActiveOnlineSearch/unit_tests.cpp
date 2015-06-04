@@ -40,8 +40,10 @@ using util::Range;
 using std::vector;
 using std::tuple;
 using std::pair;
+using std::make_pair;
 using std::cout;
 using std::endl;
+using lemon::INVALID;
 
 typedef lemon::ListDigraph graph_t;
 typedef graph_t::Node Node;
@@ -1374,25 +1376,270 @@ private:
     int state;
 };
 
-TEST(ActiveTreeSearch, Test) {
-    using namespace node_finder;
-    for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
-                {std::shared_ptr<NodeFinder>(new PlainTree()),10}
-                // {std::shared_ptr<NodeFinder>(new ObservationTree()),11},
-                // {std::shared_ptr<NodeFinder>(new FullDAG()),8},
-                // {std::shared_ptr<NodeFinder>(new FullGraph()),5}
-            }}) {
-        RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
-        auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
-        //auto environment = std::shared_ptr<AbstractEnvironment>(new GamblingHall(10, 1));
-        ActiveTreeSearch search(environment,
-                                1,
-                                node_finder);
-        for(int i=0; i<iterations; ++i) {
-            search.next();
-            // visual output
-            search.toPdf("graph.pdf");
-            getchar();
+/**
+ * Special derived class for unit tests. The computations in this version simply
+ * sum up all incomming values for any computational node. The values are
+ * initialized to 1 for independent variables and 0 for dependent variables
+ * (alpha, beta, gamma, A, B, C are considered dependent variables even if they
+ * currently happen to have no incoming arc because they correspond to
+ * leaf-nodes). In this setting each independen variables contributes to the
+ * value of every dependent variable (including the root node) once via every
+ * possible path. This allows for a simple check of values and derivaties. */
+class MockActiveTreeSearch: public ActiveTreeSearch {
+public:
+    MockActiveTreeSearch(std::shared_ptr<AbstractEnvironment> environment,
+                         double discount,
+                         std::shared_ptr<node_finder::NodeFinder> node_finder):
+        ActiveTreeSearch(environment,discount,node_finder)
+    {}
+    virtual ~MockActiveTreeSearch() = default;
+    const graph_t & get_c_graph() const {return c_graph;}
+    const ComputationalConstGraph & get_computer() const {return computer;}
+    virtual void update_c_node_connections(node_t action_node) override {
+        DEBUG_EXPECT(0,node_info_map[action_node].type==ACTION_NODE);
+
+        for(node_t c_node : {
+                variable_info_map[action_node].pi,
+                    variable_info_map[action_node].mean_Q,
+                    variable_info_map[action_node].var_Q,
+                    variable_info_map[action_node].mean_r,
+                    variable_info_map[action_node].var_r,
+                    variable_info_map[action_node].A,
+                    variable_info_map[action_node].B,
+                    variable_info_map[action_node].C
+                    }) {
+            vector<QString> input_names;
+            for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                input_names.push_back(computer.get_node_label(c_graph.source(arc)));
+            }
+            computer.set_node_function(c_node,
+                                       input_names,
+                                       [](vector<double> v)->double{
+                                           double ret = 0;
+                                           for(double val : v) ret += val;
+                                           return ret;
+                                       });
+            for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                computer.set_arc(arc, [](vector<double>)->double{return 1;});
+            }
+        }
+
+        for(node_array_t array : {
+                variable_info_map[action_node].mean_p,
+                    variable_info_map[action_node].alpha,
+                    variable_info_map[action_node].beta
+                    }) {
+            for(auto c_node_pair : array) {
+                node_t c_node = c_node_pair.second;
+                vector<QString> input_names;
+                for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                    input_names.push_back(computer.get_node_label(c_graph.source(arc)));
+                }
+                computer.set_node_function(c_node,
+                                           input_names,
+                                           [](vector<double> v)->double{
+                                               double ret = 0;
+                                               for(double val : v) ret += val;
+                                               return ret;
+                                           });
+                for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                    computer.set_arc(arc, [](vector<double>)->double{return 1;});
+                }
+            }
+        }
+
+        for(node_matrix_t matrix : {
+                variable_info_map[action_node].var_p,
+                    variable_info_map[action_node].gamma
+                    }) {
+            for(auto array : matrix) {
+                for(auto c_node_pair : array.second) {
+                    node_t c_node = c_node_pair.second;
+                    vector<QString> input_names;
+                    for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                        input_names.push_back(computer.get_node_label(c_graph.source(arc)));
+                    }
+                    computer.set_node_function(c_node,
+                                               input_names,
+                                               [](vector<double> v)->double{
+                                                   double ret = 0;
+                                                   for(double val : v) ret += val;
+                                                   return ret;
+                                               });
+                    for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
+                        computer.set_arc(arc, [](vector<double>)->double{return 1;});
+                    }
+                }
+            }
+        }
+
+        // update values (which were invalidated above)
+        update_c_node_values(action_node);
+    }
+    virtual void update_c_node_values(node_t action_node) override {
+        // independent variables
+        for(node_t c_node : {
+                variable_info_map[action_node].mean_r,
+                    variable_info_map[action_node].var_r,
+                    }) {
+            computer.set_node_value(c_node,1);
+        }
+
+        for(node_array_t array : {
+                variable_info_map[action_node].mean_p,
+                    }) {
+            for(auto c_node_pair : array) {
+                node_t c_node = c_node_pair.second;
+                computer.set_node_value(c_node,1);
+            }
+        }
+        for(node_matrix_t matrix : {
+                variable_info_map[action_node].var_p,
+                    }) {
+            for(auto array : matrix) {
+                for(auto c_node_pair : array.second) {
+                    node_t c_node = c_node_pair.second;
+                    computer.set_node_value(c_node,1);
+                }
+            }
+        }
+
+        // dependent variables
+        for(node_t c_node : {
+                variable_info_map[action_node].pi,
+                    variable_info_map[action_node].mean_Q,
+                    variable_info_map[action_node].var_Q,
+                    variable_info_map[action_node].A,
+                    variable_info_map[action_node].B,
+                    variable_info_map[action_node].C
+                    }) {
+            // set to zero if no input available
+            if(in_arc_it_t(c_graph,c_node)==INVALID) computer.set_node_value(c_node,0);
+        }
+
+        for(node_array_t array : {
+                variable_info_map[action_node].alpha,
+                    variable_info_map[action_node].beta
+                    }) {
+            for(auto c_node_pair : array) {
+                node_t c_node = c_node_pair.second;
+                // set to zero if no input available
+                if(in_arc_it_t(c_graph,c_node)==INVALID) computer.set_node_value(c_node,0);
+            }
+        }
+        for(node_matrix_t matrix : {
+                variable_info_map[action_node].gamma
+                    }) {
+            for(auto array : matrix) {
+                for(auto c_node_pair : array.second) {
+                    node_t c_node = c_node_pair.second;
+                    // set to zero if no input available
+                    if(in_arc_it_t(c_graph,c_node)==INVALID) computer.set_node_value(c_node,0);
+                }
+            }
         }
     }
+    virtual void update_c_root_connections() override {
+        vector<QString> input_names;
+        for(in_arc_it_t arc(c_graph,c_root_node); arc!=INVALID; ++arc) {
+            input_names.push_back(computer.get_node_label(c_graph.source(arc)));
+        }
+        computer.set_node_function(c_root_node,
+                                   input_names,
+                                   [](vector<double> v)->double{
+                                       double ret = 0;
+                                       for(double val : v) ret += val;
+                                       return ret;
+                                   });
+        for(in_arc_it_t arc(c_graph,c_root_node); arc!=INVALID; ++arc) {
+            computer.set_arc(arc, [](vector<double>)->double{return 1;});
+        }
+    }
+};
+
+TEST(ActiveTreeSearch, SimpleValueCheck) {
+    auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
+    MockActiveTreeSearch search(environment,
+                                1,
+                                std::shared_ptr<node_finder::NodeFinder>(new node_finder::PlainTree()));
+    for(int i=0; i<30; ++i) {
+        search.next();
+        // visual output
+
+        //getchar();
+    }
+    search.toPdf("graph.pdf");
+    // checks
+    typedef MockActiveTreeSearch::graph_t graph_t;
+    typedef MockActiveTreeSearch::node_t node_t;
+    typedef MockActiveTreeSearch::node_it_t node_it_t;
+    typedef MockActiveTreeSearch::arc_t arc_t;
+    typedef MockActiveTreeSearch::arc_it_t arc_it_t;
+    typedef MockActiveTreeSearch::in_arc_it_t in_arc_it_t;
+    typedef MockActiveTreeSearch::out_arc_it_t out_arc_it_t;
+    auto & graph = search.get_c_graph();
+    auto & computer = search.get_computer();
+    graph_t::NodeMap<int> value_map(graph,0);
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        // currently explored path
+        vector<pair<node_t,out_arc_it_t>> path;
+        // follow-path function
+        auto follow_path = [&](){
+            while(path.back().second!=INVALID) {
+                node_t new_node = graph.target(path.back().second);
+                path.push_back(make_pair(new_node,out_arc_it_t(graph,new_node)));
+                if(in_arc_it_t(graph,node)==INVALID && computer.get_node_value(node)==1) {
+                    ++value_map[new_node];
+                }
+            }
+        };
+        // backtracking function
+        auto backtrack = [&]() {
+            // we should be at a (the one and only actually) terminal node
+            EXPECT_EQ(path.back().second,INVALID);
+            while(path.back().second==INVALID) {
+                // remove from path
+                path.pop_back();
+                // in case we removed the initial node there are no more paths
+                // to discover
+                if(path.empty()) return;
+                // now we should be at a non-terminal node
+                EXPECT_NE(path.back().second,INVALID);
+                // iterate to next outgoing arc
+                ++path.back().second;
+            }
+        };
+        // initialize with current node and follow to terminal node
+        path.push_back(make_pair(node,out_arc_it_t(graph,node)));
+        int path_counter = 0;
+        while(!path.empty()) {
+            follow_path();
+            backtrack();
+            ++path_counter;
+        }
+        // the differential should be equal to the number of paths (to the root
+        // node)
+        EXPECT_EQ(computer.get_node_differential(node),path_counter);
+    }
+    // check value (must be the number of paths from independen variables
+    // passing that node)
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        // only internal nodes
+        if(in_arc_it_t(graph,node)!=INVALID)
+            EXPECT_EQ(computer.get_node_value(node),value_map[node]);
+    }
+}
+
+TEST(ActiveTreeSearch, Test) {
+    auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
+    ActiveTreeSearch search(environment,
+                            1,
+                            std::shared_ptr<node_finder::NodeFinder>(new node_finder::PlainTree()));
+    for(int i=0; i<30; ++i) {
+        search.next();
+        // visual output
+        // search.toPdf("graph.pdf");
+        // getchar();
+    }
+    search.toPdf("graph.pdf");
 }

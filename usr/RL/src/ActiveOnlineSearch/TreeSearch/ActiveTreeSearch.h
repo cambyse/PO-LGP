@@ -9,6 +9,7 @@
 
 class ActiveTreeSearch: public SearchTree {
     //----typedefs/classes----//
+public:
     typedef std::map<node_t,node_t> node_array_t;
     typedef std::map<node_t,node_array_t> node_matrix_t;
     struct VariableInfo {
@@ -22,9 +23,11 @@ protected:
     graph_t c_graph;
     node_t c_root_node = lemon::INVALID;
     graph_t::NodeMap<VariableInfo> variable_info_map;
+    graph_t::NodeMap<state_handle_t> associated_state;
     graph_t::NodeMap<node_t> base_node;
-    graph_t::NodeMap<QString> c_node_name;
     graph_t::ArcMap<int> counts;
+    graph_t::ArcMap<reward_t> reward_sum;
+    graph_t::ArcMap<reward_t> reward_square_sum;
     ComputationalConstGraph computer;
 
     //----methods----//
@@ -43,6 +46,9 @@ public:
     virtual void update_c_node_connections(node_t action_node);
     virtual void update_c_node_values(node_t action_node);
     virtual void update_c_root_connections();
+private:
+    static QString description(const action_handle_t);
+    static QString description(const observation_handle_t);
 };
 
 #endif /* ACTIVETREESEARCH_H_ */

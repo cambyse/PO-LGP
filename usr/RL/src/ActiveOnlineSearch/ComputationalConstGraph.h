@@ -120,17 +120,17 @@ public:
      * and partial derivatives of all nodes and arcs. */
     virtual ComputationalConstGraph & compute_values(std::vector<double> values = std::vector<double>());
     /**
-     * Compute values and total derivatives. Assign values to input variables
-     * and their differentials, compute values and partial derivatives, and
-     * compute differentials and total derivatives of output variables via
-     * forward accumulation. */
+     * Compute values and total derivatives. Assign values and differentials to
+     * input variables, compute values and partial derivatives, and compute
+     * differentials and total derivatives of output variables via forward
+     * accumulation. */
     virtual ComputationalConstGraph & forward_accumulation(std::vector<double> values = std::vector<double>(),
                                                            std::vector<double> differentials = std::vector<double>());
     /**
      * Compute values and total derivatives. Assign values to input variables
-     * and their differentials, compute values and partial derivatives, and
-     * compute differentials and total derivatives of output variables via
-     * reverse accumulation. */
+     * and differentials to output variables, compute values and partial
+     * derivatives, and compute differentials and total derivatives of output
+     * variables via reverse accumulation. */
     virtual ComputationalConstGraph & reverse_accumulation(std::vector<double> values = std::vector<double>(),
                                                            std::vector<double> differentials = std::vector<double>());
     /**
@@ -166,7 +166,7 @@ public:
      * epsilon_absolute and the realtive deviation (i.e. the absolute value of
      * the quotient of numerical and analytical derivative) is larger than \e
      * 1+epsilon_relative. */
-    virtual bool check_derivatives(std::vector<double> values,
+    virtual bool check_derivatives(std::vector<double> values = std::vector<double>(),
                                    double delta = 1e-5,
                                    double epsilon_absolute = 1e-10,
                                    double epsilon_relative = 1e-10);
@@ -226,10 +226,13 @@ public:
      * duplicates). */
     virtual bool check_graph_structure(bool reset_input_nodes = false,
                                        bool reset_output_nodes = false);
+    virtual QString get_node_label(node_t) const;
     virtual double get_node_value(node_t) const;
     virtual double get_node_differential(node_t) const;
     virtual double get_arc_value(arc_t) const;
+    virtual void set_node_label(node_t,QString);
     virtual void set_node_value(node_t,double);
+    virtual void set_node_function(node_t, std::vector<QString>, function_t);
     virtual void set_node_differential(node_t,double);
     virtual void set_arc_value(arc_t,double);
 private:

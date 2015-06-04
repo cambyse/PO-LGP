@@ -622,6 +622,10 @@ bool CG::check_graph_structure(bool reset_input_nodes,
     return ok;
 }
 
+QString CG::get_node_label(node_t node) const {
+    return node_labels[node];
+}
+
 double CG::get_node_value(node_t node) const {
     return node_values[node];
 }
@@ -634,8 +638,17 @@ double CG::get_arc_value(arc_t arc) const {
     return arc_values[arc];
 }
 
+void CG::set_node_label(node_t node, QString label) {
+    node_labels[node] = label;
+}
+
 void CG::set_node_value(node_t node, double value) {
     node_values[node] = value;
+}
+
+void CG::set_node_function(node_t node, std::vector<QString> variables, function_t function) {
+    node_variables[node] = variables;
+    node_functions[node] = function;
 }
 
 void CG::set_node_differential(node_t node, double value) {
