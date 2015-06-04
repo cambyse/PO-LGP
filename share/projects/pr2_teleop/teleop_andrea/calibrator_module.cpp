@@ -13,7 +13,6 @@ Calibrator::Calibrator()
 }
 
 void Calibrator::step() {
-
   // starting in calibraton phase:
   //   "Y"    - save the front poses
   //   "B"    - save the right poses

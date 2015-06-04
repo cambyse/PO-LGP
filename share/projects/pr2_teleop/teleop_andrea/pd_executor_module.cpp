@@ -6,7 +6,7 @@
 // Executor
 PDExecutor::PDExecutor()
     : world("model.kvg"), fmc(world, true), started(false), useros(false),
-      limits(nullptr), collision(nullptr),
+      limits(nullptr), collisions(nullptr),
       effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
       effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
 {
@@ -16,48 +16,47 @@ PDExecutor::PDExecutor()
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(.3, 10.);
 
-  // limits = fmc.addPDTask("limits", 1., .8, new TaskMap_qLimits);
-  if(limits) {
+  if(MT::getParameter<bool>("useLimits", false)) {
+    limits = fmc.addPDTask("limits", 1., .8, new TaskMap_qLimits);
     limits->y_ref.setZero();
   }
 
-  // collision = fmc.addPDTask("collisions", 2., .8, new ProxyTaskMap(allPTMT, {0u}, .1));
-  if(collision) {
-    collision->y_ref.setZero();
-    collision->v_ref.setZero();
+  if(MT::getParameter<bool>("useCollisions", false)) {
+    collisions = fmc.addPDTask("collisions", 2., .8, new ProxyTaskMap(allPTMT, {0u}, .1));
+    collisions->y_ref.setZero();
+    collisions->v_ref.setZero();
   }
 
-  effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
-  if(effPosR) {
+  if(MT::getParameter<bool>("usePositionR", false)) {
+    effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
     effPosR->y_ref = {.4, .4, 1.2};
   }
 
-  effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
-  if(effPosL) {
+  if(MT::getParameter<bool>("usePositionL", false)) {
+    effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
     effPosL->y_ref = {-.4, .4, 1.2};
   }
 
-  int jointID;
-  jointID = world.getJointByName("r_gripper_joint")->qIndex;
-  gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  if(gripperR) {
+  if(MT::getParameter<bool>("useGripperR", false)) {
+    int jointID = world.getJointByName("r_gripper_joint")->qIndex;
+    gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperR->y_ref = .08;  // open gripper 8cm
   }
 
-  jointID = world.getJointByName("l_gripper_joint")->qIndex;
-  gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  if(gripperL) {
+  if(MT::getParameter<bool>("useGripperL", false)) {
+    int jointID = world.getJointByName("l_gripper_joint")->qIndex;
+    gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperL->y_ref = .08;  // open gripper 8cm
   }
 
-  effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  if(effOrientationR) {
+  if(MT::getParameter<bool>("useOrientationR", false)) {
+    effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
   }
 
-  effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
-  if(effOrientationL) {
+  if(MT::getParameter<bool>("useOrientationL", false)) {
+    effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
   }

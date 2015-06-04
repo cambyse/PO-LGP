@@ -30,7 +30,7 @@ struct PDExecutor: Module {
 
   // Tasks
   CtrlTask* limits;
-  CtrlTask* collision;
+  CtrlTask* collisions;
 
   CtrlTask* effPosR;
   CtrlTask* gripperR;
