@@ -13,23 +13,22 @@
 // ============================================================================
 struct PR2G4Control:System {
   PR2G4Control() {
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<G4Poller>(NULL, Module::loopWithBeat, .05);
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
+    
+    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .05);
     addModule<Calibrator>("Calibrator", Module::loopWithBeat, .05);
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
+
     // ROS
-    if (MT::getParameter<bool>("useRos", false)) {
+    if(MT::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      // addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
-      // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
     }
     connect();
   };
 };
-
 
 // ============================================================================
 int main(int argc, char** argv) {

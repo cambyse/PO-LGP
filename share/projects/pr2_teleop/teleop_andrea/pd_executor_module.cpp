@@ -5,55 +5,62 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"), fmc(world, true), started(false), useros(false) {
+    : world("model.kvg"), fmc(world, true), started(false), useros(false),
+      limits(nullptr), collision(nullptr),
+      effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
+      effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
+{
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
   fmc.qitselfPD.y_ref = q;
-  fmc.qitselfPD.setGains(.0, 10.);
+  fmc.qitselfPD.setGains(.3, 10.);
 
-  // INIT TASKS
-  limits = fmc.addPDTask("limits", .1, .8, new TaskMap_qLimits);
-  limits->y_ref.setZero();
-  limits->prec = 100.;
-  // limits->prec = 0;
+  // limits = fmc.addPDTask("limits", 1., .8, new TaskMap_qLimits);
+  if(limits) {
+    limits->y_ref.setZero();
+  }
 
-  // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
-  // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
-  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
-  collision->y_ref.setZero();
-  collision->v_ref.setZero();
-  // collision->prec = 0;
+  // collision = fmc.addPDTask("collisions", 2., .8, new ProxyTaskMap(allPTMT, {0u}, .1));
+  if(collision) {
+    collision->y_ref.setZero();
+    collision->v_ref.setZero();
+  }
 
   effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
-  effPosR->y_ref = {.4, .4, 1.2};
-  // effPosR->prec = 0;
+  if(effPosR) {
+    effPosR->y_ref = {.4, .4, 1.2};
+  }
 
   effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
-  effPosL->y_ref = {-.4, .4, 1.2};
-  // effPosL->prec = 0;
+  if(effPosL) {
+    effPosL->y_ref = {-.4, .4, 1.2};
+  }
 
-  int jointID = world.getJointByName("r_gripper_joint")->qIndex;
+  int jointID;
+  jointID = world.getJointByName("r_gripper_joint")->qIndex;
   gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  gripperR->y_ref = .08;  // open gripper 8cm
-  // gripperR->prec = 0;
+  if(gripperR) {
+    gripperR->y_ref = .08;  // open gripper 8cm
+  }
 
   jointID = world.getJointByName("l_gripper_joint")->qIndex;
   gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  gripperL->y_ref = .08;  // open gripper 8cm
-  // gripperL->prec = 0;
+  if(gripperL) {
+    gripperL->y_ref = .08;  // open gripper 8cm
+  }
 
-  // // Orientation
   effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  effOrientationR->y_ref = {1., 0., 0., 0.};
-  effOrientationR->flipTargetSignOnNegScalarProduct = true;
-  // effOrientationR->prec = 0;
+  if(effOrientationR) {
+    effOrientationR->y_ref = {1., 0., 0., 0.};
+    effOrientationR->flipTargetSignOnNegScalarProduct = true;
+  }
 
   effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
-  effOrientationL->y_ref = {1., 0., 0., 0.};
-  effOrientationL->flipTargetSignOnNegScalarProduct = true;
-  // effOrientationL->prec = 0;
+  if(effOrientationL) {
+    effOrientationL->y_ref = {1., 0., 0., 0.};
+    effOrientationL->flipTargetSignOnNegScalarProduct = true;
+  }
 }
 
 void PDExecutor::visualizeSensors() {
@@ -112,7 +119,7 @@ void PDExecutor::step() {
   y = cal_pose_rh(1) * 1.2;
   z = cal_pose_rh(2) * .75 - .05;
   pos = ARR(x, y, z) + ARR(0, 0, 1);
-  effPosR->setTarget(pos);
+  if(effPosR) effPosR->setTarget(pos);
 
   // orientation
   quat = {
@@ -121,7 +128,7 @@ void PDExecutor::step() {
     (double)cal_pose_rh(5),
     (double)cal_pose_rh(6)
   };
-  effOrientationR->setTarget(quat);
+  if(effOrientationR) effOrientationR->setTarget(quat);
 
   // world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
   // world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
@@ -132,7 +139,7 @@ void PDExecutor::step() {
   y = cal_pose_lh(1) * 1.2;
   z = cal_pose_lh(2) * .75 - .05;
   pos = ARR(x, y, z) + ARR(0, 0, 1);
-  effPosL->setTarget(pos);
+  if(effPosL) effPosL->setTarget(pos);
 
   // orientation
   quat = {
@@ -141,17 +148,17 @@ void PDExecutor::step() {
     (double)cal_pose_lh(5),
     (double)cal_pose_lh(6)
   };
-  effOrientationL->setTarget(quat);
+  if(effOrientationL) effOrientationL->setTarget(quat);
 
   // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
   // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
-  cal_gripper = calibrated_gripper_rh.get() * 8. / 100.;
-  gripperR->setTarget({cal_gripper});
-  cal_gripper = calibrated_gripper_lh.get() * 8. / 100.;
-  gripperL->setTarget({cal_gripper});
+  cal_gripper = .09 * calibrated_gripper_rh.get();
+  if(gripperR) gripperR->setTarget({cal_gripper});
+  cal_gripper = .09 * calibrated_gripper_lh.get();
+  if(gripperL) gripperL->setTarget({cal_gripper});
 
   // update fmc/ors
   double tau = 0.001;
@@ -178,14 +185,6 @@ void PDExecutor::sendRosCtrlMsg() {
   qdotzero.resizeAs(q).setZero();
   ref.qdot = qdotzero;
 
-<<<<<<< HEAD
-  ref.fL = ARR(0., 0., 0., 0., 0., 0.);
-  // ref.KfL_gainFactor.clear();
-  // ref.EfL.clear();
-  ref.u_bias = zeros(q.N);
-  // ref.Kq_gainFactor = 1.;
-  // ref.Kd_gainFactor = 1.;
-=======
   ref.fL = zeros(6);
   ref.fR = zeros(6);
 
@@ -193,7 +192,6 @@ void PDExecutor::sendRosCtrlMsg() {
   ref.Ki.clear();
   ref.Kd = {1.};
 
->>>>>>> b0b2422c10c07277a6f5253fe020f40054a74546
   ref.gamma = 1.;
   ref.J_ft_inv.clear();
   ref.u_bias = zeros(q.N);
