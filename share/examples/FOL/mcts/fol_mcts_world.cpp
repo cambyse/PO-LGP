@@ -177,7 +177,7 @@ double FOL_World::get_terminal_reward() const {
   double r=0.;
   r -= T_real;
   r -= 0.1 * T_step;
-  if(deadEnd) r-=30;
+  if(deadEnd) r-=100;
   return r;
 }
 

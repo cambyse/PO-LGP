@@ -135,7 +135,7 @@ void testMCTS(){
   world.fil.close();
   MT::open(world.fil,"z.demos");
   mcts.beta=1.;
-  world.verbose=4;
+  world.verbose=0;
   for(uint k=0;k<10;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
     mcts.addRollout(100);
@@ -145,6 +145,8 @@ void testMCTS(){
 //===========================================================================
 
 int main(int argn, char** argv){
+  rnd.clockSeed();
+  srand(rnd());
 //  testMonteCarlo();
   testMCTS();
 }
