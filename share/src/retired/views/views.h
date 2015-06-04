@@ -17,7 +17,7 @@ struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   struct OpenGL *gl;    //which gl has this view created?
-  Item *reg; //the registration info for this view type
+  Node *reg; //the registration info for this view type
   RWLock *objectLock;
   
   View();
@@ -38,7 +38,7 @@ inline void operator>>(istream&,View&){NIY}
 inline void operator<<(ostream&,const View&){NIY}
 
 #define REGISTER_VIEW(ViewT, AppliesOnT)\
-  Item_typed<Type> ViewT##_ViewRegistryEntry({"View", #ViewT, typeid(AppliesOnT).name()}, ItemL(), new Type_typed<ViewT KO void>(NULL,NULL), &registry());
+  Node_typed<Type> ViewT##_ViewRegistryEntry({"View", #ViewT, typeid(AppliesOnT).name()}, NodeL(), new Type_typed<ViewT KO void>(NULL,NULL), &registry());
 
 
 
@@ -48,17 +48,17 @@ inline void operator<<(ostream&,const View&){NIY}
 //
 
 //-- query available views for specific objects
-ItemL getViews(const char* appliesOn_sysType);
-Item* getViewByName(const char *name);
+NodeL getViews(const char* appliesOn_sysType);
+Node* getViewByName(const char *name);
 
 
 //-- create new views
 
 // general generation of a new view (all others call this)
 template<class T>
-View* newViewBase(T* object, Item *vi, GtkWidget *container){
+View* newViewBase(T* object, Node *vi, GtkWidget *container){
   if(!vi){
-    ItemL vis=getViews(typeid(T).name());
+    NodeL vis=getViews(typeid(T).name());
     if(!vis.N){
       MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
       return NULL;

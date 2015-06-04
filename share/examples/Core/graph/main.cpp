@@ -16,7 +16,7 @@ void TEST(Read){
   cout <<"\ndone" <<endl;
   cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
-//  Item *m = G.getItem("modify");
+//  Node *m = G.getItem("modify");
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
@@ -24,9 +24,9 @@ void TEST(Read){
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
-  cout <<G["k"]->kvg() <<endl;
+  cout <<G["k"]->graph() <<endl;
   cout <<G["val"]->V<double>() <<endl;
-  cout <<G["k"]->kvg()["z"]->V<MT::String>() <<endl;
+  cout <<G["k"]->graph()["z"]->V<MT::String>() <<endl;
   cout <<"DONE" <<endl;
 }
 
@@ -52,19 +52,19 @@ const Graph& rndContainer(const Graph& G){
 Graph& rndSubgraph(Graph& G){
   Graph *g=&G;
   while(rnd.uni()<.8){
-    ItemL subgraphs = g->getTypedItems<Graph>(NULL);
+    NodeL subgraphs = g->getTypedItems<Graph>(NULL);
     if(!subgraphs.N) break;
-    Item *subgraph=subgraphs.rndElem();
+    Node *subgraph=subgraphs.rndElem();
     if(!subgraph->getValue<Graph>()) break;
-    g = &subgraph->kvg();
+    g = &subgraph->graph();
   }
   return *g;
 }
 
-ItemL rndParents(const Graph& G){
+NodeL rndParents(const Graph& G){
   if(!G.N) return {};
   uint nparents=rnd(0,10);
-  ItemL par;
+  NodeL par;
   for(uint i=0;i<nparents;i++){
     par.append(rndContainer(G).rndElem());
   }
@@ -74,10 +74,10 @@ ItemL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Item_typed<bool>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new bool(true), true);
+      new Node_typed<bool>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new bool(true), true);
       break;
     case 1://add Subgraph item
-      new Item_typed<Graph>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new Graph(), true);
+      new Node_typed<Graph>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new Graph(), true);
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();

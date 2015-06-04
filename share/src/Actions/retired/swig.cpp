@@ -55,7 +55,7 @@ return D;
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Item *symbol = s->KB.get()->getItem(symbolName.c_str());
+  Node *symbol = s->KB.get()->getItem(symbolName.c_str());
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -69,8 +69,8 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
   s->KB.writeAccess();
-  Graph& state=s->KB().getItem("STATE")->kvg();
-  ItemL parents;
+  Graph& state=s->KB().getItem("STATE")->graph();
+  NodeL parents;
   for(auto i:literal) parents.append(s->KB().elem(i));
   state.append<bool>({}, parents, NULL, false);
   s->KB.deAccess();
@@ -78,8 +78,8 @@ void ActionSwigInterface::startActivity(intV literal, dict parameters){
 
 void ActionSwigInterface::waitForCondition(intV literal){
   s->KB.readAccess();
-  Graph& state=s->KB().getItem("STATE")->kvg();
-  ItemL lit;
+  Graph& state=s->KB().getItem("STATE")->graph();
+  NodeL lit;
   for(auto i:literal) lit.append(s->KB().elem(i));
   s->KB.deAccess();
 
@@ -87,7 +87,7 @@ void ActionSwigInterface::waitForCondition(intV literal){
   while (cont) {
     s->KB.waitForNextRevision();
     s->KB.readAccess();
-    Item *it = getEqualFactInKB(state, lit);
+    Node *it = getEqualFactInKB(state, lit);
     if(it) cont=false;
     s->KB.deAccess();
   }
@@ -98,14 +98,14 @@ void ActionSwigInterface::waitForQuitSymbol(){
 }
 
 int ActionSwigInterface::createNewSymbol(std::string symbolName){
-  Item *symbol = s->KB.set()->append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = s->KB.set()->append<bool>(symbolName.c_str(), NULL, false);
   return symbol->index;
 }
 
 int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName, dict parameters){
   s->KB.writeAccess();
 
-  Item *symbol = s->KB().append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = s->KB().append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
   s->KB().append<Graph>({"Task"}, {symbol}, td, true);
   s->KB().checkConsistency();

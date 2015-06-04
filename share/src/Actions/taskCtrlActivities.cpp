@@ -5,14 +5,14 @@
 
 extern TaskControllerModule *taskControllerModule();
 
-void TaskCtrlActivity::configure(Item *fact) {
+void TaskCtrlActivity::configure(Node *fact) {
   name.clear();
-  for(Item *p:fact->parents) name <<p->keys.last();
+  for(Node *p:fact->parents) name <<p->keys.last();
   taskController = taskControllerModule();
   CHECK(taskController,"");
   Activity::fact = fact;
   Graph *specs = &NoGraph;
-  if(fact->getValueType()==typeid(Graph)) specs = &fact->kvg();
+  if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
   configure2(name, *specs, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
@@ -31,7 +31,7 @@ void TaskCtrlActivity::step(double dt){
 
   //potentially report on stopping criteria
   MT::String convStr = "(conv ";
-  for(Item *p:fact->parents) convStr <<' ' <<p->keys.last();
+  for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
   convStr <<")";
   if(isConv()){
     if(!conv){
@@ -49,7 +49,7 @@ void TaskCtrlActivity::step(double dt){
 //===========================================================================
 
 void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  Item *it;
+  Node *it;
   if((it=specs["type"])){
     if(it->V<MT::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");

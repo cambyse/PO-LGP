@@ -4,42 +4,43 @@
 
 //### Level 0 routines
 
-ItemL getLiteralsOfScope(Graph& KB);
-ItemL getSymbolsOfScope(Graph& KB);
-ItemL getVariables(Item* literal, Graph* varScope);
-uint getNumOfVariables(Item* literal, Graph* varScope);
-Item *getFirstVariable(Item* literal, Graph* varScope);
-//Item *getFirstSymbol(Item* literal, Graph* varScope);
+NodeL getLiteralsOfScope(Graph& KB);
+NodeL getSymbolsOfScope(Graph& KB);
+NodeL getVariables(Node* literal, Graph* varScope);
+uint getNumOfVariables(Node* literal, Graph* varScope);
+Node *getFirstVariable(Node* literal, Graph* varScope);
+//Node *getFirstSymbol(Node* literal, Graph* varScope);
 
 //---------- checking equality of facts or literals
 
-bool factsAreEqual(Item *fact0, Item *fact1, bool checkAlsoValue=false);
-bool factsAreEqual(Item *fact0, ItemL& fact1);
-bool factsAreEqual(Item *fact, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=false);
-Item *getEqualFactInKB(Graph& facts, Item *fact, bool checkAlsoValue=true);
-Item *getEqualFactInKB(Graph& facts, ItemL& fact);
-Item *getEqualFactInKB(Graph& facts, Item *literal, const ItemL& subst, Graph* subst_scope, bool checkAlsoValue=true);
-Item *getEqualFactInList(Item *fact, ItemL& facts);
-bool allFactsHaveEqualsInScope(Graph& KB, ItemL& facts);
+bool factsAreEqual(Node *fact0, Node *fact1, bool checkAlsoValue=false);
+bool factsAreEqual(Node *fact0, NodeL& fact1);
+bool factsAreEqual(Node *fact, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=false, bool ignoreSubst=false);
+Node *getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
+Node *getEqualFactInKB(Graph& facts, NodeL& fact);
+Node *getEqualFactInKB(Graph& facts, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=true);
+Node *getPotentiallyEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
+Node *getEqualFactInList(Node *fact, NodeL& facts);
+bool allFactsHaveEqualsInScope(Graph& KB, NodeL& facts);
 
-bool matchingFactsAreEqual(Graph& facts, Item *it1, Item *it2, const ItemL& subst, Graph* subst_scope);
+bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subst, Graph* subst_scope);
 
 //---------- finding possible variable substitutions
 
-void removeInfeasibleSymbolsFromDomain(Graph& facts, ItemL& domain, Item *literal, Graph* varScope);
-ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, bool verbose=false);
-ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, bool verbose=false);
+void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node *literal, Graph* varScope);
+NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbose=false);
+NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, bool verbose=false);
 
 //----------- adding facts
 
-Item *createNewSubstitutedLiteral(Graph& facts, Item* literal, const ItemL& subst, Graph* subst_scope);
-bool applySubstitutedLiteral(Graph& facts, Item*  literal, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
-bool applyEffectLiterals    (Graph& facts, Graph& effects, const ItemL& subst, Graph* subst_scope, Graph& changes=NoGraph);
+Node *createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope);
+bool applySubstitutedLiteral(Graph& facts, Node*  literal, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
+bool applyEffectLiterals    (Graph& facts, Graph& effects, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes=NoGraph, bool verbose=false);
-bool forwardChaining_propositional(Graph& KB, Item* q);
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, bool verbose=false);
+bool forwardChaining_propositional(Graph& KB, Node* q);
 
 //### Level 1 class
 

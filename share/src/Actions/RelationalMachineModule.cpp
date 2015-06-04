@@ -3,7 +3,7 @@
 struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;
   RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM){}
-  virtual void cb_new(Item *it){
+  virtual void cb_new(Node *it){
     LOG(-1) <<"NEWED: " <<*it;
 //    Activity *act = newActivity(it);
 //    if(act){
@@ -13,7 +13,7 @@ struct RM_EditCallback:GraphEditCallback{
 //      LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
 //    }
   }
-  virtual void cb_delete(Item *it){
+  virtual void cb_delete(Node *it){
     LOG(-1) <<"DELETED: " <<*it;
     for(Activity *act:RMM.A()) if(act->fact==it){
       LOG(2) <<"removing activity '" <<*act <<"'";
@@ -72,7 +72,7 @@ void RelationalMachineModule::step(){
       CHECK(act->fact == state(act->fact->index),"SOMETHING'S WRONG!");
       fact2act(act->fact->index) = act;
     }
-    for(Item *it:state) if(fact2act(it->index)==NULL){ //fact is not associated yet
+    for(Node *it:state) if(fact2act(it->index)==NULL){ //fact is not associated yet
       Activity *act = newActivity(it);
       if(act){
         A().append(act);

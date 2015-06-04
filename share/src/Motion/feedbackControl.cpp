@@ -27,7 +27,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
-  Item *it;
+  Node *it;
   if((it=params["PD"])){
     arr pd=it->V<arr>();
     setGainsAsNatural(pd(0), pd(1));

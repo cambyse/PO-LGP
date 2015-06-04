@@ -66,7 +66,7 @@ void Parser::fill_missing_positions(Graph & kvg)
             item.value_end = item.parents_end;
         }
         // call recursively
-        if(item.value_type==Graph::Item::KVG) {
+        if(item.value_type==Graph::Node::KVG) {
             fill_missing_positions(*(item.sub_graph));
         }
     }
@@ -107,12 +107,12 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Gr
             case START:
                 if(is(c,key_chars)) {
                     // keys
-                    kvg.items.push_back(Graph::Item());
+                    kvg.items.push_back(Graph::Node());
                     parse_key(input, output, in_it, kvg);
                     state = KEYS;
                 } else if(is(c,R"(\()")) {
                     // no keys but parents
-                    kvg.items.push_back(Graph::Item());
+                    kvg.items.push_back(Graph::Node());
                     output += par_sep_color + toHtml(c) + close_span;
                     ++in_it;
                     state = PARENTS;
@@ -334,12 +334,12 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Gr
                     parse_graph(input, output, in_it, sub_graph, false);
                     // set value in key-value-graph
                     auto& item = kvg.items.back();
-                    if(item.value_type!=Graph::Item::NONE) {
+                    if(item.value_type!=Graph::Node::NONE) {
                         ERROR("Overwriting value");
                     }
                     item.value = "";
                     *(item.sub_graph) = sub_graph;
-                    item.value_type = Graph::Item::KVG;
+                    item.value_type = Graph::Node::KVG;
                 }
                 break;
             }
@@ -351,11 +351,11 @@ void Parser::parse_graph(const QString &input, QString &output, PosIt &in_it, Gr
     while(!kvg_list.empty()) {
         for(auto& item : kvg_list.front()->items) {
             switch(item.value_type) {
-            case Graph::Item::NONE:
+            case Graph::Node::NONE:
                 item.value = "true";
-                item.value_type = Graph::Item::BOOL;
+                item.value_type = Graph::Node::BOOL;
                 break;
-            case Graph::Item::KVG:
+            case Graph::Node::KVG:
                 kvg_list.push_back(item.sub_graph.get());
                 break;
             default:
@@ -537,15 +537,15 @@ void Parser::parse_value(const QString &input, QString &output, PosIt &in_it, Gr
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = value;
-    item.value_type = Graph::Item::STRING;
+    item.value_type = Graph::Node::STRING;
 
     // convert to bool if necessary
     if(value=="true" || value=="false") {
-        item.value_type = Graph::Item::BOOL;
+        item.value_type = Graph::Node::BOOL;
     }
 
     // format as HTML
@@ -565,11 +565,11 @@ void Parser::parse_string_value(const QString &input, QString &output, PosIt &in
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = string;
-    item.value_type = Graph::Item::STRING;
+    item.value_type = Graph::Node::STRING;
 
     // format as HTML
     toHtml(string);
@@ -588,11 +588,11 @@ void Parser::parse_file_value(const QString &input, QString &output, PosIt &in_i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = file;
-    item.value_type = Graph::Item::FILE;
+    item.value_type = Graph::Node::FILE;
 
     // format as HTML
     toHtml(file);
@@ -630,11 +630,11 @@ void Parser::parse_double_value(const QString &input, QString &output, PosIt &in
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = d;
-    item.value_type = Graph::Item::DOUBLE;
+    item.value_type = Graph::Node::DOUBLE;
 
     // format as HTML
     toHtml(d);
@@ -658,11 +658,11 @@ void Parser::parse_array_value(const QString &input, QString &output, PosIt &in_
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = array;
-    item.value_type = Graph::Item::ARRAY;
+    item.value_type = Graph::Node::ARRAY;
 
     // format as HTML
     toHtml(array);
@@ -681,11 +681,11 @@ void Parser::parse_list_value(const QString &input, QString &output, PosIt &in_i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = list;
-    item.value_type = Graph::Item::LIST;
+    item.value_type = Graph::Node::LIST;
 
     // format as HTML
     toHtml(list);
@@ -704,11 +704,11 @@ void Parser::parse_special_value(const QString &input, QString &output, PosIt &i
 
     // set value in key-value-graph
     auto& item = kvg.items.back();
-    if(item.value_type!=Graph::Item::NONE) {
+    if(item.value_type!=Graph::Node::NONE) {
         ERROR("Overwriting value");
     }
     item.value = special;
-    item.value_type = Graph::Item::SPECIAL;
+    item.value_type = Graph::Node::SPECIAL;
 
     // format as HTML
     toHtml(special);
@@ -742,7 +742,7 @@ QString Parser::Graph::dot()
         multimap<QString, QString> key_id_map;
         QString indentation = QString("    ").repeated(cluster_level+1);
         bool first_node = true;
-        for(Item item : kvg->items) {
+        for(Node item : kvg->items) {
             QString key_list;
             bool first_key = true;
             for(QString key : item.keys) {
@@ -755,7 +755,7 @@ QString Parser::Graph::dot()
             }
             QString node_id;
             switch (item.value_type) {
-            case Item::KVG:
+            case Node::KVG:
             {
                 QString next_cluster_name = QString("cluster_%1_%2").arg(cluster_level).arg(cluster_level_counts[cluster_level]);
                 node_id = next_cluster_name;

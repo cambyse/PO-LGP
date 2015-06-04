@@ -193,7 +193,7 @@ System& NoSystem = *((System*)NULL);
 
 Module* System::addModule(const char *dclName, const char *name, Module::StepMode mode, double beat){
   //find the dcl in the registry
-  Item *modReg = registry().getItem("Decl_Module", dclName);
+  Node *modReg = registry().getItem("Decl_Module", dclName);
   if(!modReg){
     MT_MSG("could not find Decl_Module " <<dclName);
     return NULL;
@@ -258,14 +258,14 @@ Graph System::graph() const{
   Graph g;
   g.append<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
-  std::map<RevisionedAccessGatedClass*, Item*> vit;
+  std::map<RevisionedAccessGatedClass*, Node*> vit;
   for(RevisionedAccessGatedClass *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: modules){
-    Item *mit = g.append({"Module", m->name}, {}, &m, false);
+    Node *mit = g.append({"Module", m->name}, {}, &m, false);
     g.checkConsistency();
     for(Access *a: m->accesses){
-      Item *ait = g.append({"Access", a->name}, {}, &a, false);
+      Node *ait = g.append({"Access", a->name}, {}, &a, false);
       ait->parents.append(mit);
       mit->parentOf.append(ait);
       if(a->var){

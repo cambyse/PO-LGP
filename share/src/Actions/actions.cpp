@@ -10,7 +10,7 @@ Action::Action(ActionMachine& actionMachine, const char* name)
   : name(name), active(false), symbol(NULL), actionTime(0.), timeOut(-1.){
   actionMachine.A.set()->append(this);
   actionMachine.KB.readAccess();
-  Item *it = actionMachine.KB().getItem(name);
+  Node *it = actionMachine.KB().getItem(name);
   if(it && &it->container != &actionMachine.KB()) it=NULL;
   if(it && it->getValueType()!=typeid(bool)) it=NULL;
   actionMachine.KB.deAccess();

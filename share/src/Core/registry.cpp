@@ -34,7 +34,7 @@ extern bool cfgFileOpen;
 extern Mutex cfgFileMutex;
 }
 
-extern Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
+extern Node *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
 
 void initRegistry(int argc, char* argv[]){
 
@@ -46,10 +46,10 @@ void initRegistry(int argc, char* argv[]){
         MT::String value;
         value <<'=' <<argv[n+1];
         readItem(registry(), value, false, false, key);
-//        new Item_typed<MT::String>(registry(), {key}, {}, new MT::String(argv[n+1]), true);
+//        new Node_typed<MT::String>(registry(), {key}, {}, new MT::String(argv[n+1]), true);
         n++;
       }else{
-        new Item_typed<bool>(registry(), {key}, {}, new bool(true), true);
+        new Node_typed<bool>(registry(), {key}, {}, new bool(true), true);
       }
     }else{
       MT_MSG("non-parsed cmd line argument:" <<argv[n]);

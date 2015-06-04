@@ -23,7 +23,7 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
   W.isLinkTree=false;
   W.checkConsistency();
 
-  //  for(Item *i:G){
+  //  for(Node *i:G){
 
   //  }
 
@@ -107,10 +107,10 @@ void solveProblem(ors::KinematicWorld& world, Graph& symbols){
 
 void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
   symbols.checkConsistency();
-  Item *CYLIN = symbols["Cylin"];
-  Item *BOARD = symbols["Board"];
-  Item *DEPTH = symbols["depth"];
-  Graph& state = symbols["STATE"]->kvg();
+  Node *CYLIN = symbols["Cylin"];
+  Node *BOARD = symbols["Board"];
+  Node *DEPTH = symbols["depth"];
+  Graph& state = symbols["STATE"]->graph();
 
   uint n = 10+rnd(20);
   double x=-1.6, y=-1.;
@@ -142,7 +142,7 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Item *o = symbols.append<bool>({"Object", s->name}, {}, new bool(true), true);
+    Node *o = symbols.append<bool>({"Object", s->name}, {}, new bool(true), true);
     if(s->type==ors::cylinderST){
       state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
     }else{
@@ -154,14 +154,14 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
   symbols.checkConsistency();
 
   //HACK: move the actionSequence item to the end...
-  Item *ss = symbols["STATE"];
-  symbols.ItemL::append(ss);
-  symbols.ItemL::remove(ss->index);
+  Node *ss = symbols["STATE"];
+  symbols.NodeL::append(ss);
+  symbols.NodeL::remove(ss->index);
   symbols.index();
 
-  Item *as = symbols["actionSequence"];
-  symbols.ItemL::append(as);
-  symbols.ItemL::remove(as->index);
+  Node *as = symbols["actionSequence"];
+  symbols.NodeL::append(as);
+  symbols.NodeL::remove(as->index);
   symbols.index();
 
   world.calc_fwdPropagateShapeFrames();
@@ -172,10 +172,10 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
 double reward(ors::KinematicWorld& world, Graph& symbols){
   //-- find max depth
   double depth=0.;
-  Item *depthSymbol=symbols["depth"];
-  Graph& state =symbols["STATE"]->kvg();
+  Node *depthSymbol=symbols["depth"];
+  Graph& state =symbols["STATE"]->graph();
 
-  for(Item *dep:depthSymbol->parentOf) if(&dep->container==&state){
+  for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
     double *d = dep->getValue<double>();
     CHECK(d,"");
     if(*d>depth) depth=*d;
@@ -183,11 +183,11 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
 
   //-- count supports below
   double supp=0.;
-  Item *supportSymbol=symbols["supports"];
-  ItemL objs=symbols.getItems("Object");
-  for(Item *obj:objs){
-    ItemL supporters;
-    for(Item *constraint:obj->parentOf){
+  Node *supportSymbol=symbols["supports"];
+  NodeL objs=symbols.getItems("Object");
+  for(Node *obj:objs){
+    NodeL supporters;
+    for(Node *constraint:obj->parentOf){
       if(constraint->parents.N==3 && constraint->parents(0)==supportSymbol && constraint->parents(2)==obj){
         supporters.append(constraint->parents(1));
       }

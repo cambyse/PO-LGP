@@ -57,7 +57,7 @@ struct Module{
   const char *name;
   struct Process *proc;
   AccessL accesses;
-  Item *reg;
+  Node *reg;
   uint step_count;         ///< step count
   Module(const char *_name):name(_name), proc(NULL), reg(NULL), step_count(0){}
   virtual ~Module(){};
@@ -79,7 +79,7 @@ struct Access{
   Module *module;
   Variable *variable;
   const char* name;
-  Item *reg;
+  Node *reg;
   Access(const char* _name):module(NULL), variable(NULL), name(_name), reg(NULL) {}
   void write(ostream& os) const{ os <<name; }
   void read(istream&) { NIY; }
@@ -124,11 +124,11 @@ struct Access_typed:Access{
 //
 
 template<class T, class P>
-Item* registerItem(T *instance, const char *key1, const char* key2, Item *parent1=NULL, Item *parent2=NULL){
-  ItemL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
+Node* registerItem(T *instance, const char *key1, const char* key2, Node *parent1=NULL, Node *parent2=NULL){
+  NodeL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
   StringA keys; if(key1) keys.append(MT::String(key1)); if(key2) keys.append(MT::String(key2));
   Type *ti = new Type_typed<T,P>(NULL, NULL);
-  return new Item_typed<Type>(keys, parents, ti, &registry());
+  return new Node_typed<Type>(keys, parents, ti, &registry());
 }
 
 
@@ -165,9 +165,9 @@ template<class T> void Access_typed<T>::setData(void* _data){
    In our case we call registerItem */
 template<class T, class N, class P> struct Registrator{
   struct StaticRegistrator{
-    Item *reg;
+    Node *reg;
     StaticRegistrator():reg(NULL){ //called whenever a module/access is DECLARED
-      Item *parent = NULL;
+      Node *parent = NULL;
       const char *declkey="Decl_Module";
       MT::String name;
       if(typeid(P)!=typeid(void)){ //dependence registry

@@ -33,7 +33,7 @@ private:
     void parse_content(QString input);
     void block_editor_signals();
     void unblock_editor_signals();
-    QTreeWidgetItem * item_to_tree_item(const Parser::Graph::Item & item);
+    QTreeWidgetItem * item_to_tree_item(const Parser::Graph::Node & item);
     QString random_alpha_num(int n) const;
 private slots:
     void kvg_to_tree();

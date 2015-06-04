@@ -15,9 +15,9 @@ void RelationalMachine::init(const char* filename){
   }else{
     MT_MSG("No '"<<filename<<"' for initialization given! This might fail!")
   }
-  new Item_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
-  state = &KB["STATE"]->kvg();
-  tmp   = &KB["TMP"]->kvg();
+  new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  state = &KB["STATE"]->graph();
+  tmp   = &KB["TMP"]->graph();
 }
 
 bool RelationalMachine::queryCondition(MT::String query) const{
@@ -59,7 +59,7 @@ bool RelationalMachine::applyEffect(MT::String effect){
   return e;
 }
 
-ItemL RelationalMachine::fwdChainRules(){
+NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
   forwardChaining_FOL(KB, NULL, *tmp, false);
   if(verbose){
@@ -71,10 +71,10 @@ ItemL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
-Item *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+Node *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
 
-Item* RelationalMachine::declareNewSymbol(MT::String symbol){
-  Item *it = readItem(KB, symbol, false, false);
+Node* RelationalMachine::declareNewSymbol(MT::String symbol){
+  Node *it = readItem(KB, symbol, false, false);
   return it;
 }
 
@@ -91,14 +91,14 @@ MT::String RelationalMachine::getState(){
 }
 
 MT::String RelationalMachine::getRules(){
-  ItemL rules = KB.getItems("Rule");
+  NodeL rules = KB.getItems("Rule");
   MT::String str;
   listWrite(rules, str, "\n", "[]");
   return str;
 }
 
 StringA RelationalMachine::getSymbols(){
-  ItemL symbols = getSymbolsOfScope(KB);
+  NodeL symbols = getSymbolsOfScope(KB);
   StringA strs(symbols.N);
   for(uint i=0;i<symbols.N;i++){
     strs(i) <<*symbols(i);

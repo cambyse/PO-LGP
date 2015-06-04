@@ -92,19 +92,19 @@ void View::gtkNewText(GtkWidget *container){ NICO }
 #endif
 
 #if 1
-ItemL getViews(const char* appliesOn_sysType){
-  ItemL types = registry().getDerivedItems<Type>();
-  ItemL ret;
-  for(Item *ti: types){
+NodeL getViews(const char* appliesOn_sysType){
+  NodeL types = registry().getDerivedItems<Type>();
+  NodeL ret;
+  for(Node *ti: types){
     if(ti->keys(0)!="View") continue;
     if(ti->keys(2)==appliesOn_sysType) ret.append(ti);
   }
   return ret;
 }
 
-Item* getViewByName(const char *name){
-  ItemL types = registry().getDerivedItems<Type>();
-  for(Item *ti: types){
+Node* getViewByName(const char *name){
+  NodeL types = registry().getDerivedItems<Type>();
+  for(Node *ti: types){
     if(ti->keys(0)!="View") continue;
     if(ti->keys(1)==name || ti->value<Type>()->typeId().name()==name) return ti;
   }

@@ -13,9 +13,9 @@ typedef MT::Array<SystemDescription::VariableEntry*> VariableEntryL;
 // SystemDescription
 //
 
-void SystemDescription::addModule(const char *dclName, const char *name, const ItemL& vars, StepMode mode, double beat){
+void SystemDescription::addModule(const char *dclName, const char *name, const NodeL& vars, StepMode mode, double beat){
   //find the dcl in the registry
-  Item *modReg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
+  Node *modReg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
     MT_MSG("could not find Decl_Module" <<dclName);
     return;
@@ -25,16 +25,16 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
   m->type = modReg->value<Type>();
   m->mode = mode;
   m->beat = beat;
-  Item* modIt = system.append<ModuleEntry>({"Module", (name?name:modReg->keys(1))}, m);
+  Node* modIt = system.append<ModuleEntry>({"Module", (name?name:modReg->keys(1))}, m);
 
-  for(Item *accReg: modReg->parentOf){
+  for(Node *accReg: modReg->parentOf){
     AccessEntry *a = new AccessEntry;
     a->reg = accReg;
     a->type = accReg->value<Type>();
     if(!&vars || !vars.N){
       system.append<AccessEntry>({MT::String("Access"), accReg->keys(1)}, {modIt}, a);
     }else{
-      Item *varIt = vars(accReg_COUNT);
+      Node *varIt = vars(accReg_COUNT);
       VariableEntry *v = varIt->value<VariableEntry>();
       cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
            <<" with Variable (" <<*(v->type) <<")" <<endl;
@@ -45,14 +45,14 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
 
 void SystemDescription::complete(){
 #if 0
-  ItemL modules = system.getTypedItems<ModuleEntry>("Module");
-  for(Item *it: modules){
+  NodeL modules = system.getTypedItems<ModuleEntry>("Module");
+  for(Node *it: modules){
     ModuleEntry *m=it->value<ModuleEntry>();
-    Item *reg=m->reg;
+    Node *reg=m->reg;
     if(!m->accs.N && reg->parentOf.N){ //declaration has children but description no accesses...
-      for(Item *acc: reg->parentOf){
+      for(Node *acc: reg->parentOf){
         CHECK_EQ(acc->keys(0),"Decl_Access","");
-        Item* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
+        Node* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
         VariableEntry *v=NULL;
         if(!varIt){ //we need to add a variable
           cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
@@ -70,12 +70,12 @@ void SystemDescription::complete(){
     }
   }
 #else
-  ItemL accesses = system.getTypedItems<AccessEntry>("Access");
-  for(Item *accIt: accesses){
+  NodeL accesses = system.getTypedItems<AccessEntry>("Access");
+  for(Node *accIt: accesses){
     AccessEntry *a=accIt->value<AccessEntry>();
     CHECK(accIt->parents.N==1 || accIt->parents.N==2,"");
     if(accIt->parents.N==1){ //access has no variable yet...
-      Item* varIt = getVariableEntry(accIt->keys(1), *a->type);
+      Node* varIt = getVariableEntry(accIt->keys(1), *a->type);
       VariableEntry *v=NULL;
       if(!varIt){ //we need to add a variable
         cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
@@ -94,13 +94,13 @@ void SystemDescription::complete(){
 #endif
 }
 
-Item* SystemDescription::getVariableEntry(const Access& acc){
+Node* SystemDescription::getVariableEntry(const Access& acc){
   return getVariableEntry(acc.name, *acc.reg->value<Type>());
 }
 
-Item* SystemDescription::getVariableEntry(const char* name, const Type& type){
-  ItemL variables = system.getTypedItems<VariableEntry>("Variable");
-  for(Item *it: variables){
+Node* SystemDescription::getVariableEntry(const char* name, const Type& type){
+  NodeL variables = system.getTypedItems<VariableEntry>("Variable");
+  for(Node *it: variables){
     VariableEntry *v = it->value<VariableEntry>();
     if(it->keys(1)==name){
       if(v->type->typeId()!=type.typeId())
@@ -139,8 +139,8 @@ void Engine::create(SystemDescription& S){
   if(mode==none) mode=serial;
 
   //create pre-defined variables
-  ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
-  for(Item *varIt: variables){
+  NodeL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
+  for(Node *varIt: variables){
     SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
     cout <<"creating " <<varIt->keys(1) <<": " <<*(v->type) <<endl;
     v->var = new Variable(varIt->keys(1));
@@ -148,8 +148,8 @@ void Engine::create(SystemDescription& S){
   }
 
   //create modules
-  ItemL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
-  for(Item *modIt: modules){
+  NodeL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
+  for(Node *modIt: modules){
     SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
     cout <<"creating " <<modIt->keys(1) <<": " <<*(m->type) <<endl;
     if(mode==threaded){
@@ -165,11 +165,11 @@ void Engine::create(SystemDescription& S){
     //accesses have automatically been created as member of a module,
     //need to link them now
     CHECK_EQ(m->mod->accesses.N,modIt->parentOf.N,"dammit");
-    for(Item *accIt: modIt->parentOf){
+    for(Node *accIt: modIt->parentOf){
       Access *a = m->mod->accesses(accIt_COUNT);
       //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
       //CHECK_EQ(acc->type , a->type,"");
-      Item *varIt = accIt->parents(1);
+      Node *varIt = accIt->parents(1);
       CHECK_EQ(varIt->keys(0),"Variable","");
       SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
       CHECK(v,"");
@@ -185,7 +185,7 @@ void Engine::create(SystemDescription& S){
 
   //start modules modules
   if(mode==threaded){
-    for(Item *modIt: modules){
+    for(Node *modIt: modules){
       SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
       switch(m->mode){
       case SystemDescription::loopWithBeat:  m->mod->proc->threadLoopWithBeat(m->beat);  break;

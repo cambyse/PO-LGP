@@ -110,29 +110,29 @@ double delta_E_fuse(Segment& a, Segment& b){
 
 template<class V, class E> void makeGridGraph(Graph& G, uint h, uint w){
   for(uint i=0;i<h;i++) for(uint j=0;j<w;j++){
-    new Item_typed<Segment>(G, {STRING(i<<'_'<<j)}, {}, new V(), true);
+    new Node_typed<Segment>(G, {STRING(i<<'_'<<j)}, {}, new V(), true);
   }
-  ItemL verts = G.list();
+  NodeL verts = G.list();
   verts.reshape(h,w);
   for(uint i=0;i<h;i++) for(uint j=0;j<w;j++){
-    if(i) new Item_typed<E>(G, {}, {verts(i-1,j), verts(i,j)}, new E(), true);
-    if(j) new Item_typed<E>(G, {}, {verts(i,j-1), verts(i,j)}, new E(), true);
+    if(i) new Node_typed<E>(G, {}, {verts(i-1,j), verts(i,j)}, new E(), true);
+    if(j) new Node_typed<E>(G, {}, {verts(i,j-1), verts(i,j)}, new E(), true);
   }
 }
 
 double cost(Graph& S){
   double E=0.;
-  for(Item *s:S.getTypedItems<Segment>()){
+  for(Node *s:S.getTypedItems<Segment>()){
     E += s->V<Segment>().beta_len;
   }
-  for(Item *e:S.getTypedItems<uint>()){
+  for(Node *e:S.getTypedItems<uint>()){
     E += lambda*e->V<uint>();
   }
   return E;
 }
 
-void fuse(Graph& S, Item *ita, Item *itb){
-//  Item *e=S.getChild(ita,itb);
+void fuse(Graph& S, Node *ita, Node *itb){
+//  Node *e=S.getChild(ita,itb);
   Segment &a=ita->V<Segment>();
   Segment &b=itb->V<Segment>();
   a.X += b.X;
@@ -140,11 +140,11 @@ void fuse(Graph& S, Item *ita, Item *itb){
   a.mu += b.mu;
   a.pix.append(b.pix);
   a.comBeta();
-  for(Item *itc:neighbors(itb)) if(itc!=ita){
+  for(Node *itc:neighbors(itb)) if(itc!=ita){
     uint nbc = S.getChild(itb,itc)->V<uint>();
-    Item *ea=S.getChild(ita,itc);
+    Node *ea=S.getChild(ita,itc);
     if(ea) ea->V<uint>() += nbc;
-    else new Item_typed<uint>(S, {}, {ita, itc}, new uint(nbc), true);
+    else new Node_typed<uint>(S, {}, {ita, itc}, new uint(nbc), true);
   }
   while(itb->parentOf.N) delete itb->parentOf.last();
   delete itb;
@@ -184,7 +184,7 @@ void planes(){
 
   for(uint k=0;k<10000;k++){
     double Eold = cost(S);
-    Item *e = S.getTypedItems<uint>().rndElem();
+    Node *e = S.getTypedItems<uint>().rndElem();
     double deltaE = delta_E_fuse(e->parents(0)->V<Segment>(), e->parents(1)->V<Segment>());
     deltaE -= lambda*e->V<uint>();
     if(deltaE<0.){
@@ -197,7 +197,7 @@ void planes(){
 
     arr img(X.d0);  img=-1.;
     uintA seg(X.d0);
-    for(Item *sit:S.getTypedItems<Segment>()){
+    for(Node *sit:S.getTypedItems<Segment>()){
       Segment *s = sit->getValue<Segment>();
       for(uint p:s->pix){
         img(p) = s->f(Phi[p]);

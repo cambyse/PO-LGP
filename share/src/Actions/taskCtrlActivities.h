@@ -11,7 +11,7 @@ struct TaskCtrlActivity : Activity{
   bool conv;
 
   ~TaskCtrlActivity();
-  virtual void configure(Item *fact); ///< calls configure2 and registers
+  virtual void configure(Node *fact); ///< calls configure2 and registers
   virtual void step(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world) = 0;

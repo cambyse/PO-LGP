@@ -10,7 +10,7 @@ int main(int argc, char ** argv) {
   String dir;
   ifstream ann_g4;
   Graph kvg, *subkvg, *lock;
-  Item *item;
+  Node *item;
 
   MT::getParameter(dir, "dir");
 

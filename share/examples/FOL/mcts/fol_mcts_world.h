@@ -6,9 +6,9 @@
 struct FOL_World:MCTS_Environment{
   struct Decision:SAO{
     bool waitDecision;
-    Item *rule;
-    ItemL substitution;
-    Decision(bool waitDecision, Item *rule, const ItemL& substitution):waitDecision(waitDecision),rule(rule), substitution(substitution){}
+    Node *rule;
+    NodeL substitution;
+    Decision(bool waitDecision, Node *rule, const NodeL& substitution):waitDecision(waitDecision),rule(rule), substitution(substitution){}
     bool operator==(const SAO & other) const{ NIY; }
     void write(ostream&) const;
   };
@@ -19,11 +19,11 @@ struct FOL_World:MCTS_Environment{
   Graph KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
-  ItemL rules;  ///< rules withing the KB (each is a subgraph item of the KB)
-  ItemL constants;///< constants withing the KB (each is an item of the KB)
+  NodeL rules;  ///< rules withing the KB (each is a subgraph item of the KB)
+  NodeL constants;///< constants withing the KB (each is an item of the KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
   Graph *terminal; //TODO: replace
-  Item *Terminate_keyword;
+  Node *Terminate_keyword;
   int verbose;
 
 

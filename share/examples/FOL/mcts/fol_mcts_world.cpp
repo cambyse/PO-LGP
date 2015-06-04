@@ -14,8 +14,8 @@ void FOL_World::Decision::write(ostream& os) const{
 FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), verbose(4){
   FILE("z.init") <<KB;
   KB.checkConsistency();
-  start_state = &KB["START_STATE"]->kvg();
-  terminal = &KB["terminal"]->kvg(); //TODO: replace by QUIT state predicate!
+  start_state = &KB["START_STATE"]->graph();
+  terminal = &KB["terminal"]->graph(); //TODO: replace by QUIT state predicate!
   rules = KB.getItems("Rule");
   constants = KB.getItems("Constant");
   Terminate_keyword = KB["Terminate"];
@@ -33,7 +33,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(d->waitDecision){
     //-- find minimal wait time
     double w=1e10;
-    for(Item *i:*state){
+    for(Node *i:*state){
       if(i->getValueType()==typeid(double)){
         double wi = *i->getValue<double>();
         if(w>wi) w=wi;
@@ -48,8 +48,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
-      ItemL terminatingActivities;
-      for(Item *i:*state){
+      NodeL terminatingActivities;
+      for(Node *i:*state){
         if(i->getValueType()==typeid(double)){
           double &wi = *i->getValue<double>(); //this is a double reference!
           wi -= w;
@@ -58,25 +58,25 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       }
 
       //-- for all these activities call the terminate operator
-      for(Item *act:terminatingActivities){
-        Item *predicate = act->parents(0);
-        Item *rule = KB.getChild(Terminate_keyword, predicate);
+      for(Node *act:terminatingActivities){
+        Node *predicate = act->parents(0);
+        Node *rule = KB.getChild(Terminate_keyword, predicate);
         if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
-        Item *effect = rule->kvg().last();
-        ItemL vars = getSymbolsOfScope(rule->kvg());
-        ItemL subs(vars.N); subs.setZero();
+        Node *effect = rule->graph().last();
+        NodeL vars = getSymbolsOfScope(rule->graph());
+        NodeL subs(vars.N); subs.setZero();
         CHECK(vars.N==act->parents.N-1,"");
         for(uint i=0;i<vars.N;i++) subs(i) = act->parents(i+1);
 
         if(verbose>2) cout <<"*** terminating activity '" <<*act <<"' with rule '" <<*rule <<endl;
         if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(subs, cout); cout <<endl; }
-        applyEffectLiterals(*state, effect->kvg(), subs, &rule->kvg());
+        applyEffectLiterals(*state, effect->graph(), subs, &rule->graph());
       }
     }
   }else{
-    Item *effect = d->rule->kvg().last();
+    Node *effect = d->rule->graph().last();
     if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(d->substitution, cout); cout <<endl; }
-    applyEffectLiterals(*state, effect->kvg(), d->substitution, &d->rule->kvg());
+    applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
   }
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
@@ -88,8 +88,8 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
   MT::Array<Handle> decisions; //tuples of rule and substitution
   decisions.append(Handle(new Decision(true, NULL, {}))); //the wait decision (true as first argument, no rule, no substitution)
-  for(Item* rule:rules){
-    ItemL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+  for(Node* rule:rules){
+    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     for(uint s=0;s<subs.d0;s++){
       decisions.append(Handle(new Decision(false, rule, subs[s]))); //a grounded rule decision (abstract rule with substution)
     }
@@ -139,11 +139,11 @@ void FOL_World::reset_state(){
   state = start_state;
 #endif
   state->isItemOfParentKvg->keys(0)="STATE";
-  //  new Item_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
+  //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 
   if(tmp) delete tmp->isItemOfParentKvg;
-  new Item_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
-  tmp   = &KB["TMP"]->kvg();
+  new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  tmp   = &KB["TMP"]->graph();
 
   KB.checkConsistency();
   FILE("z.after") <<KB;

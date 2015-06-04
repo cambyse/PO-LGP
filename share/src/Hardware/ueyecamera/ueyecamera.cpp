@@ -47,7 +47,7 @@ struct sUEyeInterface {
     UEYEIMAGEINFO imgInfo;
     UEYE_CAPTURE_STATUS_INFO captInfo;
 
-    bool setup_flag, init_flag, open_flag, err_flag; // TODO err_flag?
+    bool setup_flag, init_flag, open_flag, err_flag;
 
     sUEyeInterface(int cameraID);
     ~sUEyeInterface();
