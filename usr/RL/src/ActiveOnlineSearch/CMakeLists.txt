@@ -17,6 +17,7 @@ add_executable(main_ActiveOnlineSearch
     Environment_old/DynamicTightRope.h
     Environment_old/DynamicTightRope.cpp
     Environment_old/UnitTestEnvironment.h
+    Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
     Environment_old/BottleNeckHallway.h
@@ -71,6 +72,7 @@ add_library(ActiveOnlineSearch
     Environment_old/DynamicTightRope.h
     Environment_old/DynamicTightRope.cpp
     Environment_old/UnitTestEnvironment.h
+    Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
     Environment_old/BottleNeckHallway.h

@@ -158,7 +158,7 @@ public:
     /**
      * Checks the derivatives via finite differences. The function changes every
      * node/variable by +/- \e delta. It then computes the nummerical derivative
-     * for all dependent nodes using this a symetric finite difference and
+     * for all dependent nodes using this symetric finite difference and
      * compares the value to the function stored in the connecting arc. An error
      * is signaled (by printing a warning and returning false) if for any
      * derivative both the absolute deviation (i.e. the absulute value of the

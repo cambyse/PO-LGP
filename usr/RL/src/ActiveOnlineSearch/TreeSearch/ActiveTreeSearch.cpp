@@ -44,49 +44,55 @@ void ActiveTreeSearch::next_do() {
     environment->set_state(root_state);
     set<node_t> action_nodes_to_update;
     DEBUG_OUT(1,"Next...");
-    for(int i=0; i<1; ++i) {
-        // choose observation node at random and set environment's state
-        vector<node_t> candidate_nodes;
-        for(node_it_t node(graph); node!=INVALID; ++node) {
-            if(node_info_map[node].type==ACTION_NODE) continue;
-            // // determine depth
-            // int depth = 0;
-            // node_t ancestor = node;
-            // while(ancestor!=INVALID) {
-            //     in_arc_it_t arc(graph,ancestor);
-            //     if(arc!=INVALID) {
-            //         ancestor = graph.source(arc);
-            //         ++depth;
-            //     } else {
-            //         ancestor = INVALID;
-            //     }
-            // }
-            // if(depth/2>3) continue;
-            candidate_nodes.push_back(node);
-        }
-        node_t old_observation_node = INVALID;
-        while(old_observation_node==INVALID) {
-            old_observation_node = util::random_select(candidate_nodes);
-            environment->set_state(associated_state[old_observation_node]);
-            if(environment->is_terminal_state()) {
-                DEBUG_OUT(1,"    Discard observation node:");
-                if(old_observation_node==root_node) {
-                    DEBUG_OUT(1,"        root");
-                } else {
-                    DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-                }
-                old_observation_node=INVALID;
+
+    // choose observation node at random
+    vector<node_t> candidate_nodes;
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        if(node_info_map[node].type==ACTION_NODE) continue;
+        // // determine depth
+        // int depth = 0;
+        // node_t ancestor = node;
+        // while(ancestor!=INVALID) {
+        //     in_arc_it_t arc(graph,ancestor);
+        //     if(arc!=INVALID) {
+        //         ancestor = graph.source(arc);
+        //         ++depth;
+        //     } else {
+        //         ancestor = INVALID;
+        //     }
+        // }
+        // if(depth/2>3) continue;
+        candidate_nodes.push_back(node);
+    }
+    node_t old_observation_node = INVALID;
+    while(old_observation_node==INVALID) {
+        old_observation_node = util::random_select(candidate_nodes);
+        environment->set_state(associated_state[old_observation_node]);
+        if(environment->is_terminal_state()) {
+            DEBUG_OUT(1,"    Discard observation node:");
+            if(old_observation_node==root_node) {
+                DEBUG_OUT(1,"        root");
             } else {
-                DEBUG_OUT(1,"    Choose observation node:");
-                if(old_observation_node==root_node) {
-                    DEBUG_OUT(1,"        root");
-                } else {
-                    DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-                }
+                DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
+            }
+            old_observation_node=INVALID;
+        } else {
+            DEBUG_OUT(1,"    Choose observation node:");
+            if(old_observation_node==root_node) {
+                DEBUG_OUT(1,"        root");
+            } else {
+                DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
             }
         }
-        // make a random transition
-        auto action = util::random_select(environment->get_actions());
+    }
+
+    // choose a random action
+    auto action = util::random_select(environment->get_actions());
+
+    for(int i=0; i<2; ++i) {
+        // set environment's state
+        environment->set_state(associated_state[old_observation_node]);
+        // make a transition
         RETURN_TUPLE(observation_handle_t, observation,
                      reward_t, reward ) = environment->transition(action);
         DEBUG_OUT(1,"    (action --> observation) = (" << *action << " --> " << *observation << ")");
@@ -131,7 +137,7 @@ void ActiveTreeSearch::next_do() {
             nodes.push_back(node);
         }
         computer.check_graph_structure(true,true); // identify input and output nodes
-        computer.check_derivatives();
+        computer.check_derivatives(vector<double>(), 1e-5, 1e-2, 1e-2);
         //computer.compute_values();
         computer.set_node_differential(c_root_node,1);
         computer.reverse_accumulation();
@@ -153,6 +159,7 @@ void ActiveTreeSearch::init(const state_handle_t & root_state) {
 
 void ActiveTreeSearch::toPdf(const char* file_name) const {
     const bool use_id = true;
+    const bool use_partials = true;
     graph_t combi_graph;
     graph_t::NodeMap<node_t> graph_map(graph);
     graph_t::NodeMap<node_t> c_graph_map(c_graph);
@@ -236,7 +243,12 @@ void ActiveTreeSearch::toPdf(const char* file_name) const {
         // the correct end in the plot
         arc_t combi_arc = combi_graph.addArc(c_graph_map[c_graph.target(arc)],
                                              c_graph_map[c_graph.source(arc)]);
-        arc_prop_map[combi_arc] = QString("dir=back style=solid color=\".3 .8 .8\"");
+        if(use_partials) {
+            arc_prop_map[combi_arc] = QString("dir=back style=solid color=\".3 .8 .8\" fontcolor=\".3 .5 .5\" label=<%1>").
+                arg(computer.get_arc_value(arc));
+        } else {
+            arc_prop_map[combi_arc] = QString("dir=back style=solid color=\".3 .8 .8\"");
+        }
     }
     // add associating arcs
     for(node_it_t c_node(c_graph); c_node!=INVALID; ++c_node) {
@@ -496,8 +508,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
         }
         DEBUG_EXPECT(0,this_idx!=-1);
         // method for computing the policy
-        const double tau = 1;
-        const double Cp = 1;
+        const double tau = 0.01;
+        const double Cp = 10;
         node_t c_node = variable_info_map[action_node].pi;
         auto policy = [tau,Cp](vector<double> v, int a_idx){
             vector<reward_t> upper_bounds;
@@ -538,8 +550,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                      return (1-policy(v,this_idx))*policy(v,this_idx)/tau;
                                  });
                 computer.set_arc(var_Q_arc,
-                                 [tau,policy,this_idx](vector<double> v){
-                                     return (1-policy(v,this_idx))*policy(v,this_idx)/tau;
+                                 [tau,Cp,policy,this_idx](vector<double> v){
+                                     return Cp*(1-policy(v,this_idx))*policy(v,this_idx)/tau;
                                  });
             } else {
                 DEBUG_EXPECT(0,idx!=this_idx);
@@ -548,8 +560,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                      return -policy(v,idx)*policy(v,this_idx)/tau;
                                  });
                 computer.set_arc(var_Q_arc,
-                                 [tau,policy,idx,this_idx](vector<double> v){
-                                     return -policy(v,idx)*policy(v,this_idx)/tau;
+                                 [tau,Cp,policy,idx,this_idx](vector<double> v){
+                                     return -Cp*policy(v,idx)*policy(v,this_idx)/tau;
                                  });
             }
             ++idx;
@@ -585,15 +597,12 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
         }
     }
 
-    // A, B
-    vector<QString> A_input_list, B_input_list;
+    // A
+    vector<QString> A_input_list;
     for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
         node_t s_prime_prime = graph.target(arc);
         A_input_list.push_back(computer.get_node_label(variable_info_map[action_node].mean_p[s_prime_prime]));
         A_input_list.push_back(computer.get_node_label(variable_info_map[action_node].alpha[s_prime_prime]));
-        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].mean_p[s_prime_prime]));
-        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime]));
-        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].beta[s_prime_prime]));
     }
     {
         node_t c_node = variable_info_map[action_node].A;
@@ -611,10 +620,21 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t s_prime_prime = graph.target(arc);
             arc_t mean_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].mean_p[s_prime_prime],c_node);
             arc_t alpha_arc = lemon::findArc(c_graph,variable_info_map[action_node].alpha[s_prime_prime],c_node);
+            DEBUG_EXPECT(0,mean_p_arc!=INVALID);
+            DEBUG_EXPECT(0,alpha_arc!=INVALID);
             computer.set_arc(mean_p_arc, [this,idx](vector<double> v){return discount*v[2*idx+1];});
             computer.set_arc(alpha_arc, [this,idx](vector<double> v){return discount*v[2*idx];});
             ++idx;
         }
+    }
+
+    // B
+    vector<QString> B_input_list;
+    for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
+        node_t s_prime_prime = graph.target(arc);
+        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].mean_p[s_prime_prime]));
+        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime]));
+        B_input_list.push_back(computer.get_node_label(variable_info_map[action_node].beta[s_prime_prime]));
     }
     {
         node_t c_node = variable_info_map[action_node].B;
@@ -633,23 +653,24 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             arc_t mean_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].mean_p[s_prime_prime],c_node);
             arc_t var_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime],c_node);
             arc_t beta_arc = lemon::findArc(c_graph,variable_info_map[action_node].beta[s_prime_prime],c_node);
-            computer.set_arc(mean_p_arc, [this,idx](vector<double> v){return discount*2*v[2*idx]*v[2*idx+2];});
-            computer.set_arc(var_p_arc, [this,idx](vector<double> v){return discount*v[2*idx+2];});
-            computer.set_arc(beta_arc, [this,idx](vector<double> v){return discount*(pow(v[2*idx],2)+v[2*idx+1]);});
+            DEBUG_EXPECT(0,mean_p_arc!=INVALID);
+            DEBUG_EXPECT(0,var_p_arc!=INVALID);
+            DEBUG_EXPECT(0,beta_arc!=INVALID);
+            computer.set_arc(mean_p_arc, [this,idx](vector<double> v){return discount*2*v[3*idx]*v[3*idx+2];});
+            computer.set_arc(var_p_arc, [this,idx](vector<double> v){return discount*v[3*idx+2];});
+            computer.set_arc(beta_arc, [this,idx](vector<double> v){return discount*(pow(v[3*idx],2)+v[3*idx+1]);});
             ++idx;
         }
     }
 
-    // alpha, beta
-    map<node_t,vector<QString>> alpha_input_list, beta_input_list;
+    // alpha
+    map<node_t,vector<QString>> alpha_input_list;
     for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
         node_t s_prime_prime = graph.target(arc);
         for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
             node_t a_prime_prime = graph.target(arc);
             alpha_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].pi));
             alpha_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].mean_Q));
-            beta_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].pi));
-            beta_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].var_Q));
         }
     }
     for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
@@ -664,8 +685,27 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                        }
                                        return sum;
                                    });
-        for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-            computer.set_arc(arc, [](vector<double>){return 1;});
+        int idx = 0;
+        for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+            node_t a_prime_prime = graph.target(arc);
+            arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+            arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
+            DEBUG_EXPECT(0,pi_arc!=INVALID);
+            DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+            computer.set_arc(pi_arc, [this,idx](vector<double> v){return v[2*idx+1];});
+            computer.set_arc(mean_Q_arc, [this,idx](vector<double> v){return v[2*idx];});
+            ++idx;
+        }
+    }
+
+    // beta
+    map<node_t,vector<QString>> beta_input_list;
+    for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
+        node_t s_prime_prime = graph.target(arc);
+        for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+            node_t a_prime_prime = graph.target(arc);
+            beta_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].pi));
+            beta_input_list[s_prime_prime].push_back(computer.get_node_label(variable_info_map[a_prime_prime].var_Q));
         }
     }
     for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
@@ -676,12 +716,20 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                    [](vector<double> v){
                                        double sum = 0;
                                        for(int idx=0; idx<(int)v.size(); idx+=2) {
-                                           sum += v[idx]*v[idx+1];
+                                           sum += pow(v[idx],2)*v[idx+1];
                                        }
                                        return sum;
                                    });
-        for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-            computer.set_arc(arc, [](vector<double>){return 1;});
+        int idx = 0;
+        for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+            node_t a_prime_prime = graph.target(arc);
+            arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+            arc_t var_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].var_Q,c_node);
+            DEBUG_EXPECT(0,pi_arc!=INVALID);
+            DEBUG_EXPECT(0,var_Q_arc!=INVALID);
+            computer.set_arc(pi_arc, [this,idx](vector<double> v){return 2*v[2*idx]*v[2*idx+1];});
+            computer.set_arc(var_Q_arc, [this,idx](vector<double> v){return pow(v[2*idx],2);});
+            ++idx;
         }
     }
 
@@ -710,8 +758,19 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                        }
                                        return sum;
                                    });
-        for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-            computer.set_arc(arc, [](vector<double>){return 1;});
+        int idx = 0;
+        for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
+            node_t s_prime_prime = graph.target(arc);
+            for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
+                node_t s_prime_prime_prime = graph.target(arc);
+                arc_t var_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime_prime],c_node);
+                arc_t gamma_arc = lemon::findArc(c_graph,variable_info_map[action_node].gamma[s_prime_prime][s_prime_prime_prime],c_node);
+                DEBUG_EXPECT(0,var_p_arc!=INVALID);
+                DEBUG_EXPECT(0,gamma_arc!=INVALID);
+                computer.set_arc(var_p_arc, [this,idx](vector<double> v){return v[2*idx+1];});
+                computer.set_arc(gamma_arc, [this,idx](vector<double> v){return v[2*idx];});
+                ++idx;
+            }
         }
     }
 
@@ -722,6 +781,7 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
         for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
             node_t s_prime_prime_prime = graph.target(arc);
             auto & input_list = gamma_input_list[s_prime_prime][s_prime_prime_prime];
+            // node gamma_s''_s'''
             for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
                 node_t a_prime_prime = graph.target(arc);
                 input_list.push_back(computer.get_node_label(variable_info_map[a_prime_prime].pi));
@@ -742,13 +802,13 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t c_node = variable_info_map[action_node].gamma[s_prime_prime][s_prime_prime_prime];
             // Each gamma node (for a pair of observation nodes) takes four
             // input nodes for each action pair. If for one of the observation
-            // nodes are ARE available actions but for the other NOT then there
-            // are incomming arcs (in the computational graph) but nothing can
-            // actually be computed because the other values are missing and the
-            // input list (constructed above) is empty. We need to handle this
-            // special case separately.
+            // nodes there ARE available actions but for the other NOT then
+            // there are incomming arcs (in the computational graph) but nothing
+            // can actually be computed because the other values are missing and
+            // the input list (constructed above) is empty. We need to handle
+            // this special case separately.
             if(gamma_input_list[s_prime_prime][s_prime_prime_prime].empty() && in_arc_it_t(c_graph,c_node)!=INVALID) {
-#define FORCE_DEBUG_LEVEL 2
+                DEBUG_WARNING("I thought this would never happen! But luckily I built this safety check to hopefully catch errors :-)");
                 DEBUG_OUT(1,"clear " << computer.get_node_label(c_node) << " (id=" << c_graph.id(c_node) << ")");
                 for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
                     gamma_input_list[s_prime_prime][s_prime_prime_prime].push_back(
@@ -757,33 +817,111 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                 }
                 computer.set_node_function(c_node,
                                            gamma_input_list[s_prime_prime][s_prime_prime_prime],
-                                           [](vector<double> v){return 0;});
+                                           [](vector<double>){return 0;});
                 for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
                     computer.set_arc(arc, [](vector<double>){return 0;});
                 }
-#define FORCE_DEBUG_LEVEL 2
             } else {
-                computer.set_node_function(c_node,
-                                           gamma_input_list[s_prime_prime][s_prime_prime_prime],
-                                           [](vector<double> v){
-                                               double sum = 0;
-                                               for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
-                                                   for(int idx_2=0; idx_2<(int)v.size(); idx_2+=2) {
-                                                       sum += v[idx_1]*v[idx_1+1]*v[idx_2]*v[idx_2+1];
+                if(s_prime_prime_prime==s_prime_prime) {
+                    computer.set_node_function(c_node,
+                                               gamma_input_list[s_prime_prime][s_prime_prime_prime],
+                                               [](vector<double> v){
+                                                   double sum = 0;
+                                                   for(int idx=0; idx<(int)v.size(); idx+=2) {
+                                                       sum += v[idx]*v[idx+1];
                                                    }
-                                               }
-                                               return sum;
-                                           });
-                for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-                    computer.set_arc(arc, [](vector<double>){return 1;});
+                                                   return pow(sum,2);
+                                               });
+                    int idx = 0;
+                    for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+                        node_t a_prime_prime = graph.target(arc);
+                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
+                        DEBUG_EXPECT(0,pi_arc!=INVALID);
+                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                        computer.set_arc(pi_arc, [this,idx](vector<double> v){
+                                double sum_1 = 0;
+                                for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
+                                    sum_1 += v[idx_1]*v[idx_1+1];
+                                }
+                                return 2*sum_1*v[2*idx+1];
+                            });
+                        computer.set_arc(mean_Q_arc, [this,idx](vector<double> v){
+                                double sum_1 = 0;
+                                for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
+                                    sum_1 += v[idx_1]*v[idx_1+1];
+                                }
+                                return 2*sum_1*v[2*idx];
+                            });
+                        ++idx;
+                    }
+                } else {
+                    int s_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime);
+                    int s_prime_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime_prime);
+                    computer.set_node_function(c_node,
+                                               gamma_input_list[s_prime_prime][s_prime_prime_prime],
+                                               [s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                                                   double sum_1 = 0;
+                                                   double sum_2 = 0;
+                                                   for(int idx=0; idx<s_prime_prime_out; ++idx) {
+                                                       sum_1 += v[2*idx]*v[2*idx+1];
+                                                   }
+                                                   for(int idx=s_prime_prime_out; idx<s_prime_prime_out+s_prime_prime_prime_out; ++idx) {
+                                                       sum_2 += v[2*idx]*v[2*idx+1];
+                                                   }
+                                                   return sum_1*sum_2;
+                                               });
+                    int idx = 0;
+                    for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+                        node_t a_prime_prime = graph.target(arc);
+                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
+                        DEBUG_EXPECT(0,pi_arc!=INVALID);
+                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                        computer.set_arc(pi_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                                double sum_2 = 0;
+                                for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
+                                    sum_2 += v[2*idx_2]*v[2*idx_2+1];
+                                }
+                                return sum_2*v[2*idx+1];
+                            });
+                        computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                                double sum_2 = 0;
+                                for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
+                                    sum_2 += v[2*idx_2]*v[2*idx_2+1];
+                                }
+                                return sum_2*v[2*idx];
+                            });
+                        ++idx;
+                    }
+                    for(out_arc_it_t arc(graph,s_prime_prime_prime); arc!=INVALID; ++arc) {
+                        node_t a_prime_prime_prime = graph.target(arc);
+                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].pi,c_node);
+                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].mean_Q,c_node);
+                        DEBUG_EXPECT(0,pi_arc!=INVALID);
+                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                        computer.set_arc(pi_arc, [this,idx,s_prime_prime_out](vector<double> v){
+                                double sum_1 = 0;
+                                for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
+                                    sum_1 += v[2*idx_1]*v[2*idx_1+1];
+                                }
+                                return sum_1*v[2*idx+1];
+                            });
+                        computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out](vector<double> v){
+                                double sum_1 = 0;
+                                for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
+                                    sum_1 += v[2*idx_1]*v[2*idx_1+1];
+                                }
+                                return sum_1*v[2*idx];
+                            });
+                        ++idx;
+                    }
                 }
             }
         }
     }
 
-    //==================================================================//
-
-    // update values (which were invalidated above)
+    // update values
     update_c_node_values(action_node);
 }
 
@@ -801,8 +939,12 @@ void ActiveTreeSearch::update_c_node_values(node_t action_node) {
         computer.set_node_value(variable_info_map[action_node].mean_r, this_reward_sum/this_counts);
         reward_t var;
         if(this_counts>1) {
-            var = (this_reward_square_sum/this_counts - pow(this_reward_sum/this_counts,2)); // biased
-            var *= (reward_t)this_counts/(this_counts-1); // unbiased
+            // biased variance of the reward
+            var = (this_reward_square_sum/this_counts - pow(this_reward_sum/this_counts,2));
+            // unbiased variance of the reward
+            var *= (reward_t)this_counts/(this_counts-1);
+            // variance of the MEAN reward
+            var /= this_counts;
         } else {
             if(numeric_limits<reward_t>::has_infinity) {
                 var = numeric_limits<reward_t>::infinity();
@@ -815,7 +957,6 @@ void ActiveTreeSearch::update_c_node_values(node_t action_node) {
 
     // mean_p
     {
-#define FORCE_DEBUG_LEVEL 0
         DEBUG_OUT(1,"Compute mean_p");
         for(out_arc_it_t to_observation_arc(graph,action_node);
             to_observation_arc!=INVALID;
@@ -829,19 +970,30 @@ void ActiveTreeSearch::update_c_node_values(node_t action_node) {
             DEBUG_OUT(1,"        counts to observation=" << counts[to_observation_arc]);
             DEBUG_OUT(1,"        counts to action=" << this_counts);
             DEBUG_OUT(1,"        mean_p=" << mean_p);
-#define FORCE_DEBUG_LEVEL 0
             computer.set_node_value(variable_info_map[action_node].mean_p[observation_node], mean_p);
-        }
+         }
     }
 
     // var_p
-    for(node_matrix_t matrix : {
-                variable_info_map[action_node].var_p,
-                }) {
-        for(auto array : matrix) {
-            for(auto c_node_pair : array.second) {
-                node_t c_node = c_node_pair.second;
-                computer.set_node_value(c_node,1);
+    {
+        DEBUG_OUT(1,"Compute var_p");
+        for(out_arc_it_t to_observation_arc_1(graph,action_node);
+            to_observation_arc_1!=INVALID;
+            ++to_observation_arc_1) {
+            node_t observation_node_1 = graph.target(to_observation_arc_1);
+            for(out_arc_it_t to_observation_arc_2(graph,action_node);
+                to_observation_arc_2!=INVALID;
+                ++to_observation_arc_2) {
+                node_t observation_node_2 = graph.target(to_observation_arc_2);
+                double mean_p_1 = (double)counts[to_observation_arc_1]/this_counts;
+                double mean_p_2 = (double)counts[to_observation_arc_2]/this_counts;
+                if(observation_node_1==observation_node_2) {
+                    double var = mean_p_1*(1-mean_p_1)/(this_counts+1);
+                    computer.set_node_value(variable_info_map[action_node].var_p[observation_node_1][observation_node_2], var);
+                } else {
+                    double covar = mean_p_1*mean_p_2/(this_counts+1);
+                    computer.set_node_value(variable_info_map[action_node].var_p[observation_node_1][observation_node_2], covar);
+                }
             }
         }
     }
@@ -899,7 +1051,7 @@ void ActiveTreeSearch::update_c_root_connections() {
                                });
     int idx = 0;
     for(in_arc_it_t arc(c_graph,c_root_node); arc!=INVALID; ++arc) {
-        computer.set_arc(arc, [idx](vector<double> v){return 1 + log(v[idx]);});
+        computer.set_arc(arc, [idx](vector<double> v){return -(1 + log(v[idx]));});
         ++idx;
     }
 }

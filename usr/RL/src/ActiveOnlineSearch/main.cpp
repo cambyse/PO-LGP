@@ -24,6 +24,7 @@
 #include "Environment_old/TightRope.h"
 #include "Environment_old/DynamicTightRope.h"
 #include "Environment_old/UnitTestEnvironment.h"
+#include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
 #include "Environment_old/BottleNeckHallway.h"
 #include "Environment_old/DelayedUncertainty.h"
@@ -61,6 +62,7 @@ static const std::set<std::string> mode_set = {"SAMPLE",
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
                                                       "GamblingHall",
+                                                      "SimpleEnvironment",
                                                       "BottleNeckHallway",
                                                       "DelayedUncertainty",
                                                       "UnitTest"};
@@ -522,6 +524,8 @@ tuple<shared_ptr<SearchTree>,
         environment.reset(new TightRope(15));
     } else if(environment_arg.getValue()=="DynamicTightRope") {
         environment.reset(new DynamicTightRope(50, 10));
+    } else if(environment_arg.getValue()=="SimpleEnvironment") {
+        environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
         environment.reset(new GamblingHall(10, 1));
     } else if(environment_arg.getValue()=="BottleNeckHallway") {
