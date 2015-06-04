@@ -15,8 +15,8 @@ PDExecutor::PDExecutor()
   // INIT TASKS
   limits = fmc.addPDTask("limits", .1, .8, new TaskMap_qLimits);
   limits->y_ref.setZero();
-  // limits->prec = 100.;
-  limits->prec = 0;
+  limits->prec = 100.;
+  // limits->prec = 0;
 
   // collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   // collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
@@ -123,8 +123,8 @@ void PDExecutor::step() {
   };
   effOrientationR->setTarget(quat);
 
-  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
-  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
+  // world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
+  // world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
 
   // avoid going behind your back
   x = cal_pose_lh(0) * 1.2;
@@ -143,8 +143,8 @@ void PDExecutor::step() {
   };
   effOrientationL->setTarget(quat);
 
-  world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
-  world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+  // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
+  // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
@@ -204,15 +204,14 @@ void PDExecutor::initRos() {
     CtrlMsg obs = ctrl_obs.get();
 
     cout << "================================================\n"
-         << "  observed q.N:    " << obs.q.N << "\n"
-         << "  world q.N:       " << world.q.N  << "\n"
-         << "  observed qdot.N: " << obs.qdot.N << "\n"
-         << "  world qdot.N:    " << world.qdot.N << "\n"
-         << "================================================" << endl;
+         << "  observed q.N:    " << obs.q.N <<             "\n"
+         << "  world q.N:       " << world.q.N  <<          "\n"
+         << "  observed qdot.N: " << obs.qdot.N <<          "\n"
+         << "  world qdot.N:    " << world.qdot.N <<        "\n"
+         << "===============================================" << endl;
 
     if (obs.q.N == world.q.N && obs.qdot.N == world.qdot.N)
       break;
-
   }
 
   cout << "** Setting State of robot in simulation" << endl;

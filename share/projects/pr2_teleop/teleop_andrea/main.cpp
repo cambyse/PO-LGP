@@ -18,18 +18,14 @@ struct PR2G4Control:System {
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
     addModule<Calibrator>("Calibrator", Module::loopWithBeat, .05);
-    // auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
-// #ifdef WITH_ROS
     // ROS
     if (MT::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       // addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
       // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
-      // pd_executor->roscom = roscom;
     }
-// #endif
     connect();
   };
 };
