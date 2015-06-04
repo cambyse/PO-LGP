@@ -800,122 +800,99 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
         for(out_arc_it_t arc(graph,action_node); arc!=INVALID; ++arc) {
             node_t s_prime_prime_prime = graph.target(arc);
             node_t c_node = variable_info_map[action_node].gamma[s_prime_prime][s_prime_prime_prime];
-            // Each gamma node (for a pair of observation nodes) takes four
-            // input nodes for each action pair. If for one of the observation
-            // nodes there ARE available actions but for the other NOT then
-            // there are incomming arcs (in the computational graph) but nothing
-            // can actually be computed because the other values are missing and
-            // the input list (constructed above) is empty. We need to handle
-            // this special case separately.
-            if(gamma_input_list[s_prime_prime][s_prime_prime_prime].empty() && in_arc_it_t(c_graph,c_node)!=INVALID) {
-                DEBUG_WARNING("I thought this would never happen! But luckily I built this safety check to hopefully catch errors :-)");
-                DEBUG_OUT(1,"clear " << computer.get_node_label(c_node) << " (id=" << c_graph.id(c_node) << ")");
-                for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-                    gamma_input_list[s_prime_prime][s_prime_prime_prime].push_back(
-                        computer.get_node_label(c_graph.source(arc)));
-
-                }
+            if(s_prime_prime_prime==s_prime_prime) {
                 computer.set_node_function(c_node,
                                            gamma_input_list[s_prime_prime][s_prime_prime_prime],
-                                           [](vector<double>){return 0;});
-                for(in_arc_it_t arc(c_graph,c_node); arc!=INVALID; ++arc) {
-                    computer.set_arc(arc, [](vector<double>){return 0;});
+                                           [](vector<double> v){
+                                               double sum = 0;
+                                               for(int idx=0; idx<(int)v.size(); idx+=2) {
+                                                   sum += v[idx]*v[idx+1];
+                                               }
+                                               return pow(sum,2);
+                                           });
+                int idx = 0;
+                for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+                    node_t a_prime_prime = graph.target(arc);
+                    arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+                    arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
+                    DEBUG_EXPECT(0,pi_arc!=INVALID);
+                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    computer.set_arc(pi_arc, [this,idx](vector<double> v){
+                            double sum_1 = 0;
+                            for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
+                                sum_1 += v[idx_1]*v[idx_1+1];
+                            }
+                            return 2*sum_1*v[2*idx+1];
+                        });
+                    computer.set_arc(mean_Q_arc, [this,idx](vector<double> v){
+                            double sum_1 = 0;
+                            for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
+                                sum_1 += v[idx_1]*v[idx_1+1];
+                            }
+                            return 2*sum_1*v[2*idx];
+                        });
+                    ++idx;
                 }
             } else {
-                if(s_prime_prime_prime==s_prime_prime) {
-                    computer.set_node_function(c_node,
-                                               gamma_input_list[s_prime_prime][s_prime_prime_prime],
-                                               [](vector<double> v){
-                                                   double sum = 0;
-                                                   for(int idx=0; idx<(int)v.size(); idx+=2) {
-                                                       sum += v[idx]*v[idx+1];
-                                                   }
-                                                   return pow(sum,2);
-                                               });
-                    int idx = 0;
-                    for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
-                        node_t a_prime_prime = graph.target(arc);
-                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
-                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
-                        DEBUG_EXPECT(0,pi_arc!=INVALID);
-                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
-                        computer.set_arc(pi_arc, [this,idx](vector<double> v){
-                                double sum_1 = 0;
-                                for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
-                                    sum_1 += v[idx_1]*v[idx_1+1];
-                                }
-                                return 2*sum_1*v[2*idx+1];
-                            });
-                        computer.set_arc(mean_Q_arc, [this,idx](vector<double> v){
-                                double sum_1 = 0;
-                                for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
-                                    sum_1 += v[idx_1]*v[idx_1+1];
-                                }
-                                return 2*sum_1*v[2*idx];
-                            });
-                        ++idx;
-                    }
-                } else {
-                    int s_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime);
-                    int s_prime_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime_prime);
-                    computer.set_node_function(c_node,
-                                               gamma_input_list[s_prime_prime][s_prime_prime_prime],
-                                               [s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
-                                                   double sum_1 = 0;
-                                                   double sum_2 = 0;
-                                                   for(int idx=0; idx<s_prime_prime_out; ++idx) {
-                                                       sum_1 += v[2*idx]*v[2*idx+1];
-                                                   }
-                                                   for(int idx=s_prime_prime_out; idx<s_prime_prime_out+s_prime_prime_prime_out; ++idx) {
-                                                       sum_2 += v[2*idx]*v[2*idx+1];
-                                                   }
-                                                   return sum_1*sum_2;
-                                               });
-                    int idx = 0;
-                    for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
-                        node_t a_prime_prime = graph.target(arc);
-                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
-                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
-                        DEBUG_EXPECT(0,pi_arc!=INVALID);
-                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
-                        computer.set_arc(pi_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
-                                double sum_2 = 0;
-                                for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
-                                    sum_2 += v[2*idx_2]*v[2*idx_2+1];
-                                }
-                                return sum_2*v[2*idx+1];
-                            });
-                        computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
-                                double sum_2 = 0;
-                                for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
-                                    sum_2 += v[2*idx_2]*v[2*idx_2+1];
-                                }
-                                return sum_2*v[2*idx];
-                            });
-                        ++idx;
-                    }
-                    for(out_arc_it_t arc(graph,s_prime_prime_prime); arc!=INVALID; ++arc) {
-                        node_t a_prime_prime_prime = graph.target(arc);
-                        arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].pi,c_node);
-                        arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].mean_Q,c_node);
-                        DEBUG_EXPECT(0,pi_arc!=INVALID);
-                        DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
-                        computer.set_arc(pi_arc, [this,idx,s_prime_prime_out](vector<double> v){
-                                double sum_1 = 0;
-                                for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
-                                    sum_1 += v[2*idx_1]*v[2*idx_1+1];
-                                }
-                                return sum_1*v[2*idx+1];
-                            });
-                        computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out](vector<double> v){
-                                double sum_1 = 0;
-                                for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
-                                    sum_1 += v[2*idx_1]*v[2*idx_1+1];
-                                }
-                                return sum_1*v[2*idx];
-                            });
-                        ++idx;
-                    }
+                int s_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime);
+                int s_prime_prime_prime_out = lemon::countOutArcs(graph,s_prime_prime_prime);
+                computer.set_node_function(c_node,
+                                           gamma_input_list[s_prime_prime][s_prime_prime_prime],
+                                           [s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                                               double sum_1 = 0;
+                                               double sum_2 = 0;
+                                               for(int idx=0; idx<s_prime_prime_out; ++idx) {
+                                                   sum_1 += v[2*idx]*v[2*idx+1];
+                                               }
+                                               for(int idx=s_prime_prime_out; idx<s_prime_prime_out+s_prime_prime_prime_out; ++idx) {
+                                                   sum_2 += v[2*idx]*v[2*idx+1];
+                                               }
+                                               return sum_1*sum_2;
+                                           });
+                int idx = 0;
+                for(out_arc_it_t arc(graph,s_prime_prime); arc!=INVALID; ++arc) {
+                    node_t a_prime_prime = graph.target(arc);
+                    arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
+                    arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
+                    DEBUG_EXPECT(0,pi_arc!=INVALID);
+                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    computer.set_arc(pi_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                            double sum_2 = 0;
+                            for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
+                                sum_2 += v[2*idx_2]*v[2*idx_2+1];
+                            }
+                            return sum_2*v[2*idx+1];
+                        });
+                    computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
+                            double sum_2 = 0;
+                            for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
+                                sum_2 += v[2*idx_2]*v[2*idx_2+1];
+                            }
+                            return sum_2*v[2*idx];
+                        });
+                    ++idx;
+                }
+                for(out_arc_it_t arc(graph,s_prime_prime_prime); arc!=INVALID; ++arc) {
+                    node_t a_prime_prime_prime = graph.target(arc);
+                    arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].pi,c_node);
+                    arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].mean_Q,c_node);
+                    DEBUG_EXPECT(0,pi_arc!=INVALID);
+                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    computer.set_arc(pi_arc, [this,idx,s_prime_prime_out](vector<double> v){
+                            double sum_1 = 0;
+                            for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
+                                sum_1 += v[2*idx_1]*v[2*idx_1+1];
+                            }
+                            return sum_1*v[2*idx+1];
+                        });
+                    computer.set_arc(mean_Q_arc, [this,idx,s_prime_prime_out](vector<double> v){
+                            double sum_1 = 0;
+                            for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
+                                sum_1 += v[2*idx_1]*v[2*idx_1+1];
+                            }
+                            return sum_1*v[2*idx];
+                        });
+                    ++idx;
                 }
             }
         }
