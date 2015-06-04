@@ -178,6 +178,14 @@ void PDExecutor::sendRosCtrlMsg() {
   qdotzero.resizeAs(q).setZero();
   ref.qdot = qdotzero;
 
+<<<<<<< HEAD
+  ref.fL = ARR(0., 0., 0., 0., 0., 0.);
+  // ref.KfL_gainFactor.clear();
+  // ref.EfL.clear();
+  ref.u_bias = zeros(q.N);
+  // ref.Kq_gainFactor = 1.;
+  // ref.Kd_gainFactor = 1.;
+=======
   ref.fL = zeros(6);
   ref.fR = zeros(6);
 
@@ -185,6 +193,7 @@ void PDExecutor::sendRosCtrlMsg() {
   ref.Ki.clear();
   ref.Kd = {1.};
 
+>>>>>>> b0b2422c10c07277a6f5253fe020f40054a74546
   ref.gamma = 1.;
   ref.J_ft_inv.clear();
   ref.u_bias = zeros(q.N);
