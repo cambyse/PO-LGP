@@ -23,11 +23,11 @@ struct FOL_World:MCTS_Environment{
   double R_total;
   uint Ndecisions;
   bool deadEnd;
-  Graph KB;     ///< current knowledge base
+  Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
-  ItemL decisionRules;  ///< rules withing the KB (each is a subgraph item of the KB)
-  ItemL constants;///< constants withing the KB (each is an item of the KB)
+  NodeL decisionRules;  ///< rules withing the KB (each is a subgraph item of the KB)
+  NodeL constants;///< constants withing the KB (each is an item of the KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
   Graph *terminal; //TODO: replace
   Node *Terminate_keyword;

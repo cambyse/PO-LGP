@@ -16,8 +16,8 @@ NodeL getSymbolsOfScope(Graph& KB){
   return vars;
 }
 
-Item *getFirstNonSymbolOfScope(Graph& KB){
-  for(Item *i:KB) if( !(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) ) return i;
+Node *getFirstNonSymbolOfScope(Graph& KB){
+  for(Node *i:KB) if( !(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) ) return i;
   return NULL;
 }
 
@@ -223,8 +223,8 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
 
 
 /// directly create a new fact
-Item *createNewFact(Graph& facts, const ItemL& symbols){
-  return new Item_typed<bool>(facts, {}, symbols, new bool(true), true);
+Node *createNewFact(Graph& facts, const NodeL& symbols){
+  return new Node_typed<bool>(facts, {}, symbols, new bool(true), true);
 }
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
@@ -262,9 +262,9 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
 
   if(trueValue){
     if(!matches.N){
-      Node *newItem = createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
+      Node *newNode = createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
       hasEffects=true;
-      if(&changes) newItem->newClone(changes);
+      if(&changes) newNode->newClone(changes);
     }else{
       for(Node *m:matches){
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
@@ -303,11 +303,11 @@ bool applyEffectLiterals(Graph& facts, Graph& effects, const NodeL& subst, Graph
 
 
 /// extracts the preconditions of the rule, then returns substitutions
-ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, int verbose){
+NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose){
   //-- extract precondition
   if(verbose>1){ cout <<"Substitutions for rule " <<*rule <<endl; }
   Graph& Rule=rule->graph();
-  return getSubstitutions(facts, getFirstNonSymbolOfScope(Rule)->kvg(), domain, verbose);
+  return getSubstitutions(facts, getFirstNonSymbolOfScope(Rule)->graph(), domain, verbose);
 }
 
 
@@ -317,7 +317,7 @@ ItemL getRuleSubstitutions(Graph& facts, Item *rule, ItemL& domain, int verbose)
 /// the return value is an array: for every item of the literal's scope:
 /// if item=variable the array contains a pointer to the constant
 /// if item=non-variable the arrach contains a NULL pointer
-ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose){
+NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose){
   CHECK(literals.N,"");
   Graph& varScope = literals(0)->container.isItemOfParentKvg->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
 
@@ -341,7 +341,7 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose
   for(Node *v:vars) domainOf(v->index) = domain;
 
   if(verbose>3) cout <<"domains before 'constraint propagation':" <<endl;
-  if(verbose>3) for(Item *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+  if(verbose>3) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
   //-- grab open variables for each literal
   uintA lit_numVars(literals(0)->container.N);
@@ -350,19 +350,19 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose
   //-- first pick out all precondition predicates with just one open variable and reduce domains directly
   for(Node *literal:literals){
     if(lit_numVars(literal->index)==1){
-      Item *var = getFirstVariable(literal, &varScope);
+      Node *var = getFirstVariable(literal, &varScope);
       if(verbose>3) cout <<"checking literal '" <<*literal <<"'" <<flush;
       removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), literal, &varScope);
       if(verbose>3){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
       if(domainOf(var->index).N==0){
         if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
-        return ItemL(); //early failure
+        return NodeL(); //early failure
       }
     }
   }
 
   if(verbose>2) cout <<"domains after 'constraint propagation':" <<endl;
-  if(verbose>2) for(Item *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+  if(verbose>2) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
   //-- for the others, create constraints
   NodeL constraints;
@@ -430,7 +430,6 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose
 }
 
 
-<<<<<<< HEAD
 // NodeL getSubstitutions(Graph& facts, NodeL& literals, bool verbose){
 //   CHECK(literals.N,"");
 //   Graph& varScope = literals(0)->container.isItemOfParentKvg->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
@@ -544,26 +543,26 @@ ItemL getSubstitutions(Graph& facts, ItemL& literals, ItemL& domain, int verbose
 // }
 
 
-bool forwardChaining_FOL(Graph& KB, Item* query, Graph& changes, int verbose){
-  ItemL rules = KB.getItems("Rule");
-  ItemL constants = KB.getItems("Constant");
-  Graph& state = KB.getItem("STATE")->kvg();
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose){
+  NodeL rules = KB.getItems("Rule");
+  NodeL constants = KB.getItems("Constant");
+  Graph& state = KB.getItem("STATE")->graph();
 
   for(;;){
     KB.checkConsistency();
     bool newFacts=false;
-    for(Item *rule:rules){
+    for(Node *rule:rules){
       if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
-      ItemL subs = getRuleSubstitutions(state, rule, constants, verbose);
+      NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
       for(uint s=0;s<subs.d0;s++){
-        Item *effect = rule->kvg().last();
+        Node *effect = rule->graph().last();
         if(effect->getValueType()==typeid(arr)){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
           arr p = effect->V<arr>();
           uint r = sampleMultinomial(p);
-          effect = rule->kvg().elem(-1-p.N+r);
+          effect = rule->graph().elem(-1-p.N+r);
         }
         if(verbose>0){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
-        bool e = applyEffectLiterals(state, effect->kvg(), subs[s], &rule->kvg(), changes);
+        bool e = applyEffectLiterals(state, effect->graph(), subs[s], &rule->graph(), changes);
         if(verbose>1){
           if(e){
             cout <<"NEW STATE = " <<state <<endl;

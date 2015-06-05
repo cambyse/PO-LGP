@@ -23,8 +23,8 @@ void FOL_World::Decision::write(ostream& os) const{
 FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(4){
   FILE("z.init") <<KB;
   KB.checkConsistency();
-  start_state = &KB["START_STATE"]->kvg();
-  terminal = &KB["terminal"]->kvg(); //TODO: replace by QUIT state predicate!
+  start_state = &KB["START_STATE"]->graph();
+  terminal = &KB["terminal"]->graph(); //TODO: replace by QUIT state predicate!
   decisionRules = KB.getItems("DecisionRule");
   constants = KB.getItems("Constant");
   Terminate_keyword = KB["Terminate"];
@@ -74,8 +74,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
       reward -= w;
-      ItemL terminatingActivities;
-      for(Item *i:*state){
+      NodeL terminatingActivities;
+      for(Node *i:*state){
         if(i->getValueType()==typeid(double)){
           double &wi = *i->getValue<double>(); //this is a double reference!
           wi -= w;
@@ -84,10 +84,10 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       }
 
       //-- for all these activities call the terminate operator
-      for(Item *act:terminatingActivities){
+      for(Node *act:terminatingActivities){
 #if 0
-        Item *predicate = act->parents(0);
-        Item *rule = KB.getChild(Terminate_keyword, predicate);
+        Node *predicate = act->parents(0);
+        Node *rule = KB.getChild(Terminate_keyword, predicate);
         if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
         Node *effect = rule->graph().last();
         NodeL vars = getSymbolsOfScope(rule->graph());
@@ -97,9 +97,9 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
         if(verbose>2) cout <<"*** terminating activity '" <<*act <<"' with rule '" <<*rule <<endl;
         if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(subs, cout); cout <<endl; }
-        applyEffectLiterals(*state, effect->kvg(), subs, &rule->kvg());
+        applyEffectLiterals(*state, effect->graph(), subs, &rule->graph());
 #else
-        ItemL symbols;
+        NodeL symbols;
         symbols.append(Terminate_keyword);
         symbols.append(act->parents);
         createNewFact(*state, symbols);
@@ -108,11 +108,11 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     }
   }else{
     //first check if probabilistic
-    Item *effect = d->rule->kvg().last();
+    Node *effect = d->rule->graph().last();
     if(effect->getValueType()==typeid(arr)){
       arr p = effect->V<arr>();
       uint r = sampleMultinomial(p);
-      effect = d->rule->kvg().elem(-1-p.N+r);
+      effect = d->rule->graph().elem(-1-p.N+r);
     }
     if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(d->substitution, cout); cout <<endl; }
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
@@ -138,8 +138,8 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
   MT::Array<Handle> decisions; //tuples of rule and substitution
   decisions.append(Handle(new Decision(true, NULL, {}))); //the wait decision (true as first argument, no rule, no substitution)
-  for(Item* rule:decisionRules){
-    ItemL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+  for(Node* rule:decisionRules){
+    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     for(uint s=0;s<subs.d0;s++){
       decisions.append(Handle(new Decision(false, rule, subs[s]))); //a grounded rule decision (abstract rule with substution)
     }
