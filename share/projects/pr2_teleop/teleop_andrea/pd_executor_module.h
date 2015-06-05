@@ -3,43 +3,34 @@
 #include <Motion/feedbackControl.h>
 #include <System/engine.h>
 
-// #ifdef WITH_ROS
-  #include <Actions/actions.h>
-  #include <pr2/roscom.h>
-// #endif
+#include <Actions/actions.h>
+#include <pr2/roscom.h>
 
 // ============================================================================
 struct PDExecutor: Module {
   // calibrated_pose is pos + orientation (quaternion)
-  ACCESS(floatA, calibrated_pose_rh);
-  ACCESS(floatA, calibrated_pose_lh);
+  ACCESS(arrf, calibrated_pose_rh);
+  ACCESS(arrf, calibrated_pose_lh);
   // distance of the two finger tips
   ACCESS(float, calibrated_gripper_rh);
   ACCESS(float, calibrated_gripper_lh);
   // Msgs that are send to ROS
-// #ifdef WITH_ROS
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
-// #endif
 
-  ACCESS(floatA, poses_rh);
-  ACCESS(floatA, poses_lh);
+  ACCESS(arrf, poses_rh);
+  ACCESS(arrf, poses_lh);
 
   // FeedbackMotionControl stuff
   ors::KinematicWorld world;
   FeedbackMotionControl fmc;
   arr q, qdot;
 
-  bool inited, useros;
-
-  // ros stuff
-// #ifdef WITH_ROS
-  // RosCom_ControllerSync* roscom;
-// #endif
+  bool started, useros;
 
   // Tasks
   CtrlTask* limits;
-  CtrlTask* collision;
+  CtrlTask* collisions;
 
   CtrlTask* effPosR;
   CtrlTask* gripperR;

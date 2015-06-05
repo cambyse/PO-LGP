@@ -13,7 +13,6 @@ Calibrator::Calibrator()
 }
 
 void Calibrator::step() {
-
   // starting in calibraton phase:
   //   "Y"    - save the front poses
   //   "B"    - save the right poses
@@ -27,7 +26,7 @@ void Calibrator::step() {
   CHECK(gpstate.N, "ERROR: No GamePad found");
   int button = gpstate(0);
 
-  floatA tmpPoses = poses.get();
+  arrf tmpPoses = poses.get();
 
   if(tmpPoses.N == 0) {
     return;
@@ -92,13 +91,13 @@ void Calibrator::step() {
 void Calibrator::calibrate() {
   // arm position
   // assuming posesFront and poses2 only contain 1 position
-  // floatA p_front, p_side;
-  // floatA p_front_xy, p_side_xy, diff, orth, center_xy;
+  // arrf p_front, p_side;
+  // arrf p_front_xy, p_side_xy, diff, orth, center_xy;
   // float height, dist;
   // orth.resize(2);
-  floatA p_side_rh, p_side_lh;
+  arrf p_side_rh, p_side_lh;
 
-  floatA p_open, p_closed;
+  arrf p_open, p_closed;
   float dist_open, dist_closed;
 
   p_side_rh = mid.query(posesSide, STRING("/human/rh/index")).subRange(0, 2);
@@ -185,9 +184,9 @@ void Calibrator::calibrate() {
 }
 
 /// Transform the human hand position into the unit sphere.
-floatA transformPosition(const floatA& thumb, const floatA& index, const floatA& center, float radius) {
+arrf transformPosition(const arrf& thumb, const arrf& index, const arrf& center, float radius) {
   // pos
-  floatA pos_mean = (thumb.sub(0, 2) + index.sub(0, 2)) / 2.f - center;
+  arrf pos_mean = (thumb.sub(0, 2) + index.sub(0, 2)) / 2.f - center;
   if(length(pos_mean) >= radius)
     pos_mean /= length(pos_mean);
   else
@@ -196,7 +195,7 @@ floatA transformPosition(const floatA& thumb, const floatA& index, const floatA&
   return {pos_mean(0), pos_mean(1), pos_mean(2)};
 }
 
-floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index) {
+arrf transformOrientation(const arrf &pose_thumb, const arrf &pose_index) {
   ors::Quaternion quat;
   ors::Vector x_thumb, x_index;
   ors::Vector pos_thumb, pos_index;
@@ -235,8 +234,8 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index) 
   return {(float)quat.w, (float)quat.x, (float)quat.y, (float)quat.z};
 }
 
-void Calibrator::transform(const floatA& poses_raw) {
-  floatA cal_pose_rh, cal_pose_lh;
+void Calibrator::transform(const arrf& poses_raw) {
+  arrf cal_pose_rh, cal_pose_lh;
 
   // Positions
   auto poses_thumb_rh = mid.query(poses_raw, STRING("/human/rh/thumb"));
@@ -267,7 +266,7 @@ void Calibrator::transform(const floatA& poses_raw) {
   calibrated_pose_lh.set() = cal_pose_lh;
 }
 
-void Calibrator::fixCoordinates(floatA &poses) {
+void Calibrator::fixCoordinates(arrf &poses) {
   ors::Transformation T, Tfix;
   Tfix.setZero();
   Tfix.addRelativeRotationDeg(-90, 0, 0, 1);

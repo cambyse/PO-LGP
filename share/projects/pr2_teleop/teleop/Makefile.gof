@@ -3,13 +3,13 @@ BASE = ../../..
 PLIB = 1
 
 OBJS = main.o g4taprecon/taprecon.o g4mapper/calibrator_module.o pd_executor/pd_executor_module.o
-DEPEND = pr2 Actions Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception 
+DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception 
 
 # comment/uncomment to disable/enable ROS
  ROS = 1
  ROS_VERSION = indigo 
  CXXFLAGS = -DWITH_ROS
  DEPEND += pr2 Actions
- LPATHS += /opt/ros/groovy/lib
+ LPATHS += /opt/ros/indigo/lib
 
 include $(BASE)/gofMake/generic.mk

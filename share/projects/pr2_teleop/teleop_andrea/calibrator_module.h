@@ -9,21 +9,21 @@
 // ============================================================================
 struct Calibrator: Module {
   ACCESS(arr, gamepadState);
-  ACCESS(floatA, poses);
-  ACCESS(floatA, calibrated_pose_rh);
-  ACCESS(floatA, calibrated_pose_lh);
+  ACCESS(arrf, poses);
+  ACCESS(arrf, calibrated_pose_rh);
+  ACCESS(arrf, calibrated_pose_lh);
   ACCESS(float, calibrated_gripper_rh);
   ACCESS(float, calibrated_gripper_lh);
 
-  ACCESS(floatA, poses_rh);
-  ACCESS(floatA, poses_lh);
+  ACCESS(arrf, poses_rh);
+  ACCESS(arrf, poses_lh);
 
   bool calibration_phase; ///< indicates if we're in the calibration phase
 
-  // floatA posesFront, posesSide, posesOpen, posesClosed;
-  floatA posesSide, posesOpen, posesClosed;
+  // arrf posesFront, posesSide, posesOpen, posesClosed;
+  arrf posesSide, posesOpen, posesClosed;
 
-  floatA center;
+  arrf center;
   float radius;
 
   float m_rh, m_lh;
@@ -37,7 +37,7 @@ struct Calibrator: Module {
   void close() {}
   void step();
 
-  void fixCoordinates(floatA &poses);
+  void fixCoordinates(arrf &poses);
   void calibrate();
-  void transform(const floatA& poses_raw);
+  void transform(const arrf& poses_raw);
 };
