@@ -28,6 +28,7 @@
 #include "Environment/GamblingHall.h"
 #include "Environment_old/BottleNeckHallway.h"
 #include "Environment_old/DelayedUncertainty.h"
+#include "../../../../share/src/FOL/fol_mcts_world.h"
 
 #include <omp.h>
 #define USE_OMP
@@ -62,6 +63,7 @@ static const std::set<std::string> mode_set = {"SAMPLE",
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
                                                       "GamblingHall",
+                                                      "FOL",
                                                       "SimpleEnvironment",
                                                       "BottleNeckHallway",
                                                       "DelayedUncertainty",
@@ -102,64 +104,64 @@ velocity.\nTightRope: The agent has integer position. SAMPLE mode prints the \
 reward for a given position and action.", \
                                                      true, "DynamicTightRope", "string");
 static TCLAP::ValueArg<int> sample_n_arg(            "n", "sample_n",\
-                                                     "Number of samples/rollouts.",\
+                                                     "(default: 1) Number of samples/rollouts.",\
                                                      false, 1, "int" );
 static TCLAP::ValueArg<int> sample_incr_arg(         "i", "sample_incr",\
-                                                     "Increment of the number rollouts. ",\
+                                                     "(default: 1) Increment of the number rollouts. ",\
                                                      false, 1, "int" );
 static TCLAP::ValueArg<int> sample_max_arg(          "x", "sample_max",\
-                                                     "Maximum number of rollouts.",\
+                                                     "(default: 100) Maximum number of rollouts.",\
                                                      false, 100, "int" );
 static TCLAP::ValueArg<int> step_n_arg(              "s", "step_n",\
-                                                     "Number of steps to perform (0 for infinite / until terminal state).",\
+                                                     "(default: 0) Number of steps to perform (0 for infinite / until terminal state).",\
                                                      false, 0, "int" );
 static TCLAP::ValueArg<int> run_n_arg(               "r", "run_n", \
-                                                     "Number of runs to perform for evaluations.", \
+                                                     "(default: 1) Number of runs to perform for evaluations.", \
                                                      false, 1, "int" );
 static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
-                                                     "Level of detail for watching progress (0,...,3).",\
+                                                     "(default: 1) Level of detail for watching progress (0,...,3).",\
                                                      false, 1, "int");
 static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
-                                                     "Don't generate graphics."\
+                                                     "(default: false) If true don't generate graphics."\
                                                      , false);
 static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
-                                                     "How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
+                                                     "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
                                                      , false, "mean", "string");
 static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
-                                                     "Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
+                                                     "(default: FullDAG) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
                                                      , false, "FullDAG", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
-                                                     "Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
+                                                     "(default: BACKUP_PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "BACKUP_PROPAGATE", "string");
 static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
-                                                     "Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
+                                                     "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
 static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", \
-                                                       "Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
+                                                       "(default: Zero) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
                                                        , false, "Zero", "string");
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
-                                                     "What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
+                                                     "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
-static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "Discount for the returns"
+static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 0.9) Discount for the returns"
                                                      , false, 0.9, "double");
-static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "Weigh for exploration term in upper bound policies."
+static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
-static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "Length of rollouts from leaf nodes. Use negative values for rollouts to \
+static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
 terminal state if there is one and one-step if there is no terminal state."
                                                      , false, -1, "double");
 static TCLAP::ValueArg<int> random_seed_arg(         "", "random_seed", \
-                                                     "Random seed to use. For negative values (default) current time is used as seed.", \
+                                                     "(default: -1) Random seed to use. For negative values (default) current time is used as seed.", \
                                                      false, -1, "int" );
 static TCLAP::SwitchArg no_header_arg(               "", "no_header",\
-                                                     "In EVAL mode (-m EVAL) don't print a head line containing the column names."\
+                                                     "(default: false) In EVAL mode (-m EVAL) don't print a head line containing the column names."\
                                                      , false);
 static TCLAP::ValueArg<int> threads_arg(             "t", "threads", \
-                                                     "Maximum number of threads to use by calling omp_set_num_threads(). A value of \
+                                                     "(default: 0) Maximum number of threads to use by calling omp_set_num_threads(). A value of \
 Zero (default) or below does not restict the number of threads so the \
 OMP_NUM_THREADS environment variable will take effect (if set).", \
                                                      false, 0, "int" );
 static TCLAP::SwitchArg active_arg(                  "", "active",\
-                                                     "Use active tree search."\
+                                                     "(default: false) Use active tree search."\
                                                      , false);
 
 bool check_arguments();
@@ -528,6 +530,8 @@ tuple<shared_ptr<SearchTree>,
         environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
         environment.reset(new GamblingHall(5, 1));
+    } else if(environment_arg.getValue()=="FOL") {
+        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleNeckHallway") {
         environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
     } else if(environment_arg.getValue()=="DelayedUncertainty") {

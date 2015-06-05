@@ -5,6 +5,7 @@ find_package(Qt5Core)
 add_definitions(-fopenmp -std=c++0x)
 
 include_directories(/home/robert/MLR_git/share/include)
+include_directories(/home/robert/MLR_git/share/src)
 
 ## executable
 
@@ -47,11 +48,15 @@ add_executable(main_ActiveOnlineSearch
 
 target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
+find_library(LIBFOL FOL /home/robert/data/git_repos/MLR_git/share/lib)
+target_link_libraries(main_ActiveOnlineSearch ${LIBFOL})
+
 target_link_libraries(main_ActiveOnlineSearch
     util
     -lemon
     -larmadillo
     -lgomp
+    -lFOL
 )
 
 ## example

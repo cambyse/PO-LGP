@@ -2,6 +2,7 @@
 
 #include <MCTS/env_marc.h>
 //#include <FOL/fol.h>
+#include <Core/array.h>
 
 struct Node;
 struct Graph;
@@ -12,11 +13,34 @@ struct FOL_World:MCTS_Environment{
     bool waitDecision;
     Node *rule;
     NodeL substitution;
-    Decision(bool waitDecision, Node *rule, const NodeL& substitution):waitDecision(waitDecision),rule(rule), substitution(substitution){}
-    bool operator==(const SAO & other) const{ NIY; }
+    int id;
+  Decision(bool waitDecision, Node *rule, const NodeL& substitution, int id):waitDecision(waitDecision),rule(rule), substitution(substitution), id(id) {}
+    bool operator==(const SAO & other) const {
+        auto decision = dynamic_cast<const Decision *>(&other);
+        if(decision==nullptr) return false;
+        if(decision->waitDecision!=waitDecision) return false;
+        if(decision->rule!=rule) return false;
+        if(decision->substitution!=substitution) return false;
+        return true;
+    }
     void write(ostream&) const;
+    virtual size_t get_hash() const override {
+        return std::hash<int>()(id);
+    }
   };
-
+  struct Observation:SAO{
+      int id;
+      Observation(int id): id(id) {}
+      bool operator==(const SAO & other) const {
+          auto ob = dynamic_cast<const Observation *>(&other);
+          return ob!=nullptr && ob->id==id;
+      }
+      void write(ostream&) const;
+      virtual size_t get_hash() const override {
+          return std::hash<int>()(id);
+      }
+  };
+  struct State:SAO {};
 
   uint T_step; ///< discrete "time": decision steps so far
   double T_real;///< real time so far;
