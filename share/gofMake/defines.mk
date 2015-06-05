@@ -133,9 +133,10 @@ endif
 ifeq ($(QHULL),1)
 CXXFLAGS  += -DMT_QHULL
 LIBS      += -lqhull
-ifeq ($(ARCH_LINUX),1)
-CXXFLAGS += -DARCH_LINUX
 endif
+
+ifeq ($(ARCH_LINUX),1)
+CXXFLAGS += -DARCH_LINUX -DATLAS
 endif
 
 ifeq ($(OpenML),1)
