@@ -1,4 +1,6 @@
 #pragma once
+
+#include <ros/ros.h>
 #include <Core/module.h>
 
 
