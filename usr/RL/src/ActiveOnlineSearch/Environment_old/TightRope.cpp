@@ -17,7 +17,8 @@ TightRope::TightRope(int n):
     }
 }
 
-TightRope::state_reward_pair_t TightRope::transition(const state_t & s, const action_t & a) const {
+TightRope::state_reward_pair_t TightRope::finite_transition(const state_t & s,
+                                                            const action_t & a) const {
     // return values
     state_t ss = 0;
     reward_t r = 0;
@@ -58,6 +59,14 @@ TightRope::state_reward_pair_t TightRope::transition(const state_t & s, const ac
     // clamp to allowed states and return
     ss = util::clamp<int>(0,state_list.size()-1,ss);
     return state_reward_pair_t(ss,r);
+}
+
+TightRope::reward_t TightRope::max_reward() const {
+    return 2;
+}
+
+TightRope::reward_t TightRope::min_reward() const {
+    return -1;
 }
 
 QString TightRope::action_name(const action_t & a) const {

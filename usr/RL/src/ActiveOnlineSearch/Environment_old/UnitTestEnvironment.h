@@ -12,7 +12,7 @@ class UnitTestEnvironment: public Environment {
 public:
     UnitTestEnvironment(): Environment({0,1},{0,1}) {}
     virtual ~UnitTestEnvironment() = default;
-    virtual state_reward_pair_t sample(const state_t &, const action_t &) const {
+    virtual state_reward_pair_t finite_transition(const state_t &, const action_t &) const {
         return state_reward_pair_t(rand()%2,1);
     };
     bool has_terminal_state() const override {return false;}

@@ -38,8 +38,8 @@ DelayedUncertainty::DelayedUncertainty(int options,
     }
 }
 
-DelayedUncertainty::state_reward_pair_t DelayedUncertainty::transition(const state_t & state,
-                                                                       const action_t & action) const {
+DelayedUncertainty::state_reward_pair_t DelayedUncertainty::finite_transition(const state_t & state,
+                                                                              const action_t & action) const {
     auto branch_time = convert_1D_to_ND_index((int)state,{branch_n,time_steps_n});
     DEBUG_OUT(2, "state: " << state << "(" << state_name(state) << ")");
     DEBUG_OUT(2, "branch_time: " << branch_time);

@@ -3,7 +3,9 @@
 
 #include "AbstractEnvironment.h"
 
-template<class ACTION = int, class STATE = int>
+#include <initializer_list>
+
+template<class ACTION = int, class STATE = int, class OBSERVATION = STATE>
 class AbstractFiniteEnvironment: public AbstractEnvironment {
 
     //----typedefs/classes----//
@@ -15,9 +17,6 @@ public:
         // types
     public:
         typedef T value_t;
-        struct hash {
-            size_t operator()(const TypeWrapper & x) const {return std::hash<int>((int)x);}
-        };
         // methods
     public:
         TypeWrapper(const T& val): value(val) {}
@@ -35,7 +34,7 @@ public:
         T value;
     };
 
-    class FiniteAction: public AbstractEnvironment::Action,
+    class FiniteAction: public Action,
                        public TypeWrapper<FiniteAction,ACTION> {
     public:
         FiniteAction(ACTION action):
@@ -45,10 +44,16 @@ public:
             auto finite = dynamic_cast<const FiniteAction *>(&other);
             return finite!=nullptr && finite->value==this->value;
         }
+        virtual size_t get_hash() const override {
+            return std::hash<ACTION>()((ACTION)*this);
+        }
+        virtual void write(std::ostream & out) const override {
+            out << (ACTION)*this;
+        }
     };
     typedef FiniteAction action_t;
 
-    class FiniteState: public AbstractEnvironment::State,
+    class FiniteState: public State,
                        public TypeWrapper<FiniteState,STATE> {
     public:
         FiniteState(STATE state):
@@ -61,20 +66,28 @@ public:
     };
     typedef FiniteState state_t;
 
-    class FiniteObservation: public AbstractEnvironment::Observation,
-                       public TypeWrapper<FiniteObservation,STATE> {
+    class FiniteObservation: public Observation,
+                       public TypeWrapper<FiniteObservation,OBSERVATION> {
     public:
-        FiniteObservation(STATE observation):
-            TypeWrapper<FiniteObservation,STATE>(observation) {}
+        FiniteObservation(OBSERVATION observation):
+            TypeWrapper<FiniteObservation,OBSERVATION>(observation) {}
         virtual ~FiniteObservation() = default;
         virtual bool operator==(const Observation & other) const {
             auto finite = dynamic_cast<const FiniteObservation *>(&other);
             return finite!=nullptr && finite->value==this->value;
         }
+        virtual size_t get_hash() const override {
+            return std::hash<OBSERVATION>()((OBSERVATION)*this);
+        }
+        void write(std::ostream & out) const override {
+            out << (OBSERVATION)*this;
+        }
     };
     typedef FiniteObservation observation_t;
 
     typedef std::pair<state_t,reward_t> state_reward_pair_t;
+
+    typedef std::vector<state_handle_t> state_container_t;
 
     //----members----//
 
@@ -102,6 +115,16 @@ public:
         AbstractFiniteEnvironment(convert_vector<ACTION,action_t>(action_list),
                                   convert_vector<STATE,state_t>(state_list)) {}
 
+    AbstractFiniteEnvironment(const std::initializer_list<action_t> action_list,
+                              const std::initializer_list<state_t> state_list):
+        AbstractFiniteEnvironment(std::vector<action_t>(action_list),
+                                  std::vector<state_t>(state_list)) {}
+
+    AbstractFiniteEnvironment(const std::initializer_list<ACTION> action_list,
+                              const std::initializer_list<STATE> state_list):
+        AbstractFiniteEnvironment(std::vector<ACTION>(action_list),
+                                  std::vector<STATE>(state_list)) {}
+
     virtual ~AbstractFiniteEnvironment() = default;
 
     template<class FROM, class TO>
@@ -116,32 +139,42 @@ public:
     static action_container_t construct_action_container(const std::vector<action_t> & action_list) {
         action_container_t action_handle_list;
         for(action_t action : action_list) {
-            action_handle_list.push_back(make_action_handle(action));
+            action_handle_list.push_back(action_handle_t(new action_t((action_t)action)));
         }
         return action_handle_list;
     }
 
-    virtual state_reward_pair_t transition(const state_t state, const action_t action) = 0;
-
-    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) final {
-        auto action = std::dynamic_pointer_cast<const action_t>(action_handle);
-        assert(action!=nullptr);
-        auto state_reward = transition(state,*action);
-        state = state_reward.first;
-        return observation_reward_pair_t(make_observation_handle(state_reward.first),state_reward.second);
+    static state_container_t construct_state_container(const std::vector<state_t> & state_list) {
+        state_container_t state_handle_list;
+        for(state_t state : state_list) {
+            state_handle_list.push_back(state_handle_t(new state_t((state_t)state)));
+        }
+        return state_handle_list;
     }
 
-    virtual const action_container_t get_actions() final {return action_handle_list;}
+    virtual state_reward_pair_t finite_transition(const state_t &, const action_t &) const = 0;
 
-    virtual const state_handle_t get_state_handle() final {return make_state_handle(state);}
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override final {
+        auto action = std::dynamic_pointer_cast<const action_t>(action_handle);
+        assert(action!=nullptr);
+        auto state_reward = finite_transition(state,*action);
+        state = state_reward.first;
+        return observation_reward_pair_t(observation_handle_t(std::make_shared<observation_t>(state_reward.first)),state_reward.second);
+    }
 
-    virtual void set_state(const state_handle_t & state_handle) final {
+    virtual action_container_t get_actions() override final {return action_handle_list;}
+
+    virtual state_container_t get_states() final {return construct_state_container(state_list);}
+
+    virtual state_handle_t get_state_handle() override final {return state_handle_t(std::make_shared<state_t>(state));}
+
+    virtual void set_state(const state_handle_t & state_handle) override final {
         auto finite_state = std::dynamic_pointer_cast<const state_t>(state_handle);
         assert(finite_state!=nullptr);
         state=*finite_state;
     }
 
-    virtual bool is_markov() const final {return true;}
+    virtual bool is_markov() const override final {return true;}
 };
 
 #endif /* ABSTRACTFINITEENVIRONMENT_H_ */
