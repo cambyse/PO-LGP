@@ -32,7 +32,7 @@ struct FOL_World:MCTS_Environment{
 
 
   FOL_World(const char* KB_file);
-  virtual ~FOL_World() = default;
+  virtual ~FOL_World();
 
   virtual std::pair<Handle, double> transition(const Handle& action);
   virtual const std::vector<Handle> get_actions();

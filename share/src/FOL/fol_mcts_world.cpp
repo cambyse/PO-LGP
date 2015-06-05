@@ -24,6 +24,10 @@ FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), 
   reset_state();
 }
 
+FOL_World::~FOL_World(){
+  delete &KB; //the reference new'ed in the constructor
+}
+
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
   T_step++;
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
