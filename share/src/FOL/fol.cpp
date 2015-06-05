@@ -16,6 +16,11 @@ NodeL getSymbolsOfScope(Graph& KB){
   return vars;
 }
 
+Node *getFirstNonSymbolOfScope(Graph& KB){
+  for(Node *i:KB) if( !(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) ) return i;
+  return NULL;
+}
+
 /// returns all variables of the literal
 NodeL getVariables(Node* literal, Graph* varScope){
   NodeL vars;
@@ -216,6 +221,12 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
   }
 }
 
+
+/// directly create a new fact
+Node *createNewFact(Graph& facts, const NodeL& symbols){
+  return new Node_typed<bool>(facts, {}, symbols, new bool(true), true);
+}
+
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
 /// add the new literal to KB
 Node* createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope){
@@ -251,9 +262,9 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
 
   if(trueValue){
     if(!matches.N){
-      Node *newItem = createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
+      Node *newNode = createNewSubstitutedLiteral(facts, literal, subst, subst_scope);
       hasEffects=true;
-      if(&changes) newItem->newClone(changes);
+      if(&changes) newNode->newClone(changes);
     }else{
       for(Node *m:matches){
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
@@ -292,11 +303,11 @@ bool applyEffectLiterals(Graph& facts, Graph& effects, const NodeL& subst, Graph
 
 
 /// extracts the preconditions of the rule, then returns substitutions
-NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, bool verbose){
+NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose){
   //-- extract precondition
-  if(verbose){ cout <<"Substitutions for rule " <<*rule <<endl; }
+  if(verbose>1){ cout <<"Substitutions for rule " <<*rule <<endl; }
   Graph& Rule=rule->graph();
-  return getSubstitutions(facts, Rule.last(-2)->graph(), domain, verbose);
+  return getSubstitutions(facts, getFirstNonSymbolOfScope(Rule)->graph(), domain, verbose);
 }
 
 
@@ -306,7 +317,7 @@ NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, bool verbose
 /// the return value is an array: for every item of the literal's scope:
 /// if item=variable the array contains a pointer to the constant
 /// if item=non-variable the arrach contains a NULL pointer
-NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbose){
+NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose){
   CHECK(literals.N,"");
   Graph& varScope = literals(0)->container.isItemOfParentKvg->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
 
@@ -319,7 +330,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
 //    return subs;
 //  }
 
-  if(verbose){
+  if(verbose>2){
     cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
 //    cout <<"   with facts " <<facts <<" and domain "; listWrite(domain, cout); cout <<'\'' <<endl;
   }
@@ -329,8 +340,8 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
 //  constants.sort(ItemComp);
   for(Node *v:vars) domainOf(v->index) = domain;
 
-  if(verbose) cout <<"domains before 'constraint propagation':" <<endl;
-  if(verbose) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+  if(verbose>3) cout <<"domains before 'constraint propagation':" <<endl;
+  if(verbose>3) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
   //-- grab open variables for each literal
   uintA lit_numVars(literals(0)->container.N);
@@ -340,18 +351,18 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
   for(Node *literal:literals){
     if(lit_numVars(literal->index)==1){
       Node *var = getFirstVariable(literal, &varScope);
-      if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
+      if(verbose>3) cout <<"checking literal '" <<*literal <<"'" <<flush;
       removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), literal, &varScope);
-      if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+      if(verbose>3){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
       if(domainOf(var->index).N==0){
-        if(verbose) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
+        if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
         return NodeL(); //early failure
       }
     }
   }
 
-  if(verbose) cout <<"domains after 'constraint propagation':" <<endl;
-  if(verbose) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+  if(verbose>2) cout <<"domains after 'constraint propagation':" <<endl;
+  if(verbose>2) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
   //-- for the others, create constraints
   NodeL constraints;
@@ -361,7 +372,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
     }
   }
 
-  if(verbose){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
+  if(verbose>2){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
 
   //-- naive CSP: loop through everything
   uint subN=0;
@@ -393,11 +404,11 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
               feasible=true;
           }
         }
-        if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
+        if(verbose>3){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
         if(!feasible) break;
       }
       if(feasible){
-        if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
+        if(verbose>3){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
         substitutions.append(values);
         subN++;
       }
@@ -405,7 +416,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
   }
   substitutions.reshape(subN,vars.N);
 
-  if(verbose){
+  if(verbose>1){
     cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
     for(uint s=0;s<substitutions.d0;s++){
       for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
@@ -532,7 +543,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbos
 // }
 
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, bool verbose){
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getItems("Rule");
   NodeL constants = KB.getItems("Constant");
   Graph& state = KB.getItem("STATE")->graph();
@@ -541,13 +552,19 @@ bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, bool verbose){
     KB.checkConsistency();
     bool newFacts=false;
     for(Node *rule:rules){
-      if(verbose) cout <<"Testing Rule " <<*rule <<endl;
+      if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
       NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
       for(uint s=0;s<subs.d0;s++){
         Node *effect = rule->graph().last();
-        if(verbose){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
+        if(effect->getValueType()==typeid(arr)){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
+          arr p = effect->V<arr>();
+          uint r = sampleMultinomial(p);
+          if(decisionObservation) *decisionObservation = (*decisionObservation)*p.N + r; //raise previous decisions to the factor p.N and add current decision
+          effect = rule->graph().elem(-1-p.N+r);
+        }
+        if(verbose>0){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }
         bool e = applyEffectLiterals(state, effect->graph(), subs[s], &rule->graph(), changes);
-        if(verbose){
+        if(verbose>1){
           if(e){
             cout <<"NEW STATE = " <<state <<endl;
             if(&changes) cout <<"CHANGES = " <<changes <<endl;
@@ -563,7 +580,7 @@ bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, bool verbose){
         }
       }
       if(!subs.d0){
-        if(verbose) cout <<"NO NEW STATE for this rule" <<endl;
+        if(verbose>1) cout <<"NO NEW STATE for this rule" <<endl;
       }
     }
     if(!newFacts) break;

@@ -28,18 +28,19 @@ bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subs
 //---------- finding possible variable substitutions
 
 void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node *literal, Graph* varScope);
-NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, bool verbose=false);
-NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, bool verbose=false);
+NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose=0);
+NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose=0);
 
 //----------- adding facts
 
+Node *createNewFact(Graph& facts, const NodeL& symbols);
 Node *createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope);
 bool applySubstitutedLiteral(Graph& facts, Node*  literal, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 bool applyEffectLiterals    (Graph& facts, Graph& effects, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, bool verbose=false);
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, int verbose=0, int* decisionObservation=NULL);
 bool forwardChaining_propositional(Graph& KB, Node* q);
 
 //### Level 1 class

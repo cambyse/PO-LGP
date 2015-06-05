@@ -701,8 +701,9 @@ template<class T> MT::Array<uint> MT::Array<T>::dim() const {
 }
 
 /// the \c ith element
-template<class T> T& MT::Array<T>::elem(uint i) const {
-  CHECK(i<N, "range error (" <<i <<">=" <<N <<")");
+template<class T> T& MT::Array<T>::elem(int i) const {
+  if(i<0) i+=N;
+  CHECK(i>=0 && i<N, "range error (" <<i <<">=" <<N <<")");
   return p[i];
 }
 

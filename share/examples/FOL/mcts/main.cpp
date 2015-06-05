@@ -7,7 +7,7 @@
 
 void testMonteCarlo(){
   Graph Gorig;
-  FILE("boxes.kvg") >>Gorig;
+  FILE("boxes_new.kvg") >>Gorig;
   MT::rnd.seed(3);
   uint verbose=3;
 
@@ -114,25 +114,39 @@ void testMonteCarlo(){
 
 
 void testMCTS(){
-  FOL_World world("boxes.kvg");
+  FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
-  world.verbose=4;
+  world.verbose=0;
   mcts.verbose=1;
+  mcts.beta=100.;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<1000;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
-    mcts.addRollout();
+    mcts.addRollout(100);
 //    G = mcts.getGraph();
 //    if(!(k%1)) gv.update();
   }
   cout <<mcts.Qfunction() <<endl;
+  mcts.reportQ(cout); cout <<endl;
+  cout <<"MCTS #nodes=" <<mcts.Nnodes() <<endl;
 
+  //--- generate some playouts of the optimal (non optimistic) policy
+  world.fil.close();
+  MT::open(world.fil,"z.demos");
+  mcts.beta=1.;
+  world.verbose=0;
+  for(uint k=0;k<10;k++){
+    cout <<"******************************************** ROLLOUT " <<k <<endl;
+    mcts.addRollout(100);
+  }
 }
 
 //===========================================================================
 
 int main(int argn, char** argv){
+  rnd.clockSeed();
+  srand(rnd());
 //  testMonteCarlo();
   testMCTS();
 }

@@ -37,7 +37,7 @@ void simulate(uint& state_new, double& reward, uint action, uint state_old,const
   arr p(n);
   for(uint s=0;s<n;s++) p(s) = mdp.Psas(s,action,state_old); //same as Psas(:,action,state) in matlab
 //   cout<<"action="<<action<<"  state_old="<<state_old<<"   p="<<p<<endl;
-  state_new = SUS(p); //sample from p
+  state_new = sampleMultinomial(p); //sample from p
 }
 
 #define Q_LEARNING__GREEDY 1
@@ -92,7 +92,7 @@ int main(int argc, char **argv){
 
 //   rnd.clockSeed();
 
-  state_new = SUS(mdp.Ps); //sample from the start distribution
+  state_new = sampleMultinomial(mdp.Ps); //sample from the start distribution
   ofstream fil("z.rewards");
   
   uint s, a, s_suc;
@@ -118,7 +118,7 @@ int main(int argc, char **argv){
           uint max_action = argmax(Q[s]);
           pi(s,max_action) = 1.;
         }
-        action = SUS(pi[state_old]); //sample from pi(:|s)
+        action = sampleMultinomial(pi[state_old]); //sample from pi(:|s)
       }
     }
     else if (rl_algorithm == E_CUBE) {

@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Core FOL Gui MCTS
+DEPEND = Core FOL MCTS
 #OPTIM=fast_debug
 
 include $(BASE)/gofMake/generic.mk

@@ -49,16 +49,13 @@ void testFolFwdChaining(){
 
   FILE("fol.kvg") >>G;
 
-//  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
-
-  NodeL consts = G.getItems("Constant");
-  NodeL rules = G.getItems("Rule");
   Graph& state = G.getItem("STATE")->graph();
 
-  cout <<"INIT STATE = " <<GRAPH(state) <<endl;
+  cout <<"INIT STATE = " <<state <<endl;
 
   Node *query=G["Query"]->graph()(0);
   forwardChaining_FOL(G, query);
+//  cout <<"FINAL STATE = " <<state <<endl;
 }
 
 //===========================================================================
