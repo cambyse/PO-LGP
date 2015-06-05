@@ -91,10 +91,6 @@ public:
         }
         MCTS_Environment::Handle observation;
     };
-    struct InterfaceMarcState: public State {
-        InterfaceMarcState(MCTS_Environment::Handle state): state(state) {}
-        MCTS_Environment::Handle state;
-    };
 
     //----members----//
     std::shared_ptr<MCTS_Environment> env_marc;
