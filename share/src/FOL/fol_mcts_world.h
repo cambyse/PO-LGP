@@ -14,31 +14,31 @@ struct FOL_World:MCTS_Environment{
     Node *rule;
     NodeL substitution;
     int id;
-  Decision(bool waitDecision, Node *rule, const NodeL& substitution, int id):waitDecision(waitDecision),rule(rule), substitution(substitution), id(id) {}
+    Decision(bool waitDecision, Node *rule, const NodeL& substitution, int id):waitDecision(waitDecision),rule(rule), substitution(substitution), id(id) {}
     bool operator==(const SAO & other) const {
-        auto decision = dynamic_cast<const Decision *>(&other);
-        if(decision==nullptr) return false;
-        if(decision->waitDecision!=waitDecision) return false;
-        if(decision->rule!=rule) return false;
-        if(decision->substitution!=substitution) return false;
-        return true;
+      auto decision = dynamic_cast<const Decision *>(&other);
+      if(decision==nullptr) return false;
+      if(decision->waitDecision!=waitDecision) return false;
+      if(decision->rule!=rule) return false;
+      if(decision->substitution!=substitution) return false;
+      return true;
     }
     void write(ostream&) const;
     virtual size_t get_hash() const override {
-        return std::hash<int>()(id);
+      return std::hash<int>()(id);
     }
   };
   struct Observation:SAO{
-      int id;
-      Observation(int id): id(id) {}
-      bool operator==(const SAO & other) const {
-          auto ob = dynamic_cast<const Observation *>(&other);
-          return ob!=nullptr && ob->id==id;
-      }
-      void write(ostream&) const;
-      virtual size_t get_hash() const override {
-          return std::hash<int>()(id);
-      }
+    int id;
+    Observation(int id): id(id) {}
+    bool operator==(const SAO & other) const {
+      auto ob = dynamic_cast<const Observation *>(&other);
+      return ob!=nullptr && ob->id==id;
+    }
+    void write(ostream& os) const {os <<"BLA"; }
+    virtual size_t get_hash() const override {
+      return std::hash<int>()(id);
+    }
   };
   struct State:SAO {};
 

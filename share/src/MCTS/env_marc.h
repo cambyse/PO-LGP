@@ -19,10 +19,10 @@ struct MCTS_Environment {
       virtual bool operator==(const SAO & other) const { return true; } ///< why true? Because a NIL object (e.g. non-observation) is always equal to NIL
       virtual bool operator!=(const SAO & other) const { return !(*this==other); }
       virtual void write(std::ostream& os) const { os <<"NIL_SAO"; }
-        virtual size_t get_hash() const {
-            std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
-            exit(-1);
-        }
+      virtual size_t get_hash() const {
+        std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
+        exit(-1);
+      }
     };
     typedef std::shared_ptr<const SAO> Handle;
 
@@ -91,10 +91,6 @@ public:
         }
         MCTS_Environment::Handle observation;
     };
-    struct InterfaceMarcState: public State {
-        InterfaceMarcState(MCTS_Environment::Handle state): state(state) {}
-        MCTS_Environment::Handle state;
-    };
 
     //----members----//
     std::shared_ptr<MCTS_Environment> env_marc;
@@ -122,17 +118,6 @@ public:
             action_container.push_back(action_handle_t(new InterfaceMarcAction(action)));
         }
         return action_container;
-    }
-    virtual state_handle_t get_state_handle() override {
-        return state_handle_t(new InterfaceMarcState(env_marc->get_state()));
-    }
-    virtual void set_state(const state_handle_t & state_handle) override {
-        #warning hack!
-        env_marc->reset_state();
-        return;
-        auto interface_state = std::dynamic_pointer_cast<const InterfaceMarcState>(state_handle);
-        assert(interface_state!=nullptr);
-        env_marc->set_state(interface_state->state);
     }
     virtual bool has_terminal_state() const override {
         return env_marc->get_info(MCTS_Environment::InfoTag::hasTerminal);
