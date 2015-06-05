@@ -29,6 +29,8 @@ namespace value_heuristic {
     void Rollout::add_value_estimate(const node_t & state_node,
                                      mcts_node_info_map_t & mcts_node_info_map) const {
 
+        bool start_state_is_terminal = environment->is_terminal_state();
+
         // Do rollout of specified length (rollout_length).
         int length = rollout_length;
 
@@ -44,9 +46,6 @@ namespace value_heuristic {
         reward_t discounted_return = 0;
         double discount_factor = discount;
         int k=0;
-        //DEBUG_OUT(1,"Rollout from state '" << Environment::name(*environment,start_state) << "'");
-        #warning XXXXX
-        //environment->set_state(start_state);
         while((length<0 || k<length) && !environment->is_terminal_state()) {
             // select action uniformly from available actions
             action = util::random_select(environment->get_actions());
@@ -57,24 +56,16 @@ namespace value_heuristic {
             // update counter and discount factor
             ++k;
             discount_factor*=discount;
-            // DEBUG_OUT(2,"    action '" << Environment::name(*environment,action) <<
-            //           "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
-            //           "	R=" << discounted_return << "	d=" << discount_factor);
         }
         mcts_node_info_map[state_node].add_rollout_return(discounted_return);
-
 
         auto rollout_return_sum = mcts_node_info_map[state_node].get_rollout_return_sum();
         auto squared_rollout_return_sum = mcts_node_info_map[state_node].get_squared_rollout_return_sum();
         auto rollout_counts = mcts_node_info_map[state_node].get_rollout_counts();
         DEBUG_EXPECT(0,rollout_counts>=1);
         if(rollout_counts==1) {
-            #warning XXXXX
-            //environment->set_state(start_state);
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
-                                                     environment->is_terminal_state()?
-                                                     0:
-                                                     std::numeric_limits<double>::infinity());
+                                                     start_state_is_terminal?0:std::numeric_limits<double>::infinity());
         } else {
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
                                                      (rollout_counts/(rollout_counts-1))*(squared_rollout_return_sum/rollout_counts-pow(rollout_return_sum/rollout_counts,2)));

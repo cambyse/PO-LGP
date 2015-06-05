@@ -138,8 +138,7 @@ void MonteCarloTreeSearch::next_do() {
     {
         DEBUG_OUT(2,"Follow tree-policy...");
         node_t current_node = root_node;
-        #warning XXXXX
-        //environment->set_state(root_state);
+        environment->reset_state();
         node_set_t node_set({root_node},0,node_hash);
         DEBUG_OUT(2,"    Starting at node " << graph.id(root_node));
         for(int depth=0; max_depth<0 || depth<max_depth; ++depth) {

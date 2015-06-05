@@ -56,8 +56,7 @@ typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
-static const std::set<std::string> mode_set = {"SAMPLE",
-                                               "WATCH",
+static const std::set<std::string> mode_set = {"WATCH",
                                                "EVAL"};
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
@@ -87,15 +86,13 @@ static const std::set<std::string> tree_policy_set = {"UCB1",
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
-                                                     "Mode to use "+util::container_to_str(mode_set,", ","(",")")+".\n'SAMPLE' takes <n> (--sample_n <n>) samples for different state-action \
-pairs from the environment <e> (--environment <e>) and prints the data to \
-std::cout.\n'WATCH' runs tree search with <n> rollouts per step and performs <s> \
+                                                     "Mode to use "+util::container_to_str(mode_set,", ","(",")")+".\n'WATCH' runs tree search with <n> rollouts per step and performs <s> \
 (--step_n <s>) steps. The progress during tree building can be watched at a \
 different level of detail (--progress).\n'EVAL' performs <r> (--run_n <r>) \
 runs with a series of trials for different numbers of rollouts <n>, <n>+<i>, \
 ... , <x> (--sample_incr <i> --sample_max <x>) and <s> steps per trial and \
 prints the mean reward per trial to std::cout.",\
-                                                     true, "SAMPLE", "string");
+                                                     true, "WATCH", "string");
 static TCLAP::ValueArg<std::string> environment_arg( "e", "environment",\
                                                      "Environment to use "+util::container_to_str(environment_set,", ","(",")")+".\nDynamicTightRope: The agent has integer position and velocity. SAMPLE mode \
 prints the max-reward (over actions) for a given position and \
@@ -127,8 +124,8 @@ static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
                                                      , false, "mean", "string");
 static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
-                                                     "(default: FullDAG) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
-                                                     , false, "FullDAG", "string");
+                                                     "(default: PlainTree) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
+                                                     , false, "PlainTree", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "(default: BACKUP_PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "BACKUP_PROPAGATE", "string");
@@ -230,64 +227,7 @@ int main(int argn, char ** args) {
 
     // different modes
     cout << header(argn,args) << endl;
-    if(mode_arg.getValue()=="SAMPLE") {
-        // // set up
-        // RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
-        //              shared_ptr<TreePolicy>, tree_policy,
-        //              shared_ptr<ValueHeuristic>, value_heuristic,
-        //              shared_ptr<BackupMethod>, backup_method,
-        //              shared_ptr<AbstractEnvironment>, environment,
-        //              state_handle_t, root_state) = setup();
-        // if(environment_arg.getValue()!="DynamicTightRope") {
-        //     cout << "run,state (from),action,reward,state (to)" << endl;
-        //     for(int run : Range(sample_n_arg.getValue())) {
-        //         for(auto state_from : Environment::get_states(*environment)) {
-        //             if(environment->is_terminal_state(state_from)) continue;
-        //             for(auto action : environment->get_actions()) {
-        //                 RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->transition(state_from, action);
-        //                 cout << QString("%1,%2,%3,%4,%5").
-        //                     arg(run).
-        //                     arg(Environment::name(*environment,state_from)).
-        //                     arg(Environment::name(*environment,action)).
-        //                     arg(reward).
-        //                     arg(Environment::name(*environment,state_to)) << endl;
-        //             }
-        //         }
-        //     }
-        // } else {
-        //     cout << "run,position,velocity,"+accumulate_arg.getValue()+"_reward" << endl;
-        //     for(int run : Range(sample_n_arg.getValue())) {
-        //         for(auto state_from : Environment::get_states(*environment)) {
-        //             double accum_reward;
-        //             auto env = std::dynamic_pointer_cast<DynamicTightRope>(environment);
-        //             DEBUG_EXPECT(0,env!=nullptr);
-        //             RETURN_TUPLE(int,position,int,velocity) = env->get_position_and_velocity(state_from);
-        //             if(accumulate_arg.getValue()=="min") {
-        //                 accum_reward = DBL_MAX;
-        //             } else if(accumulate_arg.getValue()=="max") {
-        //                 accum_reward = -DBL_MAX;
-        //             } else if(accumulate_arg.getValue()=="mean") {
-        //                 accum_reward = 0;
-        //             } else {
-        //                 DEBUG_DEAD_LINE;
-        //             }
-        //             for(auto action : environment->get_actions()) {
-        //                 RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->sample(state_from, action);
-        //                 if(accumulate_arg.getValue()=="min") {
-        //                     accum_reward = std::min(reward,accum_reward);
-        //                 } else if(accumulate_arg.getValue()=="max") {
-        //                     accum_reward = std::max(reward,accum_reward);
-        //                 } else if(accumulate_arg.getValue()=="mean") {
-        //                     accum_reward += reward/environment->get_actions().size();
-        //                 } else {
-        //                     DEBUG_DEAD_LINE;
-        //                 }
-        //             }
-        //             cout << QString("%1,%2,%3,%4").arg(run).arg(position).arg(velocity).arg(accum_reward) << endl;
-        //         }
-        //     }
-        // }
-    } else if(mode_arg.getValue()=="WATCH") {
+    if(mode_arg.getValue()=="WATCH") {
         // set up
         RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
                      shared_ptr<TreePolicy>, tree_policy,
@@ -296,8 +236,7 @@ int main(int argn, char ** args) {
                      shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
-            #warning XXXXX
-            //environment->set_state(current_state);
+            environment->reset_state();
             if(environment->is_terminal_state()) break;
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
@@ -310,10 +249,11 @@ int main(int argn, char ** args) {
                 }
             }
             if(step<step_n_arg.getValue()) { // don't prune in last step
-                #warning XXXXX
-                //environment->set_state(current_state);
+                // make a transition and prune
+                environment->reset_state();
                 auto action = search_tree->recommend_action();
                 auto observation_reward = environment->transition(action);
+                environment->make_current_state_default();
                 auto observation = std::get<0>(observation_reward);
                 auto reward = std::get<1>(observation_reward);
                 if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
@@ -330,8 +270,6 @@ int main(int argn, char ** args) {
                         *action << " --> " <<
                         *observation << ", " <<
                         reward << ")" << endl;
-                    #warning XXXXX
-                    //environment->set_state(current_state);
                     if(environment->is_terminal_state()) {
                         cout << "Terminal state!" << endl;
                     }
@@ -396,14 +334,14 @@ int main(int argn, char ** args) {
                         search_tree->next();
                     }
                     // perform step
-                    #warning XXXXX
-                    //environment->set_state(current_state);
+                    environment->reset_state();
                     auto action = search_tree->recommend_action();
                     auto observation_reward = environment->transition(action);
+                    environment->make_current_state_default();
                     auto observation = std::get<0>(observation_reward);
                     reward_sum += std::get<1>(observation_reward);
                     // break on terminal state
-                    if(environment->has_terminal_state() && environment->is_terminal_state()) break;
+                    if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number

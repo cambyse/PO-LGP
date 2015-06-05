@@ -40,55 +40,56 @@ ActiveTreeSearch::ActiveTreeSearch(std::shared_ptr<AbstractEnvironment> environm
 }
 
 void ActiveTreeSearch::next_do() {
-    #warning XXXXX
-    //environment->set_state(root_state);
+    environment->reset_state();
     set<node_t> action_nodes_to_update;
     DEBUG_OUT(1,"Next...");
 
-    // choose observation node at random and set environment's state
-    vector<node_t> candidate_nodes;
-    for(node_it_t node(graph); node!=INVALID; ++node) {
-        if(node_info_map[node].type==ACTION_NODE) continue;
-        // // determine depth
-        // int depth = 0;
-        // node_t ancestor = node;
-        // while(ancestor!=INVALID) {
-        //     in_arc_it_t arc(graph,ancestor);
-        //     if(arc!=INVALID) {
-        //         ancestor = graph.source(arc);
-        //         ++depth;
-        //     } else {
-        //         ancestor = INVALID;
-        //     }
-        // }
-        // if(depth/2>3) continue;
-        candidate_nodes.push_back(node);
-    }
-    node_t old_observation_node = INVALID;
-    while(old_observation_node==INVALID) {
-        old_observation_node = util::random_select(candidate_nodes);
-        #warning XXXXX
-        //environment->set_state(associated_state[old_observation_node]);
-        if(environment->is_terminal_state()) {
-            DEBUG_OUT(1,"    Discard observation node:");
-            if(old_observation_node==root_node) {
-                DEBUG_OUT(1,"        root");
-            } else {
-                DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-            }
-            old_observation_node=INVALID;
-        } else {
-            DEBUG_OUT(1,"    Choose observation node:");
-            if(old_observation_node==root_node) {
-                DEBUG_OUT(1,"        root");
-            } else {
-                DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-            }
-        }
-    }
+    // // choose observation node at random and set environment's state
+    // vector<node_t> candidate_nodes;
+    // for(node_it_t node(graph); node!=INVALID; ++node) {
+    //     if(node_info_map[node].type==ACTION_NODE) continue;
+    //     // // determine depth
+    //     // int depth = 0;
+    //     // node_t ancestor = node;
+    //     // while(ancestor!=INVALID) {
+    //     //     in_arc_it_t arc(graph,ancestor);
+    //     //     if(arc!=INVALID) {
+    //     //         ancestor = graph.source(arc);
+    //     //         ++depth;
+    //     //     } else {
+    //     //         ancestor = INVALID;
+    //     //     }
+    //     // }
+    //     // if(depth/2>3) continue;
+    //     candidate_nodes.push_back(node);
+    // }
+    // node_t old_observation_node = INVALID;
+    // while(old_observation_node==INVALID) {
+    //     old_observation_node = util::random_select(candidate_nodes);
+    //     #warning XXXXX
+    //     //environment->set_state(associated_state[old_observation_node]);
+    //     if(environment->is_terminal_state()) {
+    //         DEBUG_OUT(1,"    Discard observation node:");
+    //         if(old_observation_node==root_node) {
+    //             DEBUG_OUT(1,"        root");
+    //         } else {
+    //             DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
+    //         }
+    //         old_observation_node=INVALID;
+    //     } else {
+    //         DEBUG_OUT(1,"    Choose observation node:");
+    //         if(old_observation_node==root_node) {
+    //             DEBUG_OUT(1,"        root");
+    //         } else {
+    //             DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
+    //         }
+    //     }
+    // }
 
-    // // choose a random action
-    // auto action = util::random_select(environment->get_actions());
+    // // // choose a random action
+    // // auto action = util::random_select(environment->get_actions());
+
+    node_t old_observation_node = root_node;
 
     for(auto action : environment->get_actions())
     {
@@ -99,9 +100,8 @@ void ActiveTreeSearch::next_do() {
         }
 
         repeat(0) {
-            // set environment's state (only for multiple iterations)
-            #warning XXXXX
-            //environment->set_state(associated_state[old_observation_node]);
+            // reset environment's state (only for multiple iterations)
+            environment->reset_state();
             // make a transition
             RETURN_TUPLE(observation_handle_t, observation,
                          reward_t, reward ) = environment->transition(action);
