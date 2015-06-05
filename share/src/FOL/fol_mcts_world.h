@@ -2,6 +2,7 @@
 
 #include <MCTS/env_marc.h>
 //#include <FOL/fol.h>
+#include <Core/array.h>
 
 struct Node;
 struct Graph;

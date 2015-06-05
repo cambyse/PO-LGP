@@ -4,7 +4,7 @@
 #include <memory>
 #include <tuple>
 
-#include "AbstractEnvironment.h"
+#include "../../include/MCTS_Environment/AbstractEnvironment.h"
 
 /** This is an abstraction of an environment for MCTS. The environment essentially only needs to simulate (=transition
  *  forward the state for given actions), and for each transition return the observation and reward. Additionally, it
@@ -58,7 +58,6 @@ struct MCTS_Environment {
     virtual double get_info_value(InfoTag tag) const = 0;
 };
 
-#if 0
 class InterfaceMarc: public AbstractEnvironment {
     //----typedefs/classes----//
 public:
@@ -109,6 +108,14 @@ public:
         auto return_value = env_marc->transition(interface_action->action);
         return observation_reward_pair_t(observation_handle_t(new InterfaceMarcObservation(return_value.first)),return_value.second);
     }
+    template<class C>
+        static std::shared_ptr<AbstractEnvironment> makeAbstractEnvironment(C * env) {
+        auto mcts = dynamic_cast<MCTS_Environment*>(env);
+        assert(mcts!=nullptr);
+        return std::shared_ptr<AbstractEnvironment>(
+            std::make_shared<InterfaceMarc>(
+                std::shared_ptr<MCTS_Environment>(mcts)));
+    }
     virtual action_container_t get_actions() override {
         action_container_t action_container;
         for(auto action : env_marc->get_actions()) {
@@ -149,4 +156,3 @@ public:
         return env_marc->get_info(MCTS_Environment::InfoTag::isMarkov);
     }
 };
-#endif
