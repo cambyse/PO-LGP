@@ -144,7 +144,8 @@ OpenGripper::OpenGripper(ActionMachine& actionMachine, const Side side)
   auto task = new CtrlTask(STRING("OpenGripper_"),
                            new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
                            2, .8, 1., 1.);
-  task->setTarget({.0});
+  task->setTarget({.08});
+  // task->setGains(200, 0);
   task->active = true;
   tasks.append(task);
 }
@@ -167,7 +168,8 @@ CloseGripper::CloseGripper(ActionMachine& actionMachine, const Side side)
   auto task = new CtrlTask(STRING("CloseGripper_"),
                            new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
                            2, .8, 1., 1.);
-  task->setTarget({.0});
+  task->setTarget({.01});
+  // task->setGains(200, 0);
   task->active = true;
   tasks.append(task);
 }
