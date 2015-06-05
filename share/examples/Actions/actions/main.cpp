@@ -7,13 +7,48 @@
 //==============================================================================
 void gripper() {
   ActionSystem activity;
+  auto& m = *activity.machine;
+
   new CoreTasks(*activity.machine);
   engine().open(activity);
 
+  auto target = m.s->world.getShapeByName("mymarker")->X;
+  cout << target << endl;
   Action* open_left = new OpenGripper(*activity.machine, Side::LEFT);
   Action* open_right = new OpenGripper(*activity.machine, Side::RIGHT);
   activity.machine->waitForActionCompletion(open_left);
   activity.machine->waitForActionCompletion(open_right);
+
+  engine().close(activity);
+}
+
+//==============================================================================
+// grab the marker
+void grap_the_marker() {
+  ActionSystem activity;
+  auto& m = *activity.machine;
+
+  new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+  Action* open_right = new OpenGripper(m, Side::RIGHT);
+  // m.waitForActionCompletion(open_right);
+
+  // align along marker
+  auto target = m.s->world.getShapeByName("mymarker")->X;
+  cout << "target:" << target << endl;
+  arr target_position = ARRAY(target.pos);
+  arr target_orientation = ARRAY(target.rot);
+  Action* pose_to = new PoseTo(m, "endeffR", target_position, target_orientation);
+
+  // TODO
+  // cage marker
+
+  // Action* close_right = new CloseGripper(*activity.machine, Side::RIGHT);
+  // activity.machine->waitForActionCompletion(open_right);
+
+  m.waitForActionCompletion(open_right);
+  m.waitForActionCompletion(pose_to);
   engine().close(activity);
 }
 
