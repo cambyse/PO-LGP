@@ -119,7 +119,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   }
 
 #if 1 //generic world transitioning
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3);
+  int decisionObservation = 0;
+  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
 #endif
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
@@ -131,7 +132,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   reward=0;
   R_total += reward;
 
-  return {Handle(NULL), reward};
+  return {Handle(new Observation(decisionObservation)), reward};
 }
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){

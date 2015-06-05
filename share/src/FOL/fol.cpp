@@ -543,7 +543,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 // }
 
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose){
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getItems("Rule");
   NodeL constants = KB.getItems("Constant");
   Graph& state = KB.getItem("STATE")->graph();
@@ -559,6 +559,7 @@ bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose){
         if(effect->getValueType()==typeid(arr)){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
           arr p = effect->V<arr>();
           uint r = sampleMultinomial(p);
+          if(decisionObservation) *decisionObservation = (*decisionObservation)*p.N + r; //raise previous decisions to the factor p.N and add current decision
           effect = rule->graph().elem(-1-p.N+r);
         }
         if(verbose>0){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }

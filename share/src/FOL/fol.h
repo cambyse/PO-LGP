@@ -40,7 +40,7 @@ bool applyEffectLiterals    (Graph& facts, Graph& effects, const NodeL& subst, G
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, int verbose=0);
+bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, int verbose=0, int* decisionObservation=NULL);
 bool forwardChaining_propositional(Graph& KB, Node* q);
 
 //### Level 1 class
