@@ -148,15 +148,3 @@ public:
         return env_marc->get_info(MCTS_Environment::InfoTag::isMarkov);
     }
 };
-
-struct MCTS_Environment_Dummy: public MCTS_Environment {
-    virtual std::pair<ObservationH, double> transition(const ActionH& action) {return std::pair<ObservationH, double>();}
-    virtual const std::vector<ActionH> get_actions() {return std::vector<ActionH>();}
-    virtual const StateH get_state() {return StateH();}
-    virtual bool is_terminal_state() const {return false;}
-    virtual double get_terminal_reward() const { return 0.; }
-    virtual void set_state(const StateH& state) {}
-    virtual void reset_state() {}
-    virtual bool get_info(InfoTag tag) const {return false;}
-    virtual double get_info_value(InfoTag tag) const {return 0;}
-};
