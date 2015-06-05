@@ -910,7 +910,27 @@ void ActiveTreeSearch::update_c_node_values(node_t action_node) {
     int this_counts = counts[to_action_arc];
 
     // mean_r, var_r
-    {
+    double prior_counts = 2;
+    if(prior_counts>1 && environment->has_min_reward() && environment->has_max_reward()) {
+        reward_t this_reward_sum = reward_sum[to_action_arc]
+            + prior_counts*environment->min_reward()/2
+            + prior_counts*environment->max_reward()/2;
+        reward_t this_reward_square_sum = reward_square_sum[to_action_arc]
+            + pow(prior_counts*environment->min_reward()/2,2)
+            + pow(prior_counts*environment->max_reward()/2,2);
+        double use_counts = this_counts+prior_counts;
+        double mean = this_reward_sum/use_counts;
+        computer.set_node_value(variable_info_map[action_node].mean_r, mean);
+        // biased variance of the reward
+        reward_t var = (this_reward_square_sum/use_counts - pow(this_reward_sum/use_counts,2));
+        // unbiased variance of the reward
+        var *= (reward_t)use_counts/(use_counts-1);
+        // variance of the mean reward estimator
+        var /= use_counts;
+        computer.set_node_value(variable_info_map[action_node].var_r, var);
+        DEBUG_OUT(1,"mean: " << mean);
+        DEBUG_OUT(1,"var: " << var);
+    } else {
         reward_t this_reward_sum = reward_sum[to_action_arc];
         reward_t this_reward_square_sum = reward_square_sum[to_action_arc];
         computer.set_node_value(variable_info_map[action_node].mean_r, this_reward_sum/this_counts);
