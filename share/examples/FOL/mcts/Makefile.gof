@@ -1,7 +1,5 @@
 BASE = ../../..
 
-OBJS = main.o fol_mcts_world.o
-
 DEPEND = Core FOL Gui MCTS
 #OPTIM=fast_debug
 

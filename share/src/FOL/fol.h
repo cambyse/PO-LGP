@@ -19,7 +19,7 @@ bool factsAreEqual(Node *fact, Node *literal, const NodeL& subst, Graph* subst_s
 Node *getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
 Node *getEqualFactInKB(Graph& facts, NodeL& fact);
 Node *getEqualFactInKB(Graph& facts, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=true);
-Node *getPotentiallyEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
+NodeL getPotentiallyEqualFactInKB(Graph& facts, Node* literal, Graph* subst_scope, bool checkAlsoValue=true);
 Node *getEqualFactInList(Node *fact, NodeL& facts);
 bool allFactsHaveEqualsInScope(Graph& KB, NodeL& facts);
 

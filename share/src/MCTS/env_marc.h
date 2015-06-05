@@ -58,6 +58,7 @@ struct MCTS_Environment {
     virtual double get_info_value(InfoTag tag) const = 0;
 };
 
+#if 0
 class InterfaceMarc: public AbstractEnvironment {
     //----typedefs/classes----//
 public:
@@ -148,3 +149,4 @@ public:
         return env_marc->get_info(MCTS_Environment::InfoTag::isMarkov);
     }
 };
+#endif

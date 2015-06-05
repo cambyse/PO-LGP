@@ -1,6 +1,7 @@
 #include <FOL/fol.h>
 #include <Gui/graphview.h>
 #include <MCTS/solver_marc.h>
+#include <FOL/fol_mcts_world.h>
 
 //===========================================================================
 
@@ -111,7 +112,6 @@ void testMonteCarlo(){
 
 //===========================================================================
 
-#include "fol_mcts_world.h"
 
 void testMCTS(){
   FOL_World world("boxes.kvg");

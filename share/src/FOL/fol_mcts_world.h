@@ -1,7 +1,11 @@
 #pragma once
 
 #include <MCTS/env_marc.h>
-#include <FOL/fol.h>
+//#include <FOL/fol.h>
+
+struct Node;
+struct Graph;
+typedef MT::Array<Node*> NodeL;
 
 struct FOL_World:MCTS_Environment{
   struct Decision:SAO{
@@ -16,7 +20,7 @@ struct FOL_World:MCTS_Environment{
 
   uint T_step; ///< discrete "time": decision steps so far
   double T_real;///< real time so far;
-  Graph KB;     ///< current knowledge base
+  Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
   NodeL rules;  ///< rules withing the KB (each is a subgraph item of the KB)

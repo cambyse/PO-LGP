@@ -1,5 +1,6 @@
 #include <Core/array-vector.h>
 #include "fol_mcts_world.h"
+#include "fol.h"
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
@@ -11,7 +12,7 @@ void FOL_World::Decision::write(ostream& os) const{
   }
 }
 
-FOL_World::FOL_World(const char* KB_file):KB(KB_file), state(NULL), tmp(NULL), verbose(4){
+FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(4){
   FILE("z.init") <<KB;
   KB.checkConsistency();
   start_state = &KB["START_STATE"]->graph();
