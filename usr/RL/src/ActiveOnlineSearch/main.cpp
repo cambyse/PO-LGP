@@ -21,13 +21,13 @@
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
-#include "Environment_old/TightRope.h"
-#include "Environment_old/DynamicTightRope.h"
-#include "Environment_old/UnitTestEnvironment.h"
+//#include "Environment_old/TightRope.h"
+//#include "Environment_old/DynamicTightRope.h"
+//#include "Environment_old/UnitTestEnvironment.h"
 #include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
-#include "Environment_old/BottleNeckHallway.h"
-#include "Environment_old/DelayedUncertainty.h"
+//#include "Environment_old/BottleNeckHallway.h"
+//#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 
 #include <omp.h>
@@ -54,7 +54,6 @@ using namespace backup_method;
 
 typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
-typedef AbstractEnvironment::state_handle_t       state_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
 static const std::set<std::string> mode_set = {"SAMPLE",
@@ -171,8 +170,7 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<AbstractEnvironment>,
-      state_handle_t> setup();
+      shared_ptr<AbstractEnvironment>> setup();
 QString header(int argn, char ** args);
 
 int main(int argn, char ** args) {
@@ -295,11 +293,11 @@ int main(int argn, char ** args) {
                      shared_ptr<TreePolicy>, tree_policy,
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
-                     shared_ptr<AbstractEnvironment>, environment,
-                     state_handle_t, current_state) = setup();
+                     shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
-            environment->set_state(current_state);
+            #warning XXXXX
+            //environment->set_state(current_state);
             if(environment->is_terminal_state()) break;
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
@@ -312,17 +310,17 @@ int main(int argn, char ** args) {
                 }
             }
             if(step<step_n_arg.getValue()) { // don't prune in last step
-                environment->set_state(current_state);
+                #warning XXXXX
+                //environment->set_state(current_state);
                 auto action = search_tree->recommend_action();
                 auto observation_reward = environment->transition(action);
                 auto observation = std::get<0>(observation_reward);
                 auto reward = std::get<1>(observation_reward);
-                current_state = environment->get_state_handle();
                 if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
                     search_tree->toPdf("tree.pdf");
                     getchar();
                 }
-                search_tree->prune(action,observation,current_state);
+                search_tree->prune(action,observation);
                 if(watch_progress_arg.getValue()>=2) {
                     if(!no_graphics_arg.getValue()) {
                         search_tree->toPdf("tree.pdf");
@@ -332,7 +330,8 @@ int main(int argn, char ** args) {
                         *action << " --> " <<
                         *observation << ", " <<
                         reward << ")" << endl;
-                    environment->set_state(current_state);
+                    #warning XXXXX
+                    //environment->set_state(current_state);
                     if(environment->is_terminal_state()) {
                         cout << "Terminal state!" << endl;
                     }
@@ -383,35 +382,32 @@ int main(int argn, char ** args) {
                              shared_ptr<TreePolicy>, tree_policy,
                              shared_ptr<ValueHeuristic>, value_heuristic,
                              shared_ptr<BackupMethod>, backup_method,
-                             shared_ptr<AbstractEnvironment>, environment,
-                             state_handle_t, current_state) = setup();
+                             shared_ptr<AbstractEnvironment>, environment) = setup();
 
                 double reward_sum = 0;
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
                 int step = 1;
                 // initialize tree
-                current_state = environment->get_state_handle();
-                search_tree->init(current_state);
+                search_tree->init();
                 while(true) {
                     // build tree
                     repeat(sample_n) {
                         search_tree->next();
                     }
                     // perform step
-                    environment->set_state(current_state);
+                    #warning XXXXX
+                    //environment->set_state(current_state);
                     auto action = search_tree->recommend_action();
                     auto observation_reward = environment->transition(action);
                     auto observation = std::get<0>(observation_reward);
-                    current_state = environment->get_state_handle();
                     reward_sum += std::get<1>(observation_reward);
                     // break on terminal state
                     if(environment->has_terminal_state() && environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
-                    search_tree->prune(action,observation,current_state);
-                    current_state = environment->get_state_handle();
+                    search_tree->prune(action,observation);
                     ++step;
                 }
 #ifdef USE_OMP
@@ -511,8 +507,7 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<AbstractEnvironment>,
-      state_handle_t> setup() {
+      shared_ptr<AbstractEnvironment>> setup() {
 
     // return variables
     shared_ptr<SearchTree>      search_tree;
@@ -520,33 +515,31 @@ tuple<shared_ptr<SearchTree>,
     shared_ptr<ValueHeuristic>  value_heuristic;
     shared_ptr<BackupMethod>    backup_method;
     shared_ptr<AbstractEnvironment> environment;
-    state_handle_t              current_state;
     // set up environment
-    if(environment_arg.getValue()=="TightRope") {
-        environment.reset(new TightRope(15));
-    } else if(environment_arg.getValue()=="DynamicTightRope") {
-        environment.reset(new DynamicTightRope(50, 10));
-    } else if(environment_arg.getValue()=="SimpleEnvironment") {
+    // if(environment_arg.getValue()=="TightRope") {
+    //     environment.reset(new TightRope(15));
+    // } else if(environment_arg.getValue()=="DynamicTightRope") {
+    //     environment.reset(new DynamicTightRope(50, 10));
+    // } else
+    if(environment_arg.getValue()=="SimpleEnvironment") {
         environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
         environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
-    } else if(environment_arg.getValue()=="BottleNeckHallway") {
-        environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
-    } else if(environment_arg.getValue()=="DelayedUncertainty") {
-        environment.reset(new DelayedUncertainty(2,3));
-    } else if(environment_arg.getValue()=="UnitTest") {
-        environment.reset(new UnitTestEnvironment());
-    } else {
+    }
+    // else if(environment_arg.getValue()=="BottleNeckHallway") {
+    //     environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
+    // } else if(environment_arg.getValue()=="DelayedUncertainty") {
+    //     environment.reset(new DelayedUncertainty(2,3));
+    // } else if(environment_arg.getValue()=="UnitTest") {
+    //     environment.reset(new UnitTestEnvironment());
+    // }
+    else {
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
     }
     // print info
-    auto env = std::dynamic_pointer_cast<Environment>(environment);
-    if(env!=nullptr) {
-        DEBUG_OUT(1, "States: " << env->get_states());
-    }
     DEBUG_OUT(1, "Actions: " << environment->get_actions());
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
@@ -571,7 +564,6 @@ tuple<shared_ptr<SearchTree>,
         backup_method.reset(new MonteCarlo());
     } else DEBUG_DEAD_LINE;
     // set up search tree
-    current_state = environment->get_state_handle();
     if(active_arg.getValue()) {
         search_tree.reset(new ActiveTreeSearch(environment,
                                                discount_arg.getValue(),
@@ -585,14 +577,13 @@ tuple<shared_ptr<SearchTree>,
                                                    backup_method,
                                                    get_backup_type()));
     }
-    search_tree->init(current_state);
+    search_tree->init();
     // return
     return make_tuple(search_tree,
                       tree_policy,
                       value_heuristic,
                       backup_method,
-                      environment,
-                      current_state);
+                      environment);
 }
 
 QString header(int argn, char ** args) {

@@ -33,8 +33,6 @@ public:
         void set_value(reward_t val, reward_t val_variance);
         void add_rollout_return(reward_t ret);
         void add_transition();
-        state_handle_t get_state_from_last_visit() const;
-        void set_state_from_last_visit(state_handle_t state);
         reward_t get_rollout_return_sum() const;
         reward_t get_squared_rollout_return_sum() const;
     protected:
@@ -61,10 +59,6 @@ public:
          * The sum of squared returns for all rollouts passing through this
          * node. */
         reward_t squared_return_sum = 0;
-        /**
-         * Holds a state handle to the state from the last time the node was
-         * visited. */
-        state_handle_t state_from_last_visit;
     };
     typedef graph_t::NodeMap<MCTSNodeInfo> mcts_node_info_map_t;
 

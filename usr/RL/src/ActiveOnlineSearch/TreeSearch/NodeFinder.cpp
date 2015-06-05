@@ -20,7 +20,6 @@ namespace node_finder {
     typedef SearchTree::NODE_TYPE            NODE_TYPE;
     typedef SearchTree::node_info_map_t      node_info_map_t;
     typedef SearchTree::action_handle_t      action_handle_t;
-    typedef SearchTree::state_handle_t       state_handle_t;
     typedef SearchTree::observation_handle_t observation_handle_t;
     typedef SearchTree::reward_t             reward_t;
 

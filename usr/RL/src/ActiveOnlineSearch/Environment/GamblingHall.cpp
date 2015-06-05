@@ -144,14 +144,12 @@ GamblingHall::action_container_t GamblingHall::get_actions() {
                 action_handle_t(new GamblingHallAction(1))});
 }
 
-GamblingHall::state_handle_t GamblingHall::get_state_handle() {
-    return state_handle_t(new GamblingHallState(state));
+void GamblingHall::make_current_state_default() {
+    default_state = state;
 }
 
-void GamblingHall::set_state(const state_handle_t & state_handle) {
-    auto new_state = std::dynamic_pointer_cast<const GamblingHallState>(state_handle);
-    DEBUG_EXPECT(0,new_state!=nullptr);
-    state = new_state->state;
+void GamblingHall::reset_state() {
+    state = default_state;
 }
 
 bool GamblingHall::has_terminal_state() const {

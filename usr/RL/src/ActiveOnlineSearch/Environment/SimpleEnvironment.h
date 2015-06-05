@@ -32,10 +32,6 @@ public:
         }
         int observation;
     };
-    struct SimpleEnvironmentState: public State {
-        SimpleEnvironmentState(int state): state(state) {}
-        int state;
-    };
 
     //----members----//
     //      ...      //
@@ -58,13 +54,8 @@ public:
         return action_container_t({action_handle_t(new SimpleEnvironmentAction(0)),
                     action_handle_t(new SimpleEnvironmentAction(1))});
     }
-    virtual state_handle_t get_state_handle() override {
-        return state_handle_t(new SimpleEnvironmentState(state));
-    }
-    virtual void set_state(const state_handle_t & state_handle) override {
-        auto state_ = std::dynamic_pointer_cast<const SimpleEnvironmentState>(state_handle);
-        state = state_->state;
-    }
+    virtual void make_current_state_default() override {default_state = state;}
+    virtual void reset_state() override {state = default_state;}
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return state==1 || state==2;}
     virtual bool is_deterministic() const override {return false;}
@@ -74,6 +65,7 @@ public:
     virtual reward_t min_reward() const override {return 0;}
     virtual bool is_markov() const override {return true;}
 private:
+    int default_state = 0;
     int state = 0;
 };
 

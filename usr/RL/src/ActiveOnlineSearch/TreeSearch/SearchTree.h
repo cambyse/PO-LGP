@@ -58,9 +58,6 @@ protected:
      * Root node of the search tree. */
     node_t root_node = lemon::INVALID;
     /**
-     * Root state of the search tree. */
-    state_handle_t root_state = nullptr;
-    /**
      * Map holding node-specific information of type NodeInfo. */
     node_info_map_t node_info_map;
 
@@ -70,14 +67,13 @@ public:
                double discount,
                std::shared_ptr<node_finder::NodeFinder> node_finder);
     virtual ~SearchTree() = default;
-    virtual void init(const state_handle_t & root_state) override;
+    virtual void init() override;
     /**
      * Calls init() if necessary, then calls next_do() */
     virtual void next() override final;
     virtual void next_do() = 0;
     virtual void prune(const action_handle_t &,
-                       const observation_handle_t &,
-                       const state_handle_t &) override;
+                       const observation_handle_t &) override;
     virtual void toPdf(const char* file_name) const override;
     virtual const graph_t & get_graph() const;
     virtual const node_info_map_t & get_node_info_map() const;

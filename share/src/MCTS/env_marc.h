@@ -123,16 +123,11 @@ public:
         }
         return action_container;
     }
-    virtual state_handle_t get_state_handle() override {
-        return state_handle_t(new InterfaceMarcState(env_marc->get_state()));
+    virtual void make_current_state_default() override {
+        #warning Implement this!
     }
-    virtual void set_state(const state_handle_t & state_handle) override {
-        #warning hack!
+    virtual void reset_state() override {
         env_marc->reset_state();
-        return;
-        auto interface_state = std::dynamic_pointer_cast<const InterfaceMarcState>(state_handle);
-        assert(interface_state!=nullptr);
-        env_marc->set_state(interface_state->state);
     }
     virtual bool has_terminal_state() const override {
         return env_marc->get_info(MCTS_Environment::InfoTag::hasTerminal);
