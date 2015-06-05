@@ -277,56 +277,62 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
 }
 
 CG & CG::compute_values(std::vector<double> values) {
-    update_values(values, input_nodes);
+    update_values(input_nodes, values);
     return *this;
 }
 
 CG & CG::forward_accumulation(std::vector<double> values,
                               std::vector<double> differentials) {
     compute_values(values);
-    update_differentials_forward(differentials, input_nodes);
+    update_differentials_forward(input_nodes, differentials);
     return *this;
 }
 
 CG & CG::reverse_accumulation(std::vector<double> values,
                               std::vector<double> differentials) {
     compute_values(values);
-    update_differentials_reverse(differentials, output_nodes);
+    update_differentials_reverse(output_nodes, differentials);
     return *this;
 }
 
-CG & CG::update_values(std::vector<double> values,
-                       std::vector<node_t> nodes,
+CG & CG::update_values(std::vector<node_t> nodes,
+                       std::vector<double> values,
                        bool input_nodes_only) {
     if(input_nodes_only and !includes(input_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
         return *this;
     }
-    assign_values(values, nodes);
+    if(!values.empty()) {
+        assign_values(values, nodes);
+    }
     propagate_values(VALUES, nodes);
     return *this;
 }
 
-CG & CG::update_differentials_forward(std::vector<double> differentials,
-                                      std::vector<node_t> nodes,
+CG & CG::update_differentials_forward(std::vector<node_t> nodes,
+                                      std::vector<double> differentials,
                                       bool input_nodes_only) {
     if(input_nodes_only and !includes(input_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
         return *this;
     }
-    assign_differentials(differentials, nodes);
+    if(!differentials.empty()) {
+        assign_differentials(differentials, nodes);
+    }
     propagate_values(FORWARD, nodes);
     return *this;
 }
 
-CG & CG::update_differentials_reverse(std::vector<double> differentials,
-                                      std::vector<node_t> nodes,
+CG & CG::update_differentials_reverse(std::vector<node_t> nodes,
+                                      std::vector<double> differentials,
                                       bool output_nodes_only) {
     if(output_nodes_only and !includes(output_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the output nodes.");
         return *this;
     }
-    assign_differentials(differentials, nodes);
+    if(!differentials.empty()) {
+        assign_differentials(differentials, nodes);
+    }
     propagate_values(REVERSE, nodes);
     return *this;
 }
@@ -614,6 +620,43 @@ bool CG::check_graph_structure(bool reset_input_nodes,
     }
 
     return ok;
+}
+
+QString CG::get_node_label(node_t node) const {
+    return node_labels[node];
+}
+
+double CG::get_node_value(node_t node) const {
+    return node_values[node];
+}
+
+double CG::get_node_differential(node_t node) const {
+    return node_differentials[node];
+}
+
+double CG::get_arc_value(arc_t arc) const {
+    return arc_values[arc];
+}
+
+void CG::set_node_label(node_t node, QString label) {
+    node_labels[node] = label;
+}
+
+void CG::set_node_value(node_t node, double value) {
+    node_values[node] = value;
+}
+
+void CG::set_node_function(node_t node, std::vector<QString> variables, function_t function) {
+    node_variables[node] = variables;
+    node_functions[node] = function;
+}
+
+void CG::set_node_differential(node_t node, double value) {
+    node_differentials[node] = value;
+}
+
+void CG::set_arc_value(arc_t arc, double value) {
+    arc_values[arc] = value;
 }
 
 bool CG::includes(std::vector<node_t> nodes, std::vector<node_t> subnodes) {

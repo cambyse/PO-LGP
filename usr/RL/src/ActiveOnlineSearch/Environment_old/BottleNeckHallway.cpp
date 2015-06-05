@@ -21,8 +21,8 @@ BottleNeckHallway::BottleNeckHallway(int length,
     DEBUG_EXPECT(0,max_prob>=0 && max_prob<=1);
 }
 
-BottleNeckHallway::state_reward_pair_t BottleNeckHallway::transition(const state_t & state,
-                                                                     const action_t & action) const {
+BottleNeckHallway::state_reward_pair_t BottleNeckHallway::finite_transition(const state_t & state,
+                                                                            const action_t & action) const {
     if(state>=length-1) {
         // in terminal state (or beyond)
         return state_reward_pair_t(state,0);

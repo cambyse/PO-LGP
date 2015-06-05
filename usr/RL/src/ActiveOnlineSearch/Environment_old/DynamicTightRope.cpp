@@ -26,8 +26,8 @@ DynamicTightRope::DynamicTightRope(int pos, int vel):
     }
 }
 
-DynamicTightRope::state_reward_pair_t DynamicTightRope::transition(const state_t & s,
-                                                                   const action_t & a) const {
+DynamicTightRope::state_reward_pair_t DynamicTightRope::finite_transition(const state_t & s,
+                                                                          const action_t & a) const {
     // position/velocity
     RETURN_TUPLE(int,pos,int,vel) = get_ND_index<2>::from((int)s,{position_n,velocity_n});
     DEBUG_OUT(1,"pos = " << pos << ", vel = " << vel);
