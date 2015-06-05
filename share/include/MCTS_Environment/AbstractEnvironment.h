@@ -32,12 +32,8 @@ public:
         }
         virtual void write(std::ostream &) const = 0;
     };
-    struct State {
-        virtual ~State() = default;
-    };
     typedef std::shared_ptr<const Action> action_handle_t;
     typedef std::shared_ptr<const Observation> observation_handle_t;
-    typedef std::shared_ptr<const State> state_handle_t;
     typedef std::vector<action_handle_t> action_container_t;
     typedef double reward_t;
     typedef std::tuple<observation_handle_t,reward_t> observation_reward_pair_t;
@@ -90,11 +86,12 @@ public:
      * @endcode is. */
     virtual action_container_t get_actions() = 0;
     /**
-     * Get the current state. */
-    virtual state_handle_t get_state_handle() = 0;
+     * Make the current state default. reste_state() will then reset to this
+     * state. */
+    virtual void make_current_state_default() = 0;
     /**
-     * Set the environment's state the the given state. */
-    virtual void set_state(const state_handle_t & state_handle) = 0;
+     * Resets the environment to the default state. */
+    virtual void reset_state() = 0;
     /**
      * Return whether the environment has a terminal state. */
     virtual bool has_terminal_state() const = 0;

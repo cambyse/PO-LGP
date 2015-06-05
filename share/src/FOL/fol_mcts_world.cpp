@@ -82,17 +82,17 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
 
-  return {Handle(NULL), 0.};
+  return {Handle(new Observation(0)), 0.};
 }
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
   MT::Array<Handle> decisions; //tuples of rule and substitution
-  decisions.append(Handle(new Decision(true, NULL, {}))); //the wait decision (true as first argument, no rule, no substitution)
+  decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
   for(Node* rule:rules){
     NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     for(uint s=0;s<subs.d0;s++){
-      decisions.append(Handle(new Decision(false, rule, subs[s]))); //a grounded rule decision (abstract rule with substution)
+        decisions.append(Handle(new Decision(false, rule, subs[s], decisions.N))); //a grounded rule decision (abstract rule with substution)
     }
   }
   if(verbose>2) cout <<"-- # possible decisions: " <<decisions.N <<endl;
@@ -103,7 +103,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
-  NIY;
+    return Handle(new State());
 }
 
 bool FOL_World::is_terminal_state() const{
