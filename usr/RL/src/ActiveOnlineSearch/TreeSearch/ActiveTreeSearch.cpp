@@ -45,7 +45,7 @@ void ActiveTreeSearch::next_do() {
     set<node_t> action_nodes_to_update;
     DEBUG_OUT(1,"Next...");
 
-    // choose observation node at random
+    // choose observation node at random and set environment's state
     vector<node_t> candidate_nodes;
     for(node_it_t node(graph); node!=INVALID; ++node) {
         if(node_info_map[node].type==ACTION_NODE) continue;
@@ -86,42 +86,51 @@ void ActiveTreeSearch::next_do() {
         }
     }
 
-    // choose a random action
-    auto action = util::random_select(environment->get_actions());
+    // // choose a random action
+    // auto action = util::random_select(environment->get_actions());
 
-    for(int i=0; i<2; ++i) {
-        // set environment's state
-        environment->set_state(associated_state[old_observation_node]);
-        // make a transition
-        RETURN_TUPLE(observation_handle_t, observation,
-                     reward_t, reward ) = environment->transition(action);
-        DEBUG_OUT(1,"    (action --> observation) = (" << *action << " --> " << *observation << ")");
-        // find/add action node
-        RETURN_TUPLE(arc_t, to_action_arc,
-                     node_t, action_node,
-                     bool, created_to_action_arc,
-                     bool, created_action_node) = find_or_create_action_node(old_observation_node,
-                                                                             action);
-        // find/add observation node
-        RETURN_TUPLE(arc_t, to_observation_arc,
-                     node_t, new_observation_node,
-                     bool, created_to_observation_arc,
-                     bool, created_observation_node) = find_or_create_observation_node(action_node,
-                                                                                       observation);
-        // increment counts and rewards (init if created)
-        if(created_to_observation_arc) counts[to_observation_arc] = 0;
-        if(created_to_action_arc) {
-            counts[to_action_arc] = 0;
-            reward_sum[to_action_arc] = 0;
-            reward_square_sum[to_action_arc] = 0;
+    for(auto action : environment->get_actions())
+    {
+
+        // create action node for all actions
+        for(action_handle_t a : environment->get_actions()) {
+            find_or_create_action_node(old_observation_node, a);
         }
-        ++counts[to_observation_arc];
-        ++counts[to_action_arc];
-        reward_sum[to_action_arc] += reward;
-        reward_square_sum[to_action_arc] += reward*reward;
-        // update
-        associated_state[new_observation_node] = environment->get_state_handle();
-        action_nodes_to_update.insert(action_node);
+
+        repeat(0) {
+            // set environment's state (only for multiple iterations)
+            environment->set_state(associated_state[old_observation_node]);
+            // make a transition
+            RETURN_TUPLE(observation_handle_t, observation,
+                         reward_t, reward ) = environment->transition(action);
+            DEBUG_OUT(1,"    (action --> observation) = (" << *action << " --> " << *observation << ")");
+            // find/add action node
+            RETURN_TUPLE(arc_t, to_action_arc,
+                         node_t, action_node,
+                         bool, created_to_action_arc,
+                         bool, created_action_node) = find_or_create_action_node(old_observation_node,
+                                                                                 action);
+            // find/add observation node
+            RETURN_TUPLE(arc_t, to_observation_arc,
+                         node_t, new_observation_node,
+                         bool, created_to_observation_arc,
+                         bool, created_observation_node) = find_or_create_observation_node(action_node,
+                                                                                           observation);
+            // increment counts and rewards (init if created)
+            if(created_to_observation_arc) counts[to_observation_arc] = 0;
+            if(created_to_action_arc) {
+                counts[to_action_arc] = 0;
+                reward_sum[to_action_arc] = 0;
+                reward_square_sum[to_action_arc] = 0;
+            }
+            ++counts[to_observation_arc];
+            ++counts[to_action_arc];
+            reward_sum[to_action_arc] += reward;
+            reward_square_sum[to_action_arc] += reward*reward;
+            // update
+            associated_state[new_observation_node] = environment->get_state_handle();
+            action_nodes_to_update.insert(action_node);
+        }
     }
     DEBUG_OUT(1,"...expanded tree");
 

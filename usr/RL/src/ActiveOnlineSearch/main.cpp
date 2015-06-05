@@ -92,7 +92,7 @@ std::cout.\n'WATCH' runs tree search with <n> rollouts per step and performs <s>
 (--step_n <s>) steps. The progress during tree building can be watched at a \
 different level of detail (--progress).\n'EVAL' performs <r> (--run_n <r>) \
 runs with a series of trials for different numbers of rollouts <n>, <n>+<i>, \
-... , <m> (--sample_incr <i> --sample_max <m>) and <s> steps per trial and \
+... , <x> (--sample_incr <i> --sample_max <x>) and <s> steps per trial and \
 prints the mean reward per trial to std::cout.",\
                                                      true, "SAMPLE", "string");
 static TCLAP::ValueArg<std::string> environment_arg( "e", "environment",\
@@ -527,7 +527,7 @@ tuple<shared_ptr<SearchTree>,
     } else if(environment_arg.getValue()=="SimpleEnvironment") {
         environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
-        environment.reset(new GamblingHall(10, 1));
+        environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="BottleNeckHallway") {
         environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
     } else if(environment_arg.getValue()=="DelayedUncertainty") {
