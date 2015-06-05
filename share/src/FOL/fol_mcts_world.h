@@ -66,7 +66,7 @@ struct FOL_World:MCTS_Environment{
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;
   virtual double get_terminal_reward() const;
-  virtual void set_state(const Handle& state);
+  virtual void make_current_state_default() override;
   virtual void reset_state();
 
   virtual bool get_info(InfoTag tag) const;
