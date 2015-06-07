@@ -39,6 +39,10 @@ public:
     virtual action_handle_t recommend_action() const override;
     virtual void init() override;
     virtual void toPdf(const char* file_name) const override;
+    virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
+                                                       const observation_handle_t & observation) override;
+    virtual arc_node_t find_or_create_action_node(const node_t & observation_node,
+                                                  const action_handle_t & action) override;
     virtual arc_node_t add_observation_node(observation_handle_t observation, node_t action_node) override;
     virtual arc_node_t add_action_node(action_handle_t action, node_t observation_node) override;
     virtual void erase_node(node_t) override;

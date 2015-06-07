@@ -397,6 +397,8 @@ bool CG::check_derivatives(std::vector<double> values,
                               " (id" << graph.id(node) << ") is out of bounds (numerical=" <<
                               numerical_derivative << " / analytical=" <<
                               analytical_derivative << ")");
+                DEBUG_WARNING("    (" << values_1[idx] << " - " << values_2[idx] << ") = "
+                              << values_1[idx] - values_2[idx] << " / " << delta);
             }
         }
     }
@@ -436,6 +438,7 @@ double CG::evaluate_node(const node_t & node, TYPE e) {
                 if(node_labels[source_node]==var) {
                     found = true;
                     values.push_back(node_values[source_node]);
+                    break;
                 }
             }
             if(!found) {
@@ -657,6 +660,10 @@ void CG::set_node_differential(node_t node, double value) {
 
 void CG::set_arc_value(arc_t arc, double value) {
     arc_values[arc] = value;
+}
+
+const CG::graph_t & CG::get_graph() const {
+    return graph;
 }
 
 bool CG::includes(std::vector<node_t> nodes, std::vector<node_t> subnodes) {

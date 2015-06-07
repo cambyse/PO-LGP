@@ -20,9 +20,7 @@
 #include "graph_util.h"
 
 #include <MCTS_Environment/AbstractEnvironment.h>
-#include <MCTS_Environment/AbstractFiniteEnvironment.h>
 
-#include "Environment_old/Environment.h"
 #include "Environment/GamblingHall.h"
 #include "ComputationalGraph.h"
 #include "TreeSearch/SearchTree.h"
@@ -393,6 +391,47 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
     EXPECT_EQ(v1,v2);
 }
 
+TEST(ActiveOnlineSearch, ComputationalGraphDerivatives) {
+
+    typedef ComputationalGraph::node_t node_t;
+    typedef lemon::ListDigraph graph_t;
+
+    // use default constructor here so the class manages its own graph object
+    vector<double> values;
+    for(bool check : {false,true}) {
+        ComputationalGraph cg;
+
+        // create the graph
+        node_t a_node = cg.add_node("a", {}, [](vector<double> v)->double{return 0;});
+        node_t b_node = cg.add_node("b", {"a"}, [](vector<double> v)->double{
+                DEBUG_OUT(1,"b:" << v[0]);
+                return v[0];
+            });
+        node_t c_node = cg.add_node("c", {"a","b"}, [](vector<double> v)->double{
+                DEBUG_OUT(1,"c:" << v[0] << "+" << v[1]);
+                return v[0]+v[1];
+            });
+        cg.add_arc(a_node, b_node, [](vector<double> v)->double{return 1;});
+        cg.add_arc(a_node, c_node, [](vector<double> v)->double{return 1;});
+        cg.add_arc(b_node, c_node, [](vector<double> v)->double{return 1;});
+
+        cg.check_graph_structure(true,true);
+        cg.compute_values({1});
+        if(check) cg.check_derivatives();
+        //cg.plot_graph("graph.pdf");
+        int idx = 0;
+        for(graph_t::NodeIt node(cg.get_graph()); node!=lemon::INVALID; ++node) {
+            DEBUG_OUT(1,"node " << cg.get_node_label(node) << "=" << cg.get_node_value(node));
+            if(check) {
+                EXPECT_EQ(cg.get_node_value(node),values[idx]);
+            } else {
+                values.push_back(cg.get_node_value(node));
+            }
+            ++idx;
+        }
+    }
+}
+
 graph_util::GraphPropagation<lemon::ListDigraph>
 make_graph_for_graph_propagation_tests(lemon::ListDigraph & graph,
                                        lemon::ListDigraph::NodeMap<QString> & node_names) {
@@ -570,76 +609,68 @@ TEST(GraphPropagation, ProcessingOrder) {
     EXPECT_EQ(node_chain,"1 2 3 4 5 6 7 8 9 10 11 ") << "node_chain='" << node_chain << "'";
 }
 
-class ConcreteEnvironment: public AbstractEnvironment {
+class TestEnvironment: public AbstractEnvironment {
+    //----typedefs/classes----//
 public:
-    ConcreteEnvironment() = default;
-    virtual ~ConcreteEnvironment() = default;
+    struct TestAction: public Action {
+        TestAction(int action): action(action) {}
+        virtual bool operator==(const Action & other) const override {
+            auto a = dynamic_cast<const TestAction *>(&other);
+            return a!=nullptr && a->action==action;
+        }
+        virtual size_t get_hash() const override {
+            return std::hash<int>()(action);
+        }
+        virtual void write(std::ostream & out) const override {
+            out << action;
+        }
+        int action;
+    };
+    struct TestObservation: public Observation {
+        TestObservation(int observation): observation(observation) {}
+        virtual bool operator==(const Observation & other) const override {
+            auto o = dynamic_cast<const TestObservation *>(&other);
+            return o!=nullptr && o->observation==observation;
+
+        }
+        virtual size_t get_hash() const override {
+            return std::hash<int>()(observation);
+        }
+        virtual void write(std::ostream & out) const override {
+            out << observation;
+        }
+        int observation;
+    };
+    //----members----//
+    int state = 0;
+    int default_state = 0;
+    //----methods----//
+public:
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        return observation_reward_pair_t(observation_handle_t(),reward_t());
+        auto test_action = std::dynamic_pointer_cast<const TestAction>(action_handle);
+        EXPECT_NE(test_action,nullptr);
+        int action = test_action->action;
+        if(action==0 || state==1) {
+            return observation_reward_pair_t(observation_handle_t(new TestObservation(state)), 0);
+        } else {
+            state = (state+1)%2;
+            return observation_reward_pair_t(observation_handle_t(new TestObservation(state)), 1);
+        }
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t()});
+        return action_container_t({action_handle_t(new TestAction(0)),
+                    action_handle_t(new TestAction(1))});
     }
-    virtual state_handle_t get_state_handle() override {return state_handle_t();}
-    virtual void set_state(const state_handle_t & state_handle) override {return;}
+    virtual void make_current_state_default() override {default_state = state;}
+    virtual void reset_state() override {state = default_state;}
     virtual bool has_terminal_state() const override {return false;}
     virtual bool is_terminal_state() const override {return false;}
     virtual bool is_deterministic() const override {return true;}
-    virtual bool has_max_reward() const override {return false;}
-    virtual reward_t max_reward() const override {return reward_t();}
-    virtual bool has_min_reward() const override {return false;}
-    virtual reward_t min_reward() const override {return reward_t();}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
     virtual bool is_markov() const override {return true;}
-};
-
-class FiniteEnvironment: public AbstractFiniteEnvironment<int,int> {
-public:
-    FiniteEnvironment(): AbstractFiniteEnvironment({0,1},{0,1}) {}
-    virtual state_reward_pair_t finite_transition(const state_t & state,
-                                                  const action_t & action) const override {
-        if(action==0) {
-            return state_reward_pair_t(state,0);
-        } else {
-            return state_reward_pair_t((state+1)%2,1);
-        }
-    }
-    virtual bool has_terminal_state() const override {return false;}
-    virtual bool is_terminal_state() const override {return false;}
-    virtual bool is_deterministic() const override {return true;}
-    virtual bool has_max_reward() const override {return true;}
-    virtual reward_t max_reward() const override {return 1;}
-    virtual bool has_min_reward() const override {return true;}
-    virtual reward_t min_reward() const override {return 0;}
-};
-
-TEST(MCTS, DeriveAbstractEnvironment) {
-    ConcreteEnvironment env;
-    FiniteEnvironment f_env;
-    DEBUG_OUT(1,"state/action 0/0 --> " << f_env.finite_transition(0,0).first);
-    DEBUG_OUT(1,"state/action 0/1 --> " << f_env.finite_transition(0,1).first);
-    DEBUG_OUT(1,"state/action 1/0 --> " << f_env.finite_transition(1,0).first);
-    DEBUG_OUT(1,"state/action 1/1 --> " << f_env.finite_transition(1,1).first);
-}
-
-class MockEnvironment: public Environment {
-public:
-    MockEnvironment(): Environment({0,1},{0,1}) {}
-    virtual ~MockEnvironment() = default;
-    virtual state_reward_pair_t finite_transition(const state_t & state,
-                                                  const action_t & action) const override {
-        if(action==0 || state==1) {
-            return state_reward_pair_t(state,0);
-        } else {
-            return state_reward_pair_t((state+1)%2,1);
-        }
-    }
-    bool has_terminal_state() const override {return false;}
-    bool is_terminal_state(state_t) const override {return false;}
-    virtual bool is_deterministic() const override {return true;}
-    virtual bool has_max_reward() const override {return true;}
-    virtual reward_t max_reward() const override {return 1;}
-    virtual bool has_min_reward() const override {return true;}
-    virtual reward_t min_reward() const override {return 0;}
 };
 
 class MockSearchTree: public SearchTree {
@@ -671,7 +702,7 @@ public:
                 action_sequence_t short_action_sequence = action_sequence_list.front();
                 DEBUG_OUT(1,"Expand action sequence of length " << short_action_sequence.size());
                 for(action_handle_t action : action_list) {
-                    DEBUG_OUT(1,"    add action " << Environment::name(*environment,action));
+                    DEBUG_OUT(1,"    add action " << *action);
                     action_sequence_t short_action_sequence_copy = short_action_sequence;
                     short_action_sequence_copy.push_back(action);
                     DEBUG_OUT(1,"        now has length " << short_action_sequence_copy.size());
@@ -687,7 +718,7 @@ public:
             DEBUG_OUT(1,"Have " << action_sequence_list.size() << " action sequences");
             for(action_sequence_t action_sequence : action_sequence_list) {
                 DEBUG_OUT(1,"Next action sequence (length=" << action_sequence.size() << "):");
-                environment->set_state(root_state);
+                environment->reset_state();
                 trajectory_t trajectory;
                 for(action_handle_t action : action_sequence) {
                     observation_handle_t observation;
@@ -696,8 +727,8 @@ public:
                     transition_t transition(action,observation);
                     trajectory.push_back(transition);
                     DEBUG_OUT(1,"        <"
-                              << Environment::name(*environment,action) << ","
-                              << Environment::name(*environment,observation) << ">"
+                              << *action << ","
+                              << *observation << ">"
                         );
                 }
                 trajectory_list.push_back(trajectory);
@@ -713,8 +744,8 @@ public:
                 observation_handle_t observation;
                 t(action,observation) = transition;
                 DEBUG_OUT(1,"        <"
-                          << Environment::name(*environment,action) << ","
-                          << Environment::name(*environment,observation) << ">"
+                          << *action << ","
+                          << *observation << ">"
                     );
                 bool new_arc, new_node;
                 // add action node
@@ -730,7 +761,7 @@ public:
             }
         }
     }
-    virtual action_handle_t recommend_action() const {return action_handle_t();}
+    virtual action_handle_t recommend_action() const override {return action_handle_t();}
 };
 
 TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
@@ -750,14 +781,14 @@ TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
     typedef node_finder::FullDAG::depth_t depth_t;
 
     // set up everything
-    auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
+    auto environment = std::shared_ptr<TestEnvironment>(new TestEnvironment);
     graph_t graph;
     node_info_map_t node_info_map(graph);
     node_finder::FullDAG finder;
     finder.init(graph,node_info_map);
 
     // initialize
-    MockEnvironment::reward_t reward;
+    TestEnvironment::reward_t reward;
     action_handle_t action = *(environment->get_actions().begin());
     observation_handle_t observation;
     return_tuple::t(observation,reward) = environment->transition(action);
@@ -815,13 +846,12 @@ TEST(SearchTree, NodeFinder) {
         return_tuple::t(nodes_1, arcs_1, nodes_2, arcs_2, node_finder) = tup;
 
         // setup environment and search tree
-        auto environment = std::shared_ptr<MockEnvironment>(new MockEnvironment);
+        auto environment = std::shared_ptr<TestEnvironment>(new TestEnvironment);
         std::shared_ptr<MockSearchTree> mock_search_tree(new MockSearchTree(environment,
                                                                             0.9,
                                                                             node_finder));
         std::shared_ptr<AbstractSearchTree> search_tree(mock_search_tree);
-        AbstractEnvironment::state_handle_t state = environment->get_state_handle();
-        search_tree->init(environment->get_states()[0]);
+        search_tree->init();
 
         // build tree
         search_tree->next();
@@ -831,15 +861,15 @@ TEST(SearchTree, NodeFinder) {
         // getchar();
 
         // perform transition
-        environment->set_state(state);
+        environment->reset_state();
         AbstractEnvironment::action_handle_t action = environment->get_actions()[0];
         AbstractEnvironment::observation_handle_t observation;
         AbstractEnvironment::reward_t reward;
         t(observation,reward) = environment->transition(action);
-        state = environment->get_state_handle();
+        environment->make_current_state_default();
 
         // prune tree
-        search_tree->prune(action, observation, state);
+        search_tree->prune(action, observation);
 
         // build tree anew
         search_tree->next();
@@ -855,14 +885,14 @@ public:
     struct DepthAction: public Action {
         DepthAction(int action): action(action) {}
         virtual ~DepthAction() = default;
-        virtual bool operator==(const Action & other) const {
+        virtual bool operator==(const Action & other) const override {
             auto depth_action = dynamic_cast<const DepthAction*>(&other);
             return depth_action!=nullptr && depth_action->action==action;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(action);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << action;
         }
         int action;
@@ -870,26 +900,22 @@ public:
     struct DepthObservation: public Observation {
         DepthObservation(int observation): observation(observation) {}
         virtual ~DepthObservation() = default;
-        virtual bool operator==(const Observation & other) const {
+        virtual bool operator==(const Observation & other) const override {
             auto depth_observation = dynamic_cast<const DepthObservation*>(&other);
             return depth_observation!=nullptr && depth_observation->observation==observation;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(observation);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << observation;
         }
         int observation;
     };
-    struct DepthState: public State {
-        DepthState(int s): state(s) {}
-        int state;
-    };
 public:
-    DepthEnvironment(int reward_depth): reward_depth(reward_depth), state(0) {}
+    DepthEnvironment(int reward_depth): reward_depth(reward_depth){}
     virtual ~DepthEnvironment() = default;
-    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto depth_action = std::dynamic_pointer_cast<const DepthAction>(action_handle);
         EXPECT_NE(nullptr,depth_action);
         ++state;
@@ -898,30 +924,28 @@ public:
         return observation_reward_pair_t(observation_handle_t(new DepthObservation(state)),
                                          state>=reward_depth?1:0);
     }
-    virtual action_container_t get_actions() {
+    virtual action_container_t get_actions() override {
         return action_container_t({action_handle_t(new DepthAction(-1)),
                     action_handle_t(new DepthAction(1))});
     }
-    virtual state_handle_t get_state_handle() {
-        return std::shared_ptr<State>(new DepthState(state));
+    virtual void make_current_state_default() override {
+        default_state = state;
     }
-    virtual void set_state(const state_handle_t & state_handle) {
-        auto depth_state = std::dynamic_pointer_cast<const DepthState>(state_handle);
-        EXPECT_NE(nullptr,depth_state);
-        state = depth_state->state;
-        DEBUG_OUT(1,"Set state to " << state);
+    virtual void reset_state() override {
+        state = default_state;
     }
-    virtual bool has_terminal_state() const {return false;}
-    virtual bool is_terminal_state() const {return false;}
-    virtual bool is_deterministic() const {return true;}
-    virtual bool has_max_reward() const {return true;}
-    virtual reward_t max_reward() const {return 1;}
-    virtual bool has_min_reward() const {return true;}
-    virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return true;}
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual bool is_markov() const override {return true;}
 private:
     int reward_depth;
-    int state;
+    int state = 0;
+    int default_state = 0;
 };
 
 TEST(MonteCarloTreeSearch, PlainTree) {
@@ -990,14 +1014,14 @@ public:
     struct LineAction: public Action {
         LineAction(int action): action(action) {}
         virtual ~LineAction() = default;
-        virtual bool operator==(const Action & other) const {
+        virtual bool operator==(const Action & other) const override {
             auto line_action = dynamic_cast<const LineAction*>(&other);
             return line_action!=nullptr && line_action->action==action;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(action);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << action;
         }
         int action;
@@ -1005,26 +1029,22 @@ public:
     struct LineObservation: public Observation {
         LineObservation(int observation): observation(observation) {}
         virtual ~LineObservation() = default;
-        virtual bool operator==(const Observation & other) const {
+        virtual bool operator==(const Observation & other) const override {
             auto line_observation = dynamic_cast<const LineObservation*>(&other);
             return line_observation!=nullptr && line_observation->observation==observation;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(observation);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << observation;
         }
         int observation;
     };
-    struct LineState: public State {
-        LineState(int s): state(s) {}
-        int state;
-    };
 public:
-    LineEnvironment(int line_width): line_width(line_width), state(0) {}
+    LineEnvironment(int line_width): line_width(line_width) {}
     virtual ~LineEnvironment() = default;
-    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto line_action = std::dynamic_pointer_cast<const LineAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         state += line_action->action;
@@ -1033,31 +1053,29 @@ public:
         DEBUG_OUT(1,"Transition to " << state);
         return observation_reward_pair_t(observation_handle_t(new LineObservation(state)), state);
     }
-    virtual action_container_t get_actions() {
+    virtual action_container_t get_actions() override {
         return action_container_t({action_handle_t(new LineAction(-1)),
                     action_handle_t(new LineAction(0)),
                     action_handle_t(new LineAction(1))});
     }
-    virtual state_handle_t get_state_handle() {
-        return std::shared_ptr<State>(new LineState(state));
+    virtual void make_current_state_default() override {
+        default_state = state;
     }
-    virtual void set_state(const state_handle_t & state_handle) {
-        auto line_state = std::dynamic_pointer_cast<const LineState>(state_handle);
-        EXPECT_NE(nullptr,line_state);
-        state = line_state->state;
-        DEBUG_OUT(1,"Set state to " << state);
+    virtual void reset_state() override {
+        state = default_state;
     }
-    virtual bool has_terminal_state() const {return true;}
-    virtual bool is_terminal_state() const {return state==line_width;}
-    virtual bool is_deterministic() const {return true;}
-    virtual bool has_max_reward() const {return false;}
-    virtual reward_t max_reward() const {return 0;}
-    virtual bool has_min_reward() const {return true;}
-    virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return true;}
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==line_width;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return false;}
+    virtual reward_t max_reward() const override {return 0;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual bool is_markov() const override {return true;}
 private:
     int line_width;
-    int state;
+    int state = 0;
+    int default_state = 0;
 };
 
 TEST(MonteCarloTreeSearch, NodeFinder) {
@@ -1156,14 +1174,14 @@ public:
     struct FiniteLineAction: public Action {
         FiniteLineAction(int action): action(action) {}
         virtual ~FiniteLineAction() = default;
-        virtual bool operator==(const Action & other) const {
+        virtual bool operator==(const Action & other) const override {
             auto line_action = dynamic_cast<const FiniteLineAction*>(&other);
             return line_action!=nullptr && line_action->action==action;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(action);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << action;
         }
         int action;
@@ -1171,26 +1189,22 @@ public:
     struct FiniteLineObservation: public Observation {
         FiniteLineObservation(int observation): observation(observation) {}
         virtual ~FiniteLineObservation() = default;
-        virtual bool operator==(const Observation & other) const {
+        virtual bool operator==(const Observation & other) const override {
             auto line_observation = dynamic_cast<const FiniteLineObservation*>(&other);
             return line_observation!=nullptr && line_observation->observation==observation;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(observation);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << observation;
         }
         int observation;
     };
-    struct FiniteLineState: public State {
-        FiniteLineState(int s): state(s) {}
-        int state;
-    };
 public:
-    FiniteLineEnvironment(int line_width): line_width(line_width), state(0) {}
+    FiniteLineEnvironment(int line_width): line_width(line_width) {}
     virtual ~FiniteLineEnvironment() = default;
-    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto line_action = std::dynamic_pointer_cast<const FiniteLineAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         //state += (line_action->action>0?1:0);
@@ -1201,31 +1215,29 @@ public:
         DEBUG_OUT(1,"Transition to " << state);
         return observation_reward_pair_t(observation_handle_t(new FiniteLineObservation(state)), reward);
     }
-    virtual action_container_t get_actions() {
+    virtual action_container_t get_actions() override {
         return action_container_t({action_handle_t(new FiniteLineAction(-1)),
                     action_handle_t(new FiniteLineAction(0)),
                     action_handle_t(new FiniteLineAction(1))});
     }
-    virtual state_handle_t get_state_handle() {
-        return std::shared_ptr<State>(new FiniteLineState(state));
+    virtual void make_current_state_default() override {
+        default_state = state;
     }
-    virtual void set_state(const state_handle_t & state_handle) {
-        auto line_state = std::dynamic_pointer_cast<const FiniteLineState>(state_handle);
-        EXPECT_NE(nullptr,line_state);
-        state = line_state->state;
-        DEBUG_OUT(1,"Set state to " << state);
+    virtual void reset_state() override {
+        state = default_state;
     }
-    virtual bool has_terminal_state() const {return true;}
-    virtual bool is_terminal_state() const {return state==line_width;}
-    virtual bool is_deterministic() const {return true;}
-    virtual bool has_max_reward() const {return true;}
-    virtual reward_t max_reward() const {return 1;}
-    virtual bool has_min_reward() const {return true;}
-    virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return true;}
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==line_width;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual bool is_markov() const override {return true;}
 private:
     int line_width;
-    int state;
+    int state = 0;
+    int default_state = 0;
 };
 
 TEST(MonteCarloTreeSearch, Backup) {
@@ -1301,14 +1313,14 @@ public:
     struct StochasticFiniteLineAction: public Action {
         StochasticFiniteLineAction(int action): action(action) {}
         virtual ~StochasticFiniteLineAction() = default;
-        virtual bool operator==(const Action & other) const {
+        virtual bool operator==(const Action & other) const override {
             auto line_action = dynamic_cast<const StochasticFiniteLineAction*>(&other);
             return line_action!=nullptr && line_action->action==action;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(action);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << action;
         }
         int action;
@@ -1316,26 +1328,22 @@ public:
     struct StochasticFiniteLineObservation: public Observation {
         StochasticFiniteLineObservation(int observation): observation(observation) {}
         virtual ~StochasticFiniteLineObservation() = default;
-        virtual bool operator==(const Observation & other) const {
+        virtual bool operator==(const Observation & other) const override {
             auto line_observation = dynamic_cast<const StochasticFiniteLineObservation*>(&other);
             return line_observation!=nullptr && line_observation->observation==observation;
         }
-        virtual size_t get_hash() const {
+        virtual size_t get_hash() const override {
             return std::hash<int>()(observation);
         }
-        virtual void write(std::ostream & out) const {
+        virtual void write(std::ostream & out) const override {
             out << observation;
         }
         int observation;
     };
-    struct StochasticFiniteLineState: public State {
-        StochasticFiniteLineState(int s): state(s) {}
-        int state;
-    };
 public:
-    StochasticFiniteLineEnvironment(int line_width): line_width(line_width), state(0) {}
+    StochasticFiniteLineEnvironment(int line_width): line_width(line_width) {}
     virtual ~StochasticFiniteLineEnvironment() = default;
-    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) {
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto line_action = std::dynamic_pointer_cast<const StochasticFiniteLineAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         //state += (line_action->action>0?1:0);
@@ -1349,31 +1357,29 @@ public:
         DEBUG_OUT(1,"Transition to " << state);
         return observation_reward_pair_t(observation_handle_t(new StochasticFiniteLineObservation(state)), reward);
     }
-    virtual action_container_t get_actions() {
+    virtual action_container_t get_actions() override {
         return action_container_t({action_handle_t(new StochasticFiniteLineAction(-1)),
                     action_handle_t(new StochasticFiniteLineAction(0)),
                     action_handle_t(new StochasticFiniteLineAction(1))});
     }
-    virtual state_handle_t get_state_handle() {
-        return std::shared_ptr<State>(new StochasticFiniteLineState(state));
+    virtual void make_current_state_default() override {
+        default_state = state;
     }
-    virtual void set_state(const state_handle_t & state_handle) {
-        auto line_state = std::dynamic_pointer_cast<const StochasticFiniteLineState>(state_handle);
-        EXPECT_NE(nullptr,line_state);
-        state = line_state->state;
-        DEBUG_OUT(1,"Set state to " << state);
+    virtual void reset_state() override {
+        state = default_state;
     }
-    virtual bool has_terminal_state() const {return true;}
-    virtual bool is_terminal_state() const {return state==line_width;}
-    virtual bool is_deterministic() const {return false;}
-    virtual bool has_max_reward() const {return true;}
-    virtual reward_t max_reward() const {return 1;}
-    virtual bool has_min_reward() const {return true;}
-    virtual reward_t min_reward() const {return 0;}
-    virtual bool is_markov() const {return true;}
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==line_width;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual bool is_markov() const override {return true;}
 private:
     int line_width;
-    int state;
+    int state = 0;
+    int default_state = 0;
 };
 
 /**
@@ -1562,13 +1568,12 @@ TEST(ActiveTreeSearch, SimpleValueCheck) {
     MockActiveTreeSearch search(environment,
                                 1,
                                 std::shared_ptr<node_finder::NodeFinder>(new node_finder::PlainTree()));
-    for(int i=0; i<30; ++i) {
+    for(int i=0; i<10; ++i) {
         search.next();
         // visual output
-
-        //getchar();
+        search.toPdf("graph.pdf");
+        getchar();
     }
-    search.toPdf("graph.pdf");
     // checks
     typedef MockActiveTreeSearch::graph_t graph_t;
     typedef MockActiveTreeSearch::node_t node_t;
@@ -1630,6 +1635,7 @@ TEST(ActiveTreeSearch, SimpleValueCheck) {
     }
 }
 
+#if 0
 TEST(ActiveTreeSearch, Test) {
     auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
     ActiveTreeSearch search(environment,
@@ -1643,3 +1649,4 @@ TEST(ActiveTreeSearch, Test) {
     }
     search.toPdf("graph.pdf");
 }
+#endif

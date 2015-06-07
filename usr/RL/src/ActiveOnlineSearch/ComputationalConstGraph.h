@@ -235,6 +235,7 @@ public:
     virtual void set_node_function(node_t, std::vector<QString>, function_t);
     virtual void set_node_differential(node_t,double);
     virtual void set_arc_value(arc_t,double);
+    virtual const graph_t & get_graph() const;
 private:
     /**
      * Propagate values/differentials from changed nodes.
