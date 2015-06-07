@@ -16,7 +16,6 @@ public:
         virtual size_t get_hash() const override;
         virtual void write(std::ostream &) const override;
     };
-    struct TemplateState: public State {};
 
     //----members----//
     //      ...      //
@@ -25,8 +24,8 @@ public:
 public:
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override;
     virtual action_container_t get_actions() override;
-    virtual state_handle_t get_state_handle() override;
-    virtual void set_state(const state_handle_t & state_handle) override;
+    virtual void make_current_state_default() override;
+    virtual void reset_state() override;
     virtual bool has_terminal_state() const override;
     virtual bool is_terminal_state() const override;
     virtual bool is_deterministic() const override;
