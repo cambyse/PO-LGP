@@ -47,8 +47,6 @@ struct MCTS_Environment {
     /// Return whether the current state is a terminal state
     virtual bool is_terminal_state() const = 0;
 
-    virtual double get_terminal_reward() const { return 0.; }
-
     /// Set the environment's state to the given state -- DEBATABLE!
     virtual void set_state(const Handle& state) = 0;
 
