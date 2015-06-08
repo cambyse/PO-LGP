@@ -46,7 +46,7 @@ struct FOL_World:MCTS_Environment{
   double T_real;///< real time so far;
   double R_total;
   uint Ndecisions;
-  bool deadEnd;
+  bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
@@ -65,7 +65,6 @@ struct FOL_World:MCTS_Environment{
   virtual const std::vector<Handle> get_actions();
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;
-  virtual double get_terminal_reward() const;
   virtual void make_current_state_default() override;
   virtual void reset_state();
 

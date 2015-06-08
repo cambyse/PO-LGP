@@ -47,8 +47,6 @@ struct MCTS_Environment {
     /// Return whether the current state is a terminal state
     virtual bool is_terminal_state() const = 0;
 
-    virtual double get_terminal_reward() const { return 0.; }
-
     /// Makes the current state the future start state set by reset_state().
     virtual void make_current_state_default() = 0;
 

@@ -48,7 +48,7 @@ FOL_World::~FOL_World(){
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
   double reward=0.;
   T_step++;
-  reward -= 0.1;
+  reward -= 0.1; //cost per step
 
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
@@ -73,7 +73,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
-      reward -= w;
+      reward -= w; //cost per real time
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->getValueType()==typeid(double)){
@@ -123,13 +123,19 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
 #endif
 
+  //-- check for terminal
+  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+
+  if(deadEnd) reward -= 100.;
+  if(successEnd) reward += 100.;
+
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
   fil <<"--\n  T_step=" <<T_step;
   fil <<"\n  decision="; d->write(fil);
   fil <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}");
   fil <<"\n  reward=" <<reward <<endl;
 
-  reward=0;
+  //reward=0.;
   R_total += reward;
 
   return {Handle(new Observation(decisionObservation)), reward};
@@ -161,30 +167,18 @@ bool FOL_World::is_terminal_state() const{
     if(verbose>0) cout <<"************* FOL_World: DEAD END STATE (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
     (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
-    double r=get_terminal_reward();
-    (*((ofstream*)&fil)) <<"\n  terminal reward=" <<r;
     (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
     return true;
   }
   //-- test the terminal state
-  if(allFactsHaveEqualsInScope(*state, *terminal)){
-    if(verbose>0) cout <<"************* FOL_World: TERMINAL STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
+  if(successEnd){
+    if(verbose>0) cout <<"************* FOL_World: SUCCESS STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
-    (*((ofstream*)&fil)) <<"--\n  TERMINAL STATE";
-    double r=get_terminal_reward();
-    (*((ofstream*)&fil)) <<"\n  terminal reward=" <<r;
+    (*((ofstream*)&fil)) <<"--\n  SUCCESS STATE";
     (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
     return true;
   }
   return false;
-}
-
-double FOL_World::get_terminal_reward() const {
-  double r=0.;
-  r -= T_real;
-  r -= 0.1 * T_step;
-  if(deadEnd) r-=100;
-  return r;
 }
 
 void FOL_World::make_current_state_default() {
@@ -197,6 +191,7 @@ void FOL_World::reset_state(){
   T_real=0.;
   R_total=0.;
   deadEnd=false;
+  successEnd=false;
   Ndecisions=0;
 #if 1
   KB.checkConsistency();
