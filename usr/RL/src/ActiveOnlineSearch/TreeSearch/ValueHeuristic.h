@@ -11,7 +11,6 @@ namespace value_heuristic {
     typedef MonteCarloTreeSearch::node_t               node_t;
     typedef AbstractEnvironment::action_handle_t       action_handle_t;
     typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
-    typedef AbstractEnvironment::state_handle_t        state_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
@@ -30,7 +29,6 @@ namespace value_heuristic {
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
         virtual void add_value_estimate(const node_t & state_node,
-                                        const state_handle_t & state,
                                         mcts_node_info_map_t & mcts_node_info_map) const = 0;
     };
 
@@ -39,7 +37,6 @@ namespace value_heuristic {
     class Zero: public ValueHeuristic {
     public:
         virtual void add_value_estimate(const node_t & state_node,
-                                        const state_handle_t & state,
                                         mcts_node_info_map_t & mcts_node_info_map) const override;
     };
 
@@ -53,7 +50,6 @@ namespace value_heuristic {
          * or infinite until reaching a terminal state. */
         Rollout(int rollout_length = -1);
         virtual void add_value_estimate(const node_t & state_node,
-                                        const state_handle_t & state,
                                         mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         int rollout_length;

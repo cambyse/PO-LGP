@@ -19,7 +19,6 @@ namespace value_heuristic {
     }
 
     void Zero::add_value_estimate(const node_t & state_node,
-                                  const state_handle_t &,
                                   mcts_node_info_map_t & mcts_node_info_map) const {
         mcts_node_info_map[state_node].add_rollout_return(0);
         // note: instead of adding zero we can as well leave the value unchanged
@@ -28,8 +27,9 @@ namespace value_heuristic {
     Rollout::Rollout(int rollout_length): rollout_length(rollout_length) {}
 
     void Rollout::add_value_estimate(const node_t & state_node,
-                                     const state_handle_t & start_state,
                                      mcts_node_info_map_t & mcts_node_info_map) const {
+
+        bool start_state_is_terminal = environment->is_terminal_state();
 
         // Do rollout of specified length (rollout_length).
         int length = rollout_length;
@@ -46,8 +46,6 @@ namespace value_heuristic {
         reward_t discounted_return = 0;
         double discount_factor = discount;
         int k=0;
-        //DEBUG_OUT(1,"Rollout from state '" << Environment::name(*environment,start_state) << "'");
-        environment->set_state(start_state);
         while((length<0 || k<length) && !environment->is_terminal_state()) {
             // select action uniformly from available actions
             action = util::random_select(environment->get_actions());
@@ -58,27 +56,23 @@ namespace value_heuristic {
             // update counter and discount factor
             ++k;
             discount_factor*=discount;
-            // DEBUG_OUT(2,"    action '" << Environment::name(*environment,action) <<
-            //           "'	--> state '" << Environment::name(*environment,environment->get_state_handle()) << "':	r=" << reward <<
-            //           "	R=" << discounted_return << "	d=" << discount_factor);
         }
         mcts_node_info_map[state_node].add_rollout_return(discounted_return);
-
 
         auto rollout_return_sum = mcts_node_info_map[state_node].get_rollout_return_sum();
         auto squared_rollout_return_sum = mcts_node_info_map[state_node].get_squared_rollout_return_sum();
         auto rollout_counts = mcts_node_info_map[state_node].get_rollout_counts();
         DEBUG_EXPECT(0,rollout_counts>=1);
         if(rollout_counts==1) {
-            environment->set_state(start_state);
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
-                                                     environment->is_terminal_state()?
-                                                     0:
-                                                     std::numeric_limits<double>::infinity());
+                                                     start_state_is_terminal?0:std::numeric_limits<double>::infinity());
         } else {
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
                                                      (rollout_counts/(rollout_counts-1))*(squared_rollout_return_sum/rollout_counts-pow(rollout_return_sum/rollout_counts,2)));
         }
+#define FORCE_DEBUG_LEVEL 1
+        if(discounted_return!=0)
+            DEBUG_OUT(1,"rollout return: " << discounted_return);
     }
 
 } // end namespace value_heuristic

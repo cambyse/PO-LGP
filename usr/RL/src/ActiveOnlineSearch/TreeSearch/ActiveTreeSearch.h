@@ -23,7 +23,6 @@ protected:
     graph_t c_graph;
     node_t c_root_node = lemon::INVALID;
     graph_t::NodeMap<VariableInfo> variable_info_map;
-    graph_t::NodeMap<state_handle_t> associated_state;
     graph_t::NodeMap<node_t> base_node;
     graph_t::ArcMap<int> counts;
     graph_t::ArcMap<reward_t> reward_sum;
@@ -38,7 +37,7 @@ public:
     virtual ~ActiveTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
-    virtual void init(const state_handle_t & root_state) override;
+    virtual void init() override;
     virtual void toPdf(const char* file_name) const override;
     virtual arc_node_t add_observation_node(observation_handle_t observation, node_t action_node) override;
     virtual arc_node_t add_action_node(action_handle_t action, node_t observation_node) override;

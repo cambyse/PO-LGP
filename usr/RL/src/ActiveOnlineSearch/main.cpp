@@ -21,13 +21,13 @@
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
-#include "Environment_old/TightRope.h"
-#include "Environment_old/DynamicTightRope.h"
-#include "Environment_old/UnitTestEnvironment.h"
+//#include "Environment_old/TightRope.h"
+//#include "Environment_old/DynamicTightRope.h"
+//#include "Environment_old/UnitTestEnvironment.h"
 #include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
-#include "Environment_old/BottleNeckHallway.h"
-#include "Environment_old/DelayedUncertainty.h"
+//#include "Environment_old/BottleNeckHallway.h"
+//#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 
 #include <omp.h>
@@ -54,11 +54,9 @@ using namespace backup_method;
 
 typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
-typedef AbstractEnvironment::state_handle_t       state_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
-static const std::set<std::string> mode_set = {"SAMPLE",
-                                               "WATCH",
+static const std::set<std::string> mode_set = {"WATCH",
                                                "EVAL"};
 static const std::set<std::string> environment_set = {"TightRope",
                                                       "DynamicTightRope",
@@ -88,15 +86,13 @@ static const std::set<std::string> tree_policy_set = {"UCB1",
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
-                                                     "Mode to use "+util::container_to_str(mode_set,", ","(",")")+".\n'SAMPLE' takes <n> (--sample_n <n>) samples for different state-action \
-pairs from the environment <e> (--environment <e>) and prints the data to \
-std::cout.\n'WATCH' runs tree search with <n> rollouts per step and performs <s> \
+                                                     "Mode to use "+util::container_to_str(mode_set,", ","(",")")+".\n'WATCH' runs tree search with <n> rollouts per step and performs <s> \
 (--step_n <s>) steps. The progress during tree building can be watched at a \
 different level of detail (--progress).\n'EVAL' performs <r> (--run_n <r>) \
 runs with a series of trials for different numbers of rollouts <n>, <n>+<i>, \
 ... , <x> (--sample_incr <i> --sample_max <x>) and <s> steps per trial and \
 prints the mean reward per trial to std::cout.",\
-                                                     true, "SAMPLE", "string");
+                                                     true, "WATCH", "string");
 static TCLAP::ValueArg<std::string> environment_arg( "e", "environment",\
                                                      "Environment to use "+util::container_to_str(environment_set,", ","(",")")+".\nDynamicTightRope: The agent has integer position and velocity. SAMPLE mode \
 prints the max-reward (over actions) for a given position and \
@@ -128,8 +124,8 @@ static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
                                                      , false, "mean", "string");
 static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
-                                                     "(default: FullDAG) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
-                                                     , false, "FullDAG", "string");
+                                                     "(default: PlainTree) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
+                                                     , false, "PlainTree", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "(default: BACKUP_PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "BACKUP_PROPAGATE", "string");
@@ -171,8 +167,7 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<AbstractEnvironment>,
-      state_handle_t> setup();
+      shared_ptr<AbstractEnvironment>> setup();
 QString header(int argn, char ** args);
 
 int main(int argn, char ** args) {
@@ -232,74 +227,16 @@ int main(int argn, char ** args) {
 
     // different modes
     cout << header(argn,args) << endl;
-    if(mode_arg.getValue()=="SAMPLE") {
-        // // set up
-        // RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
-        //              shared_ptr<TreePolicy>, tree_policy,
-        //              shared_ptr<ValueHeuristic>, value_heuristic,
-        //              shared_ptr<BackupMethod>, backup_method,
-        //              shared_ptr<AbstractEnvironment>, environment,
-        //              state_handle_t, root_state) = setup();
-        // if(environment_arg.getValue()!="DynamicTightRope") {
-        //     cout << "run,state (from),action,reward,state (to)" << endl;
-        //     for(int run : Range(sample_n_arg.getValue())) {
-        //         for(auto state_from : Environment::get_states(*environment)) {
-        //             if(environment->is_terminal_state(state_from)) continue;
-        //             for(auto action : environment->get_actions()) {
-        //                 RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->transition(state_from, action);
-        //                 cout << QString("%1,%2,%3,%4,%5").
-        //                     arg(run).
-        //                     arg(Environment::name(*environment,state_from)).
-        //                     arg(Environment::name(*environment,action)).
-        //                     arg(reward).
-        //                     arg(Environment::name(*environment,state_to)) << endl;
-        //             }
-        //         }
-        //     }
-        // } else {
-        //     cout << "run,position,velocity,"+accumulate_arg.getValue()+"_reward" << endl;
-        //     for(int run : Range(sample_n_arg.getValue())) {
-        //         for(auto state_from : Environment::get_states(*environment)) {
-        //             double accum_reward;
-        //             auto env = std::dynamic_pointer_cast<DynamicTightRope>(environment);
-        //             DEBUG_EXPECT(0,env!=nullptr);
-        //             RETURN_TUPLE(int,position,int,velocity) = env->get_position_and_velocity(state_from);
-        //             if(accumulate_arg.getValue()=="min") {
-        //                 accum_reward = DBL_MAX;
-        //             } else if(accumulate_arg.getValue()=="max") {
-        //                 accum_reward = -DBL_MAX;
-        //             } else if(accumulate_arg.getValue()=="mean") {
-        //                 accum_reward = 0;
-        //             } else {
-        //                 DEBUG_DEAD_LINE;
-        //             }
-        //             for(auto action : environment->get_actions()) {
-        //                 RETURN_TUPLE(state_handle_t,state_to,reward_t,reward) = environment->sample(state_from, action);
-        //                 if(accumulate_arg.getValue()=="min") {
-        //                     accum_reward = std::min(reward,accum_reward);
-        //                 } else if(accumulate_arg.getValue()=="max") {
-        //                     accum_reward = std::max(reward,accum_reward);
-        //                 } else if(accumulate_arg.getValue()=="mean") {
-        //                     accum_reward += reward/environment->get_actions().size();
-        //                 } else {
-        //                     DEBUG_DEAD_LINE;
-        //                 }
-        //             }
-        //             cout << QString("%1,%2,%3,%4").arg(run).arg(position).arg(velocity).arg(accum_reward) << endl;
-        //         }
-        //     }
-        // }
-    } else if(mode_arg.getValue()=="WATCH") {
+    if(mode_arg.getValue()=="WATCH") {
         // set up
         RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
                      shared_ptr<TreePolicy>, tree_policy,
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
-                     shared_ptr<AbstractEnvironment>, environment,
-                     state_handle_t, current_state) = setup();
+                     shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
         for(int step : Range(0,step_n_arg.getValue())) {
-            environment->set_state(current_state);
+            environment->reset_state();
             if(environment->is_terminal_state()) break;
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
@@ -312,17 +249,18 @@ int main(int argn, char ** args) {
                 }
             }
             if(step<step_n_arg.getValue()) { // don't prune in last step
-                environment->set_state(current_state);
+                // make a transition and prune
+                environment->reset_state();
                 auto action = search_tree->recommend_action();
                 auto observation_reward = environment->transition(action);
+                environment->make_current_state_default();
                 auto observation = std::get<0>(observation_reward);
                 auto reward = std::get<1>(observation_reward);
-                current_state = environment->get_state_handle();
                 if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
                     search_tree->toPdf("tree.pdf");
                     getchar();
                 }
-                search_tree->prune(action,observation,current_state);
+                search_tree->prune(action,observation);
                 if(watch_progress_arg.getValue()>=2) {
                     if(!no_graphics_arg.getValue()) {
                         search_tree->toPdf("tree.pdf");
@@ -332,7 +270,6 @@ int main(int argn, char ** args) {
                         *action << " --> " <<
                         *observation << ", " <<
                         reward << ")" << endl;
-                    environment->set_state(current_state);
                     if(environment->is_terminal_state()) {
                         cout << "Terminal state!" << endl;
                     }
@@ -383,35 +320,32 @@ int main(int argn, char ** args) {
                              shared_ptr<TreePolicy>, tree_policy,
                              shared_ptr<ValueHeuristic>, value_heuristic,
                              shared_ptr<BackupMethod>, backup_method,
-                             shared_ptr<AbstractEnvironment>, environment,
-                             state_handle_t, current_state) = setup();
+                             shared_ptr<AbstractEnvironment>, environment) = setup();
 
                 double reward_sum = 0;
                 // for each number of samples a number of steps (or until
                 // terminal state) is performed
                 int step = 1;
                 // initialize tree
-                current_state = environment->get_state_handle();
-                search_tree->init(current_state);
+                search_tree->init();
                 while(true) {
                     // build tree
                     repeat(sample_n) {
                         search_tree->next();
                     }
                     // perform step
-                    environment->set_state(current_state);
+                    environment->reset_state();
                     auto action = search_tree->recommend_action();
                     auto observation_reward = environment->transition(action);
+                    environment->make_current_state_default();
                     auto observation = std::get<0>(observation_reward);
-                    current_state = environment->get_state_handle();
                     reward_sum += std::get<1>(observation_reward);
                     // break on terminal state
-                    if(environment->has_terminal_state() && environment->is_terminal_state()) break;
+                    if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
-                    search_tree->prune(action,observation,current_state);
-                    current_state = environment->get_state_handle();
+                    search_tree->prune(action,observation);
                     ++step;
                 }
 #ifdef USE_OMP
@@ -511,8 +445,7 @@ tuple<shared_ptr<SearchTree>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
-      shared_ptr<AbstractEnvironment>,
-      state_handle_t> setup() {
+      shared_ptr<AbstractEnvironment>> setup() {
 
     // return variables
     shared_ptr<SearchTree>      search_tree;
@@ -520,33 +453,31 @@ tuple<shared_ptr<SearchTree>,
     shared_ptr<ValueHeuristic>  value_heuristic;
     shared_ptr<BackupMethod>    backup_method;
     shared_ptr<AbstractEnvironment> environment;
-    state_handle_t              current_state;
     // set up environment
-    if(environment_arg.getValue()=="TightRope") {
-        environment.reset(new TightRope(15));
-    } else if(environment_arg.getValue()=="DynamicTightRope") {
-        environment.reset(new DynamicTightRope(50, 10));
-    } else if(environment_arg.getValue()=="SimpleEnvironment") {
+    // if(environment_arg.getValue()=="TightRope") {
+    //     environment.reset(new TightRope(15));
+    // } else if(environment_arg.getValue()=="DynamicTightRope") {
+    //     environment.reset(new DynamicTightRope(50, 10));
+    // } else
+    if(environment_arg.getValue()=="SimpleEnvironment") {
         environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
         environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
-    } else if(environment_arg.getValue()=="BottleNeckHallway") {
-        environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
-    } else if(environment_arg.getValue()=="DelayedUncertainty") {
-        environment.reset(new DelayedUncertainty(2,3));
-    } else if(environment_arg.getValue()=="UnitTest") {
-        environment.reset(new UnitTestEnvironment());
-    } else {
+    }
+    // else if(environment_arg.getValue()=="BottleNeckHallway") {
+    //     environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
+    // } else if(environment_arg.getValue()=="DelayedUncertainty") {
+    //     environment.reset(new DelayedUncertainty(2,3));
+    // } else if(environment_arg.getValue()=="UnitTest") {
+    //     environment.reset(new UnitTestEnvironment());
+    // }
+    else {
         cout << "Unknown environment" << endl;
         DEBUG_DEAD_LINE;
     }
     // print info
-    auto env = std::dynamic_pointer_cast<Environment>(environment);
-    if(env!=nullptr) {
-        DEBUG_OUT(1, "States: " << env->get_states());
-    }
     DEBUG_OUT(1, "Actions: " << environment->get_actions());
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
@@ -571,7 +502,6 @@ tuple<shared_ptr<SearchTree>,
         backup_method.reset(new MonteCarlo());
     } else DEBUG_DEAD_LINE;
     // set up search tree
-    current_state = environment->get_state_handle();
     if(active_arg.getValue()) {
         search_tree.reset(new ActiveTreeSearch(environment,
                                                discount_arg.getValue(),
@@ -585,14 +515,13 @@ tuple<shared_ptr<SearchTree>,
                                                    backup_method,
                                                    get_backup_type()));
     }
-    search_tree->init(current_state);
+    search_tree->init();
     // return
     return make_tuple(search_tree,
                       tree_policy,
                       value_heuristic,
                       backup_method,
-                      environment,
-                      current_state);
+                      environment);
 }
 
 QString header(int argn, char ** args) {

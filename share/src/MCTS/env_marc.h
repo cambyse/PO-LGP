@@ -19,10 +19,10 @@ struct MCTS_Environment {
       virtual bool operator==(const SAO & other) const { return true; } ///< why true? Because a NIL object (e.g. non-observation) is always equal to NIL
       virtual bool operator!=(const SAO & other) const { return !(*this==other); }
       virtual void write(std::ostream& os) const { os <<"NIL_SAO"; }
-      virtual size_t get_hash() const {
-        std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
-        exit(-1);
-      }
+        virtual size_t get_hash() const {
+            std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
+            exit(-1);
+        }
     };
     typedef std::shared_ptr<const SAO> Handle;
 
@@ -47,8 +47,8 @@ struct MCTS_Environment {
     /// Return whether the current state is a terminal state
     virtual bool is_terminal_state() const = 0;
 
-    /// Set the environment's state to the given state -- DEBATABLE!
-    virtual void set_state(const Handle& state) = 0;
+    /// Makes the current state the future start state set by reset_state().
+    virtual void make_current_state_default() = 0;
 
     /// Reset the environment's state to the start state
     virtual void reset_state() = 0;
@@ -116,6 +116,12 @@ public:
             action_container.push_back(action_handle_t(new InterfaceMarcAction(action)));
         }
         return action_container;
+    }
+    virtual void make_current_state_default() override {
+        env_marc->make_current_state_default();
+    }
+    virtual void reset_state() override {
+        env_marc->reset_state();
     }
     virtual bool has_terminal_state() const override {
         return env_marc->get_info(MCTS_Environment::InfoTag::hasTerminal);

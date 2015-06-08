@@ -181,8 +181,8 @@ bool FOL_World::is_terminal_state() const{
   return false;
 }
 
-void FOL_World::set_state(const Handle& state){
-  NIY;
+void FOL_World::make_current_state_default() {
+    NIY;
 }
 
 void FOL_World::reset_state(){

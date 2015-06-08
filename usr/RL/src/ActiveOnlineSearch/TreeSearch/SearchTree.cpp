@@ -45,12 +45,11 @@ SearchTree::SearchTree(std::shared_ptr<AbstractEnvironment> environment,
     node_finder->init(graph,node_info_map);
 }
 
-void SearchTree::init(const state_handle_t & state) {
+void SearchTree::init() {
     graph.clear();
     root_node = graph.addNode();
     node_info_map[root_node].type = OBSERVATION_NODE;
     node_info_map[root_node].observation = observation_handle_t();
-    root_state = state;
     node_finder->init(graph,node_info_map);
     node_finder->add_observation_node(root_node);
 }
@@ -58,7 +57,7 @@ void SearchTree::init(const state_handle_t & state) {
 void SearchTree::next() {
     // check is graph was initialized
     if(node_it_t(graph)==INVALID) {
-        init(environment->get_state_handle());
+        init();
     }
     // call actual function
     next_do();
@@ -66,8 +65,7 @@ void SearchTree::next() {
 
 
 void SearchTree::prune(const action_handle_t & action,
-                       const observation_handle_t & observation,
-                       const state_handle_t & state) {
+                       const observation_handle_t & observation) {
     //--------------------//
     // find new root node //
     //--------------------//
@@ -91,7 +89,7 @@ void SearchTree::prune(const action_handle_t & action,
     if(new_root_node==INVALID) {
         DEBUG_ERROR("No branch for (action --> observation) = ("
                     << *action << " --> " << *observation << ")");
-        init(state);
+        init();
         return;
     }
 
@@ -116,7 +114,6 @@ void SearchTree::prune(const action_handle_t & action,
     // remove old root and set new root
     erase_node(root_node);
     root_node = new_root_node;
-    root_state = state;
 
     // try to find a reverse (!) path from all nodes to_be_processed to the
     // (new) root_node and erase the ones such a path does not exist for. this

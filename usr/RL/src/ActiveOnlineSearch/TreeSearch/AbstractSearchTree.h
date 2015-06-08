@@ -8,7 +8,6 @@ class AbstractSearchTree {
     //----typedefs/classes----//
 public:
     typedef AbstractEnvironment::action_handle_t      action_handle_t;
-    typedef AbstractEnvironment::state_handle_t       state_handle_t;
     typedef AbstractEnvironment::observation_handle_t observation_handle_t;
     typedef AbstractEnvironment::reward_t             reward_t;
 
@@ -32,7 +31,7 @@ public:
      * Initializes an empty search tree. This function may be used to reset
      * everything and, depending on the implementation, may need to be called
      * before using the AbstractSearchTree. */
-    virtual void init(const state_handle_t & root_state) = 0;
+    virtual void init() = 0;
     /**
      * Proceed with planning. Performs the next iteration in the planning
      * process, such as a new rollout in MonteCarloTreeSearch methods. */
@@ -46,8 +45,7 @@ public:
      * in the environment to reuse the relevant rest of the tree instead of
      * resetting it with init().*/
     virtual void prune(const action_handle_t &,
-                       const observation_handle_t &,
-                       const state_handle_t &) = 0;
+                       const observation_handle_t &) = 0;
     /**
      * Prints the graph to a PDF file with given name. */
     virtual void toPdf(const char* file_name) const = 0;

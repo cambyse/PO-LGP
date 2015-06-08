@@ -13,7 +13,6 @@ namespace tree_policy {
     typedef MonteCarloTreeSearch::arc_t                arc_t;
     typedef AbstractEnvironment::action_handle_t       action_handle_t;
     typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
-    typedef AbstractEnvironment::state_handle_t        state_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
