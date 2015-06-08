@@ -392,12 +392,11 @@ TEST(ActiveOnlineSearch, ComputationalGraph2) {
 }
 
 TEST(ActiveOnlineSearch, ComputationalGraphDerivatives) {
-
+    typedef ComputationalGraph::graph_t graph_t;
     typedef ComputationalGraph::node_t node_t;
-    typedef lemon::ListDigraph graph_t;
+    typedef ComputationalGraph::arc_t arc_t;
 
     // use default constructor here so the class manages its own graph object
-    vector<double> values;
     for(bool check : {false,true}) {
         ComputationalGraph cg;
 
@@ -411,24 +410,20 @@ TEST(ActiveOnlineSearch, ComputationalGraphDerivatives) {
                 DEBUG_OUT(1,"c:" << v[0] << "+" << v[1]);
                 return v[0]+v[1];
             });
-        cg.add_arc(a_node, b_node, [](vector<double> v)->double{return 1;});
-        cg.add_arc(a_node, c_node, [](vector<double> v)->double{return 1;});
-        cg.add_arc(b_node, c_node, [](vector<double> v)->double{return 1;});
+        arc_t a_b_arc = cg.add_arc(a_node, b_node, [](vector<double> v)->double{return 1;});
+        arc_t a_c_arc = cg.add_arc(a_node, c_node, [](vector<double> v)->double{return 1;});
+        arc_t b_c_arc = cg.add_arc(b_node, c_node, [](vector<double> v)->double{return 1;});
 
         cg.check_graph_structure(true,true);
         cg.compute_values({1});
         if(check) cg.check_derivatives();
-        //cg.plot_graph("graph.pdf");
-        int idx = 0;
-        for(graph_t::NodeIt node(cg.get_graph()); node!=lemon::INVALID; ++node) {
-            DEBUG_OUT(1,"node " << cg.get_node_label(node) << "=" << cg.get_node_value(node));
-            if(check) {
-                EXPECT_EQ(cg.get_node_value(node),values[idx]);
-            } else {
-                values.push_back(cg.get_node_value(node));
-            }
-            ++idx;
-        }
+        cg.plot_graph("graph.pdf");
+        EXPECT_EQ(cg.get_node_value(a_node),1);
+        EXPECT_EQ(cg.get_node_value(b_node),1);
+        EXPECT_EQ(cg.get_node_value(c_node),2);
+        EXPECT_EQ(cg.get_arc_value(a_b_arc),1);
+        EXPECT_EQ(cg.get_arc_value(a_c_arc),1);
+        EXPECT_EQ(cg.get_arc_value(b_c_arc),1);
     }
 }
 

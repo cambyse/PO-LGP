@@ -343,20 +343,27 @@ bool CG::check_derivatives(std::vector<double> values,
                            double epsilon_relative) {
     // compute all values
     compute_values(values);
-    // make a copy of the derivatives
+    // make a copy of the analytical derivatives because they change while
+    // computing the numerical derivatives
     graph_t::ArcMap<double> arc_values_copy(graph);
     mapCopy(graph, arc_values, arc_values_copy);
-    // change the value of all nodes by delta and nummerically check derivatives
+    // change the value of all nodes by delta and compare the nummerical partial
+    // derivative of the dependent nodes with the analytical partial derivative
     bool ok = true;
     for(node_it_t node(graph); node!=INVALID; ++node) {
         DEBUG_OUT(2,"Checking derivatives w.r.t " <<
                   node_labels[node] << " (id" << graph.id(node) << ")");
-        // get dependent nodes (the ones we need to check)
+        // get dependent nodes and remember their values to reset later
         vector<node_t> dependent_nodes;
         vector<arc_t> dependent_arcs;
+        vector<double> dependent_nodes_old_values;
+        vector<double> dependent_arcs_old_values;
         for(out_arc_it_t arc(graph, node); arc!=INVALID; ++arc) {
-            dependent_nodes.push_back(graph.target(arc));
+            node_t dep_node = graph.target(arc);
+            dependent_nodes.push_back(dep_node);
+            dependent_nodes_old_values.push_back(node_values[dep_node]);
             dependent_arcs.push_back(arc);
+            dependent_arcs_old_values.push_back(arc_values[arc]);
         }
         // compute finite differences
         double old_value = node_values[node];
@@ -401,6 +408,11 @@ bool CG::check_derivatives(std::vector<double> values,
                               << values_1[idx] - values_2[idx] << " / " << delta);
             }
         }
+        // reset values
+        for(int i : Range(dependent_nodes.size())) {
+            node_values[dependent_nodes[i]] = dependent_nodes_old_values[i];
+            arc_values[dependent_arcs[i]] = dependent_arcs_old_values[i];
+        }
     }
     return ok;
 }
@@ -442,7 +454,8 @@ double CG::evaluate_node(const node_t & node, TYPE e) {
                 }
             }
             if(!found) {
-                DEBUG_ERROR("Could not find node with label '" << var << "' while computing value of node '" << node_labels[node] << "'");
+                DEBUG_ERROR("Could not find node with label '" << var
+                            << "' while computing value of node '" << node_labels[node] << "'");
                 values.push_back(NAN);
             }
         }

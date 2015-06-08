@@ -133,13 +133,13 @@ static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
 static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", \
-                                                       "(default: Zero) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
-                                                       , false, "Zero", "string");
+                                                       "(default: Rollout) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
+                                                       , false, "Rollout", "string");
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
-static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 0.9) Discount for the returns"
-                                                     , false, 0.9, "double");
+static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
+                                                     , false, 1, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
