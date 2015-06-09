@@ -10,6 +10,8 @@
 
 void TEST(KinectModules) {
   struct MySystem:System{
+    ACCESS(byteA, kinect_rgb)
+    ACCESS(uint16A, kinect_depth)
     MySystem(){
       addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
       addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
@@ -28,6 +30,9 @@ void TEST(KinectModules) {
 
   engine().enableAccessLog();
   engine().open(S);
+
+  S.kinect_depth.waitForRevisionGreaterThan(10);
+  FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
   engine().shutdown.waitForSignal();
 
