@@ -144,7 +144,7 @@ void ActiveTreeSearch::next_do() {
             nodes.push_back(node);
         }
         computer.check_graph_structure(true,true); // identify input and output nodes
-        computer.check_derivatives(vector<double>(), 2, 1e-2, 1e-2);
+        computer.check_derivatives(1e-5, 1e-3, 1e-3);
         //computer.compute_values();
         computer.set_node_differential(c_root_node,1);
         computer.reverse_accumulation();

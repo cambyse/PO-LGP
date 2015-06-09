@@ -59,8 +59,6 @@ protected:
      * derived classes that use a non-const graph (like the ComputationalGraph
      * class). */
     graph_t dummy_graph;
-private:
-
     /**
      * The graph-object. This is a reference to the graph object given in the
      * constructor. */
@@ -156,6 +154,15 @@ public:
                                                                    std::vector<double> differentials = std::vector<double>(),
                                                                    bool output_nodes_only = true);
     /**
+     * Check derivatives for a node. For the given node compare the analytical
+     * paritial derivatives w.r.t. all incomming variables to numerical
+     * approximations using finite differences. Values and derivatives are
+     * computed using the current values of all variables.*/
+    virtual bool check_derivatives(node_t node,
+                                   double delta = 1e-5,
+                                   double epsilon_absolute = 1e-10,
+                                   double epsilon_relative = 1e-10);
+    /**
      * Checks the derivatives via finite differences. The function changes every
      * node/variable by +/- \e delta. It then computes the nummerical derivative
      * for all dependent nodes using this symetric finite difference and
@@ -166,10 +173,10 @@ public:
      * epsilon_absolute and the realtive deviation (i.e. the absolute value of
      * the quotient of numerical and analytical derivative) is larger than \e
      * 1+epsilon_relative. */
-    virtual bool check_derivatives(std::vector<double> values = std::vector<double>(),
-                                   double delta = 1e-5,
+    virtual bool check_derivatives(double delta = 1e-5,
                                    double epsilon_absolute = 1e-10,
                                    double epsilon_relative = 1e-10);
+
     /**
      * Uses util::graph_to_pdf to plot the graph. */
     virtual ComputationalConstGraph & plot_graph(const char* file_name);

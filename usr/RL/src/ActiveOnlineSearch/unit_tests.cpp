@@ -199,7 +199,8 @@ TEST(ActiveOnlineSearch, ComputationalGraph) {
     }
 
     // check derivatives
-    EXPECT_TRUE(cg.check_derivatives({VALUES}));
+    cg.compute_values({VALUES});
+    EXPECT_TRUE(cg.check_derivatives());
 
 
     /*=============================================
@@ -417,7 +418,7 @@ TEST(ActiveOnlineSearch, ComputationalGraphDerivatives) {
         cg.check_graph_structure(true,true);
         cg.compute_values({1});
         if(check) cg.check_derivatives();
-        cg.plot_graph("graph.pdf");
+        //cg.plot_graph("graph.pdf");
         EXPECT_EQ(cg.get_node_value(a_node),1);
         EXPECT_EQ(cg.get_node_value(b_node),1);
         EXPECT_EQ(cg.get_node_value(c_node),2);
@@ -481,7 +482,7 @@ make_graph_for_graph_propagation_tests(lemon::ListDigraph & graph,
         }
     }
 
-    util::graph_to_pdf("graph.pdf", graph, "", &node_property_map);
+    //util::graph_to_pdf("graph.pdf", graph, "", &node_property_map);
 
     return graph_propagation;
 }
@@ -593,7 +594,7 @@ TEST(GraphPropagation, ProcessingOrder) {
         graph.addArc(prev,next);
         graph.addArc(center,next);
     }
-    util::graph_to_pdf("graph.pdf", graph);
+    //util::graph_to_pdf("graph.pdf", graph);
     auto prop = graph_util::GraphPropagationFactory(graph);
     prop.add_source(center).init();
     QString node_chain;
@@ -1566,8 +1567,8 @@ TEST(ActiveTreeSearch, SimpleValueCheck) {
     for(int i=0; i<10; ++i) {
         search.next();
         // visual output
-        search.toPdf("graph.pdf");
-        getchar();
+        // search.toPdf("graph.pdf");
+        // getchar();
     }
     // checks
     typedef MockActiveTreeSearch::graph_t graph_t;
@@ -1630,7 +1631,7 @@ TEST(ActiveTreeSearch, SimpleValueCheck) {
     }
 }
 
-#if 0
+#if 1
 TEST(ActiveTreeSearch, Test) {
     auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
     ActiveTreeSearch search(environment,
@@ -1642,6 +1643,6 @@ TEST(ActiveTreeSearch, Test) {
         // search.toPdf("graph.pdf");
         // getchar();
     }
-    search.toPdf("graph.pdf");
+    //search.toPdf("graph.pdf");
 }
 #endif
