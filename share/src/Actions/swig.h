@@ -15,8 +15,13 @@ struct ActionSwigInterface{
   ActionSwigInterface(bool useRos); //instantiates the ActionMachineSystem, runs it
   ~ActionSwigInterface();
 
+  void Cancel();
+
   //-- robot data access
+
   stringV getShapeList();
+  stringV getBodyList();
+  stringV getJointList();
   doubleV getQ();
   doubleV getForceTorqueMeasurement();
   dict getBodyByName (string bodyName);
@@ -29,18 +34,22 @@ struct ActionSwigInterface{
   intV str2lit(stringV symbolNames);
   stringV lit2str(intV literals);
   std::vector<intV> getStateLiterals();
-  bool isTrue(intV literal);
+  bool isTrue(const stringV& literals);
   dict getLiteralParameters(intV literal);
 
   //-- methods to modify the activity state (also sequence actions)
   void setFact(const char* fact);
+  void stopFact(const char* fact);
+  stringV getFacts();
   void waitForCondition(const char* query);
   void startActivity(const stringV& literals, const dict& parameters=dict());
+  void stopActivity(const stringV& literals);
+
   void waitForCondition(const stringV& literals);
 
 //  void startActivity(intV literal, const dict& parameters=dict());
 //  void waitForCondition(intV literal);
-  int  waitForOrCondition(std::vector<intV> literals);
+  int  waitForOrCondition(intV literals);
   void waitForQuitSymbol();
 
 //  void activateAction(string symbolName); //"(reachAt A)"

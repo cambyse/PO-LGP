@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 //  S.waitForCondition(S.lit({"positionHandL", "conv"}));
 
   S.defineNewTaskSpaceControlAction("positionHandR", {"FollowReferenceActivity"},
-  {{"type","pos"}, {"ref1","endeffR"}, {"target","[.2, .4, .6]"}, {"PD","[.5, .9, .1, 10.]"}});
+  {{"type","wheels"}, {"target","[.0, .0, .5]"}, {"PD","[.5, .9, .1, 10.]"}});
 
   S.startActivity({"positionHandR"});
   S.waitForCondition({"conv", "positionHandR"});

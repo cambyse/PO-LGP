@@ -251,7 +251,7 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
-#%.so: $(PREOBJS) $(BUILDS) $(OBJS)
+#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
 #	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 #	rm $(BASE)/lib/$(NAME).so
 #	ln -s -r $(NAME).so $(BASE)/lib/$(NAME).so
