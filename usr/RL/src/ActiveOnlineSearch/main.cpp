@@ -544,6 +544,14 @@ tuple<shared_ptr<SearchTree>,
                                                    backup_method,
                                                    get_backup_type()));
     }
+    commander.add_command("print tree",[search_tree]()->Ret{
+            search_tree->toPdf("tree.pdf");
+            return {true,"Printed search tree to 'tree.pdf'"};
+        }, "Print the search tree to PDF file 'tree.pdf'");
+    commander.add_command("print tree",[search_tree](QString file_name)->Ret{
+            search_tree->toPdf(file_name.toLatin1());
+            return {true,QString("Printed search tree to '%1'").arg(file_name)};
+        }, "Print the search tree to PDF file with given name");
     search_tree->init();
     // return
     return make_tuple(search_tree,
