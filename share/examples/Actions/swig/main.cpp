@@ -34,6 +34,20 @@ int main(int argc, char** argv) {
   S.startActivity({"positionHand2"});
   S.waitForCondition({"conv", "positionHand2"});
 
+
+  S.defineNewTaskSpaceControlAction("base", {"FollowReferenceActivity"},
+  {{"type","wheels"}, {"target","[.0, 0.1, 0.]"}, {"PD","[.5, .9, .1, 5.]"}});
+
+  S.startActivity({"base"});
+  S.waitForCondition({"conv", "base"});
+
+  S.defineNewTaskSpaceControlAction("q", {"FollowReferenceActivity"},
+  {{"type","qItself"},{"ref1","l_gripper_joint"}, {"target","[0.01]"}, {"PD","[2., .8, .1, 1.]"}});
+
+  S.startActivity({"q"});
+  S.waitForCondition({"conv", "q"});
+
+
 //  S.createNewSymbol("quit");
 //  S.waitForQuitSymbol();
 

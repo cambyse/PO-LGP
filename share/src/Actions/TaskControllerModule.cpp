@@ -115,6 +115,16 @@ void TaskControllerModule::step(){
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
 
+  //-- send base command
+  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
+  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
+  if(sendBaseMotion && trans && trans->qDim()==3){
+    refs.qdot(trans->qIndex+0) = qdot_model(trans->qIndex+0);
+    refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
+    refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
+  }
+
+
   //-- compute the force feedback control coefficients
   uint count=0;
   ctrlTasks.readAccess();
