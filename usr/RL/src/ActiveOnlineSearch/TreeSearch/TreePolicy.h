@@ -82,6 +82,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
     };
@@ -105,6 +106,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
     };
