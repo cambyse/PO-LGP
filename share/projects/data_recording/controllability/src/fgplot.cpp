@@ -155,7 +155,7 @@ FGPlots::~FGPlots() {
 }
 
 void FGPlots::open(const Graph &k) {
-  ItemL plot_list;
+  NodeL plot_list;
   Graph *plot_kvg;
 
   String *str;

@@ -2,43 +2,107 @@ cmake_minimum_required(VERSION 3.0)
 
 find_package(Qt5Core)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+add_definitions(-fopenmp -std=c++0x)
+
+include_directories(/home/robert/MLR_git/share/include)
+include_directories(/home/robert/MLR_git/share/src)
 
 ## executable
 
-add_executable(main
+add_executable(main_ActiveOnlineSearch
     main.cpp
-    SearchTree.h
-    SearchTree.cpp
-    Environment.h
-    TightRope.h
-    TightRope.cpp
-    DynamicTightRope.h
-    DynamicTightRope.cpp
+    graph_util.h
+#    Environment_old/Environment.h
+#    Environment_old/TightRope.h
+#    Environment_old/TightRope.cpp
+#    Environment_old/DynamicTightRope.h
+#    Environment_old/DynamicTightRope.cpp
+#    Environment_old/UnitTestEnvironment.h
+    Environment/SimpleEnvironment.h
+    Environment/GamblingHall.h
+    Environment/GamblingHall.cpp
+#    Environment_old/BottleNeckHallway.h
+#    Environment_old/BottleNeckHallway.cpp
+#    Environment_old/DelayedUncertainty.h
+#    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    ComputationalConstGraph.h
+    ComputationalConstGraph.cpp
+    TreeSearch/AbstractSearchTree.h
+    TreeSearch/SearchTree.h
+    TreeSearch/SearchTree.cpp
+    TreeSearch/NodeFinder.h
+    TreeSearch/NodeFinder.cpp
+    TreeSearch/MonteCarloTreeSearch.h
+    TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/ActiveTreeSearch.h
+    TreeSearch/ActiveTreeSearch.cpp
+    TreeSearch/TreePolicy.h
+    TreeSearch/TreePolicy.cpp
+    TreeSearch/ValueHeuristic.h
+    TreeSearch/ValueHeuristic.cpp
+    TreeSearch/BackupMethod.h
+    TreeSearch/BackupMethod.cpp
 )
 
-target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(main
+find_library(LIBFOL FOL /home/robert/data/git_repos/MLR_git/share/lib)
+target_link_libraries(main_ActiveOnlineSearch ${LIBFOL})
+
+target_link_libraries(main_ActiveOnlineSearch
     util
     -lemon
     -larmadillo
+    -lgomp
+    -lFOL
 )
+
+## example
+
+add_executable(GraphPropagationExample
+    examples/GraphPropagationExample.cpp
+    graph_util.h
+)
+target_link_libraries(GraphPropagationExample util -lemon)
 
 ## library
 
 add_library(ActiveOnlineSearch
-    SearchTree.h
-    SearchTree.cpp
-    Environment.h
-    TightRope.h
-    TightRope.cpp
-    DynamicTightRope.h
-    DynamicTightRope.cpp
+    graph_util.h
+#    Environment_old/Environment.h
+#    Environment_old/TightRope.h
+#    Environment_old/TightRope.cpp
+#    Environment_old/DynamicTightRope.h
+#    Environment_old/DynamicTightRope.cpp
+#    Environment_old/UnitTestEnvironment.h
+    Environment/SimpleEnvironment.h
+    Environment/GamblingHall.h
+    Environment/GamblingHall.cpp
+#    Environment_old/BottleNeckHallway.h
+#    Environment_old/BottleNeckHallway.cpp
+#    Environment_old/DelayedUncertainty.h
+#    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
+    ComputationalConstGraph.h
+    ComputationalConstGraph.cpp
+    TreeSearch/AbstractSearchTree.h
+    TreeSearch/SearchTree.h
+    TreeSearch/SearchTree.cpp
+    TreeSearch/NodeFinder.h
+    TreeSearch/NodeFinder.cpp
+    TreeSearch/MonteCarloTreeSearch.h
+    TreeSearch/MonteCarloTreeSearch.cpp
+    TreeSearch/ActiveTreeSearch.h
+    TreeSearch/ActiveTreeSearch.cpp
+    TreeSearch/TreePolicy.h
+    TreeSearch/TreePolicy.cpp
+    TreeSearch/ValueHeuristic.h
+    TreeSearch/ValueHeuristic.cpp
+    TreeSearch/BackupMethod.h
+    TreeSearch/BackupMethod.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -37,40 +37,35 @@ struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType,
 
 //===========================================================================
 //
-//  typed Item
+//  typed Node
 //
 
 template<class T>
-struct Item_typed:Item {
+struct Node_typed :Node {
   T *value;
   bool ownsValue;
 
-  Item_typed():value(NULL), ownsValue(false) { HALT("shouldn't be called, right? Always want to append to container"); }
+  Node_typed():value(NULL), ownsValue(false) { HALT("shouldn't be called, right? Always want to append to container"); }
 
   /// directly store pointer to value
-  Item_typed(Graph& container, T *value, bool ownsValue):Item(container), value(value), ownsValue(ownsValue) {
+  Node_typed(Graph& container, T *value, bool ownsValue):Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) graph().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
-  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, T *value, bool ownsValue)
-    : Item(container, parents), value(value), ownsValue(ownsValue) {
+  Node_typed(Graph& container, const StringA& keys, const NodeL& parents, T *value, bool ownsValue)
+    : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    keys=_keys;
-    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) graph().isItemOfParentKvg = this;
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
-//  /// copy value
-//  Item_typed(Graph& container, const StringA& _keys, const ItemL& parents, const T& _value)
-//    : Item(container, parents), value(NULL), ownsValue(true) {
-//    value = new T(_value);
-//    keys=_keys;
-//    if(typeid(T)==typeid(Graph)) kvg().isItemOfParentKvg = this;
-//  }
-
-  virtual ~Item_typed(){
+  virtual ~Node_typed(){
+    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
     if(ownsValue) delete value;
+    value=NULL;
   }
 
   virtual bool hasValue() const {
@@ -81,16 +76,16 @@ struct Item_typed:Item {
     return (void*)value;
   }
 
-  virtual void copyValue(Item *it) {
-    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+  virtual void copyValue(Node *it) {
+    Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     CHECK(itt->value,"can't assign to nothing");
     if(value) delete value;
     value = new T(*itt->value);
   }
 
-  virtual void takeoverValue(Item *it) {
-    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+  virtual void takeoverValue(Node *it) {
+    Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     CHECK(itt->value,"can't assign to nothing");
     if(value) delete value;
@@ -98,16 +93,27 @@ struct Item_typed:Item {
     itt->value = NULL;
   }
 
-  virtual bool hasEqualValue(Item *it) {
-    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+  virtual bool hasEqualValue(Node *it) {
+    Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     if(!itt->value || !value) return false;
+#ifdef MT_CLANG
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+#endif
     return memcmp(itt->value, value, sizeof(T))==0;
+#ifdef MT_CLANG
+#  pragma clang diagnostic pop
+#endif
   }
 
   virtual void writeValue(std::ostream &os) const {
-    if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
-    else os <<*value;
+    if(value){
+      if(typeid(T)==typeid(NodeL)) listWrite(*(NodeL*)(value), os, " ");
+      else os <<*value;
+    }else{
+      os <<"<" <<typeid(T).name() <<">";
+    }
   }
   
   virtual const std::type_info& getValueType() const {
@@ -118,19 +124,24 @@ struct Item_typed:Item {
     return MLR_is_base_of<RootType, T>::value;
   }
   
-  virtual Item *newClone(Graph& container) const {
-    if(!value) return new Item_typed<T>(container, keys, parents, (T*)NULL, false);
-    return new Item_typed<T>(container, keys, parents, new T(*value), true);
+  virtual Node* newClone(Graph& container) const {
+    if(!value) return new Node_typed<T>(container, keys, parents, (T*)NULL, false);
+    if(getValueType()==typeid(Graph)){
+      Graph *g = new Graph();
+      g->copy(*getValue<Graph>(), &container);
+      return g->isItemOfParentKvg;
+    }
+    return new Node_typed<T>(container, keys, parents, new T(*value), true);
   }
 };
 
-template<class T> T *Item::getValue() {
-  Item_typed<T>* typed = dynamic_cast<Item_typed<T>*>(this);
+template<class T> T *Node::getValue() {
+  Node_typed<T>* typed = dynamic_cast<Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
       const Graph *kvg = getValue<Graph>();
       if(kvg->N==1){ //only if it has size 1??
-        typed = dynamic_cast<Item_typed<T>*>(kvg->elem(0));
+        typed = dynamic_cast<Node_typed<T>*>(kvg->elem(0));
       }
     }
     if(!typed){
@@ -141,13 +152,13 @@ template<class T> T *Item::getValue() {
   return typed->value;
 }
 
-template<class T> const T *Item::getValue() const {
-  const Item_typed<T>* typed = dynamic_cast<const Item_typed<T>*>(this);
+template<class T> const T *Node::getValue() const {
+  const Node_typed<T>* typed = dynamic_cast<const Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
       const Graph *kvg = getValue<Graph>();
       if(kvg->N==1){ //only if it has size 1??
-        typed = dynamic_cast<const Item_typed<T>*>(kvg->elem(0));
+        typed = dynamic_cast<const Node_typed<T>*>(kvg->elem(0));
       }
     }
     MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
@@ -157,31 +168,31 @@ template<class T> const T *Item::getValue() const {
 }
 
 template<class T> ItemInitializer::ItemInitializer(const char* key, const T& x){
-  it = new Item_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(NoGraph, new T(x), true);
   it->keys.append(STRING(key));
 }
 
 template<class T> ItemInitializer::ItemInitializer(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  it = new Item_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(NoGraph, new T(x), true);
   it->keys.append(STRING(key));
 }
 
 template<class T> T* Graph::getValue(const char *key) {
-  Item *it = getItem(key);
+  Node *it = getItem(key);
   if(!it) return NULL;
   return it->getValue<T>();
 }
 
 template<class T> T* Graph::getValue(const StringA &keys) {
-  Item *it = getItem(keys);
+  Node *it = getItem(keys);
   if(!it) return NULL;
   return it->getValue<T>();
 }
 
 template<class T> MT::Array<T*> Graph::getTypedValues(const char* key) {
   MT::Array<T*> ret;
-  for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
+  for(Node *it: (*this)) if(it->getValueType()==typeid(T)) {
     if(!key) ret.append(it->getValue<T>());
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
       ret.append(it->getValue<T>());
@@ -191,34 +202,34 @@ template<class T> MT::Array<T*> Graph::getTypedValues(const char* key) {
   return ret;
 }
 
-template<class T> Item *Graph::append(T *x, bool ownsValue) {
-  return new Item_typed<T>(*this, x, ownsValue);
+template<class T> Node *Graph::append(T *x, bool ownsValue) {
+  return new Node_typed<T>(*this, x, ownsValue);
 }
 
-template<class T> Item *Graph::append(const char* key, T *x, bool ownsValue) {
-  return new Item_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
+  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
 }
 
-template<class T> Item *Graph::append(const StringA& keys, const ItemL& parents, T *x, bool ownsValue) {
-  return new Item_typed<T>(*this, keys, parents, x, ownsValue);
+template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, T *x, bool ownsValue) {
+  return new Node_typed<T>(*this, keys, parents, x, ownsValue);
 }
 
 template <class T> MT::Array<T*> Graph::getDerivedValues() {
   MT::Array<T*> ret;
-  for(Item *it: (*this)) {
+  for(Node *it: (*this)) {
     if(it->is_derived_from_RootType()) {
-      T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
+      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)it)->value);
       if(val) ret.append(val);
     }
   }
   return ret;
 }
 
-template <class T> ItemL Graph::getDerivedItems() {
-  ItemL ret;
-  for(Item *it: (*this)) {
+template <class T> NodeL Graph::getDerivedItems() {
+  NodeL ret;
+  for(Node *it: (*this)) {
     if(it->is_derived_from_RootType()) {
-      T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
+      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)it)->value);
       if(val) ret.append(it);
     }
   }

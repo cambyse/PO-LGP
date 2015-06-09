@@ -1,3 +1,5 @@
+//g++ -I../../../src -L../../../lib -fPIC -std=c++0x main.cpp -lCore
+
 #include <Core/array.h>
 
 //===========================================================================
@@ -31,6 +33,7 @@ void gettingStarted() {
   FILE("z.2") <<Y_grid.reshape(31,31);
   gnuplot("splot 'z.1' us 1:2:3 w p, 'z.2' matrix us ($1/5-3):($2/5-3):3 w l", true);
 
+  cout <<"CLICK ON THE PLOT!" <<endl;
 }
 
 //===========================================================================

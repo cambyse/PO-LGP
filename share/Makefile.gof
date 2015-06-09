@@ -89,7 +89,8 @@ makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
 
 dependPath/%: %
-	+@-$(BASE)/gofMake/make-path.sh $< depend
+	@echo "                                                ***** depend " $*
+	@-$(MAKE) -C $* -f Makefile.gof depend --no-print-directory
 
 cleanPath/%: %
 	@echo "                                                ***** clean " $*

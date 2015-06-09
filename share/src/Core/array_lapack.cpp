@@ -230,7 +230,6 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {
   integer info, wn=work.N;
   dsyev_((char*)"V", (char*)"U", &N, Evecs.p,
          &N, Evals.p, work.p, &wn, &info);
-  transpose(Evecs);
   CHECK(!info, "lapack_EigenDecomp error info = " <<info);
 }
 

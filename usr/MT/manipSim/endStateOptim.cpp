@@ -28,9 +28,9 @@ struct EndStateProgram:ConstrainedProblemMix{
     if(&tt) tt.clear();
 
     //-- support symbols -> constraints of being inside!
-    Item *support=symbolicState["supports"];
-    Graph& state =symbolicState["STATE"]->kvg();
-    for(Item *constraint:support->parentOf) if(&constraint->container==&state){
+    Node *support=symbolicState["supports"];
+    Graph& state =symbolicState["STATE"]->graph();
+    for(Node *constraint:support->parentOf) if(&constraint->container==&state){
       ors::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
       ors::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
       if(b2->shapes(0)->type==ors::cylinderST){
@@ -69,10 +69,10 @@ struct EndStateProgram:ConstrainedProblemMix{
     }
 
     //-- supporters below object -> maximize their distances and center
-    ItemL objs=symbolicState.getItems("Object");
-    for(Item *obj:objs){
-      ItemL supporters;
-      for(Item *constraint:obj->parentOf){
+    NodeL objs=symbolicState.getItems("Object");
+    for(Node *obj:objs){
+      NodeL supporters;
+      for(Node *constraint:obj->parentOf){
         if(constraint->parents.N==3 && constraint->parents(0)==support && constraint->parents(2)==obj){
           supporters.append(constraint->parents(1));
         }
@@ -84,7 +84,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
         ors::Body *b;
         arr y,J;
-        for(Item *s:supporters){
+        for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
           cen += y;
@@ -95,7 +95,7 @@ struct EndStateProgram:ConstrainedProblemMix{
 
         //-- max distances to center
         prec=3e-1;
-        for(Item *s:supporters){
+        for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
           y -= cen;
@@ -132,9 +132,9 @@ struct EndStateProgram:ConstrainedProblemMix{
     }
 
     //-- supporters above object
-    for(Item *obj:objs){
-      ItemL supporters;
-      for(Item *constraint:obj->parentOf){
+    for(Node *obj:objs){
+      NodeL supporters;
+      for(Node *constraint:obj->parentOf){
         if(constraint->parents.N==3 && constraint->parents(0)==support && constraint->parents(1)==obj){
           supporters.append(constraint->parents(2));
         }
@@ -147,7 +147,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
         ors::Body *b;
         arr y,J;
-        for(Item *s:supporters){
+        for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
           cen += y;
@@ -158,7 +158,7 @@ struct EndStateProgram:ConstrainedProblemMix{
 
         //-- max distances to center
         prec=1e-1;
-        for(Item *s:supporters){
+        for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
           world.kinematicsPos(y, J, b);
           y -= cen;
@@ -219,14 +219,14 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 //===========================================================================
 
 void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
-  //  Item *actionSequence = symbolicState["actionSequence"];
-  Item *supportSymbol  = symbolicState["supports"];
-  Graph& state = symbolicState["STATE"]->kvg();
+  //  Node *actionSequence = symbolicState["actionSequence"];
+  Node *supportSymbol  = symbolicState["supports"];
+  Graph& state = symbolicState["STATE"]->graph();
 
-  for(Item *s:supportSymbol->parentOf) if(&s->container==&state){
+  for(Node *s:supportSymbol->parentOf) if(&s->container==&state){
 
     //  }
-    //  for(Item *a:actions){
+    //  for(Node *a:actions){
 
     //    //-- create a symbol that says A-on-B
     //    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);

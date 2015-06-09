@@ -75,3 +75,22 @@ void CudaInterface::free(arr& X){
   cudaFree(X.aux);
   X.aux=NULL;
 }
+
+void cuAlloc(arr& X){
+  CHECK(!X.aux,"already allocated?");
+  cudaMalloc((void **) &X.aux, X.N*X.sizeT);
+}
+
+void cuUpload(const arr& X){
+  if(!X.aux) cuAlloc(X);
+  cudaMemcpy(X.aux, X.p, X.N*X.sizeT, cudaMemcpyHostToDevice);
+}
+
+void cuDownload(arr& X){
+  cudaMemcpy(X.p, X.aux, X.N*X.sizeT, cudaMemcpyDeviceToHost);
+}
+
+void cuFree(arr& X){
+  cudaFree(X.aux);
+  X.aux=NULL;
+}

@@ -30,7 +30,7 @@ void testLinReg(const char *datafile=NULL) {
 
   //-- evaluate model on a grid
   arr X_grid,y_grid;
-  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:30));
+  X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
   Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
   arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+MT::sqr(sigma)*/);
@@ -42,6 +42,7 @@ void testLinReg(const char *datafile=NULL) {
     plotPoints(X,y);
     plot(true);
   }
+  FILE("z.model") <<~y_grid;
 
   //-- gnuplot
   MT::arrayBrackets="  ";
@@ -77,12 +78,13 @@ void testKernelReg(const char *datafile=NULL) {
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
 
-  KernelRidgeRegression f(X,y);
+  KernelRidgeRegression f(X, y, defaultKernelFunction, -1, 10.);
+  cout <<"estimated alpha = "<< f.alpha <<endl;
   cout <<"Mean error (sdv) = " <<f.sigma <<endl;
 
   //-- evaluate model on a grid
   arr X_grid, s_grid;
-  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:30));
+  X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
   arr y_grid = f.evaluate(X_grid, s_grid);
   s_grid = sqrt(s_grid);
 
@@ -92,6 +94,7 @@ void testKernelReg(const char *datafile=NULL) {
     plotPoints(X,y);
     plot(true);
   }
+  FILE("z.model") <<~y_grid;
 
   //-- gnuplot
   MT::arrayBrackets="  ";
@@ -167,11 +170,12 @@ void TEST(KernelLogReg){
   arr X,y;
   artificialData_Hasties2Class(X, y);
 
-  KernelLogisticRegression klr(X,y);
+  KernelLogisticRegression klr(X,y, defaultKernelFunction, -1., -3.);
 
   arr X_grid;
   X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:50));
   arr p_ba,p_hi,p_lo;
+//  arr p_grid = klr.evaluateF(X_grid, p_ba); p_hi=p_grid+p_ba;  p_lo=p_grid-p_ba;
   arr p_grid = klr.evaluate(X_grid, p_ba, p_hi, p_lo);
 
   if(X.d1==1){
@@ -333,6 +337,8 @@ void exercise2() {
 
 int main(int argc, char *argv[]) {
   MT::initCmdLine(argc,argv);
+
+  MT::arrayBrackets="[]";
 
   uint seed = MT::getParameter<uint>("seed", 0);
   if(!seed)  rnd.clockSeed();

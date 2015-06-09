@@ -14,8 +14,8 @@ public:
 
     /** Key-Value-Graph structure. Value are stored as strings.*/
     struct Graph {
-        /** An Item within a key-value-graph. */
-        struct Item {
+        /** An Node within a key-value-graph. */
+        struct Node {
             std::set<QString> keys;
             int keys_start = -1;
             int keys_end = -1;
@@ -28,7 +28,7 @@ public:
             std::shared_ptr<Graph> sub_graph = std::shared_ptr<Graph>(new Graph);
             enum VALUE_TYPE { NONE, BOOL, STRING, FILE, DOUBLE, ARRAY, LIST, SPECIAL, KVG } value_type = NONE;
         };
-        std::list<Item> items;
+        std::list<Node> items;
         std::set<QString> keys;
         QString dot();
     };

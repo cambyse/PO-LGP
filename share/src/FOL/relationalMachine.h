@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fol.h"
 
 /** The RelationalMachine maintains a knowledge base, which stores both, a state (=set/conjunction of facts) and a set
@@ -16,13 +18,16 @@ struct RelationalMachine{
   Graph *tmp;   ///< a tmp subgraph of the KB (private)
   bool verbose;
 
+  RelationalMachine();
   RelationalMachine(const char* filename);
+  void init(const char* filename);
 
-  bool queryCondition(MT::String query); ///< return indicates coverage of the condition
+  bool queryCondition(MT::String query) const; ///< return indicates coverage of the condition
   bool applyEffect(MT::String effect);   ///< return indicates change of state
-  ItemL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
+  NodeL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
-  void declareNewSymbol(MT::String symbol);
+  Node* declareNewSymbol(MT::String symbol);
+  MT::String getKB();
   MT::String getState();
   MT::String getRules();
   StringA getSymbols();

@@ -29,6 +29,19 @@ struct CudaInterface {
   void free(arr& X);
 };
 
+inline void cuAlloc(arr& X){  cudaMalloc((void **) &X.aux, X.N*X.sizeT);  }
+inline void cuUpload(const arr& X){
+  if(!X.aux) cuAlloc
+  cudaMemcpy(X.aux, X.p, X.N*X.sizeT, cudaMemcpyHostToDevice);
+}
+void CudaInterface::download(arr& X){
+  cudaMemcpy(X.p, X.aux, X.N*X.sizeT, cudaMemcpyDeviceToHost);
+}
+void CudaInterface::free(arr& X){
+  cudaFree(X.aux);
+  X.aux=NULL;
+}
+
 
 #ifdef  MT_IMPLEMENTATION
 #  include "cudaModules.cpp"

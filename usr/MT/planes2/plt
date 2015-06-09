@@ -1,0 +1,2 @@
+set view map
+splot 'z.seg' matrix with image

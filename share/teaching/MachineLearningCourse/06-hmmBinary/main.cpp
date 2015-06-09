@@ -100,8 +100,8 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
   y.resize(T);
   p=P0;
   for(t=0;t<T;t++){
-    x(t) = SUS(p); //state
-    y(t) = mu(x(t)) + sigma*rnd.gauss(); //SUS(B[x(t)]); //observation
+    x(t) = sampleMultinomial(p); //state
+    y(t) = mu(x(t)) + sigma*rnd.gauss(); //sampleMultinomial(B[x(t)]); //observation
     p = P[x(t)];
   }
   x.reshape(T,1);  x >>FILE("z.x");  x.reshape(T);

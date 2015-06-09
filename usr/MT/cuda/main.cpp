@@ -5,4 +5,9 @@ int main(int argc,char **argv){
   CudaInterface CU;
   CU.initMapping();
 
+  uint16A D;
+  FILE("z.depth") >>D;
+
+
+
 }

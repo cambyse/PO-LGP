@@ -8,9 +8,9 @@
 #include <Core/array-vector.h>
 
 struct MySystem:System{
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, gamepadState);
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(arr, gamepadState)
   MySystem(){
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
@@ -131,6 +131,16 @@ void TEST(Gamepad){
       J = inverse_SymPosDef(J*~J)*J;
 
       fil <<t <<' ' <<f_des <<' ' << J_ft*fLobs << " " << J*uobs << endl;
+
+
+//      // change stiffness of endeff
+//      -      arr y_fL, J_fL;
+//      -      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+//      -      J_fL = J_fL.sub(0,1,0,-1);
+//      -      arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
+//      -      cout <<J_fL <<gain <<endl;
+//      -      refs.Kq_gainFactor = gain;
+//      -      refs.u_bias = zeros(q.N);
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;

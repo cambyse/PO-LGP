@@ -47,8 +47,8 @@ void TEST(KinectRaw) {
   KinectPoller kin;
   Variable<byteA> kinect_rgb;
   Variable<uint16A> kinect_depth;
-  connect(kin.kinect_rgb, kinect_rgb);
-  connect(kin.kinect_depth, kinect_depth);
+  kin.kinect_rgb.linkToVariable(&kinect_rgb);
+  kin.kinect_depth.linkToVariable(&kinect_depth);
 
   kin.open();
   for(uint t=0;t<100;t++){

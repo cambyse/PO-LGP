@@ -178,7 +178,7 @@ void plotFunctions(const arr& F, double x0, double x1) {
   for(uint j=0; j<tF.d0; j++) plotFunction(tF[j], x0, x1);
 }
 
-void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
+void plotFunctionPoints(const arr& x, const arr& f) {
   CHECK_EQ(x.d0,f.d0, "Domain and image of function have different size!")
   arr X(x.d0, x.d1+1);
   uint i, j;
@@ -187,7 +187,6 @@ void plotFunctionPoints(const arr& x, const arr& f, MT::String title) {
     X(i, j)=f(i);
   }
   plotModule.s->points.append(X);
-  plotModule.s->legend.append(title);
 }
 
 void plotFunction(const arr& x, const arr& f) {
@@ -685,7 +684,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   gnuplotdata.close();
   
   //call gnuplot
-  gnuplot(gnuplotcmd, pauseMouse, true, "z.pdf");
+  gnuplot(gnuplotcmd, pauseMouse, false, "z.pdf");
 }
 
 

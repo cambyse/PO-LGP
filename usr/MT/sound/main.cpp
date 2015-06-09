@@ -3,7 +3,7 @@
 #include <Media/audio.h>
 
 
-uintA DUR = {0,2,4,5,7,9,11};
+uintA DUR = {0u,2,4,5,7,9,11};
 
 void basic(SineSound& S, Audio& audio){
   S.addNote(440., .1, .0);

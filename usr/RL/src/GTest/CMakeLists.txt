@@ -4,7 +4,9 @@ find_package(Qt5Core)
 find_package(Qt5Widgets)
 find_package(Qt5Svg)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+add_definitions(-std=c++0x)
+
+include_directories(/home/robert/MLR_git/share/include)
 
 add_executable(GTest
     main.cpp
@@ -32,6 +34,8 @@ add_executable(GTest
     MinimalEnvironmentExample/MinimalReward.h
     ../util/unit_tests.cpp
     ../ActiveOnlineSearch/unit_tests.cpp
+    ~/MLR_git/share/include/MCTS_Environment/AbstractEnvironment.h
+    ~/MLR_git/share/include/MCTS_Environment/unit_tests.cpp
 )
 
 target_include_directories(GTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

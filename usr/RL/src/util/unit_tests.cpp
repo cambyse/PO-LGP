@@ -1233,7 +1233,8 @@ TEST(Util, ReturnTuple) {
 
         // create named tuple and assign in one step
         {
-            NAMED_RETURN_TUPLE(tt, int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            NAMED_RETURN_TUPLE(tt, int, i, double, d);
+            tt = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
             EXPECT_EQ(i, std::get<0>(tt));
@@ -1288,33 +1289,36 @@ TEST(Util, ArrayToTuple) {
 
 TEST(Util, GraphToPdf) {
 
+    //! [graph_to_pdf example]
+
     using namespace lemon;
 
+    // construct the graph
     ListDigraph graph;
     auto n1 = graph.addNode();
     auto n2 = graph.addNode();
     auto n3 = graph.addNode();
     graph.addArc(n1,n2);
     graph.addArc(n1,n3);
-    bool first;
+
+    // get a node map (only filling the first entry)
     ListDigraph::NodeMap<QString> node_map(graph);
-    first = true;
     for(ListDigraph::NodeIt node(graph); node!=INVALID; ++node) {
-        if(first) {
-            node_map[node] = "color=red";
-            first = false;
-        }
-    }
-    ListDigraph::ArcMap<QString> arc_map(graph);
-    first = true;
-    for(ListDigraph::ArcIt arc(graph); arc!=INVALID; ++arc) {
-        if(first) {
-            arc_map[arc] = "style=solid";
-            first = false;
-        }
+        node_map[node] = "color=red";
+        break;
     }
 
+    // get an arc map (only filling the first entry)
+    ListDigraph::ArcMap<QString> arc_map(graph);
+    for(ListDigraph::ArcIt arc(graph); arc!=INVALID; ++arc) {
+        arc_map[arc] = "style=solid";
+        break;
+    }
+
+    // plot the graph
     util::graph_to_pdf("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
+
+    //! [graph_to_pdf example]
 
     EXPECT_EQ(0,system("dot -V")) << "Could not find 'dot' command for generating graphs.";
     EXPECT_EQ(0,remove("graph.pdf")) << "Graph 'graph.pdf' was not generated.";

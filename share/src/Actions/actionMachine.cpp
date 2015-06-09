@@ -45,13 +45,24 @@ void ActionMachine::open(){
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
+    }else{
+      KB.writeAccess();
+      new Node_typed<bool>(KB(), {"conv"}, {}, NULL, false);
+      new Node_typed<bool>(KB(), {"contact"}, {}, NULL, false);
+      new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
+//new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
+//new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
+      new Node_typed<Graph>(KB(), {"STATE"}, {}, new Graph(), true);
+      KB().checkConsistency();
+      KB()>> FILE("z.initialKB");
+      KB.deAccess();
     }
   }
 
   KB.readAccess();
-  Item *tasks = KB()["Tasks"];
+  Node *tasks = KB()["Tasks"];
   if(tasks){
-    parseTaskDescriptions(tasks->kvg());
+    parseTaskDescriptions(tasks->graph());
   }
   KB.deAccess();
 
@@ -94,7 +105,7 @@ void ActionMachine::step(){
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
-  transitionFOL( .01*t,  (t<=1) );
+  transitionFOL( .01*t, true);// (t<=1) );
 
   //-- set gains to default value (can be overwritten by other actions)
   Kp=ARR(1.);
@@ -105,8 +116,8 @@ void ActionMachine::step(){
   if(stopButtons(gamepad)){
     cout <<"STOP" <<endl;
     KB.writeAccess();
-    Item *quitSymbol = KB()["quit"];
-    KB().getItem("STATE")->kvg().append<bool>({},{quitSymbol}, NULL, false);
+    Node *quitSymbol = KB()["quit"];
+    KB().getItem("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    engine().shutdown.incrementValue();
   }
@@ -199,7 +210,7 @@ void ActionMachine::close(){
 }
 
 void ActionMachine::parseTaskDescription(Graph& td){
-  Item *t = td.isItemOfParentKvg;
+  Node *t = td.isItemOfParentKvg;
   MT::String type=td["type"]->V<MT::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
@@ -215,7 +226,7 @@ void ActionMachine::parseTaskDescription(Graph& td){
 
 void ActionMachine::parseTaskDescriptions(const Graph& tds){
   cout <<"Instantiating task descriptions:\n" <<tds <<endl;
-  for(Item *t:tds) parseTaskDescription(t->kvg());
+  for(Node *t:tds) parseTaskDescription(t->graph());
 }
 
 void ActionMachine::removeAction(Action* a, bool hasLock){
@@ -230,25 +241,26 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
-  Item* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
-  Item* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
-  Item* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
-  Graph& state = KB().getItem("STATE")->kvg();
+  Node* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
+  Node* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
+  Node* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
+  Graph& state = KB().getItem("STATE")->graph();
+  cout <<"STATE = " <<state <<endl;
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
-      Item *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
+      Node *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
       if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
     if(a->indicateTimeout(*this)){
-      Item *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
+      Node *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
       if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
   }
 //  if(getContactForce()>5.){
-//    Item *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
+//    Node *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
 //    if(getEqualFactInKB(KB(), newit)) delete newit;
 //    else changes=true;
 //  }
@@ -265,7 +277,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
     for(Action *a:A()){
       if(!a->symbol){ a->active=false;  continue; }
       bool act=false;
-      for(Item *lit:a->symbol->parentOf){
+      for(Node *lit:a->symbol->parentOf){
         if(&lit->container==&state && lit->keys.N==0 && lit->parents.N>0){ act=true; break; }
       }
       if(act) a->active=true;
@@ -307,12 +319,12 @@ void ActionMachine::waitForQuitSymbol() {
   while (cont) {
     KB.waitForNextRevision();
     KB.readAccess();
-    Item* quitSymbol = KB().getItem("quit");
+    Node* quitSymbol = KB().getItem("quit");
     if(!quitSymbol){
       MT_MSG("WARNING: no quit symbol!");
       return;
     }
-    for(Item *f:quitSymbol->parentOf){
+    for(Node *f:quitSymbol->parentOf){
       if(f->container.isItemOfParentKvg && f->container.isItemOfParentKvg->keys.N && f->container.isItemOfParentKvg->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();

@@ -27,7 +27,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
-  Item *it;
+  Node *it;
   if((it=params["PD"])){
     arr pd=it->V<arr>();
     setGainsAsNatural(pd(0), pd(1));
@@ -60,6 +60,7 @@ void CtrlTask::setGains(double pgain, double dgain) {
 }
 
 void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
+  CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
   Pgain = MT::sqr(1./lambda);

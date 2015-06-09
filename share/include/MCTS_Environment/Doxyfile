@@ -1,0 +1,16 @@
+PROJECT_NAME           = "MCTS"
+OUTPUT_DIRECTORY       = doc
+GENERATE_TAGFILE       = doc/doxy.tag
+#TAGFILES	       =
+EXAMPLE_PATH	       = doc examples
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_PACKAGE        = YES
+EXTRACT_STATIC         = YES
+RECURSIVE              = YES
+#HTML_EXTRA_FILES       =
+GENERATE_LATEX         = NO
+HAVE_DOT               = YES
+UML_LOOK               = YES
