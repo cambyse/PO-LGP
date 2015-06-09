@@ -41,7 +41,7 @@ START_STATE {
 
 ### terminal state
 
-terminal { (fixed Handle Long1) } (fixed Handle Long2) }
+terminal { (fixed Handle Long1) (fixed Handle Long2) }
 
 ### RULES
 
