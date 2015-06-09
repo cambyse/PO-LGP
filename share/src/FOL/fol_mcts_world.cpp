@@ -182,7 +182,13 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-    NIY;
+  start_state = state;
+  start_state->isItemOfParentKvg->keys(0)="START_STATE";
+  KB.checkConsistency();
+  if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
+  if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
+  fil <<"*** reassign start state ***" <<endl;
+  fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl;
 }
 
 void FOL_World::reset_state(){
@@ -218,7 +224,7 @@ void FOL_World::reset_state(){
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
 
   fil <<"*** reset ***" <<endl;
-  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; start_state->write(fil," ","{}"); fil <<endl;
+  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
 }
 
 bool FOL_World::get_info(InfoTag tag) const{
