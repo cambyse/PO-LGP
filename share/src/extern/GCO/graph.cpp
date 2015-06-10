@@ -8,7 +8,7 @@
 
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	Graph<captype, tcaptype, flowtype>::Graph(int node_num_max, int edge_num_max, void (*err_function)(const char *))
+	GCO_Graph<captype, tcaptype, flowtype>::GCO_Graph(int node_num_max, int edge_num_max, void (*err_function)(const char *))
 	: node_num(0),
 	  nodeptr_block(NULL),
 	  error_function(err_function)
@@ -30,7 +30,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	Graph<captype,tcaptype,flowtype>::~Graph()
+	GCO_Graph<captype,tcaptype,flowtype>::~GCO_Graph()
 {
 	if (nodeptr_block) 
 	{ 
@@ -42,7 +42,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::reset()
+	void GCO_Graph<captype,tcaptype,flowtype>::reset()
 {
 	node_last = nodes;
 	arc_last = arcs;
@@ -59,7 +59,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::reallocate_nodes(int num)
+	void GCO_Graph<captype,tcaptype,flowtype>::reallocate_nodes(int num)
 {
 	int node_num_max = (int)(node_max - nodes);
 	node* nodes_old = nodes;
@@ -83,7 +83,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::reallocate_arcs()
+	void GCO_Graph<captype,tcaptype,flowtype>::reallocate_arcs()
 {
 	int arc_num_max = (int)(arc_max - arcs);
 	int arc_num = (int)(arc_last - arcs);

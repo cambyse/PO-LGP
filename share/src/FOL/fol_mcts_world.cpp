@@ -227,6 +227,10 @@ void FOL_World::reset_state(){
   fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
 }
 
+void FOL_World::write_current_state(ostream& os){
+  state->write(os," ","{}");
+}
+
 bool FOL_World::get_info(InfoTag tag) const{
   switch(tag){
     case hasTerminal: return true;

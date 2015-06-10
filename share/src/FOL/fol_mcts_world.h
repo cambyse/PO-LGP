@@ -35,7 +35,7 @@ struct FOL_World:MCTS_Environment{
       auto ob = dynamic_cast<const Observation *>(&other);
       return ob!=nullptr && ob->id==id;
     }
-    void write(ostream& os) const {os <<"BLA"; }
+    void write(ostream& os) const { os <<id; }
     virtual size_t get_hash() const override {
       return std::hash<int>()(id);
     }

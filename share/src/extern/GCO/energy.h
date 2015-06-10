@@ -76,11 +76,11 @@
 #include <assert.h>
 #include "graph.h"
 
-template <typename captype, typename tcaptype, typename flowtype> class Energy: public Graph<captype,tcaptype,flowtype>
+template <typename captype, typename tcaptype, typename flowtype> class Energy: public GCO_Graph<captype,tcaptype,flowtype>
 {
-	typedef Graph<captype,tcaptype,flowtype> GraphT;
+	typedef GCO_Graph<captype,tcaptype,flowtype> GCO_GraphT;
 public:
-	typedef typename GraphT::node_id Var;
+	typedef typename GCO_GraphT::node_id Var;
 
 	/* Types of energy values.
 	   Value is a type of a value in a single term
@@ -184,7 +184,7 @@ private:
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-inline Energy<captype,tcaptype,flowtype>::Energy(int var_num_max, int edge_num_max, void (*err_function)(const char *)) : Graph<captype,tcaptype,flowtype>(var_num_max, edge_num_max, err_function)
+inline Energy<captype,tcaptype,flowtype>::Energy(int var_num_max, int edge_num_max, void (*err_function)(const char *)) : GCO_Graph<captype,tcaptype,flowtype>(var_num_max, edge_num_max, err_function)
 {
 	Econst = 0;
 	error_function = err_function;
@@ -195,7 +195,7 @@ inline Energy<captype,tcaptype,flowtype>::~Energy() {}
 
 template <typename captype, typename tcaptype, typename flowtype> 
 inline typename Energy<captype,tcaptype,flowtype>::Var Energy<captype,tcaptype,flowtype>::add_variable(int num) 
-{	return GraphT::add_node(num); }
+{	return GCO_GraphT::add_node(num); }
 
 template <typename captype, typename tcaptype, typename flowtype> 
 inline void Energy<captype,tcaptype,flowtype>::add_constant(Value A) { Econst += A; }
@@ -322,7 +322,7 @@ inline void Energy<captype,tcaptype,flowtype>::add_term3(Var x, Var y, Var z,
 
 template <typename captype, typename tcaptype, typename flowtype> 
 inline typename Energy<captype,tcaptype,flowtype>::TotalValue Energy<captype,tcaptype,flowtype>::minimize() { 
-return Econst + GraphT::maxflow(); }
+return Econst + GCO_GraphT::maxflow(); }
 
 template <typename captype, typename tcaptype, typename flowtype> 
 inline int Energy<captype,tcaptype,flowtype>::get_var(Var x) { return (int) this->what_segment(x); }

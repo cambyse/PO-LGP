@@ -52,7 +52,7 @@
 // flowtype: type of total flow
 //
 // Current instantiations are in instances.inc
-template <typename captype, typename tcaptype, typename flowtype> class Graph
+template <typename captype, typename tcaptype, typename flowtype> class GCO_Graph
 {
 public:
 	typedef enum
@@ -80,10 +80,10 @@ public:
 	// Also, temporarily the amount of allocated memory would be more than twice than needed.
 	// Similarly for edges.
 	// If you wish to avoid this overhead, you can download version 2.2, where nodes and edges are stored in blocks.
-	Graph(int node_num_max, int edge_num_max, void (*err_function)(const char *) = NULL);
+	GCO_Graph(int node_num_max, int edge_num_max, void (*err_function)(const char *) = NULL);
 
 	// Destructor
-	~Graph();
+	~GCO_Graph();
 
 	// Adds node(s) to the graph. By default, one node is added (num=1); then first call returns 0, second call returns 1, and so on. 
 	// If num>1, then several nodes are added, and node_id of the first one is returned.
@@ -108,7 +108,7 @@ public:
 	flowtype maxflow(bool reuse_trees = false, Block<node_id>* changed_list = NULL);
 
 	// After the maxflow is computed, this function returns to which
-	// segment the node 'i' belongs (Graph<captype,tcaptype,flowtype>::SOURCE or Graph<captype,tcaptype,flowtype>::SINK).
+	// segment the node 'i' belongs (GCO_Graph<captype,tcaptype,flowtype>::SOURCE or GCO_Graph<captype,tcaptype,flowtype>::SINK).
 	//
 	// Occasionally there may be several minimum cuts. If a node can be assigned
 	// to both the source and the sink, then default_segm is returned.
@@ -211,8 +211,8 @@ public:
 	// Nodes which are not in the list are guaranteed to keep their old segmentation label (SOURCE or SINK).
 	// Example usage:
 	//
-	//		typedef Graph<int,int,int> G;
-	//		G* g = new Graph(nodeNum, edgeNum);
+	//		typedef GCO_Graph<int,int,int> G;
+	//		G* g = new GCO_Graph(nodeNum, edgeNum);
 	//		Block<G::node_id>* changed_list = new Block<G::node_id>(128);
 	//
 	//		... // add nodes and edges
@@ -247,7 +247,7 @@ public:
 		nodes[i].is_in_changed_list = 0;
 	}
 
-	void Copy(Graph<captype, tcaptype, flowtype>* g0);
+	void Copy(GCO_Graph<captype, tcaptype, flowtype>* g0);
 
 
 
@@ -357,7 +357,7 @@ private:
 
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline typename Graph<captype,tcaptype,flowtype>::node_id Graph<captype,tcaptype,flowtype>::add_node(int num)
+	inline typename GCO_Graph<captype,tcaptype,flowtype>::node_id GCO_Graph<captype,tcaptype,flowtype>::add_node(int num)
 {
 	assert(num > 0);
 
@@ -385,7 +385,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::add_tweights(node_id i, tcaptype cap_source, tcaptype cap_sink)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::add_tweights(node_id i, tcaptype cap_source, tcaptype cap_sink)
 {
 	assert(i >= 0 && i < node_num);
 
@@ -397,7 +397,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::add_edge(node_id _i, node_id _j, captype cap, captype rev_cap)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::add_edge(node_id _i, node_id _j, captype cap, captype rev_cap)
 {
 	assert(_i >= 0 && _i < node_num);
 	assert(_j >= 0 && _j < node_num);
@@ -426,19 +426,19 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline typename Graph<captype,tcaptype,flowtype>::arc* Graph<captype,tcaptype,flowtype>::get_first_arc()
+	inline typename GCO_Graph<captype,tcaptype,flowtype>::arc* GCO_Graph<captype,tcaptype,flowtype>::get_first_arc()
 {
 	return arcs;
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline typename Graph<captype,tcaptype,flowtype>::arc* Graph<captype,tcaptype,flowtype>::get_next_arc(arc* a) 
+	inline typename GCO_Graph<captype,tcaptype,flowtype>::arc* GCO_Graph<captype,tcaptype,flowtype>::get_next_arc(arc* a) 
 {
 	return a + 1; 
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::get_arc_ends(arc* a, node_id& i, node_id& j)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::get_arc_ends(arc* a, node_id& i, node_id& j)
 {
 	assert(a >= arcs && a < arc_last);
 	i = (node_id) (a->sister->head - nodes);
@@ -446,28 +446,28 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline tcaptype Graph<captype,tcaptype,flowtype>::get_trcap(node_id i)
+	inline tcaptype GCO_Graph<captype,tcaptype,flowtype>::get_trcap(node_id i)
 {
 	assert(i>=0 && i<node_num);
 	return nodes[i].tr_cap;
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline captype Graph<captype,tcaptype,flowtype>::get_rcap(arc* a)
+	inline captype GCO_Graph<captype,tcaptype,flowtype>::get_rcap(arc* a)
 {
 	assert(a >= arcs && a < arc_last);
 	return a->r_cap;
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::set_trcap(node_id i, tcaptype trcap)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::set_trcap(node_id i, tcaptype trcap)
 {
 	assert(i>=0 && i<node_num); 
 	nodes[i].tr_cap = trcap;
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::set_rcap(arc* a, captype rcap)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::set_rcap(arc* a, captype rcap)
 {
 	assert(a >= arcs && a < arc_last);
 	a->r_cap = rcap;
@@ -475,7 +475,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline typename Graph<captype,tcaptype,flowtype>::termtype Graph<captype,tcaptype,flowtype>::what_segment(node_id i, termtype default_segm)
+	inline typename GCO_Graph<captype,tcaptype,flowtype>::termtype GCO_Graph<captype,tcaptype,flowtype>::what_segment(node_id i, termtype default_segm)
 {
 	if (nodes[i].parent)
 	{
@@ -488,7 +488,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::mark_node(node_id _i)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::mark_node(node_id _i)
 {
 	node* i = nodes + _i;
 	if (!i->next)
