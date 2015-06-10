@@ -88,7 +88,7 @@ struct MotionProblem {
   //-- trajectory length and tau
   uint T; ///< number of time steps
   double tau; ///< duration of single step
-  uint k_order;
+  uint k_order; ///< determine the order of the KOMO problem (default 2)
   
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
@@ -151,7 +151,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
-  virtual uint get_k() { return 2; }
+  virtual uint get_k() { return MP.k_order; }
   virtual uint dim_x() { return MP.x0.N; }
   virtual uint dim_z() { return MP.z0.N; }
   virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
