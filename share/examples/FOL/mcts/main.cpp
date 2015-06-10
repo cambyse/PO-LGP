@@ -5,7 +5,7 @@
 
 //===========================================================================
 
-void testMonteCarlo(){
+void TEST(MonteCarlo){
   Graph Gorig;
   FILE("boxes_new.kvg") >>Gorig;
   MT::rnd.seed(3);
@@ -112,8 +112,7 @@ void testMonteCarlo(){
 
 //===========================================================================
 
-
-void testMCTS(){
+void TEST(MCTS){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=0;
@@ -144,9 +143,32 @@ void testMCTS(){
 
 //===========================================================================
 
+void TEST(FOL_World){
+  FOL_World world("boxes_new.kvg");
+
+  auto actions = world.get_actions();
+  for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
+
+  for(uint k=0;k<10;k++){
+    auto res=world.transition_randomly();
+    cout <<"RND TRANSITION: obs=" <<*res.first <<" r=" <<res.second <<endl;
+  }
+
+  world.get_actions();
+
+  world.make_current_state_default();
+
+  world.reset_state();
+  world.get_actions();
+
+}
+
+//===========================================================================
+
 int main(int argn, char** argv){
   rnd.clockSeed();
-  srand(rnd());
-//  testMonteCarlo();
-  testMCTS();
+
+//  testMCTS();
+
+  testFOL_World();
 }

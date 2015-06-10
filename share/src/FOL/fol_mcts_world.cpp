@@ -182,7 +182,11 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  start_state = state;
+#if 0
+  delete start_state->isNodeOfParentGraph;
+  start_state = new Graph();
+#endif
+  start_state->copy(*state, &KB);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   KB.checkConsistency();
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
@@ -199,17 +203,14 @@ void FOL_World::reset_state(){
   deadEnd=false;
   successEnd=false;
   Ndecisions=0;
-#if 1
+#if 0
   KB.checkConsistency();
-  if(state){
-//    state->clear();
-    delete state->isNodeOfParentGraph;
-  }
+  if(state) delete state->isNodeOfParentGraph;
   state = new Graph();
-  state->operator =(*start_state);
-#else
-  state = start_state;
 #endif
+  if(!state) state = new Graph();
+  state->copy(*start_state, &KB);
+  KB.checkConsistency();
   state->isNodeOfParentGraph->keys(0)="STATE";
   //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 

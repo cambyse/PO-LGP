@@ -148,3 +148,5 @@ public:
         return env_marc->get_info(MCTS_Environment::InfoTag::isMarkov);
     }
 };
+
+stdOutPipe(MCTS_Environment::SAO);
