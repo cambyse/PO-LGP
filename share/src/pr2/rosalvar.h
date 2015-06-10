@@ -15,12 +15,22 @@
 
 
 //===========================================================================
-/// Sync the AR maker alvar
+/// Generic subscriber to the AR maker alvar
 ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
 
 
+//===========================================================================
+using ors::KinematicWorld;  // this is necessary to make the macro work.
+
+/// Simple syncing of the ors world "modelWorld" with ar_pose_marker
+BEGIN_ROSMODULE("/ar_pose_marker", AlvarMarkers, markers)
+  ACCESS(KinematicWorld, modelWorld)
+END_ROSMODULE()
+
 
 //===========================================================================
+// Helper functions
+
 /**
  * Set the transformation of the body to the transformation of the alvar maker.
  */

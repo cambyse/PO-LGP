@@ -8,7 +8,7 @@
 #include <geometry_msgs/WrenchStamped.h>
 
 //===========================================================================
-
+// HELPERS
 void rosCheckInit(){
   ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
 }

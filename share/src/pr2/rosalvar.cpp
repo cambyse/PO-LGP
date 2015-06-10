@@ -1,6 +1,16 @@
 #include "rosalvar.h"
 
 
+// ============================================================================
+void ROSMODULE_markers::step() {
+  cout << "steppppppp" << endl;;
+  modelWorld.writeAccess();
+  AlvarMarkers markers_ = markers.get();
+  syncMarkers(modelWorld.set()(), markers_);
+  modelWorld.deAccess();
+}
+
+// ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
