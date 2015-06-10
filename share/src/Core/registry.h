@@ -57,7 +57,7 @@ void initRegistry(int argc, char *argv[]);
 struct Type:RootType {
   MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual const std::type_info& typeId() const {NIY}
-  virtual struct Node* readIntoNewItem(Graph& container, istream&) const {NIY}
+  virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
   virtual void* newInstance() const {NIY}
   virtual Type* clone() const {NIY}
   void write(std::ostream& os) const {
@@ -84,7 +84,7 @@ typedef MT::Array<Type*> TypeInfoL;
 
 //-- query existing types
 inline Node *reg_findType(const char* key) {
-  NodeL types = registry().getDerivedItems<Type>();
+  NodeL types = registry().getDerivedNodes<Type>();
   for(Node *ti: types) {
     if(MT::String(ti->getValue<Type>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
@@ -94,7 +94,7 @@ inline Node *reg_findType(const char* key) {
 
 template<class T>
 Node *reg_findType() {
-  NodeL types = registry().getDerivedItems<Type>();
+  NodeL types = registry().getDerivedNodes<Type>();
   for(Node *ti: types) {
     if(ti->getValue<Type>()->typeId()==typeid(T)) return ti;
   }
@@ -107,9 +107,9 @@ Node *reg_findType() {
 // read a value from a stream by looking up available registered types
 //
 
-inline Node* readTypeIntoItem(Graph& container, const char* key, std::istream& is) {
+inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& is) {
   Node *ti = reg_findType(key);
-  if(ti) return ti->getValue<Type>()->readIntoNewItem(container, is);
+  if(ti) return ti->getValue<Type>()->readIntoNewNode(container, is);
   return NULL;
 }
 
@@ -140,7 +140,7 @@ template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
   Type_typed_readable() {}
   Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
-  virtual Node* readIntoNewItem(Graph& container, istream& is) const { T *x=new T(); is >>*x; return new Node_typed<T>(container, x, true); }
+  virtual Node* readIntoNewNode(Graph& container, istream& is) const { T *x=new T(); is >>*x; return new Node_typed<T>(container, x, true); }
   virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 

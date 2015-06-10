@@ -98,7 +98,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = S->RM.get()->KB.getItem(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -140,7 +140,7 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 //  startActivity(lit2str(literal), parameters);
 //#else
 //  S->RM.writeAccess();
-//  Graph& state=S->RM().getItem("STATE")->graph();
+//  Graph& state=S->RM().getNode("STATE")->graph();
 //  NodeL parents;
 //  for(auto i:literal) parents.append(S->RM().elem(i));
 //  state.append<bool>({}, parents, NULL, false);
@@ -153,7 +153,7 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 //  waitForCondition(lit2str(literals));
 //#else
 //  S->RM.readAccess();
-//  Graph& state=S->RM().getItem("STATE")->graph();
+//  Graph& state=S->RM().getNode("STATE")->graph();
 //  NodeL lit;
 //  for(auto i:literal) lit.append(S->RM().elem(i));
 //  S->RM.deAccess();

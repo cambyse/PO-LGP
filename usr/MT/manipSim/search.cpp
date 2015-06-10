@@ -10,13 +10,13 @@ void runMonteCarlo(Graph& G){
 
   G.checkConsistency();
   //    Node *Terminate_keyword = G["Terminate"];
-  NodeL rules = G.getItems("Rule");
-  NodeL constants = G.getItems("Object");
+  NodeL rules = G.getNodes("Rule");
+  NodeL constants = G.getNodes("Object");
   Graph& actionSequence = G["actionSequence"]->graph();
   Node *papSymbol = G["pap"];
   Node *depthSymbol = G["depth"];
   Graph& state = G["STATE"]->graph();
-  //    Graph& terminal = G.getItem("terminal")->graph();
+  //    Graph& terminal = G.getNode("terminal")->graph();
 
   for(uint h=0;h<100;h++){
     if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;

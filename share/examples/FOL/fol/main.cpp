@@ -22,19 +22,19 @@ void testFolLoadFile(){
 
 //  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
 
-  NodeL consts = G.getItems("Constant");
+  NodeL consts = G.getNodes("Constant");
   Node *s = G["STATE"];
   Node *r = G["cruiseto"]->graph()["precond"];
-  NodeL vars = G["cruiseto"]->graph().getItems("Var");
+  NodeL vars = G["cruiseto"]->graph().getNodes("Var");
 
-  cout <<"symbols = " <<G.getItems("Symbol") <<endl;
+  cout <<"symbols = " <<G.getNodes("Symbol") <<endl;
 
   cout <<"state = " <<*s <<"\nrule=" <<*r <<endl;
 
 
   G.checkConsistency();
   Node *sub = new Node_typed<Graph>(G, new Graph, true);
-  sub->graph().isItemOfParentKvg = sub;
+  sub->graph().isNodeOfParentGraph = sub;
   G.checkConsistency();
   new Node_typed<bool>(sub->graph(), {}, {s, consts(0)}, NULL, false);
   G.checkConsistency();
@@ -49,7 +49,7 @@ void testFolFwdChaining(){
 
   FILE("fol.kvg") >>G;
 
-  Graph& state = G.getItem("STATE")->graph();
+  Graph& state = G.getNode("STATE")->graph();
 
   cout <<"INIT STATE = " <<state <<endl;
 
@@ -77,9 +77,9 @@ void testFolSubstitution(){
 //  FILE("boxes.kvg") >>G;
   FILE("substTest.kvg") >>KB;
 
-  NodeL rules = KB.getItems("Rule");
-  NodeL constants = KB.getItems("Constant");
-  Graph& state = KB.getItem("STATE")->graph();
+  NodeL rules = KB.getNodes("Rule");
+  NodeL constants = KB.getNodes("Constant");
+  Graph& state = KB.getNode("STATE")->graph();
 
   for(Node* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
@@ -107,10 +107,10 @@ void testMonteCarlo(){
     Graph KB = Gorig;
     KB.checkConsistency();
     Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getItem("STATE")->graph();
-    NodeL rules = KB.getItems("Rule");
-    NodeL constants = KB.getItems("Constant");
-    Graph& terminal = KB.getItem("terminal")->graph();
+    Graph& state = KB.getNode("STATE")->graph();
+    NodeL rules = KB.getNodes("Rule");
+    NodeL constants = KB.getNodes("Constant");
+    Graph& terminal = KB.getNode("terminal")->graph();
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;

@@ -8,7 +8,7 @@ void FOL_World::Decision::write(ostream& os) const{
   }else{
 #if 0
     os <<"RULE '" <<rule->keys(1) <<"' SUB ";
-    Graph &r=rule->kvg();
+    Graph &r=rule->graph();
     for(uint i=0;i<substitution.N;i++){
       os <<r.elem(i)->keys.last() <<'/' <<substitution.elem(i)->keys.last() <<' ';
     }
@@ -25,8 +25,8 @@ FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), 
   KB.checkConsistency();
   start_state = &KB["START_STATE"]->graph();
   terminal = &KB["terminal"]->graph(); //TODO: replace by QUIT state predicate!
-  decisionRules = KB.getItems("DecisionRule");
-  constants = KB.getItems("Constant");
+  decisionRules = KB.getNodes("DecisionRule");
+  constants = KB.getNodes("Constant");
   Terminate_keyword = KB["Terminate"];
 
   if(verbose>1){
@@ -183,7 +183,7 @@ bool FOL_World::is_terminal_state() const{
 
 void FOL_World::make_current_state_default() {
   start_state = state;
-  start_state->isItemOfParentKvg->keys(0)="START_STATE";
+  start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   KB.checkConsistency();
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
   if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
@@ -203,17 +203,17 @@ void FOL_World::reset_state(){
   KB.checkConsistency();
   if(state){
 //    state->clear();
-    delete state->isItemOfParentKvg;
+    delete state->isNodeOfParentGraph;
   }
   state = new Graph();
   state->operator =(*start_state);
 #else
   state = start_state;
 #endif
-  state->isItemOfParentKvg->keys(0)="STATE";
+  state->isNodeOfParentGraph->keys(0)="STATE";
   //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 
-  if(tmp) delete tmp->isItemOfParentKvg;
+  if(tmp) delete tmp->isNodeOfParentGraph;
   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
   tmp   = &KB["TMP"]->graph();
 
@@ -227,9 +227,9 @@ void FOL_World::reset_state(){
   fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
 }
 
-void FOL_World::write_current_state(ostream& os){
-  state->write(os," ","{}");
-}
+// void FOL_World::write_current_state(ostream& os){
+//   state->write(os," ","{}");
+// }
 
 bool FOL_World::get_info(InfoTag tag) const{
   switch(tag){

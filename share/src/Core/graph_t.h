@@ -50,7 +50,7 @@ struct Node_typed :Node {
   /// directly store pointer to value
   Node_typed(Graph& container, T *value, bool ownsValue):Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(value && typeid(T)==typeid(Graph)) graph().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
     if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -58,7 +58,7 @@ struct Node_typed :Node {
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, T *value, bool ownsValue)
     : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(value && typeid(T)==typeid(Graph)) graph().isItemOfParentKvg = this;
+    if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
     if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -129,7 +129,7 @@ struct Node_typed :Node {
     if(getValueType()==typeid(Graph)){
       Graph *g = new Graph();
       g->copy(*getValue<Graph>(), &container);
-      return g->isItemOfParentKvg;
+      return g->isNodeOfParentGraph;
     }
     return new Node_typed<T>(container, keys, parents, new T(*value), true);
   }
@@ -139,9 +139,9 @@ template<class T> T *Node::getValue() {
   Node_typed<T>* typed = dynamic_cast<Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
-      const Graph *kvg = getValue<Graph>();
-      if(kvg->N==1){ //only if it has size 1??
-        typed = dynamic_cast<Node_typed<T>*>(kvg->elem(0));
+      const Graph *graph = getValue<Graph>();
+      if(graph->N==1){ //only if it has size 1??
+        typed = dynamic_cast<Node_typed<T>*>(graph->elem(0));
       }
     }
     if(!typed){
@@ -156,9 +156,9 @@ template<class T> const T *Node::getValue() const {
   const Node_typed<T>* typed = dynamic_cast<const Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
-      const Graph *kvg = getValue<Graph>();
-      if(kvg->N==1){ //only if it has size 1??
-        typed = dynamic_cast<const Node_typed<T>*>(kvg->elem(0));
+      const Graph *graph = getValue<Graph>();
+      if(graph->N==1){ //only if it has size 1??
+        typed = dynamic_cast<const Node_typed<T>*>(graph->elem(0));
       }
     }
     MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
@@ -167,25 +167,25 @@ template<class T> const T *Node::getValue() const {
   return typed->value;
 }
 
-template<class T> ItemInitializer::ItemInitializer(const char* key, const T& x){
+template<class T> NodeInitializer::NodeInitializer(const char* key, const T& x){
   it = new Node_typed<T>(NoGraph, new T(x), true);
   it->keys.append(STRING(key));
 }
 
-template<class T> ItemInitializer::ItemInitializer(const char* key, const StringA& parents, const T& x)
+template<class T> NodeInitializer::NodeInitializer(const char* key, const StringA& parents, const T& x)
   : parents(parents){
   it = new Node_typed<T>(NoGraph, new T(x), true);
   it->keys.append(STRING(key));
 }
 
 template<class T> T* Graph::getValue(const char *key) {
-  Node *it = getItem(key);
+  Node *it = getNode(key);
   if(!it) return NULL;
   return it->getValue<T>();
 }
 
 template<class T> T* Graph::getValue(const StringA &keys) {
-  Node *it = getItem(keys);
+  Node *it = getNode(keys);
   if(!it) return NULL;
   return it->getValue<T>();
 }
@@ -225,7 +225,7 @@ template <class T> MT::Array<T*> Graph::getDerivedValues() {
   return ret;
 }
 
-template <class T> NodeL Graph::getDerivedItems() {
+template <class T> NodeL Graph::getDerivedNodes() {
   NodeL ret;
   for(Node *it: (*this)) {
     if(it->is_derived_from_RootType()) {

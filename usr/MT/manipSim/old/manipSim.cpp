@@ -24,13 +24,13 @@ void Action::setRandom(uint n){
 }
 
 void State::compControllable(){
-//  NodeL objs = G.getItems("body");
+//  NodeL objs = G.getNodes("body");
 
 //  cout <<G <<endl;
-  NodeL ctrltags = G.getItems("controllable");
+  NodeL ctrltags = G.getNodes("controllable");
   for_list_rev(Node, i, ctrltags) delete i;
 
-  ctrltags = G.getItems("canGrasp");
+  ctrltags = G.getNodes("canGrasp");
   NodeL ctrlables;
 
   for(Node *o:ctrltags) ctrlables.append(o->parents(0));

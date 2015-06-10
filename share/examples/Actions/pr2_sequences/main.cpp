@@ -37,8 +37,8 @@ void rewriteGraph(){
   FILE("machine.fol") >>G;
 //  FILE("machine_simple.fol") >>G;
 
-  NodeL actions=G.getItems("Action");
-  NodeL rules=G.getItems("Rule");
+  NodeL actions=G.getNodes("Action");
+  NodeL rules=G.getNodes("Rule");
   NodeL state=getLiteralsOfScope(G);
 
   for(Node* a:actions){

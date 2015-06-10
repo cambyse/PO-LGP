@@ -1,6 +1,6 @@
 #include "fol.h"
 
-/// given a scope (a subKvg, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
+/// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
 NodeL getLiteralsOfScope(Graph& KB){
   NodeL state;
   state.anticipateMEM(KB.N);
@@ -207,8 +207,8 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
       match = fact->hasEqualValue(literal);
     }
     if(match){
-      CHECK(value && &value->container==&facts.isItemOfParentKvg->container,""); //the value should be a constant!
-//      dom.NodeL::setAppendInSorted(value, ItemComp);
+      CHECK(value && &value->container==&facts.isNodeOfParentGraph->container,""); //the value should be a constant!
+//      dom.NodeL::setAppendInSorted(value, NodeComp);
       dom.NodeL::append(value);
     }
   }
@@ -233,7 +233,7 @@ Node* createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subs
   Node *fact = literal->newClone(facts);
   for(uint i=0;i<fact->parents.N;i++){
     Node *arg=fact->parents(i);
-    CHECK(&arg->container==subst_scope || &arg->container==&facts.isItemOfParentKvg->container,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
+    CHECK(&arg->container==subst_scope || &arg->container==&facts.isNodeOfParentGraph->container,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
     if(&arg->container==subst_scope){ //is a variable, and subst exists
        CHECK(subst(arg->index)!=NULL,"a variable (=argument in local scope) requires a substitution, no?");
       //CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
@@ -312,14 +312,14 @@ NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose)
 
 
 /// the list of literals is a conjunctive clause (e.g. precondition)
-/// all literals must be in the same scope (element of the same subKvg)
+/// all literals must be in the same scope (element of the same subGraph)
 /// we return all feasible substitutions of the literal's variables by constants
 /// the return value is an array: for every item of the literal's scope:
 /// if item=variable the array contains a pointer to the constant
 /// if item=non-variable the arrach contains a NULL pointer
 NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose){
   CHECK(literals.N,"");
-  Graph& varScope = literals(0)->container.isItemOfParentKvg->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
+  Graph& varScope = literals(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
 
   Node* EQ = facts["EQ"];
   NodeL vars = getSymbolsOfScope(varScope);
@@ -337,7 +337,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
   //-- initialize potential domains for each variable
   MT::Array<NodeL> domainOf(vars.N);
-//  constants.sort(ItemComp);
+//  constants.sort(NodeComp);
   for(Node *v:vars) domainOf(v->index) = domain;
 
   if(verbose>3) cout <<"domains before 'constraint propagation':" <<endl;
@@ -432,7 +432,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
 // NodeL getSubstitutions(Graph& facts, NodeL& literals, bool verbose){
 //   CHECK(literals.N,"");
-//   Graph& varScope = literals(0)->container.isItemOfParentKvg->container; //this is usually a rule (scope = subKvg in which we'll use the indexing)
+//   Graph& varScope = literals(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
 
 //   NodeL vars = getSymbolsOfScope(varScope);
 
@@ -544,9 +544,9 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
 
 bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
-  NodeL rules = KB.getItems("Rule");
-  NodeL constants = KB.getItems("Constant");
-  Graph& state = KB.getItem("STATE")->graph();
+  NodeL rules = KB.getNodes("Rule");
+  NodeL constants = KB.getNodes("Constant");
+  Graph& state = KB.getNode("STATE")->graph();
 
   for(;;){
     KB.checkConsistency();
@@ -595,7 +595,7 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
   KB.checkConsistency();
   uintA count(KB.N);     count=0;
   boolA inferred(KB.N);  inferred=false;
-  NodeL clauses = KB.getItems("Clause");
+  NodeL clauses = KB.getNodes("Clause");
   NodeL agenda;
   for(Node *clause:clauses){
     count(clause->index) = clause->graph().N;
@@ -610,7 +610,7 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
     if(!inferred(s->index)){
       inferred(s->index) = true;
       for(Node *child : s->parentOf){ //all objects that involve 's'
-        Node *clause = child->container.isItemOfParentKvg; //check if child is a literal in a clause
+        Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
         if(clause){ //yes: 's' is a literal in a clause
           CHECK(count(clause->index)>0,"");
           //          if(count(clause->index)>0){ //I think this is always true...

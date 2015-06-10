@@ -20,10 +20,10 @@ struct SystemDescription{
   Node* getVariableEntry(const Access& acc);
   Node* getVariableEntry(const char* name, const Type& typeinfo);
 
-  Node* getVar(uint i){ NodeL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
+  Node* getVar(uint i){ NodeL vars = system.getTypedNodes<VariableEntry>("Variable"); return vars(i); }
   template<class T> T& getValue(uint i){ return *((T*)getVar(i)->value<VariableEntry>()->var->data); }
 
-  void addModule(const char *dclName, const char *name=NULL, const NodeL& vars=NoItemL, StepMode mode=listenRead, double beat=0.);
+  void addModule(const char *dclName, const char *name=NULL, const NodeL& vars=NoNodeL, StepMode mode=listenRead, double beat=0.);
   void report();
   void complete();
 };

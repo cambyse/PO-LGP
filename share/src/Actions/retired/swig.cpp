@@ -55,7 +55,7 @@ return D;
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = s->KB.get()->getItem(symbolName.c_str());
+  Node *symbol = s->KB.get()->getNode(symbolName.c_str());
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -69,7 +69,7 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
   s->KB.writeAccess();
-  Graph& state=s->KB().getItem("STATE")->graph();
+  Graph& state=s->KB().getNode("STATE")->graph();
   NodeL parents;
   for(auto i:literal) parents.append(s->KB().elem(i));
   state.append<bool>({}, parents, NULL, false);
@@ -78,7 +78,7 @@ void ActionSwigInterface::startActivity(intV literal, dict parameters){
 
 void ActionSwigInterface::waitForCondition(intV literal){
   s->KB.readAccess();
-  Graph& state=s->KB().getItem("STATE")->graph();
+  Graph& state=s->KB().getNode("STATE")->graph();
   NodeL lit;
   for(auto i:literal) lit.append(s->KB().elem(i));
   s->KB.deAccess();

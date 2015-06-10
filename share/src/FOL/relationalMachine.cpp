@@ -71,10 +71,10 @@ NodeL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
-Node *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
 
 Node* RelationalMachine::declareNewSymbol(MT::String symbol){
-  Node *it = readItem(KB, symbol, false, false);
+  Node *it = readNode(KB, symbol, false, false);
   return it;
 }
 
@@ -91,7 +91,7 @@ MT::String RelationalMachine::getState(){
 }
 
 MT::String RelationalMachine::getRules(){
-  NodeL rules = KB.getItems("Rule");
+  NodeL rules = KB.getNodes("Rule");
   MT::String str;
   listWrite(rules, str, "\n", "[]");
   return str;

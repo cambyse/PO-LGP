@@ -62,7 +62,7 @@ struct EndStateProgram:ConstrainedProblemMix{
     }
 
     //-- supporters below object -> maximize their distances
-    NodeL objs=symbolicState.getItems("Object");
+    NodeL objs=symbolicState.getNodes("Object");
     for(Node *obj:objs){
       NodeL supporters;
       for(Node *constraint:obj->parentOf){
@@ -100,7 +100,7 @@ struct EndStateProgram:ConstrainedProblemMix{
     }
 
     //-- supporter above object -> center
-//    objs=symbolicState.getItems("Object");
+//    objs=symbolicState.getNodes("Object");
     for(Node *obj:objs){
       NodeL supporters;
       for(Node *constraint:obj->parentOf){

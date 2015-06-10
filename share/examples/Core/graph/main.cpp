@@ -14,9 +14,9 @@ void TEST(Read){
   G <<FILE(filename?filename:"example.kvg");
   G.checkConsistency();
   cout <<"\ndone" <<endl;
-  cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
+  cout <<"read graph=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
-//  Node *m = G.getItem("modify");
+//  Node *m = G.getNode("modify");
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
@@ -43,8 +43,8 @@ void TEST(Init){
 const Graph& rndContainer(const Graph& G){
   const Graph *g=&G;
   while(rnd.uni()<.8){
-    if(!g->isItemOfParentKvg) break;
-    g = &g->isItemOfParentKvg->container;
+    if(!g->isNodeOfParentGraph) break;
+    g = &g->isNodeOfParentGraph->container;
   }
   return *g;
 }
@@ -52,7 +52,7 @@ const Graph& rndContainer(const Graph& G){
 Graph& rndSubgraph(Graph& G){
   Graph *g=&G;
   while(rnd.uni()<.8){
-    NodeL subgraphs = g->getTypedItems<Graph>(NULL);
+    NodeL subgraphs = g->getTypedNodes<Graph>(NULL);
     if(!subgraphs.N) break;
     Node *subgraph=subgraphs.rndElem();
     if(!subgraph->getValue<Graph>()) break;
@@ -102,7 +102,7 @@ void TEST(Random){
     C->checkConsistency();
     B = A;
     B.checkConsistency();
-    if(C->isItemOfParentKvg) delete C->isItemOfParentKvg; else delete C;
+    if(C->isNodeOfParentGraph) delete C->isNodeOfParentGraph; else delete C;
     A.checkConsistency();
   }
   A.clear();

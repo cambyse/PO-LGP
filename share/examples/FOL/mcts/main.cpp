@@ -15,10 +15,10 @@ void testMonteCarlo(){
     Graph KB = Gorig;
     KB.checkConsistency();
     Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getItem("STATE")->graph();
-    NodeL rules = KB.getItems("Rule");
-    NodeL constants = KB.getItems("Constant");
-    Graph& terminal = KB.getItem("terminal")->graph();
+    Graph& state = KB.getNode("STATE")->graph();
+    NodeL rules = KB.getNodes("Rule");
+    NodeL constants = KB.getNodes("Constant");
+    Graph& terminal = KB.getNode("terminal")->graph();
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;

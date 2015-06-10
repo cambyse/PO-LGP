@@ -15,7 +15,7 @@ typedef MT::Array<SystemDescription::VariableEntry*> VariableEntryL;
 
 void SystemDescription::addModule(const char *dclName, const char *name, const NodeL& vars, StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
+  Node *modReg = registry().getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
     MT_MSG("could not find Decl_Module" <<dclName);
     return;

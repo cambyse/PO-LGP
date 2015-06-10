@@ -117,7 +117,7 @@ void ActionMachine::step(){
     cout <<"STOP" <<endl;
     KB.writeAccess();
     Node *quitSymbol = KB()["quit"];
-    KB().getItem("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
+    KB().getNode("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    engine().shutdown.incrementValue();
   }
@@ -210,7 +210,7 @@ void ActionMachine::close(){
 }
 
 void ActionMachine::parseTaskDescription(Graph& td){
-  Node *t = td.isItemOfParentKvg;
+  Node *t = td.isNodeOfParentGraph;
   MT::String type=td["type"]->V<MT::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
@@ -241,10 +241,10 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
-  Node* convSymbol = KB().getItem("conv");  CHECK(convSymbol,"");
-  Node* contactSymbol = KB().getItem("contact");  CHECK(contactSymbol,"");
-  Node* timeoutSymbol = KB().getItem("timeout");  CHECK(timeoutSymbol,"");
-  Graph& state = KB().getItem("STATE")->graph();
+  Node* convSymbol = KB().getNode("conv");  CHECK(convSymbol,"");
+  Node* contactSymbol = KB().getNode("contact");  CHECK(contactSymbol,"");
+  Node* timeoutSymbol = KB().getNode("timeout");  CHECK(timeoutSymbol,"");
+  Graph& state = KB().getNode("STATE")->graph();
   cout <<"STATE = " <<state <<endl;
   A.readAccess();
   for(Action *a:A()) if(a->active){
@@ -319,13 +319,13 @@ void ActionMachine::waitForQuitSymbol() {
   while (cont) {
     KB.waitForNextRevision();
     KB.readAccess();
-    Node* quitSymbol = KB().getItem("quit");
+    Node* quitSymbol = KB().getNode("quit");
     if(!quitSymbol){
       MT_MSG("WARNING: no quit symbol!");
       return;
     }
     for(Node *f:quitSymbol->parentOf){
-      if(f->container.isItemOfParentKvg && f->container.isItemOfParentKvg->keys.N && f->container.isItemOfParentKvg->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
+      if(f->container.isNodeOfParentGraph && f->container.isNodeOfParentGraph->keys.N && f->container.isNodeOfParentGraph->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();
   }

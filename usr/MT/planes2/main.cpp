@@ -122,10 +122,10 @@ template<class V, class E> void makeGridGraph(Graph& G, uint h, uint w){
 
 double cost(Graph& S){
   double E=0.;
-  for(Node *s:S.getTypedItems<Segment>()){
+  for(Node *s:S.getTypedNodes<Segment>()){
     E += s->V<Segment>().beta_len;
   }
-  for(Node *e:S.getTypedItems<uint>()){
+  for(Node *e:S.getTypedNodes<uint>()){
     E += lambda*e->V<uint>();
   }
   return E;
@@ -184,7 +184,7 @@ void planes(){
 
   for(uint k=0;k<10000;k++){
     double Eold = cost(S);
-    Node *e = S.getTypedItems<uint>().rndElem();
+    Node *e = S.getTypedNodes<uint>().rndElem();
     double deltaE = delta_E_fuse(e->parents(0)->V<Segment>(), e->parents(1)->V<Segment>());
     deltaE -= lambda*e->V<uint>();
     if(deltaE<0.){
@@ -197,7 +197,7 @@ void planes(){
 
     arr img(X.d0);  img=-1.;
     uintA seg(X.d0);
-    for(Node *sit:S.getTypedItems<Segment>()){
+    for(Node *sit:S.getTypedNodes<Segment>()){
       Segment *s = sit->getValue<Segment>();
       for(uint p:s->pix){
         img(p) = s->f(Phi[p]);
