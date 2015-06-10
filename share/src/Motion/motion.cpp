@@ -85,9 +85,8 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
   }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
-  double duration = MT::getParameter<double>("duration", 5.);
-  T = MT::getParameter<uint>("timeSteps", 50.);
-  tau = duration/T;
+  setTiming(MT::getParameter<uint>("timeSteps", 50), MT::getParameter<double>("duration", 5.));
+  k_order = 2;
 }
 
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
@@ -96,6 +95,7 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   taskCosts = other.taskCosts;
   T = other.T;
   tau = other.tau;
+  k_order = other.k_order;
   x0 = other.x0;
   v0 = other.v0;
   prefix = other.prefix;
@@ -103,6 +103,11 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   dualMatrix = other.dualMatrix;
   ttMatrix = other.ttMatrix;
   return *this;
+}
+
+void MotionProblem::setTiming(uint timeSteps, double duration){
+  T = timeSteps;
+  if(T) tau = duration/T; else tau=duration;
 }
 
 arr MotionProblem::getH_rate_diag() {
@@ -626,6 +631,16 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
 
 //===========================================================================
 
+MotionProblem_EndPoseFunction::MotionProblem_EndPoseFunction(MotionProblem& _MP)
+  : MP(_MP){
+//  ConstrainedProblemMix::operator=( [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+//    this->Phi(phi, J, tt, x);
+//  } );
+}
+
+
+//===========================================================================
+
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);
   for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
@@ -653,3 +668,4 @@ void getAcc(arr& a, const arr& q, double tau){
   a[0] = a[1]/2.;
   a[T] = a[T-1]/2.;
 }
+

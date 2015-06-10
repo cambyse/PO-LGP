@@ -7,7 +7,9 @@ arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
            ors::Shape& target,
            byte whichAxesToAlign,
-           uint iterate){
+           uint iterate,
+           int timeSteps,
+           double duration){
   //-- parameters
   double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
   double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
@@ -22,16 +24,24 @@ arr moveTo(ors::KinematicWorld& world,
   world.swift().initActivations(world);
   MP.world.watch(false);
 
+  if(timeSteps>=0) MP.setTiming(timeSteps, duration);
+  if(timeSteps==0) MP.k_order=1;
+
   Task *t;
 
   t = MP.addTask("transitions", new TransitionTaskMap(world));
-  t->map.order=2; //make this an acceleration task!
+  if(timeSteps!=0){
+    t->map.order=2; //make this an acceleration task!
+  }else{
+    t->map.order=1; //make this a velocity task!
+  }
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-//  t = MP.addTask("final_vel", new TransitionTaskMap(world));
-  t = MP.addTask("final_vel", new TaskMap_qItself());
-  t->map.order=1; //make this a velocity task!
-  t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
+  if(timeSteps!=0){
+    t = MP.addTask("final_vel", new TaskMap_qItself());
+    t->map.order=1; //make this a velocity task!
+    t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
+  }
 
   if(colPrec<0){ //interpreted as hard constraint (default)
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
@@ -64,10 +74,10 @@ arr moveTo(ors::KinematicWorld& world,
   for(uint k=0;k<iterate;k++){
     MT::timerStart();
     if(colPrec<0){
-      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2, aulaMuInc=1.1));
+      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+      optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
     }
     cout <<"** optimization time=" <<MT::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
@@ -77,3 +87,4 @@ arr moveTo(ors::KinematicWorld& world,
 
   return x;
 }
+

@@ -87,12 +87,14 @@ struct UnconstrainedProblemMix:ScalarFunction{
     ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
       return this->lagrangian(dL, HL, x);
     } );
+
+    double muInit = MT::getParameter("opt/optConstrained/muInit",1.);
     //switch on penalty terms
-    nu=1.;
+    nu=muInit;
     switch(method){
-      case squaredPenalty: mu=1.;  break;
-      case augmentedLag:   mu=1.;  break;
-      case anyTimeAula:    mu=1.;  /*stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",2.);*/ break;
+      case squaredPenalty: mu=muInit;  break;
+      case augmentedLag:   mu=muInit;  break;
+      case anyTimeAula:    mu=muInit;  break;
       case logBarrier:     muLB=.1;  break;
       case noMethod: HALT("need to set method before");  break;
     }

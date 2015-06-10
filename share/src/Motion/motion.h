@@ -88,6 +88,7 @@ struct MotionProblem {
   //-- trajectory length and tau
   uint T; ///< number of time steps
   double tau; ///< duration of single step
+  uint k_order;
   
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
@@ -106,6 +107,9 @@ struct MotionProblem {
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
   MotionProblem& operator=(const MotionProblem& other);
+
+  //-- setting time aspects
+  void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
   Task* addTask(const char* name, TaskMap *map);
@@ -164,12 +168,13 @@ struct MotionProblemFunction:KOrderMarkovFunction {
 // transforming a motion problem description into an end-pose optimization problem only
 //
 
-struct MotionProblem_EndPoseFunction:VectorFunction {
+struct MotionProblem_EndPoseFunction{
   MotionProblem& MP;
 
-  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P) { NIY };
+  MotionProblem_EndPoseFunction(MotionProblem& _MP);
 
   //VectorFunction definitions
+  void Phi(arr& phi, arr& J, TermTypeA& tt, const arr& x);
   virtual void fv(arr& phi, arr& J, const arr& x);
 };
 

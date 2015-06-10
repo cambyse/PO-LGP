@@ -37,6 +37,20 @@ void TEST(EasyPR2){
 
 //===========================================================================
 
+void TEST(FinalPosePR2){
+  ors::KinematicWorld G("model.kvg");
+  G.meldFixedJoints();
+  G.removeUselessBodies();
+  makeConvexHulls(G.shapes);
+  for(ors::Shape *s:G.shapes) s->cont=true;
+  cout <<"configuration space dim=" <<G.q.N <<endl;
+  arr x = finalPoseTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
+  G.setJointState(x.reshape(x.N));
+  G.gl().watch();
+}
+
+//===========================================================================
+
 void TEST(EasyAlign){
   ors::KinematicWorld G("test.ors");
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"), 7); //aligns all 3 axes
@@ -62,7 +76,7 @@ int main(int argc,char** argv){
 //  testEasyAlign();
 //  testEasyAlign2();
   testEasyPR2();
-
+//  testFinalPosePR2();
   return 0;
 }
 
