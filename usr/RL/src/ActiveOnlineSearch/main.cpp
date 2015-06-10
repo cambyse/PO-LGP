@@ -10,6 +10,7 @@
 
 #include <util/util.h>
 #include <util/return_tuple.h>
+#include <util/Commander.h>
 
 #include <QDateTime>
 #include <util/QtUtil.h>
@@ -43,6 +44,7 @@ using std::vector;
 using std::tuple;
 using std::make_tuple;
 using std::cout;
+using std::cin;
 using std::endl;
 using std::shared_ptr;
 using util::Range;
@@ -52,9 +54,12 @@ using namespace tree_policy;
 using namespace value_heuristic;
 using namespace backup_method;
 
+typedef Commander::ReturnType Ret;
 typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
+
+static Commander::CommandCenter commander;
 
 static const std::set<std::string> mode_set = {"WATCH",
                                                "EVAL"};
@@ -133,13 +138,13 @@ static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
 static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", \
-                                                       "(default: Zero) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
-                                                       , false, "Zero", "string");
+                                                       "(default: Rollout) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
+                                                       , false, "Rollout", "string");
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
-static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 0.9) Discount for the returns"
-                                                     , false, 0.9, "double");
+static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
+                                                     , false, 1, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
@@ -160,6 +165,16 @@ static TCLAP::SwitchArg active_arg(                  "", "active",\
                                                      "(default: false) Use active tree search."\
                                                      , false);
 
+void prompt_for_command() {
+    bool ok = false;
+    while(!ok) {
+        std::string command;
+        getline(cin,command);
+        cout << commander.execute(command.c_str(),ok) << endl;
+        if(command!="") ok = false;
+        if(!ok) cout << "Your command: ";
+    }
+}
 bool check_arguments();
 shared_ptr<NodeFinder> get_node_finder();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
@@ -208,6 +223,10 @@ int main(int argn, char ** args) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
     }
 
+    // set some default commands
+    commander.add_command("", []()->Ret{return {true,"Continuing..."};}, "Continue execution (empty string / only whitespace)");
+    commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
+
     // set random seeds
     if(random_seed_arg.getValue()<0) {
         auto seed = time(nullptr);
@@ -245,7 +264,7 @@ int main(int argn, char ** args) {
                         search_tree->toPdf("tree.pdf");
                     }
                     cout << "Sample # " << sample+1 << endl;
-                    getchar();
+                    prompt_for_command();
                 }
             }
             if(step<step_n_arg.getValue()) { // don't prune in last step
@@ -258,7 +277,7 @@ int main(int argn, char ** args) {
                 auto reward = std::get<1>(observation_reward);
                 if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
                     search_tree->toPdf("tree.pdf");
-                    getchar();
+                    prompt_for_command();
                 }
                 search_tree->prune(action,observation);
                 if(watch_progress_arg.getValue()>=2) {
@@ -273,7 +292,7 @@ int main(int argn, char ** args) {
                     if(environment->is_terminal_state()) {
                         cout << "Terminal state!" << endl;
                     }
-                    getchar();
+                    prompt_for_command();
                 }
             }
         }
@@ -481,9 +500,19 @@ tuple<shared_ptr<SearchTree>,
     DEBUG_OUT(1, "Actions: " << environment->get_actions());
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
-        tree_policy.reset(new UCB1(exploration_arg.getValue()));
+        auto policy = new UCB1(exploration_arg.getValue());
+        commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                policy->set_exploration(ex);
+                return {true,QString("Set exploration to %1").arg(ex)};
+            }, "Set exploration for UCB1 policy");
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="UCB_Plus") {
-        tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
+        auto policy = new UCB_Plus(exploration_arg.getValue());
+        commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                policy->set_exploration(ex);
+                return {true,QString("Set exploration to %1").arg(ex)};
+            }, "Set exploration for UCB_Plus policy");
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
     } else DEBUG_DEAD_LINE;
@@ -515,6 +544,14 @@ tuple<shared_ptr<SearchTree>,
                                                    backup_method,
                                                    get_backup_type()));
     }
+    commander.add_command("print tree",[search_tree]()->Ret{
+            search_tree->toPdf("tree.pdf");
+            return {true,"Printed search tree to 'tree.pdf'"};
+        }, "Print the search tree to PDF file 'tree.pdf'");
+    commander.add_command("print tree",[search_tree](QString file_name)->Ret{
+            search_tree->toPdf(file_name.toLatin1());
+            return {true,QString("Printed search tree to '%1'").arg(file_name)};
+        }, "Print the search tree to PDF file with given name");
     search_tree->init();
     // return
     return make_tuple(search_tree,
