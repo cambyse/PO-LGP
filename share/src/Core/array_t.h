@@ -3175,6 +3175,9 @@ template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
 
 //---------- unary functions
 
+inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
+
+
 #define UnaryFunction( func )         \
   template<class T>           \
   MT::Array<T> func (const MT::Array<T>& y){    \
@@ -3215,6 +3218,7 @@ UnaryFunction(cbrt);
 UnaryFunction(ceil);
 UnaryFunction(fabs);
 UnaryFunction(floor);
+UnaryFunction(sigm);
 #undef UnaryFunction
 
 
