@@ -2,13 +2,12 @@
 
 
 // ============================================================================
-void ROSMODULE_markers::step() {
-  cout << "steppppppp" << endl;;
-  modelWorld.writeAccess();
-  AlvarMarkers markers_ = markers.get();
-  syncMarkers(modelWorld.set()(), markers_);
-  modelWorld.deAccess();
-}
+// void ROSMODULE_markers::step() {
+//   modelWorld.writeAccess();
+//   AlvarMarkers markers_ = markers.get();
+//   syncMarkers(modelWorld.set()(), markers_);
+//   modelWorld.deAccess();
+// }
 
 // ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
@@ -20,6 +19,7 @@ void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.rot.y = marker.pose.pose.orientation.y;
   body.X.rot.z = marker.pose.pose.orientation.z;
 }
+
 
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   bool createdNewMarkers = false;
@@ -37,12 +37,15 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       body = new ors::Body(world);
       body->name = marker_name;
       ors::Shape *shape = new ors::Shape(world, *body);
+      shape->name = marker_name;
       shape->type = ors::boxST;
       shape->size[0] = .1; shape->size[1] = .1; shape->size[2] = .03; shape->size[3] = .1;
     }
     setBody(*body, marker);
     // transform: torso_lift_link is the reference frame_id
     body->X.pos += refFrame;  // TODO is this the proper way to do it?
+    world.getShapeByName(marker_name)->X = body->X;
+
   }
 
   if (createdNewMarkers) {
