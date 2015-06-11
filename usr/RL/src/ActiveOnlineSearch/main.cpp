@@ -168,11 +168,11 @@ static TCLAP::SwitchArg active_arg(                  "", "active",\
 void prompt_for_command() {
     bool ok = false;
     while(!ok) {
+        cout << "Your command: ";
         std::string command;
         getline(cin,command);
         cout << commander.execute(command.c_str(),ok) << endl;
         if(command!="") ok = false;
-        if(!ok) cout << "Your command: ";
     }
 }
 bool check_arguments();
@@ -267,33 +267,32 @@ int main(int argn, char ** args) {
                     prompt_for_command();
                 }
             }
+            // make a transition and prune
+            environment->reset_state();
+            auto action = search_tree->recommend_action();
+            RETURN_TUPLE(observation_handle_t, observation,
+                         reward_t, reward) = environment->transition(action);
+            environment->make_current_state_default();
+            if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
+                search_tree->toPdf("tree.pdf");
+                prompt_for_command();
+            }
             if(step<step_n_arg.getValue()) { // don't prune in last step
-                // make a transition and prune
-                environment->reset_state();
-                auto action = search_tree->recommend_action();
-                auto observation_reward = environment->transition(action);
-                environment->make_current_state_default();
-                auto observation = std::get<0>(observation_reward);
-                auto reward = std::get<1>(observation_reward);
-                if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
-                    search_tree->toPdf("tree.pdf");
-                    prompt_for_command();
-                }
                 search_tree->prune(action,observation);
-                if(watch_progress_arg.getValue()>=2) {
-                    if(!no_graphics_arg.getValue()) {
-                        search_tree->toPdf("tree.pdf");
-                    }
-                    cout << "Step # " << step+1 <<
-                        ": (action --> observation, reward) = (" <<
-                        *action << " --> " <<
-                        *observation << ", " <<
-                        reward << ")" << endl;
-                    if(environment->is_terminal_state()) {
-                        cout << "Terminal state!" << endl;
-                    }
-                    prompt_for_command();
+            }
+            if(watch_progress_arg.getValue()>=2) {
+                if(!no_graphics_arg.getValue()) {
+                    search_tree->toPdf("tree.pdf");
                 }
+                cout << "Step # " << step+1 <<
+                    ": (action --> observation, reward) = (" <<
+                    *action << " --> " <<
+                    *observation << ", " <<
+                    reward << ")" << endl;
+                if(environment->is_terminal_state()) {
+                    cout << "Terminal state!" << endl;
+                }
+                prompt_for_command();
             }
         }
         if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
@@ -355,10 +354,10 @@ int main(int argn, char ** args) {
                     // perform step
                     environment->reset_state();
                     auto action = search_tree->recommend_action();
-                    auto observation_reward = environment->transition(action);
+                    RETURN_TUPLE(observation_handle_t, observation,
+                                 reward_t, reward) = environment->transition(action);
                     environment->make_current_state_default();
-                    auto observation = std::get<0>(observation_reward);
-                    reward_sum += std::get<1>(observation_reward);
+                    reward_sum += reward;
                     // break on terminal state
                     if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
@@ -501,17 +500,21 @@ tuple<shared_ptr<SearchTree>,
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
         auto policy = new UCB1(exploration_arg.getValue());
-        commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
-                policy->set_exploration(ex);
-                return {true,QString("Set exploration to %1").arg(ex)};
-            }, "Set exploration for UCB1 policy");
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB1 policy");
+        }
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="UCB_Plus") {
         auto policy = new UCB_Plus(exploration_arg.getValue());
-        commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
-                policy->set_exploration(ex);
-                return {true,QString("Set exploration to %1").arg(ex)};
-            }, "Set exploration for UCB_Plus policy");
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB_Plus policy");
+        }
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
@@ -544,14 +547,16 @@ tuple<shared_ptr<SearchTree>,
                                                    backup_method,
                                                    get_backup_type()));
     }
-    commander.add_command("print tree",[search_tree]()->Ret{
-            search_tree->toPdf("tree.pdf");
-            return {true,"Printed search tree to 'tree.pdf'"};
-        }, "Print the search tree to PDF file 'tree.pdf'");
-    commander.add_command("print tree",[search_tree](QString file_name)->Ret{
-            search_tree->toPdf(file_name.toLatin1());
-            return {true,QString("Printed search tree to '%1'").arg(file_name)};
-        }, "Print the search tree to PDF file with given name");
+    if(mode_arg.getValue()=="WATCH") {
+        commander.add_command("print tree",[search_tree]()->Ret{
+                search_tree->toPdf("tree.pdf");
+                return {true,"Printed search tree to 'tree.pdf'"};
+            }, "Print the search tree to PDF file 'tree.pdf'");
+        commander.add_command("print tree",[search_tree](QString file_name)->Ret{
+                search_tree->toPdf(file_name.toLatin1());
+                return {true,QString("Printed search tree to '%1'").arg(file_name)};
+            }, "Print the search tree to PDF file with given name");
+    }
     search_tree->init();
     // return
     return make_tuple(search_tree,
