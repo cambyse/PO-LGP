@@ -48,6 +48,7 @@ using std::cin;
 using std::endl;
 using std::shared_ptr;
 using util::Range;
+using std::dynamic_pointer_cast;
 
 using namespace node_finder;
 using namespace tree_policy;
@@ -59,6 +60,8 @@ typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
+static bool write_log = false;
+static std::ofstream log_file;
 static Commander::CommandCenter commander;
 
 static const std::set<std::string> mode_set = {"WATCH",
@@ -164,6 +167,22 @@ OMP_NUM_THREADS environment variable will take effect (if set).", \
 static TCLAP::SwitchArg active_arg(                  "", "active",\
                                                      "(default: false) Use active tree search."\
                                                      , false);
+static TCLAP::ValueArg<std::string> traces_arg(      "", "traces", \
+                                                     "(default: empty string) For non-empty string, write the action, observation, \
+and (if possible) state description to the given file."\
+                                                     , false, "", "string");
+
+void write_state_to_log(int run, std::shared_ptr<AbstractEnvironment> environment) {
+    auto interface_marc = dynamic_pointer_cast<InterfaceMarc>(environment);
+    if(interface_marc!=nullptr) {
+        auto fol_world = dynamic_pointer_cast<FOL_World>(interface_marc->env_marc);
+        if(fol_world) {
+            log_file << run << "	State = ";
+            fol_world->write_current_state(log_file);
+            log_file << endl;
+        }
+    }
+}
 
 void prompt_for_command() {
     bool ok = false;
@@ -190,6 +209,7 @@ int main(int argn, char ** args) {
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(traces_arg);
         cmd.add(active_arg);
         cmd.add(threads_arg);
         cmd.add(no_header_arg);
@@ -226,6 +246,13 @@ int main(int argn, char ** args) {
     // set some default commands
     commander.add_command("", []()->Ret{return {true,"Continuing..."};}, "Continue execution (empty string / only whitespace)");
     commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
+
+    // open log file if given
+    if(traces_arg.getValue()!="") {
+        write_log = true;
+        log_file.open(traces_arg.getValue());
+        log_file << "run	action	observation	reward" << endl;
+    }
 
     // set random seeds
     if(random_seed_arg.getValue()<0) {
@@ -273,6 +300,14 @@ int main(int argn, char ** args) {
             RETURN_TUPLE(observation_handle_t, observation,
                          reward_t, reward) = environment->transition(action);
             environment->make_current_state_default();
+            // write log
+            if(write_log) {
+                log_file << 0 << "	" <<
+                    *action << "	" <<
+                    *observation << "	" <<
+                    reward << endl;
+                write_state_to_log(0,environment);
+            }
             if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
                 search_tree->toPdf("tree.pdf");
                 prompt_for_command();
@@ -322,16 +357,20 @@ int main(int argn, char ** args) {
         if(threads_arg.getValue()>0) {
             omp_set_num_threads(threads_arg.getValue());
         }
+        int run_n = run_n_arg.getValue();
+        int sample_n = sample_n_arg.getValue();
+        int sample_max = sample_max_arg.getValue();
+        int sample_incr = sample_incr_arg.getValue();
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
         // several runs
-        for(int run=0; run<run_n_arg.getValue(); ++run) {
+        for(int run=0; run<run_n; ++run) {
 
             // with one trial for a different number of samples
-            for(int sample_n=sample_n_arg.getValue(); sample_n<=sample_max_arg.getValue(); sample_n+=sample_incr_arg.getValue()) {
+            for(int sample=sample_n; sample<=sample_max; sample+=sample_incr) {
 
-                DEBUG_OUT(1, "run # " << run << ", samples: " << sample_n);
+                DEBUG_OUT(1, "run # " << run << ", samples: " << sample);
 
                 // set up
                 RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
@@ -348,7 +387,7 @@ int main(int argn, char ** args) {
                 search_tree->init();
                 while(true) {
                     // build tree
-                    repeat(sample_n) {
+                    repeat(sample) {
                         search_tree->next();
                     }
                     // perform step
@@ -358,6 +397,17 @@ int main(int argn, char ** args) {
                                  reward_t, reward) = environment->transition(action);
                     environment->make_current_state_default();
                     reward_sum += reward;
+                    // write log
+#ifdef USE_OMP
+#pragma omp critical (MCTS)
+#endif
+                    if(write_log) {
+                        log_file << run << "	" <<
+                            *action << "	" <<
+                            *observation << "	" <<
+                            reward << endl;
+                        write_state_to_log(run,environment);
+                    }
                     // break on terminal state
                     if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
@@ -367,11 +417,11 @@ int main(int argn, char ** args) {
                     ++step;
                 }
 #ifdef USE_OMP
-#pragma omp critical (BatchWorker)
+#pragma omp critical (MCTS)
 #endif
                 cout << QString("%1,%2,%3,%4").
                     arg(reward_sum/step).
-                    arg(sample_n).
+                    arg(sample).
                     arg(run).
                     arg(method_string) << endl;
             }
