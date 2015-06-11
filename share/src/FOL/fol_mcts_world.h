@@ -70,4 +70,5 @@ struct FOL_World:MCTS_Environment{
 
   virtual bool get_info(InfoTag tag) const;
   virtual double get_info_value(InfoTag tag) const;
+  virtual void write_current_state(ostream&);
 };

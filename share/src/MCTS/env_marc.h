@@ -91,6 +91,7 @@ public:
     };
 
     //----members----//
+public:
     std::shared_ptr<MCTS_Environment> env_marc;
 
     //----methods----//
