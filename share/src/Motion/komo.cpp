@@ -3,6 +3,14 @@
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
 
+void setTasks(MotionProblem& MP,
+              ors::Shape &endeff,
+              ors::Shape& target,
+              byte whichAxesToAlign,
+              uint iterate,
+              int timeSteps,
+              double duration);
+
 arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
            ors::Shape& target,
@@ -10,6 +18,44 @@ arr moveTo(ors::KinematicWorld& world,
            uint iterate,
            int timeSteps,
            double duration){
+
+  MotionProblem MP(world);
+  MotionProblemFunction MF(MP);
+
+  setTasks(MP, endeff, target, whichAxesToAlign, iterate, timeSteps, duration);
+
+  //-- create the Optimization problem (of type kOrderMarkov)
+  arr x = replicate(MP.x0, MP.T+1); //we initialize with a constant trajectory!
+  rndGauss(x,.01,true); //don't initialize at a singular config
+
+  //-- optimize
+  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  ors::KinematicWorld::setJointStateCount=0;
+  for(uint k=0;k<iterate;k++){
+    MT::timerStart();
+    if(colPrec<0){
+      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
+      //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
+    }else{
+      optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
+    }
+    cout <<"** optimization time=" <<MT::timerRead()
+        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+//    checkJacobian(Convert(MF), x, 1e-5);
+    MP.costReport();
+  }
+
+  return x;
+}
+
+void setTasks(MotionProblem& MP,
+              ors::Shape &endeff,
+              ors::Shape& target,
+              byte whichAxesToAlign,
+              uint iterate,
+              int timeSteps,
+              double duration){
+
   //-- parameters
   double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
   double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
@@ -20,16 +66,15 @@ arr moveTo(ors::KinematicWorld& world,
   //-- set up the MotionProblem
   target.cont=false; //turn off contact penalization with the target
 
-  MotionProblem MP(world);
-  world.swift().initActivations(world);
-  MP.world.watch(false);
+  MP.world.swift().initActivations(MP.world);
+  //MP.world.watch(false);
 
   if(timeSteps>=0) MP.setTiming(timeSteps, duration);
   if(timeSteps==0) MP.k_order=1;
 
   Task *t;
 
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TransitionTaskMap(MP.world));
   if(timeSteps!=0){
     t->map.order=2; //make this an acceleration task!
   }else{
@@ -63,28 +108,6 @@ arr moveTo(ors::KinematicWorld& world,
                    new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis));
     t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
   }
-
-  //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(MP);
-  arr x = replicate(MP.x0, MP.T+1); //we initialize with a constant trajectory!
-  rndGauss(x,.01,true); //don't initialize at a singular config
-
-  //-- optimize
-  ors::KinematicWorld::setJointStateCount=0;
-  for(uint k=0;k<iterate;k++){
-    MT::timerStart();
-    if(colPrec<0){
-      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
-      //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
-    }else{
-      optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
-    }
-    cout <<"** optimization time=" <<MT::timerRead()
-        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-//    checkJacobian(Convert(MF), x, 1e-5);
-    MP.costReport();
-  }
-
-  return x;
 }
+
 
