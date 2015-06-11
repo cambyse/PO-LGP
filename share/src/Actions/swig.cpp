@@ -22,6 +22,8 @@ struct SwigSystem : System{
   TaskControllerModule *tcm;
   SwigSystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    modelWorld.linkToVariable(tcm->modelWorld.v);
+
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
     addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
@@ -60,10 +62,21 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
-//  S->RM.writeAccess();
-//  S->RM().KB.append<Graph>({"STATE"}, {}, new Graph(), true);
-//  S->RM().KB.checkConsistency();
-//  S->RM.deAccess();
+
+  cout <<"**************" <<endl;
+  cout <<"Registered Activities=" <<activityRegistry();
+  for(Node *n:activityRegistry()){
+    cout <<"adding symbol for " <<n->keys(0) <<endl;
+    createNewSymbol(n->keys(0).p);
+  }
+  cout <<"Shape Symbols:";
+  S->modelWorld.writeAccess();
+  for(ors::Shape *sh:S->modelWorld().shapes){
+    cout <<"adding symbol for Shape " <<sh->name <<endl;
+    createNewSymbol(sh->name.p);
+  }
+  S->modelWorld.deAccess();
+  cout <<"**************" <<endl;
 }
 
 ActionSwigInterface::~ActionSwigInterface(){
