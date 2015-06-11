@@ -19,7 +19,7 @@ struct SwigSystem : System{
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarker, ar_post_markers)
+  ACCESS(AlvarMarker, ar_pose_markers)
 
   TaskControllerModule *tcm;
   SwigSystem(){
@@ -31,7 +31,7 @@ struct SwigSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<ROSMODULE_markers>(NULL, Module::loopWithBeat, 0.05);
+      addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
@@ -220,6 +220,12 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
   }
 }
 
+void ActionSwigInterface::waitForCondition(const char* query){
+  for(;;){
+    if(S->RM.get()->queryCondition(query)) return;
+    S->state.waitForNextRevision();
+  }
+}
 
 int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
   for(;;){

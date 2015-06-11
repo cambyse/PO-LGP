@@ -43,6 +43,7 @@ struct ActionSwigInterface{
   void stopActivity(const stringV& literals);
 
   void waitForCondition(const stringV& literals);
+  void waitForCondition(const char* query);
 
 //  void startActivity(intV literal, const dict& parameters=dict());
 //  void waitForCondition(intV literal);
