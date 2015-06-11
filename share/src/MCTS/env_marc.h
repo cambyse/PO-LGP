@@ -149,4 +149,4 @@ public:
     }
 };
 
-stdOutPipe(MCTS_Environment::SAO);
+inline std::ostream& operator<<(std::ostream& os, const MCTS_Environment::SAO& x){ x.write(os); return os; }
