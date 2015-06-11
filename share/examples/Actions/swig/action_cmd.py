@@ -6,7 +6,7 @@ import random
 import sys
 import os
 import time
-sys.path.append(os.path.join(os.path.expanduser("~"),'git/mlr-staff/share/src/Actions/'))
+sys.path.append(os.path.abspath('../../../src/Actions'))
 import swig
 
 
@@ -18,9 +18,9 @@ class ActionCmd(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         self.shapeL = S.getShapeList()
-        self.bodyL = "" #S.getBodyList()
-        self.jointL = "" #S.getJointList()
-        self.parameters =({"type":"pos", "ref1":"endeffL", "ref2":"endeffR", "target":"[0.5, 0.0, 0.0]","PD" :"[.5, .9, .1, 10.]"})
+        self.bodyL = S.getBodyList()
+        self.jointL = S.getJointList()
+        self.parameters =({"type":"pos", "ref1":"endeffL", "target":"[0.5, 0.0, 0.0]","PD" :"[.5, .9, .1, 10.]"})
         self.facts =  S.getFacts()
         self.actions = []
 
@@ -29,10 +29,23 @@ class ActionCmd(cmd.Cmd):
         cmd.Cmd.cmdloop(self)
         return "true"
 
+    def do_close(self, para):
+        self.parameters = ({"type":"qItself", "ref1":"l_gripper_joint", "target":"[0.05]", "PD" :"[.5, .9, .1, 10.]"})
+        self.do_newTask("close")
+        self.do_startAction("close")
+
+    def do_open(self, para):
+        self.parameters = ({"type":"qItself", "ref1":"l_gripper_joint", "target":"[0.2]", "PD" :"[.5, .9, .1, 10.]"})
+        self.do_newTask("open")
+        self.do_startAction("open")
+
+
+
     def do_changePara(self, par):
         p = par.split()
         if len(p) == 2:       
             self.parameters[p[0]] = p[1]
+
 
     def do_getShapeByName (self, obj):
         """get literal of shape by name"""
@@ -62,6 +75,12 @@ class ActionCmd(cmd.Cmd):
         bodyL = S.getBodyList()
         print(bodyL)
 
+
+    def do_getJointList (self, xxx):
+        """get list of available joints"""
+        jointL = S.getJointList()
+        print(jointL)
+
     def do_print(self, xxx):
         print (self.parameters)
         
@@ -70,7 +89,7 @@ class ActionCmd(cmd.Cmd):
         argument order:
         1.: type 2.: name, 3.: effector, 4.: target."""
         p = name.split()
-        name = "test" 
+        name = "task" 
         reference = ["FollowReferenceActivity"]
 
         for i in range(0,len(p) ):
@@ -93,12 +112,15 @@ class ActionCmd(cmd.Cmd):
 
     def do_startAction (self, name):
         """start defined task"""
+        if name == "":
+            name = "task"
         S.startActivity([name])
-        self.actions.remove(name)
+
 
     def do_stopAction (self, name):
         """stop defined task"""
-        print(name)
+        if name == "":
+            name = "task"
         S.stopActivity([name])
 
     def do_start(self,name):

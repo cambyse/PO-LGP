@@ -19,7 +19,7 @@ struct SwigSystem : System{
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarker, markers)
+  ACCESS(AlvarMarker, ar_post_markers)
 
   TaskControllerModule *tcm;
   SwigSystem(){
@@ -208,24 +208,28 @@ stringV ActionSwigInterface::getFacts(){
 void ActionSwigInterface::startActivity(const stringV& literals, const dict& parameters){
   setFact(lits2str(literals, parameters));
 }
-void stopActivity(const stringV& literals);
-void stopActivity(const stringV& literals);
 
 void ActionSwigInterface::stopActivity(const stringV& literals){
   stopFact(lits2str(literals));
 }
 
-void ActionSwigInterface::waitForCondition(const char* query){
+void ActionSwigInterface::waitForCondition(const stringV& literals){
   for(;;){
-    if(S->RM.get()->queryCondition(query)) return;
+    if(isTrue(literals)) return;
     S->state.waitForNextRevision();
   }
 }
 
-void ActionSwigInterface::waitForCondition(const stringV& literals){
-  waitForCondition(lits2str(literals));
-}
 
+int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
+  for(;;){
+    for(unsigned i=0; i < literals.size(); i++){
+      if(isTrue(literals[i])) return i;
+    }
+    S->state.waitForNextRevision();
+  }
+
+}
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
 //#if 1
 //  startActivity(lit2str(literal), parameters);

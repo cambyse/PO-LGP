@@ -21,18 +21,18 @@ int main(int argc, char** argv) {
 //  S.startActivity(S.lit({"positionHandL"}));
 //  S.waitForCondition(S.lit({"positionHandL", "conv"}));
 
-  S.defineNewTaskSpaceControlAction("positionHandR", {"FollowReferenceActivity"},
-  {{"type","wheels"}, {"target","[.0, .0, .5]"}, {"PD","[.5, .9, .1, 10.]"}});
+  //S.defineNewTaskSpaceControlAction("positionHandR", {"FollowReferenceActivity"},
+  //{{"type","wheels"}, {"target","[.0, .0, .5]"}, {"PD","[.5, .9, .1, 10.]"}});
 
-  S.startActivity({"positionHandR"});
-  S.waitForCondition({"conv", "positionHandR"});
+  //S.startActivity({"positionHandR"});
+  //S.waitForCondition({"conv", "positionHandR"});
 
 
-  S.defineNewTaskSpaceControlAction("positionHand2", {"FollowReferenceActivity"},
-    {{"type","pos"}, {"ref1","endeffL"}, {"target","[.7, .3, .9]"}, {"PD","[.5, .9, .1, 10.]"}});
+  //S.defineNewTaskSpaceControlAction("positionHand2", {"FollowReferenceActivity"},
+   // {{"type","pos"}, {"ref1","endeffL"}, {"target","[.7, .3, .9]"}, {"PD","[.5, .9, .1, 10.]"}});
 
-  S.startActivity({"positionHand2"});
-  S.waitForCondition({"conv", "positionHand2"});
+//  S.startActivity({"positionHand2"});
+//  S.waitForCondition({"conv", "positionHand2"});
 
 
   S.defineNewTaskSpaceControlAction("base", {"FollowReferenceActivity"},
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   S.waitForCondition({"conv", "base"});
 
   S.defineNewTaskSpaceControlAction("q", {"FollowReferenceActivity"},
-  {{"type","qItself"},{"ref1","l_gripper_joint"}, {"target","[0.01]"}, {"PD","[2., .8, .1, 1.]"}});
+  {{"type","qItself"},{"ref1","l_gripper_joint"}, {"target","[0.05]"}, {"PD","[2., .8, .1, 1.]"}});
 
   S.startActivity({"q"});
   S.waitForCondition({"conv", "q"});
