@@ -3,6 +3,7 @@
 #include <Core/module.h>
 #include <Motion/feedbackControl.h>
 #include <pr2/roscom.h>
+#include <pr2/rosalvar.h>
 
 extern struct TaskControllerModule *taskControllerModule();
 
@@ -15,6 +16,7 @@ struct TaskControllerModule : Module {
   ACCESS(MT::Array<CtrlTask*>, ctrlTasks)
   ACCESS(MT::String, effects)
   ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESS(AlvarMarkers, ar_pose_marker)
 
   //non-protected members
 //private:

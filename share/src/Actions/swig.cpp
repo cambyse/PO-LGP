@@ -10,6 +10,7 @@
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
+#include <pr2/rosalvar.h>
 
 // ============================================================================
 struct SwigSystem : System{
@@ -18,6 +19,7 @@ struct SwigSystem : System{
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESS(AlvarMarker, markers)
 
   TaskControllerModule *tcm;
   SwigSystem(){
@@ -29,7 +31,8 @@ struct SwigSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-//      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<ROSMODULE_markers>(NULL, Module::loopWithBeat, 0.05);
+      // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
   }

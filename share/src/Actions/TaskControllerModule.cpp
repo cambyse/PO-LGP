@@ -7,8 +7,14 @@ TaskControllerModule *taskControllerModule(){
 }
 
 TaskControllerModule::TaskControllerModule()
-  : Module("TaskControllerModule"), realWorld("model.kvg"), __modelWorld__(realWorld),
-    feedbackController(__modelWorld__, true), q0(__modelWorld__.q), useRos(false), syncModelStateWithRos(false), verbose(false){
+    : Module("TaskControllerModule")
+    , realWorld("model.kvg")
+    , __modelWorld__(realWorld)
+    , feedbackController(__modelWorld__, true)
+    , q0(__modelWorld__.q)
+    , useRos(false)
+    , syncModelStateWithRos(false)
+    , verbose(false) {
   modelWorld.linkToVariable(new Variable<ors::KinematicWorld>(__modelWorld__));
   globalTaskControllerModule=this;
 }
@@ -141,6 +147,30 @@ void TaskControllerModule::step(){
 
   //-- send the computed movement to the robot
   ctrl_ref.set() = refs;
+
+
+  modelWorld.writeAccess();
+  AlvarMarkers alvarMarkers = ar_pose_marker.get();
+  syncMarkers(modelWorld(), alvarMarkers);
+  // realWorld = ors::KinematicWorld(modelWorld());
+  modelWorld.deAccess();
+
+  // { // DEBUG
+  //   cout << "modelWorld     " << modelWorld.get()->shapes.N << endl;
+  //   if (modelWorld.get()->getBodyByName("torso_lift_link") != nullptr) {
+  //     cout << "torso_lift_link found" << endl;
+  //   }
+
+  //   cout << "__modelWorld__ " << __modelWorld__.shapes.N    << endl;
+  //   if (__modelWorld__.getBodyByName("torso_lift_link") != nullptr) {
+  //     cout << "torso_lift_link found" << endl;
+  //   }
+
+  //   cout << "realWorld      " << realWorld.shapes.N         << endl;
+  //   if (realWorld.getBodyByName("torso_lift_link") != nullptr) {
+  //     cout << "torso_lift_link found" << endl;
+  //   }
+  // }
 }
 
 void TaskControllerModule::close(){
