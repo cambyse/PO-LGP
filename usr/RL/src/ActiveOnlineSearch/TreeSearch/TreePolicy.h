@@ -14,6 +14,7 @@ namespace tree_policy {
     typedef AbstractEnvironment::action_handle_t       action_handle_t;
     typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
+    typedef AbstractEnvironment::action_container_t    action_container_t;
 
     /**
      * Abstract basis class for tree policies. The job of the tree policy is to
@@ -29,6 +30,7 @@ namespace tree_policy {
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
     public:
         //----methods----//
+        virtual ~TreePolicy() = default;
         virtual void init(std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
@@ -41,6 +43,7 @@ namespace tree_policy {
      * Sample actions uniformly from available action nodes. */
     class Uniform: public TreePolicy {
     public:
+        virtual ~Uniform() = default;
         virtual action_handle_t get_action(const node_t & state_node) const override;
     };
 

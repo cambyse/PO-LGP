@@ -35,6 +35,7 @@ namespace backup_method {
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
     public:
         //----methods----//
+        virtual ~BackupMethod() = default;
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
@@ -53,6 +54,7 @@ namespace backup_method {
     class Bellman: public BackupMethod {
     public:
         Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr);
+        virtual ~Bellman() = default;
         virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;
@@ -64,6 +66,7 @@ namespace backup_method {
      * Performs Monte-Carlo backups. */
     class MonteCarlo: public BackupMethod {
     public:
+        virtual ~MonteCarlo() = default;
         virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;

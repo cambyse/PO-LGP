@@ -12,14 +12,14 @@ if(CMAKE_BUILD_TYPE MATCHES unit_tests|UNIT_TESTS)
     # actually use debug type for unit tests
     message(STATUS "Setting build type to DEBUG to enable debug info")
     set(CMAKE_BUILD_TYPE Debug)
-    add_definitions(-DUNIT_TESTS -DDEBUG -O0 -Wall)
+    add_definitions(-DUNIT_TESTS -DDEBUG -O0)
     add_subdirectory(GTest)
 
 elseif(CMAKE_BUILD_TYPE MATCHES release|Release|RELEASE)
     # only MazeGUI and BatchWorker executables, not GTest executable
 
     message(STATUS "Build Type: RELEASE")
-    add_definitions(-DRELEASE -DNDEBUG -O3 -Wall)
+    add_definitions(-DRELEASE -DNDEBUG -O3)
     add_subdirectory(gui)
     add_subdirectory(batchworker)
 
@@ -27,7 +27,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES debug|Debug|DEBUG)
     # only MazeGUI and BatchWorker executables, not GTest executable
 
     message(STATUS "Build Type: DEBUG")
-    add_definitions(-DDEBUG -O0 -Wall)
+    add_definitions(-DDEBUG -O0)
     add_subdirectory(gui)
     add_subdirectory(batchworker)
 
@@ -37,6 +37,8 @@ else()
     message(FATAL_ERROR "Unkown or unspecified Build Type. Use '-DCMAKE_BUILD_TYPE=<type>' with <type> being RELEASE, DEBUG, or UNIT_TESTS when calling cmake")
 
 endif()
+
+add_definitions(-Wall -Wnon-virtual-dtor)
 
 # add all other directories
 add_subdirectory(ActiveOnlineSearch)
