@@ -45,7 +45,7 @@ struct FOL_World:MCTS_Environment{
   uint T_step; ///< discrete "time": decision steps so far
   double T_real;///< real time so far;
   double R_total;
-  uint Ndecisions;
+//  uint Ndecisions;
   bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
