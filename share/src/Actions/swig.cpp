@@ -53,6 +53,8 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
   return str;
 }
 
+// ============================================================================
+// ActionSwigInterface
 ActionSwigInterface::ActionSwigInterface(bool useRos){
   S = new SwigSystem();
   S->tcm->verbose=false;

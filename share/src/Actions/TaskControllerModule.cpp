@@ -152,7 +152,8 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-  // realWorld = ors::KinematicWorld(modelWorld());
+  syncMarkers(__modelWorld__, alvarMarkers);
+  syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
   // { // DEBUG
