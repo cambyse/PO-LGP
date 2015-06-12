@@ -126,7 +126,7 @@ uint Rprop::loop(arr& _x,
     fx = f(J, NoArr, x);  evals++;
 
     if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<' ' <<x <<endl;
-    if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<x <<endl;
+    if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<(x.N<20?x:ARR()) <<endl;
 
     //infeasible point! undo the previous step
     if(fx!=fx) { //is NAN

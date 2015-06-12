@@ -24,7 +24,7 @@ struct FOL_World:MCTS_Environment{
       return true;
     }
     void write(ostream&) const;
-    virtual size_t get_hash() const override {
+    virtual size_t get_hash() const {
       return std::hash<int>()(id);
     }
   };
@@ -36,7 +36,7 @@ struct FOL_World:MCTS_Environment{
       return ob!=nullptr && ob->id==id;
     }
     void write(ostream& os) const { os <<id; }
-    virtual size_t get_hash() const override {
+    virtual size_t get_hash() const {
       return std::hash<int>()(id);
     }
   };
@@ -45,7 +45,7 @@ struct FOL_World:MCTS_Environment{
   uint T_step; ///< discrete "time": decision steps so far
   double T_real;///< real time so far;
   double R_total;
-  uint Ndecisions;
+//  uint Ndecisions;
   bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
@@ -65,7 +65,7 @@ struct FOL_World:MCTS_Environment{
   virtual const std::vector<Handle> get_actions();
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;
-  virtual void make_current_state_default() override;
+  virtual void make_current_state_default();
   virtual void reset_state();
 
   virtual bool get_info(InfoTag tag) const;

@@ -11,7 +11,7 @@ class AbstractEnvironment {
     //----typedefs/classes----//
 public:
     struct Action {
-        virtual ~Action() = default;
+      virtual ~Action(){}
         virtual bool operator==(const Action & other) const = 0;
         virtual bool operator!=(const Action & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
@@ -22,7 +22,7 @@ public:
         virtual void write(std::ostream &) const = 0;
     };
     struct Observation {
-        virtual ~Observation() = default;
+      virtual ~Observation(){}
         virtual bool operator==(const Observation & other) const = 0;
         virtual bool operator!=(const Observation & other) const {return !(*this==other);}
         virtual size_t get_hash() const = 0;
@@ -63,7 +63,7 @@ public:
     //----methods----//
 public:
     AbstractEnvironment() = default;
-    virtual ~AbstractEnvironment() = default;
+    virtual ~AbstractEnvironment(){}
     /**
      * Perform a transition by executing the given action and return the
      * resulting observation and reward. */

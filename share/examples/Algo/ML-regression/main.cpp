@@ -78,7 +78,7 @@ void testKernelReg(const char *datafile=NULL) {
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
 
-  KernelRidgeRegression f(X, y, defaultKernelFunction, -1, 10.);
+  KernelRidgeRegression f(X, y, defaultKernelFunction, -1, 0.);
   cout <<"estimated alpha = "<< f.alpha <<endl;
   cout <<"Mean error (sdv) = " <<f.sigma <<endl;
 
@@ -128,7 +128,7 @@ void test2Class() {
   arr beta = logisticRegression2Class(Phi, y, -1., Sigma);
   
   arr X_grid;
-  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:50));
+  X_grid.setGrid(X.d1,-2,3, (X.d1==1?500:50));
   Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
   arr y_grid = Phi*beta;
   arr s_grid = evaluateBayesianRidgeRegressionSigma(Phi, Sigma);
@@ -170,10 +170,10 @@ void TEST(KernelLogReg){
   arr X,y;
   artificialData_Hasties2Class(X, y);
 
-  KernelLogisticRegression klr(X,y, defaultKernelFunction, -1., -3.);
+  KernelLogisticRegression klr(X,y, defaultKernelFunction, -1., -0.);
 
   arr X_grid;
-  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:50));
+  X_grid.setGrid(X.d1,-2, 3, (X.d1==1?500:50));
   arr p_ba,p_hi,p_lo;
 //  arr p_grid = klr.evaluateF(X_grid, p_ba); p_hi=p_grid+p_ba;  p_lo=p_grid-p_ba;
   arr p_grid = klr.evaluate(X_grid, p_ba, p_hi, p_lo);
@@ -192,6 +192,7 @@ void TEST(KernelLogReg){
     gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
   }
+  MT::wait();
 }
 
 //===========================================================================

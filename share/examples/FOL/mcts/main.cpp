@@ -120,15 +120,22 @@ void TEST(MCTS){
   mcts.beta=100.;
 //  Graph G = mcts.getGraph();
 //  GraphView gv(G);
-  for(uint k=0;k<1000;k++){
+  for(uint k=0;k<100;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
     mcts.addRollout(100);
+//    cout <<mcts.getGraph();
+//    mcts.reportDecisions(cout);
+//    world.reset_state();
+//    world.get_actions();
+
 //    G = mcts.getGraph();
 //    if(!(k%1)) gv.update();
   }
   cout <<mcts.Qfunction() <<endl;
   mcts.reportQ(cout); cout <<endl;
   cout <<"MCTS #nodes=" <<mcts.Nnodes() <<endl;
+
+  return;
 
   //--- generate some playouts of the optimal (non optimistic) policy
   world.fil.close();
@@ -160,15 +167,57 @@ void TEST(FOL_World){
 
   world.reset_state();
   world.get_actions();
+}
 
+//===========================================================================
+
+void TEST(Determinism){
+  FOL_World world("boxes_new.kvg");
+  world.verbose=1;
+
+  for(uint k=0;k<100;k++){
+    world.fil.close();
+    MT::open(world.fil,"z.FOL_World");
+
+    //-- generate a random rollout
+    world.reset_state();
+    MT::Array<FOL_World::Handle> decisions;
+    for(;;){
+      auto actions = world.get_actions();
+      FOL_World::Handle action = actions[rand()%actions.size()];
+      decisions.append(action);
+      world.transition(action);
+      if(world.is_terminal_state()) break;
+    }
+
+    MT::String res;
+    res <<*world.state;
+
+    world.fil.close();
+    MT::open(world.fil,"z.FOL_World2");
+
+    //-- now repeat
+    world.reset_state();
+    uint t=0;
+    for(;;t++){
+      world.transition(decisions(t));
+      if(world.is_terminal_state()) break;
+    }
+    CHECK_EQ(t+1, decisions.N,"");
+    MT::String res2;
+    res2 <<*world.state;
+    CHECK_EQ(res, res2, "");
+  }
 }
 
 //===========================================================================
 
 int main(int argn, char** argv){
   rnd.clockSeed();
+//  srand(timenow)
 
 //  testMCTS();
 
-  testFOL_World();
+//  testFOL_World();
+  testDeterminism();
 }
