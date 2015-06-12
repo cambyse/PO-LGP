@@ -69,6 +69,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
+      reward -= 10.;
       if(Ndecisions==1) deadEnd=true;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
@@ -221,6 +222,9 @@ void FOL_World::reset_state(){
   KB.checkConsistency();
   FILE("z.after") <<KB;
 
+  //-- check for terminal
+  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
 
@@ -239,6 +243,11 @@ bool FOL_World::get_info(InfoTag tag) const{
     case hasMaxReward: return true;
     case hasMinReward: return true;
     case isMarkov: return true;
+    case writeState:{
+      cout <<"INFO: deadEnd=" <<deadEnd <<" successEnd=" <<successEnd <<" T_step=" <<T_step <<" T_real=" <<T_real <<" R_total=" <<R_total <<" state=" <<endl;
+      state->write(cout," ","{}");
+      return true;
+    }
     default: HALT("unknown tag" <<tag);
   }
 }

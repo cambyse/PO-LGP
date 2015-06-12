@@ -53,7 +53,7 @@ struct MCTS_Environment {
     /// Reset the environment's state to the start state
     virtual void reset_state() = 0;
 
-    enum InfoTag{ hasTerminal, isDeterministic, hasMaxReward, getMaxReward, hasMinReward, getMinReward, isMarkov };
+    enum InfoTag{ hasTerminal, isDeterministic, hasMaxReward, getMaxReward, hasMinReward, getMinReward, isMarkov, writeState };
     virtual bool get_info(InfoTag tag) const = 0;
     virtual double get_info_value(InfoTag tag) const = 0;
 };
