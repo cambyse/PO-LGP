@@ -5,7 +5,7 @@ share/gofMake/generic.mk
 share/gofMake/config.mk
 share/gofMake/defines.mk
 share/gofMake/make-path.sh
-README.md
-README.mlr.md
-COPYING
-install/INSTALL_ALL_UBUNTU_PACKAGES.sh
+share/README.md
+share/README.mlr.md
+share/COPYING
+share/INSTALL_ALL_UBUNTU_PACKAGES.sh
