@@ -9,6 +9,10 @@
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
 
+#include <set>
+#include <string>
+#include <sstream>
+
 using util::random_select;
 using std::unordered_set;
 using std::vector;
@@ -45,10 +49,44 @@ namespace tree_policy {
         return action;
     }
 
+    MaxPolicy::~MaxPolicy() {
+        delete available_actions;
+    }
+
+    void MaxPolicy::init(std::shared_ptr<AbstractEnvironment> environment,
+                         const graph_t & graph,
+                         const node_info_map_t & node_info_map,
+                         const mcts_node_info_map_t & mcts_node_info_map,
+                         const mcts_arc_info_map_t & mcts_arc_info_map) {
+        TreePolicy::init(environment,graph,node_info_map,mcts_node_info_map,mcts_arc_info_map);
+        available_actions = new graph_t::NodeMap<action_container_t>(graph);
+    }
+
     action_handle_t MaxPolicy::get_action(const node_t & state_node) const {
 
         // get set of actions
-        auto actions = environment->get_actions();
+        action_container_t actions = (*available_actions)[state_node];
+        if(actions.size()>0) {
+#ifdef UNIT_TESTS
+                std::vector<std::string> old_actions;
+                for(auto a : actions) {
+                    std::stringstream s;
+                    s << *a;
+                    old_actions.push_back(s.str());
+                }
+                std::vector<std::string> new_actions;
+                for(auto a : environment->get_actions()) {
+                    std::stringstream s;
+                    s << *a;
+                    new_actions.push_back(s.str());
+                }
+                DEBUG_EXPECT(0,old_actions==new_actions);
+#endif
+        } else {
+            actions = environment->get_actions();
+            (*available_actions)[state_node] = actions;
+        }
+
         unordered_set<action_handle_t,
                       AbstractEnvironment::ActionHash,
                       AbstractEnvironment::ActionEq> action_set(actions.begin(), actions.end());

@@ -51,7 +51,14 @@ namespace tree_policy {
      * Basis class for policies that choose the action by maximizing some
      * quantity (like value or upper bound). */
     class MaxPolicy: public TreePolicy {
+        graph_t::NodeMap<action_container_t> * available_actions = nullptr;
     public:
+        virtual ~MaxPolicy();
+        virtual void init(std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
         virtual action_handle_t get_action(const node_t & state_node) const override final;
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
