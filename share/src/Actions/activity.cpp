@@ -4,14 +4,14 @@ Singleton<Graph> ActivityRegistry;
 
 Graph& activityRegistry(){ return ActivityRegistry(); }
 
-Activity* newActivity(Item *fact){
-  Item *symbol=fact->parents(0);
+Activity* newActivity(Node *fact){
+  Node *symbol=fact->parents(0);
   while(symbol->parents.N) symbol=symbol->parents(0);
 
-  Item *specs=fact;
+  Node *specs=fact;
   while(specs->getValueType()!=typeid(Graph) && specs->parents.N) specs=specs->parents(0);
 
-  Item *actType = activityRegistry().getItem(symbol->keys.last());
+  Node *actType = activityRegistry().getNode(symbol->keys.last());
   if(!actType){
     LOG(-1) <<"cannot create activity " <<*fact << "(symbol=" <<*symbol <<", specs=" <<*specs <<")";
     return NULL;

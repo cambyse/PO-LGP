@@ -4,35 +4,42 @@
 
 double lambda = .05;
 double lambda_reg = 1e-10;
-uint width=100;
+uint width=100, height=0;
 
-arr generateRandomData(uint n=20, double sig=.03){
+std::pair<arr,arr> generateRandomData(uint n=10, double sig=.03){
   struct RndPlane{
-    double lo, hi, b0, b1;
+    double xlo, xhi, ylo, yhi, b0, b1, b2;
     RndPlane(){
-      lo = rnd.uni();
-      hi = lo + .2*rnd.uni();
+      xlo = rnd.uni(-1.,1.);
+      xhi = xlo + 1.*rnd.uni();
+      if(height){
+        ylo = rnd.uni(-1.,1.);
+        yhi = ylo + 1.*rnd.uni();
+      }else{
+        ylo = -10.; yhi = 10.;
+      }
       b0 = rnd.uni(-1.,1.);
-      b1 = rnd.uni(-10.,10.);
-      b0-= rnd.uni()*b1;
+      b1 = rnd.uni(-2.,2.);
+      b2 = rnd.uni(-2.,2.);
     }
   };
   MT::Array<RndPlane> planes(n);
-  arr Y(width+1);
+  arr X = grid({-1.,-1.}, {1.,1.}, {height,width});
+  arr Y(X.d0);
   for(uint i=0;i<Y.N;i++){
-    double x=(double)i/(Y.N-1);
-    double y=0.,yp;
+    double y=X(i,0), x=X(i,1);
+    double z=0.,zp;
     for(RndPlane& p:planes){
-      if(x>p.lo && x<=p.hi){
-        yp = p.b0 + p.b1*x;
-        if(yp>y) y=yp;
+      if(x>=p.xlo && x<=p.xhi && y>=p.ylo && y<=p.yhi){
+        zp = p.b0 + p.b1*x + p.b2*y;
+        if(zp>z) z=zp;
       }
     }
-    Y(i)=y;
+    Y(i)=z;
   }
   rndGauss(Y, sig, true);
-  Y.reshape(Y.N,1);
-  return Y;
+  Y.reshape(height+1,width+1);
+  return {X,Y};
 }
 
 struct Cell;
@@ -92,7 +99,7 @@ struct Cell{
     return 2.*scalarProduct(s->beta,phi)*phi;
   }
 
-  double delta_E(Cell *s_new){
+  double delta_E_switch(Cell *s_new){
 //    if(s_new->s == s) return 0.; TODO: check!
 
     arr delta_X_new = X_loc;
@@ -111,6 +118,26 @@ struct Cell{
     return deltaE;
   }
 
+  double delta_E_fuse(Cell *b){
+//    if(s_new->s == s) return 0.; TODO: check!
+
+//    if(b->X_n<2 || s->X_n<2) return 1.;
+
+    arr Xc = s->X + b->X;
+    arr muc = s->X_mean + b->X_mean;
+    double nc = s->X_n + b->X_n;
+
+    arr betac = s->X_n*s->beta + b->X_n*b->beta;
+    betac /= length(betac);
+    double lambdac = length( (Xc - nc*(muc*~muc)) * betac);
+
+    double lambdaa = length( (s->X - s->X_n*(s->X_mean*~s->X_mean)) * s->beta);
+    double lambdab = length( (b->X - b->X_n*(b->X_mean*~b->X_mean)) * b->beta);
+
+    double errold = lambdaa+lambdab;
+    return lambdac - errold - lambda*10;
+  }
+
   void step_decide(uint t){
 #if 0
     arr deltaE = zeros(neighbors.N);
@@ -119,8 +146,18 @@ struct Cell{
 #endif
     Cell *s_new = neighbors(t%neighbors.N);
     if(!s_new || s_new->s==s) return;
-    double deltaE = delta_E(s_new);
+
+    double deltaE = delta_E_switch(s_new);
     if(deltaE<0.){ //we switch!
+      s->X -= X_loc;
+      s = s_new->s;
+      s->X += X_loc;
+      return;
+    }
+
+    deltaE = delta_E_fuse(s_new->s);
+    if(deltaE<0.){ //we fuse!
+      cout <<"BLA" <<endl;
       s->X -= X_loc;
       s = s_new->s;
       s->X += X_loc;
@@ -134,7 +171,7 @@ struct Cell{
       sig = Sig(0);
       if(sig>1e-10) beta = Beta[0];
       else{ beta = zeros(phi.N); beta.last()=1.; }
-      cout <<"compEig: " <<id <<':' <<Sig <<':' <<Beta <<endl;
+//      cout <<"compEig: " <<id <<':' <<Sig <<':' <<Beta <<endl;
     }
   }
 
@@ -154,25 +191,37 @@ struct Cell{
 };
 
 void planes(){
-  arr data = generateRandomData();
-  plotFunction(data);
-  plotGnuplot();
-  plot(false);
+  auto data = generateRandomData();
+  arr &X=data.first, &Y=data.second;
+  FILE("z.X") <<X;
+  FILE("z.data") <<Y;
+  gnuplot(STRING("splot 'z.data' matrix us ($1/15-1):($2/15-1):3 w l"), false, true);
+//  Y.reshape(Y.N);
+  X.reshape(Y.d0,Y.d1,X.d1);
+  Y.reshape(Y.d0,Y.d1,1);
 
-
-  CellA cells(data.N);
-  for(uint i=0;i<cells.N;i++){
-    arr x={double(i)};
-    arr phi=cat(x, data[i]);
-    if(i && i<cells.N-1) cells(i).init(i, phi, {&cells(i-1), &cells(i+1)});
-    else if(i)  cells(i).init(i, phi, {&cells(i-1), NULL});
-    else        cells(i).init(i, phi, {NULL, &cells(i+1)});
+  CellA cells(Y.d0, Y.d1);
+  for(uint i=0;i<cells.d0;i++) for(uint j=0;j<cells.d1;j++){
+    arr phi;
+    if(height) phi=cat(X.subDim(i,j), Y.subDim(i,j));
+    else phi={X(i,j,1), Y(i,j,0)};
+    CellL neighbors;
+    if(i) neighbors.append(&cells(i-1,j));
+    if(j) neighbors.append(&cells(i,j-1));
+    if(i<Y.d0-1) neighbors.append(&cells(i+1,j));
+    if(j<Y.d1-1) neighbors.append(&cells(i,j+1));
+    cells(i,j).init(cells.d1*i+j, phi, neighbors);
   }
 
-  cout <<"avg=" <<sum(data)/(double)data.N <<endl;
-  arr x(cells.N), e(cells.N);
-  uintA s(cells.N);
-  for(uint i=0;i<cells.N;i++) x(i) = cells(i).f();
+//  for(Cell &c:cells) c.s=&cells.elem(13);
+  for(Cell &c:cells){ c.resetStatistics(); }
+  for(Cell &c:cells){ c.resubmitStatistics(); }
+  for(Cell &c:cells){ c.recomputeEig(); }
+
+  cout <<"avg=" <<sum(Y)/(double)Y.N <<endl;
+  arr x(Y.d0,Y.d1), e(Y.d0,Y.d1);
+  uintA s(Y.d0,Y.d1);
+  for(uint i=0;i<cells.N;i++) x.elem(i) = cells.elem(i).f();
   cout <<x <<endl;
 
   for(uint k=0;k<15;k++){
@@ -180,22 +229,29 @@ void planes(){
     for(Cell &c:cells){ c.resubmitStatistics(); }
     for(Cell &c:cells){ c.recomputeEig(); }
 
-    for(uint i=0;i<cells.N;i++) { x(i) = cells(i).f();  e(i) = cells(i).E(); s(i) = cells(i).s->id; }
-    cout <<"x=" <<x <<endl;
-    cout <<"e=" <<e <<endl;
+    for(uint i=0;i<cells.N;i++) { x.elem(i) = cells.elem(i).f();  e.elem(i) = cells.elem(i).E(); s.elem(i) = cells.elem(i).s->id; }
+//    cout <<"x=" <<x <<endl;
+//    cout <<"e=" <<e <<endl;
     cout <<sum(e) <<endl;
-    cout <<"s=" <<s <<endl;
-    for(Cell &c:cells) if(c.s==&c){
-      cout <<c.id <<':' <<c.X <<':' <<c.sig <<endl;
+//    cout <<"s=" <<s <<endl;
+//    for(Cell &c:cells) if(c.s==&c){
+//      cout <<c.id <<':' <<c.X <<':' <<c.sig <<endl;
+//    }
+    if(cells.d0>1){
+      FILE("z.model") <<x;
+      FILE("z.seg") <<s;
+      gnuplot(STRING("splot [:][:][-0:2] 'z.seg' matrix us ($1/15-1):($2/15-1):($3/30) with image, 'z.data' matrix us ($1/15-1):($2/15-1):3 w l, 'z.model' matrix us ($1/15-1):($2/15-1):3 w l"), false, true);
+    }else{
+      plotClear();
+      plotFunction(Y.reshape(Y.N));
+      plotFunction(x.reshape(x.N));
+      plot(false);
     }
-    plotClear();
-    plotFunction(data);
-    plotFunction(x);
-    plot(false);
     MT::wait(1.5);
 //    MT::wait();
 
-    for(Cell &c:cells) c.step_decide(k);
+    for(uint i=0;i<cells.N;i++) if(!((i+k)%3)) cells.elem(i).step_decide(k);
+//    for(uint i=0;i<cells.N;i++) cells.elem(i).step_decide(k);
   }
 
 

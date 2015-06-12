@@ -22,6 +22,8 @@ struct SwigSystem : System{
   TaskControllerModule *tcm;
   SwigSystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    modelWorld.linkToVariable(tcm->modelWorld.v);
+
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
     addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
@@ -60,10 +62,21 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
-//  S->RM.writeAccess();
-//  S->RM().KB.append<Graph>({"STATE"}, {}, new Graph(), true);
-//  S->RM().KB.checkConsistency();
-//  S->RM.deAccess();
+
+  cout <<"**************" <<endl;
+  cout <<"Registered Activities=" <<activityRegistry();
+  for(Node *n:activityRegistry()){
+    cout <<"adding symbol for " <<n->keys(0) <<endl;
+    createNewSymbol(n->keys(0).p);
+  }
+  cout <<"Shape Symbols:";
+  S->modelWorld.writeAccess();
+  for(ors::Shape *sh:S->modelWorld().shapes){
+    cout <<"adding symbol for Shape " <<sh->name <<endl;
+    createNewSymbol(sh->name.p);
+  }
+  S->modelWorld.deAccess();
+  cout <<"**************" <<endl;
 }
 
 ActionSwigInterface::~ActionSwigInterface(){
@@ -98,7 +111,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Item *symbol = S->RM.get()->KB.getItem(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -140,8 +153,8 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 //  startActivity(lit2str(literal), parameters);
 //#else
 //  S->RM.writeAccess();
-//  Graph& state=S->RM().getItem("STATE")->kvg();
-//  ItemL parents;
+//  Graph& state=S->RM().getNode("STATE")->graph();
+//  NodeL parents;
 //  for(auto i:literal) parents.append(S->RM().elem(i));
 //  state.append<bool>({}, parents, NULL, false);
 //  S->RM.deAccess();
@@ -153,8 +166,8 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 //  waitForCondition(lit2str(literals));
 //#else
 //  S->RM.readAccess();
-//  Graph& state=S->RM().getItem("STATE")->kvg();
-//  ItemL lit;
+//  Graph& state=S->RM().getNode("STATE")->graph();
+//  NodeL lit;
 //  for(auto i:literal) lit.append(S->RM().elem(i));
 //  S->RM.deAccess();
 
@@ -162,7 +175,7 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 //  while (cont) {
 //    S->RM.waitForNextRevision();
 //    S->RM.readAccess();
-//    Item *it = getEqualFactInKB(state, lit);
+//    Node *it = getEqualFactInKB(state, lit);
 //    if(it) cont=false;
 //    S->RM.deAccess();
 //  }
@@ -175,9 +188,9 @@ void ActionSwigInterface::waitForQuitSymbol(){
 
 int ActionSwigInterface::createNewSymbol(std::string symbolName){
 #if 1
-  Item *symbol = S->RM.set()->declareNewSymbol(symbolName.c_str());
+  Node *symbol = S->RM.set()->declareNewSymbol(symbolName.c_str());
 #else
-  Item *symbol = S->RM.set()->append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = S->RM.set()->append<bool>(symbolName.c_str(), NULL, false);
 #endif
   return symbol->index;
 }
@@ -186,11 +199,11 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 #if 1
   MT::String str;
   str <<symbolName.c_str() <<lits2str(parentSymbols, parameters);
-  Item *symbol = S->RM.set()->declareNewSymbol(str);
+  Node *symbol = S->RM.set()->declareNewSymbol(str);
 #else
   S->RM.writeAccess();
 
-  Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
   S->RM().append<Graph>({"Task"}, {symbol}, td, true);
   S->RM().checkConsistency();

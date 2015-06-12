@@ -1,8 +1,8 @@
 PROJECT_NAME           = "Utility Library"
 OUTPUT_DIRECTORY       = doc
 GENERATE_TAGFILE       = doc/doxy.tag
-TAGFILES	       = ../doc/doxy.tag=../../../doc/html \
-		         /usr/share/doc/lemon/html/lemon.tag=/usr/share/doc/lemon/html/
+#TAGFILES	       = ../doc/doxy.tag=../../../doc/html /
+#		         /usr/share/doc/lemon/html/lemon.tag=/usr/share/doc/lemon/html/
 EXAMPLE_PATH           = doc .
 IMAGE_PATH	       = doc/img
 JAVADOC_AUTOBRIEF      = YES

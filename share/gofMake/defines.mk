@@ -136,7 +136,7 @@ LIBS      += -lqhull
 endif
 
 ifeq ($(ARCH_LINUX),1)
-CXXFLAGS += -DARCH_LINUX
+CXXFLAGS += -DARCH_LINUX -DATLAS
 endif
 
 ifeq ($(OpenML),1)

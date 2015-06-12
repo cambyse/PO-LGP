@@ -5,12 +5,12 @@
 
 struct Activity {
   MT::String name;     ///< name, just for reporting
-  Item *fact;          ///< pointer to the fact in the state of a KB
+  Node *fact;          ///< pointer to the fact in the state of a KB
   double activityTime; ///< for how long it this activity running yet
 
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
-  virtual void configure(Item *fact) = 0;
+  virtual void configure(Node *fact) = 0;
   virtual void step(double dt) = 0;
   void write(ostream& os) const { os <<"Activity '" <<name <<"' (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
 };
@@ -25,11 +25,11 @@ Graph& activityRegistry();
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Item_typed<Type>(activityRegistry(), {key}, {}, new Type_typed<T,void>, true);
+  new Node_typed<Type>(activityRegistry(), {key}, {}, new Type_typed<T,void>, true);
 }
 
 /// create/launch a new activity based on the fact
-Activity* newActivity(Item *fact);
+Activity* newActivity(Node *fact);
 
 //===========================================================================
 

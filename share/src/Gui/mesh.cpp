@@ -311,7 +311,6 @@ void Mesh::makeConvexHull() {
   if(!V.N) return;
 #ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
-//  getTriangulatedHull(T, V); //TODO: somehow this makes a difference! (with PR2)
 #else
   NICO
 #endif

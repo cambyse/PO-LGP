@@ -1,8 +1,8 @@
 #include <Actions/swig.h>
-#include <pr2/TaskControllerModule.h>
+#include <Actions/TaskControllerModule.h>
 #include <Actions/taskCtrlActivities.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <pr2/RelationalMachineModule.h>
+#include <Actions/RelationalMachineModule.h>
 
 #include <Core/util.h>
 #include <System/engine.h>

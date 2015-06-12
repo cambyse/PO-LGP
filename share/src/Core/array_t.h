@@ -701,8 +701,9 @@ template<class T> MT::Array<uint> MT::Array<T>::dim() const {
 }
 
 /// the \c ith element
-template<class T> T& MT::Array<T>::elem(uint i) const {
-  CHECK(i<N, "range error (" <<i <<">=" <<N <<")");
+template<class T> T& MT::Array<T>::elem(int i) const {
+  if(i<0) i+=N;
+  CHECK(i>=0 && i<(int)N, "range error (" <<i <<">=" <<N <<")");
   return p[i];
 }
 
@@ -1391,8 +1392,8 @@ MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
   if(dim==2) {
     resize(steps+1, steps+1, 2);
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) {
-        operator()(i, j, 0)=lo+(hi-lo)*j/steps;
-        operator()(i, j, 1)=lo+(hi-lo)*i/steps;
+        operator()(i, j, 0)=lo+(hi-lo)*i/steps;
+        operator()(i, j, 1)=lo+(hi-lo)*j/steps;
       }
     reshape(d0*d1, 2);
     return;
@@ -1400,9 +1401,9 @@ MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
   if(dim==3) {
     resize(TUP(steps+1, steps+1, steps+1, 3));
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) for(k=0; k<d2; k++) {
-          operator()(TUP(i, j, k, 0))=lo+(hi-lo)*k/steps;
+          operator()(TUP(i, j, k, 0))=lo+(hi-lo)*i/steps;
           operator()(TUP(i, j, k, 1))=lo+(hi-lo)*j/steps;
-          operator()(TUP(i, j, k, 2))=lo+(hi-lo)*i/steps;
+          operator()(TUP(i, j, k, 2))=lo+(hi-lo)*k/steps;
         }
     reshape(d0*d1*d2, 3);
     return;

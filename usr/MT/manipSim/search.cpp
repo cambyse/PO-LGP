@@ -9,14 +9,14 @@ void runMonteCarlo(Graph& G){
   uint verbose=0;
 
   G.checkConsistency();
-  //    Item *Terminate_keyword = G["Terminate"];
-  ItemL rules = G.getItems("Rule");
-  ItemL constants = G.getItems("Object");
-  Graph& actionSequence = G["actionSequence"]->kvg();
-  Item *papSymbol = G["pap"];
-  Item *depthSymbol = G["depth"];
-  Graph& state = G["STATE"]->kvg();
-  //    Graph& terminal = G.getItem("terminal")->kvg();
+  //    Node *Terminate_keyword = G["Terminate"];
+  NodeL rules = G.getNodes("Rule");
+  NodeL constants = G.getNodes("Object");
+  Graph& actionSequence = G["actionSequence"]->graph();
+  Node *papSymbol = G["pap"];
+  Node *depthSymbol = G["depth"];
+  Graph& state = G["STATE"]->graph();
+  //    Graph& terminal = G.getNode("terminal")->graph();
 
   for(uint h=0;h<100;h++){
     if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;
@@ -26,13 +26,13 @@ void runMonteCarlo(Graph& G){
 
     {
       //-- get all possible decisions
-      MT::Array<std::pair<Item*, ItemL> > decisions; //tuples of rule and substitution
-      for(Item* rule:rules){
+      MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
+      for(Node* rule:rules){
         //      cout <<"*** RULE: " <<*rule <<endl;
         //      cout <<  "Substitutions:" <<endl;
-        ItemL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
+        NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
         for(uint s=0;s<subs.d0;s++){
-          decisions.append(std::pair<Item*, ItemL>(rule, subs[s]));
+          decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
         }
       }
 
@@ -47,19 +47,19 @@ void runMonteCarlo(Graph& G){
       }else{
         //-- pick a random decision
         uint deci = MT::rnd(decisions.N);
-        std::pair<Item*, ItemL>& d = decisions(deci);
+        std::pair<Node*, NodeL>& d = decisions(deci);
         if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 
-        Item *effect = d.first->kvg().last();
+        Node *effect = d.first->graph().last();
         if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
-        applyEffectLiterals(state, effect->kvg(), d.second, &d.first->kvg());
+        applyEffectLiterals(state, effect->graph(), d.second, &d.first->graph());
 
         //hack: apply depth effect:
-        Item *depth0=NULL, *depth1=NULL;
-        for(Item *fact:d.second(0)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
+        Node *depth0=NULL, *depth1=NULL;
+        for(Node *fact:d.second(0)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
           depth0=fact; break;
         }
-        for(Item *fact:d.second(1)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
+        for(Node *fact:d.second(1)->parentOf) if(&fact->container==&state && fact->parents(0)==depthSymbol){
           depth1=fact; break;
         }
         if(depth0 && depth1){

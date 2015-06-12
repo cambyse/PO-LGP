@@ -24,19 +24,19 @@ void Action::setRandom(uint n){
 }
 
 void State::compControllable(){
-//  ItemL objs = G.getItems("body");
+//  NodeL objs = G.getNodes("body");
 
 //  cout <<G <<endl;
-  ItemL ctrltags = G.getItems("controllable");
-  for_list_rev(Item, i, ctrltags) delete i;
+  NodeL ctrltags = G.getNodes("controllable");
+  for_list_rev(Node, i, ctrltags) delete i;
 
-  ctrltags = G.getItems("canGrasp");
-  ItemL ctrlables;
+  ctrltags = G.getNodes("canGrasp");
+  NodeL ctrlables;
 
-  for(Item *o:ctrltags) ctrlables.append(o->parents(0));
+  for(Node *o:ctrltags) ctrlables.append(o->parents(0));
 
-  for(Item *o:ctrlables){
-    for(Item *r:o->parentOf){
+  for(Node *o:ctrlables){
+    for(Node *r:o->parentOf){
       if(r->keys(0)=="rigid"){
         if(r->parents(0)==o)
           ctrlables.setAppend(r->parents(1));
@@ -46,9 +46,9 @@ void State::compControllable(){
     }
   }
 
-  for(Item *o:ctrlables){
+  for(Node *o:ctrlables){
     bool hasTag=false;
-    for(Item *r:o->parentOf) if(r->keys(0)=="controllable"){ hasTag=true; break; }
+    for(Node *r:o->parentOf) if(r->keys(0)=="controllable"){ hasTag=true; break; }
     if(!hasTag) G.append<bool>({"controllable"}, {o}, NULL, false);
   }
 //  cout <<G <<endl;
@@ -59,8 +59,8 @@ void State::expandReachable(){
 
 bool State::testAction(const Action& a, bool apply){
   bool applicable=false;
-  Item *o1 = G(a.i);
-  Item *o2 = G(a.j);
+  Node *o1 = G(a.i);
+  Node *o2 = G(a.j);
   if(a.a==create_){
     if(!o1->ParentOf()["controllable"]) return false;
     if(a.p=="rigid"){
@@ -70,8 +70,8 @@ bool State::testAction(const Action& a, bool apply){
     if(apply) G.append<bool>({a.p}, {o1,o2}, NULL, false);
   }
   if(a.a==break_){
-    Item *toBeBroken=NULL;
-    for(Item *p:o1->parentOf){
+    Node *toBeBroken=NULL;
+    for(Node *p:o1->parentOf){
       if(p->keys(0)==a.p){
         if((p->parents(0)==o1 && p->parents(1)==o2) ||
            (p->parents(0)==o2 && p->parents(1)==o1)){ toBeBroken=p;  break; }
@@ -80,8 +80,8 @@ bool State::testAction(const Action& a, bool apply){
     if(toBeBroken){
       bool good=true;
       if(!o1->parentOf.N || !o2->parentOf.N) good=false; //if it has no relation!
-      for(Item *i:o1->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
-      for(Item *i:o2->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
+      for(Node *i:o1->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
+      for(Node *i:o2->parentOf){ if(i->keys(0)=="pose" || i->keys(0)=="controllable") continue;  if(i->keys(0)=="fixed" || i->keys(0)=="canGrasp") break;  if(i->parents.N<2) good=false; }
       if(!good) toBeBroken=NULL;
     }
     if(toBeBroken){

@@ -1,8 +1,6 @@
 BASE = ../../..
 
-OBJS = main.o fol_mcts_world.o
-
-DEPEND = Core FOL Gui MCTS
+DEPEND = Core FOL MCTS
 #OPTIM=fast_debug
 
 include $(BASE)/gofMake/generic.mk

@@ -32,10 +32,9 @@ extern "C" {
 #include "f2c.h"
 #undef small
 #undef large
-#ifdef ARCH_LINUX
-#  include <lapack/lapacke.h>
-#  define integer int
-#else
+//#ifdef ARCH_LINUX
+//
+#ifndef ATLAS
 #  include <lapack/clapack.h>
 #endif
 #undef double
@@ -44,6 +43,14 @@ extern "C" {
 #undef abs
 }
 
+#ifdef ATLAS
+#include <complex>
+#define lapack_complex_float std::complex<float>
+#define lapack_complex_double std::complex<double>
+
+#include <lapack/lapacke.h>
+#define integer int
+#endif
 
 #ifdef NO_BLAS
 void blas_MM(arr& X, const arr& A, const arr& B) {       MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };

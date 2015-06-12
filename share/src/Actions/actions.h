@@ -34,7 +34,7 @@ const char* getActionStateString(ActionState actionState);
 struct Action {
   MT::String name;
   bool active;
-  Item *symbol;
+  Node *symbol;
   double actionTime, timeOut;
 
   CtrlTaskL tasks;

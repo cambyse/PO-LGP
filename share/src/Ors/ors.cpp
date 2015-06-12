@@ -128,10 +128,10 @@ void ors::Body::parseAts() {
   if(ats.getValue<double>(d,"dyntype")) type=(BodyType)d;
 
   // SHAPE handling
-  Item* item;
+  Node* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
-  item = ats.getItem("meshes");
+  item = ats.getNode("meshes");
   if(item){
     MT::FileToken *file = item->getValue<MT::FileToken>();
     CHECK(file,"somethings wrong");
@@ -154,7 +154,7 @@ void ors::Body::parseAts() {
   }
 
   // add shape if there is no shape exists yet
-  if(ats.getItem("type") && !shapes.N){
+  if(ats.getNode("type") && !shapes.N){
     Shape *s = new Shape(world, *this);
     s->name = name;
   }
@@ -162,7 +162,7 @@ void ors::Body::parseAts() {
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
-  Item *it=ats["type"]; if(it){ delete it; /*ats.removeValue(it);*/ ats.index(); }
+  Node *it=ats["type"]; if(it){ delete it; /*ats.removeValue(it);*/ ats.index(); }
   //  listDelete(ats);
 }
 
@@ -170,7 +170,7 @@ void ors::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   if(mass) os <<"mass=" <<mass <<' ';
   if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
-//  uint i; Item *a;
+//  uint i; Node *a;
 //  for_list(Type,  a,  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
 }
@@ -318,7 +318,7 @@ void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   os <<"size=[" <<size[0] <<' '<<size[1] <<' '<<size[2] <<' '<<size[3] <<"] ";
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
-  for_list(Item, a, ats)
+  for_list(Node, a, ats)
   if(a->keys(0)!="rel" && a->keys(0)!="type" && a->keys(0)!="size") os <<*a <<' ';
 }
 
@@ -464,7 +464,7 @@ void ors::Joint::write(std::ostream& os) const {
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
   if(!Q.isZero()) os <<"Q=<T " <<Q <<" > ";
-  for_list(Item, a, ats)
+  for_list(Node, a, ats)
   if(a->keys(0)!="A" && a->keys(0)!="from"
       && a->keys(0)!="axis" //because this was subsumed in A during read
       && a->keys(0)!="B" && a->keys(0)!="to"
@@ -1701,8 +1701,8 @@ void ors::KinematicWorld::read(std::istream& is) {
   
   clear();
   
-  ItemL bs = G->getItems("body");
-  for_list(Item,  it,  bs) {
+  NodeL bs = G->getNodes("body");
+  for_list(Node,  it,  bs) {
     CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
     
@@ -1712,8 +1712,8 @@ void ors::KinematicWorld::read(std::istream& is) {
     b->parseAts();
   }
 
-  ItemL ss = G->getItems("shape");
-  for(Item *it: ss) {
+  NodeL ss = G->getNodes("shape");
+  for(Node *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
     CHECK(it->getValueType()==typeid(Graph),"shape must have value Graph");
@@ -1732,8 +1732,8 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
   
   uint nCoupledJoints=0;
-  ItemL js = G->getItems("joint");
-  for(Item *it: js) {
+  NodeL js = G->getNodes("joint");
+  for(Node *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");
     CHECK(it->getValueType()==typeid(Graph),"joints must have value Graph");

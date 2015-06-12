@@ -1233,7 +1233,8 @@ TEST(Util, ReturnTuple) {
 
         // create named tuple and assign in one step
         {
-            NAMED_RETURN_TUPLE(tt, int, i, double, d) = std::make_tuple(rand_int, rand_double);
+            NAMED_RETURN_TUPLE(tt, int, i, double, d);
+            tt = std::make_tuple(rand_int, rand_double);
             EXPECT_EQ(rand_int, i);
             EXPECT_EQ(rand_double, d);
             EXPECT_EQ(i, std::get<0>(tt));

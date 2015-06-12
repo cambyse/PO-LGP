@@ -24,9 +24,9 @@ struct RelationalMachine{
 
   bool queryCondition(MT::String query) const; ///< return indicates coverage of the condition
   bool applyEffect(MT::String effect);   ///< return indicates change of state
-  ItemL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
+  NodeL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
-  Item* declareNewSymbol(MT::String symbol);
+  Node* declareNewSymbol(MT::String symbol);
   MT::String getKB();
   MT::String getState();
   MT::String getRules();

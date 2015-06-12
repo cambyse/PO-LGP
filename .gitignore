@@ -33,6 +33,7 @@ vc60.idb
 tags
 .cccc
 
+*.orig
 
 # PYTHON
 *.pyc
