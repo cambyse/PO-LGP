@@ -54,7 +54,7 @@ namespace backup_method {
             for(out_arc_it_t to_state_arc_1(*graph, action_node); to_state_arc_1!=INVALID; ++to_state_arc_1) {
 
                 node_t target_state_node_1 = graph->target(to_state_arc_1);
-                double prob_1 = (*mcts_arc_info_map)[to_state_arc_1].get_transition_counts()/action_transition_counts;
+                double prob_1 = (double)(*mcts_arc_info_map)[to_state_arc_1].get_transition_counts()/action_transition_counts;
                 double prob_variance_1 = prob_1*(1-prob_1)/(action_transition_counts+1);
                 reward_t state_value_1 = mcts_node_info_map[target_state_node_1].get_value();
                 reward_t state_value_variance_1 = mcts_node_info_map[target_state_node_1].get_value_variance();
@@ -74,7 +74,7 @@ namespace backup_method {
                 for(out_arc_it_t to_state_arc_2(*graph, action_node); to_state_arc_2!=INVALID; ++to_state_arc_2) {
 
                     node_t target_state_node_2 = graph->target(to_state_arc_2);
-                    double prob_2 = (*mcts_arc_info_map)[to_state_arc_2].get_transition_counts()/action_transition_counts;
+                    double prob_2 = (double)(*mcts_arc_info_map)[to_state_arc_2].get_transition_counts()/action_transition_counts;
                     reward_t state_value_2 = mcts_node_info_map[target_state_node_2].get_value();
 
                     double prob_covariance = target_state_node_1==target_state_node_2?
