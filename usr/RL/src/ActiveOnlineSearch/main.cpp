@@ -60,6 +60,9 @@ typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
+static const char * graph_plot_file_name = "tree.svg";
+static const char * graph_plot_command = "dot";
+static const char * graph_plot_parameters = "-Tsvg";
 static bool write_log = false;
 static std::ofstream log_file;
 static Commander::CommandCenter commander;
@@ -125,8 +128,8 @@ static TCLAP::ValueArg<int> run_n_arg(               "r", "run_n", \
 static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
                                                      "(default: 1) Level of detail for watching progress (0,...,3).",\
                                                      false, 1, "int");
-static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
-                                                     "(default: false) If true don't generate graphics."\
+static TCLAP::SwitchArg graphics_arg(                "g", "graphics",\
+                                                     "(default: false) If true automatically generate graphics."\
                                                      , false);
 static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
@@ -184,6 +187,18 @@ void write_state_to_log(int run, std::shared_ptr<AbstractEnvironment> environmen
     }
 }
 
+void write_state_to_cout(std::shared_ptr<AbstractEnvironment> environment) {
+    auto interface_marc = dynamic_pointer_cast<InterfaceMarc>(environment);
+    if(interface_marc!=nullptr) {
+        auto fol_world = dynamic_pointer_cast<FOL_World>(interface_marc->env_marc);
+        if(fol_world) {
+            cout << "	State = ";
+            fol_world->write_current_state(cout);
+            cout << endl;
+        }
+    }
+}
+
 void prompt_for_command() {
     bool ok = false;
     while(!ok) {
@@ -220,7 +235,7 @@ int main(int argn, char ** args) {
         cmd.add(backup_method_arg);
         cmd.add(backup_type_arg);
         cmd.add(graph_type_arg);
-        cmd.add(no_graphics_arg);
+        cmd.add(graphics_arg);
         cmd.add(watch_progress_arg);
         cmd.add(rollout_length_arg);
         cmd.add(exploration_arg);
@@ -287,8 +302,10 @@ int main(int argn, char ** args) {
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
                 if(watch_progress_arg.getValue()>=3) {
-                    if(!no_graphics_arg.getValue()) {
-                        search_tree->toPdf("tree.pdf");
+                    if(graphics_arg.getValue()) {
+                        search_tree->plot_graph(graph_plot_file_name,
+                                                graph_plot_command,
+                                                graph_plot_parameters);
                     }
                     cout << "Sample # " << sample+1 << endl;
                     prompt_for_command();
@@ -300,7 +317,7 @@ int main(int argn, char ** args) {
             RETURN_TUPLE(observation_handle_t, observation,
                          reward_t, reward) = environment->transition(action);
             environment->make_current_state_default();
-            // write log
+            // write
             if(write_log) {
                 log_file << 0 << "	" <<
                     *action << "	" <<
@@ -308,30 +325,40 @@ int main(int argn, char ** args) {
                     reward << endl;
                 write_state_to_log(0,environment);
             }
-            if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
-                search_tree->toPdf("tree.pdf");
-                prompt_for_command();
-            }
-            if(step<step_n_arg.getValue()) { // don't prune in last step
-                search_tree->prune(action,observation);
-            }
             if(watch_progress_arg.getValue()>=2) {
-                if(!no_graphics_arg.getValue()) {
-                    search_tree->toPdf("tree.pdf");
-                }
                 cout << "Step # " << step+1 <<
                     ": (action --> observation, reward) = (" <<
                     *action << " --> " <<
                     *observation << ", " <<
                     reward << ")" << endl;
+                write_state_to_cout(environment);
                 if(environment->is_terminal_state()) {
                     cout << "Terminal state!" << endl;
                 }
+                if(graphics_arg.getValue()) {
+                    search_tree->plot_graph(graph_plot_file_name,
+                                            graph_plot_command,
+                                            graph_plot_parameters);
+                }
                 prompt_for_command();
             }
+            if(step<step_n_arg.getValue()) { // don't prune in last step
+                search_tree->prune(action,observation);
+                if(watch_progress_arg.getValue()>=2) {
+                    cout << "tree pruned" << endl;
+                    if(graphics_arg.getValue()) {
+                        search_tree->plot_graph(graph_plot_file_name,
+                                                graph_plot_command,
+                                                graph_plot_parameters);
+                    }
+                    prompt_for_command();
+                }
+            }
         }
-        if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
-            search_tree->toPdf("tree.pdf");
+        if(watch_progress_arg.getValue()>=1 && graphics_arg.getValue()) {
+            search_tree->plot_graph(graph_plot_file_name,
+                                    graph_plot_command,
+                                    graph_plot_parameters);
         }
     } else if(mode_arg.getValue()=="EVAL") {
         // print header
@@ -599,11 +626,14 @@ tuple<shared_ptr<SearchTree>,
     }
     if(mode_arg.getValue()=="WATCH") {
         commander.add_command("print tree",[search_tree]()->Ret{
-                search_tree->toPdf("tree.pdf");
-                return {true,"Printed search tree to 'tree.pdf'"};
+                search_tree->plot_graph(graph_plot_file_name,
+                                        graph_plot_command,
+                                        graph_plot_parameters);
+                return {true,QString("Printed search tree to '%1'").
+                        arg(graph_plot_file_name).toLatin1()};
             }, "Print the search tree to PDF file 'tree.pdf'");
         commander.add_command("print tree",[search_tree](QString file_name)->Ret{
-                search_tree->toPdf(file_name.toLatin1());
+                search_tree->plot_graph(file_name.toLatin1());
                 return {true,QString("Printed search tree to '%1'").arg(file_name)};
             }, "Print the search tree to PDF file with given name");
     }
