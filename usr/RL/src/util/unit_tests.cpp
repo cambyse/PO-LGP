@@ -1316,7 +1316,7 @@ TEST(Util, GraphToPdf) {
     }
 
     // plot the graph
-    util::graph_to_pdf("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
+    util::plot_graph("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
 
     //! [graph_to_pdf example]
 

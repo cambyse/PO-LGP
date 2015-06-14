@@ -64,15 +64,15 @@ namespace util {
         class STRING_4_T = QString,
         class STRING_5_T = QString,
         class STRING_6_T = QString>
-        void graph_to_pdf(const char* file_name,
-                          const GRAPH_T & graph,
-                          const STRING_1_T general_node_properties = "",
-                          const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
-                          const STRING_3_T general_arc_properties = "",
-                          const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
-                          bool delete_dot_file = true,
-                          const STRING_5_T command = "dot",
-                          const STRING_6_T parameters = "-Tpdf") {
+        void plot_graph(const char* file_name,
+                        const GRAPH_T & graph,
+                        const STRING_1_T general_node_properties = "",
+                        const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
+                        const STRING_3_T general_arc_properties = "",
+                        const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
+                        bool delete_dot_file = true,
+                        const STRING_5_T command = "dot",
+                        const STRING_6_T parameters = "-Tpdf") {
 
         //-------------------//
         // random file names //

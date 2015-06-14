@@ -139,7 +139,9 @@ public:
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
-    void toPdf(const char* file_name) const override;
+    void plot_graph(const char* file_name,
+                    const char* command = "dot",
+                    const char* parameters = "-Tpdf") const override;
     int get_max_depth() const {return max_depth;}
     void set_max_depth(int depth) {max_depth = depth;}
     virtual const mcts_node_info_map_t & get_mcts_node_info_map() const;

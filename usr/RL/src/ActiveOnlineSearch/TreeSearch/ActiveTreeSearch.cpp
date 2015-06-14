@@ -163,7 +163,9 @@ void ActiveTreeSearch::init() {
     computer.set_node_label(c_root_node, "root");
 }
 
-void ActiveTreeSearch::toPdf(const char* file_name) const {
+void ActiveTreeSearch::plot_graph(const char* file_name,
+                                  const char* command,
+                                  const char* parameters) const {
     const bool use_id = true;
     const bool use_partials = true;
     graph_t combi_graph;
@@ -262,14 +264,15 @@ void ActiveTreeSearch::toPdf(const char* file_name) const {
         arc_prop_map[combi_arc] = QString("dir=none style=dotted color=\"1 .7 .7\"");
     }
     // write to file
-    util::graph_to_pdf(file_name,
-                       combi_graph,
-                       "style=filled truecolor=true",
-                       &node_prop_map,
-                       "",
-                       &arc_prop_map,
-                       true,
-                       "dot");
+    util::plot_graph(file_name,
+                     combi_graph,
+                     "style=filled truecolor=true",
+                     &node_prop_map,
+                     "",
+                     &arc_prop_map,
+                     true,
+                     command,
+                     parameters);
 }
 
 ActiveTreeSearch::arc_node_t ActiveTreeSearch::find_or_create_observation_node(

@@ -145,7 +145,9 @@ void SearchTree::prune(const action_handle_t & action,
     }
 }
 
-void SearchTree::toPdf(const char* file_name) const {
+void SearchTree::plot_graph(const char* file_name,
+                            const char* command,
+                            const char* parameters) const {
     graph_t::NodeMap<QString> node_map(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
         node_map[node] = QString("shape=%2 label=<%3>").
@@ -162,12 +164,14 @@ void SearchTree::toPdf(const char* file_name) const {
         }
     }
 
-    util::graph_to_pdf(file_name,
-                       graph,
-                       "style=filled truecolor=true",
-                       &node_map,
-                       "",
-                       &arc_map);
+    util::plot_graph(file_name,
+                     graph,
+                     "style=filled truecolor=true",
+                     &node_map,
+                     "",
+                     &arc_map,
+                     command,
+                     parameters);
 }
 
 const SearchTree::graph_t & SearchTree::get_graph() const {

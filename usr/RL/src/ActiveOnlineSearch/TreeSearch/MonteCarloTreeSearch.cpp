@@ -314,7 +314,9 @@ MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() c
     return util::random_select(optimal_actions);
 }
 
-void MonteCarloTreeSearch::toPdf(const char* file_name) const {
+void MonteCarloTreeSearch::plot_graph(const char* file_name,
+                                      const char* command,
+                                      const char* parameters) const {
 
     //-----------------------------------------//
     // get min and max value/reward and counts //
@@ -374,12 +376,15 @@ void MonteCarloTreeSearch::toPdf(const char* file_name) const {
         }
     }
 
-    util::graph_to_pdf(file_name,
-                       graph,
-                       "style=filled truecolor=true",
-                       &node_map,
-                       "",
-                       &arc_map);
+    util::plot_graph(file_name,
+                     graph,
+                     "style=filled truecolor=true",
+                     &node_map,
+                     "",
+                     &arc_map,
+                     true,
+                     command,
+                     parameters);
 }
 
 const MonteCarloTreeSearch::mcts_node_info_map_t & MonteCarloTreeSearch::get_mcts_node_info_map() const {

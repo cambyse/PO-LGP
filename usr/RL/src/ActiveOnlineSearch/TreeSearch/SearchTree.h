@@ -74,7 +74,9 @@ public:
     virtual void next_do() = 0;
     virtual void prune(const action_handle_t &,
                        const observation_handle_t &) override;
-    virtual void toPdf(const char* file_name) const override;
+    virtual void plot_graph(const char* file_name,
+                            const char* command = "dot",
+                            const char* parameters = "-Tpdf") const override;
     virtual const graph_t & get_graph() const;
     virtual const node_info_map_t & get_node_info_map() const;
 protected:
