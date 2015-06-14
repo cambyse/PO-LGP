@@ -96,6 +96,7 @@ public:
         reward_t squared_reward_sum = 0;
     };
     typedef graph_t::ArcMap<MCTSArcInfo>   mcts_arc_info_map_t;
+    typedef std::vector<std::tuple<action_handle_t,double>> action_value_list_t;
 protected:
     typedef graph_util::NodeHashFunction<graph_t> node_hash_function_t;
     typedef std::unordered_set<node_t,node_hash_function_t> node_set_t;
@@ -139,6 +140,7 @@ public:
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
+    virtual action_value_list_t get_action_values() const;
     void plot_graph(const char* file_name,
                     const char* command = "dot",
                     const char* parameters = "-Tpdf") const override;

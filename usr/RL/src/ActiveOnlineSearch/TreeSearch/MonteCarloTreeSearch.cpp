@@ -314,6 +314,17 @@ MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() c
     return util::random_select(optimal_actions);
 }
 
+MonteCarloTreeSearch::action_value_list_t MonteCarloTreeSearch::get_action_values() const {
+    action_value_list_t action_values;
+    for(out_arc_it_t arc(graph,root_node); arc!=INVALID; ++arc) {
+        node_t action_node = graph.target(arc);
+        action_handle_t action = node_info_map[action_node].action;
+        double value = mcts_node_info_map[action_node].get_value();
+        action_values.push_back(make_tuple(action,value));
+    }
+    return action_values;
+}
+
 void MonteCarloTreeSearch::plot_graph(const char* file_name,
                                       const char* command,
                                       const char* parameters) const {
