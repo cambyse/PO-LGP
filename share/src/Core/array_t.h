@@ -1776,9 +1776,15 @@ template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
     return;
   }
   if(y.nd==2) {
-    uint i, j, d0=y.d1, d1=y.d0;
-    x.resize(d0, d1);
-    for(i=0; i<d0; i++) for(j=0; j<d1; j++) x.p[i*d1+j]=y.p[j*d0+i];
+    x.resize(y.d1, y.d0);
+//    for(i=0; i<d0; i++)
+    T *xp=x.p;
+    for(uint i=0; i<x.d0; i++){
+      T *yp=y.p+i, *xstop=xp+x.d1;
+      uint ystep=y.d1;
+      for(; xp!=xstop; xp++, yp+=ystep) *xp = *yp;
+//      for(j=0; j<d1; j++) x.p[i*d1+j]=y.p[j*d0+i];
+    }
     return;
   }
   if(y.nd==1) {
@@ -2308,8 +2314,13 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
   }
   if(y.nd==1 && z.nd==2) {  //vector x matrix -> index-wise
     CHECK_EQ(y.N,z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
-    x=z;
-    for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
+    x = z;
+    for(uint i=0;i<x.d0;i++){
+      double yi=y(i);
+      T *xp=&x(i,0), *xstop=xp+x.d1;
+      for(; xp!=xstop; xp++) *xp *= yi;
+//      x[i]() *= y(i);
+    }
     return;
   }
   if(y.nd==2 && z.nd==1) {  //matrix x vector -> index-wise
@@ -2320,8 +2331,8 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
   }
   if(y.dim() == z.dim()) { //matrix x matrix -> element-wise
     x = y;
-    for(uint i = 0; i < x.N; i++)
-      x.elem(i) *= z.elem(i);
+    T *xp=x.p, *xstop=x.p+x.N, *zp=z.p;
+    for(; xp!=xstop; xp++, zp++) *xp *= *zp;
     return;
   }
   HALT("operator% not implemented for "<<y.dim() <<" %" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
@@ -3183,8 +3194,7 @@ inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
   MT::Array<T> func (const MT::Array<T>& y){    \
     MT::Array<T> x;           \
     if(&x!=&y) x.resizeAs(y);         \
-    T *xp=x.p, *xstop=xp+x.N;            \
-    const T *yp=y.p;            \
+    T *xp=x.p, *xstop=xp+x.N, *yp=y.p;            \
     for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
     return x;         \
   }

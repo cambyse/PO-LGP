@@ -9,6 +9,7 @@ struct NeuralNet{
   MT::Array<arr> w;
   MT::Array<arr> g;
   double Error;
+  uint missClass;
 
   NeuralNet(const uintA& h, double lambda):h(h), lambda(lambda){
     w.resize(h.N-1);
@@ -18,11 +19,10 @@ struct NeuralNet{
       g(l).resize(h(l+1), h(l));
     }
     for(arr& wl:w) rndGauss(wl);
+    missClass = 0;
     Error = 0.;
-    for(uint l=0;l<w.N;l++){
-      Error += lambda*sumOfSqr(w(l));
-      g(l) = (2.*lambda)*w(l);
-    }
+    for(arr& wl:w) Error += lambda*sumOfSqr(wl);
+    for(uint l=0;l<w.N;l++) g(l) = (2.*lambda)*w(l);
   }
 
   arr f(const arr& X_input, const arr& y_target=NoArr, bool resetEgrad=true){
@@ -31,28 +31,27 @@ struct NeuralNet{
     //forward
     MT::Array<arr> x(h.N);
     x(0) = ~X_input;
-    for(uint l=1;l<h.N;l++){
-      x(l) = w(l-1)*x(l-1);
-      if(l<h.N-1) x(l) = sigm(x(l));
-    }
+    for(uint l=1;l<h.N-1;l++) x(l) = sigm( w(l-1)*x(l-1) );
+    x(h.N-1) = w(h.N-2)*x(h.N-2);
 
     if(&y_target){
       for(auto& y:y_target) CHECK(y==-1. || y==1.,"");//if(y==0.) y= -1.; //we want target +/-1
       CHECK(y_target.d0==X_input.d0 && y_target.d1==h.last(),"");
 
       if(resetEgrad){
+        missClass = 0;
         Error = 0.;
-        for(uint l=0;l<w.N;l++){
-          Error += lambda*sumOfSqr(w(l));
-          g(l) = (2.*lambda)*w(l);
-        }
+        for(arr& wl:w) Error += lambda*sumOfSqr(wl);
+        for(uint l=0;l<w.N;l++) g(l) = (2.*lambda)*w(l);
       }
 
       //error
       arr E(y_target.d0), dE(y_target.d0);
       for(uint i=0;i<y_target.d0;i++){
-        E(i) = 1.-x.last()(0,i)*y_target(i,0);
+        double y_f = x.last()(0,i)*y_target(i,0);
+        E(i) = 1.-y_f;
         if(E(i)<0.){ E(i)=0.; dE(i)=0.; } else dE(i)=-1;
+        if(y_f<1e-10) missClass++;
       }
 
       //backward & gradient
@@ -107,30 +106,35 @@ void TEST(NN) {
   arr X,y;
   artificialData_Hasties2Class(X, y);
   arr Phi = makeFeatures(X, linearFT);
+//  arr Phi = X;
   y.reshape(X.d0,1);
   for(auto& yi:y) if(yi==0.) yi=-1.;
 
-  NeuralNet NN({3u, 100, 1}, 1e-2);
+  NeuralNet NN({3u, 10, 10, 1}, 1e-3);
 
   arr W = NN.getWeights();
-  rndGauss(W);
+  rndGauss(W, .1);
 //  checkGradient(NN.fn(Phi, y), W, 1e-4); return;
 
 #if 1
-  optRprop(W, NN.fn(Phi,y), OPT(verbose=2));
-//  optGradDescent(W, NN.fn(Phi,y), OPT(verbose=2, stopTolerance=1e-4));
+  optRprop(W, NN.fn(Phi,y), OPT(verbose=2, stopTolerance=1e-4, stopIters=10000, stopEvals=10000));
+//  optGradDescent(W, NN.fn(Phi,y), OPT(verbose=2, stopTolerance=1e-6, stopIters=10000, stopEvals=10000));
 #else
   double eps=1e-2;
-  for(uint k=0;k<10;k++){
-    double E=NN.applyOnData(NoArr, X,y);
-    cout <<"E=" <<E <<endl;
+  for(uint k=0;k<10000;k++){
+    NN.f(Phi, y);
+    if(!(k%100)) cout <<"k=" <<k <<"  E=" <<NN.Error <<endl;
     for(uint i=0;i<NN.w.N;i++) NN.w(i) -= eps*NN.g(i);
   }
 #endif
 
+  NN.f(Phi, y);
+  cout <<"miss classification rate=" <<(double)NN.missClass/Phi.d0 <<endl;
+
   arr X_grid;
   X_grid.setGrid(X.d1, -2, 3, (X.d1==1?500:50));
   Phi = makeFeatures(X_grid, linearFT);
+//  Phi = X_grid;
 
   arr f_grid = sigm(NN.f(Phi));
   FILE("z.train") <<catCol(X, y);
