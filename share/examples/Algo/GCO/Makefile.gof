@@ -1,5 +1,7 @@
 BASE = ../../..
 
-DEPEND = Core extern_GCO
+GL = 1
+
+DEPEND = extern_GCO Gui Perception Core
 
 include $(BASE)/gofMake/generic.mk

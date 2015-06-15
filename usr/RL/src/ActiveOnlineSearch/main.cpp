@@ -10,6 +10,7 @@
 
 #include <util/util.h>
 #include <util/return_tuple.h>
+#include <util/Commander.h>
 
 #include <QDateTime>
 #include <util/QtUtil.h>
@@ -43,18 +44,25 @@ using std::vector;
 using std::tuple;
 using std::make_tuple;
 using std::cout;
+using std::cin;
 using std::endl;
 using std::shared_ptr;
 using util::Range;
+using std::dynamic_pointer_cast;
 
 using namespace node_finder;
 using namespace tree_policy;
 using namespace value_heuristic;
 using namespace backup_method;
 
+typedef Commander::ReturnType Ret;
 typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
+
+static bool write_log = false;
+static std::ofstream log_file;
+static Commander::CommandCenter commander;
 
 static const std::set<std::string> mode_set = {"WATCH",
                                                "EVAL"};
@@ -133,13 +141,13 @@ static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
 static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", \
-                                                       "(default: Zero) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
-                                                       , false, "Zero", "string");
+                                                       "(default: Rollout) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
+                                                       , false, "Rollout", "string");
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
-static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 0.9) Discount for the returns"
-                                                     , false, 0.9, "double");
+static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
+                                                     , false, 1, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
@@ -159,7 +167,33 @@ OMP_NUM_THREADS environment variable will take effect (if set).", \
 static TCLAP::SwitchArg active_arg(                  "", "active",\
                                                      "(default: false) Use active tree search."\
                                                      , false);
+static TCLAP::ValueArg<std::string> traces_arg(      "", "traces", \
+                                                     "(default: empty string) For non-empty string, write the action, observation, \
+and (if possible) state description to the given file."\
+                                                     , false, "", "string");
 
+void write_state_to_log(int run, std::shared_ptr<AbstractEnvironment> environment) {
+    auto interface_marc = dynamic_pointer_cast<InterfaceMarc>(environment);
+    if(interface_marc!=nullptr) {
+        auto fol_world = dynamic_pointer_cast<FOL_World>(interface_marc->env_marc);
+        if(fol_world) {
+            log_file << run << "	State = ";
+            fol_world->write_current_state(log_file);
+            log_file << endl;
+        }
+    }
+}
+
+void prompt_for_command() {
+    bool ok = false;
+    while(!ok) {
+        cout << "Your command: ";
+        std::string command;
+        getline(cin,command);
+        cout << commander.execute(command.c_str(),ok) << endl;
+        if(command!="") ok = false;
+    }
+}
 bool check_arguments();
 shared_ptr<NodeFinder> get_node_finder();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
@@ -175,6 +209,7 @@ int main(int argn, char ** args) {
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(traces_arg);
         cmd.add(active_arg);
         cmd.add(threads_arg);
         cmd.add(no_header_arg);
@@ -206,6 +241,17 @@ int main(int argn, char ** args) {
     } catch (TCLAP::ArgException &e) {
         // catch any exceptions
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+    }
+
+    // set some default commands
+    commander.add_command("", []()->Ret{return {true,"Continuing..."};}, "Continue execution (empty string / only whitespace)");
+    commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
+
+    // open log file if given
+    if(traces_arg.getValue()!="") {
+        write_log = true;
+        log_file.open(traces_arg.getValue());
+        log_file << "run	action	observation	reward" << endl;
     }
 
     // set random seeds
@@ -245,36 +291,43 @@ int main(int argn, char ** args) {
                         search_tree->toPdf("tree.pdf");
                     }
                     cout << "Sample # " << sample+1 << endl;
-                    getchar();
+                    prompt_for_command();
                 }
             }
+            // make a transition and prune
+            environment->reset_state();
+            auto action = search_tree->recommend_action();
+            RETURN_TUPLE(observation_handle_t, observation,
+                         reward_t, reward) = environment->transition(action);
+            environment->make_current_state_default();
+            // write log
+            if(write_log) {
+                log_file << 0 << "	" <<
+                    *action << "	" <<
+                    *observation << "	" <<
+                    reward << endl;
+                write_state_to_log(0,environment);
+            }
+            if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
+                search_tree->toPdf("tree.pdf");
+                prompt_for_command();
+            }
             if(step<step_n_arg.getValue()) { // don't prune in last step
-                // make a transition and prune
-                environment->reset_state();
-                auto action = search_tree->recommend_action();
-                auto observation_reward = environment->transition(action);
-                environment->make_current_state_default();
-                auto observation = std::get<0>(observation_reward);
-                auto reward = std::get<1>(observation_reward);
-                if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
-                    search_tree->toPdf("tree.pdf");
-                    getchar();
-                }
                 search_tree->prune(action,observation);
-                if(watch_progress_arg.getValue()>=2) {
-                    if(!no_graphics_arg.getValue()) {
-                        search_tree->toPdf("tree.pdf");
-                    }
-                    cout << "Step # " << step+1 <<
-                        ": (action --> observation, reward) = (" <<
-                        *action << " --> " <<
-                        *observation << ", " <<
-                        reward << ")" << endl;
-                    if(environment->is_terminal_state()) {
-                        cout << "Terminal state!" << endl;
-                    }
-                    getchar();
+            }
+            if(watch_progress_arg.getValue()>=2) {
+                if(!no_graphics_arg.getValue()) {
+                    search_tree->toPdf("tree.pdf");
                 }
+                cout << "Step # " << step+1 <<
+                    ": (action --> observation, reward) = (" <<
+                    *action << " --> " <<
+                    *observation << ", " <<
+                    reward << ")" << endl;
+                if(environment->is_terminal_state()) {
+                    cout << "Terminal state!" << endl;
+                }
+                prompt_for_command();
             }
         }
         if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
@@ -304,16 +357,20 @@ int main(int argn, char ** args) {
         if(threads_arg.getValue()>0) {
             omp_set_num_threads(threads_arg.getValue());
         }
+        int run_n = run_n_arg.getValue();
+        int sample_n = sample_n_arg.getValue();
+        int sample_max = sample_max_arg.getValue();
+        int sample_incr = sample_incr_arg.getValue();
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
         // several runs
-        for(int run=0; run<run_n_arg.getValue(); ++run) {
+        for(int run=0; run<run_n; ++run) {
 
             // with one trial for a different number of samples
-            for(int sample_n=sample_n_arg.getValue(); sample_n<=sample_max_arg.getValue(); sample_n+=sample_incr_arg.getValue()) {
+            for(int sample=sample_n; sample<=sample_max; sample+=sample_incr) {
 
-                DEBUG_OUT(1, "run # " << run << ", samples: " << sample_n);
+                DEBUG_OUT(1, "run # " << run << ", samples: " << sample);
 
                 // set up
                 RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
@@ -330,16 +387,27 @@ int main(int argn, char ** args) {
                 search_tree->init();
                 while(true) {
                     // build tree
-                    repeat(sample_n) {
+                    repeat(sample) {
                         search_tree->next();
                     }
                     // perform step
                     environment->reset_state();
                     auto action = search_tree->recommend_action();
-                    auto observation_reward = environment->transition(action);
+                    RETURN_TUPLE(observation_handle_t, observation,
+                                 reward_t, reward) = environment->transition(action);
                     environment->make_current_state_default();
-                    auto observation = std::get<0>(observation_reward);
-                    reward_sum += std::get<1>(observation_reward);
+                    reward_sum += reward;
+                    // write log
+#ifdef USE_OMP
+#pragma omp critical (MCTS)
+#endif
+                    if(write_log) {
+                        log_file << run << "	" <<
+                            *action << "	" <<
+                            *observation << "	" <<
+                            reward << endl;
+                        write_state_to_log(run,environment);
+                    }
                     // break on terminal state
                     if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
@@ -349,11 +417,11 @@ int main(int argn, char ** args) {
                     ++step;
                 }
 #ifdef USE_OMP
-#pragma omp critical (BatchWorker)
+#pragma omp critical (MCTS)
 #endif
                 cout << QString("%1,%2,%3,%4").
                     arg(reward_sum/step).
-                    arg(sample_n).
+                    arg(sample).
                     arg(run).
                     arg(method_string) << endl;
             }
@@ -481,9 +549,23 @@ tuple<shared_ptr<SearchTree>,
     DEBUG_OUT(1, "Actions: " << environment->get_actions());
     // set up tree policy
     if(tree_policy_arg.getValue()=="UCB1") {
-        tree_policy.reset(new UCB1(exploration_arg.getValue()));
+        auto policy = new UCB1(exploration_arg.getValue());
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB1 policy");
+        }
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="UCB_Plus") {
-        tree_policy.reset(new UCB_Plus(exploration_arg.getValue()));
+        auto policy = new UCB_Plus(exploration_arg.getValue());
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB_Plus policy");
+        }
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
     } else DEBUG_DEAD_LINE;
@@ -514,6 +596,16 @@ tuple<shared_ptr<SearchTree>,
                                                    value_heuristic,
                                                    backup_method,
                                                    get_backup_type()));
+    }
+    if(mode_arg.getValue()=="WATCH") {
+        commander.add_command("print tree",[search_tree]()->Ret{
+                search_tree->toPdf("tree.pdf");
+                return {true,"Printed search tree to 'tree.pdf'"};
+            }, "Print the search tree to PDF file 'tree.pdf'");
+        commander.add_command("print tree",[search_tree](QString file_name)->Ret{
+                search_tree->toPdf(file_name.toLatin1());
+                return {true,QString("Printed search tree to '%1'").arg(file_name)};
+            }, "Print the search tree to PDF file with given name");
     }
     search_tree->init();
     // return

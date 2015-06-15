@@ -31,7 +31,7 @@
 
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::set_active(node *i)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::set_active(node *i)
 {
 	if (!i->next)
 	{
@@ -49,7 +49,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	otherwise it is removed from the list
 */
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline typename Graph<captype,tcaptype,flowtype>::node* Graph<captype,tcaptype,flowtype>::next_active()
+	inline typename GCO_Graph<captype,tcaptype,flowtype>::node* GCO_Graph<captype,tcaptype,flowtype>::next_active()
 {
 	node *i;
 
@@ -77,7 +77,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::set_orphan_front(node *i)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::set_orphan_front(node *i)
 {
 	nodeptr *np;
 	i -> parent = ORPHAN;
@@ -88,7 +88,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::set_orphan_rear(node *i)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::set_orphan_rear(node *i)
 {
 	nodeptr *np;
 	i -> parent = ORPHAN;
@@ -103,7 +103,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	inline void Graph<captype,tcaptype,flowtype>::add_to_changed_list(node *i)
+	inline void GCO_Graph<captype,tcaptype,flowtype>::add_to_changed_list(node *i)
 {
 	if (changed_list && !i->is_in_changed_list)
 	{
@@ -116,7 +116,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::maxflow_init()
+	void GCO_Graph<captype,tcaptype,flowtype>::maxflow_init()
 {
 	node *i;
 
@@ -156,7 +156,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::maxflow_reuse_trees_init()
+	void GCO_Graph<captype,tcaptype,flowtype>::maxflow_reuse_trees_init()
 {
 	node* i;
 	node* j;
@@ -241,7 +241,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::augment(arc *middle_arc)
+	void GCO_Graph<captype,tcaptype,flowtype>::augment(arc *middle_arc)
 {
 	node *i;
 	arc *a;
@@ -313,7 +313,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::process_source_orphan(node *i)
+	void GCO_Graph<captype,tcaptype,flowtype>::process_source_orphan(node *i)
 {
 	node *j;
 	arc *a0, *a0_min = NULL, *a;
@@ -390,7 +390,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::process_sink_orphan(node *i)
+	void GCO_Graph<captype,tcaptype,flowtype>::process_sink_orphan(node *i)
 {
 	node *j;
 	arc *a0, *a0_min = NULL, *a;
@@ -469,7 +469,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	flowtype Graph<captype,tcaptype,flowtype>::maxflow(bool reuse_trees, Block<node_id>* _changed_list)
+	flowtype GCO_Graph<captype,tcaptype,flowtype>::maxflow(bool reuse_trees, Block<node_id>* _changed_list)
 {
 	node *i, *j, *current_node = NULL;
 	arc *a;
@@ -607,7 +607,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::test_consistency(node* current_node)
+	void GCO_Graph<captype,tcaptype,flowtype>::test_consistency(node* current_node)
 {
 	node *i;
 	arc *a;
@@ -682,7 +682,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
-	void Graph<captype,tcaptype,flowtype>::Copy(Graph<captype, tcaptype, flowtype>* g0)
+	void GCO_Graph<captype,tcaptype,flowtype>::Copy(GCO_Graph<captype, tcaptype, flowtype>* g0)
 {
 	node* i;
 	arc* a;

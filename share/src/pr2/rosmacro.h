@@ -43,30 +43,30 @@
   };
 
 
-#define BEGIN_ROSMODULE(topic_name, msg_type, var_name) \
-  class ROSMODULE_##var_name : public Module { \
-  public: \
-    ROSMODULE_##var_name() : Module(#var_name) {} \
-    void open() { \
-      rosCheckInit(); \
-      this->_nh = new ros::NodeHandle; \
-      this->_sub  = this->_nh->subscribe( \
-        topic_name, 1, &ROSMODULE_##var_name::callback, this); \
-    } \
-    void step(); \
-    void close() { \
-      this->_nh->shutdown(); \
-      delete _nh; \
-    } \
-    void callback(const msg_type::ConstPtr& msg) { \
-      this->var_name.set() = *msg; \
-    } \
-  private: \
-    ros::NodeHandle* _nh; \
-    ros::Subscriber _sub; \
-    \
-  public: \
-    ACCESS(msg_type, var_name)
+// #define BEGIN_ROSMODULE(topic_name, msg_type, var_name) \
+//   class ROSMODULE_##var_name : public Module { \
+//   public: \
+//     ROSMODULE_##var_name() : Module(#var_name) {} \
+//     void open() { \
+//       rosCheckInit(); \
+//       this->_nh = new ros::NodeHandle; \
+//       this->_sub  = this->_nh->subscribe( \
+//         topic_name, 1, &ROSMODULE_##var_name::callback, this); \
+//     } \
+//     void step(); \
+//     void close() { \
+//       this->_nh->shutdown(); \
+//       delete _nh; \
+//     } \
+//     void callback(const msg_type::ConstPtr& msg) { \
+//       this->var_name.set() = *msg; \
+//     } \
+//   private: \
+//     ros::NodeHandle* _nh; \
+//     ros::Subscriber _sub; \
+//     \
+//   public: \
+//     ACCESS(msg_type, var_name)
 
-#define END_ROSMODULE() \
-  };
+// #define END_ROSMODULE() \
+//   };

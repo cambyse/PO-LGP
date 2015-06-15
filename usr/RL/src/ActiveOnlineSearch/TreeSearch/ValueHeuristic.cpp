@@ -70,7 +70,6 @@ namespace value_heuristic {
             mcts_node_info_map[state_node].set_value(rollout_return_sum/rollout_counts,
                                                      (rollout_counts/(rollout_counts-1))*(squared_rollout_return_sum/rollout_counts-pow(rollout_return_sum/rollout_counts,2)));
         }
-#define FORCE_DEBUG_LEVEL 1
         if(discounted_return!=0)
             DEBUG_OUT(1,"rollout return: " << discounted_return);
     }

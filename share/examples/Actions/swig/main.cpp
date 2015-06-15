@@ -4,13 +4,6 @@
 #include <time.h>
 #include <iostream>
 
-// void sleep(unsigned int mseconds){
-//   std::cout << clock() << endl;
-//   clock_t goal = mseconds + clock();
-//   while (goal > clock());
-//   std::cout << clock() << endl;
-// }
-
 // ============================================================================
 int main(int argc, char** argv) {
 

@@ -86,7 +86,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       }
       ors::Vector vel(gamepadLeftRight, gamepadForwardBack, gamepadUpDown);
       if(sel==down){
-        vel.set ( gamepadLeftRight, gamepadRotate, gamepadForwardBack );
+        vel.set ( gamepadForwardBack, gamepadLeftRight, gamepadRotate );
         vel *= .5;
       }
 //      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;

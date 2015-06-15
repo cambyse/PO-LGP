@@ -193,7 +193,7 @@ System& NoSystem = *((System*)NULL);
 
 Module* System::addModule(const char *dclName, const char *name, Module::StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getItem("Decl_Module", dclName);
+  Node *modReg = registry().getNode("Decl_Module", dclName);
   if(!modReg){
     MT_MSG("could not find Decl_Module " <<dclName);
     return NULL;

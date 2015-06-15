@@ -131,7 +131,7 @@ void ors::Body::parseAts() {
   Node* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
-  item = ats.getItem("meshes");
+  item = ats.getNode("meshes");
   if(item){
     MT::FileToken *file = item->getValue<MT::FileToken>();
     CHECK(file,"somethings wrong");
@@ -154,7 +154,7 @@ void ors::Body::parseAts() {
   }
 
   // add shape if there is no shape exists yet
-  if(ats.getItem("type") && !shapes.N){
+  if(ats.getNode("type") && !shapes.N){
     Shape *s = new Shape(world, *this);
     s->name = name;
   }
@@ -1706,7 +1706,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   
   clear();
   
-  NodeL bs = G->getItems("body");
+  NodeL bs = G->getNodes("body");
   for_list(Node,  it,  bs) {
     CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
@@ -1717,7 +1717,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     b->parseAts();
   }
 
-  NodeL ss = G->getItems("shape");
+  NodeL ss = G->getNodes("shape");
   for(Node *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
@@ -1737,7 +1737,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
   
   uint nCoupledJoints=0;
-  NodeL js = G->getItems("joint");
+  NodeL js = G->getNodes("joint");
   for(Node *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");

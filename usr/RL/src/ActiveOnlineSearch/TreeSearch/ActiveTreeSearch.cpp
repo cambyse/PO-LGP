@@ -40,97 +40,94 @@ ActiveTreeSearch::ActiveTreeSearch(std::shared_ptr<AbstractEnvironment> environm
 }
 
 void ActiveTreeSearch::next_do() {
+
+    // reset to initial state
     environment->reset_state();
+    // visited action nodes
     set<node_t> action_nodes_to_update;
-    DEBUG_OUT(1,"Next...");
+    // running observation node during rollout
+    node_t current_observation_node;
 
-    // // choose observation node at random and set environment's state
-    // vector<node_t> candidate_nodes;
-    // for(node_it_t node(graph); node!=INVALID; ++node) {
-    //     if(node_info_map[node].type==ACTION_NODE) continue;
-    //     // // determine depth
-    //     // int depth = 0;
-    //     // node_t ancestor = node;
-    //     // while(ancestor!=INVALID) {
-    //     //     in_arc_it_t arc(graph,ancestor);
-    //     //     if(arc!=INVALID) {
-    //     //         ancestor = graph.source(arc);
-    //     //         ++depth;
-    //     //     } else {
-    //     //         ancestor = INVALID;
-    //     //     }
-    //     // }
-    //     // if(depth/2>3) continue;
-    //     candidate_nodes.push_back(node);
-    // }
-    // node_t old_observation_node = INVALID;
-    // while(old_observation_node==INVALID) {
-    //     old_observation_node = util::random_select(candidate_nodes);
-    //     #warning XXXXX
-    //     //environment->set_state(associated_state[old_observation_node]);
-    //     if(environment->is_terminal_state()) {
-    //         DEBUG_OUT(1,"    Discard observation node:");
-    //         if(old_observation_node==root_node) {
-    //             DEBUG_OUT(1,"        root");
-    //         } else {
-    //             DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-    //         }
-    //         old_observation_node=INVALID;
-    //     } else {
-    //         DEBUG_OUT(1,"    Choose observation node:");
-    //         if(old_observation_node==root_node) {
-    //             DEBUG_OUT(1,"        root");
-    //         } else {
-    //             DEBUG_OUT(1,"        " << *(node_info_map[old_observation_node].observation));
-    //         }
-    //     }
-    // }
-
-    // // // choose a random action
-    // // auto action = util::random_select(environment->get_actions());
-
-    node_t old_observation_node = root_node;
-
-    for(auto action : environment->get_actions())
-    {
-
-        // create action node for all actions
+    // if necessary only create actions from root node without rollout
+    if(out_arc_it_t(graph,root_node)==INVALID) {
         for(action_handle_t a : environment->get_actions()) {
-            find_or_create_action_node(old_observation_node, a);
-        }
-
-        repeat(0) {
-            // reset environment's state (only for multiple iterations)
-            environment->reset_state();
-            // make a transition
-            RETURN_TUPLE(observation_handle_t, observation,
-                         reward_t, reward ) = environment->transition(action);
-            DEBUG_OUT(1,"    (action --> observation) = (" << *action << " --> " << *observation << ")");
-            // find/add action node
             RETURN_TUPLE(arc_t, to_action_arc,
                          node_t, action_node,
                          bool, created_to_action_arc,
-                         bool, created_action_node) = find_or_create_action_node(old_observation_node,
-                                                                                 action);
-            // find/add observation node
-            RETURN_TUPLE(arc_t, to_observation_arc,
-                         node_t, new_observation_node,
-                         bool, created_to_observation_arc,
-                         bool, created_observation_node) = find_or_create_observation_node(action_node,
-                                                                                           observation);
-            // increment counts and rewards (init if created)
-            if(created_to_observation_arc) counts[to_observation_arc] = 0;
-            if(created_to_action_arc) {
-                counts[to_action_arc] = 0;
-                reward_sum[to_action_arc] = 0;
-                reward_square_sum[to_action_arc] = 0;
-            }
-            ++counts[to_observation_arc];
-            ++counts[to_action_arc];
-            reward_sum[to_action_arc] += reward;
-            reward_square_sum[to_action_arc] += reward*reward;
-            // update
+                         bool, created_action_node) = find_or_create_action_node(root_node, a);
             action_nodes_to_update.insert(action_node);
+        }
+        current_observation_node = INVALID;
+    } else {
+        current_observation_node = root_node;
+    }
+
+    // follow policy to leaf node or terminal state
+    DEBUG_OUT(1,"Next...");
+    while(current_observation_node!=INVALID) {
+
+        // select action according to policy
+        action_handle_t action;
+        {
+            vector<action_handle_t> candidate_actions;
+            vector<double> action_probabilities;
+            for(out_arc_it_t arc(graph,current_observation_node); arc!=INVALID; ++arc) {
+                node_t action_node = graph.target(arc);
+                candidate_actions.push_back(node_info_map[action_node].action);
+                action_probabilities.push_back(computer.get_node_value(variable_info_map[action_node].pi));
+            }
+            int action_idx = util::draw_idx(action_probabilities);
+            DEBUG_OUT(1,"action_idx=" << action_idx);
+            DEBUG_OUT(1,action_probabilities);
+            DEBUG_OUT(1,candidate_actions);
+            action = candidate_actions[action_idx];
+        }
+
+        // make a transition
+        RETURN_TUPLE(observation_handle_t, observation,
+                     reward_t, reward ) = environment->transition(action);
+        DEBUG_OUT(1,"    (action --> observation) = (" << *action << " --> " << *observation << ")");
+        // find/add action node
+        RETURN_TUPLE(arc_t, to_action_arc,
+                     node_t, action_node,
+                     bool, created_to_action_arc,
+                     bool, created_action_node) = find_or_create_action_node(current_observation_node,
+                                                                             action);
+        // find/add observation node
+        RETURN_TUPLE(arc_t, to_observation_arc,
+                     node_t, observation_node,
+                     bool, created_to_observation_arc,
+                     bool, created_observation_node) = find_or_create_observation_node(action_node,
+                                                                                       observation);
+        DEBUG_OUT(1,created_to_action_arc << " " << created_action_node);
+        DEBUG_OUT(1,created_to_observation_arc << " " << created_observation_node);
+        // increment counts and rewards
+        ++counts[to_observation_arc];
+        ++counts[to_action_arc];
+        reward_sum[to_action_arc] += reward;
+        reward_square_sum[to_action_arc] += reward*reward;
+        // add action node to update list
+        action_nodes_to_update.insert(action_node);
+
+        // terminate if a terminal state was reaches otherwise continue from
+        // this observation node
+        if(environment->is_terminal_state()) {
+            current_observation_node = INVALID;
+        } else {
+            current_observation_node = observation_node;
+        }
+
+        // however if a new observation node was created also terminate
+        if(created_observation_node) {
+            // if it's NOT a terminal state then create action nodes for all
+            // available actions
+            if(!environment->is_terminal_state()) {
+                for(action_handle_t a : environment->get_actions()) {
+                    find_or_create_action_node(observation_node, a);
+                }
+            }
+            DEBUG_OUT(1,"Created observation node --> terminate");
+            current_observation_node = INVALID;
         }
     }
     DEBUG_OUT(1,"...expanded tree");
@@ -147,7 +144,7 @@ void ActiveTreeSearch::next_do() {
             nodes.push_back(node);
         }
         computer.check_graph_structure(true,true); // identify input and output nodes
-        computer.check_derivatives(vector<double>(), 1e-5, 1e-2, 1e-2);
+        computer.check_derivatives(1e-5, 1e-3, 1e-3);
         //computer.compute_values();
         computer.set_node_differential(c_root_node,1);
         computer.reverse_accumulation();
@@ -273,6 +270,38 @@ void ActiveTreeSearch::toPdf(const char* file_name) const {
                        &arc_prop_map,
                        true,
                        "dot");
+}
+
+ActiveTreeSearch::arc_node_t ActiveTreeSearch::find_or_create_observation_node(
+    const node_t & action_node,
+    const observation_handle_t & observation) {
+    NAMED_RETURN_TUPLE(return_value,
+                       arc_t, to_observation_arc,
+                       node_t, observation_node,
+                       bool, created_to_observation_arc,
+                       bool, created_observation_node);
+    return_value = SearchTree::find_or_create_observation_node(action_node,
+                                                               observation);
+    if(created_to_observation_arc) counts[to_observation_arc] = 0;
+    return return_value;
+}
+
+ActiveTreeSearch::arc_node_t ActiveTreeSearch::find_or_create_action_node(
+    const node_t & observation_node,
+    const action_handle_t & action) {
+    NAMED_RETURN_TUPLE(return_value,
+                       arc_t, to_action_arc,
+                       node_t, action_node,
+                       bool, created_to_action_arc,
+                       bool, created_action_node);
+    return_value = SearchTree::find_or_create_action_node(observation_node,
+                                                          action);
+    if(created_to_action_arc) {
+        counts[to_action_arc] = 0;
+        reward_sum[to_action_arc] = 0;
+        reward_square_sum[to_action_arc] = 0;
+    }
+    return return_value;
 }
 
 ActiveTreeSearch::arc_node_t ActiveTreeSearch::add_observation_node(observation_handle_t observation,

@@ -184,7 +184,7 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
   //-- count supports below
   double supp=0.;
   Node *supportSymbol=symbols["supports"];
-  NodeL objs=symbols.getItems("Object");
+  NodeL objs=symbols.getNodes("Object");
   for(Node *obj:objs){
     NodeL supporters;
     for(Node *constraint:obj->parentOf){

@@ -24,6 +24,8 @@ struct SwigSystem : System{
   TaskControllerModule *tcm;
   SwigSystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    modelWorld.linkToVariable(tcm->modelWorld.v);
+
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
     addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
@@ -65,10 +67,21 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
   createNewSymbol("timeout");
 //  new CoreTasks(*s->activity.machine);
 
-//  S->RM.writeAccess();
-//  S->RM().KB.append<Graph>({"STATE"}, {}, new Graph(), true);
-//  S->RM().KB.checkConsistency();
-//  S->RM.deAccess();
+
+  cout <<"**************" <<endl;
+  cout <<"Registered Activities=" <<activityRegistry();
+  for(Node *n:activityRegistry()){
+    cout <<"adding symbol for " <<n->keys(0) <<endl;
+    createNewSymbol(n->keys(0).p);
+  }
+  cout <<"Shape Symbols:";
+  S->modelWorld.writeAccess();
+  for(ors::Shape *sh:S->modelWorld().shapes){
+    cout <<"adding symbol for Shape " <<sh->name <<endl;
+    createNewSymbol(sh->name.p);
+  }
+  S->modelWorld.deAccess();
+  cout <<"**************" <<endl;
 }
 
 
@@ -163,7 +176,7 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
 
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = S->RM.get()->KB.getItem(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -243,8 +256,6 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
 //  startActivity(lit2str(literal), parameters);
 //#else
 //  S->RM.writeAccess();
-//  Graph& state=S->RM().getItem("STATE")->kvg();
-//  ItemL parents;
 //  for(auto i:literal) parents.append(S->RM().elem(i));
 //  state.append<bool>({}, parents, NULL, false);
 //  S->RM.deAccess();
@@ -256,8 +267,6 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
 //  waitForCondition(lit2str(literals));
 //#else
 //  S->RM.readAccess();
-//  Graph& state=S->RM().getItem("STATE")->kvg();
-//  ItemL lit;
 //  for(auto i:literal) lit.append(S->RM().elem(i));
 //  S->RM.deAccess();
 

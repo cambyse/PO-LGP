@@ -478,7 +478,8 @@ double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint 
 
   double cost;
 
-  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=verbose, stopIters=200, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
+  NIY;
+//  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=verbose, stopIters=200, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
 
   return cost;
 }

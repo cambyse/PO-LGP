@@ -15,7 +15,8 @@ void RelationalMachine::init(const char* filename){
   }else{
     MT_MSG("No '"<<filename<<"' for initialization given! This might fail!")
   }
-  new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  if(!KB["TMP"])   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  if(!KB["STATE"]) new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(), true);
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }
@@ -71,10 +72,10 @@ NodeL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
-Node *readItem(Graph& containingKvg, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
 
 Node* RelationalMachine::declareNewSymbol(MT::String symbol){
-  Node *it = readItem(KB, symbol, false, false);
+  Node *it = readNode(KB, symbol, false, false);
   return it;
 }
 
@@ -91,7 +92,7 @@ MT::String RelationalMachine::getState(){
 }
 
 MT::String RelationalMachine::getRules(){
-  NodeL rules = KB.getItems("Rule");
+  NodeL rules = KB.getNodes("Rule");
   MT::String str;
   listWrite(rules, str, "\n", "[]");
   return str;

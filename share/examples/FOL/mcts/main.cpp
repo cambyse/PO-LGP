@@ -5,7 +5,7 @@
 
 //===========================================================================
 
-void testMonteCarlo(){
+void TEST(MonteCarlo){
   Graph Gorig;
   FILE("boxes_new.kvg") >>Gorig;
   MT::rnd.seed(3);
@@ -15,10 +15,10 @@ void testMonteCarlo(){
     Graph KB = Gorig;
     KB.checkConsistency();
     Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getItem("STATE")->graph();
-    NodeL rules = KB.getItems("Rule");
-    NodeL constants = KB.getItems("Constant");
-    Graph& terminal = KB.getItem("terminal")->graph();
+    Graph& state = KB.getNode("STATE")->graph();
+    NodeL rules = KB.getNodes("Rule");
+    NodeL constants = KB.getNodes("Constant");
+    Graph& terminal = KB.getNode("terminal")->graph();
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
@@ -112,8 +112,7 @@ void testMonteCarlo(){
 
 //===========================================================================
 
-
-void testMCTS(){
+void TEST(MCTS){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=0;
@@ -124,12 +123,19 @@ void testMCTS(){
   for(uint k=0;k<100;k++){
     cout <<"******************************************** ROLLOUT " <<k <<endl;
     mcts.addRollout(100);
+//    cout <<mcts.getGraph();
+//    mcts.reportDecisions(cout);
+//    world.reset_state();
+//    world.get_actions();
+
 //    G = mcts.getGraph();
 //    if(!(k%1)) gv.update();
   }
   cout <<mcts.Qfunction() <<endl;
   mcts.reportQ(cout); cout <<endl;
   cout <<"MCTS #nodes=" <<mcts.Nnodes() <<endl;
+
+  return;
 
   //--- generate some playouts of the optimal (non optimistic) policy
   world.fil.close();
@@ -144,9 +150,74 @@ void testMCTS(){
 
 //===========================================================================
 
+void TEST(FOL_World){
+  FOL_World world("boxes_new.kvg");
+
+  auto actions = world.get_actions();
+  for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
+
+  for(uint k=0;k<10;k++){
+    auto res=world.transition_randomly();
+    cout <<"RND TRANSITION: obs=" <<*res.first <<" r=" <<res.second <<endl;
+  }
+
+  world.get_actions();
+
+  world.make_current_state_default();
+
+  world.reset_state();
+  world.get_actions();
+}
+
+//===========================================================================
+
+void TEST(Determinism){
+  FOL_World world("boxes_new.kvg");
+  world.verbose=1;
+
+  for(uint k=0;k<100;k++){
+    world.fil.close();
+    MT::open(world.fil,"z.FOL_World");
+
+    //-- generate a random rollout
+    world.reset_state();
+    MT::Array<FOL_World::Handle> decisions;
+    for(;;){
+      auto actions = world.get_actions();
+      FOL_World::Handle action = actions[rand()%actions.size()];
+      decisions.append(action);
+      world.transition(action);
+      if(world.is_terminal_state()) break;
+    }
+
+    MT::String res;
+    res <<*world.state;
+
+    world.fil.close();
+    MT::open(world.fil,"z.FOL_World2");
+
+    //-- now repeat
+    world.reset_state();
+    uint t=0;
+    for(;;t++){
+      world.transition(decisions(t));
+      if(world.is_terminal_state()) break;
+    }
+    CHECK_EQ(t+1, decisions.N,"");
+    MT::String res2;
+    res2 <<*world.state;
+    CHECK_EQ(res, res2, "");
+  }
+}
+
+//===========================================================================
+
 int main(int argn, char** argv){
   rnd.clockSeed();
-  srand(rnd());
-//  testMonteCarlo();
-  testMCTS();
+//  srand(timenow)
+
+//  testMCTS();
+
+//  testFOL_World();
+  testDeterminism();
 }

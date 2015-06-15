@@ -11,7 +11,7 @@ Activity* newActivity(Node *fact){
   Node *specs=fact;
   while(specs->getValueType()!=typeid(Graph) && specs->parents.N) specs=specs->parents(0);
 
-  Node *actType = activityRegistry().getItem(symbol->keys.last());
+  Node *actType = activityRegistry().getNode(symbol->keys.last());
   if(!actType){
     LOG(-1) <<"cannot create activity " <<*fact << "(symbol=" <<*symbol <<", specs=" <<*specs <<")";
     return NULL;

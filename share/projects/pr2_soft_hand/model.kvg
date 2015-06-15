@@ -1,0 +1,32 @@
+Include = 'pr2_model/pr2_clean.ors'
+Include = 'pr2_model/pr2_modifications.ors'
+
+shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.08 0 .12)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+shape endeffKinect(head_tilt_link){ rel=<T t(0 -.05 .12) d(180 0 0 1) d(-90 1 0 0) > type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+# shape endeffForceL(l_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+# shape endeffForceR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+shape endeffForceL(l_wrist_roll_link){ rel=<T t(.25 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffForceR(r_wrist_roll_link){ rel=<T t(.25 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+shape wrenchDispL(l_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] size=[.1 0 0 0]}
+shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] size=[.1 0 0 0]}
+
+shape mymarker(base_footprint){ type=5 color=[1 1 0] size=[.2 0 0 0]}
+
+#Merge worldTranslationRotation{ type=10 }
+
+body target{ X=<T t(.5 .0 .7)> type=1 size=[.0 .0 .108 .0375] color=[.3 .9 .1]}
+
+body soft_hand_link {mass = 0.1}
+joint soft_hand_joint(r_wrist_roll_link soft_hand_link) {A=<T t(0.18 0.0 0.07) d(-90 1 0 0) > type = 10}
+shape soft_hand (soft_hand_link){ type=3 mesh='pr2_model/soft_hand/whole_hand_1.4.simplified.stl'  rel_includes_mesh_center=true  }
+shape endeff_soft_hand(soft_hand_link) {rel=<T t(.02 -0.05 0.0)> type=5 color=[1 1 0] size=[.1 0 0 0]}
+
+#shape soft_hand (r_wrist_roll_link){ type=3 rel=<T t(0.18 0.0 0.07) d(-90 1 0 0) >  mesh='pr2_model/soft_hand/whole_hand_1.4.simplified.stl'  rel_includes_mesh_center=true  }

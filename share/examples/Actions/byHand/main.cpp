@@ -29,11 +29,6 @@ int main(int argc, char** argv) {
 
   ActionSwigInterface S(false);
 
-  S.createNewSymbol("MyTask");
-  S.createNewSymbol("FollowReferenceActivity"); //-> wird automatisiert
-  S.createNewSymbol("HomingActivity"); //-> wird automatisiert
-  S.createNewSymbol("endeffR"); //-> wird automatisiert
-  S.createNewSymbol("endeffL"); //-> wird automatisiert
   S.createNewSymbol("wheels"); //-> wird automatisiert
 
   S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[.2, 0, .3], PD=[.5, .9, .5, 10.]}");
