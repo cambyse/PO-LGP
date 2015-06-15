@@ -15,11 +15,11 @@ Node *getFirstVariable(Node* literal, Graph* varScope);
 
 bool factsAreEqual(Node *fact0, Node *fact1, bool checkAlsoValue=false);
 bool factsAreEqual(Node *fact0, NodeL& fact1);
-bool factsAreEqual(Node *fact, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=false, bool ignoreSubst=false);
+bool factsAreEqual(Node *fact, Node *literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue=false, bool ignoreSubst=false);
 Node *getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
 Node *getEqualFactInKB(Graph& facts, NodeL& fact);
 Node *getEqualFactInKB(Graph& facts, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=true);
-NodeL getPotentiallyEqualFactInKB(Graph& facts, Node* literal, Graph* subst_scope, bool checkAlsoValue=true);
+NodeL getPotentiallyEqualFactsInKB(Graph& facts, Node* tuple, const Graph& varScope, bool checkAlsoValue=true);
 Node *getEqualFactInList(Node *fact, NodeL& facts);
 bool allFactsHaveEqualsInScope(Graph& KB, NodeL& facts);
 
@@ -30,6 +30,8 @@ bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subs
 void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node *literal, Graph* varScope);
 NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose=0);
 NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose=0);
+NodeL getSubstitutions2(Graph& facts, NodeL& relations, int verbose=0);
+NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose=0);
 
 //----------- adding facts
 

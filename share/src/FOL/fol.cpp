@@ -79,7 +79,7 @@ bool factsAreEqual(Node *fact0, NodeL& fact1){
 }
 
 /// check match, where all variables of literal are replaced by subst(var->index)
-bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
+bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
   if(fact->parents.N!=literal->parents.N) return false;
   for(uint i=0;i<fact->parents.N;i++){
     Node *fact_arg = fact->parents(i);
@@ -133,23 +133,23 @@ Node *getEqualFactInKB(Graph& facts, Node* literal, const NodeL& subst, Graph* s
 }
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
-// NodeL getPotentiallyEqualFactInKB(Graph& facts, Node* literal, Graph* subst_scope, bool checkAlsoValue){
-//   Node *rarestSymbol=NULL;
-//   uint rarestSymbolN=0;
-//   for(Node *sym:literal) if(&sym->container!=subst_scope){ //loop through all grounded symbols, not variables
-//     if(!rarestSymbol || sym->parentOf.N<rarestSymbolN){
-//       rarestSymbol = sym;
-//       rarestSymbolN = sym->parentOf.N;
-//     }
-//   }
-//   NodeL candidates = rarestSymbol->parentOf;
-//   NodeL matches;
-//   for(Node *fact:candidates) if(&fact->container==&facts && fact!=literal){
-//     if(factsAreEqual(fact, literal, {}, subst_scope, checkAlsoValue, true))
-//       matches.append(fact);
-//   }
-//   return matches;
-// }
+NodeL getPotentiallyEqualFactsInKB(Graph& facts, Node* tuple, const Graph& varScope, bool checkAlsoValue){
+  Node *rarestSymbol=NULL;
+  uint rarestSymbolN=0;
+  for(Node *sym:tuple->parents) if(&sym->container!=&varScope){ //loop through all grounded symbols, not variables
+    if(!rarestSymbol || sym->parentOf.N<rarestSymbolN){
+      rarestSymbol = sym;
+      rarestSymbolN = sym->parentOf.N;
+    }
+  }
+  NodeL candidates = rarestSymbol->parentOf;
+  NodeL matches;
+  for(Node *fact:candidates) if(&fact->container==&facts && fact!=tuple){
+    if(factsAreEqual(fact, tuple, {}, &varScope, checkAlsoValue, true))
+      matches.append(fact);
+  }
+  return matches;
+}
 
 /// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
 Node *getEqualFactInList(Node* fact, NodeL& facts){
@@ -310,6 +310,13 @@ NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose)
   return getSubstitutions(facts, getFirstNonSymbolOfScope(Rule)->graph(), domain, verbose);
 }
 
+/// extracts the preconditions of the rule, then returns substitutions
+NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
+  //-- extract precondition
+  if(verbose>1){ cout <<"Substitutions for rule " <<*rule <<endl; }
+  Graph& Rule=rule->graph();
+  return getSubstitutions2(facts, getFirstNonSymbolOfScope(Rule)->graph(), verbose);
+}
 
 /// the list of literals is a conjunctive clause (e.g. precondition)
 /// all literals must be in the same scope (element of the same subGraph)
@@ -429,118 +436,139 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
   return substitutions;
 }
 
+ NodeL getSubstitutions2(Graph& facts, NodeL& relations, int verbose){
+   CHECK(relations.N,"");
+   Graph& varScope = relations(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
 
-// NodeL getSubstitutions(Graph& facts, NodeL& literals, bool verbose){
-//   CHECK(literals.N,"");
-//   Graph& varScope = literals(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
+   NodeL vars = getSymbolsOfScope(varScope);
 
-//   NodeL vars = getSymbolsOfScope(varScope);
+   if(verbose>2){
+     cout <<"Substitutions for literals "; listWrite(relations, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
+   }
 
-//   if(verbose){
-//     cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
-//   }
+   //-- collect domains for each variable by checking (marginally) for potentially matching facts
+   MT::Array<NodeL> domainOf(vars.N);
+   MT::Array<bool > domainIsConstrained(vars.N);
+   domainIsConstrained = false;
+   for(Node *rel:relations){ //first go through all (non-negated) relations...
+     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()!=false){
+       MT::Array<NodeL> domainsForThisRel(vars.N);
+       NodeL matches = getPotentiallyEqualFactsInKB(facts, rel, varScope, true);
+       if(!matches.N){
+         if(verbose>1) cout <<"Relation " <<*rel <<" has no match -> no subst" <<endl;
+         return NodeL();
+       }
+       for(uint i=0;i<rel->parents.N;i++){ //add the 'parent' symbols to the domain
+         Node *var = rel->parents(i);
+         if(&var->container==&varScope){ //this is a var
+           for(Node *m:matches) domainsForThisRel(var->index).setAppend(m->parents(i));
+         }
+       }
+       if(verbose>3){
+         cout <<"Relation " <<*rel <<"allows for domains:" <<endl;
+         for(Node *var:rel->parents) if(&var->container==&varScope){
+           cout <<"'" <<*var <<"' {"; listWrite(domainsForThisRel(var->index), cout); cout <<" }" <<endl;
+         }
+       }
+       for(uint i=0;i<vars.N;i++) if(domainsForThisRel(i).N){
+         if(domainIsConstrained(i)){
+           domainOf(i) = setSection(domainOf(i), domainsForThisRel(i));
+         }else{
+           domainOf(i) = domainsForThisRel(i);
+           domainIsConstrained(i)=true;
+         }
+         if(verbose>3) cout <<"domains after 'marginal domain collection':" <<endl;
+         if(verbose>3) for(Node *var:vars){ cout <<"'" <<*var <<"' constrained?" <<domainIsConstrained(var->index) <<" {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+       }
+     }
+   }
 
-//   //-- initialize potential domains for each variable
-//   MT::Array<NodeL> domainOf(vars.N);
-//   for(Node *l:literals){ //go through all (non-negated) literals...
-//     if(l->getValueType()!=typeid(bool) || l->V<bool>()!=false){
-//       NodeL matches = getPotentiallyEqualFactInKB(facts, l, true);
-//       for(uint i=0;i<l->parents.N;i++){
-//         Node *var = l->parents(i);
-//         if(&var->container!=subs_scope) continue; //loop over variables only
-//         for(Node *m:matches) domainOf(var->index).append(m->parents(i));
-//       }
-//     }
-//   }
+   if(verbose>2) cout <<"domains after 'marginal domain collection':" <<endl;
+   if(verbose>2) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
-//   if(verbose) cout <<"domains before 'constraint propagation':" <<endl;
-//   if(verbose) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+   //-- check that every domain is constrained (that is, mentioned by at least SOME relation)
+   for(uint i=0;i<vars.N;i++) if(!domainIsConstrained(i)){
+     HALT("The domain of variable " <<*vars(i) <<" is unconstrained (infinite, never mentioned,..)");
+   }
 
-//   //-- grab open variables for each literal
-//   uintA lit_numVars(literals(0)->container.N);
-//   for(Node *literal:literals) lit_numVars(literal->index) = getNumOfVariables(literal, &varScope);
+   //-- for negative relations with 1 variable, delete the domain
+   for(Node *rel:relations){
+     if(rel->getValueType()==typeid(bool) && rel->V<bool>()==false && getNumOfVariables(rel, &varScope)==1){
+       Node *var = getFirstVariable(rel, &varScope);
+       if(verbose>3) cout <<"checking literal '" <<*rel <<"'" <<flush;
+       removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), rel, &varScope);
+       if(verbose>3){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+       if(domainOf(var->index).N==0){
+         if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
+         return NodeL(); //early failure
+       }
+     }
+   }
 
-//   //-- first pick out all precondition predicates with just one open variable and reduce domains directly
-//   for(Node *literal:literals){
-//     if(lit_numVars(literal->index)==1){
-//       Node *var = getFirstVariable(literal, &varScope);
-//       if(verbose) cout <<"checking literal '" <<*literal <<"'" <<flush;
-//       removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), literal, &varScope);
-//       if(verbose){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
-//       if(domainOf(var->index).N==0){
-//         if(verbose) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
-//         return NodeL(); //early failure
-//       }
-//     }
-//   }
+   //-- for relations with more than 1 variable, create joint constraints
+   NodeL constraints;
+   for(Node *rel:relations){
+     if(getNumOfVariables(rel, &varScope)>1){ // || (literal->parents.N && literal->parents(0)==EQ)){
+       constraints.append(rel);
+     }
+   }
 
-//   if(verbose) cout <<"domains after 'constraint propagation':" <<endl;
-//   if(verbose) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
+   if(verbose>2){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
 
-//   //-- for the others, create constraints
-//   NodeL constraints;
-//   for(Node *literal:literals){
-//     if(lit_numVars(literal->index)!=1 || (literal->parents.N && literal->parents(0)==EQ)){
-//       constraints.append(literal);
-//     }
-//   }
+   //-- naive CSP: loop through everything
+   uint subN=0;
+   NodeL substitutions;
+   NodeL values(vars.N); values.setZero();
+   {
+     //-- using 'getIndexTuple' we can linearly enumerate all configurations of all variables
+     uintA domainN(vars.N);
+     for(uint i=0;i<vars.N;i++) domainN(i) = domainOf(i).N;  //collect dims/cardinalities of domains
+     uint configurationsN = product(domainN); //number of all possible configurations
+     for(uint config=0;config<configurationsN;config++){ //loop through all possible configurations
+       uintA valueIndex = getIndexTuple(config, domainN);
+       bool feasible=true;
+       for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domainOf(i)(valueIndex(i)); //assign the configuration
+       //only allow for disjoint assignments
+       for(uint i=0; i<values.N && feasible; i++) for(uint j=i+1; j<values.N && feasible; j++){
+         if(values(i)==values(j)) feasible=false;
+       }
+       if(!feasible) continue;
+       for(Node* literal:constraints){ //loop through all constraints
+         //         if(literal->parents.N && literal->parents(0)==EQ){ //check equality of subsequent literals
+         //           Node *it1 = literal->container(literal->index+1);
+         //           Node *it2 = literal->container(literal->index+2);
+         //           feasible = matchingFactsAreEqual(facts, it1, it2, values, &varScope);
+         //         }else{
+         feasible = getEqualFactInKB(facts, literal, values, &varScope);
+         if(!feasible){ //when literal is a negative boolean literal and we don't find a match, we interpret this as feasible!
+           if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false)
+             feasible=true;
+         }
+         //         }
+         if(verbose>3){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
+         if(!feasible) break;
+       }
+       if(feasible){
+         if(verbose>3){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
+         substitutions.append(values);
+         subN++;
+       }
+     }
+   }
+   substitutions.reshape(subN,vars.N);
 
-//   if(verbose){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
-
-//   //-- naive CSP: loop through everything
-//   uint subN=0;
-//   NodeL substitutions;
-//   NodeL values(vars.N); values.setZero();
-//   {
-//     //-- using 'getIndexTuple' we can linearly enumerate all configurations of all variables
-//     uintA domainN(vars.N);
-//     for(uint i=0;i<vars.N;i++) domainN(i) = domainOf(i).N;  //collect dims/cardinalities of domains
-//     uint configurationsN = product(domainN); //number of all possible configurations
-//     for(uint config=0;config<configurationsN;config++){ //loop through all possible configurations
-//       uintA valueIndex = getIndexTuple(config, domainN);
-//       bool feasible=true;
-//       for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domainOf(i)(valueIndex(i)); //assign the configuration
-//       //only allow for disjoint assignments
-//       for(uint i=0; i<values.N && feasible; i++) for(uint j=i+1; j<values.N && feasible; j++){
-//         if(values(i)==values(j)) feasible=false;
-//       }
-//       if(!feasible) continue;
-//       for(Node* literal:constraints){ //loop through all constraints
-//         if(literal->parents.N && literal->parents(0)==EQ){ //check equality of subsequent literals
-//           Node *it1 = literal->container(literal->index+1);
-//           Node *it2 = literal->container(literal->index+2);
-//           feasible = matchingFactsAreEqual(facts, it1, it2, values, &varScope);
-//         }else{
-//           feasible = getEqualFactInKB(facts, literal, values, &varScope);
-//           if(!feasible){ //when literal is a negative boolean literal and we don't find a match, we interpret this as feasible!
-//             if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false)
-//               feasible=true;
-//           }
-//         }
-//         if(verbose){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
-//         if(!feasible) break;
-//       }
-//       if(feasible){
-//         if(verbose){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
-//         substitutions.append(values);
-//         subN++;
-//       }
-//     }
-//   }
-//   substitutions.reshape(subN,vars.N);
-
-//   if(verbose){
-//     cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
-//     for(uint s=0;s<substitutions.d0;s++){
-//       for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
-//         cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
-//       }
-//       cout <<endl;
-//     }
-//     if(!substitutions.d0) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
-//   }
-//   return substitutions;
-// }
+   if(verbose>1){
+     cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
+     for(uint s=0;s<substitutions.d0;s++){
+       for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
+         cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
+       }
+       cout <<endl;
+     }
+     if(!substitutions.d0) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
+   }
+   return substitutions;
+ }
 
 
 bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){

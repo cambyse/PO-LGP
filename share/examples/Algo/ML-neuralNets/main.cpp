@@ -116,7 +116,7 @@ void TEST(NN) {
   rndGauss(W, .1);
 //  checkGradient(NN.fn(Phi, y), W, 1e-4); return;
 
-#if 1
+#if 0
   optRprop(W, NN.fn(Phi,y), OPT(verbose=2, stopTolerance=1e-4, stopIters=10000, stopEvals=10000));
 //  optGradDescent(W, NN.fn(Phi,y), OPT(verbose=2, stopTolerance=1e-6, stopIters=10000, stopEvals=10000));
 #else

@@ -84,7 +84,9 @@ void testFolSubstitution(){
   for(Node* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
     cout <<  "Substitutions:" <<endl;
-    NodeL subs = getRuleSubstitutions(state, rule, constants, true);
+    NodeL subs = getRuleSubstitutions(state, rule, constants, 2);
+    cout <<  "Substitutions2:" <<endl;
+    subs = getRuleSubstitutions2(state, rule, 2);
     cout <<"BEFORE state="; state.write(cout, " "); cout <<endl;
     for(uint s=0;s<subs.d0;s++){
       Node *effect = rule->graph().last();
@@ -101,7 +103,7 @@ void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
-  uint verbose=3;
+  int verbose=3;
 
   for(uint k=0;k<10;k++){
     Graph KB = Gorig;
@@ -122,7 +124,8 @@ void testMonteCarlo(){
         //-- get all possible decisions
         MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
-          NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
+          NodeL subs = getRuleSubstitutions(state, rule, constants, verbose-2 );
+//          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
           for(uint s=0;s<subs.d0;s++){
             decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
           }
@@ -210,7 +213,7 @@ int main(int argn, char** argv){
 //  testPolFwdChaining();
 //  testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
-//  testMonteCarlo();
+//  testFolSubstitution();
+  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 }
