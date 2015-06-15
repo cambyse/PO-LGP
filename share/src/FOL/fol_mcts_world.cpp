@@ -2,6 +2,8 @@
 #include "fol_mcts_world.h"
 #include "fol.h"
 
+#define DEBUG(x)
+
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
     os <<"WAIT()";
@@ -138,8 +140,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   fil <<"\n  T_real=" <<T_real;
   fil <<"\n  observation=" <<decisionObservation;
   fil <<"\n  reward=" <<reward;
-  fil <<"\n  state="; state->write(fil," ","{}");
-  fil <<endl;
+  if(verbFil){ fil <<"\n  state="; state->write(fil," ","{}"); fil <<endl; }
 
   //reward=0.;
   R_total += reward;
@@ -152,7 +153,8 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   MT::Array<Handle> decisions; //tuples of rule and substitution
   decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
   for(Node* rule:decisionRules){
-    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+//    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+    NodeL subs = getRuleSubstitutions2(*state, rule, (verbose>4) );
     for(uint s=0;s<subs.d0;s++){
         decisions.append(Handle(new Decision(false, rule, subs[s], decisions.N))); //a grounded rule decision (abstract rule with substution)
     }
@@ -196,11 +198,11 @@ void FOL_World::make_current_state_default() {
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
   start_T_real = T_real;
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
   if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
   fil <<"*** reassign start state ***" <<endl;
-  fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl;
+  if(verbFil){ fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl; }
 }
 
 void FOL_World::reset_state(){
@@ -212,13 +214,13 @@ void FOL_World::reset_state(){
   successEnd=false;
 //  Ndecisions=0;
 #if 0
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   if(state) delete state->isNodeOfParentGraph;
   state = new Graph();
 #endif
   if(!state) state = new Graph();
   state->copy(*start_state, &KB);
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   state->isNodeOfParentGraph->keys(0)="STATE";
   //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 
@@ -226,7 +228,7 @@ void FOL_World::reset_state(){
   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
   tmp   = &KB["TMP"]->graph();
 
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   FILE("z.after") <<KB;
 
   //-- check for terminal
@@ -236,7 +238,8 @@ void FOL_World::reset_state(){
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
 
   fil <<"*** reset ***" <<endl;
-  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
+  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<endl;
+  if(verbFil){ fil <<"  state="; state->write(fil," ","{}"); fil <<endl; }
 }
 
 // void FOL_World::write_current_state(ostream& os){

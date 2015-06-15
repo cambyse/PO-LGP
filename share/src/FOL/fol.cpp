@@ -1,5 +1,7 @@
 #include "fol.h"
 
+#define DEBUG(x)
+
 /// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
 NodeL getLiteralsOfScope(Graph& KB){
   NodeL state;
@@ -142,10 +144,10 @@ NodeL getPotentiallyEqualFactsInKB(Graph& facts, Node* tuple, const Graph& varSc
       rarestSymbolN = sym->parentOf.N;
     }
   }
-  NodeL candidates = rarestSymbol->parentOf;
+  const NodeL& candidates = rarestSymbol->parentOf;
   NodeL matches;
   for(Node *fact:candidates) if(&fact->container==&facts && fact!=tuple){
-    if(factsAreEqual(fact, tuple, {}, &varScope, checkAlsoValue, true))
+    if(factsAreEqual(fact, tuple, NoNodeL, &varScope, checkAlsoValue, true))
       matches.append(fact);
   }
   return matches;
@@ -449,10 +451,11 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
    //-- collect domains for each variable by checking (marginally) for potentially matching facts
    MT::Array<NodeL> domainOf(vars.N);
    MT::Array<bool > domainIsConstrained(vars.N);
+   MT::Array<NodeL> domainsForThisRel(vars.N);
    domainIsConstrained = false;
    for(Node *rel:relations){ //first go through all (non-negated) relations...
      if(rel->getValueType()!=typeid(bool) || rel->V<bool>()!=false){
-       MT::Array<NodeL> domainsForThisRel(vars.N);
+       for(auto& d:domainsForThisRel) d.clear();
        NodeL matches = getPotentiallyEqualFactsInKB(facts, rel, varScope, true);
        if(!matches.N){
          if(verbose>1) cout <<"Relation " <<*rel <<" has no match -> no subst" <<endl;
@@ -461,7 +464,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
        for(uint i=0;i<rel->parents.N;i++){ //add the 'parent' symbols to the domain
          Node *var = rel->parents(i);
          if(&var->container==&varScope){ //this is a var
-           for(Node *m:matches) domainsForThisRel(var->index).setAppend(m->parents(i));
+           for(Node *m:matches) domainsForThisRel(var->index).append(m->parents(i)); //setAppend not necessary
          }
        }
        if(verbose>3){
@@ -573,15 +576,16 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
 bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getNodes("Rule");
-  NodeL constants = KB.getNodes("Constant");
+//  NodeL constants = KB.getNodes("Constant");
   Graph& state = KB.getNode("STATE")->graph();
 
   for(;;){
-    KB.checkConsistency();
+    DEBUG(KB.checkConsistency();)
     bool newFacts=false;
     for(Node *rule:rules){
       if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
-      NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
+//      NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
+      NodeL subs = getRuleSubstitutions2(state, rule, verbose);
       for(uint s=0;s<subs.d0;s++){
         Node *effect = rule->graph().last();
         if(effect->getValueType()==typeid(arr)){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
@@ -620,7 +624,7 @@ bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, in
 
 /// actually propositional logic:
 bool forwardChaining_propositional(Graph& KB, Node* q){
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   uintA count(KB.N);     count=0;
   boolA inferred(KB.N);  inferred=false;
   NodeL clauses = KB.getNodes("Clause");

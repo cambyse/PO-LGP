@@ -116,6 +116,7 @@ void TEST(MCTS){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=0;
+  world.verbFil=0;
   mcts.verbose=1;
   mcts.beta=100.;
 //  Graph G = mcts.getGraph();
@@ -222,8 +223,8 @@ int main(int argn, char** argv){
   rnd.clockSeed();
 //  srand(timenow)
 
-//  testMCTS();
+  testMCTS();
 
 //  testFOL_World();
-  testDeterminism();
+//  testDeterminism();
 }

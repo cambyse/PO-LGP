@@ -57,6 +57,7 @@ struct FOL_World:MCTS_Environment{
   Graph *terminal; //TODO: replace
   Node *Terminate_keyword;
   int verbose;
+  int verbFil;
   ofstream fil;
 
   FOL_World(const char* KB_file);

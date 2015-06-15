@@ -103,7 +103,7 @@ void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
-  int verbose=3;
+  int verbose=2;
 
   for(uint k=0;k<10;k++){
     Graph KB = Gorig;
