@@ -42,9 +42,10 @@ struct FOL_World:MCTS_Environment{
   };
   struct State:SAO {};
 
-  uint T_step; ///< discrete "time": decision steps so far
-  double T_real;///< real time so far;
+  uint T_step, start_T_step; ///< discrete "time": decision steps so far
+  double T_real, start_T_real;///< real time so far;
   double R_total;
+
 //  uint Ndecisions;
   bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base

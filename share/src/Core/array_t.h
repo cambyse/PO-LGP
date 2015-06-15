@@ -2324,7 +2324,7 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
       x.elem(i) *= z.elem(i);
     return;
   }
-  HALT("operator% not implemented for "<<y.dim() <<"%" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+  HALT("operator% not implemented for "<<y.dim() <<" %" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
 }
 
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~

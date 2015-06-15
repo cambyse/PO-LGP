@@ -20,7 +20,7 @@ void FOL_World::Decision::write(ostream& os) const{
   }
 }
 
-FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(4){
+FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(1){
   FILE("z.init") <<KB;
   KB.checkConsistency();
   start_state = &KB["START_STATE"]->graph();
@@ -38,6 +38,8 @@ FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), 
   }
   MT::open(fil, "z.FOL_World");
 
+  start_T_step=0;
+  start_T_real=0.;
   reset_state();
 }
 
@@ -133,8 +135,11 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
   fil <<"--\n  T_step=" <<T_step;
   fil <<"\n  decision="; d->write(fil);
-  fil <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}");
-  fil <<"\n  reward=" <<reward <<endl;
+  fil <<"\n  T_real=" <<T_real;
+  fil <<"\n  observation=" <<decisionObservation;
+  fil <<"\n  reward=" <<reward;
+  fil <<"\n  state="; state->write(fil," ","{}");
+  fil <<endl;
 
   //reward=0.;
   R_total += reward;
@@ -189,6 +194,8 @@ void FOL_World::make_current_state_default() {
 #endif
   start_state->copy(*state, &KB);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
+  start_T_step = T_step;
+  start_T_real = T_real;
   KB.checkConsistency();
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
   if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
@@ -198,8 +205,8 @@ void FOL_World::make_current_state_default() {
 
 void FOL_World::reset_state(){
   FILE("z.before") <<KB;
-  T_step=0;
-  T_real=0.;
+  T_step=start_T_step;
+  T_real=start_T_real;
   R_total=0.;
   deadEnd=false;
   successEnd=false;
