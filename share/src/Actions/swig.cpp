@@ -20,6 +20,7 @@ struct SwigSystem : System{
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
+  ACCESS(bool, fixBase)
 
   TaskControllerModule *tcm;
   SwigSystem(){
@@ -37,6 +38,7 @@ struct SwigSystem : System{
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
+    fixBase.set() = !MT::getParameter<bool>("sendBaseMotion", false);
   }
 };
 

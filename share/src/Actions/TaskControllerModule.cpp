@@ -98,10 +98,19 @@ void TaskControllerModule::step(){
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   //now operational space control
+  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
   for(uint tt=0;tt<10;tt++){
     arr a = feedbackController.operationalSpaceControl();
     q_model += .001*qdot_model;
     qdot_model += .001*a;
+    if (fixBase.get()) {
+      qdot_model(trans->qIndex+0) = 0;
+      qdot_model(trans->qIndex+1) = 0;
+      qdot_model(trans->qIndex+2) = 0;
+      q_model(trans->qIndex+0) = 0;
+      q_model(trans->qIndex+1) = 0;
+      q_model(trans->qIndex+2) = 0;
+    }
     feedbackController.setState(q_model, qdot_model);
   }
   if(verbose) feedbackController.reportCurrentState();
@@ -122,7 +131,6 @@ void TaskControllerModule::step(){
   refs.u_bias = zeros(q_model.N);
 
   //-- send base command
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
   bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
   if(sendBaseMotion && trans && trans->qDim()==3){
     refs.qdot(trans->qIndex+0) = qdot_model(trans->qIndex+0);

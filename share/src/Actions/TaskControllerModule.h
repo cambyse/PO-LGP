@@ -17,6 +17,7 @@ struct TaskControllerModule : Module {
   ACCESS(MT::String, effects)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
+  ACCESS(bool, fixBase)
 
   //non-protected members
 //private:
