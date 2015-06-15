@@ -1,9 +1,5 @@
 #include "swig.h"
 
-//#include <Actions/actionMachine.h>
-//#include <Actions/actionMachine_internal.h>
-//#include <Actions/actions.h>
-//#include <Motion/motionHeuristics.h>
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
@@ -15,12 +11,12 @@
 // ============================================================================
 struct SwigSystem : System{
   ACCESS(bool, quitSignal)
+  ACCESS(bool, fixBase)
   ACCESS(RelationalMachine, RM)
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
-  ACCESS(bool, fixBase)
 
   TaskControllerModule *tcm;
   SwigSystem(){
