@@ -38,7 +38,8 @@ struct SwigSystem : System{
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
-    fixBase.set() = !MT::getParameter<bool>("sendBaseMotion", false);
+    // make the base movable by default
+    fixBase.set() = MT::getParameter<bool>("fixBase", false);
   }
 };
 

@@ -131,8 +131,7 @@ void TaskControllerModule::step(){
   refs.u_bias = zeros(q_model.N);
 
   //-- send base command
-  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
-  if(sendBaseMotion && trans && trans->qDim()==3){
+  if (!fixBase.get() && trans && trans->qDim()==3) {
     refs.qdot(trans->qIndex+0) = qdot_model(trans->qIndex+0);
     refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
     refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
