@@ -116,6 +116,7 @@ void TEST(MCTS){
   FOL_World world("boxes_new.kvg");
   MCTS mcts(world);
   world.verbose=0;
+  world.verbFil=0;
   mcts.verbose=1;
   mcts.beta=100.;
 //  Graph G = mcts.getGraph();
@@ -172,26 +173,26 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(Determinism){
-  FOL_World world("boxes_new.kvg");
-  world.verbose=1;
 
   for(uint k=0;k<100;k++){
-    world.fil.close();
-    MT::open(world.fil,"z.FOL_World");
+    FOL_World world("boxes_new.kvg");
 
     //-- generate a random rollout
     world.reset_state();
-    MT::Array<FOL_World::Handle> decisions;
+    MT::Array<FOL_World::Handle> actions;
+    MT::Array<FOL_World::Handle> observations;
+    MT::Array<double> rewards;
+    MT::Array<MT::String> states;
     for(;;){
-      auto actions = world.get_actions();
-      FOL_World::Handle action = actions[rand()%actions.size()];
-      decisions.append(action);
-      world.transition(action);
+      auto A = world.get_actions();
+      FOL_World::Handle action = A[rnd()%A.size()];
+      auto res = world.transition(action);
+      actions.append(action);
+      observations.append(res.first);
+      rewards.append(res.second);
+      states.append(STRING(*world.state));
       if(world.is_terminal_state()) break;
     }
-
-    MT::String res;
-    res <<*world.state;
 
     world.fil.close();
     MT::open(world.fil,"z.FOL_World2");
@@ -200,13 +201,19 @@ void TEST(Determinism){
     world.reset_state();
     uint t=0;
     for(;;t++){
-      world.transition(decisions(t));
+      world.make_current_state_default();
+      std::pair<FOL_World::Handle, double> res;
+      for(;;){
+        res = world.transition(actions(t));
+        if(*res.first==*observations(t)) break; //observations match... move on
+        world.reset_state();
+      }
+      CHECK_EQ(*observations(t), *res.first, "");
+      CHECK_EQ(rewards(t), res.second, "");
+      CHECK_EQ(states(t), STRING(*world.state), "");
       if(world.is_terminal_state()) break;
     }
-    CHECK_EQ(t+1, decisions.N,"");
-    MT::String res2;
-    res2 <<*world.state;
-    CHECK_EQ(res, res2, "");
+    CHECK_EQ(t+1, actions.N,"");
   }
 }
 
@@ -216,8 +223,8 @@ int main(int argn, char** argv){
   rnd.clockSeed();
 //  srand(timenow)
 
-//  testMCTS();
+  testMCTS();
 
 //  testFOL_World();
-  testDeterminism();
+//  testDeterminism();
 }
