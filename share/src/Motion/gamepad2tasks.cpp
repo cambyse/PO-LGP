@@ -136,15 +136,16 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     case 4:
     case 8:{ //open/close hand
       cout <<"open/close hand" <<endl;
-      CtrlTask *pdt=NULL;
+      CtrlTask *gripper=NULL;
       switch(sel){
-        case right:  pdt=gripperR;  break;
-        case left:   pdt=gripperL;  break;
-        default:   pdt=NULL;  break;
+        case right:  gripper=gripperR;  break;
+        case left:   gripper=gripperL;  break;
+        default:     gripper=NULL;  break;
       }
-      if(!pdt) break;
-      if(mode==8) pdt->y_ref={.08}; else pdt->y_ref={.01};
-      pdt->active=true;
+      if(!gripper) break;
+
+      gripper->y_ref = (mode == 8) ? ARR({.08}) : ARR({.01});
+      gripper->active=true;
       break;
     }
 //    case 2: { //(2) CRAZY tactile guiding
