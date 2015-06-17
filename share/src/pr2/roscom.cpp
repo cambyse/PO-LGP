@@ -6,6 +6,8 @@
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
+#include <std_msgs/String.h>
+
 
 //===========================================================================
 // HELPERS
@@ -253,6 +255,34 @@ void RosCom_ForceSensorSync::step(){
 void RosCom_ForceSensorSync::close(){
   s->nh.shutdown();
 }
+
+//===========================================================================
+// RosCom_SoftHandSync
+struct sRosCom_SoftHandSync{
+  RosCom_SoftHandSync *base;
+  ros::NodeHandle nh;
+  ros::Publisher pub_shReference;
+};
+
+void RosCom_SoftHandSync::open(){
+  rosCheckInit();
+  s = new sRosCom_SoftHandSync;
+  s->base=this;
+  s->pub_shReference = s->nh.advertise<std_msgs::String>("/softhand/grasp_ref", 1);
+}
+
+void RosCom_SoftHandSync::step(){
+  SoftHandMsg shm = sh_ref.get();
+  std_msgs::String refs;
+  refs.data = shm.soft_hand_cmd.p;
+  s->pub_shReference.publish(refs);
+}
+
+void RosCom_SoftHandSync::close(){
+  s->nh.shutdown();
+  delete s;
+}
+
 
 //===========================================================================
 #else // MT_ROS no defined
