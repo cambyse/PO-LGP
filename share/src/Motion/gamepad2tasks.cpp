@@ -144,7 +144,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       }
       if(!gripper) break;
 
-      gripper->y_ref = (mode == 8) ? ARR({.08}) : ARR({.01});
+      gripper->y_ref = (mode == 8) ? ARR(.08) : ARR(.01);
       gripper->active=true;
       break;
     }
