@@ -9,10 +9,32 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
+#include <std_msgs/String.h>
+#include <pr2/rosmacro.h>
 
+
+struct MySystem:System{
+    ACCESS(SoftHandMsg,sh_ref)
+  MySystem(){
+    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+    addModule<RosCom_SoftHandSync>(NULL, Module::loopWithBeat,.1);
+    connect();
+  }
+};
 
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
+  MySystem S;
+  engine().open(S);
+
+  SoftHandMsg grasp("medium wrap");
+  SoftHandMsg deflate("deflate");
+
+  S.sh_ref.set() = grasp;
+  MT::wait(5.);
+  S.sh_ref.set() = deflate;
+
+  return 0;
 
   ors::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
@@ -29,13 +51,13 @@ int main(int argc, char** argv){
   t->map.order=2;
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  // position task maps
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
-  t->setCostSpecs(MP.T, MP.T, {0.}, 1e2);
+// position task maps
+t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
+t->setCostSpecs(MP.T, MP.T, {0.}, 1e2);
 
-  optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
+optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
 
-  displayTrajectory(x,MP.T,world,"traj");
+displayTrajectory(x,MP.T,world,"traj");
 
-  return 0;
+return 0;
 }
