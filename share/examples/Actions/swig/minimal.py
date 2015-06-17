@@ -18,6 +18,7 @@ def signal_handler(signal, frame):
 interface = swig.ActionSwigInterface(1)
 
 # don't abort the swig interface on Ctr-C
+# the signal must be geristered after the swig interface was instatiated
 signal.signal(signal.SIGINT, signal_handler)
 time.sleep(.2)
 
