@@ -21,7 +21,7 @@
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-    : CtrlTask(map) {
+    : map(*map), active(true), prec(0.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false) {
   this->name = name;
   this->maxVel = maxVel;
   this->maxAcc = maxAcc;
@@ -29,7 +29,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-    : CtrlTask(&map) {
+    : map(map), active(true), prec(0.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false) {
   this->name = name;
   Node *it;
   if((it=params["PD"])){
