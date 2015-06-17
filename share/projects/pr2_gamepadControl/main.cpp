@@ -47,7 +47,7 @@ void TEST(Gamepad){
   Gamepad2Tasks j2t(MP);
 
   bool useRos = MT::getParameter<bool>("useRos", false);
-  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
+  bool fixBase = MT::getParameter<bool>("fixBase", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -179,7 +179,7 @@ void TEST(Gamepad){
 
     refs.q=q;
     refs.qdot=zero_qdot;
-    if(sendBaseMotion && trans && trans->qDim()==3){
+    if(!fixBase && trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
