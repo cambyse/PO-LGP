@@ -1,21 +1,28 @@
+"""
+A simple and convenient python interface for the ActivityMachine
+
+"""
 from __future__ import print_function
 from collections import namedtuple
 import time
+import signal
 
 import swig
 
 
-# interface.setFact("(HomingActivity)")
-# interface.waitForCondition("(conv HomingActivity)")
-# interface.setFact("(conv HomingActivity)!")
-# interface.setFact("(GripperOpen){ ref1=l_gripper_joint }")
-# interface.waitForCondition("(conv GripperOpen)")
-# interface.setFact("(conv GripperOpen)!")
+def signal_handler(signal, frame):
+    print("\nYou pressed Ctrl+C!")
+    print("press Ctr+D to quit")
 
-time.sleep(.2)
+
 interface = swig.ActionSwigInterface(1)
+
+# don't abort the swig interface on Ctr-C
+signal.signal(signal.SIGINT, signal_handler)
 time.sleep(.2)
 
+
+###############################################################################
 DEFAULT_ENDEFFECTOR = "endeffL"
 print("=" * 70)
 print("DEFAULT_ENDEFFECTOR is set to {}".format(DEFAULT_ENDEFFECTOR))
