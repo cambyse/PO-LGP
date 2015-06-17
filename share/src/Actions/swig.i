@@ -25,14 +25,10 @@ namespace std{
 	%template(dict) map<std::string, std::string>;
 }
 
-%ignore getShapeList();
 %ignore getQ();
 %ignore getForceTorqueMeasurement();
-%ignore getSymbols();
-%ignore getStateLiterals();
 %ignore isTrue(intV literal);
 %ignore getLiteralParameters(intV literal);
-%ignore waitForOrCondition(std::vector<intV> literals);
 
 
 
