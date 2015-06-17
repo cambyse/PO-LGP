@@ -1,19 +1,27 @@
 from __future__ import print_function
 from collections import namedtuple
+import time
+
 import swig
 
 
-# s.setFact("(HomingActivity)")
-# s.waitForCondition("(conv HomingActivity)")
-# s.setFact("(conv HomingActivity)!")
-# s.setFact("(GripperOpen){ ref1=l_gripper_joint }")
-# s.waitForCondition("(conv GripperOpen)")
-# s.setFact("(conv GripperOpen)!")
+# interface.setFact("(HomingActivity)")
+# interface.waitForCondition("(conv HomingActivity)")
+# interface.setFact("(conv HomingActivity)!")
+# interface.setFact("(GripperOpen){ ref1=l_gripper_joint }")
+# interface.waitForCondition("(conv GripperOpen)")
+# interface.setFact("(conv GripperOpen)!")
 
+time.sleep(.2)
 interface = swig.ActionSwigInterface(1)
-print(dir(interface))
+time.sleep(.2)
 
+DEFAULT_ENDEFFECTOR = "endeffL"
+print("=" * 70)
+print("DEFAULT_ENDEFFECTOR is set to {}".format(DEFAULT_ENDEFFECTOR))
+print("  You can always change it: `DEFAULT_ENDEFFECTOR = endffR`")
 
+# Sides
 LEFT = 256
 RIGHT = 255
 
@@ -33,7 +41,7 @@ def bodies(name=None):
 
 
 def facts():
-    return s.getFacts()
+    return interface.getFacts()
 
 
 ###############################################################################
@@ -59,10 +67,16 @@ def _run(fact):
     symbols = fact[: fact.find(")")] + ")"
     symbols_conv = '(conv ' + symbols[1:]
 
-    s.setFact(fact)
-    s.waitForCondition(symbols_conv)
-    s.stopFact(symbols)
-    s.stopFact(symbols_conv)
+    interface.setFact(fact)
+    interface.waitForCondition(symbols_conv)
+    interface.stopFact(symbols)
+    interface.stopFact(symbols_conv)
+
+
+def assert_valid_shapes(shape):
+    if shape not in shapes():
+        raise ValueError("The given shape {} is not an existing shape"
+                         .format(shape))
 
 
 ###############################################################################
@@ -78,6 +92,7 @@ def _gripper(side, target):
         endeff, joint = "endeffR", "r_gripper_joint"
     else:
         raise ValueError("side should be LEFT or RIGHT")
+    assert_valid_shapes(target)
 
     fact = "(GripperActivity %s){ ref1=%s, target=[%f] tol=.02 }" % (
         endeff, joint, target)
@@ -92,11 +107,16 @@ def close_gripper(side):
     _gripper(side, .01)
 
 
-def touch(what, with_, offset=None):
+def touch(what, with_=None, offset=None):
     """bla"""
+    if with_ is None:
+        with_ = DEFAULT_ENDEFFECTOR
     if offset is None:
         offset = (0., 0., 0.)
     offset = "[{} {} {}]".format(*offset)
+    assert_valid_shapes(what)
+    assert_valid_shapes(with_)
+
     _run(
         "(FollowReferenceActivity {ref1} {ref2}){{ type=pos, ref1={ref1}, ref2={ref2} target={offset} }}"
          .format(ref1=with_, ref2=what, offset=offset))
