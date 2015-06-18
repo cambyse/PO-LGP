@@ -40,6 +40,7 @@ struct sRosCom_ControllerSync{
   RosCom_ControllerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber sub_jointState;
+//  ros::Subscriber sub_odom;
   ros::Publisher pub_jointReference;
 
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
@@ -47,6 +48,11 @@ struct sRosCom_ControllerSync{
     CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
+//  void odom_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
+//    //  cout <<"** joinstState_callback" <<endl;
+//    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
+//    base->ctrl_obs.set() = m;
+//  }
 };
 
 void RosCom_ControllerSync::open(){
@@ -54,6 +60,7 @@ void RosCom_ControllerSync::open(){
   s = new sRosCom_ControllerSync;
   s->base=this;
   s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom_ControllerSync::joinstState_callback, s);
+//  s->sub_odom = s->nh.subscribe("/robot_pose_ekf/odom_combined", 1, &sRosCom_ControllerSync::joinstState_callback, s);
   s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
   //  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
   //  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
