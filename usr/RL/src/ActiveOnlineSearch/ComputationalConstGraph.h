@@ -59,8 +59,6 @@ protected:
      * derived classes that use a non-const graph (like the ComputationalGraph
      * class). */
     graph_t dummy_graph;
-private:
-
     /**
      * The graph-object. This is a reference to the graph object given in the
      * constructor. */
@@ -118,47 +116,56 @@ public:
     /**
      * Compute all values. Assign values to input variables and compute values
      * and partial derivatives of all nodes and arcs. */
-    virtual ComputationalConstGraph & compute_values(std::vector<double> values);
+    virtual ComputationalConstGraph & compute_values(std::vector<double> values = std::vector<double>());
+    /**
+     * Compute values and total derivatives. Assign values and differentials to
+     * input variables, compute values and partial derivatives, and compute
+     * differentials and total derivatives of output variables via forward
+     * accumulation. */
+    virtual ComputationalConstGraph & forward_accumulation(std::vector<double> values = std::vector<double>(),
+                                                           std::vector<double> differentials = std::vector<double>());
     /**
      * Compute values and total derivatives. Assign values to input variables
-     * and their differentials, compute values and partial derivatives, and
-     * compute differentials and total derivatives of output variables via
-     * forward accumulation. */
-    virtual ComputationalConstGraph & forward_accumulation(std::vector<double> values,
-                                                           std::vector<double> differentials);
-    /**
-     * Compute values and total derivatives. Assign values to input variables
-     * and their differentials, compute values and partial derivatives, and
-     * compute differentials and total derivatives of output variables via
-     * reverse accumulation. */
-    virtual ComputationalConstGraph & reverse_accumulation(std::vector<double> values,
-                                                           std::vector<double> differentials);
+     * and differentials to output variables, compute values and partial
+     * derivatives, and compute differentials and total derivatives of output
+     * variables via reverse accumulation. */
+    virtual ComputationalConstGraph & reverse_accumulation(std::vector<double> values = std::vector<double>(),
+                                                           std::vector<double> differentials = std::vector<double>());
     /**
      * Like compute_values() but only update changed values. Actually
      * compute_values() is just a shorthand for calling update_values() on all
      * input nodes. */
-    virtual ComputationalConstGraph & update_values(std::vector<double> values,
-                                                    std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_values(std::vector<node_t> nodes,
+                                                    std::vector<double> values = std::vector<double>(),
                                                     bool input_nodes_only = true);
     /**
      * Like forward_accumulation() but only update changed values. Actually
      * forward_accumulation() is just a shorthand for calling compute_values()
      * and update_differentials_forward() on the input nodes. */
-    virtual ComputationalConstGraph & update_differentials_forward(std::vector<double> differentials,
-                                                                   std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_differentials_forward(std::vector<node_t> nodes,
+                                                                   std::vector<double> differentials = std::vector<double>(),
                                                                    bool input_nodes_only = true);
     /**
      * Like reverse_accumulation() but only update changed values. Actually
      * reverse_accumulation() is just a shorthand for calling compute_values()
      * on the input nodes and update_differentials_reverse() on the output
      * nodes. */
-    virtual ComputationalConstGraph & update_differentials_reverse(std::vector<double> differentials,
-                                                                   std::vector<node_t> nodes,
+    virtual ComputationalConstGraph & update_differentials_reverse(std::vector<node_t> nodes,
+                                                                   std::vector<double> differentials = std::vector<double>(),
                                                                    bool output_nodes_only = true);
+    /**
+     * Check derivatives for a node. For the given node compare the analytical
+     * paritial derivatives w.r.t. all incomming variables to numerical
+     * approximations using finite differences. Values and derivatives are
+     * computed using the current values of all variables.*/
+    virtual bool check_derivatives(node_t node,
+                                   double delta = 1e-5,
+                                   double epsilon_absolute = 1e-10,
+                                   double epsilon_relative = 1e-10);
     /**
      * Checks the derivatives via finite differences. The function changes every
      * node/variable by +/- \e delta. It then computes the nummerical derivative
-     * for all dependent nodes using this a symetric finite difference and
+     * for all dependent nodes using this symetric finite difference and
      * compares the value to the function stored in the connecting arc. An error
      * is signaled (by printing a warning and returning false) if for any
      * derivative both the absolute deviation (i.e. the absulute value of the
@@ -166,10 +173,10 @@ public:
      * epsilon_absolute and the realtive deviation (i.e. the absolute value of
      * the quotient of numerical and analytical derivative) is larger than \e
      * 1+epsilon_relative. */
-    virtual bool check_derivatives(std::vector<double> values,
-                                   double delta = 1e-5,
+    virtual bool check_derivatives(double delta = 1e-5,
                                    double epsilon_absolute = 1e-10,
                                    double epsilon_relative = 1e-10);
+
     /**
      * Uses util::graph_to_pdf to plot the graph. */
     virtual ComputationalConstGraph & plot_graph(const char* file_name);
@@ -226,6 +233,16 @@ public:
      * duplicates). */
     virtual bool check_graph_structure(bool reset_input_nodes = false,
                                        bool reset_output_nodes = false);
+    virtual QString get_node_label(node_t) const;
+    virtual double get_node_value(node_t) const;
+    virtual double get_node_differential(node_t) const;
+    virtual double get_arc_value(arc_t) const;
+    virtual void set_node_label(node_t,QString);
+    virtual void set_node_value(node_t,double);
+    virtual void set_node_function(node_t, std::vector<QString>, function_t);
+    virtual void set_node_differential(node_t,double);
+    virtual void set_arc_value(arc_t,double);
+    virtual const graph_t & get_graph() const;
 private:
     /**
      * Propagate values/differentials from changed nodes.

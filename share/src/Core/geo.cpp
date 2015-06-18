@@ -20,10 +20,12 @@
 #undef abs
 #include <algorithm>
 #include "array_t.h"
-#include "registry.h"
 #include "geo.h"
 
+#ifndef MLR_NO_REGISTRY
+#include "registry.h"
 REGISTER_TYPE_Key(T, ors::Transformation);
+#endif
 
 const ors::Vector Vector_x(1, 0, 0);
 const ors::Vector Vector_y(0, 1, 0);

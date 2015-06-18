@@ -90,12 +90,12 @@ OptNewton::StopCriterion OptNewton::step(){
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
 
   //lazy stopping criterion: stop without any update
-  if(beta<2. && absMax(Delta)<1e-1*o.stopTolerance){
+  if(absMax(Delta)<1e-1*o.stopTolerance){
     if(o.verbose>1) cout <<" \t - NO UPDATE" <<endl;
     return stopCriterion=stopCrit1;
   }
 
-  for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
+  for(;;) { //stepsize adaptation loop -- doesn't iterate for dampingInc (LV) option
     y = x + alpha*Delta;
     fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
@@ -105,16 +105,12 @@ OptNewton::StopCriterion OptNewton::step(){
     if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
-//      x_changed=true;
       x = y;
       fx = fy;
       gx = gy;
       Hx = Hy;
       if(fy<=fx){
-        // if(alpha>.9) beta = .5*beta;
-        beta *= o.dampingDec;
-//        alpha = pow(alpha, o.stepInc);
-//        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
+        if(alpha>.9) beta *= o.dampingDec;
         alpha *= o.stepInc;
         if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
@@ -138,8 +134,8 @@ OptNewton::StopCriterion OptNewton::step(){
 
   //stopping criteria
 #define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return stopCriterion=ret; }
-  STOPIF(beta<2. && absMax(Delta)<o.stopTolerance, stopCrit1);
-  STOPIF(beta<2. && alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
+  STOPIF(absMax(Delta)<o.stopTolerance, stopCrit1);
+  STOPIF(alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
   STOPIF(evals>=o.stopEvals, stopCritEvals);
   STOPIF(it>=o.stopIters, stopCritEvals);
 #undef STOPIF
@@ -161,6 +157,7 @@ OptNewton::~OptNewton(){
 OptNewton::StopCriterion OptNewton::run(){
   for(;;){
     step();
+    if(stopCriterion==stopStepFailed) continue;
     if(stopCriterion>=stopCrit1) break;
   }
   return stopCriterion;

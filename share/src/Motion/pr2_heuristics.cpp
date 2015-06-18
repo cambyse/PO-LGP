@@ -25,7 +25,7 @@ arr pr2_zero_pose(){
   return q;
 }
 
-arr pr2_reasonable_W(ors::KinematicWorld& world){
+arr pr2_reasonable_W(const ors::KinematicWorld& world){
 #if 0
   arr W = world.naturalQmetric(5.);
   ors::Joint *j = world.getJointByName("torso_lift_joint");
@@ -122,7 +122,7 @@ MT::Array<const char*> pr2_full_get_bodynames() {
     
 }
 
-uintA pr2_get_shapes(ors::KinematicWorld &G) {
+uintA pr2_get_shapes(const ors::KinematicWorld &G) {
   MT::Array<const char*> bodynames = pr2_left_get_bodynames();
   uintA shape_idx;
   for (const char* bodyname: bodynames) {

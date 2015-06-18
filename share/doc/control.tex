@@ -1,0 +1,503 @@
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newenvironment{items}{
+\par\small
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+\input{macros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\bJ}{{\mathbf{J}}}
+\newcommand{\bh}{{\mathbf{h}}}
+\newcommand{\bH}{{\mathbf{H}}}
+\newcommand{\ft}{\text{ft}}
+ 
+\title{Reference Notes for our PR2 Controller}
+\author{M Toussaint}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+The aim of this document
+\begin{itemize}
+\item Agree on what we talk about!
+\end{itemize}
+
+
+\section{Slow and fast control loop}
+
+There are two nested control loops:
+
+In the slow loop ($\sim 50$Hz, non-strict, non-real-time) the
+controller has full access to the results of pre-computed
+optimizations, full models of the robots kinematics (dynamics?) and
+potentially delayed information on the robot (current pose, forces,
+contacts, etc). The slow loop may realize computationally complex
+things, e.g., operational space control, re-adaptation of a plan
+(phase adaptation, recalibration of task maps), model predictive
+control, online planning, etc.
+
+The fast loop is 1kHz, strictly and real-time. It has direct access to
+the current robot state $q$ (needs to compute $\dot q$ from filtered
+differentiation of $q$) as well as the current readouts of the F/T
+sensors $u_\ft$. \textbf{We constrain the fast controller to be a linear
+regulator in these observables and their integral:}
+\begin{align}
+e
+&\gets \g e + (f^* - J_\ft^\dag u_\ft)
+  \quad\text{or}\quad \dot e = (f^*-J_\ft^\dag u_\ft) + (1-\g)e\\
+u
+&= u_0 + k_p^\text{base} \cdot K_p (q^* - q) + k_d^\text{base} \cdot K_d (\dot q^* - \dot q) + K_I e ~.
+\end{align}
+This a (redundant) parameterization of a regulator linear in $(q, \dot
+q, e)$. We choose this parameterization because $q^*, \dot q^*, f^*$
+can be interpreted as ``references''. But actually, we could just drop
+them (absorb them in $u_0$) without loosing generality. In addition to
+this, the fast loop respects control limits by clipping
+$u \gets \texttt{clip}(u, -u_{max}, u_{max}$ element-wise. $u_{max}$
+is a constant set in configuration files, not a
+fluent. \todo{Additional mechanisms should also in the fast loop
+guarantee velocity and joint limits.}
+
+The parameter vectors $k_p^\text{base}$ and $k_d^\text{base}$ are
+constants set in the PR2 configuration files. They are hand-tuned so
+that setting $K_p=K_d=I$ leads to acceptable (rather low gain)
+behavior. The $\cdot$ denotes an element-wise product.
+
+About the integral term: $J_\ft^\dag$ allows us to linearly project the
+sensor signals to any other space in which we have a target $f^*$ and
+integrate the error.
+
+$K_p, K_d, K_I, J_\ft^\dag$ are arbitrary matrices; $u_0$ an arbitrary
+control bias. Therefore, the \textbf{control mode} of the fast loop is
+determined by the tuple
+\begin{align}
+M = (q^*, \dot q^*, f^*, u_0, K_p, K_d, K_I, J_\ft^\dag, \g) ~.
+\end{align}
+This is the message that the slow loop needs to send to the fast loop
+-- the slow loop can change the control mode at any time.
+
+Inversely, the fast loop passes the message
+\begin{align}
+(q, \dot q, f, u)
+\end{align}
+to the slow loop, giving it information on the true current state
+ $(q, \dot q)$, sensor readings $f$, and computed controls $u$.
+
+The core question therefore is how the slow loop computes the message
+$M$ to realize the desired control behaviors. The list of basic desired
+control behaviors is:
+\begin{enumerate}
+\item Follow a pre-computed trajectory $(q_{0:T},\tau)$, where $\tau$
+is the time resolution
+\item Follow the position-reference that is online computed by a
+operational space (or inverse kinematics) controller; the $K_p$ should
+such that P-gains can be set/added/removed along \emph{endeffector}
+spaces rather than only uniformly configuration space
+\item Establish a contact
+\item Stabalize a contact force
+\item Limit F/T (to avoid breaking a handle)
+\item Sliding (moving tangentially) on a surface (or along a DOF like
+  an opening door) which is perceived via the F/T signal
+\end{enumerate}
+
+
+\section{Operational Space Control: Computing gains by projecting
+operational space gains}
+
+The appendix B derived the necessary equations in all generality. In
+practise, it is sufficient to modify the $K_p$ only, using the
+Jacobian of the desired task space. In equation \refeq{eqProjGains} we have
+\begin{align}
+\bar K_p = A^\1 J^\T C K_p J \comma A = H + J^\T C J ~,
+\end{align}
+where we assumed $M=\Id$ (quasi-dynamic model) and no other
+tasks. Further, assuming $C=c$ and $K_p=k$ are scalars we have
+\begin{align}
+\bar K_p = k(H/c+J^\T J)^\1 J^\T J ~.
+\end{align}
+I actually tested just $k J^\T J$.
+
+TODO: Let @FeedbackController@ really compute these projected PD
+behaviors, instead of only $q^*,\dot q^*$! Then all of this is
+automatic!
+
+
+
+\section{Controlling the F/T signal---the \emph{sensed} force}
+
+\subsection{Preliminaries: Understanding force transmission}
+
+The following law of force propagation is well known,
+\begin{align}\label{eqForce}
+u = J^\T f
+\end{align}
+where $f$ is a force in the endeffector (e.g., the negative
+of its gravity load), $J$ the position Jacobian of the endeffector,
+and $u$ are the torques ``perceived'' in each of the joints due to the
+force $f$. This law is correct only under the assumption that nothing
+moves. Inversely, this law is typically used to compensate forces:
+Assume you have a load on an endeffector, gravity pulls it down. The
+gravity force pulling the load down propagates to torques $u$ in each
+joint -- if you want to compensate this torque the motors need to
+create the reative torque.
+
+The same also holds for force-torque $f\in\RRR^6$, where the Jacobian
+is the stacking of the position and the axial Jacobian.
+
+Typically, $f$ is lower-dimensional than $u$. So, actually, there
+should be many $u$ that generate a desired $f^*$? What is the optimal
+one? Well, assume $f^*=0$ for a moment. Then, any choice of $u$ will
+accelerate the robot (assuming gravity compensation). The only choice
+to generate $f^*=0$ and not to accelerate the robot is $u=0$. Equally,
+the only choice to generate any $f^*$ without accelerating the robot
+is $u = J^\T f^*$.
+
+When we include system dynamics in the equation, we have the general
+\begin{align}\label{eqDyn}
+u = M \ddot q + h + J^\T f ~.
+\end{align}
+where $M$ (the inertia matrix) and $h$ (the coreolis and gravity
+forces) depend on $(q,\dot q)$. One way to read this equation is: the
+torques you ``feel'' in the joints are the reactive torques of the
+robot's inertia (that derive the acceleration) plus the torque you
+feel from the endeff force $f$.
+
+
+\subsection{Controlling the direct F/T signal with a fixated endeff}
+
+Consider the following exercise: Fix the endeffector rigidly, e.g.\ to
+a table with a clamp (Schraubzwinge). Write a controller that
+generates any desired $f^*$ in the F/T sensor with the least effort,
+and stably, and staying close to a desired homing posture.
+
+If we unrealistically assume that our model is correct then the
+solution simply is \refeq{eqDyn}; for $\ddot q =0$ and a
+gravity-compensated robot just \refeq{eqForce}; where
+\begin{align}
+J = J_\ft ~,
+\end{align}
+which is the position and axial Jacobian of the F/T sensor w.r.t.\ q.
+
+However, this equation \textbf{does not use any F/T sensor feedback}
+to generate the desired F/T signal. This cannot work well in practise.
+We can resolve this with an I-controller on the F/T signal error.
+\begin{align}\label{ctrlInt}
+e
+&= \int_t dt [f^* - f] \\
+u
+&= J^\T \a e ~.
+\end{align}
+
+The $\a$ here has the meaning of an exponential decay of the signal
+error---which we can show assuming the perfect model. Under perfect
+model assumption, the F/T sensor measures
+\begin{align}
+f
+&= J^\dag u \comma J^\dag J^\T \equiv \Id \comma J^\dag = (J J^\T)^\1 J \\
+& \quad \text{Note: } J^\dag u = J^\dag J^\T f = (J J^\T)^\1 J J^\T f = f \\
+\end{align}
+Note that $J J^\T$ is a $d\times d$-matrix and invertible and $J^\dag$
+the appropriate left-pseudo-inverse of $J^\T$. Inserting
+this perfect-model measurement in the control law \refeq{ctrlInt} we
+get
+\begin{align}
+\dot e
+&= f^* - J^\dag u \\
+\dot u
+&= J^\T \a (f^* - J^\dag u) = \a J^\T f^* - \a \underbrace{J^\T
+J^\dag}{=\Id} u = \a (J^\T f^* - u)  ~.
+\end{align}
+Here, $J^\T J^\dag = J^\T (J J^\T)^\1 J^\T$ is actually the
+projection that projects any joint torques $u$ into the space that
+directly relates to endeffector forces and not to
+accelerations. However, if the $u$ was chosen by some law $J^\T f$,
+then $u$ will always lie within this projection (will never lead to
+accelerations of the robot), and therefore it actually is the identity
+matrix.
+
+Now, the above states that $\dot u = \a (J^\T f^* - u)$, which says
+that $u$ exponentially approaches the perfect-model correct torque
+$J^\T f^*$, which a decay rate $\a$. Therefore, $\a$ can be considered
+a decay rate.
+
+\textbf{Open:} What if we have a $\ddot q$ as well? Two possibilities: 1)
+Reiterate the above reasoning with $\ddot q$. 2) Just add the signals.
+
+
+\subsection{Control the indirectly sensed contact force of endeff}
+
+Exercise: We have the F/T sensor, but attached to it a hand and a
+contact point with some relative transformation to the F/T
+sensor. This point is in contact with a table. What we want to control
+is the force between point and table, which is just a 1D thing.
+
+This is best addressed by thinking of the F/T sensor as if it was a 6D
+joint (like a ball joint). If we have a force $f$ at some
+endeffector then we ``feel'' this force in all joints of the robot as
+$u = J^\T f$. This includes the F/T sensor joints! So the Jacobian of the
+endeffector variable (be it 1D or 3D) w.r.t.\ the sensor pseudo-ball-joint
+exactly gives the measurement equation. Let's denote this Jacobian as
+\begin{align}
+J_\ft \in \RRR^{d\times 6} ~,
+\end{align}
+where $d=1$ if it is only the distance to the table, or $d=3$ if it is
+all forces. Further, let's denote by
+\begin{align}
+J \in \RRR^{d\times n}
+\end{align}
+the Jacobian w.r.t.\ all the real robot joints.
+
+As above, the \emph{perceived} endeffector force (this time perceived
+by the F/T sensor) is
+\begin{align}
+u_\ft = J^\T_\ft f \quad\To\quad f = J^\dag_\ft u_\ft ~,
+\end{align}
+where $u_\ft\in\RRR^6$ is the F/T signal. Again we may use an I-controller
+to correct for the error between desired endeffector force $f^*$ and
+perceived one:
+\begin{align}
+\dot e
+&= f^* - f
+ = f^* - J^\dag_\ft u_\ft \\
+u
+&= J^\T \a e ~.
+\end{align}
+Note that the last equation generates joint torques proportional to
+the normal endeffector Jacobian $J$ because $e$ is an error in
+endeffector force space (not F/T signal space).
+
+This fits to our contoller setup by
+\begin{align}
+J^\dag_\ft &\gets J^\dag_\ft \comma
+f^* \gets f^* \comma
+\g  \gets 1 \comma
+K_I \gets \a J^\T ~.
+\end{align}
+When force control is turned off, we need to remember to set $\g=0, e=0$ to
+ensure that next time it is turned on again it doesn't blow.
+
+\textbf{Open:} What happens for $\g<1$? Is this equivalent to $\a<1$? Perhaps not.
+($\sum_{t=0}^\infty \g^t = \frac{1}{1-\g}$)
+
+
+%% Given a force $f_e$ at the endeff point, the F/T sensor reads
+%% (assuming no motions)
+%% \begin{align}
+%% f
+%% &= (f_e; \tau) \\
+%% \tau_i
+%% &= r_i \times f_e \\
+%% r_i
+%% &= (\Id - a_i a_i^\T) (p_e - p_\ft)
+%% \end{align}
+%% where $\tau$ is the measured force, $a_i$ is the $i$th F/T
+%% axis $a_i$ (the $i$th axis around which torque is measured), $r_i$ the lever for $a_i$, that is, $r_i$ is the part of $(p_e - p_\ft)$ that is
+%% orthogonal to $a_i$, $p_e$ the position of the endeff point, and
+%% $p_\ft$ the origin of the F/T sensor. All this is linear, so let's
+%% write
+%% \begin{align}
+%% \tau = R f_e
+%% \end{align}
+
+%% Now, given that we want to control the contact force, we can set a
+%% desired $f_e^*$, translate this to the desired $f^*$ and control
+%% this. BUT, is this what we want? Because that would control a 6D F/T
+%% signal although we originally wanted to control only a 1D contact
+%% force???
+
+%% \textbf{this is not good thinking}
+
+
+\subsection{$q$-control under force constraints}
+
+Assume we have a P(I)D controller on $q$---typically a PID in some
+task space that has been projected to joint space. We would like to
+execute that desired reference behavior but subject to constraints on
+the sensed endeffector force
+\begin{align}
+f_{lo} \le J^\dag_\ft f \le f_{hi} ~.
+\end{align}
+These are $2 d$ constraints.
+
+As with lagrange parameters, we can simply activate the constraints
+when violated: When one of the components violates the constraint,
+control the force to be exactly $f_{lo|hi}$. For the latter, use the
+$f$-error-integral method as above. This should eventually have higher
+priority to any other gains (keep other I-gains limited!).
+
+\subsection{I-gains on position?}
+
+
+
+\section{Technical Details and Issues}
+
+\subsection{Ctrl-Message documentation}
+
+One message type for setting the control mode AND feedback from the
+controller.
+
+Setting the control model: $(q^*, \dot q^*, f^*, u_0, K_p, K_d,
+K_f)$. Can be set any time.
+
+Feedback from the controller: $(q, \dot q, f, u)$. Published with 1kHz.
+
+
+\subsection{Filtering of the differentiation of $q$}
+
+[Peter: please fill in]
+
+\section{Enforcing control, velocity, joint and force limits}
+
+Enforcing control limits is really simple: Just clip the computed $u$.
+
+Enforcing velocity limits turned out difficult: The velocity
+signal is so noisy, a direct feedback coupling was bad. Also, the
+IF-case of velocity-limit-violation turned off and on quickly and
+introduced even more noise (rattling motors...)
+
+I have ignored limits totally so far -- should be handled (as
+collisions) in the slow loop.
+
+FORCE LIMITS! Not idea how to handle this.
+
+Maybe a route to a more principled approach to all of these: Take the
+Augmented Lagrangian way to handle constraints as a template: First
+associate only a soft squared penalty with margin penetration. Then
+compute/update the respective dual parameters that push you out of the
+margin.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+
+\section{Reference: General OPEN-LOOP ideal contact force controller}
+
+\subsection{General case}
+
+This controller is sort-of open loop! It does not take into account any F/T
+feedback. What is receives as a specification is $\ddot y^*$ (desired
+endeff accel) and $\l^*$ (desired contact force); as well as models of
+the maps $\phi, J_\phi, g, J_g$. We discuss below how this can properly
+be made a feedback regulator. We write the problem as a general constraint problem
+\begin{align}
+\min_{u, \ddot q, \l}\quad
+ & \norm{u-a}^2_H \\
+\st
+ & u = M \ddot q + h + J_g^\T \lambda \\
+ & J_\phi\ddot q = c \\
+ & \l = \l^* \\
+ & \color{blue}J_g\ddot q = b
+\end{align}
+Notes:
+\begin{items}
+\item The role of $a$ becomes clearer when we treat the blue
+constraint below
+\item The 2nd constraint relates to an arbitrary task map
+$\phi:~ q \mapsto y$ with Jacobian $J_\phi$, $c = \ddot y^* - \dot
+J_\phi \dot q$ and some desired task space acceleration $\ddot y^*$.
+\item We have a set of functions $g:~ q \to \RRR^m$ with Jacobian
+$J_g$ which play the role of inequality constraints
+\item The 3rd constraint captures desired contact forces with the constraints
+\item The blue constraint expresses that a) assuming the contact is
+active there must not be acceleration w.r.t.\ $g$ or b) if the contact
+is not active we might want to control the acceleration towards it
+(to make it active). (This constrains the dynamics. Without this
+constraint the dynamics could assume that the contact forces $\l$ are
+generated while the endeff is moving (e.g., by strange external
+forces). This constraint makes it consistent.)
+\end{items}
+
+To derive closed form solutions, each of these equality constraints
+can be handled in two ways: relax it to become a squared penalty
+(and then potentially taking the infinite precision limit); or
+resolve it.
+
+We resolve the 1st and 3rd constraint, and relax the 2nd and 4th to
+later take the limit. The solution is
+\begin{align}
+\bh
+&:= h+J_g^\T\l^*  \\
+f(\ddot q)
+&=\norm{M\ddot q - (a-\bh)}^2_H
+ + \norm{J_g \ddot q - b}^2_B
+ + \norm{J_\phi \ddot q - c}^2_C \\
+\ddot q^*
+&= (M^\T H M + J_g^\T B J_g + J_\phi^\T C J_\phi)^\1 [ M^\T H (a-\bh) + J_g^\T B b + J_\phi^\T C c]
+\end{align}
+The limit $B\to\infty$:
+\begin{align}
+\ddot q^*
+&= (X + J_g^\T B J_g)^\1 [ J_g^\T B b + x ] \\
+&= J_g{}^\#_{XB} b + (\Id - J_g{}^\#_{XB} J_g)~ (X^\1 x)
+\end{align}
+And note that $(X^\1 x)$ is the solution to only having the other
+terms.
+% Because $J_g^\T \l^*$ is certainly not in the nullspace of
+%$J_g$ one can neglect it (in the limit $B\to\infty$) ---
+Given $\ddot q^*$, the optimal control is computed as $u=M\ddot q + h
++ J_g^\T \l^*$. We still did not take the limit of the $C$-term
+(endeffector position control). We could using the hierarchical limit
+case.
+
+\section{Reference: Pullback of operational space linear controllers}
+
+The above assumes that at any instance in time we want a certain
+task-space acceleration $\ddot y^*$ and translates this to an optimal
+joint control in that instant in time. If we want to implement a
+certain feedback behavior in the task space, that is, we have a
+desired feedback control law $\pi:~ y,\dot y \mapsto \ddot y$, we can
+evaluate $\pi$ at every point in time and project to operational space
+control.
+
+\begin{align}
+\ddot y
+ &= \ddot \phi(q) = \ddot (J q) = \dot (\dot J q + J \dot q) = 2 \dot J \dot q + J \ddot q \\
+\ddot y^*
+ &= K_p y + K_d \dot y + k \\
+J \ddot q
+ &\overset{!}= c = \ddot y^* - 2 \dot J \dot q
+  = K_p y + K_d \dot y + k - 2 \dot J \dot q \\
+ &\approx K_p (J(q-q_0)+\phi(q_0)) + K_d J \dot q + k \\
+ &= K_p J q + K_d J \dot q + k' \comma k' = k + K_p (\phi(q_0)-J q_0) \\
+\ddot q^*
+ &= A^\1 [... + J^\T C c] = A^\1 [... + J^\T C (K_p J q + K_d J \dot q + k')] \\
+ &= A^\1 [...] + A^\1 J^\T C K_p J q + A^\1 J^\T C K_d J \dot q + A^\1 J^\T C k' \\
+ &= \bar K_p q + \bar K_d \dot q + \bar k \comma
+\bar k =  A^\1 [...] + A^\1 J^\T C k'\comma \bar K_p = A^\1 J^\T C K_p
+ J\comma \bar K_d = A^\1 J^\T C K_d J \label{eqProjGains}
+\end{align}
+
+
+\section{How to make this FEEDBACK?}
+
+W.r.t.\ $y$ (endeff pos) it is clear how to make this feedback: We can
+impose a PD behavior on the endeffector
+$$ \ddot y^* = k_p (y^* - y) + k_d (\dot y^*-\dot y) $$
+and send this desired endeff accel to the general controller.
+
+What about $\l^*$??
+
+\end{document}

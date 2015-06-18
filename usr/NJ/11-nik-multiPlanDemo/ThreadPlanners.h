@@ -52,7 +52,7 @@ real totalControlCost2(const arr& q,soc::SocSystemAbstraction * sys){
 
 real totalControlCost(const arr& q,soc::SocSystemAbstraction * sys){
 	uint t,T=sys->nTime();
-	CHECK(q.nd==2 && q.d0==T+1 && q.d1==sys->qDim(),"q has wrong dimension: "<<q.getDim());
+	CHECK(q.nd==2 && q.d0==T+1 && q.d1==sys->qDim(),"q has wrong dimension: "<<q.dim());
 	arr W,H,M,Mt,F;
 	real tau=sys->getTau();
 	real tau_1 = 1./tau, tau_2 = tau_1*tau_1;

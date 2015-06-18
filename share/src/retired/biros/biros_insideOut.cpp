@@ -23,7 +23,7 @@ REGISTER_VIEW(InsideOut, void)
 // helpers
 //
 
-GtkTreeIter appendToStore(GtkTreeStore *store, Item *it, uint id, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Node *it, uint id, GtkTreeIter* par);
 void setBoxView(View *v, GtkBuilder *builder, uint box);
 
 
@@ -156,7 +156,7 @@ void sInsideOut::update(bool fromWithinCallback){
   uint i,j,k;
   GtkTreeIter i_it, j_it;
   //engine().readAccess(NULL);
-  for(Item *it: (*engine().system)) {
+  for(Node *it: (*engine().system)) {
     i_it = appendToStore(procStore, it, it_COUNT, NULL);
 //    for_list(Type,  v,  p->s->listensTo) {
 //      j_it = appendToStore(procStore, v, j, &i_it);
@@ -317,7 +317,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   gtkLeaveCallback();
 }
 
-GtkTreeIter appendToStore(GtkTreeStore *store, Item *it, uint id, GtkTreeIter* par){
+GtkTreeIter appendToStore(GtkTreeStore *store, Node *it, uint id, GtkTreeIter* par){
   GtkTreeIter tit;
   MT::String info;
   SystemDescription::ModuleEntry *m = it->value<SystemDescription::ModuleEntry>();

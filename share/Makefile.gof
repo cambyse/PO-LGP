@@ -36,7 +36,7 @@ cleanCmake:
 	@find . -type f \( -name 'CMakeCache.txt' -or -name 'CTestTestfile.cmake' -or -name 'cmake_install.cmake' \) -print -delete
 	@find . -type d \( -name 'CMakeFiles' \) -exec rm -Rf {} \;
 
-inf:
+info:
 	@echo "src_paths =" $(src_paths)
 	@echo "exa_paths =" $(exa_paths)
 
@@ -83,13 +83,14 @@ reformatSources:
 	cp -f gofMake/config.mk.mine gofMake/config.mk
 	mv -f ../README.mlr.md ../README.md
 		
-	rm -Rf $*; mkdir $*; cd $*; tar xvzf ~/git/mlr/$*.tgz
+	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
 
 dependPath/%: %
-	+@-$(BASE)/gofMake/make-path.sh $< depend
+	@echo "                                                ***** depend " $*
+	@-$(MAKE) -C $* -f Makefile.gof depend --no-print-directory
 
 cleanPath/%: %
 	@echo "                                                ***** clean " $*

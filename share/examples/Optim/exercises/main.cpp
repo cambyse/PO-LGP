@@ -19,6 +19,8 @@ The constraint is always as in exercise 3\n";
 //
 
 void testGradDescent(const ScalarFunction& F){
+  displayFunction(ChoiceFunction());
+  MT::wait();
   uint d=MT::getParameter<uint>("dim", 2);
   arr x(d),x0;
   rnd.clockSeed();
@@ -41,7 +43,7 @@ void testGradDescent(const ScalarFunction& F){
     MT::wait();
 
     x=x0;
-    optNewton(x, F, OPT(verbose=3, stopTolerance=1e-3));
+    optNewton(x, F, OPT(verbose=3, dampingDec=.7, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -120,7 +122,7 @@ void testGradDescent(const ScalarFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
+void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
@@ -213,7 +215,7 @@ void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
 // test the phase one optimization
 //
 
-void testPhaseOne(ConstrainedProblem& f){
+void testPhaseOne(const ConstrainedProblem& f){
   PhaseOneProblem metaF(f);
 
   arr x;
@@ -259,19 +261,9 @@ int main(int argc,char** argv){
   enum TestType { unconstrained=1, constrained, phaseOne, gaussNewton };
 
   switch((TestType)MT::getParameter<int>("exercise")){
-  case unconstrained: {
-    displayFunction(ChoiceFunction());
-    MT::wait();
-    testGradDescent(ChoiceFunction());
-  } break;
-  case constrained: {
-    ChoiceConstraintFunction F;
-    testConstraint(F);
-  } break;
-  case phaseOne: {
-    ChoiceConstraintFunction F;
-    testPhaseOne(F);
-  } break;
+  case unconstrained:  testGradDescent(ChoiceFunction());  break;
+  case constrained:    testConstraint(ChoiceConstraintFunction());  break;
+  case phaseOne:       testPhaseOne(ChoiceConstraintFunction());  break;
   case gaussNewton: {
     SinusesFunction F;
     displayFunction(Convert(F));

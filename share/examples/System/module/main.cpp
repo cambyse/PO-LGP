@@ -12,7 +12,7 @@
 
 void way0(){
   ComputeSum C;
-  createVariables(LIST<Module>(C));
+  System dummy; dummy.modules.append(&C); dummy.connect();  //createVariables(LIST<Module>(C));
   C.x.set() = ARR(1., 2., 3.);
   C.open();
   C.step();

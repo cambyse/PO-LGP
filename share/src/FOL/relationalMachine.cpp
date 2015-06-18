@@ -1,6 +1,13 @@
 #include "relationalMachine.h"
 
+RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), verbose(false){
+}
+
 RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), verbose(false){
+  init(filename);
+}
+
+void RelationalMachine::init(const char* filename){
   MT::FileToken fil(filename);
   if(fil.exists()){
     fil >>KB;
@@ -8,12 +15,13 @@ RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL
   }else{
     MT_MSG("No '"<<filename<<"' for initialization given! This might fail!")
   }
-  new Item_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
-  state = &KB["STATE"]->kvg();
-  tmp   = &KB["TMP"]->kvg();
+  if(!KB["TMP"])   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  if(!KB["STATE"]) new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(), true);
+  state = &KB["STATE"]->graph();
+  tmp   = &KB["TMP"]->graph();
 }
 
-bool RelationalMachine::queryCondition(MT::String query){
+bool RelationalMachine::queryCondition(MT::String query) const{
   tmp->clear();
   bool q=false;
   try{
@@ -52,7 +60,7 @@ bool RelationalMachine::applyEffect(MT::String effect){
   return e;
 }
 
-ItemL RelationalMachine::fwdChainRules(){
+NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
   forwardChaining_FOL(KB, NULL, *tmp, false);
   if(verbose){
@@ -62,6 +70,13 @@ ItemL RelationalMachine::fwdChainRules(){
     cout <<endl;
   }
   return *tmp;
+}
+
+Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+
+Node* RelationalMachine::declareNewSymbol(MT::String symbol){
+  Node *it = readNode(KB, symbol, false, false);
+  return it;
 }
 
 MT::String RelationalMachine::getKB() {
@@ -77,14 +92,14 @@ MT::String RelationalMachine::getState(){
 }
 
 MT::String RelationalMachine::getRules(){
-  ItemL rules = KB.getItems("Rule");
+  NodeL rules = KB.getNodes("Rule");
   MT::String str;
   listWrite(rules, str, "\n", "[]");
   return str;
 }
 
 StringA RelationalMachine::getSymbols(){
-  ItemL symbols = getSymbolsOfScope(KB);
+  NodeL symbols = getSymbolsOfScope(KB);
   StringA strs(symbols.N);
   for(uint i=0;i<symbols.N;i++){
     strs(i) <<*symbols(i);

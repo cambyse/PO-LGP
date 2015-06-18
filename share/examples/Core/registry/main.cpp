@@ -19,7 +19,7 @@ REGISTER_TYPE_DERIVED(Derived, NewType)
 void TEST(Registry){
   cout <<"** REGISTRY:\n" <<registry() <<endl;
 
-  Item *it;
+  Node *it;
   it = reg_findType("NewType");
   CHECK(it, "could't retrieve type derived from NewType");
   cout <<"retrieved Type item: " <<*it <<endl;

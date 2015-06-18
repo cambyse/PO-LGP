@@ -39,7 +39,7 @@ void simulate(uint& state_new, double& reward, uint action, uint state_old,const
 
   arr p(n);
   for(uint s=0;s<n;s++) p(s) = mdp.Psas(s,action,state_old); //same as Psas(:,action,state) in matlab
-  state_new = SUS(p); //sample from p
+  state_new = sampleMultinomial(p); //sample from p
 }
 
 int main(int argc, char **argv){
@@ -70,7 +70,7 @@ int main(int argc, char **argv){
 
   rnd.clockSeed();
 
-  state_new = SUS(mdp.Ps); //sample from the start distribution
+  state_new = sampleMultinomial(mdp.Ps); //sample from the start distribution
   ofstream fil("z.rewards");
   for(uint t=0;t<10000;t++){
     state_old = state_new;
@@ -79,7 +79,7 @@ int main(int argc, char **argv){
       action=rnd(A);
       //in Q(lambda): set all eligibility traces zero!
     }else{
-      action = SUS(pi[state_old]); //sample from pi(:|s)
+      action = sampleMultinomial(pi[state_old]); //sample from pi(:|s)
     }
 
     simulate(state_new, reward, action, state_old, mdp);

@@ -16,7 +16,7 @@ MT::Array<T> G4ID::query(const MT::Array<T>  &data, const StringA &sensors) {
 
 template<class T>
 void G4Rec::set(const char *key, const T &value) {
-  Item *i = params.getItem(key);
+  Node *i = params.getNode(key);
   if(i)
     *i->getValue<T>() = value;
   else

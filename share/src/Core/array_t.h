@@ -324,6 +324,11 @@ template<class T> void MT::Array<T>::makeSparse() {
 
 //***** internal memory routines (probably not for external use)
 
+#ifdef MLR_CLANG
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
+#endif
+
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   if(n==N && Mforce<0) return; //no change
@@ -689,15 +694,16 @@ template<class T> void MT::Array<T>::resizeDim(uint k, uint dk) {
 //***** access operations
 
 /// return a uint-Array that contains (acutally refers to) the dimensions of 'this'
-template<class T> MT::Array<uint> MT::Array<T>::getDim() const {
+template<class T> MT::Array<uint> MT::Array<T>::dim() const {
   Array<uint> dims(d, nd);
   dims.dereference();
   return dims;
 }
 
 /// the \c ith element
-template<class T> T& MT::Array<T>::elem(uint i) const {
-  CHECK(i<N, "range error (" <<i <<">=" <<N <<")");
+template<class T> T& MT::Array<T>::elem(int i) const {
+  if(i<0) i+=N;
+  CHECK(i>=0 && i<(int)N, "range error (" <<i <<">=" <<N <<")");
   return p[i];
 }
 
@@ -708,7 +714,7 @@ template<class T> T& MT::Array<T>::rndElem() const {
 
 /// scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
-  CHECK(nd<=1 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
+  CHECK(nd<=2 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 
@@ -880,7 +886,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1);
   int k;
-  for(k=i; k<=I; k++) x(k-i)=operator()(k);
+  for(k=i; k<=I; k++) x(k-i)=operator()(k); //TODO: memmove (also below!)
   return x;
 }
 
@@ -1055,6 +1061,7 @@ template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>&
 template<class T> MT::Array<T>& MT::Array<T>::operator=(const T& v) {
   uint i;
   //if(memMove && typeid(T)==typeid(T)) memset(p, *((int*)&v), N); else
+  CHECK(N,"assigning constant to empty array");
   for(i=0; i<N; i++) p[i]=v;
   return *this;
 }
@@ -1385,8 +1392,8 @@ MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
   if(dim==2) {
     resize(steps+1, steps+1, 2);
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) {
-        operator()(i, j, 0)=lo+(hi-lo)*j/steps;
-        operator()(i, j, 1)=lo+(hi-lo)*i/steps;
+        operator()(i, j, 0)=lo+(hi-lo)*i/steps;
+        operator()(i, j, 1)=lo+(hi-lo)*j/steps;
       }
     reshape(d0*d1, 2);
     return;
@@ -1394,9 +1401,9 @@ MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
   if(dim==3) {
     resize(TUP(steps+1, steps+1, steps+1, 3));
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) for(k=0; k<d2; k++) {
-          operator()(TUP(i, j, k, 0))=lo+(hi-lo)*k/steps;
+          operator()(TUP(i, j, k, 0))=lo+(hi-lo)*i/steps;
           operator()(TUP(i, j, k, 1))=lo+(hi-lo)*j/steps;
-          operator()(TUP(i, j, k, 2))=lo+(hi-lo)*i/steps;
+          operator()(TUP(i, j, k, 2))=lo+(hi-lo)*k/steps;
         }
     reshape(d0*d1*d2, 3);
     return;
@@ -1820,7 +1827,7 @@ template<class T> void checkNan(const MT::Array<T>& x) {
 
 template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   arr x;
-  uintA d=A.getDim();
+  uintA d=A.dim();
   d.prepend(d0);
   x.resize(d);
   if(x.memMove){
@@ -1831,6 +1838,9 @@ template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   return x;
 }
 
+#ifdef MT_CLANG
+#  pragma clang diagnostic pop
+#endif
 
 //===========================================================================
 //
@@ -2064,7 +2074,7 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   }
   //any other index (includes the previous cases, but marginally slower)
   uintA IV, IS, dimV, dimS;
-  dimV = v.getDim();
+  dimV = v.dim();
   dimS.resize(dimV.N-1);
   for(i = 0, j = 0; i < dimS.N; i++, j++) {
     if(i == d) j++;
@@ -2308,13 +2318,13 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
     for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
     return;
   }
-  if(y.getDim() == z.getDim()) { //matrix x matrix -> element-wise
+  if(y.dim() == z.dim()) { //matrix x matrix -> element-wise
     x = y;
     for(uint i = 0; i < x.N; i++)
       x.elem(i) *= z.elem(i);
     return;
   }
-  HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+  HALT("operator% not implemented for "<<y.dim() <<"%" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
 }
 
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
@@ -2694,7 +2704,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   
@@ -2725,7 +2735,7 @@ template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X,
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   
   //loop
@@ -2745,7 +2755,7 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   HALT("WRONG IMPLEMENTATION! - zero don't guarantee max...");
@@ -2770,7 +2780,7 @@ template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, con
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
   
@@ -2815,7 +2825,7 @@ template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, co
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
@@ -2838,7 +2848,7 @@ template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, cons
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
@@ -2859,7 +2869,7 @@ template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const u
   //initialize looping
   uint I[maxRank];     memset(I, 0, sizeof(uint)*maxRank);  //index on X
   uint Ydim[maxRank], Yinc[maxRank], Ydec[maxRank];
-  getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
+  getMultiDimIncrement(X.dim(), Yid, Ydim, Yinc, Ydec);
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
@@ -3165,6 +3175,9 @@ template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
 
 //---------- unary functions
 
+inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
+
+
 #define UnaryFunction( func )         \
   template<class T>           \
   MT::Array<T> func (const MT::Array<T>& y){    \
@@ -3205,6 +3218,7 @@ UnaryFunction(cbrt);
 UnaryFunction(ceil);
 UnaryFunction(fabs);
 UnaryFunction(floor);
+UnaryFunction(sigm);
 #undef UnaryFunction
 
 
@@ -3471,7 +3485,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
   
   CHECK_EQ((N*d)%2,0, "");
   
-  uint i, j;
+  uint i;
   for(i=0; i<N; i++) V.append(new vert);
   
   bool ready = false;

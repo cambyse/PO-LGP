@@ -27,8 +27,8 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     double margin = MT::getParameter<double>("LGP/collisionMargin", .05);
 
     //get the actions!
-    Item *actionSequence=symbolicState["actionSequence"];
-    Graph& actions = actionSequence->kvg();
+    Node *actionSequence=symbolicState["actionSequence"];
+    Graph& actions = actionSequence->graph();
     uint endeff_index = world.getShapeByName("graspRef")->index;
     uint hand_index = world.getShapeByName("eff")->index;
 

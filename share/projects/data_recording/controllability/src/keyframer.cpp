@@ -4039,7 +4039,7 @@ void KeyFramer::dlib_train(const String &basedir, const String &traindirlist, ui
     computeVar(STRING("quat"), wlen);
 
     // looping through pairs of annotated objects
-    for(Item *pair: s->ann_kvg) {
+    for(Node *pair: s->ann_kvg) {
       obj1 = pair->keys(0);
       obj2 = pair->keys(1);
 
@@ -4142,14 +4142,14 @@ void KeyFramer::load_ann(const String &dir) {
     uint from, to;
 
     arr ann_ref;
-    for(Item *pair: s->ann_kvg) {
+    for(Node *pair: s->ann_kvg) {
       obj1 = pair->keys(0);
       obj2 = pair->keys(1);
 
       for(String part1: g4d().id().sensorsof(obj1)) {
         for(String part2: g4d().id().sensorsof(obj2)) {
           ann_ref.referTo(annOf(part1, part2));
-          for(Item *lock: *pair->getValue<Graph>()) {
+          for(Node *lock: *pair->getValue<Graph>()) {
             from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
             to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
             ann_ref.subRange(from, to) = 1;
@@ -4197,12 +4197,12 @@ void KeyFramer::dlib_test(Graph &kvg, const String &name_subj, const String &nam
   arr delta_quatVar = g4d().query(subj_dQuatVar, name_obj);
 
   cout << "numFrames: " << g4d().numFrames() << endl;
-  cout << "subj_posVar: " << subj_posVar.getDim() << endl;
-  cout << "subj_quatVar: " << subj_quatVar.getDim() << endl;
-  cout << "obj_posVar: " << obj_posVar.getDim() << endl;
-  cout << "obj_quatVar: " << obj_quatVar.getDim() << endl;
-  cout << "delta_posVar: " << delta_posVar.getDim() << endl;
-  cout << "delta_quatVar: " << delta_quatVar.getDim() << endl;
+  cout << "subj_posVar: " << subj_posVar.dim() << endl;
+  cout << "subj_quatVar: " << subj_quatVar.dim() << endl;
+  cout << "obj_posVar: " << obj_posVar.dim() << endl;
+  cout << "obj_quatVar: " << obj_quatVar.dim() << endl;
+  cout << "delta_posVar: " << delta_posVar.dim() << endl;
+  cout << "delta_quatVar: " << delta_quatVar.dim() << endl;
 
   // annotations / labels
   arr ann_ref;

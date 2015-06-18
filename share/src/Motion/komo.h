@@ -26,6 +26,17 @@ arr moveTo(ors::KinematicWorld& world, //in initial state
            ors::Shape& endeff,         //endeffector to be moved
            ors::Shape &target,         //target shape
            byte whichAxesToAlign=0,    //bit coded options to align axes
-           uint iterate=1);            //usually the optimization methods may be called just once; multiple calls -> safety
+           uint iterate=1,
+           int timeSteps=-1,
+           double duration=-1.);            //usually the optimization methods may be called just once; multiple calls -> safety
 
 //===========================================================================
+
+inline arr finalPoseTo(ors::KinematicWorld& world,
+                       ors::Shape &endeff,
+                       ors::Shape& target,
+                       byte whichAxesToAlign=0,
+                       uint iterate=1){
+  return moveTo(world, endeff, target, whichAxesToAlign, iterate, 0, 5.);
+}
+
