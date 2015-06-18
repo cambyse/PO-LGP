@@ -231,9 +231,9 @@ void JsonRec::load(const char *recdir) {
 
       // ann = new arr(nframes);
       // ann->setZero();
-      // if(!agent_targets.getItem(target))
+      // if(!agent_targets.getNode(target))
       //   agent_targets.append(target, new StringA());
-      // if(!object_targets.getItem(target))
+      // if(!object_targets.getNode(target))
       //   object_targets.append(target, new StringA());
       // StringA &a_targets = *agent_targets.getValue<StringA>(target);
       // StringA &o_targets = *object_targets.getValue<StringA>(target);
@@ -242,7 +242,7 @@ void JsonRec::load(const char *recdir) {
       //   a_targets.append(pair->keys(1));
       // if(!o_targets.contains(pair->keys(2)))
       //   o_targets.append(pair->keys(2));
-      // for(Item *lock: *pair->getValue<Graph>()) {
+      // for(Node *lock: *pair->getValue<Graph>()) {
       //   from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
       //   to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
       //   ann->subRange(from, to) = 1;
@@ -257,12 +257,12 @@ void JsonRec::load(const char *recdir) {
     // uint from, to;
 
     // arr *ann;
-    // for(Item *pair: kvgann) {
+    // for(Node *pair: kvgann) {
     //   ann = new arr(nframes);
     //   ann->setZero();
-    //   if(!agent_targets.getItem(pair->keys(0)))
+    //   if(!agent_targets.getNode(pair->keys(0)))
     //     agent_targets.append(pair->keys(0), new StringA());
-    //   if(!object_targets.getItem(pair->keys(0)))
+    //   if(!object_targets.getNode(pair->keys(0)))
     //     object_targets.append(pair->keys(0), new StringA());
     //   StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
     //   StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
@@ -270,7 +270,7 @@ void JsonRec::load(const char *recdir) {
     //     a_targets.append(pair->keys(1));
     //   if(!o_targets.contains(pair->keys(2)))
     //     o_targets.append(pair->keys(2));
-    //   for(Item *lock: *pair->getValue<Graph>()) {
+    //   for(Node *lock: *pair->getValue<Graph>()) {
     //     from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
     //     to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
     //     ann->subRange(from, to) = 1;

@@ -251,7 +251,7 @@ void MocapID::clear() {
   s->object_parts.clear();
 }
 
-// void readItem(Graph *i, uintA &hsitoi, uintA &itohsi, int ind) {
+// void readNode(Graph *i, uintA &hsitoi, uintA &itohsi, int ind) {
 //   uint hid, sid, hsi, hsitoiN;
   
 //   hid = (uint)*i->getValue<double>("hid");
@@ -279,14 +279,14 @@ void MocapID::load(const char *meta) {
   if(kvg_agents == nullptr)
     cout << "No Agents!" << endl;
   else
-    for(Item* i: *kvg_agents)
+    for(Node* i: *kvg_agents)
       s->parseAgentSensor(i->keys(0), *i->getValue<Graph>());
 
   Graph *kvg_objects = kvg.getValue<Graph>("objects");
   if(kvg_objects == nullptr)
     cout << "No Objects!" << endl;
   else
-    for(Item *i: *kvg_objects)
+    for(Node *i: *kvg_objects)
       s->parseObjectSensor(i->keys(0), *i->getValue<Graph>());
 }
 
@@ -573,8 +573,8 @@ void MocapRec::save() {
   root["data"] = array;
 
   // temporal segmentation target
-  for(Item *pair: kvgann) {
-    for(Item *lock: *pair->getValue<Graph>()) {
+  for(Node *pair: kvgann) {
+    for(Node *lock: *pair->getValue<Graph>()) {
       if(lock->keys(0) == "lock") {
         value.clear();
         value["on@"] = (uint)*lock->getValue<Graph>()->getValue<double>("from");
@@ -597,7 +597,7 @@ const MocapLabel &MocapRec::label() const { return mlabel; }
 MocapLabel &MocapRec::label() { return const_cast<MocapLabel &>(static_cast<const MocapRec&>(*this).label()); }
 
 // arr MocapRec::ann(Target type, const char *sensor1, const char *sensor2) const {
-//   for(Item *pair: kvgann)
+//   for(Node *pair: kvgann)
 //     if(pair->keys(0) == Target_to_str(type)
 //     && ((mid.sensorsof(pair->keys(2)).contains(STRING(sensor2))
 //         && (mid.sensorsof(pair->keys(1)).contains(STRING(sensor1))
@@ -626,7 +626,7 @@ uint MocapRec::numFrames(Thickness thickness) const {
 uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(StringA({"bam", bam}))->d2; }
 
 void MocapRec::appendBam(const char *bam, const arr &data) {
-  Item *i = kvg.getItem("bam", bam);
+  Node *i = kvg.getNode("bam", bam);
 
   if(!i)
     kvg.append("bam", bam, new arr(data));
@@ -639,13 +639,13 @@ void MocapRec::appendBam(const char *bam, const arr &data) {
 }
 
 bool MocapRec::hasBam(const char *bam) {
-  // return kvg.getItem(STRINGS("bam", bam)) != NULL;
-  return kvg.getItem(StringA({"bam", bam})) != NULL;
+  // return kvg.getNode(STRINGS("bam", bam)) != NULL;
+  return kvg.getNode(StringA({"bam", bam})) != NULL;
 }
 
 arr MocapRec::query(const char *bam) {
-  // Item *i = kvg.getItem(STRINGS("bam", bam));
-  Item *i = kvg.getItem(StringA({"bam", bam}));
+  // Node *i = kvg.getNode(STRINGS("bam", bam));
+  Node *i = kvg.getNode(StringA({"bam", bam}));
   CHECK(i != nullptr, STRING("BAM '" << bam << "' does not exist."));
 
   // if(0 == strcmp(bam, "pose")) {
@@ -663,8 +663,8 @@ arr MocapRec::query(const char *bam) {
 }
 
 arr MocapRec::query(const char *type, const char *sensor) {
-  // Item *i = kvg.getItem(STRINGS("bam", type));
-  Item *i = kvg.getItem(StringA({"bam", type}));
+  // Node *i = kvg.getNode(STRINGS("bam", type));
+  Node *i = kvg.getNode(StringA({"bam", type}));
   CHECK(i != nullptr, STRING("BAM '" << type << "' does not exist."));
 
   int is = mid.sensor_id(sensor);
@@ -691,8 +691,8 @@ arr MocapRec::query(const char *type, const char *sensor) {
 }
 
 arr MocapRec::query(const char *type, const char *sensor, uint f) {
-  // Item *i = kvg.getItem(STRINGS("bam", type));
-  Item *i = kvg.getItem(StringA({"bam", type}));
+  // Node *i = kvg.getNode(STRINGS("bam", type));
+  Node *i = kvg.getNode(StringA({"bam", type}));
   CHECK(i != nullptr, STRING("BAM '" << type << "' does not exist."));
 
   int is = mid.sensor_id(sensor);
@@ -733,7 +733,7 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 
 /*   Graph *skvg1 = s->kvg_sensors.getValue<Graph>(sensor1); */
 /*   Graph *skvg2 = s->kvg_sensors.getValue<Graph>(sensor2); */
-/*   CHECK(s->kvg.getItem(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
+/*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */
 
@@ -754,7 +754,7 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /* arr MocapData::query(const char *type, const char *sensor1, const char *sensor2, uint f) { */
 /*   Graph *skvg1 = s->kvg_sensors.getValue<Graph>(sensor1); */
 /*   Graph *skvg2 = s->kvg_sensors.getValue<Graph>(sensor2); */
-/*   CHECK(s->kvg.getItem(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
+/*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */
 
@@ -1328,7 +1328,7 @@ MocapData::~MocapData() { }
 StringA &MocapData::base() { return bases; }
 
 MocapRec &MocapData::rec(const char *recdir) {
-  Item *i = kvg.getItem(recdir);
+  Node *i = kvg.getNode(recdir);
   if(i) return *i->getValue<MocapRec>();
 
   for(const String &base: bases) {
@@ -1359,7 +1359,7 @@ MocapRec &MocapData::rec(const char *recdir) {
 
 void MocapData::write(std::ostream &os) const {
   os << "MocapData" << endl;
-  for(Item *i: kvg)
+  for(Node *i: kvg)
     os << " * " << i->keys << endl;
 }
 
@@ -1662,7 +1662,7 @@ void MocapSeq::appendLinCoeffFuture(bool sqr_feats) {
 void MocapSeq::write(std::ostream &os) const {
   os << "MocapSeq: " << endl;
   os << " * sensors: " << sensor1 << ", " << sensor2 << endl;
-  os << " * dim: " << data.getDim() << endl;
+  os << " * dim: " << data.dim() << endl;
   os << " * ann: " << (ann.N? "yes": "no") << endl;
 }
 

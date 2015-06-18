@@ -164,15 +164,15 @@ void G4Rec::load(const char *recdir) {
   uint from, to;
 
   arr *ann;
-  for(Item *pair: kvgtmp) {
+  for(Node *pair: kvgtmp) {
     ann = new arr(nframes);
     ann->setZero();
     if(!targets.contains(pair->keys(0)))
       targets.append(pair->keys(0));
 
-    if(!agent_targets.getItem(pair->keys(0)))
+    if(!agent_targets.getNode(pair->keys(0)))
       agent_targets.append((char*)pair->keys(0), new StringA());
-    if(!object_targets.getItem(pair->keys(0)))
+    if(!object_targets.getNode(pair->keys(0)))
       object_targets.append((char*)pair->keys(0), new StringA());
 
     StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
@@ -183,7 +183,7 @@ void G4Rec::load(const char *recdir) {
     if(!o_targets.contains(pair->keys(2)))
       o_targets.append(pair->keys(2));
 
-    for(Item *lock: *pair->getValue<Graph>()) {
+    for(Node *lock: *pair->getValue<Graph>()) {
       from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
       to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
       ann->subRange(from, to) = 1;
