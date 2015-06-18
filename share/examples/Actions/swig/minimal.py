@@ -7,18 +7,29 @@ from collections import namedtuple
 import time
 import signal
 
+from contextlib import contextmanager
 import swig
 
 
 def signal_handler(signal, frame):
+    print("\n"*10)
     print("\nYou pressed Ctrl+C!")
-    print("press Ctr+D to quit")
+    print("Stopping all facts")
+    new_facts = []
+    for fact in facts():
+        print("\n"*10)
+        print(fact)
+        if "conv" not in fact:
+            new_facts.append("(conv " + fact[1: fact.find(")") + 1])
+
+    for fact in new_facts:
+        interface.setFact(fact)
 
 
 interface = swig.ActionSwigInterface(1)
 
 # don't abort the swig interface on Ctr-C
-# the signal must be geristered after the swig interface was instatiated
+# the signal must be geristered after the swig interface was initialized
 # signal.signal(signal.SIGINT, signal_handler)
 time.sleep(.2)
 
@@ -37,7 +48,7 @@ print("  You can always change it: `DEFAULT_SIDE = RIGHT`")
 
 
 ###############################################################################
-# Helper functions
+# Helper: access ors structures
 def shapes(name=None):
     return interface.getShapeByName(name) if name else interface.getShapeList()
 
@@ -55,21 +66,41 @@ def facts():
 
 
 ###############################################################################
+def assert_valid_shapes(shape):
+    if shape not in shapes():
+        raise ValueError("The given shape {} is not an existing shape"
+                         .format(shape))
+
+###############################################################################
 # Convenient access and autocompletion to shapes, joints, and bodies
 # Just type `s.<tab>` to get a list of all shapes
-Shapes = namedtuple("Shapes", " ".join(shapes()))
-s = Shapes(*shapes())
+_tmp = list(shapes())
+Shapes = namedtuple("Shapes", " ".join(_tmp))
+s = Shapes(*_tmp)
 
+_tmp = list(bodies())
+Bodies = namedtuple("Bodies", " ".join(_tmp))
+b = Bodies(*_tmp)
 
-Bodies = namedtuple("Bodies", " ".join(bodies()))
-b = Bodies(*bodies())
+_tmp = list(joints())
+Joints = namedtuple("Joints", " ".join(_tmp))
+j = Joints(*_tmp)
 
-
-Joints = namedtuple("Joints", " ".join(joints()))
-j = Joints(*joints())
+del _tmp
 
 
 ###############################################################################
+# Helper: symbols...
+def strip_specs(fact):
+    return fact[: fact.find(")")] + ")"
+
+
+def conv_symbol(symbol):
+    return '(conv ' + symbol[1:]
+
+
+###############################################################################
+# execution control
 def run(facts):
     """Run the given fact, wait for its completion and remove the fact
     afterwards.
@@ -77,8 +108,8 @@ def run(facts):
     if not isinstance(facts, list):
         facts = [facts]
 
-    symbols = [fact[: fact.find(")")] + ")" for fact in facts]
-    symbols_conv = ['(conv ' + sym[1:] for sym in symbols]
+    symbols = [strip_specs(fact) for fact in facts]
+    symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     for fact in facts:
         interface.setFact(fact)
@@ -93,21 +124,37 @@ def run(facts):
         interface.stopFact(symb_conv)
 
 
-def assert_valid_shapes(shape):
-    if shape not in shapes():
-        raise ValueError("The given shape {} is not an existing shape"
-                         .format(shape))
+@contextmanager
+def running(facts):
+    """
+    Context manager to run the given facts (list of strings) during the context
+    """
+    for fact in facts:
+        interface.setFact(fact)
+
+    yield
+
+    symbols = [strip_specs(fact) for fact in facts]
+    symbols_conv = [conv_symbol(symbol) for symbol in symbols]
+
+    for symb in symbols:
+        interface.stopFact(symb)
+
+    active_facts = interface.getFacts()
+    for symb_conv in symbols_conv:
+        if symb_conv + "," in active_facts:
+            interface.stopFact(symb_conv)
 
 
 ###############################################################################
 # Python activities
 def homing():
-    return ["(HomingActivity)"]
+    return ["(HomingActivity){ tol=.04 }"]
 
 
 def _gripper(side, target):
     if side is None:
-        side = De
+        side = LEFT
     if side == LEFT:
         endeff, joint = "endeffL", "l_gripper_joint"
     elif side == RIGHT:
@@ -140,7 +187,7 @@ def reach(what, with_=None, offset=None):
     assert_valid_shapes(what)
     assert_valid_shapes(with_)
 
-    fact = "(FollowReferenceActivity {ref1} {ref2}){{ type=pos, ref1={ref1}, ref2={ref2} target={offset} }}".format(ref1=with_, ref2=what, offset=offset)
+    fact = "(FollowReferenceActivity {ref1} {ref2}){{ type=pos, ref1={ref1}, ref2={ref2}, target={offset} }}".format(ref1=with_, ref2=what, offset=offset)
     return [fact]
 
 
@@ -184,16 +231,39 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     ]
 
 
-def grab_marker():
-    run(open_gripper(LEFT)
-        + align_gripper_with_plane([1, 0, 0], [0, -1, 0])
-        + reach(s.mymarker, offset=[-.2, 0, 0]))
-    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0]) + reach(s.mymarker))
-    run(close_gripper(LEFT))
+def gaze_at(shape):
+    if " gazeAt," not in interface.getSymbols():
+        interface.createNewSymbol("gazeAt")
+
+    assert_valid_shapes(shape)
+
+    pos = "[" + shapes(shape)["pos"][2:-2] + "]"
+    print(pos)
+    fact = """
+    (FollowReferenceActivity gazeAt){{
+        type=gazeAt
+        ref1=endeffHead ref2=base_footprint
+        vec1=[0, 0, 1] vec2={pos} }}
+    """.strip().format(pos=pos)
+    return [fact]
 
 
+###############################################################################
+# High Level Behaviors
+def grab_marker(shape):
+    with running(gaze_at("endeffL")):
+        run(open_gripper(LEFT)
+            + reach(shape, offset=[0.0, 0.01, 0.1])
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
+        run(reach(shape, offset=[0.0, 0.01, -0.07]))
+        run(close_gripper(LEFT))
+    # run(homing())
+
+
+###############################################################################
 if __name__ == '__main__':
     # run(homing())
     pass
     # open_gripper(RIGHT)
     # close_gripper(RIGHT)
+    # grab_marker("mymarker")
