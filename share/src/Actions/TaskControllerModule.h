@@ -4,6 +4,7 @@
 #include <Motion/feedbackControl.h>
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 extern struct TaskControllerModule *taskControllerModule();
 
@@ -18,12 +19,12 @@ struct TaskControllerModule : Module {
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(bool, fixBase)
+  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
 
   //non-protected members
 //private:
   ors::KinematicWorld realWorld;
-  ors::KinematicWorld __modelWorld__;
-  FeedbackMotionControl feedbackController;
+  FeedbackMotionControl *feedbackController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose

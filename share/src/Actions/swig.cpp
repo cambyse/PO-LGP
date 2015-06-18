@@ -8,6 +8,8 @@
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
 
+ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
+
 // ============================================================================
 struct SwigSystem : System{
   ACCESS(bool, quitSignal)
@@ -31,6 +33,7 @@ struct SwigSystem : System{
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
+      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();

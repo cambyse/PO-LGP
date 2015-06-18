@@ -32,7 +32,7 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true, orsDrawColors=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
@@ -87,7 +87,7 @@ void ors::glDrawGraph(void *classP) {
 void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
-  glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
+  if(orsDrawColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
 
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);

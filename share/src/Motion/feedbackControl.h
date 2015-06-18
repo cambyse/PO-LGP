@@ -52,7 +52,6 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   /// @{ @name Parameters that define the integral force feedback control law
   arr f_ref;
   double f_Igain;
-  /// @}
 
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetSignOnNegScalarProduct;

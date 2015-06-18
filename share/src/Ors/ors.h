@@ -410,7 +410,7 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors;
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
