@@ -232,6 +232,7 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
     if(isTrue(literals)) return;
     S->state.waitForNextRevision();
   }
+  // this->stopFact(literals);
 }
 
 void ActionSwigInterface::waitForCondition(const char* query){
@@ -239,6 +240,7 @@ void ActionSwigInterface::waitForCondition(const char* query){
     if(S->RM.get()->queryCondition(query)) return;
     S->state.waitForNextRevision();
   }
+  // this->stopFact(query);
 }
 
 int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
@@ -248,8 +250,9 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
     }
     S->state.waitForNextRevision();
   }
-
+  // this->stopFact(literals);
 }
+
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
 //#if 1
 //  startActivity(lit2str(literal), parameters);
