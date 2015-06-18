@@ -210,7 +210,6 @@ void TEST(Gamepad){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-      cout <<"ROT = " <<refs.q(trans->qIndex+2) <<endl;
     }
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;

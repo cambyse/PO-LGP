@@ -301,7 +301,10 @@ class ActionSwigInterface(_object):
         except: self.this = this
     __swig_destroy__ = _swig.delete_ActionSwigInterface
     __del__ = lambda self : None;
+    def Cancel(self): return _swig.ActionSwigInterface_Cancel(self)
     def getShapeList(self): return _swig.ActionSwigInterface_getShapeList(self)
+    def getBodyList(self): return _swig.ActionSwigInterface_getBodyList(self)
+    def getJointList(self): return _swig.ActionSwigInterface_getJointList(self)
     def getBodyByName(self, *args): return _swig.ActionSwigInterface_getBodyByName(self, *args)
     def getShapeByName(self, *args): return _swig.ActionSwigInterface_getShapeByName(self, *args)
     def getJointByName(self, *args): return _swig.ActionSwigInterface_getJointByName(self, *args)
@@ -309,9 +312,12 @@ class ActionSwigInterface(_object):
     def getSymbolInteger(self, *args): return _swig.ActionSwigInterface_getSymbolInteger(self, *args)
     def str2lit(self, *args): return _swig.ActionSwigInterface_str2lit(self, *args)
     def lit2str(self, *args): return _swig.ActionSwigInterface_lit2str(self, *args)
-    def getStateLiterals(self): return _swig.ActionSwigInterface_getStateLiterals(self)
+    def isTrue(self, *args): return _swig.ActionSwigInterface_isTrue(self, *args)
     def setFact(self, *args): return _swig.ActionSwigInterface_setFact(self, *args)
+    def stopFact(self, *args): return _swig.ActionSwigInterface_stopFact(self, *args)
+    def getFacts(self): return _swig.ActionSwigInterface_getFacts(self)
     def startActivity(self, *args): return _swig.ActionSwigInterface_startActivity(self, *args)
+    def stopActivity(self, *args): return _swig.ActionSwigInterface_stopActivity(self, *args)
     def waitForCondition(self, *args): return _swig.ActionSwigInterface_waitForCondition(self, *args)
     def waitForOrCondition(self, *args): return _swig.ActionSwigInterface_waitForOrCondition(self, *args)
     def waitForQuitSymbol(self): return _swig.ActionSwigInterface_waitForQuitSymbol(self)

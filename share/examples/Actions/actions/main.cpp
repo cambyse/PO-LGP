@@ -4,26 +4,72 @@
 #include <Motion/motionHeuristics.h>
 
 
-//===============================================home============================
-// do some sequential hand movements
+//==============================================================================
+void gripper() {
+  ActionSystem activity;
+  auto& m = *activity.machine;
 
+  new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+  auto target = m.s->world.getShapeByName("mymarker")->X;
+  cout << target << endl;
+  Action* open_left = new OpenGripper(*activity.machine, Side::LEFT);
+  Action* open_right = new OpenGripper(*activity.machine, Side::RIGHT);
+  activity.machine->waitForActionCompletion(open_left);
+  activity.machine->waitForActionCompletion(open_right);
+
+  engine().close(activity);
+}
+
+//==============================================================================
+// grab the marker
+void grap_the_marker() {
+  ActionSystem activity;
+  auto& m = *activity.machine;
+
+  new CoreTasks(*activity.machine);
+  engine().open(activity);
+
+  Action* open_right = new OpenGripper(m, Side::RIGHT);
+  // m.waitForActionCompletion(open_right);
+
+  // align along marker
+  auto target = m.s->world.getShapeByName("mymarker")->X;
+  cout << "target:" << target << endl;
+  arr target_position = ARRAY(target.pos);
+  arr target_orientation = ARRAY(target.rot);
+  Action* pose_to = new PoseTo(m, "endeffR", target_position, target_orientation);
+
+  // TODO
+  // cage marker
+
+  // Action* close_right = new CloseGripper(*activity.machine, Side::RIGHT);
+  // activity.machine->waitForActionCompletion(open_right);
+
+  m.waitForActionCompletion(open_right);
+  m.waitForActionCompletion(pose_to);
+  engine().close(activity);
+}
+
+//==============================================================================
 void TEST(Dance) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-  
+
   for(int i = 0; i < 2; ++i) {
     Action* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.5, 1.2});
     Action* a_left = new MoveEffTo(*activity.machine, "endeffL", {.6, .6, 1.2});
     activity.machine->waitForActionCompletion(a_left);
     activity.machine->waitForActionCompletion(a_right);
-    
+
     Action* a_right2 = new MoveEffTo(*activity.machine, "endeffR", {.3, -.7, 1.0});
     Action* a_left2 = new MoveEffTo(*activity.machine, "endeffL", {.3, .7, 1.0});
     activity.machine->waitForActionCompletion(a_left2);
     activity.machine->waitForActionCompletion(a_right2);
   }
-  
+
   engine().close(activity);
 }
 
@@ -33,7 +79,6 @@ void TEST(FollowTrajectory) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-
 
   // first construct the trajectory
   arr q = interpolate_trajectory({.6, -.5, 1.2}, {.6, .6, 1.2}, 100);
@@ -55,7 +100,7 @@ void TEST(Push) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-  
+
   Action *a, *b;
 
   b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
@@ -95,7 +140,7 @@ void TEST(Push) {
 //  cout << "pushing" << endl;
 //  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
 //  activity.machine->waitForActionCompletion(push);
-  
+
   MT::wait(1.);
   engine().close(activity);
 }
@@ -105,17 +150,17 @@ void idle() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-  
+
   Action* right = new MoveEffTo(*activity.machine, "endeffR", {.95, -.2, .9});
   Action* left = new MoveEffTo(*activity.machine, "endeffL", {.95, .2, .9});
   activity.machine->waitForActionCompletion(right);
   activity.machine->waitForActionCompletion(left);
-  
+
   // GroundedAction* align_right = new AlignEffTo(*activity.machine, "endeffR", {.95, 0, 0.}, {.95, 0, 0});
   // GroundedAction* align_left = new AlignEffTo(*activity.machine, "endeffL", {.95, 0, 0.}, {.95, 0, 0});
   // activity.machine->waitForActionCompletion(align_right);
   // activity.machine->waitForActionCompletion(align_left);
-  
+
   engine().close(activity);
 }
 
@@ -137,22 +182,22 @@ void idle2() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
   engine().open(activity);
-  
+
   auto t = new OrientationQuat(*activity.machine, "endeffR", {1., 1., 0., 0.});
   activity.machine->waitForActionCompletion(t);
   cout << "Done waiting" << endl;
-  
+
   new MoveEffTo(*activity.machine, "endeffR", {.8, -.2, .9});
 //  new OrientationQuat("endeffR", {1, 1, 0, 0});
 
   activity.machine->waitForActionCompletion();
   MT::wait(5);
-  
+
 
   // new MoveEffTo(*activity.machine, "endeffR", {.6, -.2, .9});
   // new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {1, 0, 0});
   // activity.machine->waitForActionCompletion();
-  
+
   engine().close(activity);
 }
 

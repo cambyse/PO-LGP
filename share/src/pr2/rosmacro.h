@@ -1,4 +1,6 @@
 #pragma once
+
+#include <ros/ros.h>
 #include <Core/module.h>
 
 
@@ -6,16 +8,14 @@
  *  module system.
  *
  *  This macro creates a class "ROS_#var_name" that subscribes the given
- *  topic_name with the given msg_type.  The ros msg is basically copied into
+ *  topic_name with the given msg_type.  Each received ros msg is copied into
  *  the MLR module system.
  *
- *  You have to add the created class and the ACCESS variable to your System
- *  and you're good to go.
+ *  To use it you have to
+ *  - add the created module "ROS_#var_name"  as module to your system
+ *  - add the ACCESS variable with the ros msg type to your system
  *
  *  See ../../examples/pr2/generic_ros_sync/main.cpp for more.
- *
- *  TODO Refactor to avoid includes in header files. But we need the type of
- *  the msg. Is it even possible?
  */
 #define ROSSUB(topic_name, msg_type, var_name) \
   class ROSSUB_##var_name : public Module { \
@@ -41,3 +41,5 @@
     ros::Subscriber _sub; \
     \
   };
+
+
