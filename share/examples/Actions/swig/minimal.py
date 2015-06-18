@@ -6,6 +6,7 @@ from __future__ import print_function
 from collections import namedtuple
 import time
 import signal
+import numpy as np
 
 from contextlib import contextmanager
 import swig
@@ -248,15 +249,34 @@ def gaze_at(shape):
     return [fact]
 
 
+def pos_str_to_arr(pos_str):
+    return np.array([float(i) for i in pos_str[2:-2].split(" ")])
+
+
+def move_along_axis(endeff, axis, distance):
+    axis = np.asarray(axis)
+
+    endeff_pos = pos_str_to_arr(interface.getShapeByName(endeff)["pos"])
+    print(endeff_pos)
+
+    target_pos = endeff_pos + distance/np.linalg.norm(axis) * axis
+    print(target_pos)
+
+    fact = "(FollowReferenceActivity {ref1}){{ type=pos, ref1={ref1}, vec2={pos} }}".format(ref1=endeff, pos=target_pos)
+    return [fact]
+
+
+
+
 ###############################################################################
 # High Level Behaviors
-def grab_marker(shape):
+def grab_marker(shape, side=LEFT):
     with running(gaze_at("endeffL")):
-        run(open_gripper(LEFT)
+        run(open_gripper(side)
             + reach(shape, offset=[0.0, 0.01, 0.1])
             + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
         run(reach(shape, offset=[0.0, 0.01, -0.07]))
-        run(close_gripper(LEFT))
+        run(close_gripper(side))
     # run(homing())
 
 
