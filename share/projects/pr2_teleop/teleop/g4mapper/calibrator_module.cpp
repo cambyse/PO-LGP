@@ -454,9 +454,9 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index) 
 
 void G4HutoRoMap::transform(const floatA& poses_raw)
 {
-      cout<<"\x1B[2J\x1B[H";
+    //  cout<<"\x1B[2J\x1B[H";
 
-      cout<<"---- PUBLISHED DATA -----"<<endl;
+   //   cout<<"---- PUBLISHED DATA -----"<<endl;
 
    floatA cal_pose_rh, cal_pose_lh;
 
@@ -484,7 +484,7 @@ void G4HutoRoMap::transform(const floatA& poses_raw)
       dummy = length(poses_thumb_rh.subRange(0, 2) - poses_index_rh.subRange(0, 2)) * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
       clip(dummy, 0.f, 1.f);
       calibrated_gripper_rh.set() = dummy;
-      cout<<"calibrated_gripper_rh "<<dummy<<endl;
+    //  cout<<"calibrated_gripper_rh "<<dummy<<endl;
       dummy = 0;
       // calibrated_gripper_lh.set() = clip(
       //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
@@ -493,14 +493,14 @@ void G4HutoRoMap::transform(const floatA& poses_raw)
       clip(dummy, 0.f, 1.f);
       calibrated_gripper_lh.set() = dummy;
 
-      cout<<"calibrated_gripper_lh "<<dummy<<endl;
+    //  cout<<"calibrated_gripper_lh "<<dummy<<endl;
 
       // setting access variables
       calibrated_pose_rh.set() = cal_pose_rh;
       calibrated_pose_lh.set() = cal_pose_lh;
 
-      cout<<"calibrated_pose_rh "<<cal_pose_rh<<endl;
-      cout<<"calibrated_pose_lh "<<cal_pose_lh<<endl;
+    //  cout<<"calibrated_pose_rh "<<cal_pose_rh<<endl;
+    //  cout<<"calibrated_pose_lh "<<cal_pose_lh<<endl;
 }
 
 
