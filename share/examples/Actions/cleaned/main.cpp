@@ -1,8 +1,9 @@
 #include <Actions/swig.h>
 #include <Actions/TaskControllerModule.h>
 #include <Actions/taskCtrlActivities.h>
-#include <Hardware/gamepad/gamepad.h>
 #include <Actions/RelationalMachineModule.h>
+#include <Hardware/gamepad/gamepad.h>
+=======
 
 #include <Core/util.h>
 #include <System/engine.h>
@@ -14,6 +15,7 @@ struct MySystem : System{
   ACCESS(MT::String, effects)
   ACCESS(MT::String, state)
   TaskControllerModule *tcm;
+
   MySystem(){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);

@@ -23,6 +23,7 @@ public:
     //class look_up_map_t: public std::unordered_map<const_feature_ptr_t, feature_return_t> { // derive from map
     class look_up_map_t: public f_ptr_set_t {                                               // derive from set
     public:
+        virtual ~look_up_map_t() = default;
         virtual void insert_feature(f_ptr_t,f_ret_t);
         virtual void erase_feature(f_ptr_t);
         virtual std::vector<f_ptr_t> get_list_of_features() const;

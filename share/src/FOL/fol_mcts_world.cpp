@@ -269,3 +269,7 @@ double FOL_World::get_info_value(InfoTag tag) const{
     default: HALT("unknown tag" <<tag);
   }
 }
+
+void FOL_World::write_current_state(ostream& os){
+    state->write(os," ","{}");
+}

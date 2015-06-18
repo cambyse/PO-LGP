@@ -54,8 +54,8 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
 
 void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
-  Pgain=pgain;
-  Dgain=dgain;
+  this->Pgain=pgain;
+  this->Dgain=dgain;
   if(!prec) prec=100.;
 }
 
@@ -63,8 +63,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  Pgain = MT::sqr(1./lambda);
-  Dgain = 2.*dampingRatio/lambda;
+  this->Pgain = MT::sqr(1./lambda);
+  this->Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
 

@@ -20,7 +20,7 @@ shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] si
 
 shape mymarker(world){ type=5 color=[1 1 0] size=[.2 0 0 0]}
 
-#Merge worldTranslationRotation{ type=10 }
+# Merge worldTranslationRotation{ type=8 }
 
 body door_frame1 { X=<T t(1.2 1.2 .99)>  type=4 size=[0. 0. 1.98 0.0085] fixed, }
 body door {  type=0 size=[.038 .86 1.98 0.] color=[1. 1. 1.] fixed, contact}

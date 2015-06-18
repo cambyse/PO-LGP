@@ -32,6 +32,14 @@ struct CtrlMsg{
           double velLimitRatio, double effLimitRatio, double gamma)
     :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
 };
+
+//-- a basic message type for communication with the soft hand controller
+struct SoftHandMsg{
+  MT::String soft_hand_cmd;
+  SoftHandMsg(){}
+  SoftHandMsg(const MT::String soft_hand_cmd)
+    :soft_hand_cmd(soft_hand_cmd){}
+};
 //inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 //inline void operator>>(istream& os, CtrlMsg& m){  }
 
@@ -121,3 +129,7 @@ BEGIN_MODULE(RosCom_ForceSensorSync)
 END_MODULE()
 
 //===========================================================================
+/// This module syncs the soft hand
+BEGIN_MODULE(RosCom_SoftHandSync)
+  ACCESS(SoftHandMsg, sh_ref)
+END_MODULE()
