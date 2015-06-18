@@ -8,9 +8,9 @@
 #include <Core/array-vector.h>
 
 struct MySystem:System{
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, gamepadState);
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(arr, gamepadState)
   MySystem(){
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
@@ -47,7 +47,7 @@ void TEST(Gamepad){
   Gamepad2Tasks j2t(MP);
 
   bool useRos = MT::getParameter<bool>("useRos", false);
-  bool sendBaseMotion = MT::getParameter<bool>("sendBaseMotion", false);
+  bool fixBase = MT::getParameter<bool>("fixBase", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -132,6 +132,16 @@ void TEST(Gamepad){
 
       fil <<t <<' ' <<f_des <<' ' << J_ft*fLobs << " " << J*uobs << endl;
 
+
+//      // change stiffness of endeff
+//      -      arr y_fL, J_fL;
+//      -      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+//      -      J_fL = J_fL.sub(0,1,0,-1);
+//      -      arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
+//      -      cout <<J_fL <<gain <<endl;
+//      -      refs.Kq_gainFactor = gain;
+//      -      refs.u_bias = zeros(q.N);
+
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
 //      ors::Vector rel = ftL_shape->rel.rot*ors::Vector(fe/length(fe));
@@ -169,7 +179,7 @@ void TEST(Gamepad){
 
     refs.q=q;
     refs.qdot=zero_qdot;
-    if(sendBaseMotion && trans && trans->qDim()==3){
+    if(!fixBase && trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);

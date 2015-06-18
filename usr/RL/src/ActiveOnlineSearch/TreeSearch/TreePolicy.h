@@ -1,22 +1,20 @@
 #ifndef TREEPOLICY_H_
 #define TREEPOLICY_H_
 
-#include "AbstractMonteCarloTreeSearch.h"
-
-class Environment;
+#include "MonteCarloTreeSearch.h"
 
 namespace tree_policy {
 
-    typedef AbstractMonteCarloTreeSearch::graph_t              graph_t;
-    typedef AbstractMonteCarloTreeSearch::node_info_map_t      node_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::mcts_arc_info_map_t  mcts_arc_info_map_t;
-    typedef AbstractMonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractMonteCarloTreeSearch::arc_t                arc_t;
-    typedef AbstractEnvironment::action_handle_t               action_handle_t;
-    typedef AbstractEnvironment::observation_handle_t          observation_handle_t;
-    typedef AbstractEnvironment::state_handle_t                state_handle_t;
-    typedef AbstractEnvironment::reward_t                      reward_t;
+    typedef MonteCarloTreeSearch::graph_t              graph_t;
+    typedef MonteCarloTreeSearch::node_info_map_t      node_info_map_t;
+    typedef MonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
+    typedef MonteCarloTreeSearch::mcts_arc_info_map_t  mcts_arc_info_map_t;
+    typedef MonteCarloTreeSearch::node_t               node_t;
+    typedef MonteCarloTreeSearch::arc_t                arc_t;
+    typedef AbstractEnvironment::action_handle_t       action_handle_t;
+    typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
+    typedef AbstractEnvironment::reward_t              reward_t;
+    typedef AbstractEnvironment::action_container_t    action_container_t;
 
     /**
      * Abstract basis class for tree policies. The job of the tree policy is to
@@ -24,45 +22,47 @@ namespace tree_policy {
      * common tree policy is UCB1 but a Uniform policy may also be used. */
     class TreePolicy {
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+        //----members----//
+        std::shared_ptr<AbstractEnvironment> environment = nullptr;
+        const graph_t * graph = nullptr;
+        const node_info_map_t * node_info_map = nullptr;
+        const mcts_node_info_map_t * mcts_node_info_map = nullptr;
+        const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+    public:
+        //----methods----//
+        virtual ~TreePolicy() = default;
+        virtual void init(std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
+        virtual action_handle_t get_action(const node_t & state_node) const = 0;
     };
 
     /**
      * Sample actions uniformly from available action nodes. */
     class Uniform: public TreePolicy {
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+        virtual ~Uniform() = default;
+        virtual action_handle_t get_action(const node_t & state_node) const override;
     };
 
     /**
      * Basis class for policies that choose the action by maximizing some
      * quantity (like value or upper bound). */
     class MaxPolicy: public TreePolicy {
+        graph_t::NodeMap<action_container_t> * available_actions = nullptr;
     public:
-        virtual action_handle_t operator()(const node_t & state_node,
-                                           std::shared_ptr<Environment> environment,
-                                           const graph_t & graph,
-                                           const node_info_map_t & node_info_map,
-                                           const mcts_node_info_map_t & mcts_node_info_map,
-                                           const mcts_arc_info_map_t & mcts_arc_info_map) const override final;
+        virtual ~MaxPolicy();
+        virtual void init(std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+        virtual action_handle_t get_action(const node_t & state_node) const override final;
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const = 0;
+                               const node_t & action_node) const = 0;
     };
 
     /**
@@ -71,12 +71,7 @@ namespace tree_policy {
     public:
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
     };
 
     /**
@@ -96,12 +91,8 @@ namespace tree_policy {
         UCB1(double Cp = 0.70710678118654746);
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
     };
@@ -124,12 +115,8 @@ namespace tree_policy {
         UCB_Plus(double Cp = 1);
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
-                               const node_t & action_node,
-                               std::shared_ptr<Environment> environment,
-                               const graph_t & graph,
-                               const node_info_map_t & node_info_map,
-                               const mcts_node_info_map_t & mcts_node_info_map,
-                               const mcts_arc_info_map_t & mcts_arc_info_map) const override;
+                               const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
     };

@@ -25,7 +25,7 @@ void testFol(){
   G.checkConsistency();
   cout <<G <<endl;
 
-  Item *terminal=G["Terminal"]->kvg()(0);
+  Node *terminal=G["Terminal"]->graph()(0);
   forwardChaining_FOL(G, terminal, NoGraph, true);
 
 }
@@ -37,28 +37,28 @@ void rewriteGraph(){
   FILE("machine.fol") >>G;
 //  FILE("machine_simple.fol") >>G;
 
-  ItemL actions=G.getItems("Action");
-  ItemL rules=G.getItems("Rule");
-  ItemL state=getLiteralsOfScope(G);
+  NodeL actions=G.getNodes("Action");
+  NodeL rules=G.getNodes("Rule");
+  NodeL state=getLiteralsOfScope(G);
 
-  for(Item* a:actions){
+  for(Node* a:actions){
     nice.append<bool>(a->keys(1), NULL, false);
   }
 
-  for(Item* rule:rules){
-    Graph& Rule=rule->kvg();
-    Item *rit = nice.append<bool>({"box"}, NULL, false);
-    for(Item* prec:Rule) if(prec->parents.N){
-      Item *pit=nice[prec->parents(0)->keys(1)];
+  for(Node* rule:rules){
+    Graph& Rule=rule->graph();
+    Node *rit = nice.append<bool>({"box"}, NULL, false);
+    for(Node* prec:Rule) if(prec->parents.N){
+      Node *pit=nice[prec->parents(0)->keys(1)];
       if(pit){
         MT::String label/*("pre")*/;
         if(prec->parents.N>1) label <<prec->parents(1)->keys(1);
         nice.append<bool>({label}, {pit, rit}, NULL, false);
       }
     }
-    Graph &effect = Rule.last()->kvg();
-    for(Item* eff:effect){
-      Item *pit=nice[eff->parents(0)->keys(1)];
+    Graph &effect = Rule.last()->graph();
+    for(Node* eff:effect){
+      Node *pit=nice[eff->parents(0)->keys(1)];
       if(pit){
         MT::String label/*("eff")*/;
         if(eff->parents.N>1) label <<eff->parents(1)->keys(1);

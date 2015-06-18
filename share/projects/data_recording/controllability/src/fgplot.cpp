@@ -155,7 +155,7 @@ FGPlots::~FGPlots() {
 }
 
 void FGPlots::open(const Graph &k) {
-  ItemL plot_list;
+  NodeL plot_list;
   Graph *plot_kvg;
 
   String *str;
@@ -164,7 +164,7 @@ void FGPlots::open(const Graph &k) {
 
   s->kvg = k;
 
-  plot_list = s->kvg.getItems("plot").list();
+  plot_list = s->kvg.getNodes("plot").list();
   s->nplots = plot_list.N;
   s->plots = new FGPlot[s->nplots];
   s->data = new Graph[s->nplots];
@@ -257,7 +257,7 @@ void FGPlots::open(const Graph &k) {
     }
     // }}}
     // data {{{
-    s->data[i] = plot_kvg->getItems("data");
+    s->data[i] = plot_kvg->getNodes("data");
     for(auto j: s->data[i])
       cout << " - data: " << *j->getValue<String>() << endl;
     // }}}

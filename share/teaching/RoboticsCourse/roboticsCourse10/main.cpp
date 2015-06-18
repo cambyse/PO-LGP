@@ -86,8 +86,7 @@ int main(int argc, char** argv){
 
     //resample particles
     arr Xnew(N,2); // memorize old particles
-    uintA s;       // resample indices
-    SUS(W,N,s);    // Stochastic Universal Sampling
+    uintA s = sampleMultinomial_SUS(W,N);       // resample indices       // Stochastic Universal Sampling
     for(uint i=0;i<N;i++) Xnew[i] = X[s(i)];
     W = 1./N;
 

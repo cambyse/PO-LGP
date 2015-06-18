@@ -40,7 +40,7 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWor
 
 DefaultTaskMap::DefaultTaskMap(Graph& params, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
-  Item *it=NULL;
+  Node *it=NULL;
   if((it=params["type"])){
     MT::String Type=it->V<MT::String>();
     if(Type=="pos") type=posTMT;

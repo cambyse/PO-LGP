@@ -13,7 +13,7 @@ BASE_REAL = $(shell realpath $(BASE))
 # load user options from the local make-config
 #
 ################################################################################
--include $(BASE)/gofMake/config.mk
+include $(BASE)/gofMake/config.mk
 -include $(BASE)/gofMake/z.mk
 
 
@@ -28,7 +28,6 @@ endif
 ifndef OUTPUT
 OUTPUT = x.exe
 endif
-
 ifndef SRCS
 SRCS = $(OBJS:%.o=%.cpp)
 endif
@@ -60,8 +59,6 @@ LIBS += -lrt
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 
 CXXFLAGS += -fPIC
-CXXFLAGS += $(EXTRA_CXXFLAGS)
-
 CFLAGS += -fPIC
 
 ifndef MLR_NO_CXX11
@@ -108,7 +105,7 @@ endif
 ################################################################################
 
 ifndef MLR_PATH
-	MLR_PATH=$(HOME)/git/mlr
+MLR_PATH=$(HOME)/git/mlr
 endif
 
 MODULE_NAME=$(shell echo $(notdir $(CURDIR)) | tr A-Z a-z)
@@ -171,6 +168,9 @@ cleanLocks: force
 	@find $(BASE) -type f -name '.lastMake' -delete -print
 
 depend: generate_Makefile.dep
+
+%/config.mk: %/config.mk.default
+	cp $< $@
 
 info: force
 	@echo; echo ----------------------------------------
@@ -254,8 +254,10 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
-#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
+#%.so: $(PREOBJS) $(BUILDS) $(OBJS)
 #	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
+#	rm $(BASE)/lib/$(NAME).so
+#	ln -s -r $(NAME).so $(BASE)/lib/$(NAME).so
 
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)

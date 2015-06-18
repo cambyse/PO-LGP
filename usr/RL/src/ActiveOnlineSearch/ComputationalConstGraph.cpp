@@ -277,124 +277,206 @@ void CG::propagate_values(TYPE p, std::vector<node_t> changed_nodes) {
 }
 
 CG & CG::compute_values(std::vector<double> values) {
-    update_values(values, input_nodes);
+    update_values(input_nodes, values);
     return *this;
 }
 
 CG & CG::forward_accumulation(std::vector<double> values,
                               std::vector<double> differentials) {
     compute_values(values);
-    update_differentials_forward(differentials, input_nodes);
+    update_differentials_forward(input_nodes, differentials);
     return *this;
 }
 
 CG & CG::reverse_accumulation(std::vector<double> values,
                               std::vector<double> differentials) {
     compute_values(values);
-    update_differentials_reverse(differentials, output_nodes);
+    update_differentials_reverse(output_nodes, differentials);
     return *this;
 }
 
-CG & CG::update_values(std::vector<double> values,
-                       std::vector<node_t> nodes,
+CG & CG::update_values(std::vector<node_t> nodes,
+                       std::vector<double> values,
                        bool input_nodes_only) {
     if(input_nodes_only and !includes(input_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
         return *this;
     }
-    assign_values(values, nodes);
+    if(!values.empty()) {
+        assign_values(values, nodes);
+    }
     propagate_values(VALUES, nodes);
     return *this;
 }
 
-CG & CG::update_differentials_forward(std::vector<double> differentials,
-                                      std::vector<node_t> nodes,
+CG & CG::update_differentials_forward(std::vector<node_t> nodes,
+                                      std::vector<double> differentials,
                                       bool input_nodes_only) {
     if(input_nodes_only and !includes(input_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the input nodes.");
         return *this;
     }
-    assign_differentials(differentials, nodes);
+    if(!differentials.empty()) {
+        assign_differentials(differentials, nodes);
+    }
     propagate_values(FORWARD, nodes);
     return *this;
 }
 
-CG & CG::update_differentials_reverse(std::vector<double> differentials,
-                                      std::vector<node_t> nodes,
+CG & CG::update_differentials_reverse(std::vector<node_t> nodes,
+                                      std::vector<double> differentials,
                                       bool output_nodes_only) {
     if(output_nodes_only and !includes(output_nodes, nodes)) {
         DEBUG_WARNING("Given nodes are not a subset of the output nodes.");
         return *this;
     }
-    assign_differentials(differentials, nodes);
+    if(!differentials.empty()) {
+        assign_differentials(differentials, nodes);
+    }
     propagate_values(REVERSE, nodes);
     return *this;
 }
 
-bool CG::check_derivatives(std::vector<double> values,
+bool CG::check_derivatives(node_t node,
                            double delta,
                            double epsilon_absolute,
                            double epsilon_relative) {
-    // compute all values
-    compute_values(values);
-    // make a copy of the derivatives
-    graph_t::ArcMap<double> arc_values_copy(graph);
-    mapCopy(graph, arc_values, arc_values_copy);
-    // change the value of all nodes by delta and nummerically check derivatives
+    // remember original value
+    double original_node_value = node_values[node];
+
+    // iterate through incomming variables
     bool ok = true;
-    for(node_it_t node(graph); node!=INVALID; ++node) {
-        DEBUG_OUT(2,"Checking derivatives w.r.t " <<
-                  node_labels[node] << " (id" << graph.id(node) << ")");
-        // get dependent nodes (the ones we need to check)
-        vector<node_t> dependent_nodes;
-        vector<arc_t> dependent_arcs;
-        for(out_arc_it_t arc(graph, node); arc!=INVALID; ++arc) {
-            dependent_nodes.push_back(graph.target(arc));
-            dependent_arcs.push_back(arc);
-        }
-        // compute finite differences
-        double old_value = node_values[node];
-        vector<double> values_1;
-        vector<double> values_2;
-        {
-            // +delta/2
-            node_values[node] = old_value+delta/2;
-            for(node_t dep_node : dependent_nodes) {
-                values_1.push_back(evaluate_node(dep_node, VALUES));
-            }
-            // -delta/2
-            node_values[node] = old_value-delta/2;
-            for(node_t dep_node : dependent_nodes) {
-                values_2.push_back(evaluate_node(dep_node, VALUES));
-            }
-            // reset
-            node_values[node] = old_value;
-        }
-        // check against derivatives
-        int num_vars = dependent_nodes.size();
-        DEBUG_EXPECT(1, (int)dependent_nodes.size()==num_vars &&
-                     (int)dependent_arcs.size()==num_vars &&
-                     (int)values_1.size()==num_vars &&
-                     (int)values_2.size()==num_vars);
-        for(int idx : Range(num_vars)) {
-            DEBUG_OUT(2,"Checking derivative of " << node_labels[dependent_nodes[idx]] <<
-                      " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
-                      node_labels[node] << " (id" << graph.id(node) << ")");
-            double numerical_derivative = (values_1[idx] - values_2[idx])/delta;
-            double analytical_derivative = arc_values_copy[dependent_arcs[idx]];
-            if(fabs(numerical_derivative-analytical_derivative)>epsilon_absolute and
-               fabs(numerical_derivative/analytical_derivative)>1+epsilon_relative) {
-                ok = false;
-                DEBUG_WARNING("Partial derivative of " << node_labels[dependent_nodes[idx]] <<
-                              " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
-                              node_labels[node] <<
-                              " (id" << graph.id(node) << ") is out of bounds (numerical=" <<
-                              numerical_derivative << " / analytical=" <<
-                              analytical_derivative << ")");
-            }
+    for(in_arc_it_t in_arc(graph,node); in_arc!=INVALID; ++in_arc) {
+        node_t in_node = graph.source(in_arc);
+        double in_node_original_value = node_values[in_node];
+        // + delta/2
+        node_values[in_node] = in_node_original_value + delta/2;
+        double plus = evaluate_node(node, VALUES);
+        // - delta/2
+        node_values[in_node] = in_node_original_value - delta/2;
+        double minus = evaluate_node(node, VALUES);
+        // analytical derivative
+        node_values[in_node] = in_node_original_value;
+        evaluate_node(node, VALUES);
+        double analytical_derivative = arc_values[in_arc];
+        // check
+        double numerical_derivative = (plus-minus)/delta;
+        if(fabs(numerical_derivative-analytical_derivative)>epsilon_absolute and
+           (numerical_derivative/analytical_derivative>1+epsilon_relative or
+            analytical_derivative/numerical_derivative>1+epsilon_relative)) {
+            ok = false;
+            DEBUG_WARNING("Partial derivative of " << node_labels[node] <<
+                          " (id" << graph.id(node) << ") w.r.t " <<
+                          node_labels[in_node] <<
+                          " (id" << graph.id(in_node) << ") is out of bounds (numerical=" <<
+                          numerical_derivative << " / analytical=" <<
+                          analytical_derivative << ")");
+            DEBUG_WARNING("    (" << plus << " - " << minus << ") = "
+                          << plus - minus << " / " << delta);
         }
     }
+
+    // restore original value
+    node_values[node] = original_node_value;
+
     return ok;
+}
+
+bool CG::check_derivatives(double delta,
+                           double epsilon_absolute,
+                           double epsilon_relative) {
+    // make a copy to restore original values
+    graph_t::NodeMap<double> original_node_values(graph);
+    graph_t::ArcMap<double> original_arc_values(graph);
+    mapCopy(graph, node_values, original_node_values);
+    mapCopy(graph, arc_values, original_arc_values);
+
+    // check derivatives of all nodes
+    bool ok = true;
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        if(!check_derivatives(node,delta,epsilon_absolute,epsilon_relative)) ok = false;
+    }
+
+    // restore original values
+    mapCopy(graph, original_node_values, node_values);
+    mapCopy(graph, original_arc_values, arc_values);
+
+    return ok;
+
+    // // compute all values
+    // compute_values(values);
+    // // make a copy of the analytical derivatives because they change while
+    // // computing the numerical derivatives
+    // graph_t::ArcMap<double> arc_values_copy(graph);
+    // mapCopy(graph, arc_values, arc_values_copy);
+    // // change the value of all nodes by delta and compare the nummerical partial
+    // // derivative of the dependent nodes with the analytical partial derivative
+    // bool ok = true;
+    // for(node_it_t node(graph); node!=INVALID; ++node) {
+    //     DEBUG_OUT(2,"Checking derivatives w.r.t " <<
+    //               node_labels[node] << " (id" << graph.id(node) << ")");
+    //     // get dependent nodes and remember their values to reset later
+    //     vector<node_t> dependent_nodes;
+    //     vector<arc_t> dependent_arcs;
+    //     vector<double> dependent_nodes_old_values;
+    //     vector<double> dependent_arcs_old_values;
+    //     for(out_arc_it_t arc(graph, node); arc!=INVALID; ++arc) {
+    //         node_t dep_node = graph.target(arc);
+    //         dependent_nodes.push_back(dep_node);
+    //         dependent_nodes_old_values.push_back(node_values[dep_node]);
+    //         dependent_arcs.push_back(arc);
+    //         dependent_arcs_old_values.push_back(arc_values[arc]);
+    //     }
+    //     // compute finite differences
+    //     double old_value = node_values[node];
+    //     vector<double> values_1;
+    //     vector<double> values_2;
+    //     {
+    //         // +delta/2
+    //         node_values[node] = old_value+delta/2;
+    //         for(node_t dep_node : dependent_nodes) {
+    //             values_1.push_back(evaluate_node(dep_node, VALUES));
+    //         }
+    //         // -delta/2
+    //         node_values[node] = old_value-delta/2;
+    //         for(node_t dep_node : dependent_nodes) {
+    //             values_2.push_back(evaluate_node(dep_node, VALUES));
+    //         }
+    //         // reset
+    //         node_values[node] = old_value;
+    //     }
+    //     // check against derivatives
+    //     int num_vars = dependent_nodes.size();
+    //     DEBUG_EXPECT(1, (int)dependent_nodes.size()==num_vars &&
+    //                  (int)dependent_arcs.size()==num_vars &&
+    //                  (int)values_1.size()==num_vars &&
+    //                  (int)values_2.size()==num_vars);
+    //     for(int idx : Range(num_vars)) {
+    //         DEBUG_OUT(2,"Checking derivative of " << node_labels[dependent_nodes[idx]] <<
+    //                   " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
+    //                   node_labels[node] << " (id" << graph.id(node) << ")");
+    //         double numerical_derivative = (values_1[idx] - values_2[idx])/delta;
+    //         double analytical_derivative = arc_values_copy[dependent_arcs[idx]];
+    //         if(fabs(numerical_derivative-analytical_derivative)>epsilon_absolute and
+    //            fabs(numerical_derivative/analytical_derivative)>1+epsilon_relative) {
+    //             ok = false;
+    //             DEBUG_WARNING("Partial derivative of " << node_labels[dependent_nodes[idx]] <<
+    //                           " (id" << graph.id(dependent_nodes[idx]) << ") w.r.t " <<
+    //                           node_labels[node] <<
+    //                           " (id" << graph.id(node) << ") is out of bounds (numerical=" <<
+    //                           numerical_derivative << " / analytical=" <<
+    //                           analytical_derivative << ")");
+    //             DEBUG_WARNING("    (" << values_1[idx] << " - " << values_2[idx] << ") = "
+    //                           << values_1[idx] - values_2[idx] << " / " << delta);
+    //         }
+    //     }
+    //     // reset values
+    //     for(int i : Range(dependent_nodes.size())) {
+    //         node_values[dependent_nodes[i]] = dependent_nodes_old_values[i];
+    //         arc_values[dependent_arcs[i]] = dependent_arcs_old_values[i];
+    //     }
+    // }
+    // return ok;
 }
 
 CG & CG::plot_graph(const char* file_name) {
@@ -430,10 +512,12 @@ double CG::evaluate_node(const node_t & node, TYPE e) {
                 if(node_labels[source_node]==var) {
                     found = true;
                     values.push_back(node_values[source_node]);
+                    break;
                 }
             }
             if(!found) {
-                DEBUG_ERROR("Could not find node with label '" << var << "' while computing value of node '" << node_labels[node] << "'");
+                DEBUG_ERROR("Could not find node with label '" << var
+                            << "' while computing value of node '" << node_labels[node] << "'");
                 values.push_back(NAN);
             }
         }
@@ -614,6 +698,47 @@ bool CG::check_graph_structure(bool reset_input_nodes,
     }
 
     return ok;
+}
+
+QString CG::get_node_label(node_t node) const {
+    return node_labels[node];
+}
+
+double CG::get_node_value(node_t node) const {
+    return node_values[node];
+}
+
+double CG::get_node_differential(node_t node) const {
+    return node_differentials[node];
+}
+
+double CG::get_arc_value(arc_t arc) const {
+    return arc_values[arc];
+}
+
+void CG::set_node_label(node_t node, QString label) {
+    node_labels[node] = label;
+}
+
+void CG::set_node_value(node_t node, double value) {
+    node_values[node] = value;
+}
+
+void CG::set_node_function(node_t node, std::vector<QString> variables, function_t function) {
+    node_variables[node] = variables;
+    node_functions[node] = function;
+}
+
+void CG::set_node_differential(node_t node, double value) {
+    node_differentials[node] = value;
+}
+
+void CG::set_arc_value(arc_t arc, double value) {
+    arc_values[arc] = value;
+}
+
+const CG::graph_t & CG::get_graph() const {
+    return graph;
 }
 
 bool CG::includes(std::vector<node_t> nodes, std::vector<node_t> subnodes) {

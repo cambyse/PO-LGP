@@ -6,8 +6,12 @@
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 
+//================================================================================
+
 void TEST(KinectModules) {
   struct MySystem:System{
+    ACCESS(byteA, kinect_rgb)
+    ACCESS(uint16A, kinect_depth)
     MySystem(){
       addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
       addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
@@ -22,10 +26,13 @@ void TEST(KinectModules) {
     }
   } S;
 
-//  cout <<S <<endl;
+  cout <<S <<endl;
 
   engine().enableAccessLog();
   engine().open(S);
+
+  S.kinect_depth.waitForRevisionGreaterThan(10);
+  FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
   engine().shutdown.waitForSignal();
 
@@ -33,22 +40,27 @@ void TEST(KinectModules) {
   cout <<"bye bye" <<endl;
 }
 
+//================================================================================
+
 void TEST(KinectRaw) {
   OpenGL gl;
   KinectPoller kin;
-  byteA kinect_rgb;
-  uint16A kinect_depth;
-  connect(kin.kinect_rgb, kinect_rgb);
-  connect(kin.kinect_depth, kinect_depth);
+  Variable<byteA> kinect_rgb;
+  Variable<uint16A> kinect_depth;
+  kin.kinect_rgb.linkToVariable(&kinect_rgb);
+  kin.kinect_depth.linkToVariable(&kinect_depth);
 
   kin.open();
   for(uint t=0;t<100;t++){
     kin.step();
-    gl.watchImage(kinect_rgb, false, 1.);
+    gl.watchImage(kinect_rgb.get(), false, 1.);
   }
-  cout <<"hello" <<endl;
+  cout <<"closing..." <<endl;
   kin.close();
+  cout <<"bye bye" <<endl;
 }
+
+//================================================================================
 
 int main(int argc,char **argv){
 //  testKinectRaw();

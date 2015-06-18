@@ -748,22 +748,22 @@ namespace util {
         return random_select(std::vector<T>(init_list));
     }
 
-    /** \brief Return index draw from normalized (or unnormalized) vector. */
+    /** \brief Return index draw from normalized (or unnormalized) container. */
     template < typename T >
-        int draw_idx(const T& vec, bool normalized = true) {
-        if(vec.size()==0) {
-            DEBUG_ERROR("Cannot draw from an empty vector");
+        int draw_idx(const T& container, bool normalized = true) {
+        if(container.size()==0) {
+            DEBUG_ERROR("Cannot draw from an empty container");
             return -1;
         }
         if(!normalized) {
             double sum = 0;
-            for(auto& elem : vec) {
+            for(auto& elem : container) {
                 sum += elem;
             }
             double prob = drand48();
             int idx = 0;
-            for(auto& elem : vec) {
-                prob -= elem/sum;
+            for(auto& elem : container) {
+                prob -= (double)elem/sum;
                 if(prob<0) {
                     return idx;
                 }
@@ -773,7 +773,7 @@ namespace util {
         } else {
             double prob = drand48();
             int idx = 0;
-            for(auto& elem : vec) {
+            for(auto& elem : container) {
                 prob -= elem;
                 if(prob<0) {
                     return idx;

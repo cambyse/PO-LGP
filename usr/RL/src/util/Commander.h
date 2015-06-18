@@ -156,6 +156,7 @@ namespace Commander {
     class AbstractCommandFunction {
     public:
         QString arg_description;
+        virtual ~AbstractCommandFunction() = default;
         ReturnType wrong_number_of_parameters(int,int) const;
         virtual ReturnType execute(const QStringList&) const = 0;
         virtual int get_n_args() const = 0;

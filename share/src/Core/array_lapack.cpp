@@ -32,10 +32,9 @@ extern "C" {
 #include "f2c.h"
 #undef small
 #undef large
-#ifdef ARCH_LINUX
-#  include <lapack/lapacke.h>
-#  define integer int
-#else
+//#ifdef ARCH_LINUX
+//
+#ifndef ATLAS
 #  include <lapack/clapack.h>
 #endif
 #undef double
@@ -44,6 +43,14 @@ extern "C" {
 #undef abs
 }
 
+#ifdef ATLAS
+#include <complex>
+#define lapack_complex_float std::complex<float>
+#define lapack_complex_double std::complex<double>
+
+#include <lapack/lapacke.h>
+#define integer int
+#endif
 
 #ifdef NO_BLAS
 void blas_MM(arr& X, const arr& A, const arr& B) {       MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
@@ -159,8 +166,16 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }
   if(INFO) {
-    HALT("lapack_Ainv_b_sym error info = " <<INFO
-         <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
+    uint k=(N>3?3:N); //number of required eigenvalues
+    MT::Array<integer> IWORK(5*N), IFAIL(N);
+    arr WORK(7*N);
+    integer M, IL=1, IU=k, LDQ=0, LDZ=1;
+    double VL=0., VU=0., ABSTOL=1e-8;
+    arr w(k);
+    dsbevx_((char*)"N", (char*)"I", (char*)"L", &N, &KD, Acol.p, &LDAB, (double*)NULL, &LDQ, &VL, &VU, &IL, &IU, &ABSTOL, &M, w.p, (double*)NULL, &LDZ, WORK.p, IWORK.p, IFAIL.p, &INFO);
+
+    THROW("lapack_Ainv_b_sym error info = " <<INFO
+         <<"\n typically this is because A is not pos-def,\nA=" <<A <<"\nb=" <<b <<"\neigenvalues=" <<w);
   }
 #if 0
   arr y = inverse(A)*b;
@@ -222,7 +237,6 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {
   integer info, wn=work.N;
   dsyev_((char*)"V", (char*)"U", &N, Evecs.p,
          &N, Evals.p, work.p, &wn, &info);
-  transpose(Evecs);
   CHECK(!info, "lapack_EigenDecomp error info = " <<info);
 }
 

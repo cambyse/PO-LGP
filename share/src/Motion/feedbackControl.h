@@ -35,7 +35,7 @@
 /**
  * A CtrlTask defines a motion in operational space.
  */
-struct CtrlTask{
+struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) in task spaces
   TaskMap& map;
   MT::String name;
   bool active;
@@ -52,6 +52,7 @@ struct CtrlTask{
   /// @{ @name Parameters that define the integral force feedback control law
   arr f_ref;
   double f_Igain;
+  /// @}
 
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetSignOnNegScalarProduct;
@@ -60,7 +61,7 @@ struct CtrlTask{
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(0.), maxAcc(0.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false){}
+  CtrlTask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
