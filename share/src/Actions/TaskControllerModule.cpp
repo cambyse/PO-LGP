@@ -10,17 +10,19 @@ TaskControllerModule *taskControllerModule(){
 TaskControllerModule::TaskControllerModule()
     : Module("TaskControllerModule")
     , realWorld("model.kvg")
-    , __modelWorld__(realWorld)
-    , feedbackController(__modelWorld__, true)
-    , q0(__modelWorld__.q)
+    , feedbackController(NULL)
+    , q0(realWorld.q)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>(__modelWorld__));
+  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>());
+  modelWorld.set() = realWorld;
+  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
   globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){
+  delete feedbackController;
 }
 
 void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
@@ -41,15 +43,17 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
 void TaskControllerModule::open(){
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
-  feedbackController.qitselfPD.y_ref = q0;
-  feedbackController.qitselfPD.setGains(.0,10.);
+  feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  feedbackController->qitselfPD.y_ref = q0;
+  feedbackController->qitselfPD.setGains(.0,10.);
 
   MT::open(fil,"z.TaskControllerModule");
 
-  __modelWorld__.gl().add(changeColor);
-  __modelWorld__.gl().add(ors::glDrawGraph, &realWorld);
-  __modelWorld__.gl().add(changeColor2);
+  modelWorld.writeAccess();
+  modelWorld().gl().add(changeColor);
+  modelWorld().gl().add(ors::glDrawGraph, &realWorld);
+  modelWorld().gl().add(changeColor2);
+  modelWorld.deAccess();
 
   useRos = MT::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
@@ -95,13 +99,13 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
+//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
-    __modelWorld__.watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
   }
 
   //-- code to output force signals
@@ -124,12 +128,12 @@ void TaskControllerModule::step(){
   //-- copy the task to the local controller
   ctrlTasks.readAccess();
   modelWorld.writeAccess();
-  feedbackController.tasks = ctrlTasks();
+  feedbackController->tasks = ctrlTasks();
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   //now operational space control
   for(uint tt=0;tt<10;tt++){
-    arr a = feedbackController.operationalSpaceControl();
+    arr a = feedbackController->operationalSpaceControl();
     q_model += .001*qdot_model;
     qdot_model += .001*a;
     if(fixBase.get()) {
@@ -140,9 +144,9 @@ void TaskControllerModule::step(){
       q_model(trans->qIndex+1) = 0;
       q_model(trans->qIndex+2) = 0;
     }
-    feedbackController.setState(q_model, qdot_model);
+    feedbackController->setState(q_model, qdot_model);
   }
-  if(verbose) feedbackController.reportCurrentState();
+  if(verbose) feedbackController->reportCurrentState();
   modelWorld.deAccess();
   ctrlTasks.deAccess();
 
@@ -170,8 +174,8 @@ void TaskControllerModule::step(){
   //-- compute the force feedback control coefficients
   uint count=0;
   ctrlTasks.readAccess();
-  feedbackController.tasks = ctrlTasks();
-  for(CtrlTask *t : feedbackController.tasks) {
+  feedbackController->tasks = ctrlTasks();
+  for(CtrlTask *t : feedbackController->tasks) {
     if(t->active && t->f_ref.N){
       count++;
       if(count!=1) HALT("you have multiple active force control tasks - NIY");

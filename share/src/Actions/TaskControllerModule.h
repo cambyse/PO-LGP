@@ -24,8 +24,7 @@ struct TaskControllerModule : Module {
   //non-protected members
 //private:
   ors::KinematicWorld realWorld;
-  ors::KinematicWorld __modelWorld__;
-  FeedbackMotionControl feedbackController;
+  FeedbackMotionControl *feedbackController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose
