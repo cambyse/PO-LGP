@@ -9,46 +9,65 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-        : world("model.kvg"), fmc(world, true), inited(false), useros(false) {
+    : world("model.kvg"), fmc(world, true), useros(false),
+      limits(nullptr), collision(nullptr),
+      effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
+      effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
+{
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
   fmc.qitselfPD.y_ref = q;
+  fmc.qitselfPD.setGains(.3, 15);
+ // fmc.qitselfPD.active = false;
+ // fmc.qitselfPD.prec = 10;
+  //fmc.qitselfPD.maxVel = 0.008;
+  //fmc.qitselfPD.maxAcc = 0.09;
 
-  // INIT TASKS
-  limits = fmc.addPDTask("limits", .1, .8, new TaskMap_qLimits);
-  limits->v_ref.setZero();
-  limits->v_ref.setZero();
-  limits->prec = 100.;
+  if(MT::getParameter<bool>("useLimits", false)) {
+    limits = fmc.addPDTask("limits", 1., .8, new TaskMap_qLimits);
+    limits->y_ref.setZero();
+  }
 
-  //collision = fmc.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
-  //collision = fmc.addPDTask("collisions", .2, .8, allPTMT, NULL, NoVector, NULL, NoVector, {.1});
-  collision = fmc.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
-  collision->y_ref.setZero();
-  collision->v_ref.setZero();
+  if(MT::getParameter<bool>("useCollisions", false)) {
+    collision = fmc.addPDTask("collision", 2., .8, new ProxyTaskMap(allPTMT, {0u}, .1));
+    collision->y_ref.setZero();
+    collision->v_ref.setZero();
+  }
 
-  effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
-  effPosR->y_ref = {.4, .4, 1.2};
+  if(MT::getParameter<bool>("usePositionR", false)) {
+    effPosR = fmc.addPDTask("MoveEffTo_endeffR", 2., .8, posTMT, "endeffR");
+    effPosR->y_ref = {0.8, -.5, 1.};
+  }
 
-  effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
-  effPosL->y_ref = {-.4, .4, 1.2};
+  if(MT::getParameter<bool>("usePositionL", false)) {
+    effPosL = fmc.addPDTask("MoveEffTo_endeffL", 2., .8, posTMT, "endeffL");
+    effPosL->y_ref = {0.8, .5, 1.};
+  }
 
-  int jointID = world.getJointByName("r_gripper_joint")->qIndex;
-  gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  gripperR->y_ref = .08;  // open gripper 8cm
+  if(MT::getParameter<bool>("useGripperR", false)) {
+    int jointID = world.getJointByName("r_gripper_joint")->qIndex;
+    gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
+    gripperR->y_ref = .08;  // open gripper 8cm
+  }
 
-  jointID = world.getJointByName("l_gripper_joint")->qIndex;
-  gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
-  gripperL->y_ref = .08;  // open gripper 8cm
+  if(MT::getParameter<bool>("useGripperL", false)) {
+    int jointID = world.getJointByName("l_gripper_joint")->qIndex;
+    gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
+    gripperL->y_ref = .08;  // open gripper 8cm
+  }
 
-  // Orientation
-  effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
-  effOrientationR->y_ref = {1., 0., 0., 0.};
-  effOrientationR->flipTargetSignOnNegScalarProduct = true;
+  if(MT::getParameter<bool>("useOrientationR", false)) {
+    effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
+    effOrientationR->y_ref = {1., 0., 0., 0.};
+    effOrientationR->flipTargetSignOnNegScalarProduct = true;
+  }
 
-  effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
-  effOrientationL->y_ref = {1., 0., 0., 0.};
-  effOrientationL->flipTargetSignOnNegScalarProduct = true;
+  if(MT::getParameter<bool>("useOrientationL", false)) {
+    effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
+    effOrientationL->y_ref = {1., 0., 0., 0.};
+    effOrientationL->flipTargetSignOnNegScalarProduct = true;
+  }
 }
 
 void PDExecutor::visualizeSensors()
@@ -67,15 +86,19 @@ void PDExecutor::visualizeSensors()
 
 void PDExecutor::step()
 {
+    cout<<"\x1B[2J\x1B[H";
   if (useros && !inited) {
     cout << "STARTING TO OPEN" << endl;
     initRos();
     cout << "FINISHED TO OPEN" << endl;
     inited = true;
   }
+
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
    world.watch(false);
+
+
 
   floatA cal_pose_rh = calibrated_pose_rh.get();
   floatA cal_pose_lh = calibrated_pose_lh.get();
@@ -101,12 +124,14 @@ void PDExecutor::step()
   // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
   // effPosR->setTarget(pos_shoulder_frame);
   // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
+  //ors::Vector baseV = world.getShapeByName("base_footprint")->rel.pos;
+  //ors::Quaternion baseQ = world.getShapeByName("base_footprint")->rel.rot;
   x = cal_pose_rh(0) * 1;
   clip(x, 0., 1.2);
   y = cal_pose_rh(1) * 1;
-  z = cal_pose_rh(2) * 1 ;
-  pos = ARR(x, y, z) + ARR(0, -0.25, 1);
-  effPosR->setTarget(pos);
+  z = cal_pose_rh(2) * 1;
+  pos = ARR(x, y, z) + ARR(0, -0.25, 1.2);
+ // if(effPosR) effPosR->setTarget(pos);
 
   // orientation
   quat = {
@@ -115,7 +140,7 @@ void PDExecutor::step()
     (double)cal_pose_rh(5),
     (double)cal_pose_rh(6)
   };
-  effOrientationR->setTarget(quat);
+  if(effOrientationR) effOrientationR->setTarget(quat);
 
 //  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
 //  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
@@ -126,8 +151,8 @@ void PDExecutor::step()
   clip(x, 0., 1.2);
   y = cal_pose_lh(1) * 1;
   z = cal_pose_lh(2) * 1;
-  pos = ARR(x, y, z) + ARR(0, 0.25, 1);
-  effPosL->setTarget(pos);
+  pos = ARR(x, y, z) + ARR(0, 0.25, 1.2);
+ // if(effPosL) effPosL->setTarget(pos);
 
   // orientation
   quat = {
@@ -136,58 +161,60 @@ void PDExecutor::step()
     (double)cal_pose_lh(5),
     (double)cal_pose_lh(6)
   };
-  effOrientationL->setTarget(quat);
+  if(effOrientationL) effOrientationL->setTarget(quat);
 
  // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
  // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
-  cal_gripper = calibrated_gripper_rh.get() * 8. / 100.;
-  gripperR->setTarget({cal_gripper});
-  cal_gripper = calibrated_gripper_lh.get() * 8. / 100.;
-  gripperL->setTarget({cal_gripper});
+  cal_gripper =  calibrated_gripper_rh.get() * .09;
+  if(gripperR) gripperR->setTarget({cal_gripper});
+  cal_gripper =  calibrated_gripper_lh.get() * .09;
+  if(gripperL) gripperL->setTarget({cal_gripper});
 
   // update fmc/ors
-  double tau = 0.001;
-  for (uint t = 0; t < 20; t++) {
+
+ double tau = 0.002;
+ // arr a = fmc.operationalSpaceControl();
+
+  for (uint t = 0; t < 20 ; t++) {
+
     arr a = fmc.operationalSpaceControl();
     q += tau * qdot;
     qdot += tau * a;
     fmc.setState(q, qdot);
 
-    if (length(qdot) < .001)
-      break;
+  
+   // if (length(qdot) < .001)
+   //   break;
   }
+ // cout<<q<<endl<<qdot<<endl; 
 
   // set state
-  sendRosCtrlMsg();
+  sendRosCtrlMsg();//testing
+     
 
    fmc.reportCurrentState();
 }
 
 void PDExecutor::sendRosCtrlMsg()
 {
-//#ifdef WITH_ROS
-  // if (roscom == nullptr)
-  //   return;
-
   CtrlMsg ref;
   ref.q = q;
   arr qdotzero;
   qdotzero.resizeAs(q).setZero();
   ref.qdot = qdotzero;
 
-  ref.fL = ARR(0., 0., 0., 0., 0., 0.);
-  ref.fL.clear();
-  ref.fR.clear();
   ref.u_bias = zeros(q.N);
-  ref.Kp = 1.;
-  ref.Kd = 1.;
-  ref.gamma = 1.;
-  ref.velLimitRatio = .1;
-  ref.effLimitRatio = 1.;
 
+  ref.fL =zeros(6);
+  ref.fR =zeros(6);
+  ref.Kp = {1.};
+  ref.Ki.clear();
+  ref.Kd = {1.};
+  ref.gamma = 1.;
+  ref.J_ft_inv.clear();
   ctrl_ref.set() = ref;
  //  roscom->publishJointReference();
 //#endif

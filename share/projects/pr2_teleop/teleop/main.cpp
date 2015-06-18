@@ -20,25 +20,17 @@ struct PR2G4Control:System {
   //  addModule<G4Display>(NULL,Module::loopWithBeat,0.05);
     addModule<G4HutoRoMap>("G4HuToRoMap", Module::loopWithBeat , .05);
  //  addModule<G4MoveRecon>("G4MoveRecon", Module::loopWithBeat , .05);
-
-
-
-
-
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
     //auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
-    //
-//#ifdef WITH_ROS
+
+
     // ROS
-   // if (MT::getParameter<bool>("useRos", false)) {
+    if(MT::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      // auto roscom = addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
-      // pd_executor->roscom = roscom;
-  //  }
-//#endif
+      addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
+    }
     connect();
   };
 };
