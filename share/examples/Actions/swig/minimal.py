@@ -29,6 +29,10 @@ def signal_handler(signal, frame):
 
 interface = swig.ActionSwigInterface(1)
 
+# new convenient symbols
+for s in ["rot", "qItself", "pos", "front", "gazeAt"]:
+    interface.createNewSymbol(s)
+
 # don't abort the swig interface on Ctr-C
 # the signal must be geristered after the swig interface was initialized
 # signal.signal(signal.SIGINT, signal_handler)
@@ -41,7 +45,6 @@ LEFT = 256
 RIGHT = 255
 
 DEFAULT_SIDE = LEFT
-eff = {LEFT: "endeffL", RIGHT: "endeffR"}
 
 print("=" * 70)
 print("DEFAULT_SIDE is set to {}".format(DEFAULT_SIDE))
@@ -100,6 +103,31 @@ def conv_symbol(symbol):
     return '(conv ' + symbol[1:]
 
 
+def pos_str2arr(pos_str):
+    return np.array([float(i) for i in pos_str[2:-2].split(" ")])
+
+
+def side2endeff(side=None):
+    if side is None:
+        side = DEFAULT_SIDE
+    eff = {LEFT: "endeffL", RIGHT: "endeffR"}
+    return eff[side]
+
+
+def side2gripper_joint(side=None):
+    if side is None:
+        side = DEFAULT_SIDE
+    gripper_joint = {LEFT: "l_gripper_joint", RIGHT: "r_gripper_joint"}
+    return gripper_joint[side]
+
+
+def side2wrist_joint(side=None):
+    if side is None:
+        side = DEFAULT_SIDE
+    wrist_joint = {LEFT: "l_wrist_roll_joint", RIGHT: "r_wrist_roll_joint"}
+    return wrist_joint[side]
+
+
 ###############################################################################
 # execution control
 def run(facts):
@@ -154,14 +182,9 @@ def homing():
 
 
 def _gripper(side, target):
-    if side is None:
-        side = LEFT
-    if side == LEFT:
-        endeff, joint = "endeffL", "l_gripper_joint"
-    elif side == RIGHT:
-        endeff, joint = "endeffR", "r_gripper_joint"
-    else:
-        raise ValueError("side should be LEFT or RIGHT")
+    endeff = side2endeff(side)
+    joint = side2gripper_joint(side)
+
     assert_valid_shapes(endeff)
 
     fact = ("(GripperActivity {endeff}){{ ref1={joint}, target=[{target}] tol=.01 }}"
@@ -180,14 +203,14 @@ def close_gripper(side=None):
 def reach(what, with_=None, offset=None):
     """bla"""
     if with_ is None:
-        with_ = eff[DEFAULT_SIDE]
+        with_ = side2endeff(DEFAULT_SIDE)
     if offset is None:
         offset = (0., 0., 0.)
 
-    offset = "[{} {} {}]".format(*offset)
     assert_valid_shapes(what)
     assert_valid_shapes(with_)
 
+    # offset = "[{} {} {}]".format(*offset)
     fact = "(FollowReferenceActivity {ref1} {ref2}){{ type=pos, ref1={ref1}, ref2={ref2}, target={offset} }}".format(ref1=with_, ref2=what, offset=offset)
     return [fact]
 
@@ -201,14 +224,9 @@ def align_gripper_vertical(side=None):
 
 
 def align_gripper(vec_endeff, vec_target, side=None):
-    if side is None:
-        side = DEFAULT_SIDE
-    endeff = eff[side]
+    endeff = side2endeff(side)
 
     assert_valid_shapes(endeff)
-
-    if " rot," not in interface.getSymbols():
-        interface.createNewSymbol("rot")
 
     fact = "(FollowReferenceActivity {ref1} rot){{ type=vec, ref1={ref1}, vec1={vec_endeff}, target={vec_target} }}".format(ref1=endeff, vec_endeff=vec_endeff, vec_target=vec_target)
 
@@ -216,15 +234,9 @@ def align_gripper(vec_endeff, vec_target, side=None):
 
 
 def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
-    if side is None:
-        side = DEFAULT_SIDE
-    endeff = eff[side]
+    endeff = side2endeff(side)
 
     assert_valid_shapes(endeff)
-
-    if " rot," not in interface.getSymbols():
-        interface.createNewSymbol("rot")
-        interface.createNewSymbol("front")
 
     return [
         "(FollowReferenceActivity {ref1} front){{ type=vec, ref1={ref1}, vec1=[1 0 0], target={front} }}".format(ref1=endeff, front=front_opening),
@@ -233,13 +245,9 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
 
 
 def gaze_at(shape):
-    if " gazeAt," not in interface.getSymbols():
-        interface.createNewSymbol("gazeAt")
-
     assert_valid_shapes(shape)
 
-    pos = "[" + shapes(shape)["pos"][2:-2] + "]"
-    print(pos)
+    pos = pos_str2arr(shapes(shape)["pos"])
     fact = """
     (FollowReferenceActivity gazeAt){{
         type=gazeAt
@@ -249,14 +257,10 @@ def gaze_at(shape):
     return [fact]
 
 
-def pos_str_to_arr(pos_str):
-    return np.array([float(i) for i in pos_str[2:-2].split(" ")])
-
-
 def move_along_axis(endeff, axis, distance):
     axis = np.asarray(axis)
 
-    endeff_pos = pos_str_to_arr(interface.getShapeByName(endeff)["pos"])
+    endeff_pos = pos_str2arr(interface.getShapeByName(endeff)["pos"])
     print(endeff_pos)
 
     target_pos = endeff_pos + distance/np.linalg.norm(axis) * axis
@@ -266,6 +270,10 @@ def move_along_axis(endeff, axis, distance):
     return [fact]
 
 
+def turn_wrist(relative_angle, side=None):
+    joint = side2wrist_joint(side)
+    fact = "(GripperActivity qItself {joint}){{ ref1={joint} target=[{target}] tol=.1 }}".format(joint=joint, target=relative_angle)
+    return [fact]
 
 
 ###############################################################################
