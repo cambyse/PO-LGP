@@ -17,8 +17,9 @@ struct ActionSwigInterface{
 
   void Cancel();
 
-  //-- robot data access
+  void setVerbose(bool verbose);
 
+  //-- robot data access
   stringV getShapeList();
   stringV getBodyList();
   stringV getJointList();

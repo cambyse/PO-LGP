@@ -91,6 +91,9 @@ ActionSwigInterface::~ActionSwigInterface(){
   engine().close(*S);
 }
 
+void ActionSwigInterface::setVerbose(bool verbose) {
+  S->tcm->verbose = verbose;
+}
 
 void ActionSwigInterface::Cancel(){
   //engine().cancel(*S); 
