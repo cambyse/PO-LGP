@@ -44,6 +44,7 @@ add_executable(main_ActiveOnlineSearch
     TreeSearch/ValueHeuristic.cpp
     TreeSearch/BackupMethod.h
     TreeSearch/BackupMethod.cpp
+    TreeSearch/PriorModels.h
 )
 
 target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -103,6 +104,7 @@ add_library(ActiveOnlineSearch
     TreeSearch/ValueHeuristic.cpp
     TreeSearch/BackupMethod.h
     TreeSearch/BackupMethod.cpp
+    TreeSearch/PriorModels.h
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
