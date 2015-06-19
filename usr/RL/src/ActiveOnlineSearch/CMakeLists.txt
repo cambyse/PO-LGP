@@ -32,6 +32,8 @@ add_executable(main_ActiveOnlineSearch
     TreeSearch/AbstractSearchTree.h
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
+    TreeSearch/RandomSearch.h
+    TreeSearch/RandomSearch.cpp
     TreeSearch/NodeFinder.h
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h
@@ -92,6 +94,8 @@ add_library(ActiveOnlineSearch
     TreeSearch/AbstractSearchTree.h
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
+    TreeSearch/RandomSearch.h
+    TreeSearch/RandomSearch.cpp
     TreeSearch/NodeFinder.h
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h

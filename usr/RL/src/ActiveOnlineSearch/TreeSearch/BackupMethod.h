@@ -53,23 +53,63 @@ namespace backup_method {
      * the source state and the action, not on the tartet state! */
     class Bellman: public BackupMethod {
     public:
-        Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr);
+        Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr,
+                double prior_counts = -1);
         virtual ~Bellman() = default;
+        virtual void init(double discount,
+                          std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
         virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         std::shared_ptr<const tree_policy::TreePolicy> tree_policy;
+        double prior_counts;
     };
 
     /**
      * Performs Monte-Carlo backups. */
     class MonteCarlo: public BackupMethod {
     public:
+        MonteCarlo(double prior_counts = -1);
         virtual ~MonteCarlo() = default;
+        virtual void init(double discount,
+                          std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
         virtual void backup(const node_t & observation_node,
                             const node_t & action_node,
                             mcts_node_info_map_t & mcts_node_info_map) const override;
+    protected:
+        double prior_counts;
+    };
+
+    /**
+     * Performs hybrid Dynamic Programming (Bellman) and Monte-Carlo backups. MC
+     * backups are weighted with \p mc_weight (given in constructor). That is
+     * for \p mc_weight = 1 this corresponds to MonteCarlo backups and for
+     * mc_weight = 0 this corresponds to Bellman backups. */
+    class HybridMCDP: public BackupMethod {
+    public:
+        HybridMCDP(double mc_weight = 0.5,
+                   double reward_prior_counts = -1,
+                   double return_prior_counts = -1);
+        virtual ~HybridMCDP() = default;
+        virtual void init(double discount,
+                          std::shared_ptr<AbstractEnvironment> environment,
+                          const graph_t & graph,
+                          const node_info_map_t & node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map);
+        virtual void backup(const node_t & observation_node,
+                            const node_t & action_node,
+                            mcts_node_info_map_t & mcts_node_info_map) const override;
+    protected:
+        double mc_weight;
+        MonteCarlo monte_carlo;
+        Bellman bellman;
     };
 
 } // namespace backup_method

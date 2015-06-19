@@ -165,7 +165,8 @@ void ActiveTreeSearch::init() {
 
 void ActiveTreeSearch::plot_graph(const char* file_name,
                                   const char* command,
-                                  const char* parameters) const {
+                                  const char* parameters,
+                                  bool delete_dot_file) const {
     const bool use_id = true;
     const bool use_partials = true;
     graph_t combi_graph;

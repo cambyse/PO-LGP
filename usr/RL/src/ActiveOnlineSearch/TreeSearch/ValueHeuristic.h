@@ -30,7 +30,7 @@ namespace value_heuristic {
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const = 0;
+                                        mcts_node_info_map_t & mcts_node_info_map) = 0;
     };
 
     /**
@@ -39,23 +39,30 @@ namespace value_heuristic {
     public:
         virtual ~Zero() = default;
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
     };
 
     /**
      * This heuristic does a rollout to initialize value/return. */
     class Rollout: public ValueHeuristic {
     public:
+        typedef MonteCarloTreeSearch::ActionObservationReward ActionObservationReward;
+        typedef MonteCarloTreeSearch::rollout_t rollout_t;
         /**
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
-        Rollout(int rollout_length = -1);
+        Rollout(int rollout_length = -1, double prior_counts = -1);
         virtual ~Rollout() = default;
+        virtual void init(double disc,
+                          std::shared_ptr<AbstractEnvironment> env);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual rollout_t get_last_rollout() const {return last_rollout;}
     protected:
         int rollout_length;
+        double prior_counts;
+        rollout_t last_rollout;
     };
 
 } // end namespace value_heuristic

@@ -50,7 +50,8 @@ public:
      * Prints the graph to a PDF file with given name. */
     virtual void plot_graph(const char* file_name,
                             const char* command = "dot",
-                            const char* parameters = "-Tpdf") const = 0;
+                            const char* parameters = "-Tpdf",
+                            bool delete_dot_file = true) const = 0;
 };
 
 #endif /* ABSTRACTSEARCHTREE_H_ */

@@ -19,6 +19,8 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 using lemon::INVALID;
+using std::cout;
+using std::endl;
 
 namespace tree_policy {
 
@@ -44,9 +46,17 @@ namespace tree_policy {
     }
 
     action_handle_t Uniform::get_action(const node_t & state_node) const {
-        action_handle_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << *action);
-        return action;
+        if(restrict_to_existing || out_arc_it_t arc(*graph,state_node)==INVALID) {
+            vector<action_handle_t> existing_actions;
+            for(out_arc_it_t arc(*graph,state_node); arc!=INVALID; ++arc) {
+                existing_actions.push_back((*node_info_map)[graph->target(arc)].action);
+            }
+            return random_select(existing_actions);
+        } else {
+            action_handle_t action = random_select(environment->get_actions());
+            DEBUG_OUT(1,"Select action: " << *action);
+            return action;
+        }
     }
 
     MaxPolicy::~MaxPolicy() {
@@ -105,17 +115,21 @@ namespace tree_policy {
             action_set.erase(action);
         }
 
-        // select unsampled action if there are any left
-        if(action_set.size()>0) {
+        // select unsampled action if there are any left (and choice is not
+        // restricted to existing actions)
+        if(action_set.size()>0 && !restrict_to_existing) {
 #ifdef UNIT_TESTS
             action_handle_t action = *(action_set.begin());
 #else
             action_handle_t action = random_select(action_set);
 #endif
             DEBUG_OUT(2,"Selecting unsampled action: " << *action);
+            if(print_choice) {
+                cout << "Select " << *action << " (unsampled)" << endl;
+            }
             return action;
         } else {
-            DEBUG_OUT(2,"No unsampled actions.");
+            DEBUG_OUT(2,"No unsampled actions (or restricted to existing).");
         }
 
         // select max upper bound action otherwise
@@ -126,7 +140,7 @@ namespace tree_policy {
             }
         }
         DEBUG_EXPECT(1,scores.size()>0);
-        reward_t max_score = -DBL_MAX;
+        reward_t max_score = std::numeric_limits<reward_t>::lowest();
         vector<action_handle_t> max_score_actions;
         for(auto bound_action : scores) {
             if(bound_action.first>max_score) {
@@ -140,18 +154,22 @@ namespace tree_policy {
 
         // random tie breaking between action with equal upper bound
 #ifdef UNIT_TESTS
+        // not random tie breaking for unit tests
         action_handle_t action = max_score_actions.back();
 #else
         action_handle_t action = random_select(max_score_actions);
 #endif
         DEBUG_OUT(2,"Choosing action " << *action << " with upper bound " << max_score );
+        if(print_choice) {
+            cout << "Select " << *action << " (score=" << max_score << ")" << endl;
+        }
         return action;
     }
 
     reward_t Optimal::score(const node_t & state_node,
                             const arc_t & to_action_arc,
                             const node_t & action_node) const {
-        return (*mcts_node_info_map)[action_node].get_value();
+        return (*mcts_node_info_map)[action_node].value;
     }
 
     UCB1::UCB1(double Cp): Cp(Cp) {}
@@ -159,10 +177,10 @@ namespace tree_policy {
     reward_t UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node) const {
-        return (*mcts_node_info_map)[action_node].get_value() +
+        return (*mcts_node_info_map)[action_node].value +
             2*Cp*sqrt(
-                2*log((*mcts_node_info_map)[state_node].get_transition_counts())/
-                (*mcts_arc_info_map)[to_action_arc].get_transition_counts()
+                2*log((*mcts_node_info_map)[state_node].action_counts)/
+                (*mcts_arc_info_map)[to_action_arc].transition_counts
                 );
     }
 
@@ -174,8 +192,14 @@ namespace tree_policy {
 
         // upper bound = value + Cp sqrt( value_variance / n) where n is the
         // number of times this action was taken.
-        return (*mcts_node_info_map)[action_node].get_value() +
-            Cp*sqrt((*mcts_node_info_map)[action_node].get_value_variance());
+        return (*mcts_node_info_map)[action_node].value +
+            Cp*sqrt((*mcts_node_info_map)[action_node].value_variance);
+    }
+
+    reward_t HardUpper::score(const node_t & state_node,
+                              const arc_t & to_action_arc,
+                              const node_t & action_node) const {
+        return (*mcts_node_info_map)[action_node].max_value;
     }
 
 } // end namespace tree_policy

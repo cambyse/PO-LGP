@@ -28,6 +28,7 @@ namespace tree_policy {
         const node_info_map_t * node_info_map = nullptr;
         const mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+        bool restrict_to_existing = false;
     public:
         //----methods----//
         virtual ~TreePolicy() = default;
@@ -63,6 +64,7 @@ namespace tree_policy {
         virtual reward_t score(const node_t & state_node,
                                const arc_t & to_action_arc,
                                const node_t & action_node) const = 0;
+        bool print_choice = false;
     };
 
     /**
@@ -119,6 +121,13 @@ namespace tree_policy {
         virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
+    };
+
+    class HardUpper: public MaxPolicy {
+    public:
+        virtual reward_t score(const node_t & state_node,
+                               const arc_t & to_action_arc,
+                               const node_t & action_node) const override;
     };
 
 } // end namespace tree_policy
