@@ -187,6 +187,7 @@ def _gripper(side, target):
 
     assert_valid_shapes(endeff)
 
+    # TODO use FollowReference once qItself is fixed
     fact = ("(GripperActivity {endeff}){{ ref1={joint}, target=[{target}] tol=.01 }}"
             .format(endeff=endeff, joint=joint, target=target))
     return [fact]
@@ -270,9 +271,12 @@ def move_along_axis(endeff, axis, distance):
     return [fact]
 
 
-def turn_wrist(relative_angle, side=None):
+def turn_wrist(rel_degree, side=None):
     joint = side2wrist_joint(side)
-    fact = "(GripperActivity qItself {joint}){{ ref1={joint} target=[{target}] tol=.1 }}".format(joint=joint, target=relative_angle)
+    current_q = float(joints(joint)["q"])
+    target = current_q + np.deg2rad(rel_degree)
+    fact = ("(GripperActivity qItself {joint}){{ ref1={joint} target=[{target}] tol=.1 }}"
+            .format(joint=joint, target=target))
     return [fact]
 
 
