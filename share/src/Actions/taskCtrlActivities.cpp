@@ -91,7 +91,8 @@ void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWo
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
-  stopTolerance=1e-2; //TODO: overwrite from specs
+  Node *it;
+  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 }
 
 bool HomingActivity::isConv(){
