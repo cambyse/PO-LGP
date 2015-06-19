@@ -1,9 +1,9 @@
 #include "relationalMachine.h"
 
-RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), verbose(false){
+RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), _log("RelationalMachine"){
 }
 
-RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), verbose(false){
+RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), _log("RelationalMachine"){
   init(filename);
 }
 
@@ -32,11 +32,7 @@ bool RelationalMachine::queryCondition(MT::String query) const{
     MT_MSG("queryCondition "<<query <<" -- syntax error of query:" );
     return false;
   }
-  if(verbose){
-    cout <<__FUNCTION__ <<":";
-    cout <<"\n  query="; tmp->write(cout, " ");
-    cout <<"\n  outcome=" <<(q?"TRUE":"FALSE") <<endl;
-  }
+  LOG(1) <<"  query=" <<*tmp <<"  outcome=" <<(q?"TRUE":"FALSE");
   return q;
 }
 
@@ -51,24 +47,16 @@ bool RelationalMachine::applyEffect(MT::String effect){
     MT_MSG("applyEffect "<<effect <<" -- syntax error of query");
 //    return false;
   }
-  if(verbose){
-    cout <<__FUNCTION__ <<":";
-    cout <<"\n  effects="; tmp->write(cout, " ");
-    cout <<"\n  new state="; state->write(cout, " ");
-    cout <<endl;
-  }
+  LOG(1) <<"  effects=" <<*tmp;
+  LOG(2) <<"  new state=" <<*state;
   return e;
 }
 
 NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
   forwardChaining_FOL(KB, NULL, *tmp, false);
-  if(verbose){
-    cout <<__FUNCTION__ <<":";
-    cout <<"\n  changes="; tmp->write(cout, " ");
-    cout <<"\n  new state="; state->write(cout, " ");
-    cout <<endl;
-  }
+  LOG(1) <<"  changes=" <<*tmp;
+  LOG(2) <<"  new state=" <<*state;
   return *tmp;
 }
 

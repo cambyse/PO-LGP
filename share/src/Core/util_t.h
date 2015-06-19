@@ -30,11 +30,6 @@
 #  include <unistd.h>
 #endif
 
-namespace MT {
-extern std::ifstream cfgFile;
-extern bool cfgFileOpen;
-extern Mutex cfgFileMutex;
-}
 
 namespace MT {
 /** @brief Search for a command line option \c -tag and, if found, pipe the
@@ -56,27 +51,27 @@ in the config file (opened automatically) and, if found, pipes
 it in \c value. Returns false if parameter is not found. */
 template<class T>
 bool getFromCfgFile(T& x, const char *tag) {
-  cfgFileMutex.lock();
-  if(!cfgFileOpen) openConfigFile();
-  cfgFile.clear();
-  cfgFile.seekg(std::ios::beg);
-  if(!cfgFile.good()) { cfgFileMutex.unlock(); return false; }
+  globalThings().cfgFileMutex.lock();
+  if(!globalThings().cfgFileOpen) openConfigFile();
+  globalThings().cfgFile.clear();
+  globalThings().cfgFile.seekg(std::ios::beg);
+  if(!globalThings().cfgFile.good()) { globalThings().cfgFileMutex.unlock(); return false; }
   unsigned n=strlen(tag);
   char *buf=new char [n+2]; memset(buf, 0, n+2);
-  while(cfgFile.good()) {
+  while(globalThings().cfgFile.good()) {
     memmove(buf, buf+1, n);
-    buf[n]=cfgFile.get();
+    buf[n]=globalThings().cfgFile.get();
     if(buf[n]==' ' || buf[n]=='\t' || buf[n]==':' || buf[n]=='=') { buf[n]=0; if(!strcmp(tag, buf)) break; buf[n]=':'; }
   };
   delete[] buf;
   
-  if(!cfgFile.good()) { cfgFileMutex.unlock(); return false; }
+  if(!globalThings().cfgFile.good()) { globalThings().cfgFileMutex.unlock(); return false; }
   
-  skip(cfgFile, " :=\n\r\t");
-  cfgFile >>x;
+  skip(globalThings().cfgFile, " :=\n\r\t");
+  globalThings().cfgFile >>x;
   
-  if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
-  cfgFileMutex.unlock();
+  if(globalThings().cfgFile.fail()) HALT("error when reading parameter " <<tag);
+  globalThings().cfgFileMutex.unlock();
   return true;
 }
 

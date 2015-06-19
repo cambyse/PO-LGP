@@ -3,7 +3,6 @@
 #include <Actions/taskCtrlActivities.h>
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-=======
 
 #include <Core/util.h>
 #include <System/engine.h>
@@ -42,8 +41,8 @@ int main(int argc, char** argv) {
     //    S.quitSignal.waitForNextRevision();
     //    if(S.quitSignal.get()==true) break;
     S.state.waitForNextRevision();
-    cout <<"new state: " <<S.state.get()() <<endl;
-    if(S.RM.set()->queryCondition("(quit)")) break;
+//    cout <<"new state: " <<S.state.get()() <<endl;
+    if(S.RM.get()->queryCondition("(quit)")) break;
   }
 
   engine().close(S);

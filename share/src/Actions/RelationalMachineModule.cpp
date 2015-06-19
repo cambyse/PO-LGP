@@ -2,38 +2,31 @@
 
 struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;
-  RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM){}
+  Log& _log;
+  RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM), _log(RMM._log){}
   virtual void cb_new(Node *it){
-    LOG(-1) <<"NEWED: " <<*it;
-//    Activity *act = newActivity(it);
-//    if(act){
-//      RMM.A().append(act);
-//      LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
-//    }else{
-//      LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
-//    }
+    LOG(3) <<"state cb -- new fact: " <<*it;
   }
   virtual void cb_delete(Node *it){
-    LOG(-1) <<"DELETED: " <<*it;
+    LOG(3) <<"state cb -- del fact: " <<*it;
     for(Activity *act:RMM.A()) if(act->fact==it){
-      LOG(2) <<"removing activity '" <<*act <<"'";
+      LOG(3) <<"removing activity '" <<*act <<"'";
       RMM.A().removeValue(act);
       delete act;
     }
   }
 };
 
-RelationalMachineModule::RelationalMachineModule():Module("RelationalMachineModule"){
+RelationalMachineModule::RelationalMachineModule():Module("RelationalMachineModule"),
+  _log("RelationalMachineModule"){
 }
 
 RelationalMachineModule::~RelationalMachineModule(){
 }
 
 void RelationalMachineModule::open(){
-  MT::open(fil,"z.RelationalMachineModule");
   RM.writeAccess();
   RM().init("machine.fol");
-  RM().verbose = true;
   RM().state->callbacks.append(new RM_EditCallback(*this));
   RM.deAccess();
   threadStep(1);
@@ -41,7 +34,6 @@ void RelationalMachineModule::open(){
 
 void RelationalMachineModule::close(){
   listDelete(RM.set()->state->callbacks);
-  fil.close();
 }
 
 void RelationalMachineModule::step(){
@@ -49,7 +41,7 @@ void RelationalMachineModule::step(){
   MT::String effs = effects();
   effects().clear();
   effects.deAccess();
-  fil <<RM.var->revision.getValue() <<endl <<"EFFECTS = " <<effs <<endl;
+  LOG(0) <<std::setprecision(2) <<std::fixed <<MT::realTime() <<"sec: it=" <<RM.var->revision.getValue()<<" EFFECT=" <<effs;
   if(!effs.N && step_count) return; //on 1st iteration we need a step!
 
   RM.writeAccess();
@@ -57,7 +49,8 @@ void RelationalMachineModule::step(){
   if(effs.N){
     RM().applyEffect(effs);
     RM().fwdChainRules();
-    fil <<"STATE = " <<RM().getState() <<endl <<"KB = " <<RM().getKB() << endl;
+    LOG(1) <<"STATE = " <<RM().getState();
+    LOG(2) <<"KB = " <<RM().getKB();
   }
 
   if(!step_count || effs.N){

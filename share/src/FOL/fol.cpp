@@ -452,7 +452,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
    MT::Array<NodeL> domainOf(vars.N);
    MT::Array<bool > domainIsConstrained(vars.N);
    MT::Array<NodeL> domainsForThisRel(vars.N);
-   domainIsConstrained = false;
+   if(vars.N) domainIsConstrained = false;
    for(Node *rel:relations){ //first go through all (non-negated) relations...
      if(rel->getValueType()!=typeid(bool) || rel->V<bool>()!=false){
        for(auto& d:domainsForThisRel) d.clear();

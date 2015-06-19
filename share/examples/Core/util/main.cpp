@@ -60,6 +60,7 @@ void TEST(Timer){
 }
 
 void TEST(Logging){
+  Log _log("Test");
   LOG(-1) <<"HALLO";
   LOG(-3) <<"bye";
 //  MT::log() <<"bla" <<endl;
@@ -83,8 +84,8 @@ int MAIN(int argc,char** argv){
 //  testString();
 //  testParameter();
 //  testTimer();
-//  testLogging();
-  testException();
+  testLogging();
+//  testException();
 
   return 0;
 }
