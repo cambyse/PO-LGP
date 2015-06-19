@@ -112,8 +112,10 @@ void GripperActivity::configure2(const char *name, Graph& specs, ors::KinematicW
   }
   task = new CtrlTask(name, *map, specs);
   if ((it=specs["target"])){
-    task->setTarget(specs["target"]->V<arr>());
-    adjusted_target = specs["target"]->V<arr>() * 2.;
+    // TODO WARNING this should not be necessary
+    // fix qItself. it moves twice as far as it should
+    task->setTarget(specs["target"]->V<arr>() / 2.);
+    adjusted_target = specs["target"]->V<arr>();
   } else {
     HALT("You need a specify which target");
   }
