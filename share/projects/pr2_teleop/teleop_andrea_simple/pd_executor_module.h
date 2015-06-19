@@ -42,6 +42,8 @@ struct PDExecutor: Module {
   // CtrlTask* effOrientationLY;
   // CtrlTask* effOrientationLZ;
 
+  CtrlTask* effHead, *effHead_ref;
+
   MocapID mid;
   ors::Transformation transf_mocap_robot;
   ors::Transformation transf;
@@ -56,8 +58,9 @@ struct PDExecutor: Module {
   void teleop();
 
   void rigidTransf(arrf &poses);
-  void trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPos, CtrlTask *gripper, CtrlTask *effOrientation);
-  arr makeHandOrientation(const arrf &thumb, const arrf &index);
+  void trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPos, CtrlTask *gripper, CtrlTask *effOrientation, bool right);
+  void trackHead();
+  arr makeHandOrientation(const arrf &thumb, const arrf &index, bool right);
   void runOperationalSpaceControl();
 
   void visualizeSensors();

@@ -8,7 +8,8 @@ PDExecutor::PDExecutor()
     : world("model.kvg"), fmc(world, true), started(false), useros(false),
       limits(nullptr), collisions(nullptr),
       effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
-      effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
+      effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr),
+      effHead(nullptr), effHead_ref(nullptr)
 {
   // fmc setup
   world.getJointState(q, qdot);
@@ -66,9 +67,15 @@ PDExecutor::PDExecutor()
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
   }
 
+  if(MT::getParameter<bool>("useHead", false)) {
+    effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x, "base_footprint"));
+    // effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x));
+    effHead_ref = nullptr;
+  }
+
   mid.load("g4mapping.kvg");
   transf.setZero();
-  transf.addRelativeTranslation(.5+.35, -.45, .4);
+  transf.addRelativeTranslation(.5+.25, -.45, .4);
   transf.addRelativeRotationDeg(-90, 0, 0, 1);
   activateTasks(false);
 }
@@ -111,8 +118,18 @@ void PDExecutor::step() {
   CHECK(gpstate.N, "ERROR: No GamePad found");
   int button = gpstate(0);
 
-  if(button & BTN_B)
+
+  if(button & BTN_RB)
+    effHead_ref = effPosR;
+  else if(button & BTN_LB)
+    effHead_ref = effPosL;
+  // else
+  //   effHead_ref = nullptr;
+
+  if(button & BTN_B) {
     activateTasks(false);
+    effHead_ref = nullptr;
+  }
   else if(button & BTN_A)
     activateTasks(true);
 
@@ -128,33 +145,86 @@ void PDExecutor::activateTasks(bool active) {
   if(effPosL) effPosL->active = active;
   if(gripperL) gripperL->active = active;
   if(effOrientationL) effOrientationL->active = active;
+
+  if(effHead) effHead->active = active;
 }
 
 void PDExecutor::teleop() {
-  poses.readAccess();
-  arrf thumb_rh = mid.query(poses(), "/human/rh/thumb");
-  arrf index_rh = mid.query(poses(), "/human/rh/index");
-  arrf thumb_lh = mid.query(poses(), "/human/lh/thumb");
-  arrf index_lh = mid.query(poses(), "/human/lh/index");
-  poses.deAccess();
+  arrf tmpPoses = poses.get();
+
+  if(!tmpPoses.N) return;
+
+  arrf thumb_rh = mid.query(tmpPoses, "/human/rh/thumb");
+  arrf index_rh = mid.query(tmpPoses, "/human/rh/index");
+  arrf thumb_lh = mid.query(tmpPoses, "/human/lh/thumb");
+  arrf index_lh = mid.query(tmpPoses, "/human/lh/index");
 
   // cout << "frames: " << endl;
   // cout << thumb_rh << endl;
   // cout << thumb_lh << endl;
   // cout << index_rh << endl;
   // cout << index_lh << endl;
-  if (length(thumb_rh) < 1e-5 || length(index_rh) < 1e-5 ||
-      length(thumb_lh) < 1e-5 || length(index_lh) < 1e-5)
+  if( length(thumb_rh.sub(0, 2)) < 1e-5 ||
+      length(thumb_rh.sub(3, 6)) < 1e-5 ||
+      length(index_rh.sub(0, 2)) < 1e-5 ||
+      length(index_rh.sub(3, 6)) < 1e-5 ||
+      length(thumb_lh.sub(0, 2)) < 1e-5 ||
+      length(thumb_lh.sub(3, 6)) < 1e-5 ||
+      length(index_lh.sub(0, 2)) < 1e-5 ||
+      length(index_lh.sub(3, 6)) < 1e-5 )
     return;
   // cout << "pass" << endl;
+
+  // cout << " === NEW LOOP === " << endl;
+  // cout << "thumb_rh: " << thumb_rh << endl;
+  // cout << "index_rh: " << index_rh << endl;
+  // cout << "thumb_lh: " << thumb_lh << endl;
+  // cout << "index_lh: " << index_lh << endl;
+
+  // cout.precision(15);
+  // cout << "len " << length(thumb_rh.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb_rh.sub(3, 6)) << endl;
+  // cout << "len " << length(index_rh.sub(0, 2)) << endl;
+  // cout << "len " << length(index_rh.sub(3, 6)) << endl;
+  // cout << "len " << length(thumb_lh.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb_lh.sub(3, 6)) << endl;
+  // cout << "len " << length(index_lh.sub(0, 2)) << endl;
+  // cout << "len " << length(index_lh.sub(3, 6)) << endl;
 
   rigidTransf(thumb_rh);
   rigidTransf(index_rh);
   rigidTransf(thumb_lh);
   rigidTransf(index_lh);
 
-  trackHand(thumb_rh, index_rh, effPosR, gripperR, effOrientationR);
-  trackHand(thumb_lh, index_lh, effPosL, gripperL, effOrientationL);
+  // cout << " --- second --- " << endl;
+  // cout << "thumb_rh: " << thumb_rh << endl;
+  // cout << "index_rh: " << index_rh << endl;
+  // cout << "thumb_lh: " << thumb_lh << endl;
+  // cout << "index_lh: " << index_lh << endl;
+
+  // cout.precision(15);
+  // cout << "len " << length(thumb_rh.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb_rh.sub(3, 6)) << endl;
+  // cout << "len " << length(index_rh.sub(0, 2)) << endl;
+  // cout << "len " << length(index_rh.sub(3, 6)) << endl;
+  // cout << "len " << length(thumb_lh.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb_lh.sub(3, 6)) << endl;
+  // cout << "len " << length(index_lh.sub(0, 2)) << endl;
+  // cout << "len " << length(index_lh.sub(3, 6)) << endl;
+
+  // if( length(thumb_rh.sub(0, 2)) < 1e-5 ||
+  //     length(thumb_rh.sub(3, 6)) < 1e-5 ||
+  //     length(index_rh.sub(0, 2)) < 1e-5 ||
+  //     length(index_rh.sub(3, 6)) < 1e-5 ||
+  //     length(thumb_lh.sub(0, 2)) < 1e-5 ||
+  //     length(thumb_lh.sub(3, 6)) < 1e-5 ||
+  //     length(index_lh.sub(0, 2)) < 1e-5 ||
+  //     length(index_lh.sub(3, 6)) < 1e-5 )
+  //   return;
+
+  trackHand(thumb_rh, index_rh, effPosR, gripperR, effOrientationR, true);
+  trackHand(thumb_lh, index_lh, effPosL, gripperL, effOrientationL, false);
+  trackHead();
 
   // op space control loop
   runOperationalSpaceControl();
@@ -163,11 +233,15 @@ void PDExecutor::teleop() {
   sendRosCtrlMsg();
 }
 
+void PDExecutor::trackHead() {
+    if(effHead && effHead_ref) dynamic_cast<DefaultTaskMap*>(&effHead->map)->jvec = effHead_ref->y;
+}
+
 void PDExecutor::rigidTransf(arrf &pose) {
   ors::Transformation T;
 
-  ors::Vector v(pose(0), pose(1), pose(2));
-  ors::Quaternion q(pose(3), pose(4), pose(5), pose(6));
+  ors::Vector v_mocap(pose(0), pose(1), pose(2));
+  ors::Quaternion q_mocap(pose(3), pose(4), pose(5), pose(6));
   // T.appendInvTransformation(transf_mocap_robot);
 
   // T.addRelativeTranslation(.55, .5, 1.);
@@ -177,60 +251,93 @@ void PDExecutor::rigidTransf(arrf &pose) {
 
   // cout << "before: " << v << " " << q << endl;
 
-  v = transf * v;
-  q = transf.rot * q;
+  ors::Vector v_robot = transf * v_mocap;
+  ors::Quaternion q_robot = transf.rot * q_mocap;
 
   // cout << "after: " << v << " " << q << endl;
 
-  pose(0) = v.x;
-  pose(1) = v.y;
-  pose(2) = v.z;
-  pose(3) = q.w;
-  pose(4) = q.x;
-  pose(5) = q.y;
-  pose(6) = q.z;
+  pose(0) = v_robot.x;
+  pose(1) = v_robot.y;
+  pose(2) = v_robot.z;
+  pose(3) = q_robot.w;
+  pose(4) = q_robot.x;
+  pose(5) = q_robot.y;
+  pose(6) = q_robot.z;
 }
 
-void PDExecutor::trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPos, CtrlTask *gripper, CtrlTask *effOrientation) {
+void PDExecutor::trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPos, CtrlTask *gripper, CtrlTask *effOrientation, bool right) {
   // Setting hand position
   // cout << "thumb: " << thumb << endl;
   // cout << "thumb.dim(): " << thumb.dim() << endl;
 
-  arrf pos = .5f * (thumb.subRange(0, 2) + index.subRange(0, 2));
+  // cout << " --- before setting pos target --- " << endl;
+  // cout << "thumb: " << thumb << endl;
+  // cout << "index: " << index << endl;
+
+  // cout.precision(15);
+  // cout << "len " << length(thumb.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb.sub(3, 6)) << endl;
+  // cout << "len " << length(index.sub(0, 2)) << endl;
+  // cout << "len " << length(index.sub(3, 6)) << endl;
+
+  // TODO check if subrange here is a bug of some type
+  // arrf pos = .5f * (thumb.sub(0, 2) + index.sub(0, 2));
+  arrf pos = .5f * ( thumb + index );
   if(effPos) effPos->setTarget({(double)pos(0), (double)pos(1), (double)pos(2)});
 
   // Setting hand orientation
-  arr quat = makeHandOrientation(thumb, index);
+  // cout << " --- before make hand orientation --- " << endl;
+  // cout << "thumb: " << thumb << endl;
+  // cout << "index: " << index << endl;
+
+  // cout.precision(15);
+  // cout << "len " << length(thumb.sub(0, 2)) << endl;
+  // cout << "len " << length(thumb.sub(3, 6)) << endl;
+  // cout << "len " << length(index.sub(0, 2)) << endl;
+  // cout << "len " << length(index.sub(3, 6)) << endl;
+
+  arr quat = makeHandOrientation(thumb, index, right);
   if(effOrientation) effOrientation->setTarget(quat);
 
   // Setting gripper
-  double cal_gripper = length(thumb.subRange(0, 2) - index.subRange(0, 2)) - .04;
-  clip(cal_gripper, 0., .08);
+  double cal_gripper = length(thumb.sub(0, 2) - index.sub(0, 2)) - .04;
+  clip(cal_gripper, .02, .08);
   if(gripper) gripper->setTarget({cal_gripper});
 }
 
-arr PDExecutor::makeHandOrientation(const arrf &thumb, const arrf &index) {
+arr PDExecutor::makeHandOrientation(const arrf &thumb, const arrf &index, bool right) {
   ors::Quaternion quat;
   ors::Vector x_thumb, x_index;
   ors::Vector pos_thumb, pos_index;
   ors::Vector x_pr2, y_pr2, z_pr2;
 
+  // cout << "right: " << right << endl;
   pos_thumb.set(thumb(0), thumb(1), thumb(2));
   quat.set(thumb(3), thumb(4), thumb(5), thumb(6));
+  // cout << "pos_thumb: " << pos_thumb << endl;
+  // cout << "quat " << quat << endl;
   x_thumb = quat * Vector_x;
 
   pos_index.set(index(0), index(1), index(2));
   quat.set(index(3), index(4), index(5), index(6));
+  // cout << "pos_index: " << pos_index << endl;
+  // cout << "quat " << quat << endl;
   x_index = quat * Vector_x;
 
-  y_pr2 = pos_index - pos_thumb;
+  if(right)
+    y_pr2 = pos_index - pos_thumb;
+  else
+    y_pr2 = pos_thumb - pos_index;
+  // cout << "y_pr2" << y_pr2 << endl;
   y_pr2.normalize();
 
   x_pr2 = .5 * (x_index + x_thumb);
+  // cout << "x_pr2" << x_pr2 << endl;
   x_pr2.makeNormal(y_pr2);
   x_pr2.normalize();
 
   z_pr2 = x_pr2 ^ y_pr2;
+  // cout << "z_pr2" << z_pr2 << endl;
   z_pr2.normalize();
   
   double matrix[9];
@@ -272,7 +379,7 @@ void PDExecutor::sendRosCtrlMsg() {
   ref.fL = zeros(6);
   ref.fR = zeros(6);
 
-  ref.Kp = {1.};
+  ref.Kp = {1.1};
   ref.Ki.clear();
   ref.Kd = {1.};
 
