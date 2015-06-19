@@ -282,7 +282,7 @@ def turn_wrist(rel_degree, side=None):
 
 ###############################################################################
 # High Level Behaviors
-def grab_marker(shape, side=LEFT):
+def run_grab_marker(shape, side=LEFT):
     with running(gaze_at("endeffL")):
         run(open_gripper(side)
             + reach(shape, offset=[0.0, 0.01, 0.1])
@@ -290,6 +290,16 @@ def grab_marker(shape, side=LEFT):
         run(reach(shape, offset=[0.0, 0.01, -0.07]))
         run(close_gripper(side))
     # run(homing())
+
+
+def run_turn_marker(shape):
+    with running(gaze_at("endeffL")):
+        run(open_gripper()
+            + reach(shape, offset=[0.0, 0.01, 0.1])
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
+        run(reach(shape, offset=[0.0, 0.01, -0.07]))
+        run(close_gripper())
+        run(turn_wrist(90))
 
 
 ###############################################################################
