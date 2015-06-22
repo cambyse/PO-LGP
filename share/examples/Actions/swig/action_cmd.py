@@ -43,7 +43,7 @@ class ActionCmd(cmd.Cmd):
 
     def do_changePara(self, par):
         p = par.split()
-        if len(p) == 2:       
+        if len(p) == 2:
             self.parameters[p[0]] = p[1]
 
 
@@ -83,13 +83,13 @@ class ActionCmd(cmd.Cmd):
 
     def do_print(self, xxx):
         print (self.parameters)
-        
+
     def do_newTask (self, name):
         """define new task space control action
         argument order:
         1.: type 2.: name, 3.: effector, 4.: target."""
         p = name.split()
-        name = "task" 
+        name = "task"
         reference = ["FollowReferenceActivity"]
 
         for i in range(0,len(p) ):
@@ -105,7 +105,7 @@ class ActionCmd(cmd.Cmd):
                 self.parameters["PD"] = p[i]
             elif i == 5:
                 self.parameters["ref2"] = p[i]
-        
+
         S.defineNewTaskSpaceControlAction(name, reference, self.parameters)
         #S.startActivity([name])
         self.actions.append(name)
@@ -165,9 +165,9 @@ class ActionCmd(cmd.Cmd):
 
 if __name__ == '__main__':
     S = swig.ActionSwigInterface(1)
-    
+
     C = ActionCmd()
 
     C.cmdloop()
-    
+
 

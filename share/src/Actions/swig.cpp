@@ -8,6 +8,10 @@
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
 
+#ifdef MT_ROS
+ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
+#endif
+
 // ============================================================================
 struct SwigSystem : System{
   ACCESS(bool, quitSignal)
@@ -30,8 +34,9 @@ struct SwigSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-#ifdef MT_ROS_ALVAR
+#ifdef MT_ROS
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
+      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
 #endif
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
@@ -90,6 +95,9 @@ ActionSwigInterface::~ActionSwigInterface(){
   engine().close(*S);
 }
 
+void ActionSwigInterface::setVerbose(bool verbose) {
+  S->tcm->verbose = verbose;
+}
 
 void ActionSwigInterface::Cancel(){
   //engine().cancel(*S); 
@@ -159,6 +167,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
+  D["q"] = std::to_string(S->tcm->modelWorld().getJointState()(joint->qIndex));
   S->tcm->modelWorld.deAccess();
   return D;
 }
@@ -234,6 +243,7 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
     if(isTrue(literals)) return;
     S->state.waitForNextRevision();
   }
+  // this->stopFact(literals);
 }
 
 void ActionSwigInterface::waitForCondition(const char* query){
@@ -241,6 +251,7 @@ void ActionSwigInterface::waitForCondition(const char* query){
     if(S->RM.get()->queryCondition(query)) return;
     S->state.waitForNextRevision();
   }
+  // this->stopFact(query);
 }
 
 int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
@@ -250,8 +261,9 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
     }
     S->state.waitForNextRevision();
   }
-
+  // this->stopFact(literals);
 }
+
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
 //#if 1
 //  startActivity(lit2str(literal), parameters);
