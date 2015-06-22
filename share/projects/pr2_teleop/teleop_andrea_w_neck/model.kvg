@@ -1,9 +1,0 @@
-Include = '/home/bais/.ros/model.kvg'
-
-# shape XXXtargetL(world){ type=5 color=[1 0 0] size=[.55 .55 .55 .55]}
-# shape XXXtargetR(world){ type=5 color=[1 0 0] size=[.55 .55 .55 .55]}
-
-# shape sensor_rh_thumb(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
-# shape sensor_rh_index(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
-# shape sensor_lh_thumb(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
-# shape sensor_lh_index(world){ type=2 color=[0 1 0] size=[.1 .1 .1 .1]}
