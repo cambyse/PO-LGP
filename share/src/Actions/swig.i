@@ -12,6 +12,7 @@
 typedef std::vector<double> doubleV;
 typedef std::vector<int> intV;
 typedef std::vector<std::string> stringV;
+
 typedef std::map<std::string, std::string> dict;
 
 %include "std_string.i"
@@ -23,12 +24,15 @@ namespace std{
 	%template(intV) vector<int>;
 	%template(stringV) vector<std::string>;
 	%template(dict) map<std::string, std::string>;
+
 }
+
 
 %ignore getQ();
 %ignore getForceTorqueMeasurement();
-%ignore isTrue(intV literal);
-%ignore getLiteralParameters(intV literal);
+
+
+
 
 
 

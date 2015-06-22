@@ -21,16 +21,12 @@
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-    : map(*map), active(true), prec(0.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false) {
-  this->name = name;
-  this->maxVel = maxVel;
-  this->maxAcc = maxAcc;
+  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-    : map(map), active(true), prec(0.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false) {
-  this->name = name;
+  : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->V<arr>();
@@ -58,8 +54,8 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
 
 void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
-  Pgain=pgain;
-  Dgain=dgain;
+  this->Pgain=pgain;
+  this->Dgain=dgain;
   if(!prec) prec=100.;
 }
 
@@ -67,8 +63,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  Pgain = MT::sqr(1./lambda);
-  Dgain = 2.*dampingRatio/lambda;
+  this->Pgain = MT::sqr(1./lambda);
+  this->Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
 

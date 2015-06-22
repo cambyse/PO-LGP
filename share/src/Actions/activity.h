@@ -36,6 +36,8 @@ Activity* newActivity(Node *fact);
 struct ActivitySpinnerModule : Module{
   ACCESS(ActivityL, A)
 
+  ActivitySpinnerModule() : Module("ActivitySpinnerModule") {}
+
   /// @name module implementations
   void open(){}
   void step(){
