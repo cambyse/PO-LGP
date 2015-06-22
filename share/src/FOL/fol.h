@@ -38,7 +38,7 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose=0);
 Node *createNewFact(Graph& facts, const NodeL& symbols);
 Node *createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope);
 bool applySubstitutedLiteral(Graph& facts, Node*  literal, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
-bool applyEffectLiterals    (Graph& facts, Graph& effects, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
+bool applyEffectLiterals    (Graph& facts, NodeL& effects, const NodeL& subst, Graph* subst_scope, Graph& changes=NoGraph);
 
 //------------ fwd chaining
 

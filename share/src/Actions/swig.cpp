@@ -20,8 +20,10 @@ struct SwigSystem : System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
 
+  Log _log;
   TaskControllerModule *tcm;
-  SwigSystem(){
+
+  SwigSystem():_log("SwigSystem", 1, 1){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
@@ -59,31 +61,28 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
-ActionSwigInterface::ActionSwigInterface(bool useRos){
-  S = new SwigSystem();
+ActionSwigInterface::ActionSwigInterface(bool useRos): S(new SwigSystem), _log(S->_log){
   S->tcm->verbose=false;
   engine().open(*S, true);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
   createNewSymbol("timeout");
+  createNewSymbol("go");
 //  new CoreTasks(*s->activity.machine);
 
-
-  cout <<"**************" <<endl;
-  cout <<"Registered Activities=" <<activityRegistry();
+  LOG(1) <<"Registered Activities=" <<activityRegistry();
   for(Node *n:activityRegistry()){
-    cout <<"adding symbol for " <<n->keys(0) <<endl;
+    LOG(1) <<"adding symbol for " <<n->keys(0);
     createNewSymbol(n->keys(0).p);
   }
-  cout <<"Shape Symbols:";
+  LOG(1) <<"Shape Symbols:";
   S->modelWorld.writeAccess();
   for(ors::Shape *sh:S->modelWorld().shapes){
-    cout <<"adding symbol for Shape " <<sh->name <<endl;
+    LOG(1) <<"adding symbol for Shape " <<sh->name;
     createNewSymbol(sh->name.p);
   }
   S->modelWorld.deAccess();
-  cout <<"**************" <<endl;
 }
 
 
@@ -105,7 +104,7 @@ stringV ActionSwigInterface::getShapeList(){
   for(ors::Shape *shape: S->tcm->modelWorld().shapes){
     tmp.str(""),
     tmp.clear();
-    tmp << shape->name;
+    tmp <<shape->name;
     strs.push_back(tmp.str());
   }
   S->tcm->modelWorld.deAccess();
@@ -201,12 +200,12 @@ bool  ActionSwigInterface::isTrue(const stringV& literals){
 
 void ActionSwigInterface::setFact(const char* fact){
   S->effects.set()() <<fact <<", ";
-  S->state.waitForNextRevision();
+  S->state.waitForNextRevision(); //TODO: is this robust?
 }
 
 void ActionSwigInterface::stopFact(const char* fact){
   S->effects.set()() <<fact <<"!, ";
-  S->state.waitForNextRevision();
+  S->state.waitForNextRevision(); //TODO: is this robust?
 }
 
 stringV ActionSwigInterface::getFacts(){
@@ -325,5 +324,25 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   s->activity.machine->parseTaskDescription(*td);
 #endif
   return symbol->index;
+}
+
+void ActionSwigInterface::execScript(const char* filename){
+  //-- load
+  FILE(filename) >>S->RM.set()->KB;
+
+  Node *s = S->RM.get()->KB.getNode("Script");
+  Graph& script = s->graph();
+  for(Node* n:script){
+    if(n->parents.N==0){ //interpret as wait
+      CHECK(n->getValueType()==typeid(Graph),"")
+      for(;;){
+        if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
+        S->RM.waitForNextRevision();
+      }
+    }else{ //interpret as set fact
+      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
+    }
+    S->effects.set()() <<"(go)"; //just trigger that the RM module steps
+  }
 }
 

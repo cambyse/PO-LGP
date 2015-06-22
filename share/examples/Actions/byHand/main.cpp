@@ -24,30 +24,24 @@ bool MyTask::isConv(){
 
 // ============================================================================
 
-int main(int argc, char** argv) {
-  registerActivity<MyTask>("MyTask");
-
-  ActionSwigInterface S(false);
-
-  S.createNewSymbol("wheels"); //-> wird automatisiert
-
+void script1(ActionSwigInterface& S){
   S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");
   S.waitForCondition("(conv MyTask endeffL)");
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
 
   S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");
   S.waitForCondition("(conv MyTask endeffL)");
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
 
   S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv MyTask endeffL)");
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
 
@@ -55,6 +49,25 @@ int main(int argc, char** argv) {
   S.setFact("(HomingActivity)");
   S.waitForCondition("(conv HomingActivity)");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");
+}
+
+// ============================================================================
+
+void script2(ActionSwigInterface& S){
+  S.execScript("script.g");
+}
+
+// ============================================================================
+
+int main(int argc, char** argv) {
+  registerActivity<MyTask>("MyTask");
+
+  ActionSwigInterface S(false);
+
+  S.createNewSymbol("wheels");
+
+//  script1(S);
+  script2(S);
 
   return 0;
 }

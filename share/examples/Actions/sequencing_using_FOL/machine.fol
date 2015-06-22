@@ -7,14 +7,17 @@ start
 CoreTasks
 FollowReferenceActivity
 HomingActivity
-gazeAtHand (FollowReferenceActivity){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
-alignHand (FollowReferenceActivity){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
-positionHand (FollowReferenceActivity){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
+
+endeffHead
+endeffL
+gazeAtHand (FollowReferenceActivity){ type="gazeAt", PD=[.5 .9 .1 10.], prec=1. }
+alignHand (FollowReferenceActivity){ type="vec", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
+positionHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
 lowerHand (FollowReferenceActivity){ type="pos", ref1="endeffL", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
 controlForce (FollowReferenceActivity){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
 homing (HomingActivity){ type="homing" }
 
-STATE { (CoreTasks) (gazeAtHand) (alignHand) (positionHand) }
+STATE { (CoreTasks) (gazeAtHand endeffHead endeffL) (alignHand endeffL) (positionHand endeffL) }
 
 Rule {
   { (conv positionHand) (conv alignHand) }
@@ -29,4 +32,12 @@ Rule {
 Rule {
   { (homing) (conv homing) }
   { (quit) (homing)! (conv homing)! }
+}
+
+Script {
+  (gazeAtHand endeffHead endeffL)
+  (alignHand endeffL)
+  (positionHand endeffL)
+  { (conv alignHand) (conv positionHand) }
+  (lowerHand)
 }

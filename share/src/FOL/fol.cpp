@@ -294,7 +294,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
   return hasEffects;
 }
 
-bool applyEffectLiterals(Graph& facts, Graph& effects, const NodeL& subst, Graph* subst_scope, Graph& changes){
+bool applyEffectLiterals(Graph& facts, NodeL& effects, const NodeL& subst, Graph* subst_scope, Graph& changes){
   bool hasEffects=false;
   for(Node *lit:effects){
     bool e = applySubstitutedLiteral(facts, lit, subst, subst_scope, changes);

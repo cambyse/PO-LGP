@@ -26,7 +26,7 @@ struct RelationalMachine{
   bool applyEffect(MT::String effect);   ///< return indicates change of state
   NodeL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
-  Node* declareNewSymbol(MT::String symbol);
+  Node* declareNewSymbol(MT::String symbolStr);
   MT::String getKB();
   MT::String getState();
   MT::String getRules();

@@ -62,8 +62,8 @@ NodeL RelationalMachine::fwdChainRules(){
 
 Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
 
-Node* RelationalMachine::declareNewSymbol(MT::String symbol){
-  Node *it = readNode(KB, symbol, false, false);
+Node* RelationalMachine::declareNewSymbol(MT::String symbolStr){
+  Node *it = readNode(KB, symbolStr, false, false);
   return it;
 }
 

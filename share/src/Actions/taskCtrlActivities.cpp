@@ -10,7 +10,7 @@ void TaskCtrlActivity::configure(Node *fact) {
   for(Node *p:fact->parents) name <<p->keys.last();
   taskController = taskControllerModule();
   CHECK(taskController,"");
-  Activity::fact = fact;
+  this->fact = fact;
   Graph *specs = &NoGraph;
   if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
   configure2(name, *specs, taskController->modelWorld.set());
