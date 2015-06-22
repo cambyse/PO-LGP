@@ -945,14 +945,6 @@ private:
     int default_state = 0;
 };
 
-TEST(SearchTree, PriorModels) {
-    prior_models::PriorCounts prior_counts(1,1,2,0,1,2);
-    EXPECT_EQ(0.5,prior_models::PriorCounts::compute_mean(1,2,0,1,2));
-    EXPECT_EQ(0.5,prior_counts.mean);
-    EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2));
-    EXPECT_EQ(0.25*4./3.,prior_counts.variance);
-}
-
 TEST(MonteCarloTreeSearch, PlainTree) {
     using namespace node_finder;
     using namespace tree_policy;
@@ -2075,4 +2067,59 @@ TEST(ActiveTreeSearch, Test) {
         // getchar();
     }
     //search.toPdf("graph.pdf");
+}
+
+TEST(PriorModels, PriorCounts) {
+    prior_models::PriorCounts prior_counts(1,1,2,0,1,2);
+    EXPECT_EQ(0.5,prior_models::PriorCounts::compute_mean(1,2,0,1,2));
+    EXPECT_EQ(0.5,prior_counts.mean);
+    EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2));
+    EXPECT_EQ(0.25*4./3.,prior_counts.variance);
+}
+
+TEST(PriorModels, Dirichlet) {
+    // uniform counts
+    {
+        double n = 10;
+        prior_models::Dirichlet dirichlet(vector<double>(n,1));
+        double norm = n*n*(n+1);
+        for(int idx_1=0; idx_1<n; ++idx_1) {
+            EXPECT_EQ(dirichlet.mean[idx_1],1/n);
+            for(int idx_2=0; idx_2<n; ++idx_2) {
+                if(idx_1==idx_2) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],(n-1)/norm);
+                } else {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-1/(norm));
+                }
+            }
+        }
+    }
+    // strongly non-uniform counts
+    {
+        double n = 10;
+        double high = 100;
+        double counts = n-1+high;
+        vector<double> count_vec(n,1);
+        count_vec[0] = high;
+        prior_models::Dirichlet dirichlet(count_vec);
+        double norm = (counts)*(counts)*(counts+1);
+        for(int idx_1=0; idx_1<n; ++idx_1) {
+            if(idx_1==0) {
+                EXPECT_EQ(dirichlet.mean[idx_1],high/counts);
+            } else {
+                EXPECT_EQ(dirichlet.mean[idx_1],1/counts);
+            }
+            for(int idx_2=0; idx_2<n; ++idx_2) {
+                if(idx_1==0 && idx_2==0) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],high*(counts-high)/norm);
+                } else if(idx_1==0 || idx_2==0) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-high/norm);
+                } else if(idx_1==idx_2) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],(counts-1)/norm);
+                } else {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-1/norm);
+                }
+            }
+        }
+    }
 }
