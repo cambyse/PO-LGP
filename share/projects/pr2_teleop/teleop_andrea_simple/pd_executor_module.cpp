@@ -75,7 +75,7 @@ PDExecutor::PDExecutor()
 
   mid.load("g4mapping.kvg");
   transf.setZero();
-  transf.addRelativeTranslation(.5+.25, -.45, .4);
+  transf.addRelativeTranslation(.5+.25, -.45, .6);
   transf.addRelativeRotationDeg(-90, 0, 0, 1);
   activateTasks(false);
 }
@@ -300,7 +300,7 @@ void PDExecutor::trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPo
   if(effOrientation) effOrientation->setTarget(quat);
 
   // Setting gripper
-  double cal_gripper = length(thumb.sub(0, 2) - index.sub(0, 2)) - .04;
+  double cal_gripper = length(thumb.sub(0, 2) - index.sub(0, 2)) - .02;
   clip(cal_gripper, .02, .08);
   if(gripper) gripper->setTarget({cal_gripper});
 }
