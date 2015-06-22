@@ -4,6 +4,8 @@
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
+#ifdef MT_ROS_ALVAR
+
 #ifdef MT_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
   using namespace ar_track_alvar_msgs;
@@ -42,3 +44,13 @@ void setBody(ors::Body& body, const AlvarMarker& marker);
  * Note: this never deletes old markers.
  */
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+
+#else
+
+class AlvarMarker{};
+typedef MT::Array<AlvarMarker> AlvarMarkers;
+
+void setBody(ors::Body& body, const AlvarMarker& marker);
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+
+#endif
