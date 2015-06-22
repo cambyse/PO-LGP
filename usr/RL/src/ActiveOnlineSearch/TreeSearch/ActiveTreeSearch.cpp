@@ -76,7 +76,7 @@ void ActiveTreeSearch::next_do() {
                 candidate_actions.push_back(node_info_map[action_node].action);
                 action_probabilities.push_back(computer.get_node_value(variable_info_map[action_node].pi));
             }
-            int action_idx = util::draw_idx(action_probabilities);
+            int action_idx = util::random_select_idx(action_probabilities);
             DEBUG_OUT(1,"action_idx=" << action_idx);
             DEBUG_OUT(1,action_probabilities);
             DEBUG_OUT(1,candidate_actions);

@@ -93,7 +93,6 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
     if(recommendation_policy==nullptr) {
         recommendation_policy.reset(new tree_policy::Optimal());
     }
-    recommendation_policy->restrict_to_existing = true;
     recommendation_policy->init(environment,graph,node_info_map,mcts_node_info_map,mcts_arc_info_map);
     DEBUG_EXPECT(0,recommendation_policy!=nullptr);
 }
