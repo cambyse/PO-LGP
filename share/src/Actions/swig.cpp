@@ -30,7 +30,9 @@ struct SwigSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+#ifdef MT_ROS_ALVAR
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
+#endif
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
