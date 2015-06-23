@@ -84,7 +84,7 @@ struct ActionSystem : System{
       cout << "USING ROS" <<endl;
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-#ifdef MT_ROS_ALVAR
+#ifdef MT_ROS
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.1);
 #endif
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);

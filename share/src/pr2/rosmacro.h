@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MT_ROS
+
 #include <ros/ros.h>
 #include <Core/module.h>
 
@@ -42,4 +44,4 @@
     \
   };
 
-
+#endif

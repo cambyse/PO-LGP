@@ -1,6 +1,6 @@
 #include "rosalvar.h"
 
-#ifdef MT_ROS_ALVAR
+#ifdef MT_ROS
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
@@ -54,6 +54,6 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   }
 }
 #else
-void setBody(ors::Body& body, const AlvarMarker& marker) {NICO;}
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {NICO;}
+void setBody(ors::Body& body, const AlvarMarker& marker) {}
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {}
 #endif
