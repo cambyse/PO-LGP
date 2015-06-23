@@ -41,11 +41,3 @@ struct HomingActivity : TaskCtrlActivity {
 stdOutPipe(HomingActivity)
 
 
-//===========================================================================
-struct GripperActivity : TaskCtrlActivity {
-  arr adjusted_target;
-  double stopTolerance;
-  virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
-  virtual bool isConv();
-};
