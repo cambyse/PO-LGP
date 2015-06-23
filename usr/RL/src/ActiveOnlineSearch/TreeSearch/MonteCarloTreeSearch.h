@@ -5,6 +5,7 @@
 #include <vector>
 #include <deque>
 #include <list>
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 #include <limits>
@@ -22,20 +23,25 @@ class MonteCarloTreeSearch: public SearchTree {
     //----typedefs/classes----//
 public:
     typedef AbstractEnvironment::action_container_t action_container_t;
-    struct ActionObservationReward {
-        ActionObservationReward(action_handle_t action,
-                                observation_handle_t observation,
-                                reward_t reward,
-                                reward_t discounted_return):
-        action(action), observation(observation), reward(reward), discounted_return(discounted_return)
+    struct RolloutItem {
+        RolloutItem(action_handle_t action = nullptr,
+                    observation_handle_t observation = nullptr,
+                    reward_t reward = 0,
+                    reward_t discounted_return = 0,
+                    double weight = 1,
+                    std::shared_ptr<RolloutItem> next = nullptr):
+            action(action), observation(observation), reward(reward),
+            discounted_return(discounted_return),
+            weight(weight), next(next)
         {}
         action_handle_t action;
         observation_handle_t observation;
         reward_t reward;
         reward_t discounted_return;
+        double weight;
+        std::shared_ptr<RolloutItem> next;
     };
-    typedef std::deque<ActionObservationReward> rollout_t;
-    typedef std::list<rollout_t> rollout_list_t;
+    typedef std::set<std::shared_ptr<RolloutItem>> rollout_set_t;
     /**
      * Node-specific data for MCTS.*/
     struct MCTSNodeInfo {
@@ -44,7 +50,7 @@ public:
                        reward_t min_val,
                        reward_t max_val);
         void add_rollout_return(reward_t ret);
-        void add_rollout_to_list(rollout_t rollout);
+        void add_rollout_to_set(std::shared_ptr<RolloutItem> rollout);
         /** # of actions taken from here. */
         int action_counts = 0;
         /** # of added rollout returns. */
@@ -66,7 +72,7 @@ public:
         /** Highest return ever encountered on a rollout. */
         reward_t max_return = std::numeric_limits<reward_t>::lowest();
         /** List of all rollouts in leaf nodes. */
-        rollout_list_t rollout_list;
+        rollout_set_t rollout_set;
     };
     typedef graph_t::NodeMap<MCTSNodeInfo> mcts_node_info_map_t;
 

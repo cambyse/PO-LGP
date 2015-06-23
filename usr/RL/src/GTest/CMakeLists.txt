@@ -12,8 +12,6 @@ add_executable(GTest
     main.cpp
     CommanderTest.cpp
     EnvironmentTest.cpp
-    Examples.cpp
-    Examples.h
     FeatureTest.cpp
     InstanceTest.cpp
     LBFGSTest.cpp

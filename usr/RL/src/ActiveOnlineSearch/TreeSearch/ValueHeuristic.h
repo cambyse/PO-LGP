@@ -21,6 +21,8 @@ namespace value_heuristic {
      * fixed length \e k just using Zero as initialization. */
     class ValueHeuristic {
     public:
+        //----typdefs/classes----//
+        typedef MonteCarloTreeSearch::RolloutItem RolloutItem;
         //----members----//
         double discount = 0;
         std::shared_ptr<AbstractEnvironment> environment = nullptr;
@@ -29,8 +31,8 @@ namespace value_heuristic {
         virtual ~ValueHeuristic() = default;
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
-        virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) = 0;
+        virtual reward_t add_value_estimate(const node_t & state_node,
+                                            mcts_node_info_map_t & mcts_node_info_map) = 0;
     };
 
     /**
@@ -38,16 +40,15 @@ namespace value_heuristic {
     class Zero: public ValueHeuristic {
     public:
         virtual ~Zero() = default;
-        virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual reward_t add_value_estimate(const node_t & state_node,
+                                            mcts_node_info_map_t & mcts_node_info_map) override;
     };
 
     /**
      * This heuristic does a rollout to initialize value/return. */
     class Rollout: public ValueHeuristic {
     public:
-        typedef MonteCarloTreeSearch::ActionObservationReward ActionObservationReward;
-        typedef MonteCarloTreeSearch::rollout_t rollout_t;
+        typedef std::vector<std::shared_ptr<RolloutItem>> rollout_t;
         /**
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
@@ -56,8 +57,8 @@ namespace value_heuristic {
         virtual ~Rollout() = default;
         virtual void init(double disc,
                           std::shared_ptr<AbstractEnvironment> env);
-        virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual reward_t add_value_estimate(const node_t & state_node,
+                                            mcts_node_info_map_t & mcts_node_info_map) override;
         virtual rollout_t get_last_rollout() const {return last_rollout;}
     protected:
         int rollout_length;

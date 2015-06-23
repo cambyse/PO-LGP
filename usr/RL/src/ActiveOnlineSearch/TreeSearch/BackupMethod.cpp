@@ -14,7 +14,7 @@
 
 using lemon::INVALID;
 using std::vector;
-
+#define FORCE_DEBUG_LEVEL 2
 namespace backup_method {
 
     void BackupMethod::init(double disc,
@@ -249,19 +249,26 @@ namespace backup_method {
                             mean_and_variance.variance,
                             info->min_return,
                             info->max_return);
+            // debug info
+            DEBUG_OUT(2,"    info->return_sum	" << info->return_sum);
+            DEBUG_OUT(2,"    info->squared_return_sum	" << info->squared_return_sum);
+            DEBUG_OUT(2,"    info->rollout_counts	" << info->rollout_counts);
+            DEBUG_OUT(2,"    min_return	" << min_return);
+            DEBUG_OUT(2,"    max_return	" << max_return);
+            DEBUG_OUT(2,"    prior_counts	" << prior_counts);
         }
-        DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
-                  arg(graph->id(observation_node)).
-                  arg(mcts_node_info_map[observation_node].value).
-                  arg(mcts_node_info_map[observation_node].value_variance).
-                  arg(mcts_node_info_map[observation_node].min_value).
-                  arg(mcts_node_info_map[observation_node].max_value));
         DEBUG_OUT(1,QString("    backup action-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(action_node)).
                   arg(mcts_node_info_map[action_node].value).
                   arg(mcts_node_info_map[action_node].value_variance).
                   arg(mcts_node_info_map[action_node].min_value).
                   arg(mcts_node_info_map[action_node].max_value));
+        DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
+                  arg(graph->id(observation_node)).
+                  arg(mcts_node_info_map[observation_node].value).
+                  arg(mcts_node_info_map[observation_node].value_variance).
+                  arg(mcts_node_info_map[observation_node].min_value).
+                  arg(mcts_node_info_map[observation_node].max_value));
     }
 
     HybridMCDP::HybridMCDP(double mc_weight,

@@ -27,6 +27,7 @@ using std::tuple;
 using std::make_tuple;
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
 
 void MonteCarloTreeSearch::MCTSNodeInfo::set_value(reward_t val,
                                                    reward_t val_variance,
@@ -52,9 +53,9 @@ void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_return(reward_t ret) {
     max_return = std::max(max_return,ret);
 }
 
-void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_to_list(rollout_t rollout) {
-    DEBUG_EXPECT(0,!rollout.empty());
-    rollout_list.push_back(rollout);
+void MonteCarloTreeSearch::MCTSNodeInfo::add_rollout_to_set(std::shared_ptr<RolloutItem> rollout) {
+    DEBUG_EXPECT(0,rollout!=nullptr);
+    rollout_set.insert(rollout);
 }
 
 void MonteCarloTreeSearch::MCTSArcInfo::add_reward(reward_t reward) {
@@ -99,7 +100,7 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(std::shared_ptr<AbstractEnvironment> 
 
 void MonteCarloTreeSearch::next_do() {
     // remember the trajectory
-    typedef tuple<node_t,arc_t,node_t,arc_t,reward_t> trajectory_item_t;
+    typedef tuple<node_t,arc_t,node_t,arc_t,reward_t,shared_ptr<RolloutItem>> trajectory_item_t;
     vector<trajectory_item_t> trajectory;
 
     /* ========================================================================
@@ -139,8 +140,16 @@ void MonteCarloTreeSearch::next_do() {
             DEBUG_OUT(2,"        observation " << *observation_to << " / node " << graph.id(observation_node));
             DEBUG_OUT(2,"        reward " << reward);
 
-            // add to trajectory
-            trajectory.push_back(trajectory_item_t(current_node, to_action_arc, action_node, to_observation_arc, reward));
+            // add to trajectory (set discounted return and next-pointer during backpropagation)
+            trajectory.push_back(trajectory_item_t(current_node,
+                                                   to_action_arc,
+                                                   action_node,
+                                                   to_observation_arc,
+                                                   reward,
+                                                   make_shared<RolloutItem>(action,
+                                                                            observation_to,
+                                                                            reward,
+                                                                            0, 0, nullptr)));
 
             // update current node and state
             current_node = observation_node;
@@ -167,19 +176,25 @@ void MonteCarloTreeSearch::next_do() {
     /* =======================================
        get a heuristic value estimate
        ======================================= */
+    auto leaf_node_rollout_item = make_shared<RolloutItem>();
     if(is_real_leaf_node) {
         switch(rollout_storage) {
         case ROLLOUT_STORAGE::NONE:
-            value_heuristic->add_value_estimate(leaf_node,
-                                                mcts_node_info_map);
+        {
+            auto discounted_return = value_heuristic->add_value_estimate(leaf_node,
+                                                                         mcts_node_info_map);
+            leaf_node_rollout_item->discounted_return = discounted_return;
             break;
+        }
         case ROLLOUT_STORAGE::CONDENSED:
         {
-            value_heuristic->add_value_estimate(leaf_node,
-                                                mcts_node_info_map);
+            auto discounted_return = value_heuristic->add_value_estimate(leaf_node,
+                                                                         mcts_node_info_map);
+            leaf_node_rollout_item->discounted_return = discounted_return;
             auto rollout_heuristic = std::dynamic_pointer_cast<value_heuristic::Rollout>(value_heuristic);
-            if(rollout_heuristic!=nullptr && !rollout_heuristic->get_last_rollout().empty()) {
-                mcts_node_info_map[leaf_node].add_rollout_to_list(rollout_heuristic->get_last_rollout());
+            if(rollout_heuristic!=nullptr) {
+                DEBUG_EXPECT(0,!rollout_heuristic->get_last_rollout().empty());
+                leaf_node_rollout_item = rollout_heuristic->get_last_rollout().front();
             }
             break;
         }
@@ -207,8 +222,16 @@ void MonteCarloTreeSearch::next_do() {
                   bool, new_observation_arc,
                   bool, new_observation_node) = find_or_create_observation_node(action_node, observation_to);
 
-                // add to trajectory
-                trajectory.push_back(trajectory_item_t(current_node, to_action_arc, action_node, to_observation_arc, reward));
+                // add to trajectory (set discounted return and next-pointer during backpropagation)
+                trajectory.push_back(trajectory_item_t(current_node,
+                                                       to_action_arc,
+                                                       action_node,
+                                                       to_observation_arc,
+                                                       reward,
+                                                       make_shared<RolloutItem>(action,
+                                                                                observation_to,
+                                                                                reward,
+                                                                                0, 0, nullptr)));
 
                 // update current node and state
                 current_node = observation_node;
@@ -235,24 +258,32 @@ void MonteCarloTreeSearch::next_do() {
      * is BACKUP_TRACE we also do the backups here. In that case only nodes that
      * lie on the trajectory will be backed up. (In trees this is the only way
      * but in general BACKUP_PROPAGATE will backup more nodes.) */
+#define FORCE_DEBUG_LEVEL 0
     {
-        // initialize discounted return of this rollout with leaf-node's return
-        reward_t discounted_return = 0;
-        if(mcts_node_info_map[leaf_node].rollout_counts>0) {
-            discounted_return = mcts_node_info_map[leaf_node].return_sum/mcts_node_info_map[leaf_node].rollout_counts;
-        }
+        // initialize next rollout item with leaf-node's rollout item
+        shared_ptr<RolloutItem> next_rollout_item = leaf_node_rollout_item;
+        shared_ptr<RolloutItem> current_rollout_item;
         // follow the trace back to root node
         node_t observation_node, action_node;
         arc_t to_action_arc, to_observation_arc;
         reward_t reward;
+        std::shared_ptr<RolloutItem> rollout_item;
         for(auto transition=trajectory.rbegin(); transition!=trajectory.rend(); ++transition) {
-            t(observation_node,to_action_arc,action_node,to_observation_arc,reward) = *transition;
+            t(observation_node,to_action_arc,action_node,to_observation_arc,reward,current_rollout_item) = *transition;
             // calculate discounted return
-            discounted_return = reward + discount*discounted_return;
-            // update counts, reward, and return
+            reward_t discounted_return = reward + discount*next_rollout_item->discounted_return;
+            DEBUG_OUT(2,discounted_return << " = " << reward << " + " << discount << "⋅" << current_rollout_item->discounted_return);
+            // update counts, reward, return, and rollout item
             add_transition(observation_node, to_action_arc, action_node, to_observation_arc, reward);
             mcts_node_info_map[observation_node  ].add_rollout_return(discounted_return);
             mcts_node_info_map[action_node       ].add_rollout_return(discounted_return);
+            mcts_node_info_map[observation_node  ].add_rollout_to_set(current_rollout_item);
+            current_rollout_item->discounted_return = discounted_return;
+            current_rollout_item->next = next_rollout_item;
+            // update next-pointer
+            next_rollout_item = current_rollout_item;
+            // debug info
+#define FORCE_DEBUG_LEVEL 0
             DEBUG_OUT(2,QString("    update observation-node(%1):	counts=%2/%3	return_sum=%4").
                       arg(graph.id(observation_node)).
                       arg(mcts_node_info_map[observation_node].action_counts).
@@ -387,7 +418,7 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
     <TR><TD ALIGN="right"> R  </TD><TD ALIGN="left"> %5         </TD></TR>
     <TR><TD ALIGN="right"> R² </TD><TD ALIGN="left"> %8         </TD></TR>
     <TR><TD ALIGN="right"> R↹ </TD><TD ALIGN="left"> %9 / %10   </TD></TR>
-    <TR><TD ALIGN="right"> #⤳ </TD><TD ALIGN="left"> %13 (%14)  </TD></TR>
+    <TR><TD ALIGN="right"> #⤳ </TD><TD ALIGN="left"> %13       </TD></TR>
 </TABLE>)").
             arg(str_html(node)).
             arg(mcts_node_info_map[node].action_counts).
@@ -401,10 +432,7 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
             arg(mcts_node_info_map[node].max_return,0,'g',4).
             arg(mcts_node_info_map[node].max_value,0,'g',4).
             arg(mcts_node_info_map[node].max_value,0,'g',4).
-            arg(mcts_node_info_map[node].rollout_list.size()).
-            arg(
-                [&](){int sum=0; for(auto roll:mcts_node_info_map[node].rollout_list) {sum+=roll.size();} return sum;}()
-                );
+            arg(mcts_node_info_map[node].rollout_set.size());
         node_map[node] = QString(R"(shape=%1 width=0 height=0 margin=0 label=<%2> fillcolor="%3 %4 1" penwidth=%5)").
             arg(node_info_map[node].type==OBSERVATION_NODE?"square":"circle").
             arg(node_label).
@@ -506,7 +534,7 @@ MonteCarloTreeSearch::arc_node_t MonteCarloTreeSearch::find_or_create_observatio
     }
     return return_value;
 }
-
+#define FORCE_DEBUG_LEVEL 0
 bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
                                              arc_t to_action_arc,
                                              node_t via_action_node,
@@ -517,15 +545,16 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
     DEBUG_EXPECT(0,node_info_map[to_observation_node].type==OBSERVATION_NODE);
     auto action = node_info_map[via_action_node].action;
     auto observation = node_info_map[to_observation_node].observation;
-    auto & rollout_list = mcts_node_info_map[from_observation_node].rollout_list;
-    vector<rollout_list_t::iterator> erase_from_list;
+    auto & rollout_set = mcts_node_info_map[from_observation_node].rollout_set;
     int transferred_rollouts = 0;
-    for(auto rollout_it=rollout_list.begin(); rollout_it!=rollout_list.end(); ++rollout_it) {
+    DEBUG_OUT(1,"Transferring rollouts from " <<
+              graph.id(from_observation_node) << " via " <<
+              graph.id(via_action_node) << " to " <<
+              graph.id(to_observation_node));
+    for(auto rollout_item : rollout_set) {
         // check if rollout took the required path
-        if(*action==*(rollout_it->front().action) && *observation==*(rollout_it->front().observation)) {
-            // should be removed from parent node to free up space and make
-            // future iterations more efficient
-            erase_from_list.push_back(rollout_it);
+        if(*action==*(rollout_item->action) && *observation==*(rollout_item->observation)) {
+            DEBUG_OUT(2,"    match");
             // update transition as for backups but don't add return to
             // from_observation_node because that was done when it got that
             // rollout added to its list (see below)
@@ -533,36 +562,27 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
                            to_action_arc,
                            via_action_node,
                            to_observation_arc,
-                           rollout_it->front().reward);
-            mcts_node_info_map[via_action_node].add_rollout_return(rollout_it->front().discounted_return);
-            // remove first transition (starting from parent node) from rollout
-            rollout_it->pop_front();
-            if(!rollout_it->empty()) {
+                           rollout_item->reward);
+            mcts_node_info_map[via_action_node].add_rollout_return(rollout_item->discounted_return);
+            // go to next rollout item
+            rollout_item = rollout_item->next;
+            if(rollout_item->next!=nullptr) {
                 // here we update the return for the observation node
                 // (cf. above, where we didn't)
-                mcts_node_info_map[to_observation_node].add_rollout_return(rollout_it->front().discounted_return);
+                mcts_node_info_map[to_observation_node].add_rollout_return(rollout_item->discounted_return);
                 // add rollout to list of to-observation node
-                mcts_node_info_map[to_observation_node].add_rollout_to_list(*rollout_it);
-                // set flag
+                mcts_node_info_map[to_observation_node].add_rollout_to_set(rollout_item);
+                // increment counts
                 ++transferred_rollouts;
             } else {
-                DEBUG_OUT(1,"Not transferring empty rollout from " <<
-                          graph.id(from_observation_node) << " via " <<
-                          graph.id(via_action_node) << " to " <<
-                          graph.id(to_observation_node));
+                DEBUG_OUT(2,"    not transferring empty rollout");
             }
-        }
+        } else DEBUG_OUT(2,"    no-match");
     }
-    for(auto it : erase_from_list) {
-        rollout_list.erase(it);
-    }
-    DEBUG_OUT(1,"transferred " << transferred_rollouts << " rollouts from " <<
-              graph.id(from_observation_node) << " via " <<
-              graph.id(via_action_node) << " to " <<
-              graph.id(to_observation_node));
+    DEBUG_OUT(1,"    " << transferred_rollouts << " rollouts transferred");
     return transferred_rollouts>0;
 }
-
+#define FORCE_DEBUG_LEVEL 0
 void MonteCarloTreeSearch::add_transition(node_t from_observation_node,
                                           arc_t to_action_arc,
                                           node_t action_node,

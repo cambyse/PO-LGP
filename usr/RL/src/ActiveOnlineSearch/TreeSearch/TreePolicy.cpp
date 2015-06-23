@@ -71,7 +71,7 @@ namespace tree_policy {
         TreePolicy::init(environment,graph,node_info_map,mcts_node_info_map,mcts_arc_info_map);
         available_actions = new graph_t::NodeMap<action_container_t>(graph);
     }
-
+#define FORCE_DEBUG_LEVEL 2
     MaxPolicy::action_probability_t MaxPolicy::get_action_probabilities(const node_t & state_node) const {
 
         // get set of actions
@@ -129,6 +129,12 @@ namespace tree_policy {
     action_handle_t MaxPolicy::get_action(const node_t & state_node) const {
         RETURN_TUPLE(action_container_t, actions,
                      vector<double>, probs) = get_action_probabilities(state_node);
+        IF_DEBUG(1) {
+            DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
+            for(int idx=0; idx<actions.size(); ++idx) {
+                DEBUG_OUT(1,"    " << *(actions[idx]) << "	" << probs[idx] );
+            }
+        }
         int idx = util::random_select_idx(probs);
         return actions[idx];
     }

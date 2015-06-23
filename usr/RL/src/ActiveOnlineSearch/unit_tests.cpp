@@ -1410,6 +1410,7 @@ public:
     virtual bool is_markov() const override {return true;}
 };
 
+#define FORCE_DEBUG_LEVEL 2
 TEST(MonteCarloTreeSearch, Backup2) {
     // initializde environment and search tree
     using namespace node_finder;
@@ -1455,7 +1456,7 @@ TEST(MonteCarloTreeSearch, Backup2) {
                             cout << "    " << typeid(*backup_method).name() << endl;
                             cout << "    " << typeid(backup_type).name() << endl;
                         } else {
-                            cout << "." << endl;
+                            cout << ".";
                         }
                         // do rollouts
                         int rollout_n = 3000;
@@ -1485,30 +1486,30 @@ TEST(MonteCarloTreeSearch, Backup2) {
                         const graph_t & graph = search.get_graph();
                         auto & node_info_map = search.get_node_info_map();
                         auto & mcts_node_info_map = search.get_mcts_node_info_map();
-                        int rollout_counts = 0;
+                        int rollout_counts_1 = 0;
+                        int rollout_counts_2 = 0;
                         for(node_it_t node(graph); node!=INVALID; ++node) {
-                            // there should be no rollouts stored in nodes
-                            // because all were handed through to the leaf nodes
-                            // (where they are empty and thus also not stored)
-                            EXPECT_TRUE(mcts_node_info_map[node].rollout_list.empty());
                             // ignore root node
                             if(in_arc_it_t(graph,node)==INVALID) continue;
                             // ignore action nodes
                             if(node_info_map[node].type==SearchTree::ACTION_NODE) continue;
-                            // all observation nodes one step before the
-                            // terminal state (i.e. with observation 3) should
-                            // in sum contain all rollouts ever made (checked
-                            // below, here we compute the sum)
+                            // all observation nodes at the same depth
+                            // (i.e. with observation 3 or 1/2) should in sum
+                            // contain all rollouts ever made (checked below,
+                            // here we compute the sum)
                             auto observation = node_info_map[node].observation;
                             auto simple_observation = std::dynamic_pointer_cast<const SimpleEnvironment::SimpleObservation>(observation);
                             EXPECT_NE(simple_observation,nullptr);
-                            if(simple_observation->observation==3) {
-                                rollout_counts += mcts_node_info_map[node].rollout_counts;
+                            if(simple_observation->observation==1 || simple_observation->observation==2) {
+                                rollout_counts_1 += mcts_node_info_map[node].rollout_counts;
+                            } else if(simple_observation->observation==3) {
+                                rollout_counts_2 += mcts_node_info_map[node].rollout_counts;
                             }
                         }
-                        EXPECT_EQ(rollout_counts,rollout_n);
-                        // plot graph before pruning etc
-                        //search.plot_graph("graph.pdf");
+                        EXPECT_EQ(rollout_counts_1,rollout_n);
+                        EXPECT_EQ(rollout_counts_2,rollout_n);
+                        // plot graph before pruning
+                        search.plot_graph("graph.pdf");
                         // do first step
                         environment->reset_state();
                         {
@@ -1538,13 +1539,16 @@ TEST(MonteCarloTreeSearch, Backup2) {
                             EXPECT_EQ(reward,1);
                             search.prune(action,observation);
                         }
-                        //getchar();
+                        getchar();
                     }
                 }
             }
         }
     }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
 }
+#define FORCE_DEBUG_LEVEL 0
 
 class SplitEnvironment: public AbstractEnvironment {
     //----typedefs/classes----//
@@ -1626,6 +1630,7 @@ public:
     virtual bool is_markov() const override {return true;}
 };
 
+#define FORCE_DEBUG_LEVEL 2
 TEST(MonteCarloTreeSearch, RolloutTransfer) {
     // initializde environment and search tree
     using namespace node_finder;
@@ -1640,13 +1645,13 @@ TEST(MonteCarloTreeSearch, RolloutTransfer) {
                 std::shared_ptr<NodeFinder>(new FullGraph())
                 }) {
         for(auto tree_policy: {
-                std::shared_ptr<TreePolicy>(new Uniform()),
-                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
+                //std::shared_ptr<TreePolicy>(new Uniform()),
+                //std::shared_ptr<TreePolicy>(new UCB1(1e10)),
                     std::shared_ptr<TreePolicy>(new UCB_Plus(1e10))
                     }) {
             for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new Rollout(-1,0))}) {
                 for(auto backup_method : {
-                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
+                        //std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
                             std::shared_ptr<BackupMethod>(new MonteCarlo(0))
                             }) {
                     for(auto backup_type : {
@@ -1654,7 +1659,7 @@ TEST(MonteCarloTreeSearch, RolloutTransfer) {
                                 MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
                                 }) {
                         auto environment = std::shared_ptr<AbstractEnvironment>(new SplitEnvironment());
-                        double discount = 0.1;
+                        double discount = 1;
                         MonteCarloTreeSearch search(environment,
                                                     discount,
                                                     node_finder,
@@ -1693,10 +1698,6 @@ TEST(MonteCarloTreeSearch, RolloutTransfer) {
                         auto & mcts_node_info_map = search.get_mcts_node_info_map();
                         std::map<int,int> rollout_counts;
                         for(node_it_t node(graph); node!=INVALID; ++node) {
-                            // there should be no rollouts stored in nodes
-                            // because all were handed through to the leaf nodes
-                            // (where they are empty and thus also not stored)
-                            EXPECT_TRUE(mcts_node_info_map[node].rollout_list.empty());
                             // ignore root node
                             if(in_arc_it_t(graph,node)==INVALID) continue;
                             // ignore action nodes (check together with observation node)
@@ -1719,14 +1720,15 @@ TEST(MonteCarloTreeSearch, RolloutTransfer) {
                         for(auto counts : rollout_counts) {
                             EXPECT_EQ(counts.second,rollout_n);
                         }
-                        // search.plot_graph("graph.pdf");
-                        // getchar();
+                        search.plot_graph("graph.pdf");
+                        getchar();
                     }
                 }
             }
         }
     }
 }
+#define FORCE_DEBUG_LEVEL 0
 
 class StochasticFiniteLineEnvironment: public AbstractEnvironment {
 public:

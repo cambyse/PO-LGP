@@ -19,11 +19,12 @@ namespace value_heuristic {
         environment = env;
     }
 
-    void Zero::add_value_estimate(const node_t & state_node,
-                                  mcts_node_info_map_t & mcts_node_info_map) {
+    reward_t Zero::add_value_estimate(const node_t & state_node,
+                                      mcts_node_info_map_t & mcts_node_info_map) {
         DEBUG_EXPECT(0,environment!=nullptr);
         mcts_node_info_map[state_node].add_rollout_return(0);
-        // note: instead of adding zero we can as well leave the value unchanged
+        mcts_node_info_map[state_node].add_rollout_to_set(std::make_shared<RolloutItem>());
+        return 0;
     }
 
     Rollout::Rollout(int rollout_length, double prior_counts):
@@ -50,8 +51,8 @@ namespace value_heuristic {
         }
     }
 
-    void Rollout::add_value_estimate(const node_t & state_node,
-                                     mcts_node_info_map_t & mcts_node_info_map) {
+    reward_t Rollout::add_value_estimate(const node_t & state_node,
+                                         mcts_node_info_map_t & mcts_node_info_map) {
         DEBUG_EXPECT(0,environment!=nullptr);
 
         // clear last rollout
@@ -63,7 +64,8 @@ namespace value_heuristic {
             mcts_node_info_map[state_node].set_value(0,0,0,0);
             mcts_node_info_map[state_node].min_return = 0;
             mcts_node_info_map[state_node].max_return = 0;
-            return;
+            last_rollout.push_back(std::make_shared<RolloutItem>());
+            return 0;
         }
 
         // Do rollout of specified length (rollout_length).
@@ -91,20 +93,27 @@ namespace value_heuristic {
             // update counter and discount factor
             ++k;
             discount_factor*=discount;
-            // update last rollout (update discounted return later)
-            last_rollout.push_back(ActionObservationReward(action,observation,reward,0));
+            // update last rollout (update discounted return and next item
+            // later)
+            last_rollout.push_back(std::make_shared<RolloutItem>(action,observation,reward,0,1,nullptr));
         }
+        // "empty" rollout item for last node
+        last_rollout.push_back(std::make_shared<RolloutItem>());
         // now update discounted return
         {
             reward_t reverse_discounted_return = 0;
-            for(auto elem_it=last_rollout.rbegin(); elem_it!=last_rollout.rend(); ++elem_it) {
-                elem_it->discounted_return = reverse_discounted_return;
-                reverse_discounted_return = elem_it->reward + discount * reverse_discounted_return;
+            std::shared_ptr<RolloutItem> next = nullptr;
+            for(auto rollout_item_it=last_rollout.rbegin(); rollout_item_it!=last_rollout.rend(); ++rollout_item_it) {
+                (*rollout_item_it)->discounted_return = reverse_discounted_return;
+                reverse_discounted_return = (*rollout_item_it)->reward + discount * reverse_discounted_return;
+                (*rollout_item_it)->next = next;
+                next = (*rollout_item_it);
             }
-            DEBUG_EXPECT(0,reverse_discounted_return-discounted_return<1e-10);
+            DEBUG_EXPECT(0,fabs(reverse_discounted_return-discounted_return)<1e-10);
         }
         // add rollout
         mcts_node_info_map[state_node].add_rollout_return(discounted_return);
+        mcts_node_info_map[state_node].add_rollout_to_set(last_rollout.front());
         // set value (mean and variance)
         auto rollout_return_sum = mcts_node_info_map[state_node].return_sum;
         auto squared_rollout_return_sum = mcts_node_info_map[state_node].squared_return_sum;
@@ -133,8 +142,9 @@ namespace value_heuristic {
                                                  std::min(mcts_node_info_map[state_node].min_value,discounted_return),
                                                  std::max(mcts_node_info_map[state_node].max_value,discounted_return));
         DEBUG_OUT(1,"value mean/variance: " << mean_and_variance.mean << "/" << mean_and_variance.variance);
-        if(discounted_return!=0)
-            DEBUG_OUT(1,"rollout return: " << discounted_return);
+        if(discounted_return!=0) DEBUG_OUT(1,"rollout return: " << discounted_return);
+
+        return discounted_return;
     }
 
 } // end namespace value_heuristic
