@@ -4,7 +4,7 @@
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
-#ifdef MT_ROS_ALVAR
+#ifdef MT_ROS
 
 #ifdef MT_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
