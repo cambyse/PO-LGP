@@ -28,6 +28,7 @@ TaskControllerModule::~TaskControllerModule(){
 void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
+#ifdef MT_ROS
 void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
   ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
   ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
@@ -39,6 +40,7 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
   q(qIndex+1) = pos(1);
   q(qIndex+2) = MT::sign(rotvec(2)) * angle;
 }
+#endif
 
 void TaskControllerModule::open(){
   modelWorld.get()->getJointState(q_model, qdot_model);
@@ -75,7 +77,9 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
+#ifdef MT_ROS
       setOdom(q_real, trans->qIndex, pr2_odom.get());
+#endif
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
