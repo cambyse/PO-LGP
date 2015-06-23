@@ -12,7 +12,7 @@ using std::string;
 struct ActionSwigInterface{
   struct SwigSystem *S;
 
-  ActionSwigInterface(bool useRos); //instantiates the ActionMachineSystem, runs it
+  ActionSwigInterface(); //instantiates the ActionMachineSystem, runs it
   ~ActionSwigInterface();
 
   void Cancel();
