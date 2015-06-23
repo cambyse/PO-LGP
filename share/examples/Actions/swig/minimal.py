@@ -30,7 +30,7 @@ def signal_handler(signal, frame):
 interface = swig.ActionSwigInterface(False)
 
 # new convenient symbols
-for s in ["rot", "qItself", "pos", "front", "gazeAt"]:
+for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper"]:
     interface.createNewSymbol(s)
 
 # don't abort the swig interface on Ctr-C
@@ -187,8 +187,7 @@ def _gripper(side, target):
 
     assert_valid_shapes(endeff)
 
-    # TODO use FollowReference once qItself is fixed
-    fact = ("(GripperActivity {endeff}){{ ref1={joint}, target=[{target}] tol=.01 }}"
+    fact = ("(FollowReferenceActivity {endeff} gripper){{ type=qItself ref1={joint}, target=[{target}] tol=.01 }}"
             .format(endeff=endeff, joint=joint, target=target))
     return [fact]
 
@@ -206,7 +205,7 @@ def reach(what, with_=None, offset=None):
     if with_ is None:
         with_ = side2endeff(DEFAULT_SIDE)
     if offset is None:
-        offset = (0., 0., 0.)
+        offset = [0., 0., 0.]
 
     assert_valid_shapes(what)
     assert_valid_shapes(with_)
@@ -275,7 +274,7 @@ def turn_wrist(rel_degree, side=None):
     joint = side2wrist_joint(side)
     current_q = float(joints(joint)["q"])
     target = current_q + np.deg2rad(rel_degree)
-    fact = ("(GripperActivity qItself {joint}){{ ref1={joint} target=[{target}] tol=.1 }}"
+    fact = ("(FollowReferenceActivity qItself {joint}){{ type=qItself ref1={joint} target=[{target}] tol=.1 }}"
             .format(joint=joint, target=target))
     return [fact]
 
