@@ -1244,6 +1244,7 @@ private:
 };
 
 TEST(MonteCarloTreeSearch, BackupType) {
+    #warning This test fails sometimes?!
     using namespace node_finder;
     using namespace tree_policy;
     using namespace value_heuristic;
