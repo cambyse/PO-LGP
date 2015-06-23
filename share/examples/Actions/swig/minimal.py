@@ -282,23 +282,39 @@ def turn_wrist(rel_degree, side=None):
 ###############################################################################
 # High Level Behaviors
 def run_grab_marker(shape, side=LEFT):
-    with running(gaze_at("endeffL")):
-        run(open_gripper(side)
-            + reach(shape, offset=[0.0, 0.01, 0.1])
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
-        run(reach(shape, offset=[0.0, 0.01, -0.07]))
-        run(close_gripper(side))
+    endeff = side2endeff(side)
+    with running(gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[0.0, 0.01, 0.1], with_=endeff)
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+        run(reach(shape, offset=[0.0, 0.01, -0.07], with_=endeff))
+        run(close_gripper(side=side))
     # run(homing())
 
 
-def run_turn_marker(shape):
-    with running(gaze_at("endeffL")):
+def run_turn_marker(shape, degree, side=LEFT):
+    endeff = side2endeff(side)
+    with running(gaze_at(endeff)):
         run(open_gripper()
-            + reach(shape, offset=[0.0, 0.01, 0.1])
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
-        run(reach(shape, offset=[0.0, 0.01, -0.07]))
-        run(close_gripper())
-        run(turn_wrist(90))
+            + reach(shape, with_=endeff, offset=[0.0, 0.01, 0.1])
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+        run(reach(shape, with_=endeff, offset=[0.0, 0.01, -0.07]))
+        run(close_gripper(side))
+        run(turn_wrist(degree, side))
+        run(open_gripper(side))
+
+
+def run_move_shape(shape, distance, side=LEFT):
+    endeff = side2endeff(side)
+    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
+                 gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
+        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
+        run(close_gripper(side=side))
+        run(move_along_axis(endeff, [0, 0, 1], distance))
+        run(open_gripper(side=side))
 
 
 ###############################################################################
