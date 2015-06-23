@@ -22,7 +22,6 @@ add_executable(GTest
     RepresentationTest.cpp
     SandBox.cpp
     SandBox.h
-    TemplateTest.cpp
     MinimalEnvironmentExample/MinimalAction.cpp
     MinimalEnvironmentExample/MinimalAction.h
     MinimalEnvironmentExample/MinimalEnvironment.h

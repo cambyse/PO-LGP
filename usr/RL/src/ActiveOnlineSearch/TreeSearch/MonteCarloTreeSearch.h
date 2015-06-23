@@ -29,10 +29,12 @@ public:
                     reward_t reward = 0,
                     reward_t discounted_return = 0,
                     double weight = 1,
-                    std::shared_ptr<RolloutItem> next = nullptr):
+                    std::shared_ptr<RolloutItem> next = nullptr,
+                    bool is_new = true,
+                    NODE_TYPE type = OBSERVATION_NODE):
             action(action), observation(observation), reward(reward),
             discounted_return(discounted_return),
-            weight(weight), next(next)
+            weight(weight), next(next), is_new(is_new), type(type)
         {}
         action_handle_t action;
         observation_handle_t observation;
@@ -40,6 +42,8 @@ public:
         reward_t discounted_return;
         double weight;
         std::shared_ptr<RolloutItem> next;
+        bool is_new;
+        NODE_TYPE type;
     };
     typedef std::set<std::shared_ptr<RolloutItem>> rollout_set_t;
     /**
@@ -49,8 +53,6 @@ public:
                        reward_t val_variance,
                        reward_t min_val,
                        reward_t max_val);
-        void add_rollout_return(reward_t ret);
-        void add_rollout_to_set(std::shared_ptr<RolloutItem> rollout);
         /** # of actions taken from here. */
         int action_counts = 0;
         /** # of added rollout returns. */
@@ -79,7 +81,6 @@ public:
     /**
      * Arc-specific data for MCTS.*/
     struct MCTSArcInfo {
-        void add_reward(reward_t reward);
         /** Number of times this arc was taken. */
         int transition_counts = 0;
         /** Sum of rewards for all transitions. */
@@ -129,6 +130,7 @@ protected:
     std::shared_ptr<tree_policy::TreePolicy> recommendation_policy;
 
     int max_depth;
+    int rollout_length;
 
     //----methods----//
 public:
@@ -139,6 +141,7 @@ public:
                          std::shared_ptr<value_heuristic::ValueHeuristic> value_heuristic,
                          std::shared_ptr<backup_method::BackupMethod> backup_method,
                          BACKUP_TYPE backup_type = BACKUP_TYPE::PROPAGATE,
+                         int rollout_length = -1,
                          std::shared_ptr<tree_policy::TreePolicy> recommendation_policy = nullptr,
                          int max_depth = -1,
                          ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::NONE);
@@ -167,7 +170,12 @@ protected:
                                 node_t action_node,
                                 arc_t to_observation_arc,
                                 reward_t reward);
+    virtual void add_rollout(node_t node,
+                             std::shared_ptr<RolloutItem> rollout);
+    virtual std::shared_ptr<RolloutItem> rollout(node_t leaf_node);
     virtual double color_rescale(const double&) const;
+    static bool equal(const MCTSNodeInfo & lhs, const MCTSNodeInfo & rhs);
+    static void update(const MCTSNodeInfo & from, MCTSNodeInfo & to);
 };
 
 #endif /* MONTECARLOTREESEARCH_H_ */

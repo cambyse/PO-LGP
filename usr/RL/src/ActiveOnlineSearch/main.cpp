@@ -730,7 +730,7 @@ tuple<shared_ptr<AbstractSearchTree>,
     if(value_heuristic_arg.getValue()=="Zero") {
         value_heuristic.reset(new Zero());
     } else if(value_heuristic_arg.getValue()=="Rollout") {
-        value_heuristic.reset(new Rollout(rollout_length_arg.getValue(),prior_counts_arg.getValue()));
+        value_heuristic.reset(new Rollout(prior_counts_arg.getValue()));
     } else DEBUG_DEAD_LINE;
     // set up backup method
     if(backup_method_arg.getValue()=="Bellman") {
@@ -760,6 +760,7 @@ tuple<shared_ptr<AbstractSearchTree>,
                                                    value_heuristic,
                                                    backup_method,
                                                    get_backup_type(),
+                                                   rollout_length_arg.getValue(),
                                                    action_policy));
     }
     search_tree->init();

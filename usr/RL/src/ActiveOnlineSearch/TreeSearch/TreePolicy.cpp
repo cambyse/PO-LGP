@@ -46,17 +46,39 @@ namespace tree_policy {
         mcts_arc_info_map = &mcts_ai_map;
     }
 
-    Uniform::action_probability_t Uniform::get_action_probabilities(const node_t & state_node) const {
-        auto actions = environment->get_actions();
-        int action_n = actions.size();
-        vector<double> probs(action_n,1./action_n);
-        return action_probability_t(actions, probs);
+    action_handle_t TreePolicy::get_action(const node_t & state_node) const {
+        RETURN_TUPLE(action_container_t, actions,
+                     vector<double>, probs) = get_action_probabilities(state_node);
+        DEBUG_EXPECT(0,actions.size()>0);
+        IF_DEBUG(1) {
+            DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
+            for(int idx=0; idx<(int)actions.size(); ++idx) {
+                DEBUG_OUT(1,"    " << *(actions[idx]) << "	" << probs[idx] );
+            }
+            if(actions.size()==0) {
+                DEBUG_OUT(1,"    node has outgoing arc? " << (out_arc_it_t(*graph,state_node)==INVALID));
+            }
+        }
+        int idx = util::random_select_idx(probs);
+        return actions[idx];
     }
 
-    action_handle_t Uniform::get_action(const node_t & state_node) const {
-        action_handle_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << *action);
-        return action;
+    Uniform::action_probability_t Uniform::get_action_probabilities(const node_t & state_node) const {
+        if(restrict_to_existing) {
+            int action_n = 0;
+            action_container_t actions;
+            for(out_arc_it_t arc(*graph,state_node); arc!=INVALID; ++arc) {
+                actions.push_back((*node_info_map)[graph->target(arc)].action);
+                ++action_n;
+            }
+            vector<double> probs(action_n,1./action_n);
+            return action_probability_t(actions, probs);
+        } else {
+            action_container_t actions = environment->get_actions();
+            int action_n = actions.size();
+            vector<double> probs(action_n,1./action_n);
+            return action_probability_t(actions, probs);
+        }
     }
 
     MaxPolicy::~MaxPolicy() {
@@ -71,7 +93,7 @@ namespace tree_policy {
         TreePolicy::init(environment,graph,node_info_map,mcts_node_info_map,mcts_arc_info_map);
         available_actions = new graph_t::NodeMap<action_container_t>(graph);
     }
-#define FORCE_DEBUG_LEVEL 2
+
     MaxPolicy::action_probability_t MaxPolicy::get_action_probabilities(const node_t & state_node) const {
 
         // get set of actions
@@ -116,27 +138,19 @@ namespace tree_policy {
             // erase this action from set
             action_set.erase(action);
         }
-        // set scores to infinity for unsampled actions
-        for(auto action : action_set) {
-            scores.push_back(std::numeric_limits<double>::infinity());
-            scored_actions.push_back(action);
+        // set scores to infinity for unsampled actions (if not restricted to
+        // existing actions)
+        if(!restrict_to_existing) {
+            for(auto action : action_set) {
+                scores.push_back(std::numeric_limits<double>::infinity());
+                scored_actions.push_back(action);
+            }
         }
+        DEBUG_EXPECT(0,!scores.empty());
+        DEBUG_EXPECT(0,scored_actions.size()==scores.size());
 
         // compute soft-max probabilities and return
         return action_probability_t(scored_actions, util::soft_max(scores,soft_max_temperature));
-    }
-
-    action_handle_t MaxPolicy::get_action(const node_t & state_node) const {
-        RETURN_TUPLE(action_container_t, actions,
-                     vector<double>, probs) = get_action_probabilities(state_node);
-        IF_DEBUG(1) {
-            DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
-            for(int idx=0; idx<actions.size(); ++idx) {
-                DEBUG_OUT(1,"    " << *(actions[idx]) << "	" << probs[idx] );
-            }
-        }
-        int idx = util::random_select_idx(probs);
-        return actions[idx];
     }
 
     double Optimal::score(const node_t & state_node,

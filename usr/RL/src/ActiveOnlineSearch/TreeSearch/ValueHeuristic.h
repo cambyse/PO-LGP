@@ -5,12 +5,8 @@
 
 namespace value_heuristic {
 
-    typedef MonteCarloTreeSearch::graph_t              graph_t;
     typedef MonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef MonteCarloTreeSearch::node_info_map_t      node_info_map_t;
     typedef MonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractEnvironment::action_handle_t       action_handle_t;
-    typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
@@ -21,8 +17,6 @@ namespace value_heuristic {
      * fixed length \e k just using Zero as initialization. */
     class ValueHeuristic {
     public:
-        //----typdefs/classes----//
-        typedef MonteCarloTreeSearch::RolloutItem RolloutItem;
         //----members----//
         double discount = 0;
         std::shared_ptr<AbstractEnvironment> environment = nullptr;
@@ -31,8 +25,8 @@ namespace value_heuristic {
         virtual ~ValueHeuristic() = default;
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
-        virtual reward_t add_value_estimate(const node_t & state_node,
-                                            mcts_node_info_map_t & mcts_node_info_map) = 0;
+        virtual void add_value_estimate(const node_t & state_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) = 0;
     };
 
     /**
@@ -40,30 +34,26 @@ namespace value_heuristic {
     class Zero: public ValueHeuristic {
     public:
         virtual ~Zero() = default;
-        virtual reward_t add_value_estimate(const node_t & state_node,
-                                            mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual void add_value_estimate(const node_t & state_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
     };
 
     /**
      * This heuristic does a rollout to initialize value/return. */
     class Rollout: public ValueHeuristic {
     public:
-        typedef std::vector<std::shared_ptr<RolloutItem>> rollout_t;
         /**
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
-        Rollout(int rollout_length = -1, double prior_counts = -1);
+        Rollout(double prior_counts = -1);
         virtual ~Rollout() = default;
         virtual void init(double disc,
                           std::shared_ptr<AbstractEnvironment> env);
-        virtual reward_t add_value_estimate(const node_t & state_node,
-                                            mcts_node_info_map_t & mcts_node_info_map) override;
-        virtual rollout_t get_last_rollout() const {return last_rollout;}
+        virtual void add_value_estimate(const node_t & state_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
     protected:
-        int rollout_length;
         double prior_counts;
-        rollout_t last_rollout;
     };
 
 } // end namespace value_heuristic

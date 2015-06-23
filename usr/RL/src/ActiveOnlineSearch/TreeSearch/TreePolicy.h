@@ -30,6 +30,7 @@ namespace tree_policy {
         const node_info_map_t * node_info_map = nullptr;
         const mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+        bool restrict_to_existing = false;
     public:
         //----methods----//
         virtual ~TreePolicy() = default;
@@ -39,7 +40,7 @@ namespace tree_policy {
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map);
         virtual action_probability_t get_action_probabilities(const node_t & state_node) const = 0;
-        virtual action_handle_t get_action(const node_t & state_node) const = 0;
+        virtual action_handle_t get_action(const node_t & state_node) const final;
     };
 
     /**
@@ -48,7 +49,6 @@ namespace tree_policy {
     public:
         virtual ~Uniform() = default;
         virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
-        virtual action_handle_t get_action(const node_t & state_node) const override;
     };
 
     /**
@@ -64,7 +64,6 @@ namespace tree_policy {
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map) override;
         virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
-        virtual action_handle_t get_action(const node_t & state_node) const override final;
         virtual double score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const = 0;

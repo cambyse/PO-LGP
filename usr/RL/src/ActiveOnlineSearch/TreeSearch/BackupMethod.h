@@ -32,6 +32,7 @@ namespace backup_method {
         std::shared_ptr<AbstractEnvironment> environment;
         const graph_t * graph = nullptr;
         const node_info_map_t * node_info_map = nullptr;
+        const mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
     public:
         //----methods----//
@@ -40,10 +41,12 @@ namespace backup_method {
                           std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
+                          const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & observation_node,
-                            const node_t & action_node,
-                            mcts_node_info_map_t & mcts_node_info_map) const = 0;
+        virtual void backup_action_node(const node_t & action_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) const = 0;
+        virtual void backup_observation_node(const node_t & observation_node,
+                                             mcts_node_info_map_t & mcts_node_info_map) const = 0;
         virtual void backup_root(const node_t & observation_node,
                                  mcts_node_info_map_t & mcts_node_info_map) const {};
     };
@@ -53,19 +56,21 @@ namespace backup_method {
      * the source state and the action, not on the tartet state! */
     class Bellman: public BackupMethod {
     public:
-        Bellman(std::shared_ptr<const tree_policy::TreePolicy> tree_policy = nullptr,
+        Bellman(std::shared_ptr<tree_policy::TreePolicy> tree_policy = nullptr,
                 double prior_counts = -1);
         virtual ~Bellman() = default;
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & observation_node,
-                            const node_t & action_node,
-                            mcts_node_info_map_t & mcts_node_info_map) const override;
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+        virtual void backup_action_node(const node_t & action_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+        virtual void backup_observation_node(const node_t & observation_node,
+                                             mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
-        std::shared_ptr<const tree_policy::TreePolicy> tree_policy;
+        std::shared_ptr<tree_policy::TreePolicy> tree_policy;
         double prior_counts;
     };
 
@@ -79,11 +84,15 @@ namespace backup_method {
                           std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & observation_node,
-                            const node_t & action_node,
-                            mcts_node_info_map_t & mcts_node_info_map) const override;
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+        virtual void backup_action_node(const node_t & action_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+        virtual void backup_observation_node(const node_t & observation_node,
+                                             mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
+        virtual void backup_node(const node_t & node,
+                                 mcts_node_info_map_t & mcts_node_info_map) const;
         double prior_counts;
     };
 
@@ -102,10 +111,12 @@ namespace backup_method {
                           std::shared_ptr<AbstractEnvironment> environment,
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual void backup(const node_t & observation_node,
-                            const node_t & action_node,
-                            mcts_node_info_map_t & mcts_node_info_map) const override;
+                          const mcts_node_info_map_t & mcts_node_info_map,
+                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+        virtual void backup_action_node(const node_t & action_node,
+                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+        virtual void backup_observation_node(const node_t & observation_node,
+                                             mcts_node_info_map_t & mcts_node_info_map) const override;
     protected:
         double mc_weight;
         MonteCarlo monte_carlo;
