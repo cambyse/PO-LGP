@@ -79,11 +79,17 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
     y_ref = -y_ref;
   //compute diffs
   arr y_diff(y);
-  if(y_ref.N==1) y_diff -= y_ref.scalar();
-  if(y_ref.N==y_diff.N) y_diff -= y_ref;
+  if(y_ref.N==1) {
+    y_diff -= y_ref.scalar();
+  }else if(y_ref.N==y_diff.N) {
+    y_diff -= y_ref;
+  }
   arr ydot_diff(ydot);
-  if(v_ref.N==1) ydot_diff -= v_ref.scalar();
-  if(v_ref.N==ydot_diff.N) ydot_diff -= v_ref;
+  if(v_ref.N==1) {
+    ydot_diff -= v_ref.scalar();
+  }else if(v_ref.N==ydot_diff.N) {
+    ydot_diff -= v_ref;
+  }
 
   arr a = - Pgain*y_diff - Dgain*ydot_diff;
   //check limits
