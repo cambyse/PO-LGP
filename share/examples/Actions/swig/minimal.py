@@ -317,6 +317,20 @@ def run_move_shape(shape, distance, side=LEFT):
         run(open_gripper(side=side))
 
 
+def run_move_shape_along_joint(shape, distance, joint, side=LEFT):
+    endeff = side2endeff(side)
+
+
+    axis = pos_str2arr(interface.getJointByName(joint)["axis"])
+    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
+                         gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
+        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
+        run(close_gripper(side=side))
+        run(move_along_axis(endeff, axis, distance))
+        run(open_gripper(side=side))
 ###############################################################################
 if __name__ == '__main__':
     # run(homing())
