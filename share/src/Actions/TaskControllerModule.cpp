@@ -74,6 +74,7 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
+    pr2_odom.waitForRevisionGreaterThan(0);
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
