@@ -35,9 +35,10 @@ struct FollowReferenceActivity : TaskCtrlActivity {
 
 struct HomingActivity : TaskCtrlActivity {
   double stopTolerance;
+  ors::Joint *wheeljoint;
 
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
+  virtual void step2(double dt);
   virtual bool isConv();
 };
 stdOutPipe(HomingActivity)
