@@ -1,5 +1,4 @@
 #include "swig.h"
-
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
@@ -167,7 +166,13 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
-  D["q"] = std::to_string(S->tcm->modelWorld().getJointState()(joint->qIndex));
+  if(joint->agent == S->tcm->modelWorld().q_agent) {
+    D["q"] = std::to_string(S->tcm->modelWorld().getJointState()(joint->qIndex));
+  }
+  else {
+    D["q"] = "not available";
+  }
+  D["axis"] = STRING('[' << joint->axis << ']');
   S->tcm->modelWorld.deAccess();
   return D;
 }

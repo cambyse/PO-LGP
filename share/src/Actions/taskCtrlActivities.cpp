@@ -112,37 +112,9 @@ void HomingActivity::step2(double dt) {
 
 }
 
-//===========================================================================
-void GripperActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  Node *it;
-  if ((it=specs["ref1"])){
-    int jointID = world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex;
-    map = new TaskMap_qItself(jointID, world.getJointStateDimension());
-  } else {
-    HALT("You need a specify which gripper (ref1) to move");
-  }
-  task = new CtrlTask(name, *map, specs);
-  if ((it=specs["target"])){
-    // TODO WARNING this should not be necessary
-    // fix qItself. it moves twice as far as it should
-    task->setTarget(specs["target"]->V<arr>() / 2.);
-    adjusted_target = specs["target"]->V<arr>();
-  } else {
-    HALT("You need a specify which target");
-  }
-
-  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
-}
-
-bool GripperActivity::isConv() {
-  return task->y.N==task->y_ref.N
-      && maxDiff(task->y, adjusted_target) < stopTolerance
-      && maxDiff(task->v, task->v_ref) < stopTolerance;
-}
 
 //===========================================================================
 RUN_ON_INIT_BEGIN(Activities)
 registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
 registerActivity<HomingActivity>("HomingActivity");
-registerActivity<GripperActivity>("GripperActivity");
 RUN_ON_INIT_END(Activities)

@@ -770,10 +770,10 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   return qdim(agent);
 }
 
-void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot) const {
-  if(!qdim.N || q.N!=getJointStateDimension()){
-    getJointStateDimension();
-    ((KinematicWorld*)this)->calc_q_from_Q();
+void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
+  if(!qdim.N || q.N!=getJointStateDimension(agent)){
+    getJointStateDimension(agent);
+    ((KinematicWorld*)this)->calc_q_from_Q(agent);
   }
   _q=q;
   if(&_qdot){
@@ -782,10 +782,10 @@ void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot) const {
   }
 }
 
-arr ors::KinematicWorld::getJointState() const {
-  if(!qdim.N || q.N!=getJointStateDimension()){
-    getJointStateDimension();
-    ((KinematicWorld*)this)->calc_q_from_Q();
+arr ors::KinematicWorld::getJointState(int agent) const {
+  if(!qdim.N || q.N!=getJointStateDimension(agent)){
+    getJointStateDimension(agent);
+    ((KinematicWorld*)this)->calc_q_from_Q(agent);
   }
   return q;
 }
@@ -821,15 +821,16 @@ void ors::KinematicWorld::zeroGaugeJoints() {
   }
 }
 
-void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
+void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
+  if(agent == -1) agent = q_agent;
 //  ors::Quaternion rot;
   
-  uint N=getJointStateDimension();
+  uint N=getJointStateDimension(agent);
   q.resize(N);
   qdot.resize(N).setZero();
 
   uint n=0;
-  for(Joint *j: joints) if(j->agent==q_agent){
+  for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic) continue; //don't count dependent joints
     CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
     switch(j->type) {
@@ -948,9 +949,10 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
   CHECK_EQ(n,N,"");
 }
 
-void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
+void ors::KinematicWorld::calc_Q_from_q(bool calcVels, int agent){
+  if(agent==-1) agent = q_agent;
   uint n=0;
-  for(Joint *j: joints) if(j->agent==q_agent){
+  for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic){
       j->Q=j->mimic->Q;
     }else{
@@ -1057,15 +1059,15 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
 
 /** @brief sets the joint state vectors separated in positions and
   velocities */
-void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, bool calcVels) {
+void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, bool calcVels, int agent) {
   setJointStateCount++; //global counter
 
-  uint N=getJointStateDimension();
+  uint N=getJointStateDimension(agent);
   CHECK(_q.N==N && (!(&_qdot) || _qdot.N==N), "wrong joint state dimensionalities");
   if(&_q!=&q) q=_q;
   if(&_qdot){ if(&_qdot!=&qdot) qdot=_qdot; }else qdot.clear();
 
-  calc_Q_from_q(calcVels);
+  calc_Q_from_q(calcVels, agent);
 
   calc_fwdPropagateFrames();
 }

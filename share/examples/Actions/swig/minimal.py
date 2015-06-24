@@ -187,7 +187,8 @@ def _gripper(side, target):
 
     assert_valid_shapes(endeff)
 
-    fact = ("(FollowReferenceActivity {endeff} gripper){{ type=qItself ref1={joint}, target=[{target}] tol=.01 }}"
+    fact = ("(FollowReferenceActivity {endeff} gripper)"
+            "{{ type=qItself ref1={joint}, target=[{target}] tol=.01 }}"
             .format(endeff=endeff, joint=joint, target=target))
     return [fact]
 
@@ -211,7 +212,9 @@ def reach(what, with_=None, offset=None):
     assert_valid_shapes(with_)
 
     # offset = "[{} {} {}]".format(*offset)
-    fact = "(FollowReferenceActivity {ref1} {ref2}){{ type=pos, ref1={ref1}, ref2={ref2}, target={offset} }}".format(ref1=with_, ref2=what, offset=offset)
+    fact = ("(FollowReferenceActivity {ref1} {ref2})"
+            "{{ type=pos, ref1={ref1}, ref2={ref2}, target={offset} }}"
+            .format(ref1=with_, ref2=what, offset=offset))
     return [fact]
 
 
@@ -228,7 +231,10 @@ def align_gripper(vec_endeff, vec_target, side=None):
 
     assert_valid_shapes(endeff)
 
-    fact = "(FollowReferenceActivity {ref1} rot){{ type=vec, ref1={ref1}, vec1={vec_endeff}, target={vec_target} }}".format(ref1=endeff, vec_endeff=vec_endeff, vec_target=vec_target)
+    fact = ("(FollowReferenceActivity {ref1} rot)"
+            "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
+            "target={vec_target} }}"
+            .format(ref1=endeff, vec_endeff=vec_endeff, vec_target=vec_target))
 
     return [fact]
 
@@ -239,8 +245,12 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     assert_valid_shapes(endeff)
 
     return [
-        "(FollowReferenceActivity {ref1} front){{ type=vec, ref1={ref1}, vec1=[1 0 0], target={front} }}".format(ref1=endeff, front=front_opening),
-        "(FollowReferenceActivity {ref1} rot){{ type=vec, ref1={ref1}, vec1=[0 1 0], target={rot} }}".format(ref1=endeff, rot=rotation_around_wrist)
+        ("(FollowReferenceActivity {ref1} front)"
+         "{{ type=vec, ref1={ref1}, vec1=[1 0 0], target={front} }}"
+         .format(ref1=endeff, front=front_opening)),
+        ("(FollowReferenceActivity {ref1} rot)"
+         "{{ type=vec, ref1={ref1}, vec1=[0 1 0], target={rot} }}"
+         .format(ref1=endeff, rot=rotation_around_wrist))
     ]
 
 
@@ -266,7 +276,9 @@ def move_along_axis(endeff, axis, distance):
     target_pos = endeff_pos + distance/np.linalg.norm(axis) * axis
     print(target_pos)
 
-    fact = "(FollowReferenceActivity {ref1}){{ type=pos, ref1={ref1}, vec2={pos} }}".format(ref1=endeff, pos=target_pos)
+    fact = ("(FollowReferenceActivity {ref1})"
+            "{{ type=pos, ref1={ref1}, vec2={pos} }}"
+            .format(ref1=endeff, pos=target_pos))
     return [fact]
 
 
@@ -274,32 +286,69 @@ def turn_wrist(rel_degree, side=None):
     joint = side2wrist_joint(side)
     current_q = float(joints(joint)["q"])
     target = current_q + np.deg2rad(rel_degree)
-    fact = ("(FollowReferenceActivity qItself {joint}){{ type=qItself ref1={joint} target=[{target}] tol=.1 }}"
+    fact = ("(FollowReferenceActivity qItself {joint})"
+            "{{ type=qItself ref1={joint} target=[{target}] tol=.1 }}"
             .format(joint=joint, target=target))
+    return [fact]
+
+
+def move_to_pos(endeff, pos):
+    fact = ("(FollowReferenceActivity pos {endeff})"
+            "{{ type=pos ref1={endeff} vec2={position} }}"
+            .format(endeff=endeff, position=pos))
     return [fact]
 
 
 ###############################################################################
 # High Level Behaviors
 def run_grab_marker(shape, side=LEFT):
-    with running(gaze_at("endeffL")):
-        run(open_gripper(side)
-            + reach(shape, offset=[0.0, 0.01, 0.1])
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
-        run(reach(shape, offset=[0.0, 0.01, -0.07]))
-        run(close_gripper(side))
+    endeff = side2endeff(side)
+    with running(gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[0.0, 0.01, 0.1], with_=endeff)
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+        run(reach(shape, offset=[0.0, 0.01, -0.07], with_=endeff))
+        run(close_gripper(side=side))
     # run(homing())
 
 
-def run_turn_marker(shape):
-    with running(gaze_at("endeffL")):
+def run_turn_marker(shape, degree, side=LEFT):
+    endeff = side2endeff(side)
+    with running(gaze_at(endeff)):
         run(open_gripper()
-            + reach(shape, offset=[0.0, 0.01, 0.1])
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0]))
-        run(reach(shape, offset=[0.0, 0.01, -0.07]))
-        run(close_gripper())
-        run(turn_wrist(90))
+            + reach(shape, with_=endeff, offset=[0.0, 0.01, 0.1])
+            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+        run(reach(shape, with_=endeff, offset=[0.0, 0.01, -0.07]))
+        run(close_gripper(side))
+        run(turn_wrist(degree, side))
+        run(open_gripper(side))
 
+
+def run_move_shape(shape, distance, side=LEFT):
+    endeff = side2endeff(side)
+    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
+                 gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
+        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
+        run(close_gripper(side=side))
+        run(move_along_axis(endeff, [0, 0, 1], distance))
+        run(open_gripper(side=side))
+
+
+def run_move_shape_along_joint(shape, distance, joint, side=LEFT):
+    endeff = side2endeff(side)
+    axis = pos_str2arr(interface.getJointByName(joint)["axis"])
+    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
+    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
+                 gaze_at(endeff)):
+        run(open_gripper(side=side)
+            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
+        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
+        run(close_gripper(side=side))
+        run(move_along_axis(endeff, axis, distance))
+        run(open_gripper(side=side))
 
 ###############################################################################
 if __name__ == '__main__':
