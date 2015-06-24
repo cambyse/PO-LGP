@@ -251,6 +251,7 @@ struct KinematicWorld {
   /// @name computations on the graph
   void calc_Q_from_q(bool calcVels=false, int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
   void calc_q_from_Q(bool calcVels=false, int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
+  arr calc_q_from_Q(Joint* j, bool calcVels=false);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)

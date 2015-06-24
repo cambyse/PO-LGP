@@ -821,6 +821,126 @@ void ors::KinematicWorld::zeroGaugeJoints() {
   }
 }
 
+arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
+  arr q;
+  switch(j->type) {
+    case JT_hingeX:
+    case JT_hingeY:
+    case JT_hingeZ: {
+      q.resize(1);
+      //angle
+      ors::Vector rotv;
+      j->Q.rot.getRad(q(0), rotv);
+      if(q(0)>MT_PI) q(0)-=MT_2PI;
+      if(j->type==JT_hingeX && rotv*Vector_x<0.) q(0)=-q(0);
+      if(j->type==JT_hingeY && rotv*Vector_y<0.) q(0)=-q(0);
+      if(j->type==JT_hingeZ && rotv*Vector_z<0.) q(0)=-q(0);
+      //velocity
+      if(calcVels){
+        qdot(0)=j->Q.angvel.length();
+        if(j->type==JT_hingeX && j->Q.angvel*Vector_x<0.) qdot(0)=-qdot(0);
+        if(j->type==JT_hingeY && j->Q.angvel*Vector_y<0.) qdot(0)=-qdot(0);
+        if(j->type==JT_hingeZ && j->Q.angvel*Vector_z<0.) qdot(0)=-qdot(0);
+      }
+    } break;
+
+    case JT_universal: {
+      q.resize(2);
+      //angle
+      if(fabs(j->Q.rot.w)>1e-15) {
+        q(0) = 2.0 * atan(j->Q.rot.x/j->Q.rot.w);
+        q(1) = 2.0 * atan(j->Q.rot.y/j->Q.rot.w);
+      } else {
+        q(0) = MT_PI;
+        q(1) = MT_PI;
+      }
+      
+      if(calcVels) NIY; // velocity: need to fix
+    } break;
+
+    case JT_quatBall: {
+      q.resize(4);
+      q(0)=j->Q.rot.w;
+      q(1)=j->Q.rot.x;
+      q(2)=j->Q.rot.y;
+      q(3)=j->Q.rot.z;
+      if(calcVels) NIY;  // velocity: need to fix
+    } break;
+
+    case JT_transX: {
+      q.resize(1);
+      q(0)=j->Q.pos.x;
+      if(calcVels) qdot(0)=j->Q.vel.x;
+    } break;
+    case JT_transY: {
+      q.resize(1);
+      q(0)=j->Q.pos.y;
+      if(calcVels) qdot(0)=j->Q.vel.y;
+    } break;
+    case JT_transZ: {
+      q.resize(1);
+      q(0)=j->Q.pos.z;
+      if(calcVels) qdot(0)=j->Q.vel.z;
+    } break;
+    case JT_transXY: {
+      q.resize(1);
+      q(0)=j->Q.pos.x;  
+      q(1)=j->Q.pos.y;
+      if(calcVels){  
+        qdot(0)=j->Q.vel.x;  
+        qdot(1)=j->Q.vel.y;  }
+    } break;
+    case JT_transXYPhi: {
+      q.resize(3);
+      q(0)=j->Q.pos.x;
+      q(1)=j->Q.pos.y;
+      ors::Vector rotv;
+      j->Q.rot.getRad(q(2), rotv);
+      if(q(2)>MT_PI) q(2)-=MT_2PI;
+      if(rotv*Vector_z<0.) q(2)=-q(2);
+      if(calcVels){
+        qdot(0)=j->Q.vel.x;
+        qdot(1)=j->Q.vel.y;
+        qdot(2)=j->Q.angvel.length();
+        if(j->Q.angvel*Vector_z<0.) qdot(0)=-qdot(0);
+      }
+    } break;
+    case JT_phiTransXY: {
+      q.resize(3);
+      ors::Vector rotv;
+      j->Q.rot.getRad(q(0), rotv);
+      if(q(0)>MT_PI) q(0)-=MT_2PI;
+      if(rotv*Vector_z<0.) q(0)=-q(0);
+      ors::Vector relpos = j->Q.rot/j->Q.pos;
+      q(1)=relpos.x;
+      q(2)=relpos.y;
+      if(calcVels){
+        qdot(0)=j->Q.angvel.length();
+        if(j->Q.angvel*Vector_z<0.) qdot(0)=-qdot(0);
+        ors::Vector relvel = j->Q.rot/j->Q.vel;
+        qdot(1)=relvel.x;
+        qdot(2)=relvel.y;
+      }
+    } break;
+    case JT_trans3: {
+      q.resize(3);
+      q(0)=j->Q.pos.x;
+      q(1)=j->Q.pos.y;
+      q(2)=j->Q.pos.z;
+      if(calcVels) {
+        qdot(0)=j->Q.vel.x;
+        qdot(1)=j->Q.vel.y;
+        qdot(2)=j->Q.vel.z;
+      }
+    } break;
+    case JT_glue:
+    case JT_fixed:
+      break;
+    default: NIY;
+  }
+  return q;
+}
+
 void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
   if(agent == -1) agent = q_agent;
 //  ors::Quaternion rot;
@@ -833,118 +953,12 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
   for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic) continue; //don't count dependent joints
     CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
-    switch(j->type) {
-      case JT_hingeX:
-      case JT_hingeY:
-      case JT_hingeZ: {
-        //angle
-        ors::Vector rotv;
-        j->Q.rot.getRad(q(n), rotv);
-        if(q(n)>MT_PI) q(n)-=MT_2PI;
-        if(j->type==JT_hingeX && rotv*Vector_x<0.) q(n)=-q(n);
-        if(j->type==JT_hingeY && rotv*Vector_y<0.) q(n)=-q(n);
-        if(j->type==JT_hingeZ && rotv*Vector_z<0.) q(n)=-q(n);
-        //velocity
-        if(calcVels){
-          qdot(n)=j->Q.angvel.length();
-          if(j->type==JT_hingeX && j->Q.angvel*Vector_x<0.) qdot(n)=-qdot(n);
-          if(j->type==JT_hingeY && j->Q.angvel*Vector_y<0.) qdot(n)=-qdot(n);
-          if(j->type==JT_hingeZ && j->Q.angvel*Vector_z<0.) qdot(n)=-qdot(n);
-        }
-        n++;
-      } break;
+    arr joint_q = calc_q_from_Q(j, calcVels);
+    //TODO is there a better way?
+    for(uint i=0; i<joint_q.N; ++i)
+      q(n+i) = joint_q(i);
+    n += joint_q.N;
 
-      case JT_universal: {
-        //angle
-        if(fabs(j->Q.rot.w)>1e-15) {
-          q(n) = 2.0 * atan(j->Q.rot.x/j->Q.rot.w);
-          q(n+1) = 2.0 * atan(j->Q.rot.y/j->Q.rot.w);
-        } else {
-          q(n) = MT_PI;
-          q(n+1) = MT_PI;
-        }
-        
-        if(calcVels) NIY; // velocity: need to fix
-        n+=2;
-      } break;
-
-      case JT_quatBall: {
-        q(n+0)=j->Q.rot.w;
-        q(n+1)=j->Q.rot.x;
-        q(n+2)=j->Q.rot.y;
-        q(n+3)=j->Q.rot.z;
-        if(calcVels) NIY;  // velocity: need to fix
-        n+=4;
-      } break;
-
-      case JT_transX: {
-        q(n)=j->Q.pos.x;
-        if(calcVels) qdot(n)=j->Q.vel.x;
-        n++;
-      } break;
-      case JT_transY: {
-        q(n)=j->Q.pos.y;
-        if(calcVels) qdot(n)=j->Q.vel.y;
-        n++;
-      } break;
-      case JT_transZ: {
-        q(n)=j->Q.pos.z;
-        if(calcVels) qdot(n)=j->Q.vel.z;
-        n++;
-      } break;
-      case JT_transXY: {
-        q(n)=j->Q.pos.x;  q(n+1)=j->Q.pos.y;
-        if(calcVels){  qdot(n)=j->Q.vel.x;  qdot(n+1)=j->Q.vel.y;  }
-        n+=2;
-      } break;
-      case JT_transXYPhi: {
-        q(n)=j->Q.pos.x;
-        q(n+1)=j->Q.pos.y;
-        ors::Vector rotv;
-        j->Q.rot.getRad(q(n+2), rotv);
-        if(q(n+2)>MT_PI) q(n+2)-=MT_2PI;
-        if(rotv*Vector_z<0.) q(n+2)=-q(n+2);
-        if(calcVels){
-          qdot(n)=j->Q.vel.x;
-          qdot(n+1)=j->Q.vel.y;
-          qdot(n+2)=j->Q.angvel.length();
-          if(j->Q.angvel*Vector_z<0.) qdot(n)=-qdot(n);
-        }
-        n+=3;
-      } break;
-      case JT_phiTransXY: {
-        ors::Vector rotv;
-        j->Q.rot.getRad(q(n), rotv);
-        if(q(n)>MT_PI) q(n)-=MT_2PI;
-        if(rotv*Vector_z<0.) q(n)=-q(n);
-        ors::Vector relpos = j->Q.rot/j->Q.pos;
-        q(n+1)=relpos.x;
-        q(n+2)=relpos.y;
-        if(calcVels){
-          qdot(n)=j->Q.angvel.length();
-          if(j->Q.angvel*Vector_z<0.) qdot(n)=-qdot(n);
-          ors::Vector relvel = j->Q.rot/j->Q.vel;
-          qdot(n+1)=relvel.x;
-          qdot(n+2)=relvel.y;
-        }
-        n+=3;
-      } break;
-      case JT_trans3: {
-        q(n)=j->Q.pos.x;
-        q(n+1)=j->Q.pos.y;
-        q(n+2)=j->Q.pos.z;
-        if(calcVels) {
-          qdot(n)=j->Q.vel.x;
-          qdot(n+1)=j->Q.vel.y;
-          qdot(n+2)=j->Q.vel.z;
-        }
-        n+=3;
-      } break;
-      case JT_glue:
-      case JT_fixed:
-        break;
-      default: NIY;
-    }
   }
   CHECK_EQ(n,N,"");
 }
