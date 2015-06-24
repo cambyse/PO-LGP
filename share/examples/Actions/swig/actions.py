@@ -5,9 +5,7 @@ import numpy as np
 
 from resources import interface, shapes, s, bodies, b, joints, j
 from utils import (
-    DEFAULT_SIDE,
-    LEFT,
-    RIGHT,
+    SIDE,
     strip_specs,
     conv_symbol,
     assert_valid_shapes,
@@ -96,7 +94,7 @@ def close_gripper(side=None):
 def reach(what, with_=None, offset=None):
     """bla"""
     if with_ is None:
-        with_ = side2endeff(DEFAULT_SIDE)
+        with_ = side2endeff()
     if offset is None:
         offset = [0., 0., 0.]
 
@@ -193,7 +191,7 @@ def move_to_pos(endeff, pos):
 
 ###############################################################################
 # High Level Behaviors
-def run_grab_marker(shape, side=LEFT):
+def run_grab_marker(shape, side=None):
     endeff = side2endeff(side)
     with running(gaze_at(endeff)):
         run(open_gripper(side=side)
@@ -204,7 +202,7 @@ def run_grab_marker(shape, side=LEFT):
     # run(homing())
 
 
-def run_turn_marker(shape, degree, side=LEFT):
+def run_turn_marker(shape, degree, side=None):
     endeff = side2endeff(side)
     with running(gaze_at(endeff)):
         run(open_gripper()
@@ -216,7 +214,7 @@ def run_turn_marker(shape, degree, side=LEFT):
         run(open_gripper(side))
 
 
-def run_move_shape(shape, distance, side=LEFT):
+def run_move_shape(shape, distance, side=None):
     endeff = side2endeff(side)
     run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
     with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
@@ -229,7 +227,7 @@ def run_move_shape(shape, distance, side=LEFT):
         run(open_gripper(side=side))
 
 
-def run_move_shape_along_joint(shape, distance, joint, side=LEFT):
+def run_move_shape_along_joint(shape, distance, joint, side=None):
     endeff = side2endeff(side)
     axis = pos_str2arr(interface.getJointByName(joint)["axis"])
     run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
