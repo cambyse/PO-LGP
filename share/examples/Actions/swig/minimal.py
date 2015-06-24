@@ -27,7 +27,7 @@ def signal_handler(signal, frame):
         interface.setFact(fact)
 
 
-interface = swig.ActionSwigInterface(False)
+interface = swig.ActionSwigInterface()
 
 # new convenient symbols
 for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper"]:
