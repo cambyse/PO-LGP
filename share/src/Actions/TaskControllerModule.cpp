@@ -74,6 +74,7 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
+    pr2_odom.waitForRevisionGreaterThan(0);
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
@@ -191,23 +192,6 @@ void TaskControllerModule::step(){
 
   //-- send the computed movement to the robot
   ctrl_ref.set() = refs;
-
-  // { // DEBUG
-  //   cout << "modelWorld     " << modelWorld.get()->shapes.N << endl;
-  //   if (modelWorld.get()->getBodyByName("torso_lift_link") != nullptr) {
-  //     cout << "torso_lift_link found" << endl;
-  //   }
-
-  //   cout << "__modelWorld__ " << __modelWorld__.shapes.N    << endl;
-  //   if (__modelWorld__.getBodyByName("torso_lift_link") != nullptr) {
-  //     cout << "torso_lift_link found" << endl;
-  //   }
-
-  //   cout << "realWorld      " << realWorld.shapes.N         << endl;
-  //   if (realWorld.getBodyByName("torso_lift_link") != nullptr) {
-  //     cout << "torso_lift_link found" << endl;
-  //   }
-  // }
 }
 
 void TaskControllerModule::close(){

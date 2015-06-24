@@ -62,7 +62,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
-ActionSwigInterface::ActionSwigInterface(bool useRos){
+ActionSwigInterface::ActionSwigInterface(){
   S = new SwigSystem();
   S->tcm->verbose=false;
   engine().open(*S, true);
@@ -99,7 +99,7 @@ void ActionSwigInterface::setVerbose(bool verbose) {
 }
 
 void ActionSwigInterface::Cancel(){
-  //engine().cancel(*S); 
+  //engine().cancel(*S);
   cout << S->quitSignal.get();
   S->quitSignal.set() = true;
 }

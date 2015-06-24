@@ -71,6 +71,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** TreeControllerClass Started");
 
   msgBlock=1;
+  iterationsSinceLastMsg=0;
 
   return true;
 }
@@ -96,6 +97,15 @@ void TreeControllerClass::update() {
   }
 
   mutex.lock(); //only inside here we use the msg values...
+
+  // stop when no messages arrive anymore
+  if(iterationsSinceLastMsg > 100){
+    q_ref.clear();
+    qdot_ref.clear();
+    u_bias.clear();
+  }else{
+    iterationsSinceLastMsg++;
+  }
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
@@ -178,6 +188,7 @@ void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   mutex.lock();
+  iterationsSinceLastMsg=0;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);
