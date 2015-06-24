@@ -1,5 +1,9 @@
 """
-A simple and convenient python interface for the ActivityMachine
+A simple and convenient python interface for the ActivityMachine.
+
+::
+
+    ipython -i minimal.py
 
 """
 from __future__ import print_function
