@@ -5,6 +5,7 @@
 
 extern TaskControllerModule *taskControllerModule();
 
+//===========================================================================
 void TaskCtrlActivity::configure(Node *fact) {
   name.clear();
   for(Node *p:fact->parents) name <<p->keys.last();
@@ -47,7 +48,6 @@ void TaskCtrlActivity::step(double dt){
 }
 
 //===========================================================================
-
 void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
   Node *it;
   if((it=specs["type"])){
@@ -86,11 +86,11 @@ bool FollowReferenceActivity::isConv(){
 }
 
 //===========================================================================
-
 void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
+
   Node *it;
   if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 
@@ -109,9 +109,7 @@ void HomingActivity::step2(double dt) {
     for(uint i=0;i<wheeljoint->qDim();i++)
       task->y_ref(wheeljoint->qIndex+i) = b(i);
   }
-
 }
-
 
 //===========================================================================
 RUN_ON_INIT_BEGIN(Activities)
