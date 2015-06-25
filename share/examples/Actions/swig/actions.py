@@ -29,27 +29,15 @@ def _run(facts):
 
     for fact in facts:
         interface.setFact(str(fact))
-        print("\n"*3)
-        print("FACT: {}".format(str(fact)))
-        print("\n"*3)
 
     for symb_conv in symbols_conv:
-        print("\n"*3)
-        print("FACT: {}".format(str(fact)))
-        print("\n"*3)
         interface.waitForCondition(symb_conv)
 
     for symb in symbols:
         interface.stopFact(symb)
-        print("\n"*3)
-        print("FACT: {}".format(symb))
-        print("\n"*3)
 
     for symb_conv in symbols_conv:
         interface.stopFact(symb_conv)
-        print("\n"*3)
-        print("FACT: {}".format(symb_conv))
-        print("\n"*3)
 
 
 @contextmanager
@@ -60,6 +48,8 @@ def running(facts):
     """
     if not isinstance(facts, list):
         facts = [facts]
+
+    facts = _flatten(facts)
 
     for fact in facts:
         interface.setFact(str(fact))
@@ -81,6 +71,7 @@ def running(facts):
 def _run_with(with_construct):
     with running(with_construct["with"]):
         run(with_construct["plan"])
+
 
 def _flatten(iterable):
     """Given an iterable, possibly nested to any level, return it flattened."""
@@ -335,23 +326,50 @@ def grab_marker(shape, side=None):
             ]
 
 
-def run_turn_marker(shape, degree, pre_grasp_offset, grasp_offset, plane=None,
-                    side=None):
+def turn_marker(shape, degree, pre_grasp_offset=None, grasp_offset=None,
+                plane=None, side=None):
+    if pre_grasp_offset is None:
+        pre_grasp_offset = [0, 0, 0]
+    if grasp_offset is None:
+        grasp_offset = [0, 0, 0]
     if plane is None:
         plane = ([1, 0, 0], [0, -1, 0])
+
     endeff = side2endeff(side)
-    with running(gaze_at(endeff)):
-        run(open_gripper()
-            + reach(shape, with_=endeff, offset=pre_grasp_offset)
-            + align_gripper_with_plane(*plane, side=side))
-        run(reach(shape, with_=endeff, offset=grasp_offset))
-        run(close_gripper(side))
-        run(turn_wrist(degree, side))
-        run(open_gripper(side))
+
+    return [{"with": gaze_at(endeff),
+             "plan": [(open_gripper(side),
+                       reach(shape, with_=endeff, offset=pre_grasp_offset),
+                       align_gripper_with_plane(*plane, side=side)),
+                      reach(shape, endeff, offset=grasp_offset),
+                      close_gripper(side),
+                      turn_wrist(degree, side),
+                      open_gripper(side)]
+             }]
 
 
-def run_move_shape(shape, distance, side=None):
+def move_shape(shape, distance, axis, pre_grasp_offset=None, grasp_offset=None,
+               plane=None, side=None):
+    if pre_grasp_offset is None:
+        pre_grasp_offset = [0, 0, 0]
+    if grasp_offset is None:
+        grasp_offset = [0, 0, 0]
+    if plane is None:
+        plane = ([1, 0, 0], [0, -1, 0])
+
     endeff = side2endeff(side)
+
+    return [align_gripper_with_plane(*plane, side=side),
+            {"with": [align_gripper_with_plane(*plane, side=side),
+                      gaze_at(endeff)],
+             "plan": [(open_gripper(side),
+                       reach(shape, offset=pre_grasp_offset, with_=endeff)),
+                      reach(shape, offset=grasp_offset, with_=endeff),
+                      close_gripper(side),
+                      move_along_axis(endeff, axis, distance),
+                      open_gripper()]
+             }]
+
     run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
     with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
                  gaze_at(endeff)):
