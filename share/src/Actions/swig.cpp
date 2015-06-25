@@ -327,14 +327,12 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 }
 
 void ActionSwigInterface::execScript(const char* filename){
-  //-- load
   FILE(filename) >>S->RM.set()->KB;
 
   Node *s = S->RM.get()->KB.getNode("Script");
   Graph& script = s->graph();
   for(Node* n:script){
-    if(n->parents.N==0){ //interpret as wait
-      CHECK(n->getValueType()==typeid(Graph),"")
+    if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         S->RM.waitForNextRevision();

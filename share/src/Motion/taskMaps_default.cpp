@@ -38,20 +38,25 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWor
   if(&_jvec) jvec=_jvec; else jvec.setZero();
 }
 
-DefaultTaskMap::DefaultTaskMap(Graph& params, const ors::KinematicWorld& G)
+DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
-  Node *it=NULL;
-  if((it=params["type"])){
+  Node *it=specs["type"];
+  if(it){
     MT::String Type=it->V<MT::String>();
-    if(Type=="pos") type=posTMT;
-    if(Type=="vec") type=vecTMT;
-    if(Type=="gazeAt") type=gazeAtTMT;
-  }
-  CHECK(type!=noTMT,"unknown type");
-  if((it=params["ref1"])) i = G.getShapeByName(it->V<MT::String>())->index;
-  if((it=params["ref2"])) j = G.getShapeByName(it->V<MT::String>())->index;
-  if((it=params["vec1"])) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-  if((it=params["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+         if(Type=="pos") type=posTMT;
+    else if(Type=="vec") type=vecTMT;
+    else if(Type=="quat") type=quatTMT;
+    else if(Type=="posDiff") type=posDiffTMT;
+    else if(Type=="vecDiff") type=vecDiffTMT;
+    else if(Type=="quatDiff") type=quatDiffTMT;
+    else if(Type=="vecAlign") type=vecAlignTMT;
+    else if(Type=="gazeAt") type=gazeAtTMT;
+    else HALT("unknown type " <<Type);
+  }else HALT("no type given");
+  if((it=specs["ref1"])){ auto name=it->V<MT::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["ref2"])){ auto name=it->V<MT::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+  if((it=specs["vec1"])) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
+  if((it=specs["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
 }
 
 

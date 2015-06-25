@@ -530,7 +530,6 @@ ors::KinematicWorld::~KinematicWorld() {
 
 void ors::KinematicWorld::init(const char* filename) {
   *this <<FILE(filename);
-  calc_q_from_Q();
 }
 
 void ors::KinematicWorld::clear() {

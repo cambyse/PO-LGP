@@ -13,20 +13,30 @@ endeffL
 gazeAtHand (FollowReferenceActivity){ type="gazeAt", PD=[.5 .9 .1 10.], prec=1. }
 alignHand (FollowReferenceActivity){ type="vec", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
 positionHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
-lowerHand (FollowReferenceActivity){ type="pos", ref1="endeffL", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
+lowerHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
 controlForce (FollowReferenceActivity){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
 homing (HomingActivity){ type="homing" }
 
 STATE { (CoreTasks) (gazeAtHand endeffHead endeffL) (alignHand endeffL) (positionHand endeffL) }
 
-Rule {
-  { (conv positionHand) (conv alignHand) }
-  { (lowerHand) (positionHand)! (conv positionHand)! }
+
+Macro byebye{
+  startHoming{ (homing) }
+  ifHomingSucc(startHoming){ (homing) (conv homing) }
+  quit{ (quit) (homing)! (conv homing)! }
+  ifHomingFail(startHoming)
 }
 
 Rule {
-  { (lowerHand) (conv lowerHand) }
-  { (homing) (lowerHand)! (conv lowerHand)! (gazeAtHand)! (alignHand)! (conv alignHand)! }
+  X
+  { (conv positionHand X) (conv alignHand X) }
+  { (lowerHand X) (positionHand X)! (conv positionHand X)! }
+}
+
+Rule {
+  X
+  { (conv lowerHand X) }
+  { (homing) (lowerHand X)! (conv lowerHand X)! (gazeAtHand)! (alignHand X)! (conv alignHand X)! }
 }
 
 Rule {
@@ -34,10 +44,31 @@ Rule {
   { (quit) (homing)! (conv homing)! }
 }
 
-Script {
-  (gazeAtHand endeffHead endeffL)
-  (alignHand endeffL)
-  (positionHand endeffL)
-  { (conv alignHand) (conv positionHand) }
-  (lowerHand)
+
+Macro posLower{
+  X
+  (alignHand X)
+  (positionHand X)
+  { (conv positionHand X) (conv alignHand X) }
+  (lowerHand X)
+  (positionHand X)!
+  (conv positionHand X)!
+#  { (fail positionHand X) }
+#  (fail posLower)
+  { (conv lowerHand X) }
+}
+
+Macro posLower{
+  X
+  { (posLower X) (alignHand X) (positionHand X) } %effect
+  (-1){ (conv positionHand X) (conv alignHand X) } %condition
+  { (lowerHand X) (positionHand X)! (conv positionHand X)! } %effect
+  (-2){ (conv lowerHand X) } %condition
+  { (posLower X)! (conv lowerHand X)! (alignHand X)! (conv alignHand X)! }
+}
+
+PolicyGraph byebye{ #this is a 'client', modifying the state, which is a FSM itself -- different to rules
+  { (homing) }
+  (-1){ (conv homing) }
+  (-1){ (quit) }
 }

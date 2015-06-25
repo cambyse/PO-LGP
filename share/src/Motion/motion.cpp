@@ -222,7 +222,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
       c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
       if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       //linear transform (target shift)
-      if(c->map.type==sumOfSqrTT){
+      if(true){ //c->map.type==sumOfSqrTT){
         if(c->target.N==1) y -= c->target(0);
         else if(c->target.nd==1) y -= c->target;
         else if(c->target.nd==2) y -= c->target[t];

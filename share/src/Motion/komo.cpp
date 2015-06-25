@@ -3,6 +3,72 @@
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
 
+//===========================================================================
+
+KOMO::KOMO(const Graph& specs){
+  init(specs);
+  reset();
+  CHECK(x.N,"");
+}
+
+void KOMO::init(const Graph& specs){
+  Graph &glob = specs["KOMO"]->graph();
+  MT::FileToken model = glob["model"]->V<MT::FileToken>();
+  uint timeSteps=glob["T"]->V<double>();
+  double duration=glob["duration"]->V<double>();
+
+  world.read(model);
+  world.meldFixedJoints();
+  world.removeUselessBodies();
+  makeConvexHulls(world.shapes);
+  for(ors::Shape *s:world.shapes) s->cont=true;
+  world.swift().initActivations(world);
+
+  MP = new MotionProblem(world);
+  MPF = new MotionProblemFunction(*MP);
+  if(timeSteps>=0) MP->setTiming(timeSteps, duration);
+  if(timeSteps==0) MP->k_order=1;
+
+  NodeL tasks = specs.getNodes("Task");
+  for(Node *t:tasks){
+    Graph &T = t->graph();
+    TaskMap *map = newTaskMap( T["map"]->graph(), world);
+    Task *task = MP->addTask(t->keys.last(), map);
+    map->order = T.V<double>("order", 0);
+    MT::String type = T.V<MT::String>("type", STRING("sumOfSqr"));
+    if(type=="sumOfSqr") map->type=sumOfSqrTT;
+    else if(type=="inequal") map->type=ineqTT;
+    else if(type=="equal") map->type=eqTT;
+    else HALT("Task type must be sumOfSqr|ineq|eq");
+    arr time = T.V<arr>("time",{0.,1.});
+    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.V<arr>("target", {0.}), T.V<double>("scale", {100.}));
+  }
+}
+
+void KOMO::reset(){
+  x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
+  rndGauss(x,.01,true); //don't initialize at a singular config
+}
+
+void KOMO::step(){
+  NIY;
+}
+
+void KOMO::run(){
+  ors::KinematicWorld::setJointStateCount=0;
+  optConstrainedMix(x, NoArr, Convert(*MPF), OPT(verbose=2)); //parameters are set in cfg!!
+  cout <<"** optimization time=" <<MT::timerRead()
+      <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+//    checkJacobian(Convert(MF), x, 1e-5);
+  MP->costReport();
+}
+
+void KOMO::displayTrajectory(){
+  ::displayTrajectory(x, 1, world, "KOMO planned trajectory", 0.01);
+}
+
+//===========================================================================
+
 void setTasks(MotionProblem& MP,
               ors::Shape &endeff,
               ors::Shape& target,

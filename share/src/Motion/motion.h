@@ -61,7 +61,7 @@ struct Task {
   uint dim_phi(const ors::KinematicWorld& G, uint t){
     if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
-  Task(TaskMap* m):map(*m), active(true){}
+  Task(TaskMap* m):map(*m), active(true){} //TODO: require type here!!
 
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),

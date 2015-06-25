@@ -178,13 +178,13 @@ template<class T> NodeInitializer::NodeInitializer(const char* key, const String
   it->keys.append(STRING(key));
 }
 
-template<class T> T* Graph::getValue(const char *key) {
+template<class T> T* Graph::getValue(const char *key) const {
   Node *it = getNode(key);
   if(!it) return NULL;
   return it->getValue<T>();
 }
 
-template<class T> T* Graph::getValue(const StringA &keys) {
+template<class T> T* Graph::getValue(const StringA &keys) const {
   Node *it = getNode(keys);
   if(!it) return NULL;
   return it->getValue<T>();
