@@ -13,7 +13,7 @@ struct ActionSwigInterface{
   struct SwigSystem *S;
   struct Log& _log;
 
-  ActionSwigInterface(bool useRos); //instantiates the ActionMachineSystem, runs it
+  ActionSwigInterface();
   ~ActionSwigInterface();
 
   void Cancel();
@@ -61,7 +61,29 @@ struct ActionSwigInterface{
   //-- methods to define tasks/actions
   int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());
 
+<<<<<<< HEAD
 
   //-- testing...
   void execScript(const char* filename);
+=======
+//  int defineNewTaskSpaceControlAction(
+//      string symbolName,
+//      //task map
+//      string taskMapType,
+//      string shape_ref1, doubleV vec_ref1,
+//      string shape_ref2="baseReferenceNotWorld", doubleV vec_ref2,
+//      //controller parameters
+//      const doubleV yref, const doubleV vref,
+//      double refTrajectoryDurationInSeconds=-1., //trajectory reference
+//      double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
+//      //fusion parameters
+//      double relativePrec=100.,
+//      //indicator parameters
+//      double convergenceIndicatorTolerance=1e-2,
+//      double timeoutIndicator=-1.
+//                              );
+
+//  defineNewTaskSpaceForceControlAction();
+
+>>>>>>> master
 };

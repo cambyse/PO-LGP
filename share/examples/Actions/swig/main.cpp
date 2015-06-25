@@ -7,7 +7,7 @@
 // ============================================================================
 int main(int argc, char** argv) {
 
-  ActionSwigInterface S(false);
+  ActionSwigInterface S;
 //  S.defineNewTaskSpaceControlAction("positionHandL",
 //    { {"type","pos"}, {"ref1","endeffL"}, {"target","[.7, .3, .7]"}, {"PD","[0., 0., 0., 0.]"} } ); 0 gains makes no sense!!!???
 
