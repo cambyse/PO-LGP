@@ -65,6 +65,100 @@ def running(facts):
             interface.stopFact(symb_conv)
 
 
+def _run_with(with_construct):
+    with running(with_construct["with"]):
+        run_plan(with_construct["plan"])
+
+
+def run_plan(plan):
+    for item in plan:
+        if isinstance(item, list):
+            run_plan(item)
+        elif isinstance(item, dict):
+            _run_with(item)
+        else:
+            run(item)
+
+###############################################################################
+# Python activitiy classes
+
+class Activity(object):
+    def __init__(self):
+        self.time = 3.
+        self.damping = .7
+        self.max_vel = 10
+        self.max_acc = 10
+        self.tolerance = .1
+
+    @property
+    def natural_gains(self):
+        return [self.time, self.damping, self.max_vel, self.max_acc]
+
+    @natural_gains.setter
+    def natural_gains(self, gains):
+        self.time, self.damping, self.max_vel, self.max_acc = gains
+
+
+class PosActivity(Activity):
+    def __init__(self, endeff, pos):
+        super(PosActivity, self).__init__()
+        assert_valid_shapes(endeff, shapes())
+        self.endeff = endeff
+        self.pos = pos
+
+    def __call__(self):
+        return [("(FollowReferenceActivity {endeff} pos)"
+                 "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
+                 .format(endeff=self.endeff, pos=self.pos, tol=self.tolerance,
+                         gains=self.natural_gains))]
+
+
+class ReachActivity(Activity):
+    def __init__(self, endeff, goal_shape, offset=None):
+        super(ReachActivity, self).__init__()
+        assert_valid_shapes(endeff, shapes())
+        assert_valid_shapes(goal_shape, shapes())
+        self.offset = offset
+        if self.offset is None:
+            self.offset = [0, 0, 0]
+        self.endeff = endeff
+        self.goal_shape = goal_shape
+
+    def __call__(self):
+        return [("(FollowReferenceActivity {endeff} {goal})"
+                 "{{ type=pos ref1={endeff} ref2={goal} tol={tol} "
+                 "target={offset} PD={gains} }}"
+                 .format(endeff=self.endeff, goal=self.goal_shape,
+                         tol=self.tolerance, offset=self.offset,
+                         gains=self.natural_gains))]
+
+
+class AlignActivity(Activity):
+    def __init__(self, endeff, vec_endeff, vec_target):
+        super(AlignActivity, self).__init__()
+        assert_valid_shapes(endeff, shapes())
+        self.endeff = endeff
+        self.vec_endeff = vec_endeff
+        self.vec_target = vec_target
+
+    def __call__(self):
+        return [("(FollowReferenceActivity {ref1} rot)"
+                 "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
+                 "target={vec_target} }}"
+                 .format(ref1=self.endeff, vec_endeff=self.vec_endeff,
+                         vec_target=self.vec_target))]
+
+
+class HomingActivity(Activity):
+    def __init__(self):
+        super(HomingActivity, self).__init__()
+        self.tolerance = .04
+
+    def __call__(self):
+        return [("(HomingActivity){{ tol={tol} PD={gains} }}"
+                 .format(tol=self.tolerance, gains=self.natural_gains))]
+
+
 ###############################################################################
 # Python activities
 def homing():
@@ -202,13 +296,16 @@ def run_grab_marker(shape, side=None):
     # run(homing())
 
 
-def run_turn_marker(shape, degree, side=None):
+def run_turn_marker(shape, degree, pre_grasp_offset, grasp_offset, plane=None,
+                    side=None):
+    if plane is None:
+        plane = ([1, 0, 0], [0, -1, 0])
     endeff = side2endeff(side)
     with running(gaze_at(endeff)):
         run(open_gripper()
-            + reach(shape, with_=endeff, offset=[0.0, 0.01, 0.1])
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
-        run(reach(shape, with_=endeff, offset=[0.0, 0.01, -0.07]))
+            + reach(shape, with_=endeff, offset=pre_grasp_offset)
+            + align_gripper_with_plane(*plane, side=side))
+        run(reach(shape, with_=endeff, offset=grasp_offset))
         run(close_gripper(side))
         run(turn_wrist(degree, side))
         run(open_gripper(side))
