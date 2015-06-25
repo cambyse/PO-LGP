@@ -15,6 +15,10 @@ def assert_valid_shapes(name, shapes):
         raise ValueError("The given shape {} is not an existing shape"
                          .format(name))
 
+def assert_valid_joints(name, joints):
+    if name not in joints:
+        raise ValueError("The given joint {} is not an existing joint"
+                         .format(name))
 
 ###############################################################################
 # Helper: symbols...
