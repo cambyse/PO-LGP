@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <util/util.h>
+#include <util/return_tuple.h>
 
 #define DEBUG_LEVEL 0
 #include <util/debug.h>
@@ -19,6 +20,8 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 using lemon::INVALID;
+using std::cout;
+using std::endl;
 
 namespace tree_policy {
 
@@ -43,10 +46,39 @@ namespace tree_policy {
         mcts_arc_info_map = &mcts_ai_map;
     }
 
-    action_handle_t Uniform::get_action(const node_t & state_node) const {
-        action_handle_t action = random_select(environment->get_actions());
-        DEBUG_OUT(1,"Select action: " << *action);
-        return action;
+    action_handle_t TreePolicy::get_action(const node_t & state_node) const {
+        RETURN_TUPLE(action_container_t, actions,
+                     vector<double>, probs) = get_action_probabilities(state_node);
+        DEBUG_EXPECT(0,actions.size()>0);
+        IF_DEBUG(1) {
+            DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
+            for(int idx=0; idx<(int)actions.size(); ++idx) {
+                DEBUG_OUT(1,"    " << *(actions[idx]) << "	" << probs[idx] );
+            }
+            if(actions.size()==0) {
+                DEBUG_OUT(1,"    node has outgoing arc? " << (out_arc_it_t(*graph,state_node)==INVALID));
+            }
+        }
+        int idx = util::random_select_idx(probs);
+        return actions[idx];
+    }
+
+    Uniform::action_probability_t Uniform::get_action_probabilities(const node_t & state_node) const {
+        if(restrict_to_existing) {
+            int action_n = 0;
+            action_container_t actions;
+            for(out_arc_it_t arc(*graph,state_node); arc!=INVALID; ++arc) {
+                actions.push_back((*node_info_map)[graph->target(arc)].action);
+                ++action_n;
+            }
+            vector<double> probs(action_n,1./action_n);
+            return action_probability_t(actions, probs);
+        } else {
+            action_container_t actions = environment->get_actions();
+            int action_n = actions.size();
+            vector<double> probs(action_n,1./action_n);
+            return action_probability_t(actions, probs);
+        }
     }
 
     MaxPolicy::~MaxPolicy() {
@@ -62,11 +94,16 @@ namespace tree_policy {
         available_actions = new graph_t::NodeMap<action_container_t>(graph);
     }
 
-    action_handle_t MaxPolicy::get_action(const node_t & state_node) const {
+    MaxPolicy::action_probability_t MaxPolicy::get_action_probabilities(const node_t & state_node) const {
 
         // get set of actions
-        action_container_t actions = (*available_actions)[state_node];
-        if(actions.size()>0) {
+        unordered_set<action_handle_t,
+                      AbstractEnvironment::ActionHash,
+                      AbstractEnvironment::ActionEq> action_set;
+        {
+            // remember action sets in case computation is costly
+            action_container_t actions = (*available_actions)[state_node];
+            if(actions.size()>0) {
 #ifdef UNIT_TESTS
                 std::vector<std::string> old_actions;
                 for(auto a : actions) {
@@ -82,100 +119,74 @@ namespace tree_policy {
                 }
                 DEBUG_EXPECT(0,old_actions==new_actions);
 #endif
-        } else {
-            actions = environment->get_actions();
-            (*available_actions)[state_node] = actions;
+            } else {
+                actions = environment->get_actions();
+                (*available_actions)[state_node] = actions;
+            }
+            action_set.insert(actions.begin(), actions.end());
         }
 
-        unordered_set<action_handle_t,
-                      AbstractEnvironment::ActionHash,
-                      AbstractEnvironment::ActionEq> action_set(actions.begin(), actions.end());
-
-        // prepare vector for computing upper bounds
-        vector<pair<reward_t,action_handle_t>> scores;
-
-        // compute upper bounds
-        DEBUG_OUT(3,"Computing upper bound for state node " << graph->id(state_node));
+        // compute scores for sampled actions
+        vector<double> scores;
+        vector<action_handle_t> scored_actions;
         for(out_arc_it_t to_action_arc(*graph, state_node); to_action_arc!=INVALID; ++to_action_arc) {
             node_t action_node = graph->target(to_action_arc);
             action_handle_t action = (*node_info_map)[action_node].action;
-            reward_t upper = score(state_node, to_action_arc, action_node);
-            scores.push_back(make_pair(upper,action));
+            double score_value = score(state_node, to_action_arc, action_node);
+            scores.push_back(score_value);
+            scored_actions.push_back(action);
             // erase this action from set
             action_set.erase(action);
         }
-
-        // select unsampled action if there are any left
-        if(action_set.size()>0) {
-#ifdef UNIT_TESTS
-            action_handle_t action = *(action_set.begin());
-#else
-            action_handle_t action = random_select(action_set);
-#endif
-            DEBUG_OUT(2,"Selecting unsampled action: " << *action);
-            return action;
-        } else {
-            DEBUG_OUT(2,"No unsampled actions.");
-        }
-
-        // select max upper bound action otherwise
-        IF_DEBUG(3) {
-            DEBUG_OUT(3,"Use upper bound to choose between:");
-            for(auto bound_action : scores) {
-                DEBUG_OUT(3,"    '" << *(bound_action.second) << "' with bound " << bound_action.first);
+        // set scores to infinity for unsampled actions (if not restricted to
+        // existing actions)
+        if(!restrict_to_existing) {
+            for(auto action : action_set) {
+                scores.push_back(std::numeric_limits<double>::infinity());
+                scored_actions.push_back(action);
             }
         }
-        DEBUG_EXPECT(1,scores.size()>0);
-        reward_t max_score = -DBL_MAX;
-        vector<action_handle_t> max_score_actions;
-        for(auto bound_action : scores) {
-            if(bound_action.first>max_score) {
-                max_score_actions.clear();
-            }
-            if(bound_action.first>=max_score) {
-                max_score = bound_action.first;
-                max_score_actions.push_back(bound_action.second);
-            }
-        }
+        DEBUG_EXPECT(0,!scores.empty());
+        DEBUG_EXPECT(0,scored_actions.size()==scores.size());
 
-        // random tie breaking between action with equal upper bound
-#ifdef UNIT_TESTS
-        action_handle_t action = max_score_actions.back();
-#else
-        action_handle_t action = random_select(max_score_actions);
-#endif
-        DEBUG_OUT(2,"Choosing action " << *action << " with upper bound " << max_score );
-        return action;
+        // compute soft-max probabilities and return
+        return action_probability_t(scored_actions, util::soft_max(scores,soft_max_temperature));
     }
 
-    reward_t Optimal::score(const node_t & state_node,
+    double Optimal::score(const node_t & state_node,
                             const arc_t & to_action_arc,
                             const node_t & action_node) const {
-        return (*mcts_node_info_map)[action_node].get_value();
+        return (*mcts_node_info_map)[action_node].value;
     }
 
     UCB1::UCB1(double Cp): Cp(Cp) {}
 
-    reward_t UCB1::score(const node_t & state_node,
+    double UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node) const {
-        return (*mcts_node_info_map)[action_node].get_value() +
+        return (*mcts_node_info_map)[action_node].value +
             2*Cp*sqrt(
-                2*log((*mcts_node_info_map)[state_node].get_transition_counts())/
-                (*mcts_arc_info_map)[to_action_arc].get_transition_counts()
+                2*log((*mcts_node_info_map)[state_node].action_counts)/
+                (*mcts_arc_info_map)[to_action_arc].transition_counts
                 );
     }
 
     UCB_Plus::UCB_Plus(double Cp): Cp(Cp) {}
 
-    reward_t UCB_Plus::score(const node_t & state_node,
+    double UCB_Plus::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const {
 
         // upper bound = value + Cp sqrt( value_variance / n) where n is the
         // number of times this action was taken.
-        return (*mcts_node_info_map)[action_node].get_value() +
-            Cp*sqrt((*mcts_node_info_map)[action_node].get_value_variance());
+        return (*mcts_node_info_map)[action_node].value +
+            Cp*sqrt((*mcts_node_info_map)[action_node].value_variance);
+    }
+
+    double HardUpper::score(const node_t & state_node,
+                              const arc_t & to_action_arc,
+                              const node_t & action_node) const {
+        return (*mcts_node_info_map)[action_node].max_value;
     }
 
 } // end namespace tree_policy

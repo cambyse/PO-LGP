@@ -22,7 +22,7 @@ void FOL_World::Decision::write(ostream& os) const{
   }
 }
 
-FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(1){
+FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(0), verbFil(0) {
   FILE("z.init") <<KB;
   KB.checkConsistency();
   start_state = &KB["START_STATE"]->graph();
@@ -135,12 +135,14 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(successEnd) reward += 100.;
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
-  fil <<"--\n  T_step=" <<T_step;
-  fil <<"\n  decision="; d->write(fil);
-  fil <<"\n  T_real=" <<T_real;
-  fil <<"\n  observation=" <<decisionObservation;
-  fil <<"\n  reward=" <<reward;
-  if(verbFil){ fil <<"\n  state="; state->write(fil," ","{}"); fil <<endl; }
+  if(verbFil){
+      fil <<"--\n  T_step=" <<T_step;
+      fil <<"\n  decision="; d->write(fil);
+      fil <<"\n  T_real=" <<T_real;
+      fil <<"\n  observation=" <<decisionObservation;
+      fil <<"\n  reward=" <<reward;
+      fil <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
+  }
 
   //reward=0.;
   R_total += reward;
@@ -174,16 +176,20 @@ bool FOL_World::is_terminal_state() const{
   if(deadEnd){
     if(verbose>0) cout <<"************* FOL_World: DEAD END STATE (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
-    (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
-    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    if(verbFil) {
+        (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
+        (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    }
     return true;
   }
   //-- test the terminal state
   if(successEnd){
     if(verbose>0) cout <<"************* FOL_World: SUCCESS STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
-    (*((ofstream*)&fil)) <<"--\n  SUCCESS STATE";
-    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    if(verbFil) {
+        (*((ofstream*)&fil)) <<"--\n  SUCCESS STATE";
+        (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    }
     return true;
   }
   return false;
@@ -201,8 +207,10 @@ void FOL_World::make_current_state_default() {
   DEBUG(KB.checkConsistency();)
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
   if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
-  fil <<"*** reassign start state ***" <<endl;
-  if(verbFil){ fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl; }
+  if(verbFil) {
+      fil <<"*** reassign start state ***" <<endl;
+      fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl;
+  }
 }
 
 void FOL_World::reset_state(){
@@ -237,9 +245,11 @@ void FOL_World::reset_state(){
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
 
-  fil <<"*** reset ***" <<endl;
-  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<endl;
-  if(verbFil){ fil <<"  state="; state->write(fil," ","{}"); fil <<endl; }
+  if(verbFil){
+      fil <<"*** reset ***" <<endl;
+      fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<endl;
+      fil <<"  state="; state->write(fil," ","{}"); fil <<endl;
+  }
 }
 
 // void FOL_World::write_current_state(ostream& os){

@@ -22,12 +22,15 @@ namespace tree_policy {
      * common tree policy is UCB1 but a Uniform policy may also be used. */
     class TreePolicy {
     public:
+        //----typedefs/classes----//
+        typedef std::tuple<action_container_t,std::vector<double>> action_probability_t;
         //----members----//
         std::shared_ptr<AbstractEnvironment> environment = nullptr;
         const graph_t * graph = nullptr;
         const node_info_map_t * node_info_map = nullptr;
         const mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+        bool restrict_to_existing = false;
     public:
         //----methods----//
         virtual ~TreePolicy() = default;
@@ -36,7 +39,8 @@ namespace tree_policy {
                           const node_info_map_t & node_info_map,
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual action_handle_t get_action(const node_t & state_node) const = 0;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const = 0;
+        virtual action_handle_t get_action(const node_t & state_node) const final;
     };
 
     /**
@@ -44,7 +48,7 @@ namespace tree_policy {
     class Uniform: public TreePolicy {
     public:
         virtual ~Uniform() = default;
-        virtual action_handle_t get_action(const node_t & state_node) const override;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
     };
 
     /**
@@ -59,19 +63,21 @@ namespace tree_policy {
                           const node_info_map_t & node_info_map,
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map) override;
-        virtual action_handle_t get_action(const node_t & state_node) const override final;
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const = 0;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const = 0;
+        bool print_choice = false;
+        double soft_max_temperature = 0;
     };
 
     /**
      * Sample the action with highes value. */
     class Optimal: public MaxPolicy {
     public:
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
     };
 
     /**
@@ -89,9 +95,9 @@ namespace tree_policy {
          * exploration. The default value is Cp=1/√2, which was shown by Kocsis
          * and Szepesvári to satisfy the Hoeffding ineqality. */
         UCB1(double Cp = 0.70710678118654746);
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
@@ -113,12 +119,19 @@ namespace tree_policy {
          * Constructor. @param Cp This is the scaling parameter for
          * exploration.*/
         UCB_Plus(double Cp = 1);
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
     protected:
         double Cp;
+    };
+
+    class HardUpper: public MaxPolicy {
+    public:
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
     };
 
 } // end namespace tree_policy

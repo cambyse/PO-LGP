@@ -76,7 +76,7 @@ void ActiveTreeSearch::next_do() {
                 candidate_actions.push_back(node_info_map[action_node].action);
                 action_probabilities.push_back(computer.get_node_value(variable_info_map[action_node].pi));
             }
-            int action_idx = util::draw_idx(action_probabilities);
+            int action_idx = util::random_select_idx(action_probabilities);
             DEBUG_OUT(1,"action_idx=" << action_idx);
             DEBUG_OUT(1,action_probabilities);
             DEBUG_OUT(1,candidate_actions);
@@ -163,7 +163,10 @@ void ActiveTreeSearch::init() {
     computer.set_node_label(c_root_node, "root");
 }
 
-void ActiveTreeSearch::toPdf(const char* file_name) const {
+void ActiveTreeSearch::plot_graph(const char* file_name,
+                                  const char* command,
+                                  const char* parameters,
+                                  bool delete_dot_file) const {
     const bool use_id = true;
     const bool use_partials = true;
     graph_t combi_graph;
@@ -262,14 +265,15 @@ void ActiveTreeSearch::toPdf(const char* file_name) const {
         arc_prop_map[combi_arc] = QString("dir=none style=dotted color=\"1 .7 .7\"");
     }
     // write to file
-    util::graph_to_pdf(file_name,
-                       combi_graph,
-                       "style=filled truecolor=true",
-                       &node_prop_map,
-                       "",
-                       &arc_prop_map,
-                       true,
-                       "dot");
+    util::plot_graph(file_name,
+                     combi_graph,
+                     "style=filled truecolor=true",
+                     &node_prop_map,
+                     "",
+                     &arc_prop_map,
+                     true,
+                     command,
+                     parameters);
 }
 
 ActiveTreeSearch::arc_node_t ActiveTreeSearch::find_or_create_observation_node(

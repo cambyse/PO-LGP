@@ -132,11 +132,11 @@ int main(int argn, char ** args) {
             arg((double)class_map[node]/cluster_n);
     }
     QString all_node_prop = QString("shape=circle style=filled truecolor=true fixedsize=true width=%1").arg(0.05*scale);
-    util::graph_to_pdf("graph.pdf", graph,
-                       all_node_prop, &node_prop,
-                       "", nullptr,
-                       true,
-                       "neato");
+    util::plot_graph("graph.pdf", graph,
+                     all_node_prop, &node_prop,
+                     "", nullptr,
+                     true,
+                     "neato");
 
     // discuss cluster :-)
     {
@@ -201,11 +201,11 @@ int main(int argn, char ** args) {
                         arg(id_to_hue[id_map[node]]);
                 }
                 QString all_node_prop = QString("shape=circle style=filled truecolor=true fixedsize=true width=%1").arg(0.05*scale);
-                util::graph_to_pdf("graph.pdf", graph,
-                                   all_node_prop, &node_prop,
-                                   "", nullptr,
-                                   true,
-                                   "neato");
+                util::plot_graph("graph.pdf", graph,
+                                 all_node_prop, &node_prop,
+                                 "", nullptr,
+                                 true,
+                                 "neato");
                 DEBUG_OUT(0,id_to_hue.size() << " clusters");
             }
         }

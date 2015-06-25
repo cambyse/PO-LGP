@@ -21,8 +21,8 @@ add_executable(main_ActiveOnlineSearch
     Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
-#    Environment_old/BottleNeckHallway.h
-#    Environment_old/BottleNeckHallway.cpp
+    Environment/BottleneckEnvironment.h
+    Environment/BottleneckEnvironment.cpp
 #    Environment_old/DelayedUncertainty.h
 #    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
@@ -32,6 +32,8 @@ add_executable(main_ActiveOnlineSearch
     TreeSearch/AbstractSearchTree.h
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
+    TreeSearch/RandomSearch.h
+    TreeSearch/RandomSearch.cpp
     TreeSearch/NodeFinder.h
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h
@@ -44,6 +46,8 @@ add_executable(main_ActiveOnlineSearch
     TreeSearch/ValueHeuristic.cpp
     TreeSearch/BackupMethod.h
     TreeSearch/BackupMethod.cpp
+    TreeSearch/PriorModels.h
+    TreeSearch/PriorModels.cpp
 )
 
 target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -80,8 +84,8 @@ add_library(ActiveOnlineSearch
     Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
-#    Environment_old/BottleNeckHallway.h
-#    Environment_old/BottleNeckHallway.cpp
+    Environment/BottleneckEnvironment.h
+    Environment/BottleneckEnvironment.cpp
 #    Environment_old/DelayedUncertainty.h
 #    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
@@ -91,6 +95,8 @@ add_library(ActiveOnlineSearch
     TreeSearch/AbstractSearchTree.h
     TreeSearch/SearchTree.h
     TreeSearch/SearchTree.cpp
+    TreeSearch/RandomSearch.h
+    TreeSearch/RandomSearch.cpp
     TreeSearch/NodeFinder.h
     TreeSearch/NodeFinder.cpp
     TreeSearch/MonteCarloTreeSearch.h
@@ -103,6 +109,8 @@ add_library(ActiveOnlineSearch
     TreeSearch/ValueHeuristic.cpp
     TreeSearch/BackupMethod.h
     TreeSearch/BackupMethod.cpp
+    TreeSearch/PriorModels.h
+    TreeSearch/PriorModels.cpp
 )
 
 target_include_directories(ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

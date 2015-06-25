@@ -5,12 +5,8 @@
 
 namespace value_heuristic {
 
-    typedef MonteCarloTreeSearch::graph_t              graph_t;
     typedef MonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef MonteCarloTreeSearch::node_info_map_t      node_info_map_t;
     typedef MonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractEnvironment::action_handle_t       action_handle_t;
-    typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
@@ -30,7 +26,7 @@ namespace value_heuristic {
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const = 0;
+                                        mcts_node_info_map_t & mcts_node_info_map) = 0;
     };
 
     /**
@@ -39,7 +35,7 @@ namespace value_heuristic {
     public:
         virtual ~Zero() = default;
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
     };
 
     /**
@@ -50,12 +46,14 @@ namespace value_heuristic {
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
-        Rollout(int rollout_length = -1);
+        Rollout(double prior_counts = -1);
         virtual ~Rollout() = default;
+        virtual void init(double disc,
+                          std::shared_ptr<AbstractEnvironment> env);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
     protected:
-        int rollout_length;
+        double prior_counts;
     };
 
 } // end namespace value_heuristic

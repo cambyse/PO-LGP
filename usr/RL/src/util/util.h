@@ -748,9 +748,9 @@ namespace util {
         return random_select(std::vector<T>(init_list));
     }
 
-    /** \brief Return index draw from normalized (or unnormalized) container. */
+    /** \brief Return index drawn from normalized (or unnormalized) container. */
     template < typename T >
-        int draw_idx(const T& container, bool normalized = true) {
+        int random_select_idx(const T& container, bool normalized = true) {
         if(container.size()==0) {
             DEBUG_ERROR("Cannot draw from an empty container");
             return -1;
@@ -782,6 +782,7 @@ namespace util {
             }
             DEBUG_DEAD_LINE;
         }
+        DEBUG_DEAD_LINE;
         return -1;
     }
 
@@ -807,6 +808,29 @@ namespace util {
         Vec soft_max(const Vec& vec, double temperature) {
         if(vec.size()==0) {
             Vec ret = vec;
+            return ret;
+        }
+        // hard-max limit
+        if(temperature==0) {
+            double max = std::numeric_limits<double>::lowest();
+            double max_counts = 0;
+            for(auto value : vec) {
+                if(value>max) {
+                    max_counts = 1;
+                    max = value;
+                } else if(value==max) {
+                    ++max_counts;
+                }
+            }
+            DEBUG_EXPECT(0,max_counts>0);
+            Vec ret = vec;
+            for(int idx=0; idx<(int)vec.size(); ++idx) {
+                if(vec[idx]==max) {
+                    ret[idx] = 1./max_counts;
+                } else {
+                    ret[idx] = 0;
+                }
+            }
             return ret;
         }
         //---------------//

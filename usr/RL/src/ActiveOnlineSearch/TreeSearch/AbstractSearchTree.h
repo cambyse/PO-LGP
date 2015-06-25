@@ -48,7 +48,10 @@ public:
                        const observation_handle_t &) = 0;
     /**
      * Prints the graph to a PDF file with given name. */
-    virtual void toPdf(const char* file_name) const = 0;
+    virtual void plot_graph(const char* file_name,
+                            const char* command = "dot",
+                            const char* parameters = "-Tpdf",
+                            bool delete_dot_file = true) const = 0;
 };
 
 #endif /* ABSTRACTSEARCHTREE_H_ */

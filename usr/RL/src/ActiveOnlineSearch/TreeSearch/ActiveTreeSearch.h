@@ -38,7 +38,10 @@ public:
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
     virtual void init() override;
-    virtual void toPdf(const char* file_name) const override;
+    virtual void plot_graph(const char* file_name,
+                            const char* command,
+                            const char* parameters,
+                            bool delete_dot_file) const override;
     virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
                                                        const observation_handle_t & observation) override;
     virtual arc_node_t find_or_create_action_node(const node_t & observation_node,

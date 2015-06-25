@@ -41,9 +41,7 @@ SearchTree::SearchTree(std::shared_ptr<AbstractEnvironment> environment,
     AbstractSearchTree(environment,discount),
     node_finder(node_finder),
     node_info_map(graph)
-{
-    node_finder->init(graph,node_info_map);
-}
+{}
 
 void SearchTree::init() {
     graph.clear();
@@ -87,8 +85,8 @@ void SearchTree::prune(const action_handle_t & action,
 
     // check if new root node was found
     if(new_root_node==INVALID) {
-        DEBUG_ERROR("No branch for (action --> observation) = ("
-                    << *action << " --> " << *observation << ")");
+        DEBUG_OUT(1,"No branch for (action --> observation) = ("
+                  << *action << " --> " << *observation << ")");
         init();
         return;
     }
@@ -97,11 +95,36 @@ void SearchTree::prune(const action_handle_t & action,
     // prune tree //
     //------------//
 
-    /* This alternative approach only searches through the parts of the graph
-     * that are close to the root. This might be less efficient for very small
-     * graphs but should be much more efficient for large graphs. */
-
     DEBUG_OUT(2,"Pruning graph...");
+#if 1
+    /* In this approach we flood the graph starting at the root node and erase
+     * any nodes that were not reached. Complexity scales with the number of
+     * nodes that are NOT erased (cf. other approach above). */
+
+    // set new root node and remove old one, which splits graph in multiple
+    // connected components
+    erase_node(root_node);
+    root_node = new_root_node;
+
+    // find nodes that are reachable from new root node
+    graph_t::NodeMap<bool> reached(graph);
+    graph_util::graph_flooding(graph,reached).add_source(root_node).flood();
+
+    // erase those that cannot be reached (but don't iterate AND erase at the
+    // same time)
+    vector<node_t> nodes_to_erase;
+    for(node_it_t node(graph); node!=INVALID; ++node) {
+        if(!reached[node]) nodes_to_erase.push_back(node);
+    }
+    for(node_t node : nodes_to_erase) {
+        erase_node(node);
+    }
+#else
+    /* In this approach we try to find reverse paths to the root node and erase
+     * nodes if such a path could not be found. Since we start close to the root
+     * node and don't proceed with a node's children if there IS a path, this
+     * approach scales with the number of nodes that ARE erased (cf. other
+     * approach above). */
 
     // add all children of the old root node to list of nodes to_be_processed
     queue<node_t> to_be_processed;
@@ -123,6 +146,7 @@ void SearchTree::prune(const action_handle_t & action,
         node_t node = to_be_processed.front();
         to_be_processed.pop();
         DEBUG_OUT(3,"    checking node " << graph.id(node));
+        // TODO: Do not for every node instantiate a new BFS instance!
         if(graph.valid(node) && !bfs(reverse_graph).run(node,root_node)) {
             // no path to root node: erase from graph and add children to nodes
             // to_be_processed
@@ -143,9 +167,13 @@ void SearchTree::prune(const action_handle_t & action,
             }
         }
     }
+#endif
 }
 
-void SearchTree::toPdf(const char* file_name) const {
+void SearchTree::plot_graph(const char* file_name,
+                            const char* command,
+                            const char* parameters,
+                            bool delete_dot_file) const {
     graph_t::NodeMap<QString> node_map(graph);
     for(node_it_t node(graph); node!=INVALID; ++node) {
         node_map[node] = QString("shape=%2 label=<%3>").
@@ -162,12 +190,15 @@ void SearchTree::toPdf(const char* file_name) const {
         }
     }
 
-    util::graph_to_pdf(file_name,
-                       graph,
-                       "style=filled truecolor=true",
-                       &node_map,
-                       "",
-                       &arc_map);
+    util::plot_graph(file_name,
+                     graph,
+                     "style=filled truecolor=true",
+                     &node_map,
+                     "",
+                     &arc_map,
+                     delete_dot_file,
+                     command,
+                     parameters);
 }
 
 const SearchTree::graph_t & SearchTree::get_graph() const {

@@ -12,8 +12,6 @@ add_executable(GTest
     main.cpp
     CommanderTest.cpp
     EnvironmentTest.cpp
-    Examples.cpp
-    Examples.h
     FeatureTest.cpp
     InstanceTest.cpp
     LBFGSTest.cpp
@@ -24,7 +22,6 @@ add_executable(GTest
     RepresentationTest.cpp
     SandBox.cpp
     SandBox.h
-    TemplateTest.cpp
     MinimalEnvironmentExample/MinimalAction.cpp
     MinimalEnvironmentExample/MinimalAction.h
     MinimalEnvironmentExample/MinimalEnvironment.h

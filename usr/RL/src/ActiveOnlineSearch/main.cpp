@@ -18,6 +18,7 @@
 #include "TreeSearch/SearchTree.h"
 #include "TreeSearch/MonteCarloTreeSearch.h"
 #include "TreeSearch/ActiveTreeSearch.h"
+#include "TreeSearch/RandomSearch.h"
 #include "TreeSearch/NodeFinder.h"
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
@@ -27,7 +28,7 @@
 //#include "Environment_old/UnitTestEnvironment.h"
 #include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
-//#include "Environment_old/BottleNeckHallway.h"
+#include "Environment/BottleneckEnvironment.h"
 //#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 
@@ -60,20 +61,25 @@ typedef AbstractEnvironment::action_handle_t      action_handle_t;
 typedef AbstractEnvironment::observation_handle_t observation_handle_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
+static QString graph_plot_file_name = "tree.pdf";
+static QString graph_plot_command = "dot";
+static QString graph_plot_parameters = "-Tpdf";
 static bool write_log = false;
 static std::ofstream log_file;
 static Commander::CommandCenter commander;
 
 static const std::set<std::string> mode_set = {"WATCH",
-                                               "EVAL"};
-static const std::set<std::string> environment_set = {"TightRope",
-                                                      "DynamicTightRope",
+                                               "EVAL",
+                                               "PLAY"};
+static const std::set<std::string> environment_set = {//"TightRope",
+                                                      //"DynamicTightRope",
                                                       "GamblingHall",
                                                       "FOL",
                                                       "SimpleEnvironment",
-                                                      "BottleNeckHallway",
-                                                      "DelayedUncertainty",
-                                                      "UnitTest"};
+                                                      "BottleneckEnvironment"
+                                                      //"DelayedUncertainty",
+                                                      //"UnitTest"
+};
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
                                                      "max"};
@@ -81,16 +87,22 @@ static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "FullDAG",
                                                      "FullGraph",
                                                      "ObservationTree"};
-static const std::set<std::string> backup_type_set = {"BACKUP_TRACE",
-                                                      "BACKUP_PROPAGATE"};
+static const std::set<std::string> backup_type_set = {"TRACE",
+                                                      "PROPAGATE"};
 static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "BellmanTreePolicy",
-                                                        "MonteCarlo"};
+                                                        "MonteCarlo",
+                                                        "HybridMCDP"};
 static const std::set<std::string> value_heuristic_set = {"Zero",
                                                           "Rollout"};
 static const std::set<std::string> tree_policy_set = {"UCB1",
                                                       "UCB_Plus",
-                                                      "Uniform"};
+                                                      "Uniform",
+                                                      "HardUpper",
+                                                      "Optimal"};
+static const std::set<std::string> graphics_type_set = {"svg",
+                                                        "png",
+                                                        "pdf"};
 
 // the command line arguments
 static TCLAP::ValueArg<std::string> mode_arg(        "m", "mode",\
@@ -114,8 +126,8 @@ static TCLAP::ValueArg<int> sample_incr_arg(         "i", "sample_incr",\
                                                      "(default: 1) Increment of the number rollouts. ",\
                                                      false, 1, "int" );
 static TCLAP::ValueArg<int> sample_max_arg(          "x", "sample_max",\
-                                                     "(default: 100) Maximum number of rollouts.",\
-                                                     false, 100, "int" );
+                                                     "(default: -1) Maximum number of rollouts (neative values for same as minimal).",\
+                                                     false, -1, "int" );
 static TCLAP::ValueArg<int> step_n_arg(              "s", "step_n",\
                                                      "(default: 0) Number of steps to perform (0 for infinite / until terminal state).",\
                                                      false, 0, "int" );
@@ -125,8 +137,8 @@ static TCLAP::ValueArg<int> run_n_arg(               "r", "run_n", \
 static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
                                                      "(default: 1) Level of detail for watching progress (0,...,3).",\
                                                      false, 1, "int");
-static TCLAP::SwitchArg no_graphics_arg(             "g", "no_graphics",\
-                                                     "(default: false) If true don't generate graphics."\
+static TCLAP::SwitchArg graphics_arg(                "g", "graphics",\
+                                                     "(default: false) If true automatically generate graphics."\
                                                      , false);
 static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
                                                      "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
@@ -135,8 +147,8 @@ static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
                                                      "(default: PlainTree) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
                                                      , false, "PlainTree", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
-                                                     "(default: BACKUP_PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
-                                                     , false, "BACKUP_PROPAGATE", "string");
+                                                     "(default: PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
+                                                     , false, "PROPAGATE", "string");
 static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
@@ -146,8 +158,16 @@ static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", 
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
+static TCLAP::ValueArg<std::string> action_policy_arg( "", "action_policy",      \
+                                                     "(default: Optimal) Policy to choose action to actually perfrom "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
+                                                     , false, "Optimal", "string");
+static TCLAP::ValueArg<std::string> graphics_type_arg( "", "graphics_type",      \
+                                                     "(default: pdf) Format for printing search tree "+util::container_to_str(graphics_type_set,", ","(",")")+"." \
+                                                     , false, "pdf", "string");
 static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
                                                      , false, 1, "double");
+static TCLAP::ValueArg<double> prior_counts_arg(     "", "prior_counts", "(default: -1) Prior counts to use (negative values for auto)."
+                                                     , false, -1, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
@@ -167,10 +187,23 @@ OMP_NUM_THREADS environment variable will take effect (if set).", \
 static TCLAP::SwitchArg active_arg(                  "", "active",\
                                                      "(default: false) Use active tree search."\
                                                      , false);
+static TCLAP::SwitchArg random_arg(                  "", "random",\
+                                                     "(default: false) Use random tree search."\
+                                                     , false);
 static TCLAP::ValueArg<std::string> traces_arg(      "", "traces", \
                                                      "(default: empty string) For non-empty string, write the action, observation, \
 and (if possible) state description to the given file."\
                                                      , false, "", "string");
+
+void plot_graph(shared_ptr<AbstractSearchTree>  search_tree, QString file_name = "") {
+    if(file_name=="") {
+        file_name = graph_plot_file_name;
+    }
+    search_tree->plot_graph(file_name.toLatin1(),
+                            graph_plot_command.toLatin1(),
+                            graph_plot_parameters.toLatin1(),
+                            false);
+}
 
 void write_state_to_log(int run, std::shared_ptr<AbstractEnvironment> environment) {
     auto interface_marc = dynamic_pointer_cast<InterfaceMarc>(environment);
@@ -180,6 +213,18 @@ void write_state_to_log(int run, std::shared_ptr<AbstractEnvironment> environmen
             log_file << run << "	State = ";
             fol_world->write_current_state(log_file);
             log_file << endl;
+        }
+    }
+}
+
+void write_state_to_cout(std::shared_ptr<AbstractEnvironment> environment) {
+    auto interface_marc = dynamic_pointer_cast<InterfaceMarc>(environment);
+    if(interface_marc!=nullptr) {
+        auto fol_world = dynamic_pointer_cast<FOL_World>(interface_marc->env_marc);
+        if(fol_world) {
+            cout << "	State = ";
+            fol_world->write_current_state(cout);
+            cout << endl;
         }
     }
 }
@@ -197,7 +242,8 @@ void prompt_for_command() {
 bool check_arguments();
 shared_ptr<NodeFinder> get_node_finder();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
-tuple<shared_ptr<SearchTree>,
+tuple<shared_ptr<AbstractSearchTree>,
+      shared_ptr<TreePolicy>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
@@ -210,20 +256,24 @@ int main(int argn, char ** args) {
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
         cmd.add(traces_arg);
+        cmd.add(random_arg);
         cmd.add(active_arg);
         cmd.add(threads_arg);
         cmd.add(no_header_arg);
         cmd.add(random_seed_arg);
         cmd.add(accumulate_arg);
+        cmd.add(action_policy_arg);
         cmd.add(tree_policy_arg);
         cmd.add(value_heuristic_arg);
         cmd.add(backup_method_arg);
         cmd.add(backup_type_arg);
         cmd.add(graph_type_arg);
-        cmd.add(no_graphics_arg);
+        cmd.add(graphics_type_arg);
+        cmd.add(graphics_arg);
         cmd.add(watch_progress_arg);
         cmd.add(rollout_length_arg);
         cmd.add(exploration_arg);
+        cmd.add(prior_counts_arg);
         cmd.add(discount_arg);
         cmd.add(run_n_arg);
         cmd.add(step_n_arg);
@@ -242,10 +292,6 @@ int main(int argn, char ** args) {
         // catch any exceptions
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
     }
-
-    // set some default commands
-    commander.add_command("", []()->Ret{return {true,"Continuing..."};}, "Continue execution (empty string / only whitespace)");
-    commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
 
     // open log file if given
     if(traces_arg.getValue()!="") {
@@ -274,9 +320,13 @@ int main(int argn, char ** args) {
     // different modes
     cout << header(argn,args) << endl;
     if(mode_arg.getValue()=="WATCH") {
+        // set some default commands
+        commander.add_command("", []()->Ret{return {true,"Continuing..."};}, "Continue execution (empty string / only whitespace)");
+        commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
         // set up
-        RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
+        RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
                      shared_ptr<TreePolicy>, tree_policy,
+                     shared_ptr<TreePolicy>, action_policy,
                      shared_ptr<ValueHeuristic>, value_heuristic,
                      shared_ptr<BackupMethod>, backup_method,
                      shared_ptr<AbstractEnvironment>, environment) = setup();
@@ -287,8 +337,8 @@ int main(int argn, char ** args) {
             for(int sample : Range(sample_n_arg.getValue())) {
                 search_tree->next();
                 if(watch_progress_arg.getValue()>=3) {
-                    if(!no_graphics_arg.getValue()) {
-                        search_tree->toPdf("tree.pdf");
+                    if(graphics_arg.getValue()) {
+                        plot_graph(search_tree);
                     }
                     cout << "Sample # " << sample+1 << endl;
                     prompt_for_command();
@@ -300,7 +350,7 @@ int main(int argn, char ** args) {
             RETURN_TUPLE(observation_handle_t, observation,
                          reward_t, reward) = environment->transition(action);
             environment->make_current_state_default();
-            // write log
+            // write
             if(write_log) {
                 log_file << 0 << "	" <<
                     *action << "	" <<
@@ -308,30 +358,34 @@ int main(int argn, char ** args) {
                     reward << endl;
                 write_state_to_log(0,environment);
             }
-            if(watch_progress_arg.getValue()>=2 && !no_graphics_arg.getValue()) {
-                search_tree->toPdf("tree.pdf");
-                prompt_for_command();
-            }
-            if(step<step_n_arg.getValue()) { // don't prune in last step
-                search_tree->prune(action,observation);
-            }
             if(watch_progress_arg.getValue()>=2) {
-                if(!no_graphics_arg.getValue()) {
-                    search_tree->toPdf("tree.pdf");
-                }
                 cout << "Step # " << step+1 <<
                     ": (action --> observation, reward) = (" <<
                     *action << " --> " <<
                     *observation << ", " <<
                     reward << ")" << endl;
+                write_state_to_cout(environment);
                 if(environment->is_terminal_state()) {
                     cout << "Terminal state!" << endl;
                 }
+                if(graphics_arg.getValue()) {
+                    plot_graph(search_tree);
+                }
                 prompt_for_command();
             }
+            if(step<step_n_arg.getValue()) { // don't prune in last step
+                search_tree->prune(action,observation);
+                if(watch_progress_arg.getValue()>=2) {
+                    cout << "tree pruned" << endl;
+                    if(graphics_arg.getValue()) {
+                        plot_graph(search_tree);
+                    }
+                    prompt_for_command();
+                }
+            }
         }
-        if(watch_progress_arg.getValue()>=1 && !no_graphics_arg.getValue()) {
-            search_tree->toPdf("tree.pdf");
+        if(watch_progress_arg.getValue()>=1 && graphics_arg.getValue()) {
+            plot_graph(search_tree);
         }
     } else if(mode_arg.getValue()=="EVAL") {
         // print header
@@ -347,12 +401,19 @@ int main(int argn, char ** args) {
         if(value_heuristic_string=="Rollout") {
             value_heuristic_string += QString("(%1)").arg(rollout_length_arg.getValue());
         }
-        QString method_string = QString("%1 / %2 / %3 [%4 / %5]").
-            arg(tree_policy_string).
-            arg(value_heuristic_string).
-            arg(backup_method_arg.getValue().c_str()).
-            arg(graph_type_arg.getValue().c_str()).
-            arg(backup_type_arg.getValue().c_str());
+        QString method_string;
+        if(active_arg.getValue()) {
+            method_string = "ACTIVE";
+        } else if(random_arg.getValue()) {
+            method_string = "RANDOM";
+        } else {
+            method_string = QString("%1 / %2 / %3 [%4 / %5]").
+                arg(tree_policy_string).
+                arg(value_heuristic_string).
+                arg(backup_method_arg.getValue().c_str()).
+                arg(graph_type_arg.getValue().c_str()).
+                arg(backup_type_arg.getValue().c_str());
+        }
         // limit number of threads if required
         if(threads_arg.getValue()>0) {
             omp_set_num_threads(threads_arg.getValue());
@@ -360,6 +421,7 @@ int main(int argn, char ** args) {
         int run_n = run_n_arg.getValue();
         int sample_n = sample_n_arg.getValue();
         int sample_max = sample_max_arg.getValue();
+        if(sample_max<0) sample_max = sample_n;
         int sample_incr = sample_incr_arg.getValue();
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
@@ -373,8 +435,9 @@ int main(int argn, char ** args) {
                 DEBUG_OUT(1, "run # " << run << ", samples: " << sample);
 
                 // set up
-                RETURN_TUPLE(shared_ptr<SearchTree>, search_tree,
+                RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
                              shared_ptr<TreePolicy>, tree_policy,
+                             shared_ptr<TreePolicy>, action_policy,
                              shared_ptr<ValueHeuristic>, value_heuristic,
                              shared_ptr<BackupMethod>, backup_method,
                              shared_ptr<AbstractEnvironment>, environment) = setup();
@@ -426,6 +489,56 @@ int main(int argn, char ** args) {
                     arg(method_string) << endl;
             }
         }
+    } else if(mode_arg.getValue()=="PLAY") {
+        // set up
+        RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
+                     shared_ptr<TreePolicy>, tree_policy,
+                     shared_ptr<TreePolicy>, action_policy,
+                     shared_ptr<ValueHeuristic>, value_heuristic,
+                     shared_ptr<BackupMethod>, backup_method,
+                     shared_ptr<AbstractEnvironment>, environment) = setup();
+        cout << "Play the environment..." << endl;
+        environment->reset_state();
+        auto available_actions = environment->get_actions();
+        int max_idx = 0;
+        reward_t reward_sum = 0;
+        commander.add_command("action help", []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{false,""};}, "Print help");
+        commander.add_command({"action"}, [&](int idx)->Ret{
+                if(idx>max_idx) {
+                    return {false,QString("Index must be in [0,%1]").arg(max_idx)};
+                } else {
+                    auto action = available_actions[idx];
+                    RETURN_TUPLE(observation_handle_t, observation,
+                                 reward_t, reward) = environment->transition(action);
+                    reward_sum += reward;
+                    cout << "(action --> observation, reward) = (" <<
+                        *action << " --> " <<
+                        *observation << ", " <<
+                        reward << ")" << endl;
+                    write_state_to_cout(environment);
+                    if(environment->is_terminal_state()) {
+                        cout << "Terminal state!" << endl;
+                    }
+                    return {true,QString("Performed action %1").arg(idx)};
+                }
+            }, "Perform an action");
+        for(int step=1; !environment->is_terminal_state(); ++step) {
+            available_actions = environment->get_actions();
+            cout << "Choose an action for step " << step << ":" << endl;
+            for(int idx=0; idx<(int)available_actions.size(); ++idx) {
+                cout << "    (" << idx << "): " << *(available_actions[idx]) << endl;
+                max_idx = idx;
+            }
+            bool ok = false;
+            while(!ok) {
+                cout << "action ";
+                std::string command;
+                getline(cin,command);
+                command = "action "+command;
+                cout << commander.execute(command.c_str(),ok) << endl;
+                cout << "reward: sum=" << reward_sum << ", mean=" << reward_sum/step << endl;
+            }
+        }
     } else {
         DEBUG_ERROR("Unexpected mode");
     }
@@ -436,12 +549,12 @@ bool check_arguments() {
     // check mode
     if(mode_set.find(mode_arg.getValue())==mode_set.end()) {
         ok = false;
-        cout << "Mode must be one of:" << util::container_to_str(mode_set,"\n\t","\n\t") << endl;
+        cout << "Mode must be one of:" << util::container_to_str(mode_set,"\n\t","\n\t","") << endl;
     }
     // check environment
     if(environment_set.find(environment_arg.getValue())==environment_set.end()) {
         ok = false;
-        cout << "Environment must be one of:" << util::container_to_str(environment_set,"\n\t","\n\t") << endl;
+        cout << "Environment must be one of:" << util::container_to_str(environment_set,"\n\t","\n\t","") << endl;
     }
     // check sample number
     if(sample_n_arg.getValue()<0) {
@@ -451,32 +564,42 @@ bool check_arguments() {
     // check accumulation
     if(accumulate_set.find(accumulate_arg.getValue())==accumulate_set.end()) {
         ok = false;
-        cout << "Accumulation must be one of:" << util::container_to_str(accumulate_set,"\n\t","\n\t") << endl;
+        cout << "Accumulation must be one of:" << util::container_to_str(accumulate_set,"\n\t","\n\t","") << endl;
     }
     // check graph type
     if(graph_type_set.find(graph_type_arg.getValue())==graph_type_set.end()) {
         ok = false;
-        cout << "Graph type must be one of:" << util::container_to_str(graph_type_set,"\n\t","\n\t") << endl;
+        cout << "Graph type must be one of:" << util::container_to_str(graph_type_set,"\n\t","\n\t","") << endl;
     }
     // check backup type
     if(backup_type_set.find(backup_type_arg.getValue())==backup_type_set.end()) {
         ok = false;
-        cout << "Backup type must be one of:" << util::container_to_str(backup_type_set,"\n\t","\n\t") << endl;
+        cout << "Backup type must be one of:" << util::container_to_str(backup_type_set,"\n\t","\n\t","") << endl;
     }
     // check backup method
     if(backup_method_set.find(backup_method_arg.getValue())==backup_method_set.end()) {
         ok = false;
-        cout << "Backup method must be one of:" << util::container_to_str(backup_method_set,"\n\t","\n\t") << endl;
+        cout << "Backup method must be one of:" << util::container_to_str(backup_method_set,"\n\t","\n\t","") << endl;
     }
     // check value heuristic
     if(value_heuristic_set.find(value_heuristic_arg.getValue())==value_heuristic_set.end()) {
         ok = false;
-        cout << "value heuristic must be one of:" << util::container_to_str(value_heuristic_set,"\n\t","\n\t") << endl;
+        cout << "value heuristic must be one of:" << util::container_to_str(value_heuristic_set,"\n\t","\n\t","") << endl;
     }
     // check tree policy
     if(tree_policy_set.find(tree_policy_arg.getValue())==tree_policy_set.end()) {
         ok = false;
-        cout << "Tree policy must be one of:" << util::container_to_str(tree_policy_set,"\n\t","\n\t") << endl;
+        cout << "Tree policy must be one of:" << util::container_to_str(tree_policy_set,"\n\t","\n\t","") << endl;
+    }
+    // check action policy
+    if(tree_policy_set.find(action_policy_arg.getValue())==tree_policy_set.end()) {
+        ok = false;
+        cout << "Action policy must be one of:" << util::container_to_str(tree_policy_set,"\n\t","\n\t","") << endl;
+    }
+    // check graphics type
+    if(graphics_type_set.find(graphics_type_arg.getValue())==graphics_type_set.end()) {
+        ok = false;
+        cout << "Graphics type must be one of:" << util::container_to_str(graphics_type_set,"\n\t","\n\t","") << endl;
     }
     if(discount_arg.getValue()<0 || discount_arg.getValue()>1) {
         ok = false;
@@ -503,23 +626,25 @@ shared_ptr<NodeFinder> get_node_finder() {
 }
 
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
-    if(backup_type_arg.getValue()=="BACKUP_TRACE") return MonteCarloTreeSearch::BACKUP_TRACE;
-    if(backup_type_arg.getValue()=="BACKUP_PROPAGATE") return MonteCarloTreeSearch::BACKUP_PROPAGATE;
+    if(backup_type_arg.getValue()=="TRACE") return MonteCarloTreeSearch::BACKUP_TYPE::TRACE;
+    if(backup_type_arg.getValue()=="PROPAGATE") return MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE;
     DEBUG_DEAD_LINE;
-    return MonteCarloTreeSearch::BACKUP_TRACE;
+    return MonteCarloTreeSearch::BACKUP_TYPE::TRACE;
 }
 
-tuple<shared_ptr<SearchTree>,
+tuple<shared_ptr<AbstractSearchTree>,
+      shared_ptr<TreePolicy>,
       shared_ptr<TreePolicy>,
       shared_ptr<ValueHeuristic>,
       shared_ptr<BackupMethod>,
       shared_ptr<AbstractEnvironment>> setup() {
 
     // return variables
-    shared_ptr<SearchTree>      search_tree;
-    shared_ptr<TreePolicy>      tree_policy;
-    shared_ptr<ValueHeuristic>  value_heuristic;
-    shared_ptr<BackupMethod>    backup_method;
+    shared_ptr<AbstractSearchTree>  search_tree;
+    shared_ptr<TreePolicy>          tree_policy;
+    shared_ptr<TreePolicy>          action_policy;
+    shared_ptr<ValueHeuristic>      value_heuristic;
+    shared_ptr<BackupMethod>        backup_method;
     shared_ptr<AbstractEnvironment> environment;
     // set up environment
     // if(environment_arg.getValue()=="TightRope") {
@@ -533,10 +658,10 @@ tuple<shared_ptr<SearchTree>,
         environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
+    } else if(environment_arg.getValue()=="BottleneckEnvironment") {
+        environment.reset(new BottleneckEnvironment(9,2));
     }
-    // else if(environment_arg.getValue()=="BottleNeckHallway") {
-    //     environment.reset(new BottleNeckHallway(3, 5, 0.01, 0.1));
-    // } else if(environment_arg.getValue()=="DelayedUncertainty") {
+    // else if(environment_arg.getValue()=="DelayedUncertainty") {
     //     environment.reset(new DelayedUncertainty(2,3));
     // } else if(environment_arg.getValue()=="UnitTest") {
     //     environment.reset(new UnitTestEnvironment());
@@ -568,26 +693,65 @@ tuple<shared_ptr<SearchTree>,
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
+    } else if(tree_policy_arg.getValue()=="HardUpper") {
+        tree_policy.reset(new HardUpper());
+    } else if(tree_policy_arg.getValue()=="Optimal") {
+        tree_policy.reset(new Optimal());
+    } else DEBUG_DEAD_LINE;
+    // set up action policy
+    if(action_policy_arg.getValue()=="UCB1") {
+        auto policy = new UCB1(exploration_arg.getValue());
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB1 policy");
+        }
+        action_policy.reset(policy);
+    } else if(action_policy_arg.getValue()=="UCB_Plus") {
+        auto policy = new UCB_Plus(exploration_arg.getValue());
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB_Plus policy");
+        }
+        action_policy.reset(policy);
+    } else if(action_policy_arg.getValue()=="Uniform") {
+        action_policy.reset(new Uniform());
+    } else if(action_policy_arg.getValue()=="HardUpper") {
+        auto pol = new HardUpper();
+        //pol->print_choice = true;
+        action_policy.reset(pol);
+    } else if(action_policy_arg.getValue()=="Optimal") {
+        action_policy.reset(new Optimal());
     } else DEBUG_DEAD_LINE;
     // set up value heuristic
     if(value_heuristic_arg.getValue()=="Zero") {
         value_heuristic.reset(new Zero());
     } else if(value_heuristic_arg.getValue()=="Rollout") {
-        value_heuristic.reset(new Rollout(rollout_length_arg.getValue()));
+        value_heuristic.reset(new Rollout(prior_counts_arg.getValue()));
     } else DEBUG_DEAD_LINE;
     // set up backup method
     if(backup_method_arg.getValue()=="Bellman") {
-        backup_method.reset(new Bellman());
+        backup_method.reset(new Bellman(nullptr,prior_counts_arg.getValue()));
     } else if(backup_method_arg.getValue()=="BellmanTreePolicy") {
-        backup_method.reset(new Bellman(tree_policy));
+        backup_method.reset(new Bellman(tree_policy,prior_counts_arg.getValue()));
     } else if(backup_method_arg.getValue()=="MonteCarlo") {
-        backup_method.reset(new MonteCarlo());
+        backup_method.reset(new MonteCarlo(prior_counts_arg.getValue()));
+    } else if(backup_method_arg.getValue()=="HybridMCDP") {
+        backup_method.reset(new HybridMCDP(0.9,
+                                           prior_counts_arg.getValue(),
+                                           prior_counts_arg.getValue()));
     } else DEBUG_DEAD_LINE;
     // set up search tree
     if(active_arg.getValue()) {
         search_tree.reset(new ActiveTreeSearch(environment,
                                                discount_arg.getValue(),
                                                get_node_finder()));
+    } else if(random_arg.getValue()) {
+        search_tree.reset(new RandomSearch(environment,
+                                           discount_arg.getValue()));
     } else {
         search_tree.reset(new MonteCarloTreeSearch(environment,
                                                    discount_arg.getValue(),
@@ -595,22 +759,42 @@ tuple<shared_ptr<SearchTree>,
                                                    tree_policy,
                                                    value_heuristic,
                                                    backup_method,
-                                                   get_backup_type()));
-    }
-    if(mode_arg.getValue()=="WATCH") {
-        commander.add_command("print tree",[search_tree]()->Ret{
-                search_tree->toPdf("tree.pdf");
-                return {true,"Printed search tree to 'tree.pdf'"};
-            }, "Print the search tree to PDF file 'tree.pdf'");
-        commander.add_command("print tree",[search_tree](QString file_name)->Ret{
-                search_tree->toPdf(file_name.toLatin1());
-                return {true,QString("Printed search tree to '%1'").arg(file_name)};
-            }, "Print the search tree to PDF file with given name");
+                                                   get_backup_type(),
+                                                   rollout_length_arg.getValue(),
+                                                   action_policy));
     }
     search_tree->init();
+    if(mode_arg.getValue()=="WATCH") {
+        // add commands for plotting tree
+        commander.add_command("print tree",[search_tree]()->Ret{
+                plot_graph(search_tree);
+                return {true,QString("Printed search tree to '%1'").
+                        arg(graph_plot_file_name).toLatin1()};
+            }, "Print the search tree to PDF file 'tree.pdf'");
+        commander.add_command("print tree",[search_tree](QString file_name)->Ret{
+                plot_graph(search_tree, file_name.toLatin1());
+                return {true,QString("Printed search tree to '%1'").arg(file_name)};
+            }, "Print the search tree to PDF file with given name");
+
+        // set graphics type
+        if(graphics_type_arg.getValue()=="pdf") {
+            graph_plot_file_name = "tree.pdf";
+            graph_plot_command = "dot";
+            graph_plot_parameters = "-Tpdf";
+        } else if(graphics_type_arg.getValue()=="svg") {
+            graph_plot_file_name = "tree.svg";
+            graph_plot_command = "dot";
+            graph_plot_parameters = "-Tsvg";
+        } else if(graphics_type_arg.getValue()=="png") {
+            graph_plot_file_name = "tree.png";
+            graph_plot_command = "dot";
+            graph_plot_parameters = "-Tpng";
+        } else DEBUG_DEAD_LINE;
+    }
     // return
     return make_tuple(search_tree,
                       tree_policy,
+                      action_policy,
                       value_heuristic,
                       backup_method,
                       environment);
