@@ -26,11 +26,11 @@ def run(facts):
     if not isinstance(facts, list):
         facts = [facts]
 
-    symbols = [strip_specs(fact) for fact in facts]
+    symbols = [strip_specs(str(fact)) for fact in facts]
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     for fact in facts:
-        interface.setFact(fact)
+        interface.setFact(str(fact))
 
     for symb_conv in symbols_conv:
         interface.waitForCondition(symb_conv)
@@ -49,11 +49,11 @@ def running(facts):
 
     """
     for fact in facts:
-        interface.setFact(fact)
+        interface.setFact(str(fact))
 
     yield
 
-    symbols = [strip_specs(fact) for fact in facts]
+    symbols = [strip_specs(str(fact)) for fact in facts]
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     for symb in symbols:
@@ -106,11 +106,11 @@ class PosActivity(Activity):
         self.endeff = endeff
         self.pos = pos
 
-    def __call__(self):
-        return [("(FollowReferenceActivity {endeff} pos)"
-                 "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
-                 .format(endeff=self.endeff, pos=self.pos, tol=self.tolerance,
-                         gains=self.natural_gains))]
+    def __str__(self):
+        return ("(FollowReferenceActivity {endeff} pos)"
+                "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
+                .format(endeff=self.endeff, pos=self.pos, tol=self.tolerance,
+                        gains=self.natural_gains))
 
 
 class ReachActivity(Activity):
@@ -124,13 +124,13 @@ class ReachActivity(Activity):
         self.endeff = endeff
         self.goal_shape = goal_shape
 
-    def __call__(self):
-        return [("(FollowReferenceActivity {endeff} {goal})"
-                 "{{ type=pos ref1={endeff} ref2={goal} tol={tol} "
-                 "target={offset} PD={gains} }}"
-                 .format(endeff=self.endeff, goal=self.goal_shape,
-                         tol=self.tolerance, offset=self.offset,
-                         gains=self.natural_gains))]
+    def __str__(self):
+        return ("(FollowReferenceActivity {endeff} {goal})"
+                "{{ type=pos ref1={endeff} ref2={goal} tol={tol} "
+                "target={offset} PD={gains} }}"
+                .format(endeff=self.endeff, goal=self.goal_shape,
+                        tol=self.tolerance, offset=self.offset,
+                        gains=self.natural_gains))
 
 
 class AlignActivity(Activity):
@@ -141,12 +141,12 @@ class AlignActivity(Activity):
         self.vec_endeff = vec_endeff
         self.vec_target = vec_target
 
-    def __call__(self):
-        return [("(FollowReferenceActivity {ref1} rot)"
-                 "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
-                 "target={vec_target} }}"
-                 .format(ref1=self.endeff, vec_endeff=self.vec_endeff,
-                         vec_target=self.vec_target))]
+    def __str__(self):
+        return ("(FollowReferenceActivity {ref1} rot)"
+                "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
+                "target={vec_target} }}"
+                .format(ref1=self.endeff, vec_endeff=self.vec_endeff,
+                        vec_target=self.vec_target))
 
 
 class HomingActivity(Activity):
@@ -154,9 +154,9 @@ class HomingActivity(Activity):
         super(HomingActivity, self).__init__()
         self.tolerance = .04
 
-    def __call__(self):
-        return [("(HomingActivity){{ tol={tol} PD={gains} }}"
-                 .format(tol=self.tolerance, gains=self.natural_gains))]
+    def __str__(self):
+        return ("(HomingActivity){{ tol={tol} PD={gains} }}"
+                .format(tol=self.tolerance, gains=self.natural_gains))
 
 
 ###############################################################################
