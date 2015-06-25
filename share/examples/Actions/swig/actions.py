@@ -9,6 +9,7 @@ from utils import (
     strip_specs,
     conv_symbol,
     assert_valid_shapes,
+    assert_valid_joints,
     side2endeff,
     side2gripper_joint,
     pos_str2arr,
@@ -18,28 +19,37 @@ from utils import (
 
 ###############################################################################
 # execution actions
-def run(facts):
+def _run(facts):
     """Run the given fact, wait for its completion and remove the fact
     afterwards.
 
     """
-    if not isinstance(facts, list):
-        facts = [facts]
-
     symbols = [strip_specs(str(fact)) for fact in facts]
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     for fact in facts:
         interface.setFact(str(fact))
+        print("\n"*3)
+        print("FACT: {}".format(str(fact)))
+        print("\n"*3)
 
     for symb_conv in symbols_conv:
+        print("\n"*3)
+        print("FACT: {}".format(str(fact)))
+        print("\n"*3)
         interface.waitForCondition(symb_conv)
 
     for symb in symbols:
         interface.stopFact(symb)
+        print("\n"*3)
+        print("FACT: {}".format(symb))
+        print("\n"*3)
 
     for symb_conv in symbols_conv:
         interface.stopFact(symb_conv)
+        print("\n"*3)
+        print("FACT: {}".format(symb_conv))
+        print("\n"*3)
 
 
 @contextmanager
@@ -48,6 +58,9 @@ def running(facts):
     context.
 
     """
+    if not isinstance(facts, list):
+        facts = [facts]
+
     for fact in facts:
         interface.setFact(str(fact))
 
@@ -67,17 +80,31 @@ def running(facts):
 
 def _run_with(with_construct):
     with running(with_construct["with"]):
-        run_plan(with_construct["plan"])
+        run(with_construct["plan"])
+
+def _flatten(iterable):
+    """Given an iterable, possibly nested to any level, return it flattened."""
+    new_list = []
+    for item in iterable:
+        if hasattr(item, '__iter__'):
+            new_list.extend(_flatten(item))
+        else:
+            new_list.append(item)
+    return new_list
 
 
-def run_plan(plan):
+def run(plan):
+    if not isinstance(plan, list):
+        plan = [plan]
     for item in plan:
         if isinstance(item, list):
-            run_plan(item)
+            run(item)
         elif isinstance(item, dict):
             _run_with(item)
+        elif isinstance(item, tuple):
+            _run(_flatten(item))
         else:
-            run(item)
+            _run([item])
 
 ###############################################################################
 # Python activitiy classes
@@ -89,6 +116,17 @@ class Activity(object):
         self.max_vel = 10
         self.max_acc = 10
         self.tolerance = .1
+        self._name = ""
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if name + "," not in interface.getSymbols():
+            interface.createNewSymbol(name)
+        self._name = name
 
     @property
     def natural_gains(self):
@@ -97,6 +135,9 @@ class Activity(object):
     @natural_gains.setter
     def natural_gains(self, gains):
         self.time, self.damping, self.max_vel, self.max_acc = gains
+
+    def __repr__(self):
+        return str(self)
 
 
 class PosActivity(Activity):
@@ -107,9 +148,39 @@ class PosActivity(Activity):
         self.pos = pos
 
     def __str__(self):
-        return ("(FollowReferenceActivity {endeff} pos)"
+        return ("(FollowReferenceActivity {endeff} pos {name})"
                 "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
-                .format(endeff=self.endeff, pos=self.pos, tol=self.tolerance,
+                .format(name=self.name, endeff=self.endeff, pos=self.pos,
+                        tol=self.tolerance, gains=self.natural_gains))
+
+
+class QItselfActivity(Activity):
+    def __init__(self, joint, q):
+        super(QItselfActivity, self).__init__()
+        assert_valid_joints(joint, joints())
+        self.joint = joint
+        self.q = q
+        self.tolerance = .01
+
+    def __str__(self):
+        return ("(FollowReferenceActivity qItself {name})"
+                "{{ type=qItself ref1={joint} target=[{target}] tol={tol} PD={gains} }}"
+                .format(name=self.name, joint=self.joint, target=self.q,
+                        tol=self.tolerance, gains=self.natural_gains))
+
+
+class GazeAtActivity(Activity):
+    def __init__(self, shape):
+        super(GazeAtActivity, self).__init__()
+        assert_valid_shapes(shape, shapes())
+        self.shape = shape
+
+    def __str__(self):
+        pos = pos_str2arr(shapes(self.shape)["pos"])
+        return ("(FollowReferenceActivity gazeAt {name})"
+                "{{ type=gazeAt ref1=endeffHead ref2=base_footprint "
+                "vec1=[0, 0, 1] vec2={pos} tol={tol} PD={gains}}}"
+                .format(name=self.name, pos=pos, tol=self.tolerance,
                         gains=self.natural_gains))
 
 
@@ -125,27 +196,30 @@ class ReachActivity(Activity):
         self.goal_shape = goal_shape
 
     def __str__(self):
-        return ("(FollowReferenceActivity {endeff} {goal})"
+        return ("(FollowReferenceActivity {endeff} {goal} {name})"
                 "{{ type=pos ref1={endeff} ref2={goal} tol={tol} "
                 "target={offset} PD={gains} }}"
-                .format(endeff=self.endeff, goal=self.goal_shape,
-                        tol=self.tolerance, offset=self.offset,
-                        gains=self.natural_gains))
+                .format(name=self.name, endeff=self.endeff,
+                        goal=self.goal_shape, tol=self.tolerance,
+                        offset=self.offset, gains=self.natural_gains))
 
 
 class AlignActivity(Activity):
-    def __init__(self, endeff, vec_endeff, vec_target):
+    def __init__(self, endeff, vec_endeff, vec_target, name=None):
         super(AlignActivity, self).__init__()
         assert_valid_shapes(endeff, shapes())
         self.endeff = endeff
         self.vec_endeff = vec_endeff
         self.vec_target = vec_target
+        if name is not None:
+            self._name = name
 
     def __str__(self):
-        return ("(FollowReferenceActivity {ref1} rot)"
+        return ("(FollowReferenceActivity {ref1} rot {name})"
                 "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
                 "target={vec_target} }}"
-                .format(ref1=self.endeff, vec_endeff=self.vec_endeff,
+                .format(name=self.name, ref1=self.endeff,
+                        vec_endeff=self.vec_endeff,
                         vec_target=self.vec_target))
 
 
@@ -162,27 +236,17 @@ class HomingActivity(Activity):
 ###############################################################################
 # Python activities
 def homing():
-    return ["(HomingActivity){ tol=.04 }"]
-
-
-def _gripper(side, target):
-    endeff = side2endeff(side)
-    joint = side2gripper_joint(side)
-
-    assert_valid_shapes(endeff, shapes())
-
-    fact = ("(FollowReferenceActivity {endeff} gripper)"
-            "{{ type=qItself ref1={joint}, target=[{target}] tol=.01 }}"
-            .format(endeff=endeff, joint=joint, target=target))
-    return [fact]
+    return HomingActivity()
 
 
 def open_gripper(side=None):
-    return _gripper(side, .08)
+    joint = side2gripper_joint(side)
+    return QItselfActivity(joint, .08)
 
 
 def close_gripper(side=None):
-    return _gripper(side, .01)
+    joint = side2gripper_joint(side)
+    return QItselfActivity(joint, .01)
 
 
 def reach(what, with_=None, offset=None):
@@ -195,11 +259,7 @@ def reach(what, with_=None, offset=None):
     assert_valid_shapes(what, shapes())
     assert_valid_shapes(with_, shapes())
 
-    # offset = "[{} {} {}]".format(*offset)
-    fact = ("(FollowReferenceActivity {ref1} {ref2})"
-            "{{ type=pos, ref1={ref1}, ref2={ref2}, target={offset} }}"
-            .format(ref1=with_, ref2=what, offset=offset))
-    return [fact]
+    return ReachActivity(with_, what, offset=offset)
 
 
 def align_gripper_horizontal(side=None):
@@ -215,12 +275,7 @@ def align_gripper(vec_endeff, vec_target, side=None):
 
     assert_valid_shapes(endeff, shapes())
 
-    fact = ("(FollowReferenceActivity {ref1} rot)"
-            "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
-            "target={vec_target} }}"
-            .format(ref1=endeff, vec_endeff=vec_endeff, vec_target=vec_target))
-
-    return [fact]
+    return AlignActivity(endeff, vec_endeff, vec_target)
 
 
 def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
@@ -228,27 +283,14 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
 
     assert_valid_shapes(endeff, shapes())
 
-    return [
-        ("(FollowReferenceActivity {ref1} front)"
-         "{{ type=vec, ref1={ref1}, vec1=[1 0 0], target={front} }}"
-         .format(ref1=endeff, front=front_opening)),
-        ("(FollowReferenceActivity {ref1} rot)"
-         "{{ type=vec, ref1={ref1}, vec1=[0 1 0], target={rot} }}"
-         .format(ref1=endeff, rot=rotation_around_wrist))
-    ]
+    return (AlignActivity(endeff, [1, 0, 0], front_opening, "front"),
+            AlignActivity(endeff, [0, 1, 0], rotation_around_wrist, "rot"))
 
 
 def gaze_at(shape):
     assert_valid_shapes(shape, shapes())
 
-    pos = pos_str2arr(shapes(shape)["pos"])
-    fact = """
-    (FollowReferenceActivity gazeAt){{
-        type=gazeAt
-        ref1=endeffHead ref2=base_footprint
-        vec1=[0, 0, 1] vec2={pos} }}
-    """.strip().format(pos=pos)
-    return [fact]
+    return GazeAtActivity(shape)
 
 
 def move_along_axis(endeff, axis, distance):
@@ -260,40 +302,37 @@ def move_along_axis(endeff, axis, distance):
     target_pos = endeff_pos + distance/np.linalg.norm(axis) * axis
     print(target_pos)
 
-    fact = ("(FollowReferenceActivity {ref1})"
-            "{{ type=pos, ref1={ref1}, vec2={pos} }}"
-            .format(ref1=endeff, pos=target_pos))
-    return [fact]
+    return PosActivity(endeff, pos=target_pos)
 
 
 def turn_wrist(rel_degree, side=None):
     joint = side2wrist_joint(side)
     current_q = float(joints(joint)["q"])
     target = current_q + np.deg2rad(rel_degree)
-    fact = ("(FollowReferenceActivity qItself {joint})"
-            "{{ type=qItself ref1={joint} target=[{target}] tol=.1 }}"
-            .format(joint=joint, target=target))
-    return [fact]
+
+    return QItselfActivity(joint, target)
 
 
 def move_to_pos(endeff, pos):
-    fact = ("(FollowReferenceActivity pos {endeff})"
-            "{{ type=pos ref1={endeff} vec2={position} }}"
-            .format(endeff=endeff, position=pos))
-    return [fact]
+    return PosActivity(endeff, pos)
 
 
 ###############################################################################
 # High Level Behaviors
-def run_grab_marker(shape, side=None):
+def grab_marker(shape, side=None):
     endeff = side2endeff(side)
-    with running(gaze_at(endeff)):
-        run(open_gripper(side=side)
-            + reach(shape, offset=[0.0, 0.01, 0.1], with_=endeff)
-            + align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
-        run(reach(shape, offset=[0.0, 0.01, -0.07], with_=endeff))
-        run(close_gripper(side=side))
-    # run(homing())
+
+    return [{"with": gaze_at(endeff),
+             "plan": [(open_gripper(side),
+                       reach(shape, offset=[0, .01, .1], with_=endeff),
+                       align_gripper_with_plane([1, 0, 0], [0, -1, 0],
+                                                side=side)
+                       ),
+                      reach(shape, offset=[0, .01, -.07], with_=endeff),
+                      close_gripper(side)
+                      ]
+             }
+            ]
 
 
 def run_turn_marker(shape, degree, pre_grasp_offset, grasp_offset, plane=None,
