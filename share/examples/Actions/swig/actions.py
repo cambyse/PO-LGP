@@ -1,138 +1,27 @@
-"""
-A simple and convenient python interface for the ActivityMachine
-
-"""
 from __future__ import print_function
-from collections import namedtuple
-import time
-import signal
-import numpy as np
 
 from contextlib import contextmanager
-import swig
+import numpy as np
 
-
-def signal_handler(signal, frame):
-    print("\n"*10)
-    print("\nYou pressed Ctrl+C!")
-    print("Stopping all facts")
-    new_facts = []
-    for fact in facts():
-        print("\n"*10)
-        print(fact)
-        if "conv" not in fact:
-            new_facts.append("(conv " + fact[1: fact.find(")") + 1])
-
-    for fact in new_facts:
-        interface.setFact(fact)
-
-
-interface = swig.ActionSwigInterface()
-
-# new convenient symbols
-for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper"]:
-    interface.createNewSymbol(s)
-
-# don't abort the swig interface on Ctr-C
-# the signal must be geristered after the swig interface was initialized
-# signal.signal(signal.SIGINT, signal_handler)
-time.sleep(.2)
+from resources import interface, shapes, s, bodies, b, joints, j
+from utils import (
+    SIDE,
+    strip_specs,
+    conv_symbol,
+    assert_valid_shapes,
+    side2endeff,
+    side2gripper_joint,
+    pos_str2arr,
+    side2wrist_joint,
+)
 
 
 ###############################################################################
-# Sides
-LEFT = 256
-RIGHT = 255
-
-DEFAULT_SIDE = LEFT
-
-print("=" * 70)
-print("DEFAULT_SIDE is set to {}".format(DEFAULT_SIDE))
-print("  You can always change it: `DEFAULT_SIDE = RIGHT`")
-
-
-###############################################################################
-# Helper: access ors structures
-def shapes(name=None):
-    return interface.getShapeByName(name) if name else interface.getShapeList()
-
-
-def joints(name=None):
-    return interface.getJointByName(name) if name else interface.getJointList()
-
-
-def bodies(name=None):
-    return interface.getBodyByName(name) if name else interface.getBodyList()
-
-
-def facts():
-    return interface.getFacts()
-
-
-###############################################################################
-def assert_valid_shapes(shape):
-    if shape not in shapes():
-        raise ValueError("The given shape {} is not an existing shape"
-                         .format(shape))
-
-###############################################################################
-# Convenient access and autocompletion to shapes, joints, and bodies
-# Just type `s.<tab>` to get a list of all shapes
-_tmp = list(shapes())
-Shapes = namedtuple("Shapes", " ".join(_tmp))
-s = Shapes(*_tmp)
-
-_tmp = list(bodies())
-Bodies = namedtuple("Bodies", " ".join(_tmp))
-b = Bodies(*_tmp)
-
-_tmp = list(joints())
-Joints = namedtuple("Joints", " ".join(_tmp))
-j = Joints(*_tmp)
-
-del _tmp
-
-
-###############################################################################
-# Helper: symbols...
-def strip_specs(fact):
-    return fact[: fact.find(")")] + ")"
-
-
-def conv_symbol(symbol):
-    return '(conv ' + symbol[1:]
-
-
-def pos_str2arr(pos_str):
-    return np.array([float(i) for i in pos_str[2:-2].split(" ")])
-
-
-def side2endeff(side=None):
-    if side is None:
-        side = DEFAULT_SIDE
-    eff = {LEFT: "endeffL", RIGHT: "endeffR"}
-    return eff[side]
-
-
-def side2gripper_joint(side=None):
-    if side is None:
-        side = DEFAULT_SIDE
-    gripper_joint = {LEFT: "l_gripper_joint", RIGHT: "r_gripper_joint"}
-    return gripper_joint[side]
-
-
-def side2wrist_joint(side=None):
-    if side is None:
-        side = DEFAULT_SIDE
-    wrist_joint = {LEFT: "l_wrist_roll_joint", RIGHT: "r_wrist_roll_joint"}
-    return wrist_joint[side]
-
-
-###############################################################################
-# execution control
+# execution actions
 def run(facts):
     """Run the given fact, wait for its completion and remove the fact
     afterwards.
+
     """
     if not isinstance(facts, list):
         facts = [facts]
@@ -155,8 +44,9 @@ def run(facts):
 
 @contextmanager
 def running(facts):
-    """
-    Context manager to run the given facts (list of strings) during the context
+    """Context manager to run the given facts (list of strings) during the
+    context.
+
     """
     for fact in facts:
         interface.setFact(fact)
@@ -185,7 +75,7 @@ def _gripper(side, target):
     endeff = side2endeff(side)
     joint = side2gripper_joint(side)
 
-    assert_valid_shapes(endeff)
+    assert_valid_shapes(endeff, shapes())
 
     fact = ("(FollowReferenceActivity {endeff} gripper)"
             "{{ type=qItself ref1={joint}, target=[{target}] tol=.01 }}"
@@ -204,12 +94,12 @@ def close_gripper(side=None):
 def reach(what, with_=None, offset=None):
     """bla"""
     if with_ is None:
-        with_ = side2endeff(DEFAULT_SIDE)
+        with_ = side2endeff()
     if offset is None:
         offset = [0., 0., 0.]
 
-    assert_valid_shapes(what)
-    assert_valid_shapes(with_)
+    assert_valid_shapes(what, shapes())
+    assert_valid_shapes(with_, shapes())
 
     # offset = "[{} {} {}]".format(*offset)
     fact = ("(FollowReferenceActivity {ref1} {ref2})"
@@ -229,7 +119,7 @@ def align_gripper_vertical(side=None):
 def align_gripper(vec_endeff, vec_target, side=None):
     endeff = side2endeff(side)
 
-    assert_valid_shapes(endeff)
+    assert_valid_shapes(endeff, shapes())
 
     fact = ("(FollowReferenceActivity {ref1} rot)"
             "{{ type=vec, ref1={ref1}, vec1={vec_endeff}, "
@@ -242,7 +132,7 @@ def align_gripper(vec_endeff, vec_target, side=None):
 def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     endeff = side2endeff(side)
 
-    assert_valid_shapes(endeff)
+    assert_valid_shapes(endeff, shapes())
 
     return [
         ("(FollowReferenceActivity {ref1} front)"
@@ -255,7 +145,7 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
 
 
 def gaze_at(shape):
-    assert_valid_shapes(shape)
+    assert_valid_shapes(shape, shapes())
 
     pos = pos_str2arr(shapes(shape)["pos"])
     fact = """
@@ -301,7 +191,7 @@ def move_to_pos(endeff, pos):
 
 ###############################################################################
 # High Level Behaviors
-def run_grab_marker(shape, side=LEFT):
+def run_grab_marker(shape, side=None):
     endeff = side2endeff(side)
     with running(gaze_at(endeff)):
         run(open_gripper(side=side)
@@ -312,7 +202,7 @@ def run_grab_marker(shape, side=LEFT):
     # run(homing())
 
 
-def run_turn_marker(shape, degree, side=LEFT):
+def run_turn_marker(shape, degree, side=None):
     endeff = side2endeff(side)
     with running(gaze_at(endeff)):
         run(open_gripper()
@@ -324,7 +214,7 @@ def run_turn_marker(shape, degree, side=LEFT):
         run(open_gripper(side))
 
 
-def run_move_shape(shape, distance, side=LEFT):
+def run_move_shape(shape, distance, side=None):
     endeff = side2endeff(side)
     run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
     with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
@@ -337,7 +227,7 @@ def run_move_shape(shape, distance, side=LEFT):
         run(open_gripper(side=side))
 
 
-def run_move_shape_along_joint(shape, distance, joint, side=LEFT):
+def run_move_shape_along_joint(shape, distance, joint, side=None):
     endeff = side2endeff(side)
     axis = pos_str2arr(interface.getJointByName(joint)["axis"])
     run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
@@ -350,10 +240,5 @@ def run_move_shape_along_joint(shape, distance, joint, side=LEFT):
         run(move_along_axis(endeff, axis, distance))
         run(open_gripper(side=side))
 
-###############################################################################
-if __name__ == '__main__':
-    # run(homing())
-    pass
-    # open_gripper(RIGHT)
-    # close_gripper(RIGHT)
-    # grab_marker("mymarker")
+
+print("Loaded actions.py...")
