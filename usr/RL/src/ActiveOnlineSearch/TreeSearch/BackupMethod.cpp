@@ -2,6 +2,7 @@
 #include "PriorModels.h"
 
 #include <util/QtUtil.h>
+#include <util/return_tuple.h>
 
 #include <float.h>
 #include <limits>
@@ -21,7 +22,7 @@ namespace backup_method {
                             std::shared_ptr<AbstractEnvironment> environment_,
                             const graph_t & graph_,
                             const node_info_map_t & node_info_map_,
-                            const mcts_node_info_map_t & mcts_node_info_map_,
+                            mcts_node_info_map_t & mcts_node_info_map_,
                             const mcts_arc_info_map_t & mcts_arc_info_map_) {
         discount = discount_;
         environment = environment_;
@@ -41,7 +42,7 @@ namespace backup_method {
                        std::shared_ptr<AbstractEnvironment> environment_,
                        const graph_t & graph_,
                        const node_info_map_t & node_info_map_,
-                       const mcts_node_info_map_t & mcts_node_info_map_,
+                       mcts_node_info_map_t & mcts_node_info_map_,
                        const mcts_arc_info_map_t & mcts_arc_info_map_) {
         BackupMethod::init(discount_,
                            environment_,
@@ -71,8 +72,7 @@ namespace backup_method {
         tree_policy->restrict_to_existing = true;
     }
 
-    void Bellman::backup_action_node(const node_t & action_node,
-                                     mcts_node_info_map_t & mcts_node_info_map) const {
+    void Bellman::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT(0,environment!=nullptr);
         DEBUG_OUT(1,"Backup action node " << graph->id(action_node));
         // compute imediate reward (mean and variance)
@@ -91,56 +91,58 @@ namespace backup_method {
                                                     max_reward,
                                                     prior_counts);
         reward_t mean_reward = mean_and_variance.mean;
-        reward_t mean_reward_variance = mean_and_variance.variance;
+        reward_t mean_reward_variance = mean_and_variance.variance_of_mean;
         DEBUG_OUT(3,"    ^r=" << mean_reward << ", ~r=" << mean_reward_variance);
+        // transition probabilities
+        vector<double> counts;
+        for(out_arc_it_t arc(*graph, action_node); arc!=INVALID; ++arc) {
+            counts.push_back((*mcts_arc_info_map)[arc].transition_counts);
+        }
+        prior_models::Dirichlet prob(counts);
         // compute value (mean and variance)
         reward_t action_value = mean_reward;
         reward_t action_value_variance = mean_reward_variance;
         reward_t min_action_value = 0;
         reward_t max_action_value = 0;
-        for(out_arc_it_t to_state_arc_1(*graph, action_node); to_state_arc_1!=INVALID; ++to_state_arc_1) {
+        int idx_1 = 0;
+        for(out_arc_it_t to_state_arc_1(*graph, action_node);
+            to_state_arc_1!=INVALID;
+            ++to_state_arc_1, ++idx_1) {
 
-            node_t target_state_node_1 = graph->target(to_state_arc_1);
-            double prob_1 = (double)(*mcts_arc_info_map)[to_state_arc_1].transition_counts/action_transition_counts;
-            double prob_variance_1 = prob_1*(1-prob_1)/(action_transition_counts+1);
-            reward_t state_value_1 = mcts_node_info_map[target_state_node_1].value;
-            reward_t state_value_variance_1 = mcts_node_info_map[target_state_node_1].value_variance;
-            DEBUG_OUT(3,"    transition to state node " << graph->id(target_state_node_1));
-            DEBUG_OUT(3,"        ^p=" << prob_1 << ", ~p=" << prob_variance_1);
-            DEBUG_OUT(3,"        ^V=" << state_value_1 << ", ~V=" << state_value_variance_1);
+            node_t state_node_1 = graph->target(to_state_arc_1);
+            DEBUG_OUT(3,"    transition to state node " << graph->id(state_node_1));
+            DEBUG_OUT(3,"        ^p=" << prob.mean[idx_1] << ", ~p=" << prob.covariance[idx_1][idx_1]);
+            DEBUG_OUT(3,"        ^V=" << (*mcts_node_info_map)[state_node_1].value << ", ~V=" << (*mcts_node_info_map)[state_node_1].value_variance);
 
             // update action value
-            action_value += discount*prob_1*state_value_1;
+            action_value += discount*prob.mean[idx_1]*(*mcts_node_info_map)[state_node_1].value;
 
             // update action value variance (first sum)
             action_value_variance += discount*discount*
-                (prob_1*prob_1 + prob_variance_1)*
-                state_value_variance_1;
+                (prob.mean[idx_1]*prob.mean[idx_1] + prob.covariance[idx_1][idx_1])*
+                (*mcts_node_info_map)[state_node_1].value_variance;
 
             // update action value bounds
-            min_action_value += discount*prob_1*mcts_node_info_map[target_state_node_1].min_value;
-            max_action_value += discount*prob_1*mcts_node_info_map[target_state_node_1].max_value;
+            min_action_value += discount*prob.mean[idx_1]*(*mcts_node_info_map)[state_node_1].min_value;
+            max_action_value += discount*prob.mean[idx_1]*(*mcts_node_info_map)[state_node_1].max_value;
 
             // update action value variance (second sum)
-            for(out_arc_it_t to_state_arc_2(*graph, action_node); to_state_arc_2!=INVALID; ++to_state_arc_2) {
+            int idx_2 = 0;
+            for(out_arc_it_t to_state_arc_2(*graph, action_node);
+                to_state_arc_2!=INVALID;
+                ++to_state_arc_2, ++idx_2) {
 
-                node_t target_state_node_2 = graph->target(to_state_arc_2);
-                double prob_2 = (double)(*mcts_arc_info_map)[to_state_arc_2].transition_counts/action_transition_counts;
-                reward_t state_value_2 = mcts_node_info_map[target_state_node_2].value;
-
-                double prob_covariance = target_state_node_1==target_state_node_2?
-                    prob_2*(1-prob_2)/(action_transition_counts+1):
-                    -prob_1*prob_2/(action_transition_counts+1);
-                DEBUG_OUT(3,"        transition-pair to state nodes " << graph->id(target_state_node_1) << "/" << graph->id(target_state_node_2));
-                DEBUG_OUT(3,"        ^p=" << prob_1 << "/" << prob_2 << ", ~p=" << prob_covariance);
-                DEBUG_OUT(3,"        ^V=" << state_value_1 << "/" << state_value_2);
+                node_t state_node_2 = graph->target(to_state_arc_2);
+                DEBUG_OUT(3,"        transition-pair to state nodes " << graph->id(state_node_1) << "/" << graph->id(state_node_2));
+                DEBUG_OUT(3,"        ^p=" << prob.mean[idx_1] << "/" << prob.mean[idx_2] << ", ~p=" << prob.covariance[idx_1][idx_2]);
+                DEBUG_OUT(3,"        ^V=" << (*mcts_node_info_map)[state_node_1].value << "/" << (*mcts_node_info_map)[state_node_2].value);
 
                 action_value_variance += discount*discount*
-                    prob_covariance*
-                    state_value_1*state_value_2;
+                    prob.covariance[idx_1][idx_2]*
+                    (*mcts_node_info_map)[state_node_1].value*(*mcts_node_info_map)[state_node_2].value;
             }
         }
-        mcts_node_info_map[action_node].set_value(action_value,
+        (*mcts_node_info_map)[action_node].set_value(action_value,
                                                   action_value_variance,
                                                   min_action_value,
                                                   max_action_value);
@@ -151,15 +153,35 @@ namespace backup_method {
                   arg(max_action_value));
     }
 
-    void Bellman::backup_observation_node(const node_t & observation_node,
-                                          mcts_node_info_map_t & mcts_node_info_map) const {
+    void Bellman::backup_observation_node(const node_t & observation_node) const {
         DEBUG_EXPECT(0,environment!=nullptr);
         DEBUG_EXPECT(0,tree_policy!=nullptr);
         DEBUG_EXPECT(0,tree_policy->restrict_to_existing);
         DEBUG_OUT(1,"Backup observation node " << graph->id(observation_node));
-        #warning TODO: Make this stochastic!
-        // get an action
-        action_handle_t action = tree_policy->get_action(observation_node);
+        // get action probabilities
+        RETURN_TUPLE(action_container_t, actions,
+                     vector<double>, probs) = tree_policy->get_action_probabilities(observation_node);
+        std::unordered_map<action_handle_t,node_t,
+                           AbstractEnvironment::ActionHash,
+                           AbstractEnvironment::ActionEq> action_nodes;
+        for(out_arc_it_t to_action_arc(*graph, observation_node); to_action_arc!=INVALID; ++to_action_arc) {
+            node_t action_node = graph->target(to_action_arc);
+            action_nodes[(*node_info_map)[action_node].action] = action_node;
+        }
+        double mean_value = 0;
+        double mean_value_variance = 0;
+        double min_value = 0;
+        double max_value = 0;
+        for(int idx=0; idx<(int)actions.size(); ++idx) {
+            node_t action_node = action_nodes[actions[idx]];
+            mean_value += probs[idx]*(*mcts_node_info_map)[action_node].value;
+#warning Does the variance REALLY go quadratic with the probability??!
+            mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
+            min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
+            max_value += probs[idx]*(*mcts_node_info_map)[action_node].max_value;
+        }
+        // old
+        auto action = tree_policy->get_action(observation_node);
         node_t action_node = INVALID;
         for(out_arc_it_t to_action_arc(*graph, observation_node); to_action_arc!=INVALID; ++to_action_arc) {
             action_node = graph->target(to_action_arc);
@@ -169,15 +191,29 @@ namespace backup_method {
         }
         DEBUG_EXPECT(0,action_node!=INVALID);
         // assign
-        mcts_node_info_map[observation_node].set_value(mcts_node_info_map[action_node].value,
-                                                       mcts_node_info_map[action_node].value_variance,
-                                                       mcts_node_info_map[action_node].min_value,
-                                                       mcts_node_info_map[action_node].max_value);
+        (*mcts_node_info_map)[observation_node].set_value((*mcts_node_info_map)[action_node].value,
+                                                       (*mcts_node_info_map)[action_node].value_variance,
+                                                       (*mcts_node_info_map)[action_node].min_value,
+                                                       (*mcts_node_info_map)[action_node].max_value);
         DEBUG_OUT(2,QString("Assign	^Q=%1	~Q=%2	↹Q=%3/%4").
-                  arg(mcts_node_info_map[action_node].value).
-                  arg(mcts_node_info_map[action_node].value_variance).
-                  arg(mcts_node_info_map[action_node].min_value).
-                  arg(mcts_node_info_map[action_node].max_value));
+                  arg((*mcts_node_info_map)[action_node].value).
+                  arg((*mcts_node_info_map)[action_node].value_variance).
+                  arg((*mcts_node_info_map)[action_node].min_value).
+                  arg((*mcts_node_info_map)[action_node].max_value));
+        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].value-mean_value)<1e-10);
+        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].value_variance-mean_value_variance)<1e-10);
+        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].min_value-min_value)<1e-10);
+        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].max_value-max_value)<1e-10);
+        // if(fabs((*mcts_node_info_map)[action_node].value-mean_value)>=1e-10 ||
+        //    fabs((*mcts_node_info_map)[action_node].value_variance-mean_value_variance)>=1e-10 ||
+        //    fabs((*mcts_node_info_map)[action_node].min_value-min_value)>=1e-10 ||
+        //    fabs((*mcts_node_info_map)[action_node].max_value-max_value)>=1e-10) {
+        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].value << " / " << mean_value);
+        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].value_variance << " / " << mean_value_variance);
+        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].min_value << " / " << min_value);
+        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].max_value << " / " << max_value);
+        //     DEBUG_OUT(0,"    " << probs);
+        // }
     }
 
     MonteCarlo::MonteCarlo(double prior_counts):
@@ -188,7 +224,7 @@ namespace backup_method {
                           std::shared_ptr<AbstractEnvironment> environment_,
                           const graph_t & graph_,
                           const node_info_map_t & node_info_map_,
-                          const mcts_node_info_map_t & mcts_node_info_map_,
+                          mcts_node_info_map_t & mcts_node_info_map_,
                           const mcts_arc_info_map_t & mcts_arc_info_map_) {
         BackupMethod::init(discount_,
                            environment_,
@@ -212,31 +248,28 @@ namespace backup_method {
         }
     }
 
-    void MonteCarlo::backup_action_node(const node_t & action_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const {
-        backup_node(action_node,mcts_node_info_map);
+    void MonteCarlo::backup_action_node(const node_t & action_node) const {
+        backup_node(action_node);
         DEBUG_OUT(1,QString("    backup action-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(action_node)).
-                  arg(mcts_node_info_map[action_node].value).
-                  arg(mcts_node_info_map[action_node].value_variance).
-                  arg(mcts_node_info_map[action_node].min_value).
-                  arg(mcts_node_info_map[action_node].max_value));
+                  arg((*mcts_node_info_map)[action_node].value).
+                  arg((*mcts_node_info_map)[action_node].value_variance).
+                  arg((*mcts_node_info_map)[action_node].min_value).
+                  arg((*mcts_node_info_map)[action_node].max_value));
     }
 
-    void MonteCarlo::backup_observation_node(const node_t & observation_node,
-                                             mcts_node_info_map_t & mcts_node_info_map) const {
-        backup_node(observation_node,mcts_node_info_map);
+    void MonteCarlo::backup_observation_node(const node_t & observation_node) const {
+        backup_node(observation_node);
         DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(observation_node)).
-                  arg(mcts_node_info_map[observation_node].value).
-                  arg(mcts_node_info_map[observation_node].value_variance).
-                  arg(mcts_node_info_map[observation_node].min_value).
-                  arg(mcts_node_info_map[observation_node].max_value));
+                  arg((*mcts_node_info_map)[observation_node].value).
+                  arg((*mcts_node_info_map)[observation_node].value_variance).
+                  arg((*mcts_node_info_map)[observation_node].min_value).
+                  arg((*mcts_node_info_map)[observation_node].max_value));
     }
 
-    void MonteCarlo::backup_node(const node_t & node,
-                                 mcts_node_info_map_t & mcts_node_info_map) const {
-        auto * info = &mcts_node_info_map[node];
+    void MonteCarlo::backup_node(const node_t & node) const {
+        auto * info = &(*mcts_node_info_map)[node];
         reward_t min_return = 0;
         reward_t max_return = 0;
         if(prior_counts>0) {
@@ -251,7 +284,7 @@ namespace backup_method {
                                                     prior_counts);
         // assign
         info->set_value(mean_and_variance.mean,
-                        mean_and_variance.variance,
+                        mean_and_variance.variance_of_mean,
                         info->min_return,
                         info->max_return);
         // debug info
@@ -283,7 +316,7 @@ namespace backup_method {
                           std::shared_ptr<AbstractEnvironment> environment_,
                           const graph_t & graph_,
                           const node_info_map_t & node_info_map_,
-                          const mcts_node_info_map_t & mcts_node_info_map_,
+                          mcts_node_info_map_t & mcts_node_info_map_,
                           const mcts_arc_info_map_t & mcts_arc_info_map_) {
         BackupMethod::init(discount_,
                            environment_,
@@ -305,46 +338,44 @@ namespace backup_method {
                      mcts_arc_info_map_);
     }
 
-    void HybridMCDP::backup_action_node(const node_t & action_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const {
+    void HybridMCDP::backup_action_node(const node_t & action_node) const {
         // make bellman backup
-        bellman.backup_action_node(action_node,mcts_node_info_map);
-        auto bellman_action_value = mcts_node_info_map[action_node].value;
-        auto bellman_action_value_variance = mcts_node_info_map[action_node].value_variance;
-        auto bellman_min_action_value = mcts_node_info_map[action_node].min_value;
-        auto bellman_max_action_value = mcts_node_info_map[action_node].max_value;
+        bellman.backup_action_node(action_node);
+        auto bellman_action_value = (*mcts_node_info_map)[action_node].value;
+        auto bellman_action_value_variance = (*mcts_node_info_map)[action_node].value_variance;
+        auto bellman_min_action_value = (*mcts_node_info_map)[action_node].min_value;
+        auto bellman_max_action_value = (*mcts_node_info_map)[action_node].max_value;
         // make monte-carlo backup
-        monte_carlo.backup_action_node(action_node,mcts_node_info_map);
-        auto monte_carlo_action_value = mcts_node_info_map[action_node].value;
-        auto monte_carlo_action_value_variance = mcts_node_info_map[action_node].value_variance;
-        auto monte_carlo_min_action_value = mcts_node_info_map[action_node].min_value;
-        auto monte_carlo_max_action_value = mcts_node_info_map[action_node].max_value;
+        monte_carlo.backup_action_node(action_node);
+        auto monte_carlo_action_value = (*mcts_node_info_map)[action_node].value;
+        auto monte_carlo_action_value_variance = (*mcts_node_info_map)[action_node].value_variance;
+        auto monte_carlo_min_action_value = (*mcts_node_info_map)[action_node].min_value;
+        auto monte_carlo_max_action_value = (*mcts_node_info_map)[action_node].max_value;
         // average both
-        mcts_node_info_map[action_node].value          = mc_weight*monte_carlo_action_value          + (1-mc_weight)*bellman_action_value;
-        mcts_node_info_map[action_node].value_variance = mc_weight*monte_carlo_action_value_variance + (1-mc_weight)*bellman_action_value_variance;
-        mcts_node_info_map[action_node].min_value      = mc_weight*monte_carlo_min_action_value      + (1-mc_weight)*bellman_min_action_value;
-        mcts_node_info_map[action_node].max_value      = mc_weight*monte_carlo_max_action_value      + (1-mc_weight)*bellman_max_action_value;
+        (*mcts_node_info_map)[action_node].value          = mc_weight*monte_carlo_action_value          + (1-mc_weight)*bellman_action_value;
+        (*mcts_node_info_map)[action_node].value_variance = mc_weight*monte_carlo_action_value_variance + (1-mc_weight)*bellman_action_value_variance;
+        (*mcts_node_info_map)[action_node].min_value      = mc_weight*monte_carlo_min_action_value      + (1-mc_weight)*bellman_min_action_value;
+        (*mcts_node_info_map)[action_node].max_value      = mc_weight*monte_carlo_max_action_value      + (1-mc_weight)*bellman_max_action_value;
     }
 
-    void HybridMCDP::backup_observation_node(const node_t & observation_node,
-                                             mcts_node_info_map_t & mcts_node_info_map) const {
+    void HybridMCDP::backup_observation_node(const node_t & observation_node) const {
         // make bellman backup
-        bellman.backup_observation_node(observation_node,mcts_node_info_map);
-        auto bellman_observation_value = mcts_node_info_map[observation_node].value;
-        auto bellman_observation_value_variance = mcts_node_info_map[observation_node].value_variance;
-        auto bellman_min_observation_value = mcts_node_info_map[observation_node].min_value;
-        auto bellman_max_observation_value = mcts_node_info_map[observation_node].max_value;
+        bellman.backup_observation_node(observation_node);
+        auto bellman_observation_value = (*mcts_node_info_map)[observation_node].value;
+        auto bellman_observation_value_variance = (*mcts_node_info_map)[observation_node].value_variance;
+        auto bellman_min_observation_value = (*mcts_node_info_map)[observation_node].min_value;
+        auto bellman_max_observation_value = (*mcts_node_info_map)[observation_node].max_value;
         // make monte-carlo backup
-        monte_carlo.backup_observation_node(observation_node,mcts_node_info_map);
-        auto monte_carlo_observation_value = mcts_node_info_map[observation_node].value;
-        auto monte_carlo_observation_value_variance = mcts_node_info_map[observation_node].value_variance;
-        auto monte_carlo_min_observation_value = mcts_node_info_map[observation_node].min_value;
-        auto monte_carlo_max_observation_value = mcts_node_info_map[observation_node].max_value;
+        monte_carlo.backup_observation_node(observation_node);
+        auto monte_carlo_observation_value = (*mcts_node_info_map)[observation_node].value;
+        auto monte_carlo_observation_value_variance = (*mcts_node_info_map)[observation_node].value_variance;
+        auto monte_carlo_min_observation_value = (*mcts_node_info_map)[observation_node].min_value;
+        auto monte_carlo_max_observation_value = (*mcts_node_info_map)[observation_node].max_value;
         // average both
-        mcts_node_info_map[observation_node].value          = mc_weight*monte_carlo_observation_value          + (1-mc_weight)*bellman_observation_value;
-        mcts_node_info_map[observation_node].value_variance = mc_weight*monte_carlo_observation_value_variance + (1-mc_weight)*bellman_observation_value_variance;
-        mcts_node_info_map[observation_node].min_value      = mc_weight*monte_carlo_min_observation_value      + (1-mc_weight)*bellman_min_observation_value;
-        mcts_node_info_map[observation_node].max_value      = mc_weight*monte_carlo_max_observation_value      + (1-mc_weight)*bellman_max_observation_value;
+        (*mcts_node_info_map)[observation_node].value          = mc_weight*monte_carlo_observation_value          + (1-mc_weight)*bellman_observation_value;
+        (*mcts_node_info_map)[observation_node].value_variance = mc_weight*monte_carlo_observation_value_variance + (1-mc_weight)*bellman_observation_value_variance;
+        (*mcts_node_info_map)[observation_node].min_value      = mc_weight*monte_carlo_min_observation_value      + (1-mc_weight)*bellman_min_observation_value;
+        (*mcts_node_info_map)[observation_node].max_value      = mc_weight*monte_carlo_max_observation_value      + (1-mc_weight)*bellman_max_observation_value;
     }
 
 } // namespace backup_method {

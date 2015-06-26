@@ -29,20 +29,18 @@ namespace value_heuristic {
         mcts_node_info_map[state_node].set_value(0,0,0,0);
     }
 
-    RolloutStatistics::RolloutStatistics(double prior_counts):
-        prior_counts(prior_counts)
-    {}
+    RolloutStatistics::RolloutStatistics(double prior_counts): _prior_counts(prior_counts) {}
 
     void RolloutStatistics::init(double disc,
                        shared_ptr<AbstractEnvironment> env) {
         ValueHeuristic::init(disc,env);
-        if(prior_counts<0) {
+        if(_prior_counts<0) {
             if(discount<1 && environment->has_min_reward() && environment->has_max_reward()) {
-                prior_counts = 1;
+                _prior_counts = 1;
             } else {
-                prior_counts = 0;
+                _prior_counts = 0;
             }
-        } else if(prior_counts>0) {
+        } else if(_prior_counts>0) {
             if(!environment->has_min_reward() || !environment->has_max_reward()) {
                 DEBUG_ERROR("Cannot use prior counts without min/max reward");
             }
@@ -63,7 +61,7 @@ namespace value_heuristic {
         DEBUG_EXPECT(0,rollout_counts>=1);
         reward_t min_return = 0;
         reward_t max_return = 0;
-        if(prior_counts>0) {
+        if(_prior_counts>0) {
             min_return = environment->min_reward()/(1-discount);
             max_return = environment->max_reward()/(1-discount);
         }
@@ -72,7 +70,7 @@ namespace value_heuristic {
         DEBUG_OUT(2,"rollout_counts: " << rollout_counts);
         DEBUG_OUT(2,"min_return: " << min_return);
         DEBUG_OUT(2,"max_return: " << max_return);
-        DEBUG_OUT(2,"prior_counts: " << prior_counts);
+        DEBUG_OUT(2,"prior_counts: " << _prior_counts);
         // get min max value from return
         reward_t min_value = std::numeric_limits<reward_t>::max();
         reward_t max_value = std::numeric_limits<reward_t>::lowest();
@@ -86,12 +84,17 @@ namespace value_heuristic {
                                                     rollout_counts,
                                                     min_return,
                                                     max_return,
-                                                    prior_counts);
+                                                    _prior_counts);
         mcts_node_info_map[state_node].set_value(mean_and_variance.mean,
-                                                 mean_and_variance.variance,
+                                                 mean_and_variance.variance_of_mean,
                                                  min_value,
                                                  max_value);
-        DEBUG_OUT(1,"value mean/variance: " << mean_and_variance.mean << "/" << mean_and_variance.variance);
+        DEBUG_OUT(1,"value mean/variance: " << mean_and_variance.mean << "/" << mean_and_variance.variance_of_mean);
+    }
+
+    RolloutStatistics & RolloutStatistics::prior_counts(double prior_counts) {
+        _prior_counts = prior_counts;
+        return *this;
     }
 
 } // end namespace value_heuristic

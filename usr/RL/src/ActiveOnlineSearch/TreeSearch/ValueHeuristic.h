@@ -52,8 +52,9 @@ namespace value_heuristic {
                           std::shared_ptr<AbstractEnvironment> env);
         virtual void add_value_estimate(const node_t & state_node,
                                         mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual RolloutStatistics & prior_counts(double prior_counts);
     protected:
-        double prior_counts;
+        double _prior_counts;
     };
 
 } // end namespace value_heuristic

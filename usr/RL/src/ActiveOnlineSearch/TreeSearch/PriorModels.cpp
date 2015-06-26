@@ -19,7 +19,8 @@ namespace prior_models {
         max(max),
         prior_counts(prior_counts),
         mean(compute_mean(sum,counts,min,max,prior_counts)),
-        variance(compute_variance(mean,squares_sum,counts,min,max,prior_counts))
+        variance(compute_variance(mean,squares_sum,counts,min,max,prior_counts)),
+        variance_of_mean(variance/(counts+prior_counts))
     {}
 
     double PriorCounts::compute_mean(double sum,

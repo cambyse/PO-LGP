@@ -194,7 +194,7 @@ void MonteCarloTreeSearch::next_do() {
     {
         // explicit rollout
         node_t current_node = leaf_node;
-        for(int depth=0; max_depth<0 || depth<max_depth; ++depth) {
+        for(int depth=0; (max_depth<0 || depth<max_depth) && !environment->is_terminal_state(); ++depth) {
 
             // get tree-policy action
             action_handle_t action = util::random_select(environment->get_actions());
@@ -226,13 +226,8 @@ void MonteCarloTreeSearch::next_do() {
 
             // update current node and state
             current_node = observation_node;
-
-            // break in terminal nodes
-            if(environment->is_terminal_state()) {
-                mcts_node_info_map[current_node].set_value(0,0,0,0);
-                break;
-            }
         }
+        mcts_node_info_map[current_node].set_value(0,0,0,0);
         leaf_node_rollout_item = make_shared<RolloutItem>();
         leaf_node = current_node;
     }
@@ -306,11 +301,9 @@ void MonteCarloTreeSearch::next_do() {
             // backup if back_type is BACKUP_TRACE
             if(backup_type==BACKUP_TYPE::TRACE) {
                 weight_updates(action_node);
-                backup_method->backup_action_node(action_node,
-                                                  mcts_node_info_map);
+                backup_method->backup_action_node(action_node);
                 weight_updates(observation_node);
-                backup_method->backup_observation_node(observation_node,
-                                                       mcts_node_info_map);
+                backup_method->backup_observation_node(observation_node);
             }
         }
         root_node_rollout_item = current_rollout_item;
@@ -363,13 +356,11 @@ void MonteCarloTreeSearch::next_do() {
             weight_updates(next_node);
             switch(node_info_map[next_node].type) {
             case OBSERVATION_NODE:
-                backup_method->backup_observation_node(next_node,
-                                                       mcts_node_info_map);
+                backup_method->backup_observation_node(next_node);
                 DEBUG_OUT(2,"    update observ.-node " << graph.id(next_node));
                 break;
             case ACTION_NODE:
-                backup_method->backup_action_node(next_node,
-                                                  mcts_node_info_map);
+                backup_method->backup_action_node(next_node);
                 DEBUG_OUT(2,"    update action-node "      << graph.id(next_node));
                 break;
             }
@@ -400,8 +391,7 @@ void MonteCarloTreeSearch::next_do() {
     }
 
     // backup root node (for global models)
-    backup_method->backup_root(root_node,
-                               mcts_node_info_map);
+    backup_method->backup_root(root_node);
 }
 
 MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() const {
@@ -777,6 +767,7 @@ void MonteCarloTreeSearch::init_rollout_weights(node_t node) {
 }
 
 void MonteCarloTreeSearch::weight_updates(node_t node) {
+    return;
     DEBUG_OUT(1,"Update node " << graph.id(node));
     switch(node_info_map[node].type) {
     case ACTION_NODE:

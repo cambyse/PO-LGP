@@ -1717,7 +1717,269 @@ TEST(MonteCarloTreeSearch, LoopyPropagation) {
     IF_DEBUG(1) {/* do nothing*/}
     else cout << endl;
 }
+#define FORCE_DEBUG_LEVEL 0
+class MinimalCompleteEnvironment: public IntegerEnvironment {
+public:
+    MinimalCompleteEnvironment() = default;
+    virtual ~MinimalCompleteEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(nullptr,action);
+        reward_t reward = 0;
+        int old_state = state;
+        if(state==0) {
+            state = 1;
+        } else if(state==1) {
+            if(action->action==0) {
+                if(rand()%3==0) state = 1;
+                else state = 2;
+            } else if(action->action==1) {
+                if(rand()%3==0) state = 2;
+                else state = 3;
+            } else EXPECT_TRUE(false);
+        } else if(state==2) {
+            state = 4;
+            if(action->action==0) {
+                if(rand()%3==0) reward = 1;
+                else reward = 0;
+            } else if(action->action==1) {
+                if(rand()%3==0) reward = 0;
+                else reward = 1;
+            } else EXPECT_TRUE(false);
+        } else if(state==3) {
+            state = 4;
+            if(action->action==0) {
+                if(rand()%3==0) reward = 0;
+                else reward = 1;
+            } else if(action->action==1) {
+                reward = 1;
+            } else EXPECT_TRUE(false);
+        } else EXPECT_TRUE(false);
+        DEBUG_OUT(1,"Transition: (" << old_state << ") " << action->action << " --> " << state << " (" << reward << ")" << (is_terminal_state()?" terminal!":""));
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        if(state==0) {
+            return action_container_t({action_handle_t(new IntegerAction(0))});
+        } else {
+            return action_container_t({action_handle_t(new IntegerAction(0)),
+                        action_handle_t(new IntegerAction(1))});
+        }
+    }
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==4;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+};
+#define FORCE_DEBUG_LEVEL 1
+TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    using namespace prior_models;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1()),
+                    std::shared_ptr<TreePolicy>(new UCB_Plus(20))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,1)),
+                            //std::shared_ptr<BackupMethod>(new MonteCarlo(1))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                            MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        for(auto rollout_storage : {
+                                MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL
+                                    }) {
+                            IF_DEBUG(1) {
+                                cout << "Testing" << endl;
+                                cout << "    " << typeid(*node_finder).name() << endl;
+                                cout << "    " << typeid(*tree_policy).name() << endl;
+                                cout << "    " << typeid(*value_heuristic).name() << endl;
+                                cout << "    " << typeid(*backup_method).name() << endl;
+                                cout << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                                cout << "    " << typeid(rollout_storage).name() << ": " << (int)rollout_storage << endl;
+                            } else {
+                                cout << "." << std::flush;
+                            }
+                            // things that don't work together
+                            if(typeid(*tree_policy)==typeid(Uniform) && typeid(*backup_method)==typeid(MonteCarlo)) {
+                                DEBUG_OUT(1,"    Skipping");
+                                continue;
+                                // N11node_finder9FullGraphE
+                                //    N11tree_policy4UCB1E
+                                //    N15value_heuristic17RolloutStatisticsE
+                                //    N13backup_method7BellmanE
+                                //    N20MonteCarloTreeSearch11BACKUP_TYPEE: 0
+                                //    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 1
+                                /*
+ N11node_finder9PlainTreeE
+    N11tree_policy8UCB_PlusE
+    N15value_heuristic17RolloutStatisticsE
+    N13backup_method7BellmanE
+    N20MonteCarloTreeSearch11BACKUP_TYPEE: 0
+    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 2
 
+ N11node_finder9PlainTreeE
+    N11tree_policy8UCB_PlusE
+    N15value_heuristic17RolloutStatisticsE
+    N13backup_method7BellmanE
+    N20MonteCarloTreeSearch11BACKUP_TYPEE: 1
+    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 0
+
+    N11node_finder15ObservationTreeE
+    N11tree_policy4UCB1E
+    N15value_heuristic17RolloutStatisticsE
+    N13backup_method10MonteCarloE
+    N20MonteCarloTreeSearch11BACKUP_TYPEE: 0
+    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 1
+
+  N11node_finder15ObservationTreeE
+    N11tree_policy4UCB1E
+    N15value_heuristic17RolloutStatisticsE
+    N13backup_method10MonteCarloE
+    N20MonteCarloTreeSearch11BACKUP_TYPEE: 1
+    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 0
+
+ N11node_finder9FullGraphE
+    N11tree_policy4UCB1E
+    N15value_heuristic17RolloutStatisticsE
+    N13backup_method10MonteCarloE
+    N20MonteCarloTreeSearch11BACKUP_TYPEE: 1
+    N20MonteCarloTreeSearch15ROLLOUT_STORAGEE: 2
+
+
+                                 */
+                            }
+                            // setup everything
+                            auto environment = std::shared_ptr<AbstractEnvironment>(new MinimalCompleteEnvironment());
+                            double discount = 0.5;
+                            MonteCarloTreeSearch search(environment,
+                                                        discount,
+                                                        node_finder,
+                                                        tree_policy,
+                                                        value_heuristic,
+                                                        backup_method,
+                                                        backup_type);
+                            search.rollout_storage = rollout_storage;
+                            // do rollouts
+                            int rollout_n = 5000;
+                            repeat(rollout_n) {
+                                search.next();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
+                            }
+                            // checks
+                            typedef MonteCarloTreeSearch::graph_t graph_t;
+                            typedef MonteCarloTreeSearch::node_t node_t;
+                            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                            typedef MonteCarloTreeSearch::arc_t arc_t;
+                            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                            const graph_t & graph = search.get_graph();
+                            auto & node_info_map = search.get_node_info_map();
+                            auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                            // root node
+                            node_t root_node = INVALID;
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(in_arc_it_t(graph,node)==INVALID) {
+                                    root_node = node;
+                                    break;
+                                }
+                            }
+                            EXPECT_NE(root_node,INVALID);
+                            // state 1
+                            node_t state_1 = graph.target(out_arc_it_t(graph,graph.target(out_arc_it_t(graph,root_node))));
+                            EXPECT_EQ(*(node_info_map[state_1].observation),MinimalCompleteEnvironment::IntegerObservation(1));
+                            EXPECT_NEAR(mcts_node_info_map[state_1].value,0.44,0.1);
+                            node_t action_0_from_state_1 = INVALID;
+                            node_t action_1_from_state_1 = INVALID;
+                            for(out_arc_it_t arc(graph,state_1); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_1 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_1 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_1,INVALID);
+                            EXPECT_NE(action_1_from_state_1,INVALID);
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_1].value,0.3,0.1);
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_1].value,0.44,0.1);
+                            // state 2, state 3
+                            node_t state_2 = INVALID;
+                            node_t state_3 = INVALID;
+                            for(out_arc_it_t arc(graph,action_1_from_state_1); arc!=INVALID; ++arc) {
+                                node_t state_node = graph.target(arc);
+                                if(*(node_info_map[state_node].observation)==MinimalCompleteEnvironment::IntegerObservation(2)) {
+                                    state_2 = state_node;
+                                } else if(*(node_info_map[state_node].observation)==MinimalCompleteEnvironment::IntegerObservation(3)) {
+                                    state_3 = state_node;
+                                }
+                            }
+                            EXPECT_NE(state_2,INVALID);
+                            EXPECT_NE(state_3,INVALID);
+                            EXPECT_EQ(*(node_info_map[state_2].observation),MinimalCompleteEnvironment::IntegerObservation(2));
+                            EXPECT_EQ(*(node_info_map[state_3].observation),MinimalCompleteEnvironment::IntegerObservation(3));
+                            EXPECT_NEAR(mcts_node_info_map[state_2].value,0.67,0.1);
+                            EXPECT_NEAR(mcts_node_info_map[state_3].value,1,0.1);
+                            node_t action_0_from_state_2 = INVALID;
+                            node_t action_1_from_state_2 = INVALID;
+                            for(out_arc_it_t arc(graph,state_2); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_2 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_2 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_2,INVALID);
+                            EXPECT_NE(action_1_from_state_2,INVALID);
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_2].value,0.33,0.1);
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_2].value,0.67,0.1);
+                            node_t action_0_from_state_3 = INVALID;
+                            node_t action_1_from_state_3 = INVALID;
+                            for(out_arc_it_t arc(graph,state_3); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_3 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_3 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_3,INVALID);
+                            EXPECT_NE(action_1_from_state_3,INVALID);
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_3].value,0.67,0.1);
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_3].value,1,0.1);
+                            // search.plot_graph("graph.pdf");
+                            // getchar();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+#define FORCE_DEBUG_LEVEL 0
 class StochasticFiniteLineEnvironment: public IntegerEnvironment {
 public:
     StochasticFiniteLineEnvironment(int line_width): line_width(line_width) {}
@@ -2025,6 +2287,7 @@ TEST(PriorModels, PriorCounts) {
     EXPECT_EQ(0.5,prior_counts.mean);
     EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2));
     EXPECT_EQ(0.25*4./3.,prior_counts.variance);
+    EXPECT_EQ(0.25*4./3./(2+2),prior_counts.variance_of_mean);
 }
 
 TEST(PriorModels, Dirichlet) {

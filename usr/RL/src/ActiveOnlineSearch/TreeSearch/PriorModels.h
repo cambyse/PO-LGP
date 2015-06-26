@@ -17,6 +17,7 @@ namespace prior_models {
         const double prior_counts;
         const double mean;
         const double variance;
+        const double variance_of_mean;
 
         //----methods----//
     PriorCounts(double sum,
