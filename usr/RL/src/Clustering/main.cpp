@@ -135,6 +135,7 @@ int main(int argn, char ** args) {
     util::plot_graph("graph.pdf", graph,
                      all_node_prop, &node_prop,
                      "", nullptr,
+                     "",
                      true,
                      "neato");
 

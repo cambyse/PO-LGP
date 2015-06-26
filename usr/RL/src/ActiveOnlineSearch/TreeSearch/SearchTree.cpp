@@ -196,6 +196,7 @@ void SearchTree::plot_graph(const char* file_name,
                      &node_map,
                      "",
                      &arc_map,
+                     "",
                      delete_dot_file,
                      command,
                      parameters);

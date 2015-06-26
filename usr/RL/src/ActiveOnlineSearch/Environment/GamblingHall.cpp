@@ -1,6 +1,7 @@
 #include "GamblingHall.h"
 
 #include <util/util.h>
+#define DEBUG_LEVEL 0
 #include <util/debug.h>
 
 //#define VARIANT 0 // go to a machine or play current machine, infinitely often
@@ -135,7 +136,9 @@ GamblingHall::observation_reward_pair_t GamblingHall::transition(const action_ha
         reward = drand48()<p?1:0;
     }
     state = util::convert_ND_to_1D_index({machine,time+1},{machine_n,time_n});
-    return observation_reward_pair_t(observation_handle_t(new GamblingHallObservation(state,machine_n,time_n)), reward);
+    observation_handle_t observation(new GamblingHallObservation(state,machine_n,time_n));
+    DEBUG_OUT(1,"Transition: " << *action_handle << " --> " << *observation << " (" << reward << ")");
+    return observation_reward_pair_t(observation, reward);
 }
 
 GamblingHall::action_container_t GamblingHall::get_actions() {

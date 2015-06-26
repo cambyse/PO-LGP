@@ -94,7 +94,7 @@ static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "MonteCarlo",
                                                         "HybridMCDP"};
 static const std::set<std::string> value_heuristic_set = {"Zero",
-                                                          "Rollout"};
+                                                          "RolloutStatistics"};
 static const std::set<std::string> tree_policy_set = {"UCB1",
                                                       "UCB_Plus",
                                                       "Uniform",
@@ -129,8 +129,8 @@ static TCLAP::ValueArg<int> sample_max_arg(          "x", "sample_max",\
                                                      "(default: -1) Maximum number of rollouts (neative values for same as minimal).",\
                                                      false, -1, "int" );
 static TCLAP::ValueArg<int> step_n_arg(              "s", "step_n",\
-                                                     "(default: 0) Number of steps to perform (0 for infinite / until terminal state).",\
-                                                     false, 0, "int" );
+                                                     "(default: -1) Number of steps to perform (negative for infinite / until terminal state).",\
+                                                     false, -1, "int" );
 static TCLAP::ValueArg<int> run_n_arg(               "r", "run_n", \
                                                      "(default: 1) Number of runs to perform for evaluations.", \
                                                      false, 1, "int" );
@@ -153,8 +153,8 @@ static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
 static TCLAP::ValueArg<std::string> value_heuristic_arg( "", "value_heuristic", \
-                                                       "(default: Rollout) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
-                                                       , false, "Rollout", "string");
+                                                       "(default: RolloutStatistics) Method to use for initializing leaf-node values: "+util::container_to_str(value_heuristic_set,", ","(",")")+"." \
+                                                       , false, "RolloutStatistics", "string");
 static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
                                                      "(default: UCB1) What tree policy to use "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "UCB1", "string");
@@ -331,7 +331,7 @@ int main(int argn, char ** args) {
                      shared_ptr<BackupMethod>, backup_method,
                      shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
-        for(int step : Range(0,step_n_arg.getValue())) {
+        for(int step=0; step<step_n_arg.getValue() || step_n_arg.getValue()<0; ++step) {
             environment->reset_state();
             if(environment->is_terminal_state()) break;
             for(int sample : Range(sample_n_arg.getValue())) {
@@ -373,7 +373,8 @@ int main(int argn, char ** args) {
                 }
                 prompt_for_command();
             }
-            if(step<step_n_arg.getValue()) { // don't prune in last step
+             // prune (but not in last step to be able to visualize final tree)
+            if(step<step_n_arg.getValue() || step_n_arg.getValue()) {
                 search_tree->prune(action,observation);
                 if(watch_progress_arg.getValue()>=2) {
                     cout << "tree pruned" << endl;
@@ -398,7 +399,7 @@ int main(int argn, char ** args) {
             tree_policy_string += QString("(%1)").arg(exploration_arg.getValue());
         }
         QString value_heuristic_string = value_heuristic_arg.getValue().c_str();
-        if(value_heuristic_string=="Rollout") {
+        if(value_heuristic_string=="RolloutStatistics") {
             value_heuristic_string += QString("(%1)").arg(rollout_length_arg.getValue());
         }
         QString method_string;
@@ -474,7 +475,7 @@ int main(int argn, char ** args) {
                     // break on terminal state
                     if(environment->is_terminal_state()) break;
                     // break if (maximum) number of steps was set and reached
-                    if(step_n_arg.getValue()>0 && step>=step_n_arg.getValue()) break;
+                    if(step_n_arg.getValue()>=0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
                     search_tree->prune(action,observation);
                     ++step;
@@ -729,8 +730,8 @@ tuple<shared_ptr<AbstractSearchTree>,
     // set up value heuristic
     if(value_heuristic_arg.getValue()=="Zero") {
         value_heuristic.reset(new Zero());
-    } else if(value_heuristic_arg.getValue()=="Rollout") {
-        value_heuristic.reset(new Rollout(prior_counts_arg.getValue()));
+    } else if(value_heuristic_arg.getValue()=="RolloutStatistics") {
+        value_heuristic.reset(new RolloutStatistics(prior_counts_arg.getValue()));
     } else DEBUG_DEAD_LINE;
     // set up backup method
     if(backup_method_arg.getValue()=="Bellman") {

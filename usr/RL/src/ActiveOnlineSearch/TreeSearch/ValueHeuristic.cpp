@@ -29,11 +29,11 @@ namespace value_heuristic {
         mcts_node_info_map[state_node].set_value(0,0,0,0);
     }
 
-    Rollout::Rollout(double prior_counts):
+    RolloutStatistics::RolloutStatistics(double prior_counts):
         prior_counts(prior_counts)
     {}
 
-    void Rollout::init(double disc,
+    void RolloutStatistics::init(double disc,
                        shared_ptr<AbstractEnvironment> env) {
         ValueHeuristic::init(disc,env);
         if(prior_counts<0) {
@@ -52,8 +52,8 @@ namespace value_heuristic {
         }
     }
 
-    void Rollout::add_value_estimate(const node_t & state_node,
-                                     mcts_node_info_map_t & mcts_node_info_map) {
+    void RolloutStatistics::add_value_estimate(const node_t & state_node,
+                                               mcts_node_info_map_t & mcts_node_info_map) {
         DEBUG_EXPECT(0,environment!=nullptr);
 
         // set value (mean and variance)

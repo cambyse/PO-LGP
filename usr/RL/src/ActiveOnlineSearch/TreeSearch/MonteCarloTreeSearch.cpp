@@ -31,6 +31,15 @@ using std::deque;
 using std::shared_ptr;
 using std::make_shared;
 
+void MonteCarloTreeSearch::RolloutItem::write(std::ostream & out) const {
+    out <<
+        *(this->action) << " -->	" <<
+        *(this->observation) << "	(" <<
+        this->reward << ")	" <<
+        (this->type==OBSERVATION_NODE?"OBSERVATION":"ACTION     ") << "	" <<
+        this->weight << " / " << this->discounted_return;
+}
+
 void MonteCarloTreeSearch::MCTSNodeInfo::set_value(reward_t val,
                                                    reward_t val_variance,
                                                    reward_t min_val,
@@ -145,8 +154,7 @@ void MonteCarloTreeSearch::next_do() {
                                                    reward,
                                                    make_shared<RolloutItem>(action,
                                                                             observation_to,
-                                                                            reward,
-                                                                            0, 0, nullptr)));
+                                                                            reward)));
 
             // update current node and state
             current_node = observation_node;
@@ -214,8 +222,7 @@ void MonteCarloTreeSearch::next_do() {
                                                    reward,
                                                    make_shared<RolloutItem>(action,
                                                                             observation_to,
-                                                                            reward,
-                                                                            0, 0, nullptr)));
+                                                                            reward)));
 
             // update current node and state
             current_node = observation_node;
@@ -234,8 +241,9 @@ void MonteCarloTreeSearch::next_do() {
     /* =======================================
        get a heuristic value estimate
        ======================================= */
-    // first add rollout to leaf node
+    // first add rollout to leaf node (also reinitialize weights)
     add_rollout(leaf_node, leaf_node_rollout_item);
+    init_rollout_weights(leaf_node);
     // get value
     value_heuristic->add_value_estimate(leaf_node,
                                         mcts_node_info_map);
@@ -250,6 +258,7 @@ void MonteCarloTreeSearch::next_do() {
      * is BACKUP_TRACE we also do the backups here. In that case only nodes that
      * lie on the trajectory will be backed up. (In trees this is the only way
      * but in general BACKUP_PROPAGATE will backup more nodes.) */
+    shared_ptr<RolloutItem> root_node_rollout_item;
     {
         // initialize next rollout item with leaf-node's rollout item
         shared_ptr<RolloutItem> next_rollout_item = leaf_node_rollout_item;
@@ -296,12 +305,15 @@ void MonteCarloTreeSearch::next_do() {
             DEBUG_OUT(2,QString("    reward=%1, return=%2").arg(reward).arg(discounted_return));
             // backup if back_type is BACKUP_TRACE
             if(backup_type==BACKUP_TYPE::TRACE) {
+                weight_updates(action_node);
                 backup_method->backup_action_node(action_node,
                                                   mcts_node_info_map);
+                weight_updates(observation_node);
                 backup_method->backup_observation_node(observation_node,
                                                        mcts_node_info_map);
             }
         }
+        root_node_rollout_item = current_rollout_item;
     }
 
     if(backup_type==BACKUP_TYPE::TRACE) {
@@ -311,31 +323,33 @@ void MonteCarloTreeSearch::next_do() {
 
         DEBUG_OUT(1,"Propagate backups from leaf-node " << graph.id(leaf_node));
 
-        // construct graph propagation object
-        auto graph_propagation = graph_util::GraphPropagationFactory(lemon::reverseDigraph(graph));
         // construct check-change function
-        // static shared_ptr<mcts_node_info_map_t> old_values = nullptr; // initialize only once
-        // if(old_values==nullptr) {
-        //     old_values.reset(new mcts_node_info_map_t(graph));
-        //     lemon::mapCopy(graph, mcts_node_info_map, *old_values);
-        // }
-        // graph_t::NodeMap<bool> changed(graph,true); // re-initialize every time
-        // std::function<bool(node_t node)> check_changed_function = [&](node_t node) {
-        //     DEBUG_OUT(1,"Check node " << graph.id(node));
-        //     bool return_value = changed[node] || !equal((*old_values)[node], mcts_node_info_map[node]);
-        //     update(mcts_node_info_map[node], (*old_values)[node]);
-        //     changed[node] = false;
-        //     return return_value;
-        // };
-        // set source, check-change function, and initialize
+        if(old_values==nullptr) {
+            old_values.reset(new mcts_node_info_map_t(graph));
+            lemon::mapCopy(graph, mcts_node_info_map, *old_values);
+        }
+        graph_t::NodeMap<bool> changed(graph,true); // re-initialize every time
+        std::function<bool(node_t node)> check_changed_function = [&](node_t node) {
+            DEBUG_OUT(2,"Check node " << graph.id(node));
+            bool return_value = changed[node] || !equal((*old_values)[node], mcts_node_info_map[node]);
+            update(mcts_node_info_map[node], (*old_values)[node]);
+            changed[node] = false;
+            DEBUG_OUT(3,"    node " << graph.id(node) << (return_value?" CHANGED":" no change"));
+            return return_value;
+        };
+
+        // construct graph propagation object, set source, check-change
+        // function, and initialize
+        auto graph_propagation = graph_util::GraphPropagationFactory(lemon::reverseDigraph(graph));
         graph_propagation.
             add_source(leaf_node).
-            //set_check_change_function(check_changed_function).
+            allow_incomplete_updates(true).
+            set_check_change_function(check_changed_function).
             init();
 
         // process nodes
         int update_counter = 0;
-        int max_updates = 10*lemon::countNodes(graph);
+        int max_updates = 10000*lemon::countNodes(graph);
         for(node_t next_node = leaf_node;
             next_node!=INVALID;
             next_node = graph_propagation.next()) {
@@ -346,11 +360,12 @@ void MonteCarloTreeSearch::next_do() {
             }
 
             // update
+            weight_updates(next_node);
             switch(node_info_map[next_node].type) {
             case OBSERVATION_NODE:
                 backup_method->backup_observation_node(next_node,
                                                        mcts_node_info_map);
-                DEBUG_OUT(2,"    update observation-node " << graph.id(next_node));
+                DEBUG_OUT(2,"    update observ.-node " << graph.id(next_node));
                 break;
             case ACTION_NODE:
                 backup_method->backup_action_node(next_node,
@@ -372,6 +387,17 @@ void MonteCarloTreeSearch::next_do() {
             }
         }
     } else DEBUG_DEAD_LINE;
+
+    // print rollout
+    IF_DEBUG(3) {
+        DEBUG_OUT(1,"Trace");
+        shared_ptr<RolloutItem> current_rollout_item = root_node_rollout_item;
+        while(current_rollout_item->next!=nullptr) {
+            DEBUG_OUT(1,"    " << *current_rollout_item);
+            current_rollout_item = current_rollout_item->next;
+        }
+        DEBUG_OUT(1,"    final weight: " << current_rollout_item->weight);
+    }
 
     // backup root node (for global models)
     backup_method->backup_root(root_node,
@@ -458,7 +484,7 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
             arg(mcts_node_info_map[node].max_value,0,'g',4).
             arg(mcts_node_info_map[node].max_value,0,'g',4).
             arg(mcts_node_info_map[node].rollout_set.size());
-        node_map[node] = QString(R"(shape=%1 width=0 height=0 margin=0 label=<%2> fillcolor="%3 %4 1" penwidth=%5)").
+        node_map[node] = QString(R"(shape=%1 label=<%2> fillcolor="%3 %4 1" penwidth=%5)").
             arg(node_info_map[node].type==OBSERVATION_NODE?"square":"circle").
             arg(node_label).
             arg(value>0?0.3:0).
@@ -484,12 +510,12 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
             arg(mcts_arc_info_map[arc].min_reward,0,'g',3).
             arg(mcts_arc_info_map[arc].max_reward,0,'g',3);
         if(node_info_map[source].type==OBSERVATION_NODE) {
-            arc_map[arc] = QString(R"(style=dashed label=<%1> color="%2 %3 %3")").
+            arc_map[arc] = QString(R"(style=dashed label=<%1> color="%2 %3 %3" len=1)").
                 arg(arc_label).
                 arg(value>0?0.3:0).
                 arg(color_rescale(fabs(value/norm)));
         } else {
-            arc_map[arc] = QString(R"(style=solid label=<%1> color="%2 %3 %3" penwidth=%4)").
+            arc_map[arc] = QString(R"(style=solid label=<%1> color="%2 %3 %3" len=2 penwidth=%4)").
                 arg(arc_label).
                 arg(value>0?0.3:0).
                 arg(color_rescale(fabs(value/norm))).
@@ -499,10 +525,11 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
 
     util::plot_graph(file_name,
                      graph,
-                     "style=filled truecolor=true",
+                     "style=filled truecolor=true width=0 height=0 margin=0",
                      &node_map,
                      "",
                      &arc_map,
+                     "splines=true overlap=false",
                      delete_dot_file,
                      command,
                      parameters);
@@ -717,7 +744,7 @@ shared_ptr<MonteCarloTreeSearch::RolloutItem> MonteCarloTreeSearch::rollout(node
             discount_factor*=discount;
             // update last rollout (update discounted return and next item
             // later)
-            rollout_list.push_back(make_shared<RolloutItem>(action,observation,reward,0,1,nullptr));
+            rollout_list.push_back(make_shared<RolloutItem>(action,observation,reward));
         }
 
         // add "empty" rollout item for last node
@@ -736,6 +763,129 @@ shared_ptr<MonteCarloTreeSearch::RolloutItem> MonteCarloTreeSearch::rollout(node
             DEBUG_EXPECT(0,fabs(reverse_discounted_return-discounted_return)<1e-10);
         }
         return rollout_list.front();
+    }
+}
+
+void MonteCarloTreeSearch::init_rollout_weights(node_t node) {
+    auto & rollout_set = mcts_node_info_map[node].rollout_set;
+    double weight = 1./rollout_set.size();
+    for(auto rollout_item : rollout_set) {
+        if(rollout_item->next==nullptr || rollout_item->next->weight==-1) {
+            rollout_item->weight = weight;
+        }
+    }
+}
+
+void MonteCarloTreeSearch::weight_updates(node_t node) {
+    DEBUG_OUT(1,"Update node " << graph.id(node));
+    switch(node_info_map[node].type) {
+    case ACTION_NODE:
+    {
+        // compute transition probabilities
+        std::unordered_map<observation_handle_t,double,
+                           AbstractEnvironment::ObservationHash,
+                           AbstractEnvironment::ObservationEq> transition_probabilities;
+        int transition_count_sum = 0;
+        for(out_arc_it_t to_observation_node(graph,node);
+            to_observation_node!=INVALID;
+            ++to_observation_node) {
+            node_t observation_node = graph.target(to_observation_node);
+            int transition_counts = mcts_arc_info_map[to_observation_node].transition_counts;
+            transition_probabilities[node_info_map[observation_node].observation] = transition_counts;
+            transition_count_sum += transition_counts;
+        }
+        DEBUG_EXPECT(0,transition_count_sum>0);
+        for(auto & props : transition_probabilities) {
+            props.second /= transition_count_sum;
+        }
+        // update weights
+        auto & rollout_set = mcts_node_info_map[node].rollout_set;
+        // first check for zero probabilities
+        bool zero_probs = false;
+        for(auto & rollout_item : rollout_set) {
+            if(transition_probabilities[rollout_item->observation]==0) {
+                zero_probs = true;
+            }
+        }
+        double init_weight = 1./rollout_set.size();
+        double check_weight = -1;
+        double weight_sum = 0;
+        for(auto & rollout_item : rollout_set) {
+            if(rollout_item->next==nullptr) {
+                DEBUG_ERROR("This line should never be reached: A rollout never ends in an action node");
+            } else if(zero_probs) {
+                rollout_item->weight = init_weight;
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        init weight: " << init_weight);
+            } else {
+                rollout_item->weight = rollout_item->next->weight * transition_probabilities[rollout_item->observation];
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
+                DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->observation]);
+            }
+            if(check_weight==-1) {
+                check_weight = rollout_item->weight;
+            } else {
+                DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
+            }
+            weight_sum += rollout_item->weight;
+        }
+        DEBUG_EXPECT(0,fabs(weight_sum-1)<1e-10);
+    }
+    break;
+    case OBSERVATION_NODE:
+    {
+        // compute action probabilities (empirical policy)
+        std::unordered_map<action_handle_t,double,
+                           AbstractEnvironment::ActionHash,
+                           AbstractEnvironment::ActionEq> transition_probabilities;
+        int transition_count_sum = 0;
+        for(out_arc_it_t to_action_node(graph,node);
+            to_action_node!=INVALID;
+            ++to_action_node) {
+            node_t action_node = graph.target(to_action_node);
+            int transition_counts = mcts_arc_info_map[to_action_node].transition_counts;
+            transition_probabilities[node_info_map[action_node].action] = transition_counts;
+            transition_count_sum += transition_counts;
+        }
+
+        for(auto & props : transition_probabilities) {
+            props.second /= transition_count_sum;
+        }
+        // update weights
+        auto & rollout_set = mcts_node_info_map[node].rollout_set;
+        // first check for zero probabilities
+        bool zero_probs = false;
+        for(auto & rollout_item : rollout_set) {
+            if(transition_probabilities[rollout_item->action]==0) {
+                zero_probs = true;
+            }
+        }
+        double init_weight = 1./rollout_set.size();
+        double check_weight = -1;
+        double weight_sum = 0;
+        for(auto & rollout_item : rollout_set) {
+            if(rollout_item->next==nullptr || zero_probs) {
+                rollout_item->weight = init_weight;
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        init weight: " << init_weight);
+            } else {
+                rollout_item->weight = rollout_item->next->weight * transition_probabilities[rollout_item->action];
+                DEBUG_EXPECT(0,transition_count_sum>0);
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
+                DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->action]);
+            }
+            if(check_weight==-1) {
+                check_weight = rollout_item->weight;
+            } else {
+                DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
+            }
+            weight_sum += rollout_item->weight;
+        }
+        DEBUG_EXPECT(0,fabs(weight_sum-1)<1e-10);
+    }
+    break;
     }
 }
 

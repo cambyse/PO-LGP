@@ -40,14 +40,14 @@ namespace value_heuristic {
 
     /**
      * This heuristic does a rollout to initialize value/return. */
-    class Rollout: public ValueHeuristic {
+    class RolloutStatistics: public ValueHeuristic {
     public:
         /**
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
-        Rollout(double prior_counts = -1);
-        virtual ~Rollout() = default;
+        RolloutStatistics(double prior_counts = -1);
+        virtual ~RolloutStatistics() = default;
         virtual void init(double disc,
                           std::shared_ptr<AbstractEnvironment> env);
         virtual void add_value_estimate(const node_t & state_node,
