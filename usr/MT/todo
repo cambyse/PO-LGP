@@ -5,7 +5,10 @@
 * ors::KinematicWorld -> ors::KinematicGraph
 * Ors -> Kinematic
 * loading parameters -> KeyValueGraph
-* KeyValueGraph -> Graph
+
+* ActionMachine -> retired
+* opt non-mixed -> retired
+* TaskMap type -> Task type
 
 
 ** module system

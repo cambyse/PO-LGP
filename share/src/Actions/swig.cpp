@@ -65,7 +65,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
-ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem), _log(S->_log){
+ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   S->tcm->verbose=false;
   engine().open(*S, true);
 

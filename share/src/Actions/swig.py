@@ -297,8 +297,8 @@ class ActionSwigInterface(_object):
     __swig_setmethods__["S"] = _swig.ActionSwigInterface_S_set
     __swig_getmethods__["S"] = _swig.ActionSwigInterface_S_get
     if _newclass:S = _swig_property(_swig.ActionSwigInterface_S_get, _swig.ActionSwigInterface_S_set)
-    def __init__(self, *args): 
-        this = _swig.new_ActionSwigInterface(*args)
+    def __init__(self): 
+        this = _swig.new_ActionSwigInterface()
         try: self.this.append(this)
         except: self.this = this
     __swig_destroy__ = _swig.delete_ActionSwigInterface
@@ -325,6 +325,7 @@ class ActionSwigInterface(_object):
     def waitForQuitSymbol(self): return _swig.ActionSwigInterface_waitForQuitSymbol(self)
     def createNewSymbol(self, *args): return _swig.ActionSwigInterface_createNewSymbol(self, *args)
     def defineNewTaskSpaceControlAction(self, *args): return _swig.ActionSwigInterface_defineNewTaskSpaceControlAction(self, *args)
+    def execScript(self, *args): return _swig.ActionSwigInterface_execScript(self, *args)
 ActionSwigInterface_swigregister = _swig.ActionSwigInterface_swigregister
 ActionSwigInterface_swigregister(ActionSwigInterface)
 
