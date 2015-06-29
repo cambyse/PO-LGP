@@ -9,7 +9,9 @@ ors::Transformation t1, t2;
 ors::Vector p1, p2;
 
 void draw(void*){
-  glColor(.8, .8, .8, .6);
+  glDisable(GL_DEPTH_TEST);
+
+  glColor(.8, .8, .8, .8);
   glTransform(t1);  ors::glDrawMesh(&m1);
   glTransform(t2);  ors::glDrawMesh(&m2);
   glLoadIdentity();
@@ -24,16 +26,18 @@ void draw(void*){
   glLoadIdentity();
 }
 
+extern bool orsDrawWires;
 void TEST(GJK) {
   OpenGL gl;
   gl.add(glStandardScene);
   gl.add(draw, &m2);
+  orsDrawWires = true;
 
   t1.setZero();
   t2.setZero();
 
-  m1.setRandom();  t1.pos.set(-0., -0., 1.);
-  m2.setRandom();  t2.pos.set( 0., 0., 1.5);
+  m1.setRandom();  m1.clean();  t1.pos.set(-0., -0., 1.);
+  m2.setRandom();  m2.clean();  t2.pos.set( 0., 0., 1.5);
 
   gl.update();
 

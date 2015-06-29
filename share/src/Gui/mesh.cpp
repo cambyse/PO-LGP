@@ -549,6 +549,7 @@ void getTriNormals(const Mesh& m, arr& Tn) {
   }
 }
 
+/// flips all faces
 void Mesh::flipFaces() {
   uint i, a;
   for(i=0; i<T.d0; i++) {
@@ -558,6 +559,7 @@ void Mesh::flipFaces() {
   }
 }
 
+/// check whether this is really a closed mesh, and flip inconsistent faces
 void Mesh::clean() {
   uint i, j, idist=0;
   Vector a, b, c, m;
@@ -1420,7 +1422,6 @@ void Mesh::glDraw() {
     glDrawElements(GL_LINE_STRIP, T.N, GL_UNSIGNED_INT, T.p);
     //glDrawArrays(GL_LINE_STRIP, 0, V.d0);
 #endif
-    return;
   }
 #if 1
   GLboolean turnOnLight=false;
@@ -1525,7 +1526,7 @@ double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
                     ors::Vector& p1, ors::Vector& p2){
   Object_structure m1,m2;
   MT::Array<double*> Vhelp1, Vhelp2;
-  m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(Vhelp1);  m1.rings=NULL;
+  m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(Vhelp1);  m1.rings=NULL; //TODO: rings would make it faster
   m2.numpoints = mesh2.V.d0;  m2.vertices = mesh2.V.getCarray(Vhelp2);  m2.rings=NULL;
 
   arr T1,T2;
@@ -1533,7 +1534,19 @@ double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
   if(&t1){  T1=t1.getAffineMatrix();  T1.getCarray(Thelp1);  }
   if(&t2){  T2=t2.getAffineMatrix();  T2.getCarray(Thelp2);  }
 
-  double d = gjk_distance(&m1, Thelp1.p, &m2, Thelp2.p, (&p1?p1.p():NULL), (&p2?p2.p():NULL), NULL, 0);
+  simplex_point simplex;
+
+  double d = gjk_distance(&m1, Thelp1.p, &m2, Thelp2.p, (&p1?p1.p():NULL), (&p2?p2.p():NULL), &simplex, 0);
+
+  cout <<"simplex lambda=" <<arr(simplex.lambdas, 4) <<endl;
+  cout <<"simplex 1=" <<intA(simplex.simplex1, 4) <<endl;
+  cout <<"simplex 2=" <<intA(simplex.simplex2, 4) <<endl;
+
+  arr P1=zeros(3), P2=zeros(3);
+  for(int i=0;i<simplex.npts;i++) P1 += simplex.lambdas[i] * arr(simplex.coords1[i],3);
+  for(int i=0;i<simplex.npts;i++) P2 += simplex.lambdas[i] * arr(simplex.coords2[i],3);
+  cout <<"P1=" <<P1 <<", " <<p1 <<endl;
+  cout <<"P2=" <<P2 <<", " <<p2 <<endl;
 
   return sqrt(d);
 }
