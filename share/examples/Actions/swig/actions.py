@@ -120,6 +120,10 @@ class Activity(object):
     def __repr__(self):
         return str(self)
 
+    def run(self):
+        """Run this Activity"""
+        run(str(self))
+
 
 class PosActivity(Activity):
     def __init__(self, endeff, pos):
