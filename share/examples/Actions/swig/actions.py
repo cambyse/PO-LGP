@@ -178,11 +178,11 @@ class GazeAtActivity(Activity):
         self.shape = shape
 
     def __str__(self):
-        pos = pos_str2arr(shapes(self.shape)["pos"])
         return ("(FollowReferenceActivity gazeAt {name})"
-                "{{ type=gazeAt ref1=endeffHead ref2=base_footprint "
-                "vec1=[0, 0, 1] vec2={pos} tol={tol} PD={gains}}}"
-                .format(name=self.name, pos=pos, tol=self.tolerance,
+                "{{ type=gazeAt ref1=endeffHead "
+                "ref2={target} "
+                "vec1=[0, 0, 1] vec2=[0, 0, 0] tol={tol} PD={gains}}}"
+                .format(name=self.name, target=self.shape, tol=self.tolerance,
                         gains=self.natural_gains))
 
 
