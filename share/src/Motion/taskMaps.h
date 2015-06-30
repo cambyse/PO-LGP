@@ -71,9 +71,13 @@ struct DefaultTaskMap:TaskMap {
 
 struct TaskMap_qItself:TaskMap {
   arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
-  TaskMap_qItself(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; } ///< The singleQ parameter generates a matrix M that picks out a single q value
-  TaskMap_qItself(const arr& _M=NoArr){ if(&_M) M=_M; }                     ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
-  TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName){
+  bool moduloTwoPi; ///< if false, consider multiple turns of a joint as different q values (Default: true)
+
+  TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true) { M=zeros(1,qN); M(0,singleQ)=1.; } ///< The singleQ parameter generates a matrix M that picks out a single q value
+  TaskMap_qItself(const arr& _M=NoArr) : moduloTwoPi(true) { if(&_M) M=_M; }                     ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
+  TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName)
+    : moduloTwoPi(true)
+  {
     ors::Joint *j = G.getJointByName(jointName);
     M = zeros(j->qDim(), G.getJointStateDimension() );
     M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);

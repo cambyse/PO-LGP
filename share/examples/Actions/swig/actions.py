@@ -169,12 +169,16 @@ class QItselfActivity(Activity):
         self.joint = joint
         self.q = q
         self.tolerance = .01
+        self.moduloTwoPi = True
 
     def __str__(self):
         return ("(FollowReferenceActivity qItself {name})"
-                "{{ type=qItself ref1={joint} target=[{target}] tol={tol} PD={gains} }}"
+                "{{ type=qItself ref1={joint} target=[{target}] tol={tol} "
+                "moduloTwoPi={modulo} PD={gains} }}"
                 .format(name=self.name, joint=self.joint, target=self.q,
-                        tol=self.tolerance, gains=self.natural_gains))
+                        tol=self.tolerance,
+                        modulo="1" if self.moduloTwoPi else "0",
+                        gains=self.natural_gains))
 
 
 class GazeAtActivity(Activity):
@@ -239,6 +243,10 @@ class HomingActivity(Activity):
     def __str__(self):
         return ("(HomingActivity){{ tol={tol} PD={gains} }}"
                 .format(tol=self.tolerance, gains=self.natural_gains))
+
+
+
+
 
 
 ###############################################################################
@@ -313,7 +321,9 @@ def turn_wrist(rel_degree, side=None):
     current_q = float(joints(joint)["q"])
     target = current_q + np.deg2rad(rel_degree)
 
-    return QItselfActivity(joint, target)
+    activity = QItselfActivity(joint, target)
+    activity.moduloTwoPi = False
+    return activity
 
 
 def move_to_pos(endeff, pos):
