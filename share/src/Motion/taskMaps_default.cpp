@@ -73,7 +73,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
     if(body_j==NULL) { //simple, no j reference
-      G.kinematicsPos(y, J, body_i, &vec_i);
+      G.kinematicsPos(y, J, body_i, vec_i);
       y -= ARRAY(vec_j);
       return;
     }//else...
@@ -82,8 +82,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     y = ARRAY(body_j->X.rot / (pi-pj));
     if(&J) {
       arr Ji, Jj, JRj;
-      G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
-      G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
+      G.kinematicsPos(NoArr, Ji, body_i, vec_i);
+      G.kinematicsPos(NoArr, Jj, body_j, vec_j);
       G.jacobianR(JRj, body_j);
       J.resize(3, Jj.d1);
       for(uint k=0; k<Jj.d1; k++) {
@@ -103,12 +103,12 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(type==posDiffTMT){
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
-    G.kinematicsPos(y, J, body_i, &vec_i);
+    G.kinematicsPos(y, J, body_i, vec_i);
     if(!body_j){ //relative to world
       y -= ARRAY(vec_j);
     }else{
       arr y2, J2;
-      G.kinematicsPos(y2, J2, body_j, &vec_j);
+      G.kinematicsPos(y2, J2, body_j, vec_j);
       y -= y2;
       J -= J2;
     }
@@ -119,7 +119,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
 //    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
     if(body_j==NULL) { //simple, no j reference
-      G.kinematicsVec(y, J, body_i, &vec_i);
+      G.kinematicsVec(y, J, body_i, vec_i);
       return;
     }//else...
     //relative
@@ -136,12 +136,12 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(type==vecDiffTMT){
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
-    G.kinematicsVec(y, J, body_i, &vec_i);
+    G.kinematicsVec(y, J, body_i, vec_i);
     if(!body_j){ //relative to world
       y -= ARRAY(vec_j);
     }else{
       arr y2, J2;
-      G.kinematicsVec(y2, J2, body_j, &vec_j);
+      G.kinematicsVec(y2, J2, body_j, vec_j);
       y -= y2;
       J -= J2;
     }
@@ -154,12 +154,12 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
     arr zi,Ji,zj,Jj;
-    G.kinematicsVec(zi, Ji, body_i, &vec_i);
+    G.kinematicsVec(zi, Ji, body_i, vec_i);
     if(body_j==NULL) {
       zj = ARRAY(vec_j);
       if(&J) { Jj.resizeAs(Ji); Jj.setZero(); }
     } else {
-      G.kinematicsVec(zj, Jj, body_j, &vec_j);
+      G.kinematicsVec(zj, Jj, body_j, vec_j);
     }
     y.resize(1);
     y(0) = scalarProduct(zi, zj);
@@ -177,14 +177,14 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
     arr pi,Jpi, xi,Jxi, yi,Jyi, pj,Jpj;
-    G.kinematicsPos(pi, Jpi, body_i, &vec_i);
-    G.kinematicsVec(xi, Jxi, body_i, &vec_xi);
-    G.kinematicsVec(yi, Jyi, body_i, &vec_yi);
+    G.kinematicsPos(pi, Jpi, body_i, vec_i);
+    G.kinematicsVec(xi, Jxi, body_i, vec_xi);
+    G.kinematicsVec(yi, Jyi, body_i, vec_yi);
     if(body_j==NULL) {
       pj = ARRAY(vec_j);
       if(&J) { Jpj.resizeAs(Jpi); Jpj.setZero(); }
     } else {
-      G.kinematicsPos(pj, Jpj, body_j, &vec_j);
+      G.kinematicsPos(pj, Jpj, body_j, vec_j);
     }
     y.resize(2);
     y(0) = scalarProduct(xi, (pj-pi));

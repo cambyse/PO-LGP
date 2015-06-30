@@ -1,0 +1,9 @@
+BASE = ../../..
+
+LIBS += -lglut -lGL -lqhull
+
+GJK=1
+
+DEPEND = Core Gui Ors
+
+include $(BASE)/gofMake/generic.mk

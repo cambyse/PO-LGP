@@ -269,24 +269,24 @@ struct KinematicWorld {
   void setAgent(uint agent, bool calcVels=false);
 
   /// @name kinematics
-  void kinematicsPos (arr& y, arr& J, Body *b, ors::Vector *rel=0) const;
-  void kinematicsVec (arr& y, arr& J, Body *b, ors::Vector *vec=0) const;
+  void kinematicsPos (arr& y, arr& J, Body *b, const Vector& rel=NoVector) const; //TODO: make vector& not vector*
+  void kinematicsVec (arr& y, arr& J, Body *b, const ors::Vector& vec=NoVector) const;
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
   void jacobianR(arr& J, Body *b) const;
-  void kinematicsRelPos (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const;
-  void kinematicsRelVec (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const;
+  void kinematicsRelVec (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const;
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: deprecated?
-  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
+  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name High level (inverse) kinematics
-  void inverseKinematicsPos(Body& body, const arr& ytarget, ors::Vector* rel_offset=NULL, int max_iter=3);
+  void inverseKinematicsPos(Body& body, const arr& ytarget, const ors::Vector& rel_offset=NoVector, int max_iter=3);
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);

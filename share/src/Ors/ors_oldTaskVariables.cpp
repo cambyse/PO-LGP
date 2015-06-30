@@ -348,15 +348,15 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
   switch(type) {
     case posTVT:
       if(j==-1) {
-        ors.kinematicsPos(y, J, bi, &irel.pos);
+        ors.kinematicsPos(y, J, bi, irel.pos);
         break;
       }
       pi = bi->X.pos + bi->X.rot * irel.pos;
       pj = bj->X.pos + bj->X.rot * jrel.pos;
       c = bj->X.rot / (pi-pj);
       y = ARRAY(c);
-      ors.kinematicsPos(NoArr, Ji, bi, &irel.pos);
-      ors.kinematicsPos(NoArr, Jj, bj, &jrel.pos);
+      ors.kinematicsPos(NoArr, Ji, bi, irel.pos);
+      ors.kinematicsPos(NoArr, Jj, bj, jrel.pos);
       ors.jacobianR(JRj, bj);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++) {
@@ -372,7 +372,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
     case zoriTVT:
       if(j==-1) {
         vi = irel.rot.getZ();
-        ors.kinematicsVec(y, J, bi, &vi);
+        ors.kinematicsVec(y, J, bi, vi);
         break;
       }
       //relative
@@ -410,7 +410,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       J.clear();
       for(k=0; k<params.N; k++) {
         l=(uint)params(k);
-        ors.kinematicsPos(NoArr, Ji, ors.bodies(l), NULL);
+        ors.kinematicsPos(NoArr, Ji, ors.bodies(l));
         vi = -ors.bodies(l)->X.rot.getY();
         vi *= -1.;
         zi = ARRAY(vi);
@@ -420,7 +420,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       break;
     case zalignTVT:
       vi = irel.rot.getZ();
-      ors.kinematicsVec(zi, Ji, bi, &vi);
+      ors.kinematicsVec(zi, Ji, bi, vi);
       if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
@@ -429,7 +429,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
         Jj.setZero();
       } else {
         vj = jrel.rot.getZ();
-        ors.kinematicsVec(zj, Jj, bj, &vj);
+        ors.kinematicsVec(zj, Jj, bj, vj);
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);

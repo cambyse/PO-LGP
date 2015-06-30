@@ -50,6 +50,7 @@ namespace ors {
 
 double& Vector::operator()(uint i) {
   CHECK(i<3,"out of range");
+  isZero=false;
   return (&x)[i];
 }
 

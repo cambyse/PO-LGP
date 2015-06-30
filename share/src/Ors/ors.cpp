@@ -1084,7 +1084,7 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
-void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
+void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vector& rel) const {
   if(!b){
     MT_MSG("WARNING: calling kinematics for NULL body");
     if(&y) y.resize(3).setZero();
@@ -1094,7 +1094,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
 
   //get position
   ors::Vector pos_world = b->X.pos;
-  if(rel) pos_world += b->X.rot*(*rel);
+  if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = ARRAY(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
@@ -1176,12 +1176,12 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
   of the i-th body W.R.T. the 6 axes of an arbitrary shape-frame, NOT the robot's joints (3 x 6 tensor)
   WARNING: this does not check if s is actually in the kinematic chain from root to b.
 */
-void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const {
+void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const {
   if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
 
   //get position
   ors::Vector pos_world = b->X.pos;
-  if(rel) pos_world += b->X.rot*(*rel);
+  if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = ARRAY(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
@@ -1285,11 +1285,11 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 /// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, ors::Vector *vec) const {
+void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vector& vec) const {
   //get the vectoreference frame
   ors::Vector vec_referene;
-  if(vec) vec_referene = b->X.rot*(*vec);
-  else    vec_referene = b->X.rot.getZ();
+  if(&vec) vec_referene = b->X.rot*vec;
+  else     vec_referene = b->X.rot.getZ();
   if(&y) y = ARRAY(vec_referene); //return the vec
   if(&J){
     arr A;
@@ -1363,7 +1363,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
 }
 
 /// The position vec1, attached to b1, relative to the frame of b2 (plus vec2)
-void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const {
+void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const {
   arr y1,y2,J1,J2;
   kinematicsPos(y1, J1, b1, vec1);
   kinematicsPos(y2, J2, b2, vec2);
@@ -1377,7 +1377,7 @@ void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, ors::Vector
 }
 
 /// The vector vec1, attached to b1, relative to the frame of b2
-void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const {
+void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const {
   arr y1,J1;
   kinematicsVec(y1, J1, b1, vec1);
 //  kinematicsVec(y2, J2, b2, vec2);
@@ -1974,8 +1974,8 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
       brel=b->X.rot/(p->posB-b->X.pos);
       CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
       arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
-      kinematicsPos(NoArr, Jpos, a->body, &arel);  J += (normal*Jpos);
-      kinematicsPos(NoArr, Jpos, b->body, &brel);  J -= (normal*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body, arel);  J += (normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body, brel);  J -= (normal*Jpos);
     }
   }
 }
@@ -2022,8 +2022,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
       arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
           
-      kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d2/margin*(normal*Jpos);
-      kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d2/margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body, arel);  J -= d2/margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body, brel);  J += d2/margin*(normal*Jpos);
     }
         
     if(useCenterDist && d2>0.){
@@ -2035,8 +2035,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       }else{
         arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
         
-        kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d1/ab_radius*(normal*Jpos);
-        kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, a->body, arel);  J -= d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, b->body, brel);  J += d1/ab_radius*(normal*Jpos);
       }
     }
   }
@@ -2075,8 +2075,8 @@ void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, do
     }
     normal.reshape(1, 3);
 
-    kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= (normal*Jpos);
-    kinematicsPos(NoArr, Jpos, b->body, &brel);  J += (normal*Jpos);
+    kinematicsPos(NoArr, Jpos, a->body, arel);  J -= (normal*Jpos);
+    kinematicsPos(NoArr, Jpos, b->body, brel);  J += (normal*Jpos);
   }
 }
 
@@ -2102,8 +2102,8 @@ void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
     CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p(), 3); dnormal.reshape(1, 3);
     grad.setZero();
-    kinematicsPos(NoArr, Jpos, a->body, &arel); grad += dnormal*Jpos; //moving a long normal b->a increases distance
-    kinematicsPos(NoArr, Jpos, b->body, &brel); grad -= dnormal*Jpos; //moving b long normal b->a decreases distance
+    kinematicsPos(NoArr, Jpos, a->body, arel); grad += dnormal*Jpos; //moving a long normal b->a increases distance
+    kinematicsPos(NoArr, Jpos, b->body, brel); grad -= dnormal*Jpos; //moving b long normal b->a decreases distance
     J.append(grad);
     con++;
   }
@@ -2125,7 +2125,7 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
 
 /// Compute the new configuration q such that body is located at ytarget (with deplacement rel).
 void ors::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
-                                               ors::Vector *rel_offset, int max_iter) {
+                                               const ors::Vector& rel_offset, int max_iter) {
   arr q0, q;
   getJointState(q0);
   q = q0;
