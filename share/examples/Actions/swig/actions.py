@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import math
 from contextlib import contextmanager
 import numpy as np
 
@@ -169,6 +170,34 @@ class QItselfActivity(Activity):
                         tol=self.tolerance,
                         modulo="1" if self.moduloTwoPi else "0",
                         gains=self.natural_gains))
+
+
+class TiltHead(QItselfActivity):
+    """Tilt the head up (pos. values) or down (neg. values)."""
+
+    def __init__(self, deg_relative=0):
+        self.joint_name = "head_tilt_joint"
+        super(TiltHead, self).__init__(self.joint_name, 0)
+        self.radian_offset = math.radians(deg_relative)
+
+    def __str__(self):
+        self.q = (float(interface.getJointByName(self.joint_name)["q"])
+                  + self.radian_offset)
+        return super(TiltHead, self).__str__()
+
+
+class PanHead(QItselfActivity):
+    """Pan/turn the head left (pos. values) or right (neg. values)."""
+
+    def __init__(self, deg_relative=0):
+        self.joint_name = "head_pan_joint"
+        super(PanHead, self).__init__(self.joint_name, 0)
+        self.radian_offset = math.radians(deg_relative)
+
+    def __str__(self):
+        self.q = (float(interface.getJointByName(self.joint_name)["q"])
+                  + self.radian_offset)
+        return super(PanHead, self).__str__()
 
 
 class GazeAtActivity(Activity):
