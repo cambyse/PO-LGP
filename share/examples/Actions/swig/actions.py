@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import math
 from contextlib import contextmanager
 import numpy as np
 
@@ -75,6 +74,26 @@ def _run_with(with_construct):
 
 
 def run(plan):
+    """
+    Runs a plan in the following format.
+
+    A plan is a lightwight datastructure to store sequential and simultaneous
+    activities. A single Activity is already a plan. To create more complex
+    plans, the following construxts are possible:
+
+    * A list of activities or plans is run sequentially. Each one must be
+      converged for the next one to start
+    * A tuple of activities or plans is run simultaneously. Everything is
+      flatten, i.e. (a, [b, c], d) is equally treated as (a, b, c, d). All
+      activities have to be converged for the tuple to be considered converged
+    * A dict with two entries. First "with" contains a list of activities,
+      second "plan" contains a plan. The list of activities in the "with" list
+      are run simultaneous to the plan. However, when the last activity of the
+      plan is converged they are stopped regardless of the convergence status.
+
+    :param plan:
+    :return:
+    """
     if not isinstance(plan, list):
         plan = [plan]
     for item in plan:
@@ -91,6 +110,16 @@ def run(plan):
 # Python activitiy classes
 
 class Activity(object):
+    """
+    An Activity is something which can be run on the robot and moves certain
+    parts of it. This is the base class for it, which serves as a data
+    container for common parameters.
+
+    See the subclasses for details on what exactly they do.
+
+    All Activities can be represented as strings, which can be fed to the
+    relational machine.
+    """
     def __init__(self):
         self.time = 3.
         self.damping = .7
@@ -126,7 +155,16 @@ class Activity(object):
 
 
 class PosActivity(Activity):
+    """
+    An Activity that moves an endeffector shape to a position in world
+    coordinates.
+    """
     def __init__(self, endeff, pos):
+        """
+        :param endeff: The endeffector shape to move
+        :param pos: The target position in world coordinates
+        :return:
+        """
         super(PosActivity, self).__init__()
         assert_in(endeff, shapes())
         self.endeff = endeff
@@ -140,7 +178,18 @@ class PosActivity(Activity):
 
 
 class MoveAlongAxisActivity(Activity):
+    """
+    Moves an endeffector shape a ceratin distance on a given axis. Note that
+    the position is evaluated when the string is generated. Thus call run or
+    __str__() only when you are ready to move.
+    """
     def __init__(self, endeff, axis, distance):
+        """
+        :param endeff: The endeffector shape to move
+        :param axis: The axis to move along in world coordinates
+        :param distance: The distance to move the endeffector in meter
+        :return:
+        """
         super(MoveAlongAxisActivity, self).__init__()
         self.endeff = endeff
         self.axis = axis
@@ -158,13 +207,27 @@ class MoveAlongAxisActivity(Activity):
 
 
 class QItselfActivity(Activity):
-    def __init__(self, joint, q):
+    """
+    Moves a given joint to a specified q value.
+    """
+    def __init__(self, joint, q, moduloTwoPi=True):
+        """
+        :param joint: The name of the joint to move
+        :param q: The desired position. For rotational joints in radian. For
+                  translational joints in meter.
+        :param moduloTwoPi: If set tu True all angles are set to values
+                            between 0 and two pi radian or 360 degree
+                            respectively. E.g. if you want to move a joint to
+                            361 degree it moves to 1 degree. If set to False
+                            it also makes multiple turns.
+        :return:
+        """
         super(QItselfActivity, self).__init__()
         assert_in(joint, joints())
         self.joint = joint
         self.q = q
         self.tolerance = .01
-        self.moduloTwoPi = True
+        self.moduloTwoPi = moduloTwoPi
 
     def __str__(self):
         return ("(FollowReferenceActivity qItself {name})"
@@ -177,12 +240,16 @@ class QItselfActivity(Activity):
 
 
 class TiltHead(QItselfActivity):
-    """Tilt the head up (pos. values) or down (neg. values)."""
+    """Tilt the head up (positive values) or down (negative values)."""
 
     def __init__(self, deg_relative=0):
+        """
+        :param deg_relative: The angle to turn the head up/down
+        :return:
+        """
         self.joint_name = "head_tilt_joint"
         super(TiltHead, self).__init__(self.joint_name, 0)
-        self.radian_offset = math.radians(deg_relative)
+        self.radian_offset = np.deg2rad(deg_relative)
 
     def __str__(self):
         self.q = (float(interface.getJointByName(self.joint_name)["q"])
@@ -191,12 +258,17 @@ class TiltHead(QItselfActivity):
 
 
 class PanHead(QItselfActivity):
-    """Pan/turn the head left (pos. values) or right (neg. values)."""
+    """Pan/turn the head left (positive values) or right (negative values)."""
 
     def __init__(self, deg_relative=0):
+        """
+        :param deg_relative: The angle in degree to turn the head left
+                             (positive values) or right (negative values).
+        :return:
+        """
         self.joint_name = "head_pan_joint"
         super(PanHead, self).__init__(self.joint_name, 0)
-        self.radian_offset = math.radians(deg_relative)
+        self.radian_offset = np.deg2rad(deg_relative)
 
     def __str__(self):
         self.q = (float(interface.getJointByName(self.joint_name)["q"])
@@ -205,23 +277,45 @@ class PanHead(QItselfActivity):
 
 
 class GazeAtActivity(Activity):
-    def __init__(self, shape):
+    """
+    Look at a shape.
+    """
+    def __init__(self, shape, pos_in_shape=None):
+        """
+        :param shape: The shape to look at
+        :param pos_in_shape: Where in the shape to look. In coordinates of the
+                             shape's own coordinate system. Default: [0, 0, 0]
+        :return:
+        """
         super(GazeAtActivity, self).__init__()
         assert_in(shape, shapes())
         self.shape = shape
         self.tolerance = .01
+        self.position_in_shape = ([0, 0, 0]
+                                  if pos_in_shape is None
+                                  else pos_in_shape)
 
     def __str__(self):
         return ("(FollowReferenceActivity gazeAt {name})"
                 "{{ type=gazeAt ref1=endeffHead "
                 "ref2={target} "
-                "vec1=[0, 0, 1] vec2=[0, 0, 0] tol={tol} PD={gains}}}"
+                "vec1=[0, 0, 1] vec2={pos} tol={tol} PD={gains}}}"
                 .format(name=self.name, target=self.shape, tol=self.tolerance,
-                        gains=self.natural_gains))
+                        pos=self.position_in_shape, gains=self.natural_gains))
 
 
 class ReachActivity(Activity):
+    """
+    Reach a shape with a given endeffector shape.
+    """
     def __init__(self, endeff, goal_shape, offset=None):
+        """
+        :param endeff: The endeffector shape to reach the shape with.
+        :param goal_shape: The shape to reach
+        :param offset: A offset to the shapes position in the goal shape's
+                       coordinate system. Default: [0, 0, 0]
+        :return:
+        """
         super(ReachActivity, self).__init__()
         assert_in(endeff, shapes())
         assert_in(goal_shape, shapes())
@@ -241,7 +335,18 @@ class ReachActivity(Activity):
 
 
 class AlignActivity(Activity):
+    """
+    Align a vector attached to an endeffector with a given target vector
+    """
     def __init__(self, endeff, vec_endeff, vec_target, name=None):
+        """
+        :param endeff: The endeffector shape to align
+        :param vec_endeff: The vector in the endeffector's coordinate system
+                           attached to the endeffect, which is to be aligned
+        :param vec_target: The target vector in world coordinates
+        :param name: A name for this activity
+        """
+
         super(AlignActivity, self).__init__()
         assert_in(endeff, shapes())
         self.endeff = endeff
@@ -260,6 +365,10 @@ class AlignActivity(Activity):
 
 
 class HomingActivity(Activity):
+    """
+    Move the robot in the base position. The base does _not_ move to [0, 0, 0]
+    in world coordinates.
+    """
     def __init__(self):
         super(HomingActivity, self).__init__()
         self.tolerance = .08
