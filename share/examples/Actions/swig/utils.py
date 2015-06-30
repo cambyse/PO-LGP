@@ -4,7 +4,17 @@ import numpy as np
 ###############################################################################
 # generic datastructure manipulation
 def flatten(iterable):
-    """Given an iterable, possibly nested to any level, return it flattened."""
+    """Given an iterable, possibly nested to any level, return it flattened.
+
+    >>> nested_list = [1, [2, 2], [3, 3, 3, [4, 4, 4, 4,], 3], 1]
+    >>> flatten(nested_list)
+    [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 3, 1]
+
+    >>> nested_list = ["one", ["two", "three", ["four"]]]
+    >>> flatten(nested_list)
+    ['one', 'two', 'three', 'four']
+
+    """
     new_list = []
     for item in iterable:
         if hasattr(item, '__iter__'):
