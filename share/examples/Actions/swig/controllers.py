@@ -83,8 +83,6 @@ def screw_controller(pos):
     current_pos = int(interface.getJointByName(j.lockbox_screw)["q"])
     distance = pos - current_pos
 
-    current_q = float(joints(joint)["q"])
-
     turns = distance / turn_distance
     degree = -360 * turns
 
