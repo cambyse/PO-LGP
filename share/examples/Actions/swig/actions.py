@@ -5,6 +5,7 @@ import numpy as np
 
 from resources import interface, shapes, s, bodies, b, joints, j
 from utils import (
+    flatten,
     SIDE,
     strip_specs,
     conv_symbol,
@@ -49,7 +50,7 @@ def running(facts):
     if not isinstance(facts, list):
         facts = [facts]
 
-    facts = _flatten(facts)
+    facts = flatten(facts)
 
     for fact in facts:
         interface.setFact(str(fact))
@@ -73,17 +74,6 @@ def _run_with(with_construct):
         run(with_construct["plan"])
 
 
-def _flatten(iterable):
-    """Given an iterable, possibly nested to any level, return it flattened."""
-    new_list = []
-    for item in iterable:
-        if hasattr(item, '__iter__'):
-            new_list.extend(_flatten(item))
-        else:
-            new_list.append(item)
-    return new_list
-
-
 def run(plan):
     if not isinstance(plan, list):
         plan = [plan]
@@ -93,7 +83,7 @@ def run(plan):
         elif isinstance(item, dict):
             _run_with(item)
         elif isinstance(item, tuple):
-            _run(_flatten(item))
+            _run(flatten(item))
         else:
             _run([item])
 
