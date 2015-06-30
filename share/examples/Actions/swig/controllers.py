@@ -1,9 +1,14 @@
+"""
+This module contains the high level controller to manipulate the lock box.
+
+"""
 from __future__ import division
 
 from enum import Enum
 
 from actions import *
 from utils import SIDE
+
 
 class LockboxJoint(Enum):
     door = 0
@@ -15,6 +20,12 @@ class LockboxJoint(Enum):
 
 
 def move(joint, pos):
+    """High level function / interface to move the given LockBoxJoint to the
+    given position.
+
+    Use this function for everything!
+
+    """
     if joint == LockboxJoint.pin:
         return pin_controller(pos)
     elif joint == LockboxJoint.screw:

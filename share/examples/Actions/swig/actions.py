@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import math
 from contextlib import contextmanager
 import numpy as np
 
@@ -9,8 +10,7 @@ from utils import (
     SIDE,
     strip_specs,
     conv_symbol,
-    assert_valid_shapes,
-    assert_valid_joints,
+    assert_in,
     side2endeff,
     side2gripper_joint,
     pos_str2arr,
@@ -124,7 +124,7 @@ class Activity(object):
 class PosActivity(Activity):
     def __init__(self, endeff, pos):
         super(PosActivity, self).__init__()
-        assert_valid_shapes(endeff, shapes())
+        assert_in(endeff, shapes())
         self.endeff = endeff
         self.pos = pos
 
@@ -152,10 +152,11 @@ class MoveAlongAxisActivity(Activity):
                 .format(name=self.name, endeff=self.endeff, pos=target_pos,
                         tol=self.tolerance, gains=self.natural_gains))
 
+
 class QItselfActivity(Activity):
     def __init__(self, joint, q):
         super(QItselfActivity, self).__init__()
-        assert_valid_joints(joint, joints())
+        assert_in(joint, joints())
         self.joint = joint
         self.q = q
         self.tolerance = .01
@@ -171,11 +172,40 @@ class QItselfActivity(Activity):
                         gains=self.natural_gains))
 
 
+class TiltHead(QItselfActivity):
+    """Tilt the head up (pos. values) or down (neg. values)."""
+
+    def __init__(self, deg_relative=0):
+        self.joint_name = "head_tilt_joint"
+        super(TiltHead, self).__init__(self.joint_name, 0)
+        self.radian_offset = math.radians(deg_relative)
+
+    def __str__(self):
+        self.q = (float(interface.getJointByName(self.joint_name)["q"])
+                  + self.radian_offset)
+        return super(TiltHead, self).__str__()
+
+
+class PanHead(QItselfActivity):
+    """Pan/turn the head left (pos. values) or right (neg. values)."""
+
+    def __init__(self, deg_relative=0):
+        self.joint_name = "head_pan_joint"
+        super(PanHead, self).__init__(self.joint_name, 0)
+        self.radian_offset = math.radians(deg_relative)
+
+    def __str__(self):
+        self.q = (float(interface.getJointByName(self.joint_name)["q"])
+                  + self.radian_offset)
+        return super(PanHead, self).__str__()
+
+
 class GazeAtActivity(Activity):
     def __init__(self, shape):
         super(GazeAtActivity, self).__init__()
-        assert_valid_shapes(shape, shapes())
+        assert_in(shape, shapes())
         self.shape = shape
+        self.tolerance = .01
 
     def __str__(self):
         return ("(FollowReferenceActivity gazeAt {name})"
@@ -189,8 +219,8 @@ class GazeAtActivity(Activity):
 class ReachActivity(Activity):
     def __init__(self, endeff, goal_shape, offset=None):
         super(ReachActivity, self).__init__()
-        assert_valid_shapes(endeff, shapes())
-        assert_valid_shapes(goal_shape, shapes())
+        assert_in(endeff, shapes())
+        assert_in(goal_shape, shapes())
         self.offset = offset
         if self.offset is None:
             self.offset = [0, 0, 0]
@@ -209,7 +239,7 @@ class ReachActivity(Activity):
 class AlignActivity(Activity):
     def __init__(self, endeff, vec_endeff, vec_target, name=None):
         super(AlignActivity, self).__init__()
-        assert_valid_shapes(endeff, shapes())
+        assert_in(endeff, shapes())
         self.endeff = endeff
         self.vec_endeff = vec_endeff
         self.vec_target = vec_target
@@ -228,15 +258,11 @@ class AlignActivity(Activity):
 class HomingActivity(Activity):
     def __init__(self):
         super(HomingActivity, self).__init__()
-        self.tolerance = .04
+        self.tolerance = .08
 
     def __str__(self):
         return ("(HomingActivity){{ tol={tol} PD={gains} }}"
                 .format(tol=self.tolerance, gains=self.natural_gains))
-
-
-
-
 
 
 ###############################################################################
@@ -262,8 +288,8 @@ def reach(what, with_=None, offset=None):
     if offset is None:
         offset = [0., 0., 0.]
 
-    assert_valid_shapes(what, shapes())
-    assert_valid_shapes(with_, shapes())
+    assert_in(what, shapes())
+    assert_in(with_, shapes())
 
     return ReachActivity(with_, what, offset=offset)
 
@@ -279,7 +305,7 @@ def align_gripper_vertical(side=None):
 def align_gripper(vec_endeff, vec_target, side=None):
     endeff = side2endeff(side)
 
-    assert_valid_shapes(endeff, shapes())
+    assert_in(endeff, shapes())
 
     return AlignActivity(endeff, vec_endeff, vec_target)
 
@@ -287,14 +313,14 @@ def align_gripper(vec_endeff, vec_target, side=None):
 def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     endeff = side2endeff(side)
 
-    assert_valid_shapes(endeff, shapes())
+    assert_in(endeff, shapes())
 
     return (AlignActivity(endeff, [1, 0, 0], front_opening, "front"),
             AlignActivity(endeff, [0, 1, 0], rotation_around_wrist, "rot"))
 
 
 def gaze_at(shape):
-    assert_valid_shapes(shape, shapes())
+    assert_in(shape, shapes())
 
     return GazeAtActivity(shape)
 
