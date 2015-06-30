@@ -33,16 +33,10 @@ class SIDE:
 
 
 ###############################################################################
-def assert_valid_shapes(name, shapes):
-    if name not in shapes:
-        raise ValueError("The given shape {} is not an existing shape"
-                         .format(name))
-
-
-def assert_valid_joints(name, joints):
-    if name not in joints:
-        raise ValueError("The given joint {} is not an existing joint"
-                         .format(name))
+def assert_in(name, source):
+    """Assert that ``name`` is in ``source``."""
+    if name not in source:
+        raise ValueError("{} is not a valid string".format(name))
 
 
 ###############################################################################
