@@ -23,9 +23,9 @@ void rosCheckInit();
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
   arr q, qdot, fL, fR, u_bias, J_ft_inv;
-  arr Kp, Kd, Ki;
-  double velLimitRatio, effLimitRatio, gamma;
-  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.){}
+  arr Kp, Kd, Ki, Kint;
+  double velLimitRatio, effLimitRatio, intLimitRatio, gamma;
+  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), Kint(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(1.){}
   CtrlMsg(const arr& q, const arr& qdot,
           const arr& fL, const arr& fR,
           const arr& u_bias, const arr& J_ft_inv,

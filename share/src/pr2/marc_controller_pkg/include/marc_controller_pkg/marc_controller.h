@@ -20,7 +20,10 @@ private:
   arr q_ref, qdot_ref;
   arr Kp, Kd, Ki;
   arr u_bias;
-  double velLimitRatio, effLimitRatio;
+  double velLimitRatio, effLimitRatio, intLimitRatio;
+
+  // integral controller
+  arr Kint, int_error;
 
   //force related things
   arr fL_obs, fR_obs, fL_ref, fR_ref;

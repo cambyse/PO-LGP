@@ -68,9 +68,11 @@ void RosCom_ControllerSync::step(){
   jointRef.Kp = VECTOR(m.Kp);
   jointRef.Kd = VECTOR(m.Kd);
   jointRef.Ki = VECTOR(m.Ki);
+  jointRef.Kint = VECTOR(m.Kint);
   jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
   jointRef.velLimitRatio = m.velLimitRatio;
   jointRef.effLimitRatio = m.effLimitRatio;
+  jointRef.intLimitRatio = m.intLimitRatio;
   jointRef.gamma = m.gamma;
   s->pub_jointReference.publish(jointRef);
 }

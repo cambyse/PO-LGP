@@ -31,13 +31,14 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kd_base.resize(world.q.N).setZero();
   Kp=Kd=ARR(1.);
   Ki.clear();
-  limits.resize(world.q.N,4).setZero();
+  Kint.clear();
+  limits.resize(world.q.N,5).setZero();
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
     info = j->ats.getValue<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
-    info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
+    info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); limits(j->qIndex,4)=info->elem(2); }
     } }
 
   //match joint names with ros joints
@@ -80,6 +81,7 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
+  int_error = zeros(q.N);
   err = zeros(3);
   q_filt = 0.;
   qd_filt = 0.95;
@@ -124,6 +126,15 @@ void TreeControllerClass::update() {
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }
     u += u_bias;
+
+    // add integral term
+    if(Kint.N==1){
+      int_error += Kp_base % (Kint.scalar() * (q_ref - q));
+      for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
+        clip(int_error(i), -intLimitRatio*limits(i,4), intLimitRatio*limits(i,4));
+      }
+//      u += int_error;
+    }
 
     // torque PD for left ft sensor
     //double ft_norm = length(fL_obs);
@@ -185,8 +196,10 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   CP(Kd);
 #undef CP
   Ki = ARRAY(msg->Ki);             if (Ki.N>0) Ki.reshape(q_ref.N, 3);
+  Kint = ARRAY(msg->Kint);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
+  intLimitRatio = msg->intLimitRatio;
   gamma = msg->gamma;
   mutex.unlock();
 }
