@@ -106,7 +106,7 @@ class Activity(object):
         self.damping = .7
         self.max_vel = 10
         self.max_acc = 10
-        self.tolerance = .1
+        self.tolerance = .01
         self._name = ""
 
     @property
@@ -144,6 +144,23 @@ class PosActivity(Activity):
                 .format(name=self.name, endeff=self.endeff, pos=self.pos,
                         tol=self.tolerance, gains=self.natural_gains))
 
+
+class MoveAlongAxisActivity(Activity):
+    def __init__(self, endeff, axis, distance):
+        super(MoveAlongAxisActivity, self).__init__()
+        self.endeff = endeff
+        self.axis = axis
+        self.distance = distance
+
+    def __str__(self):
+        start_pos = np.array(pos_str2arr(interface.getShapeByName(self.endeff)["pos"]))
+        target_pos = (start_pos +
+                      self.distance/np.linalg.norm(self.axis) * self.axis)
+
+        return ("(FollowReferenceActivity {endeff} pos {name})"
+                "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
+                .format(name=self.name, endeff=self.endeff, pos=target_pos,
+                        tol=self.tolerance, gains=self.natural_gains))
 
 class QItselfActivity(Activity):
     def __init__(self, joint, q):
@@ -284,14 +301,9 @@ def gaze_at(shape):
     return GazeAtActivity(shape)
 
 
-def move_along_axis(endeff, axis, distance):
+def move_along_axis(endeff, start_pos, axis, distance):
     axis = np.asarray(axis)
-
-    endeff_pos = pos_str2arr(interface.getShapeByName(endeff)["pos"])
-    print(endeff_pos)
-
-    target_pos = endeff_pos + distance/np.linalg.norm(axis) * axis
-    print(target_pos)
+    target_pos = start_pos + distance/np.linalg.norm(axis) * axis
 
     return PosActivity(endeff, pos=target_pos)
 
@@ -366,33 +378,16 @@ def move_shape(shape, distance, axis, pre_grasp_offset=None, grasp_offset=None,
                        reach(shape, offset=pre_grasp_offset, with_=endeff)),
                       reach(shape, offset=grasp_offset, with_=endeff),
                       close_gripper(side),
-                      move_along_axis(endeff, axis, distance),
+                      MoveAlongAxisActivity(endeff, axis, distance),
                       open_gripper()]
              }]
 
-    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
-    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
-                 gaze_at(endeff)):
-        run(open_gripper(side=side)
-            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
-        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
-        run(close_gripper(side=side))
-        run(move_along_axis(endeff, [0, 0, 1], distance))
-        run(open_gripper(side=side))
 
-
-def run_move_shape_along_joint(shape, distance, joint, side=None):
-    endeff = side2endeff(side)
+def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
+                           grasp_offset=None, plane=None, side=None):
     axis = pos_str2arr(interface.getJointByName(joint)["axis"])
-    run(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side))
-    with running(align_gripper_with_plane([1, 0, 0], [0, -1, 0], side=side) +
-                 gaze_at(endeff)):
-        run(open_gripper(side=side)
-            + reach(shape, offset=[-0.05, 0, 0.0], with_=endeff))
-        run(reach(shape, offset=[0.0, .0, 0.], with_=endeff))
-        run(close_gripper(side=side))
-        run(move_along_axis(endeff, axis, distance))
-        run(open_gripper(side=side))
-
+    print("Axis: {}".format(axis))
+    return move_shape(shape, distance, axis, pre_grasp_offset, grasp_offset,
+                      plane=plane, side=side)
 
 print("Loaded actions.py...")
