@@ -162,13 +162,6 @@ stringV ActionSwigInterface::getJointList(){
   return strs;
 }
 
-void ActionSwigInterface::resetHighValue(std::string jointName) {
-  S->tcm->modelWorld.writeAccess();
-  //cout << "world: " << &S->tcm->modelWorld() << endl;
-  ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
-  joint->resetHighValue();
-  S->tcm->modelWorld.deAccess();
-}
 
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
@@ -191,9 +184,6 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
   D["q"] = STRING(S->tcm->modelWorld().calc_q_from_Q(joint, false));
-  //cout << "q = " << S->tcm->modelWorld().getJointState() << endl;
-  S->tcm->modelWorld().calc_q_from_Q();
-  //cout << "q = " << S->tcm->modelWorld().getJointState() << endl;
   D["axis"] = STRING('[' << joint->axis << ']');
   S->tcm->modelWorld.deAccess();
   return D;
