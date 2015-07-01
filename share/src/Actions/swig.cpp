@@ -6,13 +6,18 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
+#include <csignal>
 
 #ifdef MT_ROS
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
 #endif
 
+
+struct SwigSystem* _g_swig;
+
 // ============================================================================
 struct SwigSystem : System{
+
   ACCESS(bool, quitSignal)
   ACCESS(bool, fixBase)
   ACCESS(RelationalMachine, RM)
@@ -21,8 +26,10 @@ struct SwigSystem : System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
 
+  bool stopWaiting;
+
   TaskControllerModule *tcm;
-  SwigSystem(){
+  SwigSystem() : stopWaiting(false) {
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
@@ -42,10 +49,17 @@ struct SwigSystem : System{
     connect();
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
+
+    _g_swig = this;
   }
 };
 
 
+void signal_catch(int signal) {
+  _g_swig->stopWaiting = true;
+  _g_swig->effects.set()() << "stop, ";
+  cout << "Ctrl-C pressed, try to stop all facts." << endl;
+}
 // ============================================================================
 MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
   MT::String str;
@@ -66,10 +80,12 @@ ActionSwigInterface::ActionSwigInterface(){
   S = new SwigSystem();
   S->tcm->verbose=false;
   engine().open(*S, true);
+  signal(SIGINT, signal_catch); //overwrite signal handler
 
   createNewSymbol("conv");
   createNewSymbol("contact");
   createNewSymbol("timeout");
+  createNewSymbol("stop");
 //  new CoreTasks(*s->activity.machine);
 
 
@@ -146,6 +162,14 @@ stringV ActionSwigInterface::getJointList(){
   return strs;
 }
 
+void ActionSwigInterface::resetHighValue(std::string jointName) {
+  S->tcm->modelWorld.writeAccess();
+  //cout << "world: " << &S->tcm->modelWorld() << endl;
+  ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
+  joint->resetHighValue();
+  S->tcm->modelWorld.deAccess();
+}
+
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
   S->tcm->modelWorld.readAccess();
@@ -160,13 +184,16 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
 
 dict ActionSwigInterface::getJointByName(std::string jointName){
   dict D;
-  S->tcm->modelWorld.readAccess();
+  S->tcm->modelWorld.writeAccess();
   ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
   D["q"] = STRING(S->tcm->modelWorld().calc_q_from_Q(joint, false));
+  //cout << "q = " << S->tcm->modelWorld().getJointState() << endl;
+  S->tcm->modelWorld().calc_q_from_Q();
+  //cout << "q = " << S->tcm->modelWorld().getJointState() << endl;
   D["axis"] = STRING('[' << joint->axis << ']');
   S->tcm->modelWorld.deAccess();
   return D;
@@ -240,7 +267,11 @@ void ActionSwigInterface::stopActivity(const stringV& literals){
 
 void ActionSwigInterface::waitForCondition(const stringV& literals){
   for(;;){
-    if(isTrue(literals)) return;
+    if(isTrue(literals) or S->stopWaiting) {
+      S->stopWaiting = false;
+      this->stopFact("stop");
+      return;
+    }
     S->state.waitForNextRevision();
   }
   // this->stopFact(literals);
@@ -248,7 +279,11 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 
 void ActionSwigInterface::waitForCondition(const char* query){
   for(;;){
-    if(S->RM.get()->queryCondition(query)) return;
+    if(S->RM.get()->queryCondition(query) or S->stopWaiting) {
+      S->stopWaiting = false;
+      this->stopFact("stop");
+      return;
+    }
     S->state.waitForNextRevision();
   }
   // this->stopFact(query);
@@ -258,6 +293,11 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
   for(;;){
     for(unsigned i=0; i < literals.size(); i++){
       if(isTrue(literals[i])) return i;
+      if(S->stopWaiting) {
+        S->stopWaiting = false;
+        this->stopFact("stop");
+        return -1;   
+      }
     }
     S->state.waitForNextRevision();
   }
