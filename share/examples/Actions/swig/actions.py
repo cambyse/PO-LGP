@@ -119,6 +119,9 @@ class Activity(object):
 
     All Activities can be represented as strings, which can be fed to the
     relational machine.
+
+    The subclasses of Activity must overwrite the __str__ method to return
+    a string representation of an action.
     """
     def __init__(self):
         self.time = 3.
