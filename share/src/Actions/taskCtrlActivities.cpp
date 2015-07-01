@@ -14,7 +14,7 @@ void TaskCtrlActivity::configure(Node *fact) {
   Activity::fact = fact;
   Graph *specs = &NoGraph;
   if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
-  configure2(name, *specs, taskController->modelWorld.set());
+  configureControl(name, *specs, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
 }
@@ -28,8 +28,9 @@ TaskCtrlActivity::~TaskCtrlActivity(){
 void TaskCtrlActivity::step(double dt){
   activityTime += dt;
 
-  step2(dt);
+  stepControl(dt);
 
+  // Modify the KB
   //potentially report on stopping criteria
   MT::String convStr = "(conv ";
   for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
@@ -48,7 +49,7 @@ void TaskCtrlActivity::step(double dt){
 }
 
 //===========================================================================
-void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   Node *it;
   if((it=specs["type"])){
     if(it->V<MT::String>()=="wheels"){
@@ -66,7 +67,7 @@ void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::Ki
   if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 }
 
-void FollowReferenceActivity::step2(double dt){
+void FollowReferenceActivity::stepControl(double dt){
   //if trajectory, set reference depending on actionTime
   if(ref.nd==2){
     uint t = activityTime/trajectoryDuration * (ref.d0-1);
@@ -87,7 +88,7 @@ bool FollowReferenceActivity::isConv(){
 }
 
 //===========================================================================
-void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
@@ -104,7 +105,7 @@ bool HomingActivity::isConv(){
       && maxDiff(task->v, task->v_ref) < stopTolerance;
 }
 
-void HomingActivity::step2(double dt) {
+void HomingActivity::stepControl(double dt) {
   arr b = task->y;
   if(b.N && wheeljoint && wheeljoint->qDim()){
     for(uint i=0;i<wheeljoint->qDim();i++)

@@ -3,6 +3,13 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 
+//===========================================================================
+//
+/**
+ * Activities are "things" that change the state of the KB.
+ *
+ * Activity (an ABC) defines the interface for each concrete activity.
+ */
 struct Activity {
   MT::String name;     ///< name, just for reporting
   Node *fact;          ///< pointer to the fact in the state of a KB
@@ -10,9 +17,14 @@ struct Activity {
 
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
-  virtual void configure(Node *fact) = 0;
-  virtual void step(double dt) = 0;
+
   void write(ostream& os) const { os <<"Activity '" <<name <<"' (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
+
+  /// @name activity interface to overwrite
+  /// Read the facts and configure the activity
+  virtual void configure(Node *fact) = 0;
+  /// Do whatever the Activity has to do and change the state of the KB
+  virtual void step(double dt) = 0;
 };
 stdOutPipe(Activity)
 
@@ -30,20 +42,3 @@ template<class T> void registerActivity(const char* key){
 
 /// create/launch a new activity based on the fact
 Activity* newActivity(Node *fact);
-
-//===========================================================================
-
-struct ActivitySpinnerModule : Module{
-  ACCESS(ActivityL, A)
-
-  ActivitySpinnerModule() : Module("ActivitySpinnerModule") {}
-
-  /// @name module implementations
-  void open(){}
-  void step(){
-    A.readAccess();
-    for(Activity *act:A()) act->step(0.01);
-    A.deAccess();
-  }
-  void close(){}
-};
