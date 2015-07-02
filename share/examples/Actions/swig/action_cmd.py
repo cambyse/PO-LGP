@@ -9,6 +9,31 @@ import time
 sys.path.append(os.path.abspath('../../../src/Actions'))
 import swig
 
+PD = "[.5, .9, .1, 10]"
+
+def setPD(decayTime, dampingRatio, maxVel, maxAcc):
+    global PD
+    PD = "[" + decayTime + ", " + dampingRatio + ", " + maxVel + ", " + maxAcc + "]"
+
+def lits2str(literals, parameters):
+    str = "("
+    for i in literals:
+        str  += i + ' '
+    str += ")"
+    if parameters == "!":
+        str += "!"
+    elif parameters:
+        str += "{"
+        for i, j in parameters.items():
+            str += i + '=' +  j + ", "
+        str += "}"
+    return str
+
+def qItself(ref1, target):
+    lit = ["FollowReferenceActivity", "qItself"]
+    par = {"type":"qItself", "ref1":ref1, "target":target, "PD":PD}
+    S.setFact(lits2str(lit, par))
+    print (lits2str(lit, par))
 
 class ActionCmd(cmd.Cmd):
     prompt = "pr2> "
@@ -25,9 +50,24 @@ class ActionCmd(cmd.Cmd):
         self.actions = []
 
 
+
+
+
     def cmdloop (self):
         cmd.Cmd.cmdloop(self)
         return "true"
+
+    def do_setFact(self,para):
+        S.setFact(para)
+
+    def do_waitForCondition(self, para):
+        S.waitForCondition(para)
+
+    def do_createSymbol(self, para):
+        S.createSymbol(para)
+
+
+
 
     def do_close(self, para):
         self.parameters = ({"type":"qItself", "ref1":"l_gripper_joint", "target":"[0.05]", "PD" :"[.5, .9, .1, 10.]"})
@@ -66,7 +106,8 @@ class ActionCmd(cmd.Cmd):
         #return body
 
     def do_getShapeList (self, xxx):
-        """get list of available shapes"""
+        """get lis
+        print (self.parameters)t of available shapes"""
         shapeL = S.getShapeList()
         print (shapeL)
 
@@ -165,9 +206,14 @@ class ActionCmd(cmd.Cmd):
 
 if __name__ == '__main__':
     S = swig.ActionSwigInterface(1)
-    
-    C = ActionCmd()
 
-    C.cmdloop()
+    time.sleep(1)
+    qItself("l_gripper_joint", "[0.00]")
+    #qItself("l_gripper_joint", "[0.00]")
+
+    
+   # C = ActionCmd()
+
+   # C.cmdloop()
     
 
