@@ -1,6 +1,7 @@
 #include <FOL/fol.h>
 #include <Gui/graphview.h>
 #include <MCTS/solver_marc.h>
+#include <MCTS/solver_PlainMC.h>
 #include <FOL/fol_mcts_world.h>
 
 //===========================================================================
@@ -151,6 +152,30 @@ void TEST(MCTS){
 
 //===========================================================================
 
+void TEST(MC){
+  FOL_World world("boxes_new.kvg");
+  PlainMC mc(world);
+  world.verbose=0;
+  world.verbFil=0;
+  mc.verbose=0;
+
+
+  for(uint s=0;s<100;s++){
+    cout <<"******************************************** STEP " <<s <<endl;
+    mc.reset();
+    for(uint k=0;k<100;k++) mc.addRollout(100);
+    mc.report();
+    auto a = mc.getBestAction();
+    cout <<"******** ACTION " <<*a <<endl;
+    world.reset_state();
+    world.transition(a);
+    if(world.is_terminal_state()) break;
+    world.make_current_state_default();
+  }
+}
+
+//===========================================================================
+
 void TEST(FOL_World){
   FOL_World world("boxes_new.kvg");
 
@@ -223,8 +248,8 @@ int main(int argn, char** argv){
   rnd.clockSeed();
 //  srand(timenow)
 
-  testMCTS();
-
+//  testMCTS();
+  testMC();
 //  testFOL_World();
 //  testDeterminism();
 }

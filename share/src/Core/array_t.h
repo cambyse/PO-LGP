@@ -1436,7 +1436,7 @@ template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) 
   if(!N) return 0;
   if(comp(x, elem(0))) return 0;
   if(comp(elem(N-1), x)) return N;
-  uint lo=0, up=N-1, mi=lo+(up-lo)/2;
+  uint lo=0, up=N-1, mi;
   while(lo<=up) {
     mi=lo+(up-lo)/2;
     if(elem(mi) == x) return mi;
@@ -1829,6 +1829,11 @@ template<class T> void checkNan(const MT::Array<T>& x) {
     //CHECK(x.elem(i)!=NAN, "found a NaN" <<x.elem(i) <<'[' <<i <<']');
     CHECK_EQ(x.elem(i),x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
   }
+}
+
+template<class T> void sort(MT::Array<T>& x) {
+  T *pstop=x.p+x.N;
+  std::sort(x.p, pstop);
 }
 
 template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
