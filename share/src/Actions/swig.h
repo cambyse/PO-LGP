@@ -12,13 +12,14 @@ using std::string;
 struct ActionSwigInterface{
   struct SwigSystem *S;
 
-  ActionSwigInterface(bool useRos); //instantiates the ActionMachineSystem, runs it
+  ActionSwigInterface(); //instantiates the ActionMachineSystem, runs it
   ~ActionSwigInterface();
 
   void Cancel();
 
-  //-- robot data access
+  void setVerbose(bool verbose);
 
+  //-- robot data access
   stringV getShapeList();
   stringV getBodyList();
   stringV getJointList();
@@ -48,6 +49,7 @@ struct ActionSwigInterface{
 //  void startActivity(intV literal, const dict& parameters=dict());
 //  void waitForCondition(intV literal);
   int  waitForOrCondition(const std::vector<stringV> literals);
+  void waitForAllCondition(const stringV queries);
   void waitForQuitSymbol();
 
 //  void activateAction(string symbolName); //"(reachAt A)"

@@ -71,6 +71,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** TreeControllerClass Started");
 
   msgBlock=1;
+  iterationsSinceLastMsg=0;
 
   return true;
 }
@@ -91,11 +92,20 @@ void TreeControllerClass::starting(){
 void TreeControllerClass::update() {
   //-- get current joint pos
   for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
-      q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
-      qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
+    q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
+    qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
   }
 
   mutex.lock(); //only inside here we use the msg values...
+
+  // stop when no messages arrive anymore
+  if(iterationsSinceLastMsg > 100){
+    q_ref.clear();
+    qdot_ref.clear();
+    u_bias.clear();
+  }else{
+    iterationsSinceLastMsg++;
+  }
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
@@ -149,9 +159,13 @@ void TreeControllerClass::update() {
     //-- command twist to base
     if(j_worldTranslationRotation && j_worldTranslationRotation->qDim()==3){
       geometry_msgs::Twist base_cmd;
-      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+0);
-      base_cmd.linear.x = qdot_ref(j_worldTranslationRotation->qIndex+1);
-      base_cmd.linear.y = qdot_ref(j_worldTranslationRotation->qIndex+2);
+      double phi = q_ref(j_worldTranslationRotation->qIndex+2);
+      double vx  = qdot_ref(j_worldTranslationRotation->qIndex+0);
+      double vy  = qdot_ref(j_worldTranslationRotation->qIndex+1);
+      double co  = cos(phi), si = -sin(phi);
+      base_cmd.linear.x = co*vx - si*vy;
+      base_cmd.linear.y = si*vx + co*vy;
+      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+2);
       baseCommand_publisher.publish(base_cmd);
     }
   }
@@ -174,6 +188,7 @@ void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   mutex.lock();
+  iterationsSinceLastMsg=0;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);

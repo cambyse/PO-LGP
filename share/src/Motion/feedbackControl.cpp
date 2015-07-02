@@ -21,22 +21,20 @@
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-    : CtrlTask(map) {
-  this->name = name;
-  this->maxVel = maxVel;
-  this->maxAcc = maxAcc;
+  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-    : CtrlTask(&map) {
-  this->name = name;
+  : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->V<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
+  } else {
+    setGainsAsNatural(3., .7);
   }
   if((it=params["prec"])) prec = it->V<double>();
   if((it=params["target"])) y_ref = it->V<arr>();
@@ -81,11 +79,17 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
     y_ref = -y_ref;
   //compute diffs
   arr y_diff(y);
-  if(y_ref.N==1) y_diff -= y_ref.scalar();
-  if(y_ref.N==y_diff.N) y_diff -= y_ref;
+  if(y_ref.N==1) {
+    y_diff -= y_ref.scalar();
+  }else if(y_ref.N==y_diff.N) {
+    y_diff -= y_ref;
+  }
   arr ydot_diff(ydot);
-  if(v_ref.N==1) ydot_diff -= v_ref.scalar();
-  if(v_ref.N==ydot_diff.N) ydot_diff -= v_ref;
+  if(v_ref.N==1) {
+    ydot_diff -= v_ref.scalar();
+  }else if(v_ref.N==ydot_diff.N) {
+    ydot_diff -= v_ref;
+  }
 
   arr a = - Pgain*y_diff - Dgain*ydot_diff;
   //check limits

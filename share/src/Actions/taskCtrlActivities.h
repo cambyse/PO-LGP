@@ -10,7 +10,7 @@ struct TaskCtrlActivity : Activity{
   double stopTolerance;
   bool conv;
 
-  ~TaskCtrlActivity();
+  virtual ~TaskCtrlActivity();
   virtual void configure(Node *fact); ///< calls configure2 and registers
   virtual void step(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
@@ -20,11 +20,13 @@ struct TaskCtrlActivity : Activity{
 };
 
 //===========================================================================
-
 struct FollowReferenceActivity : TaskCtrlActivity {
   arr ref;
   double trajectoryDuration; ///< -1 if this is only a point reference instead of a trajectory
   double stopTolerance;
+
+  arr old_y;
+  uint stuck_count;
 
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
   virtual void step2(double dt);
@@ -32,12 +34,14 @@ struct FollowReferenceActivity : TaskCtrlActivity {
 };
 
 //===========================================================================
-
 struct HomingActivity : TaskCtrlActivity {
   double stopTolerance;
+  ors::Joint *wheeljoint;
 
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
+  virtual void step2(double dt);
   virtual bool isConv();
 };
 stdOutPipe(HomingActivity)
+
+

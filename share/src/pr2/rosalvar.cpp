@@ -1,5 +1,6 @@
 #include "rosalvar.h"
 
+#ifdef MT_ROS
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
@@ -38,8 +39,8 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       body->name = marker_name;
       ors::Shape *shape = new ors::Shape(world, *body);
       shape->name = marker_name;
-      shape->type = ors::boxST;
-      shape->size[0] = .1; shape->size[1] = .1; shape->size[2] = .03; shape->size[3] = .1;
+      shape->type = ors::markerST;
+      shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
     setBody(*body, marker);
     // transform: torso_lift_link is the reference frame_id
@@ -52,3 +53,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     world.swiftDelete();
   }
 }
+#else
+void setBody(ors::Body& body, const AlvarMarker& marker) {}
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {}
+#endif

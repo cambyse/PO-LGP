@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MT_ROS
+
 #include <ros/ros.h>
 #include <Core/module.h>
 
@@ -41,3 +43,5 @@
     ros::Subscriber _sub; \
     \
   };
+
+#endif
