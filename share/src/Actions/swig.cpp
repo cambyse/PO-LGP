@@ -26,10 +26,12 @@ struct SwigSystem : System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
 
-  bool stopWaiting;
+  ACCESS(int, stopWaiting);
+  ACCESS(int, waiters);
 
   TaskControllerModule *tcm;
-  SwigSystem() : stopWaiting(false) {
+  SwigSystem() {
+
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
@@ -50,14 +52,19 @@ struct SwigSystem : System{
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
 
+    stopWaiting.set() = 0;
+    waiters.set() = 0;
+
     _g_swig = this;
   }
 };
 
 
 void signal_catch(int signal) {
-  _g_swig->stopWaiting = true;
+  cout << "Waiters: " <<_g_swig->waiters.get() << endl;
+  _g_swig->stopWaiting.set() = _g_swig->waiters.get();
   _g_swig->effects.set()() << "stop, ";
+  _g_swig->effects.set()() << "stop!, ";
   cout << "Ctrl-C pressed, try to stop all facts." << endl;
 }
 // ============================================================================
@@ -256,10 +263,15 @@ void ActionSwigInterface::stopActivity(const stringV& literals){
 }
 
 void ActionSwigInterface::waitForCondition(const stringV& literals){
+  S->waiters.set()++;
   for(;;){
-    if(isTrue(literals) or S->stopWaiting) {
-      S->stopWaiting = false;
-      this->stopFact("stop");
+    if(isTrue(literals)) {
+      S->waiters.set()--;
+      return;
+    } 
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
       return;
     }
     S->state.waitForNextRevision();
@@ -268,10 +280,16 @@ void ActionSwigInterface::waitForCondition(const stringV& literals){
 }
 
 void ActionSwigInterface::waitForCondition(const char* query){
+  S->waiters.set()++;
   for(;;){
-    if(S->RM.get()->queryCondition(query) or S->stopWaiting) {
-      S->stopWaiting = false;
-      this->stopFact("stop");
+    if(S->RM.get()->queryCondition(query)){
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+
       return;
     }
     S->state.waitForNextRevision();
@@ -280,12 +298,16 @@ void ActionSwigInterface::waitForCondition(const char* query){
 }
 
 int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
+  S->waiters.set()++;
   for(;;){
     for(unsigned i=0; i < literals.size(); i++){
-      if(isTrue(literals[i])) return i;
-      if(S->stopWaiting) {
-        S->stopWaiting = false;
-        this->stopFact("stop");
+      if(isTrue(literals[i])) {
+        S->waiters.set()--;
+        return i;
+      }
+      if(S->stopWaiting.get() > 0) {
+        S->stopWaiting.set()--;
+        S->waiters.set()--;
         return -1;   
       }
     }
@@ -294,6 +316,28 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
   // this->stopFact(literals);
 }
 
+void ActionSwigInterface::waitForAllCondition(const stringV queries){
+  S->waiters.set()++;
+  for(;;){
+    bool allTrue = true;
+    for(unsigned i=0; i < queries.size(); i++){
+      if(not S->RM.get()->queryCondition(MT::String(queries[i]))) {
+        allTrue = false;
+      }
+    }
+    if(allTrue) {
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(literals);
+}
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
 //#if 1
 //  startActivity(lit2str(literal), parameters);
