@@ -159,7 +159,6 @@ void TEST(MC){
   world.verbFil=0;
   mc.verbose=0;
 
-
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
     mc.reset();
@@ -222,13 +221,13 @@ void TEST(Determinism){
     world.fil.close();
     MT::open(world.fil,"z.FOL_World2");
 
-    //-- now repeat
+    //-- now repeat and check: same observations => same rollout
     world.reset_state();
     uint t=0;
     for(;;t++){
       world.make_current_state_default();
       std::pair<FOL_World::Handle, double> res;
-      for(;;){
+      for(;;){ //repeat stochastic transition until you get the same observation
         res = world.transition(actions(t));
         if(*res.first==*observations(t)) break; //observations match... move on
         world.reset_state();

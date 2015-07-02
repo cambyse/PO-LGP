@@ -502,10 +502,10 @@ template<class T> void MT::Array<T>::setAppend(const MT::Array<T>& x) {
 }
 
 /// remove and return the first element of the array (must have size>1)
-template<class T> T MT::Array<T>::popFirst() { T x; x=elem(0);   remove(0);   return x; }
+template<class T> T MT::Array<T>::popFirst() { T x; x=elem(0); remove(0);   return x; }
 
 /// remove and return the last element of the array (must have size>1)
-template<class T> T MT::Array<T>::popLast() { T x; x=elem(N-1); remove(N-1); return x; }
+template<class T> T MT::Array<T>::popLast() { T x=elem(N-1); resizeCopy(N-1); return x; }
 
 /// reverse this array
 template<class T> void MT::Array<T>::reverse() {
@@ -715,6 +715,12 @@ template<class T> T& MT::Array<T>::rndElem() const {
 /// scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
   CHECK(nd<=2 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
+  return *p;
+}
+
+/// reference to the last element
+template<class T> T& MT::Array<T>::first() const {
+  CHECK(N, "can't take first of none");
   return *p;
 }
 
@@ -1434,17 +1440,16 @@ template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
 /// fast find method in a sorted array, returns index where x would fit into array
 template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
   if(!N) return 0;
-  if(comp(x, elem(0))) return 0;
-  if(comp(elem(N-1), x)) return N;
-  uint lo=0, up=N-1, mi;
-  while(lo<=up) {
-    mi=lo+(up-lo)/2;
-    if(elem(mi) == x) return mi;
-    if(comp(x, elem(mi))) up=mi-1; else lo=mi+1;
-    if(comp(x, elem(lo))) return lo;
-    if(comp(elem(up), x)) return up+1;
+  T *lo=p, *hi=p+N-1, *mi;
+  if(comp(x, *lo)) return 0;
+  if(comp(*hi, x)) return N;
+  for(;;){
+    if(lo+1==hi) return hi-p;
+    mi=lo+(hi-lo)/2; //works (the minus operator on pointers gives #objects)
+    if(comp(*mi, x)) lo=mi; else hi=mi;
   }
-  return mi;
+  HALT("you shouldn't be here");
+  return 0;
 }
 
 /// fast find method in a sorted array, returns index to element equal to x
