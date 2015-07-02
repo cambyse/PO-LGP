@@ -30,8 +30,7 @@ def _run(facts):
     for fact in facts:
         interface.setFact(str(fact))
 
-    for symb_conv in symbols_conv:
-        interface.waitForCondition(symb_conv)
+    interface.waitForAllCondition(symbols_conv)
 
     for symb in symbols:
         interface.stopFact(symb)
@@ -182,7 +181,7 @@ class MoveAlongAxisActivity(Activity):
         """
         super(MoveAlongAxisActivity, self).__init__()
         self.endeff = endeff
-        self.axis = axis
+        self.axis = np.asarray(axis)
         self.distance = distance
 
     def __str__(self):
