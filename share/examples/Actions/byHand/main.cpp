@@ -62,7 +62,7 @@ void script2(ActionSwigInterface& S){
 int main(int argc, char** argv) {
   registerActivity<MyTask>("MyTask");
 
-  ActionSwigInterface S(false);
+  ActionSwigInterface S;
 
   S.createNewSymbol("wheels");
 

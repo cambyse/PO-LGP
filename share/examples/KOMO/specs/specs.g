@@ -1,5 +1,5 @@
 KOMO{
-  model = 'model.kvg'
+  model = '../easy/test.ors'
   T = 100
   duration = 5
 }
@@ -16,6 +16,7 @@ Task sqrAccelerations{
 Task finalHandPosition{
   map={ type=posDiff ref1=endeff ref2=target vec1=[.15 0 0] }
   time=[1 1] # only final
+  scale=100
   type=equal # hard equality constraint
 }
 
@@ -26,7 +27,7 @@ Task finalHandVelocity{
 #  type=equal # hard equality constraint
 }
 
-Task finalHandAlignment{
+NoTask finalHandAlignment{
   map={ type=vecAlign ref1=endeff ref2=target vec1=[1 0 0] vec2=[1 0 0] }
   time=[1 1] # only final
   target = [1]
@@ -34,7 +35,7 @@ Task finalHandAlignment{
 }
 
 Task collisions{
-  map={ type=collisionIneq margin=0.1 }
+  map={ type=collisionIneq margin=0.05 }
   type=inequal # hard inequality constraint
   scale = 0.1
 }

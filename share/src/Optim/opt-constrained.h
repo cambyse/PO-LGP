@@ -83,7 +83,7 @@ struct UnconstrainedProblemMix:ScalarFunction{
   arr phi_x, J_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblemMix(const ConstrainedProblemMix &P,ConstrainedMethodType method):P(P), muLB(0.), mu(0.), nu(0.) {
+  UnconstrainedProblemMix(const ConstrainedProblemMix &P,ConstrainedMethodType method, arr& lambdaInit=NoArr):P(P), muLB(0.), mu(0.), nu(0.) {
     ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
       return this->lagrangian(dL, HL, x);
     } );
@@ -98,6 +98,8 @@ struct UnconstrainedProblemMix:ScalarFunction{
       case logBarrier:     muLB=.1;  break;
       case noMethod: HALT("need to set method before");  break;
     }
+
+    if(&lambdaInit) lambda = lambdaInit;
   }
 
   double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F

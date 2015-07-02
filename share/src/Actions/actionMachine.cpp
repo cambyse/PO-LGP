@@ -148,8 +148,8 @@ void ActionMachine::step(){
 //    cout <<fLobs <<endl;
     if(fLobs.N && uobs.N){
       arr Jft, J;
-      world->kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      world->kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,world->getShapeByName("l_ft_sensor"));
+      world->kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
+      world->kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, world->getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
       MT::arrayBrackets="  ";

@@ -195,7 +195,6 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
     P(phi_x, J_x, tt_x, x);
     CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
     CHECK_EQ(phi_x.N, tt_x.N, "termType array size inconsistent");
-//    && Hf_x.d1==x.N && Jg_x.d1==x.N &&  && Jh_x.d1==x.N //those dimensions might be non-equal due to packing...
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
     if(&dL || &HL) CHECK(J_x.N,"");
   }
@@ -206,8 +205,8 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   I_lambda_x = false;
   if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x(i)==ineqTT) I_lambda_x(i) = (phi_x(i)>0. || (lambda.N && lambda(i)>0.));
 
-  //L value
-  double L=0.;
+
+  double L=0.; //L value
   for(uint i=0;i<phi_x.N;i++){
     if(            tt_x(i)==sumOfSqrTT             ) L += MT::sqr(phi_x(i));       // sumOfSqr terms
     if(muLB     && tt_x(i)==ineqTT && phi_x(i)>0.  ) L -= muLB * ::log(-phi_x(i)); //log barrier, check feasibility
@@ -489,7 +488,7 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
 
-  UnconstrainedProblemMix UCP(P, opt.constrainedMethod);
+  UnconstrainedProblemMix UCP(P, opt.constrainedMethod, dual);
 
   //uint stopTolInc;
 

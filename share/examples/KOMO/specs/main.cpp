@@ -7,11 +7,13 @@
 
 void TEST(Specs){
   KOMO komo(Graph("specs.g"));
-  komo.run();
-  for(uint i=0;i<2;i++) komo.displayTrajectory();
-}
 
-//===========================================================================
+  for(;;){
+    komo.init(Graph("specs.g"));
+    komo.run();
+    for(uint i=0;i<2;i++) komo.displayTrajectory();
+  }
+}
 
 //===========================================================================
 

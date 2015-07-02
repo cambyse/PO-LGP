@@ -56,7 +56,7 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-  optConstrainedMix(x, NoArr, Convert(*MPF), OPT(verbose=2)); //parameters are set in cfg!!
+  optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2)); //parameters are set in cfg!!
   cout <<"** optimization time=" <<MT::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
 //    checkJacobian(Convert(MF), x, 1e-5);
