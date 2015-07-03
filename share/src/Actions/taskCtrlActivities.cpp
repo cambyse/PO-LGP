@@ -125,5 +125,5 @@ void HomingActivity::stepControl(double dt) {
 RUN_ON_INIT_BEGIN(Activities)
 registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
 registerActivity<HomingActivity>("HomingActivity");
-registerActivity<SensorActivityABC>("SensorActivityABC");
+registerActivity<SensorActivity>("SensorActivity");
 RUN_ON_INIT_END(Activities)
