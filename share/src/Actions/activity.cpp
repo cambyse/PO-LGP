@@ -13,8 +13,6 @@ void Activity::configure(Node *fact) {
     name << p->keys.last();
   }
   Activity::fact = fact;
-  Graph *specs = &NoGraph;
-  if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
 }
 
 //===========================================================================
