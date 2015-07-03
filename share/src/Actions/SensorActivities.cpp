@@ -2,9 +2,6 @@
 #include "TaskControllerModule.h"
 #include "pr2/roscom.h"
 
-// TODO I'm abusing TaskControllerModule to get the ctrl_obs variable.
-//      Find a better way.
-extern TaskControllerModule *taskControllerModule();
 
 // ============================================================================
 void SensorActivity::configure(Node *fact) {
@@ -25,9 +22,7 @@ void SensorActivity::step(double dt) {
     cout << "I was isTriggered(): " << endl;
 
     if (!_isTriggered) {
-      // TODO fix modify KB
-      auto* controlActivityManager = taskControllerModule();
-      controlActivityManager->effects.set()() << STRING("(triggered SensorActivity), ");
+      effects.set()() << STRING("(triggered SensorActivity), ");
     }
     _isTriggered = true;
   }
@@ -48,8 +43,7 @@ void SensorActivity::stepSensor() {
 }
 
 bool SensorActivity::isTriggered() {
-  auto* controlActivityManager = taskControllerModule();
-  CtrlMsg obs = controlActivityManager->ctrl_obs.get();
+  CtrlMsg obs = ctrl_obs.get();
   // cout << "Left:  " << obs.fL << endl;
   // cout << "Right: " << obs.fR << endl;
   return (sum(obs.fL)) > _threshold;

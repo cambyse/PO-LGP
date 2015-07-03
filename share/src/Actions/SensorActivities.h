@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Ors/ors.h>
+#include <pr2/roscom.h>
 #include "activity.h"
 
 
@@ -23,6 +24,9 @@
  * - anything gripper specific?
  */
 struct SensorActivity : Activity {
+  ACCESS(CtrlMsg, ctrl_obs);
+  ACCESS(MT::String, effects);
+
   bool _isTriggered;
   double _threshold;
 
