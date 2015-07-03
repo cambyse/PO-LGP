@@ -30,8 +30,7 @@ def _run(facts):
     for fact in facts:
         interface.setFact(str(fact))
 
-    for symb_conv in symbols_conv:
-        interface.waitForCondition(symb_conv)
+    interface.waitForAllCondition(symbols_conv)
 
     for symb in symbols:
         interface.stopFact(symb)
@@ -75,23 +74,10 @@ def _run_with(with_construct):
 
 def run(plan):
     """
-    Runs a plan in the following format.
+    Runs a plan in :ref:`section-plan-format`
 
-    A plan is a lightwight datastructure to store sequential and simultaneous
-    activities. A single Activity is already a plan. To create more complex
-    plans, the following construxts are possible:
 
-    * A list of activities or plans is run sequentially. Each one must be
-      converged for the next one to start
-    * A tuple of activities or plans is run simultaneously. Everything is
-      flatten, i.e. (a, [b, c], d) is equally treated as (a, b, c, d). All
-      activities have to be converged for the tuple to be considered converged
-    * A dict with two entries. First "with" contains a list of activities,
-      second "plan" contains a plan. The list of activities in the "with" list
-      are run simultaneous to the plan. However, when the last activity of the
-      plan is converged they are stopped regardless of the convergence status.
-
-    :param plan:
+    :param plan: A plan in the plan format
     :return:
     """
     if not isinstance(plan, list):
@@ -195,7 +181,7 @@ class MoveAlongAxisActivity(Activity):
         """
         super(MoveAlongAxisActivity, self).__init__()
         self.endeff = endeff
-        self.axis = axis
+        self.axis = np.asarray(axis)
         self.distance = distance
 
     def __str__(self):

@@ -49,6 +49,7 @@ struct ActionSwigInterface{
 //  void startActivity(intV literal, const dict& parameters=dict());
 //  void waitForCondition(intV literal);
   int  waitForOrCondition(const std::vector<stringV> literals);
+  void waitForAllCondition(const stringV queries);
   void waitForQuitSymbol();
 
 //  void activateAction(string symbolName); //"(reachAt A)"

@@ -10,7 +10,7 @@ struct TaskCtrlActivity : Activity{
   double stopTolerance;
   bool conv;
 
-  ~TaskCtrlActivity();
+  virtual ~TaskCtrlActivity();
 
   // Implement base class methods: modify KB
   virtual void configure(Node *fact); ///< calls configureControl and registers
@@ -25,6 +25,9 @@ struct TaskCtrlActivity : Activity{
 //===========================================================================
 struct FollowReferenceActivity : TaskCtrlActivity {
   arr ref;
+  arr old_y;
+  uint stuck_count;
+
   double trajectoryDuration; ///< -1 if this is only a point reference instead of a trajectory
   double stopTolerance;
 

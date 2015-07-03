@@ -2,17 +2,23 @@
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
+#include "activitySpinner.h"
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
+#include <csignal>
 
 #ifdef MT_ROS
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
 #endif
 
+
+struct SwigSystem* _g_swig;
+
 // ============================================================================
 struct SwigSystem : System{
+
   ACCESS(bool, quitSignal)
   ACCESS(bool, fixBase)
   ACCESS(RelationalMachine, RM)
@@ -21,8 +27,12 @@ struct SwigSystem : System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
 
+  ACCESS(int, stopWaiting);
+  ACCESS(int, waiters);
+
   TaskControllerModule *tcm;
-  SwigSystem(){
+  SwigSystem() {
+
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
@@ -42,10 +52,22 @@ struct SwigSystem : System{
     connect();
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
+
+    stopWaiting.set() = 0;
+    waiters.set() = 0;
+
+    _g_swig = this;
   }
 };
 
 
+void signal_catch(int signal) {
+  cout << "Waiters: " <<_g_swig->waiters.get() << endl;
+  _g_swig->stopWaiting.set() = _g_swig->waiters.get();
+  _g_swig->effects.set()() << "stop, ";
+  _g_swig->effects.set()() << "stop!, ";
+  cout << "Ctrl-C pressed, try to stop all facts." << endl;
+}
 // ============================================================================
 MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
   MT::String str;
@@ -66,10 +88,12 @@ ActionSwigInterface::ActionSwigInterface(){
   S = new SwigSystem();
   S->tcm->verbose=false;
   engine().open(*S, true);
+  signal(SIGINT, signal_catch); //overwrite signal handler
 
   createNewSymbol("conv");
   createNewSymbol("contact");
   createNewSymbol("timeout");
+  createNewSymbol("stop");
 //  new CoreTasks(*s->activity.machine);
 
 
@@ -146,6 +170,7 @@ stringV ActionSwigInterface::getJointList(){
   return strs;
 }
 
+
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
   S->tcm->modelWorld.readAccess();
@@ -160,7 +185,7 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
 
 dict ActionSwigInterface::getJointByName(std::string jointName){
   dict D;
-  S->tcm->modelWorld.readAccess();
+  S->tcm->modelWorld.writeAccess();
   ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
@@ -239,31 +264,81 @@ void ActionSwigInterface::stopActivity(const stringV& literals){
 }
 
 void ActionSwigInterface::waitForCondition(const stringV& literals){
+  S->waiters.set()++;
   for(;;){
-    if(isTrue(literals)) return;
-    S->state.waitForNextRevision();
-  }
-  // this->stopFact(literals);
-}
-
-void ActionSwigInterface::waitForCondition(const char* query){
-  for(;;){
-    if(S->RM.get()->queryCondition(query)) return;
-    S->state.waitForNextRevision();
-  }
-  // this->stopFact(query);
-}
-
-int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
-  for(;;){
-    for(unsigned i=0; i < literals.size(); i++){
-      if(isTrue(literals[i])) return i;
+    if(isTrue(literals)) {
+      S->waiters.set()--;
+      return;
+    } 
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
     }
     S->state.waitForNextRevision();
   }
   // this->stopFact(literals);
 }
 
+void ActionSwigInterface::waitForCondition(const char* query){
+  S->waiters.set()++;
+  for(;;){
+    if(S->RM.get()->queryCondition(query)){
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+
+      return;
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(query);
+}
+
+int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
+  S->waiters.set()++;
+  for(;;){
+    for(unsigned i=0; i < literals.size(); i++){
+      if(isTrue(literals[i])) {
+        S->waiters.set()--;
+        return i;
+      }
+      if(S->stopWaiting.get() > 0) {
+        S->stopWaiting.set()--;
+        S->waiters.set()--;
+        return -1;   
+      }
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(literals);
+}
+
+void ActionSwigInterface::waitForAllCondition(const stringV queries){
+  S->waiters.set()++;
+  for(;;){
+    bool allTrue = true;
+    for(unsigned i=0; i < queries.size(); i++){
+      if(not S->RM.get()->queryCondition(MT::String(queries[i]))) {
+        allTrue = false;
+      }
+    }
+    if(allTrue) {
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(literals);
+}
 //void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
 //#if 1
 //  startActivity(lit2str(literal), parameters);

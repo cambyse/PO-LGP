@@ -2,3 +2,4 @@
 %autoreload 2
 
 from actions import *
+from controllers import *

@@ -50,6 +50,7 @@ void TaskCtrlActivity::step(double dt){
 
 //===========================================================================
 void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
+  stuck_count = 0;
   Node *it;
   if((it=specs["type"])){
     if(it->V<MT::String>()=="wheels"){
@@ -78,13 +79,23 @@ void FollowReferenceActivity::stepControl(double dt){
 }
 
 bool FollowReferenceActivity::isConv(){
+  bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
+
+  if (stuck)
+    stuck_count++;
+  else
+    stuck_count = 0;
+
+  old_y = task->y;
+
   return ((task->y_ref.nd == 1
            && task->y.N == task->y_ref.N
            && maxDiff(task->y, task->y_ref) < stopTolerance
            && maxDiff(task->v, task->v_ref) < stopTolerance)
-          ||
+          or
           (task->y_ref.nd==2
-           && activityTime>=trajectoryDuration));
+           && activityTime>=trajectoryDuration)
+          or (stuck and stuck_count > 6000));
 }
 
 //===========================================================================

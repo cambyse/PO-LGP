@@ -70,18 +70,17 @@ def bar_controller(pos):
 
 
 def wheel_controller(pos):
-    print("Not yet...")
-    return
     current_pos = int(interface.getJointByName(j.lockbox_wheel)["q"])
     distance = pos - np.rad2deg(current_pos)
+    pre_grasp_offset = [0, -.05, 0]
     print("Distance: {}".format(distance))
-    run(turn_marker(s.wheel_handle, distance))
+    run(turn_marker(s.wheel_handle, distance,
+                    pre_grasp_offset=pre_grasp_offset))
+    run(reach(s.wheel_handle, offset=pre_grasp_offset))
     run(homing())
 
 
 def screw_controller(pos):
-    print("Not yet...")
-    return
     side = SIDE.RIGHT
     endeff = side2endeff(side)
     joint = side2wrist_joint(side)
@@ -108,10 +107,9 @@ def screw_controller(pos):
     plan[0]["plan"][-2].time = turns
 
     plan.append(reach(shape, offset=pre_grasp_offset, with_=endeff))
-    # plan.append(homing())
+    plan.append(homing())
 
     run(plan)
-    interface.resetHighValue(joint)
 
     # with running(align_gripper([1, 0, 0], [0, 1, 0], side=side) +
     #              gaze_at(endeff)):
