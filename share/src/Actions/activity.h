@@ -4,7 +4,6 @@
 #include <Core/module.h>
 
 //===========================================================================
-//
 /**
  * Activities are "things" that change the state of the KB.
  *
@@ -22,7 +21,8 @@ struct Activity {
 
   /// @name activity interface to overwrite
   /// Read the facts and configure the activity
-  virtual void configure(Node *fact) = 0;
+  virtual void configure(Node *fact);
+
   /// Do whatever the Activity has to do and change the state of the KB
   virtual void step(double dt) = 0;
 };
@@ -42,3 +42,6 @@ template<class T> void registerActivity(const char* key){
 
 /// create/launch a new activity based on the fact
 Activity* newActivity(Node *fact);
+
+/// Return the spec from the fact
+Graph* getSpecsFromFact(Node *fact);

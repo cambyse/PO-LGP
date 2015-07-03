@@ -1,6 +1,9 @@
+#pragma once
+
 #include <Ors/ors.h>
 #include "activity.h"
 
+// ============================================================================
 /// A typical 'control activity' that adds a CtrlTask to the task list of the task controller.
 /// Der
 struct TaskCtrlActivity : Activity{

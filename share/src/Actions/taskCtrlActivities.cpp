@@ -1,5 +1,6 @@
 #include <Motion/feedbackControl.h>
 #include "TaskControllerModule.h"
+#include "SensorActivities.h"
 
 #include "taskCtrlActivities.h"
 
@@ -7,13 +8,13 @@ extern TaskControllerModule *taskControllerModule();
 
 //===========================================================================
 void TaskCtrlActivity::configure(Node *fact) {
-  name.clear();
-  for(Node *p:fact->parents) name <<p->keys.last();
+  Activity::configure(fact);
+
+  // TaskCtrlActivity specific stuff
   taskController = taskControllerModule();
-  CHECK(taskController,"");
-  Activity::fact = fact;
-  Graph *specs = &NoGraph;
-  if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
+  CHECK(taskController, "taskControllerModule() did not return anything. Why?");
+
+  Graph *specs = getSpecsFromFact(fact);
   configureControl(name, *specs, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
@@ -31,7 +32,7 @@ void TaskCtrlActivity::step(double dt){
   stepControl(dt);
 
   // Modify the KB
-  //potentially report on stopping criteria
+  // potentially report on stopping criteria
   MT::String convStr = "(conv ";
   for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
   convStr <<")";
@@ -56,7 +57,8 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
     if(it->V<MT::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
     }else if (it->V<MT::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,world.getJointStateDimension());
+      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,
+                                world.getJointStateDimension());
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"]->V<double>();
     }else{
       map = new DefaultTaskMap(specs, world);
@@ -80,12 +82,7 @@ void FollowReferenceActivity::stepControl(double dt){
 
 bool FollowReferenceActivity::isConv(){
   bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
-
-  if (stuck)
-    stuck_count++;
-  else
-    stuck_count = 0;
-
+  stuck_count = stuck ? stuck_count + 1 : 0;
   old_y = task->y;
 
   return ((task->y_ref.nd == 1
@@ -128,4 +125,5 @@ void HomingActivity::stepControl(double dt) {
 RUN_ON_INIT_BEGIN(Activities)
 registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
 registerActivity<HomingActivity>("HomingActivity");
+registerActivity<SensorActivityABC>("SensorActivityABC");
 RUN_ON_INIT_END(Activities)
