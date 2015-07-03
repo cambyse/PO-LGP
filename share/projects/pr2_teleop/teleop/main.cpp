@@ -23,7 +23,7 @@ struct PR2G4Control:System {
     // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
     // g4debug->id().load("g4mapping.kvg");
     //auto pd_executor = addModule<PDExecutor>(NULL, Module::loopWithBeat, .05);
-    addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .05);
+   addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .01);
 
 
     // ROS

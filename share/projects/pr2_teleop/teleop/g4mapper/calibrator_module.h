@@ -11,7 +11,7 @@
 
 struct G4HutoRoMap:Module
 {
-
+    ACCESS(bool, initmapper);
 
     ACCESS(floatA, poses);
     ACCESS(arr, gamepadState);
@@ -28,12 +28,13 @@ struct G4HutoRoMap:Module
 /////////////////////INIT////////////////////
     bool initphase = true;
     floatA  poselhthumbmaxopen  , poselhindexmaxopen, poselhthumbminopen  , poselhindexminopen;
-    float distlhmaxopen = 0;
-    float distlhminopen = 50;
+    float distlhmaxopen = 0.1;
+    float distlhminopen = 0.04;
     floatA  poserhthumbmaxopen  , poserhindexmaxopen, poserhthumbminopen  , poserhindexminopen;
-    float distrhmaxopen = 0;
-    float distrhminopen = 50;
+    float distrhmaxopen = 0.1;
+    float distrhminopen = 0.04;
     
+    bool demoidle = false;
 
     float calarm_r_r = 0;
     float calarm_r_l = 0;
@@ -78,8 +79,31 @@ struct G4HutoRoMap:Module
     void open();
     void step();
     void close();
+/////////////////////////////////////////////
+//
+    void doinitsendROS(floatA a);
+/*
+    void doinitandrea(floatA a,int button);
+    void caliandrea();
+    void transform_andrea();
 
+    floatA posesSideR;
+    floatA posesSideL;
+    floatA posesOpen;
+    floatA posesFrontR;
+    floatA posesFrontL;
+    floatA posesClosed;
+    float radiusR_andrea;    
+    float radiusL_andrea;
+    arrf center_andrea;
+    float m_rh_andrea, m_lh_andrea;
+    float q_rh_andrea, q_lh_andrea;
 
+/////////////////////////////////////////////    
+   
+   */
+    void doinitpresaved(int button);/*
+*/
 };
 
 

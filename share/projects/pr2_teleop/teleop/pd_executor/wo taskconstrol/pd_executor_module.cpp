@@ -76,7 +76,7 @@ PDExecutor::PDExecutor()
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
 
   }
-/*
+
   if(MT::getParameter<bool>("fc", false)) {
     fc = fmc.addConstraintForceTask("test", new PairCollisionConstraint(world,"endeffForceR","r_ft_sensor"));
   
@@ -91,7 +91,7 @@ PDExecutor::PDExecutor()
     fc->desiredForce = 1000.;
       fc->active = true;
   }
-*/
+
 }
 
 void PDExecutor::visualizeSensors()
@@ -121,21 +121,6 @@ void PDExecutor::step()
   // visualize raw sensor data; not very useful anymore
   // visualizeSensors();
    world.watch(false);
-  if(true){
-    ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-    arr fLobs = ctrl_obs.get()->fL;
-    arr uobs =  ctrl_obs.get()->u_bias;
-    if(fLobs.N && uobs.N){
-      arr Jft, J;
-      world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      world.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,world.getShapeByName("l_ft_sensor"));
-      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
-      J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
-      cout <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
-//      MT::arrayBrackets="[]";
-    }
-  }
 
 
 
@@ -166,7 +151,9 @@ void PDExecutor::step()
     fc->active = true;
   }
 
- //world.getShapeByName("endeffForceR")->rel.pos = ors::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
+   CtrlMsg obs = ctrl_obs.get();
+    cout<<obs.fL<<endl<<obs.fR<<endl;
+ world.getShapeByName("endeffForceR")->rel.pos = ors::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
 
 // world.getShapeByName("endeffForceR")->size[2]= ors::Vector(obs.fR(0), obs.fR(1), obs.fR(2)).length();
 
@@ -248,7 +235,7 @@ if(!init)
  // arr a = fmc.operationalSpaceControl();
 
   for (uint t = 0; t < 20 ; t++) {
-    //fmc.updateConstraintControllers();
+    fmc.updateConstraintControllers();
     arr a = fmc.operationalSpaceControl();
     q += tau * qdot;
     qdot += tau * a;
@@ -261,42 +248,10 @@ if(!init)
  // cout<<q<<endl<<qdot<<endl; 
 
   // set state
-  CtrlMsg ref;
-  ref.q = q;
-  arr qdotzero;
-  qdotzero.resizeAs(q).setZero();
-  ref.qdot = qdotzero;
-
-  ref.u_bias = zeros(q.N);
-
-  ref.fL =zeros(6);
-  ref.fR =zeros(6);
-  ref.Kp = {1.};
-  ref.Ki.clear();
-  ref.Kd = {1.};
-  ref.gamma = .5;
-  ref.J_ft_inv.clear();
-  
+  sendRosCtrlMsg();//testing
+     
 
    fmc.reportCurrentState();
-     //-- compute the force feedback control coefficients
-  uint count=0;
-  //ctrlTasks.readAccess();
-  //fm.tasks = ctrlTasks();
-  for(CtrlTask *t : fmc.tasks) {
-    if(t->active && t->f_ref.N){
-      count++;
-      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      t->getForceControlCoeffs(ref.fL, ref.u_bias, ref.Ki, ref.J_ft_inv, world);
-    }
-  }
-  if(count==1) ref.Kp = .5;
- // ctrlTasks.deAccess();
-
-  //-- send the computed movement to the robot
-  ctrl_ref.set() = ref;
-
-   
 }
 
 void PDExecutor::sendRosCtrlMsg()
@@ -314,7 +269,7 @@ void PDExecutor::sendRosCtrlMsg()
   ref.Kp = {1.};
   ref.Ki.clear();
   ref.Kd = {1.};
-  ref.gamma = .5;
+  ref.gamma = 1.;
   ref.J_ft_inv.clear();
   ctrl_ref.set() = ref;
  //  roscom->publishJointReference();
