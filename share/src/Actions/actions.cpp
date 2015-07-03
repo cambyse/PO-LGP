@@ -3,18 +3,16 @@
 #include "actionMachine_internal.h"
 
 //===========================================================================
-// Action
-//
-
+// Action Base Class
 Action::Action(ActionMachine& actionMachine, const char* name)
-  : name(name), active(false), symbol(NULL), actionTime(0.), timeOut(-1.){
+    : name(name), active(false), symbol(NULL), actionTime(0.), timeOut(-1.){
   actionMachine.A.set()->append(this);
   actionMachine.KB.readAccess();
   Node *it = actionMachine.KB().getNode(name);
   if(it && &it->container != &actionMachine.KB()) it=NULL;
   if(it && it->getValueType()!=typeid(bool)) it=NULL;
   actionMachine.KB.deAccess();
-  if(!it) MT_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
+  //if(!it) MT_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
   if(it) symbol=it;
 }
 
@@ -32,13 +30,17 @@ void Action::reportState(ostream& os){
   reportDetails(os);
 }
 
-// ============================================================================
+// ================================================================================================
+// Implementations of all Actions
+// ================================================================================================
+
 FollowReference::FollowReference(ActionMachine& actionMachine, const char* name, TaskMap *map,
-    const arr& yref, const arr& vref, double durationInSeconds,
-    double decayTime, double dampingRatio, double maxVel, double maxAcc,
-    double relativePrec,
-    double stopTolerance)
-  : Action(actionMachine, name), trajectoryDuration(durationInSeconds), stopTolerance(stopTolerance) {
+                                 const arr& yref, const arr& vref, double durationInSeconds,
+                                 double decayTime, double dampingRatio, double maxVel, double maxAcc,
+                                 double relativePrec,
+                                 double stopTolerance)
+  : Action(actionMachine, name), trajectoryDuration(durationInSeconds), stopTolerance(stopTolerance)
+{
   CtrlTask* task = new CtrlTask(STRING("FollowReference_" << name), map,
                                 decayTime, dampingRatio, maxVel, maxAcc);
   if(yref.nd==2){
@@ -91,7 +93,7 @@ void FollowReference::reportDetails(ostream& os) {
 // ============================================================================
 // CoreTasks
 CoreTasks::CoreTasks(ActionMachine& actionMachine)
-  : Action(actionMachine, "CoreTasks") {
+    : Action(actionMachine, "CoreTasks") {
   // CtrlTask *qitself;
   // qitself = new CtrlTask("DampMotion_qitself", .1, 1., new TaskMap_qItself(P.s->MP.H_rate_diag));
   // qitself->setGains(0.,10.);
@@ -116,7 +118,7 @@ CoreTasks::CoreTasks(ActionMachine& actionMachine)
 
 //===========================================================================
 Homing::Homing(ActionMachine& actionMachine, const char* name)
-  : Action(actionMachine, name) {
+    : Action(actionMachine, name) {
   CtrlTask *task = new CtrlTask(
                      STRING("Homing_" << name),
                      new TaskMap_qItself(),
@@ -131,6 +133,53 @@ bool Homing::finishedSuccess(ActionMachine& M){
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
 }
 
+// ============================================================================
+// OpenGripper
+OpenGripper::OpenGripper(ActionMachine& actionMachine, const Side side)
+    : Action(actionMachine, "OpenGripper") {
+
+  const char* jointName = (side == Side::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
+  int jointID = actionMachine.s->world.getJointByName(jointName)->qIndex;
+  cout << "joint id" << jointID << endl;
+  auto task = new CtrlTask(STRING("OpenGripper_"),
+                           new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
+                           2, .8, 1., 1.);
+  task->setTarget({.08});
+  // task->setGains(200, 0);
+  task->active = true;
+  tasks.append(task);
+}
+
+bool OpenGripper::finishedSuccess(ActionMachine& M) {
+  if(!tasks.N) return false;
+  CtrlTask *task=tasks(0);
+  return (task->y.N == task->y_ref.N &&
+          maxDiff(task->y, task->y_ref) < 1e-3);
+}
+
+// ============================================================================
+// CloseGripper
+CloseGripper::CloseGripper(ActionMachine& actionMachine, const Side side)
+    : Action(actionMachine, "CloseGripper") {
+
+  const char* jointName = (side == Side::LEFT) ? "l_gripper_joint" : "r_gripper_joint";
+  int jointID = actionMachine.s->world.getJointByName(jointName)->qIndex;
+  cout << "joint id" << jointID << endl;
+  auto task = new CtrlTask(STRING("CloseGripper_"),
+                           new TaskMap_qItself(jointID, actionMachine.s->world.q.N),
+                           2, .8, 1., 1.);
+  task->setTarget({.01});
+  // task->setGains(200, 0);
+  task->active = true;
+  tasks.append(task);
+}
+
+bool CloseGripper::finishedSuccess(ActionMachine& M) {
+  if(!tasks.N) return false;
+  CtrlTask *task=tasks(0);
+  return (task->y.N == task->y_ref.N &&
+          maxDiff(task->y, task->y_ref) < 1e-3);
+}
 // ============================================================================
 MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const arr& positionTarget)
     : Action(actionMachine, "MoveEffTo") {
@@ -175,7 +224,7 @@ bool PoseTo::finishedSuccess(ActionMachine& M) {
   if(!tasks.N) return false;
   CtrlTask *task0=tasks(0);
   CtrlTask *task1=tasks(1);
-  return (task0->y.N==task0->y_ref.N && maxDiff(task0->y, task0->y_ref)<1e-2) 
+  return (task0->y.N==task0->y_ref.N && maxDiff(task0->y, task0->y_ref)<1e-2)
       && (task1->y.N == task1->y_ref.N && maxDiff(task1->y, task1->y_ref) < 1e-2);
 }
 

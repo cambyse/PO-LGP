@@ -1,8 +1,10 @@
+#include "actionMachine.h"
 #include "actionMachine_internal.h"
 
 //#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
+#include <pr2/rosalvar.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -37,7 +39,7 @@ void ActionMachine::open(){
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
 
-  {
+  { // read machine.fol
     MT::FileToken fil("machine.fol");
     if(fil.exists()){
       KB.writeAccess();
@@ -77,6 +79,7 @@ void ActionMachine::open(){
 void ActionMachine::step(){
   static uint t=0;
   t++;
+
   if(initStateFromRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -102,6 +105,10 @@ void ActionMachine::step(){
 
   if(!(t%5))
     s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
+
+  // Sync alvar marker
+  AlvarMarkers markers = ar_pose_marker.get();
+  syncMarkers(s->feedbackController.world, markers);
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
