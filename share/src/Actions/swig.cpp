@@ -8,7 +8,9 @@
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
 
+#ifdef MT_ROS
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
+#endif
 
 // ============================================================================
 struct SwigSystem : System{
@@ -32,8 +34,10 @@ struct SwigSystem : System{
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+#ifdef MT_ROS
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
       addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
+#endif
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
@@ -59,7 +63,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
-ActionSwigInterface::ActionSwigInterface(bool useRos){
+ActionSwigInterface::ActionSwigInterface(){
   S = new SwigSystem();
   S->tcm->verbose=false;
   engine().open(*S, true);
@@ -93,7 +97,7 @@ ActionSwigInterface::~ActionSwigInterface(){
 
 
 void ActionSwigInterface::Cancel(){
-  //engine().cancel(*S); 
+  //engine().cancel(*S);
   cout << S->quitSignal.get();
   S->quitSignal.set() = true;
 }

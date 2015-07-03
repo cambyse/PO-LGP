@@ -4,7 +4,10 @@
 #include <Motion/feedbackControl.h>
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
+
+#ifdef MT_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#endif
 
 extern struct TaskControllerModule *taskControllerModule();
 
@@ -19,7 +22,9 @@ struct TaskControllerModule : Module {
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(bool, fixBase)
+#ifdef MT_ROS
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
+#endif
 
   //non-protected members
 //private:

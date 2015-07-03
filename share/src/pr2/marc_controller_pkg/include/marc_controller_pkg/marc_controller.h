@@ -48,6 +48,7 @@ private:
 
   // internal: counter for sparse messages
   uint msgBlock;
+  uint iterationsSinceLastMsg;
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh);

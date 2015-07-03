@@ -1,5 +1,6 @@
 #include "rosalvar.h"
 
+#ifdef MT_ROS
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
@@ -52,3 +53,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     world.swiftDelete();
   }
 }
+#else
+void setBody(ors::Body& body, const AlvarMarker& marker) {}
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {}
+#endif
