@@ -16,6 +16,7 @@ void KOMO::init(const Graph& specs){
   MT::FileToken model = glob["model"]->V<MT::FileToken>();
   uint timeSteps=glob["T"]->V<double>();
   double duration=glob["duration"]->V<double>();
+  uint phases=glob.V<double>("phases", 1);
 
   world.read(model);
   world.meldFixedJoints();
@@ -26,7 +27,7 @@ void KOMO::init(const Graph& specs){
 
   MP = new MotionProblem(world);
   MPF = new MotionProblemFunction(*MP);
-  if(timeSteps>=0) MP->setTiming(timeSteps, duration);
+  if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
   if(timeSteps==0) MP->k_order=1;
 
   NodeL tasks = specs.getNodes("Task");
@@ -43,6 +44,20 @@ void KOMO::init(const Graph& specs){
     arr time = T.V<arr>("time",{0.,1.});
     task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.V<arr>("target", {0.}), T.V<double>("scale", {100.}));
   }
+
+  NodeL switches = specs.getNodes("KinematicSwitch");
+  for(Node *s:switches){
+    Graph &S = s->graph();
+    ors::KinematicSwitch *sw= new ors::KinematicSwitch();
+    MT::String type = S.V<MT::String>("type");
+    if(type=="addRigid") sw->symbol = ors::KinematicSwitch::addRigid;
+    else if(type=="deleteJoint") sw->symbol = ors::KinematicSwitch::deleteJoint;
+    sw->timeOfApplication = S.V<double>("timeOfApplication")*timeSteps+1;
+    sw->fromId = world.getShapeByName(S.V<MT::String>("from"))->index;
+    sw->toId = world.getShapeByName(S.V<MT::String>("to"))->index;
+    MP->switches.append(sw);
+  }
+
 }
 
 void KOMO::reset(){
@@ -64,7 +79,7 @@ void KOMO::run(){
 }
 
 void KOMO::displayTrajectory(){
-  ::displayTrajectory(x, 1, world, "KOMO planned trajectory", 0.01);
+  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
 }
 
 //===========================================================================

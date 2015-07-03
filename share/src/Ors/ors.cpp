@@ -2303,29 +2303,31 @@ void ors::KinematicWorld::meldFixedJoints() {
 
 //===========================================================================
 
-ors::GraphOperator::GraphOperator():
+ors::KinematicSwitch::KinematicSwitch():
   symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
-void ors::GraphOperator::apply(KinematicWorld& G){
-  Body *from=G.bodies(fromId), *to=G.bodies(toId);
+void ors::KinematicSwitch::apply(KinematicWorld& G){
+  Shape *from=G.shapes(fromId), *to=G.shapes(toId);
   if(symbol==deleteJoint){
-    Joint *j = G.getJointByBodies(from, to);
+    Joint *j = G.getJointByBodies(from->body, to->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
     delete j;
     return;
   }
   if(symbol==addRigid){
 //    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
-    Joint *j = new Joint(G, from, to);
+    Joint *j = new Joint(G, from->body, to->body);
 
     // Keep Object Orientation
-//    Transformation A = from->X;
+    //    Transformation A = from->X;
   //  Transformation B = to->X;
     //A.pos *= 0.;
    // B.pos *= 0.;
    // j->A.setDifference(A, B);
     j->type=JT_fixed;
+    j->A = from->rel;
+    j->B = -to->rel;
 //    j->agent=1;
     G.isLinkTree=false;
     return;

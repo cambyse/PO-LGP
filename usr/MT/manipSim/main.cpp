@@ -137,7 +137,7 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     }
     b->name = s->name;
     //position on grid
-    b->X.addRelativeTranslation(0,.5*s->size[1],.5*s->size[2]);
+    b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
     y += .1 + s->size[1]+s->size[3];
     if(y>1.){ x+=.4; y=-1.; }
 
@@ -247,15 +247,15 @@ void coreExperiment(){
         world_best = world_sol;
         symbols_best = symbols_sol;
       }
-      gl.drawers(1).classP= &world_sol;
+//      gl.drawers(1).classP= &world_sol;
 //      gl.update();
-//      world_sol.gl().watch();
+//      world_sol.gl().update();
     }
     cout <<"BEST:" <<endl;
     world_best >>FILE("z.world_best.kvg");
     symbols_best >>FILE("z.symbols_best.kvg");
 
-    gl.drawers(1).classP= &world_best;
+//    gl.drawers(1).classP= &world_best;
     gl.update();
 //    gl.watch();
 

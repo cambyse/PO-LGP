@@ -465,12 +465,12 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   CHECK(t<=T,"");
 
   //-- manage configurations and set x_bar states
-  if(configurations.N!=k+1 || (MP.world.operators.N && t==0)){
+  if(configurations.N!=k+1 || (MP.switches.N && t==0)){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
-  if(!MP.world.operators.N){ //this efficiency gain only works without operators yet...
+  if(!MP.switches.N){ //this efficiency gain only works without switches yet...
     uintA match(k+1); match=UINT_MAX;
     boolA used(k+1); used=false;
     uintA unused;
@@ -485,11 +485,11 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
     for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
     configurations.permute(match);
   }
-  //apply potential graph operators
-  for(ors::GraphOperator *op:MP.world.operators){
+  //apply potential graph switches
+  for(ors::KinematicSwitch *sw:MP.switches){
     for(uint i=0;i<=k;i++){
-      if(t+i>=k && op->timeOfApplication==t-k+i){
-        op->apply(*configurations(i));
+      if(t+i>=k && sw->timeOfApplication==t-k+i){
+        sw->apply(*configurations(i));
         if(MP.useSwift) configurations(i)->swift().initActivations(*configurations(i));
       }
     }

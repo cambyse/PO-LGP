@@ -52,7 +52,7 @@ struct Shape;
 struct Body;
 struct KinematicWorld;
 struct Proxy;
-struct GraphOperator;
+struct KinematicSwitch;
 } // END of namespace
 
 //===========================================================================
@@ -61,7 +61,7 @@ typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
 typedef MT::Array<ors::Body*>  BodyL;
 typedef MT::Array<ors::Proxy*> ProxyL;
-typedef MT::Array<ors::GraphOperator*> GraphOperatorL;
+typedef MT::Array<ors::KinematicSwitch*> KinematicSwitchL;
 typedef MT::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
@@ -204,7 +204,7 @@ struct KinematicWorld {
   JointL joints;
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
-  GraphOperatorL operators;
+//  KinematicSwitchL operators;
 
   bool isLinkTree;
   static uint setJointStateCount;
@@ -333,12 +333,12 @@ struct KinematicWorld {
 
 //===========================================================================
 
-struct GraphOperator{
+struct KinematicSwitch{
   enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid };
   OperatorSymbol symbol;
   uint timeOfApplication;
   uint fromId, toId;
-  GraphOperator();
+  KinematicSwitch();
   void apply(KinematicWorld& G);
 };
 
@@ -415,7 +415,7 @@ extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);

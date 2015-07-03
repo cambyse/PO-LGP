@@ -38,7 +38,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         b1=b2; b2=z;
       }//b2 should be the board
       arr y,J;
-      world.kinematicsRelPos(y, J, b1, NULL, b2, NULL);
+      world.kinematicsRelPos(y, J, b1, NoVector, b2, NoVector);
       arr range(3);
       double d1 = .5*b1->shapes(0)->size[0] + b1->shapes(0)->size[3];
       double d2 = .5*b2->shapes(0)->size[0] + b2->shapes(0)->size[3];

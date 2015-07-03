@@ -9,8 +9,8 @@
 struct SwitchConfigurationProgram:ConstrainedProblemMix{
   ors::KinematicWorld world;
   Graph& symbolicState;
-  int verbose;
   uint microSteps;
+  int verbose;
 
   MotionProblem MP;
   MotionProblemFunction MPF;
@@ -179,23 +179,23 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       }
     }
 
-    //-- graph operators
+    //-- graph switches
     for(uint i=0;i<actions.N;i++){
       //pick at time 2*i+1
-      ors::GraphOperator *op_pick = new ors::GraphOperator();
-      op_pick->symbol = ors::GraphOperator::addRigid;
+      ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
+      op_pick->symbol = ors::KinematicSwitch::addRigid;
       op_pick->timeOfApplication = tPick(i)+1;
-      op_pick->fromId = world.shapes(endeff_index)->body->index;
-      op_pick->toId = world.shapes(idObject(i))->body->index;
-      world.operators.append(op_pick);
+      op_pick->fromId = world.shapes(endeff_index)->index;
+      op_pick->toId = world.shapes(idObject(i))->index;
+      MP.switches.append(op_pick);
 
       //place at time 2*i+2
-      ors::GraphOperator *op_place = new ors::GraphOperator();
-      op_place->symbol = ors::GraphOperator::deleteJoint;
+      ors::KinematicSwitch *op_place = new ors::KinematicSwitch();
+      op_place->symbol = ors::KinematicSwitch::deleteJoint;
       op_place->timeOfApplication = tPlace(i)+1;
-      op_place->fromId = world.shapes(endeff_index)->body->index;
-      op_place->toId = world.shapes(idObject(i))->body->index;
-      world.operators.append(op_place);
+      op_place->fromId = world.shapes(endeff_index)->index;
+      op_place->toId = world.shapes(idObject(i))->index;
+      MP.switches.append(op_place);
     }
 
 /*
@@ -224,7 +224,7 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   OptConstrained opt(x, NoArr, f, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
   opt.run();
   f.MP.costReport();
-  displayTrajectory(x, 1, f.MP.world, "planned configs", .02);
+  displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);
   return opt.UCP.get_sumOfSquares();
 }
 

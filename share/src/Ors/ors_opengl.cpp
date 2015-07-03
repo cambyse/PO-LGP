@@ -253,14 +253,13 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const char *tag, double delay, uint dim_z, bool copyG) {
+void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
   if(!steps) return;
-//  G.gl().update();
   for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
     s->mesh.computeNormals();
   }
   ors::KinematicWorld *Gcopy;
-  if(G.operators.N) copyG=true;
+  if(switches.N) copyG=true;
   if(!copyG) Gcopy=&G;
   else{
     Gcopy = new ors::KinematicWorld;
@@ -279,10 +278,10 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const c
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(uint k=0; k<=(uint)num; k++) {
     uint t = k*T/num;
-    if(G.operators.N){
-      for(ors::GraphOperator *op: G.operators)
-        if(op->timeOfApplication==t)
-          op->apply(*Gcopy);
+    if(switches.N){
+      for(ors::KinematicSwitch *sw: switches)
+        if(sw->timeOfApplication==t)
+          sw->apply(*Gcopy);
     }
     if(dim_z) Gcopy->setJointState(cat(x[t], z));
     else Gcopy->setJointState(x[t]);

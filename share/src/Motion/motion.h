@@ -84,7 +84,10 @@ struct MotionProblem {
 
   //-- task cost descriptions
   MT::Array<Task*> taskCosts;
-  
+
+  //-- kinematic switches along the motion
+  MT::Array<ors::KinematicSwitch*> switches;
+
   //-- trajectory length and tau
   uint T; ///< number of time steps
   double tau; ///< duration of single step

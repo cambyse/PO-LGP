@@ -36,15 +36,15 @@ void TEST(PickAndPlace){
 
   cout <<"z-init=" <<MP.z0 <<endl;
 
-  ors::GraphOperator *op1 = new ors::GraphOperator();
-  op1->symbol = ors::GraphOperator::addRigid;
+  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
+  op1->symbol = ors::KinematicSwitch::addRigid;
   op1->timeOfApplication = MP.T/2;
   op1->fromId = G.getBodyByName("graspRef")->index;
   op1->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op1);
 
-  ors::GraphOperator *op2 = new ors::GraphOperator();
-  op2->symbol = ors::GraphOperator::deleteJoint;
+  ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
+  op2->symbol = ors::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = MP.T/2;
   op2->fromId = G.getBodyByName("table")->index;
   op2->toId = G.getBodyByName("obj1")->index;
