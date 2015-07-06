@@ -13,6 +13,8 @@ Contents:
 
    doc/intro
    doc/actions
+   doc/resources
+   doc/utils
 
 
 Indices and tables
