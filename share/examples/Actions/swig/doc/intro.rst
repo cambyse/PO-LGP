@@ -5,6 +5,19 @@ This is our action interface to the PR2 robot. It works both in simulation and
 on the real robot, although we're not yet at a point where this can be
 considered stable.
 
+Dependencies
+-----------------
+
+- python 2.7
+- numpy
+
+For using the docs install the following:
+
+::
+
+    pip install --user sphinx sphinx_rtd_theme enum34
+
+
 Startup procedure
 -----------------
 
