@@ -106,7 +106,6 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 

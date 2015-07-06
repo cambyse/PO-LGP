@@ -1,5 +1,6 @@
 #include <Motion/feedbackControl.h>
 #include "TaskControllerModule.h"
+#include "SensorActivities.h"
 
 #include "taskCtrlActivities.h"
 
@@ -7,14 +8,14 @@ extern TaskControllerModule *taskControllerModule();
 
 //===========================================================================
 void TaskCtrlActivity::configure(Node *fact) {
-  name.clear();
-  for(Node *p:fact->parents) name <<p->keys.last();
+  Activity::configure(fact);
+
+  // TaskCtrlActivity specific stuff
   taskController = taskControllerModule();
-  CHECK(taskController,"");
-  Activity::fact = fact;
-  Graph *specs = &NoGraph;
-  if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
-  configure2(name, *specs, taskController->modelWorld.set());
+  CHECK(taskController, "taskControllerModule() did not return anything. Why?");
+
+  Graph *specs = getSpecsFromFact(fact);
+  configureControl(name, *specs, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
 }
@@ -28,9 +29,10 @@ TaskCtrlActivity::~TaskCtrlActivity(){
 void TaskCtrlActivity::step(double dt){
   activityTime += dt;
 
-  step2(dt);
+  stepControl(dt);
 
-  //potentially report on stopping criteria
+  // Modify the KB
+  // potentially report on stopping criteria
   MT::String convStr = "(conv ";
   for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
   convStr <<")";
@@ -48,14 +50,15 @@ void TaskCtrlActivity::step(double dt){
 }
 
 //===========================================================================
-void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
   if((it=specs["type"])){
     if(it->V<MT::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
     }else if (it->V<MT::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,world.getJointStateDimension());
+      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,
+                                world.getJointStateDimension());
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"]->V<double>();
     }else{
       map = new DefaultTaskMap(specs, world);
@@ -67,7 +70,7 @@ void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::Ki
   if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 }
 
-void FollowReferenceActivity::step2(double dt){
+void FollowReferenceActivity::stepControl(double dt){
   //if trajectory, set reference depending on actionTime
   if(ref.nd==2){
     uint t = activityTime/trajectoryDuration * (ref.d0-1);
@@ -79,12 +82,7 @@ void FollowReferenceActivity::step2(double dt){
 
 bool FollowReferenceActivity::isConv(){
   bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
-
-  if (stuck)
-    stuck_count++;
-  else
-    stuck_count = 0;
-
+  stuck_count = stuck ? stuck_count + 1 : 0;
   old_y = task->y;
 
   return ((task->y_ref.nd == 1
@@ -98,7 +96,7 @@ bool FollowReferenceActivity::isConv(){
 }
 
 //===========================================================================
-void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
@@ -115,7 +113,7 @@ bool HomingActivity::isConv(){
       && maxDiff(task->v, task->v_ref) < stopTolerance;
 }
 
-void HomingActivity::step2(double dt) {
+void HomingActivity::stepControl(double dt) {
   arr b = task->y;
   if(b.N && wheeljoint && wheeljoint->qDim()){
     for(uint i=0;i<wheeljoint->qDim();i++)
@@ -127,4 +125,5 @@ void HomingActivity::step2(double dt) {
 RUN_ON_INIT_BEGIN(Activities)
 registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
 registerActivity<HomingActivity>("HomingActivity");
+registerActivity<SensorActivity>("SensorActivity");
 RUN_ON_INIT_END(Activities)
