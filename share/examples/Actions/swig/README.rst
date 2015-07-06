@@ -5,17 +5,30 @@ This is our action interface to the PR2 robot. It works both in simulation and
 on the real robot, although we're not yet at a point where this can be
 considered stable.
 
-Dependencies
------------------
+Install & Dependencies
+-----------------------
+
+You must be able to compile the MLR "Actions" code::
+
+    cd ~/git/mlr/share/src/Actions
+    make -f Makefile.gof
+
+You need the following dependencies:
 
 - python 2.7
 - numpy
+- python-enum34
 
 For using the docs install the following:
 
 ::
 
     pip install --user sphinx sphinx_rtd_theme enum34
+
+Build the docs::
+
+    cd ~/git/mlr/share/examples/Actions/swig/doc
+    make html
 
 
 Startup procedure
@@ -43,7 +56,7 @@ Basic interface
 The direct translation of the relational machine would be to write a relational
 fact and add it to the logic state::
 
-    >>> fact = (HomingActivity){tol=.01}
+    >>> fact = "(HomingActivity){tol=.01}"
     >>> interface.setFact(fact)
 
 This starts a ``HomingActivity`` and the robot should move to its base
