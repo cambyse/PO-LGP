@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   doc/intro
-   doc/actions
+   intro
+   actions
 
 
 Indices and tables
