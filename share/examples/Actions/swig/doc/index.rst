@@ -13,6 +13,8 @@ Contents:
 
    intro
    actions
+   resources
+   utils
 
 
 Indices and tables
