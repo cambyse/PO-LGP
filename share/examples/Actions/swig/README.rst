@@ -39,6 +39,12 @@ sugar for common tasks. It can be used both, within scripts and in an
 interactive manner. In every case make shure ``mlr/share/lib`` is in your
 ``$LD_LIBRARY_PATH`` and ``mlr/share/src/Actions`` is in your ``$PYTHONPATH``.
 
+Alternatively create symlink::
+
+    cd ~/git/mlr/share/examples/Actions/swig
+    ln -s ../../../src/Actions/_swig.so .
+    ln -s ../../../src/Actions/swig.py .
+
 For a first run make sure ``useRos = 0`` in the ``MT.cfg`` file. If you want to
 drive the real robot, you have to change that to ``useRos = 1``, but for a
 first try you should always run simulation first.
