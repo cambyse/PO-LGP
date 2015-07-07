@@ -59,7 +59,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
     }else if (it->V<MT::String>()=="qItself") {
       map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,
                                 world.getJointStateDimension());
-      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"]->V<double>();
+      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->V<double>() : true;
     }else{
       map = new DefaultTaskMap(specs, world);
     }
