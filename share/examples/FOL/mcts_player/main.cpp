@@ -1,6 +1,4 @@
 #include <FOL/fol.h>
-#include <Gui/graphview.h>
-#include <MCTS/solver_marc.h>
 #include <FOL/fol_mcts_world.h>
 
 //===========================================================================
@@ -34,7 +32,9 @@ void TEST(PlayFOL_World){
     bool terminal = world.is_terminal_state();
     auto actions = world.get_actions();
     cout <<"********************" <<endl;
-    cout <<"CHOICES:" <<endl;
+    cout <<"STATE: ";
+    world.get_info(MCTS_Environment::writeState);
+    cout <<"\nCHOICES:" <<endl;
     cout <<"(q) quit" <<endl;
     cout <<"(r) reset_state" <<endl;
     cout <<"(m) make_current_initial" <<endl;
@@ -49,9 +49,7 @@ void TEST(PlayFOL_World){
       auto &a = actions[int(cmd-'0')];
       cout <<"executing decision " <<*a <<endl;
       auto res=world.transition(a);
-      cout <<"->  result: obs=" <<*res.first <<" reward=" <<res.second <<"\n new state=" <<endl;
-      world.get_info(MCTS_Environment::writeState);
-      cout <<endl;
+      cout <<"->  result: obs=" <<*res.first <<" reward=" <<res.second <<endl;
     }else switch(cmd){
       case 'q': go=false; break;
       case 'r': world.reset_state(); break;

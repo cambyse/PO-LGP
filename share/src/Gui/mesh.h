@@ -172,6 +172,7 @@ void getDelaunayEdges(uintA& E, const arr& V);
 //
 
 enum GJK_point_type { GJK_vertex=1, GJK_edge, GJK_face };
+extern GJK_point_type& NoPointType;
 double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
                     const ors::Transformation& t1, const ors::Transformation& t2,
                     ors::Vector& p1, ors::Vector& p2,

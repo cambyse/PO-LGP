@@ -32,7 +32,7 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true, orsDrawColors=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
@@ -224,8 +224,10 @@ void ors::KinematicWorld::glDraw() {
   //proxies
   if(orsDrawProxies) for(Proxy *proxy: proxies) {
     glLoadIdentity();
-    if(!proxy->colorCode) glColor(.75,.75,.75);
-    else glColor(proxy->colorCode);
+    if(!proxy->colorCode){
+      if(proxy->d>0.) glColor(.75,.75,.75);
+      else glColor(.75,.5,.5);
+    }else glColor(proxy->colorCode);
     glBegin(GL_LINES);
     glVertex3dv(proxy->posA.p());
     glVertex3dv(proxy->posB.p());

@@ -301,7 +301,10 @@ struct KinematicWorld {
   double getEnergy() const;
   double getJointErrors() const;
   ors::Proxy* getContact(uint a, uint b) const;
-  
+
+  /// @name get infos
+  arr getHmetric() const;
+
   /// @name forces and gravity
   void clearForces();
   void addForce(ors::Vector force, Body *n);

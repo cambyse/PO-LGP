@@ -1,7 +1,9 @@
 #include "komo.h"
 #include "motion.h"
+#include <iomanip>
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
+#include <Gui/opengl.h>
 
 //===========================================================================
 
@@ -22,7 +24,7 @@ void KOMO::init(const Graph& specs){
   world.meldFixedJoints();
   world.removeUselessBodies();
   makeConvexHulls(world.shapes);
-  for(ors::Shape *s:world.shapes) s->cont=true;
+//  for(ors::Shape *s:world.shapes) s->cont=true;
   world.swift().initActivations(world);
 
   MP = new MotionProblem(world);
@@ -79,7 +81,12 @@ void KOMO::run(){
 }
 
 void KOMO::displayTrajectory(){
-  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+//  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+//  orsDrawProxies=true;
+  for(uint t=0;t<x.d0;t++){
+    MP->setState(x[t]);
+    MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
+  }
 }
 
 //===========================================================================

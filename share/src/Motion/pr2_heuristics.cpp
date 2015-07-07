@@ -40,15 +40,10 @@ arr pr2_reasonable_W(const ors::KinematicWorld& world){
     W(j->qIndex+1) *= 3;
 //    W(j->qIndex+2) *= 10;
   }
-#else
-  arr W(world.getJointStateDimension());
-  for(ors::Joint *j:world.joints){
-    double h=j->H;
-    for(uint k=0;k<j->qDim();k++) W(j->qIndex+k)=h;
-  }
-//  cout <<W <<endl;
-#endif
   return W;
+#else
+  return world.getHmetric();
+#endif
 }
 
 uintA _get_shape_indices(ors::Body* b) {

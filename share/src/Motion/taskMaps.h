@@ -142,6 +142,17 @@ struct CollisionConstraint:TaskMap {
 
 //===========================================================================
 
+struct TaskMap_GJK:TaskMap{
+  int i, j;               ///< which shapes does it refer to?
+  ors::Vector vec1, vec2; ///< additional position or vector
+
+  TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& W, int t=-1);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
+};
+
+//===========================================================================
+
 struct ProxyConstraint:TaskMap {
   ProxyTaskMap proxyCosts;
   ProxyConstraint(PTMtype _type,

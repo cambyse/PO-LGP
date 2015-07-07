@@ -1836,12 +1836,13 @@ void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
     ors::Shape *b = shapes(p->b);
     (*os)
         <<p_COUNT <<" ("
-        <<a <<':' <<a->body->name <<")-("
-        <<b <<':' <<b->body->name
+        <<a->name <<':' <<a->body->name <<")-("
+        <<b->name <<':' <<b->body->name
         <<") d=" <<p->d
         <<" |A-B|=" <<(p->posB-p->posA).length()
         <<" cenD=" <<p->cenD
-        <<" d^2=" <<(p->posB-p->posA).lengthSqr()
+//        <<" d^2=" <<(p->posB-p->posA).lengthSqr()
+        <<" v=" <<(p->posB-p->posA)
         <<" normal=" <<p->normal
         <<" posA=" <<p->posA
         <<" posB=" <<p->posB
@@ -2183,6 +2184,16 @@ ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
       if(proxies(i)->a==(int)b && proxies(i)->b==(int)a) return proxies(i);
     }
   return NULL;
+}
+
+arr ors::KinematicWorld::getHmetric() const{
+  arr H(getJointStateDimension());
+  for(ors::Joint *j:joints){
+    double h=j->H;
+    CHECK(h>0.,"Hmetric should be larger than 0");
+    for(uint k=0;k<j->qDim();k++) H(j->qIndex+k)=h;
+  }
+  return H;
 }
 
 /** @brief */

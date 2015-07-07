@@ -1,6 +1,7 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Motion/komo.h>
+#include <Motion/motion.h>
 
 
 //===========================================================================
@@ -11,7 +12,13 @@ void TEST(Specs){
   for(;;){
     komo.init(Graph("specs.g"));
     komo.run();
-    for(uint i=0;i<2;i++) komo.displayTrajectory();
+    for(uint i=0;i<2;i++){
+      komo.displayTrajectory();
+      arr y;
+      komo.MP->taskCosts.last()->map.phi(y, NoArr, komo.world, komo.MP->tau);
+      komo.world.reportProxies();
+      komo.world.gl().watch();
+    }
   }
 }
 

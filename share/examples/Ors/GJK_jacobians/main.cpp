@@ -48,30 +48,61 @@ void TEST(GJK_Jacobians) {
   W.calc_fwdPropagateFrames();
   arr q = W.getJointState();
 
-//  animateConfiguration(W);
+  //  animateConfiguration(W);
   orsDrawWires=true;
   W.gl().add(draw);
 
-  VectorFunction f = [&W, &s1, &s2](arr& y, arr& J, const arr& x) -> void {
+  VectorFunction f = [&W, &s1, &s2](arr& v, arr& J, const arr& x) -> void {
     W.setJointState(x);
     double d2=GJK_sqrDistance(s1.mesh, s2.mesh, s1.X, s2.X, p1, p2, e1, e2, pt1, pt2);
-      arr y2, J2;
-      W.kinematicsPos(y,  J,  s1.body, s1.body->X.rot/(p1-s1.X.pos));
-      W.kinematicsPos(y2, J2, s2.body, s2.body->X.rot/(p2-s2.X.pos));
-      //      W.kinematicsVec(v1, Jv1, s1.body, s1.X.rot/e1);
-      //      W.kinematicsVec(v2, Jv2, s2.body, s2.X.rot/e2);
-      y -= y2;
-      if(&J) J -= J2;
-      if(&J) J = ~(2.*y)*J;
-      y = ARR(sumOfSqr(y));
-      CHECK_ZERO(y.scalar()-d2, 1e-6,"");
+//    if(&J) cout <<"point types= " <<pt1 <<' ' <<pt2 <<endl;
+    if(d2<1e-10) LOG(-1) <<"zero distance";
+    arr y1, J1, y2, J2;
+    W.kinematicsPos(y1, J1, s1.body, s1.body->X.rot/(p1-s1.X.pos));
+    W.kinematicsPos(y2, J2, s2.body, s2.body->X.rot/(p2-s2.X.pos));
+    v = y1 - y2;
+    if(&J){
+      J = J1 - J2;
+      if((pt1==GJK_vertex && pt2==GJK_face) || (pt1==GJK_face && pt2==GJK_vertex)){
+        arr vec, Jv, n = v/length(v);
+        J = n*(~n*J);
+        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2.body, s2.body->X.rot/(p1-p2));
+        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1.body, s1.body->X.rot/(p1-p2));
+        J += Jv;
+      }
+      if((pt1==GJK_vertex && pt2==GJK_edge) || (pt1==GJK_edge && pt2==GJK_vertex)){
+        arr vec, Jv, n;
+        if(pt1==GJK_vertex) n=ARRAY(e2); else n=ARRAY(e1);
+        J = J - n*(~n*J);
+        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2.body, s2.body->X.rot/(p1-p2));
+        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1.body, s1.body->X.rot/(p1-p2));
+        J += n*(~n*Jv);
+      }
+      if(pt1==GJK_edge && pt2==GJK_edge){
+        arr vec, Jv, n, a, b;
+        n = v/length(v);
+        J = n*(~n*J);
+
+        W.kinematicsVec(vec, Jv, s1.body, s1.body->X.rot/e1);
+        a=ARRAY(e1);
+        b=ARRAY(e2);
+        double ab=scalarProduct(a,b);
+        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+
+        W.kinematicsVec(vec, Jv, s2.body, s2.body->X.rot/e2);
+        a=ARRAY(e2);
+        b=ARRAY(e1);
+        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+      }
+    }
+    //      CHECK_ZERO(y.scalar()-d2, 1e-6,"");
   };
 
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<110;k++){
     rndGauss(q, .3);
 
     arr y,J;
-    f(y, J, q);
+    //    f(y, J, q);
     checkJacobian(f, q, 1e-4);
 
     W.gl().update();
