@@ -1,3 +1,13 @@
+"""
+The ``actions module`` contains
+(a) low level actions the robot can perform,
+(b) methods to run and sequence these actions,
+(c) high level behaviors that use low level actions and and the sequencing
+    stuff.
+
+All implementations of activities must inherit from the base class
+``Activity``.
+"""
 from __future__ import print_function
 
 from contextlib import contextmanager
@@ -92,9 +102,9 @@ def run(plan):
         else:
             _run([item])
 
+
 ###############################################################################
 # Python activitiy classes
-
 class Activity(object):
     """
     An Activity is something which can be run on the robot and moves certain
@@ -384,7 +394,6 @@ def close_gripper(side=None):
 
 
 def reach(what, with_=None, offset=None):
-    """bla"""
     if with_ is None:
         with_ = side2endeff()
     if offset is None:
