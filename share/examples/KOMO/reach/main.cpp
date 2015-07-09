@@ -12,6 +12,7 @@ void TEST(Specs){
   for(;;){
     komo.init(Graph("specs.g"));
     komo.run();
+    komo.checkGradients();
     for(uint i=0;i<2;i++){
       komo.displayTrajectory();
       arr y;

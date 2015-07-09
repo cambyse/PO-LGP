@@ -1558,66 +1558,69 @@ double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
   if(&e1 && &e2){
     e1.setZero();
     e2.setZero();
+    pt1=GJK_vertex;
+    pt2=GJK_vertex;
+    if(d2<1e-6) return d2;
+
     if(simplex.npts==1){
-      pt1=GJK_vertex;
-      pt2=GJK_vertex;
-    }else
 
-      if(simplex.npts==2){
+    }else if(simplex.npts==2){
+
+      if(simplex.simplex1[0]==simplex.simplex1[1]){
+        pt1=GJK_vertex;
+      }else{
+        pt1=GJK_edge;
+        for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[1][i];
+        e1.normalize();
+      }
+      if(simplex.simplex2[0]==simplex.simplex2[1]){
+        pt2=GJK_vertex;
+      }else{
+        pt2=GJK_edge;
+        for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[1][i];
+        e2.normalize();
+      }
+
+    }else if(simplex.npts==3){
+
+      // 1st point
+      if(simplex.simplex1[0]==simplex.simplex1[1] && simplex.simplex1[0]==simplex.simplex1[2]){
+        pt1=GJK_vertex;
+      }else if(simplex.simplex1[0]!=simplex.simplex1[1] && simplex.simplex1[0]!=simplex.simplex1[2] && simplex.simplex1[1]!=simplex.simplex1[2]){
+        pt1=GJK_face;
+      }else{
+        pt1=GJK_edge;
         if(simplex.simplex1[0]==simplex.simplex1[1]){
-          pt1=GJK_vertex;
+          for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[2][i];
         }else{
-          pt1=GJK_edge;
           for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[1][i];
-          e1.normalize();
         }
+        e1.normalize();
+      }
+
+      // 2nd point
+      if(simplex.simplex2[0]==simplex.simplex2[1] && simplex.simplex2[0]==simplex.simplex2[2]){
+        pt2=GJK_vertex;
+      }else if(simplex.simplex2[0]!=simplex.simplex2[1] && simplex.simplex2[0]!=simplex.simplex2[2] && simplex.simplex2[1]!=simplex.simplex2[2]){
+        pt2=GJK_face;
+      }else{
+        pt2=GJK_edge;
         if(simplex.simplex2[0]==simplex.simplex2[1]){
-          pt2=GJK_vertex;
+          for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[2][i];
         }else{
-          pt2=GJK_edge;
           for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[1][i];
-          e2.normalize();
         }
-      }else
+        e2.normalize();
+      }
 
-        if(simplex.npts==3){
-          // 1st point
-          if(simplex.simplex1[0]==simplex.simplex1[1] && simplex.simplex1[0]==simplex.simplex1[2]){
-            pt1=GJK_vertex;
-          }else if(simplex.simplex1[0]!=simplex.simplex1[1] && simplex.simplex1[0]!=simplex.simplex1[2] && simplex.simplex1[1]!=simplex.simplex1[2]){
-            pt1=GJK_face;
-          }else{
-            pt1=GJK_edge;
-            if(simplex.simplex1[0]==simplex.simplex1[1]){
-              for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[2][i];
-            }else{
-              for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[1][i];
-            }
-            e1.normalize();
-          }
-
-          // 2nd point
-          if(simplex.simplex2[0]==simplex.simplex2[1] && simplex.simplex2[0]==simplex.simplex2[2]){
-            pt2=GJK_vertex;
-          }else if(simplex.simplex2[0]!=simplex.simplex2[1] && simplex.simplex2[0]!=simplex.simplex2[2] && simplex.simplex2[1]!=simplex.simplex2[2]){
-            pt2=GJK_face;
-          }else{
-            pt2=GJK_edge;
-            if(simplex.simplex2[0]==simplex.simplex2[1]){
-              for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[2][i];
-            }else{
-              for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[1][i];
-            }
-            e2.normalize();
-          }
-        }else{
-          if(d2>EPSILON) LOG(-2) <<"GJK converges to simplex!";
-        }
+    }else{
+      if(d2>EPSILON) LOG(-2) <<"GJK converges to simplex!";
+    }
 
 //    cout <<"point types= " <<pt1 <<' ' <<pt2 <<endl;
-    CHECK(!(pt1==3 && pt2==3),"");
-    CHECK(!(pt1==2 && pt2==3),"");
-    CHECK(!(pt1==3 && pt2==2),"");
+//    CHECK(!(pt1==3 && pt2==3),"");
+//    CHECK(!(pt1==2 && pt2==3),"");
+//    CHECK(!(pt1==3 && pt2==2),"");
   }
 
   return d2;

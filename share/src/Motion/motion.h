@@ -41,6 +41,13 @@ struct TaskMap {
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
+  VectorFunction vf(ors::KinematicWorld& G){
+    return [this, &G](arr& y, arr& J, const arr& x) -> void {
+      G.setJointState(x);
+      phi(y, J, G, -1);
+    };
+  }
+
   TaskMap():type(sumOfSqrTT),order(0) {}
   virtual ~TaskMap() {};
 };

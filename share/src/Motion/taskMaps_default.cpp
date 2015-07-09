@@ -108,9 +108,9 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
       y -= ARRAY(vec_j);
     }else{
       arr y2, J2;
-      G.kinematicsPos(y2, J2, body_j, vec_j);
+      G.kinematicsPos(y2, (&J?J2:NoArr), body_j, vec_j);
       y -= y2;
-      J -= J2;
+      if(&J) J -= J2;
     }
     return;
   }

@@ -32,6 +32,7 @@ struct KOMO{
   void reset();
   void step();
   void run();
+  void checkGradients();
   void displayTrajectory();
 };
 

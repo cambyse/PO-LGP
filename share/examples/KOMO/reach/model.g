@@ -35,7 +35,7 @@ joint graspJoint(eff graspRef){ A=<T t(0 0 .35)  d(-180 0 0 1) d(160 0 1 0) d(50
 
 body tool { X=<T t(.2 0 .64)> }
 shape lbar(tool) { rel=<T t(.4 0 0)> type=0 size=[.8 .04 .04 0] color=[1 0 0] contact }
-shape lhook(tool) { rel=<T t(.02 .15 0)> type=0 size=[.04 .3 .04 0] color=[1 0 0] contact }
+shape hookcol(tool) { rel=<T t(.02 .15 0)> type=0 size=[.04 .3 .04 0] color=[1 0 0] contact }
 
 shape hook(tool) { rel=<T t(.02 .2 0)> type=0 size=[.04 .04 .04 0] color=[1 1 0] contact }
 shape handle(tool) { rel=<T t(.5 0 0)> type=0 size=[.08 .04 .04 0] color=[1 1 0] }
@@ -45,5 +45,5 @@ joint (graspRef tool){ B=<T t(-.5 0 0)> }
 ### objs
 
 body obj { X=<T t(-1. .3 .62)> }
-shape (obj) { rel=<T t(0 0 .1)> type=4 size=[0 0 .2 .05] color=[0 1 0] contact }
-shape objs(obj) { rel=<T t(0 0 .1)> type=4 size=[0 0 .1 .05] color=[0 1 1] }
+shape objcol(obj) { rel=<T t(0 0 .1)> type=4 size=[0 0 .2 .05] color=[0 1 0] contact }
+shape objs(obj) { rel=<T t(0 0 .1)> type=4 size=[0 0 .1 .05] color=[0 1 1] contact }

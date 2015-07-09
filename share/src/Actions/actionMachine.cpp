@@ -266,17 +266,17 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
       else changes=true;
     }
   }
-//  if(getContactForce()>5.){
-//    Node *newit = KB.data()->append<bool>({}, {contactSymbol}, new bool(true), true);
-//    if(getEqualFactInKB(KB(), newit)) delete newit;
-//    else changes=true;
-//  }
+  if(getContactForce()>5.){
+    Node *newit = state.append<bool>({}, {contactSymbol}, new bool(true), true);
+    if(getEqualFactInKB(state, newit)) delete newit;
+    else changes=true;
+  }
   A.deAccess();
   KB().checkConsistency();
 
   if(changes || forceChaining){
     cout <<"STATE (changed by real world at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
-    forwardChaining_FOL(KB(), NULL, NoGraph, false);
+    forwardChaining_FOL(KB(), NULL, NoGraph, 0);
 //    state = getLiteralsOfScope(KB());
     cout <<"STATE (transitioned by FOL   at t=" <<time <<"):"; state.write(cout, " "); cout <<endl;
 

@@ -80,6 +80,10 @@ void KOMO::run(){
   MP->costReport();
 }
 
+void KOMO::checkGradients(){
+  checkAllGradients(Convert(*MPF), x, 1e-4);
+}
+
 void KOMO::displayTrajectory(){
 //  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
 //  orsDrawProxies=true;

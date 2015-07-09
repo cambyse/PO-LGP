@@ -103,6 +103,7 @@ struct NeuralNet{
 
 void TEST(NN) {
 
+  ofstream fil("z.NN");
   arr X,y;
   artificialData_Hasties2Class(X, y);
   arr Phi = makeFeatures(X, linearFT);
@@ -110,7 +111,7 @@ void TEST(NN) {
   y.reshape(X.d0,1);
   for(auto& yi:y) if(yi==0.) yi=-1.;
 
-  NeuralNet NN({3u, 10, 10, 1}, 1e-3);
+  NeuralNet NN({3u, 10, 1}, 1e-3);
 
   arr W = NN.getWeights();
   rndGauss(W, .1);
@@ -123,7 +124,8 @@ void TEST(NN) {
   double eps=1e-2;
   for(uint k=0;k<10000;k++){
     NN.f(Phi, y);
-    if(!(k%100)) cout <<"k=" <<k <<"  E=" <<NN.Error <<endl;
+    if(!(k%100)) cout <<"k=" <<k <<"  E=" <<NN.Error << " missClass=" <<(double)NN.missClass/Phi.d0 <<endl;
+    fil <<k <<' ' <<NN.Error <<' ' <<(double)NN.missClass/Phi.d0 <<endl;
     for(uint i=0;i<NN.w.N;i++) NN.w(i) -= eps*NN.g(i);
   }
 #endif

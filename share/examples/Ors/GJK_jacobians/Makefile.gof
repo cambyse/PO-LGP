@@ -4,6 +4,6 @@ LIBS += -lglut -lGL -lqhull
 
 GJK=1
 
-DEPEND = Core Gui Ors
+DEPEND = Core Gui Ors Motion
 
 include $(BASE)/gofMake/generic.mk

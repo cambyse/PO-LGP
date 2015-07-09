@@ -25,24 +25,55 @@ TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs){
   Node *it;
   if((it=specs["ref1"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
   if((it=specs["ref2"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
-  if((it=specs["vec1"])) vec1 = ors::Vector(it->V<arr>());  else vec1.setZero();
-  if((it=specs["vec2"])) vec2 = ors::Vector(it->V<arr>());  else vec2.setZero();
+//  if((it=specs["vec1"])) vec1 = ors::Vector(it->V<arr>());  else vec1.setZero();
+//  if((it=specs["vec2"])) vec2 = ors::Vector(it->V<arr>());  else vec2.setZero();
 }
 
-void TaskMap_GJK::phi(arr& y, arr& J, const ors::KinematicWorld& W, int t){
+void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
   ors::Shape *s1 = i<0?NULL: W.shapes(i);
   ors::Shape *s2 = j<0?NULL: W.shapes(j);
   CHECK(s1 && s2,"");
-  ors::Vector p1, p2;
-  GJK_sqrDistance(s1->mesh, s2->mesh, s1->X, s2->X, p1, p2, NoVector, NoVector, NoPointType, NoPointType);
-  arr y2, J2;
-  W.kinematicsPos(y,  (&J?J :NoArr), s1->body, s1->body->X.rot/(p1-s1->body->X.pos));
+  ors::Vector p1, p2, e1, e2;
+  GJK_point_type pt1, pt2;
+  GJK_sqrDistance(s1->mesh, s2->mesh, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
+  //  if(d2<1e-10) LOG(-1) <<"zero distance";
+  arr y1, J1, y2, J2;
+  W.kinematicsPos(y1, (&J?J1:NoArr), s1->body, s1->body->X.rot/(p1-s1->body->X.pos));
   W.kinematicsPos(y2, (&J?J2:NoArr), s2->body, s2->body->X.rot/(p2-s2->body->X.pos));
-  y -= y2;
-  y -= ARRAY(vec1);
-  if(&J) J -= J2;
+  v = y1 - y2;
+  if(&J){
+    J = J1 - J2;
+    return;
+    if((pt1==GJK_vertex && pt2==GJK_face) || (pt1==GJK_face && pt2==GJK_vertex)){
+      arr vec, Jv, n = v/length(v);
+      J = n*(~n*J);
+      if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
+      if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
+      J += Jv;
+    }
+    if(pt1==GJK_edge && pt2==GJK_edge){
+      arr vec, Jv, n, a, b;
+      n = v/length(v);
+      J = n*(~n*J);
 
-//  ors::Proxy *p = new ors::Proxy();
-//  p->a=i; p->b=j; p->posA=p1; p->posB=p2; p->colorCode=1;
-//  ((ors::KinematicWorld*)&W)->proxies.append(p);
+      W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/e1);
+      a=ARRAY(e1);
+      b=ARRAY(e2);
+      double ab=scalarProduct(a,b);
+      J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+
+      W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/e2);
+      a=ARRAY(e2);
+      b=ARRAY(e1);
+      J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+    }
+    if((pt1==GJK_vertex && pt2==GJK_edge) || (pt1==GJK_edge && pt2==GJK_vertex)){
+      arr vec, Jv, n;
+      if(pt1==GJK_vertex) n=ARRAY(e2); else n=ARRAY(e1);
+      J = J - n*(~n*J);
+      if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
+      if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
+      J += n*(~n*Jv);
+    }
+  }
 }

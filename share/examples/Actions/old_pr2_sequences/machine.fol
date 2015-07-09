@@ -28,15 +28,15 @@ Rule {
   { (lowerHand) (positionHand)! (positionHand conv)! }
 }
 
-Rule {
-  { (lowerHand) (lowerHand conv) }
-  { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
-}
-
 #Rule {
-#  (lowerHand) (contact),
-#  { (controlForce) (lowerHand)! (lowerHand conv)! }
+#  { (lowerHand) (lowerHand conv) }
+#  { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
 #}
+
+Rule {
+  { (lowerHand) (contact) }
+  { (controlForce) (lowerHand)! (lowerHand conv)! }
+}
 
 #Rule {
 #  { (lowerHand) (lowerHand conv) }

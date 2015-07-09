@@ -4,6 +4,7 @@
 #include <Gui/mesh.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
+#include <Motion/taskMaps.h>
 
 ors::Vector p1, p2;
 ors::Vector e1, e2;
@@ -44,6 +45,9 @@ void TEST(GJK_Jacobians) {
   s1.type = s2.type = ors::meshST;
   s1.mesh.setRandom();
   s2.mesh.setRandom();
+  s1.name="s1";
+  s2.name="s2";
+
 
   W.calc_fwdPropagateFrames();
   arr q = W.getJointState();
@@ -98,12 +102,16 @@ void TEST(GJK_Jacobians) {
     //      CHECK_ZERO(y.scalar()-d2, 1e-6,"");
   };
 
-  for(uint k=0;k<110;k++){
+  TaskMap_GJK gjk(W, Graph(STRING("type=GJK_vec ref1=s1 ref2=s2")));
+
+  for(uint k=0;k<100;k++){
     rndGauss(q, .3);
 
     arr y,J;
     //    f(y, J, q);
     checkJacobian(f, q, 1e-4);
+
+    checkJacobian(gjk.vf(W), q, 1e-4);
 
     W.gl().update();
   }
