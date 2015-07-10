@@ -13,7 +13,7 @@
   <depend package="pluginlib"/>
   <depend package="std_srvs"/>
   <!-- <depend package="orocos-kdl"/> -->
-  <!-- <depend package="kdl"/> -->
+  <depend package="kdl"/>
   <export>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
   </export>
