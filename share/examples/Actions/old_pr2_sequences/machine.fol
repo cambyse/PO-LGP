@@ -28,13 +28,13 @@ Rule {
   { (lowerHand) (positionHand)! (positionHand conv)! }
 }
 
-#Rule {
-#  { (lowerHand) (lowerHand conv) }
-#  { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
-#}
+# Rule {
+#   { (lowerHand) (lowerHand conv) }
+#   { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
+# }
 
 Rule {
-  { (lowerHand) (contact) }
+  { (lowerHand) }
   { (controlForce) (lowerHand)! (lowerHand conv)! }
 }
 
@@ -63,7 +63,7 @@ Tasks {
   (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
   (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
   (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
-  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
+  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -10], timeOut=10. }
   (homing){ type="homing" }
 }
 
