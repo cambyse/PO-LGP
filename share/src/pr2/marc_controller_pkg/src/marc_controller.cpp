@@ -140,7 +140,13 @@ void TreeControllerClass::update() {
     if (/*ft_norm<2. ||*/ !Ki.N) {   // no contact or Ki gain -> don't use the integral term
       err = err*0.;              // reset integral error
     } else {
+#if 0
       err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
+#else
+      err *= gamma;
+      arr f_obs = J_ft_inv*fL_obs;
+      for(uint i=0;i<f_obs.N;i++) if(f_obs(i) > fL_ref(i)) err(i) += fL_ref(i)-f_obs(i);
+#endif
       u += Ki * err;
     }
 
