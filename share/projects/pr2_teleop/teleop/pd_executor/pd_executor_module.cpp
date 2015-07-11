@@ -45,7 +45,9 @@ PDExecutor::PDExecutor()
 
   if(MT::getParameter<bool>("usePositionL", false)) {
     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8, posTMT, "endeffL");
-    effPosL->y_ref = {0.8, .5, 1.};
+    effPosL->y_ref = {0., 0.0, 0.};
+    effPosL->f_ref = {5.,2.,2.};
+    effPosL->f_Igain = .1;
     //effPosL->maxVel = 0.004;
   }
 
@@ -123,8 +125,11 @@ void PDExecutor::step()
    world.watch(false);
   if(true){
     ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-    arr fLobs = ctrl_obs.get()->fL;
-    arr uobs =  ctrl_obs.get()->u_bias;
+    CtrlMsg obs = ctrl_obs.get();
+    arr fLobs = obs.fL;
+    cout<<fLobs<<endl;
+    arr uobs =  obs.u_bias;
+    cout<<uobs<<endl;
     if(fLobs.N && uobs.N){
       arr Jft, J;
       world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
@@ -133,6 +138,8 @@ void PDExecutor::step()
       J = inverse_SymPosDef(J*~J)*J;
 //      MT::arrayBrackets="  ";
       cout <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
+//effPosL->f_ref =  (Jft*fLobs).subRange(0,2);/////CURRENZ 
+
 //      MT::arrayBrackets="[]";
     }
   }
@@ -157,13 +164,13 @@ void PDExecutor::step()
   else
   {
 
-    effPosR->active = true;
+   // effPosR->active = true;
     effPosL->active = true;
-    effOrientationR->active = true;
-    effOrientationL->active = true;
-    gripperL->active = true;
-    gripperR->active = true;
-    fc->active = true;
+   // effOrientationR->active = true;
+   // effOrientationL->active = true;
+   // gripperL->active = true;
+   // gripperR->active = true;
+    //fc->active = true;
   }
 
  //world.getShapeByName("endeffForceR")->rel.pos = ors::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
@@ -221,7 +228,7 @@ if(!init)
   y = cal_pose_lh(1) * 1;
   z = cal_pose_lh(2) * 1;
   pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
-  if(effPosL) effPosL->setTarget(pos);
+ // if(effPosL) effPosL->setTarget(pos);
 
   // orientation
   quat = {
@@ -274,7 +281,7 @@ if(!init)
   ref.Kp = {1.};
   ref.Ki.clear();
   ref.Kd = {1.};
-  ref.gamma = .5;
+  ref.gamma = .1;
   ref.J_ft_inv.clear();
   
 
@@ -291,7 +298,8 @@ if(!init)
     }
   }
   if(count==1) ref.Kp = .5;
- // ctrlTasks.deAccess();
+    cout<<"fl"<<ref.fL<<endl<<"ubias"<<ref.u_bias<<endl<<"KI"<<ref.Ki<<endl<<"J_ft"<< ref.J_ft_inv<<endl;
+// ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot
   ctrl_ref.set() = ref;
@@ -361,4 +369,20 @@ void PDExecutor::open()
 
 void PDExecutor::close()
 {
+    CtrlMsg ref;
+    ref.q = q;
+    arr qdotzero;
+    qdotzero.resizeAs(q).setZero();
+    ref.qdot = qdotzero;
+
+    ref.u_bias = zeros(q.N);
+
+    ref.fL =zeros(6);
+    ref.fR =zeros(6);
+    ref.Kp = {1.};
+    ref.Ki.clear();
+    ref.Kd = {1.};
+    ref.gamma = 0.;
+    ref.J_ft_inv.clear();
+    //ctrl_ref.set() = ref;
 }
