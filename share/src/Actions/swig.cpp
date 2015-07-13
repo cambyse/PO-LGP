@@ -2,11 +2,14 @@
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
+#include "ActivitySpinnerModule.h"
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
 #include <csignal>
+
+#include <Core/array-vector.h>
 
 #ifdef MT_ROS
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
@@ -93,6 +96,7 @@ ActionSwigInterface::ActionSwigInterface(){
   createNewSymbol("contact");
   createNewSymbol("timeout");
   createNewSymbol("stop");
+  createNewSymbol("qItself");
 //  new CoreTasks(*s->activity.machine);
 
 
@@ -208,6 +212,22 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
   return D;
 }
 
+
+doubleV ActionSwigInterface::getQ() {
+  arr q = S->modelWorld.get()->getJointState();
+  return VECTOR<double>(q);
+}
+
+doubleV ActionSwigInterface::getV() {
+  arr q, qdot;
+  S->modelWorld.get()->getJointState(q, qdot);
+  return VECTOR<double>(qdot);
+}
+
+double ActionSwigInterface::getQDim() {
+  int qdim = S->modelWorld.get()->getJointStateDimension();
+  return qdim;
+}
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
   Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
@@ -412,3 +432,6 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   return symbol->index;
 }
 
+int ActionSwigInterface::getQIndex(std::string jointName) {
+  return S->tcm->modelWorld.get()->getJointByName(MT::String(jointName))->qIndex;
+}

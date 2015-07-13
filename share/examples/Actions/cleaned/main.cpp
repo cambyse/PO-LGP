@@ -1,9 +1,9 @@
 #include <Actions/swig.h>
 #include <Actions/TaskControllerModule.h>
+#include <Actions/activitySpinner.h>
 #include <Actions/taskCtrlActivities.h>
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-=======
 
 #include <Core/util.h>
 #include <System/engine.h>

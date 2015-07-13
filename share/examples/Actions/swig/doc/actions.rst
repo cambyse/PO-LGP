@@ -1,7 +1,7 @@
 .. _section-actions:
 
-Actions
-=======
+Actions module
+==============
 
 The actions module accommodates all the activities for the interface.
 

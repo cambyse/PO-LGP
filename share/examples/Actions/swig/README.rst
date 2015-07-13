@@ -5,6 +5,32 @@ This is our action interface to the PR2 robot. It works both in simulation and
 on the real robot, although we're not yet at a point where this can be
 considered stable.
 
+Install & Dependencies
+-----------------------
+
+You must be able to compile the MLR "Actions" code::
+
+    cd ~/git/mlr/share/src/Actions
+    make -f Makefile.gof
+
+You need the following dependencies:
+
+- python 2.7
+- numpy
+- python-enum34
+
+For using the docs install the following:
+
+::
+
+    pip install --user sphinx sphinx_rtd_theme enum34
+
+Build the docs::
+
+    cd ~/git/mlr/share/examples/Actions/swig/doc
+    make html
+
+
 Startup procedure
 -----------------
 
@@ -12,6 +38,12 @@ The interface is basically a wrapper around Marc's relational machine with some
 sugar for common tasks. It can be used both, within scripts and in an
 interactive manner. In every case make shure ``mlr/share/lib`` is in your
 ``$LD_LIBRARY_PATH`` and ``mlr/share/src/Actions`` is in your ``$PYTHONPATH``.
+
+Alternatively create symlink::
+
+    cd ~/git/mlr/share/examples/Actions/swig
+    ln -s ../../../src/Actions/_swig.so .
+    ln -s ../../../src/Actions/swig.py .
 
 For a first run make sure ``useRos = 0`` in the ``MT.cfg`` file. If you want to
 drive the real robot, you have to change that to ``useRos = 1``, but for a
@@ -30,7 +62,7 @@ Basic interface
 The direct translation of the relational machine would be to write a relational
 fact and add it to the logic state::
 
-    >>> fact = (HomingActivity){tol=.01}
+    >>> fact = "(HomingActivity){tol=.01}"
     >>> interface.setFact(fact)
 
 This starts a ``HomingActivity`` and the robot should move to its base

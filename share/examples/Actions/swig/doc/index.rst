@@ -11,8 +11,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   doc/intro
-   doc/actions
+   readme
+   actions
+   resources
+   utils
 
 
 Indices and tables
