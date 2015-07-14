@@ -175,45 +175,20 @@ namespace backup_method {
         for(int idx=0; idx<(int)actions.size(); ++idx) {
             node_t action_node = action_nodes[actions[idx]];
             mean_value += probs[idx]*(*mcts_node_info_map)[action_node].value;
-#warning Does the variance REALLY go quadratic with the probability??!
             mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
             min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
             max_value += probs[idx]*(*mcts_node_info_map)[action_node].max_value;
         }
-        // old
-        auto action = tree_policy->get_action(observation_node);
-        node_t action_node = INVALID;
-        for(out_arc_it_t to_action_arc(*graph, observation_node); to_action_arc!=INVALID; ++to_action_arc) {
-            action_node = graph->target(to_action_arc);
-            if((*node_info_map)[action_node].action==action) {
-                break;
-            }
-        }
-        DEBUG_EXPECT(0,action_node!=INVALID);
         // assign
-        (*mcts_node_info_map)[observation_node].set_value((*mcts_node_info_map)[action_node].value,
-                                                       (*mcts_node_info_map)[action_node].value_variance,
-                                                       (*mcts_node_info_map)[action_node].min_value,
-                                                       (*mcts_node_info_map)[action_node].max_value);
-        DEBUG_OUT(2,QString("Assign	^Q=%1	~Q=%2	↹Q=%3/%4").
-                  arg((*mcts_node_info_map)[action_node].value).
-                  arg((*mcts_node_info_map)[action_node].value_variance).
-                  arg((*mcts_node_info_map)[action_node].min_value).
-                  arg((*mcts_node_info_map)[action_node].max_value));
-        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].value-mean_value)<1e-10);
-        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].value_variance-mean_value_variance)<1e-10);
-        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].min_value-min_value)<1e-10);
-        // DEBUG_EXPECT(0,fabs((*mcts_node_info_map)[action_node].max_value-max_value)<1e-10);
-        // if(fabs((*mcts_node_info_map)[action_node].value-mean_value)>=1e-10 ||
-        //    fabs((*mcts_node_info_map)[action_node].value_variance-mean_value_variance)>=1e-10 ||
-        //    fabs((*mcts_node_info_map)[action_node].min_value-min_value)>=1e-10 ||
-        //    fabs((*mcts_node_info_map)[action_node].max_value-max_value)>=1e-10) {
-        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].value << " / " << mean_value);
-        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].value_variance << " / " << mean_value_variance);
-        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].min_value << " / " << min_value);
-        //     DEBUG_OUT(0,(*mcts_node_info_map)[action_node].max_value << " / " << max_value);
-        //     DEBUG_OUT(0,"    " << probs);
-        // }
+        (*mcts_node_info_map)[observation_node].set_value(mean_value,
+                                                          mean_value_variance,
+                                                          min_value,
+                                                          max_value);
+        DEBUG_OUT(2,QString("Assigned	^Q=%1	~Q=%2	↹Q=%3/%4").
+                  arg((*mcts_node_info_map)[observation_node].value).
+                  arg((*mcts_node_info_map)[observation_node].value_variance).
+                  arg((*mcts_node_info_map)[observation_node].min_value).
+                  arg((*mcts_node_info_map)[observation_node].max_value));
     }
 
     MonteCarlo::MonteCarlo(double prior_counts):

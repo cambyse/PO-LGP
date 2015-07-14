@@ -767,37 +767,44 @@ void MonteCarloTreeSearch::init_rollout_weights(node_t node) {
 }
 
 void MonteCarloTreeSearch::weight_updates(node_t node) {
-    return;
+#define FORCE_DEBUG_LEVEL 2
+    // This function performes Monte-Carlo weight updates, that is, the
+    // transition probabilities and policy are estimated from the observed
+    // counts.
     DEBUG_OUT(1,"Update node " << graph.id(node));
+    auto & rollout_set = mcts_node_info_map[node].rollout_set;
     switch(node_info_map[node].type) {
     case ACTION_NODE:
     {
-        // compute transition probabilities
+        //----------------------------------//
+        // compute transition probabilities //
+        //----------------------------------//
         std::unordered_map<observation_handle_t,double,
                            AbstractEnvironment::ObservationHash,
                            AbstractEnvironment::ObservationEq> transition_probabilities;
+        // get counts
         int transition_count_sum = 0;
-        for(out_arc_it_t to_observation_node(graph,node);
-            to_observation_node!=INVALID;
-            ++to_observation_node) {
-            node_t observation_node = graph.target(to_observation_node);
-            int transition_counts = mcts_arc_info_map[to_observation_node].transition_counts;
-            transition_probabilities[node_info_map[observation_node].observation] = transition_counts;
-            transition_count_sum += transition_counts;
+        for(auto & rollout_item : rollout_set) {
+            ++transition_probabilities[rollout_item->observation];
+            ++transition_count_sum;
         }
         DEBUG_EXPECT(0,transition_count_sum>0);
-        for(auto & props : transition_probabilities) {
-            props.second /= transition_count_sum;
+        // normalize
+        for(auto & prob : transition_probabilities) {
+            prob.second /= transition_count_sum;
         }
-        // update weights
-        auto & rollout_set = mcts_node_info_map[node].rollout_set;
+        //----------------//
+        // update weights //
+        //----------------//
         // first check for zero probabilities
+        #warning what is this for?
         bool zero_probs = false;
         for(auto & rollout_item : rollout_set) {
             if(transition_probabilities[rollout_item->observation]==0) {
                 zero_probs = true;
             }
         }
+        DEBUG_EXPECT(0,zero_probs==false);
         double init_weight = 1./rollout_set.size();
         double check_weight = -1;
         double weight_sum = 0;
@@ -814,10 +821,14 @@ void MonteCarloTreeSearch::weight_updates(node_t node) {
                 DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
                 DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->observation]);
             }
+            // all weights must be the same for MC weight updates
             if(check_weight==-1) {
                 check_weight = rollout_item->weight;
             } else {
                 DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
+                if(!(fabs(check_weight-rollout_item->weight)<1e-10)) {
+                    DEBUG_OUT(1,*rollout_item << "	(check weight = " << check_weight << ")");
+                }
             }
             weight_sum += rollout_item->weight;
         }
@@ -826,32 +837,35 @@ void MonteCarloTreeSearch::weight_updates(node_t node) {
     break;
     case OBSERVATION_NODE:
     {
-        // compute action probabilities (empirical policy)
+        //-------------------------------------------------//
+        // compute action probabilities (empirical policy) //
+        //-------------------------------------------------//
         std::unordered_map<action_handle_t,double,
                            AbstractEnvironment::ActionHash,
                            AbstractEnvironment::ActionEq> transition_probabilities;
+        // get counts
         int transition_count_sum = 0;
-        for(out_arc_it_t to_action_node(graph,node);
-            to_action_node!=INVALID;
-            ++to_action_node) {
-            node_t action_node = graph.target(to_action_node);
-            int transition_counts = mcts_arc_info_map[to_action_node].transition_counts;
-            transition_probabilities[node_info_map[action_node].action] = transition_counts;
-            transition_count_sum += transition_counts;
+        for(auto & rollout_item : rollout_set) {
+            ++transition_probabilities[rollout_item->action];
+            ++transition_count_sum;
         }
-
-        for(auto & props : transition_probabilities) {
-            props.second /= transition_count_sum;
+        DEBUG_EXPECT(0,transition_count_sum>0);
+        // normalize
+        for(auto & prob : transition_probabilities) {
+            prob.second /= transition_count_sum;
         }
-        // update weights
-        auto & rollout_set = mcts_node_info_map[node].rollout_set;
+        //----------------//
+        // update weights //
+        //----------------//
         // first check for zero probabilities
+        #warning what is this for?
         bool zero_probs = false;
         for(auto & rollout_item : rollout_set) {
             if(transition_probabilities[rollout_item->action]==0) {
                 zero_probs = true;
             }
         }
+        DEBUG_EXPECT(0,zero_probs==false);
         double init_weight = 1./rollout_set.size();
         double check_weight = -1;
         double weight_sum = 0;
@@ -871,6 +885,9 @@ void MonteCarloTreeSearch::weight_updates(node_t node) {
                 check_weight = rollout_item->weight;
             } else {
                 DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
+                if(!(fabs(check_weight-rollout_item->weight)<1e-10)) {
+                    DEBUG_OUT(1,*rollout_item << "	(check weight = " << check_weight << ")");
+                }
             }
             weight_sum += rollout_item->weight;
         }
@@ -878,6 +895,7 @@ void MonteCarloTreeSearch::weight_updates(node_t node) {
     }
     break;
     }
+#define FORCE_DEBUG_LEVEL 0
 }
 
 double MonteCarloTreeSearch::color_rescale(const double& d) const {
