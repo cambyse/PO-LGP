@@ -32,7 +32,7 @@ import swig
 interface = swig.ActionSwigInterface()
 
 # new convenient symbols
-for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align"]:
+for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels"]:
     interface.createNewSymbol(s)
 
 # don't abort the swig interface on Ctr-C
