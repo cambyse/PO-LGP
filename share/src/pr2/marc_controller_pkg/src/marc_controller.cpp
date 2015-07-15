@@ -99,7 +99,7 @@ void TreeControllerClass::update() {
   mutex.lock(); //only inside here we use the msg values...
 
   // stop when no messages arrive anymore
-  if(iterationsSinceLastMsg > 100){
+  if(iterationsSinceLastMsg > 300){
     q_ref.clear();
     qdot_ref.clear();
     u_bias.clear();

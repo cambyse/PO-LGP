@@ -1,3 +1,13 @@
+"""
+The ``actions module`` contains
+(a) low level actions the robot can perform,
+(b) methods to run and sequence these actions,
+(c) high level behaviors that use low level actions and and the sequencing
+    stuff.
+
+All implementations of activities must inherit from the base class
+``Activity``.
+"""
 from __future__ import print_function
 
 from contextlib import contextmanager
@@ -92,9 +102,9 @@ def run(plan):
         else:
             _run([item])
 
+
 ###############################################################################
 # Python activitiy classes
-
 class Activity(object):
     """
     An Activity is something which can be run on the robot and moves certain
@@ -231,14 +241,14 @@ class QItselfActivity(Activity):
 class TiltHead(QItselfActivity):
     """Tilt the head up (positive values) or down (negative values)."""
 
-    def __init__(self, deg_relative=0):
+    def __init__(self, up_deg_relative=0):
         """
-        :param deg_relative: The angle to turn the head up/down
+        :param up_deg_relative: The angle to turn the head up/down
         :return:
         """
         self.joint_name = "head_tilt_joint"
         super(TiltHead, self).__init__(self.joint_name, 0)
-        self.radian_offset = np.deg2rad(deg_relative)
+        self.radian_offset = np.deg2rad(up_deg_relative)
 
     def __str__(self):
         self.q = (float(interface.getJointByName(self.joint_name)["q"])
@@ -249,15 +259,15 @@ class TiltHead(QItselfActivity):
 class PanHead(QItselfActivity):
     """Pan/turn the head left (positive values) or right (negative values)."""
 
-    def __init__(self, deg_relative=0):
+    def __init__(self, left_deg_relative=0):
         """
-        :param deg_relative: The angle in degree to turn the head left
+        :param left_deg_relative: The angle in degree to turn the head left
                              (positive values) or right (negative values).
         :return:
         """
         self.joint_name = "head_pan_joint"
         super(PanHead, self).__init__(self.joint_name, 0)
-        self.radian_offset = np.deg2rad(deg_relative)
+        self.radian_offset = np.deg2rad(left_deg_relative)
 
     def __str__(self):
         self.q = (float(interface.getJointByName(self.joint_name)["q"])
@@ -384,7 +394,6 @@ def close_gripper(side=None):
 
 
 def reach(what, with_=None, offset=None):
-    """bla"""
     if with_ is None:
         with_ = side2endeff()
     if offset is None:
