@@ -237,6 +237,26 @@ class QItselfActivity(Activity):
                         modulo="1" if self.moduloTwoPi else "0",
                         gains=self.natural_gains))
 
+class WheelsActivity(Activity):
+    """
+
+    Moves Base to a specified position.
+    """
+    def __init__(self, pos):
+        """
+        :param pos: The position to move relative to current position.
+        :return:
+        """
+        super(WheelsActivity, self).__init__()
+        self.pos = pos
+        self.tolerance = .01
+
+    def __str__(self):
+        return("(FollowReferenceActivity wheels {name})"
+                "{{ type=wheels target={target} tol={tol} PD{gains} }}"
+                .format(name=self.name, target=self.pos,
+                gains=self.natural_gains, tol=self.tolerance))
+
 
 class TiltHead(QItselfActivity):
     """Tilt the head up (positive values) or down (negative values)."""
