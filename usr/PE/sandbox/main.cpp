@@ -6,6 +6,9 @@
 #include <Perception/videoEncoder.h>
 #include <iomanip>
 
+#include "/usr/local/MATLAB/R2013a/extern/include/engine.h"
+#define  BUFSIZE 512
+
 void TEST(Matrices) {
   ors::KinematicWorld G("chain.ors");
   MotionProblem MP(G);
@@ -29,9 +32,14 @@ void TEST(Matrices) {
   cout << JJ*dq << endl;
   cout << "dy: " << dy << endl;
 
-  cout << ~dy*R[0] << endl;
-  cout << ~dy*R[1] << endl;
-  cout << ~dy*R[2] << endl;
+//  cout << ~dy*R[0] << endl;
+//  cout << ~dy*R[1] << endl;
+//  cout << ~dy*R[2] << endl;
+
+  cout << R<< endl;
+  R.reverseRows();
+  cout << R << endl;
+  cout << R.col(2).max() << endl;
 }
 
 void TEST(GradCheck) {
@@ -80,11 +88,127 @@ void TEST(GradCheck) {
 //   MT::open(fil, filename);
 // fil.precision(30);
 //   catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
-  // fil.close();
+// fil.close();
+
+void TEST(Matlab) {
+  Engine *ep;
+  mxArray *T = NULL, *result = NULL;
+  char buffer[BUFSIZE+1];
+  double time[10] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
+
+  /*
+           * Call engOpen with a NULL string. This starts a MATLAB process
+       * on the current host using the command "matlab".
+           */
+  if (!(ep = engOpen(""))) {
+    fprintf(stderr, "\nCan't start MATLAB engine\n");
+  }
+
+  arr A = randn(3,5);
+  cout << A << endl;
+
+  uint nRow = A.d0;
+  uint nCol = A.d1;
+
+//  T = mxCreateDoubleMatrix(nRow, nCol, mxREAL);
+//  memcpy((void *)mxGetPr(T), (void *)time, sizeof(time));
+
+//  double *xValues = mxGetPr(T);
+
+//  for(uint row = 0; row < nRow; row++) {
+//    for(uint col = 0; col < nCol; col++) {
+//      xValues[nRow * col + row] = A(row,col);
+//    }
+//  }
+  T = mxCreateDoubleMatrix(nCol, nRow, mxREAL);
+  memcpy((void *)mxGetPr(T), (void *)A.p, A.d0*A.d1*sizeof(double));
+  engPutVariable(ep, "T", T);
+  engEvalString(ep, "T=T'");
+
+  buffer[BUFSIZE] = '\0';
+  engOutputBuffer(ep, buffer, BUFSIZE);
+  engEvalString(ep, "testMC");
+  printf("Hit return to continue\n\n");
+  fgetc(stdin);
+
+  printf("%s", buffer);
+
+  arr B;
+  B.resizeAs(A);
+  engEvalString(ep, "T=T'");
+  result = engGetVariable(ep,"T");
+  B.p = mxGetPr(result);
+
+
+  cout << B << endl;
+
+//  mxSetPr(T,A.p);
+  /*
+  engPutVariable(ep, "T", T);
+
+  buffer[BUFSIZE] = '\0';
+  engOutputBuffer(ep, buffer, BUFSIZE);
+
+  engEvalString(ep, "testMC");
+  engEvalString(ep, "T=T'");
+
+  result = engGetVariable(ep,"T");
+  double *rValues = mxGetPr(result);
+
+  arr B;
+  B.resizeAs(A);
+
+  B.p = mxGetPr(result);
+  /*
+  B.resizeAs(A);
+  for (uint i =0;i<B.d0;i++){
+    for (uint j =0;j<B.d1;j++){
+      B(i,j) = rValues[j*B.d0+i];
+    }
+  }*/
+//  cout << B << endl;
+  /*
+
+  for(uint row = 0; row < nRow; row++) {
+      for(uint col = 0; col < nCol; col++) {
+
+          printf("%lf", xValues[nRow * col + row]);
+      }
+      printf("\n");
+  }*/
+
+//  printf("%s", buffer);
+}
+
+void TEST(MatlabGP) {
+  Engine *ep;
+  mxArray *T = NULL, *result = NULL;
+  char buffer[BUFSIZE+1];
+
+  if (!(ep = engOpen(""))) {
+    fprintf(stderr, "\nCan't start MATLAB engine\n");
+  }
+
+
+  buffer[BUFSIZE] = '\0';
+  engOutputBuffer(ep, buffer, BUFSIZE);
+
+  engEvalString(ep, "testMC");
+  MT::wait(10.);
+
+  printf("%s", buffer);
+}
 
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
-//  testMatrices();
-  testGradCheck();
+  testMatrices();
+  //  testGradCheck();
+//  testMatlab();
+//  testMatlabGP();
+
   return 0;
 }
+
+//    cout << "Enter result:  success [1] or failure [0]: "<<endl;
+//    std::cin >> result;
+

@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['../plots/'];
+folder = ['data/door1/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -34,27 +34,25 @@ jointNames = {'worldTranslationRotation1',
  'r gripper joint',
  'l gripper joint'};
 
-%% compute error between desired and actual trajectory
-% error = sum((Xdes-Xact).^2,1)
-% figure(6);clf;hold on;
-% bar(error);
-% set(gca,'XTickLabel',jointNames,'XTick',1:numel(jointNames));
-% rotateXLabels(gca(),90);
-% 
-% figure(8);clf;hold on;
-% plot(Tact,FLact(:,6))
-% sum(FLact(:,6))
-
 %% plotting
 col={'r','b','k','m','c'};
-for i =1:5:size(Xact,2)
- figure(1+round(i/5));clf;hold on;
- for j=0:4
-  plot(Xact(:,i+j),col{j+1});
- end
- legend(jointNames{i:i+4})
- for j=0:4
-  plot(Xdes(:,i+j),col{j+1},'LineStyle','.');
-  plot(Xact(:,i+j),col{j+1});
- end
-end
+
+
+x = Xact(:,23);
+y = Xact(:,25);
+
+feat = [sin(x),cos(x),x,ones(size(Xact,1),1)]
+% x = [x,ones(size(Xact,1),1)]
+beta = inv(feat'*feat)*feat'*y
+
+y_pred = feat*beta;
+
+figure(1);clf;hold on;
+plot(x,y,col{2});
+plot(x,y_pred,col{2});
+
+figure(2);clf;hold on;
+plot(y./x);
+plot(y_pred./x,'r.');
+plot(y_pred2./x,'g.');
+norm(y_pred - y)

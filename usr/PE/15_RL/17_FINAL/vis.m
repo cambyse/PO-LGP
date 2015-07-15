@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['../plots/'];
+folder = ['data/door1/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -35,15 +35,19 @@ jointNames = {'worldTranslationRotation1',
  'l gripper joint'};
 
 %% compute error between desired and actual trajectory
-% error = sum((Xdes-Xact).^2,1)
-% figure(6);clf;hold on;
-% bar(error);
-% set(gca,'XTickLabel',jointNames,'XTick',1:numel(jointNames));
-% rotateXLabels(gca(),90);
-% 
-% figure(8);clf;hold on;
-% plot(Tact,FLact(:,6))
-% sum(FLact(:,6))
+error = sum((Xdes-Xact).^2,1)
+figure(6);clf;hold on;
+bar(error);
+set(gca,'XTickLabel',jointNames,'XTick',1:numel(jointNames));
+rotateXLabels(gca(),90);
+
+figure(8);clf;hold on;
+plot(Tact,FLact(:,6))
+sum(FLact(:,6))
+
+figure(9);clf;hold on;
+plot3(Mact(:,1),Mact(:,2),Mact(:,3),'.');
+axis equal; grid on;
 
 %% plotting
 col={'r','b','k','m','c'};
@@ -54,7 +58,7 @@ for i =1:5:size(Xact,2)
  end
  legend(jointNames{i:i+4})
  for j=0:4
-  plot(Xdes(:,i+j),col{j+1},'LineStyle','.');
+  plot(Xdes(:,i+j),col{j+1},'LineStyle','--');
   plot(Xact(:,i+j),col{j+1});
  end
 end

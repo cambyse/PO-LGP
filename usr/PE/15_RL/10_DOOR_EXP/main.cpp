@@ -164,11 +164,11 @@ int main(int argc,char **argv){
   /// model free exploration
   arr zC1 = vC1;
   arr zC2 = vC2;
-  arr off1 = ARR(0.00,-0.04,0.0);
-  arr off2 = ARR(0.00,-0.02,0.0);
+  arr off1 = ARR(0.04,-0.0,0.0);
+  arr off2 = ARR(0.04,-0.0,0.0);
   for (uint t =0;t<xDem.d0;t++){
     world.setJointState(xDem[t]);
-    arr R = world.getBodyByName("handle")->X.rot.getArr();
+    arr R = world.getShapeByName("endeffC2")->X.rot.getArr();
     zC1[t] = zC1[t] + R*off1;
     zC2[t] = zC2[t] + R*off2;
   }

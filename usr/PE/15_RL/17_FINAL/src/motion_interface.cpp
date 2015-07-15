@@ -26,41 +26,48 @@ Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
   q = S.ctrl_obs.get()->q;
   qdot = S.ctrl_obs.get()->qdot;
 
+  markers = S.ar_pose_marker.get();
+  syncMarkers(*world, markers);
+
   world->setJointState(q, qdot);
 }
 
 
-void Motion_Interface::executeTrajectory(arr &X, double duration) {
+void Motion_Interface::executeTrajectory(arr &X, double T)
+{
+  double dt = T/X.d0;
+  Xref = X;
   arr Xdot;
-  getVel(Xdot,X,duration/X.d0);
+  getVel(Xdot,X,dt);
 
   MT::Spline XS(X.d0,X);
   MT::Spline XdotS(Xdot.d0,Xdot);
 
-  Xdes.clear(); Xact.clear(); FLact.clear(); Tact.clear();
+  Tact.clear(); Xdes.clear(); Xact.clear(); FLact.clear(); Uact.clear(); Mact.clear();
+
   MT::timerStart(true);
   CtrlMsg refs;
   double t = 0.;
-  double dt = duration/X.d0;
   double t_last = -dt;
-  while(t<duration){
-    double s = t/duration;
+  while(t<T){
+    double s = t/T;
     refs.q = XS.eval(s);
-    refs.qdot=XdotS.eval(s);
+    refs.qdot=XdotS.eval(s)*1.;
     refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex) = 0.;
     refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex+1) = 0.;
     refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex+2) = 0.;
+
     refs.fL = zeros(6);
     refs.Ki.clear();
     refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kp = 3.5;
-    refs.Kd = 1.0;
-    refs.Kint = .01;
+    refs.Kp = 1.5;
+    refs.Kd = 1.2;
+    refs.Kint = .003;
     refs.gamma = 1.;
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
-    refs.intLimitRatio = 1.0;
+    refs.intLimitRatio = 1.5;
     S.ctrl_ref.set() = refs;
 
     t = t + MT::timerRead(true);
@@ -71,19 +78,17 @@ void Motion_Interface::executeTrajectory(arr &X, double duration) {
       Xdes.append(~refs.q);
       Xact.append(~S.ctrl_obs.get()->q);
       FLact.append(~S.ctrl_obs.get()->fL);
+      Uact.append(~S.ctrl_obs.get()->u_bias);
+
+      markers = S.ar_pose_marker.get();
+      syncMarkers(*world, markers);
+      Mact.append(~ARRAY(world->getBodyByName("marker4")->X.pos));
     }
   }
 
-  write(LIST<arr>(Tact),"plots/Tact.dat");
-  write(LIST<arr>(Xdes),"plots/Xdes.dat");
-  write(LIST<arr>(Xact),"plots/Xact.dat");
-//  write(LIST<arr>(Vdes),"plots/Vdes.dat");
-//  write(LIST<arr>(Vact),"plots/Vact.dat");
-  if (FLact.N>0) write(LIST<arr>(FLact),"plots/FLact.dat");
-
 }
 
-void Motion_Interface::gotoPosition(arr &x)
+void Motion_Interface::gotoPosition(arr x)
 {
   MotionProblem MP(*world,false);
   MP.T = 100;
@@ -104,11 +109,57 @@ void Motion_Interface::gotoPosition(arr &x)
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
   optConstrainedMix(X, NoArr, Convert(MPF), o);
+  //  displayTrajectory(X,-1,*world,"demo");
   executeTrajectory(X,MP.T*MP.tau);
 }
 
-void Motion_Interface::recordDemonstration(arr &X,double duration)
+void Motion_Interface::recordDemonstration(arr &X,double T)
 {
+  MT::wait(5.);
+
+  /// send zero gains
+  CtrlMsg refs;
+  refs.q = S.ctrl_obs.get()->q;
+  refs.qdot=S.ctrl_obs.get()->qdot*0.;
+  refs.fL = zeros(6);
+  refs.Ki.clear();
+  refs.J_ft_inv.clear();
+  refs.u_bias = zeros(q.N);
+  refs.Kp = 0.;
+  refs.Kd = 0.;
+  refs.Kint.clear();
+  refs.gamma = 1.;
+  refs.velLimitRatio = .1;
+  refs.effLimitRatio = 1.;
+  refs.intLimitRatio = 1.5;
+  S.ctrl_ref.set() = refs;
+
+  MT::wait(2.);
+  cout << "start recording" << endl;
+
+  /// record demonstrations
+  double t = 0.;
+  MT::timerStart(true);
+  while(t<T) {
+    X.append(~S.ctrl_obs.get()->q);
+    MT::wait(0.1);
+    t = t + MT::timerRead(true);
+  }
+  cout << "stop recording" << endl;
+
+  /// reset gains
+  refs.q = S.ctrl_obs.get()->q;
+  refs.qdot=S.ctrl_obs.get()->qdot*0.;
+  refs.Kp = 1.5;
+  refs.Kd = 1.2;
+  refs.Kint = ARR(.003);
+  S.ctrl_ref.set() = refs;
+}
+
+void Motion_Interface::sendZeroGains(double T)
+{
+  cout << "sending zero gains" << endl;
+
   /// send zero gains
   CtrlMsg refs;
   refs.q = S.ctrl_obs.get()->q;
@@ -126,17 +177,10 @@ void Motion_Interface::recordDemonstration(arr &X,double duration)
   refs.intLimitRatio = .1;
   S.ctrl_ref.set() = refs;
 
-  MT::wait(5.);
+  //  MT::wait(T);
+  world->watch(true);
 
-  /// record demonstrations
-  double t = 0.;
-  MT::timerStart(true);
-  while(t<duration) {
-    X.append(~S.ctrl_obs.get()->q);
-    MT::wait(0.1);
-    t = t + MT::timerRead(true);
-  }
-
+  cout << "resetting gains" << endl;
   /// reset gains
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
@@ -145,3 +189,26 @@ void Motion_Interface::recordDemonstration(arr &X,double duration)
   S.ctrl_ref.set() = refs;
 }
 
+/// save last run
+void Motion_Interface::logging(MT::String folder, uint id) {
+  write(LIST<arr>(Xref),STRING(folder<<"X"<<id<<".dat"));
+  write(LIST<arr>(Xref),STRING(folder<<"X.dat"));
+
+  write(LIST<arr>(Xact),STRING(folder<<"Xact"<<id<<".dat"));
+  write(LIST<arr>(Xact),STRING(folder<<"Xact.dat"));
+
+  write(LIST<arr>(Xdes),STRING(folder<<"Xdes"<<id<<".dat"));
+  write(LIST<arr>(Xdes),STRING(folder<<"Xdes.dat"));
+
+  write(LIST<arr>(Tact),STRING(folder<<"Tdes"<<id<<".dat"));
+  write(LIST<arr>(Tact),STRING(folder<<"Tdes.dat"));
+
+  if (FLact.N>0) write(LIST<arr>(FLact),STRING(folder<<"FLact"<<id<<".dat"));
+  if (FLact.N>0) write(LIST<arr>(FLact),STRING(folder<<"FLact.dat"));
+
+  if (Mact.N>0) write(LIST<arr>(Mact),STRING(folder<<"Mact"<<id<<".dat"));
+  if (Mact.N>0) write(LIST<arr>(Mact),STRING(folder<<"Mact.dat"));
+
+  if (Uact.N>0) write(LIST<arr>(Uact),STRING(folder<<"Uact"<<id<<".dat"));
+  if (Uact.N>0) write(LIST<arr>(Uact),STRING(folder<<"Uact.dat"));
+}

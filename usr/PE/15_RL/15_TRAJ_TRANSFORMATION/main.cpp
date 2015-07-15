@@ -8,75 +8,142 @@
 #include <pr2/roscom.h>
 #include <System/engine.h>
 #include "../12_MBMF_LEARNING/task_manager.h"
-#include "../12_MBMF_LEARNING/mf_strategy.h"
 #include "../12_MBMF_LEARNING/motion_interface.h"
 #include "../src/traj_factory.h"
 #include "../src/plotUtil.h"
 #include <pr2/roscom.h>
+#include <Motion/pr2_heuristics.h>
+
 #include <System/engine.h>
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
   bool useRos = MT::getParameter<bool>("useRos");
-
-
-  TaskManager *tm = new DonutTask();
-  ors::KinematicWorld world("donut.ors");
-  arr X;
-  tm->createSynthethicDemonstration(X,world);
+  ors::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
-  arr Pendeff,P;
+  arr X;
+  X << FILE("data/door1/Xact2.dat");
+
+
+  arr Pdemo1,P1,Pdemo2,P2;
   TrajFactory tf;
-  tf.compFeatTraj(X,P,world,new DefaultTaskMap(posTMT,world,"endeff"));
 
-  arr offset = ARRAY(0.,0.,0.05);
+  drawLine(world,X,Pdemo1,"endeffC1",0);
+  drawLine(world,X,Pdemo2,"endeffC2",1);
+  drawPoints(world,X,P1,"endeffC1",0);
+  drawPoints(world,X,P2,"endeffC2",1);
 
-  arr yT;
-  yT.resizeAs(P);
-  /// interpolation in task space
-  for(uint t=0;t<X.d0;t++){
-    double s = t/double(X.d0);
-    yT[t] = P[t]+offset*s;
+  for (uint t=0;t<X.d0;t++) {
+    world.setJointState(X[t]);
+    ors::Body *handle = world.getBodyByName("handle");
+    ors::Shape *ec1 = world.getShapeByName("endeffC1");
+    ors::Shape *ec2 = world.getShapeByName("endeffC2");
+
+    handle->X.pos = (P1[t]+P2[t])/2.;
+//    ors::Vector x_axis(0.,1.,0.);
+//    ors::Vector y_axis(0.,1.,0.);
+//    ors::Vector z_axis(0.,.0,1.);
+//    ors::Vector v  = ec1->X.rot.getY();
+//    handle->X.rot.setDiff(x_axis,v);
+//    handle->X.rot.setDiff(y_axis,ec1->X.rot.getZ());
+
+//    arr R;
+//    R = ec1->X.rot.getArr();
+//    R[0] =  ARRAY(ec1->X.rot.getX());
+//    R[1] =  ARRAY(ec1->X.rot.getY());
+//    R[2] =  ARRAY(ec1->X.rot.getZ());
+//    R=~R;
+//    handle->X.rot.setMatrix(R.p);
+
+    handle->X.rot = ec1->X.rot;
+    double d = length(ARRAY(ec1->X.pos-ec2->X.pos));
+    double h = .029;
+    double w = sqrt(d*d-h*h);
+    double alpha = acos(w/d)*180./M_PI;
+    double beta = asin(h/d)*180./M_PI;;
+    handle->X.addRelativeRotationDeg(90.,0.,1.,0.);
+    handle->X.addRelativeRotationDeg(-alpha-beta,1.,0.,0.);
+
+    world.gl().update(STRING(t));
+    world.watch(true);
   }
-
-  arr Q;
-  Q.resizeAs(X);
-  arr xf = X[X.d0-1];
-  arr yf,Jf;// = P[P.d0-1];
-
-  world.setJointState(xf);
-
-  ors::Vector v(0.,0.,0.4);
-  world.kinematicsPos(yf,Jf,world.getShapeByName("endeff")->body,&v);
-
-  arr C = eye(3);
-  arr W = eye(4)*1e-3;
-
-
-  arr yTarget = yf + offset;
-  arr q_offset = inverse_SymPosDef(~Jf*C*Jf + W)*~Jf*C*(yTarget-yf);
-  cout<<yTarget << endl;
-  cout << q_offset << endl;
-  /// interpolation in joint space
-  for(uint t=0;t<X.d0;t++){
-    double s = t/double(X.d0);
-    Q[t] = X[t]+q_offset*s;
-  }
-  arr qT;
-  tf.compFeatTraj(Q,qT,world,new DefaultTaskMap(posTMT,world,"endeff"));
-
-  cout << qT[qT.d0-1] << endl;
-  world.gl().add(drawRedPoints,&(qT));
-  world.gl().add(drawBluePoints,&(P));
-  world.gl().add(drawGreenPoints,&(yT));
-
-  world.watch(true);
-  displayTrajectory(X,-1,world,"X");
-  displayTrajectory(Q,-1,world,"X");
-
-
-
 
   return 0;
 
+
+
+/*
+
+
+//  world.setJointState(X[T(0)]);
+  arr R1 = world.getShapeByName("endeffC1")->X.rot.getArr();
+  arr R2 = world.getShapeByName("endeffC2")->X.rot.getArr();
+
+  //  arr offset = ARR(0.05,0.,0.0);
+  //  // test translation transformation
+  //  for (uint t=0; t<T(0); t++){
+  //    /// linear transition from trajectory to contact point
+  //    P1[t] = P1[t] + t/T(0)*R1*offset;
+  //    P2[t] = P2[t] + t/T(0)*R2*offset;
+  //  }
+  //  for (uint t=T(0); t<T(1); t++){
+  //    /// linear transition from trajectory to contact point
+  //    R1 = world.getShapeByName("endeffC1")->X.rot.getArr();
+  //    P1[t] = P1[t] + R1*offset;
+  //    R2 = world.getShapeByName("endeffC2")->X.rot.getArr();
+  //    P2[t] = P2[t] + R2*offset;
+  //  }
+
+  // test gripper opening
+  arr offset = ARR(0.0,0.02,0.0);
+  for (uint t=0; t<T(0); t++){
+    /// linear transition from trajectory to contact point
+    P1[t] = P1[t] + t/T(0)*R1*offset;
+    P2[t] = P2[t] - t/T(0)*R2*offset;
+  }
+  for (uint t=T(0); t<T(1); t++){
+    world.setJointState(X[t]);
+    /// linear transition from trajectory to contact point
+    R1 = world.getShapeByName("endeffC1")->X.rot.getArr();
+    P1[t] = P1[t] + R1*offset;
+    R2 = world.getShapeByName("endeffC2")->X.rot.getArr();
+    P2[t] = P2[t] - R2*offset;
+  }
+
+
+  cout << sum((P2-P1)%(P2-P1)) << endl;
+  cout << sum((Pdemo2-Pdemo1)%(Pdemo2-Pdemo1)) << endl;
+
+  MotionProblem MP(world,false);
+  MP.T = T(1)-1;
+  MP.tau = 0.01;
+  MP.x0 = X[0];
+
+  //--tasks
+  Task *t;
+  t = MP.addTask("tra", new TransitionTaskMap(world));
+  t->map.order=2;
+  t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(world);
+
+
+  t =MP.addTask("posC1", new DefaultTaskMap(posTMT,world,"endeffC1"));
+  t->setCostSpecs(0,MP.T, P1, 1e2);
+  t =MP.addTask("posC2", new DefaultTaskMap(posTMT,world,"endeffC2"));
+  t->setCostSpecs(0,MP.T, P2, 1e2);
+
+  MotionProblemFunction MPF(MP);
+  arr Xt = X;
+  OptOptions o;
+  o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
+  optConstrainedMix(Xt, NoArr, Convert(MPF), o);
+
+  for(;;){
+    displayTrajectory(X,-1,world,"demo");
+    displayTrajectory(Xt,-1,world,"trans");
+    world.watch(true);
+  }
+
+  return 0;
+*/
 }

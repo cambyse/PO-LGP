@@ -52,7 +52,7 @@ struct DoorTask:TaskManager {
   DoorTask () {
     name = "door1";
     paramDim = 1;
-    paramLimit = ARR(-.1,.1);
+    paramLimit = ARR(-0.4,.4);
     tau = 0.05;
     gridSize = 50;
   }

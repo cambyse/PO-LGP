@@ -106,6 +106,7 @@ void DoorTask::initTask(ors::KinematicWorld &world_, arr &Xdemo_)
   uint qI = world->getJointByName("l_gripper_joint")->qIndex;
   Cdemo = zeros(Xdemo.d0); Cdemo.flatten();
 
+  // TODO: check if contact data is greater than 0
   for (uint t=0;t<Xdemo.d0;t++) {
     if (Xdemo(t,qI)<0.04) {
       Cdemo(t) = 1.;

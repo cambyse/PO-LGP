@@ -28,12 +28,7 @@ int main(int argc,char **argv){
   MT::String sceneName = MT::getParameter<MT::String>("sceneName");
   cout <<"Task: "<< sceneName << endl;
   ors::KinematicWorld world(STRING(sceneName<<".ors"));
-  cout << world.getJointByName("l_gripper_joint")->qIndex << endl;
-  cout << world.getJointByName("l_gripper_r_finger_tip_joint")->qIndex << endl;
-  cout << world.getJointByName("l_wrist_roll_joint")->qIndex << endl;
-  cout << world.getJointByName("l_forearm_roll_joint")->qIndex << endl;
-  cout << world.getJointByName("l_elbow_flex_joint")->qIndex << endl;
-  cout << world.getJointByName("l_upper_arm_roll_joint")->qIndex << endl;
+
   TaskManager *tm;
   if (sceneName=="donut") {
     tm = new DonutTask();
@@ -70,15 +65,11 @@ int main(int argc,char **argv){
   world.gl().resize(800,800);
   TrajFactory tf;
   arr Pdemo1,P1,Pdemo2,P2;
-  tf.compFeatTraj(Xdemo,Pdemo1,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
-  tf.compFeatTraj(Xdemo,P1,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
-  tf.compFeatTraj(Xdemo,Pdemo2,world,new DefaultTaskMap(posTMT,world,"endeffC2"));
-  tf.compFeatTraj(Xdemo,P2,world,new DefaultTaskMap(posTMT,world,"endeffC2"));
+  drawLine(world,Xdemo,Pdemo1,"endeffC1",0);
+  drawLine(world,Xdemo,Pdemo2,"endeffC2",1);
+  drawPoints(world,Xdemo,P1,"endeffC1",0);
+  drawPoints(world,Xdemo,P2,"endeffC2",1);
 
-  world.gl().add(drawRedLine,&(Pdemo1));
-  world.gl().add(drawYellowLine,&(P1));
-  world.gl().add(drawGreenLine,&(Pdemo2));
-  world.gl().add(drawBlueLine,&(P2));
 
   if (visualize) {
     displayTrajectory(Xdemo,Xdemo.d0,world,"demonstration");
@@ -88,14 +79,14 @@ int main(int argc,char **argv){
   /// -----------------------------------------------------------
   /// Initialize Learning Structures ----------------------------
   /// -----------------------------------------------------------
-  MBMFL *mbmfl = new MBMFL(sceneName);
+  MBMFL *mbmfl = new MBMFL(sceneName); // TODO: delete MBMFL
 
   if (MT::getParameter<bool>("loadMBMFL")) {mbmfl->loadMBMFL();}
   enum LEARNING_MODE {MODEL_BASED_STEP=0,MODEL_BASED_PHASE=1,MODEL_FREE=2};
   LEARNING_MODE learning_mode = /*MODEL_FREE;//*/MODEL_BASED_STEP;
 
   MB_strategy mbs(Xdemo,world,*tm);
-  MF_strategy mfs(tm->paramDim,*tm);
+  MF_strategy mfs(tm->paramDim,*tm); // TODO: replace with new class
   arr X_old = X;
   arr param = ARR(0.0);
   double paramR;
@@ -148,6 +139,8 @@ int main(int argc,char **argv){
     std::cin >> result;
 //    result = false;
 
+
+    // TODO: add force feedback signal as reward
     switch (learning_mode){
       case (MODEL_BASED_STEP):{ //-- model based step improvement strategy
         if (result) {
