@@ -55,7 +55,17 @@
                 DEBUG_ERROR("Condition '" << #condition << "' is not fulfilled"); \
             }                                           \
         }                                               \
-    }                                                   \
+    }
+
+#define DEBUG_EXPECT_APPROX(level, value_1, value_2) {  \
+        IF_DEBUG(level) {                               \
+            if(fabs(value_1-value_2)>1e-10) {                     \
+                DEBUG_ERROR("Not approximately equal ('" << #value_1 << "' and '" << #value_2 << "')"); \
+                DEBUG_ERROR("    " << #value_1 << " = " << value_1);     \
+                DEBUG_ERROR("    " << #value_2 << " = " << value_2);     \
+            }                                                           \
+        }                                                               \
+    }
 
 // assert of errors and warnings for unit tests
 

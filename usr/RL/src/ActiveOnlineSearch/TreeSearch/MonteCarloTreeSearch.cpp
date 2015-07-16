@@ -67,10 +67,9 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(shared_ptr<AbstractEnvironment> envir
                                            shared_ptr<tree_policy::TreePolicy> recommendation_policy_,
                                            int max_depth_,
                                            ROLLOUT_STORAGE rollout_storage_,
-                                           bool perform_weight_updates_):
+                                           bool perform_data_backups_):
     SearchTree(environment_, discount_, node_finder_),
     rollout_storage(rollout_storage_),
-    perform_weight_updates(perform_weight_updates_),
     mcts_node_info_map(graph),
     mcts_arc_info_map(graph),
     tree_policy(tree_policy_),
@@ -80,7 +79,8 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(shared_ptr<AbstractEnvironment> envir
     node_hash(graph),
     recommendation_policy(recommendation_policy_),
     max_depth(max_depth_),
-    rollout_length(rollout_length_)
+    rollout_length(rollout_length_),
+    perform_data_backups(perform_data_backups_)
 {
     tree_policy->init(environment,
                       graph,
@@ -94,7 +94,8 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(shared_ptr<AbstractEnvironment> envir
                         graph,
                         node_info_map,
                         mcts_node_info_map,
-                        mcts_arc_info_map);
+                        mcts_arc_info_map,
+                        perform_data_backups);
     if(recommendation_policy==nullptr) {
         recommendation_policy.reset(new tree_policy::Optimal());
     }
@@ -302,9 +303,7 @@ void MonteCarloTreeSearch::next_do() {
             DEBUG_OUT(2,QString("    reward=%1, return=%2").arg(reward).arg(discounted_return));
             // backup if back_type is BACKUP_TRACE
             if(backup_type==BACKUP_TYPE::TRACE) {
-                weight_updates(action_node);
                 backup_method->backup_action_node(action_node);
-                weight_updates(observation_node);
                 backup_method->backup_observation_node(observation_node);
             }
         }
@@ -355,7 +354,6 @@ void MonteCarloTreeSearch::next_do() {
             }
 
             // update
-            weight_updates(next_node);
             switch(node_info_map[next_node].type) {
             case OBSERVATION_NODE:
                 backup_method->backup_observation_node(next_node);
@@ -532,6 +530,11 @@ const MonteCarloTreeSearch::mcts_node_info_map_t & MonteCarloTreeSearch::get_mct
 }
 const MonteCarloTreeSearch::mcts_arc_info_map_t & MonteCarloTreeSearch::get_mcts_arc_info_map() const {
     return mcts_arc_info_map;
+}
+
+void MonteCarloTreeSearch::data_backups(bool b) {
+    perform_data_backups = b;
+    backup_method->perform_data_backups = b;
 }
 
 MonteCarloTreeSearch::arc_node_t MonteCarloTreeSearch::find_or_create_observation_node(const node_t & action_node,
@@ -752,7 +755,7 @@ shared_ptr<MonteCarloTreeSearch::RolloutItem> MonteCarloTreeSearch::rollout(node
                 (*rollout_item_it)->next = next;
                 next = (*rollout_item_it);
             }
-            DEBUG_EXPECT(0,fabs(reverse_discounted_return-discounted_return)<1e-10);
+            DEBUG_EXPECT_APPROX(0,reverse_discounted_return,discounted_return);
         }
         return rollout_list.front();
     }
@@ -765,174 +768,6 @@ void MonteCarloTreeSearch::init_rollout_weights(node_t node) {
         if(rollout_item->next==nullptr || rollout_item->next->weight==-1) {
             rollout_item->weight = weight;
         }
-    }
-}
-
-void MonteCarloTreeSearch::weight_updates(node_t node) {
-    if(!perform_weight_updates) {
-        return;
-    }
-    // This function performes Monte-Carlo weight updates, that is, the
-    // transition probabilities and policy are estimated from the observed
-    // counts.
-    DEBUG_OUT(1,"Update node " << graph.id(node));
-    auto & rollout_set = mcts_node_info_map[node].rollout_set;
-    switch(node_info_map[node].type) {
-    case ACTION_NODE:
-    {
-        //----------------------------------//
-        // compute transition probabilities //
-        //----------------------------------//
-        std::unordered_map<observation_handle_t,double,
-                           AbstractEnvironment::ObservationHash,
-                           AbstractEnvironment::ObservationEq> transition_probabilities;
-        // get counts
-        int transition_count_sum = 0;
-        for(auto & rollout_item : rollout_set) {
-            ++transition_probabilities[rollout_item->observation];
-            ++transition_count_sum;
-        }
-        DEBUG_EXPECT(0,transition_count_sum>0);
-        // normalize
-        for(auto & prob : transition_probabilities) {
-            prob.second /= transition_count_sum;
-        }
-        //-------------------------------------//
-        // check which observation nodes exist //
-        //-------------------------------------//
-        std::unordered_set<observation_handle_t,
-                           AbstractEnvironment::ObservationHash,
-                           AbstractEnvironment::ObservationEq> existing_observation_nodes;
-        DEBUG_OUT(3,"    Existing observation nodes:");
-        for(out_arc_it_t arc(graph,node); arc!=INVALID; ++arc) {
-            observation_handle_t observation = node_info_map[graph.target(arc)].observation;
-            existing_observation_nodes.insert(observation);
-            DEBUG_OUT(3,"        " << *observation);
-        }
-        //----------------//
-        // update weights //
-        //----------------//
-        double init_weight = 1./rollout_set.size();
-        double check_weight = -1;
-        double weight_sum = 0;
-        for(auto & rollout_item : rollout_set) {
-            if(rollout_item->next==nullptr) {
-                DEBUG_ERROR("This line should never be reached: A rollout never ends in an action node");
-            } else if(!existing_observation_nodes.count(rollout_item->observation)) {
-                rollout_item->weight = init_weight;
-                DEBUG_OUT(2,"    " << *rollout_item);
-                DEBUG_OUT(2,"        init weight: " << init_weight);
-            } else {
-                rollout_item->weight = rollout_item->next->weight * transition_probabilities[rollout_item->observation];
-                DEBUG_OUT(2,"    " << *rollout_item);
-                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
-                DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->observation]);
-            }
-            // all weights must be the same for MC weight updates
-            if(check_weight==-1) {
-                check_weight = rollout_item->weight;
-            } else {
-                DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
-                if(!(fabs(check_weight-rollout_item->weight)<1e-10)) {
-                    DEBUG_OUT(1,*rollout_item << "	(check weight = " << check_weight << ")");
-                }
-            }
-            weight_sum += rollout_item->weight;
-        }
-        DEBUG_EXPECT(0,fabs(weight_sum-1)<1e-10);
-    }
-    break;
-    case OBSERVATION_NODE:
-    {
-        // Note: Rollouts are transfered really only from observation node to
-        // observation node. That is, even if the "correct" action node exists
-        // the rollout is only transferred if the "correct" observation exists,
-        // too. This has two consequences (1) we need to check for
-        // action-observation PAIRS to exist and (2) if any pair does not exist
-        // the corresponding rollouts do not have valid weights and we need to
-        // intialize the WHOLE observation node with default weights.
-
-        //-------------------------------------------------//
-        // check which action/observation node-pairs exist //
-        //-------------------------------------------------//
-        struct tmp_hash {
-            inline std::size_t operator()(const std::pair<action_handle_t,observation_handle_t> & p) const {
-                return p.first->get_hash()+p.second->get_hash();
-            }
-        };
-        struct tmp_eq {
-            inline std::size_t operator()(const std::pair<action_handle_t,observation_handle_t> & p1,
-                                          const std::pair<action_handle_t,observation_handle_t> & p2) const {
-                return *(p1.first)==*(p2.first) && *(p1.second)==*(p2.second);
-            }
-        };
-        std::unordered_set<std::pair<action_handle_t,observation_handle_t>,
-                           tmp_hash, tmp_eq> existing_action_observation_node_pairs;
-        DEBUG_OUT(3,"    Existing action/observation node-pairs:");
-        for(out_arc_it_t action_arc(graph,node); action_arc!=INVALID; ++action_arc) {
-            node_t action_node = graph.target(action_arc);
-            action_handle_t action = node_info_map[action_node].action;
-            for(out_arc_it_t observation_arc(graph,action_node); observation_arc!=INVALID; ++observation_arc) {
-                node_t observation_node = graph.target(observation_arc);
-                observation_handle_t observation = node_info_map[observation_node].observation;
-                existing_action_observation_node_pairs.insert(std::make_pair(action,observation));
-                DEBUG_OUT(3,"        " << *action << "/" << *observation);
-            }
-        }
-        //-------------------------------------------------//
-        // compute action probabilities (empirical policy) //
-        // and check if node is fully expanded             //
-        //-------------------------------------------------//
-        std::unordered_map<action_handle_t,double,
-                           AbstractEnvironment::ActionHash,
-                           AbstractEnvironment::ActionEq> transition_probabilities;
-        bool fully_expanded = true;
-        // get counts
-        int transition_count_sum = 0;
-        for(auto & rollout_item : rollout_set) {
-            ++transition_probabilities[rollout_item->action];
-            ++transition_count_sum;
-            fully_expanded = fully_expanded &&
-                existing_action_observation_node_pairs.count(std::make_pair(rollout_item->action,
-                                                                            rollout_item->observation));
-        }
-        DEBUG_EXPECT(0,transition_count_sum>0);
-        // normalize
-        for(auto & prob : transition_probabilities) {
-            prob.second /= transition_count_sum;
-        }
-        //----------------//
-        // update weights //
-        //----------------//
-        double init_weight = 1./rollout_set.size();
-        double check_weight = -1;
-        double weight_sum = 0;
-        for(auto & rollout_item : rollout_set) {
-            if(rollout_item->next==nullptr || !fully_expanded) {
-                rollout_item->weight = init_weight;
-                DEBUG_OUT(2,"    " << *rollout_item);
-                DEBUG_OUT(2,"        init weight: " << init_weight);
-            } else {
-                rollout_item->weight = rollout_item->next->weight * transition_probabilities[rollout_item->action];
-                DEBUG_EXPECT(0,transition_count_sum>0);
-                DEBUG_OUT(2,"    " << *rollout_item);
-                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
-                DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->action]);
-            }
-            // all weights must be the same for MC weight updates
-            if(check_weight==-1) {
-                check_weight = rollout_item->weight;
-            } else {
-                DEBUG_EXPECT(0,fabs(check_weight-rollout_item->weight)<1e-10);
-                if(!(fabs(check_weight-rollout_item->weight)<1e-10)) {
-                    DEBUG_OUT(1,*rollout_item << "	(check weight = " << check_weight << ")");
-                }
-            }
-            weight_sum += rollout_item->weight;
-        }
-        DEBUG_EXPECT(0,fabs(weight_sum-1)<1e-10);
-    }
-    break;
     }
 }
 

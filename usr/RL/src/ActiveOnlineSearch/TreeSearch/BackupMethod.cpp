@@ -23,13 +23,124 @@ namespace backup_method {
                             const graph_t & graph_,
                             const node_info_map_t & node_info_map_,
                             mcts_node_info_map_t & mcts_node_info_map_,
-                            const mcts_arc_info_map_t & mcts_arc_info_map_) {
+                            const mcts_arc_info_map_t & mcts_arc_info_map_,
+                            bool perform_data_backups_) {
         discount = discount_;
         environment = environment_;
         graph = &graph_;
         node_info_map = &node_info_map_;
         mcts_node_info_map = &mcts_node_info_map_;
         mcts_arc_info_map = &mcts_arc_info_map_;
+        perform_data_backups = perform_data_backups_;
+    }
+
+    void BackupMethod::action_data_backup(const node_t & action_node) const {
+        DEBUG_OUT(1,"Update node " << graph->id(action_node));
+        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
+        auto & rollout_set = (*mcts_node_info_map)[action_node].rollout_set;
+        //----------------------------------//
+        // compute transition probabilities //
+        //----------------------------------//
+        std::unordered_map<observation_handle_t,double,
+                           AbstractEnvironment::ObservationHash,
+                           AbstractEnvironment::ObservationEq> transition_probabilities;
+        int transition_count_sum = 0;
+        for(auto & rollout_item : rollout_set) {
+            ++transition_probabilities[rollout_item->observation];
+            ++transition_count_sum;
+        }
+        DEBUG_EXPECT(0,transition_count_sum>0);
+        // normalize
+        for(auto & prob : transition_probabilities) {
+            prob.second /= transition_count_sum;
+        }
+        //----------------------------------------//
+        // check that all observation nodes exist //
+        //----------------------------------------//
+        DEBUG_EXPECT(0,lemon::countOutArcs(*graph,action_node)==transition_probabilities.size());
+        //----------------//
+        // update weights //
+        //----------------//
+        double weight_sum = 0;
+        for(auto & rollout_item : rollout_set) {
+            if(rollout_item->next==nullptr) {
+                DEBUG_ERROR("This line should never be reached: A rollout never ends in an action node");
+            } else {
+                rollout_item->weight = rollout_item->next->weight * transition_probabilities[rollout_item->observation];
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
+                DEBUG_OUT(2,"        transit. prob: " << transition_probabilities[rollout_item->observation]);
+            }
+            weight_sum += rollout_item->weight;
+        }
+        DEBUG_EXPECT_APPROX(0,weight_sum,1);
+    }
+
+    void BackupMethod::observation_data_backup(const node_t & observation_node, policy_t & policy) const {
+        // Note: Rollouts are transfered really only from observation node to
+        // observation node. That is, even if the "correct" action node exists
+        // the rollout is only transferred if the "correct" observation exists,
+        // too. As a consequence we need to check whether action-observation
+        // PAIRS exist and if ANY pair does not exist the corresponding rollouts
+        // do not have valid weights and we need to intialize the WHOLE
+        // observation node with default weights.
+
+        auto & rollout_set = (*mcts_node_info_map)[observation_node].rollout_set;
+        //-------------------------------------------------//
+        // check which action/observation node-pairs exist //
+        //-------------------------------------------------//
+        struct tmp_hash {
+            inline std::size_t operator()(const std::pair<action_handle_t,observation_handle_t> & p) const {
+                return p.first->get_hash()+p.second->get_hash();
+            }
+        };
+        struct tmp_eq {
+            inline std::size_t operator()(const std::pair<action_handle_t,observation_handle_t> & p1,
+                                          const std::pair<action_handle_t,observation_handle_t> & p2) const {
+                return *(p1.first)==*(p2.first) && *(p1.second)==*(p2.second);
+            }
+        };
+        std::unordered_set<std::pair<action_handle_t,observation_handle_t>,
+                           tmp_hash, tmp_eq> existing_action_observation_node_pairs;
+        DEBUG_OUT(3,"    Existing action/observation node-pairs:");
+        for(out_arc_it_t action_arc(*graph,observation_node); action_arc!=INVALID; ++action_arc) {
+            node_t action_node = graph->target(action_arc);
+            action_handle_t action = (*node_info_map)[action_node].action;
+            for(out_arc_it_t observation_arc(*graph,action_node); observation_arc!=INVALID; ++observation_arc) {
+                node_t other_observation_node = graph->target(observation_arc);
+                observation_handle_t observation = (*node_info_map)[other_observation_node].observation;
+                existing_action_observation_node_pairs.insert(std::make_pair(action,observation));
+                DEBUG_OUT(3,"        " << *action << "/" << *observation);
+            }
+        }
+        //--------------------------------------------------------//
+        // compare to rollouts to check if node is fully expanded //
+        //--------------------------------------------------------//
+        bool fully_expanded = true;
+        for(auto & rollout_item : rollout_set) {
+            fully_expanded = fully_expanded &&
+                existing_action_observation_node_pairs.count(std::make_pair(rollout_item->action,
+                                                                            rollout_item->observation));
+        }
+        //----------------//
+        // update weights //
+        //----------------//
+        double init_weight = 1./rollout_set.size();
+        double weight_sum = 0;
+        for(auto & rollout_item : rollout_set) {
+            if(rollout_item->next==nullptr || !fully_expanded) {
+                rollout_item->weight = init_weight;
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        init weight: " << init_weight);
+            } else {
+                rollout_item->weight = rollout_item->next->weight * policy[rollout_item->action];
+                DEBUG_OUT(2,"    " << *rollout_item);
+                DEBUG_OUT(2,"        parent weight: " << rollout_item->next->weight);
+                DEBUG_OUT(2,"        transit. prob: " << policy[rollout_item->action]);
+            }
+            weight_sum += rollout_item->weight;
+        }
+        DEBUG_EXPECT_APPROX(0,weight_sum,1);
     }
 
     Bellman::Bellman(std::shared_ptr<tree_policy::TreePolicy> tree_policy_,
@@ -43,13 +154,15 @@ namespace backup_method {
                        const graph_t & graph_,
                        const node_info_map_t & node_info_map_,
                        mcts_node_info_map_t & mcts_node_info_map_,
-                       const mcts_arc_info_map_t & mcts_arc_info_map_) {
+                       const mcts_arc_info_map_t & mcts_arc_info_map_,
+                       bool perform_data_backups_) {
         BackupMethod::init(discount_,
                            environment_,
                            graph_,
                            node_info_map_,
                            mcts_node_info_map_,
-                           mcts_arc_info_map_);
+                           mcts_arc_info_map_,
+                           perform_data_backups_);
         // init prior counts
         if(prior_counts<0) {
             if(environment->has_min_reward() && environment->has_max_reward()) {
@@ -151,6 +264,31 @@ namespace backup_method {
                   arg(action_value_variance).
                   arg(min_action_value).
                   arg(max_action_value));
+        //--------------//
+        // data backups //
+        //--------------//
+        if(perform_data_backups) {
+            action_data_backup(action_node);
+            IF_DEBUG(0) {
+                auto & rollout_set = (*mcts_node_info_map)[action_node].rollout_set;
+                if(prior_counts==0) {
+                    double mean_return = 0;
+                    double mean_return_square = 0;
+                    double counts = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        mean_return += rollout_item->weight * rollout_item->discounted_return;
+                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                        ++counts;
+                    }
+                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[action_node].value);
+                    if(counts>=2) {
+                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                        double value_variance = return_variance/counts;
+                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[action_node].value_variance);
+                    }
+                }
+            }
+        }
     }
 
     void Bellman::backup_observation_node(const node_t & observation_node) const {
@@ -189,6 +327,41 @@ namespace backup_method {
                   arg((*mcts_node_info_map)[observation_node].value_variance).
                   arg((*mcts_node_info_map)[observation_node].min_value).
                   arg((*mcts_node_info_map)[observation_node].max_value));
+        //--------------//
+        // data backups //
+        //--------------//
+        if(perform_data_backups) {
+            //---------------------------------//
+            // tranform policy into right type //
+            //---------------------------------//
+            policy_t policy;
+            for(int idx=0; idx<(int)actions.size(); ++idx) {
+                policy[actions[idx]] = probs[idx];
+            }
+            //----------------//
+            // update weights //
+            //----------------//
+            observation_data_backup(observation_node, policy);
+            IF_DEBUG(0) {
+                auto & rollout_set = (*mcts_node_info_map)[observation_node].rollout_set;
+                if(prior_counts==0) {
+                    double mean_return = 0;
+                    double mean_return_square = 0;
+                    double counts = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        mean_return += rollout_item->weight * rollout_item->discounted_return;
+                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                        ++counts;
+                    }
+                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[observation_node].value);
+                    if(counts>=2) {
+                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                        double value_variance = return_variance/counts;
+                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[observation_node].value_variance);
+                    }
+                }
+            }
+        }
     }
 
     MonteCarlo::MonteCarlo(double prior_counts):
@@ -200,13 +373,15 @@ namespace backup_method {
                           const graph_t & graph_,
                           const node_info_map_t & node_info_map_,
                           mcts_node_info_map_t & mcts_node_info_map_,
-                          const mcts_arc_info_map_t & mcts_arc_info_map_) {
+                          const mcts_arc_info_map_t & mcts_arc_info_map_,
+                          bool perform_data_backups_) {
         BackupMethod::init(discount_,
                            environment_,
                            graph_,
                            node_info_map_,
                            mcts_node_info_map_,
-                           mcts_arc_info_map_);
+                           mcts_arc_info_map_,
+                           perform_data_backups_);
         if(prior_counts<0) {
             if(discount<1 && environment->has_min_reward() && environment->has_max_reward()) {
                 prior_counts = 1;
@@ -223,7 +398,9 @@ namespace backup_method {
         }
     }
 
+#define FORCE_DEBUG_LEVEL 0
     void MonteCarlo::backup_action_node(const node_t & action_node) const {
+        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
         backup_node(action_node);
         DEBUG_OUT(1,QString("    backup action-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(action_node)).
@@ -231,9 +408,52 @@ namespace backup_method {
                   arg((*mcts_node_info_map)[action_node].value_variance).
                   arg((*mcts_node_info_map)[action_node].min_value).
                   arg((*mcts_node_info_map)[action_node].max_value));
+        //--------------//
+        // data backups //
+        //--------------//
+        if(perform_data_backups) {
+            action_data_backup(action_node);
+            IF_DEBUG(0) {
+                auto & rollout_set = (*mcts_node_info_map)[action_node].rollout_set;
+                {
+                    double check_weight = -1;
+                    double return_sum = 0;
+                    double squared_return_sum = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        return_sum += rollout_item->discounted_return;
+                        squared_return_sum += pow(rollout_item->discounted_return,2);
+                        // all weights must be the same for MC weight updates
+                        if(check_weight==-1) {
+                            check_weight = rollout_item->weight;
+                        } else {
+                            DEBUG_EXPECT_APPROX(0,check_weight,rollout_item->weight);
+                        }
+                    }
+                    DEBUG_EXPECT_APPROX(0,return_sum,(*mcts_node_info_map)[action_node].return_sum);
+                    DEBUG_EXPECT_APPROX(0,squared_return_sum,(*mcts_node_info_map)[action_node].squared_return_sum);
+                }
+                if(prior_counts==0) {
+                    double mean_return = 0;
+                    double mean_return_square = 0;
+                    double counts = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        mean_return += rollout_item->weight * rollout_item->discounted_return;
+                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                        ++counts;
+                    }
+                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[action_node].value);
+                    if(counts>=2) {
+                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                        double value_variance = return_variance/counts;
+                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[action_node].value_variance);
+                    }
+                }
+            }
+        }
     }
 
     void MonteCarlo::backup_observation_node(const node_t & observation_node) const {
+        DEBUG_EXPECT(0,(*node_info_map)[observation_node].type==MonteCarloTreeSearch::OBSERVATION_NODE);
         backup_node(observation_node);
         DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(observation_node)).
@@ -241,6 +461,70 @@ namespace backup_method {
                   arg((*mcts_node_info_map)[observation_node].value_variance).
                   arg((*mcts_node_info_map)[observation_node].min_value).
                   arg((*mcts_node_info_map)[observation_node].max_value));
+        //--------------//
+        // data backups //
+        //--------------//
+        if(perform_data_backups) {
+            // We perform Monte-Carlo weight updates, that is, the policy is
+            // estimated from the observed counts.
+
+            //-------------------------------------------------//
+            // compute action probabilities (empirical policy) //
+            //-------------------------------------------------//
+            auto & rollout_set = (*mcts_node_info_map)[observation_node].rollout_set;
+            policy_t policy;
+            // get counts
+            int transition_count_sum = 0;
+            for(auto & rollout_item : rollout_set) {
+                ++policy[rollout_item->action];
+                ++transition_count_sum;
+            }
+            DEBUG_EXPECT(0,transition_count_sum>0);
+            // normalize
+            for(auto & prob : policy) {
+                prob.second /= transition_count_sum;
+            }
+            //----------------//
+            // update weights //
+            //----------------//
+            observation_data_backup(observation_node, policy);
+            IF_DEBUG(0) {
+                auto & rollout_set = (*mcts_node_info_map)[observation_node].rollout_set;
+                {
+                    double check_weight = -1;
+                    double return_sum = 0;
+                    double squared_return_sum = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        return_sum += rollout_item->discounted_return;
+                        squared_return_sum += pow(rollout_item->discounted_return,2);
+                        // all weights must be the same for MC weight updates
+                        if(check_weight==-1) {
+                            check_weight = rollout_item->weight;
+                        } else {
+                            DEBUG_EXPECT_APPROX(0,check_weight,rollout_item->weight);
+                        }
+                    }
+                    DEBUG_EXPECT_APPROX(0,return_sum,(*mcts_node_info_map)[observation_node].return_sum);
+                    DEBUG_EXPECT_APPROX(0,squared_return_sum,(*mcts_node_info_map)[observation_node].squared_return_sum);
+                }
+                if(prior_counts==0) {
+                    double mean_return = 0;
+                    double mean_return_square = 0;
+                    double counts = 0;
+                    for(auto & rollout_item : rollout_set) {
+                        mean_return += rollout_item->weight * rollout_item->discounted_return;
+                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                        ++counts;
+                    }
+                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[observation_node].value);
+                    if(counts>=2) {
+                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                        double value_variance = return_variance/counts;
+                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[observation_node].value_variance);
+                    }
+                }
+            }
+        }
     }
 
     void MonteCarlo::backup_node(const node_t & node) const {
@@ -270,6 +554,7 @@ namespace backup_method {
         DEBUG_OUT(3,"    max_return	" << max_return);
         DEBUG_OUT(3,"    prior_counts	" << prior_counts);
     }
+#define FORCE_DEBUG_LEVEL 0
 
     HybridMCDP::HybridMCDP(double mc_weight,
                            double reward_prior_counts,
@@ -292,25 +577,29 @@ namespace backup_method {
                           const graph_t & graph_,
                           const node_info_map_t & node_info_map_,
                           mcts_node_info_map_t & mcts_node_info_map_,
-                          const mcts_arc_info_map_t & mcts_arc_info_map_) {
+                          const mcts_arc_info_map_t & mcts_arc_info_map_,
+                          bool perform_data_backups_) {
         BackupMethod::init(discount_,
                            environment_,
                            graph_,
                            node_info_map_,
                            mcts_node_info_map_,
-                           mcts_arc_info_map_);
+                           mcts_arc_info_map_,
+                           perform_data_backups_);
         monte_carlo.init(discount_,
                          environment_,
                          graph_,
                          node_info_map_,
                          mcts_node_info_map_,
-                         mcts_arc_info_map_);
+                         mcts_arc_info_map_,
+                         perform_data_backups_);
         bellman.init(discount_,
                      environment_,
                      graph_,
                      node_info_map_,
                      mcts_node_info_map_,
-                     mcts_arc_info_map_);
+                     mcts_arc_info_map_,
+                     perform_data_backups_);
     }
 
     void HybridMCDP::backup_action_node(const node_t & action_node) const {

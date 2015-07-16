@@ -1776,14 +1776,13 @@ public:
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
 };
-
+#define FORCE_DEBUG_LEVEL 1
 TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
     // initialize environment and search tree
     using namespace node_finder;
     using namespace tree_policy;
     using namespace value_heuristic;
     using namespace backup_method;
-    using namespace prior_models;
     for(auto node_finder : {
             std::shared_ptr<NodeFinder>(new PlainTree()),
                 std::shared_ptr<NodeFinder>(new ObservationTree()),
@@ -1795,10 +1794,13 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                     std::shared_ptr<TreePolicy>(new UCB1()),
                     std::shared_ptr<TreePolicy>(new UCB_Plus(20))
                     }) {
-            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
+#warning 0-->1
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0))}) {
                 for(auto backup_method : {
-                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,1)),
-                            std::shared_ptr<BackupMethod>(new MonteCarlo(1))
+#warning 0-->1
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
+#warning 0-->1
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(0))
                             }) {
                     for(auto backup_type : {
                             MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
@@ -1838,12 +1840,13 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                                                         backup_method,
                                                         backup_type);
                             search.rollout_storage = rollout_storage;
+                            search.data_backups(true);
                             // do rollouts
                             int rollout_n = 5000;
                             repeat(rollout_n) {
                                 search.next();
-                                // search.plot_graph("graph.pdf");
-                                // getchar();
+                                search.plot_graph("graph.pdf");
+                                getchar();
                             }
                             // checks
                             typedef MonteCarloTreeSearch::graph_t graph_t;

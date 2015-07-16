@@ -109,7 +109,6 @@ public:
     //----members----//
 public:
     ROLLOUT_STORAGE rollout_storage;
-    bool perform_weight_updates;
 protected:
     /**
      * Map holding node-specific information of type MCTSNodeInfo . */
@@ -141,6 +140,7 @@ protected:
 
     int max_depth;
     int rollout_length;
+    bool perform_data_backups;
 
     //----methods----//
 public:
@@ -155,7 +155,7 @@ public:
                          std::shared_ptr<tree_policy::TreePolicy> recommendation_policy = nullptr,
                          int max_depth = -1,
                          ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::CONDENSED,
-                         bool weight_updates = false);
+                         bool perform_data_backups = false);
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
@@ -168,6 +168,7 @@ public:
     void set_max_depth(int depth) {max_depth = depth;}
     virtual const mcts_node_info_map_t & get_mcts_node_info_map() const;
     virtual const mcts_arc_info_map_t & get_mcts_arc_info_map() const;
+    virtual void data_backups(bool);
 protected:
     virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
                                                        const observation_handle_t & observation) override;
@@ -185,7 +186,6 @@ protected:
                              std::shared_ptr<RolloutItem> rollout);
     virtual std::shared_ptr<RolloutItem> rollout(node_t leaf_node);
     virtual void init_rollout_weights(node_t node);
-    virtual void weight_updates(node_t node);
     virtual double color_rescale(const double&) const;
     static bool equal(const MCTSNodeInfo & lhs, const MCTSNodeInfo & rhs);
     static void update(const MCTSNodeInfo & from, MCTSNodeInfo & to);

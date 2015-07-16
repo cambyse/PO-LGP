@@ -27,6 +27,10 @@ namespace backup_method {
      * visited a backup will be performed. This usually are either Monte-Carlo
      * backups using rollouts from that node or dynamic programming backups. */
     class BackupMethod {
+    protected:
+        typedef std::unordered_map<action_handle_t,double,
+            AbstractEnvironment::ActionHash,
+            AbstractEnvironment::ActionEq> policy_t;
     public:
         //----members----//
         double discount = 0;
@@ -35,6 +39,7 @@ namespace backup_method {
         const node_info_map_t * node_info_map = nullptr;
         mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+        bool perform_data_backups = false;
     public:
         //----methods----//
         virtual ~BackupMethod() = default;
@@ -43,10 +48,14 @@ namespace backup_method {
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
                           mcts_node_info_map_t & mcts_node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map);
+                          const mcts_arc_info_map_t & mcts_arc_info_map,
+                          bool perform_data_backups);
         virtual void backup_action_node(const node_t & action_node) const = 0;
         virtual void backup_observation_node(const node_t & observation_node) const = 0;
         virtual void backup_root(const node_t & observation_node) const {};
+    protected:
+        virtual void action_data_backup(const node_t & node) const final;
+        virtual void observation_data_backup(const node_t & node, policy_t & policy) const final;
     };
 
     /**
@@ -62,7 +71,8 @@ namespace backup_method {
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
                           mcts_node_info_map_t & mcts_node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+                          const mcts_arc_info_map_t & mcts_arc_info_map,
+                          bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
     protected:
@@ -81,7 +91,8 @@ namespace backup_method {
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
                           mcts_node_info_map_t & mcts_node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+                          const mcts_arc_info_map_t & mcts_arc_info_map,
+                          bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
     protected:
@@ -105,7 +116,8 @@ namespace backup_method {
                           const graph_t & graph,
                           const node_info_map_t & node_info_map,
                           mcts_node_info_map_t & mcts_node_info_map,
-                          const mcts_arc_info_map_t & mcts_arc_info_map) override;
+                          const mcts_arc_info_map_t & mcts_arc_info_map,
+                          bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
     protected:
