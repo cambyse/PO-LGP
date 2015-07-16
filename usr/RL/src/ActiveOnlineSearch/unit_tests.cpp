@@ -1776,7 +1776,7 @@ public:
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
 };
-#define FORCE_DEBUG_LEVEL 1
+
 TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
     // initialize environment and search tree
     using namespace node_finder;
@@ -1842,8 +1842,8 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                             int rollout_n = 5000;
                             repeat(rollout_n) {
                                 search.next();
-                                search.plot_graph("graph.pdf");
-                                getchar();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
                             }
                             // checks
                             typedef MonteCarloTreeSearch::graph_t graph_t;

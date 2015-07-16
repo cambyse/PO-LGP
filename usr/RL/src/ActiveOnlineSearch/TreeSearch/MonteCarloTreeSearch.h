@@ -109,6 +109,7 @@ public:
     //----members----//
 public:
     ROLLOUT_STORAGE rollout_storage;
+    bool perform_weight_updates;
 protected:
     /**
      * Map holding node-specific information of type MCTSNodeInfo . */
@@ -153,7 +154,8 @@ public:
                          int rollout_length = -1,
                          std::shared_ptr<tree_policy::TreePolicy> recommendation_policy = nullptr,
                          int max_depth = -1,
-                         ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::CONDENSED);
+                         ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::CONDENSED,
+                         bool weight_updates = false);
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
