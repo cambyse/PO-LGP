@@ -7,7 +7,9 @@
   #include <Actions/actions.h>
   #include <pr2/roscom.h>
 //#endif
-
+//#ifdef MT_ROS
+    #include <geometry_msgs/PoseWithCovarianceStamped.h>
+//#endif
 // ============================================================================
 struct PDExecutor: Module {
   // calibrated_pose is pos + orientation (quaternion)
@@ -21,6 +23,11 @@ struct PDExecutor: Module {
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
 // #endif
+//#ifdef MT_ROS
+  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom);
+//#endif
+  ACCESS(bool, fixBase);
+
 
   ACCESS(floatA, poses_rh);
   ACCESS(floatA, poses_lh);
@@ -28,10 +35,12 @@ struct PDExecutor: Module {
   ACCESS(bool, initmapper);  
   // FeedbackMotionControl stuff
   ors::KinematicWorld world;
+  ors::KinematicWorld worldreal;
   FeedbackMotionControl fmc;
-  arr q, qdot;
+  arr q, qdot ;
 
   bool inited, useros;
+  arr error;
 
   // ros stuff
 // #ifdef WITH_ROS
@@ -55,8 +64,8 @@ struct PDExecutor: Module {
   // CtrlTask* effOrientationLX;
   // CtrlTask* effOrientationLY;
   // CtrlTask* effOrientationLZ;
-
-  ConstraintForceTask* fc; 
+  CtrlTask* base;
+  CtrlTask* fc; 
 
   PDExecutor();
 

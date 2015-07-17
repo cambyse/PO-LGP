@@ -10,7 +10,7 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"), fmc(world, true), useros(false),
+    : world("model.kvg"),worldreal("model.kvg"), fmc(world, true), useros(false),
       limits(nullptr), collision(nullptr),
       effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
       effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
@@ -20,7 +20,7 @@ PDExecutor::PDExecutor()
   fmc.H_rate_diag = pr2_reasonable_W(world);
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2.3,10);
- // fmc.qitselfPD.active = false;
+//  fmc.qitselfPD.active = false;
   fmc.qitselfPD.prec = 0.100;
   //fmc.qitselfPD.maxVel = 0.008;
   //fmc.qitselfPD.maxAcc = 0.09;
@@ -38,17 +38,24 @@ PDExecutor::PDExecutor()
   }
 
   if(MT::getParameter<bool>("usePositionR", false)) {
-    effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8, posTMT, "endeffR");
+
+    effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
     effPosR->y_ref = {0.8, -.5, 1.};
     //effPosR->maxVel = 0.004;
   }
 
   if(MT::getParameter<bool>("usePositionL", false)) {
-    effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8, posTMT, "endeffL");
-    effPosL->y_ref = {0., 0.0, 0.};
-    effPosL->f_ref = {5.,2.,2.};
-    effPosL->f_Igain = .1;
+    effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
+    effPosL->y_ref = {0.8, .5, 1.};
+    //effPosL->f_ref = {5.,5.,5.};
+    //effPosL->f_Igain = .05;
     //effPosL->maxVel = 0.004;
+  }
+  if(MT::getParameter<bool>("fc", false)) {
+    fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
+    fc->y_ref ={0.8,0.5,1.}; 
+    fc->f_ref = {5.,5.,5.};
+    fc->f_Igain = .08;
   }
 
   if(MT::getParameter<bool>("useGripperR", false)) {
@@ -66,34 +73,24 @@ PDExecutor::PDExecutor()
   }
 
   if(MT::getParameter<bool>("useOrientationR", false)) {
-    effOrientationR = fmc.addPDTask("orientationR", .2, 1.8, quatTMT, "endeffR", {0, 0, 0});
+    effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   }
 
   if(MT::getParameter<bool>("useOrientationL", false)) {
-    effOrientationL = fmc.addPDTask("orientationL", .2,1.8, quatTMT, "endeffL", {0, 0, 0});
+    effOrientationL = fmc.addPDTask("orientationL", .2,1.8,new DefaultTaskMap(quatTMT,world, "endeffL"));
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
 
   }
-/*
-  if(MT::getParameter<bool>("fc", false)) {
-    fc = fmc.addConstraintForceTask("test", new PairCollisionConstraint(world,"endeffForceR","r_ft_sensor"));
-  
-    //fc->desiredApproach.f_ref = {1.,0.,0.,0.,0.,0.};
-    //fc->desiredApproach.v_ref.clear();// = {0.,0.,0.};
-    //fc->desiredApproach.y_ref.clear();// = {0.,0.,0.};
 
-    fc->desiredApproach.active= true;
-    fc->desiredApproach.Dgain = 1.;
-    fc->desiredApproach.Pgain = 1.;
-    fc->desiredApproach.f_Igain = 1.;
-    fc->desiredForce = 1000.;
-      fc->active = true;
+
+  if(MT::getParameter<bool>("base", false)) {
+    base = fmc.addPDTask("basepos", .2,.8,new TaskMap_qItself(world, "worldTranslationRotation"));
   }
-*/
+
 }
 
 void PDExecutor::visualizeSensors()
@@ -110,201 +107,231 @@ void PDExecutor::visualizeSensors()
   }
 }
 
+
+void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
+  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
+  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
+
+  double angle;
+  ors::Vector rotvec;
+  quat.getRad(angle, rotvec);
+  q(qIndex+0) = pos(0);
+  q(qIndex+1) = pos(1);
+  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+  cout<<q<<endl;
+}
+
+
+
 void PDExecutor::step()
 {
     cout<<"\x1B[2J\x1B[H";
-  if (useros && !inited) {
-    cout << "STARTING TO OPEN" << endl;
-    initRos();
-    cout << "FINISHED TO OPEN" << endl;
-    inited = true;
-  }
-
-  // visualize raw sensor data; not very useful anymore
-  // visualizeSensors();
-   world.watch(false);
-  if(true){
-    ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
-    CtrlMsg obs = ctrl_obs.get();
-    arr fLobs = obs.fL;
-    cout<<fLobs<<endl;
-    arr uobs =  obs.u_bias;
-    cout<<uobs<<endl;
-    if(fLobs.N && uobs.N){
-      arr Jft, J;
-      world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      world.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,world.getShapeByName("l_ft_sensor"));
-      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
-      J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
-      cout <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
-//effPosL->f_ref =  (Jft*fLobs).subRange(0,2);/////CURRENZ 
-
-//      MT::arrayBrackets="[]";
+    if (useros && !inited)
+    {
+        cout << "STARTING TO OPEN" << endl;
+        initRos();
+        cout << "FINISHED TO OPEN" << endl;
+        inited = true;
     }
-  }
+
+    world.watch(false);
+    worldreal.watch(false);
+    
+    ors::Joint *trans= world.getJointByName("worldTranslationRotation");
+    arr fLobs;
+    arr uobs;
+    if(useros)
+    {
+       // ctrl_obs.waitForNextRevision();
+       // pr2_odom.waitForRevisionGreaterThan(0);
+        ors::Shape *ftL_shape = worldreal.getShapeByName("endeffForceL");
+        CtrlMsg obs = ctrl_obs.get();
+        fLobs = obs.fL;
+        //cout<<fLobs<<endl;
+        uobs =  obs.u_bias;
+        //cout<<uobs<<endl;
+        if(fLobs.N && uobs.N)
+        {
+
+            setOdom(obs.q,trans->qIndex,pr2_odom.get());
+
+            worldreal.setJointState(obs.q,obs.qdot);
+            arr Jft, J;
+            worldreal.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
+            worldreal.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,worldreal.getShapeByName("l_ft_sensor"));
+            Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
+            J = inverse_SymPosDef(J*~J)*J;
+             fLobs = Jft*fLobs;
+             cout <<zeros(3) <<' ' << fLobs << " " << J*uobs << endl;
+        }
+    }     
 
 
 
-  floatA cal_pose_rh = calibrated_pose_rh.get();
-  floatA cal_pose_lh = calibrated_pose_lh.get();
 
-  bool init;
-  init = initmapper.get();
-  if(init)
-  {
-    effPosR->active = false;
-    effPosL->active = false;
-    effOrientationR->active = false;
-    effOrientationL->active = false;
-    gripperL->active = false;
-    gripperR->active = false;
-  //  fc->active = false;
-  }
-  else
-  {
+    floatA cal_pose_rh = calibrated_pose_rh.get();
+    floatA cal_pose_lh = calibrated_pose_lh.get();
 
-   // effPosR->active = true;
-    effPosL->active = true;
-   // effOrientationR->active = true;
-   // effOrientationL->active = true;
-   // gripperL->active = true;
-   // gripperR->active = true;
-    //fc->active = true;
-  }
-
- //world.getShapeByName("endeffForceR")->rel.pos = ors::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
-
-// world.getShapeByName("endeffForceR")->size[2]= ors::Vector(obs.fR(0), obs.fR(1), obs.fR(2)).length();
-
-
-/*  // only work with calibrated data
-  if (cal_pose_rh.N == 0 || cal_pose_lh.N == 0)
-    return;
-*/
-  // cout << "============" << endl;
-  // cout << "cal_pose_rh: " << cal_pose_rh << endl;
-
-  // cout << "cal_pose_lh: " << cal_pose_lh << endl;
-if(!init)
-{
-  // set arm poses
-  double x, y, z;
-  arr pos, quat;
-
-  // avoid going behind your back
-  // x = clip(cal_pose_rh(0) * 1.1, 0., 1.1);
-  // y = cal_pose_rh(1) * 1.1;
-  // z = cal_pose_rh(2) * .75 - .05;
-  // pos = { x, y, z };
-  // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
-  // effPosR->setTarget(pos_shoulder_frame);
-  // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
-  //ors::Vector baseV = world.getShapeByName("base_footprint")->rel.pos;
-  //ors::Quaternion baseQ = world.getShapeByName("base_footprint")->rel.rot;
-  x = cal_pose_rh(0) * 1;
- // clip(x, 0., 1.2);
-  y = cal_pose_rh(1) * 1;
-  z = cal_pose_rh(2) * 1;
-  pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
-  if(effPosR) effPosR->setTarget(pos);
-
-  // orientation
-  quat = {
-    (double)cal_pose_rh(3),
-    (double)cal_pose_rh(4),
-    (double)cal_pose_rh(5),
-    (double)cal_pose_rh(6)
-  };
-  if(effOrientationR) effOrientationR->setTarget(quat);
-
-//  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
-//  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
-
-  // avoid going behind your back
-  // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
-  x = cal_pose_lh(0) * 1;
-  // clip(x, 0., 1.2);
-  y = cal_pose_lh(1) * 1;
-  z = cal_pose_lh(2) * 1;
-  pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
- // if(effPosL) effPosL->setTarget(pos);
-
-  // orientation
-  quat = {
-    (double)cal_pose_lh(3),
-    (double)cal_pose_lh(4),
-    (double)cal_pose_lh(5),
-    (double)cal_pose_lh(6)
-  };
-  if(effOrientationL) effOrientationL->setTarget(quat);
-
- // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
- // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
-
-  // set gripper
-  double cal_gripper;
-  cal_gripper =  calibrated_gripper_rh.get();
-  if(gripperR) gripperR->setTarget({cal_gripper});
-  cal_gripper =  calibrated_gripper_lh.get();
-  if(gripperL) gripperL->setTarget({cal_gripper});
-}
-  // update fmc/ors
-
- double tau = 0.001;
- // arr a = fmc.operationalSpaceControl();
-
-  for (uint t = 0; t < 20 ; t++) {
-    //fmc.updateConstraintControllers();
-    arr a = fmc.operationalSpaceControl();
-    q += tau * qdot;
-    qdot += tau * a;
-    fmc.setState(q, qdot);
-
-  
-   // if (length(qdot) < .001)
-   //   break;
-  }
- // cout<<q<<endl<<qdot<<endl; 
-
-  // set state
-  CtrlMsg ref;
-  ref.q = q;
-  arr qdotzero;
-  qdotzero.resizeAs(q).setZero();
-  ref.qdot = qdotzero;
-
-  ref.u_bias = zeros(q.N);
-
-  ref.fL =zeros(6);
-  ref.fR =zeros(6);
-  ref.Kp = {1.};
-  ref.Ki.clear();
-  ref.Kd = {1.};
-  ref.gamma = .1;
-  ref.J_ft_inv.clear();
-  
-
-   fmc.reportCurrentState();
-     //-- compute the force feedback control coefficients
-  uint count=0;
-  //ctrlTasks.readAccess();
-  //fm.tasks = ctrlTasks();
-  for(CtrlTask *t : fmc.tasks) {
-    if(t->active && t->f_ref.N){
-      count++;
-      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      t->getForceControlCoeffs(ref.fL, ref.u_bias, ref.Ki, ref.J_ft_inv, world);
+    bool init;
+    init = initmapper.get();
+    if(init)
+    {
+        effPosR->active = false;
+        effPosL->active = false;
+        effOrientationR->active = false;
+        effOrientationL->active = false;
+        gripperL->active = false;
+        gripperR->active = false;
+        fc->active = false;
+        base->active =false;
     }
-  }
-  if(count==1) ref.Kp = .5;
-    cout<<"fl"<<ref.fL<<endl<<"ubias"<<ref.u_bias<<endl<<"KI"<<ref.Ki<<endl<<"J_ft"<< ref.J_ft_inv<<endl;
-// ctrlTasks.deAccess();
+    else
+    {
 
-  //-- send the computed movement to the robot
-  ctrl_ref.set() = ref;
+       // effPosR->active = true;
+      //  effPosL->active = true;
+      //  effOrientationR->active = true;
+      //  effOrientationL->active = true;
+     //   gripperL->active = true;
+     //   gripperR->active = true;
+     //   fc->active = true;
+        base->active =true;
+    }
 
-   
+
+    if(!init)
+    {
+        // set arm poses
+        double x, y, z;
+        arr pos, quat;
+
+        x = cal_pose_rh(0) * 1;
+        y = cal_pose_rh(1) * 1;
+        z = cal_pose_rh(2) * 1;
+        pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
+        if(effPosR) effPosR->setTarget(pos);
+
+        // orientation
+        quat = {
+            (double)cal_pose_rh(3),
+            (double)cal_pose_rh(4),
+            (double)cal_pose_rh(5),
+            (double)cal_pose_rh(6)
+          };
+        if(effOrientationR) effOrientationR->setTarget(quat);
+
+
+        x = cal_pose_lh(0) * 1;
+        y = cal_pose_lh(1) * 1;
+        z = cal_pose_lh(2) * 1;
+        pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
+        if(effPosL) effPosL->setTarget(pos);
+
+        // orientation
+        quat = {
+          (double)cal_pose_lh(3),
+          (double)cal_pose_lh(4),
+          (double)cal_pose_lh(5),
+          (double)cal_pose_lh(6)
+        };
+        if(effOrientationL) effOrientationL->setTarget(quat);
+
+
+        double cal_gripper;
+        cal_gripper =  calibrated_gripper_rh.get();
+        if(gripperR) gripperR->setTarget({cal_gripper});
+        cal_gripper =  calibrated_gripper_lh.get();
+        if(gripperL) gripperL->setTarget({cal_gripper});
+
+        base->setTarget({1.,-2.,-6.28});
+        fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
+        fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
+        fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
+    }
+    double tau = 0.001;
+
+    for (uint t = 0; t < 20 ; t++)
+    {
+        arr a = fmc.operationalSpaceControl();
+        q += tau * qdot;
+        qdot += tau * a;
+       
+
+/*        if(fixBase.get())
+        {
+            qdot(trans->qIndex+0) = 0;
+            qdot(trans->qIndex+1) = 0;
+            qdot(trans->qIndex+2) = 0;
+            q(trans->qIndex+0) = 0;
+            q(trans->qIndex+1) = 0;
+            q(trans->qIndex+2) = 0;
+        }
+        */
+        fmc.setState(q, qdot);
+  
+    }
+    cout<<    q(trans->qIndex+0)<<endl
+        <<    q(trans->qIndex+1)<<endl
+        <<    q(trans->qIndex+2)<<endl<<trans->qIndex<<endl;
+    // set state
+    CtrlMsg ref;
+    ref.q = q;
+    arr qdotzero;
+    qdotzero.resizeAs(q).setZero();
+    ref.qdot = qdotzero;
+
+    ref.u_bias = zeros(q.N);
+
+    ref.fL =zeros(6);
+    ref.fR =zeros(6);
+    ref.Kp = {1.};
+    ref.Ki.clear();
+    ref.Kd = {1.};
+    ref.gamma = .988;
+    ref.J_ft_inv.clear();
+    fmc.reportCurrentState();
+    //if (!fixBase.get() && trans && trans->qDim()==3)
+   // {
+     //   ref.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
+     //   ref.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
+     //   ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+  //  }
+    if(useros)
+    {
+        uint count=0;
+        //ctrlTasks.readAccess();
+        //fm.tasks = ctrlTasks();
+        if(fLobs.N && uobs.N)
+        {
+
+            for(CtrlTask *t : fmc.tasks)
+            {
+         
+                if(t->active && t->f_ref.N)
+                {
+                    count++;
+                    if(count!=1) HALT("you have multiple active force control tasks - NIY");
+                    t->getForceControlCoeffs(ref.fL, ref.u_bias, ref.Ki, ref.J_ft_inv, worldreal);
+                }
+            }     
+        }
+        if(count==1 )
+        {
+            for(uint i = 0;i<fLobs.N;i++)
+            {
+                  if(fLobs(i) > fc->f_ref(i))  error(i) =ref.gamma*error(i)+ fc->f_ref(i)-fLobs(i);
+                  else if(fLobs(i) < -fc->f_ref(i)) error(i) =ref.gamma*error(i)+ -fc->f_ref(i)-fLobs(i);
+                  else error(i)=0.;
+            }
+        }    
+        //  cout<<"fl"<<ref.fL<<endl<<"ubias"<<ref.u_bias<<endl<<"KI"<<ref.Ki<<endl<<"J_ft"<< ref.J_ft_inv<<endl;
+        // ctrlTasks.deAccess();
+    
+        //-- send the computed movement to the robot
+        cout<<"error"<<error<<endl;
+        ctrl_ref.set() = ref;
+    }
+    
 }
 
 void PDExecutor::sendRosCtrlMsg()
@@ -358,6 +385,7 @@ void PDExecutor::initRos()
   q = ctrl_obs.get()->q;
   qdot = ctrl_obs.get()->qdot;
   fmc.setState(q, qdot);
+  worldreal.setJointState(q,qdot);
   cout << "DONE" << endl;
 //#endif
 }
@@ -365,6 +393,7 @@ void PDExecutor::initRos()
 void PDExecutor::open()
 {
   useros = MT::getParameter<bool>("useRos", false);
+  error = zeros(3);
 }
 
 void PDExecutor::close()

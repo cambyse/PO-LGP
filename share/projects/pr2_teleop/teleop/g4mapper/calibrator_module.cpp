@@ -638,16 +638,16 @@ void G4HutoRoMap::transform(const floatA& poses_raw)
       // calibrated_gripper_rh.set() = clip(
       //     length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_rh.subRange(0, 2) - poses_index_rh.subRange(0, 2)) * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
-      clip(dummy, 0.f, 1.f);
+      dummy = length(poses_thumb_rh.subRange(0, 2) - poses_index_rh.subRange(0, 2));// * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
+      clip(dummy, 0.f, 0.9f);
       calibrated_gripper_rh.set() = dummy;
     //  cout<<"calibrated_gripper_rh "<<dummy<<endl;
       dummy = 0;
       // calibrated_gripper_lh.set() = clip(
       //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_lh.subRange(0, 2) - poses_index_lh.subRange(0, 2)) *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
-      clip(dummy, 0.f, 1.f);
+      dummy = length(poses_thumb_lh.subRange(0, 2) - poses_index_lh.subRange(0, 2));// *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
+      clip(dummy, 0.f, 0.9f);
       calibrated_gripper_lh.set() = dummy;
 
     //  cout<<"calibrated_gripper_lh "<<dummy<<endl;
