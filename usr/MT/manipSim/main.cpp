@@ -223,7 +223,7 @@ void coreExperiment(){
     nObjects = world.bodies.N - nObjects;
 //    world .gl().watch();
 
-    ors::KinematicWorld world_best;
+    ors::KinematicWorld world_best, world_display;
     Graph symbols_best;
     double f_best=0.;
 
@@ -248,12 +248,17 @@ void coreExperiment(){
         symbols_best = symbols_sol;
       }
 //      gl.drawers(1).classP= &world_sol;
+      world_display=world_sol;
+      world_display.gl().update();
 //      gl.update();
 //      world_sol.gl().update();
     }
     cout <<"BEST:" <<endl;
     world_best >>FILE("z.world_best.kvg");
     symbols_best >>FILE("z.symbols_best.kvg");
+
+    world_display=world_best;
+    world_display.gl().update();
 
 //    gl.drawers(1).classP= &world_best;
     gl.update();
@@ -271,8 +276,8 @@ void coreExperiment(){
 
 //===========================================================================
 int main(int argc,char **argv){
+    rnd.clockSeed();
   coreExperiment();
-//  rnd.clockSeed();
 //  generateRandomProblems();
 //  return 0;
 //  optimizeFinal();
