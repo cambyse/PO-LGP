@@ -57,7 +57,7 @@ namespace backup_method {
         //----------------------------------------//
         // check that all observation nodes exist //
         //----------------------------------------//
-        DEBUG_EXPECT(0,lemon::countOutArcs(*graph,action_node)==transition_probabilities.size());
+        DEBUG_EXPECT(0,lemon::countOutArcs(*graph,action_node)==(int)transition_probabilities.size());
         //----------------//
         // update weights //
         //----------------//
@@ -184,7 +184,7 @@ namespace backup_method {
                           *mcts_arc_info_map);
         tree_policy->restrict_to_existing = true;
     }
-
+#define FORCE_DEBUG_LEVEL 3
     void Bellman::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT(0,environment!=nullptr);
         DEBUG_OUT(1,"Backup action node " << graph->id(action_node));
@@ -259,7 +259,7 @@ namespace backup_method {
                                                   action_value_variance,
                                                   min_action_value,
                                                   max_action_value);
-        DEBUG_OUT(2,QString("Assign	^Q=%1	~Q=%2	↹Q=%3/%4").
+        DEBUG_OUT(2,QString("    Assigned	^Q=%1	~Q=%2	↹Q=%3/%4").
                   arg(action_value).
                   arg(action_value_variance).
                   arg(min_action_value).
@@ -269,25 +269,6 @@ namespace backup_method {
         //--------------//
         if(perform_data_backups) {
             action_data_backup(action_node);
-            IF_DEBUG(0) {
-                auto & rollout_set = (*mcts_node_info_map)[action_node].rollout_set;
-                if(prior_counts==0) {
-                    double mean_return = 0;
-                    double mean_return_square = 0;
-                    double counts = 0;
-                    for(auto & rollout_item : rollout_set) {
-                        mean_return += rollout_item->weight * rollout_item->discounted_return;
-                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
-                        ++counts;
-                    }
-                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[action_node].value);
-                    if(counts>=2) {
-                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
-                        double value_variance = return_variance/counts;
-                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[action_node].value_variance);
-                    }
-                }
-            }
         }
     }
 
@@ -316,13 +297,15 @@ namespace backup_method {
             mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
             min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
             max_value += probs[idx]*(*mcts_node_info_map)[action_node].max_value;
+            DEBUG_OUT(3,"    action probability to node " << graph->id(action_node) <<
+                      " (action: " << *((*node_info_map)[action_node].action) << ")");
         }
         // assign
         (*mcts_node_info_map)[observation_node].set_value(mean_value,
                                                           mean_value_variance,
                                                           min_value,
                                                           max_value);
-        DEBUG_OUT(2,QString("Assigned	^Q=%1	~Q=%2	↹Q=%3/%4").
+        DEBUG_OUT(2,QString("    Assigned	^Q=%1	~Q=%2	↹Q=%3/%4").
                   arg((*mcts_node_info_map)[observation_node].value).
                   arg((*mcts_node_info_map)[observation_node].value_variance).
                   arg((*mcts_node_info_map)[observation_node].min_value).
@@ -342,28 +325,9 @@ namespace backup_method {
             // update weights //
             //----------------//
             observation_data_backup(observation_node, policy);
-            IF_DEBUG(0) {
-                auto & rollout_set = (*mcts_node_info_map)[observation_node].rollout_set;
-                if(prior_counts==0) {
-                    double mean_return = 0;
-                    double mean_return_square = 0;
-                    double counts = 0;
-                    for(auto & rollout_item : rollout_set) {
-                        mean_return += rollout_item->weight * rollout_item->discounted_return;
-                        mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
-                        ++counts;
-                    }
-                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[observation_node].value);
-                    if(counts>=2) {
-                        double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
-                        double value_variance = return_variance/counts;
-                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[observation_node].value_variance);
-                    }
-                }
-            }
         }
     }
-
+#define FORCE_DEBUG_LEVEL 0
     MonteCarlo::MonteCarlo(double prior_counts):
         prior_counts(prior_counts)
     {}

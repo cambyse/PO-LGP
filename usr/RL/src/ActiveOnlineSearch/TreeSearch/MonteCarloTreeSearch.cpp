@@ -449,16 +449,17 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
     for(node_it_t node(graph); node!=INVALID; ++node) {
         double value = mcts_node_info_map[node].value;
         QString node_label = QString(R"(
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0">
-    <TR><TD ALIGN="center" COLSPAN="2" CELLPADDING="4"><B>%1</B></TD></TR>
+<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0">
+    <TR><TD ALIGN="center" COLSPAN="5" CELLPADDING="4"><B>%1</B></TD></TR>
     <TR><TD ALIGN="right"> id </TD><TD ALIGN="left"> %4         </TD></TR>
-    <TR><TD ALIGN="right"> #a </TD><TD ALIGN="left"> %2         </TD></TR>
-    <TR><TD ALIGN="right"> #r </TD><TD ALIGN="left"> %6         </TD></TR>
-    <TR><TD ALIGN="right"> V  </TD><TD ALIGN="left"> %3 ± %7    </TD></TR>
-    <TR><TD ALIGN="right"> V↹ </TD><TD ALIGN="left"> %11 / %12  </TD></TR>
-    <TR><TD ALIGN="right"> R  </TD><TD ALIGN="left"> %5         </TD></TR>
-    <TR><TD ALIGN="right"> R² </TD><TD ALIGN="left"> %8         </TD></TR>
-    <TR><TD ALIGN="right"> R↹ </TD><TD ALIGN="left"> %9 / %10   </TD></TR>
+    <TR><TD ALIGN="right"> #a </TD><TD ALIGN="left"> %2         </TD><TD>&nbsp;&nbsp;</TD>
+        <TD ALIGN="right"> #r </TD><TD ALIGN="left"> %6         </TD></TR>
+    <TR><TD ALIGN="right"> V  </TD><TD ALIGN="left"> %3         </TD><TD></TD>
+        <TD ALIGN="right"> V~ </TD><TD ALIGN="left"> %7         </TD></TR>
+    <TR><TD ALIGN="right"> V↹ </TD><TD ALIGN="left" COLSPAN="4"> %11 / %12  </TD></TR>
+    <TR><TD ALIGN="right"> R  </TD><TD ALIGN="left"> %5         </TD><TD></TD>
+        <TD ALIGN="right"> R² </TD><TD ALIGN="left"> %8         </TD></TR>
+    <TR><TD ALIGN="right"> R↹ </TD><TD ALIGN="left" COLSPAN="4"> %9 / %10   </TD></TR>
     <TR><TD ALIGN="right"> #⤳ </TD><TD ALIGN="left"> %13       </TD></TR>
 </TABLE>)").
             arg(str_html(node)).
@@ -467,7 +468,7 @@ void MonteCarloTreeSearch::plot_graph(const char* file_name,
             arg(graph.id(node)).
             arg(mcts_node_info_map[node].return_sum,0,'g',4).
             arg(mcts_node_info_map[node].rollout_counts).
-            arg(sqrt(mcts_node_info_map[node].value_variance),0,'g',4).
+            arg(mcts_node_info_map[node].value_variance,0,'g',4).
             arg(mcts_node_info_map[node].squared_return_sum,0,'g',4).
             arg(mcts_node_info_map[node].min_return,0,'g',4).
             arg(mcts_node_info_map[node].max_return,0,'g',4).

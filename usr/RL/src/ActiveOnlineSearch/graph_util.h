@@ -30,14 +30,14 @@ namespace graph_util {
         const graph_t & graph;
     };
 
-    template<class graph_t>
+    template<class graph_t, class map_graph_t = graph_t>
         class GraphFlooding {
     public:
         typedef typename graph_t::Node node_t;
         typedef typename graph_t::NodeIt node_it_t;
         typedef typename graph_t::OutArcIt out_arc_it_t;
         template<class T>
-            using node_map_t = typename graph_t::template NodeMap<T>;
+            using node_map_t = typename map_graph_t::template NodeMap<T>;
 
         const graph_t & graph;
         node_map_t<bool> & reached;
@@ -84,24 +84,24 @@ namespace graph_util {
     /**
      * Class for propagating information through a graph. See
      * GraphPropagationExample.cpp for an example. */
-    template<class graph_t>
+    template<class GRAPH_1, class GRAPH_2 = GRAPH_1>
         class GraphPropagation {
         //----typedefs/classes----//
     public:
-        typedef typename graph_t::Node node_t;
-        typedef typename graph_t::NodeIt node_it_t;
-        typedef typename graph_t::Arc arc_t;
-        typedef typename graph_t::ArcIt arc_it_t;
-        typedef typename graph_t::OutArcIt out_arc_it_t;
-        typedef typename graph_t::InArcIt in_arc_it_t;
+        typedef typename GRAPH_1::Node node_t;
+        typedef typename GRAPH_1::NodeIt node_it_t;
+        typedef typename GRAPH_1::Arc arc_t;
+        typedef typename GRAPH_1::ArcIt arc_it_t;
+        typedef typename GRAPH_1::OutArcIt out_arc_it_t;
+        typedef typename GRAPH_1::InArcIt in_arc_it_t;
         template<class T>
-            using node_map_t = typename graph_t::template NodeMap<T>;
+            using node_map_t = typename GRAPH_2::template NodeMap<T>;
         typedef std::function<bool(node_t)> check_change_function_t;
-        typedef std::unordered_set<node_t,NodeHashFunction<graph_t>> node_set_t;
+        typedef std::unordered_set<node_t,NodeHashFunction<GRAPH_1>> node_set_t;
 
         //----members----//
     private:
-        const graph_t & graph;
+        const GRAPH_1 & graph;
         node_set_t source_nodes;
         node_set_t unprocessed_nodes_set;
         std::deque<node_t> unprocessed_nodes_queue;
@@ -118,10 +118,10 @@ namespace graph_util {
 
         GraphPropagation() = delete;
 
-        GraphPropagation(const graph_t & graph):
+        GraphPropagation(const GRAPH_1 & graph):
             graph(graph),
-            source_nodes({},0,NodeHashFunction<graph_t>(graph)),
-            unprocessed_nodes_set({},0,NodeHashFunction<graph_t>(graph))
+            source_nodes({},0,NodeHashFunction<GRAPH_1>(graph)),
+            unprocessed_nodes_set({},0,NodeHashFunction<GRAPH_1>(graph))
         {}
 
         virtual ~GraphPropagation() {
@@ -334,8 +334,8 @@ namespace graph_util {
     };
 
     template<class graph_t>
-        GraphPropagation<graph_t> GraphPropagationFactory(const graph_t & graph) {
-        return GraphPropagation<graph_t>(graph);
+        GraphPropagation<graph_t,graph_t> GraphPropagationFactory(const graph_t & graph) {
+        return GraphPropagation<graph_t,graph_t>(graph);
     }
 
 } //end namespace graph_util

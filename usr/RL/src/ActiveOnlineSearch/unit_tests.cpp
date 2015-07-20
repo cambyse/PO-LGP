@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <lemon/dfs.h>
+#include <lemon/adaptors.h>
 
 #include <sstream>
 
@@ -1776,7 +1777,7 @@ public:
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
 };
-#define FORCE_DEBUG_LEVEL 1
+
 TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
     // initialize environment and search tree
     using namespace node_finder;
@@ -1794,20 +1795,17 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                     std::shared_ptr<TreePolicy>(new UCB1()),
                     std::shared_ptr<TreePolicy>(new UCB_Plus(20))
                     }) {
-#warning 0-->1
-            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0))}) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
                 for(auto backup_method : {
-#warning 0-->1
-                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
-#warning 0-->1
-                            std::shared_ptr<BackupMethod>(new MonteCarlo(0))
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,1)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(1))
                             }) {
                     for(auto backup_type : {
                             MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
                             MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
                                 }) {
                         for(auto rollout_storage : {
-                                //MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
+                                MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
                                     MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED,
                                     MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL
                                     }) {
@@ -1840,13 +1838,13 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                                                         backup_method,
                                                         backup_type);
                             search.rollout_storage = rollout_storage;
-                            search.data_backups(true);
+                            search.data_backups(false);
                             // do rollouts
                             int rollout_n = 5000;
                             repeat(rollout_n) {
                                 search.next();
-                                search.plot_graph("graph.pdf");
-                                getchar();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
                             }
                             // checks
                             typedef MonteCarloTreeSearch::graph_t graph_t;
@@ -1933,6 +1931,153 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
                             EXPECT_NEAR(mcts_node_info_map[action_1_from_state_3].value,1,0.1) << case_string.str();
                             // search.plot_graph("graph.pdf");
                             // getchar();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+#define FORCE_DEBUG_LEVEL 2
+TEST(MonteCarloTreeSearch, DataBackup) {
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1()),
+                    std::shared_ptr<TreePolicy>(new UCB_Plus(20))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(0))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                            MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        for(auto rollout_storage : {
+                                //MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL
+                                    }) {
+                            std::stringstream case_string;
+                            case_string << "Testing" << endl;
+                            case_string << "    " << typeid(*node_finder).name() << endl;
+                            case_string << "    " << typeid(*tree_policy).name() << endl;
+                            case_string << "    " << typeid(*value_heuristic).name() << endl;
+                            case_string << "    " << typeid(*backup_method).name() << endl;
+                            case_string << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                            case_string << "    " << typeid(rollout_storage).name() << ": " << (int)rollout_storage << endl;
+                            IF_DEBUG(1) {
+                                cout << case_string.str();
+                            } else {
+                                cout << "." << std::flush;
+                            }
+                            // things that don't work together
+                            // if(typeid(*tree_policy)==typeid(Uniform) && typeid(*backup_method)==typeid(MonteCarlo)) {
+                            //     DEBUG_OUT(1,"    Skipping");
+                            //     continue;
+                            // }
+                            // setup everything
+                            auto environment = std::shared_ptr<AbstractEnvironment>(new MinimalCompleteEnvironment());
+                            double discount = 0.5;
+                            MonteCarloTreeSearch search(environment,
+                                                        discount,
+                                                        node_finder,
+                                                        tree_policy,
+                                                        value_heuristic,
+                                                        backup_method,
+                                                        backup_type);
+                            search.rollout_storage = rollout_storage;
+                            search.data_backups(true);
+                            // do rollouts
+                            int rollout_n = 100;
+                            repeat(rollout_n) {
+                                search.next();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
+                            }
+                            //--------//
+                            // checks //
+                            //--------//
+                            typedef MonteCarloTreeSearch::graph_t graph_t;
+                            typedef MonteCarloTreeSearch::node_t node_t;
+                            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                            typedef MonteCarloTreeSearch::arc_t arc_t;
+                            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                            const graph_t & graph = search.get_graph();
+                            auto & node_info_map = search.get_node_info_map();
+                            auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                            // find nodes with fully expanded sub-trees by
+                            // "reverse flooding" from not-fully-expanded nodes
+                            typedef lemon::ReverseDigraph<const graph_t> const_graph_t;
+                            const_graph_t reverse_graph = lemon::reverseDigraph(graph);
+                            graph_t::NodeMap<bool> reached(graph);
+                            auto flooding = graph_util::GraphFlooding<const_graph_t,graph_t>(reverse_graph,reached);
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(mcts_node_info_map[node].rollout_counts<2 || // for valid variance
+                                   mcts_node_info_map[node].rollout_counts!=(int)mcts_node_info_map[node].rollout_set.size()) {
+                                    flooding.add_source(node);
+                                    DEBUG_OUT(2,"    node " << graph.id(node) << " not fully expanded");
+                                }
+                            }
+                            flooding.flood();
+                            // now check nodes that were not reached, i.e., that
+                            // have fully expanded subtrees
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(reached[node]) continue;
+                                DEBUG_OUT(2,"    checking node " << graph.id(node));
+                                auto & rollout_set = mcts_node_info_map[node].rollout_set;
+                                double mean_return = 0;
+                                double mean_return_square = 0;
+                                double counts = 0;
+                                double weight_sum = 0;
+                                for(auto & rollout_item : rollout_set) {
+                                    mean_return += rollout_item->weight * rollout_item->discounted_return;
+                                    mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                                    weight_sum += rollout_item->weight;
+                                    ++counts;
+                                }
+                                double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                                double value_variance = return_variance/counts;
+
+                                DEBUG_WARNING("mean return: " << mean_return);
+                                DEBUG_WARNING("mean return square: " << mean_return_square);
+                                DEBUG_WARNING("counts: " << counts);
+                                DEBUG_WARNING("return variance: " << return_variance);
+                                DEBUG_WARNING("value variance: " << value_variance);
+                                DEBUG_WARNING("value variance [node]: " << mcts_node_info_map[node].value_variance);
+                                DEBUG_WARNING("value [node]: " << mcts_node_info_map[node].value);
+
+                                DEBUG_EXPECT_APPROX(0,weight_sum,1);
+                                DEBUG_EXPECT_APPROX(0,mean_return,mcts_node_info_map[node].value);
+                                DEBUG_EXPECT_APPROX(0,value_variance,mcts_node_info_map[node].value_variance);
+
+                                if(fabs(mean_return-mcts_node_info_map[node].value)>1e-10 ||
+                                   fabs(value_variance-mcts_node_info_map[node].value_variance)>1e-10) {
+                                    for(auto & rollout_item : rollout_set) {
+                                        cout << *rollout_item << endl;
+                                    }
+                                }
+                            }
+
+                            search.plot_graph("graph.pdf");
+                            getchar();
                         }
                     }
                 }
