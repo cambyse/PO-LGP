@@ -8,4 +8,4 @@
 
 ODE = 0
 PHYSX = 0
-ROS_VERSION=indigo
+ROS_VERSION=groovy
