@@ -193,16 +193,15 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   if(_x!=x){
     x=_x;
     P(phi_x, J_x, tt_x, x);
-    CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
-    CHECK_EQ(phi_x.N, tt_x.N, "termType array size inconsistent");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
-    if(&dL || &HL) CHECK(J_x.N,"");
   }
+  CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
+  CHECK_EQ(phi_x.N, tt_x.N, "termType array size inconsistent");
 
   //-- construct unconstrained problem
   //precompute I_lambda_x
   boolA I_lambda_x(phi_x.N);
-  I_lambda_x = false;
+  if(phi_x.N) I_lambda_x = false;
   if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x(i)==ineqTT) I_lambda_x(i) = (phi_x(i)>0. || (lambda.N && lambda(i)>0.));
 
 
@@ -424,7 +423,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
     fil <<k <<' ' <<newton.evals <<' ' <<UCP.f_x <<' ' <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<endl;
 
     if(opt.verbose>0){
-      cout <<"***** optConstrained: iteration=" <<k
+      cout <<"** optConstr. it=" <<k
            <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
       if(x.N<5) cout <<" \tlambda=" <<UCP.lambda <<" \tkappa=" <<UCP.kappa /*<<" \tg=" <<UCP.g_x <<" \th=" <<UCP.h_x*/;
       cout <<endl;
@@ -484,6 +483,7 @@ uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions o
   return newton.evals;
 }
 
+
 uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOptions opt){
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
@@ -500,7 +500,7 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
     fil <<k <<' ' <<newton.evals <<' ' <<UCP.get_sumOfSquares() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
 
     if(opt.verbose>0){
-      cout <<"***** optConstrained: iteration=" <<k
+      cout <<"** optConstr. it=" <<k
            <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
       if(x.N<5) cout <<" \tlambda=" <<UCP.lambda;
       cout <<endl;
@@ -526,22 +526,24 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
     }else{
       //use standard 'run()' to iterate Newton steps
       double stopTol = newton.o.stopTolerance;
-      newton.o.stopTolerance*=10.;
+//      newton.o.stopTolerance*=2.;
       newton.run();
-      newton.o.stopTolerance = stopTol;
+//      newton.o.stopTolerance = stopTol;
     }
 
     if(opt.verbose>0){
-      cout <<k <<' ' <<newton.evals <<" f(x)=" <<UCP.get_sumOfSquares()
-          <<" \tg_compl=" <<UCP.get_sumOfGviolations()
-         <<" \th_compl=" <<UCP.get_sumOfHviolations();
+      cout <<"** optConstr. it=" <<k
+          <<' ' <<newton.evals <<" f(x)=" <<UCP.get_sumOfSquares()
+         <<" \tg_compl=" <<UCP.get_sumOfGviolations()
+        <<" \th_compl=" <<UCP.get_sumOfHviolations()
+       <<" \t|x-x'|=" <<absMax(x_old-x);
       if(x.N<5) cout <<" \tx=" <<x;
       cout <<endl;
     }
 
     //stopping criteron
-    if(k>10 && absMax(x_old-x)<opt.stopTolerance){
-      if(opt.verbose>0) cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+    if(k>=2 && absMax(x_old-x)<opt.stopTolerance){
+      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
       break;
     }
 
@@ -577,7 +579,7 @@ bool OptConstrained::step(){
   fil <<its <<' ' <<newton.evals <<' ' <<UCP.get_sumOfSquares() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
 
   if(opt.verbose>0){
-    cout <<"***** optConstrained: iteration=" <<its
+    cout <<"** optConstr. it=" <<its
          <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
     if(newton.x.N<5) cout <<" \tlambda=" <<UCP.lambda;
     cout <<endl;

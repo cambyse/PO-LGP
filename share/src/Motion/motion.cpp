@@ -299,8 +299,10 @@ void MotionProblem::activateAllTaskCosts(bool active) {
 
 void MotionProblem::costReport(bool gnuplt) {
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  cout <<"Size of cost matrix:" <<phiMatrix.dim() <<endl;
-  uint T=phiMatrix.d0-1;
+  if(phiMatrix.N!=T+1){
+    CHECK(phiMatrix.N==0,"");
+    phiMatrix.resize(T+1);
+  }
 
   arr plotData(T+1,taskCosts.N); plotData.setZero();
 

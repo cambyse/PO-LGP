@@ -14,11 +14,11 @@ KOMO::KOMO(const Graph& specs){
 }
 
 void KOMO::init(const Graph& specs){
-  Graph &glob = specs["KOMO"]->graph();
-  MT::FileToken model = glob["model"]->V<MT::FileToken>();
-  uint timeSteps=glob["T"]->V<double>();
-  double duration=glob["duration"]->V<double>();
-  uint phases=glob.V<double>("phases", 1);
+  Graph &glob = specs.get<Graph>("KOMO");
+  MT::FileToken model = glob.get<MT::FileToken>("model");
+  uint timeSteps=glob.get<double>("T");
+  double duration=glob.get<double>("duration");
+  uint phases=glob.get<double>("phases", 1);
 
   world.read(model);
   world.meldFixedJoints();
@@ -77,20 +77,21 @@ void KOMO::run(){
   cout <<"** optimization time=" <<MT::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
 //    checkJacobian(Convert(MF), x, 1e-5);
-  MP->costReport();
+  MP->costReport(false);
 }
 
 void KOMO::checkGradients(){
   checkAllGradients(Convert(*MPF), x, 1e-4);
 }
 
-void KOMO::displayTrajectory(){
+void KOMO::displayTrajectory(bool wait){
 //  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
 //  orsDrawProxies=true;
   for(uint t=0;t<x.d0;t++){
     MP->setState(x[t]);
     MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
   }
+  if(wait) MP->world.gl().watch();
 }
 
 //===========================================================================

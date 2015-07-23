@@ -2,16 +2,19 @@
 #include <Gui/opengl.h>
 #include <Motion/komo.h>
 
-
 //===========================================================================
 
 void TEST(Specs){
-  KOMO komo(Graph("specs.g"));
+  const char* specsfile="specs.g";
+  if(MT::argc>1) specsfile=MT::argv[1];
+
+  Graph specs(specsfile);
+  KOMO komo(specs);
 
   for(;;){
-    komo.init(Graph("specs.g"));
+    komo.init(Graph(specsfile));
     komo.run();
-    for(uint i=0;i<2;i++) komo.displayTrajectory();
+    komo.displayTrajectory();
   }
 }
 
@@ -19,6 +22,8 @@ void TEST(Specs){
 
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
+
+  cout <<MT::String(FILE("USAGE"));
 
   testSpecs();
 
