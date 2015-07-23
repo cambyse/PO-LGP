@@ -20,12 +20,12 @@ namespace prior_models {
         const double variance_of_mean;
 
         //----methods----//
-    PriorCounts(double sum,
-                double squares_sum,
-                double counts,
-                double min = 0,
-                double max = 0,
-                double prior_counts = 0);
+        PriorCounts(double sum,
+                    double squares_sum,
+                    double counts,
+                    double min = 0,
+                    double max = 0,
+                    double prior_counts = 0);
         virtual ~PriorCounts() = default;
         static double compute_mean(double sum,
                                    double counts,

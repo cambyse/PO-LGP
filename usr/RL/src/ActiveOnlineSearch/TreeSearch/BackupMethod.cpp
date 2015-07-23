@@ -184,7 +184,7 @@ namespace backup_method {
                           *mcts_arc_info_map);
         tree_policy->restrict_to_existing = true;
     }
-#define FORCE_DEBUG_LEVEL 3
+
     void Bellman::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT(0,environment!=nullptr);
         DEBUG_OUT(1,"Backup action node " << graph->id(action_node));
@@ -327,7 +327,7 @@ namespace backup_method {
             observation_data_backup(observation_node, policy);
         }
     }
-#define FORCE_DEBUG_LEVEL 0
+
     MonteCarlo::MonteCarlo(double prior_counts):
         prior_counts(prior_counts)
     {}
@@ -362,7 +362,6 @@ namespace backup_method {
         }
     }
 
-#define FORCE_DEBUG_LEVEL 0
     void MonteCarlo::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT(0,(*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
         backup_node(action_node);
@@ -518,7 +517,6 @@ namespace backup_method {
         DEBUG_OUT(3,"    max_return	" << max_return);
         DEBUG_OUT(3,"    prior_counts	" << prior_counts);
     }
-#define FORCE_DEBUG_LEVEL 0
 
     HybridMCDP::HybridMCDP(double mc_weight,
                            double reward_prior_counts,
