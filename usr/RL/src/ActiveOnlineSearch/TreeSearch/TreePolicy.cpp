@@ -150,7 +150,15 @@ namespace tree_policy {
         DEBUG_EXPECT(0,scored_actions.size()==scores.size());
 
         // compute soft-max probabilities and return
-        return action_probability_t(scored_actions, util::soft_max(scores,soft_max_temperature));
+        auto probabilities = util::soft_max(scores,soft_max_temperature);
+        IF_DEBUG(0) {
+            double sum = 0;
+            for(auto prob : probabilities) {
+                sum += prob;
+            }
+            DEBUG_EXPECT_APPROX(0,sum,1);
+        }
+        return action_probability_t(scored_actions, probabilities);
     }
 
     double Optimal::score(const node_t & state_node,
@@ -187,6 +195,88 @@ namespace tree_policy {
                               const arc_t & to_action_arc,
                               const node_t & action_node) const {
         return (*mcts_node_info_map)[action_node].max_value;
+    }
+
+    Quantile::Quantile(double Cp_,
+                       double quantile_,
+                       double min_return_,
+                       double max_return_,
+                       double prior_counts_):
+        Cp(Cp_),
+        quantile(quantile_),
+        min_return(min_return_),
+        max_return(max_return_),
+        prior_counts(prior_counts_)
+    {}
+
+    double Quantile::score(const node_t & state_node,
+                           const arc_t & to_action_arc,
+                           const node_t & action_node) const {
+        auto & rollouts = (*mcts_node_info_map)[action_node].rollout_set;
+        // get counts to rescale weights for incorporating prior counts (weights
+        // sum to 1)
+        double counts = rollouts.size();
+        DEBUG_EXPECT(0,counts>0);
+        //-----------------------------------//
+        // get sorted (by return value) list //
+        //-----------------------------------//
+        // also compute value
+        double value = 0;
+        vector<pair<double,double>> rollout_list;
+        double weight_sum = 0;
+        bool all_weights_negative = true;
+        for(auto rollout_item : rollouts) {
+            rollout_list.push_back(make_pair(rollout_item->discounted_return,
+                                             rollout_item->weight*counts)); // rescale weights
+            value += rollout_item->discounted_return * rollout_item->weight * counts;
+            weight_sum += rollout_item->weight;
+            if(rollout_item->weight>=0) {
+                all_weights_negative = false;
+            }
+        }
+        // if weights were not updated use uniform weighting
+        if(all_weights_negative) {
+            value = 0;
+            for(auto & return_weight_pair : rollout_list) {
+                return_weight_pair.second = 1;
+                value += return_weight_pair.first;
+            }
+        } else {
+            DEBUG_EXPECT_APPROX(0,weight_sum,1);
+        }
+        // add prior counts
+        if(prior_counts>0) {
+            rollout_list.push_back(make_pair(min_return, prior_counts/2));
+            rollout_list.push_back(make_pair(max_return, prior_counts/2));
+            value += min_return * prior_counts / 2;
+            value += max_return * prior_counts / 2;
+            counts += prior_counts;
+        }
+        // renormalize value
+        value /= counts;
+        // sort list
+        std::sort(rollout_list.begin(),rollout_list.end());
+        // find quantile
+        double renormalized_quantile = quantile * counts;
+        auto return_weight_pair_below = rollout_list.front();
+        auto return_weight_pair_above = rollout_list.front();
+        for(auto & return_weight_pair : rollout_list) {
+            renormalized_quantile -= return_weight_pair.second;
+            return_weight_pair_above = return_weight_pair;
+            if(renormalized_quantile<0) break;
+            return_weight_pair_below = return_weight_pair;
+        }
+        DEBUG_EXPECT(0,renormalized_quantile<0);
+        // interpolate linearly between the two values
+        double t = (return_weight_pair_above.second+renormalized_quantile)/return_weight_pair_above.second;
+        double quantile_value = (1-t)*return_weight_pair_below.first + t*return_weight_pair_above.first;
+        DEBUG_EXPECT(0,t>=0 && t<=1);
+        DEBUG_EXPECT(0,value==value);
+        DEBUG_EXPECT(0,quantile_value==quantile_value);
+        return value + Cp * quantile_value + Cp*sqrt(
+            log((*mcts_node_info_map)[state_node].action_counts)/
+            (*mcts_arc_info_map)[to_action_arc].transition_counts
+            );
     }
 
 } // end namespace tree_policy

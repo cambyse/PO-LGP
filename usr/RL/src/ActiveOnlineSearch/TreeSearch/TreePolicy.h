@@ -134,6 +134,28 @@ namespace tree_policy {
                              const node_t & action_node) const override;
     };
 
+    /**
+     * Uses the full statistics to compute quantiles. Here we compute the upper bound as
+     * \f[
+     *
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p q + C_p \sqrt{\log n / n_j}
+     *
+     * \f]
+     * similar to UCB1 but with \p q being the quantile. */
+    class Quantile: public MaxPolicy {
+    public:
+        Quantile(double Cp,
+                 double quantile,
+                 double min_return = 0,
+                 double max_return = 0,
+                 double prior_counts = 0);
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
+        double Cp, quantile, min_return, max_return, prior_counts;
+    };
+
 } // end namespace tree_policy
 
 #endif /* TREEPOLICY_H_ */

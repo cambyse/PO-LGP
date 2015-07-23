@@ -99,7 +99,8 @@ static const std::set<std::string> tree_policy_set = {"UCB1",
                                                       "UCB_Plus",
                                                       "Uniform",
                                                       "HardUpper",
-                                                      "Optimal"};
+                                                      "Optimal",
+                                                      "Quantile"};
 static const std::set<std::string> graphics_type_set = {"svg",
                                                         "png",
                                                         "pdf"};
@@ -194,6 +195,8 @@ static TCLAP::ValueArg<std::string> traces_arg(      "", "traces", \
                                                      "(default: empty string) For non-empty string, write the action, observation, \
 and (if possible) state description to the given file."\
                                                      , false, "", "string");
+static TCLAP::ValueArg<double> quantile_arg(         "q", "quantile", "(default: 0.75) Quantile to use for Quantile tree-policy."
+                                                     , false, 0.75, "double");
 
 void plot_graph(shared_ptr<AbstractSearchTree>  search_tree, QString file_name = "") {
     if(file_name=="") {
@@ -255,6 +258,7 @@ int main(int argn, char ** args) {
     // get command line arguments
     try {
 	TCLAP::CmdLine cmd("Sample an evironment or perform online search", ' ', "");
+        cmd.add(quantile_arg);
         cmd.add(traces_arg);
         cmd.add(random_arg);
         cmd.add(active_arg);
@@ -397,6 +401,10 @@ int main(int argn, char ** args) {
         QString tree_policy_string = tree_policy_arg.getValue().c_str();
         if(tree_policy_string=="UCB1" || tree_policy_string=="UCB_Plus") {
             tree_policy_string += QString("(%1)").arg(exploration_arg.getValue());
+        } else if(tree_policy_string=="Quantile") {
+            tree_policy_string += QString("(%1,%2)").
+                arg(exploration_arg.getValue()).
+                arg(quantile_arg.getValue());
         }
         QString value_heuristic_string = value_heuristic_arg.getValue().c_str();
         if(value_heuristic_string=="RolloutStatistics") {
@@ -692,6 +700,27 @@ tuple<shared_ptr<AbstractSearchTree>,
                 }, "Set exploration for UCB_Plus policy");
         }
         tree_policy.reset(policy);
+    } else if(tree_policy_arg.getValue()=="Quantile") {
+        auto policy = new Quantile(exploration_arg.getValue(),
+                                   quantile_arg.getValue());
+        if(environment->has_max_reward() && environment->has_min_reward() && discount_arg.getValue()<1) {
+            double min_return = environment->min_reward()/(1-discount_arg.getValue());
+            double max_return = environment->max_reward()/(1-discount_arg.getValue());
+            double prior_counts = prior_counts_arg.getValue()<0?1:prior_counts_arg.getValue();
+            delete policy;
+            policy = new Quantile(exploration_arg.getValue(),
+                                  quantile_arg.getValue(),
+                                  min_return,
+                                  max_return,
+                                  prior_counts);
+        }
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for Quantile policy");
+        }
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
     } else if(tree_policy_arg.getValue()=="HardUpper") {
@@ -716,6 +745,27 @@ tuple<shared_ptr<AbstractSearchTree>,
                     policy->set_exploration(ex);
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB_Plus policy");
+        }
+        action_policy.reset(policy);
+    } else if(action_policy_arg.getValue()=="Quantile") {
+        auto policy = new Quantile(exploration_arg.getValue(),
+                                   quantile_arg.getValue());
+        if(environment->has_max_reward() && environment->has_min_reward() && discount_arg.getValue()<1) {
+            double min_return = environment->min_reward()/(1-discount_arg.getValue());
+            double max_return = environment->max_reward()/(1-discount_arg.getValue());
+            double prior_counts = prior_counts_arg.getValue()<0?1:prior_counts_arg.getValue();
+            delete policy;
+            policy = new Quantile(exploration_arg.getValue(),
+                                  quantile_arg.getValue(),
+                                  min_return,
+                                  max_return,
+                                  prior_counts);
+        }
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for Quantile policy");
         }
         action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="Uniform") {
@@ -754,15 +804,17 @@ tuple<shared_ptr<AbstractSearchTree>,
         search_tree.reset(new RandomSearch(environment,
                                            discount_arg.getValue()));
     } else {
-        search_tree.reset(new MonteCarloTreeSearch(environment,
-                                                   discount_arg.getValue(),
-                                                   get_node_finder(),
-                                                   tree_policy,
-                                                   value_heuristic,
-                                                   backup_method,
-                                                   get_backup_type(),
-                                                   rollout_length_arg.getValue(),
-                                                   action_policy));
+        auto search = new MonteCarloTreeSearch(environment,
+                                               discount_arg.getValue(),
+                                               get_node_finder(),
+                                               tree_policy,
+                                               value_heuristic,
+                                               backup_method,
+                                               get_backup_type(),
+                                               rollout_length_arg.getValue(),
+                                               action_policy);
+        if(tree_policy_arg.getValue()=="Quantile") search->data_backups(true);
+        search_tree.reset(search);
     }
     search_tree->init();
     if(mode_arg.getValue()=="WATCH") {
