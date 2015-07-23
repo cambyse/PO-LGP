@@ -11,10 +11,12 @@ void TEST(Specs){
   Graph specs(specsfile);
   KOMO komo(specs);
 
-  for(;;){
+  int repeats=specs.get<double>("repeats", -1.);
+  for(int r=0;repeats<0. || r<repeats; r++){
     komo.init(Graph(specsfile));
     komo.run();
-    komo.displayTrajectory();
+    FILE("z.output.g") <<komo.getReport();
+    komo.displayTrajectory(); //repeats<0.);
   }
 }
 

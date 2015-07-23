@@ -32,6 +32,7 @@ struct KOMO{
   void reset();
   void step();
   void run();
+  Graph getReport();
   void checkGradients();
   void displayTrajectory(bool wait=true);
 };

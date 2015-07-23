@@ -222,8 +222,12 @@ template<class T> Node *Graph::append(T *x, bool ownsValue) {
   return new Node_typed<T>(*this, x, ownsValue);
 }
 
-template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
-  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+//template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
+//  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+//}
+
+template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
+  return new Node_typed<T>(*this, keys, parents, new T(x), true);
 }
 
 template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, T *x, bool ownsValue) {

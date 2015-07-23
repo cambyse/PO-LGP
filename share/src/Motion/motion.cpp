@@ -436,6 +436,57 @@ void MotionProblem::costReport(bool gnuplt) {
   if(gnuplt) gnuplot("load 'z.costReport.plt'");
 }
 
+Graph MotionProblem::getReport() {
+  if(phiMatrix.N!=T+1){
+    CHECK(phiMatrix.N==0,"");
+    phiMatrix.resize(T+1);
+  }
+
+  //-- collect all task costs and constraints
+  arr taskC(taskCosts.N); taskC.setZero();
+  arr taskG(taskCosts.N); taskG.setZero();
+  for(uint t=0; t<=T; t++){
+    uint m=0;
+    for(uint i=0; i<taskCosts.N; i++) {
+      Task *c = taskCosts(i);
+      uint d=c->dim_phi(world, t);
+      for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
+      if(d){
+        if(c->map.type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
+        if(c->map.type==ineqTT){
+          for(uint j=0;j<d;j++){
+            double g=phiMatrix(t)(m+j);
+            if(g>0.) taskG(i) += g;
+          }
+        }
+        if(c->map.type==eqTT){
+          for(uint j=0;j<d;j++) taskG(i) += fabs(phiMatrix(t)(m+j));
+        }
+        m += d;
+      }
+    }
+    CHECK_EQ(m , phiMatrix(t).N, "");
+  }
+
+  Graph report;
+  double totalC=0., totalG=0.;
+  for(uint i=0; i<taskCosts.N; i++) {
+    Task *c = taskCosts(i);
+    Graph *g=new Graph();
+    report.append<Graph>({c->name}, {}, g, true);
+    g->append<double>({"order"}, {}, c->map.order);
+    g->append<MT::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
+    g->append<double>({"sqrCosts"}, {}, taskC(i));
+    g->append<double>({"constraints"}, {}, taskG(i));
+    totalC += taskC(i);
+    totalG += taskG(i);
+  }
+  report.append<double>({"total","sqrCosts"}, {}, totalC);
+  report.append<double>({"total","constraints"}, {}, totalG);
+
+  return report;
+}
+
 arr MotionProblem::getInitialization(){
   return replicate(x0, T+1);
 }

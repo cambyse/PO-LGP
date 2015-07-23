@@ -136,7 +136,8 @@ struct MotionProblem {
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
-  
+  Graph getReport();
+
   void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 

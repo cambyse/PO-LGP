@@ -26,6 +26,7 @@ void KOMO::init(const Graph& specs){
   makeConvexHulls(world.shapes);
 //  for(ors::Shape *s:world.shapes) s->cont=true;
   world.swift().initActivations(world);
+  FILE("z.komo.model") <<world;
 
   MP = new MotionProblem(world);
   MPF = new MotionProblemFunction(*MP);
@@ -78,6 +79,10 @@ void KOMO::run(){
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
 //    checkJacobian(Convert(MF), x, 1e-5);
   MP->costReport(false);
+}
+
+Graph KOMO::getReport(){
+  return MP->getReport();
 }
 
 void KOMO::checkGradients(){
