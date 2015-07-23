@@ -26,7 +26,7 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world("planBetter.kvg");
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();

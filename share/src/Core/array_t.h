@@ -1444,7 +1444,7 @@ template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) 
   if(comp(x, *lo)) return 0;
   if(comp(*hi, x)) return N;
   for(;;){
-    if(lo+1==hi) return hi-p;
+    if(lo+1>=hi) return hi-p;
     mi=lo+(hi-lo)/2; //works (the minus operator on pointers gives #objects)
     if(comp(*mi, x)) lo=mi; else hi=mi;
   }

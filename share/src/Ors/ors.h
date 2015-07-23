@@ -204,7 +204,6 @@ struct KinematicWorld {
   JointL joints;
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
-//  KinematicSwitchL operators;
 
   bool isLinkTree;
   static uint setJointStateCount;

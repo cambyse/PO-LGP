@@ -25,6 +25,8 @@ share/src/FOL/makefile
 share/src/MCTS/environment.h
 share/src/MCTS/solver_PlainMC.h
 share/src/MCTS/solver_PlainMC.cpp
+share/src/MCTS/solver_marc.h
+share/src/MCTS/solver_marc.cpp
 share/src/MCTS/Makefile.gof
 share/src/MCTS/makefile
 
