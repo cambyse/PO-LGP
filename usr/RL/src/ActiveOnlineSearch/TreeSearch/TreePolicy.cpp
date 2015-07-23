@@ -179,16 +179,24 @@ namespace tree_policy {
                 );
     }
 
-    UCB_Plus::UCB_Plus(double Cp): Cp(Cp) {}
+    UCB_Variance::UCB_Variance(double Cp): Cp(Cp) {}
 
-    double UCB_Plus::score(const node_t & state_node,
+    double UCB_Variance::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const {
-
-        // upper bound = value + Cp sqrt( value_variance / n) where n is the
-        // number of times this action was taken.
-        return (*mcts_node_info_map)[action_node].value +
-            Cp*sqrt((*mcts_node_info_map)[action_node].value_variance);
+        double b = 1;
+        if(environment->has_min_reward() && environment->has_max_reward()) {
+            b = environment->max_reward() - environment->min_reward();
+        }
+        double n = (*mcts_node_info_map)[state_node].action_counts;
+        double nj = (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        double score = (*mcts_node_info_map)[action_node].value_variance;
+        if(score!=std::numeric_limits<double>::infinity()) {
+            score = (*mcts_node_info_map)[action_node].value +
+            sqrt( (2 * (*mcts_node_info_map)[action_node].value_variance * log(n) ) / nj ) +
+            Cp * (3 * b * log(n) ) / nj;
+        }
+        return score;
     }
 
     double HardUpper::score(const node_t & state_node,
@@ -257,26 +265,54 @@ namespace tree_policy {
         // sort list
         std::sort(rollout_list.begin(),rollout_list.end());
         // find quantile
-        double renormalized_quantile = quantile * counts;
-        auto return_weight_pair_below = rollout_list.front();
-        auto return_weight_pair_above = rollout_list.front();
+        bool found_lower = false;
+        bool found_upper = false;
+        double lower_quantile = std::min(1-quantile,quantile) * counts;
+        double upper_quantile = std::max(1-quantile,quantile) * counts;
+        auto lower_quantile_pair_below = rollout_list.front();
+        auto lower_quantile_pair_above = rollout_list.front();
+        auto upper_quantile_pair_below = rollout_list.front();
+        auto upper_quantile_pair_above = rollout_list.front();
         for(auto & return_weight_pair : rollout_list) {
-            renormalized_quantile -= return_weight_pair.second;
-            return_weight_pair_above = return_weight_pair;
-            if(renormalized_quantile<0) break;
-            return_weight_pair_below = return_weight_pair;
+            if(!found_lower) {
+                lower_quantile -= return_weight_pair.second;
+                lower_quantile_pair_above = return_weight_pair;
+                if(lower_quantile<0) found_lower = true;
+                else lower_quantile_pair_below = return_weight_pair;
+            }
+            if(!found_upper) {
+                upper_quantile -= return_weight_pair.second;
+                upper_quantile_pair_above = return_weight_pair;
+                if(upper_quantile<0) found_upper = true;
+                else upper_quantile_pair_below = return_weight_pair;
+            }
+            if(found_lower && found_upper) break;
         }
-        DEBUG_EXPECT(0,renormalized_quantile<0);
+        DEBUG_EXPECT(0,found_lower && found_upper);
         // interpolate linearly between the two values
-        double t = (return_weight_pair_above.second+renormalized_quantile)/return_weight_pair_above.second;
-        double quantile_value = (1-t)*return_weight_pair_below.first + t*return_weight_pair_above.first;
-        DEBUG_EXPECT(0,t>=0 && t<=1);
+        double t_lower = (lower_quantile_pair_above.second+lower_quantile)/lower_quantile_pair_above.second;
+        double lower_quantile_value = (1-t_lower)*lower_quantile_pair_below.first + t_lower*lower_quantile_pair_above.first;
+        double t_upper = (upper_quantile_pair_above.second+upper_quantile)/upper_quantile_pair_above.second;
+        double upper_quantile_value = (1-t_upper)*upper_quantile_pair_below.first + t_upper*upper_quantile_pair_above.first;
+        DEBUG_EXPECT(0,t_lower>=0 && t_lower<=1);
+        DEBUG_EXPECT(0,t_upper>=0 && t_upper<=1);
+        DEBUG_EXPECT(0,lower_quantile_value==lower_quantile_value);
+        DEBUG_EXPECT(0,upper_quantile_value==upper_quantile_value);
         DEBUG_EXPECT(0,value==value);
-        DEBUG_EXPECT(0,quantile_value==quantile_value);
-        return value + Cp * quantile_value + Cp*sqrt(
-            log((*mcts_node_info_map)[state_node].action_counts)/
-            (*mcts_arc_info_map)[to_action_arc].transition_counts
-            );
+        double exploration_term = log((*mcts_node_info_map)[state_node].action_counts) /
+            (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        return value + Cp * upper_quantile_value + Cp*sqrt(exploration_term);
+        // compute score
+        double b = 1;
+        if(environment->has_min_reward() && environment->has_max_reward()) {
+            b = environment->max_reward() - environment->min_reward();
+        }
+        double n = (*mcts_node_info_map)[state_node].action_counts;
+        double nj = (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        double score = (*mcts_node_info_map)[action_node].value +
+            sqrt( (2 * (upper_quantile_value - lower_quantile_value) * log(n) ) / nj ) +
+            Cp * (3 * b * log(n) ) / nj;
+        return score;
     }
 
 } // end namespace tree_policy

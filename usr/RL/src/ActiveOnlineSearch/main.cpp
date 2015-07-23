@@ -96,7 +96,7 @@ static const std::set<std::string> backup_method_set = {"Bellman",
 static const std::set<std::string> value_heuristic_set = {"Zero",
                                                           "RolloutStatistics"};
 static const std::set<std::string> tree_policy_set = {"UCB1",
-                                                      "UCB_Plus",
+                                                      "UCB_Variance",
                                                       "Uniform",
                                                       "HardUpper",
                                                       "Optimal",
@@ -399,7 +399,7 @@ int main(int argn, char ** args) {
         }
         // string describing method
         QString tree_policy_string = tree_policy_arg.getValue().c_str();
-        if(tree_policy_string=="UCB1" || tree_policy_string=="UCB_Plus") {
+        if(tree_policy_string=="UCB1" || tree_policy_string=="UCB_Variance") {
             tree_policy_string += QString("(%1)").arg(exploration_arg.getValue());
         } else if(tree_policy_string=="Quantile") {
             tree_policy_string += QString("(%1,%2)").
@@ -691,13 +691,13 @@ tuple<shared_ptr<AbstractSearchTree>,
                 }, "Set exploration for UCB1 policy");
         }
         tree_policy.reset(policy);
-    } else if(tree_policy_arg.getValue()=="UCB_Plus") {
-        auto policy = new UCB_Plus(exploration_arg.getValue());
+    } else if(tree_policy_arg.getValue()=="UCB_Variance") {
+        auto policy = new UCB_Variance(exploration_arg.getValue());
         if(mode_arg.getValue()=="WATCH") {
             commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
                     policy->set_exploration(ex);
                     return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB_Plus policy");
+                }, "Set exploration for UCB_Variance policy");
         }
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Quantile") {
@@ -738,13 +738,13 @@ tuple<shared_ptr<AbstractSearchTree>,
                 }, "Set exploration for UCB1 policy");
         }
         action_policy.reset(policy);
-    } else if(action_policy_arg.getValue()=="UCB_Plus") {
-        auto policy = new UCB_Plus(exploration_arg.getValue());
+    } else if(action_policy_arg.getValue()=="UCB_Variance") {
+        auto policy = new UCB_Variance(exploration_arg.getValue());
         if(mode_arg.getValue()=="WATCH") {
             commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
                     policy->set_exploration(ex);
                     return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB_Plus policy");
+                }, "Set exploration for UCB_Variance policy");
         }
         action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="Quantile") {

@@ -1305,7 +1305,7 @@ TEST(MonteCarloTreeSearch, Backup2) {
         for(auto tree_policy: {
                 std::shared_ptr<TreePolicy>(new Uniform()),
                     std::shared_ptr<TreePolicy>(new UCB1(1e10)),
-                    std::shared_ptr<TreePolicy>(new UCB_Plus(1e10))
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(1e10))
                     }) {
             for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
                 for(auto backup_method : {
@@ -1497,7 +1497,7 @@ TEST(MonteCarloTreeSearch, RolloutTransfer) {
         for(auto tree_policy: {
                 std::shared_ptr<TreePolicy>(new Uniform()),
                     std::shared_ptr<TreePolicy>(new UCB1(1e10)),
-                    std::shared_ptr<TreePolicy>(new UCB_Plus(1e10))
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(1e10))
                     }) {
             for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(.1))}) {
                 for(auto backup_method : {
@@ -1801,7 +1801,7 @@ TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
         for(auto tree_policy: {
                 std::shared_ptr<TreePolicy>(new Uniform()),
                     std::shared_ptr<TreePolicy>(new UCB1()),
-                    std::shared_ptr<TreePolicy>(new UCB_Plus(20))
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(20))
                     }) {
             for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
                 for(auto backup_method : {
@@ -1967,7 +1967,7 @@ TEST(MonteCarloTreeSearch, DataBackup) {
         for(auto tree_policy: {
                 std::shared_ptr<TreePolicy>(new Uniform()),
                     std::shared_ptr<TreePolicy>(new UCB1()),
-                    std::shared_ptr<TreePolicy>(new UCB_Plus(20))
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(20))
                     }) {
             for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0))}) {
                 for(auto backup_method : {

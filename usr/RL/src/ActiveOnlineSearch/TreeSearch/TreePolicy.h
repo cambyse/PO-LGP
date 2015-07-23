@@ -107,18 +107,18 @@ namespace tree_policy {
      * Sample action with maximum upper bound. This is similar to UCB1 except
      * that the bound is computed as \f[
      *
-     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p \sqrt{\widetilde{Q}_{(s,a)}}
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2 \widetilde{Q}_{(s,a)} \log n}{n_j}} + C_p \frac{3b\log n}{n_j}
      *
      * \f] where \f$\widehat{Q}_{(s,a)}\f$ is the mean value,
      * \f$\widetilde{Q}_{(s,a)}\f$ is the variance of the value, and \f$C_p\f$
      * (as in UCB1) balances exploration and exploitation. These bounds take
      * into account uncertainty further down in the tree. */
-    class UCB_Plus: public MaxPolicy {
+    class UCB_Variance: public MaxPolicy {
     public:
         /**
          * Constructor. @param Cp This is the scaling parameter for
          * exploration.*/
-        UCB_Plus(double Cp = 1);
+        UCB_Variance(double Cp = 1);
         virtual double score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
@@ -135,13 +135,7 @@ namespace tree_policy {
     };
 
     /**
-     * Uses the full statistics to compute quantiles. Here we compute the upper bound as
-     * \f[
-     *
-     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p q + C_p \sqrt{\log n / n_j}
-     *
-     * \f]
-     * similar to UCB1 but with \p q being the quantile. */
+     * Uses the full statistics to compute quantiles. */
     class Quantile: public MaxPolicy {
     public:
         Quantile(double Cp,
