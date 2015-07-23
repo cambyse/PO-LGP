@@ -218,7 +218,7 @@ if(button & BTN_Y)
 
 if(button & BTN_A)
 {
-    initphase = false;
+   // initphase = false;
 }
 
 
@@ -328,9 +328,12 @@ void G4HutoRoMap::doinitpresaved(int button)
 {
     if(button & BTN_X)
     {
-        initphase = false;
-        demoidle = false;
-        initmapper.set() = initphase;
+
+
+            initphase = false;
+            demoidle = false;
+            cout<<"---------TELEOP IS LIVE--------------"<<endl;
+            initmapper.set() = initphase;
 
 
     }
@@ -428,12 +431,59 @@ floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& sho
 
     return {(float)shoulderV.x, (float)shoulderV.y, (float)shoulderV.z};
 }
+void G4HutoRoMap::calcparameters(floatA tempData)
+{
+
+    floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb")).subRange(0,2);
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
+
+    floatA TI_vec = -poses_thumb_rh+poses_index_rh;
+    floatA quats = mid.query(tempData, STRING("/human/rh/thumb")).subRange(3,6);
+
+    TI_vec = TI_vec/length(TI_vec);
+    ors::Quaternion orsquats;
+    orsquats.set(double(quats(0)),double(quats(1)),double(quats(2)),double(quats(3)));
+    x = (double)TI_vec(0);
+    y = (double)TI_vec(1);
+    orsquats.alignWith(Vector_z);
+    phi = orsquats.getRad();
+
+
+    if(sqrt(x*x) <= 0.3 && sqrt(y*y) <= 0.3 &&  decayed)
+    {
+        phistand = orsquats.getRad();
+        calisaysokay.set()=true;
+        decayed = false;
+        drive.set()={0.,0.,0.};
+    }
+    else if(!decayed)
+    {
+        if(sqrt(x*x)>.8) x = 0.01*x;
+        else x=0.;
+        if(sqrt(y*y)>.8) y = 0.01*y;
+        else y=0.;
+        if((phi-phistand)>0.5 ||(phi-phistand)<-0.5) phi =0.01*(phi-phistand);
+        else phi=0.;
+        cout<<"  drive "<<x<<" "<<y<<" "<<phi<<endl;
+        drive.set()={x,y,phi};
+
+    }
+    else
+    {
+        cout<<"x "<<sqrt(x*x)<<" y "<<sqrt(y*y)<<endl;
+        calisaysokay.set()=false;
+    }
+
+
+
+}
 
 G4HutoRoMap::G4HutoRoMap()
 {
 }
 void G4HutoRoMap::open()
 {
+    calisaysokay.set()=false;
     sr.resize(3,1);
     sl.resize(3,1);
     shoulderR.resize(3,1);
@@ -467,18 +517,25 @@ void G4HutoRoMap::step()
     CHECK(gpstate.N, "ERROR: No GamePad found");
     int button = gpstate(0);
     floatA tempData = poses.get();
+floatA temp;
+
+    
     if(tempData.N == 0)
      return;
 
       // discard lost frames
       if (length(tempData.row(0)) == 0 || length(tempData.row(1)) == 0 ||
-          length(tempData.row(3)) == 0 || length(tempData.row(4)) == 0/* ||
-          length(tempData.row(5))==0*/)
-      return;
+          length(tempData.row(3)) == 0 || length(tempData.row(4)) == 0 ||
+          length(tempData.row(2))==0)
+      {
+        temp.clear();
+        ftdata.set()=temp;
+        return;
+      }
     ////////////////////////////////////////////////////////////////////////
-
+      temp=mid.query(tempData,STRING("/human/rl/rf"));
+      ftdata.set()=temp;
     centerpos =  {0.20f,0.55f,.40f};
-
 
     /////////////////////////transform to robot cords//////////////////////
 
@@ -487,7 +544,8 @@ void G4HutoRoMap::step()
         tempData[i]=CORDtranstoRo(tempData[i],centerpos);
     }
 
-
+    bool tappedacc ;
+         tappedacc   = taped.get();
     ///////////////////////////////////////////////////////////////////////
 
 
@@ -497,7 +555,7 @@ void G4HutoRoMap::step()
 
    // tempData=transcenter(tempData,centerORI);
     // pusblish raw sensor data
-   // poses_rh.set() = mid.query(tempData, {"/human/rh/thumb", "/human/rh/index"})+centerpos+shoulderR;
+   // poses_rh.set() = y+centerpos+shoulderR;
    // poses_lh.set() = mid.query(tempData, {"/human/lh/thumb", "/human/lh/index"})+centerpos+shoulderL;
 
 
@@ -505,8 +563,23 @@ void G4HutoRoMap::step()
    // {
        // doinit(tempData,button);//MY VERSION
        // doinitandrea(tempData,button);
-        doinitpresaved(button);
+   //cout<<tappedacc<<endl;
+    doinitpresaved(button);
+    if(tappedacc)
+    {
 
+        if(!initphase)
+        {
+            calcparameters(tempData);
+        }
+    }
+    else
+    {
+        decayed =true;
+        calisaysokay.set()=false;
+    }
+
+    doinitsendROS(tempData);
      //   return;
 
     //}
@@ -516,7 +589,6 @@ void G4HutoRoMap::step()
 
        // shoulderL=transfshoulder(~shoulderL, shoulderLori, mid.query(tempData,STRING("/human/torso/chest")));
 
-        doinitsendROS(tempData);
 
        // transform(tempData);
 
@@ -706,7 +778,7 @@ void G4HutoRoMap::doinitsendROS( floatA poses_raw)
     //  cout<<"calibrated_pose_rh "<<cal_pose_rh<<endl;
     //  cout<<"calibrated_pose_lh "<<cal_pose_lh<<endl;
 
-
+    //drived.set()={x,y,phi};
 
 }
 

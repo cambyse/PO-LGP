@@ -33,7 +33,7 @@ void serialRun(){
   G4System S;
 
   S.openAll();
-  for(uint i=0;i<100;i++){
+  for(uint i=0;i<100;i){
     S.stepAll();
     MT::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;

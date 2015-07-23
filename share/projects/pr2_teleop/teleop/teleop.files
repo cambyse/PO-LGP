@@ -5,3 +5,5 @@ g4taprecon/taprecon.h
 pd_executor/pd_executor_module.cpp
 pd_executor/pd_executor_module.h
 main.cpp
+MT.cfg
+g4mapping.kvg

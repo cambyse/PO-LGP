@@ -34,6 +34,10 @@ struct PDExecutor: Module {
 
   ACCESS(bool, initmapper);  
   // FeedbackMotionControl stuff
+  ACCESS(arr, drive);
+  ACCESS(bool,calisaysokay);
+  ACCESS(bool,taped);
+
   ors::KinematicWorld world;
   ors::KinematicWorld worldreal;
   FeedbackMotionControl fmc;

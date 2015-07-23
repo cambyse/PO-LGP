@@ -89,6 +89,9 @@ PDExecutor::PDExecutor()
 
   if(MT::getParameter<bool>("base", false)) {
     base = fmc.addPDTask("basepos", .2,.8,new TaskMap_qItself(world, "worldTranslationRotation"));
+    base->y_ref={0.,0.,0.};
+    base->active =false;
+
   }
 
 }
@@ -125,7 +128,7 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
 
 void PDExecutor::step()
 {
-    cout<<"\x1B[2J\x1B[H";
+    //cout<<"\x1B[2J\x1B[H";
     if (useros && !inited)
     {
         cout << "STARTING TO OPEN" << endl;
@@ -171,7 +174,11 @@ void PDExecutor::step()
 
     floatA cal_pose_rh = calibrated_pose_rh.get();
     floatA cal_pose_lh = calibrated_pose_lh.get();
-
+    if(length(cal_pose_lh)==0||length(cal_pose_rh)==0) return;
+    bool driveind;
+         driveind= calisaysokay.get();
+         bool tapedd;
+              tapedd= taped.get();
     bool init;
     init = initmapper.get();
     if(init)
@@ -187,15 +194,28 @@ void PDExecutor::step()
     }
     else
     {
-
-       // effPosR->active = true;
-      //  effPosL->active = true;
-      //  effOrientationR->active = true;
-      //  effOrientationL->active = true;
-     //   gripperL->active = true;
-     //   gripperR->active = true;
-     //   fc->active = true;
-        base->active =true;
+        if(tapedd)
+        {
+            effPosR->active = false;
+            effPosL->active = true;
+            effOrientationR->active = false;
+            effOrientationL->active = true;
+            gripperL->active = true;
+            gripperR->active = false;
+            fc->active = true;
+            base->active =true;
+        }
+        else
+        {
+            effPosR->active = true;
+            effPosL->active = true;
+            effOrientationR->active = true;
+            effOrientationL->active = true;
+            gripperL->active = true;
+            gripperR->active = true;
+            fc->active = true;
+            base->active =true;
+        }
     }
 
 
@@ -243,10 +263,29 @@ void PDExecutor::step()
         cal_gripper =  calibrated_gripper_lh.get();
         if(gripperL) gripperL->setTarget({cal_gripper});
 
-        base->setTarget({1.,-2.,-6.28});
+
+
+
+         arr drive_des;
+        double y_c,x_c,phi_c;
+        x_c= base->y_ref(trans->qIndex+0);
+        y_c = base->y_ref(trans->qIndex+1);
+        phi_c = base->y_ref(trans->qIndex+2);
+
+        if(driveind)
+        {
+            drive_des = drive.get();
+            x_c=x_c+ drive_des(0)*cos(phi_c)-drive_des(1)*sin(phi_c);
+            y_c=y_c+ drive_des(0)*sin(phi_c)+drive_des(1)*cos(phi_c);
+            phi_c = drive_des(2) + phi_c;
+        }
+
+
+        base->setTarget({x_c,y_c,phi_c});
         fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
         fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
         fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
+
     }
     double tau = 0.001;
 
@@ -270,9 +309,9 @@ void PDExecutor::step()
         fmc.setState(q, qdot);
   
     }
-    cout<<    q(trans->qIndex+0)<<endl
-        <<    q(trans->qIndex+1)<<endl
-        <<    q(trans->qIndex+2)<<endl<<trans->qIndex<<endl;
+ //   cout<<    q(trans->qIndex+0)<<endl
+ //       <<    q(trans->qIndex+1)<<endl
+ //       <<    q(trans->qIndex+2)<<endl<<trans->qIndex<<endl;
     // set state
     CtrlMsg ref;
     ref.q = q;
@@ -289,7 +328,7 @@ void PDExecutor::step()
     ref.Kd = {1.};
     ref.gamma = .988;
     ref.J_ft_inv.clear();
-    fmc.reportCurrentState();
+    //fmc.reportCurrentState();
     //if (!fixBase.get() && trans && trans->qDim()==3)
    // {
      //   ref.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
@@ -329,7 +368,7 @@ void PDExecutor::step()
     
         //-- send the computed movement to the robot
         cout<<"error"<<error<<endl;
-        ctrl_ref.set() = ref;
+       // ctrl_ref.set() = ref;
     }
     
 }

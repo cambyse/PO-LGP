@@ -25,6 +25,13 @@ struct G4HutoRoMap:Module
     ACCESS(floatA, poses_rh);
     ACCESS(floatA, poses_lh);
 
+    ACCESS(bool, taped);
+    ACCESS(arr, drive);
+    ACCESS(bool, tapreconready);
+    ACCESS(bool, calisaysokay);
+
+    ACCESS(floatA, ftdata);
+
 /////////////////////INIT////////////////////
     bool initphase = true;
     floatA  poselhthumbmaxopen  , poselhindexmaxopen, poselhthumbminopen  , poselhindexminopen;
@@ -35,7 +42,7 @@ struct G4HutoRoMap:Module
     float distrhminopen = 0.04;
     
     bool demoidle = false;
-
+    bool tapedacc = false;
     float calarm_r_r = 0;
     float calarm_r_l = 0;
 
@@ -75,6 +82,12 @@ struct G4HutoRoMap:Module
     floatA centerORI;
     floatA UnitPosR;
     floatA UnitPosL;
+
+    double x,y,phistand,phi;
+    void calcparameters(floatA a);
+    bool decayed=true;
+    bool tapready = false;
+
     void transform(const floatA& a);
     void open();
     void step();
