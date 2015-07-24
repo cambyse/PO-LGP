@@ -44,6 +44,8 @@ void MonteCarloTreeSearch::MCTSNodeInfo::set_value(reward_t val,
                                                    reward_t val_variance,
                                                    reward_t min_val,
                                                    reward_t max_val) {
+    DEBUG_EXPECT(val==val);
+    DEBUG_EXPECT(val_variance==val_variance);
     if(val_variance<0) {
         if(fabs(val_variance)<1e-50) {
             DEBUG_ERROR("Negative variance provided: " << val_variance);
@@ -326,7 +328,7 @@ void MonteCarloTreeSearch::next_do() {
         std::function<bool(node_t node)> check_changed_function = [&](node_t node) {
             DEBUG_OUT(2,"Check node " << graph.id(node));
             bool return_value = changed[node] || !equal((*old_values)[node], mcts_node_info_map[node]);
-            update(mcts_node_info_map[node], (*old_values)[node]);
+            update_node_info(mcts_node_info_map[node], (*old_values)[node]);
             changed[node] = false;
             DEBUG_OUT(3,"    node " << graph.id(node) << (return_value?" CHANGED":" no change"));
             return return_value;
@@ -536,6 +538,49 @@ const MonteCarloTreeSearch::mcts_arc_info_map_t & MonteCarloTreeSearch::get_mcts
 void MonteCarloTreeSearch::data_backups(bool b) {
     perform_data_backups = b;
     backup_method->perform_data_backups = b;
+}
+
+void MonteCarloTreeSearch::write(std::ostream & out) const {
+    out << "MonteCarloTreeSearch(";
+    out << "node-finder=" << *node_finder << ";";
+    out << "Environment=" << *environment << ";";
+    out << "discount=" << discount << ";";
+
+    out << "ROLLOUT_STORAGE=";
+    switch(rollout_storage) {
+    case ROLLOUT_STORAGE::NONE:
+        out << "NONE";
+        break;
+    case ROLLOUT_STORAGE::CONDENSED:
+        out << "CONDENSED";
+        break;
+    case ROLLOUT_STORAGE::FULL:
+        out << "FULL";
+        break;
+    }
+    out << ";";
+
+    out << "tree-policy=" << *tree_policy << ";";
+    out << "value-heuristic=" << *value_heuristic << ";";
+    out << "backup-method=" << *backup_method << ";";
+
+    out << "BACKUP_TYPE=";
+    switch(backup_type) {
+    case BACKUP_TYPE::TRACE:
+        out << "TRACE";
+        break;
+    case BACKUP_TYPE::PROPAGATE:
+        out << "PROPAGATE";
+        break;
+    }
+    out << ";";
+
+    out << "recommendation_policy=" << *recommendation_policy << ";";
+    out << "max_depth=" << max_depth << ";";
+    out << "rollout_length=" << rollout_length << ";";
+    out << "perform_data_backups=" << perform_data_backups << ";";
+
+    out << ")";
 }
 
 MonteCarloTreeSearch::arc_node_t MonteCarloTreeSearch::find_or_create_observation_node(const node_t & action_node,
@@ -796,7 +841,7 @@ bool MonteCarloTreeSearch::equal(const MCTSNodeInfo & lhs, const MCTSNodeInfo & 
     return true;
  }
 
-void MonteCarloTreeSearch::update(const MCTSNodeInfo & from, MCTSNodeInfo & to) {
+void MonteCarloTreeSearch::update_node_info(const MCTSNodeInfo & from, MCTSNodeInfo & to) {
     to.action_counts      = from.action_counts;
     to.rollout_counts     = from.rollout_counts;
     to.value              = from.value;

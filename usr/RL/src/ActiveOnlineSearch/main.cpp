@@ -89,6 +89,9 @@ static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "ObservationTree"};
 static const std::set<std::string> backup_type_set = {"TRACE",
                                                       "PROPAGATE"};
+static const std::set<std::string> rollout_storage_set = {"NONE",
+                                                          "CONDENSED",
+                                                          "FULL"};
 static const std::set<std::string> backup_method_set = {"Bellman",
                                                         "BellmanTreePolicy",
                                                         "MonteCarlo",
@@ -150,6 +153,9 @@ static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "(default: PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "PROPAGATE", "string");
+static TCLAP::ValueArg<std::string> rollout_storage_arg( "", "rollout_storage", \
+                                                         "(default: CONDENSED) Type of backups to do: "+util::container_to_str(rollout_storage_set,", ","(",")")+"." \
+                                                         , false, "CONDENSED", "string");
 static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
@@ -167,6 +173,8 @@ static TCLAP::ValueArg<std::string> graphics_type_arg( "", "graphics_type",     
                                                      , false, "pdf", "string");
 static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
                                                      , false, 1, "double");
+static TCLAP::ValueArg<double> soft_max_arg(         "", "soft_max", "(default: 0) Temperature for soft-max in policies"
+                                                     , false, 0, "double");
 static TCLAP::ValueArg<double> prior_counts_arg(     "", "prior_counts", "(default: -1) Prior counts to use (negative values for auto)."
                                                      , false, -1, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
@@ -245,11 +253,8 @@ void prompt_for_command() {
 bool check_arguments();
 shared_ptr<NodeFinder> get_node_finder();
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
+MonteCarloTreeSearch::ROLLOUT_STORAGE get_rollout_storage();
 tuple<shared_ptr<AbstractSearchTree>,
-      shared_ptr<TreePolicy>,
-      shared_ptr<TreePolicy>,
-      shared_ptr<ValueHeuristic>,
-      shared_ptr<BackupMethod>,
       shared_ptr<AbstractEnvironment>> setup();
 QString header(int argn, char ** args);
 
@@ -270,6 +275,7 @@ int main(int argn, char ** args) {
         cmd.add(tree_policy_arg);
         cmd.add(value_heuristic_arg);
         cmd.add(backup_method_arg);
+        cmd.add(rollout_storage_arg);
         cmd.add(backup_type_arg);
         cmd.add(graph_type_arg);
         cmd.add(graphics_type_arg);
@@ -278,6 +284,7 @@ int main(int argn, char ** args) {
         cmd.add(rollout_length_arg);
         cmd.add(exploration_arg);
         cmd.add(prior_counts_arg);
+        cmd.add(soft_max_arg);
         cmd.add(discount_arg);
         cmd.add(run_n_arg);
         cmd.add(step_n_arg);
@@ -329,10 +336,6 @@ int main(int argn, char ** args) {
         commander.add_command({"help","h"}, []()->Ret{cout << "\n\n" << commander.get_help_string() << "\n";return{true,""};}, "Print help");
         // set up
         RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
-                     shared_ptr<TreePolicy>, tree_policy,
-                     shared_ptr<TreePolicy>, action_policy,
-                     shared_ptr<ValueHeuristic>, value_heuristic,
-                     shared_ptr<BackupMethod>, backup_method,
                      shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
         for(int step=0; step<step_n_arg.getValue() || step_n_arg.getValue()<0; ++step) {
@@ -379,7 +382,7 @@ int main(int argn, char ** args) {
             }
              // prune (but not in last step to be able to visualize final tree)
             if(step<step_n_arg.getValue() || step_n_arg.getValue()) {
-                search_tree->prune(action,observation);
+                search_tree->update(action,observation);
                 if(watch_progress_arg.getValue()>=2) {
                     cout << "tree pruned" << endl;
                     if(graphics_arg.getValue()) {
@@ -397,31 +400,11 @@ int main(int argn, char ** args) {
         if(!no_header_arg.getValue()) {
             cout << "mean reward,number of roll-outs,run,method" << endl;
         }
-        // string describing method
-        QString tree_policy_string = tree_policy_arg.getValue().c_str();
-        if(tree_policy_string=="UCB1" || tree_policy_string=="UCB_Variance") {
-            tree_policy_string += QString("(%1)").arg(exploration_arg.getValue());
-        } else if(tree_policy_string=="Quantile") {
-            tree_policy_string += QString("(%1,%2)").
-                arg(exploration_arg.getValue()).
-                arg(quantile_arg.getValue());
-        }
-        QString value_heuristic_string = value_heuristic_arg.getValue().c_str();
-        if(value_heuristic_string=="RolloutStatistics") {
-            value_heuristic_string += QString("(%1)").arg(rollout_length_arg.getValue());
-        }
-        QString method_string;
+        QString method_string = "";
         if(active_arg.getValue()) {
             method_string = "ACTIVE";
         } else if(random_arg.getValue()) {
             method_string = "RANDOM";
-        } else {
-            method_string = QString("%1 / %2 / %3 [%4 / %5]").
-                arg(tree_policy_string).
-                arg(value_heuristic_string).
-                arg(backup_method_arg.getValue().c_str()).
-                arg(graph_type_arg.getValue().c_str()).
-                arg(backup_type_arg.getValue().c_str());
         }
         // limit number of threads if required
         if(threads_arg.getValue()>0) {
@@ -445,10 +428,6 @@ int main(int argn, char ** args) {
 
                 // set up
                 RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
-                             shared_ptr<TreePolicy>, tree_policy,
-                             shared_ptr<TreePolicy>, action_policy,
-                             shared_ptr<ValueHeuristic>, value_heuristic,
-                             shared_ptr<BackupMethod>, backup_method,
                              shared_ptr<AbstractEnvironment>, environment) = setup();
 
                 double reward_sum = 0;
@@ -485,26 +464,29 @@ int main(int argn, char ** args) {
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>=0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
-                    search_tree->prune(action,observation);
+                    search_tree->update(action,observation);
                     ++step;
                 }
 #ifdef USE_OMP
 #pragma omp critical (MCTS)
 #endif
-                cout << QString("%1,%2,%3,%4").
-                    arg(reward_sum/step).
-                    arg(sample).
-                    arg(run).
-                    arg(method_string) << endl;
+                {
+                    cout << QString("%1,%2,%3,").
+                        arg(reward_sum/step).
+                        arg(sample).
+                        arg(run);
+                    if(method_string=="") {
+                        cout << *search_tree;
+                    } else {
+                        cout << method_string;
+                    }
+                    cout << endl;
+                }
             }
         }
     } else if(mode_arg.getValue()=="PLAY") {
         // set up
         RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
-                     shared_ptr<TreePolicy>, tree_policy,
-                     shared_ptr<TreePolicy>, action_policy,
-                     shared_ptr<ValueHeuristic>, value_heuristic,
-                     shared_ptr<BackupMethod>, backup_method,
                      shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Play the environment..." << endl;
         environment->reset_state();
@@ -585,6 +567,11 @@ bool check_arguments() {
         ok = false;
         cout << "Backup type must be one of:" << util::container_to_str(backup_type_set,"\n\t","\n\t","") << endl;
     }
+    // check rollout storage
+    if(rollout_storage_set.find(rollout_storage_arg.getValue())==rollout_storage_set.end()) {
+        ok = false;
+        cout << "Rollout storage must be one of:" << util::container_to_str(rollout_storage_set,"\n\t","\n\t","") << endl;
+    }
     // check backup method
     if(backup_method_set.find(backup_method_arg.getValue())==backup_method_set.end()) {
         ok = false;
@@ -614,6 +601,10 @@ bool check_arguments() {
         ok = false;
         cout << "Discount must be in [0:1]" << endl;
     }
+    if(soft_max_arg.getValue()<0) {
+        ok = false;
+        cout << "Soft-Max temperature must be positive" << endl;
+    }
     if(exploration_arg.getValue()<0) {
         ok = false;
         cout << "Exploration must be positive" << endl;
@@ -641,11 +632,15 @@ MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
     return MonteCarloTreeSearch::BACKUP_TYPE::TRACE;
 }
 
+MonteCarloTreeSearch::ROLLOUT_STORAGE get_rollout_storage() {
+    if(rollout_storage_arg.getValue()=="NONE") return MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE;
+    if(rollout_storage_arg.getValue()=="CONDENSED") return MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED;
+    if(rollout_storage_arg.getValue()=="FULL") return MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL;
+    DEBUG_DEAD_LINE;
+    return MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE;
+}
+
 tuple<shared_ptr<AbstractSearchTree>,
-      shared_ptr<TreePolicy>,
-      shared_ptr<TreePolicy>,
-      shared_ptr<ValueHeuristic>,
-      shared_ptr<BackupMethod>,
       shared_ptr<AbstractEnvironment>> setup() {
 
     // return variables
@@ -690,6 +685,7 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB1 policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="UCB_Variance") {
         auto policy = new UCB_Variance(exploration_arg.getValue());
@@ -699,6 +695,7 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB_Variance policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Quantile") {
         auto policy = new Quantile(exploration_arg.getValue(),
@@ -720,13 +717,18 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for Quantile policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Uniform") {
         tree_policy.reset(new Uniform());
     } else if(tree_policy_arg.getValue()=="HardUpper") {
-        tree_policy.reset(new HardUpper());
+        auto policy = new HardUpper();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="Optimal") {
-        tree_policy.reset(new Optimal());
+        auto policy = new Optimal();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
     } else DEBUG_DEAD_LINE;
     // set up action policy
     if(action_policy_arg.getValue()=="UCB1") {
@@ -737,6 +739,7 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB1 policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="UCB_Variance") {
         auto policy = new UCB_Variance(exploration_arg.getValue());
@@ -746,6 +749,7 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB_Variance policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="Quantile") {
         auto policy = new Quantile(exploration_arg.getValue(),
@@ -767,15 +771,18 @@ tuple<shared_ptr<AbstractSearchTree>,
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for Quantile policy");
         }
+        policy->soft_max_temperature = soft_max_arg.getValue();
         action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="Uniform") {
         action_policy.reset(new Uniform());
     } else if(action_policy_arg.getValue()=="HardUpper") {
-        auto pol = new HardUpper();
-        //pol->print_choice = true;
-        action_policy.reset(pol);
+        auto policy = new HardUpper();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        action_policy.reset(policy);
     } else if(action_policy_arg.getValue()=="Optimal") {
-        action_policy.reset(new Optimal());
+        auto policy = new Optimal();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        action_policy.reset(policy);
     } else DEBUG_DEAD_LINE;
     // set up value heuristic
     if(value_heuristic_arg.getValue()=="Zero") {
@@ -812,7 +819,9 @@ tuple<shared_ptr<AbstractSearchTree>,
                                                backup_method,
                                                get_backup_type(),
                                                rollout_length_arg.getValue(),
-                                               action_policy);
+                                               action_policy,
+                                               -1,
+                                               get_rollout_storage());
         if(tree_policy_arg.getValue()=="Quantile") search->data_backups(true);
         search_tree.reset(search);
     }
@@ -846,10 +855,6 @@ tuple<shared_ptr<AbstractSearchTree>,
     }
     // return
     return make_tuple(search_tree,
-                      tree_policy,
-                      action_policy,
-                      value_heuristic,
-                      backup_method,
                       environment);
 }
 

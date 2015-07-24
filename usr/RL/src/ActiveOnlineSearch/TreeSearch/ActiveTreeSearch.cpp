@@ -1095,6 +1095,13 @@ void ActiveTreeSearch::update_c_root_connections() {
     }
 }
 
+void ActiveTreeSearch::write(std::ostream & out) const {
+    out << "ActiveTreeSearch(";
+    out << "Environment=" << *environment << ";";
+    out << "discount=" << discount << ";";
+    out << ")";
+}
+
 QString ActiveTreeSearch::description(const action_handle_t action) {
     if(action==nullptr) {
         return "NULL";

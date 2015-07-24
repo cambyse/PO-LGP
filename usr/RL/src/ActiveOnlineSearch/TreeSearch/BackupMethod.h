@@ -53,6 +53,11 @@ namespace backup_method {
         virtual void backup_action_node(const node_t & action_node) const = 0;
         virtual void backup_observation_node(const node_t & observation_node) const = 0;
         virtual void backup_root(const node_t & observation_node) const {};
+        friend std::ostream& operator<<(std::ostream & out, const BackupMethod & backup) {
+            backup.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     protected:
         virtual void action_data_backup(const node_t & node) const final;
         virtual void observation_data_backup(const node_t & node, policy_t & policy) const final;
@@ -75,6 +80,7 @@ namespace backup_method {
                           bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"Bellman(prior_counts="<<prior_counts<<";tree-policy="<<*tree_policy<<")";}
     protected:
         std::shared_ptr<tree_policy::TreePolicy> tree_policy;
         double prior_counts;
@@ -95,6 +101,7 @@ namespace backup_method {
                           bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"MonteCarlo(prior_counts="<<prior_counts<<")";}
     protected:
         virtual void backup_node(const node_t & node) const;
         double prior_counts;
@@ -120,6 +127,7 @@ namespace backup_method {
                           bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"HybridMCDP(mc_weight="<<mc_weight<<";"<<monte_carlo<<";"<<bellman<<")";}
     protected:
         double mc_weight;
         MonteCarlo monte_carlo;

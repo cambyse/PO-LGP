@@ -169,6 +169,7 @@ public:
     virtual const mcts_node_info_map_t & get_mcts_node_info_map() const;
     virtual const mcts_arc_info_map_t & get_mcts_arc_info_map() const;
     virtual void data_backups(bool);
+    virtual void write(std::ostream &) const override;
 protected:
     virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
                                                        const observation_handle_t & observation) override;
@@ -188,7 +189,7 @@ protected:
     virtual void init_rollout_weights(node_t node);
     virtual double color_rescale(const double&) const;
     static bool equal(const MCTSNodeInfo & lhs, const MCTSNodeInfo & rhs);
-    static void update(const MCTSNodeInfo & from, MCTSNodeInfo & to);
+    static void update_node_info(const MCTSNodeInfo & from, MCTSNodeInfo & to);
 };
 
 #endif /* MONTECARLOTREESEARCH_H_ */

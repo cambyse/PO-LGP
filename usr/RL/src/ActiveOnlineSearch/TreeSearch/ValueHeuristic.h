@@ -27,6 +27,11 @@ namespace value_heuristic {
                           std::shared_ptr<AbstractEnvironment> environment);
         virtual void add_value_estimate(const node_t & state_node,
                                         mcts_node_info_map_t & mcts_node_info_map) = 0;
+        friend std::ostream& operator<<(std::ostream & out, const ValueHeuristic & heuristic) {
+            heuristic.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
 
     /**
@@ -36,6 +41,7 @@ namespace value_heuristic {
         virtual ~Zero() = default;
         virtual void add_value_estimate(const node_t & state_node,
                                         mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual void write(std::ostream & out) const override{out<<"Zero()";}
     };
 
     /**
@@ -53,6 +59,7 @@ namespace value_heuristic {
         virtual void add_value_estimate(const node_t & state_node,
                                         mcts_node_info_map_t & mcts_node_info_map) override;
         virtual RolloutStatistics & prior_counts(double prior_counts);
+        virtual void write(std::ostream & out) const override{out<<"RolloutStatistics(discount="<<discount<<")";}
     protected:
         double _prior_counts;
     };

@@ -769,6 +769,7 @@ public:
         }
     }
     virtual action_handle_t recommend_action() const override {return action_handle_t();}
+    virtual void write(std::ostream & out) const override {out<<"MockSearchTree()";}
 };
 
 TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
@@ -876,7 +877,7 @@ TEST(SearchTree, NodeFinder) {
         environment->make_current_state_default();
 
         // prune tree
-        search_tree->prune(action, observation);
+        search_tree->update(action, observation);
 
         // build tree anew
         search_tree->next();
@@ -1401,7 +1402,7 @@ TEST(MonteCarloTreeSearch, Backup2) {
                             EXPECT_NE(simple_observation, nullptr);
                             EXPECT_EQ(simple_observation->observation,2);
                             EXPECT_EQ(reward,0);
-                            search.prune(action,observation);
+                            search.update(action,observation);
                         }
                         // do second step
                         {
@@ -1415,7 +1416,7 @@ TEST(MonteCarloTreeSearch, Backup2) {
                             EXPECT_NE(simple_observation, nullptr);
                             EXPECT_EQ(simple_observation->observation,3);
                             EXPECT_EQ(reward,1);
-                            search.prune(action,observation);
+                            search.update(action,observation);
                         }
                         // getchar();
                     }

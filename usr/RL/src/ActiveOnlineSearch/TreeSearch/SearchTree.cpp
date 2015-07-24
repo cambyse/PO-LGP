@@ -62,7 +62,7 @@ void SearchTree::next() {
 }
 
 
-void SearchTree::prune(const action_handle_t & action,
+void SearchTree::update(const action_handle_t & action,
                        const observation_handle_t & observation) {
     //--------------------//
     // find new root node //

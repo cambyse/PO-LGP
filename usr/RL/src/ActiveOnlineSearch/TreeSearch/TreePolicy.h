@@ -41,6 +41,11 @@ namespace tree_policy {
                           const mcts_arc_info_map_t & mcts_arc_info_map);
         virtual action_probability_t get_action_probabilities(const node_t & state_node) const = 0;
         virtual action_handle_t get_action(const node_t & state_node) const final;
+        friend std::ostream& operator<<(std::ostream & out, const TreePolicy & policy) {
+            policy.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
 
     /**
@@ -49,6 +54,7 @@ namespace tree_policy {
     public:
         virtual ~Uniform() = default;
         virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"Uniform()";};
     };
 
     /**
@@ -78,6 +84,7 @@ namespace tree_policy {
         virtual double score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"Optimal(T="<<soft_max_temperature<<")";}
     };
 
     /**
@@ -99,6 +106,7 @@ namespace tree_policy {
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
+        virtual void write(std::ostream & out) const override {out<<"UCB1(Cp="<<Cp<<";T="<<soft_max_temperature<<")";}
     protected:
         double Cp;
     };
@@ -123,6 +131,7 @@ namespace tree_policy {
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
+        virtual void write(std::ostream & out) const override {out<<"UCB_Variance(Cp="<<Cp<<";T="<<soft_max_temperature<<")";}
     protected:
         double Cp;
     };
@@ -132,6 +141,7 @@ namespace tree_policy {
         virtual double score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"HardUpper(T="<<soft_max_temperature<<")";}
     };
 
     /**
@@ -147,6 +157,7 @@ namespace tree_policy {
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
+        virtual void write(std::ostream & out) const override {out<<"Quantile(Cp="<<Cp<<";q="<<quantile<<";T="<<soft_max_temperature<<")";}
         double Cp, quantile, min_return, max_return, prior_counts;
     };
 

@@ -155,6 +155,7 @@ namespace tree_policy {
             double sum = 0;
             for(auto prob : probabilities) {
                 sum += prob;
+                DEBUG_EXPECT(prob==prob);
             }
             DEBUG_EXPECT_APPROX(sum,1);
         }

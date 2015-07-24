@@ -59,7 +59,7 @@ RandomSearch::action_handle_t RandomSearch::recommend_action() const{
     return best_action;
 }
 
-void RandomSearch::prune(const action_handle_t & action_taken,
+void RandomSearch::update(const action_handle_t & action_taken,
                          const observation_handle_t & observation_made) {
 
     NAMED_RETURN_TUPLE(transition,
@@ -83,3 +83,10 @@ void RandomSearch::plot_graph(const char* file_name,
                               const char* command,
                               const char* parameters,
                               bool delete_dot_file) const {}
+
+void RandomSearch::write(std::ostream & out) const {
+    out << "RandomSearch(";
+    out << "Environment=" << *environment << ";";
+    out << "discount=" << discount << ";";
+    out << ")";
+}

@@ -2,6 +2,7 @@
 #define ABSTRACTSEARCHTREE_H_
 
 #include <memory> // for shared_ptr
+#include <ostream> // for ostream
 #include <MCTS_Environment/AbstractEnvironment.h>
 
 class AbstractSearchTree {
@@ -44,7 +45,7 @@ public:
      * state. This function may be called after an action was actually performed
      * in the environment to reuse the relevant rest of the tree instead of
      * resetting it with init().*/
-    virtual void prune(const action_handle_t &,
+    virtual void update(const action_handle_t &,
                        const observation_handle_t &) = 0;
     /**
      * Prints the graph to a PDF file with given name. */
@@ -52,6 +53,11 @@ public:
                             const char* command = "dot",
                             const char* parameters = "-Tpdf",
                             bool delete_dot_file = true) const = 0;
+    friend std::ostream& operator<<(std::ostream & out, const AbstractSearchTree & search) {
+        search.write(out);
+        return out;
+    }
+    virtual void write(std::ostream &) const = 0;
 };
 
 #endif /* ABSTRACTSEARCHTREE_H_ */

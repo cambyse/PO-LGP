@@ -118,6 +118,17 @@ public:
     /**
      * Return whether the environment is Markov. */
     virtual bool is_markov() const = 0;
+    /**
+     * Write a description of the environment. This is not the state of the
+     * environment but rather something like an identifier, e.g., the class name
+     * with relevant parameters defining the properties of the environment. */
+    virtual void write(std::ostream & out) const {out<<"AbstractEnvironment()";}
+    /**
+     * Use write() method to define << operator. */
+    friend std::ostream& operator<<(std::ostream & out, const AbstractEnvironment & environment) {
+        environment.write(out);
+        return out;
+    }
 };
 
 #endif /* ABSTRACTENVIRONMENT_H_ */

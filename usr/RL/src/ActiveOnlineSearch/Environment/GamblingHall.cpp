@@ -164,3 +164,9 @@ bool GamblingHall::is_terminal_state() const {
 }
 
 #endif
+
+void GamblingHall::write(std::ostream & out) const {
+    out << "GamblingHall(machine_n=" << machine_n
+        << ";time_n=" << time_n
+        << ";tolerance=" << tolerance << ")";
+}
