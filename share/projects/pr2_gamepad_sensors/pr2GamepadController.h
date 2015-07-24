@@ -83,6 +83,7 @@ struct Pr2GamepadController:Module{
     }
 
     refs.Kd = ARR(1.);
+    refs.Ki = ARR(0.);
     refs.q=q;
     refs.qdot=zero_qdot;
     if(trans && trans->qDim()==3){

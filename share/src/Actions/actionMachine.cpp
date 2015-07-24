@@ -184,9 +184,10 @@ void ActionMachine::step(){
   //-- first zero references
   s->refs.Kp = ARR(1.); //Kp;
   s->refs.Kd = ARR(1.); //Kd;
+  s->refs.Ki = ARR(0.); //Ki;
   s->refs.fL = zeros(6);
   s->refs.fR = zeros(6);
-  s->refs.Ki.clear();
+  s->refs.KiFT.clear();
   s->refs.J_ft_inv.clear();
   s->refs.u_bias = zeros(s->q.N);
 
@@ -196,7 +197,7 @@ void ActionMachine::step(){
     if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
       count++;
       if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.KiFT, s->refs.J_ft_inv, *world);
     }
   }
   if(count==1) s->refs.Kp = .5;
