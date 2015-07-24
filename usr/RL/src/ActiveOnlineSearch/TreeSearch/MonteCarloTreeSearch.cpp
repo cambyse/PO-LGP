@@ -104,7 +104,7 @@ MonteCarloTreeSearch::MonteCarloTreeSearch(shared_ptr<AbstractEnvironment> envir
                                 node_info_map,
                                 mcts_node_info_map,
                                 mcts_arc_info_map);
-    DEBUG_EXPECT(0,recommendation_policy!=nullptr);
+    DEBUG_EXPECT(recommendation_policy!=nullptr);
 }
 
 void MonteCarloTreeSearch::next_do() {
@@ -395,7 +395,7 @@ void MonteCarloTreeSearch::next_do() {
 }
 
 MonteCarloTreeSearch::action_handle_t MonteCarloTreeSearch::recommend_action() const {
-    DEBUG_EXPECT(0,recommendation_policy!=nullptr);
+    DEBUG_EXPECT(recommendation_policy!=nullptr);
     return recommendation_policy->get_action(root_node);
     // old version
     environment->reset_state();
@@ -588,9 +588,9 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
                                              node_t via_action_node,
                                              arc_t to_observation_arc,
                                              node_t to_observation_node) {
-    DEBUG_EXPECT(0,node_info_map[from_observation_node].type==OBSERVATION_NODE);
-    DEBUG_EXPECT(0,node_info_map[via_action_node].type==ACTION_NODE);
-    DEBUG_EXPECT(0,node_info_map[to_observation_node].type==OBSERVATION_NODE);
+    DEBUG_EXPECT(node_info_map[from_observation_node].type==OBSERVATION_NODE);
+    DEBUG_EXPECT(node_info_map[via_action_node].type==ACTION_NODE);
+    DEBUG_EXPECT(node_info_map[to_observation_node].type==OBSERVATION_NODE);
     auto action = node_info_map[via_action_node].action;
     auto observation = node_info_map[to_observation_node].observation;
     auto & rollout_set = mcts_node_info_map[from_observation_node].rollout_set;
@@ -600,7 +600,7 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
               graph.id(via_action_node) << " to " <<
               graph.id(to_observation_node));
     for(auto rollout_item : rollout_set) {
-        DEBUG_EXPECT(0,rollout_item->type==OBSERVATION_NODE);
+        DEBUG_EXPECT(rollout_item->type==OBSERVATION_NODE);
         if(!(rollout_item->type==OBSERVATION_NODE)) {
             DEBUG_ERROR("");
         }
@@ -618,7 +618,7 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
             auto item = rollout_item;
             int steps = 0;
             while(item!=nullptr) {
-                DEBUG_EXPECT(0,item->type==OBSERVATION_NODE);
+                DEBUG_EXPECT(item->type==OBSERVATION_NODE);
                 if(!(item->type==OBSERVATION_NODE)) {
                     DEBUG_ERROR("Type " << steps << " step ahead is not OBSERVATION_NODE");
                 }
@@ -650,7 +650,7 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
             add_rollout(via_action_node, action_rollout_item);
             // go to next rollout item
             rollout_item = action_rollout_item->next;
-            DEBUG_EXPECT(0,rollout_item!=nullptr);
+            DEBUG_EXPECT(rollout_item!=nullptr);
             // now also add return to observation node
             add_rollout(to_observation_node, rollout_item);
             // increment counts
@@ -692,8 +692,8 @@ void MonteCarloTreeSearch::add_transition(node_t from_observation_node,
 void MonteCarloTreeSearch::add_rollout(node_t node,
                                        shared_ptr<RolloutItem> rollout) {
     DEBUG_OUT(1,"add rollout to node " << graph.id(node) << " (" << rollout->discounted_return << ")");
-    DEBUG_EXPECT(0,rollout!=nullptr);
-    DEBUG_EXPECT(0,rollout->type==node_info_map[node].type);
+    DEBUG_EXPECT(rollout!=nullptr);
+    DEBUG_EXPECT(rollout->type==node_info_map[node].type);
     if(!(rollout->type==node_info_map[node].type)) {
         DEBUG_ERROR("");
     }
@@ -756,7 +756,7 @@ shared_ptr<MonteCarloTreeSearch::RolloutItem> MonteCarloTreeSearch::rollout(node
                 (*rollout_item_it)->next = next;
                 next = (*rollout_item_it);
             }
-            DEBUG_EXPECT_APPROX(0,reverse_discounted_return,discounted_return);
+            DEBUG_EXPECT_APPROX(reverse_discounted_return,discounted_return);
         }
         return rollout_list.front();
     }

@@ -25,7 +25,7 @@ namespace value_heuristic {
 
     void Zero::add_value_estimate(const node_t & state_node,
                                   mcts_node_info_map_t & mcts_node_info_map) {
-        DEBUG_EXPECT(0,environment!=nullptr);
+        DEBUG_EXPECT(environment!=nullptr);
         mcts_node_info_map[state_node].set_value(0,0,0,0);
     }
 
@@ -52,13 +52,13 @@ namespace value_heuristic {
 
     void RolloutStatistics::add_value_estimate(const node_t & state_node,
                                                mcts_node_info_map_t & mcts_node_info_map) {
-        DEBUG_EXPECT(0,environment!=nullptr);
+        DEBUG_EXPECT(environment!=nullptr);
 
         // set value (mean and variance)
         auto rollout_return_sum = mcts_node_info_map[state_node].return_sum;
         auto squared_rollout_return_sum = mcts_node_info_map[state_node].squared_return_sum;
         auto rollout_counts = mcts_node_info_map[state_node].rollout_counts;
-        DEBUG_EXPECT(0,rollout_counts>=1);
+        DEBUG_EXPECT(rollout_counts>=1);
         reward_t min_return = 0;
         reward_t max_return = 0;
         if(_prior_counts>0) {

@@ -49,7 +49,7 @@ namespace tree_policy {
     action_handle_t TreePolicy::get_action(const node_t & state_node) const {
         RETURN_TUPLE(action_container_t, actions,
                      vector<double>, probs) = get_action_probabilities(state_node);
-        DEBUG_EXPECT(0,actions.size()>0);
+        DEBUG_EXPECT(actions.size()>0);
         IF_DEBUG(1) {
             DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
             for(int idx=0; idx<(int)actions.size(); ++idx) {
@@ -117,7 +117,7 @@ namespace tree_policy {
                     s << *a;
                     new_actions.push_back(s.str());
                 }
-                DEBUG_EXPECT(0,old_actions==new_actions);
+                DEBUG_EXPECT(old_actions==new_actions);
 #endif
             } else {
                 actions = environment->get_actions();
@@ -146,8 +146,8 @@ namespace tree_policy {
                 scored_actions.push_back(action);
             }
         }
-        DEBUG_EXPECT(0,!scores.empty());
-        DEBUG_EXPECT(0,scored_actions.size()==scores.size());
+        DEBUG_EXPECT(!scores.empty());
+        DEBUG_EXPECT(scored_actions.size()==scores.size());
 
         // compute soft-max probabilities and return
         auto probabilities = util::soft_max(scores,soft_max_temperature);
@@ -156,7 +156,7 @@ namespace tree_policy {
             for(auto prob : probabilities) {
                 sum += prob;
             }
-            DEBUG_EXPECT_APPROX(0,sum,1);
+            DEBUG_EXPECT_APPROX(sum,1);
         }
         return action_probability_t(scored_actions, probabilities);
     }
@@ -224,7 +224,7 @@ namespace tree_policy {
         // get counts to rescale weights for incorporating prior counts (weights
         // sum to 1)
         double counts = rollouts.size();
-        DEBUG_EXPECT(0,counts>0);
+        DEBUG_EXPECT(counts>0);
         //-----------------------------------//
         // get sorted (by return value) list //
         //-----------------------------------//
@@ -250,7 +250,7 @@ namespace tree_policy {
                 value += return_weight_pair.first;
             }
         } else {
-            DEBUG_EXPECT_APPROX(0,weight_sum,1);
+            DEBUG_EXPECT_APPROX(weight_sum,1);
         }
         // add prior counts
         if(prior_counts>0) {
@@ -288,17 +288,17 @@ namespace tree_policy {
             }
             if(found_lower && found_upper) break;
         }
-        DEBUG_EXPECT(0,found_lower && found_upper);
+        DEBUG_EXPECT(found_lower && found_upper);
         // interpolate linearly between the two values
         double t_lower = (lower_quantile_pair_above.second+lower_quantile)/lower_quantile_pair_above.second;
         double lower_quantile_value = (1-t_lower)*lower_quantile_pair_below.first + t_lower*lower_quantile_pair_above.first;
         double t_upper = (upper_quantile_pair_above.second+upper_quantile)/upper_quantile_pair_above.second;
         double upper_quantile_value = (1-t_upper)*upper_quantile_pair_below.first + t_upper*upper_quantile_pair_above.first;
-        DEBUG_EXPECT(0,t_lower>=0 && t_lower<=1);
-        DEBUG_EXPECT(0,t_upper>=0 && t_upper<=1);
-        DEBUG_EXPECT(0,lower_quantile_value==lower_quantile_value);
-        DEBUG_EXPECT(0,upper_quantile_value==upper_quantile_value);
-        DEBUG_EXPECT(0,value==value);
+        DEBUG_EXPECT(t_lower>=0 && t_lower<=1);
+        DEBUG_EXPECT(t_upper>=0 && t_upper<=1);
+        DEBUG_EXPECT(lower_quantile_value==lower_quantile_value);
+        DEBUG_EXPECT(upper_quantile_value==upper_quantile_value);
+        DEBUG_EXPECT(value==value);
         double exploration_term = log((*mcts_node_info_map)[state_node].action_counts) /
             (*mcts_arc_info_map)[to_action_arc].transition_counts;
         return value + Cp * upper_quantile_value + Cp*sqrt(exploration_term);

@@ -36,7 +36,7 @@ namespace backup_method {
 
     void BackupMethod::action_data_backup(const node_t & action_node) const {
         DEBUG_OUT(1,"Update node " << graph->id(action_node));
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
         auto & rollout_set = (*mcts_node_info_map)[action_node].rollout_set;
         //----------------------------------//
         // compute transition probabilities //
@@ -49,7 +49,7 @@ namespace backup_method {
             ++transition_probabilities[rollout_item->observation];
             ++transition_count_sum;
         }
-        DEBUG_EXPECT(0,transition_count_sum>0);
+        DEBUG_EXPECT(transition_count_sum>0);
         // normalize
         for(auto & prob : transition_probabilities) {
             prob.second /= transition_count_sum;
@@ -57,7 +57,7 @@ namespace backup_method {
         //----------------------------------------//
         // check that all observation nodes exist //
         //----------------------------------------//
-        DEBUG_EXPECT(0,lemon::countOutArcs(*graph,action_node)==(int)transition_probabilities.size());
+        DEBUG_EXPECT(lemon::countOutArcs(*graph,action_node)==(int)transition_probabilities.size());
         //----------------//
         // update weights //
         //----------------//
@@ -73,7 +73,7 @@ namespace backup_method {
             }
             weight_sum += rollout_item->weight;
         }
-        DEBUG_EXPECT_APPROX(0,weight_sum,1);
+        DEBUG_EXPECT_APPROX(weight_sum,1);
     }
 
     void BackupMethod::observation_data_backup(const node_t & observation_node, policy_t & policy) const {
@@ -140,7 +140,7 @@ namespace backup_method {
             }
             weight_sum += rollout_item->weight;
         }
-        DEBUG_EXPECT_APPROX(0,weight_sum,1);
+        DEBUG_EXPECT_APPROX(weight_sum,1);
     }
 
     Bellman::Bellman(std::shared_ptr<tree_policy::TreePolicy> tree_policy_,
@@ -186,7 +186,7 @@ namespace backup_method {
     }
 
     void Bellman::backup_action_node(const node_t & action_node) const {
-        DEBUG_EXPECT(0,environment!=nullptr);
+        DEBUG_EXPECT(environment!=nullptr);
         DEBUG_OUT(1,"Backup action node " << graph->id(action_node));
         // compute imediate reward (mean and variance)
         arc_t to_action_arc = in_arc_it_t(*graph,action_node);
@@ -273,9 +273,9 @@ namespace backup_method {
     }
 
     void Bellman::backup_observation_node(const node_t & observation_node) const {
-        DEBUG_EXPECT(0,environment!=nullptr);
-        DEBUG_EXPECT(0,tree_policy!=nullptr);
-        DEBUG_EXPECT(0,tree_policy->restrict_to_existing);
+        DEBUG_EXPECT(environment!=nullptr);
+        DEBUG_EXPECT(tree_policy!=nullptr);
+        DEBUG_EXPECT(tree_policy->restrict_to_existing);
         DEBUG_OUT(1,"Backup observation node " << graph->id(observation_node));
         // get action probabilities
         RETURN_TUPLE(action_container_t, actions,
@@ -363,7 +363,7 @@ namespace backup_method {
     }
 
     void MonteCarlo::backup_action_node(const node_t & action_node) const {
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
         backup_node(action_node);
         DEBUG_OUT(1,QString("    backup action-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(action_node)).
@@ -389,11 +389,11 @@ namespace backup_method {
                         if(check_weight==-1) {
                             check_weight = rollout_item->weight;
                         } else {
-                            DEBUG_EXPECT_APPROX(0,check_weight,rollout_item->weight);
+                            DEBUG_EXPECT_APPROX(check_weight,rollout_item->weight);
                         }
                     }
-                    DEBUG_EXPECT_APPROX(0,return_sum,(*mcts_node_info_map)[action_node].return_sum);
-                    DEBUG_EXPECT_APPROX(0,squared_return_sum,(*mcts_node_info_map)[action_node].squared_return_sum);
+                    DEBUG_EXPECT_APPROX(return_sum,(*mcts_node_info_map)[action_node].return_sum);
+                    DEBUG_EXPECT_APPROX(squared_return_sum,(*mcts_node_info_map)[action_node].squared_return_sum);
                 }
                 if(prior_counts==0) {
                     double mean_return = 0;
@@ -404,11 +404,11 @@ namespace backup_method {
                         mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
                         ++counts;
                     }
-                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[action_node].value);
+                    DEBUG_EXPECT_APPROX(mean_return,(*mcts_node_info_map)[action_node].value);
                     if(counts>=2) {
                         double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
                         double value_variance = return_variance/counts;
-                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[action_node].value_variance);
+                        DEBUG_EXPECT_APPROX(value_variance,(*mcts_node_info_map)[action_node].value_variance);
                     }
                 }
             }
@@ -416,7 +416,7 @@ namespace backup_method {
     }
 
     void MonteCarlo::backup_observation_node(const node_t & observation_node) const {
-        DEBUG_EXPECT(0,(*node_info_map)[observation_node].type==MonteCarloTreeSearch::OBSERVATION_NODE);
+        DEBUG_EXPECT((*node_info_map)[observation_node].type==MonteCarloTreeSearch::OBSERVATION_NODE);
         backup_node(observation_node);
         DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
                   arg(graph->id(observation_node)).
@@ -442,7 +442,7 @@ namespace backup_method {
                 ++policy[rollout_item->action];
                 ++transition_count_sum;
             }
-            DEBUG_EXPECT(0,transition_count_sum>0);
+            DEBUG_EXPECT(transition_count_sum>0);
             // normalize
             for(auto & prob : policy) {
                 prob.second /= transition_count_sum;
@@ -464,11 +464,11 @@ namespace backup_method {
                         if(check_weight==-1) {
                             check_weight = rollout_item->weight;
                         } else {
-                            DEBUG_EXPECT_APPROX(0,check_weight,rollout_item->weight);
+                            DEBUG_EXPECT_APPROX(check_weight,rollout_item->weight);
                         }
                     }
-                    DEBUG_EXPECT_APPROX(0,return_sum,(*mcts_node_info_map)[observation_node].return_sum);
-                    DEBUG_EXPECT_APPROX(0,squared_return_sum,(*mcts_node_info_map)[observation_node].squared_return_sum);
+                    DEBUG_EXPECT_APPROX(return_sum,(*mcts_node_info_map)[observation_node].return_sum);
+                    DEBUG_EXPECT_APPROX(squared_return_sum,(*mcts_node_info_map)[observation_node].squared_return_sum);
                 }
                 if(prior_counts==0) {
                     double mean_return = 0;
@@ -479,11 +479,11 @@ namespace backup_method {
                         mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
                         ++counts;
                     }
-                    DEBUG_EXPECT_APPROX(0,mean_return,(*mcts_node_info_map)[observation_node].value);
+                    DEBUG_EXPECT_APPROX(mean_return,(*mcts_node_info_map)[observation_node].value);
                     if(counts>=2) {
                         double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
                         double value_variance = return_variance/counts;
-                        DEBUG_EXPECT_APPROX(0,value_variance,(*mcts_node_info_map)[observation_node].value_variance);
+                        DEBUG_EXPECT_APPROX(value_variance,(*mcts_node_info_map)[observation_node].value_variance);
                     }
                 }
             }

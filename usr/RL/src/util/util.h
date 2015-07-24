@@ -822,7 +822,7 @@ namespace util {
                     ++max_counts;
                 }
             }
-            DEBUG_EXPECT(0,max_counts>0);
+            DEBUG_EXPECT(max_counts>0);
             Vec ret = vec;
             for(int idx=0; idx<(int)vec.size(); ++idx) {
                 if(vec[idx]==max) {
@@ -917,7 +917,7 @@ namespace util {
         void convert_ND_to_1D_index(const C & ND_index,
                                     const D & ND_bounds,
                                     IDX_TYPE & linear_index) {
-        DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
+        DEBUG_EXPECT( ND_index.size()==ND_bounds.size());
         linear_index = 0;
         auto idx_it = ND_index.begin();
         auto bnd_it = ND_bounds.begin();
@@ -1034,7 +1034,7 @@ namespace util {
                 static template_lib::N_tuple<N,D_IDX_TYPE> from(const IDX_TYPE & linear_index,
                                                                 const std::initializer_list<D_IDX_TYPE> ND_bounds)
             {
-                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                DEBUG_EXPECT(ND_bounds.size()==N);
                 auto vec = convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
                 std::array<D_IDX_TYPE,N> arr;
                 for(int idx = 0; idx<(int)std::min(N,vec.size()); ++idx) {
@@ -1047,7 +1047,7 @@ namespace util {
                 static template_lib::N_tuple<N,IDX_TYPE> from(const IDX_TYPE & linear_index,
                                                                 const D & ND_bounds)
             {
-                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                DEBUG_EXPECT(ND_bounds.size()==N);
                 auto ND_index = convert_1D_to_ND_index(linear_index, ND_bounds);
                 std::array<IDX_TYPE,N> arr;
                 auto arr_it = arr.begin();

@@ -79,7 +79,7 @@ void SearchTree::prune(const action_handle_t & action,
                 }
             }
         } else {
-            DEBUG_EXPECT(0,new_root_node==INVALID);
+            DEBUG_EXPECT(new_root_node==INVALID);
         }
     }
 
@@ -248,7 +248,7 @@ SearchTree::arc_node_t SearchTree::find_or_create_observation_node(const node_t 
     } else if(observation_node!=INVALID && to_observation_arc!=INVALID) {
         // observation node AND connecting arc were found --> just return them
         DEBUG_OUT(2,"    node and arc exist");
-        DEBUG_EXPECT(0,!new_arc && !new_node);
+        DEBUG_EXPECT(!new_arc && !new_node);
         return arc_node_t(to_observation_arc, observation_node, new_arc, new_node);
     } else {
         DEBUG_DEAD_LINE;
@@ -273,7 +273,7 @@ SearchTree::arc_node_t SearchTree::find_or_create_action_node(const node_t & obs
         return arc_node_t(arc, observation_node, true, false);
     } else if(action_node!=INVALID && to_action_arc!=INVALID) {
         // action node AND connecting arc were found --> just return them
-        DEBUG_EXPECT(0,!new_arc && !new_node);
+        DEBUG_EXPECT(!new_arc && !new_node);
         return arc_node_t(to_action_arc, action_node, new_arc, new_node);
     } else {
         DEBUG_DEAD_LINE;

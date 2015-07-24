@@ -2074,9 +2074,9 @@ TEST(MonteCarloTreeSearch, DataBackup) {
                                 DEBUG_WARNING("value variance [node]: " << mcts_node_info_map[node].value_variance);
                                 DEBUG_WARNING("value [node]: " << mcts_node_info_map[node].value);
 
-                                DEBUG_EXPECT_APPROX(0,weight_sum,1);
-                                DEBUG_EXPECT_APPROX(0,mean_return,mcts_node_info_map[node].value);
-                                DEBUG_EXPECT_APPROX(0,value_variance,mcts_node_info_map[node].value_variance);
+                                DEBUG_EXPECT_APPROX(weight_sum,1);
+                                DEBUG_EXPECT_APPROX(mean_return,mcts_node_info_map[node].value);
+                                DEBUG_EXPECT_APPROX(value_variance,mcts_node_info_map[node].value_variance);
 
                                 if(fabs(mean_return-mcts_node_info_map[node].value)>1e-10 ||
                                    fabs(value_variance-mcts_node_info_map[node].value_variance)>1e-10) {
@@ -2153,7 +2153,7 @@ public:
     const graph_t & get_c_graph() const {return c_graph;}
     const ComputationalConstGraph & get_computer() const {return computer;}
     virtual void update_c_node_connections(node_t action_node) override {
-        DEBUG_EXPECT(0,node_info_map[action_node].type==ACTION_NODE);
+        DEBUG_EXPECT(node_info_map[action_node].type==ACTION_NODE);
 
         for(node_t c_node : {
                 variable_info_map[action_node].pi,

@@ -116,7 +116,7 @@ GamblingHall::GamblingHall(int machine_n, double tolerance):
 
 GamblingHall::observation_reward_pair_t GamblingHall::transition(const action_handle_t & action_handle) {
     auto gamblinghallaction = std::dynamic_pointer_cast<const GamblingHallAction>(action_handle);
-    DEBUG_EXPECT(0,gamblinghallaction!=nullptr);
+    DEBUG_EXPECT(gamblinghallaction!=nullptr);
     int action = gamblinghallaction->action;
     reward_t reward;
     auto machine_and_time = util::convert_1D_to_ND_index(state,{machine_n,time_n});

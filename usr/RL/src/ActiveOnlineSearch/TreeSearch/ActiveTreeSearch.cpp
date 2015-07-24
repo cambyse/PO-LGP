@@ -530,7 +530,7 @@ void ActiveTreeSearch::erase_node(node_t node) {
 }
 
 void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
-    DEBUG_EXPECT(0,node_info_map[action_node].type==ACTION_NODE);
+    DEBUG_EXPECT(node_info_map[action_node].type==ACTION_NODE);
 
     // pi
     {
@@ -548,7 +548,7 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                 ++idx;
             }
         }
-        DEBUG_EXPECT(0,this_idx!=-1);
+        DEBUG_EXPECT(this_idx!=-1);
         // method for computing the policy
         const double tau = 0.01;
         const double Cp = 10;
@@ -583,10 +583,10 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t other_action_node = graph.target(arc);
             arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[other_action_node].mean_Q,c_node);
             arc_t var_Q_arc = lemon::findArc(c_graph,variable_info_map[other_action_node].var_Q,c_node);
-            DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
-            DEBUG_EXPECT(0,var_Q_arc!=INVALID);
+            DEBUG_EXPECT(mean_Q_arc!=INVALID);
+            DEBUG_EXPECT(var_Q_arc!=INVALID);
             if(other_action_node==action_node) {
-                DEBUG_EXPECT(0,idx==this_idx);
+                DEBUG_EXPECT(idx==this_idx);
                 computer.set_arc(mean_Q_arc,
                                  [tau,policy,this_idx](vector<double> v){
                                      return (1-policy(v,this_idx))*policy(v,this_idx)/tau;
@@ -596,7 +596,7 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                                      return Cp*(1-policy(v,this_idx))*policy(v,this_idx)/tau;
                                  });
             } else {
-                DEBUG_EXPECT(0,idx!=this_idx);
+                DEBUG_EXPECT(idx!=this_idx);
                 computer.set_arc(mean_Q_arc,
                                  [tau,policy,idx,this_idx](vector<double> v){
                                      return -policy(v,idx)*policy(v,this_idx)/tau;
@@ -662,8 +662,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t s_prime_prime = graph.target(arc);
             arc_t mean_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].mean_p[s_prime_prime],c_node);
             arc_t alpha_arc = lemon::findArc(c_graph,variable_info_map[action_node].alpha[s_prime_prime],c_node);
-            DEBUG_EXPECT(0,mean_p_arc!=INVALID);
-            DEBUG_EXPECT(0,alpha_arc!=INVALID);
+            DEBUG_EXPECT(mean_p_arc!=INVALID);
+            DEBUG_EXPECT(alpha_arc!=INVALID);
             computer.set_arc(mean_p_arc, [this,idx](vector<double> v){return discount*v[2*idx+1];});
             computer.set_arc(alpha_arc, [this,idx](vector<double> v){return discount*v[2*idx];});
             ++idx;
@@ -695,9 +695,9 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             arc_t mean_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].mean_p[s_prime_prime],c_node);
             arc_t var_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime],c_node);
             arc_t beta_arc = lemon::findArc(c_graph,variable_info_map[action_node].beta[s_prime_prime],c_node);
-            DEBUG_EXPECT(0,mean_p_arc!=INVALID);
-            DEBUG_EXPECT(0,var_p_arc!=INVALID);
-            DEBUG_EXPECT(0,beta_arc!=INVALID);
+            DEBUG_EXPECT(mean_p_arc!=INVALID);
+            DEBUG_EXPECT(var_p_arc!=INVALID);
+            DEBUG_EXPECT(beta_arc!=INVALID);
             computer.set_arc(mean_p_arc, [this,idx](vector<double> v){return discount*2*v[3*idx]*v[3*idx+2];});
             computer.set_arc(var_p_arc, [this,idx](vector<double> v){return discount*v[3*idx+2];});
             computer.set_arc(beta_arc, [this,idx](vector<double> v){return discount*(pow(v[3*idx],2)+v[3*idx+1]);});
@@ -732,8 +732,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t a_prime_prime = graph.target(arc);
             arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
             arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
-            DEBUG_EXPECT(0,pi_arc!=INVALID);
-            DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+            DEBUG_EXPECT(pi_arc!=INVALID);
+            DEBUG_EXPECT(mean_Q_arc!=INVALID);
             computer.set_arc(pi_arc, [this,idx](vector<double> v){return v[2*idx+1];});
             computer.set_arc(mean_Q_arc, [this,idx](vector<double> v){return v[2*idx];});
             ++idx;
@@ -767,8 +767,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
             node_t a_prime_prime = graph.target(arc);
             arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
             arc_t var_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].var_Q,c_node);
-            DEBUG_EXPECT(0,pi_arc!=INVALID);
-            DEBUG_EXPECT(0,var_Q_arc!=INVALID);
+            DEBUG_EXPECT(pi_arc!=INVALID);
+            DEBUG_EXPECT(var_Q_arc!=INVALID);
             computer.set_arc(pi_arc, [this,idx](vector<double> v){return 2*v[2*idx]*v[2*idx+1];});
             computer.set_arc(var_Q_arc, [this,idx](vector<double> v){return pow(v[2*idx],2);});
             ++idx;
@@ -807,8 +807,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                 node_t s_prime_prime_prime = graph.target(arc);
                 arc_t var_p_arc = lemon::findArc(c_graph,variable_info_map[action_node].var_p[s_prime_prime][s_prime_prime_prime],c_node);
                 arc_t gamma_arc = lemon::findArc(c_graph,variable_info_map[action_node].gamma[s_prime_prime][s_prime_prime_prime],c_node);
-                DEBUG_EXPECT(0,var_p_arc!=INVALID);
-                DEBUG_EXPECT(0,gamma_arc!=INVALID);
+                DEBUG_EXPECT(var_p_arc!=INVALID);
+                DEBUG_EXPECT(gamma_arc!=INVALID);
                 computer.set_arc(var_p_arc, [this,idx](vector<double> v){return v[2*idx+1];});
                 computer.set_arc(gamma_arc, [this,idx](vector<double> v){return v[2*idx];});
                 ++idx;
@@ -857,8 +857,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                     node_t a_prime_prime = graph.target(arc);
                     arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
                     arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
-                    DEBUG_EXPECT(0,pi_arc!=INVALID);
-                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    DEBUG_EXPECT(pi_arc!=INVALID);
+                    DEBUG_EXPECT(mean_Q_arc!=INVALID);
                     computer.set_arc(pi_arc, [this,idx](vector<double> v){
                             double sum_1 = 0;
                             for(int idx_1=0; idx_1<(int)v.size(); idx_1+=2) {
@@ -896,8 +896,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                     node_t a_prime_prime = graph.target(arc);
                     arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].pi,c_node);
                     arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime].mean_Q,c_node);
-                    DEBUG_EXPECT(0,pi_arc!=INVALID);
-                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    DEBUG_EXPECT(pi_arc!=INVALID);
+                    DEBUG_EXPECT(mean_Q_arc!=INVALID);
                     computer.set_arc(pi_arc, [this,idx,s_prime_prime_out,s_prime_prime_prime_out](vector<double> v){
                             double sum_2 = 0;
                             for(int idx_2=s_prime_prime_out; idx_2<s_prime_prime_out+s_prime_prime_prime_out; ++idx_2) {
@@ -918,8 +918,8 @@ void ActiveTreeSearch::update_c_node_connections(node_t action_node) {
                     node_t a_prime_prime_prime = graph.target(arc);
                     arc_t pi_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].pi,c_node);
                     arc_t mean_Q_arc = lemon::findArc(c_graph,variable_info_map[a_prime_prime_prime].mean_Q,c_node);
-                    DEBUG_EXPECT(0,pi_arc!=INVALID);
-                    DEBUG_EXPECT(0,mean_Q_arc!=INVALID);
+                    DEBUG_EXPECT(pi_arc!=INVALID);
+                    DEBUG_EXPECT(mean_Q_arc!=INVALID);
                     computer.set_arc(pi_arc, [this,idx,s_prime_prime_out](vector<double> v){
                             double sum_1 = 0;
                             for(int idx_1=0; idx_1<s_prime_prime_out; ++idx_1) {
@@ -1001,7 +1001,7 @@ void ActiveTreeSearch::update_c_node_values(node_t action_node) {
             to_observation_arc!=INVALID;
             ++to_observation_arc) {
             node_t observation_node = graph.target(to_observation_arc);
-            DEBUG_EXPECT(0,node_info_map[observation_node].type==OBSERVATION_NODE);
+            DEBUG_EXPECT(node_info_map[observation_node].type==OBSERVATION_NODE);
             double mean_p = counts[to_observation_arc];
             mean_p /= this_counts;
             DEBUG_OUT(1,"    for action node " << graph.id(action_node) <<

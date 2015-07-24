@@ -171,7 +171,7 @@ int main(int argn, char ** args) {
                         ids.push_back(id);
                     }
                 }
-                DEBUG_EXPECT(0,ids.size()>0);
+                DEBUG_EXPECT(ids.size()>0);
                 int id = ids[rand()%ids.size()];
                 id_map[node] = id;
                 // talk to neighbors
