@@ -294,7 +294,10 @@ namespace backup_method {
         for(int idx=0; idx<(int)actions.size(); ++idx) {
             node_t action_node = action_nodes[actions[idx]];
             mean_value += probs[idx]*(*mcts_node_info_map)[action_node].value;
-            mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
+            if(probs[idx]!=0) {
+                // this resolves 0 * inf to 0 in order to avoid nan
+                mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
+            }
             min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
             max_value += probs[idx]*(*mcts_node_info_map)[action_node].max_value;
             DEBUG_OUT(3,"    action probability to node " << graph->id(action_node) <<

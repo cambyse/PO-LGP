@@ -837,32 +837,32 @@ namespace util {
         // Use log scale //
         //---------------//
         double log_sum = vec[0]/temperature; // cannot initialize to log(0)
+        int positive_inf_values = ((isinf(vec[0]) && vec[0]>0)?1:0);
         for(int idx=1; idx<(int)vec.size(); ++idx) {
-            log_sum = log_add_exp(log_sum,vec[idx]/temperature);
+            if(isinf(vec[idx]) && vec[idx]>0) ++positive_inf_values;
+            if(!positive_inf_values) log_sum = log_add_exp(log_sum,vec[idx]/temperature);
         }
         Vec ret = vec;
         for(int idx=0; idx<(int)vec.size(); ++idx) {
-            ret[idx] = exp(vec[idx]/temperature - log_sum);
+            if(positive_inf_values) {
+                if(isinf(vec[idx]) && vec[idx]>0) {
+                    ret[idx] = 1./positive_inf_values;
+                    DEBUG_EXPECT_APPROX(ret[idx],1./positive_inf_values);
+                } else {
+                    ret[idx] = 0;
+                }
+            } else {
+                ret[idx] = exp(vec[idx]/temperature - log_sum);
+            }
         }
-        return ret;
-    }
-    /** SoftMax function for temperature 1. */
-    template < typename Vec >
-        Vec soft_max(const Vec& vec) {
-        if(vec.size()==0) {
-            Vec ret = vec;
-            return ret;
-        }
-        //---------------//
-        // Use log scale //
-        //---------------//
-        double log_sum = vec[0]; // cannot initialize to log(0)
-        for(int idx=1; idx<(int)vec.size(); ++idx) {
-            log_sum = log_add_exp(log_sum,vec[idx]);
-        }
-        Vec ret = vec;
-        for(int idx=0; idx<(int)vec.size(); ++idx) {
-            ret[idx] = exp(vec[idx] - log_sum);
+        IF_DEBUG(0) {
+            double weight_sum = 0;
+            for(auto w : ret) weight_sum+=w;
+            DEBUG_EXPECT_APPROX(weight_sum,1);
+            if(fabs(weight_sum-1)>1e-10) {
+                DEBUG_WARNING(positive_inf_values);
+                DEBUG_WARNING(ret);
+            }
         }
         return ret;
     }
