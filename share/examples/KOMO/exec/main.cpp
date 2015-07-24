@@ -1,12 +1,15 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Motion/komo.h>
+#include <Motion/motion.h>
 
 //===========================================================================
 
 void TEST(Specs){
   const char* specsfile="specs.g";
+  const char* outprefix="z";
   if(MT::argc>1) specsfile=MT::argv[1];
+  if(MT::argc>2) outprefix=MT::argv[2];
 
   Graph specs(specsfile);
   KOMO komo(specs);
@@ -15,7 +18,12 @@ void TEST(Specs){
   for(int r=0;repeats<0. || r<repeats; r++){
     komo.init(Graph(specsfile));
     komo.run();
-    FILE("z.output.g") <<komo.getReport();
+    FILE(STRING(outprefix<<".costs.g")) <<komo.getReport();
+    ors::KinematicWorld pose=*komo.MPF->configurations.last();
+    for(ors::KinematicSwitch *sw:komo.MP->switches){
+      if(sw->timeOfApplication>komo.MP->T) sw->apply(pose);
+    }
+    FILE(STRING(outprefix<<".pose.g")) <<pose;
     komo.displayTrajectory(); //repeats<0.);
   }
 }

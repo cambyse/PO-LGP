@@ -2220,7 +2220,7 @@ double ors::KinematicWorld::getEnergy() const {
 void ors::KinematicWorld::removeUselessBodies() {
   //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    cout <<" -- removing useless body " <<b->name <<" with in-joints ( ";
+    cout <<" -- removing useless body " <<b->name <<endl;
     delete b;
   }
   //-- reindex
@@ -2340,6 +2340,15 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     j->A = from->rel;
     j->B = -to->rel;
 //    j->agent=1;
+    G.isLinkTree=false;
+    return;
+  }
+  if(symbol==addRigidRel){
+    Joint *j = new Joint(G, from->body, to->body);
+    j->type=JT_fixed;
+    j->A.setDifference(from->body->X, to->body->X);
+//    j->A = from->rel * (to->body->X/from->body->X);
+//    j->B = -to->rel;
     G.isLinkTree=false;
     return;
   }

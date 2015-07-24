@@ -336,7 +336,7 @@ struct KinematicWorld {
 //===========================================================================
 
 struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid };
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid, addRigidRel };
   OperatorSymbol symbol;
   uint timeOfApplication;
   uint fromId, toId;

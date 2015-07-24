@@ -52,12 +52,14 @@ void KOMO::init(const Graph& specs){
   for(Node *s:switches){
     Graph &S = s->graph();
     ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-    MT::String type = S.V<MT::String>("type");
+    MT::String type = S.get<MT::String>("type");
     if(type=="addRigid") sw->symbol = ors::KinematicSwitch::addRigid;
+    else if(type=="addRigidRel") sw->symbol = ors::KinematicSwitch::addRigidRel;
     else if(type=="deleteJoint") sw->symbol = ors::KinematicSwitch::deleteJoint;
-    sw->timeOfApplication = S.V<double>("timeOfApplication")*timeSteps+1;
-    sw->fromId = world.getShapeByName(S.V<MT::String>("from"))->index;
-    sw->toId = world.getShapeByName(S.V<MT::String>("to"))->index;
+    else HALT("unknown type: "<< type);
+    sw->timeOfApplication = S.get<double>("timeOfApplication")*timeSteps+1;
+    sw->fromId = world.getShapeByName(S.get<MT::String>("from"))->index;
+    sw->toId = world.getShapeByName(S.get<MT::String>("to"))->index;
     MP->switches.append(sw);
   }
 

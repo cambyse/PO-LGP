@@ -24,3 +24,11 @@ Task collisions{
   type=inequal # hard inequality constraint
   scale = 1.
 }
+
+
+KinematicSwitch{
+  type=addRigidRel
+  timeOfApplication=1
+  from=endeff
+  to=bar1
+}
