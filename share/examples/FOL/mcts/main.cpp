@@ -46,7 +46,7 @@ void TEST(MCTS){
 //===========================================================================
 
 void TEST(MC){
-  FOL_World world("planBetter.kvg");
+  FOL_World world("boxes_new.kvg");
   PlainMC mc(world);
   world.verbose=0;
   world.verbFil=0;
@@ -92,7 +92,7 @@ void TEST(FOL_World){
 void TEST(Determinism){
 
   for(uint k=0;k<100;k++){
-    FOL_World world("planBetter.kvg");
+    FOL_World world("boxes_new.kvg");
 
     //-- generate a random rollout
     world.reset_state();
@@ -137,7 +137,7 @@ void TEST(Determinism){
 //===========================================================================
 
 int main(int argn, char** argv){
-    rnd.clockSeed();
+//    rnd.clockSeed();
 //  srand(timenow)
 
 //  testMCTS();

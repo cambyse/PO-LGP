@@ -46,16 +46,16 @@ struct FOL_World:MCTS_Environment{
   double T_real, start_T_real;///< real time so far;
   double R_total;
 
-//  uint Ndecisions;
+  double stepCost, timeCost, deadEndCost;
+
   bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
   NodeL decisionRules;  ///< rules withing the KB (each is a subgraph item of the KB)
-  NodeL constants;///< constants withing the KB (each is an item of the KB)
+  Graph *rewardFct; ///< the reward function within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
-  Graph *terminal; //TODO: replace
-  Node *Terminate_keyword;
+  Node *Terminate_keyword, *Quit_keyword, *Quit_literal;
   int verbose;
   int verbFil;
   ofstream fil;
