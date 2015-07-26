@@ -23,7 +23,7 @@ void TEST(Specs){
     for(ors::KinematicSwitch *sw:komo.MP->switches){
       if(sw->timeOfApplication>komo.MP->T) sw->apply(pose);
     }
-    FILE(STRING(outprefix<<".pose.g")) <<pose;
+    FILE(STRING(outprefix<<".pose.g")) <<"ChDir = '../../../data/pr2_model/'\n\n" <<pose;
     komo.displayTrajectory(); //repeats<0.);
   }
 }
