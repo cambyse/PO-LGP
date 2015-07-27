@@ -68,7 +68,7 @@ struct EndStateProgram:ConstrainedProblemMix{
       if(&tt) tt.append(ineqTT, 4);
     }
 
-    //-- supporters below object -> maximize their distances and center
+    //-- supporters below object -> maximize their distances to center
     NodeL objs=symbolicState.getNodes("Object");
     for(Node *obj:objs){
       NodeL supporters;

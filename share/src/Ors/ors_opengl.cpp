@@ -135,6 +135,11 @@ void glDrawShape(ors::Shape *s) {
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
         s->mesh.glDraw();
         break;
+      case ors::sscST:
+        CHECK(s->sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
+        if(!s->mesh.V.N) s->mesh.setSSC(s->sscCore, s->size[3]);
+        s->mesh.glDraw();
+        break;
       case ors::pointCloudST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
         glDrawPointCloud(s->mesh.V, NoArr);

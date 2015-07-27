@@ -271,6 +271,12 @@ void ors::Shape::parseAts() {
     case ors::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       break;
+    case ors::sscST:
+      CHECK(size[3]>1e-10,"");
+      CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+      sscCore=mesh;
+      mesh.setSSC(sscCore, size[3]);
+      break;
   }
 
   //center the mesh:

@@ -14,14 +14,14 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
     else if(specs["Hmetric"]) map = new TaskMap_qItself(specs["Hmetric"]->V<double>()*world.getHmetric());
     else map = new TaskMap_qItself();
   }else if(type=="GJK_vec"){
-    map = new TaskMap_GJK(world, specs);
+    map = new TaskMap_GJK(world, specs, false);
   }else{
     map = new DefaultTaskMap(specs, world);
   }
   return map;
 }
 
-TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs){
+TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact) : exact(exact){
   Node *it;
   if((it=specs["ref1"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
   if((it=specs["ref2"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
@@ -33,17 +33,20 @@ void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
   ors::Shape *s1 = i<0?NULL: W.shapes(i);
   ors::Shape *s2 = j<0?NULL: W.shapes(j);
   CHECK(s1 && s2,"");
+  CHECK(s1->type==ors::sscST && s2->type==ors::sscST,"");
   ors::Vector p1, p2, e1, e2;
   GJK_point_type pt1, pt2;
-  GJK_sqrDistance(s1->mesh, s2->mesh, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
+
+  GJK_sqrDistance(s1->sscCore, s2->sscCore, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
   //  if(d2<1e-10) LOG(-1) <<"zero distance";
   arr y1, J1, y2, J2;
+
   W.kinematicsPos(y1, (&J?J1:NoArr), s1->body, s1->body->X.rot/(p1-s1->body->X.pos));
   W.kinematicsPos(y2, (&J?J2:NoArr), s2->body, s2->body->X.rot/(p2-s2->body->X.pos));
   v = y1 - y2;
   if(&J){
     J = J1 - J2;
-    return;
+    if(!exact) return;
     if((pt1==GJK_vertex && pt2==GJK_face) || (pt1==GJK_face && pt2==GJK_vertex)){
       arr vec, Jv, n = v/length(v);
       J = n*(~n*J);
@@ -76,4 +79,13 @@ void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
       J += n*(~n*Jv);
     }
   }
+  //reduce by radii
+  double l2=sumOfSqr(v), l=sqrt(l2);
+  double fac = (l-s1->size[3]-s2->size[3])/l;
+  if(&J){
+    arr d_fac = (1.-(l-s1->size[3]-s2->size[3])/l)/l2 *(~v)*J;
+    J = J*fac + v*d_fac;
+  }
+  v *= fac;
+//  CHECK_ZERO(l2-d2, 1e-6,"");
 }

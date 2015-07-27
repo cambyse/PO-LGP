@@ -316,6 +316,20 @@ void Mesh::makeConvexHull() {
 #endif
 }
 
+void Mesh::setSSC(const ors::Mesh& m, double r, uint fineness){
+  Mesh ball;
+  ball.setSphere(fineness);
+  ball.scale(r);
+
+  clear();
+  for(uint i=0;i<m.V.d0;i++){
+    ball.translate(m.V(i,0), m.V(i,1), m.V(i,2));
+    addMesh(ball);
+    ball.translate(-m.V(i,0), -m.V(i,1), -m.V(i,2));
+  }
+  makeConvexHull();
+}
+
 
 /** @brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
