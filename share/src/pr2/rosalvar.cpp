@@ -12,9 +12,10 @@
 
 // ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
+  ors::Transformation t;
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
-  body.X.pos.z = marker.pose.pose.position.z;
+  body.X.pos.z = marker.pose.pose.position.z ;
   body.X.rot.w = marker.pose.pose.orientation.w;
   body.X.rot.x = marker.pose.pose.orientation.x;
   body.X.rot.y = marker.pose.pose.orientation.y;
@@ -26,7 +27,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
-  ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
+  ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
 
   for (AlvarMarker& marker : markers.markers) {
     MT::String marker_name = STRING("marker" << marker.id);
@@ -43,8 +44,16 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
     setBody(*body, marker);
-    // transform: torso_lift_link is the reference frame_id
-    body->X.pos += refFrame;  // TODO is this the proper way to do it?
+    ors::Transformation T;
+    T.setZero();
+    T.addRelativeRotationDeg(90.,0.,1.,0.);
+
+    body->X = refFrame * T * body->X;
+
+
+    //body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
+    //body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+
     world.getShapeByName(marker_name)->X = body->X;
 
   }

@@ -29,7 +29,7 @@ def flatten(iterable):
 class SIDE:
     LEFT = "left"
     RIGHT = "right"
-    DEFAULT = "left"
+    DEFAULT = "right"
 
 
 ###############################################################################

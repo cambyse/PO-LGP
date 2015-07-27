@@ -46,6 +46,9 @@ DefaultTaskMap::DefaultTaskMap(Graph& params, const ors::KinematicWorld& G)
     if(Type=="pos") type=posTMT;
     if(Type=="vec") type=vecTMT;
     if(Type=="gazeAt") type=gazeAtTMT;
+    if(Type=="vecAlign") type=vecAlignTMT;
+    if(Type=="vecDiff") type=vecDiffTMT;
+    if(Type=="posDiff") type=posDiffTMT;
   }
   CHECK(type!=noTMT,"unknown type");
   if((it=params["ref1"])) i = G.getShapeByName(it->V<MT::String>())->index;

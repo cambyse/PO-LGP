@@ -181,6 +181,11 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
   D["name"]= bodyName;
   D["type"] = std::to_string(body->type);
   D["Q"] =  STRING('[' <<body->X.rot<<']');
+  D["X"] = STRING('[' <<body->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<body->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<body->X.rot.getZ()<< ']');
+  D["q"] = STRING('[' <<body->X.rot.getVec()<< ']');
+
   D["pos"] = STRING('[' <<body->X.pos<<']');
   S->tcm->modelWorld.deAccess();
   return D;
@@ -193,6 +198,9 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
+  D["X"] = STRING('[' <<joint->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<joint->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<joint->X.rot.getZ()<< ']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
   D["q"] = STRING(S->tcm->modelWorld().calc_q_from_Q(joint, false));
   D["axis"] = STRING('[' << joint->axis << ']');
@@ -207,6 +215,9 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
   D["name"]= shapeName;
   D["type"] = std::to_string(shape->type);
   D["Q"] =  STRING('[' <<shape->X.rot<<']');
+  D["X"] = STRING('[' <<shape->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<shape->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<shape->X.rot.getZ()<< ']');
   D["pos"] = STRING('[' <<shape->X.pos<<']');
   S->tcm->modelWorld.deAccess();
   return D;

@@ -71,6 +71,7 @@ def running(facts):
     for symb in symbols:
         interface.stopFact(symb)
 
+
     active_facts = interface.getFacts()
     for symb_conv in symbols_conv:
         if symb_conv + "," in active_facts:
@@ -152,29 +153,193 @@ class Activity(object):
         """Run this Activity"""
         run(str(self))
 
-
-class PosActivity(Activity):
+class AllActivity(Activity):
     """
     An Activity that moves an endeffector shape to a position in world
     coordinates.
     """
-    def __init__(self, endeff, pos):
+    def __init__(self, ref1=None, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False):
         """
         :param endeff: The endeffector shape to move
         :param pos: The target position in world coordinates
         :return:
         """
-        super(PosActivity, self).__init__()
-        assert_in(endeff, shapes())
-        self.endeff = endeff
-        self.pos = pos
+        super(AllActivity, self).__init__()
+        self.ref1 = ref1
+        self.ref2 = ref2
+        self.vec1 = vec1
+        self.vec2 = vec2
+        self.type = type
+        self.target = target
+        self.moduloTwoPi = moduloTwoPi
 
     def __str__(self):
-        return ("(FollowReferenceActivity {endeff} pos {name})"
-                "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
-                .format(name=self.name, endeff=self.endeff, pos=self.pos,
+        return ("(FollowReferenceActivity {ref} {type} {name})"
+                "{{ type={type} {ref1} {ref2} {target} {vec1} {vec2} tol={tol} PD={gains} }}"
+                .format(name=self.name, type=self.type, ref=self.ref1,
+                        ref1="ref1={ref1}".format(ref1=self.ref1) if self.ref1 else "",
+                        ref2="ref2={ref2}".format(ref2=self.ref2) if self.ref2 else "",
+                        target="target={target}".format(target=self.target) if self.target else "",
+                        vec1="vec1={vec1}".format(vec1=self.vec1) if self.vec1 else "",
+                        vec2="vec2={vec2}".format(vec2=self.vec2) if self.vec2 else "",
+                        moduloTwoPi="moduloTwoPi=1" if self.moduloTwoPi else "",
                         tol=self.tolerance, gains=self.natural_gains))
 
+
+class PosActivity(AllActivity):
+    """
+    An Activity that moves an endeffector shape to a position in world
+    coordinates.
+    """
+    def __init__(self, ref1, target):
+        """
+        :param endeff: The endeffector shape to move
+        :param pos: The target position in world coordinates
+        :return:
+        """
+        self.ref1 = ref1
+        self.target = target
+        super(PosActivity, self).__init__(ref1=self.ref1, target=self.target)
+        
+
+    def __str__(self):
+        return super(PosActivity, self).__str__()
+
+
+class VecDiffActivity(AllActivity):
+    """
+    An Activity that moves an endeffector shape to a position in world
+    coordinates.
+    """
+    def __init__(self, ref1, ref2, vec1=None, vec2=None):
+        """
+        :param endeff: The endeffector shape to move
+        :param pos: The target position in world coordinates
+        :return:
+        """
+        self.ref1 = ref1
+        self.ref2 = ref2
+        self.vec1 = vec1 if vec1 else [1,0,0]
+        self.vec2 = vec2 if vec2 else [0,0,-1]
+        super(VecDiffActivity, self).__init__(ref1=self.ref1, 
+            ref2=self.ref2, vec1=self.vec1, vec2=self.vec2, type="vecDiff")
+        
+
+    def __str__(self):
+        return super(VecDiffActivity, self).__str__()
+
+
+
+class QItselfActivity(AllActivity):
+    """
+    Moves a given joint to a specified q value.
+    """
+    def __init__(self, ref1, target, moduloTwoPi=True):
+        """
+        :param joint: The name of the joint to move
+        :param q: The desired position. For rotational joints in radian. For
+                  translational joints in meter.
+        :param moduloTwoPi: If set tu True all angles are set to values
+                            between 0 and two pi radian or 360 degree
+                            respectively. E.g. if you want to move a joint to
+                            361 degree it moves to 1 degree. If set to False
+                            it also makes multiple turns.
+        :return:
+        """
+        assert_in(ref1, joints())
+        self.ref1 = ref1
+        self.target = [target]
+        self.tolerance = .01
+        self.moduloTwoPi = moduloTwoPi
+        super(QItselfActivity, self).__init__(ref1=self.ref1, target=self.target, type="qItself", moduloTwoPi=self.moduloTwoPi)
+
+
+    def __str__(self):
+        return super(QItselfActivity, self).__str__()
+
+
+class WheelsActivity(AllActivity):
+    """
+
+    Moves Base to a specified position relative to the base.
+    """
+    def __init__(self, q, absolute=False):
+        """
+        :param pos: The position to move relative to current position.
+        :param absolute: Absolute position flag
+        :return:
+        """
+
+        self.q = q
+        self.absolute = absolute
+        if self.absolute:
+            self.target = self.q
+        else:
+            self.q_base = [float(x) for x in joints("worldTranslationRotation")["q"].split()]
+            self.target = [0, 0, 0]
+            
+            self.target[0] = np.sin(self.q_base[2])*-self.q[1]+np.cos(self.q_base[2])*self.q[0]
+            self.target[1] = np.sin(self.q_base[2])*self.q[0]+np.cos(self.q_base[2])*self.q[1]
+            self.target[2] = np.deg2rad(self.q[2])
+            self.target = [x + y for x, y in zip(self.target, self.q_base)]
+        super(WheelsActivity, self).__init__(target=self.target, type="wheels")
+
+    def __str__(self):   
+        return super(WheelsActivity, self).__str__()
+
+
+class GazeAtActivity(AllActivity):
+    """
+    Look at a shape.
+    """
+    def __init__(self, ref1, ref2, vec1=[1,0,0], vec2=[0,0,0]):
+        """
+        :param shape: The shape to look at
+        :param pos_in_shape: Where in the shape to look. In coordinates of the
+                             shape's own coordinate system. Default: [0, 0, 0]
+        :return:
+        """
+        
+        assert_in(ref1, shapes())
+        assert_in(ref2, shapes())
+        self.ref1=ref1
+        self.ref2=ref2
+        self.vec1=vec1
+        self.vec2=vec2
+        
+        super(GazeAtActivity, self).__init__(ref1=self.ref1,ref2=self.ref2,vec1=self.vec1, vec2=self.vec2, type="gazeAt")
+
+    def __str__(self):
+        return super(GazeAtActivity, self).__str__()
+
+
+
+class MoveBaseToShape(WheelsActivity):
+    """Move base in front of shape with given offset"""
+
+    def __init__(self, shape, offset=1):
+        """
+        :param shape: The destination of the movement
+        :param offset: The distance to reach between base and shape.
+        :return:
+        """
+        assert_in(shape, shapes())
+        self.shape = shape
+        self.offset = offset
+        self.pos = np.array(pos_str2arr(interface.getShapeByName(self.shape)["pos"]))
+        self.X = np.array(pos_str2arr(interface.getShapeByName(self.shape)["X"]))
+        self.X = np.cross(np.cross(self.X,[0,0,1]),[0,0,1])
+        self.X = np.divide(self.X,np.linalg.norm(self.X))
+        self.pos[2] = np.arccos(np.dot([1,0,0],self.X))
+        self.X = np.multiply(self.X, self.offset)
+        self.pos[0] -= self.X[0]
+        self.pos[1] -= self.X[1] 
+
+        super(MoveBaseToShape, self).__init__(self.pos, 1)
+        
+
+    def __str__(self):
+        return super(MoveBaseToShape, self).__str__()
 
 class MoveAlongAxisActivity(Activity):
     """
@@ -203,59 +368,6 @@ class MoveAlongAxisActivity(Activity):
                 "{{ type=pos ref1={endeff} vec2={pos} tol={tol} PD={gains} }}"
                 .format(name=self.name, endeff=self.endeff, pos=target_pos,
                         tol=self.tolerance, gains=self.natural_gains))
-
-
-class QItselfActivity(Activity):
-    """
-    Moves a given joint to a specified q value.
-    """
-    def __init__(self, joint, q, moduloTwoPi=True):
-        """
-        :param joint: The name of the joint to move
-        :param q: The desired position. For rotational joints in radian. For
-                  translational joints in meter.
-        :param moduloTwoPi: If set tu True all angles are set to values
-                            between 0 and two pi radian or 360 degree
-                            respectively. E.g. if you want to move a joint to
-                            361 degree it moves to 1 degree. If set to False
-                            it also makes multiple turns.
-        :return:
-        """
-        super(QItselfActivity, self).__init__()
-        assert_in(joint, joints())
-        self.joint = joint
-        self.q = q
-        self.tolerance = .01
-        self.moduloTwoPi = moduloTwoPi
-
-    def __str__(self):
-        return ("(FollowReferenceActivity qItself {name})"
-                "{{ type=qItself ref1={joint} target=[{target}] tol={tol} "
-                "moduloTwoPi={modulo} PD={gains} }}"
-                .format(name=self.name, joint=self.joint, target=self.q,
-                        tol=self.tolerance,
-                        modulo="1" if self.moduloTwoPi else "0",
-                        gains=self.natural_gains))
-
-class WheelsActivity(Activity):
-    """
-
-    Moves Base to a specified position.
-    """
-    def __init__(self, pos):
-        """
-        :param pos: The position to move relative to current position.
-        :return:
-        """
-        super(WheelsActivity, self).__init__()
-        self.pos = pos
-        self.tolerance = .01
-
-    def __str__(self):
-        return("(FollowReferenceActivity wheels {name})"
-                "{{ type=wheels target={target} tol={tol} PD{gains} }}"
-                .format(name=self.name, target=self.pos,
-                gains=self.natural_gains, tol=self.tolerance))
 
 
 class TiltHead(QItselfActivity):
@@ -295,7 +407,7 @@ class PanHead(QItselfActivity):
         return super(PanHead, self).__str__()
 
 
-class GazeAtActivity(Activity):
+class LookAtActivity(Activity):
     """
     Look at a shape.
     """
@@ -306,7 +418,7 @@ class GazeAtActivity(Activity):
                              shape's own coordinate system. Default: [0, 0, 0]
         :return:
         """
-        super(GazeAtActivity, self).__init__()
+        super(LookAtActivity, self).__init__()
         assert_in(shape, shapes())
         self.shape = shape
         self.tolerance = .01
@@ -321,6 +433,7 @@ class GazeAtActivity(Activity):
                 "vec1=[0, 0, 1] vec2={pos} tol={tol} PD={gains}}}"
                 .format(name=self.name, target=self.shape, tol=self.tolerance,
                         pos=self.position_in_shape, gains=self.natural_gains))
+
 
 
 class ReachActivity(Activity):
@@ -449,11 +562,15 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     return (AlignActivity(endeff, [1, 0, 0], front_opening, "front"),
             AlignActivity(endeff, [0, 1, 0], rotation_around_wrist, "rot"))
 
+def slign_gripper_with_shape(shape, side=None):
+    endeff = side2endeff(side)
+    return GazeAtActivity(ref1=endeff, ref2=shape, vec1=[1,0,0])
+
 
 def gaze_at(shape):
     assert_in(shape, shapes())
 
-    return GazeAtActivity(shape)
+    return LookAtActivity(shape)
 
 
 def move_along_axis(endeff, start_pos, axis, distance):
@@ -484,16 +601,24 @@ def grab_marker(shape, side=None):
 
     return [{"with": gaze_at(endeff),
              "plan": [(open_gripper(side),
-                       reach(shape, offset=[0, .01, .1], with_=endeff),
+                       reach(shape, offset=[0, .1, 0], with_=endeff),
                        align_gripper_with_plane([1, 0, 0], [0, -1, 0],
                                                 side=side)
                        ),
-                      reach(shape, offset=[0, .01, -.07], with_=endeff),
+                      reach(shape, offset=[0, 0, 0.], with_=endeff),
                       close_gripper(side)
                       ]
              }
             ]
+def in_front(shape, side=None):
+    endeff = side2endeff(side)
 
+    return [{"with": [gaze_at(shape), 
+                GazeAtActivity(endeff, shape, [1, 0, 0]), 
+                #VecDiffActivity(endeff, shape, [0, 1, 0], [0,-1,0])
+                ],
+             "plan": reach(shape, offset=[0, 0, .1], with_=endeff)
+            }]
 
 def turn_marker(shape, degree, pre_grasp_offset=None, grasp_offset=None,
                 plane=None, side=None):
@@ -515,6 +640,8 @@ def turn_marker(shape, degree, pre_grasp_offset=None, grasp_offset=None,
                       turn_wrist(degree, side),
                       open_gripper(side)]
              }]
+
+
 
 
 def move_shape(shape, distance, axis, pre_grasp_offset=None, grasp_offset=None,

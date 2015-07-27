@@ -32,7 +32,7 @@ import swig
 interface = swig.ActionSwigInterface()
 
 # new convenient symbols
-for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align"]:
+for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels"]:
     interface.createNewSymbol(s)
 
 # don't abort the swig interface on Ctr-C
@@ -62,16 +62,21 @@ def facts():
 ###############################################################################
 # Convenient access and autocompletion to shapes, joints, and bodies
 # Just type `s.<tab>` to get a list of all shapes
-_tmp = list(shapes())
-Shapes = namedtuple("Shapes", " ".join(_tmp))
-s = Shapes(*_tmp)
 
-_tmp = list(bodies())
-Bodies = namedtuple("Bodies", " ".join(_tmp))
-b = Bodies(*_tmp)
+def  update():
+	global s, j, b
+	_tmp = list(shapes())
+	Shapes = namedtuple("Shapes", " ".join(_tmp))
+	s = Shapes(*_tmp)
 
-_tmp = list(joints())
-Joints = namedtuple("Joints", " ".join(_tmp))
-j = Joints(*_tmp)
+	_tmp = list(bodies())
+	Bodies = namedtuple("Bodies", " ".join(_tmp))
+	b = Bodies(*_tmp)
 
-del _tmp
+	_tmp = list(joints())
+	Joints = namedtuple("Joints", " ".join(_tmp))
+	j = Joints(*_tmp)
+
+	del _tmp
+
+update()
