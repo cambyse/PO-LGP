@@ -173,6 +173,9 @@ namespace tree_policy {
     double UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node) const {
+        /* Sample actions according to UCB1 policy. The upper bound is computed
+         * as $$Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + 2 C_p \sqrt{2\log n / n_j}$$
+         *  */
         return (*mcts_node_info_map)[action_node].value +
             2*Cp*sqrt(
                 2*log((*mcts_node_info_map)[state_node].action_counts)/

@@ -29,6 +29,7 @@
 #include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
 #include "Environment/BottleneckEnvironment.h"
+#include "Environment/VarianceEnvironments.h"
 //#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 
@@ -76,7 +77,8 @@ static const std::set<std::string> environment_set = {//"TightRope",
                                                       "GamblingHall",
                                                       "FOL",
                                                       "SimpleEnvironment",
-                                                      "BottleneckEnvironment"
+                                                      "BottleneckEnvironment",
+                                                      "DLVSOR"
                                                       //"DelayedUncertainty",
                                                       //"UnitTest"
 };
@@ -660,6 +662,8 @@ tuple<shared_ptr<AbstractSearchTree>,
         environment.reset(new SimpleEnvironment());
     } else if(environment_arg.getValue()=="GamblingHall") {
         environment.reset(new GamblingHall(5, 1));
+    } else if(environment_arg.getValue()=="DLVSOR") {
+        environment.reset(new DelayedLowVarianceSubOptimalReward());
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {

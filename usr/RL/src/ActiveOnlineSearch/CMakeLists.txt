@@ -21,6 +21,7 @@ add_executable(main_ActiveOnlineSearch
     Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
+    Environment/VarianceEnvironments.h
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
 #    Environment_old/DelayedUncertainty.h

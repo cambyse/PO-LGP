@@ -34,6 +34,7 @@ public:
     virtual bool has_min_reward() const override;
     virtual reward_t min_reward() const override;
     virtual bool is_markov() const override;
+    virtual void write(std::ostream & out) const override;
 };
 
 class IntegerEnvironment: public AbstractEnvironment {
@@ -74,6 +75,7 @@ public:
     virtual void make_current_state_default() override final {default_state = state;}
     virtual void reset_state() override final {state = default_state;}
     virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override = 0;
 protected:
     int state = 0;
     int default_state = 0;
