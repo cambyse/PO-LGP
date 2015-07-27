@@ -43,7 +43,7 @@ namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
 

@@ -460,6 +460,7 @@ uint ors::Joint::qDim() {
   if(type==JT_trans3) return 3;
   if(type==JT_universal) return 2;
   if(type==JT_quatBall) return 4;
+  if(type==JT_free) return 7;
   if(type==JT_glue || type==JT_fixed) return 0;
   HALT("shouldn't be here");
   return 0;
@@ -881,6 +882,23 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
         n+=4;
       } break;
 
+      case JT_free: {
+        q(n+0)=j->Q.pos.x;
+        q(n+1)=j->Q.pos.y;
+        q(n+2)=j->Q.pos.z;
+        q(n+3)=j->Q.rot.w;
+        q(n+4)=j->Q.rot.x;
+        q(n+5)=j->Q.rot.y;
+        q(n+6)=j->Q.rot.z;
+        if(calcVels) {
+          qdot(n)=j->Q.vel.x;
+          qdot(n+1)=j->Q.vel.y;
+          qdot(n+2)=j->Q.vel.z;
+          NIY;  // velocity: need to fix
+        }
+        n+=7;
+      } break;
+
       case JT_transX: {
         q(n)=j->Q.pos.x;
         if(calcVels) qdot(n)=j->Q.vel.x;
@@ -991,9 +1009,19 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
         case JT_quatBall:{
           j->Q.rot.set(q.p+n);
           j->Q.rot.normalize();
-          j->Q.rot.isZero=false; //TODO: WHY???? (gradient check fails without!)
+          j->Q.rot.isZero=false; //WHY? (gradient check fails without!)
           if(calcVels) NIY;
           n+=4;
+        } break;
+
+        case JT_free:{
+          j->Q.pos.set(q.p+n);
+          if(calcVels){ j->Q.vel.set(qdot.p+n); j->Q.zeroVels=false; }
+          j->Q.rot.set(q.p+n+3);
+          j->Q.rot.normalize();
+          j->Q.rot.isZero=false;
+          if(calcVels) NIY;
+          n+=7;
         } break;
 
         case JT_transX: {
@@ -1147,12 +1175,13 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
           arr R = (j->X.rot*j->Q.rot).getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx+1);
         }
-        else if(j->type==JT_trans3) {
+        if(j->type==JT_trans3 || j->type==JT_free) {
           if(j->mimic) NIY;
           arr R = j->X.rot.getArr();
           J.setMatrixBlock(R, 0, j_idx);
         }
-        else if(j->type==JT_quatBall) {
+        if(j->type==JT_quatBall || j->type==JT_free) {
+          uint offset = (j->type==JT_free)?3:0;
           ors::Quaternion e;
           ors::Vector axis, tmp;
           for(uint i=0;i<4;i++){
@@ -1164,11 +1193,11 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
             axis.set(e.x, e.y, e.z);
             axis = j->X.rot*axis;
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
-            tmp = axis ^ (pos_world-j->X.pos);
-            J(0, j_idx+i) += tmp.x;
-            J(1, j_idx+i) += tmp.y;
-            J(2, j_idx+i) += tmp.z;
+            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+            tmp = axis ^ (pos_world-(j->X.pos+j->X.rot*j->Q.pos));
+            J(0, j_idx+offset+i) += tmp.x;
+            J(1, j_idx+offset+i) += tmp.y;
+            J(2, j_idx+offset+i) += tmp.z;
           }
         }
       }
@@ -1342,7 +1371,8 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
           J(1, j_idx) += j->axis.y;
           J(2, j_idx) += j->axis.z;
         }
-        else if(j->type==JT_quatBall) {
+        if(j->type==JT_quatBall || j->type==JT_free) {
+          uint offset = (j->type==JT_free)?3:0;
           ors::Quaternion e;
           ors::Vector axis;
           for(uint i=0;i<4;i++){
@@ -1353,11 +1383,11 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
             e = e / j->Q.rot;
             axis.set(e.x, e.y, e.z);
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
+            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
             axis = j->X.rot*axis;
-            J(0, j_idx+i) += axis.x;
-            J(1, j_idx+i) += axis.y;
-            J(2, j_idx+i) += axis.z;
+            J(0, j_idx+offset+i) += axis.x;
+            J(1, j_idx+offset+i) += axis.y;
+            J(2, j_idx+offset+i) += axis.z;
           }
         }
         //all other joints: J=0 !!

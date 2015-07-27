@@ -103,7 +103,7 @@ void glDrawShape(ors::Shape *s) {
   }
   if(orsDrawShapes) {
     switch(s->type) {
-      case ors::noneST: break;
+      case ors::noneST: LOG(-1) <<"Shape '" <<s->name <<"' has no joint type";  break;
       case ors::boxST:
         if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
         else glDrawBox(s->size[0], s->size[1], s->size[2]);

@@ -43,11 +43,11 @@ void TEST(Kinematics){
       VectorFunction::operator= ( [this](arr& y, arr& J, const arr& x) -> void{
         W.setJointState(x);
         switch(mode){
-          case Pos:    W.kinematicsPos(y,J,b,&vec); break;
-          case Vec:    W.kinematicsVec(y,J,b,&vec); break;
+          case Pos:    W.kinematicsPos(y,J,b,vec); break;
+          case Vec:    W.kinematicsVec(y,J,b,vec); break;
           case Quat:   W.kinematicsQuat(y,J,b); break;
-          case RelPos: W.kinematicsRelPos(y,J,b,&vec,b2,&vec2); break;
-          case RelVec: W.kinematicsRelVec(y,J,b,&vec,b2); break;
+          case RelPos: W.kinematicsRelPos(y,J,b,vec,b2,vec2); break;
+          case RelVec: W.kinematicsRelVec(y,J,b,vec,b2); break;
         }
       } );
     }
@@ -321,7 +321,7 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.kinematicsPos(y, NoArr, G.bodies.last(), &rel);
+  G.kinematicsPos(y, NoArr, G.bodies.last(), rel);
   for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
   G.gl().add(glDrawPlot,&plotModule);
@@ -330,7 +330,7 @@ void TEST(FollowRedundantSequence){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.kinematicsPos(y, J, G.bodies.last(), &rel);  //get the new endeffector position
+    G.kinematicsPos(y, J, G.bodies.last(), rel);  //get the new endeffector position
     invJ = ~J*inverse_SymPosDef(J*~J);
     x += invJ * (Z[t]-y);                  //simulate a time step (only kinematically)
     G.setJointState(x);
@@ -557,6 +557,7 @@ void TEST(InverseKinematics) {
 int MAIN(int argc,char **argv){
 
   testKinematics();
+  return 0;
   testLoadSave();
   testCopy();
   testPlayStateSequence();
