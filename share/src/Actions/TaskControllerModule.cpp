@@ -163,12 +163,13 @@ void TaskControllerModule::step(){
   refs.gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.);
+  refs.Ki = ARR(0.1);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
+  refs.intLimitRatio = ARR(0.5);
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {
