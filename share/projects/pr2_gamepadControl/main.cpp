@@ -17,9 +17,9 @@ struct MySystem:System{
   ACCESS(arr, gamepadState)
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
   MySystem(){
-    addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", false)){
+      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
@@ -152,7 +152,7 @@ void TEST(Gamepad){
 
       refs.u_bias = ~J*f_des;
       refs.fL = f_des;
-      refs.Ki = alpha*~J;
+      refs.KiFT = alpha*~J;
       refs.J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
 
       J = inverse_SymPosDef(J*~J)*J;
@@ -195,13 +195,14 @@ void TEST(Gamepad){
 #endif
     }else{
       refs.fL = zeros(6);
-      refs.Ki.clear();
+      refs.KiFT.clear();
       refs.J_ft_inv.clear();
       refs.u_bias = zeros(q.N);
     }
     refs.Kp = 1.;
     if(mode==2) refs.Kp = .1;
     refs.Kd = 1.;
+    refs.Ki = 0.;
     refs.gamma = 1.;
 
     refs.q=q;
@@ -213,6 +214,7 @@ void TEST(Gamepad){
     }
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
+    refs.intLimitRatio = 0.3;
 //    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
     S.ctrl_ref.set() = refs;
 
