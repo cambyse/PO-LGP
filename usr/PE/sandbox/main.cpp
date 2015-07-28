@@ -6,6 +6,7 @@
 #include <Perception/videoEncoder.h>
 #include <iomanip>
 
+
 #include "/usr/local/MATLAB/R2013a/extern/include/engine.h"
 #define  BUFSIZE 512
 
@@ -56,6 +57,8 @@ void TEST(GradCheck) {
   cout << "R: " << R << endl;
   arr J_fL0 = R*J_fL;
   J_fL0[0]=0.;
+
+
 
   arr JJ = ~J_fL*inverse(J_fL * ~J_fL)*J_fL0 ;
   arr dq;
@@ -199,13 +202,45 @@ void TEST(MatlabGP) {
   printf("%s", buffer);
 }
 
+void TEST(Transformation) {
+  ors::KinematicWorld world("trans.ors");
+  world.gl().resize(800,800);
+
+
+  ors::Transformation marker = world.getJointByName("tm")->B;
+  cout << world.getJointByName("tm")->B.pos << endl;
+  cout << world.getJointByName("tm")->B.rot << endl;
+  cout << marker << endl;
+
+  ors::Body *trans1 = world.getBodyByName("trans1");
+  ors::Body *trans2 = world.getBodyByName("trans2");
+
+  arr m = trans2->X.rot.getArr();
+
+//  ors::Vector v = trans2->X.pos + trans2->X.rot*marker.pos;
+//  ors::Quaternion r = trans2->X.rot*marker.rot;
+
+//  world.getBodyByName("marker2")->X.pos = v;
+//  world.getBodyByName("marker2")->X.rot = r;
+//  world.getBodyByName("marker2")->X = trans2->X*marker;
+
+  ors::Transformation T;
+  T.setZero();
+  T.addRelativeRotationDeg(90.,0.,1.,0.);
+  world.getBodyByName("marker2")->X = trans1->X*T*marker;
+
+  world.calc_fwdPropagateFrames();
+
+  world.watch(true);
+}
+
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
-  testMatrices();
-  //  testGradCheck();
+//  testMatrices();
+//  testGradCheck();
 //  testMatlab();
 //  testMatlabGP();
-
+  testTransformation();
   return 0;
 }
 

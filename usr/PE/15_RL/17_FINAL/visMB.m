@@ -34,22 +34,10 @@ while exist(['phaseX',num2str(i)])
  i=i+1;
 end
 
-i=0;
-cMF = [];
-while exist(['Fmf',num2str(i)])
- X = eval(['Fmf',num2str(i)]);
- cMF = [cMF;sum(sum(abs(X)))/T];
- i=i+1;
-end
-
 figure(1);clf;hold on;
 plot(0,(cDemo),'.g');
 plot(1:length(cMB),(cMB));
 plot(1:length(cMBact),(cMBact),'r');
 
-
-
-
 plot(length(cMB)+1:length(cMB)+length(cPhase),(cPhase),'r--');
 plot(length(cMB)+1:length(cMB)+length(cPhase),(cPhaseAct),'b--');
-plot(length(cMB)+length(cPhase)+1:length(cMB)+length(cPhase)+length(cMF),(cMF),'m.')

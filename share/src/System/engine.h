@@ -115,15 +115,15 @@ extern System& NoSystem;
  * A singleton that can run systems
  */
 
-struct Engine{
+struct OrsEngine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
   System *system;
   AccessL createdAccesses;
   ConditionVariable shutdown;
 
-  Engine();
-  virtual ~Engine();
+  OrsEngine();
+  virtual ~OrsEngine();
 
   void open(System& S, bool waitForOpened=true);
   void step(Module &m, bool threadedOnly=false);
@@ -144,7 +144,7 @@ struct Engine{
 };
 
 /// returns the singleton
-Engine& engine();
+OrsEngine& engine();
 
 
 //===========================================================================

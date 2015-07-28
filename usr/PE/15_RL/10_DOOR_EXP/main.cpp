@@ -127,7 +127,7 @@ int main(int argc,char **argv){
 
 
 
-  for(uint l=0;l<10; l++){
+  for(uint l=0;l<3; l++){
     opt.step();
 
     tf.compFeatTraj(X,wC1,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
@@ -192,8 +192,12 @@ int main(int argc,char **argv){
   ((TransitionTaskMap*)&t->map)->H_rate_diag(world.getJointByName("door_handle")->qIndex) = 0.;
 
   // final position constraint
-  t = MP2.addTask("qT", new TaskMap_qItself());
-  t->setCostSpecs(MP2.T,MP2.T,xDem[xDem.d0-1],1e1);
+//  t = MP2.addTask("qT", new TaskMap_qItself());
+//  t->setCostSpecs(MP2.T,MP2.T,xDem[xDem.d0-1],1e1);
+
+  t =MP2.addTask("qPrior", new TaskMap_qItself());
+  t->setCostSpecs(0,tp(1)-11,Xres.subRange(0,tp(1)-11),1e-1);
+
 
   // endeffector position constraint
   t =MP2.addTask("c1", new DefaultTaskMap(posTMT,world, "endeffC1"));

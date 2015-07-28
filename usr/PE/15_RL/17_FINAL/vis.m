@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['data/door1/'];
+folder = ['data/door2/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
