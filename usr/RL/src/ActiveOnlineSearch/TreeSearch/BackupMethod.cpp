@@ -188,24 +188,6 @@ namespace backup_method {
     void Bellman::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT(environment!=nullptr);
         DEBUG_OUT(1,"Backup action node " << graph->id(action_node));
-        // compute imediate reward (mean and variance)
-        arc_t to_action_arc = in_arc_it_t(*graph,action_node);
-        int action_transition_counts = (*mcts_arc_info_map)[to_action_arc].transition_counts;
-        reward_t min_reward = 0;
-        reward_t max_reward = 0;
-        if(prior_counts>0) {
-            min_reward = environment->min_reward();
-            max_reward = environment->max_reward();
-        }
-        prior_models::PriorCounts mean_and_variance((*mcts_arc_info_map)[to_action_arc].reward_sum,
-                                                    (*mcts_arc_info_map)[to_action_arc].squared_reward_sum,
-                                                    action_transition_counts,
-                                                    min_reward,
-                                                    max_reward,
-                                                    prior_counts);
-        reward_t mean_reward = mean_and_variance.mean;
-        reward_t mean_reward_variance = mean_and_variance.variance_of_mean;
-        DEBUG_OUT(3,"    ^r=" << mean_reward << ", ~r=" << mean_reward_variance);
         // transition probabilities
         vector<double> counts;
         for(out_arc_it_t arc(*graph, action_node); arc!=INVALID; ++arc) {
@@ -213,8 +195,8 @@ namespace backup_method {
         }
         prior_models::Dirichlet prob(counts);
         // compute value (mean and variance)
-        reward_t action_value = mean_reward;
-        reward_t action_value_variance = mean_reward_variance;
+        reward_t action_value = 0;
+        reward_t action_value_variance = 0;
         reward_t min_action_value = 0;
         reward_t max_action_value = 0;
         int idx_1 = 0;
@@ -222,18 +204,36 @@ namespace backup_method {
             to_state_arc_1!=INVALID;
             ++to_state_arc_1, ++idx_1) {
 
+            // compute immediate reward for transition to this state (mean and variance)
+            int state_transition_counts_1 = (*mcts_arc_info_map)[to_state_arc_1].transition_counts;
+            reward_t min_reward_1 = 0;
+            reward_t max_reward_1 = 0;
+            if(prior_counts>0) {
+                min_reward_1 = environment->min_reward();
+                max_reward_1 = environment->max_reward();
+            }
+            prior_models::PriorCounts mean_and_variance_1((*mcts_arc_info_map)[to_state_arc_1].reward_sum,
+                                                          (*mcts_arc_info_map)[to_state_arc_1].squared_reward_sum,
+                                                          state_transition_counts_1,
+                                                          min_reward_1,
+                                                          max_reward_1,
+                                                          prior_counts);
+            reward_t mean_reward_1 = mean_and_variance_1.mean;
+            reward_t mean_reward_1_variance = mean_and_variance_1.variance_of_mean;
+
             node_t state_node_1 = graph->target(to_state_arc_1);
             DEBUG_OUT(3,"    transition to state node " << graph->id(state_node_1));
+            DEBUG_OUT(3,"        ^r=" << mean_reward_1 << ", ~r=" << mean_reward_1_variance);
             DEBUG_OUT(3,"        ^p=" << prob.mean[idx_1] << ", ~p=" << prob.covariance[idx_1][idx_1]);
             DEBUG_OUT(3,"        ^V=" << (*mcts_node_info_map)[state_node_1].value << ", ~V=" << (*mcts_node_info_map)[state_node_1].value_variance);
 
             // update action value
-            action_value += discount*prob.mean[idx_1]*(*mcts_node_info_map)[state_node_1].value;
+            action_value += prob.mean[idx_1] * ( mean_reward_1 + discount*(*mcts_node_info_map)[state_node_1].value );
 
             // update action value variance (first sum)
-            action_value_variance += discount*discount*
-                (prob.mean[idx_1]*prob.mean[idx_1] + prob.covariance[idx_1][idx_1])*
-                (*mcts_node_info_map)[state_node_1].value_variance;
+            action_value_variance +=
+                ( prob.mean[idx_1]*prob.mean[idx_1] + prob.covariance[idx_1][idx_1] ) *
+                ( mean_reward_1_variance + discount*discount*(*mcts_node_info_map)[state_node_1].value_variance );
 
             // update action value bounds
             min_action_value += discount*prob.mean[idx_1]*(*mcts_node_info_map)[state_node_1].min_value;
@@ -245,14 +245,32 @@ namespace backup_method {
                 to_state_arc_2!=INVALID;
                 ++to_state_arc_2, ++idx_2) {
 
+                // compute immediate reward for transition to this state (mean and variance)
+                int state_transition_counts_2 = (*mcts_arc_info_map)[to_state_arc_2].transition_counts;
+                reward_t min_reward_2 = 0;
+                reward_t max_reward_2 = 0;
+                if(prior_counts>0) {
+                    min_reward_2 = environment->min_reward();
+                    max_reward_2 = environment->max_reward();
+                }
+                prior_models::PriorCounts mean_and_variance_2((*mcts_arc_info_map)[to_state_arc_2].reward_sum,
+                                                              (*mcts_arc_info_map)[to_state_arc_2].squared_reward_sum,
+                                                              state_transition_counts_2,
+                                                              min_reward_2,
+                                                              max_reward_2,
+                                                              prior_counts);
+                reward_t mean_reward_2 = mean_and_variance_2.mean;
+                //reward_t mean_reward_2_variance = mean_and_variance_2.variance_of_mean; // not used
+
                 node_t state_node_2 = graph->target(to_state_arc_2);
                 DEBUG_OUT(3,"        transition-pair to state nodes " << graph->id(state_node_1) << "/" << graph->id(state_node_2));
                 DEBUG_OUT(3,"        ^p=" << prob.mean[idx_1] << "/" << prob.mean[idx_2] << ", ~p=" << prob.covariance[idx_1][idx_2]);
                 DEBUG_OUT(3,"        ^V=" << (*mcts_node_info_map)[state_node_1].value << "/" << (*mcts_node_info_map)[state_node_2].value);
 
-                action_value_variance += discount*discount*
-                    prob.covariance[idx_1][idx_2]*
-                    (*mcts_node_info_map)[state_node_1].value*(*mcts_node_info_map)[state_node_2].value;
+                action_value_variance +=
+                    prob.covariance[idx_1][idx_2] *
+                    ( mean_reward_1 + discount*(*mcts_node_info_map)[state_node_1].value ) *
+                    ( mean_reward_2 + discount*(*mcts_node_info_map)[state_node_2].value );
             }
         }
         (*mcts_node_info_map)[action_node].set_value(action_value,
@@ -301,7 +319,7 @@ namespace backup_method {
             min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
             max_value += probs[idx]*(*mcts_node_info_map)[action_node].max_value;
             DEBUG_OUT(3,"    action probability to node " << graph->id(action_node) <<
-                      " (action: " << *((*node_info_map)[action_node].action) << ")");
+                      " (action: " << *((*node_info_map)[action_node].action) << "): " << probs[idx]);
         }
         // assign
         (*mcts_node_info_map)[observation_node].set_value(mean_value,
