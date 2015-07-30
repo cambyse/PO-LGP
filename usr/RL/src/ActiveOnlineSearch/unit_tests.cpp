@@ -2077,7 +2077,7 @@ TEST(MonteCarloTreeSearch, VarianceBackups) {
     auto bellman_backup_policy = std::shared_ptr<TreePolicy>(new Uniform());
     for(auto backup_method : {
             std::shared_ptr<BackupMethod>(new Bellman(bellman_backup_policy,0)),
-                //std::shared_ptr<BackupMethod>(new MonteCarlo(0))
+                std::shared_ptr<BackupMethod>(new MonteCarlo(0))
                 }) {
         auto node_finder = std::shared_ptr<NodeFinder>(new PlainTree());
         auto tree_policy = std::shared_ptr<TreePolicy>(new UCB1(1e10));
@@ -2126,6 +2126,7 @@ TEST(MonteCarloTreeSearch, VarianceBackups) {
             if(rollout_count>=6 && rollout_count%8==0) {
                 //search.plot_graph("graph.pdf");
                 int n = rollout_count/8;
+                bool is_bellman = typeid(*backup_method)==typeid(Bellman);
                 for(node_it_t node(graph); node!=INVALID; ++node) {
                     if(node_info_map[node].type==MonteCarloTreeSearch::ACTION_NODE) {
                         auto action = std::dynamic_pointer_cast<const MinimalVarianceCheckEnvironment::IntegerAction>(node_info_map[node].action);
@@ -2133,19 +2134,23 @@ TEST(MonteCarloTreeSearch, VarianceBackups) {
                         switch(action->action) {
                         case 0:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
                             break;
                         case 1:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
                             break;
                         case 2:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
                             break;
                         case 3:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
                             break;
                         default:
                             EXPECT_TRUE(false) << "This line should never be reached";
@@ -2162,15 +2167,18 @@ TEST(MonteCarloTreeSearch, VarianceBackups) {
                         switch(state) {
                         case 0:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,(82.*n+9.)/(400*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(82.*n+9.)/(400*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,41./(200*(8*n-1)),tolerance) << "Variance for state " << state << " does not match";
                             break;
                         case 1:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for state " << state << " does not match";
                             break;
                         case 2:
                             EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
-                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for state " << state << " does not match";
                             break;
                         case 3:
                         case 4:

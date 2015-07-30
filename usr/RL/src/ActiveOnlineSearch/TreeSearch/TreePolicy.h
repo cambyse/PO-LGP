@@ -124,16 +124,17 @@ namespace tree_policy {
     class UCB_Variance: public MaxPolicy {
     public:
         /**
-         * Constructor. @param Cp This is the scaling parameter for
+         * Constructor. @param c This is the scaling parameter for
          * exploration.*/
-        UCB_Variance(double Cp = 1);
+        UCB_Variance(double zeta = 1.2, double c = 1);
         virtual double score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const override;
-        virtual void set_exploration(double ex) {Cp = ex;}
-        virtual void write(std::ostream & out) const override {out<<"UCB_Variance(Cp="<<Cp<<";T="<<soft_max_temperature<<")";}
+        virtual void set_exploration(double ex) {c = ex;}
+        virtual void write(std::ostream & out) const override {out<<"UCB_Variance(zeta=" << zeta << ";c="<<c<<";b="<<reward_bound()<<";T="<<soft_max_temperature<<")";}
+        virtual double reward_bound() const;
     protected:
-        double Cp;
+        double zeta, c;
     };
 
     class HardUpper: public MaxPolicy {

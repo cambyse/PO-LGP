@@ -385,9 +385,9 @@ namespace backup_method {
 
     void MonteCarlo::backup_action_node(const node_t & action_node) const {
         DEBUG_EXPECT((*node_info_map)[action_node].type==MonteCarloTreeSearch::ACTION_NODE);
+        DEBUG_OUT(1,"    backup action-node " << graph->id(action_node));
         backup_node(action_node);
-        DEBUG_OUT(1,QString("    backup action-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
-                  arg(graph->id(action_node)).
+        DEBUG_OUT(2,QString("        ^V=%2	~V=%3	V+/-=%4/%5").
                   arg((*mcts_node_info_map)[action_node].value).
                   arg((*mcts_node_info_map)[action_node].value_variance).
                   arg((*mcts_node_info_map)[action_node].min_value).
@@ -438,9 +438,9 @@ namespace backup_method {
 
     void MonteCarlo::backup_observation_node(const node_t & observation_node) const {
         DEBUG_EXPECT((*node_info_map)[observation_node].type==MonteCarloTreeSearch::OBSERVATION_NODE);
+        DEBUG_OUT(1,"    backup observ.-node " << graph->id(observation_node));
         backup_node(observation_node);
-        DEBUG_OUT(1,QString("    backup observ.-node(%1):	^V=%2	~V=%3	V+/-=%4/%5").
-                  arg(graph->id(observation_node)).
+        DEBUG_OUT(2,QString("        ^V=%2	~V=%3	V+/-=%4/%5").
                   arg((*mcts_node_info_map)[observation_node].value).
                   arg((*mcts_node_info_map)[observation_node].value_variance).
                   arg((*mcts_node_info_map)[observation_node].min_value).
@@ -531,12 +531,12 @@ namespace backup_method {
                         info->min_return,
                         info->max_return);
         // debug info
-        DEBUG_OUT(3,"    info->return_sum	" << info->return_sum);
-        DEBUG_OUT(3,"    info->squared_return_sum	" << info->squared_return_sum);
-        DEBUG_OUT(3,"    info->rollout_counts	" << info->rollout_counts);
-        DEBUG_OUT(3,"    min_return	" << min_return);
-        DEBUG_OUT(3,"    max_return	" << max_return);
-        DEBUG_OUT(3,"    prior_counts	" << prior_counts);
+        DEBUG_OUT(3,"        info->return_sum	" << info->return_sum);
+        DEBUG_OUT(3,"        info->squared_return_sum	" << info->squared_return_sum);
+        DEBUG_OUT(3,"        info->rollout_counts	" << info->rollout_counts);
+        DEBUG_OUT(3,"        min_return	" << min_return);
+        DEBUG_OUT(3,"        max_return	" << max_return);
+        DEBUG_OUT(3,"        prior_counts	" << prior_counts);
     }
 
     HybridMCDP::HybridMCDP(double mc_weight,

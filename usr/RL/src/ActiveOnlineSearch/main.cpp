@@ -30,6 +30,7 @@
 #include "Environment/GamblingHall.h"
 #include "Environment/BottleneckEnvironment.h"
 #include "Environment/VarianceEnvironments.h"
+#include "Environment/MC_versus_DP.h"
 //#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 
@@ -78,7 +79,8 @@ static const std::set<std::string> environment_set = {//"TightRope",
                                                       "FOL",
                                                       "SimpleEnvironment",
                                                       "BottleneckEnvironment",
-                                                      "DLVSOR"
+                                                      "DLVSOR",
+                                                      "MCVSDP"
                                                       //"DelayedUncertainty",
                                                       //"UnitTest"
 };
@@ -664,6 +666,8 @@ tuple<shared_ptr<AbstractSearchTree>,
         environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="DLVSOR") {
         environment.reset(new DelayedLowVarianceSubOptimalReward());
+    } else if(environment_arg.getValue()=="MCVSDP") {
+        environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
@@ -692,7 +696,11 @@ tuple<shared_ptr<AbstractSearchTree>,
         policy->soft_max_temperature = soft_max_arg.getValue();
         tree_policy.reset(policy);
     } else if(tree_policy_arg.getValue()=="UCB_Variance") {
-        auto policy = new UCB_Variance(exploration_arg.getValue());
+        auto policy = new UCB_Variance(exploration_arg.getValue(),exploration_arg.getValue());
+        if(exploration_arg.getValue()==0.707) {
+            delete policy;
+            policy = new UCB_Variance();
+        }
         if(mode_arg.getValue()=="WATCH") {
             commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
                     policy->set_exploration(ex);

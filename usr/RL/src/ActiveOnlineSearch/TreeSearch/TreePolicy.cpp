@@ -183,24 +183,38 @@ namespace tree_policy {
                 );
     }
 
-    UCB_Variance::UCB_Variance(double Cp): Cp(Cp) {}
+    UCB_Variance::UCB_Variance(double zeta, double c): zeta(zeta), c(c) {}
 
+    /* $$Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2V\zeta\log n}{n_j}} + c \frac{3b\zeta\log n}{n_j}$$
+     *
+     * where V is the variance of the return (not of the value!), b is the upper
+     * bound on the reward (assuming zero as lower bound), and zeta and c > 0
+     * control the behavior. */
     double UCB_Variance::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const {
-        double b = 1;
-        if(environment->has_min_reward() && environment->has_max_reward()) {
-            b = environment->max_reward() - environment->min_reward();
-        }
+        double b = reward_bound();
         double n = (*mcts_node_info_map)[state_node].action_counts;
         double nj = (*mcts_arc_info_map)[to_action_arc].transition_counts;
         double score = (*mcts_node_info_map)[action_node].value_variance;
         if(score!=std::numeric_limits<double>::infinity()) {
+            // we drop nj in the first term because we use the variance of the
+            // value instead of the return
             score = (*mcts_node_info_map)[action_node].value +
-            sqrt( (2 * (*mcts_node_info_map)[action_node].value_variance * log(n) ) / nj ) +
-            Cp * (3 * b * log(n) ) / nj;
+                sqrt( 2 * (*mcts_node_info_map)[action_node].value_variance * zeta * log(n) ) +
+                c * (3 * b * log(n) ) / nj;
         }
         return score;
+    }
+
+    double UCB_Variance::reward_bound() const {
+        double b = 1;
+        if(environment->has_min_reward() && environment->has_max_reward()) {
+            b = environment->max_reward() - environment->min_reward();
+        } else {
+            DEBUG_WARNING("Environment does not have bounded reward. Using b = 1.");
+        }
+        return b;
     }
 
     double HardUpper::score(const node_t & state_node,
