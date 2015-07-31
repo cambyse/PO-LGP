@@ -224,7 +224,7 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   OptConstrained opt(x, NoArr, f, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
   opt.run();
   f.MP.costReport();
-  displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);
+  for(;;) displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);
   return opt.UCP.get_sumOfSquares();
 }
 

@@ -230,7 +230,7 @@ void coreExperiment(){
     double MCTS_time=0., lev1_time=0., lev2_time=0., lev3_time=0.;
 
     uint s;
-    for(s=0;s<100;s++){
+    for(s=0;s<200;s++){
       ors::KinematicWorld world_sol(world);
       Graph symbols_sol(symbols);
       MT::timerRead(true);
@@ -276,7 +276,10 @@ void coreExperiment(){
 
 //===========================================================================
 int main(int argc,char **argv){
-    rnd.clockSeed();
+  MT::initCmdLine(argc, argv);
+//  rnd.clockSeed();
+  rnd.seed(MT::getParameter<int>("seed",0));
+
   coreExperiment();
 //  generateRandomProblems();
 //  return 0;

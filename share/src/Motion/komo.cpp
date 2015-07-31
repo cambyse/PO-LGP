@@ -88,7 +88,7 @@ Graph KOMO::getReport(){
 }
 
 void KOMO::checkGradients(){
-  checkAllGradients(Convert(*MPF), x, 1e-4);
+  checkJacobianCP(Convert(*MPF), x, 1e-4);
 }
 
 void KOMO::displayTrajectory(bool wait){

@@ -417,7 +417,7 @@ extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);

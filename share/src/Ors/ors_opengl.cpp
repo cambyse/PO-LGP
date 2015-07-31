@@ -260,7 +260,7 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
+void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
   if(!steps) return;
   for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
     s->mesh.computeNormals();

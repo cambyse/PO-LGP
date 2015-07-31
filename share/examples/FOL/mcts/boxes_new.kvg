@@ -118,5 +118,5 @@ REWARD {
   r=100.
   { { (fixed Handle Long1) (fixed Handle Long2) } }
   r=20.
-  { {} (activate_fixing) }
+  { X, Y, Z, {} (activate_fixing X Y Z) }
 }

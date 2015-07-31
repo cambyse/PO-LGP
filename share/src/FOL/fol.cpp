@@ -461,7 +461,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
          if(verbose>1) cout <<"Relation " <<*rel <<" has no match -> no subst" <<endl;
          return NodeL();
        }
-       for(uint i=0;i<rel->parents.N;i++){ //add the 'parent' symbols to the domain
+       for(uint i=0;i<rel->parents.N;i++){ //add the symbols to the domain
          Node *var = rel->parents(i);
          if(&var->container==&varScope){ //this is a var
            for(Node *m:matches) domainsForThisRel(var->index).append(m->parents(i)); //setAppend not necessary

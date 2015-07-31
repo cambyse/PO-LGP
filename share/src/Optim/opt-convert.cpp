@@ -64,14 +64,6 @@ Convert::operator VectorFunction() {
   return vf;
 }
 
-Convert::operator ConstrainedProblem() {
-  if(!cp) {
-    if(kom) cp = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
-  }
-  if(!cp) HALT("");
-  return cp;
-}
-
 Convert::operator ConstrainedProblemMix() {
   if(!cpm) {
     if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblemMix(*kom);
@@ -590,12 +582,6 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
   if(&Hf){ Hf = comp_At_A(Jy); Hf *= 2.; }
   return sumOfSqr(y);
 #endif
-}
-
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
-  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
-    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
-  };
 }
 
 
