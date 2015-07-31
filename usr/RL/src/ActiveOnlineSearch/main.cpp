@@ -80,6 +80,7 @@ static const std::set<std::string> environment_set = {//"TightRope",
                                                       "SimpleEnvironment",
                                                       "BottleneckEnvironment",
                                                       "DLVSOR",
+                                                      "LVSOR",
                                                       "MCVSDP"
                                                       //"DelayedUncertainty",
                                                       //"UnitTest"
@@ -142,6 +143,9 @@ static TCLAP::ValueArg<int> step_n_arg(              "s", "step_n",\
 static TCLAP::ValueArg<int> run_n_arg(               "r", "run_n", \
                                                      "(default: 1) Number of runs to perform for evaluations.", \
                                                      false, 1, "int" );
+static TCLAP::ValueArg<int> run_start_arg(               "", "run_start", \
+                                                     "(default: 0) Index of first run (use this when adding more runs to a data set to avoid duplicate run indices).", \
+                                                     false, 0, "int" );
 static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
                                                      "(default: 1) Level of detail for watching progress (0,...,3).",\
                                                      false, 1, "int");
@@ -290,6 +294,7 @@ int main(int argn, char ** args) {
         cmd.add(prior_counts_arg);
         cmd.add(soft_max_arg);
         cmd.add(discount_arg);
+        cmd.add(run_start_arg);
         cmd.add(run_n_arg);
         cmd.add(step_n_arg);
         cmd.add(sample_max_arg);
@@ -415,6 +420,7 @@ int main(int argn, char ** args) {
             omp_set_num_threads(threads_arg.getValue());
         }
         int run_n = run_n_arg.getValue();
+        int run_start = run_start_arg.getValue();
         int sample_n = sample_n_arg.getValue();
         int sample_max = sample_max_arg.getValue();
         if(sample_max<0) sample_max = sample_n;
@@ -423,7 +429,7 @@ int main(int argn, char ** args) {
 #pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
         // several runs
-        for(int run=0; run<run_n; ++run) {
+        for(int run=run_start; run<run_start+run_n; ++run) {
 
             // with one trial for a different number of samples
             for(int sample=sample_n; sample<=sample_max; sample+=sample_incr) {
@@ -666,6 +672,8 @@ tuple<shared_ptr<AbstractSearchTree>,
         environment.reset(new GamblingHall(5, 1));
     } else if(environment_arg.getValue()=="DLVSOR") {
         environment.reset(new DelayedLowVarianceSubOptimalReward());
+    } else if(environment_arg.getValue()=="LVSOR") {
+        environment.reset(new LowVarianceSubOptimalReward());
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="FOL") {

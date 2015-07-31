@@ -112,15 +112,16 @@ namespace tree_policy {
     };
 
     /**
-     * Sample action with maximum upper bound. This is similar to UCB1 except
-     * that the bound is computed as \f[
+     * Tree policy that uses the variance of return to compute the upper bound.
+     * This is similar to UCB1 except that the bound is computed as
      *
-     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2 \widetilde{Q}_{(s,a)} \log n}{n_j}} + C_p \frac{3b\log n}{n_j}
+     * \f[
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2V\zeta\log n}{n_j}} + c \frac{3b\zeta\log n}{n_j}
+     * \f]
      *
-     * \f] where \f$\widehat{Q}_{(s,a)}\f$ is the mean value,
-     * \f$\widetilde{Q}_{(s,a)}\f$ is the variance of the value, and \f$C_p\f$
-     * (as in UCB1) balances exploration and exploitation. These bounds take
-     * into account uncertainty further down in the tree. */
+     * where V is the variance of the return (not of the value!), b is the upper
+     * bound on the reward (assuming zero as lower bound), and zeta and c > 0
+     * control the behavior. */
     class UCB_Variance: public MaxPolicy {
     public:
         /**

@@ -22,6 +22,7 @@ add_executable(main_ActiveOnlineSearch
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
     Environment/VarianceEnvironments.h
+    Environment/VarianceEnvironments.cpp
     Environment/MC_versus_DP.h
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
@@ -89,6 +90,7 @@ add_library(ActiveOnlineSearch
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
     Environment/VarianceEnvironments.h
+    Environment/VarianceEnvironments.cpp
     Environment/MC_versus_DP.h
 #    Environment_old/DelayedUncertainty.h
 #    Environment_old/DelayedUncertainty.cpp
