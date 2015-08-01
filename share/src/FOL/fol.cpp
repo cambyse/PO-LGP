@@ -448,22 +448,46 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
      cout <<"Substitutions for literals "; listWrite(relations, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
    }
 
+   //-- collect #free variables of relations
+   uintA nFreeVars(relations.N);
+   for(Node *rel:relations) nFreeVars(rel->index) = getNumOfVariables(rel, &varScope);
+
+   //-- for relations with 0 free variable, simply check
+   for(Node *rel:relations) if(nFreeVars(rel->index)==0){
+     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal
+       if(!getEqualFactInKB(facts, rel)){
+         if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS (" <<*rel <<" not true)" <<endl;
+         return NodeL(); //early failure
+       }
+     }else{ //negated boolean
+       Node *neg = getEqualFactInKB(facts, rel, false);
+       if(neg){
+         if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS (" <<*rel <<" not true)" <<endl;
+         return NodeL(); //early failure
+       }
+     }
+   }
+
+   //-- early success if no vars:
+   if(!vars.N) return NodeL(1u,0u);
+
    //-- collect domains for each variable by checking (marginally) for potentially matching facts
    MT::Array<NodeL> domainOf(vars.N);
    MT::Array<bool > domainIsConstrained(vars.N);
    MT::Array<NodeL> domainsForThisRel(vars.N);
    if(vars.N) domainIsConstrained = false;
-   for(Node *rel:relations){ //first go through all (non-negated) relations...
-     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()!=false){
+   for(Node *rel:relations) if(nFreeVars(rel->index)>0){ //first go through all (non-negated) relations...
+     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal (not negated boolean)
        for(auto& d:domainsForThisRel) d.clear();
        NodeL matches = getPotentiallyEqualFactsInKB(facts, rel, varScope, true);
        if(!matches.N){
          if(verbose>1) cout <<"Relation " <<*rel <<" has no match -> no subst" <<endl;
-         return NodeL();
+         return NodeL(); //early failure
        }
        for(uint i=0;i<rel->parents.N;i++){ //add the symbols to the domain
          Node *var = rel->parents(i);
          if(&var->container==&varScope){ //this is a var
+           CHECK(var->index<vars.N, "relation '" <<*rel <<"' has variable '" <<var->keys.last() <<"' that is not in the scope");
            for(Node *m:matches) domainsForThisRel(var->index).append(m->parents(i)); //setAppend not necessary
          }
        }
@@ -491,12 +515,14 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
    //-- check that every domain is constrained (that is, mentioned by at least SOME relation)
    for(uint i=0;i<vars.N;i++) if(!domainIsConstrained(i)){
+     cout <<"PRECOND:" <<endl;
+     listWrite(relations, cout);
      HALT("The domain of variable " <<*vars(i) <<" is unconstrained (infinite, never mentioned,..)");
    }
 
-   //-- for negative relations with 1 variable, delete the domain
+   //-- for negative relations with 1 variable, delete from the domain
    for(Node *rel:relations){
-     if(rel->getValueType()==typeid(bool) && rel->V<bool>()==false && getNumOfVariables(rel, &varScope)==1){
+     if(nFreeVars(rel->index)==1 && rel->getValueType()==typeid(bool) && rel->V<bool>()==false ){
        Node *var = getFirstVariable(rel, &varScope);
        if(verbose>3) cout <<"checking literal '" <<*rel <<"'" <<flush;
        removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), rel, &varScope);
@@ -510,10 +536,8 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 
    //-- for relations with more than 1 variable, create joint constraints
    NodeL constraints;
-   for(Node *rel:relations){
-     if(getNumOfVariables(rel, &varScope)>1){ // || (literal->parents.N && literal->parents(0)==EQ)){
-       constraints.append(rel);
-     }
+   for(Node *rel:relations) if(nFreeVars(rel->index)>1){ // || (literal->parents.N && literal->parents(0)==EQ)){
+     constraints.append(rel);
    }
 
    if(verbose>2){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
@@ -564,7 +588,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
      cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
      for(uint s=0;s<substitutions.d0;s++){
        for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
-         cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
+         cout <<varScope(i)->keys.last() <<" -> " <<substitutions(s,i)->keys.last() <<", ";
        }
        cout <<endl;
      }

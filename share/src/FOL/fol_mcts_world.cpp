@@ -22,19 +22,26 @@ void FOL_World::Decision::write(ostream& os) const{
   }
 }
 
-FOL_World::FOL_World(const char* KB_file)
-  : stepCost(0.1), timeCost(1.), deadEndCost(100.),
-    KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(0), verbFil(0) {
-  FILE("z.init") <<KB;
+FOL_World::FOL_World(istream& is)
+    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      KB(*new Graph(is)), state(NULL), tmp(NULL), verbose(0), verbFil(0) {
+  FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
+
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
-//  terminal = &KB["terminal"]->graph(); //TODO: replace by QUIT state predicate!
   decisionRules = KB.getNodes("DecisionRule");
-  Terminate_keyword = KB["Terminate"];
-  Quit_keyword = KB["QUIT"];
+  Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
+  Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, new bool(true), true);
 
+  Graph *params = KB.getValue<Graph>("FOL_World");
+  if(params){
+    gamma = params->get<double>("gamma", gamma);
+    stepCost = params->get<double>("stepCost", stepCost);
+    timeCost = params->get<double>("gamma", timeCost);
+    deadEndCost = params->get<double>("gamma", deadEndCost);
+  }
 
   if(verbose>1){
     cout <<"****************** FOL_World: creation info:" <<endl;
@@ -111,10 +118,17 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
   }
 
-#if 1 //generic world transitioning
+  //-- add the decision as a fact
+  Node *decision = NULL;
+  if(!d->waitDecision){
+    NodeL decisionTuple = {d->rule};
+    decisionTuple.append(d->substitution);
+    decision = createNewFact(*state, decisionTuple);
+  }
+
+  //-- generic world transitioning
   int decisionObservation = 0;
   forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
-#endif
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -128,6 +142,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     else{
       CHECK(rTerm->getValueType()==typeid(Graph),"");
       Graph& rCase=rTerm->graph();
+#if 0
       if(rCase.N==1){
         CHECK(rCase(0)->getValueType()==typeid(Graph),"");
         if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
@@ -139,10 +154,22 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
           if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
         }
       }
+#else
+//      getSubstitutions2(*state,
+      NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
+      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="const"){
+        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
+      }else{
+        if(subs.d0) reward += rValue;
+      }
+#endif
     }
   }else{
     if(successEnd) reward += 100.;
   }
+
+  //-- delete decision fact again
+  if(decision) delete decision;
 
   if(deadEnd) reward -= deadEndCost;
 
@@ -239,6 +266,9 @@ void FOL_World::reset_state(){
   DEBUG(KB.checkConsistency();)
   FILE("z.after") <<KB;
 
+  //-- forward chain rules
+  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3); //, &decisionObservation);
+
   //-- check for terminal
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
   successEnd = getEqualFactInKB(*state, Quit_literal);
@@ -271,6 +301,7 @@ bool FOL_World::get_info(InfoTag tag) const{
 
 double FOL_World::get_info_value(InfoTag tag) const{
   switch(tag){
+    case getGamma: return gamma;
     case getMaxReward: return 1.;
     case getMinReward: return 0.;
     default: HALT("unknown tag" <<tag);

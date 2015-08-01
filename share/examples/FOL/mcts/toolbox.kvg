@@ -1,0 +1,174 @@
+## Syntactic keywords
+Terminate
+QUIT
+#Rule
+
+## activities
+##grasping
+##graspingScrew
+##releasing
+##releasingScrew
+##fixing
+
+pick
+give
+hold
+go_home_right
+go_home_left
+wait_for_human
+holding_position
+human_can_do
+
+## basic predicates
+##agent
+##object
+
+##busy     # involved in an ongoing (durative) activity
+##free     # agent hand is free
+##held     # object is held by an agent
+##grasped  # agent X holds/has grasped object Y
+##hasScrew # agent X holds a screw (screws are not objects/constrants, just a predicate of having a screw...)
+##fixed    # object X and Y are fixed together
+##never    # (for debugging)
+
+attached
+positioned
+occupied_slot
+occupied_object
+in_human_ws
+picked
+holded
+at_home
+busy
+on_table
+free
+
+## constants
+##Constant A1
+##Constant A2
+##Constant A3
+##Constant Handle
+##Constant Long1
+##Constant Long2
+right
+left
+_toolbox_handle
+_toolbox_side_right
+_toolbox_side_left
+_toolbox_side_front
+_toolbox_side_back
+0
+1
+
+
+## initial state
+##START_STATE {
+##(agent A1) (free A1)
+##(agent A2) (free A2)
+##(agent A3) (free A3)
+##(object Handle)
+##(object Long1)
+##(object Long2)
+##}
+
+START_STATE {
+ (at_home left)
+ (at_home right)
+ (on_table _toolbox_handle)
+ (on_table _toolbox_side_right)
+ (on_table _toolbox_side_left)
+ (on_table _toolbox_side_front)
+ (on_table _toolbox_side_back)
+ (holding_position 0)
+ (holding_position 1)
+ (free left)
+}
+
+
+### terminal state
+##terminal { (fixed Handle Long1) (fixed Handle Long2) }
+
+terminal { (attached _toolbox_handle _toolbox_side_right) }
+## Abstract/aggregator ??!!!
+
+
+### RULES
+
+DecisionRule activate_pick {
+  Y
+  { (busy left)! (on_table Y) (free left) }
+  { (pick Y)=1 (busy left) }
+}
+
+Rule {
+  Y
+  { (Terminate pick Y) }
+  { (Terminate pick Y)! (pick Y)! (busy left)! (free left)! (picked Y) (on_table Y)! }
+}
+
+DecisionRule activate_give {
+  Y
+  { (busy left)! (picked Y)}
+  { (give Y)=1 (busy left) }
+}
+
+Rule {
+  Y
+  { (Terminate give Y) }
+  { (Terminate give Y)! (give Y)! (busy left)! (picked Y)! (in_human_ws Y) (free left)}
+}
+
+DecisionRule activate_hold {
+  X, Z
+  { (in_human_ws X) (busy right)! (holding_position Z) }
+  { (hold X Z)=2 (busy right) }
+}
+
+  
+Rule {
+  X, Z
+  { (Terminate hold X Z) }
+  { (Terminate hold X Z)! (hold X Z)! (busy right)! }
+}
+
+DecisionRule activate_wait_for_human {
+  { (wait_for_human)! (busy left)! (busy right)! }
+  { (wait_for_human)=1 (human_can_do) (busy left) (busy right) }
+}
+
+Rule {
+  { (Terminate wait_for_human) }
+  { (Terminate wait_for_human)! (wait_for_human)! (human_can_do)! (busy left)! (busy right)! }
+}
+
+#World rules
+Rule {
+  X, Y, Z
+  { (hold X Z) (positioned X Y Z) }
+  { (attached X Y Z) }
+}
+
+Rule {
+  { (human_can_do) (in_human_ws _toolbox_handle) (in_human_ws _toolbox_side_right) (positioned _toolbox_handle _toolbox_side_right 0)! }
+  { (human_can_do)! (positioned _toolbox_handle _toolbox_side_right 0) }
+}
+
+Rule {
+  X, Y, Z
+  { (positioned X Y Z) (hold X Z)=2 }
+  { (attached X Y Z) }
+}
+
+Rule {
+  { (human_can_do) (in_human_ws _toolbox_handle) (in_human_ws _toolbox_side_left) (positioned _toolbox_handle _toolbox_side_right 0) }
+  { (human_can_do)! (positioned _toolbox_handle _toolbox_side_left 1) }
+}
+
+
+REWARD {
+  r=0.
+  { { (attached _toolbox_handle _toolbox_side_right 0) } }
+  r=200.
+  { X, Y, Z, { (attached X Y Z) } count=2 }
+}
+

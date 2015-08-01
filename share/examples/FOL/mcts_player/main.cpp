@@ -26,7 +26,11 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  FOL_World world("planBetter.kvg");
+//  MT::String str;
+//  str <<FILE("../PlannerExample/toolbox.kvg");
+//  str <<FILE("../PlannerExample/reward.g");
+  FOL_World world("../mcts/toolbox.kvg");
+  world.verbose=2;
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();

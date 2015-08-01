@@ -46,7 +46,7 @@ struct FOL_World:MCTS_Environment{
   double T_real, start_T_real;///< real time so far;
   double R_total;
 
-  double stepCost, timeCost, deadEndCost;
+  double gamma, stepCost, timeCost, deadEndCost;
 
   bool deadEnd, successEnd;
   Graph& KB;     ///< current knowledge base
@@ -60,7 +60,7 @@ struct FOL_World:MCTS_Environment{
   int verbFil;
   ofstream fil;
 
-  FOL_World(const char* KB_file);
+  FOL_World(istream& fil);
   virtual ~FOL_World();
 
   virtual std::pair<Handle, double> transition(const Handle& action);
