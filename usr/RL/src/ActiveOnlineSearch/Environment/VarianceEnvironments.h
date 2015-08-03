@@ -32,7 +32,7 @@ private:
     double sub_optimal_return;
     //----methods----//
 public:
-    DelayedLowVarianceSubOptimalReward(int action_n = 5,
+    DelayedLowVarianceSubOptimalReward(int action_n = 2,
                                        int depth = 3,
                                        double sub_optimal_return = 0.4);
     virtual ~DelayedLowVarianceSubOptimalReward() = default;

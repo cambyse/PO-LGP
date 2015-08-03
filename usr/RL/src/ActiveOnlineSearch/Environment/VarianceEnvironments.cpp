@@ -44,10 +44,10 @@ DLVSOR::observation_reward_pair_t DLVSOR::transition(const action_handle_t & act
     double reward = 0;
     DEBUG_EXPECT(abs(state)<depth);
     DEBUG_EXPECT(action!=nullptr);
-    //---------------------------------------------------------------------- The
-    // absolute value of the state corresponds to the time; the sign corresponds
-    // to whether we are in high-variance or low-variance paths
-    // ----------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // The absolute value of the state corresponds to the time; the sign
+    // corresponds to whether we are in high-variance or low-variance paths
+    // -------------------------------------------------------------------------
     // advance in time
     if(state>=0) ++state;
     else --state;
@@ -55,8 +55,13 @@ DLVSOR::observation_reward_pair_t DLVSOR::transition(const action_handle_t & act
     if(action->action!=0 && state>0) state *= -1;
     // give certain sub-optimal reward for low-variance and reward of 1 50% of
     // the time otherwise
-    if(abs(state)==depth && (state>0 || rand()%2==0)) reward = 1;
-    else reward = sub_optimal_return;
+    if(abs(state)==depth) {
+        if(state>0) {
+            if(rand()%2==0) reward = 1;
+            else reward = 0;
+        }
+        else reward = sub_optimal_return;
+    }
     return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)),reward);
 }
 
