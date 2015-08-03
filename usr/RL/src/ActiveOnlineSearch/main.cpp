@@ -50,6 +50,7 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::shared_ptr;
+using std::make_shared;
 using util::Range;
 using std::dynamic_pointer_cast;
 
@@ -98,7 +99,6 @@ static const std::set<std::string> rollout_storage_set = {"NONE",
                                                           "CONDENSED",
                                                           "FULL"};
 static const std::set<std::string> backup_method_set = {"Bellman",
-                                                        "BellmanTreePolicy",
                                                         "MonteCarlo",
                                                         "HybridMCDP"};
 static const std::set<std::string> value_heuristic_set = {"Zero",
@@ -162,8 +162,8 @@ static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
                                                      "(default: PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
                                                      , false, "PROPAGATE", "string");
 static TCLAP::ValueArg<std::string> rollout_storage_arg( "", "rollout_storage", \
-                                                         "(default: CONDENSED) Type of backups to do: "+util::container_to_str(rollout_storage_set,", ","(",")")+"." \
-                                                         , false, "CONDENSED", "string");
+                                                         "(default: NONE) Type of backups to do: "+util::container_to_str(rollout_storage_set,", ","(",")")+"." \
+                                                         , false, "NONE", "string");
 static TCLAP::ValueArg<std::string> backup_method_arg( "", "backup_method", \
                                                      "(default: Bellman) Method to use for backups: "+util::container_to_str(backup_method_set,", ","(",")")+"." \
                                                      , false, "Bellman", "string");
@@ -176,6 +176,9 @@ static TCLAP::ValueArg<std::string> tree_policy_arg( "", "tree_policy",      \
 static TCLAP::ValueArg<std::string> action_policy_arg( "", "action_policy",      \
                                                      "(default: Optimal) Policy to choose action to actually perfrom "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
                                                      , false, "Optimal", "string");
+static TCLAP::ValueArg<std::string> backup_policy_arg( "", "backup_policy",      \
+                                                     "(default: Optimal) Policy used with Bellman backups "+util::container_to_str(tree_policy_set,", ","(",")")+"." \
+                                                     , false, "Optimal", "string");
 static TCLAP::ValueArg<std::string> graphics_type_arg( "", "graphics_type",      \
                                                      "(default: pdf) Format for printing search tree "+util::container_to_str(graphics_type_set,", ","(",")")+"." \
                                                      , false, "pdf", "string");
@@ -183,8 +186,8 @@ static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default:
                                                      , false, 1, "double");
 static TCLAP::ValueArg<double> soft_max_arg(         "", "soft_max", "(default: 0) Temperature for soft-max in policies"
                                                      , false, 0, "double");
-static TCLAP::ValueArg<double> prior_counts_arg(     "", "prior_counts", "(default: -1) Prior counts to use (negative values for auto)."
-                                                     , false, -1, "double");
+static TCLAP::ValueArg<double> prior_counts_arg(     "", "prior_counts", "(default: 0) Prior counts to use (negative values for auto)."
+                                                     , false, 0, "double");
 static TCLAP::ValueArg<double> exploration_arg(      "", "exploration", "(default: 0.707) Weigh for exploration term in upper bound policies."
                                                      , false, 0.707, "double");
 static TCLAP::ValueArg<double> rollout_length_arg(   "", "rollout_length", "(default: -1) Length of rollouts from leaf nodes. Use negative values for rollouts to \
@@ -258,12 +261,27 @@ void prompt_for_command() {
         if(command!="") ok = false;
     }
 }
+
 bool check_arguments();
+
+shared_ptr<AbstractEnvironment> get_environment();
+
 shared_ptr<NodeFinder> get_node_finder();
+
+shared_ptr<TreePolicy> get_policy(int type); // 0: tree, 1: action, 2: backup
+
+shared_ptr<ValueHeuristic> get_value_heuristic();
+
+shared_ptr<BackupMethod> get_backup_method();
+
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type();
+
 MonteCarloTreeSearch::ROLLOUT_STORAGE get_rollout_storage();
+
+
 tuple<shared_ptr<AbstractSearchTree>,
       shared_ptr<AbstractEnvironment>> setup();
+
 QString header(int argn, char ** args);
 
 int main(int argn, char ** args) {
@@ -280,6 +298,7 @@ int main(int argn, char ** args) {
         cmd.add(random_seed_arg);
         cmd.add(accumulate_arg);
         cmd.add(action_policy_arg);
+        cmd.add(backup_policy_arg);
         cmd.add(tree_policy_arg);
         cmd.add(value_heuristic_arg);
         cmd.add(backup_method_arg);
@@ -327,13 +346,15 @@ int main(int argn, char ** args) {
         srand48(seed);
         if(mode_arg.getValue()!="EVAL") {
             cout << "Using seed: " << seed << endl;
+        } else {
+            cout << "# random seed: " << seed << endl;
         }
     } else {
         auto seed = random_seed_arg.getValue();
         srand(seed);
         srand48(seed);
         if(mode_arg.getValue()!="EVAL") {
-            cout << "Reusing seed: " << seed << endl;
+            cout << "# random seed: " << seed << endl;
         }
     }
 
@@ -347,6 +368,7 @@ int main(int argn, char ** args) {
         RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
                      shared_ptr<AbstractEnvironment>, environment) = setup();
         cout << "Watch progress..." << endl;
+        cout << "Method: " << *search_tree << endl;
         for(int step=0; step<step_n_arg.getValue() || step_n_arg.getValue()<0; ++step) {
             environment->reset_state();
             if(environment->is_terminal_state()) break;
@@ -602,6 +624,11 @@ bool check_arguments() {
         ok = false;
         cout << "Action policy must be one of:" << util::container_to_str(tree_policy_set,"\n\t","\n\t","") << endl;
     }
+    // check backup policy
+    if(tree_policy_set.find(backup_policy_arg.getValue())==tree_policy_set.end()) {
+        ok = false;
+        cout << "Backup policy must be one of:" << util::container_to_str(tree_policy_set,"\n\t","\n\t","") << endl;
+    }
     // check graphics type
     if(graphics_type_set.find(graphics_type_arg.getValue())==graphics_type_set.end()) {
         ok = false;
@@ -622,6 +649,29 @@ bool check_arguments() {
     return ok;
 }
 
+shared_ptr<AbstractEnvironment> get_environment() {
+    shared_ptr<AbstractEnvironment> environment;
+    if(environment_arg.getValue()=="SimpleEnvironment") {
+        environment.reset(new SimpleEnvironment());
+    } else if(environment_arg.getValue()=="GamblingHall") {
+        environment.reset(new GamblingHall(5, 1));
+    } else if(environment_arg.getValue()=="DLVSOR") {
+        environment.reset(new DelayedLowVarianceSubOptimalReward());
+    } else if(environment_arg.getValue()=="LVSOR") {
+        environment.reset(new LowVarianceSubOptimalReward());
+    } else if(environment_arg.getValue()=="MCVSDP") {
+        environment.reset(new MC_versus_DP());
+    } else if(environment_arg.getValue()=="FOL") {
+        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
+    } else if(environment_arg.getValue()=="BottleneckEnvironment") {
+        environment.reset(new BottleneckEnvironment(9,2));
+    } else {
+        cout << "Unknown environment" << endl;
+        DEBUG_DEAD_LINE;
+    }
+    return environment;
+}
+
 shared_ptr<NodeFinder> get_node_finder() {
     if(graph_type_arg.getValue()=="PlainTree")
         return shared_ptr<NodeFinder>(new PlainTree());
@@ -633,6 +683,113 @@ shared_ptr<NodeFinder> get_node_finder() {
         return shared_ptr<NodeFinder>(new ObservationTree());
     DEBUG_DEAD_LINE;
     return shared_ptr<NodeFinder>(new PlainTree());
+}
+
+shared_ptr<TreePolicy> get_policy(int type) {
+    shared_ptr<TreePolicy> tree_policy;
+    QString type_str = "";
+    auto policy_str = tree_policy_arg.getValue();
+    switch(type) {
+    case 0:
+        type_str = "tree";
+        policy_str = tree_policy_arg.getValue();
+        break;
+    case 1:
+        type_str = "action";
+        policy_str = action_policy_arg.getValue();
+        break;
+    case 2:
+        type_str = "backup";
+        policy_str = backup_policy_arg.getValue();
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
+    if(policy_str=="UCB1") {
+        auto policy = new UCB1(exploration_arg.getValue());
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration "+type_str,"set ex "+type_str[0]}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB1 policy ("+type_str+"-policy)");
+        }
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
+    } else if(policy_str=="UCB_Variance") {
+        auto policy = new UCB_Variance(exploration_arg.getValue(),exploration_arg.getValue());
+        if(exploration_arg.getValue()==0.707) {
+            delete policy;
+            policy = new UCB_Variance();
+        }
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration "+type_str,"set ex "+type_str[0]}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for UCB_Variance policy ("+type_str+"-policy)");
+        }
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
+    } else if(policy_str=="Quantile") {
+        auto environment = get_environment();
+        auto policy = new Quantile(exploration_arg.getValue(),
+                                   quantile_arg.getValue());
+        if(environment->has_max_reward() && environment->has_min_reward() && discount_arg.getValue()<1) {
+            double min_return = environment->min_reward()/(1-discount_arg.getValue());
+            double max_return = environment->max_reward()/(1-discount_arg.getValue());
+            double prior_counts = prior_counts_arg.getValue()<0?1:prior_counts_arg.getValue();
+            delete policy;
+            policy = new Quantile(exploration_arg.getValue(),
+                                  quantile_arg.getValue(),
+                                  min_return,
+                                  max_return,
+                                  prior_counts);
+        }
+        if(mode_arg.getValue()=="WATCH") {
+            commander.add_command({"set exploration "+type_str,"set ex "+type_str[0]}, [policy](double ex)->Ret{
+                    policy->set_exploration(ex);
+                    return {true,QString("Set exploration to %1").arg(ex)};
+                }, "Set exploration for Quantile policy ("+type_str+"-policy)");
+        }
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
+    } else if(policy_str=="Uniform") {
+        tree_policy.reset(new Uniform());
+    } else if(policy_str=="HardUpper") {
+        auto policy = new HardUpper();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        tree_policy.reset(policy);
+    } else if(policy_str=="Optimal") {
+        auto policy = new Optimal();
+        policy->soft_max_temperature = soft_max_arg.getValue();
+        #warning remove this!
+        if(type==2) policy->soft_max_temperature = 0.001;
+        tree_policy.reset(policy);
+    } else DEBUG_DEAD_LINE;
+    return tree_policy;
+}
+
+shared_ptr<ValueHeuristic> get_value_heuristic() {
+    shared_ptr<ValueHeuristic> value_heuristic;
+    if(value_heuristic_arg.getValue()=="Zero") {
+        value_heuristic.reset(new Zero());
+    } else if(value_heuristic_arg.getValue()=="RolloutStatistics") {
+        value_heuristic.reset(new RolloutStatistics(prior_counts_arg.getValue()));
+    } else DEBUG_DEAD_LINE;
+    return value_heuristic;
+}
+
+shared_ptr<BackupMethod> get_backup_method() {
+    shared_ptr<BackupMethod> backup_method;
+    if(backup_method_arg.getValue()=="Bellman") {
+        backup_method.reset(new Bellman(get_policy(2),prior_counts_arg.getValue()));
+    } else if(backup_method_arg.getValue()=="MonteCarlo") {
+        backup_method.reset(new MonteCarlo(prior_counts_arg.getValue()));
+    } else if(backup_method_arg.getValue()=="HybridMCDP") {
+        backup_method.reset(new HybridMCDP(0.9,
+                                           prior_counts_arg.getValue(),
+                                           prior_counts_arg.getValue()));
+    } else DEBUG_DEAD_LINE;
+    return backup_method;
 }
 
 MonteCarloTreeSearch::BACKUP_TYPE get_backup_type() {
@@ -652,176 +809,12 @@ MonteCarloTreeSearch::ROLLOUT_STORAGE get_rollout_storage() {
 
 tuple<shared_ptr<AbstractSearchTree>,
       shared_ptr<AbstractEnvironment>> setup() {
-
-    // return variables
     shared_ptr<AbstractSearchTree>  search_tree;
-    shared_ptr<TreePolicy>          tree_policy;
-    shared_ptr<TreePolicy>          action_policy;
-    shared_ptr<ValueHeuristic>      value_heuristic;
-    shared_ptr<BackupMethod>        backup_method;
-    shared_ptr<AbstractEnvironment> environment;
-    // set up environment
-    // if(environment_arg.getValue()=="TightRope") {
-    //     environment.reset(new TightRope(15));
-    // } else if(environment_arg.getValue()=="DynamicTightRope") {
-    //     environment.reset(new DynamicTightRope(50, 10));
-    // } else
-    if(environment_arg.getValue()=="SimpleEnvironment") {
-        environment.reset(new SimpleEnvironment());
-    } else if(environment_arg.getValue()=="GamblingHall") {
-        environment.reset(new GamblingHall(5, 1));
-    } else if(environment_arg.getValue()=="DLVSOR") {
-        environment.reset(new DelayedLowVarianceSubOptimalReward());
-    } else if(environment_arg.getValue()=="LVSOR") {
-        environment.reset(new LowVarianceSubOptimalReward());
-    } else if(environment_arg.getValue()=="MCVSDP") {
-        environment.reset(new MC_versus_DP());
-    } else if(environment_arg.getValue()=="FOL") {
-        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
-    } else if(environment_arg.getValue()=="BottleneckEnvironment") {
-        environment.reset(new BottleneckEnvironment(9,2));
-    }
-    // else if(environment_arg.getValue()=="DelayedUncertainty") {
-    //     environment.reset(new DelayedUncertainty(2,3));
-    // } else if(environment_arg.getValue()=="UnitTest") {
-    //     environment.reset(new UnitTestEnvironment());
-    // }
-    else {
-        cout << "Unknown environment" << endl;
-        DEBUG_DEAD_LINE;
-    }
-    // print info
-    DEBUG_OUT(1, "Actions: " << environment->get_actions());
-    // set up tree policy
-    if(tree_policy_arg.getValue()=="UCB1") {
-        auto policy = new UCB1(exploration_arg.getValue());
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB1 policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        tree_policy.reset(policy);
-    } else if(tree_policy_arg.getValue()=="UCB_Variance") {
-        auto policy = new UCB_Variance(exploration_arg.getValue(),exploration_arg.getValue());
-        if(exploration_arg.getValue()==0.707) {
-            delete policy;
-            policy = new UCB_Variance();
-        }
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB_Variance policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        tree_policy.reset(policy);
-    } else if(tree_policy_arg.getValue()=="Quantile") {
-        auto policy = new Quantile(exploration_arg.getValue(),
-                                   quantile_arg.getValue());
-        if(environment->has_max_reward() && environment->has_min_reward() && discount_arg.getValue()<1) {
-            double min_return = environment->min_reward()/(1-discount_arg.getValue());
-            double max_return = environment->max_reward()/(1-discount_arg.getValue());
-            double prior_counts = prior_counts_arg.getValue()<0?1:prior_counts_arg.getValue();
-            delete policy;
-            policy = new Quantile(exploration_arg.getValue(),
-                                  quantile_arg.getValue(),
-                                  min_return,
-                                  max_return,
-                                  prior_counts);
-        }
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set exploration","set ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for Quantile policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        tree_policy.reset(policy);
-    } else if(tree_policy_arg.getValue()=="Uniform") {
-        tree_policy.reset(new Uniform());
-    } else if(tree_policy_arg.getValue()=="HardUpper") {
-        auto policy = new HardUpper();
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        tree_policy.reset(policy);
-    } else if(tree_policy_arg.getValue()=="Optimal") {
-        auto policy = new Optimal();
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        tree_policy.reset(policy);
-    } else DEBUG_DEAD_LINE;
-    // set up action policy
-    if(action_policy_arg.getValue()=="UCB1") {
-        auto policy = new UCB1(exploration_arg.getValue());
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB1 policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        action_policy.reset(policy);
-    } else if(action_policy_arg.getValue()=="UCB_Variance") {
-        auto policy = new UCB_Variance(exploration_arg.getValue());
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for UCB_Variance policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        action_policy.reset(policy);
-    } else if(action_policy_arg.getValue()=="Quantile") {
-        auto policy = new Quantile(exploration_arg.getValue(),
-                                   quantile_arg.getValue());
-        if(environment->has_max_reward() && environment->has_min_reward() && discount_arg.getValue()<1) {
-            double min_return = environment->min_reward()/(1-discount_arg.getValue());
-            double max_return = environment->max_reward()/(1-discount_arg.getValue());
-            double prior_counts = prior_counts_arg.getValue()<0?1:prior_counts_arg.getValue();
-            delete policy;
-            policy = new Quantile(exploration_arg.getValue(),
-                                  quantile_arg.getValue(),
-                                  min_return,
-                                  max_return,
-                                  prior_counts);
-        }
-        if(mode_arg.getValue()=="WATCH") {
-            commander.add_command({"set action exploration","set a ex"}, [policy](double ex)->Ret{
-                    policy->set_exploration(ex);
-                    return {true,QString("Set exploration to %1").arg(ex)};
-                }, "Set exploration for Quantile policy");
-        }
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        action_policy.reset(policy);
-    } else if(action_policy_arg.getValue()=="Uniform") {
-        action_policy.reset(new Uniform());
-    } else if(action_policy_arg.getValue()=="HardUpper") {
-        auto policy = new HardUpper();
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        action_policy.reset(policy);
-    } else if(action_policy_arg.getValue()=="Optimal") {
-        auto policy = new Optimal();
-        policy->soft_max_temperature = soft_max_arg.getValue();
-        action_policy.reset(policy);
-    } else DEBUG_DEAD_LINE;
-    // set up value heuristic
-    if(value_heuristic_arg.getValue()=="Zero") {
-        value_heuristic.reset(new Zero());
-    } else if(value_heuristic_arg.getValue()=="RolloutStatistics") {
-        value_heuristic.reset(new RolloutStatistics(prior_counts_arg.getValue()));
-    } else DEBUG_DEAD_LINE;
-    // set up backup method
-    if(backup_method_arg.getValue()=="Bellman") {
-        backup_method.reset(new Bellman(nullptr,prior_counts_arg.getValue()));
-    } else if(backup_method_arg.getValue()=="BellmanTreePolicy") {
-        backup_method.reset(new Bellman(tree_policy,prior_counts_arg.getValue()));
-    } else if(backup_method_arg.getValue()=="MonteCarlo") {
-        backup_method.reset(new MonteCarlo(prior_counts_arg.getValue()));
-    } else if(backup_method_arg.getValue()=="HybridMCDP") {
-        backup_method.reset(new HybridMCDP(0.9,
-                                           prior_counts_arg.getValue(),
-                                           prior_counts_arg.getValue()));
-    } else DEBUG_DEAD_LINE;
+    shared_ptr<TreePolicy>          tree_policy     = get_policy(0);
+    shared_ptr<TreePolicy>          action_policy   = get_policy(1);
+    shared_ptr<ValueHeuristic>      value_heuristic = get_value_heuristic();
+    shared_ptr<BackupMethod>        backup_method   = get_backup_method();
+    shared_ptr<AbstractEnvironment> environment     = get_environment();
     // set up search tree
     if(active_arg.getValue()) {
         search_tree.reset(new ActiveTreeSearch(environment,
