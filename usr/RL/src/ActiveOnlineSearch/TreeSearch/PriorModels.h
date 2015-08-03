@@ -25,7 +25,8 @@ namespace prior_models {
                     double counts,
                     double min = 0,
                     double max = 0,
-                    double prior_counts = 0);
+                    double prior_counts = 0,
+                    bool remove_bias = true);
         virtual ~PriorCounts() = default;
         static double compute_mean(double sum,
                                    double counts,
@@ -37,7 +38,8 @@ namespace prior_models {
                                        double counts,
                                        double min,
                                        double max,
-                                       double prior_counts);
+                                       double prior_counts,
+                                       bool remove_bias = true);
     };
 
     struct Dirichlet {
