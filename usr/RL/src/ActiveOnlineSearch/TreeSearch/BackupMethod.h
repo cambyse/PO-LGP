@@ -68,7 +68,7 @@ namespace backup_method {
      * the source state and the action, not on the tartet state! */
     class Bellman: public BackupMethod {
     public:
-        Bellman(std::shared_ptr<tree_policy::TreePolicy> tree_policy = nullptr,
+        Bellman(std::shared_ptr<tree_policy::TreePolicy> backup_policy = nullptr,
                 double prior_counts = -1);
         virtual ~Bellman() = default;
         virtual void init(double discount,
@@ -80,9 +80,9 @@ namespace backup_method {
                           bool perform_data_backups) override;
         virtual void backup_action_node(const node_t & action_node) const override;
         virtual void backup_observation_node(const node_t & observation_node) const override;
-        virtual void write(std::ostream & out) const override {out<<"Bellman(prior_counts="<<prior_counts<<";tree-policy="<<*tree_policy<<")";}
+        virtual void write(std::ostream & out) const override {out<<"Bellman(prior_counts="<<prior_counts<<";backup-policy="<<*backup_policy<<")";}
     protected:
-        std::shared_ptr<tree_policy::TreePolicy> tree_policy;
+        std::shared_ptr<tree_policy::TreePolicy> backup_policy;
         double prior_counts;
     };
 

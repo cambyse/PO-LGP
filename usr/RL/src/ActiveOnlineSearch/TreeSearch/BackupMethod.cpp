@@ -143,9 +143,9 @@ namespace backup_method {
         DEBUG_EXPECT_APPROX(weight_sum,1);
     }
 
-    Bellman::Bellman(std::shared_ptr<tree_policy::TreePolicy> tree_policy_,
+    Bellman::Bellman(std::shared_ptr<tree_policy::TreePolicy> backup_policy_,
                      double prior_counts):
-        tree_policy(tree_policy_),
+        backup_policy(backup_policy_),
         prior_counts(prior_counts)
     {}
 
@@ -176,13 +176,13 @@ namespace backup_method {
             }
         }
         // init policy
-        if(tree_policy==nullptr) tree_policy.reset(new tree_policy::Optimal());
-        tree_policy->init(environment,
+        if(backup_policy==nullptr) backup_policy.reset(new tree_policy::Optimal());
+        backup_policy->init(environment,
                           *graph,
                           *node_info_map,
                           *mcts_node_info_map,
                           *mcts_arc_info_map);
-        tree_policy->restrict_to_existing = true;
+        backup_policy->restrict_to_existing = true;
     }
 
     void Bellman::backup_action_node(const node_t & action_node) const {
@@ -292,12 +292,12 @@ namespace backup_method {
 
     void Bellman::backup_observation_node(const node_t & observation_node) const {
         DEBUG_EXPECT(environment!=nullptr);
-        DEBUG_EXPECT(tree_policy!=nullptr);
-        DEBUG_EXPECT(tree_policy->restrict_to_existing);
+        DEBUG_EXPECT(backup_policy!=nullptr);
+        DEBUG_EXPECT(backup_policy->restrict_to_existing);
         DEBUG_OUT(1,"Backup observation node " << graph->id(observation_node));
         // get action probabilities
         RETURN_TUPLE(action_container_t, actions,
-                     vector<double>, probs) = tree_policy->get_action_probabilities(observation_node);
+                     vector<double>, probs) = backup_policy->get_action_probabilities(observation_node);
         std::unordered_map<action_handle_t,node_t,
                            AbstractEnvironment::ActionHash,
                            AbstractEnvironment::ActionEq> action_nodes;
