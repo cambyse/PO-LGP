@@ -313,6 +313,7 @@ struct KinematicWorld {
   /// @name extensions on demand
   OpenGL& gl();
   SwiftInterface& swift();
+  void swiftDelete();
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
@@ -409,7 +410,7 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors;
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 

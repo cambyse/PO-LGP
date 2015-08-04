@@ -1,60 +1,56 @@
 #pragma once
+
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
+#ifdef MT_ROS
+
 #ifdef MT_ROS_INDIGO
-#include <ar_track_alvar_msgs/AlvarMarkers.h>
-using namespace ar_track_alvar_msgs;
-#elif MT_ROS_GROOVY
-#include <ar_track_alvar/AlvarMarkers.h>
-using namespace ar_track_alvar;
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  using namespace ar_track_alvar_msgs;
+#endif
+#if MT_ROS_GROOVY
+  #include <ar_track_alvar/AlvarMarkers.h>
+  using namespace ar_track_alvar;
 #endif
 
 
-
 //===========================================================================
-/// Sync the AR maker alvar
+/// Generic subscriber to the AR maker alvar
 ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
 
 
-// =================================================================================================
+//===========================================================================
+// using ors::KinematicWorld;  // this is necessary to make the macro work.
+
+// /// Simple syncing of the ors world "modelWorld" with ar_pose_marker
+// BEGIN_ROSMODULE("/ar_pose_marker", AlvarMarkers, markers)
+//   ACCESS(KinematicWorld, modelWorld)
+// END_ROSMODULE()
+
+
+//===========================================================================
+// Helper functions
+
 /**
  * Set the transformation of the body to the transformation of the alvar maker.
  */
-void setBody(ors::Body& body, const AlvarMarker& marker) {
-  body.X.pos.x = marker.pose.pose.position.x;
-  body.X.pos.y = marker.pose.pose.position.y;
-  body.X.pos.z = marker.pose.pose.position.z;
-  body.X.rot.w = marker.pose.pose.orientation.w;
-  body.X.rot.x = marker.pose.pose.orientation.x;
-  body.X.rot.y = marker.pose.pose.orientation.y;
-  body.X.rot.z = marker.pose.pose.orientation.z;
-}
+void setBody(ors::Body& body, const AlvarMarker& marker);
 
 /**
  * Sync all markers from the msg with the ors world.
  *
  * Note: this never deletes old markers.
  */
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
-  // transform: torso_lift_link is the reference frame_id
-  ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
 
-  for (AlvarMarker& marker : markers.markers) {
-    MT::String marker_name = STRING("marker" << marker.id);
-    ors::Body *body = world.getBodyByName(marker_name);
-    if (not body) {
-      cout << marker_name << " does not exist yet; adding it..." << endl;
-      cout << marker << endl;
-      body = new ors::Body(world);
-      body->name = marker_name;
-      ors::Shape *shape = new ors::Shape(world, *body);
-      shape->type = ors::boxST;
-      shape->size[0] = .1; shape->size[1] = .1; shape->size[2] = .03; shape->size[3] = .1;
-    }
-    setBody(*body, marker);
-    // transform: torso_lift_link is the reference frame_id
-    body->X.pos += refFrame;  // TODO is this the proper way to do it?
-  }
-}
+#else
+
+class AlvarMarker{};
+typedef MT::Array<AlvarMarker> AlvarMarkers;
+
+void setBody(ors::Body& body, const AlvarMarker& marker);
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+
+#endif

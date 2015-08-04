@@ -116,7 +116,9 @@ SWC_LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
 SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr
 SWC_LDFLAGS=$(SWC_FLAGS) -shared $(SWC_LIB_PATH) $(SWC_INCLUDES) $(DEPEND:%=-l%) -l$(notdir $(CURDIR))
 
+ifndef SWIG
 SWIG=swig2.0
+endif
 SWIG_INCLUDE=-I$(MLR_PATH)/share/src -I$(MLR_PATH)/share/include/numpy
 SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
 
@@ -254,7 +256,7 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
-#%.so: $(PREOBJS) $(BUILDS) $(OBJS)
+#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
 #	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 #	rm $(BASE)/lib/$(NAME).so
 #	ln -s -r $(NAME).so $(BASE)/lib/$(NAME).so

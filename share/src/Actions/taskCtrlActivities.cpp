@@ -53,6 +53,8 @@ void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::Ki
   if((it=specs["type"])){
     if(it->V<MT::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
+    }else if (it->V<MT::String>()=="qItself") {
+      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,world.getJointStateDimension());
     }else{
       map = new DefaultTaskMap(specs, world);
     }
@@ -86,13 +88,26 @@ void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWo
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
-  stopTolerance=1e-2; //TODO: overwrite from specs
+
+  Node* it;
+  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+
+  wheeljoint = world.getJointByName("worldTranslationRotation");
 }
 
 bool HomingActivity::isConv(){
   return task->y.N==task->y_ref.N
       && maxDiff(task->y, task->y_ref)<stopTolerance
       && maxDiff(task->v, task->v_ref)<stopTolerance;
+}
+
+void HomingActivity::step2(double dt) {
+  arr b = task->y;
+  if(b.N && wheeljoint && wheeljoint->qDim()){
+    for(uint i=0;i<wheeljoint->qDim();i++)
+      task->y_ref(wheeljoint->qIndex+i) = b(i);
+  }
+
 }
 
 //===========================================================================

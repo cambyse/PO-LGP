@@ -30,14 +30,16 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kp_base.resize(world.q.N).setZero();
   Kd_base.resize(world.q.N).setZero();
   Kp=Kd=ARR(1.);
+  KiFT.clear();
   Ki.clear();
-  limits.resize(world.q.N,4).setZero();
+  limits.resize(world.q.N,5).setZero();
+
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
     info = j->ats.getValue<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.getValue<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
-    info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
+    info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); limits(j->qIndex,4)=info->elem(2); }
     } }
 
   //match joint names with ros joints
@@ -71,16 +73,23 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** TreeControllerClass Started");
 
   msgBlock=1;
+  iterationsSinceLastMsg=0;
 
   return true;
 }
 
 /// Controller startup in realtime
 void TreeControllerClass::starting(){
+  //-- get current joint pos
+  for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
+    q(i) = ROS_joints(i)->position_;
+  }
+
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
   err = zeros(3);
+  int_error = zeros(q.N);
   q_filt = 0.;
   qd_filt = 0.95;
   gamma = 1.;
@@ -91,11 +100,23 @@ void TreeControllerClass::starting(){
 void TreeControllerClass::update() {
   //-- get current joint pos
   for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
-      q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
-      qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
+    q(i) = ROS_joints(i)->position_; //jnt_pos_(ROS_qIndex(i));
+    qd(i) = qd_filt*qd(i) + (1.-qd_filt)* ROS_joints(i)->velocity_; //jnt_vel_.qdot(ROS_qIndex(i));
   }
 
   mutex.lock(); //only inside here we use the msg values...
+
+  // stop when no messages arrive anymore
+  if(iterationsSinceLastMsg < 100){
+    iterationsSinceLastMsg++;
+  }
+  if(iterationsSinceLastMsg == 100){
+    q_ref = q;
+    qdot_ref = zeros(q.N);
+    u_bias = zeros(q.N);
+    iterationsSinceLastMsg++;
+  }
+
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
@@ -123,15 +144,31 @@ void TreeControllerClass::update() {
       u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }
+
+    // add integral term
+    if(Ki.N==1){
+      int_error += Kp_base % (Ki.scalar() *0.01 * (q_ref - q));
+      for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
+        clip(int_error(i), -intLimitRatio*limits(i,4), intLimitRatio*limits(i,4));
+      }
+      u += int_error;
+    }
+
     u += u_bias;
 
     // torque PD for left ft sensor
     //double ft_norm = length(fL_obs);
-    if (/*ft_norm<2. ||*/ !Ki.N) {   // no contact or Ki gain -> don't use the integral term
+    if (/*ft_norm<2. ||*/ !KiFT.N) {   // no contact or Ki gain -> don't use the integral term
       err = err*0.;              // reset integral error
     } else {
+#if 0
       err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
-      u += Ki * err;
+#else
+      err *= gamma;
+      arr f_obs = J_ft_inv*fL_obs;
+      for(uint i=0;i<f_obs.N;i++) if(f_obs(i) > fL_ref(i)) err(i) += fL_ref(i)-f_obs(i);
+#endif
+      u += KiFT * err;
     }
 
     //-- command efforts to KDL
@@ -149,9 +186,13 @@ void TreeControllerClass::update() {
     //-- command twist to base
     if(j_worldTranslationRotation && j_worldTranslationRotation->qDim()==3){
       geometry_msgs::Twist base_cmd;
-      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+0);
-      base_cmd.linear.x = qdot_ref(j_worldTranslationRotation->qIndex+1);
-      base_cmd.linear.y = qdot_ref(j_worldTranslationRotation->qIndex+2);
+      double phi = q_ref(j_worldTranslationRotation->qIndex+2);
+      double vx  = qdot_ref(j_worldTranslationRotation->qIndex+0);
+      double vy  = qdot_ref(j_worldTranslationRotation->qIndex+1);
+      double co  = cos(phi), si = -sin(phi);
+      base_cmd.linear.x = co*vx - si*vy;
+      base_cmd.linear.y = si*vx + co*vy;
+      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+2);
       baseCommand_publisher.publish(base_cmd);
     }
   }
@@ -174,6 +215,7 @@ void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   mutex.lock();
+  iterationsSinceLastMsg=0;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   u_bias = ARRAY(msg->u_bias);
@@ -184,9 +226,11 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   CP(Kp);
   CP(Kd);
 #undef CP
-  Ki = ARRAY(msg->Ki);             if (Ki.N>0) Ki.reshape(q_ref.N, 3);
+  Ki = ARRAY(msg->Ki);
+  KiFT = ARRAY(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
+  intLimitRatio = msg->intLimitRatio;
   gamma = msg->gamma;
   mutex.unlock();
 }
