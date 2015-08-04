@@ -1,6 +1,6 @@
 """
 The ``actions module`` contains
-(a) low level actions the robot can perform,
+(a) low level actHomogenions the robot can perform,
 (b) methods to run and sequence these actions,
 (c) high level behaviors that use low level actions and and the sequencing
     stuff.
@@ -11,12 +11,17 @@ All implementations of activities must inherit from the base class
 from __future__ import print_function
 
 from contextlib import contextmanager
+from collections import namedtuple
 import numpy as np
+import time
+import sys
+import signal
 
-from resources import interface, shapes, s, bodies, b, joints, j
+from resources import interface, shapes, bodies, joints
 from utils import (
     flatten,
     SIDE,
+    Bg_facts,
     strip_specs,
     conv_symbol,
     assert_in,
@@ -24,7 +29,51 @@ from utils import (
     side2gripper_joint,
     pos_str2arr,
     side2wrist_joint,
+    dehomogenize,
+    quaternion_matrix,
 )
+
+symbole = []
+symbole_conv = []
+def signal_handler(signal, frame):
+        print('ABORT!')
+        global symbole
+        global symbole_conv
+
+        for symb in symbole:
+            interface.stopFact(symb)
+
+
+        active_facts = interface.getFacts()
+        for symb_conv in symbole_conv:
+            if symb_conv + "," in active_facts:
+                interface.stopFact(symb_conv)
+
+        symbole = []
+        symbole_conv = []
+
+signal.signal(signal.SIGABRT, signal_handler)
+
+###############################################################################
+# Convenient access and autocompletion to shapes, joints, and bodies
+# Just type `s.<tab>` to get a list of all shapes
+def  update():
+    global s, j, b
+    _tmp = list(shapes())
+    Shapes = namedtuple("Shapes", " ".join(_tmp))
+    s = Shapes(*_tmp)
+
+    _tmp = list(bodies())
+    Bodies = namedtuple("Bodies", " ".join(_tmp))
+    b = Bodies(*_tmp)
+
+    _tmp = list(joints())
+    Joints = namedtuple("Joints", " ".join(_tmp))
+    j = Joints(*_tmp)
+
+    del _tmp
+
+
 
 
 ###############################################################################
@@ -79,6 +128,10 @@ def running(facts):
 
 
 def _run_with(with_construct):
+    """Excecutes a plan in the plan format.
+
+    :param with_construct: The with-construct
+    """
     with running(with_construct["with"]):
         run(with_construct["plan"])
 
@@ -104,6 +157,38 @@ def run(plan):
             _run([item])
 
 
+def run_in_bg(facts):
+    """Run given facts in background.
+
+    :param facts: List of facts to excecute.
+
+    """
+    global symbole
+    global symbole_conv
+    if not isinstance(facts, list):
+        facts = [facts]
+
+    symbols = [strip_specs(str(fact)) for fact in facts]
+    symbols_conv = [conv_symbol(symbol) for symbol in symbols]
+
+    symbole += symbols
+    symbole_conv += symbols_conv
+    for fact in facts:
+        interface.setFact(str(fact))
+        
+        
+
+def remove_facts():
+
+    """Remove all active facts an conv-symbols.
+
+    """
+    facts = interface.getFacts()
+    symbols = [strip_specs(str(fact)) for fact in facts]
+    for symb in symbols:
+        interface.stopFact(symb)
+
+
 ###############################################################################
 # Python activitiy classes
 class Activity(object):
@@ -120,6 +205,7 @@ class Activity(object):
     The subclasses of Activity must overwrite the __str__ method to return
     a string representation of an action.
     """
+    id = 0
     def __init__(self):
         self.time = 3.
         self.damping = .7
@@ -127,6 +213,9 @@ class Activity(object):
         self.max_acc = 10
         self.tolerance = .01
         self._name = ""
+        self.id = Activity.id
+        Activity.id += 1
+        interface.createNewSymbol(str(self.id))
 
     @property
     def name(self):
@@ -155,13 +244,37 @@ class Activity(object):
 
 class AllActivity(Activity):
     """
-    An Activity that moves an endeffector shape to a position in world
-    coordinates.
+    An activity that converts given parameters to a fact (string) and excecutes it.
     """
     def __init__(self, ref1=None, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False):
         """
-        :param endeff: The endeffector shape to move
-        :param pos: The target position in world coordinates
+        :param ref1: The endeffector shape to move.
+            A joint in case of "qItself
+        :param ref2: The shape to move the endeffector relative to.
+        :param vec1: The vector of ref1 to align.
+        :param vec2: The vector of ref2 as the align-reference-vector.
+        :param target: The target position of ref1 in coordinates of ref2.
+        :param type: The different types of movement:
+
+            * **pos:** Move ref1 to position (target) in coordinates of ref2. If ref2 is not set, in world coordinates.
+            
+            * **vec:** Not implemented yet.
+            
+            * **vecDiff:** Align vec1 of ref1 with vec2 of ref2. vec1 and vec2 must be normalized.
+            
+            * **gazeAt:** Point vec1 of ref1 to pos (target) of ref2. If target not set, vec1 points to ref2.
+            
+            * **qItself:** Align joint(ref1) to a given angle (target).
+            
+            * **wheels:** Moves and rotates Base to a position (target) in world coordinates. target[0]: X-coordinate. target[1]: Y-coordinate. target[2]: Rotation.
+            
+            * **homing:** Homing Activity.
+        
+        :param moduloTwoPi: If set tu True all angles are set to values
+            between 0 and two pi radian or 360 degree
+            respectively. E.g. if you want to move a joint to
+            361 degree it moves to 1 degree. If set to False
+            it also makes multiple turns.
         :return:
         """
         super(AllActivity, self).__init__()
@@ -172,33 +285,44 @@ class AllActivity(Activity):
         self.type = type
         self.target = target
         self.moduloTwoPi = moduloTwoPi
+        print(self.moduloTwoPi)
 
     def __str__(self):
-        return ("(FollowReferenceActivity {ref} {type} {name})"
-                "{{ type={type} {ref1} {ref2} {target} {vec1} {vec2} tol={tol} PD={gains} }}"
-                .format(name=self.name, type=self.type, ref=self.ref1,
+        return ("(FollowReferenceActivity {ref} {type} {name} {id})"
+                "{{ type={type} {ref1} {ref2} {target} {vec1} {vec2} tol={tol} PD={gains} {moduloTwoPi} }}"
+                .format(name=self.name, type=self.type, ref=self.ref1, id=self.id,
                         ref1="ref1={ref1}".format(ref1=self.ref1) if self.ref1 else "",
                         ref2="ref2={ref2}".format(ref2=self.ref2) if self.ref2 else "",
                         target="target={target}".format(target=self.target) if self.target else "",
                         vec1="vec1={vec1}".format(vec1=self.vec1) if self.vec1 else "",
                         vec2="vec2={vec2}".format(vec2=self.vec2) if self.vec2 else "",
-                        moduloTwoPi="moduloTwoPi=1" if self.moduloTwoPi else "",
+                        moduloTwoPi="moduloTwoPi=1" if self.moduloTwoPi else "moduloTwoPi=0",
                         tol=self.tolerance, gains=self.natural_gains))
-
 
 class PosActivity(AllActivity):
     """
-    An Activity that moves an endeffector shape to a position in world
-    coordinates.
+    An Activity that moves an endeffector shape relative to its coordinate system.
+    If relative is true. Movement is relative to the base coordinates.
     """
-    def __init__(self, ref1, target):
+    def __init__(self, ref1, q, relative=False):
         """
-        :param endeff: The endeffector shape to move
-        :param pos: The target position in world coordinates
+        :param ref1: The endeffector shape to move
+        :param q: The target position
+        :param relative: If set, q is in Base coordinates.
+            If not set, q is in ref1 coordinates
         :return:
         """
+        assert_in(ref1, shapes())
+        self.q = q
+        self.q.append(1)
         self.ref1 = ref1
-        self.target = target
+        self.relative = relative
+        self.pos = pos_str2arr(shapes(self.ref1)["pos"]).tolist()
+        self.str = self.ref1 if self.relative else "endeffBase"
+        self.R = quaternion_matrix(pos_str2arr(shapes(self.str)["Q"]).tolist())
+        self.q = np.dot(self.R, self.q) 
+        self.target = np.add(self.pos, dehomogenize(self.q)).tolist()
+        
         super(PosActivity, self).__init__(ref1=self.ref1, target=self.target)
         
 
@@ -206,17 +330,44 @@ class PosActivity(AllActivity):
         return super(PosActivity, self).__str__()
 
 
+class VecActivity(AllActivity):
+    """
+    An Activity that aligns an axis of a shape with an axis in world coordinates.
+    """
+    def __init__(self, ref1, vec1, target):
+        """
+        :param ref1: The shape to align.
+        :param vec1: The normalize axis of ref1 to align
+        :param target: the normalize axis to align to in world coordinates
+        :return:
+        """
+        assert_in(ref1, shapes())
+
+        self.ref1 = ref1
+        self.vec1 = vec1
+        self.target = target
+
+        super (VecActivity, self).__init__(ref1=self.ref1, vec1=self.vec1, target=self.target, type="vec")
+        
+    def __str__(self):
+        return super(VecActivity, self).__str__()
+
 class VecDiffActivity(AllActivity):
     """
-    An Activity that moves an endeffector shape to a position in world
-    coordinates.
+    An Activity that aligns an axis of a shape to an axis of another shape.
     """
     def __init__(self, ref1, ref2, vec1=None, vec2=None):
         """
-        :param endeff: The endeffector shape to move
+        :param ref1: The shape to align
+        :param ref2: The shape to align to
+        :param vec1: The normalized axis of ref1 to align
+        :param vec2: the normalized axis of ref2 to align to
         :param pos: The target position in world coordinates
         :return:
         """
+        assert_in(ref1, shapes())
+        assert_in(ref2, shapes())
+
         self.ref1 = ref1
         self.ref2 = ref2
         self.vec1 = vec1 if vec1 else [1,0,0]
@@ -232,13 +383,13 @@ class VecDiffActivity(AllActivity):
 
 class QItselfActivity(AllActivity):
     """
-    Moves a given joint to a specified q value.
+    An Activity that moves a given joint to a specified q value.
     """
     def __init__(self, ref1, target, moduloTwoPi=True):
         """
-        :param joint: The name of the joint to move
-        :param q: The desired position. For rotational joints in radian. For
-                  translational joints in meter.
+        :param ref1: The name of the joint to move
+        :param target: The desired position. For rotational joints in radian. For
+            translational joints in meter.
         :param moduloTwoPi: If set tu True all angles are set to values
                             between 0 and two pi radian or 360 degree
                             respectively. E.g. if you want to move a joint to
@@ -248,7 +399,10 @@ class QItselfActivity(AllActivity):
         """
         assert_in(ref1, joints())
         self.ref1 = ref1
-        self.target = [target]
+        if not isinstance(target, list):
+            self.target = [target]
+        else:
+            self.target = target
         self.tolerance = .01
         self.moduloTwoPi = moduloTwoPi
         super(QItselfActivity, self).__init__(ref1=self.ref1, target=self.target, type="qItself", moduloTwoPi=self.moduloTwoPi)
@@ -261,12 +415,13 @@ class QItselfActivity(AllActivity):
 class WheelsActivity(AllActivity):
     """
 
-    Moves Base to a specified position relative to the base.
+    An Activity that moves the robot to a specified position relative to the base.
     """
     def __init__(self, q, absolute=False):
         """
-        :param pos: The position to move relative to current position.
-        :param absolute: Absolute position flag
+        :param q: The position to move relative to current position.
+            q[0]: X-coordinate. q[1]: Y-coordinate. q[2]: Rotation.
+        :param absolute: Absolute position flag. If set, q is in world coordinates.
         :return:
         """
 
@@ -277,12 +432,13 @@ class WheelsActivity(AllActivity):
         else:
             self.q_base = [float(x) for x in joints("worldTranslationRotation")["q"].split()]
             self.target = [0, 0, 0]
-            
+            print(self.q_base)
             self.target[0] = np.sin(self.q_base[2])*-self.q[1]+np.cos(self.q_base[2])*self.q[0]
             self.target[1] = np.sin(self.q_base[2])*self.q[0]+np.cos(self.q_base[2])*self.q[1]
             self.target[2] = np.deg2rad(self.q[2])
             self.target = [x + y for x, y in zip(self.target, self.q_base)]
-        super(WheelsActivity, self).__init__(target=self.target, type="wheels")
+            print(self.target)
+        super(WheelsActivity, self).__init__(target=self.target, type="wheels",moduloTwoPi=True)
 
     def __str__(self):   
         return super(WheelsActivity, self).__str__()
@@ -290,12 +446,14 @@ class WheelsActivity(AllActivity):
 
 class GazeAtActivity(AllActivity):
     """
-    Look at a shape.
+    An activity that points an axis of of shape to another shape.
     """
     def __init__(self, ref1, ref2, vec1=[1,0,0], vec2=[0,0,0]):
         """
-        :param shape: The shape to look at
-        :param pos_in_shape: Where in the shape to look. In coordinates of the
+        :param ref1: The shape to align
+        :param ref2: The shape to point at
+        :param vec1: The normalized axis of vec1 to align. Default: [1,0,0]
+        :param vec2: Where in the shape to look. In coordinates of the
                              shape's own coordinate system. Default: [0, 0, 0]
         :return:
         """
@@ -312,22 +470,20 @@ class GazeAtActivity(AllActivity):
     def __str__(self):
         return super(GazeAtActivity, self).__str__()
 
-
-
 class MoveBaseToShape(WheelsActivity):
     """Move base in front of shape with given offset"""
 
     def __init__(self, shape, offset=1):
         """
         :param shape: The destination of the movement
-        :param offset: The distance to reach between base and shape.
+        :param offset: The distance to reach between base and shape in meter.
         :return:
         """
         assert_in(shape, shapes())
         self.shape = shape
         self.offset = offset
-        self.pos = np.array(pos_str2arr(interface.getShapeByName(self.shape)["pos"]))
-        self.X = np.array(pos_str2arr(interface.getShapeByName(self.shape)["X"]))
+        self.pos = pos_str2arr(interface.getShapeByName(self.shape)["pos"]).tolist()
+        self.X = np.array(pos_str2arr(interface.getShapeByName(self.shape)["Z"]))
         self.X = np.cross(np.cross(self.X,[0,0,1]),[0,0,1])
         self.X = np.divide(self.X,np.linalg.norm(self.X))
         self.pos[2] = np.arccos(np.dot([1,0,0],self.X))
@@ -407,36 +563,30 @@ class PanHead(QItselfActivity):
         return super(PanHead, self).__str__()
 
 
-class LookAtActivity(Activity):
+class LookAt(GazeAtActivity):
     """
     Look at a shape.
     """
-    def __init__(self, shape, pos_in_shape=None):
+    def __init__(self, ref2, vec2=[0,0,0]):
         """
         :param shape: The shape to look at
         :param pos_in_shape: Where in the shape to look. In coordinates of the
                              shape's own coordinate system. Default: [0, 0, 0]
         :return:
         """
-        super(LookAtActivity, self).__init__()
-        assert_in(shape, shapes())
-        self.shape = shape
+        
+        #assert_in(ref2, shapes())
+        self.ref2 = ref2
         self.tolerance = .01
-        self.position_in_shape = ([0, 0, 0]
-                                  if pos_in_shape is None
-                                  else pos_in_shape)
+        self.vec2 = vec2
+        super(LookAt, self).__init__(ref1="endeffHead", ref2=self.ref2, vec1=[0,0,1], vec2=self.vec2)
 
     def __str__(self):
-        return ("(FollowReferenceActivity gazeAt {name})"
-                "{{ type=gazeAt ref1=endeffHead "
-                "ref2={target} "
-                "vec1=[0, 0, 1] vec2={pos} tol={tol} PD={gains}}}"
-                .format(name=self.name, target=self.shape, tol=self.tolerance,
-                        pos=self.position_in_shape, gains=self.natural_gains))
-
+        return super(LookAt, self).__str__()
 
 
 class ReachActivity(Activity):
+
     """
     Reach a shape with a given endeffector shape.
     """
@@ -512,13 +662,28 @@ class HomingActivity(Activity):
 
 ###############################################################################
 # Python activities
+
+def door(shape):
+    return [{"with":(),
+        "plan":[homing(),MoveBaseToShape(shape),align_gripper_vertical(SIDE.LEFT),{
+            "with": [LookAt(shape), align_gripper_vertical(SIDE.LEFT)],
+            "plan": [AllActivity("endeffL",shape,target=[-0.15,-0.35,0.20]),
+                    open_gripper(SIDE.LEFT),
+                    AllActivity("endeffL",shape,target=[-0.15,-0.35,0.10]),
+                    close_gripper(SIDE.LEFT),
+                    ]},
+            AllActivity("endeffL",shape,target=[-0.25,-0.25,0.20]),
+            AllActivity("endeffL",shape,target=[-0.25,-0.25,0.20]),]
+
+             }]
+
 def homing():
     return HomingActivity()
 
 
 def open_gripper(side=None):
     joint = side2gripper_joint(side)
-    return QItselfActivity(joint, .08)
+    return QItselfActivity(joint, .1)
 
 
 def close_gripper(side=None):
@@ -562,7 +727,7 @@ def align_gripper_with_plane(front_opening, rotation_around_wrist, side=None):
     return (AlignActivity(endeff, [1, 0, 0], front_opening, "front"),
             AlignActivity(endeff, [0, 1, 0], rotation_around_wrist, "rot"))
 
-def slign_gripper_with_shape(shape, side=None):
+def align_gripper_with_shape(shape, side=None):
     endeff = side2endeff(side)
     return GazeAtActivity(ref1=endeff, ref2=shape, vec1=[1,0,0])
 
@@ -570,7 +735,7 @@ def slign_gripper_with_shape(shape, side=None):
 def gaze_at(shape):
     assert_in(shape, shapes())
 
-    return LookAtActivity(shape)
+    return LookAt(shape)
 
 
 def move_along_axis(endeff, start_pos, axis, distance):
@@ -599,13 +764,13 @@ def move_to_pos(endeff, pos):
 def grab_marker(shape, side=None):
     endeff = side2endeff(side)
 
-    return [{"with": gaze_at(endeff),
+    return [{"with": gaze_at(shape),
              "plan": [(open_gripper(side),
-                       reach(shape, offset=[0, .1, 0], with_=endeff),
+                       reach(shape, offset=[-0.05, 0.05, 0.1], with_=endeff),
                        align_gripper_with_plane([1, 0, 0], [0, -1, 0],
                                                 side=side)
                        ),
-                      reach(shape, offset=[0, 0, 0.], with_=endeff),
+                      reach(shape, offset=[-0.05, 0.05, -0.1], with_=endeff),
                       close_gripper(side)
                       ]
              }
@@ -673,5 +838,8 @@ def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
     print("Axis: {}".format(axis))
     return move_shape(shape, distance, axis, pre_grasp_offset, grasp_offset,
                       plane=plane, side=side)
+
+
+update()
 
 print("Loaded actions.py...")

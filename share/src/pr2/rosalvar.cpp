@@ -12,7 +12,6 @@
 
 // ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
-  ors::Transformation t;
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
   body.X.pos.z = marker.pose.pose.position.z ;
@@ -43,17 +42,30 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       shape->type = ors::markerST;
       shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
+    ors::Vector V_old;
+    int i = 0;
+    V_old = body->X.rot.getX();
     setBody(*body, marker);
     ors::Transformation T;
+
     T.setZero();
     T.addRelativeRotationDeg(90.,0.,1.,0.);
 
+
+
     body->X = refFrame * T * body->X;
 
+//    while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
+//      body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
+//    }
 
-    //body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
-    //body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+  while ( body->X.rot.getX().angle(V_old) > 1.3){
+    
 
+    body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
+    if (i == 3)break;
+    i++;
+  }
     world.getShapeByName(marker_name)->X = body->X;
 
   }

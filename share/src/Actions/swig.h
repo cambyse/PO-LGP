@@ -20,6 +20,7 @@ struct ActionSwigInterface{
   void Cancel();
 
   void setVerbose(bool verbose);
+  void setFixBase(bool base);
 
   //-- robot data access
   stringV getShapeList();

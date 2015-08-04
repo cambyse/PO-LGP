@@ -69,6 +69,7 @@ void signal_catch(int signal) {
   _g_swig->effects.set()() << "stop, ";
   _g_swig->effects.set()() << "stop!, ";
   cout << "Ctrl-C pressed, try to stop all facts." << endl;
+  raise(SIGABRT);
 }
 // ============================================================================
 MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
@@ -83,6 +84,9 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
   }
   return str;
 }
+
+
+
 
 // ============================================================================
 // ActionSwigInterface
@@ -123,6 +127,10 @@ ActionSwigInterface::~ActionSwigInterface(){
 
 void ActionSwigInterface::setVerbose(bool verbose) {
   S->tcm->verbose = verbose;
+}
+
+void ActionSwigInterface::setFixBase(bool base) {
+  S->fixBase.set() = base;
 }
 
 void ActionSwigInterface::Cancel(){
@@ -184,7 +192,6 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
   D["X"] = STRING('[' <<body->X.rot.getX()<< ']');
   D["Y"] = STRING('[' <<body->X.rot.getY()<< ']');
   D["Z"] = STRING('[' <<body->X.rot.getZ()<< ']');
-  D["q"] = STRING('[' <<body->X.rot.getVec()<< ']');
 
   D["pos"] = STRING('[' <<body->X.pos<<']');
   S->tcm->modelWorld.deAccess();
@@ -218,6 +225,9 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
   D["X"] = STRING('[' <<shape->X.rot.getX()<< ']');
   D["Y"] = STRING('[' <<shape->X.rot.getY()<< ']');
   D["Z"] = STRING('[' <<shape->X.rot.getZ()<< ']');
+  D["phi"] = STRING('[' <<shape->X.rot.getX().phi()<< ']');
+  D["theta"] = STRING('[' <<shape->X.rot.getX().theta()<< ']');
+
   D["pos"] = STRING('[' <<shape->X.pos<<']');
   S->tcm->modelWorld.deAccess();
   return D;
