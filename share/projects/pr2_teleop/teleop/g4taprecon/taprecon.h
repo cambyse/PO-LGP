@@ -2,6 +2,7 @@
 #include <Core/thread.h>
 #include <Motion/feedbackControl.h>
 #include <System/engine.h>
+#include <Ors/ors.h>
 // #include <pr2/actionMachine.h>
 // #include <pr2/actions.h>
 #include <Mocap/mocapdata.h>
@@ -20,6 +21,7 @@ struct G4MoveRecon:Module
     /////////////////////////////
     /////INIT////////////////////
     /////////////////////////////
+    
     floatA preRecX;
     floatA preRecY;
      floatA preRecQ2;

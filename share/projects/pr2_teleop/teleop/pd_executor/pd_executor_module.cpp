@@ -224,6 +224,10 @@ void PDExecutor::step()
         // set arm poses
         double x, y, z;
         arr pos, quat;
+    
+        ors::Quaternion orsquats;
+        orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.}); 
+        ors::Quaternion orsquatsacc;
 
         x = cal_pose_rh(0) * 1;
         y = cal_pose_rh(1) * 1;
@@ -232,11 +236,17 @@ void PDExecutor::step()
         if(effPosR) effPosR->setTarget(pos);
 
         // orientation
-        quat = {
+        orsquatsacc.set(
             (double)cal_pose_rh(3),
             (double)cal_pose_rh(4),
             (double)cal_pose_rh(5),
-            (double)cal_pose_rh(6)
+            (double)cal_pose_rh(6));
+        orsquatsacc =orsquats * orsquatsacc ;
+        quat = {
+            orsquatsacc.w,
+            orsquatsacc.x,
+            orsquatsacc.y,
+            orsquatsacc.z
           };
         if(effOrientationR) effOrientationR->setTarget(quat);
 
@@ -246,14 +256,20 @@ void PDExecutor::step()
         z = cal_pose_lh(2) * 1;
         pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
         if(effPosL) effPosL->setTarget(pos);
-
+       
         // orientation
+        orsquatsacc.set(
+            (double)cal_pose_lh(3),
+            (double)cal_pose_lh(4),
+            (double)cal_pose_lh(5),
+            (double)cal_pose_lh(6));
+        orsquatsacc =orsquats * orsquatsacc;
         quat = {
-          (double)cal_pose_lh(3),
-          (double)cal_pose_lh(4),
-          (double)cal_pose_lh(5),
-          (double)cal_pose_lh(6)
-        };
+            orsquatsacc.w,
+            orsquatsacc.x,
+            orsquatsacc.y,
+            orsquatsacc.z
+          };
         if(effOrientationL) effOrientationL->setTarget(quat);
 
 

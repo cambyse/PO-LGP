@@ -437,10 +437,12 @@ void G4HutoRoMap::calcparameters(floatA tempData)
     floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb")).subRange(0,2);
     floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
 
-    floatA TI_vec = -poses_thumb_rh+poses_index_rh;
+    floatA TI_vec = poses_thumb_rh-poses_index_rh;
+   // cout<<TI_vec<<endl;
     floatA quats = mid.query(tempData, STRING("/human/rh/thumb")).subRange(3,6);
 
     TI_vec = TI_vec/length(TI_vec);
+   // cout<<TI_vec<<endl;
     ors::Quaternion orsquats;
     orsquats.set(double(quats(0)),double(quats(1)),double(quats(2)),double(quats(3)));
     x = (double)TI_vec(0);
@@ -449,7 +451,7 @@ void G4HutoRoMap::calcparameters(floatA tempData)
     phi = orsquats.getRad();
 
 
-    if(sqrt(x*x) <= 0.3 && sqrt(y*y) <= 0.3 &&  decayed)
+    if(x <= 0.15 && x>=-0.15 && y <= 0.15 && y>=-0.15 &&  decayed)
     {
         phistand = orsquats.getRad();
         calisaysokay.set()=true;
@@ -458,19 +460,41 @@ void G4HutoRoMap::calcparameters(floatA tempData)
     }
     else if(!decayed)
     {
-        if(sqrt(x*x)>.8) x = 0.01*x;
-        else x=0.;
-        if(sqrt(y*y)>.8) y = 0.01*y;
-        else y=0.;
-        if((phi-phistand)>0.5 ||(phi-phistand)<-0.5) phi =0.01*(phi-phistand);
-        else phi=0.;
+        if(x>.8 || x<-0.8)
+        {
+            x = 0.005*x;
+            y = 0.;
+            phi=0.;
+        }
+        else
+        { 
+            x=0.;
+        
+            if(y>.8 || y<-0.8)
+            {
+                y = 0.005*y;
+                phi = 0.;
+            }
+            else
+            {
+                    y=0.;
+        
+                    if((phi-phistand)>1.3 ||(phi-phistand)<-1.3)
+                    {
+                        phi =-0.005*(phi-phistand);
+                    }
+                    else{
+                            phi=0.;
+                        }
+            }
+        }
         cout<<"  drive "<<x<<" "<<y<<" "<<phi<<endl;
         drive.set()={x,y,phi};
 
     }
     else
     {
-        cout<<"x "<<sqrt(x*x)<<" y "<<sqrt(y*y)<<endl;
+        cout<<"x "<<x<<" y "<<y<<endl;
         calisaysokay.set()=false;
     }
 
