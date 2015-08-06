@@ -113,8 +113,17 @@ struct G4HutoRoMap:Module
     float q_rh_andrea, q_lh_andrea;
 
 /////////////////////////////////////////////    
-   
-   */
+  */  
+    void patterndriving(floatA tempData);
+    void initdriving(floatA tempData, int button);
+    bool  btnpressed = true;
+
+    floatA driveposX;
+    floatA drivenegX;
+    floatA driveRY;
+    floatA driveLY;
+    bool driveready = false;
+
     void doinitpresaved(int button);/*
 */
 };

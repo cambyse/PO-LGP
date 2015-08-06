@@ -502,6 +502,156 @@ void G4HutoRoMap::calcparameters(floatA tempData)
 
 }
 
+void G4HutoRoMap::initdriving(floatA tempData,int button)
+{  
+    if(button & BTN_X)
+    {
+        if(!btnpressed)
+        {
+            btnpressed = true;
+        }
+        else
+        {
+            return;
+        }
+    }
+    else
+    {
+        btnpressed = false;
+        return;
+    }
+
+    cout<<"\x1B[2J\x1B[H";
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
+
+    floatA pose_foot=mid.query(tempData,STRING("/human/rl/rf"));
+
+   if(button & BTN_X && length(driveposX) == 0)
+    {
+            driveposX = poses_index_rh;
+            return;
+
+    }
+    else if( length(driveposX) == 0)
+    {
+            cout<<"Point to max pos x and Press X"<<endl;
+            return;
+
+    }
+
+
+    if(button & BTN_X &&  length(drivenegX) == 0)
+    {
+            drivenegX = poses_index_rh;
+            return;
+
+    }
+    else if( length(drivenegX) == 0)
+    {
+            cout<<"Point to max neg x and Press X"<<endl;
+            return;
+
+    }
+
+
+    if(button & BTN_X &&  length(driveRY) == 0.)
+    {
+            driveRY = poses_index_rh;
+            return;
+
+    }
+
+    else if( length(driveRY) == 0.)
+    {
+            cout<<"Point to right y and Press X"<<endl;
+            return;
+
+    }
+
+    if(button & BTN_X &&  length(driveLY) == 0.)
+    {
+            driveLY = poses_index_rh;
+            return;
+
+    }
+    else if( length(driveLY) == 0.)
+    {
+            cout<<"Point to max pos x and Press X"<<endl;
+            return;
+
+    }
+
+    
+    driveready = true;
+
+
+}
+
+void G4HutoRoMap::patterndriving(floatA tempData)
+{
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
+    cout<<poses_index_rh<<endl;
+    if(poses_index_rh(2)>=driveposX(2)-0.02 && poses_index_rh(2)<=driveposX(2)+0.02 )
+    {
+        floatA poses_index_rht =poses_index_rh.subRange(0,1);
+        floatA driveposXt=driveposX.subRange(0,1);
+        floatA drivenegXt=drivenegX.subRange(0,1);
+        floatA driveLYt=driveLY.subRange(0,1);
+        floatA driveRYt=driveRY.subRange(0,1);
+        floatA xd = {2.f,0.f};
+        floatA yd = {0.f,2.f};
+
+       // drivenegX(2)=0.;
+       // driveRY(2)=0.;
+       // dirveLY(2)=0.;
+        float xcompv=scalarProduct(2.f/(driveposXt-drivenegXt),poses_index_rht)-scalarProduct((driveposXt-drivenegXt),1.f/(2.f*poses_index_rht));
+
+        float ycompv =scalarProduct(2.f/(driveRYt-driveLYt),poses_index_rht)   -scalarProduct((driveRYt-driveLYt),1.f/(2.f*poses_index_rht));
+        cout<<"  drive "<<xcompv<<" "<<ycompv<<" "<<endl;
+        double xcomp = (double)(xcompv);
+        double ycomp = (double)(ycompv);
+        if( xcomp >1. || ycomp >1.)
+        {
+            drive.set()={0.,0.,0.};
+            return;
+        }
+
+        if(sqrt(xcomp*xcomp)<0.3)
+        {
+            if(sqrt(ycomp*ycomp)>0.3)
+            {
+                drive.set()={0.,0.01*ycomp,0.};
+                return;
+            }
+            else
+            {
+                drive.set()={0.,0.,0.};
+                return;
+            }
+        }
+        else if(sqrt(ycomp*ycomp)<0.3)
+        {
+            if(sqrt(xcomp*xcomp)>0.3)
+            {
+                drive.set()={0.01*xcomp,0.,0.};
+                return;
+            }
+            else
+            {
+                drive.set()={0.,0.,0.};
+                return;
+            }
+        }
+        else
+        {
+            drive.set()={0.01*xcomp,0.01*ycomp,0.};
+        }
+
+
+    }
+}
+
+
 G4HutoRoMap::G4HutoRoMap()
 {
 }
@@ -588,13 +738,22 @@ floatA temp;
        // doinit(tempData,button);//MY VERSION
        // doinitandrea(tempData,button);
    //cout<<tappedacc<<endl;
+   //
+
+   if(!driveready)//routine to init driving pattern;
+   {
+        this->initdriving(tempData,button);
+        return;
+   }
+
     doinitpresaved(button);
     if(tappedacc)
     {
 
         if(!initphase)
         {
-            calcparameters(tempData);
+            this->patterndriving(tempData);
+           // calcparameters(tempData);  hand driving mode;
         }
     }
     else
