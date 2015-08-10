@@ -662,7 +662,8 @@ shared_ptr<AbstractEnvironment> get_environment() {
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="FOL") {
-        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
+        #warning became pure virtual?! Check with Vien
+        //environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
         environment.reset(new BottleneckEnvironment(9,2));
     } else {
@@ -761,8 +762,6 @@ shared_ptr<TreePolicy> get_policy(int type) {
     } else if(policy_str=="Optimal") {
         auto policy = new Optimal();
         policy->soft_max_temperature = soft_max_arg.getValue();
-        #warning remove this!
-        if(type==2) policy->soft_max_temperature = 0.001;
         tree_policy.reset(policy);
     } else DEBUG_DEAD_LINE;
     return tree_policy;
