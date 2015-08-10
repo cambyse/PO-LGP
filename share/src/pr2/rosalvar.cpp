@@ -43,7 +43,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
     ors::Vector V_old;
-    int i = 0;
+
     V_old = body->X.rot.getX();
     setBody(*body, marker);
     ors::Transformation T;
@@ -55,20 +55,26 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
 
     body->X = refFrame * T * body->X;
 
+//int i = 0;
 //    while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
 //      body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
 //    }
 
-  while ( body->X.rot.getX().angle(V_old) > 1.3){
-    
-
-    body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
-    if (i == 3)break;
-    i++;
-  }
+ //   while ( body->X.rot.getX().angle(V_old) > 1.3){
+      
+//      cout << body->X.rot.getX().angle(V_old) << "old";
+//      body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
+//      cout << body->X.rot.getX().angle(V_old) << "new" << i << endl;
+//      if (i == 3)break;
+//      i++;
+//    }
+    body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
+    body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
     world.getShapeByName(marker_name)->X = body->X;
 
   }
+
+
 
   if (createdNewMarkers) {
     world.swiftDelete();

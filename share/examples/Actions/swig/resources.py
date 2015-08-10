@@ -9,7 +9,6 @@ A simple and convenient python interface for the ActivityMachine.
 from __future__ import print_function
 import time
 import numpy as np
-import signal
 import swig
 
 
@@ -19,8 +18,8 @@ import swig
 interface = swig.ActionSwigInterface()
 
 # new convenient symbols
-for s in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels", "vecDiff"]:
-    interface.createNewSymbol(s)
+for symb in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels", "vecDiff", "vec"]:
+    interface.createNewSymbol(symb)
 
 # don't abort the swig interface on Ctr-C
 # the signal must be geristered after the swig interface was initialized

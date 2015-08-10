@@ -17,7 +17,8 @@ import time
 import sys
 import signal
 
-from resources import interface, shapes, bodies, joints
+
+from resources import interface, shapes, bodies, joints, facts
 from utils import (
     flatten,
     SIDE,
@@ -35,32 +36,41 @@ from utils import (
 
 symbole = []
 symbole_conv = []
+s = []
+b = []
+j = []
+
 def signal_handler(signal, frame):
-        print('ABORT!')
-        global symbole
-        global symbole_conv
+    print('ABORT!')
+    global symbole
+    global symbole_conv
 
-        for symb in symbole:
-            interface.stopFact(symb)
+    for symb in reversed(symbole):
+        print("#############################################" +symb)
+        interface.stopFact(symb)
+        x = symbole.pop()
 
 
-        active_facts = interface.getFacts()
-        for symb_conv in symbole_conv:
-            if symb_conv + "," in active_facts:
-                interface.stopFact(symb_conv)
-
-        symbole = []
-        symbole_conv = []
+    active_facts = interface.getFacts()
+    for symb_conv in reversed(symbole_conv):
+        x = symbole_conv.pop()
+        if symb_conv + "," in active_facts:
+            interface.stopFact(symb_conv)
+            
 
 signal.signal(signal.SIGABRT, signal_handler)
+
+
+
+
 
 ###############################################################################
 # Convenient access and autocompletion to shapes, joints, and bodies
 # Just type `s.<tab>` to get a list of all shapes
-def  update():
-    global s, j, b
+def  update_a():
     _tmp = list(shapes())
     Shapes = namedtuple("Shapes", " ".join(_tmp))
+
     s = Shapes(*_tmp)
 
     _tmp = list(bodies())
@@ -70,12 +80,7 @@ def  update():
     _tmp = list(joints())
     Joints = namedtuple("Joints", " ".join(_tmp))
     j = Joints(*_tmp)
-
-    del _tmp
-
-
-
-
+    return [s,b,j]
 ###############################################################################
 # execution actions
 def _run(facts):
@@ -83,6 +88,7 @@ def _run(facts):
     afterwards.
 
     """
+
     symbols = [strip_specs(str(fact)) for fact in facts]
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
@@ -167,12 +173,14 @@ def run_in_bg(facts):
     global symbole_conv
     if not isinstance(facts, list):
         facts = [facts]
+    facts = flatten(facts)
 
     symbols = [strip_specs(str(fact)) for fact in facts]
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     symbole += symbols
     symbole_conv += symbols_conv
+
     for fact in facts:
         interface.setFact(str(fact))
         
@@ -246,7 +254,8 @@ class AllActivity(Activity):
     """
     An activity that converts given parameters to a fact (string) and excecutes it.
     """
-    def __init__(self, ref1=None, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False):
+    
+    def __init__(self, ref1, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False):
         """
         :param ref1: The endeffector shape to move.
             A joint in case of "qItself
@@ -285,19 +294,22 @@ class AllActivity(Activity):
         self.type = type
         self.target = target
         self.moduloTwoPi = moduloTwoPi
-        print(self.moduloTwoPi)
+        if self.ref1 + "," not in interface.getSymbols():
+            interface.createNewSymbol(self.ref1)
 
     def __str__(self):
-        return ("(FollowReferenceActivity {ref} {type} {name} {id})"
+        return ("(FollowReferenceActivity {ref}{type}{name}{id})"
                 "{{ type={type} {ref1} {ref2} {target} {vec1} {vec2} tol={tol} PD={gains} {moduloTwoPi} }}"
-                .format(name=self.name, type=self.type, ref=self.ref1, id=self.id,
-                        ref1="ref1={ref1}".format(ref1=self.ref1) if self.ref1 else "",
-                        ref2="ref2={ref2}".format(ref2=self.ref2) if self.ref2 else "",
-                        target="target={target}".format(target=self.target) if self.target else "",
-                        vec1="vec1={vec1}".format(vec1=self.vec1) if self.vec1 else "",
-                        vec2="vec2={vec2}".format(vec2=self.vec2) if self.vec2 else "",
-                        moduloTwoPi="moduloTwoPi=1" if self.moduloTwoPi else "moduloTwoPi=0",
+                .format(name=self.name + " " if self.name else "",
+                        type=self.type + " ", ref=self.ref1 + " ", id=self.id,
+                        ref1="ref1=" + self.ref1 if self.ref1 else "",
+                        ref2="ref2=" + self.ref2 if self.ref2 else "",
+                        target="target=" + str(self.target) if self.target else "",
+                        vec1="vec1=" + str(self.vec1) if self.vec1 else "",
+                        vec2="vec2="+ str(self.vec2) if self.vec2 else "",
+                        moduloTwoPi="moduloTwoPi=1" if self.moduloTwoPi else "",
                         tol=self.tolerance, gains=self.natural_gains))
+
 
 class PosActivity(AllActivity):
     """
@@ -313,17 +325,12 @@ class PosActivity(AllActivity):
         :return:
         """
         assert_in(ref1, shapes())
-        self.q = q
-        self.q.append(1)
-        self.ref1 = ref1
-        self.relative = relative
-        self.pos = pos_str2arr(shapes(self.ref1)["pos"]).tolist()
-        self.str = self.ref1 if self.relative else "endeffBase"
-        self.R = quaternion_matrix(pos_str2arr(shapes(self.str)["Q"]).tolist())
-        self.q = np.dot(self.R, self.q) 
-        self.target = np.add(self.pos, dehomogenize(self.q)).tolist()
+        q.append(1)
+        endeff = ref1 if relative else "endeffBase"
+        q = np.dot(quaternion_matrix(pos_str2arr(shapes(endeff)["Q"]).tolist()), q) 
+        target = np.add(pos_str2arr(shapes(ref1)["pos"]).tolist(), dehomogenize(q)).tolist()
         
-        super(PosActivity, self).__init__(ref1=self.ref1, target=self.target)
+        super(PosActivity, self).__init__(ref1=ref1, target=target)
         
 
     def __str__(self):
@@ -342,12 +349,7 @@ class VecActivity(AllActivity):
         :return:
         """
         assert_in(ref1, shapes())
-
-        self.ref1 = ref1
-        self.vec1 = vec1
-        self.target = target
-
-        super (VecActivity, self).__init__(ref1=self.ref1, vec1=self.vec1, target=self.target, type="vec")
+        super (VecActivity, self).__init__(ref1=ref1, vec1=vec1, target=target, type="vec")
         
     def __str__(self):
         return super(VecActivity, self).__str__()
@@ -356,7 +358,7 @@ class VecDiffActivity(AllActivity):
     """
     An Activity that aligns an axis of a shape to an axis of another shape.
     """
-    def __init__(self, ref1, ref2, vec1=None, vec2=None):
+    def __init__(self, ref1, ref2, vec1=[1,0,0], vec2=[-1,0,0]):
         """
         :param ref1: The shape to align
         :param ref2: The shape to align to
@@ -367,13 +369,8 @@ class VecDiffActivity(AllActivity):
         """
         assert_in(ref1, shapes())
         assert_in(ref2, shapes())
-
-        self.ref1 = ref1
-        self.ref2 = ref2
-        self.vec1 = vec1 if vec1 else [1,0,0]
-        self.vec2 = vec2 if vec2 else [0,0,-1]
-        super(VecDiffActivity, self).__init__(ref1=self.ref1, 
-            ref2=self.ref2, vec1=self.vec1, vec2=self.vec2, type="vecDiff")
+        super(VecDiffActivity, self).__init__(ref1=ref1, 
+            ref2=ref2, vec1=vec1, vec2=vec2, type="vecDiff")
         
 
     def __str__(self):
@@ -398,14 +395,9 @@ class QItselfActivity(AllActivity):
         :return:
         """
         assert_in(ref1, joints())
-        self.ref1 = ref1
         if not isinstance(target, list):
-            self.target = [target]
-        else:
-            self.target = target
-        self.tolerance = .01
-        self.moduloTwoPi = moduloTwoPi
-        super(QItselfActivity, self).__init__(ref1=self.ref1, target=self.target, type="qItself", moduloTwoPi=self.moduloTwoPi)
+            target = [target]
+        super(QItselfActivity, self).__init__(ref1=ref1, target=target, type="qItself", moduloTwoPi=moduloTwoPi)
 
 
     def __str__(self):
@@ -425,20 +417,16 @@ class WheelsActivity(AllActivity):
         :return:
         """
 
-        self.q = q
-        self.absolute = absolute
-        if self.absolute:
-            self.target = self.q
+        if absolute:
+            target = q
         else:
-            self.q_base = [float(x) for x in joints("worldTranslationRotation")["q"].split()]
-            self.target = [0, 0, 0]
-            print(self.q_base)
-            self.target[0] = np.sin(self.q_base[2])*-self.q[1]+np.cos(self.q_base[2])*self.q[0]
-            self.target[1] = np.sin(self.q_base[2])*self.q[0]+np.cos(self.q_base[2])*self.q[1]
-            self.target[2] = np.deg2rad(self.q[2])
-            self.target = [x + y for x, y in zip(self.target, self.q_base)]
-            print(self.target)
-        super(WheelsActivity, self).__init__(target=self.target, type="wheels",moduloTwoPi=True)
+            q_base = [float(x) for x in joints("worldTranslationRotation")["q"].split()]
+            target = [0, 0, 0]
+            target[0] = np.sin(q_base[2])*-q[1]+np.cos(q_base[2])*q[0]
+            target[1] = np.sin(q_base[2])*q[0]+np.cos(q_base[2])*q[1]
+            target[2] = np.deg2rad(q[2])
+            target = [x + y for x, y in zip(target, q_base)]
+        super(WheelsActivity, self).__init__(target=target, type="wheels",moduloTwoPi=True)
 
     def __str__(self):   
         return super(WheelsActivity, self).__str__()
@@ -460,12 +448,8 @@ class GazeAtActivity(AllActivity):
         
         assert_in(ref1, shapes())
         assert_in(ref2, shapes())
-        self.ref1=ref1
-        self.ref2=ref2
-        self.vec1=vec1
-        self.vec2=vec2
         
-        super(GazeAtActivity, self).__init__(ref1=self.ref1,ref2=self.ref2,vec1=self.vec1, vec2=self.vec2, type="gazeAt")
+        super(GazeAtActivity, self).__init__(ref1=ref1,ref2=ref2,vec1=vec1, vec2=vec2, type="gazeAt")
 
     def __str__(self):
         return super(GazeAtActivity, self).__str__()
@@ -480,18 +464,16 @@ class MoveBaseToShape(WheelsActivity):
         :return:
         """
         assert_in(shape, shapes())
-        self.shape = shape
-        self.offset = offset
-        self.pos = pos_str2arr(interface.getShapeByName(self.shape)["pos"]).tolist()
-        self.X = np.array(pos_str2arr(interface.getShapeByName(self.shape)["Z"]))
-        self.X = np.cross(np.cross(self.X,[0,0,1]),[0,0,1])
-        self.X = np.divide(self.X,np.linalg.norm(self.X))
-        self.pos[2] = np.arccos(np.dot([1,0,0],self.X))
-        self.X = np.multiply(self.X, self.offset)
-        self.pos[0] -= self.X[0]
-        self.pos[1] -= self.X[1] 
+        pos = pos_str2arr(interface.getShapeByName(shape)["pos"]).tolist()
+        X = np.array(pos_str2arr(interface.getShapeByName(shape)["Z"]))
+        X = np.cross(np.cross(self.X,[0,0,1]),[0,0,1])
+        X = np.divide(X,np.linalg.norm(X))
+        pos[2] = np.arccos(np.dot([1,0,0],X))
+        X = np.multiply(X, offset)
+        pos[0] -= X[0]
+        pos[1] -= X[1] 
 
-        super(MoveBaseToShape, self).__init__(self.pos, 1)
+        super(MoveBaseToShape, self).__init__(pos, 1)
         
 
     def __str__(self):
@@ -662,6 +644,24 @@ class HomingActivity(Activity):
 
 ###############################################################################
 # Python activities
+
+
+def forward(meters):
+    return WheelsActivity([meters,0,0])
+
+def side(meters):
+    return WheelsActivity([0,meters,0])
+
+def turn(degrees):
+    return WheelsActivity([0,0, degees])
+
+
+def align_gripper_with_marker(marker,side=None):
+    return  (VecDiffActivity(side2endeff(side),marker),  VecDiffActivity(side2endeff(side),marker,[0,1,0],[0,1,0]))
+
+def ding(marker):
+    return [{"with":[align_gripper_with_marker(marker), LookAt(marker)],
+            "plan":[reach(marker),open_gripper()]}]
 
 def door(shape):
     return [{"with":(),
@@ -840,6 +840,6 @@ def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
                       plane=plane, side=side)
 
 
-update()
+#update()
 
 print("Loaded actions.py...")
