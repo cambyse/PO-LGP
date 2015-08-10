@@ -1,7 +1,7 @@
 #ifndef MC_VERSUS_DP_H_
 #define MC_VERSUS_DP_H_
 
-#include <MCTS_Environment/TemplateEnvironment.h>
+#include <MCTS_Environment/IntegerEnvironment.h>
 
 #include <util/debug.h>
 

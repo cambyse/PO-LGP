@@ -1,7 +1,7 @@
 #ifndef VARIANCE_ENVIRONMENTS_H_
 #define VARIANCE_ENVIRONMENTS_H_
 
-#include <MCTS_Environment/TemplateEnvironment.h>
+#include <MCTS_Environment/IntegerEnvironment.h>
 
 class LowVarianceSubOptimalReward : public IntegerEnvironment {
     //----members----//
