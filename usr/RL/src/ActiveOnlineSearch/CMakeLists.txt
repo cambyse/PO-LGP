@@ -69,13 +69,20 @@ target_link_libraries(main_ActiveOnlineSearch
     -lPOMCP
 )
 
-## example
+## examples
 
 add_executable(GraphPropagationExample
     examples/GraphPropagationExample.cpp
     graph_util.h
 )
 target_link_libraries(GraphPropagationExample util -lemon)
+
+add_executable(UCT_Example
+    examples/UCT_Example.cpp
+)
+target_link_libraries(UCT_Example
+    util
+)
 
 ## library
 
