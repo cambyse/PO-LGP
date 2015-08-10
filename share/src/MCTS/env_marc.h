@@ -41,7 +41,10 @@ struct MCTS_Environment {
     virtual double GetDiscount() const { return 1.;}
 
 
-    virtual void SetDiscount(double temp) = 0;
+    virtual void SetDiscount(double temp) {
+        std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
+        exit(-1);
+    }
 
 
     /// Get the available actions in the current state

@@ -57,6 +57,8 @@ target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY
 
 find_library(LIBFOL FOL /home/robert/data/git_repos/MLR_git/share/lib)
 target_link_libraries(main_ActiveOnlineSearch ${LIBFOL})
+find_library(LIBPOMCP POMCP /home/robert/data/git_repos/MLR_git/share/lib)
+target_link_libraries(main_ActiveOnlineSearch ${LIBPOMCP})
 
 target_link_libraries(main_ActiveOnlineSearch
     util
@@ -64,6 +66,7 @@ target_link_libraries(main_ActiveOnlineSearch
     -larmadillo
     -lgomp
     -lFOL
+    -lPOMCP
 )
 
 ## example

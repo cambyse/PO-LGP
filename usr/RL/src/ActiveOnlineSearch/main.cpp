@@ -33,6 +33,7 @@
 #include "Environment/MC_versus_DP.h"
 //#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
+#include "../../../../share/src/POMCP/mcts.h"
 
 #include <omp.h>
 #define USE_OMP
@@ -662,8 +663,7 @@ shared_ptr<AbstractEnvironment> get_environment() {
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="FOL") {
-        #warning became pure virtual?! Check with Vien
-        //environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
+        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
         environment.reset(new BottleneckEnvironment(9,2));
     } else {
