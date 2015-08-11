@@ -2,6 +2,7 @@
 #define MEMORY_POOL_H
 
 #include <vector>
+#include <assert.h>
 #include <ostream>
 
 class MEMORY_OBJECT

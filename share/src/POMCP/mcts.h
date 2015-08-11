@@ -3,7 +3,7 @@
 
 #include "node.h"
 #include "statistic.h"
-#include "../MCTS/env_marc.h"
+#include "../../include/MCTS_Environment/AbstractEnvironment.h"
 
 class MCTS
 {
@@ -29,7 +29,7 @@ public:
     };
 
    // MCTS(const SIMULATOR& simulator, const PARAMS& params);
-    MCTS(MCTS_Environment& world, const PARAMS& params);
+    MCTS( std::shared_ptr<AbstractEnvironment> world, const PARAMS& params);
     ~MCTS();
 
     int SelectAction();
@@ -42,11 +42,16 @@ public:
 
     static void InitFastUCB(double exploration);
 
+    void SetDiscount(double discount){Discount = discount;}
+    double GetDiscount()             {return Discount;}
+
 private:
 
-    //const SIMULATOR& Simulator;
-    MCTS_Environment& World;
+    double Discount;
 
+    //const SIMULATOR& Simulator;
+    //MCTS_Environment& World;
+    std::shared_ptr<AbstractEnvironment> World;
 
     int TreeDepth, PeakTreeDepth;
     PARAMS Params;
@@ -56,6 +61,8 @@ private:
     //int SelectRandom() const;
     double SimulateV(VNODE* vnode);
     double SimulateQ(QNODE& qnode, int action);
+    int Random(int max) const;
+
 
     VNODE* ExpandNode();
 
@@ -63,11 +70,10 @@ private:
     static const int UCB_N = 10000, UCB_n = 100;
     static double UCB[UCB_N][UCB_n];
     static bool InitialisedFastUCB;
-    int Random(int max) const;
 
     double FastUCB(int N, int n, double logN) const;
 
-    std::vector<MCTS_Environment::Handle> Actions;// = get_actions();
+    std::vector<AbstractEnvironment::action_handle_t> Actions;// = get_actions();
 
 
 };

@@ -38,15 +38,6 @@ struct MCTS_Environment {
       return transition(actions[rand()%actions.size()]);
     }
 
-    virtual double GetDiscount() const { return 1.;}
-
-
-    virtual void SetDiscount(double temp) {
-        std::cout << "NOT IMPLEMENTED YET -- HARD EXIT!!!" << std::endl;
-        exit(-1);
-    }
-
-
     /// Get the available actions in the current state
     virtual const std::vector<Handle> get_actions() = 0;
 
