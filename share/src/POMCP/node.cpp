@@ -1,6 +1,6 @@
 #include "node.h"
 #include "history.h"
-//#include "utils.h"
+
 
 using namespace std;
 
@@ -53,7 +53,7 @@ void QNODE::DisplayPolicy(HISTORY& history, int maxDepth, ostream& ostr) const
 
 
 
-int QNODE::findIndex(MCTS_Environment::Handle& temp)
+int QNODE::findIndex(AbstractEnvironment::observation_handle_t &temp) const
 {
     for(int i=0; i<Observations.size();i++)
     {
@@ -64,7 +64,7 @@ int QNODE::findIndex(MCTS_Environment::Handle& temp)
     return -1; //there is no match
 }
 
-int QNODE::findIndex(MCTS_Environment::Handle& temp) const
+int QNODE::findIndex(AbstractEnvironment::observation_handle_t &temp)
 {
     for(int i=0; i<Observations.size();i++)
     {
@@ -74,7 +74,7 @@ int QNODE::findIndex(MCTS_Environment::Handle& temp) const
     return -1; //there is no match
 }
 
-void QNODE::Add(MCTS_Environment::Handle &temp)
+void QNODE::Add(AbstractEnvironment::observation_handle_t &temp)
 {
     NumChildren += 1;
     Children.resize(NumChildren);

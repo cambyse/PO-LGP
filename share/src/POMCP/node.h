@@ -2,13 +2,13 @@
 #define NODE_H
 
 //#include "beliefstate.h"
-//#include "utils.h"
+
 #include <iostream>
-#include "../MCTS/env_marc.h"
 #include "memorypool.h"
-#include "statistic.h"
+#include "../../include/MCTS_Environment/AbstractEnvironment.h"
 
 class HISTORY;
+//class SIMULATOR;
 class QNODE;
 class VNODE;
 
@@ -24,6 +24,8 @@ struct ALPHA
 //-----------------------------------------------------------------------------
 
 template<class COUNT>
+#define Infinity 1e+10
+
 class VALUE
 {
 public:
@@ -86,16 +88,16 @@ public:
 
     //for lazy initialization
     int NumChildren;
-    int findIndex(MCTS_Environment::Handle& temp);
-    int findIndex(MCTS_Environment::Handle& temp) const;
+    int findIndex(AbstractEnvironment::observation_handle_t& temp);
+    int findIndex(AbstractEnvironment::observation_handle_t& temp) const;
 
-    void Add(MCTS_Environment::Handle& temp);
+    void Add(AbstractEnvironment::observation_handle_t& temp);
         ///////
 
 private:
 
     std::vector<VNODE*> Children;
-    std::vector<MCTS_Environment::Handle> Observations;//match each child with an observation
+    std::vector<AbstractEnvironment::observation_handle_t> Observations;//match each child with an observation
     ALPHA AlphaData;
 
 friend class VNODE;
@@ -103,8 +105,8 @@ friend class VNODE;
 
 //-----------------------------------------------------------------------------
 
-class VNODE : public MEMORY_OBJECT {
-
+class VNODE : public MEMORY_OBJECT
+{
 public:
 
     VALUE<int> Value;

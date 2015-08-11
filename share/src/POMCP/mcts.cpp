@@ -1,10 +1,10 @@
 #include "mcts.h"
 #include <math.h>
-
+#include <tuple>
 #include <algorithm>
 
 using namespace std;
-//using namespace UTILS;
+
 
 //-----------------------------------------------------------------------------
 
@@ -25,17 +25,33 @@ MCTS::PARAMS::PARAMS()
 {
 }
 
-MCTS::MCTS(MCTS_Environment& world, const PARAMS& params)
+MCTS::MCTS(std::shared_ptr<AbstractEnvironment> world, const PARAMS& params)
 :   World(world),
     Params(params),
     TreeDepth(0)
 {
-   
-    Actions = world.get_actions();
+    /*/
+    VNODE::NumChildren = Simulator.GetNumActions();
+    //QNODE::NumChildren = Simulator.GetNumObservations();
+
+    STATE * state = Simulator.CreateStartState();
+    Root = ExpandNode(state);
+    Root->MDPState.clear();
+    Root->MDPState.push_back(state); //starting state (it is random)
+
+    cout<<"simulation "<<Params.NumSimulations <<endl;
+    cout<<"MaxDepth "<<Params.MaxDepth <<endl<<endl;
+    /*/
+
+
+    Actions = World->get_actions();
     VNODE::NumChildren  = Actions.size();
     //STATE * state = 0;// Simulator.CreateStartState();
     Root = ExpandNode();
     //cout<< Actions[0] <<endl;
+
+    // make sure we can to standard rollouts to terminal state
+    assert(World->has_terminal_state());
 }
 
 MCTS::~MCTS()
@@ -122,22 +138,16 @@ void MCTS::UCTSearch()
     {
         //cout<<" ROLLOUT Starting: "<<endl;
 
-        World.reset_state();
-        //STATE* state = 0;// Simulator.Copy(*Root->MDPState[0]);
+        World->reset_state();
         TreeDepth = 0;
         PeakTreeDepth = 0;
-        double totalReward = SimulateV(Root);
-        //StatTotalReward.Add(totalReward);
-        //StatTreeDepth.Add(PeakTreeDepth);
-        //Simulator.FreeState(state);
-
-         //cout<<" END ROLLOUT Starting: "<<endl<<endl;
+        double totalReward = SimulateV(Root);        
     }
 
 }
 
 
-double MCTS::SimulateV(VNODE* vnode)
+double MCTS::SimulateV(VNODE *vnode)
 {
     int action = GreedyUCB(vnode, true);
 
@@ -156,7 +166,7 @@ double MCTS::SimulateV(VNODE* vnode)
     return 0;// totalReward;
 }
 
-double MCTS::SimulateQ(QNODE& qnode, int action)
+double MCTS::SimulateQ(QNODE &qnode, int action)
 {
 
     int observation;
@@ -164,19 +174,16 @@ double MCTS::SimulateQ(QNODE& qnode, int action)
 
     //if (Simulator.HasAlpha())
     //    Simulator.UpdateAlpha(qnode, state);
-    std::pair<MCTS_Environment::Handle, double> SAOR = World.transition(Actions[action]);
-    immediateReward = SAOR.second;
-    bool terminal = World.is_terminal_state();//= Simulator.Step(state, action, observation, immediateReward);
+    AbstractEnvironment::observation_reward_pair_t SAOR = World->transition(Actions[action]);
+
+
+    immediateReward = std::get<1>(SAOR);
+    bool terminal = World->is_terminal_state();//= Simulator.Step(state, action, observation, immediateReward);
     //assert(observation >= 0 && observation < Simulator.GetNumObservations());
 
-
-
-    //cout<<*SAOR.first <<"  "<< immediateReward << "  ";
-
-
-    int index = qnode.findIndex(SAOR.first);
+    int index = qnode.findIndex(std::get<0>(SAOR));
     if(index<0){
-       qnode.Add(SAOR.first);
+       qnode.Add(std::get<0>(SAOR));
        index = qnode.NumChildren-1;
     }
 
@@ -191,13 +198,13 @@ double MCTS::SimulateQ(QNODE& qnode, int action)
     {
         TreeDepth++;
         if (vnode)
-            delayedReward = SimulateV( vnode);
+            delayedReward = SimulateV(vnode);
         else
             delayedReward = Rollout();
         TreeDepth--;
     }
 
-    double totalReward = immediateReward + World.GetDiscount() * delayedReward;
+    double totalReward = immediateReward + GetDiscount() * delayedReward;
     qnode.Value.Add(totalReward);
     return totalReward;
 }
@@ -246,14 +253,8 @@ int MCTS::GreedyUCB(VNODE* vnode, bool ucb) const
     return besta[Random(besta.size())];
 }
 
-int MCTS::Random(int max) const
-{
-    return rand() % max;
-}
-
 double MCTS::Rollout()
 {
-
 
     double totalReward = 0.0;
     double discount = 1.0;
@@ -261,21 +262,17 @@ double MCTS::Rollout()
     int numSteps;
     for (numSteps = 0; numSteps + TreeDepth < Params.MaxDepth && !terminal; ++numSteps)
     {
-       // int observation;
+        int observation;
         double reward;
 
         int action = Random(Actions.size());
-        std::pair<MCTS_Environment::Handle, double> SAOR = World.transition(Actions[action]);
-        reward = SAOR.second;
-        terminal = World.is_terminal_state();
-
-        //terminal = Simulator.Step(state, action, observation, reward);
-
-        //cout<< *SAOR.first <<"  " << reward << "  ";
-
+        //std::pair<MCTS_Environment::Handle, double> SAOR = World.transition(Actions[action]);
+        AbstractEnvironment::observation_reward_pair_t SAOR = World->transition(Actions[action]);
+        reward = std::get<1>(SAOR);
+        terminal = World->is_terminal_state();
 
         totalReward += reward * discount;
-        discount *= World.GetDiscount();
+        discount *= GetDiscount();
     }
 
 
@@ -309,3 +306,7 @@ inline double MCTS::FastUCB(int N, int n, double logN) const
         return Params.ExplorationConstant * sqrt(logN / n);
 }
 
+int MCTS::Random(int max) const
+{
+    return rand() % max;
+}
