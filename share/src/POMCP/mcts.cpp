@@ -47,7 +47,7 @@ MCTS::MCTS(std::shared_ptr<AbstractEnvironment> world, const PARAMS& params)
     Actions = World->get_actions();
     VNODE::NumChildren  = Actions.size();
     //STATE * state = 0;// Simulator.CreateStartState();
-    Root = ExpandNode();
+    
     //cout<< Actions[0] <<endl;
 
     // make sure we can to standard rollouts to terminal state
@@ -134,6 +134,8 @@ void MCTS::RolloutSearch()
 /*/
 void MCTS::UCTSearch()
 {
+    Root = ExpandNode();
+
     for (int n = 0; n < Params.NumSimulations; n++)
     {
         //cout<<" ROLLOUT Starting: "<<endl;
