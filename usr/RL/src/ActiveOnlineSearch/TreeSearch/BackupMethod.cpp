@@ -312,8 +312,10 @@ namespace backup_method {
         for(int idx=0; idx<(int)actions.size(); ++idx) {
             node_t action_node = action_nodes[actions[idx]];
             mean_value += probs[idx]*(*mcts_node_info_map)[action_node].value;
-            if(probs[idx]!=0) {
-                // this resolves 0 * inf to 0 in order to avoid nan
+            if(pow(probs[idx],2)!=0) {
+                // this resolves 0 * inf to 0 in order to avoid nan (also for
+                // very small probabilities for which the square resolves to
+                // zero)
                 mean_value_variance += pow(probs[idx],2)*(*mcts_node_info_map)[action_node].value_variance;
             }
             min_value += probs[idx]*(*mcts_node_info_map)[action_node].min_value;
