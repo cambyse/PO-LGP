@@ -177,7 +177,11 @@ static TCLAP::ValueArg<std::string> graphics_type_arg( "", "graphics_type",     
                                                      , false, "pdf", "string");
 static TCLAP::ValueArg<double> discount_arg(         "d", "discount", "(default: 1) Discount for the returns"
                                                      , false, 1, "double");
-static TCLAP::ValueArg<double> soft_max_arg(         "", "soft_max", "(default: 0) Temperature for soft-max in policies"
+static TCLAP::ValueArg<double> T_action_arg(         "", "T_action", "(default: 0) Temperature for soft-max in action-policy"
+                                                     , false, 0, "double");
+static TCLAP::ValueArg<double> T_tree_arg(           "", "T_tree", "(default: 0) Temperature for soft-max in tree-policy"
+                                                     , false, 0, "double");
+static TCLAP::ValueArg<double> T_backup_arg(         "", "T_backup", "(default: 0) Temperature for soft-max in backup-policy for Bellman backups"
                                                      , false, 0, "double");
 static TCLAP::ValueArg<double> prior_counts_arg(     "", "prior_counts", "(default: 0) Prior counts to use (negative values for auto)."
                                                      , false, 0, "double");
@@ -308,7 +312,9 @@ int main(int argn, char ** args) {
         cmd.add(rollout_length_arg);
         cmd.add(exploration_arg);
         cmd.add(prior_counts_arg);
-        cmd.add(soft_max_arg);
+        cmd.add(T_backup_arg);
+        cmd.add(T_tree_arg);
+        cmd.add(T_action_arg);
         cmd.add(discount_arg);
         cmd.add(run_start_arg);
         cmd.add(run_n_arg);
@@ -643,9 +649,17 @@ bool check_arguments() {
         ok = false;
         cout << "Discount must be in [0:1]" << endl;
     }
-    if(soft_max_arg.getValue()<0) {
+    if(T_action_arg.getValue()<0) {
         ok = false;
-        cout << "Soft-Max temperature must be positive" << endl;
+        cout << "Temperature must be positive in " << T_action_arg.getName() << endl;
+    }
+    if(T_tree_arg.getValue()<0) {
+        ok = false;
+        cout << "Temperature must be positive in " << T_tree_arg.getName() << endl;
+    }
+    if(T_backup_arg.getValue()<0) {
+        ok = false;
+        cout << "Temperature must be positive in " << T_backup_arg.getName() << endl;
     }
     if(exploration_arg.getValue()<0) {
         ok = false;
@@ -693,18 +707,22 @@ shared_ptr<NodeFinder> get_node_finder() {
 shared_ptr<TreePolicy> get_policy(int type) {
     shared_ptr<TreePolicy> tree_policy;
     QString type_str = "";
+    double temperature;
     auto policy_str = tree_policy_arg.getValue();
     switch(type) {
     case 0:
         type_str = "tree";
+        temperature = T_tree_arg.getValue();
         policy_str = tree_policy_arg.getValue();
         break;
     case 1:
         type_str = "action";
+        temperature = T_action_arg.getValue();
         policy_str = action_policy_arg.getValue();
         break;
     case 2:
         type_str = "backup";
+        temperature = T_backup_arg.getValue();
         policy_str = backup_policy_arg.getValue();
         break;
     default:
@@ -718,7 +736,7 @@ shared_ptr<TreePolicy> get_policy(int type) {
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB1 policy ("+type_str+"-policy)");
         }
-        policy->soft_max_temperature = soft_max_arg.getValue();
+        policy->soft_max_temperature = temperature;
         tree_policy.reset(policy);
     } else if(policy_str=="UCB_Variance") {
         auto policy = new UCB_Variance(exploration_arg.getValue(),exploration_arg.getValue());
@@ -732,7 +750,7 @@ shared_ptr<TreePolicy> get_policy(int type) {
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for UCB_Variance policy ("+type_str+"-policy)");
         }
-        policy->soft_max_temperature = soft_max_arg.getValue();
+        policy->soft_max_temperature = temperature;
         tree_policy.reset(policy);
     } else if(policy_str=="Quantile") {
         auto environment = get_environment();
@@ -755,17 +773,17 @@ shared_ptr<TreePolicy> get_policy(int type) {
                     return {true,QString("Set exploration to %1").arg(ex)};
                 }, "Set exploration for Quantile policy ("+type_str+"-policy)");
         }
-        policy->soft_max_temperature = soft_max_arg.getValue();
+        policy->soft_max_temperature = temperature;
         tree_policy.reset(policy);
     } else if(policy_str=="Uniform") {
         tree_policy.reset(new Uniform());
     } else if(policy_str=="HardUpper") {
         auto policy = new HardUpper();
-        policy->soft_max_temperature = soft_max_arg.getValue();
+        policy->soft_max_temperature = temperature;
         tree_policy.reset(policy);
     } else if(policy_str=="Optimal") {
         auto policy = new Optimal();
-        policy->soft_max_temperature = soft_max_arg.getValue();
+        policy->soft_max_temperature = temperature;
         tree_policy.reset(policy);
     } else DEBUG_DEAD_LINE;
     return tree_policy;
