@@ -23,15 +23,11 @@
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
-//#include "Environment_old/TightRope.h"
-//#include "Environment_old/DynamicTightRope.h"
-//#include "Environment_old/UnitTestEnvironment.h"
 #include "Environment/SimpleEnvironment.h"
 #include "Environment/GamblingHall.h"
 #include "Environment/BottleneckEnvironment.h"
 #include "Environment/VarianceEnvironments.h"
 #include "Environment/MC_versus_DP.h"
-//#include "Environment_old/DelayedUncertainty.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 #include "../../../../share/src/POMCP/mcts.h"
 
@@ -75,17 +71,13 @@ static Commander::CommandCenter commander;
 static const std::set<std::string> mode_set = {"WATCH",
                                                "EVAL",
                                                "PLAY"};
-static const std::set<std::string> environment_set = {//"TightRope",
-                                                      //"DynamicTightRope",
-                                                      "GamblingHall",
+static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "FOL",
                                                       "SimpleEnvironment",
                                                       "BottleneckEnvironment",
                                                       "DLVSOR",
                                                       "LVSOR",
                                                       "MCVSDP"
-                                                      //"DelayedUncertainty",
-                                                      //"UnitTest"
 };
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
@@ -200,6 +192,9 @@ static TCLAP::ValueArg<int> random_seed_arg(         "", "random_seed", \
 static TCLAP::SwitchArg no_header_arg(               "", "no_header",\
                                                      "(default: false) In EVAL mode (-m EVAL) don't print a head line containing the column names."\
                                                      , false);
+static TCLAP::SwitchArg prune_all_arg(               "", "prune_all",\
+                                                     "(default: false) When 'true' prune all branches when performing a transition instead of reusing sub-branch.."\
+                                                     , false);
 static TCLAP::ValueArg<int> threads_arg(             "t", "threads", \
                                                      "(default: 0) Maximum number of threads to use by calling omp_set_num_threads(). A value of \
 Zero (default) or below does not restict the number of threads so the \
@@ -295,6 +290,7 @@ int main(int argn, char ** args) {
         cmd.add(random_arg);
         cmd.add(active_arg);
         cmd.add(threads_arg);
+        cmd.add(prune_all_arg);
         cmd.add(no_header_arg);
         cmd.add(random_seed_arg);
         cmd.add(accumulate_arg);
@@ -414,7 +410,11 @@ int main(int argn, char ** args) {
             }
              // prune (but not in last step to be able to visualize final tree)
             if(step<step_n_arg.getValue() || step_n_arg.getValue()) {
-                search_tree->update(action,observation);
+                if(prune_all_arg.getValue()) {
+                    search_tree->init();
+                } else {
+                    search_tree->update(action,observation);
+                }
                 if(watch_progress_arg.getValue()>=2) {
                     cout << "tree pruned" << endl;
                     if(graphics_arg.getValue()) {
@@ -497,7 +497,11 @@ int main(int argn, char ** args) {
                     // break if (maximum) number of steps was set and reached
                     if(step_n_arg.getValue()>=0 && step>=step_n_arg.getValue()) break;
                     // otherwise prune tree and increment step number
-                    search_tree->update(action,observation);
+                    if(prune_all_arg.getValue()) {
+                        search_tree->init();
+                    } else {
+                        search_tree->update(action,observation);
+                    }
                     ++step;
                 }
 #ifdef USE_OMP
