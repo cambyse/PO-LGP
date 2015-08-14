@@ -10,7 +10,7 @@ using namespace std;
 
 MCTS::PARAMS::PARAMS()
 :   Verbose(0),
-    MaxDepth(500),
+    MaxDepth(1000),
     NumSimulations(1000),
     NumStartStates(1000),
     UseTransforms(true),
@@ -42,22 +42,25 @@ MCTS::MCTS(std::shared_ptr<AbstractEnvironment> world, const PARAMS& params)
     cout<<"simulation "<<Params.NumSimulations <<endl;
     cout<<"MaxDepth "<<Params.MaxDepth <<endl<<endl;
     /*/
+    //std::cout<<"simulation "<<Params.NumSimulations <<std::endl;
+    //std::cout<<"MaxDepth "<<Params.MaxDepth <<endl<<std::endl;
 
 
     Actions = World->get_actions();
     VNODE::NumChildren  = Actions.size();
     //STATE * state = 0;// Simulator.CreateStartState();
-    
+    Root = ExpandNode();
     //cout<< Actions[0] <<endl;
 
     // make sure we can to standard rollouts to terminal state
     assert(World->has_terminal_state());
+    InitFastUCB(Params.ExplorationConstant);
 }
 
 MCTS::~MCTS()
 {
-    //VNODE::Free(Root, Simulator);
-    //VNODE::FreeAll();
+    VNODE::Free(Root);
+    VNODE::FreeAll();
 }
 /*/
 bool MCTS::Update(int action, int observation, double reward)
@@ -84,10 +87,13 @@ bool MCTS::Update(int action, int observation, double reward)
 /*/
 int MCTS::SelectAction()
 {
-    if (Params.DisableTree)
-        RolloutSearch();
-    else
-        UCTSearch();
+
+    VNODE::Free(Root);
+    Root = ExpandNode();
+
+
+    UCTSearch();
+
     return GreedyUCB(Root, false);
 }
 
@@ -134,13 +140,13 @@ void MCTS::RolloutSearch()
 /*/
 void MCTS::UCTSearch()
 {
-    Root = ExpandNode();
 
     for (int n = 0; n < Params.NumSimulations; n++)
     {
         //cout<<" ROLLOUT Starting: "<<endl;
-
         World->reset_state();
+        //AbstractEnvironment::observation_handle_t
+
         TreeDepth = 0;
         PeakTreeDepth = 0;
         double totalReward = SimulateV(Root);        
@@ -151,6 +157,7 @@ void MCTS::UCTSearch()
 
 double MCTS::SimulateV(VNODE *vnode)
 {
+
     int action = GreedyUCB(vnode, true);
 
     PeakTreeDepth = TreeDepth;
@@ -163,15 +170,15 @@ double MCTS::SimulateV(VNODE *vnode)
 
     QNODE& qnode = vnode->Child(action);
     double totalReward = SimulateQ(qnode, action);
-    //vnode->Value.Add(totalReward);
+    vnode->Value.Add(totalReward);
     //AddRave(vnode, totalReward);
-    return 0;// totalReward;
+    return totalReward;
 }
 
 double MCTS::SimulateQ(QNODE &qnode, int action)
 {
 
-    int observation;
+    //int observation;
     double immediateReward, delayedReward = 0;
 
     //if (Simulator.HasAlpha())
@@ -286,14 +293,14 @@ bool MCTS::InitialisedFastUCB = true;
 
 void MCTS::InitFastUCB(double exploration)
 {
-    cout << "Initialising fast UCB table... ";
+    //cout << "Initialising fast UCB table... ";
     for (int N = 0; N < UCB_N; ++N)
         for (int n = 0; n < UCB_n; ++n)
             if (n == 0)
                 UCB[N][n] = Infinity;
             else
                 UCB[N][n] = exploration * sqrt(log(N + 1) / n);
-    cout << "done" << endl;
+    //cout << "done" << endl;
     InitialisedFastUCB = true;
 }
 
@@ -312,3 +319,4 @@ int MCTS::Random(int max) const
 {
     return rand() % max;
 }
+

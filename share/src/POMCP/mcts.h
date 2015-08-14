@@ -67,7 +67,7 @@ private:
     VNODE* ExpandNode();
 
     // Fast lookup table for UCB
-    static const int UCB_N = 10000, UCB_n = 100;
+    static const int UCB_N = 10000, UCB_n = 1000;
     static double UCB[UCB_N][UCB_n];
     static bool InitialisedFastUCB;
 
