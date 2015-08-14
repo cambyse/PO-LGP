@@ -3,8 +3,6 @@
 
 #include <MCTS_Environment/IntegerEnvironment.h>
 
-#include <util/debug.h>
-
 /**
  * This environment should work much better with DP backups than with MC
  * backups. */
@@ -19,8 +17,8 @@ public:
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         double reward = 0;
-        DEBUG_EXPECT(abs(state)<depth);
-        DEBUG_EXPECT(action!=nullptr);
+        assert(abs(state)<depth);
+        assert(action!=nullptr);
         //----------------------------------------------------------------------
         // The absolute value of the state corresponds to the time; the sign
         // corresponds to whether a non-zero reward is still possible (this is
@@ -55,7 +53,5 @@ public:
         out << "MC_versus_DP(action_n=" << action_n << ";depth=" << depth << ")";
     }
 };
-
-#include <util/debug_exclude.h>
 
 #endif /* MC_VERSUS_DP_H_ */
