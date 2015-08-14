@@ -82,6 +82,18 @@ target_link_libraries(POMCP_eval
     ${LIBPOMCP}
 )
 
+## memory leak
+
+add_executable(memory_leak
+    memory_leak.cpp
+    Environment/MC_versus_DP.h
+)
+
+target_include_directories(memory_leak PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(memory_leak
+    ${LIBPOMCP}
+)
+
 ## examples
 
 add_executable(GraphPropagationExample
