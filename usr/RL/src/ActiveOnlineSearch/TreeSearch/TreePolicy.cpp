@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <util/util.h>
+#include <util/softmax.h>
 #include <util/return_tuple.h>
 
 #define DEBUG_LEVEL 0

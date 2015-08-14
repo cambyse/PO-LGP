@@ -32,6 +32,7 @@ add_library(util
     template_lib.h
     util.cpp
     util.h
+    softmax.h
 )
 
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

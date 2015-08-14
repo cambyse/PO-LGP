@@ -24,6 +24,7 @@
 
 #include <MCTS_Environment/AbstractEnvironment.h>
 #include <MCTS_Environment/TemplateEnvironment.h>
+#include <MCTS_Environment/IntegerEnvironment.h>
 
 #include "Environment/GamblingHall.h"
 #include "ComputationalGraph.h"

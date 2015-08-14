@@ -3,6 +3,7 @@
 #include "NodeFinder.h"
 
 #include <util/util.h>
+#include <util/softmax.h>
 #include <util/QtUtil.h>
 #include <util/pretty_printer.h>
 #include <util/return_tuple.h>
