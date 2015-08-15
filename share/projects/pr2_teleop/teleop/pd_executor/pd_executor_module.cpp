@@ -56,6 +56,7 @@ PDExecutor::PDExecutor()
     fc->y_ref ={0.8,0.5,1.}; 
     fc->f_ref = {5.,5.,5.};
     fc->f_Igain = .08;
+    fc->active = false;
   }
 
   if(MT::getParameter<bool>("useGripperR", false)) {
@@ -165,7 +166,7 @@ void PDExecutor::step()
             Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
             J = inverse_SymPosDef(J*~J)*J;
              fLobs = Jft*fLobs;
-             cout <<zeros(3) <<' ' << fLobs << " " << J*uobs << endl;
+           //  cout <<zeros(3) <<' ' << fLobs << " " << J*uobs << endl;
         }
     }     
 
@@ -174,7 +175,7 @@ void PDExecutor::step()
 
     floatA cal_pose_rh = calibrated_pose_rh.get();
     floatA cal_pose_lh = calibrated_pose_lh.get();
-    if(length(cal_pose_lh)==0||length(cal_pose_rh)==0) return;
+    //if(length(cal_pose_lh)==0||length(cal_pose_rh)==0) return;
     bool driveind;
          driveind= calisaysokay.get();
          bool tapedd;
@@ -202,7 +203,7 @@ void PDExecutor::step()
             effOrientationL->active = true;
             gripperL->active = true;
             gripperR->active = false;
-            fc->active = true;
+      //      fc->active = true;
             base->active =true;
         }
         else
@@ -213,7 +214,7 @@ void PDExecutor::step()
             effOrientationL->active = true;
             gripperL->active = true;
             gripperR->active = true;
-            fc->active = true;
+        //    fc->active = true;
             base->active =true;
         }
     }
@@ -310,18 +311,7 @@ void PDExecutor::step()
         arr a = fmc.operationalSpaceControl();
         q += tau * qdot;
         qdot += tau * a;
-       
-
-/*        if(fixBase.get())
-        {
-            qdot(trans->qIndex+0) = 0;
-            qdot(trans->qIndex+1) = 0;
-            qdot(trans->qIndex+2) = 0;
-            q(trans->qIndex+0) = 0;
-            q(trans->qIndex+1) = 0;
-            q(trans->qIndex+2) = 0;
-        }
-        */
+               
         fmc.setState(q, qdot);
   
     }
@@ -345,13 +335,13 @@ void PDExecutor::step()
     ref.gamma = .988;
     ref.J_ft_inv.clear();
     //fmc.reportCurrentState();
-    //if (!fixBase.get() && trans && trans->qDim()==3)
-   // {
-     //   ref.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
-     //   ref.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
-     //   ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
-  //  }
-    if(useros)
+    if ( trans && trans->qDim()==3)
+    {
+        ref.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
+        ref.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
+        ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+   }
+/*    if(useros)
     {
         uint count=0;
         //ctrlTasks.readAccess();
@@ -385,8 +375,10 @@ void PDExecutor::step()
         //-- send the computed movement to the robot
         cout<<"error"<<error<<endl;
        // ctrl_ref.set() = ref;
-    }
-    
+    }*/
+  
+  ctrl_ref.set() = ref;
+
 }
 
 void PDExecutor::sendRosCtrlMsg()

@@ -117,7 +117,8 @@ struct G4HutoRoMap:Module
     void patterndriving(floatA tempData);
     void initdriving(floatA tempData, int button);
     bool  btnpressed = true;
-
+    floatA turnL;
+    floatA turnR;
     floatA driveposX;
     floatA drivenegX;
     floatA driveRY;

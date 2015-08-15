@@ -524,7 +524,7 @@ void G4HutoRoMap::initdriving(floatA tempData,int button)
     cout<<"\x1B[2J\x1B[H";
     floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
 
-    floatA pose_foot=mid.query(tempData,STRING("/human/rl/rf"));
+    floatA pose_foot=mid.query(tempData,STRING("/human/rl/rf")).subRange(0,2);
 
    if(button & BTN_X && length(driveposX) == 0)
     {
@@ -581,7 +581,31 @@ void G4HutoRoMap::initdriving(floatA tempData,int button)
 
     }
 
-    
+    if(button & BTN_X &&  length(turnL) == 0.)
+    {
+            turnL =  pose_foot;
+            return;
+
+    }
+    else if( length(turnL) == 0.)
+    {
+            cout<<"Point to max pos x and Press X"<<endl;
+            return;
+
+    }
+    if(button & BTN_X &&  length(turnR) == 0.)
+    {
+            turnR = pose_foot;
+            return;
+
+    }
+    else if( length(turnR) == 0.)
+    {
+            cout<<"Point to max pos x and Press X"<<endl;
+            return;
+
+    }
+
     driveready = true;
 
 
@@ -590,7 +614,26 @@ void G4HutoRoMap::initdriving(floatA tempData,int button)
 void G4HutoRoMap::patterndriving(floatA tempData)
 {
     floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
-    cout<<poses_index_rh<<endl;
+    floatA poses_rf = mid.query(tempData, STRING("/human/rl/rf")).subRange(0,2);
+    double turnrate = 0.;
+    
+    drive.set()={0.,0.,0.};
+    if(length(poses_rf-turnR)<0.05)
+    {
+          turnrate = 0.005;
+          calisaysokay.set()=true;
+
+    cout<<"turnrate "<<turnrate<<endl;
+    }
+    else if(length(poses_rf-turnL)<0.05)
+    {
+         turnrate = -0.005;
+         calisaysokay.set()=true;
+
+    cout<<"turnrate "<<turnrate<<endl;
+    }
+
+
     if(poses_index_rh(2)>=driveposX(2)-0.02 && poses_index_rh(2)<=driveposX(2)+0.02 )
     {
         floatA poses_index_rht =poses_index_rh.subRange(0,1);
@@ -604,49 +647,59 @@ void G4HutoRoMap::patterndriving(floatA tempData)
        // drivenegX(2)=0.;
        // driveRY(2)=0.;
        // dirveLY(2)=0.;
-        float xcompv=scalarProduct(2.f/(driveposXt-drivenegXt),poses_index_rht)-scalarProduct((driveposXt-drivenegXt),1.f/(2.f*poses_index_rht));
+        floatA xcompv = xd/(driveposXt-drivenegXt)% poses_index_rht -  xd/(driveposXt-drivenegXt)%(driveposXt+drivenegXt)/2.f;
 
-        float ycompv =scalarProduct(2.f/(driveRYt-driveLYt),poses_index_rht)   -scalarProduct((driveRYt-driveLYt),1.f/(2.f*poses_index_rht));
-        cout<<"  drive "<<xcompv<<" "<<ycompv<<" "<<endl;
-        double xcomp = (double)(xcompv);
-        double ycomp = (double)(ycompv);
+        floatA ycompv = yd/(driveRYt-driveLYt)% poses_index_rht     -  yd/(driveRYt-driveLYt)%(driveRYt+driveLYt)/2.f;
+        double xcomp = (double)(xcompv(0));
+        double ycomp = -(double)(ycompv(1));
+        cout<<"  drive "<<xcomp<<" "<<ycomp<<endl;
         if( xcomp >1. || ycomp >1.)
         {
-            drive.set()={0.,0.,0.};
-            return;
-        }
-
-        if(sqrt(xcomp*xcomp)<0.3)
-        {
-            if(sqrt(ycomp*ycomp)>0.3)
+            if(turnrate == 0.)
             {
-                drive.set()={0.,0.01*ycomp,0.};
-                return;
+                drive.set()={0.,0.,0. };
+                calisaysokay.set()=false;
             }
             else
             {
-                drive.set()={0.,0.,0.};
-                return;
-            }
-        }
-        else if(sqrt(ycomp*ycomp)<0.3)
-        {
-            if(sqrt(xcomp*xcomp)>0.3)
-            {
-                drive.set()={0.01*xcomp,0.,0.};
-                return;
-            }
-            else
-            {
-                drive.set()={0.,0.,0.};
-                return;
+                drive.set()={0.,0.,turnrate };
             }
         }
         else
         {
-            drive.set()={0.01*xcomp,0.01*ycomp,0.};
-        }
 
+            calisaysokay.set()=true;
+            if(sqrt(xcomp*xcomp)<0.3)
+            {
+                if(sqrt(ycomp*ycomp)>0.3)
+                {
+                    drive.set()={0.,0.002*ycomp,turnrate };
+                    return;
+                }
+                else
+                {
+                    drive.set()={0.,0.,turnrate};
+                    return;
+                }
+            }
+            else if(sqrt(ycomp*ycomp)<0.3)
+            {
+                if(sqrt(xcomp*xcomp)>0.3)
+                {
+                    drive.set()={0.002*xcomp,0.,turnrate};
+                    return;
+                }
+                else
+                {
+                    drive.set()={0.,0.,turnrate};
+                    return;
+                }
+            }
+            else
+            {
+                drive.set()={0.002*xcomp,0.002*ycomp,turnrate};
+            }
+        }
 
     }
 }
