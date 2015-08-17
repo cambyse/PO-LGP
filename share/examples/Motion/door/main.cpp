@@ -51,7 +51,7 @@ void TEST(Door1){
   arr lambda = zeros(x.d0,2);
 
   optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., aulaMuInc=1.5));
-//  optConstrained(x, lambda, Convert(MF));
+//  optConstrainedMix(x, lambda, Convert(MF));
 //  checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;
@@ -124,7 +124,7 @@ void TEST(Door2){
   rndGauss(x,.1,true);
   arr lambda = zeros(x.d0,2);
 
-  optConstrained(x, lambda, Convert(MF));
+  optConstrainedMix(x, lambda, Convert(MF));
   checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;
@@ -200,8 +200,8 @@ void TEST(Door3){
   arr lambda = zeros(x.d0,2);
 
   optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
-//  optConstrained(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-1));
-//  optConstrained(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-3));
+//  optConstrainedMix(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-1));
+//  optConstrainedMix(x, lambda, Convert(MF),OPT(constrainedMethod = ConstrainedMethodType::augmentedLag,stopTolerance = 1e-3));
 //  checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;

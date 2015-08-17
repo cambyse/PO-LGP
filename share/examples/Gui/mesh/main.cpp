@@ -45,7 +45,7 @@ void TEST(GJK) {
     t1.pos.y += .1; t1.addRelativeRotationDeg(10, 0., 1., 0.);
     t2.pos.y -= .2; t2.addRelativeRotationDeg(10, 1., 0., 0.);
 
-    double d=GJK_sqrDistance(m1, m2, t1, t2, p1, p2);
+    double d=GJK_sqrDistance(m1, m2, t1, t2, p1, p2, NoVector, NoVector, NoPointType, NoPointType);
     double c_dist=(t1.pos-t2.pos).length();
     cout <<"distance = " <<d <<"\np1=" <<p1 <<"\np2=" <<p2 <<"\ncenter dist=" <<c_dist <<endl;
     CHECK_LE(d, c_dist,"distance doesn't make sense");

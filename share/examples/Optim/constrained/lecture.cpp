@@ -23,18 +23,18 @@ void displayFunction(const VectorFunction& f){
 // test standard constrained optimizers
 //
 
-void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
-  enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
+void testConstraint(const ConstrainedProblemMix& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
 
-  MethodType method = (MethodType)MT::getParameter<int>("opt/constrainedMethod");
+  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod");
 
-  UnconstrainedProblem UCP(p);
+  UnconstrainedProblemMix UCP(p, method);
 
   //-- choose constrained method
   switch(method){
   case squaredPenalty: UCP.mu=10.; UCP.nu=10.;  break;
   case augmentedLag:   UCP.mu=1.;  UCP.nu=1.;   break;
   case logBarrier:     UCP.muLB=1.;  UCP.nu=1.;   break;
+  default: NIY;
   }
 
   //-- initial x
@@ -59,7 +59,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
 //    checkAllGradients(p, x, 1e-4);
 
     if(x.N==2){
-      displayFunction(UCP.Lag);
+      displayFunction(UCP);
       MT::wait();
       gnuplot("load 'plt'", false, true);
       MT::wait();
@@ -67,7 +67,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    OptNewton opt(x, UCP.Lag, OPT(verbose=1, damping=.1, stopTolerance=1e-2));
+    OptNewton opt(x, UCP, OPT(verbose=1, damping=.1, stopTolerance=1e-2));
     opt.run();
     evals+=opt.evals;
 
@@ -81,6 +81,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
       UCP.aulaUpdate(1.);//   UCP.mu *= 2.;
         break;
     case logBarrier:     UCP.muLB *=.5;  UCP.nu *= 10;  break;
+    default: NIY;
     }
 
 //    if(method==augmentedLag){
@@ -90,14 +91,14 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
 //    }
 
     system("cat z.grad >>z.grad_all");
-    cout <<k <<' ' <<evals <<" f(x)=" <<UCP.f_x
-        <<" \tg_compl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N)))
-       <<" \th_compl=" <<sumOfAbs(UCP.h_x)
+    cout <<k <<' ' <<evals <<" f(x)=" <<UCP.get_sumOfSquares()
+	 <<" \tg_compl=" <<UCP.get_sumOfGviolations()
+	 <<" \th_compl=" <<UCP.get_sumOfHviolations()
       <<" \tmu=" <<UCP.mu <<" \tnu=" <<UCP.nu <<" \tmuLB=" <<UCP.muLB;
-    if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda <<" \tkappa=" <<UCP.kappa /*<<" \tg=" <<UCP.g_x <<" \th=" <<UCP.h_x*/;
+    if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda /*<<" \tg=" <<UCP.g_x <<" \th=" <<UCP.h_x*/;
     cout <<endl;
   }
-  cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.f_x <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<" \tkappa=" <<UCP.kappa <<endl;
+  cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.get_sumOfSquares() <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<endl;
 
   system("mv z.grad_all z.grad");
   if(x.N==2) gnuplot("load 'plt'", false, true);

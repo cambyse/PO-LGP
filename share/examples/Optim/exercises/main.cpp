@@ -122,18 +122,18 @@ void testGradDescent(const ScalarFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
-  enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
+void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint iters=10){
 
-  MethodType method = (MethodType)MT::getParameter<int>("method");
+  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
 
-  UnconstrainedProblem F(f);
+  UnconstrainedProblemMix F(f, method);
 
   //switch on penalty terms
   switch(method){
   case squaredPenalty: F.mu=10.;  break;
   case augmentedLag:   F.mu=10.;  break;
   case logBarrier:     F.muLB=1.;  break;
+  default: NIY;
   }
 
   uint d=MT::getParameter<uint>("dim", 2);
@@ -148,15 +148,15 @@ void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=
   system("rm z.grad_all");
 
   for(uint k=0;k<iters;k++){
-    checkAllGradients(f, x, 1e-4);
-    checkGradient(F.Lag, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
-    checkHessian (F.Lag, x, 1e-4);
+    checkJacobianCP(f, x, 1e-4);
+    checkGradient(F, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
+    checkHessian (F, x, 1e-4);
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, F.Lag, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
-    displayFunction(F.Lag);
+    displayFunction(F);
     MT::wait();
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -166,6 +166,7 @@ void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=
     case squaredPenalty: F.mu *= 10;  break;
     case augmentedLag:   F.aulaUpdate();  break;
     case logBarrier:     F.muLB /= 2;  break;
+    default: NIY;
     }
 
     system("cat z.grad >>z.grad_all");
@@ -215,7 +216,7 @@ void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=
 // test the phase one optimization
 //
 
-void testPhaseOne(const ConstrainedProblem& f){
+void testPhaseOne(const ConstrainedProblemMix& f){
   PhaseOneProblem metaF(f);
 
   arr x;

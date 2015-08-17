@@ -44,7 +44,7 @@ void TEST(KOrderMarkov) {
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkAllGradients(Convert(P),  x, 1e-3);
+    checkJacobianCP(Convert(P),  x, 1e-3);
   }
   
   //-- optimize
@@ -52,7 +52,7 @@ void TEST(KOrderMarkov) {
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
   if(P.isConstrained()){
-    optConstrained(x, NoArr, Convert(P) );
+    optConstrainedMix(x, NoArr, Convert(P) );
   }else{
     OptNewton opt(x, Convert(P));
     if(K.N) opt.additionalRegularizer=&K;

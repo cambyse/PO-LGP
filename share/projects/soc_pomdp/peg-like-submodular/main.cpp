@@ -92,7 +92,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   /*/
   for(uint k=0;k<5;k++){
 
-    //optConstrained(x, P.dualMatrix, ConstrainedP);
+    //optConstrainedMix(x, P.dualMatrix, ConstrainedP);
 
     optConstrainedMix(x,  NoArr, ConstrainedP, OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
     //cout<<P.dualMatrix <<endl;

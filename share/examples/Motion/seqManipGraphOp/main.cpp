@@ -41,14 +41,14 @@ void TEST(PickAndPlace){
   op1->timeOfApplication = MP.T/2;
   op1->fromId = G.getBodyByName("graspRef")->index;
   op1->toId = G.getBodyByName("obj1")->index;
-  G.operators.append(op1);
+  MP.switches.append(op1);
 
   ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
   op2->symbol = ors::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = MP.T/2;
   op2->fromId = G.getBodyByName("table")->index;
   op2->toId = G.getBodyByName("obj1")->index;
-  G.operators.append(op2);
+  MP.switches.append(op2);
 
   //-- setup new motion problem
   ors::Shape *grasp = G.getShapeByName("graspRef");
@@ -113,7 +113,7 @@ void TEST(PickAndPlace){
   //-- optimize
   for(uint k=0;k<1;k++){
 //    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , aulaMuInc=1.2, damping=1., allowOverstep=true));
+    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , aulaMuInc=1.2, damping=1., allowOverstep=true));
   }
   MP.costReport();
 

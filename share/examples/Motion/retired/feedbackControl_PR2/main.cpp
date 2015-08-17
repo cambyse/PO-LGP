@@ -9,8 +9,8 @@
 #include <Gui/opengl.h>
 #include <iomanip>
 #include <Algo/spline.h>
-#include <Motion/mobject.h>
-#include <Motion/adaptiveMotionExecution.h>
+//#include <Motion/mobject.h>
+//#include <Motion/adaptiveMotionExecution.h>
 
 #define VISUALIZE 1
 
