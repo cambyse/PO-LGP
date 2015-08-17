@@ -4,7 +4,7 @@
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.kvg"));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -29,7 +29,7 @@ void TEST(PlayFOL_World){
 //  MT::String str;
 //  str <<FILE("../PlannerExample/toolbox.kvg");
 //  str <<FILE("../PlannerExample/reward.g");
-  FOL_World world("../mcts/toolbox.kvg");
+  FOL_World world(FILE("../mcts/toolbox.kvg"));
   world.verbose=2;
 
   for(bool go=true;go;){

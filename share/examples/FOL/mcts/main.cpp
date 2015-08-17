@@ -7,7 +7,7 @@
 //===========================================================================
 
 void TEST(MCTS){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.kvg"));
   MCTS mcts(world);   //WARNING: this version only works for deterministic worlds!!
   world.verbose=0;
   world.verbFil=0;
@@ -46,7 +46,7 @@ void TEST(MCTS){
 //===========================================================================
 
 void TEST(MC){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.kvg"));
   PlainMC mc(world);
   world.verbose=0;
   world.verbFil=0;
@@ -69,7 +69,7 @@ void TEST(MC){
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.kvg"));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -92,7 +92,7 @@ void TEST(FOL_World){
 void TEST(Determinism){
 
   for(uint k=0;k<100;k++){
-    FOL_World world("boxes_new.kvg");
+    FOL_World world(FILE("boxes_new.kvg"));
 
     //-- generate a random rollout
     world.reset_state();

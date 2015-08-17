@@ -39,8 +39,8 @@ FOL_World::FOL_World(istream& is)
   if(params){
     gamma = params->get<double>("gamma", gamma);
     stepCost = params->get<double>("stepCost", stepCost);
-    timeCost = params->get<double>("gamma", timeCost);
-    deadEndCost = params->get<double>("gamma", deadEndCost);
+    timeCost = params->get<double>("timeCost", timeCost);
+    deadEndCost = params->get<double>("deadEndCost", deadEndCost);
   }
 
   if(verbose>1){
@@ -157,7 +157,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 #else
 //      getSubstitutions2(*state,
       NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
-      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="const"){
+      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
         if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
       }else{
         if(subs.d0) reward += rValue;
