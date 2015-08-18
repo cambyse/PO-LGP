@@ -1,5 +1,5 @@
 #include "SensorActivities.h"
-#include "TaskControllerModule.h"
+#include "ControlActivityManager.h"
 #include "pr2/roscom.h"
 
 
@@ -7,8 +7,8 @@
 void SensorActivity::configure(Node *fact) {
   Activity::configure(fact);
 
-  taskController = taskControllerModule();
-  CHECK(taskController, "taskControllerModule() did not return anything. Why?");
+  controlActivitiManager = controlActivityManager();
+  CHECK(controlActivitiManager, "taskControllerModule() did not return anything. Why?");
 
   Graph* specs = getSpecsFromFact(fact);
   configureSensor(*specs);
@@ -25,7 +25,7 @@ void SensorActivity::step(double dt) {
     cout << "I was isTriggered(): " << endl;
 
     if (!_isTriggered) {
-      taskController->effects.set()() << STRING("(triggered SensorActivity), ");
+      controlActivitiManager->effects.set()() << STRING("(triggered SensorActivity), ");
     }
     _isTriggered = true;
   }
@@ -46,7 +46,7 @@ void SensorActivity::stepSensor() {
 }
 
 bool SensorActivity::isTriggered() {
-  CtrlMsg obs = taskController->ctrl_obs.get();
+  CtrlMsg obs = controlActivitiManager->ctrl_obs.get();
   // cout << "Left:  " << obs.fL << endl;
   // cout << "Right: " << obs.fR << endl;
   return (sum(obs.fL)) > _threshold;

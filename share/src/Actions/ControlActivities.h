@@ -7,7 +7,7 @@
 /// A typical 'control activity' that adds a CtrlTask to the task list of the task controller.
 /// Der
 struct ControlActivity : Activity{
-  struct TaskControllerModule *taskController;
+  struct ControlActivityManager *controlManager;
   struct TaskMap *map;
   struct CtrlTask* task;
   double stopTolerance;

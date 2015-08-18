@@ -1,27 +1,27 @@
 #include <Motion/feedbackControl.h>
 #include "ControlActivities.h"
 #include "SensorActivities.h"
-#include "TaskControllerModule.h"
+#include "ControlActivityManager.h"
 
 
-extern TaskControllerModule *taskControllerModule();
+extern ControlActivityManager *controlActivitiManager();
 
 //===========================================================================
 void ControlActivity::configure(Node *fact) {
   Activity::configure(fact);
 
   // ControlActivity specific stuff
-  taskController = taskControllerModule();
-  CHECK(taskController, "taskControllerModule() did not return anything. Why?");
+  controlManager = controlActivitiManager();
+  CHECK(controlManager, "controlActivitiManager() did not return anything. Why?");
 
   Graph *specs = getSpecsFromFact(fact);
-  configureControl(name, *specs, taskController->modelWorld.set());
-  taskController->ctrlTasks.set()->append(task);
+  configureControl(name, *specs, controlManager->modelWorld.set());
+  controlManager->ctrlTasks.set()->append(task);
   conv=false;
 }
 
 ControlActivity::~ControlActivity(){
-  taskController->ctrlTasks.set()->removeValue(task);
+  controlManager->ctrlTasks.set()->removeValue(task);
   delete task;
   delete map;
 }
@@ -38,12 +38,12 @@ void ControlActivity::step(double dt){
   convStr <<")";
   if(isConv()){
     if(!conv){
-      if(fact) taskController->effects.set()() <<convStr <<", ";
+      if(fact) controlManager->effects.set()() <<convStr <<", ";
       conv=true;
     }
   }else{
     if(conv){
-      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+      if(fact) controlManager->effects.set()() <<convStr <<"!, ";
       conv=false;
     }
   }
@@ -99,7 +99,7 @@ bool FollowReferenceActivity::isConv(){
 void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
-  task->y_ref=taskController->q0;
+  task->y_ref=controlManager->q0;
 
   Node *it;
   if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
