@@ -50,8 +50,9 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
 
   double L=0.; //L value
   for(uint i=0;i<phi_x.N;i++){
-    if(            tt_x(i)==sumOfSqrTT             ) L += MT::sqr(phi_x(i));       // sumOfSqr terms
-    if(muLB     && tt_x(i)==ineqTT && phi_x(i)>0.  ) L -= muLB * ::log(-phi_x(i)); //log barrier, check feasibility
+    if(            tt_x(i)==fTT                    ) L += phi_x(i);                // direct cost term
+    if(            tt_x(i)==sumOfSqrTT             ) L += MT::sqr(phi_x(i));       // sumOfSqr term
+    if(muLB     && tt_x(i)==ineqTT                 ){ if(phi_x(i)>0.) return NAN;  L -= muLB * ::log(-phi_x(i)); } //log barrier, check feasibility
     if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) L += mu * MT::sqr(phi_x(i));  //g-penalty
     if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) L += lambda(i) * phi_x(i);    //g-lagrange terms
     if(nu       && tt_x(i)==eqTT                   ) L += nu * MT::sqr(phi_x(i));  //h-penalty
@@ -61,8 +62,9 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   if(&dL){ //L gradient
     arr coeff=zeros(phi_x.N);
     for(uint i=0;i<phi_x.N;i++){
+      if(            tt_x(i)==fTT                    ) coeff(i) += 1.;              // direct cost term
       if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.* phi_x(i);    // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT && phi_x(i)>0.  ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
+      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
       if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu*phi_x(i);  //g-penalty
       if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) coeff(i) += lambda(i);       //g-lagrange terms
       if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu*phi_x(i);  //h-penalty
@@ -75,8 +77,9 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   if(&HL){ //L hessian
     arr coeff=zeros(phi_x.N);
     for(uint i=0;i<phi_x.N;i++){
+//      if(            tt_x(i)==fTT                    ) NIY;       // direct cost term
       if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT && phi_x(i)>0.  ) coeff(i) += (muLB/MT::sqr(phi_x(i)));  //log barrier, check feasibility
+      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/MT::sqr(phi_x(i)));  //log barrier, check feasibility
       if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
       if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu;   //h-penalty
     }
@@ -90,9 +93,10 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   return L;
 }
 
-double UnconstrainedProblemMix::get_sumOfSquares(){
+double UnconstrainedProblemMix::get_costs(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
+    if(tt_x(i)==fTT) S += phi_x(i);
     if(tt_x(i)==sumOfSqrTT) S += MT::sqr(phi_x(i));
   }
   return S;
@@ -255,7 +259,7 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
   OptNewton newton(x, UCP, opt);
 
   for(uint k=0;;k++){
-    fil <<k <<' ' <<newton.evals <<' ' <<UCP.get_sumOfSquares() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
+    fil <<k <<' ' <<newton.evals <<' ' <<UCP.get_costs() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
 
     if(opt.verbose>0){
       cout <<"** optConstr. it=" <<k
@@ -291,7 +295,7 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
 
     if(opt.verbose>0){
       cout <<"** optConstr. it=" <<k
-          <<' ' <<newton.evals <<" f(x)=" <<UCP.get_sumOfSquares()
+          <<' ' <<newton.evals <<" f(x)=" <<UCP.get_costs()
          <<" \tg_compl=" <<UCP.get_sumOfGviolations()
         <<" \th_compl=" <<UCP.get_sumOfHviolations()
        <<" \t|x-x'|=" <<absMax(x_old-x);
@@ -334,7 +338,7 @@ OptConstrained::OptConstrained(arr& x, arr &dual, const ConstrainedProblemMix& P
 }
 
 bool OptConstrained::step(){
-  fil <<its <<' ' <<newton.evals <<' ' <<UCP.get_sumOfSquares() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
+  fil <<its <<' ' <<newton.evals <<' ' <<UCP.get_costs() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
 
   if(opt.verbose>0){
     cout <<"** optConstr. it=" <<its
@@ -369,7 +373,7 @@ bool OptConstrained::step(){
   }
 
   if(opt.verbose>0){
-    cout <<its <<' ' <<newton.evals <<" f(x)=" <<UCP.get_sumOfSquares()
+    cout <<its <<' ' <<newton.evals <<" f(x)=" <<UCP.get_costs()
         <<" \tg_compl=" <<UCP.get_sumOfGviolations()
        <<" \th_compl=" <<UCP.get_sumOfHviolations();
     if(newton.x.N<5) cout <<" \tx=" <<newton.x;

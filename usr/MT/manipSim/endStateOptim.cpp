@@ -213,7 +213,7 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   opt.run();
   //  checkJacobianCP(f, x, 1e-4);
   world.setJointState(x);
-  return opt.UCP.get_sumOfSquares();
+  return opt.UCP.get_costs();
 }
 
 //===========================================================================

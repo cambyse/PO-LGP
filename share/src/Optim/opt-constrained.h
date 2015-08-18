@@ -69,7 +69,7 @@ struct UnconstrainedProblemMix:ScalarFunction{
 
   double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
 
-  double get_sumOfSquares(); ///< info on the terms from last call
+  double get_costs(); ///< info on the terms from last call
   double get_sumOfGviolations(); ///< info on the terms from last call
   double get_sumOfHviolations(); ///< info on the terms from last call
 

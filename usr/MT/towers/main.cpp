@@ -149,7 +149,7 @@ void optTowers() {
   //  checkJacobianCP(f, x, 1e-4);
   W.setJointState(x);
   W.gl().watch();
-  cout <<opt.UCP.get_sumOfSquares();
+  cout <<opt.UCP.get_costs();
 }
 
 

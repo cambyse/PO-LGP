@@ -225,7 +225,7 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   opt.run();
   f.MP.costReport();
   for(;;) displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);
-  return opt.UCP.get_sumOfSquares();
+  return opt.UCP.get_costs();
 }
 
 //===========================================================================
