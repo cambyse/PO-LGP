@@ -189,7 +189,7 @@ def run_in_bg(facts):
 
 def remove_facts():
 
-    """Remove all active facts an conv-symbols.
+    """Removes all active facts an conv-symbols.
 
     """
     facts = interface.getFacts()
@@ -637,7 +637,7 @@ def move_gripper_to_pos(target, side=None):
 
 
 def move_robot(target):
-    """Move Robot to target relative to itself.
+    """Moves robot to target relative to itself.
 
     :param target: The target to move relative to current position..
             target[0]: X-coordinate in m. target[1]: Y-coordinate in m. target[2]: Rotation in deg.

@@ -1,60 +1,46 @@
 #include <Motion/feedbackControl.h>
 #include <Actions/taskCtrlActivities.h>
 #include <Actions/swig.h>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <cassert>
+#include <sstream>
 
-// ============================================================================
-
-struct MyTask : TaskCtrlActivity {
-  virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
-  virtual bool isConv();
-};
-
-void MyTask::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
-  map = new DefaultTaskMap(specs, world);
-  task = new CtrlTask(name, *map, specs);
-  stopTolerance=1e-2; //TODO: overwrite from specs
-}
-
-bool MyTask::isConv(){
-  return ((task->y_ref.nd==1 && task->y.N==task->y_ref.N
-           && maxDiff(task->y, task->y_ref)<stopTolerance
-           && maxDiff(task->v, task->v_ref)<stopTolerance));
-}
-
-// ============================================================================
 
 int main(int argc, char** argv) {
-  registerActivity<MyTask>("MyTask");
 
-  ActionSwigInterface S(false);
+  ActionSwigInterface S;
+
+  std::vector<float> v;
+
+  std::stringstream ss;
 
   S.createNewSymbol("wheels"); //-> wird automatisiert
+  for (int i=0; i < 5; i++){
+    ss.str("");
+    ss.clear();
+    v.clear();
+    ss << (S.getJointByName("worldTranslationRotation")["q"]);
+    std::copy(std::istream_iterator<float>(ss), std::istream_iterator<float>(), std::back_inserter(v));
+    ss.str("");
+    ss.clear();
+    
+    ss << "(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, " << (v[2] + 1.6) <<"] PD=[1,1,1,10]}";
+    
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+    cout << "#################" << endl<< "worldtranslationrotation Rotation ist:" << v[2] << endl << "worldtranslationrotation Rotation soll:" << (v[2] + 1.6) << endl << "#################" << endl;
+    cout << endl << "#################" << endl << "Wird Uebergeben: " << ss.str() << endl << "##################" << endl;
+    
+    S.setFact(ss.str().c_str());
+    
+    S.waitForCondition("(conv FollowReferenceActivity wheels)");
+    S.stopFact("(FollowReferenceActivity wheels)");
+    S.stopFact("(conv FollowReferenceActivity wheels)");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
-
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
-
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(HomingActivity)");
-  S.waitForCondition("(conv HomingActivity)");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
+  }
 
   return 0;
 }

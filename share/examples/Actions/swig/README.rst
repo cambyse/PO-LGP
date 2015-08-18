@@ -82,6 +82,19 @@ That starts the fact, wait for its convergence and removes all facts again.
 You also have basic access to the underlying ors structure. See
 :ref:`section-interface` for a detailed description.
 
+Run in background
+----------
+In addition there is an ``run_in_bg()`` function, which starts an fact in the background
+so you can continue scripting while the robot is excecuting the fact::
+    
+    >>> run_in_bg(fact)
+
+That starts the fact, but doesn't stop it. You have to stop the fact manually with pressing
+``ctrl + c`` or with the function ``remove_facts()``::
+
+    >>> remove_facts()
+
+
 Activities
 ----------
 
