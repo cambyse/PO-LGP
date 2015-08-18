@@ -31,6 +31,26 @@ double I_lambda_x(uint i, arr& lambda, arr& g){
 
 //==============================================================================
 
+UnconstrainedProblemMix::UnconstrainedProblemMix(const ConstrainedProblemMix& P, ConstrainedMethodType method, arr& lambdaInit)
+  : P(P), muLB(0.), mu(0.), nu(0.) {
+  ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
+    return this->lagrangian(dL, HL, x);
+  } );
+
+  double muInit = MT::getParameter("opt/optConstrained/muInit",1.);
+  //switch on penalty terms
+  nu=muInit;
+  switch(method){
+    case squaredPenalty: mu=muInit;  break;
+    case augmentedLag:   mu=muInit;  break;
+    case anyTimeAula:    mu=muInit;  break;
+    case logBarrier:     muLB=.1;  break;
+    case noMethod: HALT("need to set method before");  break;
+  }
+
+  if(&lambdaInit) lambda = lambdaInit;
+}
+
 double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
@@ -408,3 +428,5 @@ void OptConstrained::run(){
 
 OptConstrained::~OptConstrained(){
 }
+
+

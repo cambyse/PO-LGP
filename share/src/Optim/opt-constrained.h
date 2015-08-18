@@ -28,48 +28,31 @@ extern const char* MethodName[];
 // UnconstrainedProblem
 //
 // we define an unconstraint optimization problem from a constrained one
-// that can include penalties, log barriers, and augmented lagrangian terms
+// that can include lagrange terms, penalties, log barriers, and augmented lagrangian terms
 //
 
 struct UnconstrainedProblemMix:ScalarFunction{
   /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
       concatenated to one vector:
       phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  const ConstrainedProblemMix& P;
+  ConstrainedProblemMix P;
 
-  //-- parameters of the unconstrained meta function F
+  //-- parameters of the unconstrained scalar function
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight for inequalities g
   double nu;         ///< squared penalty weight for equalities h
   arr lambda;        ///< lagrange multipliers for inequalities g and equalities h
 
   //-- buffers to avoid recomputing gradients
-  arr x; ///< point where P was last evaluated
+  arr x;          ///< point where P was last evaluated
   arr phi_x, J_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblemMix(const ConstrainedProblemMix &P,ConstrainedMethodType method, arr& lambdaInit=NoArr):P(P), muLB(0.), mu(0.), nu(0.) {
-    ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
-      return this->lagrangian(dL, HL, x);
-    } );
+  UnconstrainedProblemMix(const ConstrainedProblemMix &P, ConstrainedMethodType method, arr& lambdaInit=NoArr);
 
-    double muInit = MT::getParameter("opt/optConstrained/muInit",1.);
-    //switch on penalty terms
-    nu=muInit;
-    switch(method){
-      case squaredPenalty: mu=muInit;  break;
-      case augmentedLag:   mu=muInit;  break;
-      case anyTimeAula:    mu=muInit;  break;
-      case logBarrier:     muLB=.1;  break;
-      case noMethod: HALT("need to set method before");  break;
-    }
+  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained scalar function F
 
-    if(&lambdaInit) lambda = lambdaInit;
-  }
-
-  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
-
-  double get_costs(); ///< info on the terms from last call
+  double get_costs();            ///< info on the terms from last call
   double get_sumOfGviolations(); ///< info on the terms from last call
   double get_sumOfHviolations(); ///< info on the terms from last call
 

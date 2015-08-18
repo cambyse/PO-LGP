@@ -44,9 +44,13 @@ void TEST(KOrderMarkov) {
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobianCP(Convert(P),  x, 1e-3);
+    if(P.isConstrained()){
+      checkJacobianCP(Convert(P),  x, 1e-3);
+    }else{
+      checkGradient(Convert(P),  x, 1e-3);
+    }
   }
-  
+
   //-- optimize
   rndUniform(x,-1.,1.);
   arr K;
@@ -54,7 +58,8 @@ void TEST(KOrderMarkov) {
   if(P.isConstrained()){
     optConstrainedMix(x, NoArr, Convert(P) );
   }else{
-    OptNewton opt(x, Convert(P));
+    Convert sf(P);
+    OptNewton opt(x, sf);
     if(K.N) opt.additionalRegularizer=&K;
     opt.run();
   }
