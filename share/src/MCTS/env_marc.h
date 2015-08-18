@@ -38,6 +38,7 @@ struct MCTS_Environment {
       return transition(actions[rand()%actions.size()]);
     }
 
+   
     /// Get the available actions in the current state
     virtual const std::vector<Handle> get_actions() = 0;
 
@@ -124,6 +125,10 @@ public:
     virtual void reset_state() {
         env_marc->reset_state();
     }
+
+
+
+
     virtual bool has_terminal_state() const {
         return env_marc->get_info(MCTS_Environment::InfoTag::hasTerminal);
     }
