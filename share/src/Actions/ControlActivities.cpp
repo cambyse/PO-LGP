@@ -1,16 +1,16 @@
 #include <Motion/feedbackControl.h>
-#include "TaskControllerModule.h"
+#include "ControlActivities.h"
 #include "SensorActivities.h"
+#include "TaskControllerModule.h"
 
-#include "taskCtrlActivities.h"
 
 extern TaskControllerModule *taskControllerModule();
 
 //===========================================================================
-void TaskCtrlActivity::configure(Node *fact) {
+void ControlActivity::configure(Node *fact) {
   Activity::configure(fact);
 
-  // TaskCtrlActivity specific stuff
+  // ControlActivity specific stuff
   taskController = taskControllerModule();
   CHECK(taskController, "taskControllerModule() did not return anything. Why?");
 
@@ -20,13 +20,13 @@ void TaskCtrlActivity::configure(Node *fact) {
   conv=false;
 }
 
-TaskCtrlActivity::~TaskCtrlActivity(){
+ControlActivity::~ControlActivity(){
   taskController->ctrlTasks.set()->removeValue(task);
   delete task;
   delete map;
 }
 
-void TaskCtrlActivity::step(double dt){
+void ControlActivity::step(double dt){
   activityTime += dt;
 
   stepControl(dt);
