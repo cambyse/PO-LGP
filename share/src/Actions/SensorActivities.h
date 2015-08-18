@@ -7,7 +7,7 @@
 
 // ============================================================================
 /**
- * A SensorActivityABC (an ABC) listens to sensor data and adds symbols to the relational machine.
+ * A SensorActivity listens to sensor data and adds symbols to the relational machine.
  *
  * Braindump: what kind of sensor stuff
  * - thresholds
@@ -24,8 +24,12 @@
  * - anything gripper specific?
  */
 struct SensorActivity : Activity {
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(MT::String, effects);
+
+  // the taskConcroller is a quick and dirtyr way to access ACCESS variables
+  struct TaskControllerModule *taskController;
+  // TODO don't use the TaskControllerModule to access the variable anymore
+  // ACCESS(CtrlMsg, ctrl_obs);
+  // ACCESS(MT::String, effects);
 
   bool _isTriggered;
   double _threshold;
