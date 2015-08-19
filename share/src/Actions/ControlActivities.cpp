@@ -4,15 +4,15 @@
 #include "ControlActivityManager.h"
 
 
-extern ControlActivityManager *controlActivitiManager();
+extern ControlActivityManager *controlActivityManager();
 
 //===========================================================================
 void ControlActivity::configure(Node *fact) {
   Activity::configure(fact);
 
   // ControlActivity specific stuff
-  controlManager = controlActivitiManager();
-  CHECK(controlManager, "controlActivitiManager() did not return anything. Why?");
+  controlManager = controlActivityManager();
+  CHECK(controlManager, "controlActivityManager() did not return anything. Why?");
 
   Graph *specs = getSpecsFromFact(fact);
   configureControl(name, *specs, controlManager->modelWorld.set());

@@ -25,9 +25,9 @@
  */
 struct SensorActivity : Activity {
 
-  // the taskConcroller is a quick and dirtyr way to access ACCESS variables
-  struct ControlActivityManager *controlActivitiManager;
-  // TODO don't use the TaskControllerModule to access the variable anymore
+  // the ControlActivityManager is a quick and dirty way to access ACCESS variables
+  struct ControlActivityManager *cam;
+  // TODO don't use the ControlActivitiManager to access the variable anymore
   // ACCESS(CtrlMsg, ctrl_obs);
   // ACCESS(MT::String, effects);
 
