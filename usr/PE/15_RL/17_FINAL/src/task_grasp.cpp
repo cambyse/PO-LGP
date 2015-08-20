@@ -3,7 +3,7 @@
 #include <Motion/pr2_heuristics.h>
 #include "../../src/plotUtil.h"
 
-void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
+void GraspTask::addConstraints(MotionProblem *MP, const arr &X)
 {
   TrajFactory tf;
   arr yC1,yC2;
@@ -21,7 +21,7 @@ void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
 
 }
 
-void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
+void GraspTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,constraintCP(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,constraintCP(0),constraintCP(1));
   drawLine(world,X,Pdemo2f,"endeffC2",0,0,constraintCP(0));
@@ -30,26 +30,29 @@ void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
   /// draw demo
 }
 
-void DoorTask::computeConstraintTime(const arr &Z) {
-  constraintTime = zeros(Z.d0); constraintTime.flatten();
-  for (uint t=0;t<Z.d0;t++){
-    if(fabs(Z(t,5))> MT::getParameter<double>("contact_threshold")) {
-//      constraintTime(t) = 1.;
+void GraspTask::computeConstraintTime(const arr &F,const arr &X) {
+  constraintTime = zeros(F.d0); constraintTime.flatten();
+  uint qIdx = world->getJointByName("l_gripper_joint")->qIndex;
+  for (uint t=0;t<F.d0;t++){
+    if(fabs(X(t,qIdx)) < MT::getParameter<double>("grasp_threshold")) {
+      constraintTime(t) = 1.;
       constraintTime.subRange(t-5,t) = 1.;
+//      break;
     }
   }
-  constraintCP = ARR(constraintTime.findValue(1.),Z.d0); constraintCP.flatten();
-
+  constraintTime(constraintTime.d0-1) = 1.;
+  constraintCP = ARR(constraintTime.findValue(1.),F.d0); constraintCP.flatten();
 
   cout << "constraintTime: " << constraintTime << endl;
   cout << "constraintCP: " << constraintCP << endl;
 }
 
-bool DoorTask::success(const arr &X, const arr &Y) {
-  return length(X[X.d0-1] - Y[Y.d0-1])<0.03;
+bool GraspTask::success(const arr &X, const arr &Y) {
+  cout << catCol(X,Y) << endl;
+  return length(X[X.d0-1] - Y[Y.d0-1])<0.06;
 }
 
-bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
+bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
   tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC1"));
@@ -136,7 +139,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   MotionProblemFunction MPF(MP);
   Xn = Xdemo;
   OptOptions o;
-  o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=1;
+  o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
   optConstrainedMix(Xn, NoArr, Convert(MPF), o);
 
   // augment gripper joints
@@ -161,6 +164,6 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   }
 }
 
-double DoorTask::reward(const arr &Z){
-  return -sumOfAbs(Z)/Z.d0;
+double GraspTask::reward(const arr &Z){
+  return exp(-.2*sumOfAbs(Z)/Z.d0);
 }

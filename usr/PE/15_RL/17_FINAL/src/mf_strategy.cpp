@@ -1,6 +1,6 @@
 #include "mf_strategy.h"
 
-MF_strategy::MF_strategy(uint nParam_,arr &paramLim_):nParam(nParam_),paramLim(paramLim_)
+MF_strategy::MF_strategy(uint nParam_,arr &paramLim_,MT::String taskName):nParam(nParam_),paramLim(paramLim_)
 {
   if (!(ep = engOpen(""))) {
     fprintf(stderr, "\nCan't start MATLAB engine\n");
@@ -16,7 +16,7 @@ MF_strategy::MF_strategy(uint nParam_,arr &paramLim_):nParam(nParam_),paramLim(p
   engPutVariable(ep, "paramLim", paramLim_M);
   engEvalString(ep, "paramLim = paramLim'");
 
-  engEvalString(ep, "run ../src/matlab_interface/init_interface");
+  engEvalString(ep,STRING("run ../src/matlab_interface/"<<taskName<<"Defs.m"));
   printf("%s", buffer);
 }
 
@@ -32,7 +32,7 @@ void MF_strategy::addDatapoint(arr x, arr y, arr ys)
   YS.append(~ys);
 }
 
-void MF_strategy::evaluate(arr &x_n)
+void MF_strategy::evaluate(arr &x_exp)
 {
   // send datapoints to matlab
   mxArray *X_M = mxCreateDoubleMatrix(X.d1, X.d0, mxREAL);
@@ -52,14 +52,13 @@ void MF_strategy::evaluate(arr &x_n)
   mxDestroyArray(YS_M);
 
   // evaluate gp for next datapoint
-  engEvalString(ep, "run ../src/matlab_interface/evaluate");
-
+  engEvalString(ep, "run ../src/matlab_interface/constraintExploration.m");
+  engEvalString(ep, "run ../src/matlab_interface/constraintExplorationPlot.m");
 
   // get next datapoint from matlab
-  x_n.resize(nParam);
-  engEvalString(ep, "x_n=x_n'");
-  mxArray *result = engGetVariable(ep,"x_n");
-  x_n.p = mxGetPr(result);
+  x_exp.resize(nParam);
+  mxArray *result = engGetVariable(ep,"x_exp");
+  x_exp.p = mxGetPr(result);
 
   printf("%s", buffer);
 }

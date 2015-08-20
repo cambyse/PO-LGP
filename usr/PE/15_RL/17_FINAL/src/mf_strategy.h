@@ -7,7 +7,7 @@
 #include <Motion/taskMaps.h>
 #include <Algo/MLcourse.h>
 
-#include "/usr/local/MATLAB/R2013a/extern/include/engine.h"
+#include "/usr/local/MATLAB/R2015a/extern/include/engine.h"
 #define  BUFSIZE 512
 
 
@@ -20,10 +20,10 @@ struct MF_strategy
   char buffer[BUFSIZE+1];
 
   double mu;
-  MF_strategy(uint nParam_, arr &paramLim_);
+  MF_strategy(uint nParam_, arr &paramLim_, MT::String taskName);
   ~MF_strategy();
   void addDatapoint(arr x,arr y, arr ys);
-  void evaluate(arr &x_n);
+  void evaluate(arr &x_exp);
 
   void save(MT::String folder);
   void load(MT::String folder);

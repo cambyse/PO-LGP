@@ -8,9 +8,17 @@
 #include <geometry_msgs/WrenchStamped.h>
 
 //===========================================================================
-
 void rosCheckInit(){
-  ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
+// TODO make static variables to singleton
+  static Mutex mutex;
+  static bool inited = false;
+
+  mutex.lock();
+  if(!inited) {
+    ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
+    inited = true;
+  }
+  mutex.unlock();
 }
 
 bool rosOk(){

@@ -7,12 +7,12 @@
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
 #include <System/engine.h>
-#include "../../src/plotUtil.h"
 #include "../../src/phase_optimization.h"
 #include "../../src/traj_factory.h"
 #include "../src/mb_strategy.h"
 #include "../src/motion_interface.h"
 #include "../src/task_manager.h"
+#include "../../src/plotUtil.h"
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
@@ -20,37 +20,42 @@ int main(int argc,char **argv){
   bool visualize = MT::getParameter<bool>("visualize");
   double duration = MT::getParameter<double>("duration");
   MT::String folder = MT::getParameter<MT::String>("folder");
+  MT::String taskName = MT::getParameter<MT::String>("taskName");
+
 
   ors::KinematicWorld world(STRING("../model.kvg"));
-  DoorTask *task = new DoorTask(world);
+  TaskManager *task;
+  if (taskName == "door") {
+    task = new DoorTask(world);
+  } else if (taskName == "grasp") {
+    task = new GraspTask(world);
+  }
+
+
   Motion_Interface *mi;
   if (useRos) mi = new Motion_Interface(world);
-
+  world.gl().resize(800,800);
   arr Xreverse;
   uint count;
 
   /// ----- load demonstration ---------------------------
   arr Xdemo,Fdemo,Mdemo;
   if (MT::getParameter<bool>("loadDemoFromFile")) {
-    Xdemo << FILE(STRING(folder<<"/Xmb.dat"));
+    Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
     Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
-
-//    Xdemo << FILE(STRING(folder<<"/mbX.dat"));
-//    Fdemo << FILE(STRING(folder<<"/mbFLact.dat"));
-//    Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
-//    count = 15;
-
   } else {
     mi->recordDemonstration(Xdemo,duration);
-    if (visualize) displayTrajectory(Xdemo,-1,world,"demonstration ");
-    world.watch(true);
+
+    if (visualize) { world.watch(true,"Press Enter to play motion"); displayTrajectory(Xdemo,-1,world,"demonstration "); world.watch(true,"Press Enter to continue"); }
     mi->gotoPosition(Xdemo[0]);
-    mi->executeTrajectory(Xdemo,duration);
+    mi->executeTrajectory(Xdemo,duration,true);
+
 
     Xdemo = mi->Xact;
     Fdemo = mi->FLact;
     Mdemo = mi->Mact;
+
     write(LIST<arr>(Xdemo),STRING(folder<<"/Xdemo.dat"));
     write(LIST<arr>(Fdemo),STRING(folder<<"/Fdemo.dat"));
     write(LIST<arr>(Mdemo),STRING(folder<<"/Mdemo.dat"));
@@ -62,7 +67,7 @@ int main(int argc,char **argv){
 
 
   /// compute contact phase
-  task->computeConstraintTime(Fdemo);
+  task->computeConstraintTime(Fdemo,Xdemo);
 
   arr x0 = Xdemo[0];
   arr X = Xdemo;
@@ -93,7 +98,7 @@ int main(int argc,char **argv){
     }
 
     /// execute trajectory on robot
-    if (useRos) mi->executeTrajectory(Xn,duration);
+    if (useRos) mi->executeTrajectory(Xn,duration,true);
 
     /// evaluate cost function
     bool result;
@@ -106,8 +111,7 @@ int main(int argc,char **argv){
         X = Xn;
         mi->logging(STRING(folder<<"/mb"),count);
         if (useRos) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
-      } else { break; }
-
+      } else { mi->sendZeroGains(); }
     }else{
       write(LIST<arr>(X),STRING(folder<<"/mbX.dat"));
       write(LIST<arr>(X),STRING(folder<<"/mbX"<<count<<".dat"));

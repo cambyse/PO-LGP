@@ -7,7 +7,7 @@
 #include <iomanip>
 
 
-#include "/usr/local/MATLAB/R2013a/extern/include/engine.h"
+#include "/usr/local/MATLAB/R2015a/extern/include/engine.h"
 #define  BUFSIZE 512
 
 void TEST(Matrices) {
@@ -238,9 +238,9 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 //  testMatrices();
 //  testGradCheck();
-//  testMatlab();
+  testMatlab();
 //  testMatlabGP();
-  testTransformation();
+//  testTransformation();
   return 0;
 }
 

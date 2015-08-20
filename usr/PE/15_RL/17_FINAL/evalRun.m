@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['data/door2/'];
+folder = ['data/door3/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -16,7 +16,7 @@ cDemo = sum(sum(compVel(Xdemo,1).^2))/T;
 varList = {
   'mbXdes','mbXact';...
 %   'mfXdes','mfXact';...
-  'phaseXdes','phaseXact';...
+%   'phaseXdes','phaseXact';...
  % 'mfFLact','mfUact';...
 %  'mfUact';...
 };
@@ -42,12 +42,13 @@ for v = 1:size(varList,1)
 end
 
 
+return;
 %% eval model free part
 Y = Y - min(Y);
 [~,idxOpt] = max(Y(YS==1));
 figure(9);clf;hold on;
 plot3(X(YS==1,1),X(YS==1,2),Y(YS==1),'b.')
-plot3(X(YS==-1,1),X(YS==-1,2),0*Y(YS==-1)+13,'r.')
+plot3(X(YS==-1,1),X(YS==-1,2),0*Y(YS==-1)+max(Y(YS==1)),'r.')
 plot3(X(idxOpt,1),X(idxOpt,2),Y(idxOpt),'g.','MarkerSize',30)
 
 addpath('/home/englerpr/Dropbox/research/code/gpml/');

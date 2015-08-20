@@ -63,12 +63,12 @@ struct DynamicMovementPrimitives {
 
   arr y_ref; // Reference trajectory
 
+  arr PHI; // basis function activation
+
   // bookkeeping
   arr y_bk;
   arr yd_bk;
   arr x_bk;
-
-
 };
 
 #endif // DYNAMICMOVEMENTPRIMITIVES_H

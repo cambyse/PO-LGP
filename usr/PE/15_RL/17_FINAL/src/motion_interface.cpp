@@ -9,6 +9,15 @@ Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
   world->q = world_.q;
   engine().open(S);
 
+  useBase = false;
+  useTorso = false;
+
+  if (!useBase) {
+    world->getJointByName("worldTranslationRotation")->H = 3000000;
+    world->getJointByName("torso_lift_joint")->H = 3000000;
+  }
+
+
   //-- wait for first q observation!
   cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   for(;;){
@@ -32,40 +41,77 @@ Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
   world->setJointState(q, qdot);
 }
 
+void Motion_Interface::setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
+  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
+  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
 
-void Motion_Interface::executeTrajectory(arr &X, double T)
+  double angle;
+  ors::Vector rotvec;
+  quat.getRad(angle, rotvec);
+  q(qIndex+0) = pos(0);
+  q(qIndex+1) = pos(1);
+  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+}
+
+void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 {
   double dt = T/X.d0;
   Xref = X;
   arr Xdot;
   getVel(Xdot,X,dt);
+  write(LIST<arr>(Xdot),"Xdot");
+  write(LIST<arr>(X),"X");
 
   MT::Spline XS(X.d0,X);
   MT::Spline XdotS(Xdot.d0,Xdot);
 
   Tact.clear(); Xdes.clear(); Xact.clear(); FLact.clear(); Uact.clear(); Mact.clear();
 
+  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
+  ors::Joint *torso = world->getJointByName("torso_lift_joint");
+
+  arr q_real;
+  q_real = S.ctrl_obs.get()->q;
+
   MT::timerStart(true);
   CtrlMsg refs;
   double t = 0.;
   double t_last = -dt;
+
   while(t<T){
     double s = t/T;
     refs.q = XS.eval(s);
-    refs.qdot=XdotS.eval(s)*1.;
-    refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex) = 0.;
-    refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex+1) = 0.;
-    refs.qdot(world->getJointByName("worldTranslationRotation")->qIndex+2) = 0.;
+    refs.qdot=XdotS.eval(s);
+
+    /// base
+    if (useBase) {
+      q_real = S.ctrl_obs.get()->q;
+      setOdom(q_real, trans->qIndex, S.pr2_odom.get());
+      double gain = 0.75;
+      refs.qdot(trans->qIndex) += gain*(refs.q(trans->qIndex+0)-q_real(trans->qIndex+0));
+      refs.qdot(trans->qIndex+1) += gain*(refs.q(trans->qIndex+1)-q_real(trans->qIndex+1));
+      refs.qdot(trans->qIndex+2) += gain*(refs.q(trans->qIndex+2)-q_real(trans->qIndex+2));
+    } else {
+      refs.qdot(trans->qIndex) = 0.;
+      refs.qdot(trans->qIndex+1) = 0.;
+      refs.qdot(trans->qIndex+2) = 0.;
+    }
+
+    /// torso
+    if (!useTorso) {
+      refs.q(torso->qIndex) = q_real(torso->qIndex);
+      refs.qdot(torso->qIndex) = 0.;
+    }
 
     refs.fL = zeros(6);
     refs.Ki.clear();
     refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kp = 1.5;
+    refs.Kp = 2.0;
     refs.Kd = 1.2;
-    refs.Kint = .003;
+    refs.Kint = .7;
     refs.gamma = 1.;
-    refs.velLimitRatio = .1;
+    refs.velLimitRatio = .2;
     refs.effLimitRatio = 1.;
     refs.intLimitRatio = 1.5;
     S.ctrl_ref.set() = refs;
@@ -74,15 +120,18 @@ void Motion_Interface::executeTrajectory(arr &X, double T)
 
     if (t-t_last >= dt){
       t_last = t;
-      Tact.append(ARR(t));
-      Xdes.append(~refs.q);
-      Xact.append(~S.ctrl_obs.get()->q);
-      FLact.append(~S.ctrl_obs.get()->fL);
-      Uact.append(~S.ctrl_obs.get()->u_bias);
 
-      markers = S.ar_pose_marker.get();
-      syncMarkers(*world, markers);
-      Mact.append(~ARRAY(world->getBodyByName("marker4")->X.pos));
+      if (recordData) {
+        Tact.append(ARR(t));
+        Xdes.append(~refs.q);
+        Xact.append(~S.ctrl_obs.get()->q);
+        FLact.append(~S.ctrl_obs.get()->fL);
+        Uact.append(~S.ctrl_obs.get()->u_bias);
+
+        markers = S.ar_pose_marker.get();
+        syncMarkers(*world, markers);
+        Mact.append(~ARRAY(world->getBodyByName("marker4")->X.pos));
+      }
     }
   }
 
@@ -94,6 +143,10 @@ void Motion_Interface::gotoPosition(arr x)
   MP.T = 100;
   MP.tau = 0.05;
   MP.x0 = S.ctrl_obs.get()->q;
+
+  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
+  if (useBase) { setOdom(MP.x0, trans->qIndex, S.pr2_odom.get()); }
+
 
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(*world));
@@ -109,13 +162,13 @@ void Motion_Interface::gotoPosition(arr x)
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
   optConstrainedMix(X, NoArr, Convert(MPF), o);
-  //  displayTrajectory(X,-1,*world,"demo");
+
   executeTrajectory(X,MP.T*MP.tau);
 }
 
 void Motion_Interface::recordDemonstration(arr &X,double T)
 {
-  MT::wait(5.);
+  MT::wait(10.);
 
   /// send zero gains
   CtrlMsg refs;
@@ -125,23 +178,36 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
   refs.Ki.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q.N);
-  refs.Kp = 0.;
+  refs.Kp = zeros(q.N,q.N); // = 0.;
   refs.Kd = 0.;
   refs.Kint.clear();
   refs.gamma = 1.;
   refs.velLimitRatio = .1;
   refs.effLimitRatio = 1.;
   refs.intLimitRatio = 1.5;
+
+  // fix head joint
+  uint idx = world->getJointByName("head_pan_joint")->qIndex;
+  refs.Kp(idx,idx) = 1.;
+  idx = world->getJointByName("head_tilt_joint")->qIndex;
+  refs.Kp(idx,idx) = 1.;
+
+
   S.ctrl_ref.set() = refs;
+
+
 
   MT::wait(2.);
   cout << "start recording" << endl;
+  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
 
   /// record demonstrations
   double t = 0.;
   MT::timerStart(true);
   while(t<T) {
-    X.append(~S.ctrl_obs.get()->q);
+    arr q = S.ctrl_obs.get()->q;
+    if (useBase) {setOdom(q, trans->qIndex, S.pr2_odom.get());}
+    X.append(~q);
     MT::wait(0.1);
     t = t + MT::timerRead(true);
   }
@@ -150,13 +216,14 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
   /// reset gains
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
-  refs.Kp = 1.5;
+  refs.Kp.clear();
+  refs.Kp = ARR(1.5);
   refs.Kd = 1.2;
   refs.Kint = ARR(.003);
   S.ctrl_ref.set() = refs;
 }
 
-void Motion_Interface::sendZeroGains(double T)
+void Motion_Interface::sendZeroGains()
 {
   cout << "sending zero gains" << endl;
 
@@ -177,8 +244,7 @@ void Motion_Interface::sendZeroGains(double T)
   refs.intLimitRatio = .1;
   S.ctrl_ref.set() = refs;
 
-  //  MT::wait(T);
-  world->watch(true);
+  world->watch(true,"press button to reset gains");
 
   cout << "resetting gains" << endl;
   /// reset gains

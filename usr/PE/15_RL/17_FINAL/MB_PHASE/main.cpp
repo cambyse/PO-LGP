@@ -20,9 +20,16 @@ int main(int argc,char **argv){
   bool visualize = MT::getParameter<bool>("visualize");
   double duration = MT::getParameter<double>("duration");
   MT::String folder = MT::getParameter<MT::String>("folder");
+  MT::String taskName = MT::getParameter<MT::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
-  DoorTask *task = new DoorTask(world);
+  TaskManager *task;
+  if (taskName == "door") {
+    task = new DoorTask(world);
+  } else if (taskName == "grasp") {
+    task = new GraspTask(world);
+  }
+
   Motion_Interface *mi;
   if (useRos) mi = new Motion_Interface(world);
 
@@ -32,7 +39,7 @@ int main(int argc,char **argv){
   FLdemo << FILE(STRING(folder<<"/mbFLact.dat"));
   arr x0 = Xdemo[0];
 
-  task->computeConstraintTime(FLdemo);
+  task->computeConstraintTime(FLdemo,Xdemo);
 
   world.gl().resize(800,800);
   task->updateVisualization(world,Xdemo);
@@ -60,12 +67,10 @@ int main(int argc,char **argv){
     if (useRos) mi->gotoPosition(x0);
 
     /// execute trajectory on robot
-    if (useRos) mi->executeTrajectory(Xn,duration);
+    if (useRos) mi->executeTrajectory(Xn,duration,true);
 
     /// evaluate cost function
     bool result;
-//    cout << "Enter result:  success [1] or failure [0]: "<<endl;
-    //    std::cin >> result;
     result = task->success(mi->Mact, Mdemo);
     cout << "result: " << result << endl;
 

@@ -25,6 +25,7 @@ int main(int argc,char **argv){
   bool visualize = MT::getParameter<bool>("visualize");
   double duration = MT::getParameter<double>("duration");
   MT::String folder = MT::getParameter<MT::String>("folder");
+  MT::String taskName = MT::getParameter<MT::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
   Motion_Interface *mi;
@@ -36,7 +37,7 @@ int main(int argc,char **argv){
   FLdemo << FILE(STRING(folder<<"/phaseFLact.dat"));
   Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
 
-  task->computeConstraintTime(FLdemo);
+  task->computeConstraintTime(FLdemo,Xdemo);
 
   world.gl().resize(800,800);
   task->updateVisualization(world,Xdemo);
@@ -45,8 +46,8 @@ int main(int argc,char **argv){
   /// initialize model free strategy
   arr paramLim;
   paramLim.append(~ARR(-0.04,0.04)); // hand opening
-  paramLim.append(~ARR(-0.1,0.1)); // hand position
-  MF_strategy *mfs = new MF_strategy(2,paramLim);
+  paramLim.append(~ARR(-0.12,0.12)); // hand position
+  MF_strategy *mfs = new MF_strategy(2,paramLim,taskName);
   arr x0 = Xdemo[0];
 
   arr Xreverse, x, Xn;
@@ -58,14 +59,14 @@ int main(int argc,char **argv){
 
     task->transformTrajectory(Xn,x,Xdemo);
     if (useRos) {
-      mi->gotoPosition(x0); mi->executeTrajectory(Xn,duration);
-      Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
+      mi->gotoPosition(x0); mi->executeTrajectory(Xn,duration,true);
       y = task->reward(mi->FLact);
       ys = 1.;
+      Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
     } else {y = task->reward(Xn); ys = 1.;}
 
     mfs->addDatapoint(x,ARR(y),ARR(ys));
-    cout << x <<" "<<y<<" "<<ys << endl;
+    cout <<"x = "<< x <<"   | y = "<<y<<"   | ys = "<<ys << endl;
 
     count = 0;
   } else {
@@ -84,9 +85,9 @@ int main(int argc,char **argv){
 
     if (visualize) {
       task->updateVisualization(world,Xn);
-//      world.watch(true,"press enter to visualize trajectory");
+      world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
-//      world.watch(true,"press enter to execute candidate");
+      world.watch(true,"press enter to execute candidate");
     }
     x0 = Xn[0];
 
@@ -95,7 +96,7 @@ int main(int argc,char **argv){
       /// goto iniitial position
       mi->gotoPosition(x0);
       /// execute trajectory on robot
-      mi->executeTrajectory(Xn,duration);
+      mi->executeTrajectory(Xn,duration,true);
       /// evaluate cost functions
       if (result) result = task->success(mi->Mact, Mdemo);
       y = task->reward(mi->FLact);
@@ -113,14 +114,12 @@ int main(int argc,char **argv){
 
     /// logging
     mfs->save(STRING(folder<<"/"));
-    if (useRos) {
-      mi->logging(STRING(folder<<"/mf"),count);
-    }
+    if (useRos) { mi->logging(STRING(folder<<"/mf"),count); }
 
     if (result) {
       if (useRos) {Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
     } else {
-      if (useRos) {mi->sendZeroGains(20.);}
+      if (useRos) {mi->sendZeroGains();}
     }
 
     count++;

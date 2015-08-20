@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['data/door2/'];
+folder = ['data/door3/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -36,8 +36,8 @@ end
 
 figure(1);clf;hold on;
 plot(0,(cDemo),'.g');
-plot(1:length(cMB),(cMB));
-plot(1:length(cMBact),(cMBact),'r');
+plot(1:length(cMB),(cMB),'b.-');
+plot(1:length(cMBact),(cMBact),'r.-');
 
 plot(length(cMB)+1:length(cMB)+length(cPhase),(cPhase),'r--');
 plot(length(cMB)+1:length(cMB)+length(cPhase),(cPhaseAct),'b--');
