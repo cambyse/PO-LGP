@@ -47,16 +47,13 @@ PDExecutor::PDExecutor()
   if(MT::getParameter<bool>("usePositionL", false)) {
     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
     effPosL->y_ref = {0.8, .5, 1.};
-    //effPosL->f_ref = {5.,5.,5.};
-    //effPosL->f_Igain = .05;
-    //effPosL->maxVel = 0.004;
   }
   if(MT::getParameter<bool>("fc", false)) {
     fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
     fc->y_ref ={0.8,0.5,1.}; 
-    fc->f_ref = {5.,5.,5.};
-    fc->f_Igain = .08;
-    fc->active = false;
+    fc->f_ref = {15.,15.,15.};
+    fc->f_Igain = .075;
+    fc->active = true;
   }
 
   if(MT::getParameter<bool>("useGripperR", false)) {
@@ -122,7 +119,7 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
   q(qIndex+2) = MT::sign(rotvec(2)) * angle;
-  cout<<q<<endl;
+//  cout<<q<<endl;
 }
 
 
@@ -203,7 +200,7 @@ void PDExecutor::step()
             effOrientationL->active = true;
             gripperL->active = true;
             gripperR->active = false;
-      //      fc->active = true;
+            fc->active = true;
             base->active =true;
         }
         else
@@ -214,7 +211,7 @@ void PDExecutor::step()
             effOrientationL->active = true;
             gripperL->active = true;
             gripperR->active = true;
-        //    fc->active = true;
+            fc->active = true;
             base->active =true;
         }
     }
@@ -341,7 +338,7 @@ void PDExecutor::step()
         ref.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
         ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
    }
-/*    if(useros)
+    if(useros)
     {
         uint count=0;
         //ctrlTasks.readAccess();
@@ -373,9 +370,9 @@ void PDExecutor::step()
         // ctrlTasks.deAccess();
     
         //-- send the computed movement to the robot
-        cout<<"error"<<error<<endl;
+       // cout<<"error"<<error<<endl;
        // ctrl_ref.set() = ref;
-    }*/
+    }
   
   ctrl_ref.set() = ref;
 
