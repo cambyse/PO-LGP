@@ -350,20 +350,12 @@ int main(int argn, char ** args) {
         auto seed = time(nullptr);
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL_ONLINE" ||
-           mode_arg.getValue()!="EVAL_ROOT_ACTION") {
-            cout << "Using seed: " << seed << endl;
-        } else {
-            cout << "# random seed: " << seed << endl;
-        }
+        cout << "# using given random seed: " << seed << endl;
     } else {
         auto seed = random_seed_arg.getValue();
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL_ONLINE" ||
-           mode_arg.getValue()!="EVAL_ROOT_ACTION") {
-            cout << "# random seed: " << seed << endl;
-        }
+        cout << "# random seed: " << seed << endl;
     }
 
     // different modes

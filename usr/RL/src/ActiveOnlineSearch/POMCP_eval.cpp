@@ -16,6 +16,7 @@
 #include "Environment/BottleneckEnvironment.h"
 #include "Environment/VarianceEnvironments.h"
 #include "Environment/MC_versus_DP.h"
+#include "Environment/Stochastic1D.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 #include "../../../../share/src/POMCP/mcts.h"
 
@@ -38,18 +39,16 @@ typedef AbstractEnvironment::observation_handle_t observation_t;
 typedef AbstractEnvironment::reward_t             reward_t;
 
 static const std::set<std::string> mode_set = {"WATCH",
-                                               "EVAL"};
-static const std::set<std::string> environment_set = {//"TightRope",
-                                                      //"DynamicTightRope",
-                                                      "GamblingHall",
+                                               "EVAL_ONLINE",
+                                               "EVAL_ROOT_ACTION"};
+static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "FOL",
                                                       "SimpleEnvironment",
                                                       "BottleneckEnvironment",
                                                       "DLVSOR",
                                                       "LVSOR",
-                                                      "MCVSDP"
-                                                      //"DelayedUncertainty",
-                                                      //"UnitTest"
+                                                      "MCVSDP",
+                                                      "Stochastic1D"
 };
 
 // the command line arguments
@@ -108,7 +107,7 @@ namespace std {
         out << "PARAMS(";
         out << "Verbose=" << params.Verbose << ";";
         out << "MaxDepth=" << params.MaxDepth << ";";
-        if(mode_arg.getValue()=="EVAL") {
+        if(mode_arg.getValue()=="EVAL_ONLINE" || mode_arg.getValue()=="EVAL_ROOT_ACTION") {
             out << "NumSimulations='number of roll-outs';";
         } else {
             out << "NumSimulations=" << params.NumSimulations << ";";
@@ -165,18 +164,12 @@ int main(int argn, char ** args) {
         auto seed = time(nullptr);
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL") {
-            cout << "Using seed: " << seed << endl;
-        } else {
-            cout << "# random seed: " << seed << endl;
-        }
+        cout << "# using given random seed: " << seed << endl;
     } else {
         auto seed = random_seed_arg.getValue();
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL") {
-            cout << "# random seed: " << seed << endl;
-        }
+        cout << "# random seed: " << seed << endl;
     }
 
     // different modes
@@ -217,7 +210,7 @@ int main(int argn, char ** args) {
                 getchar();
             }
         }
-    } else if(mode_arg.getValue()=="EVAL") {
+            } else if(mode_arg.getValue()=="EVAL_ONLINE") {
         // print header
         if(!no_header_arg.getValue()) {
             cout << "mean reward,number of roll-outs,run,method" << endl;
@@ -256,7 +249,6 @@ int main(int argn, char ** args) {
                 while(!environment->is_terminal_state()) {
                     // planning
                     environment->reset_state();
-                    pomcp.UCTSearch();
                     int best_action_idx = pomcp.SelectAction();
                     // make a transition
                     environment->reset_state();
@@ -287,6 +279,55 @@ int main(int argn, char ** args) {
                 {
                     cout << QString("%1,%2,%3,").
                         arg(reward_sum/step).
+                        arg(sample).
+                        arg(run);
+                    cout << "POMCP(Environment=" << *environment << ";parameters=" <<
+                        SearchParams << ";)" << endl;
+                }
+            }
+        }
+    } else if(mode_arg.getValue()=="EVAL_ROOT_ACTION") {
+        // print header
+        if(!no_header_arg.getValue()) {
+            cout << "mean reward,number of roll-outs,run,method" << endl;
+        }
+        // limit number of threads if required
+        if(threads_arg.getValue()>0) {
+            omp_set_num_threads(threads_arg.getValue());
+        }
+        int run_n = run_n_arg.getValue();
+        int run_start = run_start_arg.getValue();
+        int sample_n = sample_n_arg.getValue();
+        int sample_max = sample_max_arg.getValue();
+        if(sample_max<0) sample_max = sample_n;
+        int sample_incr = sample_incr_arg.getValue();
+#ifdef USE_OMP
+#pragma omp parallel for schedule(dynamic,1) collapse(2)
+#endif
+        // several runs
+        for(int run=run_start; run<run_start+run_n; ++run) {
+
+            // with one trial for a different number of samples
+            for(int sample=sample_n; sample<=sample_max; sample+=sample_incr) {
+
+                // set up
+                shared_ptr<AbstractEnvironment> environment = get_environment();
+                auto SearchParams = get_params(sample);
+                MCTS pomcp(environment, SearchParams);
+                pomcp.SetDiscount(discount_arg.getValue());
+                action_t action;
+                // planning
+                environment->reset_state();
+                int best_action_idx = pomcp.SelectAction();
+                // make a transition
+                environment->reset_state();
+                assert(!environment->is_terminal_state());
+                action = environment->get_actions()[best_action_idx];
+#ifdef USE_OMP
+#pragma omp critical (MCTS)
+#endif
+                {
+                    cout << *action << QString(",	%2,	%3,	").
                         arg(sample).
                         arg(run);
                     cout << "POMCP(Environment=" << *environment << ";parameters=" <<
@@ -333,6 +374,8 @@ shared_ptr<AbstractEnvironment> get_environment() {
         environment.reset(new LowVarianceSubOptimalReward());
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
+    } else if(environment_arg.getValue()=="Stochastic1D") {
+        environment.reset(new Stochastic1D());
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
