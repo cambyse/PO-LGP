@@ -70,7 +70,8 @@ static std::ofstream log_file;
 static Commander::CommandCenter commander;
 
 static const std::set<std::string> mode_set = {"WATCH",
-                                               "EVAL",
+                                               "EVAL_ONLINE",
+                                               "EVAL_ROOT_ACTION",
                                                "PLAY"};
 static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "FOL",
@@ -349,7 +350,8 @@ int main(int argn, char ** args) {
         auto seed = time(nullptr);
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL") {
+        if(mode_arg.getValue()!="EVAL_ONLINE" ||
+           mode_arg.getValue()!="EVAL_ROOT_ACTION") {
             cout << "Using seed: " << seed << endl;
         } else {
             cout << "# random seed: " << seed << endl;
@@ -358,7 +360,8 @@ int main(int argn, char ** args) {
         auto seed = random_seed_arg.getValue();
         srand(seed);
         srand48(seed);
-        if(mode_arg.getValue()!="EVAL") {
+        if(mode_arg.getValue()!="EVAL_ONLINE" ||
+           mode_arg.getValue()!="EVAL_ROOT_ACTION") {
             cout << "# random seed: " << seed << endl;
         }
     }
@@ -435,7 +438,7 @@ int main(int argn, char ** args) {
         if(watch_progress_arg.getValue()>=1 && graphics_arg.getValue()) {
             plot_graph(search_tree);
         }
-    } else if(mode_arg.getValue()=="EVAL") {
+    } else if(mode_arg.getValue()=="EVAL_ONLINE") {
         // print header
         if(!no_header_arg.getValue()) {
             cout << "mean reward,number of roll-outs,run,method" << endl;
@@ -518,6 +521,66 @@ int main(int argn, char ** args) {
                 {
                     cout << QString("%1,%2,%3,").
                         arg(reward_sum/step).
+                        arg(sample).
+                        arg(run);
+                    if(method_string=="") {
+                        cout << *search_tree;
+                    } else {
+                        cout << method_string;
+                    }
+                    cout << endl;
+                }
+            }
+        }
+    } else if(mode_arg.getValue()=="EVAL_ROOT_ACTION") {
+        // print header
+        if(!no_header_arg.getValue()) {
+            cout << "action,	number of roll-outs,	run,	method" << endl;
+        }
+        QString method_string = "";
+        if(active_arg.getValue()) {
+            method_string = "ACTIVE";
+        } else if(random_arg.getValue()) {
+            method_string = "RANDOM";
+        }
+        // limit number of threads if required
+        if(threads_arg.getValue()>0) {
+            omp_set_num_threads(threads_arg.getValue());
+        }
+        int run_n = run_n_arg.getValue();
+        int run_start = run_start_arg.getValue();
+        int sample_n = sample_n_arg.getValue();
+        int sample_max = sample_max_arg.getValue();
+        if(sample_max<0) sample_max = sample_n;
+        int sample_incr = sample_incr_arg.getValue();
+#ifdef USE_OMP
+#pragma omp parallel for schedule(dynamic,1) collapse(2)
+#endif
+        // several runs
+        for(int run=run_start; run<run_start+run_n; ++run) {
+
+            // with one trial for a different number of samples
+            for(int sample=sample_n; sample<=sample_max; sample+=sample_incr) {
+
+                DEBUG_OUT(1, "run # " << run << ", samples: " << sample);
+
+                // set up
+                RETURN_TUPLE(shared_ptr<AbstractSearchTree>, search_tree,
+                             shared_ptr<AbstractEnvironment>, environment) = setup();
+                // initialize tree
+                search_tree->init();
+                // build tree
+                repeat(sample) {
+                    search_tree->next();
+                }
+                // get action
+                auto action = search_tree->recommend_action();
+                // write log
+#ifdef USE_OMP
+#pragma omp critical (MCTS)
+#endif
+                {
+                    cout << *action << QString(",	%2,	%3,	").
                         arg(sample).
                         arg(run);
                     if(method_string=="") {
@@ -730,6 +793,7 @@ shared_ptr<TreePolicy> get_policy(int type) {
         policy_str = backup_policy_arg.getValue();
         break;
     default:
+        temperature = 0;
         DEBUG_DEAD_LINE;
     }
     if(policy_str=="UCB1") {
