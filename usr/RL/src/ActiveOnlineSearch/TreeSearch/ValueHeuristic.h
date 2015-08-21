@@ -62,6 +62,12 @@ namespace value_heuristic {
         virtual void write(std::ostream & out) const override{out<<"RolloutStatistics(discount="<<discount<<")";}
     protected:
         double _prior_counts;
+        /** If false the variance is computed as the mean squared deviation from
+         * the mean value (i.e. the sample variance), if true this term is then
+         * corrected by multiplying it with n/(n-1) with n being the number of
+         * samples, so that it become an estimate of the true (distribution)
+         * variance. */
+        static const bool remove_bias = false;
     };
 
 } // end namespace value_heuristic

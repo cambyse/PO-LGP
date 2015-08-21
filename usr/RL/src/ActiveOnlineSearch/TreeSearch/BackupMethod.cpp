@@ -217,7 +217,8 @@ namespace backup_method {
                                                           state_transition_counts_1,
                                                           min_reward_1,
                                                           max_reward_1,
-                                                          prior_counts);
+                                                          prior_counts,
+                                                          remove_bias);
             reward_t mean_reward_1 = mean_and_variance_1.mean;
             reward_t mean_reward_1_variance = mean_and_variance_1.variance_of_mean;
 
@@ -258,7 +259,8 @@ namespace backup_method {
                                                               state_transition_counts_2,
                                                               min_reward_2,
                                                               max_reward_2,
-                                                              prior_counts);
+                                                              prior_counts,
+                                                              remove_bias);
                 reward_t mean_reward_2 = mean_and_variance_2.mean;
                 //reward_t mean_reward_2_variance = mean_and_variance_2.variance_of_mean; // not used
 
@@ -526,7 +528,8 @@ namespace backup_method {
                                                     info->rollout_counts,
                                                     min_return,
                                                     max_return,
-                                                    prior_counts);
+                                                    prior_counts,
+                                                    remove_bias);
         // assign
         info->set_value(mean_and_variance.mean,
                         mean_and_variance.variance_of_mean,

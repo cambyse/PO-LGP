@@ -2658,12 +2658,12 @@ TEST(ActiveTreeSearch, Test) {
 }
 
 TEST(PriorModels, PriorCounts) {
-    // remove bias (default)
+    // remove bias
     {
-        prior_models::PriorCounts prior_counts(1,1,2,0,1,2);
+        prior_models::PriorCounts prior_counts(1,1,2,0,1,2,true);
         EXPECT_EQ(0.5,prior_models::PriorCounts::compute_mean(1,2,0,1,2));
         EXPECT_EQ(0.5,prior_counts.mean);
-        EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2));
+        EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2,true));
         EXPECT_EQ(0.25*4./3.,prior_counts.variance);
         EXPECT_EQ(0.25*4./3./(2+2),prior_counts.variance_of_mean);
     }

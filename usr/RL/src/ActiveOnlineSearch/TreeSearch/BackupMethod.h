@@ -84,6 +84,12 @@ namespace backup_method {
     protected:
         std::shared_ptr<tree_policy::TreePolicy> backup_policy;
         double prior_counts;
+        /** If false the variance is computed as the mean squared deviation from
+         * the mean value (i.e. the sample variance), if true this term is then
+         * corrected by multiplying it with n/(n-1) with n being the number of
+         * samples, so that it become an estimate of the true (distribution)
+         * variance. */
+        static const bool remove_bias = false;
     };
 
     /**
@@ -104,6 +110,12 @@ namespace backup_method {
         virtual void write(std::ostream & out) const override {out<<"MonteCarlo(prior_counts="<<prior_counts<<")";}
     protected:
         virtual void backup_node(const node_t & node) const;
+        /** If false the variance is computed as the mean squared deviation from
+         * the mean value (i.e. the sample variance), if true this term is then
+         * corrected by multiplying it with n/(n-1) with n being the number of
+         * samples, so that it become an estimate of the true (distribution)
+         * variance. */
+        static const bool remove_bias = false;
         double prior_counts;
     };
 

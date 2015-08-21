@@ -84,7 +84,8 @@ namespace value_heuristic {
                                                     rollout_counts,
                                                     min_return,
                                                     max_return,
-                                                    _prior_counts);
+                                                    _prior_counts,
+                                                    remove_bias);
         mcts_node_info_map[state_node].set_value(mean_and_variance.mean,
                                                  mean_and_variance.variance_of_mean,
                                                  min_value,
