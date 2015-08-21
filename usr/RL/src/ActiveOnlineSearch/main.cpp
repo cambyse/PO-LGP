@@ -28,6 +28,7 @@
 #include "Environment/BottleneckEnvironment.h"
 #include "Environment/VarianceEnvironments.h"
 #include "Environment/MC_versus_DP.h"
+#include "Environment/Stochastic1D.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 #include "../../../../share/src/POMCP/mcts.h"
 
@@ -77,7 +78,8 @@ static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "BottleneckEnvironment",
                                                       "DLVSOR",
                                                       "LVSOR",
-                                                      "MCVSDP"
+                                                      "MCVSDP",
+                                                      "Stochastic1D"
 };
 static const std::set<std::string> accumulate_set = {"min",
                                                      "mean",
@@ -680,6 +682,8 @@ shared_ptr<AbstractEnvironment> get_environment() {
         environment.reset(new LowVarianceSubOptimalReward());
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
+    } else if(environment_arg.getValue()=="Stochastic1D") {
+        environment.reset(new Stochastic1D());
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
