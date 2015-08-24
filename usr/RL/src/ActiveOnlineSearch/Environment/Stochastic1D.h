@@ -54,11 +54,12 @@ class Stochastic1D : public AbstractEnvironment {
 protected:
     int depth;               ///< number of steps until reaching a terminal state
     double pi;               ///< probability that the chosen action will actually be executed
+    double rho;              ///< probability that a reward is received when reaching a terminal state
     State state = State(0,0);
     State default_state = State(0,0);
     //----methods----//
 public:
-    Stochastic1D(int depth_ = 10, double pi_ = 0.6): depth(depth_), pi(pi_) {}
+    Stochastic1D(int depth_ = 10, double pi_ = 0.6, double rho_ = 1): depth(depth_), pi(pi_), rho(rho_) {}
     virtual ~Stochastic1D() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto action = std::dynamic_pointer_cast<const Action1D>(action_handle);
@@ -89,9 +90,9 @@ public:
                 break;
             }
         }
-        // give deterministic reward in [0,1] in terminal state; reward magnitue
-        // scales linearly with position
-        if(state.time==depth) {
+        // give reward in [0,1] in terminal state; reward magnitue scales
+        // linearly with position
+        if(state.time==depth && drand48()<rho) {
             reward = (double)(state.position+depth)/(2*depth);
             assert(reward>=0 && reward<=1);
         }
@@ -112,7 +113,7 @@ public:
     virtual reward_t min_reward() const override {return 0;}
     virtual bool is_markov() const override {return true;}
     virtual void write(std::ostream & out) const override {
-        out << "Stochastic1D(depth=" << depth << ";pi=" << pi << ")";
+        out << "Stochastic1D(depth=" << depth << ";pi=" << pi << ";rho=" << rho << ")";
     }
 };
 
