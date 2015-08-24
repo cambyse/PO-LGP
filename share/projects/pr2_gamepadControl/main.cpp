@@ -147,8 +147,8 @@ void TEST(Gamepad){
       double alpha = .003;
       ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
       arr J_ft, J;
-      MP.world.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      MP.world.kinematicsPos_wrtFrame(NoArr,J_ft,ftL_shape->body,&ftL_shape->rel.pos,MP.world.getShapeByName("l_ft_sensor"));
+      MP.world.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
+      MP.world.kinematicsPos_wrtFrame(NoArr, J_ft, ftL_shape->body, ftL_shape->rel.pos, MP.world.getShapeByName("l_ft_sensor"));
 
       refs.u_bias = ~J*f_des;
       refs.fL = f_des;
