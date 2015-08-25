@@ -9,7 +9,7 @@ private:
     double sub_optimal_return;
     //----methods----//
 public:
-    LowVarianceSubOptimalReward(double sub_optimal_return = 0.4);
+    LowVarianceSubOptimalReward(double sub_optimal_return);
     virtual ~LowVarianceSubOptimalReward() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override;
     virtual action_container_t get_actions() override;
@@ -32,9 +32,9 @@ private:
     double sub_optimal_return;
     //----methods----//
 public:
-    DelayedLowVarianceSubOptimalReward(int action_n = 2,
-                                       int depth = 3,
-                                       double sub_optimal_return = 0.4);
+    DelayedLowVarianceSubOptimalReward(int action_n,
+                                       int depth,
+                                       double sub_optimal_return);
     virtual ~DelayedLowVarianceSubOptimalReward() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override;
     virtual action_container_t get_actions() override;

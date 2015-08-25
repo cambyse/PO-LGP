@@ -67,7 +67,7 @@ protected:
     static const bool deterministic_with_dropout = true;
     //----methods----//
 public:
-    Stochastic1D(int depth_ = 10, double pi_ = 0.6, double rho_ = 1): depth(depth_), pi(pi_), rho(rho_) {}
+    Stochastic1D(int depth_, double pi_, double rho_): depth(depth_), pi(pi_), rho(rho_) {}
     virtual ~Stochastic1D() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto action = std::dynamic_pointer_cast<const Action1D>(action_handle);
