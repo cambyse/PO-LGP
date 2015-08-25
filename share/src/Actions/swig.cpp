@@ -209,6 +209,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["Y"] = STRING('[' <<joint->X.rot.getY()<< ']');
   D["Z"] = STRING('[' <<joint->X.rot.getZ()<< ']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
+
   arr q;
   S->tcm->modelWorld().getJointState(q);
   arr qj(joint->qDim());
@@ -218,7 +219,6 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["q"] = STRING(qj);
   D["axis"] = STRING('[' << joint->axis << ']');
   S->tcm->modelWorld.deAccess();
-  
   return D;
 }
 
