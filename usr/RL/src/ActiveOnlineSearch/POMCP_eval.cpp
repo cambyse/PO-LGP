@@ -375,7 +375,7 @@ shared_ptr<AbstractEnvironment> get_environment() {
     } else if(environment_arg.getValue()=="MCVSDP") {
         environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="Stochastic1D") {
-        environment.reset(new Stochastic1D(10,1,0.5));
+        environment.reset(new Stochastic1D(10,0.6,0.5,true));
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {

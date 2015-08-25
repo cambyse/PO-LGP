@@ -64,10 +64,17 @@ protected:
      * rewards are either zero or one, the member rho is ignored and the
      * probability of receiving a reward (of magnitude 1) varies linearly with
      * the terminal position. */
-    static const bool deterministic_with_dropout = true;
+    const bool deterministic_with_dropout;
     //----methods----//
 public:
-    Stochastic1D(int depth_, double pi_, double rho_): depth(depth_), pi(pi_), rho(rho_) {}
+    Stochastic1D(int depth_,
+                 double pi_,
+                 double rho_,
+                 bool deterministic_with_dropout_):
+        depth(depth_),
+        pi(pi_),
+        rho(rho_),
+        deterministic_with_dropout(deterministic_with_dropout_) {}
     virtual ~Stochastic1D() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
         auto action = std::dynamic_pointer_cast<const Action1D>(action_handle);
@@ -108,7 +115,7 @@ public:
             }
         } else {
             // give reward of 0 or 1, probability of receiving 1 scales linearly
-            // with position starting at 0 and reaching 0.5 at the maximum so that
+            // with position, starting at 0 and reaching 0.5 at the maximum so that
             // the optimal reward also has highest variance
             if(state.time==depth) {
                 double unit = (double)(state.position+depth)/(2*depth);
