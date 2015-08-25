@@ -4,7 +4,7 @@ struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;
   RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM){}
   virtual void cb_new(Node *it){
-    LOG(-1) <<"NEWED: " <<*it;
+    //LOG(-1) <<"NEWED: " <<*it;
 //    Activity *act = newActivity(it);
 //    if(act){
 //      RMM.A().append(act);
@@ -14,9 +14,9 @@ struct RM_EditCallback:GraphEditCallback{
 //    }
   }
   virtual void cb_delete(Node *it){
-    LOG(-1) <<"DELETED: " <<*it;
+ //   LOG(-1) <<"DELETED: " <<*it;
     for(Activity *act:RMM.A()) if(act->fact==it){
-      LOG(2) <<"removing activity '" <<*act <<"'";
+ //     LOG(2) <<"removing activity '" <<*act <<"'";
       RMM.A().removeValue(act);
       delete act;
     }
@@ -67,7 +67,7 @@ void RelationalMachineModule::step(){
     Graph &state = *RM().state;
     MT::Array<Activity*> fact2act(state.N);
     fact2act.setUni(NULL);
-    LOG(2) <<"Syncing facts with activities..";
+  //  LOG(2) <<"Syncing facts with activities..";
     for(Activity *act:A()){
       CHECK(act->fact == state(act->fact->index),"SOMETHING'S WRONG!");
       fact2act(act->fact->index) = act;
@@ -76,9 +76,9 @@ void RelationalMachineModule::step(){
       Activity *act = newActivity(it);
       if(act){
         A().append(act);
-        LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
+     //   LOG(2) <<"added activity '" <<*act <<"' for fact '" <<*it <<"'";
       }else{
-        LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
+     //   LOG(2) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
       }
     }
   }

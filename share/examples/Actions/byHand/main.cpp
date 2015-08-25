@@ -28,10 +28,10 @@ int main(int argc, char** argv) {
     ss.str("");
     ss.clear();
     
-    ss << "(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, " << (v[2] + 1.6) <<"] PD=[1,1,1,10]}";
+    ss << "(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, " << (v[2] - 1.6) <<"] PD=[1,1,1,10]}";
     
 
-    cout << "#################" << endl<< "worldtranslationrotation Rotation ist:" << v[2] << endl << "worldtranslationrotation Rotation soll:" << (v[2] + 1.6) << endl << "#################" << endl;
+    cout << "#################" << endl<< "worldtranslationrotation Rotation ist:" << v[2] << endl << "worldtranslationrotation Rotation soll:" << (v[2] - 1.6) << endl << "#################" << endl;
     cout << endl << "#################" << endl << "Wird Uebergeben: " << ss.str() << endl << "##################" << endl;
     
     S.setFact(ss.str().c_str());

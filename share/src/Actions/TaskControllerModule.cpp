@@ -1,6 +1,9 @@
 #include "TaskControllerModule.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
 
 TaskControllerModule *globalTaskControllerModule=NULL;
 TaskControllerModule *taskControllerModule(){
@@ -90,6 +93,15 @@ void TaskControllerModule::step(){
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
         syncModelStateWithRos = false;
+       streambuf *backup; 
+       ofstream muell; 
+      muell.open ("/dev/null"); 
+  
+      backup = cout.rdbuf();     // Konsolenpuffer merken 
+  
+      ostream konsole(backup);   // Neuen stream an Konsole binden 
+  
+      cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){

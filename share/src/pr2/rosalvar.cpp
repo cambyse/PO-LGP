@@ -42,9 +42,10 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       shape->type = ors::markerST;
       shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
-    ors::Vector V_old;
-
-    V_old = body->X.rot.getX();
+    ors::Vector Y_old;
+    ors::Vector Z_old;
+    Z_old = world.getShapeByName(marker_name)->X.rot.getZ();
+    Y_old = world.getShapeByName(marker_name)->X.rot.getY();
     setBody(*body, marker);
     ors::Transformation T;
 
@@ -54,22 +55,22 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
 
 
     body->X = refFrame * T * body->X;
-
-//int i = 0;
-//    while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
-//      body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
-//    }
-
- //   while ( body->X.rot.getX().angle(V_old) > 1.3){
-      
-//      cout << body->X.rot.getX().angle(V_old) << "old";
-//      body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
-//      cout << body->X.rot.getX().angle(V_old) << "new" << i << endl;
-//      if (i == 3)break;
-//      i++;
-//    }
     body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
     body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+
+int i = 0;
+   // while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
+  //   body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
+      //cout << "test" << endl;
+   // }
+     while ( body->X.rot.getZ().angle(Z_old) > 1.3 || body->X.rot.getY().angle(Y_old) > 1.3){
+
+     body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+     //cout << body->X.rot.getX().angle(X_old) << "new" << i << endl;
+      if (i == 3)break;
+      i++;
+   }
+
     world.getShapeByName(marker_name)->X = body->X;
 
   }

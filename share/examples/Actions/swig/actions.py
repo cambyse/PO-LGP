@@ -457,30 +457,6 @@ class GazeAtActivity(AllActivity):
     def __str__(self):
         return super(GazeAtActivity, self).__str__()
 
-class MoveBaseToShape(WheelsActivity):
-    """Move base in front of shape with given offset"""
-
-    def __init__(self, shape, offset=1):
-        """
-        :param shape: The destination of the movement.
-        :param offset: The distance to reach between base and shape in meter. Default: 1.
-        :return:
-        """
-        assert_in(shape, shapes())
-        pos = pos_str2arr(interface.getShapeByName(shape)["pos"]).tolist()
-        X = np.array(pos_str2arr(interface.getShapeByName(shape)["Z"]))
-        X = np.cross(np.cross(self.X,[0,0,1]),[0,0,1])
-        X = np.divide(X,np.linalg.norm(X))
-        pos[2] = np.arccos(np.dot([1,0,0],X))
-        X = np.multiply(X, offset)
-        pos[0] -= X[0]
-        pos[1] -= X[1] 
-
-        super(MoveBaseToShape, self).__init__(pos, 1)
-        
-
-    def __str__(self):
-        return super(MoveBaseToShape, self).__str__()
 
 class MoveAlongAxisActivity(AllActivity):
     """
@@ -600,7 +576,7 @@ class AlignActivity(VecActivity):
         self.ref1 = ref1
         self.vec1 = vec1
         self.target = target
-        super(AlignActivity, self).__init__(ref1=self.ref1,ref2=self.ref2, target=self.target)
+        super(AlignActivity, self).__init__(ref1=self.ref1,vec1=self.vec1, target=self.target)
         
 
     def __str__(self):
@@ -625,18 +601,7 @@ class HomingActivity(Activity):
 ###############################################################################
 # Python activities
 
-
-
-def move_gripper_to_pos(target, side=None):
-    """Move gripper to target relative to itself.
-
-    :param target: Relative position in gripper's coordinate system
-    :param side: Right or left gripper.
-    """
-    return PosActivity(side2endeff(side), target)
-
-
-def move_robot(target):
+def moveRobot(target):
     """Moves robot to target relative to itself.
 
     :param target: The target to move relative to current position..
@@ -645,13 +610,45 @@ def move_robot(target):
     return WheelsActivity(target)
 
 
-def align_gripper_with_shape(shape,side=None):
+def moveRobotToShape(shape, offset=1):
+    """Move base in front of shape with given offset
+
+    :param shape: The destination of the movement.
+    :param offset: The distance to reach between base and shape in meter. Default: 1.
+    :return:
+    """
+    assert_in(shape, shapes())
+    pos = pos_str2arr(interface.getShapeByName(shape)["pos"]).tolist()
+    X = np.array(pos_str2arr(interface.getShapeByName(shape)["X"]))
+    X = np.cross(np.cross(X,[0,0,1]),[0,0,1])
+    print(X)
+    X = np.divide(X,np.linalg.norm(X))
+    pos[2] = np.arccos(np.dot([1,0,0],X))
+    X = np.multiply(X, offset)
+    pos[0] -= X[0]
+    pos[1] -= X[1] 
+    print(pos)
+    return WheelsActivity(pos, 1)
+
+
+def moveGripperToPos(target, side=None):
+    """Move gripper to target relative to itself.
+
+    :param target: Relative position in gripper's coordinate system
+    :param side: Right or left gripper.
+    """
+    return PosActivity(side2endeff(side), target)
+
+
+
+
+def alignGripperWithShape(shape,side=None):
     """Align gripper with shape
 
     :param shape: Shape to align to
     :param side: Right or left gripper.
     """
-    return  (VecDiffActivity(side2endeff(side),marker),  VecDiffActivity(side2endeff(side),marker,[0,1,0],[0,1,0]))
+    return  (VecDiffActivity(side2endeff(side),shape),  VecDiffActivity(side2endeff(side),shape,[0,1,0],[0,1,0]))
 
 def homing():
     """Move the robot in the base position. The base does _not_ move to [0, 0, 0]
@@ -659,7 +656,7 @@ def homing():
     return HomingActivity()
 
 
-def open_gripper(side=None):
+def openGripper(side=None):
     """Opens gripper.
 
     :param side: Right or left gripper.
@@ -669,7 +666,7 @@ def open_gripper(side=None):
     return QItselfActivity(joint, .1)
 
 
-def close_gripper(side=None):
+def closeGripper(side=None):
     """Closes gripper.
 
     :param side: Right or left gripper.
@@ -679,7 +676,7 @@ def close_gripper(side=None):
     return QItselfActivity(joint, .01)
 
 
-def reach_shape_with_gripper(shape, side=None, offset=[0.,0.,0.]):
+def moveGripperToShape(shape, side=None, offset=[0.,0.,0.]):
     """Reaches shape with gripper
 
     :param shape: What to reach.
@@ -689,7 +686,7 @@ def reach_shape_with_gripper(shape, side=None, offset=[0.,0.,0.]):
     return ReachActivity(side2endeff(side), shape, target=offset)
 
 
-def align_gripper_horizontal(side=None):
+def alignGripperHorizontal(side=None):
     """Aligns gripper horizontal
 
     :param side: Right or left gripper
@@ -697,7 +694,7 @@ def align_gripper_horizontal(side=None):
     return align_gripper([0, 0, 1], [0, 0, -1], side)
 
 
-def align_gripper_vertical(side=None):
+def alignGripperVertical(side=None):
     """Aligns gripper vertical
 
     :param side: Right or left gripper
@@ -734,7 +731,7 @@ def gaze_gripper_at_shape(shape, side=None):
     return GazeAtActivity(side2endeff(side), shape, [1,0,0])
 
 
-def look_at(shape):
+def lookAtShape(shape):
     """Looks at shape.
 
     :param shape: Shape to look at.
@@ -864,6 +861,23 @@ def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
     print("Axis: {}".format(axis))
     return move_shape(shape, distance, axis, pre_grasp_offset, grasp_offset,
                       plane=plane, side=side)
+
+
+def grabMarker(shape):
+    return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
+            "plan": [moveGripperToShape(shape, offset=[0.05,0,0.05]),
+                    openGripper(), moveGripperToShape(shape, offset=[-0.05,0,0.05]), closeGripper(),
+                    moveGripperToPos([0.,0.2,0.3]),openGripper()]
+            }]
+
+def doSth(shape):
+    return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
+            "plan": [moveGripperToShape(shape, offset=[0.05,0,0.05]),
+                    openGripper(), moveGripperToShape(shape, offset=[-0.05,0,0.05]), closeGripper(),
+                    moveGripperToPos([0.,0.2,0.3]),openGripper()]
+            }]
+
+
 
 
 print("Loaded actions.py...")

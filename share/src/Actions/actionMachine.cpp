@@ -96,6 +96,7 @@ void ActionMachine::step(){
       s->feedbackController.setState(s->q, s->qdot);
       cout <<"** GO!" <<endl;
       initStateFromRos = false;
+      
     }else{
       if(t>20){
         HALT("sync'ing real PR2 with simulated failed - using useRos=false")
