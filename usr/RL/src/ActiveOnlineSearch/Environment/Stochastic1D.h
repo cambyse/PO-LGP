@@ -5,9 +5,8 @@
 
 class Stochastic1D : public AbstractEnvironment {
     //----types/classes----//
-    enum ACTION { UP, DOWN };
     struct Action1D: public Action {
-        Action1D(ACTION action): action(action) {}
+        Action1D(int action): action(action) {}
         virtual ~Action1D() = default;
         virtual bool operator==(const Action & other) const override {
             auto action_1D = dynamic_cast<const Action1D*>(&other);
@@ -17,16 +16,9 @@ class Stochastic1D : public AbstractEnvironment {
             return std::hash<int>()(action);
         }
         virtual void write(std::ostream & out) const override {
-            switch(action) {
-            case UP:
-                out << "UP";
-                break;
-            case DOWN:
-                out << "DOWN";
-                break;
-            }
+            out << action;
         }
-        ACTION action;
+        int action;
     };
     struct State {
         State(int time_, int position_): time(time_), position(position_) {}
@@ -52,6 +44,7 @@ class Stochastic1D : public AbstractEnvironment {
     };
     //----members----//
 protected:
+    int action_range;        ///< action in {-action_range,...,0,...,+action_range} are possible
     int depth;               ///< number of steps until reaching a terminal state
     double pi;               ///< probability that the chosen action will actually be executed
     double rho;              ///< probability that a reward is received when reaching a terminal state
@@ -67,10 +60,12 @@ protected:
     const bool deterministic_with_dropout;
     //----methods----//
 public:
-    Stochastic1D(int depth_,
+    Stochastic1D(int action_range_,
+                 int depth_,
                  double pi_,
                  double rho_,
                  bool deterministic_with_dropout_):
+        action_range(action_range_),
         depth(depth_),
         pi(pi_),
         rho(rho_),
@@ -86,31 +81,17 @@ public:
         // do intended action with probability pi
         if(drand48()<pi) {
             // intendet action
-            switch(action->action) {
-            case UP:
-                ++state.position;
-                break;
-            case DOWN:
-                --state.position;
-                break;
-            }
+            state.position += action->action;
         } else {
-            // switched action
-            switch(action->action) {
-            case UP:
-                --state.position;
-                break;
-            case DOWN:
-                ++state.position;
-                break;
-            }
+            // random action
+            state.position += (rand()%(2*action_range+1) - action_range);
         }
         if(deterministic_with_dropout) {
             // give reward in [0,1] in terminal state; reward magnitue scales
             // linearly with position; there is a certain drop-out probability
             // (non-zero reward only with probability rho)
             if(state.time==depth && drand48()<rho) {
-                reward = (double)(state.position+depth)/(2*depth);
+                reward = (double)(state.position+action_range*depth)/(2*depth*action_range);
                 assert(reward>=0 && reward<=1);
             }
         } else {
@@ -118,7 +99,7 @@ public:
             // with position, starting at 0 and reaching 0.5 at the maximum so that
             // the optimal reward also has highest variance
             if(state.time==depth) {
-                double unit = (double)(state.position+depth)/(2*depth);
+                double unit = (double)(state.position+action_range*depth)/(2*depth*action_range);
                 if(drand48()<unit/2) reward = 1;
                 assert(reward==0 || reward==1);
             }
@@ -126,8 +107,11 @@ public:
         return observation_reward_pair_t(observation_handle_t(new Observation1D(state)),reward);
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new Action1D(UP)),
-                                   action_handle_t(new Action1D(DOWN))});
+        action_container_t actions;
+        for(int a=-action_range; a<=action_range; ++a) {
+            actions.push_back(action_handle_t(new Action1D(a)));
+        }
+        return actions;
     }
     virtual void make_current_state_default() override {default_state = state;}
     virtual void reset_state() override final {state = default_state;}
@@ -142,6 +126,7 @@ public:
     virtual void write(std::ostream & out) const override {
         if(deterministic_with_dropout) {
             out << "Stochastic1D(" <<
+                "action_range=" << action_range << ";" <<
                 "depth=" << depth << ";" <<
                 "pi=" << pi << ";" <<
                 "rho=" << rho << ";" <<
@@ -149,6 +134,7 @@ public:
                 ")";
         } else {
             out << "Stochastic1D(" <<
+                "action_range=" << action_range << ";" <<
                 "depth=" << depth << ";" <<
                 "pi=" << pi << ";" <<
                 "deterministic_with_dropout=" << deterministic_with_dropout << ";" <<
