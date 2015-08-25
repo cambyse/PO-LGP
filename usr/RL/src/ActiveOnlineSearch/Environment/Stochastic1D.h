@@ -57,6 +57,14 @@ protected:
     double rho;              ///< probability that a reward is received when reaching a terminal state
     State state = State(0,0);
     State default_state = State(0,0);
+    /**
+     * If true, the reward is in principle deterministic and varies linearly
+     * with the terminal position. The member rho then determines drop-out
+     * probability (rho is the probability for receiving a reward). If false,
+     * rewards are either zero or one, the member rho is ignored and the
+     * probability of receiving a reward (of magnitude 1) varies linearly with
+     * the terminal position. */
+    static const bool deterministic_with_dropout = true;
     //----methods----//
 public:
     Stochastic1D(int depth_ = 10, double pi_ = 0.6, double rho_ = 1): depth(depth_), pi(pi_), rho(rho_) {}
@@ -90,11 +98,23 @@ public:
                 break;
             }
         }
-        // give reward in [0,1] in terminal state; reward magnitue scales
-        // linearly with position
-        if(state.time==depth && drand48()<rho) {
-            reward = (double)(state.position+depth)/(2*depth);
-            assert(reward>=0 && reward<=1);
+        if(deterministic_with_dropout) {
+            // give reward in [0,1] in terminal state; reward magnitue scales
+            // linearly with position; there is a certain drop-out probability
+            // (non-zero reward only with probability rho)
+            if(state.time==depth && drand48()<rho) {
+                reward = (double)(state.position+depth)/(2*depth);
+                assert(reward>=0 && reward<=1);
+            }
+        } else {
+            // give reward of 0 or 1, probability of receiving 1 scales linearly
+            // with position starting at 0 and reaching 0.5 at the maximum so that
+            // the optimal reward also has highest variance
+            if(state.time==depth) {
+                double unit = (double)(state.position+depth)/(2*depth);
+                if(drand48()<unit/2) reward = 1;
+                assert(reward==0 || reward==1);
+            }
         }
         return observation_reward_pair_t(observation_handle_t(new Observation1D(state)),reward);
     }
@@ -113,7 +133,20 @@ public:
     virtual reward_t min_reward() const override {return 0;}
     virtual bool is_markov() const override {return true;}
     virtual void write(std::ostream & out) const override {
-        out << "Stochastic1D(depth=" << depth << ";pi=" << pi << ";rho=" << rho << ")";
+        if(deterministic_with_dropout) {
+            out << "Stochastic1D(" <<
+                "depth=" << depth << ";" <<
+                "pi=" << pi << ";" <<
+                "rho=" << rho << ";" <<
+                "deterministic_with_dropout=" << deterministic_with_dropout << ";" <<
+                ")";
+        } else {
+            out << "Stochastic1D(" <<
+                "depth=" << depth << ";" <<
+                "pi=" << pi << ";" <<
+                "deterministic_with_dropout=" << deterministic_with_dropout << ";" <<
+                ")";
+        }
     }
 };
 
