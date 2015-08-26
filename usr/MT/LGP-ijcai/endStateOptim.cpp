@@ -20,8 +20,8 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_in
 
   for(Node *s:supportSymbol->parentOf) if(&s->container==&state){
     //-- create a joint between the object and the target
-    ors::Shape *base = effKinematics.getShapeByName(s->parents(1)->keys(1));
-    ors::Shape *object= effKinematics.getShapeByName(s->parents(2)->keys(1));
+    ors::Shape *base = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    ors::Shape *object= effKinematics.getShapeByName(s->parents(2)->keys.last());
 
     if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
       ors::Joint *j = new ors::Joint(effKinematics, base->body, object->body);
@@ -51,8 +51,8 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
   Node *support=symbolicState["supports"];
   Graph& state =symbolicState["STATE"]->graph();
   for(Node *constraint:support->parentOf) if(&constraint->container==&state){
-    ors::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys(1));
-    ors::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys(1));
+    ors::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
+    ors::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys.last());
     if(b2->shapes(0)->type==ors::cylinderST){
       ors::Body *z=b1;
       b1=b2; b2=z;
@@ -105,7 +105,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
       ors::Body *b;
       arr y,J;
       for(Node *s:supporters){
-        b=effKinematics.getBodyByName(s->keys(1));
+        b=effKinematics.getBodyByName(s->keys.last());
         effKinematics.kinematicsPos(y, J, b);
         cen += y;
         cenJ += J;
@@ -116,7 +116,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
       //-- max distances to center
       prec=3e-1;
       for(Node *s:supporters){
-        b=effKinematics.getBodyByName(s->keys(1));
+        b=effKinematics.getBodyByName(s->keys.last());
         effKinematics.kinematicsPos(y, J, b);
         y -= cen;
         double d = length(y);
@@ -128,7 +128,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
 
       //-- align center with object center
       prec=1e-1;
-      b=effKinematics.getBodyByName(obj->keys(1));
+      b=effKinematics.getBodyByName(obj->keys.last());
       effKinematics.kinematicsPos(y, J, b);
       phi.append( prec*(y-cen) );
       if(&phiJ) phiJ.append( prec*(J-cenJ) );
@@ -138,8 +138,8 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
     prec=1e-0;
     if(supporters.N==1){ // just one-on-one: align
       arr y1,J1,y2,J2;
-      ors::Body *b1=effKinematics.getBodyByName(obj->keys(1));
-      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys(1));
+      ors::Body *b1=effKinematics.getBodyByName(obj->keys.last());
+      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
       if(b1->shapes(0)->type==ors::boxST){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);
@@ -168,7 +168,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
       ors::Body *b;
       arr y,J;
       for(Node *s:supporters){
-        b=effKinematics.getBodyByName(s->keys(1));
+        b=effKinematics.getBodyByName(s->keys.last());
         effKinematics.kinematicsPos(y, J, b);
         cen += y;
         cenJ += J;
@@ -179,7 +179,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
       //-- max distances to center
       prec=1e-1;
       for(Node *s:supporters){
-        b=effKinematics.getBodyByName(s->keys(1));
+        b=effKinematics.getBodyByName(s->keys.last());
         effKinematics.kinematicsPos(y, J, b);
         y -= cen;
         double d = length(y);
@@ -191,7 +191,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
 
       //-- align center with object center
       prec=1e-0;
-      b=effKinematics.getBodyByName(obj->keys(1));
+      b=effKinematics.getBodyByName(obj->keys.last());
       effKinematics.kinematicsPos(y, J, b);
       phi.append( prec*(y-cen) );
       if(&phiJ) phiJ.append( prec*(J-cenJ) );
@@ -201,8 +201,8 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
     prec=1e-0;
     if(supporters.N==1){ // just one-on-one: align
       arr y1,J1,y2,J2;
-      ors::Body *b1=effKinematics.getBodyByName(obj->keys(1));
-      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys(1));
+      ors::Body *b1=effKinematics.getBodyByName(obj->keys.last());
+      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
       if(b1->shapes(0)->type==ors::boxST){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);

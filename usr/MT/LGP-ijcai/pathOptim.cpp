@@ -25,14 +25,14 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   //-- set up the MotionProblem
   MP.T=2*actions.N*microSteps;
   world.swift().initActivations(world);
-  MP.world.watch(false);
+//  MP.world.watch(false);
 
   //-- decide on pickAndPlace times
   uintA tPick(actions.N), tPlace(actions.N), idObject(actions.N);
   for(uint i=0;i<actions.N;i++){
     tPick(i) = (2*i+1)*microSteps;
     tPlace(i) = (2*i+2)*microSteps;
-    idObject(i) = world.getShapeByName(actions(i)->parents(1)->keys(1))->index;
+    idObject(i) = world.getShapeByName(actions(i)->parents(1)->keys.last())->index;
   }
 
   //-- transitions

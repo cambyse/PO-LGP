@@ -9,7 +9,7 @@
 
 //===========================================================================
 
-void coreExperiment(){
+void ijcaiExperiment(){
   orsDrawJoints=false;
   orsDrawAlpha=1.;
 
@@ -59,7 +59,6 @@ void coreExperiment(){
     cout <<"f_path=" <<best->pathCosts <<endl;
 
     fil <<k <<' ' <<towers.nObjects <<' ' <<MCTS_time/repeat <<' ' <<lev1_time/repeat <<' ' <<best->effPoseReward <<' ' <<lev2_time <<endl;
-
   }
 }
 
@@ -70,7 +69,7 @@ int main(int argc,char **argv){
 //  rnd.clockSeed();
   rnd.seed(MT::getParameter<int>("seed",0));
 
-  coreExperiment();
+  ijcaiExperiment();
 
   return 0;
 }

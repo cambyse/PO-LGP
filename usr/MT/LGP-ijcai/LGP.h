@@ -12,15 +12,14 @@ struct ManipulationTree_Node{
   MT::Array<ManipulationTree_Node*> children;
   uint s;               ///< depth/step of this node
 //  double t;             ///< real time
-
 //  action;           ///< what decision (relative to the parent) does this node represent
 
-//  ors::KinematicSwitch sw;
-  ors::KinematicWorld kinematics;
-  Graph symbols;
+//  ors::KinematicSwitch sw; ///< the kinematic switch(es) that this action implies
+  ors::KinematicWorld kinematics; ///< actual kinematics after action (includes all previous switches)
+  Graph symbols; ///< the symbolic state after action
 
   //-- results of effective pose optimization
-  ors::KinematicWorld effKinematics;
+  ors::KinematicWorld effKinematics; ///< the effective kinematics (computed from kinematics and symbolic state)
   arr effPose;
   double effPoseCost;
   double effPoseReward;
@@ -92,7 +91,6 @@ struct EffectivePoseProblem:ConstrainedProblemMix{
                        const Graph& symbolics,
                        int verbose);
   void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x);
-  uint dim_g(){ return 4; }
 
   double optimize(arr& x);
 };
