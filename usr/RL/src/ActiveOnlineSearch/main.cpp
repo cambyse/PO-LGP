@@ -82,9 +82,6 @@ static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "MCVSDP",
                                                       "Stochastic1D"
 };
-static const std::set<std::string> accumulate_set = {"min",
-                                                     "mean",
-                                                     "max"};
 static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "FullDAG",
                                                      "FullGraph",
@@ -148,9 +145,6 @@ static TCLAP::ValueArg<int> watch_progress_arg(      "p", "progress",\
 static TCLAP::SwitchArg graphics_arg(                "g", "graphics",\
                                                      "(default: false) If true automatically generate graphics."\
                                                      , false);
-static TCLAP::ValueArg<std::string> accumulate_arg(  "a", "accumulate", \
-                                                     "(default: mean) How to accumulate values "+util::container_to_str(accumulate_set,", ","(",")")+"."\
-                                                     , false, "mean", "string");
 static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
                                                      "(default: PlainTree) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
                                                      , false, "PlainTree", "string");
@@ -300,7 +294,6 @@ int main(int argn, char ** args) {
         cmd.add(prune_all_arg);
         cmd.add(no_header_arg);
         cmd.add(random_seed_arg);
-        cmd.add(accumulate_arg);
         cmd.add(action_policy_arg);
         cmd.add(backup_policy_arg);
         cmd.add(tree_policy_arg);
@@ -433,7 +426,7 @@ int main(int argn, char ** args) {
     } else if(mode_arg.getValue()=="EVAL_ONLINE") {
         // print header
         if(!no_header_arg.getValue()) {
-            cout << "mean reward,number of roll-outs,run,method" << endl;
+            cout << "reward sum,number of roll-outs,run,method" << endl;
         }
         QString method_string = "";
         if(active_arg.getValue()) {
@@ -511,8 +504,8 @@ int main(int argn, char ** args) {
 #pragma omp critical (MCTS)
 #endif
                 {
-                    cout << QString("%1,%2,%3,").
-                        arg(reward_sum/step).
+                    cout << QString("%1,	%2,	%3,	").
+                        arg(reward_sum).
                         arg(sample).
                         arg(run);
                     if(method_string=="") {
@@ -651,11 +644,6 @@ bool check_arguments() {
     if(sample_n_arg.getValue()<0) {
         ok = false;
         cout << "Number of samples must be non-negative." << endl;
-    }
-    // check accumulation
-    if(accumulate_set.find(accumulate_arg.getValue())==accumulate_set.end()) {
-        ok = false;
-        cout << "Accumulation must be one of:" << util::container_to_str(accumulate_set,"\n\t","\n\t","") << endl;
     }
     // check graph type
     if(graph_type_set.find(graph_type_arg.getValue())==graph_type_set.end()) {

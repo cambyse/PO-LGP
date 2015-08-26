@@ -213,7 +213,7 @@ int main(int argn, char ** args) {
             } else if(mode_arg.getValue()=="EVAL_ONLINE") {
         // print header
         if(!no_header_arg.getValue()) {
-            cout << "mean reward,number of roll-outs,run,method" << endl;
+            cout << "reward sum,number of roll-outs,run,method" << endl;
         }
         // limit number of threads if required
         if(threads_arg.getValue()>0) {
@@ -278,7 +278,7 @@ int main(int argn, char ** args) {
 #endif
                 {
                     cout << QString("%1,%2,%3,").
-                        arg(reward_sum/step).
+                        arg(reward_sum).
                         arg(sample).
                         arg(run);
                     cout << "POMCP(Environment=" << *environment << ";parameters=" <<
