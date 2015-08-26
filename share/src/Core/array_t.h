@@ -1472,7 +1472,9 @@ template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp
 template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
   uint cand_pos = rankInSorted(x, comp);
-  if(cand_pos == N  ||  elem(cand_pos) != x) insert(cand_pos, x);
+  if(cand_pos<N && elem(cand_pos  )==x) return cand_pos;
+  if(cand_pos>0 && elem(cand_pos-1)==x) return cand_pos-1;
+  insert(cand_pos, x);
   return cand_pos;
 }
 

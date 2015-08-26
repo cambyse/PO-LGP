@@ -92,13 +92,13 @@ void KOMO::checkGradients(){
 }
 
 void KOMO::displayTrajectory(bool wait){
-//  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
 //  orsDrawProxies=true;
-  for(uint t=0;t<x.d0;t++){
-    MP->setState(x[t]);
-    MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
-  }
-  if(wait) MP->world.gl().watch();
+  // for(uint t=0;t<x.d0;t++){
+  //   MP->setState(x[t]);
+  //   MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
+  // }
+  // if(wait) MP->world.gl().watch();
 }
 
 //===========================================================================
