@@ -29,6 +29,7 @@
 #include "Environment/VarianceEnvironments.h"
 #include "Environment/MC_versus_DP.h"
 #include "Environment/Stochastic1D.h"
+#include "Environment/NastyStochastic1D.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
 #include "../../../../share/src/POMCP/mcts.h"
 
@@ -80,7 +81,8 @@ static const std::set<std::string> environment_set = {"GamblingHall",
                                                       "DLVSOR",
                                                       "LVSOR",
                                                       "MCVSDP",
-                                                      "Stochastic1D"
+                                                      "Stochastic1D",
+                                                      "NastyStochastic1D"
 };
 static const std::set<std::string> graph_type_set = {"PlainTree",
                                                      "FullDAG",
@@ -727,6 +729,8 @@ shared_ptr<AbstractEnvironment> get_environment() {
         environment.reset(new MC_versus_DP());
     } else if(environment_arg.getValue()=="Stochastic1D") {
         environment.reset(new Stochastic1D(1,10,0.6,0.5,true));
+    } else if(environment_arg.getValue()=="NastyStochastic1D") {
+        environment.reset(new NastyStochastic1D(3,3,1,0.5,true));
     } else if(environment_arg.getValue()=="FOL") {
         environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {

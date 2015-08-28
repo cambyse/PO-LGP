@@ -22,6 +22,7 @@ add_executable(main_ActiveOnlineSearch
     Environment/VarianceEnvironments.cpp
     Environment/MC_versus_DP.h
     Environment/Stochastic1D.h
+    Environment/NastyStochastic1D.h
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
     ComputationalGraph.h
@@ -71,6 +72,7 @@ add_executable(POMCP_eval
     Environment/VarianceEnvironments.cpp
     Environment/MC_versus_DP.h
     Environment/Stochastic1D.h
+    Environment/NastyStochastic1D.h
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
 )
@@ -112,6 +114,7 @@ add_library(ActiveOnlineSearch
     Environment/VarianceEnvironments.cpp
     Environment/MC_versus_DP.h
     Environment/Stochastic1D.h
+    Environment/NastyStochastic1D.h
     ComputationalGraph.h
     ComputationalGraph.cpp
     ComputationalConstGraph.h
