@@ -6,14 +6,16 @@
 #include <Core/geo.h>
 #include <Ors/ors.h>
 
-
 //===========================================================================
 //
 // utils
 //
 
+namespace tf{ class Transform; }
+
 bool rosOk();
 void rosCheckInit();
+ors::Transformation ros_cvrt(const tf::Transform& trans);
 
 //===========================================================================
 //

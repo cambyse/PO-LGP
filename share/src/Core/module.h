@@ -38,6 +38,7 @@
 struct Access;
 struct Module;
 typedef MT::Array<Access*> AccessL;
+typedef MT::Array<Module*> ModuleL;
 extern Module *currentlyCreating;
 extern AccessL *currentlyCreatingAccessL;
 
@@ -96,7 +97,6 @@ struct Access{
   RevisionedAccessGatedClass *var;   ///< which variable does it access
   Access(const char* _name, Type *_type, Module *_module, RevisionedAccessGatedClass *_var):name(_name), type(_type), module(_module), var(_var){}
   virtual ~Access(){}
-  RevisionedAccessGatedClass* operator->(){ CHECK(var,"This Access has not been associated to any Variable"); return var; }
   int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module); }
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
@@ -121,7 +121,8 @@ struct Access_typed:Access{
     else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
   }
   ~Access_typed(){ delete type; }
-  T& operator()(){ CHECK(v && var,"");  return v->data; }
+  T& operator()(){ CHECK(v && var,""); CHECK(v->rwlock.isLocked(),"");  return v->data; }
+  T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
   virtual void createVariable(const char *name){ CHECK(!v &&!var,"");  v=new Variable<T>(name);  var=(RevisionedAccessGatedClass*)v; }
