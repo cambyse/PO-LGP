@@ -15,7 +15,7 @@ static const double colorsTab[6][3] = {
   {0.2, 1.0, 0.2}
 };
 
-struct Model{
+struct MinEigModel{
   //statistics
   double n;
   arr X, mu;
@@ -61,11 +61,11 @@ struct Model{
 };
 
 struct ModelDrawer:OpenGL::GLDrawer{
-  MT::Array<Model>& M;
-  ModelDrawer(MT::Array<Model>& M):M(M){}
+  MT::Array<MinEigModel>& M;
+  ModelDrawer(MT::Array<MinEigModel>& M):M(M){}
   void glDraw(OpenGL &){
     uint c=0;
-    for(Model &m:M) if(m.beta.N==3){
+    for(MinEigModel &m:M) if(m.beta.N==3){
       ors::Quaternion rot;
       rot.setDiff(Vector_z, ors::Vector(m.beta));
       arr mean=m.mu/m.n;
@@ -110,7 +110,7 @@ void displayData(){
 //  for(uint i=0;i<phi.d0;i++) phi(i,0) = pts(i,2); //depth only
 
   //-- models
-  MT::Array<Model> M(num_labels);
+  MT::Array<MinEigModel> M(num_labels);
 
   ModelDrawer D(M);
   OpenGL gl;
@@ -125,13 +125,13 @@ void displayData(){
 
 
   for(uint k=0;k<10;k++){
-    for(Model &m:M) m.resetStatistics(phi.d1);
+    for(MinEigModel &m:M) m.resetStatistics(phi.d1);
 
     //-- assign data
     for(int i=0;i<num_pixels;i++){
       if(ok(i)) M(labels(i)).addStatistics(phi[i]);
     }
-    for(Model &m:M) m.comBeta();
+    for(MinEigModel &m:M) m.comBeta();
 
 
     //-- compute costs
@@ -139,7 +139,7 @@ void displayData(){
     for(int i=0; i<num_pixels;i++) if(ok(i)) C += M(labels(i)).cost(phi[i]);
     cout <<"cost = " <<C <<endl;
     C=0.;
-    for(Model &m:M) C += m.beta_len;
+    for(MinEigModel &m:M) C += m.beta_len;
     cout <<"cost = " <<C <<endl;
 
     gl.watch();

@@ -79,6 +79,9 @@ struct Mesh {
   void flipFaces();
   Vector getMeanVertex();
   double getRadius();
+  double getArea() const;
+  double getVolume();
+
 
   //[preliminary]]
   void skin(uint i);

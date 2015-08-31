@@ -827,6 +827,27 @@ double Mesh::getRadius() {
   return sqrt(r);
 }
 
+double triArea(const arr& a, const arr& b, const arr& c){
+#if 1
+  return .5*length(crossProduct(b-a, c-a));
+#else
+  arr B=b;
+  arr C=c;
+  B-=a;
+  C-=a;
+  return .5*::sqrt(sumOfSqr(B)*sumOfSqr(C)-MT::sqr(scalarProduct(B,C)));
+//  B -= (scalarProduct(B,C)/sumOfSqr(C)) * C;
+//  CHECK_ZERO(scalarProduct(B,C), 1e-4, "");
+//  return .5*length(B)*length(C);
+#endif
+}
+
+double Mesh::getArea() const{
+  double A=0.;
+  for(uint i=0;i<T.d0;i++) A += triArea(V[T(i,0)], V[T(i,1)], V[T(i,2)]);
+  return A;
+}
+
 void Mesh::write(std::ostream& os) const {
   os <<"Mesh: " <<V.d0 <<" vertices, " <<T.d0 <<" triangles" <<endl;
 }
