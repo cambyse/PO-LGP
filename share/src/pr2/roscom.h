@@ -15,7 +15,8 @@ namespace tf{ class Transform; }
 
 bool rosOk();
 void rosCheckInit();
-ors::Transformation ros_cvrt(const tf::Transform& trans);
+ors::Transformation ros_cvrt(const tf::Transform&);
+timespec ros_cvrt(const ros::Time&);
 
 //===========================================================================
 //
