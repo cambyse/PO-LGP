@@ -79,6 +79,8 @@ struct Module : Thread{
       the thread */
   virtual void close(){}
   virtual bool test(){ return true; } ///< define a unit test
+
+  void createVariables();
 };
 
 
@@ -102,7 +104,7 @@ struct Access{
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
   int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
   int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
-  virtual void createVariable(const char *name) = 0;
+  virtual void createVariable(const char *_name=NULL) = 0;
   virtual void linkToVariable(RevisionedAccessGatedClass *v) = 0;
 //  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
   double& dataTime(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
@@ -127,7 +129,7 @@ struct Access_typed:Access{
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
   typename Variable<T>::WriteToken set(const timespec& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
-  virtual void createVariable(const char *_name=NULL){ CHECK(!v &&!var,"");  if(_name) name=name; v=new Variable<T>(name);  var=(RevisionedAccessGatedClass*)v; }
+  virtual void createVariable(const char *_name=NULL){ CHECK(!v &&!var,"");  if(_name) name=_name; v=new Variable<T>(name);  var=(RevisionedAccessGatedClass*)v; }
   virtual void linkToVariable(RevisionedAccessGatedClass *_var){
     CHECK(_var, "you gave me a nullptr");
     var=_var;

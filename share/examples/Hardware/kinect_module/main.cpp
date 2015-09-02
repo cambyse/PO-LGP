@@ -13,7 +13,7 @@ void TEST(KinectModules) {
     ACCESS(byteA, kinect_rgb)
     ACCESS(uint16A, kinect_depth)
     MySystem(){
-      addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
+      addModule<KinectThread>(NULL, Module::loopFull); //this is callback driven...
       addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
       addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
       addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
@@ -31,10 +31,10 @@ void TEST(KinectModules) {
   engine().enableAccessLog();
   engine().open(S);
 
-  S.kinect_depth.waitForRevisionGreaterThan(10);
+  S.kinect_depth.waitForRevisionGreaterThan(100);
   FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
-  engine().shutdown.waitForSignal();
+//  engine().shutdown.waitForSignal();
 
   engine().close(S);
   cout <<"bye bye" <<endl;
@@ -43,17 +43,15 @@ void TEST(KinectModules) {
 //================================================================================
 
 void TEST(KinectRaw) {
-  OpenGL gl;
-  KinectPoller kin;
-  Variable<byteA> kinect_rgb;
-  Variable<uint16A> kinect_depth;
-  kin.kinect_rgb.linkToVariable(&kinect_rgb);
-  kin.kinect_depth.linkToVariable(&kinect_depth);
+  OpenGL gl("KINECT",640,480);
+  KinectThread kin;
+  kin.verbose=1;
+  kin.createVariables();
 
   kin.open();
   for(uint t=0;t<100;t++){
     kin.step();
-    gl.watchImage(kinect_rgb.get(), false, 1.);
+    gl.watchImage(kin.kinect_rgb.get(), false, 1.);
   }
   cout <<"closing..." <<endl;
   kin.close();
