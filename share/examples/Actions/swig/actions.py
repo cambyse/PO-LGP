@@ -32,6 +32,7 @@ from utils import (
     side2wrist_joint,
     dehomogenize,
     quaternion_matrix,
+
 )
 
 symbole = []
@@ -39,6 +40,23 @@ symbole_conv = []
 s = []
 b = []
 j = []
+
+def setFixBase(base = True):
+    """
+    If True, the base is fixed.
+    If False, the robot is movable
+    One can set it in the MT.cfg, too.
+    """
+    interface.setFixBase(base)
+
+def setVerbose(verbose = True):
+    """
+    If true, bump state every tick.
+    If false, not.
+    """
+    interface.setVerbose(verbose)
+
+
 
 def signal_handler(signal, frame):
     print('ABORT!')
@@ -218,9 +236,9 @@ class Activity(object):
     def __init__(self):
         self.time = 3.
         self.damping = .7
-        self.max_vel = 10
+        self.max_vel = 2
         self.max_acc = 10
-        self.tolerance = .01
+        self.tolerance = .02
         self._name = ""
         self.id = Activity.id
         Activity.id += 1
@@ -323,20 +341,28 @@ class PosActivity(AllActivity):
         """
         :param ref1: The endeffector shape to move.
         :param q: The target position.
-        :param relative: If set, q is in  the base coordinate system.
-            If not set, q is in the ref1 coordinate system.
+        :param relative: If set, q is in ref1's coordinate system.
+            If not set, q is in base's coordinate system.
         :return:
         """
+        super(PosActivity, self).__init__()
         assert_in(ref1, shapes())
-        q.append(1)
-        endeff = ref1 if relative else "endeffBase"
-        q = np.dot(quaternion_matrix(pos_str2arr(shapes(endeff)["Q"]).tolist()), q) 
-        target = np.add(pos_str2arr(shapes(ref1)["pos"]).tolist(), dehomogenize(q)).tolist()
-        
-        super(PosActivity, self).__init__(ref1=ref1, target=target)
+        self.ref1=ref1
+        self.q = q
+        self.relative = relative
+        self.q.append(1)
+      
+
+
+
+
         
 
     def __str__(self):
+        endeff = sel.fref1 if self.relative else "endeffBase"
+        self.q = np.dot(quaternion_matrix(pos_str2arr(shapes(endeff)["Q"]).tolist()), self.q) 
+        self.target = np.add(pos_str2arr(shapes(self.ref1)["pos"]).tolist(), dehomogenize(self.q)).tolist()
+  
         return super(PosActivity, self).__str__()
 
 
@@ -631,13 +657,13 @@ def moveRobotToShape(shape, offset=1):
     return WheelsActivity(pos, 1)
 
 
-def moveGripperToPos(target, side=None):
+def moveGripperToPos(target, relative=False, side=None):
     """Move gripper to target relative to itself.
 
-    :param target: Relative position in gripper's coordinate system
+    :param target: Relative position in base's coordinate system
     :param side: Right or left gripper.
     """
-    return PosActivity(side2endeff(side), target)
+    return PosActivity(side2endeff(side), target, relative=relative)
 
 
 
@@ -676,7 +702,7 @@ def closeGripper(side=None):
     return QItselfActivity(joint, .01)
 
 
-def moveGripperToShape(shape, side=None, offset=[0.,0.,0.]):
+def moveGripperToShape(shape, offset=[0.,0.,0.], side=None):
     """Reaches shape with gripper
 
     :param shape: What to reach.
@@ -865,16 +891,19 @@ def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
 
 def grabMarker(shape):
     return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
-            "plan": [moveGripperToShape(shape, offset=[0.05,0,0.05]),
-                    openGripper(), moveGripperToShape(shape, offset=[-0.05,0,0.05]), closeGripper(),
-                    moveGripperToPos([0.,0.2,0.3]),openGripper()]
+            "plan": [moveGripperToShape(shape, [0.10,0,0.0]),
+                    openGripper(), moveGripperToPos([0.22,0,0.04]), closeGripper(),
+                    ]
             }]
 
-def doSth(shape):
-    return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
-            "plan": [moveGripperToShape(shape, offset=[0.05,0,0.05]),
-                    openGripper(), moveGripperToShape(shape, offset=[-0.05,0,0.05]), closeGripper(),
-                    moveGripperToPos([0.,0.2,0.3]),openGripper()]
+def throwToBin():
+    return [{"with": [lookAtShape("marker3")],
+            "plan": [moveGripperToShape("marker3", offset=[-0.2,0,0.2]),openGripper()]
+            }]
+
+def doSth():
+    return [{"with": [lookAtShape("marker3")],
+            "plan": [moveRobot([-.4,0,0]),moveGripperToPos([.0,-.3,.4]),openGripper(),closeGripper(),openGripper(),closeGripper(),moveRobot([+.4,0,0])]
             }]
 
 

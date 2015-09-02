@@ -58,18 +58,19 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
     body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
 
-int i = 0;
+
    // while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
   //   body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
       //cout << "test" << endl;
    // }
+    /*int i = 0;
      while ( body->X.rot.getZ().angle(Z_old) > 1.3 || body->X.rot.getY().angle(Y_old) > 1.3){
 
      body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
      //cout << body->X.rot.getX().angle(X_old) << "new" << i << endl;
       if (i == 3)break;
       i++;
-   }
+   }*/
 
     world.getShapeByName(marker_name)->X = body->X;
 
