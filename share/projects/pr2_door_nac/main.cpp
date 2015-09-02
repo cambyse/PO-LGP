@@ -64,7 +64,7 @@ int main(int argc,char **argv){
   mdp::RKHSPol rkhs1(world,Xdemo,FLdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
   arr rewards;
-  rkhs1.Algorithm = 1;//NAC
+  rkhs1.Algorithm = 0;//NAC
   rkhs1.dim_A = 2;
 
   arr start(1);//multi-armed bandits setting

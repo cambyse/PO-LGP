@@ -10,7 +10,6 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include "environment.h"
 #include "plotUtil.h"
 #include "traj_factory.h"
 #include "task_door.h"

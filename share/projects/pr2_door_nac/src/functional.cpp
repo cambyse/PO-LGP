@@ -77,6 +77,8 @@ arr RKHSPol::runPG()
  {
     arr IterationReward;
     IterationReward.clear();
+    arr states,  actions,  rewards;
+    arr nxtFuncPolicy ;
 
     cout<<"============ FUNCTIONAL POLICY GRADIENT ==========================="<<endl<<endl;
 
@@ -85,11 +87,11 @@ arr RKHSPol::runPG()
 
         // Computing gradient (use Num episodes, horizon is 20)
         double total = 0.0;
-        arr nxtFuncPolicy = FuncPolicy;
 
+        nxtFuncPolicy = FuncPolicy;
         for(int k=0;k<NumEps;k++)
         {
-            arr states,  actions,  rewards;
+
             double Reward = rollout(FuncPolicy, states, actions, rewards);
             total += Reward;
 
@@ -102,7 +104,7 @@ arr RKHSPol::runPG()
         }
         //cout<<endl;
         double average = (double) total/NumEps;
-        arr temppp;
+
 
 
         //sparsify the gradient
@@ -269,8 +271,8 @@ arr RKHSPol::runPG()
      double best_alpha = 0.0;
      double best_value = -10000000.0;
 
-     uint numEval = 20;
-     uint numEpisodes = 2;
+     uint numEval = 12;
+     uint numEpisodes = 1;
      arr TempGradient;
 
      arr states,  actions,  rewards;
