@@ -633,6 +633,7 @@ bool MonteCarloTreeSearch::transfer_rollouts(node_t from_observation_node,
                                              node_t via_action_node,
                                              arc_t to_observation_arc,
                                              node_t to_observation_node) {
+    if(rollout_storage==ROLLOUT_STORAGE::NONE) return false;
     DEBUG_EXPECT(node_info_map[from_observation_node].type==OBSERVATION_NODE);
     DEBUG_EXPECT(node_info_map[via_action_node].type==ACTION_NODE);
     DEBUG_EXPECT(node_info_map[to_observation_node].type==OBSERVATION_NODE);
@@ -742,7 +743,9 @@ void MonteCarloTreeSearch::add_rollout(node_t node,
     if(!(rollout->type==node_info_map[node].type)) {
         DEBUG_ERROR("");
     }
-    mcts_node_info_map[node].rollout_set.insert(rollout);
+    if(rollout_storage!=ROLLOUT_STORAGE::NONE) {
+        mcts_node_info_map[node].rollout_set.insert(rollout);
+    }
     mcts_node_info_map[node].rollout_counts++;
     mcts_node_info_map[node].return_sum += rollout->discounted_return;
     mcts_node_info_map[node].squared_return_sum += pow(rollout->discounted_return,2);
@@ -808,6 +811,7 @@ shared_ptr<MonteCarloTreeSearch::RolloutItem> MonteCarloTreeSearch::rollout(node
 }
 
 void MonteCarloTreeSearch::init_rollout_weights(node_t node) {
+    if(rollout_storage==ROLLOUT_STORAGE::NONE) return;
     auto & rollout_set = mcts_node_info_map[node].rollout_set;
     double weight = 1./rollout_set.size();
     for(auto rollout_item : rollout_set) {

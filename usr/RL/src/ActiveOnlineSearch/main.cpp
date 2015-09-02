@@ -151,8 +151,8 @@ static TCLAP::ValueArg<std::string> graph_type_arg(  "", "graph_type", \
                                                      "(default: PlainTree) Type of the graph to use: "+util::container_to_str(graph_type_set,", ","(",")")+"." \
                                                      , false, "PlainTree", "string");
 static TCLAP::ValueArg<std::string> backup_type_arg( "", "backup_type",      \
-                                                     "(default: PROPAGATE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
-                                                     , false, "PROPAGATE", "string");
+                                                     "(default: TRACE) Type of backups to do: "+util::container_to_str(backup_type_set,", ","(",")")+"." \
+                                                     , false, "TRACE", "string");
 static TCLAP::ValueArg<std::string> rollout_storage_arg( "", "rollout_storage", \
                                                          "(default: NONE) Type of backups to do: "+util::container_to_str(rollout_storage_set,", ","(",")")+"." \
                                                          , false, "NONE", "string");
