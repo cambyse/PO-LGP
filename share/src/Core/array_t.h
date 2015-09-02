@@ -1241,7 +1241,7 @@ template<class T> void MT::Array<T>::setRandomPerm(int n) {
 
 /// 'this' becomes a copy (not reference to!) of the 1D C array
 template<class T> void MT::Array<T>::setCarray(const T *buffer, uint D0) {
-  resize(D0);
+  if(N!=D0) resize(D0);
   uint i;
   if(memMove && typeid(T)==typeid(T))
     memmove(p, buffer, sizeT*d0);

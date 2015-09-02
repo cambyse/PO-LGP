@@ -1,5 +1,7 @@
 #include "methods.h"
 
+#ifdef MLR_PCL
+
 void conv_ArrCloud_PclCloud(pcl::PointCloud<PointT>::Ptr& pcl_cloud,
                          const arr& kinect_points,
                          const arr& kinect_pointColors){
@@ -38,3 +40,5 @@ void conv_PclCloud_ArrCloud(arr& kinect_points,
   }
   CHECK_EQ(i,kinect_points.d0,"");
 }
+
+#endif

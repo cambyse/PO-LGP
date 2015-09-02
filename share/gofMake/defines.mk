@@ -260,6 +260,13 @@ CPATH := $(CPATH):/usr/include/libusb-1.0
 LIBS += -lfreenect -lusb-1.0
 endif
 
+ifeq ($(FREENECT_LOC),1)
+CXXFLAGS += -DMLR_FREENECT
+CPATH := $(HOME)/git/libfreenect/include:$(CPATH):/usr/include/libusb-1.0
+LPATH += $(HOME)/git/libfreenect/build/lib
+LIBS += -lfreenect -lusb-1.0 -lpthread
+endif
+
 ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
