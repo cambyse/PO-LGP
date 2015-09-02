@@ -87,7 +87,9 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     CP1.append(~ARRAY(world->getShapeByName("cp1")->X.pos));
     CP2.append(~ARRAY(world->getShapeByName("cp2")->X.pos));
 
-    world->gl().update(STRING(t));
+    //world->gl().update(STRING(t));
+
+
   }
 
   arr offsetC1 = CP1[constraintCP(0)] - C1trans[constraintCP(0)];
