@@ -13,6 +13,7 @@
 #include "src/traj_factory.h"
 #include "src/task_door.h"
 #include "src/functional.h"
+#include "src/motion_interface.h"
 
 
 
@@ -28,12 +29,43 @@ int main(int argc,char **argv){
 
   ors::KinematicWorld world(STRING("model.kvg"));
   DoorTask *task = new DoorTask(world);
-  arr Xdemo,FLdemo,Mdemo;
-  Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
-  FLdemo << FILE(STRING(folder<<"/FLdemo.dat"));
-  Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
+  Motion_Interface *mi;
+  if (useRos) mi = new Motion_Interface(world);
 
+  arr Xreverse;
+  arr Xdemo,Fdemo,Mdemo;
 
+  /// load demonstration from file or record from demonstration
+  if (MT::getParameter<bool>("loadDemoFromFile")) {
+    Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
+    Fdemo << FILE(STRING(folder<<"/FLdemo.dat"));
+    Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
+  } else {
+    mi->recordDemonstration(Xdemo,duration);
+    if (visualize) displayTrajectory(Xdemo,-1,world,"demonstration ");
+    world.watch(true);
+    mi->gotoPosition(Xdemo[0]);
+    mi->executeTrajectory(Xdemo,duration,true);
+
+    Xdemo = mi->Xact;
+    Fdemo = mi->FLact;
+    Mdemo = mi->Mact;
+    write(LIST<arr>(Xdemo),STRING(folder<<"/Xdemo.dat"));
+    write(LIST<arr>(Fdemo),STRING(folder<<"/Fdemo.dat"));
+    write(LIST<arr>(Mdemo),STRING(folder<<"/Mdemo.dat"));
+
+    if (useRos) {Xreverse = Xdemo; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+  }
+
+  /// compute contact phase
+  task->computeConstraintTime(Fdemo,Xdemo);
+
+  /// execute initial trajectory
+  if (useRos) {
+    mi->gotoPosition(Xdemo[0]);
+    mi->executeTrajectory(Xdemo,duration,true);
+    Xreverse = Xdemo; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
+  }
 
   /// define parameter limits
   arr paramLim;
@@ -45,7 +77,6 @@ int main(int argc,char **argv){
   param.flatten();
 
   uint count = 0;
-  //arr x0 = Xdemo[0];
   arr Xn;
   double y;
   /// learning loop
@@ -61,7 +92,7 @@ int main(int argc,char **argv){
   //int numRuns = 10; // runs for averaging performance
   int numIterations=30; //number of gradient updates
   uint kernel_type = 1;// RBF Kernel
-  mdp::RKHSPol rkhs1(world,Xdemo,FLdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
+  mdp::RKHSPol rkhs1(world,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
   arr rewards;
   rkhs1.Algorithm = 0;//NAC
@@ -73,7 +104,7 @@ int main(int argc,char **argv){
 
   rewards = rkhs1.run();
 
-
+  arr forces;
   for(;;) {
       param = param + ARR(0.03,0.05) ;//= param + rand(2)*0.01;
 
@@ -85,6 +116,15 @@ int main(int argc,char **argv){
         displayTrajectory(Xn,Xn.d0,world,"");
         world.watch(true,"press enter to execute candidate");
       }
+
+      /// execute trajectory Xn
+      if (result && useRos) {
+        mi->gotoPosition(Xn[0]);
+        mi->executeTrajectory(Xn,duration,true);
+        forces = mi->FLact;
+        Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
+      }
+
 
       /// compute reward function
       /// currently consist of one term that measures squared acceleration
