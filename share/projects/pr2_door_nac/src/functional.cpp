@@ -35,8 +35,17 @@ RKHSPol::RKHSPol(ors::KinematicWorld world, arr Xdemo,arr FLdemo,arr Mdemo, arr 
     MT::useLapack=true;
     Algorithm = 1; //default using natural policy gradient (functional policy)
     dim_A = 1; //this is default, and set again in main.cpp
+    currIteration = 0;
 
     RBFVariance = 0.0001;//0.0001; for Toy// 1)RBFVariance = 0.0001;()for Toy
+
+}
+void RKHSPol::loadOldFuncPolicy()
+{
+    FuncPolicy << FILE(STRING("FuncPolicy.dat"));
+    arr temp;
+    temp<< FILE(STRING("currIteration.dat"));
+    currIteration = temp(0);
 
 }
 void RKHSPol::setStart(const arr &start)
@@ -44,6 +53,7 @@ void RKHSPol::setStart(const arr &start)
     dim_S = start.d0;
     StartingState = start;
     FuncPolicy.resize(1, dim_A + dim_S); // weight + centre dimensions
+    currIteration = 0;
     FuncPolicy.setZero(); //initialized to 0: (that means: h_0 = 0)
     for(int i=0;i<dim_A; i++)
         FuncPolicy[0](i) = 0.;
@@ -55,7 +65,7 @@ arr RKHSPol::run()
  {    
 
      //cout<<Sigma<<endl;
-
+/*/
      if(Algorithm ==0)
         return runPG();
      else if(Algorithm ==1)
@@ -64,6 +74,8 @@ arr RKHSPol::run()
          cout<<"Algorithm should be 0 (PG) or 1 (NPG)" <<endl;
          return ARR(0);
      }
+     /*/
+    return ARR(0.);
 
  }
 
@@ -83,7 +95,7 @@ arr RKHSPol::runPG()
     cout<<"============ FUNCTIONAL POLICY GRADIENT ==========================="<<endl<<endl;
 
 
-    for(int iteration = 0; iteration<NumIterations; iteration ++){
+    for(int iteration = currIteration; iteration<NumIterations; iteration ++){
 
         // Computing gradient (use Num episodes, horizon is 20)
         double total = 0.0;
@@ -144,9 +156,13 @@ arr RKHSPol::runPG()
         /////////////////////////////////////////////////////////////////
 
 
-        cout<< " The reward of this iteration "<<iteration<<" is: " << average <<"  centres= "<<FuncPolicy.d0<<endl;
-        cout<<" step_size "<<step_size <<endl;
+        cout<< " Iteration "<<iteration<<" is: " << average <<endl;
+        //cout<<" step_size "<<step_size <<endl;
         IterationReward.append(average);
+
+
+        write(LIST<arr>(FuncPolicy),STRING("FuncPolicy.dat"));
+        write(LIST<arr>(ARR(iteration+1)),STRING("currIteration.dat"));
 
     }
     return IterationReward;
@@ -173,7 +189,7 @@ arr RKHSPol::runPG()
     cout<<"===========FUNCTIONAL NATURAL POLICY GRADIENT ============================"<<endl<<endl;
 
 
-    for(int iteration=0;iteration<NumIterations;iteration ++){
+    for(int iteration=currIteration;iteration<NumIterations;iteration ++){
 
         // Computing gradient (use Num episodes, horizon is 20)
         double total = 0.0;
@@ -246,9 +262,11 @@ arr RKHSPol::runPG()
         //}
 
 
-        cout<< " The reward of this iteration "<<iteration<<" is: " << average <<"  centres= "<<FuncPolicy.d0<<endl;
-        cout<<" step_size "<<step_size <<endl;
+        cout<< " Iteration "<<iteration<<" is: " << average <<endl;
         IterationReward.append(average);
+
+        write(LIST<arr>(FuncPolicy),STRING("FuncPolicy.dat"));
+        write(LIST<arr>(ARR(iteration+1)),STRING("currIteration.dat"));
 
     }
     return IterationReward;
@@ -272,13 +290,13 @@ arr RKHSPol::runPG()
      double best_value = -10000000.0;
 
      uint numEval = 12;
-     uint numEpisodes = 1;
+     uint numEpisodes = 2;
      arr TempGradient;
 
      arr states,  actions,  rewards;
      //uint numEpisodes = 20;
 
-     for(int grid=0;grid<numEval;grid +=4){
+     for(int grid=0;grid<numEval;grid +=2){
          //each is evaluated over NumEps
          double alpha_new = 0.000;
 

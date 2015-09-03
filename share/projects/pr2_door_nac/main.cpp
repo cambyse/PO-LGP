@@ -21,6 +21,7 @@ int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
   /// load parameters
+  bool loadFunctionalFile = MT::getParameter<bool>("loadFunctionalFile");
   bool useRos = MT::getParameter<bool>("useRos");
   bool visualize = MT::getParameter<bool>("visualize");
   double duration = MT::getParameter<double>("duration");
@@ -86,23 +87,35 @@ int main(int argc,char **argv){
 
 
 
-  int numEpisode =2; //number of episodes to evaluate Gradient (at each iteration);
+
+  int numEpisode = 1; //number of episodes to evaluate Gradient (at each iteration);
   int H = 1; //horizon
   int numCentres = 1;
   //int numRuns = 10; // runs for averaging performance
-  int numIterations=30; //number of gradient updates
+  int numIterations = 1; //number of gradient updates
   uint kernel_type = 1;// RBF Kernel
   mdp::RKHSPol rkhs1(world,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
   arr rewards;
-  rkhs1.Algorithm = 0;//NAC
   rkhs1.dim_A = 2;
+
+
+
+  rkhs1.Algorithm = 0;//NAC
+
+
+
+
 
   arr start(1);//multi-armed bandits setting
   start(0) = 0.0;
   rkhs1.setStart(start); //this always be called lastly
 
+
+  if(loadFunctionalFile) rkhs1.loadOldFuncPolicy();
   rewards = rkhs1.run();
+
+  exit(0);
 
   arr forces;
   for(;;) {

@@ -44,6 +44,7 @@ private:
     //parametric policy:dim 0) w_i ; dim 1-)centre c_i vector
 
     arr FuncPolicy;
+    uint currIteration;
     uint NumCentre; //Sparsification
     arr Sigma;
 
@@ -93,7 +94,15 @@ public:
 
     uint Algorithm;
 
-    ~RKHSPol(){}
+    void loadOldFuncPolicy();
+
+
+
+
+    ~RKHSPol(){
+        delete task;
+        task = NULL;
+    }
 
 
 };

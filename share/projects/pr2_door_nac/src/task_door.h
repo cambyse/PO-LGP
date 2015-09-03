@@ -18,6 +18,10 @@ struct DoorTask {
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
   bool success(const arr &X, const arr &Y);
   double reward(const arr &Z);
+  ~DoorTask(){
+     delete world;
+      world = NULL;
+  }
 };
 
 
