@@ -27,6 +27,7 @@ void TEST(KinectModules) {
 
   kin.kinect_depth.waitForRevisionGreaterThan(100);
   FILE("z.kinect_depth") <<kin.kinect_depth.get()();
+  FILE("z.kinect_rgb") <<kin.kinect_rgb.get()();
 
 //  engine().shutdown.waitForSignal();
 

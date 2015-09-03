@@ -406,7 +406,7 @@ void ors::Joint::reset() {
 
 void ors::Joint::parseAts() {
   //interpret some of the attributes
-  double d;
+  double d=0.;
   ats.getValue<Transformation>(A, "A");
   ats.getValue<Transformation>(A, "from");
   if(ats.getValue<bool>("BinvA")) B.setInverse(A);
