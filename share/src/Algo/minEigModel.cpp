@@ -1,4 +1,5 @@
 #include <Gui/opengl.h>
+#include <GL/gl.h>
 #include "minEigModel.h"
 
 

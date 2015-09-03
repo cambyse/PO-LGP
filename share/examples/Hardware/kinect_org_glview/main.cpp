@@ -232,20 +232,20 @@ void keyPressed(unsigned char key, int x, int y)
 		freenect_set_flag(f_dev, FREENECT_MIRROR_VIDEO, mirror);
 		mirror = mirror ? FREENECT_OFF : FREENECT_ON;
 	}
-	if (key == 'n') {
-		static freenect_flag_value near_mode = FREENECT_ON;
-		freenect_set_flag(f_dev, FREENECT_NEAR_MODE, near_mode);
-		near_mode = near_mode ? FREENECT_OFF : FREENECT_ON;
-	}
+	// if (key == 'n') {
+	// 	static freenect_flag_value near_mode = FREENECT_ON;
+	// 	freenect_set_flag(f_dev, FREENECT_NEAR_MODE, near_mode);
+	// 	near_mode = near_mode ? FREENECT_OFF : FREENECT_ON;
+	// }
 
-	if (key == '+') {
-		uint16_t brightness = freenect_get_ir_brightness(f_dev) + 2;
-		freenect_set_ir_brightness(f_dev, brightness);
-	}
-	if (key == '-') {
-		uint16_t brightness = freenect_get_ir_brightness(f_dev) - 2;
-		freenect_set_ir_brightness(f_dev, brightness);
-	}
+	// if (key == '+') {
+	// 	uint16_t brightness = freenect_get_ir_brightness(f_dev) + 2;
+	// 	freenect_set_ir_brightness(f_dev, brightness);
+	// }
+	// if (key == '-') {
+	// 	uint16_t brightness = freenect_get_ir_brightness(f_dev) - 2;
+	// 	freenect_set_ir_brightness(f_dev, brightness);
+	// }
 
 	if (key == '1') {
 		freenect_set_led(f_dev,LED_GREEN);

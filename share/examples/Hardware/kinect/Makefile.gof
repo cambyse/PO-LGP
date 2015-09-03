@@ -1,6 +1,5 @@
 BASE = ../../..
 
-FREENECT_LOC = 1
 LIBUSB = 1
 DEPEND = Core System Gui Hardware_kinect
 # Perception Gui Ors

@@ -40,6 +40,7 @@ struct Module;
 typedef MT::Array<Access*> AccessL;
 typedef MT::Array<Module*> ModuleL;
 extern Module *currentlyCreating;
+extern ModuleL& NoModuleL;
 extern AccessL *currentlyCreatingAccessL;
 
 //===========================================================================
@@ -61,7 +62,7 @@ struct Module : Thread{
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL):Thread(_name), mode(listenFirst), beat(1.){ currentlyCreating=this; }
+  Module(const char* _name=NULL, ModuleL& system=NoModuleL, StepMode mode=listenFirst, double beat=1.):Thread(_name), mode(mode), beat(beat){ currentlyCreating=this; if(&system) system.append(this); }
   virtual ~Module(){}
 
   /** The most important method of all of this: step does the actual

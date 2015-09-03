@@ -11,7 +11,7 @@ struct KinectThread:Module{
 
   int verbose;
 
-  KinectThread();
+  KinectThread(ModuleL& system=NoModuleL);
   ~KinectThread();
 
   void glViewKeys(char key);

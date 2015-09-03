@@ -9,34 +9,28 @@
 //================================================================================
 
 void TEST(KinectModules) {
-  struct MySystem:System{
-    ACCESS(byteA, kinect_rgb)
-    ACCESS(uint16A, kinect_depth)
-    MySystem(){
-      addModule<KinectThread>(NULL, Module::loopFull); //this is callback driven...
-      addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-      addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-      addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+
+  System S;
+  KinectThread kin(S);
+  S.addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
+  S.addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
+  S.addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
+  S.addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
+  S.addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
 //      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
 //      m_enc->set_rgb(true);
 //      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      connect();
-    }
-  } S;
-
+  S.connect();
   cout <<S <<endl;
 
-  engine().enableAccessLog();
-  engine().open(S);
+  S.run();
 
-  S.kinect_depth.waitForRevisionGreaterThan(100);
-  FILE("z.kinect_depth") <<S.kinect_depth.get()();
+  kin.kinect_depth.waitForRevisionGreaterThan(100);
+  FILE("z.kinect_depth") <<kin.kinect_depth.get()();
 
 //  engine().shutdown.waitForSignal();
 
-  engine().close(S);
+  S.close();
   cout <<"bye bye" <<endl;
 }
 

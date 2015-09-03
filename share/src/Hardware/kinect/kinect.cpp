@@ -21,7 +21,7 @@ struct sKinectThread{
 
 sKinectThread* single=NULL;
 
-KinectThread::KinectThread():Module("KinectThread"), verbose(0){
+KinectThread::KinectThread(ModuleL& system):Module("KinectThread", system, loopFull), verbose(0){
   s = new sKinectThread;
   s->kin = this;
   s->depth_buffer.resize(480,640);
@@ -96,20 +96,20 @@ void KinectThread::glViewKeys(char key){
     freenect_set_flag(s->f_dev, FREENECT_MIRROR_VIDEO, mirror);
     mirror = mirror ? FREENECT_OFF : FREENECT_ON;
   }
-  if (key == 'n') {
-    static freenect_flag_value near_mode = FREENECT_ON;
-    freenect_set_flag(s->f_dev, FREENECT_NEAR_MODE, near_mode);
-    near_mode = near_mode ? FREENECT_OFF : FREENECT_ON;
-  }
+  // if (key == 'n') {
+  //   static freenect_flag_value near_mode = FREENECT_ON;
+  //   freenect_set_flag(s->f_dev, FREENECT_NEAR_MODE, near_mode);
+  //   near_mode = near_mode ? FREENECT_OFF : FREENECT_ON;
+  // }
 
-  if (key == '+') {
-    uint16_t brightness = freenect_get_ir_brightness(s->f_dev) + 2;
-    freenect_set_ir_brightness(s->f_dev, brightness);
-  }
-  if (key == '-') {
-    uint16_t brightness = freenect_get_ir_brightness(s->f_dev) - 2;
-    freenect_set_ir_brightness(s->f_dev, brightness);
-  }
+  // if (key == '+') {
+  //   uint16_t brightness = freenect_get_ir_brightness(s->f_dev) + 2;
+  //   freenect_set_ir_brightness(s->f_dev, brightness);
+  // }
+  // if (key == '-') {
+  //   uint16_t brightness = freenect_get_ir_brightness(s->f_dev) - 2;
+  //   freenect_set_ir_brightness(s->f_dev, brightness);
+  // }
 
   if (key == '1') {
     freenect_set_led(s->f_dev,LED_GREEN);

@@ -5,8 +5,7 @@
 #include <GL/gl.h>
 
 
-#include "minEigModel.h"
-#include "modelEnsemble.h"
+#include <Perception/modelEnsemble.h>
 
 const double scale=10000.;
 
