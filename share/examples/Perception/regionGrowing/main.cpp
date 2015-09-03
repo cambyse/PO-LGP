@@ -1,11 +1,6 @@
-#include <extern/GCO/GCoptimization.h>
-#include <Core/array.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Core/geo.h>
-#include <GL/gl.h>
-
-
 #include <Perception/modelEnsemble.h>
+#include <Gui/opengl.h>
 
 const double scale=10000.;
 
@@ -28,7 +23,7 @@ void test(){
 
   DataNeighbored D(pts);
   D.setGridNeighborhood(kinect_depth.d0, kinect_depth.d1);
-  D.removeNonOk();
+//  D.removeNonOk();
 
   ModelEnsemble M;
 
