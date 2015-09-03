@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <math.h>
+#include <iomanip>
 
 void TEST(String){
   //-- basic IO
@@ -44,6 +45,9 @@ void TEST(Parameter){
 }
 
 void TEST(Timer){
+  for(uint t=0;t<10;t++)
+    cout <<"now=" <<MT::date() <<" clockTime=" <<std::setprecision(14) <<MT::clockTime() <<endl;
+
   MT::timerStart();
   for(uint i=0;i<4;i++){
     cout <<"i=" <<i <<flush;
@@ -83,8 +87,8 @@ int MAIN(int argc,char** argv){
   
 //  testString();
 //  testParameter();
-//  testTimer();
-  testLogging();
+  testTimer();
+//  testLogging();
 //  testException();
 
   return 0;

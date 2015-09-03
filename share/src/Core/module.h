@@ -129,7 +129,7 @@ struct Access_typed:Access{
   T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
-  typename Variable<T>::WriteToken set(const timespec& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
+  typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
   virtual void createVariable(const char *_name=NULL){ CHECK(!v &&!var,"");  if(_name) name=_name; v=new Variable<T>(name);  var=(RevisionedAccessGatedClass*)v; }
   virtual void linkToVariable(RevisionedAccessGatedClass *_var){
     CHECK(_var, "you gave me a nullptr");
