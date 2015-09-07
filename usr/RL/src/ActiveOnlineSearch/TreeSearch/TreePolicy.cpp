@@ -203,7 +203,7 @@ namespace tree_policy {
             // value instead of the return
             score = (*mcts_node_info_map)[action_node].value +
                 sqrt( 2 * (*mcts_node_info_map)[action_node].value_variance * zeta * log(n) ) +
-                c * (3 * b * log(n) ) / nj;
+                c * (3 * b * zeta * log(n) ) / nj;
         }
         return score;
     }
