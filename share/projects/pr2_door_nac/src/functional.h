@@ -13,6 +13,7 @@
 #include "plotUtil.h"
 #include "traj_factory.h"
 #include "task_door.h"
+#include "src/motion_interface.h"
 #include <Ors/ors.h>
 
 
@@ -28,9 +29,11 @@ class RKHSPol{
 private:
     //const ENVIRONMENT& Env;
     DoorTask *task;// = new DoorTask(world);
+    Motion_Interface *mi;
     arr Xdemo;
     arr FLdemo, Mdemo;
     arr paramLim;
+    bool useRos;
 
 
     int NumEps; //episodes for each iteration of gradient evalation
@@ -73,9 +76,9 @@ public:
 
     double ACTION_MAX;
     double ACTION_MIN;
+    ors::KinematicWorld *world;
 
-
-    RKHSPol(ors::KinematicWorld world, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
+    RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
 
     void setStart(const arr &start);
 
@@ -102,6 +105,8 @@ public:
     ~RKHSPol(){
         delete task;
         task = NULL;
+        delete mi;
+        mi=NULL;
     }
 
 

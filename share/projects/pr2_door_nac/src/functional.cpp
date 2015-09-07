@@ -9,7 +9,7 @@ using namespace MT;
 
 namespace mdp {
 
-RKHSPol::RKHSPol(ors::KinematicWorld world, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
+RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
     : Horizon(horizon),
       NumEps(numEps), Xdemo(Xdemo), FLdemo(FLdemo), Mdemo(Mdemo), paramLim(paramLim),
       NumCentre(numCentre),
@@ -17,7 +17,9 @@ RKHSPol::RKHSPol(ors::KinematicWorld world, arr Xdemo,arr FLdemo,arr Mdemo, arr 
       NumIterations(numIterations)
 
 {
-    task = new DoorTask(world);
+    world=new ors::KinematicWorld(world_);
+    task = new DoorTask(world_);
+    if(useRos)mi = new Motion_Interface(world_);
     /// load demonstration from file
 
 
@@ -65,7 +67,7 @@ arr RKHSPol::run()
  {    
 
      //cout<<Sigma<<endl;
-/*/
+
      if(Algorithm ==0)
         return runPG();
      else if(Algorithm ==1)
@@ -74,8 +76,6 @@ arr RKHSPol::run()
          cout<<"Algorithm should be 0 (PG) or 1 (NPG)" <<endl;
          return ARR(0);
      }
-     /*/
-    return ARR(0.);
 
  }
 
@@ -262,7 +262,7 @@ arr RKHSPol::runPG()
         //}
 
 
-        cout<< " Iteration "<<iteration<<" is: " << average <<endl;
+        cout<< " Iteration "<<iteration<<" is: " << average <<"  Step size: "<<step_size <<endl;
         IterationReward.append(average);
 
         write(LIST<arr>(FuncPolicy),STRING("FuncPolicy.dat"));
@@ -290,13 +290,13 @@ arr RKHSPol::runPG()
      double best_value = -10000000.0;
 
      uint numEval = 12;
-     uint numEpisodes = 2;
+     uint numEpisodes = 1;
      arr TempGradient;
 
      arr states,  actions,  rewards;
      //uint numEpisodes = 20;
 
-     for(int grid=0;grid<numEval;grid +=2){
+     for(int grid=0;grid<numEval;grid +=4){
          //each is evaluated over NumEps
          double alpha_new = 0.000;
 
@@ -304,7 +304,7 @@ arr RKHSPol::runPG()
               alpha_new = 0.00000001 + 0.02*grid; //for plain PG
          else if (Algorithm==1)
               //alpha_new = 0.01*pow(1.2,grid) - 0.01;// + 0.00000001; //use 1.2 for polynomial kernels (Kernel_Type>0)
-              alpha_new = 0.01*pow(2.,grid) - 0.01 + 0.00000001; //use 2. for NPG (without sparsification: because when the step-size is very large (2000.), sparsification gives poor approximation
+              alpha_new = 0.01*pow(1.5,grid) - 0.01 + 0.00000001; //use 2. for NPG (without sparsification: because when the step-size is very large (2000.), sparsification gives poor approximation
             //alpha_new = 0.00000001 + 0.02*grid;
          else
               alpha_new = 0.000 + 0.005*grid; //for plain PG
@@ -323,8 +323,8 @@ arr RKHSPol::runPG()
              double Reward = rollout(TempGradient, states, actions, rewards);
              Total_R += Reward;
          }
-        // cout<< Total_R/numEpisodes<<"  ";
-         if((double)Total_R/numEpisodes > best_value + 0.01 ){
+         cout<< Total_R/numEpisodes<<"  ";
+         if((double)Total_R/numEpisodes > best_value){
              best_value = (double) Total_R/numEpisodes;
              best_alpha = alpha_new;
           //   cout<< "alpha_new = " <<alpha_new <<" best_value=  "<<best_value <<endl;
@@ -490,18 +490,37 @@ arr RKHSPol::runPG()
 
      bool result = task->transformTrajectory(Xn,action,Xdemo);
 
+     task->updateVisualization(*world,Xn);
+     world->watch();
+
+     arr forces;
+     bool success = 1;
+     if(result && useRos){
+         mi->gotoPosition(Xn[0]);
+         mi->executeTrajectory(Xn,15.,true);
+         forces = mi->FLact;
+         arr Xreverse = Xn;
+         Xreverse.reverseRows();
+         mi->executeTrajectory(Xreverse,15.);
+         success = task->success(mi->Mact,Mdemo);
+     }
 
      /// compute reward function
      /// currently consist of one term that measures squared acceleration
      /// and another term that measures how close the current trajectory is to the demonstration
 
-     if (result) {
+
+     if (result && success) {
        arr Xdd;
        getAcc(Xdd,Xn,1.);
-       reward = exp(-0.5*(sumOfAbs(Xn-Xdemo)/Xn.d0));//exp(-0.5*sumOfAbs(Xdd)) +
+       double part1 = sumOfAbs(forces)/forces.N;
+       double part2 = (sumOfAbs(Xn-Xdemo)/Xn.d0);
+       cout<< "force: "<<part1<<" ; task "<<part2<<endl;
+       reward = exp(-part1 - 10.*part2);//exp(-0.5*sumOfAbs(Xdd)) +
      }else{
        reward = 0.;
      }
+     cout<< "reward " <<reward <<endl;
 
 
      return true;
@@ -536,8 +555,8 @@ arr RKHSPol::runPG()
 
     hs = (~sum)[0];
 
-    hs(0) = hs(0) - 0.06;
-    hs(1) = hs(1) - 0.12;
+    hs(0) = hs(0);// - 0.06;
+    hs(1) = hs(1);// - 0.12;
  }
 
  double RKHSPol::kernelFunc(const arr state1, const arr state2)

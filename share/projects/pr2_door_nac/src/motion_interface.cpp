@@ -106,7 +106,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
     }
 
     refs.fL = zeros(6);
-    refs.Ki.clear();
+    refs.KiFT.clear();
     refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 2.0;
@@ -177,7 +177,7 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
   refs.fL = zeros(6);
-  refs.Ki.clear();
+  refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q.N);
   refs.Kp = zeros(q.N,q.N); // = 0.;
@@ -238,7 +238,7 @@ void Motion_Interface::stopMotion(bool sendZeroGains)
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
   refs.fL = zeros(6);
-  refs.Ki.clear();
+  refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q.N);
   if (sendZeroGains) {

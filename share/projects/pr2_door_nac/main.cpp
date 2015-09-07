@@ -39,7 +39,7 @@ int main(int argc,char **argv){
   /// load demonstration from file or record from demonstration
   if (MT::getParameter<bool>("loadDemoFromFile")) {
     Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
-    Fdemo << FILE(STRING(folder<<"/FLdemo.dat"));
+    Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
   } else {
     mi->recordDemonstration(Xdemo,duration);
@@ -61,13 +61,6 @@ int main(int argc,char **argv){
   /// compute contact phase
   task->computeConstraintTime(Fdemo,Xdemo);
 
-  /// execute initial trajectory
-  if (useRos) {
-    mi->gotoPosition(Xdemo[0]);
-    mi->executeTrajectory(Xdemo,duration,true);
-    Xreverse = Xdemo; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
-  }
-
   /// define parameter limits
   arr paramLim;
   paramLim.append(~ARR(-0.06,0.06)); // hand opening
@@ -88,22 +81,19 @@ int main(int argc,char **argv){
 
 
 
-  int numEpisode = 1; //number of episodes to evaluate Gradient (at each iteration);
+  int numEpisode = 2; //number of episodes to evaluate Gradient (at each iteration);
   int H = 1; //horizon
   int numCentres = 1;
   //int numRuns = 10; // runs for averaging performance
-  int numIterations = 1; //number of gradient updates
-  uint kernel_type = 1;// RBF Kernel
-  mdp::RKHSPol rkhs1(world,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
+  int numIterations = 25; //number of gradient updates
+  uint kernel_type = 0;// 0 is RBF Kernel
+  mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
   arr rewards;
   rkhs1.dim_A = 2;
 
 
-
-  rkhs1.Algorithm = 0;//NAC
-
-
+  rkhs1.Algorithm = 1;//NAC
 
 
 
@@ -115,7 +105,7 @@ int main(int argc,char **argv){
   if(loadFunctionalFile) rkhs1.loadOldFuncPolicy();
   rewards = rkhs1.run();
 
-  exit(0);
+/*/
 
   arr forces;
   for(;;) {
@@ -154,6 +144,6 @@ int main(int argc,char **argv){
       cout<<"The reward is: "<<y<<endl;
 
   }
-
+/*/
   return 0;
 }
