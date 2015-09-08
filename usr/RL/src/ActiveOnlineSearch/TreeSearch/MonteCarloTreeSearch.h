@@ -21,21 +21,24 @@ namespace backup_method{class BackupMethod;}
 class MonteCarloTreeSearch: public SearchTree {
 
     //----typedefs/classes----//
-public:
-    typedef AbstractEnvironment::action_container_t action_container_t;
+protected:
     struct RolloutItem {
         RolloutItem(action_handle_t action = nullptr,
                     observation_handle_t observation = nullptr,
                     reward_t reward = 0,
                     reward_t discounted_return = 0,
-                    double weight = 1,
+                    double weight = -1,
                     std::shared_ptr<RolloutItem> next = nullptr,
                     bool is_new = true,
                     NODE_TYPE type = OBSERVATION_NODE):
             action(action), observation(observation), reward(reward),
             discounted_return(discounted_return),
-            weight(weight), next(next), is_new(is_new), type(type)
-        {}
+            weight(weight), next(next), is_new(is_new), type(type) {}
+        friend std::ostream& operator<<(std::ostream & out, const RolloutItem & action) {
+            action.write(out);
+            return out;
+        }
+        void write(std::ostream &) const;
         action_handle_t action;
         observation_handle_t observation;
         reward_t reward;
@@ -46,6 +49,8 @@ public:
         NODE_TYPE type;
     };
     typedef std::set<std::shared_ptr<RolloutItem>> rollout_set_t;
+public:
+    typedef AbstractEnvironment::action_container_t action_container_t;
     /**
      * Node-specific data for MCTS.*/
     struct MCTSNodeInfo {
@@ -126,11 +131,16 @@ protected:
     const node_hash_function_t node_hash;
 
     /**
+     * Map to store old value during backup propagation. */
+    std::shared_ptr<mcts_node_info_map_t> old_values = nullptr;
+
+    /**
      * Policy that is being used to recommend actions from the root node. */
     std::shared_ptr<tree_policy::TreePolicy> recommendation_policy;
 
     int max_depth;
     int rollout_length;
+    bool perform_data_backups;
 
     //----methods----//
 public:
@@ -144,7 +154,8 @@ public:
                          int rollout_length = -1,
                          std::shared_ptr<tree_policy::TreePolicy> recommendation_policy = nullptr,
                          int max_depth = -1,
-                         ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::NONE);
+                         ROLLOUT_STORAGE rollout_storage = ROLLOUT_STORAGE::CONDENSED,
+                         bool perform_data_backups = false);
     virtual ~MonteCarloTreeSearch() = default;
     virtual void next_do() override;
     virtual action_handle_t recommend_action() const override;
@@ -157,6 +168,8 @@ public:
     void set_max_depth(int depth) {max_depth = depth;}
     virtual const mcts_node_info_map_t & get_mcts_node_info_map() const;
     virtual const mcts_arc_info_map_t & get_mcts_arc_info_map() const;
+    virtual void data_backups(bool);
+    virtual void write(std::ostream &) const override;
 protected:
     virtual arc_node_t find_or_create_observation_node(const node_t & action_node,
                                                        const observation_handle_t & observation) override;
@@ -173,9 +186,10 @@ protected:
     virtual void add_rollout(node_t node,
                              std::shared_ptr<RolloutItem> rollout);
     virtual std::shared_ptr<RolloutItem> rollout(node_t leaf_node);
+    virtual void init_rollout_weights(node_t node);
     virtual double color_rescale(const double&) const;
     static bool equal(const MCTSNodeInfo & lhs, const MCTSNodeInfo & rhs);
-    static void update(const MCTSNodeInfo & from, MCTSNodeInfo & to);
+    static void update_node_info(const MCTSNodeInfo & from, MCTSNodeInfo & to);
 };
 
 #endif /* MONTECARLOTREESEARCH_H_ */

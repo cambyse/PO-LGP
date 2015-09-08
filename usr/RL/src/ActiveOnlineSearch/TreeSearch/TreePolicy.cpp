@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <util/util.h>
+#include <util/softmax.h>
 #include <util/return_tuple.h>
 
 #define DEBUG_LEVEL 0
@@ -49,7 +50,7 @@ namespace tree_policy {
     action_handle_t TreePolicy::get_action(const node_t & state_node) const {
         RETURN_TUPLE(action_container_t, actions,
                      vector<double>, probs) = get_action_probabilities(state_node);
-        DEBUG_EXPECT(0,actions.size()>0);
+        DEBUG_EXPECT(actions.size()>0);
         IF_DEBUG(1) {
             DEBUG_OUT(1,"Action probabilities (node " << graph->id(state_node) << "):");
             for(int idx=0; idx<(int)actions.size(); ++idx) {
@@ -117,7 +118,7 @@ namespace tree_policy {
                     s << *a;
                     new_actions.push_back(s.str());
                 }
-                DEBUG_EXPECT(0,old_actions==new_actions);
+                DEBUG_EXPECT(old_actions==new_actions);
 #endif
             } else {
                 actions = environment->get_actions();
@@ -146,11 +147,20 @@ namespace tree_policy {
                 scored_actions.push_back(action);
             }
         }
-        DEBUG_EXPECT(0,!scores.empty());
-        DEBUG_EXPECT(0,scored_actions.size()==scores.size());
+        DEBUG_EXPECT(!scores.empty());
+        DEBUG_EXPECT(scored_actions.size()==scores.size());
 
         // compute soft-max probabilities and return
-        return action_probability_t(scored_actions, util::soft_max(scores,soft_max_temperature));
+        auto probabilities = util::soft_max(scores,soft_max_temperature);
+        IF_DEBUG(0) {
+            double sum = 0;
+            for(auto prob : probabilities) {
+                sum += prob;
+                DEBUG_EXPECT(prob==prob);
+            }
+            DEBUG_EXPECT_APPROX(sum,1);
+        }
+        return action_probability_t(scored_actions, probabilities);
     }
 
     double Optimal::score(const node_t & state_node,
@@ -164,6 +174,9 @@ namespace tree_policy {
     double UCB1::score(const node_t & state_node,
                          const arc_t & to_action_arc,
                          const node_t & action_node) const {
+        /* Sample actions according to UCB1 policy. The upper bound is computed
+         * as $$Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + 2 C_p \sqrt{2\log n / n_j}$$
+         *  */
         return (*mcts_node_info_map)[action_node].value +
             2*Cp*sqrt(
                 2*log((*mcts_node_info_map)[state_node].action_counts)/
@@ -171,22 +184,154 @@ namespace tree_policy {
                 );
     }
 
-    UCB_Plus::UCB_Plus(double Cp): Cp(Cp) {}
+    UCB_Variance::UCB_Variance(double zeta, double c): zeta(zeta), c(c) {}
 
-    double UCB_Plus::score(const node_t & state_node,
+    /* $$Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2V\zeta\log n}{n_j}} + c \frac{3b\zeta\log n}{n_j}$$
+     *
+     * where V is the variance of the return (not of the value!), b is the upper
+     * bound on the reward (assuming zero as lower bound), and zeta and c > 0
+     * control the behavior. */
+    double UCB_Variance::score(const node_t & state_node,
                              const arc_t & to_action_arc,
                              const node_t & action_node) const {
+        double b = reward_bound();
+        double n = (*mcts_node_info_map)[state_node].action_counts;
+        double nj = (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        double score = (*mcts_node_info_map)[action_node].value_variance;
+        if(score!=std::numeric_limits<double>::infinity()) {
+            // we drop nj in the first term because we use the variance of the
+            // value instead of the return
+            score = (*mcts_node_info_map)[action_node].value +
+                sqrt( 2 * (*mcts_node_info_map)[action_node].value_variance * zeta * log(n) ) +
+                c * (3 * b * zeta * log(n) ) / nj;
+        }
+        return score;
+    }
 
-        // upper bound = value + Cp sqrt( value_variance / n) where n is the
-        // number of times this action was taken.
-        return (*mcts_node_info_map)[action_node].value +
-            Cp*sqrt((*mcts_node_info_map)[action_node].value_variance);
+    double UCB_Variance::reward_bound() const {
+        double b = 1;
+        if(environment->has_min_reward() && environment->has_max_reward()) {
+            b = environment->max_reward() - environment->min_reward();
+        } else {
+            DEBUG_WARNING("Environment does not have bounded reward. Using b = 1.");
+        }
+        return b;
     }
 
     double HardUpper::score(const node_t & state_node,
                               const arc_t & to_action_arc,
                               const node_t & action_node) const {
         return (*mcts_node_info_map)[action_node].max_value;
+    }
+
+    Quantile::Quantile(double Cp_,
+                       double quantile_,
+                       double min_return_,
+                       double max_return_,
+                       double prior_counts_):
+        Cp(Cp_),
+        quantile(quantile_),
+        min_return(min_return_),
+        max_return(max_return_),
+        prior_counts(prior_counts_)
+    {}
+
+    double Quantile::score(const node_t & state_node,
+                           const arc_t & to_action_arc,
+                           const node_t & action_node) const {
+        auto & rollouts = (*mcts_node_info_map)[action_node].rollout_set;
+        // get counts to rescale weights for incorporating prior counts (weights
+        // sum to 1)
+        double counts = rollouts.size();
+        DEBUG_EXPECT(counts>0);
+        //-----------------------------------//
+        // get sorted (by return value) list //
+        //-----------------------------------//
+        // also compute value
+        double value = 0;
+        vector<pair<double,double>> rollout_list;
+        double weight_sum = 0;
+        bool all_weights_negative = true;
+        for(auto rollout_item : rollouts) {
+            rollout_list.push_back(make_pair(rollout_item->discounted_return,
+                                             rollout_item->weight*counts)); // rescale weights
+            value += rollout_item->discounted_return * rollout_item->weight * counts;
+            weight_sum += rollout_item->weight;
+            if(rollout_item->weight>=0) {
+                all_weights_negative = false;
+            }
+        }
+        // if weights were not updated use uniform weighting
+        if(all_weights_negative) {
+            value = 0;
+            for(auto & return_weight_pair : rollout_list) {
+                return_weight_pair.second = 1;
+                value += return_weight_pair.first;
+            }
+        } else {
+            DEBUG_EXPECT_APPROX(weight_sum,1);
+        }
+        // add prior counts
+        if(prior_counts>0) {
+            rollout_list.push_back(make_pair(min_return, prior_counts/2));
+            rollout_list.push_back(make_pair(max_return, prior_counts/2));
+            value += min_return * prior_counts / 2;
+            value += max_return * prior_counts / 2;
+            counts += prior_counts;
+        }
+        // renormalize value
+        value /= counts;
+        // sort list
+        std::sort(rollout_list.begin(),rollout_list.end());
+        // find quantile
+        bool found_lower = false;
+        bool found_upper = false;
+        double lower_quantile = std::min(1-quantile,quantile) * counts;
+        double upper_quantile = std::max(1-quantile,quantile) * counts;
+        auto lower_quantile_pair_below = rollout_list.front();
+        auto lower_quantile_pair_above = rollout_list.front();
+        auto upper_quantile_pair_below = rollout_list.front();
+        auto upper_quantile_pair_above = rollout_list.front();
+        for(auto & return_weight_pair : rollout_list) {
+            if(!found_lower) {
+                lower_quantile -= return_weight_pair.second;
+                lower_quantile_pair_above = return_weight_pair;
+                if(lower_quantile<0) found_lower = true;
+                else lower_quantile_pair_below = return_weight_pair;
+            }
+            if(!found_upper) {
+                upper_quantile -= return_weight_pair.second;
+                upper_quantile_pair_above = return_weight_pair;
+                if(upper_quantile<0) found_upper = true;
+                else upper_quantile_pair_below = return_weight_pair;
+            }
+            if(found_lower && found_upper) break;
+        }
+        DEBUG_EXPECT(found_lower && found_upper);
+        // interpolate linearly between the two values
+        double t_lower = (lower_quantile_pair_above.second+lower_quantile)/lower_quantile_pair_above.second;
+        double lower_quantile_value = (1-t_lower)*lower_quantile_pair_below.first + t_lower*lower_quantile_pair_above.first;
+        double t_upper = (upper_quantile_pair_above.second+upper_quantile)/upper_quantile_pair_above.second;
+        double upper_quantile_value = (1-t_upper)*upper_quantile_pair_below.first + t_upper*upper_quantile_pair_above.first;
+        DEBUG_EXPECT(t_lower>=0 && t_lower<=1);
+        DEBUG_EXPECT(t_upper>=0 && t_upper<=1);
+        DEBUG_EXPECT(lower_quantile_value==lower_quantile_value);
+        DEBUG_EXPECT(upper_quantile_value==upper_quantile_value);
+        DEBUG_EXPECT(value==value);
+        double exploration_term = log((*mcts_node_info_map)[state_node].action_counts) /
+            (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        return value + Cp * upper_quantile_value + Cp*sqrt(exploration_term);
+        // compute score
+        double b = 1;
+        if(environment->has_min_reward() && environment->has_max_reward()) {
+            b = environment->max_reward() - environment->min_reward();
+        }
+        double n = (*mcts_node_info_map)[state_node].action_counts;
+        double nj = (*mcts_arc_info_map)[to_action_arc].transition_counts;
+        double score = (*mcts_node_info_map)[action_node].value +
+            sqrt( (2 * (upper_quantile_value - lower_quantile_value) * log(n) ) / nj ) +
+            Cp * (3 * b * log(n) ) / nj;
+        return score;
     }
 
 } // end namespace tree_policy

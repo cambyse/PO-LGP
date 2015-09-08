@@ -1,6 +1,7 @@
 #include "TemporallyExtendedLinearQ.h"
 
 #include "ConjunctiveAdjacency.h"
+#include "../util/softmax.h"
 #include "../util/util.h"
 #include "../util/QtUtil.h"
 #include "../util/ProgressBar.h"

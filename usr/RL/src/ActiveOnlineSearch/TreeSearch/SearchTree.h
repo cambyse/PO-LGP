@@ -72,7 +72,7 @@ public:
      * Calls init() if necessary, then calls next_do() */
     virtual void next() override final;
     virtual void next_do() = 0;
-    virtual void prune(const action_handle_t &,
+    virtual void update(const action_handle_t &,
                        const observation_handle_t &) override;
     virtual void plot_graph(const char* file_name,
                             const char* command,

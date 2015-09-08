@@ -801,72 +801,6 @@ namespace util {
         return t_max + log(sum);
     }
 
-    /** Implements the SoftMax function. Given input vector \f$u\f$ and
-     * temperature \f$T\f$ the return vector \f$v\f$ is computed as \f$v_{i} =
-     * \frac{\exp\left[u_{i}/T\right]}{\sum_{j}\exp\left[u_{j}/T\right]}\f$. */
-    template < typename Vec >
-        Vec soft_max(const Vec& vec, double temperature) {
-        if(vec.size()==0) {
-            Vec ret = vec;
-            return ret;
-        }
-        // hard-max limit
-        if(temperature==0) {
-            double max = std::numeric_limits<double>::lowest();
-            double max_counts = 0;
-            for(auto value : vec) {
-                if(value>max) {
-                    max_counts = 1;
-                    max = value;
-                } else if(value==max) {
-                    ++max_counts;
-                }
-            }
-            DEBUG_EXPECT(0,max_counts>0);
-            Vec ret = vec;
-            for(int idx=0; idx<(int)vec.size(); ++idx) {
-                if(vec[idx]==max) {
-                    ret[idx] = 1./max_counts;
-                } else {
-                    ret[idx] = 0;
-                }
-            }
-            return ret;
-        }
-        //---------------//
-        // Use log scale //
-        //---------------//
-        double log_sum = vec[0]/temperature; // cannot initialize to log(0)
-        for(int idx=1; idx<(int)vec.size(); ++idx) {
-            log_sum = log_add_exp(log_sum,vec[idx]/temperature);
-        }
-        Vec ret = vec;
-        for(int idx=0; idx<(int)vec.size(); ++idx) {
-            ret[idx] = exp(vec[idx]/temperature - log_sum);
-        }
-        return ret;
-    }
-    /** SoftMax function for temperature 1. */
-    template < typename Vec >
-        Vec soft_max(const Vec& vec) {
-        if(vec.size()==0) {
-            Vec ret = vec;
-            return ret;
-        }
-        //---------------//
-        // Use log scale //
-        //---------------//
-        double log_sum = vec[0]; // cannot initialize to log(0)
-        for(int idx=1; idx<(int)vec.size(); ++idx) {
-            log_sum = log_add_exp(log_sum,vec[idx]);
-        }
-        Vec ret = vec;
-        for(int idx=0; idx<(int)vec.size(); ++idx) {
-            ret[idx] = exp(vec[idx] - log_sum);
-        }
-        return ret;
-    }
-
     /** \brief Return true if t compares equal to itself. */
     template < typename T >
     inline bool is_number(T t) {
@@ -917,7 +851,7 @@ namespace util {
         void convert_ND_to_1D_index(const C & ND_index,
                                     const D & ND_bounds,
                                     IDX_TYPE & linear_index) {
-        DEBUG_EXPECT(0, ND_index.size()==ND_bounds.size());
+        DEBUG_EXPECT( ND_index.size()==ND_bounds.size());
         linear_index = 0;
         auto idx_it = ND_index.begin();
         auto bnd_it = ND_bounds.begin();
@@ -1034,7 +968,7 @@ namespace util {
                 static template_lib::N_tuple<N,D_IDX_TYPE> from(const IDX_TYPE & linear_index,
                                                                 const std::initializer_list<D_IDX_TYPE> ND_bounds)
             {
-                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                DEBUG_EXPECT(ND_bounds.size()==N);
                 auto vec = convert_1D_to_ND_index(linear_index, std::vector<D_IDX_TYPE>(ND_bounds));
                 std::array<D_IDX_TYPE,N> arr;
                 for(int idx = 0; idx<(int)std::min(N,vec.size()); ++idx) {
@@ -1047,7 +981,7 @@ namespace util {
                 static template_lib::N_tuple<N,IDX_TYPE> from(const IDX_TYPE & linear_index,
                                                                 const D & ND_bounds)
             {
-                DEBUG_EXPECT(0,ND_bounds.size()==N);
+                DEBUG_EXPECT(ND_bounds.size()==N);
                 auto ND_index = convert_1D_to_ND_index(linear_index, ND_bounds);
                 std::array<IDX_TYPE,N> arr;
                 auto arr_it = arr.begin();

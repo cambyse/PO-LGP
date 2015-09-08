@@ -23,12 +23,13 @@ public:
     virtual void init() override;
     virtual void next() override;
     virtual action_handle_t recommend_action() const override;
-    virtual void prune(const action_handle_t &,
+    virtual void update(const action_handle_t &,
                        const observation_handle_t &) override;
     virtual void plot_graph(const char* file_name,
                             const char* command = "dot",
                             const char* parameters = "-Tpdf",
                             bool delete_dot_file = true) const override;
+    virtual void write(std::ostream &) const override;
 };
 
 #endif /* RANDOMSEARCH_H_ */

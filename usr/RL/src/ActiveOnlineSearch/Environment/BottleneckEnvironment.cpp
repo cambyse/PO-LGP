@@ -5,12 +5,12 @@
 BottleneckEnvironment::BottleneckEnvironment(int branching, int branch_length):
     branching(branching), branch_length(branch_length)
 {
-    DEBUG_EXPECT(0,branch_length>1);
+    DEBUG_EXPECT(branch_length>1);
 }
 
 BottleneckEnvironment::observation_reward_pair_t BottleneckEnvironment::transition(const action_handle_t & action_handle) {
     auto x = std::dynamic_pointer_cast<const BottleneckAction>(action_handle);
-    DEBUG_EXPECT(0,x!=nullptr);
+    DEBUG_EXPECT(x!=nullptr);
     reward_t reward = 0;
     double prob = (double)(state.branch-1)/(branching-1);
     if(state.step==0) {

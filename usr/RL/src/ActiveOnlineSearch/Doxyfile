@@ -15,3 +15,5 @@ HTML_EXTRA_FILES       = doc/images/graph.jpg
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES
+SOURCE_BROWSER	       = YES
+USE_MATHJAX	       = YES

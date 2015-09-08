@@ -1,10 +1,3 @@
-/*
- * util.cpp
- *
- *  Created on: Dec 12, 2012
- *      Author: robert
- */
-
 #include "util.h"
 
 #include <iostream>
