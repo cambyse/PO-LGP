@@ -81,11 +81,11 @@ int main(int argc,char **argv){
 
 
 
-  int numEpisode = 2; //number of episodes to evaluate Gradient (at each iteration);
+  int numEpisode = 3; //number of episodes to evaluate Gradient (at each iteration);
   int H = 1; //horizon
   int numCentres = 1;
   //int numRuns = 10; // runs for averaging performance
-  int numIterations = 25; //number of gradient updates
+  int numIterations = 50; //number of gradient updates
   uint kernel_type = 0;// 0 is RBF Kernel
   mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
@@ -94,7 +94,6 @@ int main(int argc,char **argv){
 
 
   rkhs1.Algorithm = 1;//NAC
-
 
 
   arr start(1);//multi-armed bandits setting
