@@ -145,7 +145,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 //  cout << " parameter lim upper=" << world->getJointByName("l_gripper_joint")->limits(1) << " lower=" << world->getJointByName("l_gripper_joint")->limits(0) << endl;
 
   if (Xn.col(24).max() > world->getJointByName("l_gripper_joint")->limits(1) || Xn.col(24).min() < world->getJointByName("l_gripper_joint")->limits(0)){
-    cout << "limit reached" << endl;
+    //cout << "limit reached" << endl;
     return false;
   }else{
     return true;

@@ -44,11 +44,19 @@ RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo,
 }
 void RKHSPol::loadOldFuncPolicy()
 {
-    FuncPolicy << FILE(STRING("FuncPolicy.dat"));
-    cout<< FuncPolicy <<endl;
-    arr temp;
-    temp<< FILE(STRING("currIteration.dat"));
-    currIteration = temp(0);
+    if(Algorithm==1){
+        FuncPolicy << FILE(STRING("FuncPolicy.dat"));
+        cout<< FuncPolicy <<endl;
+        arr temp;
+        temp<< FILE(STRING("currIteration.dat"));
+        currIteration = temp(0);
+    }else{
+        FuncPolicy << FILE(STRING("FuncPolicy_PG.dat"));
+        cout<< FuncPolicy <<endl;
+        arr temp;
+        temp<< FILE(STRING("currIteration_PG.dat"));
+        currIteration = temp(0);
+    }
 
 }
 void RKHSPol::setStart(const arr &start)
@@ -172,17 +180,15 @@ arr RKHSPol::runPG()
         FuncPolicy[0](0) = newMean(0) + 0.03; // see the way we compute the bias (just fix the diff)
         FuncPolicy[0](1) = newMean(1) + 0.06;
         FuncPolicy[0](2) = StartingState(0);
-        cout<< FuncPolicy <<endl;
+        //cout<< FuncPolicy <<endl;
         //////////////////////////////////////////////////
 
 
-        write(LIST<arr>(FuncPolicy),STRING("FuncPolicy.dat"));
-        write(LIST<arr>(ARR(iteration+1)),STRING("currIteration.dat"));
+        write(LIST<arr>(FuncPolicy),STRING("FuncPolicy_PG.dat"));
+        write(LIST<arr>(ARR(iteration+1)),STRING("currIteration_PG.dat"));
 
     }
     return IterationReward;
-
-
 }
 
 
@@ -291,7 +297,7 @@ arr RKHSPol::runPG()
         FuncPolicy[0](0) = newMean(0) + 0.03; // see the way we compute the bias (just fix the diff)
         FuncPolicy[0](1) = newMean(1) + 0.06;
         FuncPolicy[0](2) = StartingState(0);
-        cout<< FuncPolicy <<endl;
+        //cout<< FuncPolicy <<endl;
         //////////////////////////////////////////////////
 
 
@@ -333,7 +339,7 @@ arr RKHSPol::runPG()
          if(Algorithm==0)
               alpha_new = 0.00000001 + 0.02*grid; //for plain PG
          else if (Algorithm==1)
-              alpha_new = 0.01*pow(1.5,grid) - 0.01;// + 0.00000001; //use 1.2 for polynomial kernels (Kernel_Type>0)
+              alpha_new = 0.01*pow(2.,grid) - 0.01;// + 0.00000001; //use 1.2 for polynomial kernels (Kernel_Type>0)
               //alpha_new = 0.00000001 + 0.07*grid; //0.01*pow(1.5,grid) - 0.01 + 0.00000001; //use 2. for NPG (without sparsification: because when the step-size is very large (2000.), sparsification gives poor approximation
             //alpha_new = 0.00000001 + 0.02*grid;
          else
@@ -353,7 +359,7 @@ arr RKHSPol::runPG()
              double Reward = rollout(TempGradient, states, actions, rewards);
              Total_R += Reward;
          }
-         cout<< Total_R/numEpisodes<<"  ";
+         //cout<< Total_R/numEpisodes<<"  ";
          if((double)Total_R/numEpisodes > best_value){
              best_value = (double) Total_R/numEpisodes;
              best_alpha = alpha_new;
