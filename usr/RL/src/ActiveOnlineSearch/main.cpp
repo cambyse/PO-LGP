@@ -5,6 +5,7 @@
 #include <tuple>
 #include <unistd.h>
 #include <memory>
+#include <fstream>
 
 #include <tclap/CmdLine.h>
 
@@ -31,7 +32,8 @@
 #include "Environment/Stochastic1D.h"
 #include "Environment/NastyStochastic1D.h"
 #include "../../../../share/src/FOL/fol_mcts_world.h"
-#include "../../../../share/src/POMCP/mcts.h"
+#include "../../../../share/src/MCTS/env_robert.h"
+//#include "../../../../share/src/POMCP/mcts.h"
 
 #include <omp.h>
 #define USE_OMP
@@ -732,7 +734,9 @@ shared_ptr<AbstractEnvironment> get_environment() {
     } else if(environment_arg.getValue()=="NastyStochastic1D") {
         environment.reset(new NastyStochastic1D(3,3,1,0.5,true));
     } else if(environment_arg.getValue()=="FOL") {
-        environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World("boxes_new.kvg"));
+      std::ifstream fil("boxes_new.kvg");
+      environment = InterfaceMarc::makeAbstractEnvironment(new FOL_World(fil));
+      fil.close();
     } else if(environment_arg.getValue()=="BottleneckEnvironment") {
         environment.reset(new BottleneckEnvironment(9,2));
     } else {

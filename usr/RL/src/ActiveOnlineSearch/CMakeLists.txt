@@ -5,10 +5,10 @@ find_package(Qt5Core)
 add_definitions(-fopenmp -std=c++0x)
 
 ## include and find FOL and POMCP
-include_directories(/home/robert/MLR_git/share/include)
-include_directories(/home/robert/MLR_git/share/src)
-find_library(LIBFOL FOL /home/robert/data/git_repos/MLR_git/share/lib)
-find_library(LIBPOMCP POMCP /home/robert/data/git_repos/MLR_git/share/lib)
+include_directories(../../../../share/include)
+include_directories(../../../../share/src)
+find_library(LIBFOL FOL ../../../../share/lib)
+#find_library(LIBPOMCP POMCP ../../../../share/lib)
 
 ## evaluation
 
@@ -58,33 +58,33 @@ target_link_libraries(main_ActiveOnlineSearch
     -larmadillo
     -lgomp
     ${LIBFOL}
-    ${LIBPOMCP}
+#    ${LIBPOMCP}
 )
 
 ## POMCP evaluation
 
-add_executable(POMCP_eval
-    POMCP_eval.cpp
-    Environment/SimpleEnvironment.h
-    Environment/GamblingHall.h
-    Environment/GamblingHall.cpp
-    Environment/VarianceEnvironments.h
-    Environment/VarianceEnvironments.cpp
-    Environment/MC_versus_DP.h
-    Environment/Stochastic1D.h
-    Environment/NastyStochastic1D.h
-    Environment/BottleneckEnvironment.h
-    Environment/BottleneckEnvironment.cpp
-)
+# add_executable(POMCP_eval
+#     POMCP_eval.cpp
+#     Environment/SimpleEnvironment.h
+#     Environment/GamblingHall.h
+#     Environment/GamblingHall.cpp
+#     Environment/VarianceEnvironments.h
+#     Environment/VarianceEnvironments.cpp
+#     Environment/MC_versus_DP.h
+#     Environment/Stochastic1D.h
+#     Environment/NastyStochastic1D.h
+#     Environment/BottleneckEnvironment.h
+#     Environment/BottleneckEnvironment.cpp
+# )
 
-target_include_directories(POMCP_eval PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(POMCP_eval
-    Qt5::Core
-    util
-    -lgomp
-    ${LIBFOL}
-    ${LIBPOMCP}
-)
+# target_include_directories(POMCP_eval PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+# target_link_libraries(POMCP_eval
+#     Qt5::Core
+#     util
+#     -lgomp
+# #    ${LIBFOL}
+# #    ${LIBPOMCP}
+# )
 
 ## examples
 

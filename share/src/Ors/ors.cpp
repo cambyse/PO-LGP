@@ -1734,12 +1734,12 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
+  clear();
+
   Graph *G = new Graph();
   G->read(is);
   G->checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
-  
-  clear();
   
   NodeL bs = G->getNodes("body");
   for_list(Node,  it,  bs) {
