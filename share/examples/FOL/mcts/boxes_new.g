@@ -115,7 +115,7 @@ Rule {
 
 REWARD {
   r=100.
-  { X, Y{ (fixed Handle X) (fixed Handle Y) } }
+  { X, Y, { (fixed Handle X) (fixed Handle Y) } }
   r=10.
   { X, Y, Z, { (activate_fixing X Y Z) } }
 }

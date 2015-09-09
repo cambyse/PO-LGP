@@ -155,7 +155,6 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
         }
       }
 #else
-//      getSubstitutions2(*state,
       NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
       if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
         if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
@@ -302,8 +301,8 @@ bool FOL_World::get_info(InfoTag tag) const{
 double FOL_World::get_info_value(InfoTag tag) const{
   switch(tag){
     case getGamma: return gamma;
-    case getMaxReward: return 1.;
-    case getMinReward: return 0.;
+    case getMaxReward: return 100.;
+    case getMinReward: return -deadEndCost;
     default: HALT("unknown tag" <<tag);
   }
 }

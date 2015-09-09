@@ -46,11 +46,13 @@ void TEST(MCTS){
 //===========================================================================
 
 void TEST(MC){
-  FOL_World world(FILE("boxes_new.kvg"));
+  FOL_World world(FILE("boxes_new.g"));
   PlainMC mc(world);
   world.verbose=0;
   world.verbFil=0;
   mc.verbose=0;
+
+  FILE("z") <<world.KB;
 
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
@@ -137,8 +139,8 @@ void TEST(Determinism){
 //===========================================================================
 
 int main(int argn, char** argv){
-//    rnd.clockSeed();
-//  srand(timenow)
+  //rnd.clockSeed();
+  //srand(rnd());
 
 //  testMCTS();
   testMC();
