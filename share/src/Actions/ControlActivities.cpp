@@ -81,7 +81,7 @@ void FollowReferenceActivity::stepControl(double dt){
 }
 
 bool FollowReferenceActivity::isConv(){
-  bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
+  bool stuck = (task->y.N == old_y.N) and (maxDiff(old_y, task->y) < stopTolerance);
   stuck_count = stuck ? stuck_count + 1 : 0;
   old_y = task->y;
 
@@ -89,9 +89,7 @@ bool FollowReferenceActivity::isConv(){
            && task->y.N == task->y_ref.N
            && maxDiff(task->y, task->y_ref) < stopTolerance
            && maxDiff(task->v, task->v_ref) < stopTolerance)
-          or
-          (task->y_ref.nd==2
-           && activityTime>=trajectoryDuration)
+          or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }
 
