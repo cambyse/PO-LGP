@@ -104,6 +104,12 @@ def run(plan):
 
 
 ###############################################################################
+class SensorActivity(object):
+    def __str__(self):
+        return "(SensorActivity endeffL) { threshold=5 }"
+
+
+###############################################################################
 # Python activitiy classes
 class Activity(object):
     """
