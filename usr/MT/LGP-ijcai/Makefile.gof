@@ -1,7 +1,5 @@
 BASE = ../../../share
 
-OBJS = main.o endStateOptim.o pathOptim.o search.o towerProblem.o
-
-DEPEND = Motion Core Ors Gui Optim FOL
+DEPEND = Motion Core Ors Gui Optim FOL LGP
 
 include $(BASE)/gofMake/generic.mk

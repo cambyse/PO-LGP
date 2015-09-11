@@ -1,11 +1,9 @@
-//#include <pr2/actionMachine.h>
-//#include "manipSim.h"
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
 
-#include "LGP.h"
+#include <LGP/LGP.h>
 
 //===========================================================================
 

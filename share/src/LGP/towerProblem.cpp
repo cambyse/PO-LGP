@@ -1,4 +1,4 @@
-#include "LGP.h"
+#include "towerProblem.h"
 
 void TowerProblem::setRandom(){
   symbols.checkConsistency();

@@ -1,4 +1,4 @@
-#include "LGP.h"
+#include "pathProblem.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 

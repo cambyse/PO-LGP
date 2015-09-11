@@ -1,4 +1,4 @@
-#include "LGP.h"
+#include "effectivePoseProblem.h"
 #include <Gui/opengl.h>
 
 //===========================================================================
