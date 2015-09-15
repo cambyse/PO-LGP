@@ -22,11 +22,22 @@ void FOL_World::Decision::write(ostream& os) const{
   }
 }
 
+FOL_World::FOL_World()
+    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), tmp(NULL), verbose(0), verbFil(0) {}
+
 FOL_World::FOL_World(istream& is)
     : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      KB(*new Graph(is)), state(NULL), tmp(NULL), verbose(0), verbFil(0) {
+      state(NULL), tmp(NULL), verbose(0), verbFil(0) {
+  init(is);
+}
+
+void FOL_World::init(istream& is){
+  KB.read(is);
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
+
+  MT_MSG("TODO: add action sequence to the representation");
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
@@ -57,7 +68,6 @@ FOL_World::FOL_World(istream& is)
 }
 
 FOL_World::~FOL_World(){
-  delete &KB; //the reference new'ed in the constructor
 }
 
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
@@ -193,7 +203,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
   for(Node* rule:decisionRules){
 //    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
-    NodeL subs = getRuleSubstitutions2(*state, rule, (verbose>4) );
+    NodeL subs = getRuleSubstitutions2(*state, rule, verbose-3 );
     for(uint s=0;s<subs.d0;s++){
         decisions.append(Handle(new Decision(false, rule, subs[s], decisions.N))); //a grounded rule decision (abstract rule with substution)
     }

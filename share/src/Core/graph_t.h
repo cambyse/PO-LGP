@@ -51,7 +51,7 @@ struct Node_typed :Node {
   Node_typed(Graph& container, T *value, bool ownsValue):Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
@@ -59,11 +59,11 @@ struct Node_typed :Node {
     : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   virtual ~Node_typed(){
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
     if(ownsValue) delete value;
     value=NULL;
   }
@@ -168,13 +168,13 @@ template<class T> const T *Node::getValue() const {
 }
 
 template<class T> NodeInitializer::NodeInitializer(const char* key, const T& x){
-  it = new Node_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));
 }
 
 template<class T> NodeInitializer::NodeInitializer(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  it = new Node_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));
 }
 

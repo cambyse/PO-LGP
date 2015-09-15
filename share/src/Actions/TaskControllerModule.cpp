@@ -15,7 +15,7 @@ TaskControllerModule::TaskControllerModule()
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>());
+  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
   modelWorld.set() = realWorld;
   feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
   globalTaskControllerModule=this;
@@ -49,7 +49,7 @@ void TaskControllerModule::open(){
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-  MT::open(fil,"z.TaskControllerModule");
+//  MT::open(fil,"z.TaskControllerModule");
 
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
@@ -125,7 +125,7 @@ void TaskControllerModule::step(){
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
 //      MT::arrayBrackets="  ";
-      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
+//      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
 //      MT::arrayBrackets="[]";
     }
   }
@@ -195,5 +195,5 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-  fil.close();
+//  fil.close();
 }

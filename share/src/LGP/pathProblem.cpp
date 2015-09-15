@@ -44,7 +44,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
   }
 
-  //-- pose
+  //-- pose damping
   {
     Task *t;
     t = MP.addTask("pose", new TaskMap_qItself());

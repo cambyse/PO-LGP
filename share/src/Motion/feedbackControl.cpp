@@ -262,3 +262,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr q_ddot = inverse_SymPosDef(A) * a;
   return q_ddot;
 }
+
+RUN_ON_INIT_BEGIN(CtrlTask)
+MT::Array<CtrlTask*>::memMove=true;
+RUN_ON_INIT_END(CtrlTask)

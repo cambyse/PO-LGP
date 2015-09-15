@@ -26,11 +26,11 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-//  MT::String str;
-//  str <<FILE("../PlannerExample/toolbox.kvg");
-//  str <<FILE("../PlannerExample/reward.g");
-  FOL_World world(FILE("../mcts/toolbox.kvg"));
-  world.verbose=2;
+  const char *file = "../mcts/toolbox.kvg";
+  if(MT::argc>1) file = MT::argv[1];
+
+  FOL_World world(FILE(file));
+  world.verbose = MT::getParameter<int>("verbose", 2);
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();
@@ -45,7 +45,7 @@ void TEST(PlayFOL_World){
     uint c=0;
     if(!terminal) for(auto& a:actions){ cout <<"(" <<c++ <<") DECISION: " <<*a <<endl; }
 
-    char cmd;
+    char cmd='1';
     std::cin >>cmd;
     cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
@@ -66,6 +66,7 @@ void TEST(PlayFOL_World){
 //===========================================================================
 
 int main(int argn, char** argv){
+  MT::initCmdLine(argn, argv);
   rnd.clockSeed();
 
 //  testMCTS();

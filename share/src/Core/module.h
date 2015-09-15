@@ -125,7 +125,7 @@ struct Access_typed:Access{
     else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
   }
   ~Access_typed(){ delete type; }
-  T& operator()(){ CHECK(v && var,""); CHECK(v->rwlock.isLocked(),"");  return v->data; }
+  T& operator()(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return v->data; }
   T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data

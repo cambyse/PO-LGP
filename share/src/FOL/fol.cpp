@@ -510,7 +510,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
      }
    }
 
-   if(verbose>2) cout <<"domains after 'marginal domain collection':" <<endl;
+   if(verbose>2) cout <<"final domains after 'marginal domain collection':" <<endl;
    if(verbose>2) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
 
    //-- check that every domain is constrained (that is, mentioned by at least SOME relation)
@@ -566,10 +566,11 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
          //           Node *it2 = literal->container(literal->index+2);
          //           feasible = matchingFactsAreEqual(facts, it1, it2, values, &varScope);
          //         }else{
-         feasible = getEqualFactInKB(facts, literal, values, &varScope);
-         if(!feasible){ //when literal is a negative boolean literal and we don't find a match, we interpret this as feasible!
-           if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false)
-             feasible=true;
+         if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly())==false){ //deal differently with false literals
+           feasible = getEqualFactInKB(facts, literal, values, &varScope, false); //check match ignoring value
+           feasible = !feasible; //invert result
+         }else{ //normal
+           feasible = getEqualFactInKB(facts, literal, values, &varScope);
          }
          //         }
          if(verbose>3){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }

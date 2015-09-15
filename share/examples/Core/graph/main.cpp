@@ -11,9 +11,10 @@ void TEST(Read){
 
   G.checkConsistency();
   cout <<"\n** reading graph..." <<flush;
-  G <<FILE(filename?filename:"example.kvg");
+  G.read(FILE(filename?filename:"example.kvg"), true); //including parse info
   G.checkConsistency();
   cout <<"\ndone" <<endl;
+  G.writeParseInfo(cout);
   cout <<"read graph=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
 //  Node *m = G.getNode("modify");
@@ -128,6 +129,7 @@ struct Something{
   Something(double y=0.){ x=y; }
   double x;
 };
+
 void operator<<(ostream& os, Something& s){ os <<s.x; }
 //the following 2 lines are optional: they enable naming the type and typed reading from file
 void operator>>(istream& is, Something& s){ is >>s.x; }
@@ -147,10 +149,10 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-  testRandom();
+//  testRandom();
   testRead();
-  testInit();
-  testDot();
+//  testInit();
+//  testDot();
 
 //  if(!filename) testManual();
 

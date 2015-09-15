@@ -90,7 +90,7 @@ void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWo
   task->y_ref=taskController->q0;
 
   Node* it;
-  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if(&specs && (it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 
   wheeljoint = world.getJointByName("worldTranslationRotation");
 }

@@ -33,7 +33,7 @@ struct TaskControllerModule : Module {
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose
-  ofstream fil; //< file for diagnostics
+//  ofstream fil; //< file for diagnostics
   bool useRos;
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
   bool verbose;

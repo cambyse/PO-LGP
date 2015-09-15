@@ -62,12 +62,32 @@ void ijcaiExperiment(){
 
 //===========================================================================
 
+void newMethod(){
+  TowerProblem_new towers; //generates a randomize towers problem
+
+  //ManipulationTree T(towers.world, towers.symbols);
+
+  auto actions = towers.fol_root.get_actions();
+  uint c=0;
+  for(auto& a:actions){ cout <<"(" <<c++ <<") DECISION: " <<*a <<endl; }
+
+//  for(;;){
+//    T.addRollout(); //uses a tree policy to walk to a leaf, expands, r
+//    T.optimEffPose(T.getRndNode());
+//    T.optimPath(T.getRndNode());
+//  }
+
+}
+
+//===========================================================================
+
 int main(int argc,char **argv){
   MT::initCmdLine(argc, argv);
 //  rnd.clockSeed();
   rnd.seed(MT::getParameter<int>("seed",0));
 
-  ijcaiExperiment();
+//  ijcaiExperiment();
+  newMethod();
 
   return 0;
 }

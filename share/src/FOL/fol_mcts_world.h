@@ -1,12 +1,8 @@
 #pragma once
 
 #include <MCTS/environment.h>
-//#include <FOL/fol.h>
 #include <Core/array.h>
-
-struct Node;
-struct Graph;
-typedef MT::Array<Node*> NodeL;
+#include <Core/graph.h>
 
 struct FOL_World:MCTS_Environment{
   struct Decision:SAO{
@@ -49,7 +45,7 @@ struct FOL_World:MCTS_Environment{
   double gamma, stepCost, timeCost, deadEndCost;
 
   bool deadEnd, successEnd;
-  Graph& KB;     ///< current knowledge base
+  Graph KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
   NodeL decisionRules;  ///< rules withing the KB (each is a subgraph item of the KB)
@@ -60,8 +56,10 @@ struct FOL_World:MCTS_Environment{
   int verbFil;
   ofstream fil;
 
+  FOL_World();
   FOL_World(istream& fil);
   virtual ~FOL_World();
+  void init(istream& fil);
 
   virtual std::pair<Handle, double> transition(const Handle& action);
   virtual const std::vector<Handle> get_actions();

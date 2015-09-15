@@ -25,7 +25,7 @@ struct SwigSystem : System{
   Log _log;
   TaskControllerModule *tcm;
 
-  SwigSystem():_log("SwigSystem", 1, 1){
+  SwigSystem():_log("SwigSystem"){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
@@ -75,15 +75,15 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   createNewSymbol("go");
 //  new CoreTasks(*s->activity.machine);
 
-  LOG(1) <<"Registered Activities=" <<activityRegistry();
+  S->LOG(1) <<"Registered Activities=" <<activityRegistry();
   for(Node *n:activityRegistry()){
-    LOG(1) <<"adding symbol for " <<n->keys(0);
+    S->LOG(1) <<"adding symbol for " <<n->keys(0);
     createNewSymbol(n->keys(0).p);
   }
-  LOG(1) <<"Shape Symbols:";
+  S->LOG(1) <<"Shape Symbols:";
   S->modelWorld.writeAccess();
   for(ors::Shape *sh:S->modelWorld().shapes){
-    LOG(1) <<"adding symbol for Shape " <<sh->name;
+    S->LOG(1) <<"adding symbol for Shape " <<sh->name;
     createNewSymbol(sh->name.p);
   }
   S->modelWorld.deAccess();
@@ -343,8 +343,8 @@ void ActionSwigInterface::execScript(const char* filename){
       }
     }else{ //interpret as set fact
       applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
+      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
     }
-    S->effects.set()() <<"(go)"; //just trigger that the RM module steps
   }
 }
 
