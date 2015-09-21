@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MLR_PCL
+
 #include <Core/array.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -14,3 +16,5 @@ void conv_ArrCloud_PclCloud(pcl::PointCloud<PointT>::Ptr& pcl_cloud,
 void conv_PclCloud_ArrCloud(arr& kinect_points,
                             arr& kinect_pointColors,
                             const pcl::PointCloud<PointT>::Ptr& pcl_cloud);
+
+#endif
