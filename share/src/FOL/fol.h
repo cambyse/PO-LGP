@@ -46,6 +46,10 @@ bool applyEffectLiterals    (Graph& facts, NodeL& effects, const NodeL& subst, G
 bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes=NoGraph, int verbose=0, int* decisionObservation=NULL);
 bool forwardChaining_propositional(Graph& KB, Node* q);
 
+//------------ functions
+
+double evaluateFunction(Graph& func, Graph& state, int verbose=0);
+
 //### Level 1 class
 
 //struct FOL: Graph{

@@ -97,6 +97,17 @@ void testFolSubstitution(){
 
 //===========================================================================
 
+void testFolFunction(){
+  Graph KB(FILE("functionTest.g"));
+
+  Graph& state = KB.getNode("STATE")->graph();
+  Graph& func = KB.getNode("func")->graph();
+
+  cout <<"f=" <<evaluateFunction(func, state, 3) <<endl;
+}
+
+//===========================================================================
+
 void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
@@ -210,7 +221,8 @@ int main(int argn, char** argv){
 //  testPolFwdChaining();
 //  testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
+//  testFolSubstitution();
+  testFolFunction();
 //  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 }

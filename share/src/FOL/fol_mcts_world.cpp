@@ -24,11 +24,13 @@ void FOL_World::Decision::write(ostream& os) const{
 
 FOL_World::FOL_World()
     : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0) {}
+      state(NULL), tmp(NULL), verbose(0), verbFil(0),
+      lastStepDuration(0.), lastStepProbability(1.) {}
 
 FOL_World::FOL_World(istream& is)
     : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0) {
+      state(NULL), tmp(NULL), verbose(0), verbFil(0),
+      lastStepDuration(0.), lastStepProbability(1.) {
   init(is);
 }
 
@@ -78,8 +80,56 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
 
+  //-- get the decision
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
+
+  //-- add the decision as a fact
+  Node *decision = NULL;
+  if(!d->waitDecision){
+    NodeL decisionTuple = {d->rule};
+    decisionTuple.append(d->substitution);
+    decision = createNewFact(*state, decisionTuple);
+  }
+
+  //-- check for rewards
+  if(rewardFct){
+    reward += evaluateFunction(*rewardFct, *state, verbose-3);
+
+#if 0
+  double rValue=0.;
+  if(rewardFct) for(Node *rTerm:*rewardFct){
+    if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
+    else{
+      CHECK(rTerm->getValueType()==typeid(Graph),"");
+      Graph& rCase=rTerm->graph();
+#if 0
+      if(rCase.N==1){
+        CHECK(rCase(0)->getValueType()==typeid(Graph),"");
+        if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
+      }
+      if(rCase.N>=2){
+        CHECK(rCase.last(-2)->getValueType()==typeid(Graph),"");
+        CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
+        if(rCase.last(-1)->parents(0)==d->rule){
+          if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
+        }
+      }
+#else
+      NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
+      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
+        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
+      }else{
+        if(subs.d0) reward += rValue;
+      }
+#endif
+    }
+#endif
+  }else{
+    if(successEnd) reward += 100.;
+  }
+
+  //-- apply effects of decision
   if(d->waitDecision){
     //-- find minimal wait time
     double w=1e10;
@@ -94,10 +144,12 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
       reward -= 10.*timeCost;
+      lastStepDuration=10.;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
       reward -= w*timeCost; //cost per real time
+      lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->getValueType()==typeid(double)){
@@ -128,14 +180,6 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
   }
 
-  //-- add the decision as a fact
-  Node *decision = NULL;
-  if(!d->waitDecision){
-    NodeL decisionTuple = {d->rule};
-    decisionTuple.append(d->substitution);
-    decision = createNewFact(*state, decisionTuple);
-  }
-
   //-- generic world transitioning
   int decisionObservation = 0;
   forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
@@ -145,37 +189,6 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   successEnd = getEqualFactInKB(*state, Quit_literal);
   deadEnd = (T_step>100);
 
-  //-- check for rewards
-  double rValue=0.;
-  if(rewardFct) for(Node *rTerm:*rewardFct){
-    if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
-    else{
-      CHECK(rTerm->getValueType()==typeid(Graph),"");
-      Graph& rCase=rTerm->graph();
-#if 0
-      if(rCase.N==1){
-        CHECK(rCase(0)->getValueType()==typeid(Graph),"");
-        if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
-      }
-      if(rCase.N>=2){
-        CHECK(rCase.last(-2)->getValueType()==typeid(Graph),"");
-        CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
-        if(rCase.last(-1)->parents(0)==d->rule){
-          if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
-        }
-      }
-#else
-      NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
-      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
-        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
-      }else{
-        if(subs.d0) reward += rValue;
-      }
-#endif
-    }
-  }else{
-    if(successEnd) reward += 100.;
-  }
 
   //-- delete decision fact again
   if(decision) delete decision;
@@ -216,7 +229,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
-    return Handle(new State());
+  return Handle(new State());
 }
 
 bool FOL_World::is_terminal_state() const{
@@ -317,6 +330,12 @@ double FOL_World::get_info_value(InfoTag tag) const{
   }
 }
 
-void FOL_World::write_current_state(ostream& os){
-    state->write(os," ","{}");
+void FOL_World::write_state(ostream& os){
+  state->write(os," ","{}");
+}
+
+void FOL_World::set_state(MT::String& s){
+  state->clear();
+  s >>"{";
+  state->read(s);
 }

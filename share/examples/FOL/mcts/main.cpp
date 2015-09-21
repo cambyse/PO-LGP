@@ -71,7 +71,7 @@ void TEST(MC){
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world(FILE("boxes_new.kvg"));
+  FOL_World world(FILE("boxes_new.g"));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -83,10 +83,19 @@ void TEST(FOL_World){
 
   world.get_actions();
 
-  world.make_current_state_default();
+  //-- test write_state/set_state
+  MT::String str;
+  world.write_state(str);
+  cout <<"\nBEFORE rndAction:" <<endl;  world.write_state(cout);
+  world.transition_randomly();
+  cout <<"\nAFTER rndAction:" <<endl;  world.write_state(cout);
+  world.set_state(str);
+  cout <<"\nAFTER set_state:" <<endl;  world.write_state(cout);
 
-  world.reset_state();
-  world.get_actions();
+
+//  world.make_current_state_default();
+//  world.reset_state();
+//  world.get_actions();
 }
 
 //===========================================================================

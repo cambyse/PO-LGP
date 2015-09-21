@@ -564,3 +564,28 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
   }
   return false;
 }
+
+
+double evaluateFunction(Graph& func, Graph& state, int verbose){
+  double f=0.;
+  for(Node *tree:func){
+    double ftree=0.;
+    Graph& treeG = tree->graph();
+    for(Node *term:treeG){
+      if(term==treeG.last()) break;
+      Graph& termG = term->graph();
+      if(verbose>2) LOG(0) <<"testing tree term " <<termG <<endl;
+      NodeL subs = getRuleSubstitutions2(state, term, 0);
+      if(subs.d0){
+        CHECK(termG.last()->getValueType()==typeid(double),"");
+        double fterm = termG.last()->V<double>();
+        ftree += fterm;
+        if(verbose>0) LOG(0) <<"tree term HIT " <<termG <<" with f-value " <<fterm <<endl;
+        break;
+      }
+    }
+    CHECK(treeG.last()->getValueType()==typeid(double),"");
+    f += treeG.last()->V<double>() * ftree;
+  }
+  return f;
+}

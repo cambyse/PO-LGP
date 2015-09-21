@@ -114,8 +114,9 @@ Rule {
 ### Reward
 
 REWARD {
-  r=100.
-  { X, Y, { (fixed Handle X) (fixed Handle Y) } }
-  r=10.
-  { X, Y, Z, { (activate_fixing X Y Z) } }
+  tree{
+    leaf{ X, Y, { (fixed Handle X) (fixed Handle Y) }, r=100. }
+    leaf{ X, Y, Z, { (activate_fixing X Y Z) }, r=10. }
+    weight=1.
+  }
 }
