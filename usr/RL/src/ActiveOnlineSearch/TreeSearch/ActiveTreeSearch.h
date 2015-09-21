@@ -52,6 +52,7 @@ public:
     virtual void update_c_node_connections(node_t action_node);
     virtual void update_c_node_values(node_t action_node);
     virtual void update_c_root_connections();
+    virtual void write(std::ostream &) const override;
 private:
     static QString description(const action_handle_t);
     static QString description(const observation_handle_t);

@@ -1012,6 +1012,8 @@ void Transformation::setInverse(const Transformation& f) {
   if(f.zeroVels) {
     rot = -f.rot;
     pos = - (rot * f.pos);
+    vel.setZero();
+    angvel.setZero();
     zeroVels = true;
   } else {
     rot = -f.rot;

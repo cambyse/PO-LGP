@@ -20,3 +20,7 @@
 
 Module *currentlyCreating = NULL;
 AccessL *currentlyCreatingAccessL = NULL;
+ModuleL& NoModuleL = *((ModuleL*)NULL);
+
+
+void Module::createVariables(){ for(Access *a:accesses) a->createVariable(); }

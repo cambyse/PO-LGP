@@ -11,7 +11,8 @@ namespace prior_models {
                              double counts,
                              double min,
                              double max,
-                             double prior_counts):
+                             double prior_counts,
+                             bool remove_bias):
         sum(sum),
         squares_sum(squares_sum),
         counts(counts),
@@ -19,7 +20,8 @@ namespace prior_models {
         max(max),
         prior_counts(prior_counts),
         mean(compute_mean(sum,counts,min,max,prior_counts)),
-        variance(compute_variance(mean,squares_sum,counts,min,max,prior_counts))
+        variance(compute_variance(mean,squares_sum,counts,min,max,prior_counts,remove_bias)),
+        variance_of_mean(variance/(counts+prior_counts))
     {}
 
     double PriorCounts::compute_mean(double sum,
@@ -35,8 +37,11 @@ namespace prior_models {
                                          double counts,
                                          double min,
                                          double max,
-                                         double prior_counts) {
-        if(counts + prior_counts - 1 <= 0) {
+                                         double prior_counts,
+                                         bool remove_bias) {
+        if(remove_bias and (counts + prior_counts - 1 <= 0)) {
+            return std::numeric_limits<double>::infinity();
+        } else if(!remove_bias and (counts + prior_counts <= 0)) {
             return std::numeric_limits<double>::infinity();
         } else {
             double var = (squares_sum +
@@ -44,7 +49,8 @@ namespace prior_models {
                           pow(max,2)*prior_counts/2);
             var /= (counts + prior_counts);
             var -= pow(mean,2);
-            return (counts + prior_counts)/(counts + prior_counts - 1)*var;
+            if(remove_bias) return (counts + prior_counts)/(counts + prior_counts - 1)*var;
+            else return var;
         }
     }
 

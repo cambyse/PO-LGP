@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dataNeighbored.h"
-#include "minEigModel.h"
+#include <Algo/dataNeighbored.h>
+#include <Algo/minEigModel.h>
 #include <Gui/opengl.h>
 
 struct ModelEnsemble :OpenGL::GLDrawer{

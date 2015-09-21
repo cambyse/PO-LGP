@@ -1,30 +1,30 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 find_package(Qt5Core)
 
 add_definitions(-fopenmp -std=c++0x)
 
-include_directories(/home/robert/MLR_git/share/include)
-include_directories(/home/robert/MLR_git/share/src)
+## include and find FOL and POMCP
+include_directories(../../../../share/include)
+include_directories(../../../../share/src)
+find_library(LIBFOL FOL ../../../../share/lib)
+#find_library(LIBPOMCP POMCP ../../../../share/lib)
 
-## executable
+## evaluation
 
 add_executable(main_ActiveOnlineSearch
     main.cpp
     graph_util.h
-#    Environment_old/Environment.h
-#    Environment_old/TightRope.h
-#    Environment_old/TightRope.cpp
-#    Environment_old/DynamicTightRope.h
-#    Environment_old/DynamicTightRope.cpp
-#    Environment_old/UnitTestEnvironment.h
     Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
+    Environment/VarianceEnvironments.h
+    Environment/VarianceEnvironments.cpp
+    Environment/MC_versus_DP.h
+    Environment/Stochastic1D.h
+    Environment/NastyStochastic1D.h
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
-#    Environment_old/DelayedUncertainty.h
-#    Environment_old/DelayedUncertainty.cpp
     ComputationalGraph.h
     ComputationalGraph.cpp
     ComputationalConstGraph.h
@@ -52,18 +52,41 @@ add_executable(main_ActiveOnlineSearch
 
 target_include_directories(main_ActiveOnlineSearch PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-find_library(LIBFOL FOL /home/robert/data/git_repos/MLR_git/share/lib)
-target_link_libraries(main_ActiveOnlineSearch ${LIBFOL})
-
 target_link_libraries(main_ActiveOnlineSearch
     util
     -lemon
     -larmadillo
     -lgomp
-    -lFOL
+    ${LIBFOL}
+#    ${LIBPOMCP}
 )
 
-## example
+## POMCP evaluation
+
+# add_executable(POMCP_eval
+#     POMCP_eval.cpp
+#     Environment/SimpleEnvironment.h
+#     Environment/GamblingHall.h
+#     Environment/GamblingHall.cpp
+#     Environment/VarianceEnvironments.h
+#     Environment/VarianceEnvironments.cpp
+#     Environment/MC_versus_DP.h
+#     Environment/Stochastic1D.h
+#     Environment/NastyStochastic1D.h
+#     Environment/BottleneckEnvironment.h
+#     Environment/BottleneckEnvironment.cpp
+# )
+
+# target_include_directories(POMCP_eval PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+# target_link_libraries(POMCP_eval
+#     Qt5::Core
+#     util
+#     -lgomp
+# #    ${LIBFOL}
+# #    ${LIBPOMCP}
+# )
+
+## examples
 
 add_executable(GraphPropagationExample
     examples/GraphPropagationExample.cpp
@@ -71,23 +94,27 @@ add_executable(GraphPropagationExample
 )
 target_link_libraries(GraphPropagationExample util -lemon)
 
+add_executable(UCT_Example
+    examples/UCT_Example.cpp
+)
+target_link_libraries(UCT_Example
+    util
+)
+
 ## library
 
 add_library(ActiveOnlineSearch
     graph_util.h
-#    Environment_old/Environment.h
-#    Environment_old/TightRope.h
-#    Environment_old/TightRope.cpp
-#    Environment_old/DynamicTightRope.h
-#    Environment_old/DynamicTightRope.cpp
-#    Environment_old/UnitTestEnvironment.h
     Environment/SimpleEnvironment.h
     Environment/GamblingHall.h
     Environment/GamblingHall.cpp
     Environment/BottleneckEnvironment.h
     Environment/BottleneckEnvironment.cpp
-#    Environment_old/DelayedUncertainty.h
-#    Environment_old/DelayedUncertainty.cpp
+    Environment/VarianceEnvironments.h
+    Environment/VarianceEnvironments.cpp
+    Environment/MC_versus_DP.h
+    Environment/Stochastic1D.h
+    Environment/NastyStochastic1D.h
     ComputationalGraph.h
     ComputationalGraph.cpp
     ComputationalConstGraph.h

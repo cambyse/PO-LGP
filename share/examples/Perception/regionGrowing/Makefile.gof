@@ -2,8 +2,6 @@ BASE = ../../..
 
 GL = 1
 
-OBJS = main.o dataNeighbored.o minEigModel.o modelEnsemble.o
-
 DEPEND = extern_GCO Gui Perception Core Algo
 
 include $(BASE)/gofMake/generic.mk

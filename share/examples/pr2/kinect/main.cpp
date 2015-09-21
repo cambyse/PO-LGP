@@ -14,6 +14,9 @@
 
 #include <tf/transform_listener.h>
 
+inline std::ostream& operator<<(std::ostream& os, const timespec& t){ os <<t.tv_sec <<'.' <<std::setw(0) <<std::setfill('0') <<t.tv_nsec; return os; }
+
+
 struct MySystem:System{
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
@@ -59,16 +62,23 @@ void TEST(Sensors){
 
   S.kinect_rgb.var->waitForRevisionGreaterThan(10);
 
+  Metronome tic("bla", .05);
+
   for(uint t=0;;t++){
 //    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
     if(engine().shutdown.getValue()>0) break;
     S.kinect_rgb.var->waitForNextRevision();
+//    tic.waitForTic();
+
+    FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
     ors::Transformation X;
+    timespec tstamp = S.kinect_depth.get().v->data_time;
+    cout <<tstamp <<endl;
     try{
       tf::StampedTransform transform;
       listener.lookupTransform("/base_footprint", "/head_mount_kinect_ir_optical_frame",
-                               ros::Time(0), transform);
+                               ros::Time(tstamp.tv_sec, tstamp.tv_nsec), transform);
       X = ros_cvrt(transform);
     }
     catch (tf::TransformException &ex) {
@@ -86,8 +96,7 @@ void TEST(Sensors){
         X.applyOnPointArray( S.kinect_points_world.set() );
 #endif
     gl.lock.unlock();
-    if(!(t%10)) gl.update();
-
+    if(!(t%1)) gl.update();
   }
 
   engine().close(S);

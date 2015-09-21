@@ -1,6 +1,8 @@
 #ifndef SIMPLEENVIRONMENT_H_
 #define SIMPLEENVIRONMENT_H_
 
+#include <MCTS_Environment/AbstractEnvironment.h>
+
 class SimpleEnvironment: public AbstractEnvironment {
     //----typedefs/classes----//
 public:

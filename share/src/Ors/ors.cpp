@@ -406,7 +406,7 @@ void ors::Joint::reset() {
 
 void ors::Joint::parseAts() {
   //interpret some of the attributes
-  double d;
+  double d=0.;
   ats.getValue<Transformation>(A, "A");
   ats.getValue<Transformation>(A, "from");
   if(ats.getValue<bool>("BinvA")) B.setInverse(A);
@@ -445,7 +445,7 @@ void ors::Joint::parseAts() {
   ats.getValue<arr>(ctrl_limits, "ctrl_limits");
   if(ctrl_limits.N && type!=JT_fixed){
     if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
-    CHECK_EQ(limits.N,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
+    CHECK_EQ(3,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
     limits.append(ctrl_limits);
   }
   //coupled to another joint requires post-processing by the Graph::read!!
@@ -1734,12 +1734,12 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
+  clear();
+
   Graph *G = new Graph();
   G->read(is);
   G->checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
-  
-  clear();
   
   NodeL bs = G->getNodes("body");
   for_list(Node,  it,  bs) {

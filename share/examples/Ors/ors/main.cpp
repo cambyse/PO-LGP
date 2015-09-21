@@ -556,11 +556,12 @@ void TEST(InverseKinematics) {
 
 int MAIN(int argc,char **argv){
 
-  testKinematics();
+  testCopy();
   return 0;
   testLoadSave();
   testCopy();
   testPlayStateSequence();
+  testKinematics();
   testQuaternionKinematics();
   testKinematicSpeed();
   testFollowRedundantSequence();

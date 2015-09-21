@@ -9,51 +9,44 @@
 //================================================================================
 
 void TEST(KinectModules) {
-  struct MySystem:System{
-    ACCESS(byteA, kinect_rgb)
-    ACCESS(uint16A, kinect_depth)
-    MySystem(){
-      addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
-      addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-      addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-      addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+
+  System S;
+  KinectThread kin(S);
+  S.addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
+  S.addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
+  S.addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
+  S.addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
+  S.addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
 //      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
 //      m_enc->set_rgb(true);
 //      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      connect();
-    }
-  } S;
-
+  S.connect();
   cout <<S <<endl;
 
-  engine().enableAccessLog();
-  engine().open(S);
+  S.run();
 
-  S.kinect_depth.waitForRevisionGreaterThan(10);
-  FILE("z.kinect_depth") <<S.kinect_depth.get()();
+  kin.kinect_depth.waitForRevisionGreaterThan(100);
+  FILE("z.kinect_depth") <<kin.kinect_depth.get()();
+  FILE("z.kinect_rgb") <<kin.kinect_rgb.get()();
 
-  engine().shutdown.waitForSignal();
+//  engine().shutdown.waitForSignal();
 
-  engine().close(S);
+  S.close();
   cout <<"bye bye" <<endl;
 }
 
 //================================================================================
 
 void TEST(KinectRaw) {
-  OpenGL gl;
-  KinectPoller kin;
-  Variable<byteA> kinect_rgb;
-  Variable<uint16A> kinect_depth;
-  kin.kinect_rgb.linkToVariable(&kinect_rgb);
-  kin.kinect_depth.linkToVariable(&kinect_depth);
+  OpenGL gl("KINECT",640,480);
+  KinectThread kin;
+  kin.verbose=1;
+  kin.createVariables();
 
   kin.open();
   for(uint t=0;t<100;t++){
     kin.step();
-    gl.watchImage(kinect_rgb.get(), false, 1.);
+    gl.watchImage(kin.kinect_rgb.get(), false, 1.);
   }
   cout <<"closing..." <<endl;
   kin.close();

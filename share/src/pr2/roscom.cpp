@@ -29,6 +29,10 @@ ors::Transformation ros_cvrt(const tf::Transform &trans){
   return X;
 }
 
+timespec cvrt(const ros::Time& time){
+  return {time.sec, time.nsec};
+}
+
 //===========================================================================
 // RosCom_Spinner
 struct sRosCom_Spinner{
@@ -87,9 +91,11 @@ void RosCom_ControllerSync::step(){
   jointRef.Kp = VECTOR(m.Kp);
   jointRef.Kd = VECTOR(m.Kd);
   jointRef.Ki = VECTOR(m.Ki);
+  jointRef.KiFT = VECTOR(m.KiFT);
   jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
   jointRef.velLimitRatio = m.velLimitRatio;
   jointRef.effLimitRatio = m.effLimitRatio;
+  jointRef.intLimitRatio = m.intLimitRatio;
   jointRef.gamma = m.gamma;
   s->pub_jointReference.publish(jointRef);
 }
@@ -152,14 +158,14 @@ struct sRosCom_KinectSync{
   ros::Subscriber sub_depth;
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    base->kinect_rgb.set() = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
+    base->kinect_rgb.set( cvrt(msg->header.stamp) ) = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
   }
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
     byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
-    base->kinect_depth.set() = ref;
+    base->kinect_depth.set( cvrt(msg->header.stamp) ) = ref;
   }
 };
 

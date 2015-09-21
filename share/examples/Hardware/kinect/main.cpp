@@ -1,31 +1,27 @@
 #include <Hardware/kinect/kinect.h>
-#include <Core/array.h>
 #include <Gui/opengl.h>
-#include <iostream>
-#include <functional>
 
-using namespace std;
-using namespace std::placeholders;
+void testKinect(){
 
-namespace {
-  void video_cb(OpenGL& gl, const byteA& rgb, double timestamp) {
-    gl.watchImage(rgb, true, 1.0);
+  OpenGL gl("FREENECT",640,480);
+
+  KinectThread kin;
+  kin.verbose=1;
+  kin.createVariables();
+  kin.threadLoop();
+
+  for(uint t=0;t<50;t++){
+    kin.kinect_rgb.waitForNextRevision();
+    gl.background = kin.kinect_rgb.get();
+    gl.update();
+    kin.glViewKeys('x'); //moving down always...
   }
 
+  kin.threadClose();
 }
 
-int main(int argc, char* argv[])
-{
-  OpenGL gl;
-  MLR::kinect_video_cb cb = std::bind(&video_cb, std::ref(gl), _1, _2);
-
-  MLR::KinectCallbackReceiver receiver(nullptr,
-                                       [&gl](const byteA& video, double){ gl.watchImage(video, false, 1.0); }, 0);
-
-  receiver.startStreaming();
-  MT::wait(5.);
-  receiver.stopStreaming();
-
+int main(int argc, char* argv[]){
+  testKinect();
   return 0;
 }
 

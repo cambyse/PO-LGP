@@ -1,4 +1,5 @@
 #include <Gui/opengl.h>
+#include <GL/gl.h>
 #include "minEigModel.h"
 
 
@@ -21,7 +22,7 @@ void MinEigModel::setWeightsToOne(){
 
 void MinEigModel::setWeightsToZero(){
   weights.setZero();
-  stat_n=0;
+  stat_n = 0;
   stat_x = zeros(data.d());
   stat_xx = zeros(data.d(), data.d());
 }

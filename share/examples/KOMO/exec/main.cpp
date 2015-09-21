@@ -6,7 +6,7 @@
 //===========================================================================
 
 void TEST(Specs){
-  const char* specsfile="specs.g";
+  const char* specsfile="1.specs.g";
   const char* outprefix="z";
   if(MT::argc>1) specsfile=MT::argv[1];
   if(MT::argc>2) outprefix=MT::argv[2];
@@ -24,6 +24,7 @@ void TEST(Specs){
       if(sw->timeOfApplication>komo.MP->T) sw->apply(pose);
     }
     FILE(STRING(outprefix<<".pose.g")) <<"ChDir = '../../../data/pr2_model/'\n\n" <<pose;
+    komo.MP->costReport(true);
     komo.displayTrajectory(); //repeats<0.);
   }
 }

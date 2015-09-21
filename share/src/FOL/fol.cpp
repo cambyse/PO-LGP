@@ -492,7 +492,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
          }
        }
        if(verbose>3){
-         cout <<"Relation " <<*rel <<"allows for domains:" <<endl;
+         cout <<"Relation " <<*rel <<" allows for domains:" <<endl;
          for(Node *var:rel->parents) if(&var->container==&varScope){
            cout <<"'" <<*var <<"' {"; listWrite(domainsForThisRel(var->index), cout); cout <<" }" <<endl;
          }
