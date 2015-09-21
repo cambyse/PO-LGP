@@ -36,7 +36,7 @@ bool RelationalMachine::queryCondition(MT::String query) const{
   return q;
 }
 
-bool RelationalMachine::applyEffect(MT::String effect){
+bool RelationalMachine::applyEffect(MT::String effect, bool fwdChain){
   tmp->clear();
   bool e=false;
   try{
@@ -48,7 +48,16 @@ bool RelationalMachine::applyEffect(MT::String effect){
 //    return false;
   }
   LOG(1) <<"  effects=" <<*tmp;
-  LOG(2) <<"  new state=" <<*state;
+  LOG(2) <<"  new state=\n  " <<getState();
+  if(fwdChain) fwdChainRules();
+  return e;
+}
+
+bool RelationalMachine::applyEffect(Node* literal, bool fwdChain){
+  bool e = applySubstitutedLiteral(*state, literal, {}, NULL);
+  LOG(1) <<"  effects=" <<*literal;
+  LOG(2) <<"  new state=\n  " <<getState();
+  if(fwdChain) fwdChainRules();
   return e;
 }
 
@@ -56,7 +65,7 @@ NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
   forwardChaining_FOL(KB, NULL, *tmp, false);
   LOG(1) <<"  changes=" <<*tmp;
-  LOG(2) <<"  new state=" <<*state;
+  LOG(2) <<"  new state=\n  " <<getState();
   return *tmp;
 }
 

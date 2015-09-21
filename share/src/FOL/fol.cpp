@@ -58,25 +58,29 @@ Node *getFirstVariable(Node* literal, Graph* varScope){
 //  return NULL;
 //}
 
-/// check if these are literally equal (all arguments are identical, be they vars or consts)
-bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
-  if(fact0->parents.N!=fact1->parents.N) return false;
-  for(uint i=0;i<fact0->parents.N;i++){
-    if(fact0->parents(i) != fact1->parents(i)) return false;
-  }
-  if(checkAlsoValue){
-    if(fact0->getValueType()!=fact1->getValueType()) return false;
-    if(!fact0->hasEqualValue(fact1)) return false;
+/// check if these are literally equal (all arguments are identical, be they vars or consts) -- fact1 is only a tuple, not an node of the graph
+bool tuplesAreEqual(NodeL& tuple0, NodeL& tuple1){
+  if(tuple0.N!=tuple1.N) return false;
+  for(uint i=0;i<tuple0.N;i++){
+    if(tuple0.elem(i) != tuple1.elem(i)) return false;
   }
   return true;
 }
 
-/// check if these are literally equal (all arguments are identical, be they vars or consts) -- fact1 is only a tuple, not an node of the graph
-bool factsAreEqual(Node *fact0, NodeL& fact1){
-  if(fact0->parents.N!=fact1.N) return false;
-  for(uint i=0;i<fact0->parents.N;i++){
-    if(fact0->parents(i) != fact1(i)) return false;
+bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance){
+  if(booleanMeansExistance){
+    if(fact0->getValueType()==typeid(bool) && *((bool*)fact0->getValueDirectly()) && fact1->getValueType()!=typeid(bool)) return true;
+    if(fact1->getValueType()==typeid(bool) && *((bool*)fact1->getValueDirectly()) && fact0->getValueType()!=typeid(bool)) return true;
   }
+  if(fact0->getValueType()!=fact1->getValueType()) return false;
+  if(!fact0->hasEqualValue(fact1)) return false;
+  return true;
+}
+
+/// check if these are literally equal (all arguments are identical, be they vars or consts)
+bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
+  if(!tuplesAreEqual(fact0->parents,fact1->parents)) return false;
+  if(checkAlsoValue) return valuesAreEqual(fact0, fact1, true);
   return true;
 }
 
@@ -84,54 +88,63 @@ bool factsAreEqual(Node *fact0, NodeL& fact1){
 bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
   if(fact->parents.N!=literal->parents.N) return false;
   for(uint i=0;i<fact->parents.N;i++){
-    Node *fact_arg = fact->parents(i);
-    Node *lit_arg = literal->parents(i);
+    Node *fact_arg = fact->parents.elem(i);
+    Node *lit_arg = literal->parents.elem(i);
     if(&lit_arg->container==subst_scope){ //lit_arg is a variable -> check match of substitution
       if(!ignoreSubst && subst(lit_arg->index)!=fact_arg) return false;
     }else if(lit_arg!=fact_arg) return false;
   }
-  if(checkAlsoValue){
-    if(fact->getValueType()!=literal->getValueType()) return false;
-    if(!fact->hasEqualValue(literal)) return false;
-  }
+  if(checkAlsoValue) return valuesAreEqual(fact, literal, true);
   return true;
 }
 
-/// try to find a literal within 'scope' that is exactly equal to 'literal'
-Node *getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
+/// try to find a fact within 'facts' that is exactly equal to 'literal'
+bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
+  if(!fact->parents.N){
+    CHECK(fact->getValueType()==typeid(Graph),"special literals need Graph type");
+    Graph& graph=fact->V<Graph>();
+    //assume this is a special parent!
+    if(fact->keys.last()=="aggregate"){
+      NodeL subs = getRuleSubstitutions2(facts, fact, 0);
+      if(graph.last()->keys.last()=="count"){
+        if(subs.d0 == graph.last()->V<double>()) return true;
+        else return false;
+      }else HALT("unknown aggregate mode '" <<graph.last()->keys.last() <<"'");
+    }else HALT("unknown special literal key'" <<fact->keys.last() <<"'");
+  }
   //first find the section of all facts that derive from the same symbols
   NodeL candidates=fact->parents(0)->parentOf;
 //  for(uint p=1;p<fact->parents.N;p++)
 //    candidates = setSection(candidates, fact->parents(p)->parentOf);
   //now check only these candidates
   for(Node *fact1:candidates) if(&fact1->container==&facts && fact1!=fact){
-    if(factsAreEqual(fact, fact1, checkAlsoValue)) return fact1;
+    if(factsAreEqual(fact, fact1, checkAlsoValue)) return true;
   }
-  return NULL;
+  return false;
 }
 
-/// try to find a literal within 'scope' that is exactly equal to 'literal'
-Node *getEqualFactInKB(Graph& facts, NodeL& fact){
+/// try to find a fact within 'facts' that is exactly equal to 'literal'
+bool getEqualFactInKB(Graph& facts, NodeL& fact, bool checkAlsoValue){
   //first find the section of all facts that derive from the same symbols
   NodeL candidates=fact(0)->parentOf;
 //  for(uint p=1;p<fact.N;p++)
 //    candidates = setSection(candidates, fact->parents(p)->parentOf);
   //now check only these candidates
   for(Node *fact1:candidates) if(&fact1->container==&facts){
-    if(factsAreEqual(fact1, fact)) return fact1;
+    if(factsAreEqual(fact1, fact, checkAlsoValue)) return true;
   }
-  return NULL;
+  return false;
 }
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
-Node *getEqualFactInKB(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue){
+bool getEqualFactInKB(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue){
   //TODO: this should construct the tuple, call the above method, then additionally checkForValue -> write a method that checks value only
   NodeL candidates = literal->parents(0)->parentOf;
 //  NodeL candidates = getLiteralsOfScope(KB);
   for(Node *fact:candidates) if(&fact->container==&facts && fact!=literal){
-    if(factsAreEqual(fact, literal, subst, subst_scope, checkAlsoValue)) return fact;
+    if(factsAreEqual(fact, literal, subst, subst_scope, checkAlsoValue)) return true;
   }
-  return NULL;
+  return false;
 }
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
@@ -154,36 +167,22 @@ NodeL getPotentiallyEqualFactsInKB(Graph& facts, Node* tuple, const Graph& varSc
 }
 
 /// return the subset of 'literals' that matches with a fact (calling match(lit0, lit1))
-Node *getEqualFactInList(Node* fact, NodeL& facts){
+Node *getEqualFactInList(Node* fact, NodeL& facts, bool checkAlsoValue){
 //  NodeL candidates=facts;
 //  for(Node *p:fact->parents) candidates = setSection(candidates, p->parentOf);
-  for(Node *fact1:facts) if(factsAreEqual(fact, fact1)) return fact1; //matches.append(fact1);
+  for(Node *fact1:facts) if(factsAreEqual(fact, fact1, checkAlsoValue)) return fact1; //matches.append(fact1);
   return NULL;
 }
 
 /// check if all facts can be matched with one in scope
 //TODO: option value
-bool allFactsHaveEqualsInScope(Graph& KB, NodeL& facts){
+bool allFactsHaveEqualsInScope(Graph& KB, NodeL& facts, bool checkAlsoValue){
   for(Node *fact:facts){
-    if(!getEqualFactInKB(KB, fact)) return false;
+    if(!getEqualFactInKB(KB, fact, checkAlsoValue)) return false;
   }
   return true;
 }
 
-//TODO: it*->literal*
-bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subst, Graph* subst_scope){
-  CHECK(&it1->container==&it2->container,"");
-  if(it1->getValueType()!=it2->getValueType()) return false;
-  if(it1->parents(0)!=it2->parents(0)) return false;
-
-  Node *m1=getEqualFactInKB(facts, it1, subst, subst_scope, false);
-  if(!m1) return false;
-  Node *m2=getEqualFactInKB(facts, it2, subst, subst_scope, false);
-  if(!m2) return false;
-
-  if(m1==m2) return true;
-  return m1->hasEqualValue(m2);
-}
 
 /// ONLY for a literal with one free variable: remove all infeasible values from the domain
 /// this is meant to be used as basic 'constraint propagation' for order-1 constraints
@@ -259,7 +258,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
   //first collect tuple matches
   NodeL matches;
   for(Node *fact:literal->parents(0)->parentOf) if(&fact->container==&facts){
-    if(factsAreEqual(fact, literal, subst, subst_scope)) matches.append(fact);
+    if(factsAreEqual(fact, literal, subst, subst_scope, false)) matches.append(fact);
   }
 
   if(trueValue){
@@ -305,14 +304,6 @@ bool applyEffectLiterals(Graph& facts, NodeL& effects, const NodeL& subst, Graph
 
 
 /// extracts the preconditions of the rule, then returns substitutions
-NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose){
-  //-- extract precondition
-  if(verbose>1){ cout <<"Substitutions for rule " <<*rule <<endl; }
-  Graph& Rule=rule->graph();
-  return getSubstitutions(facts, getFirstNonSymbolOfScope(Rule)->graph(), domain, verbose);
-}
-
-/// extracts the preconditions of the rule, then returns substitutions
 NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
   //-- extract precondition
   if(verbose>1){ cout <<"Substitutions for rule " <<*rule <<endl; }
@@ -326,117 +317,6 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
 /// the return value is an array: for every item of the literal's scope:
 /// if item=variable the array contains a pointer to the constant
 /// if item=non-variable the arrach contains a NULL pointer
-NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose){
-  CHECK(literals.N,"");
-  Graph& varScope = literals(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
-
-  Node* EQ = facts["EQ"];
-  NodeL vars = getSymbolsOfScope(varScope);
-
-//  if(!vars.N){
-//    cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" WITHOUT variables!" <<endl;
-//    NodeL subs(1u,0u);
-//    return subs;
-//  }
-
-  if(verbose>2){
-    cout <<"Substitutions for literals "; listWrite(literals, cout); cout <<" with variables '"; listWrite(vars, cout); cout <<'\'' <<endl;
-//    cout <<"   with facts " <<facts <<" and domain "; listWrite(domain, cout); cout <<'\'' <<endl;
-  }
-
-  //-- initialize potential domains for each variable
-  MT::Array<NodeL> domainOf(vars.N);
-//  constants.sort(NodeComp);
-  for(Node *v:vars) domainOf(v->index) = domain;
-
-  if(verbose>3) cout <<"domains before 'constraint propagation':" <<endl;
-  if(verbose>3) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
-
-  //-- grab open variables for each literal
-  uintA lit_numVars(literals(0)->container.N);
-  for(Node *literal:literals) lit_numVars(literal->index) = getNumOfVariables(literal, &varScope);
-
-  //-- first pick out all precondition predicates with just one open variable and reduce domains directly
-  for(Node *literal:literals){
-    if(lit_numVars(literal->index)==1){
-      Node *var = getFirstVariable(literal, &varScope);
-      if(verbose>3) cout <<"checking literal '" <<*literal <<"'" <<flush;
-      removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), literal, &varScope);
-      if(verbose>3){ cout <<" gives remaining domain for '" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
-      if(domainOf(var->index).N==0){
-        if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
-        return NodeL(); //early failure
-      }
-    }
-  }
-
-  if(verbose>2) cout <<"domains after 'constraint propagation':" <<endl;
-  if(verbose>2) for(Node *var:vars){ cout <<"'" <<*var <<"' {"; listWrite(domainOf(var->index), cout); cout <<" }" <<endl; }
-
-  //-- for the others, create constraints
-  NodeL constraints;
-  for(Node *literal:literals){
-    if(lit_numVars(literal->index)!=1 || (literal->parents.N && literal->parents(0)==EQ)){
-      constraints.append(literal);
-    }
-  }
-
-  if(verbose>2){ cout <<"remaining constraint literals:" <<endl; listWrite(constraints, cout); cout <<endl; }
-
-  //-- naive CSP: loop through everything
-  uint subN=0;
-  NodeL substitutions;
-  NodeL values(vars.N); values.setZero();
-  {
-    //-- using 'getIndexTuple' we can linearly enumerate all configurations of all variables
-    uintA domainN(vars.N);
-    for(uint i=0;i<vars.N;i++) domainN(i) = domainOf(i).N;  //collect dims/cardinalities of domains
-    uint configurationsN = product(domainN); //number of all possible configurations
-    for(uint config=0;config<configurationsN;config++){ //loop through all possible configurations
-      uintA valueIndex = getIndexTuple(config, domainN);
-      bool feasible=true;
-      for(uint i=0;i<vars.N;i++) values(vars(i)->index) = domainOf(i)(valueIndex(i)); //assign the configuration
-      //only allow for disjoint assignments
-      for(uint i=0; i<values.N && feasible; i++) for(uint j=i+1; j<values.N && feasible; j++){
-        if(values(i)==values(j)) feasible=false;
-      }
-      if(!feasible) continue;
-      for(Node* literal:constraints){ //loop through all constraints
-        if(literal->parents.N && literal->parents(0)==EQ){ //check equality of subsequent literals
-          Node *it1 = literal->container(literal->index+1);
-          Node *it2 = literal->container(literal->index+2);
-          feasible = matchingFactsAreEqual(facts, it1, it2, values, &varScope);
-        }else{
-          feasible = getEqualFactInKB(facts, literal, values, &varScope);
-          if(!feasible){ //when literal is a negative boolean literal and we don't find a match, we interpret this as feasible!
-            if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false)
-              feasible=true;
-          }
-        }
-        if(verbose>3){ cout <<"checking literal '" <<*literal <<"' with args "; listWrite(values, cout); cout <<(feasible?" -- good":" -- failed") <<endl; }
-        if(!feasible) break;
-      }
-      if(feasible){
-        if(verbose>3){ cout <<"adding feasible substitution "; listWrite(values, cout); cout <<endl; }
-        substitutions.append(values);
-        subN++;
-      }
-    }
-  }
-  substitutions.reshape(subN,vars.N);
-
-  if(verbose>1){
-    cout <<"POSSIBLE SUBSTITUTIONS: " <<substitutions.d0 <<endl;
-    for(uint s=0;s<substitutions.d0;s++){
-      for(uint i=0;i<substitutions.d1;i++) if(substitutions(s,i)){
-        cout <<varScope(i)->keys(0) <<" -> " <<substitutions(s,i)->keys(1) <<", ";
-      }
-      cout <<endl;
-    }
-    if(!substitutions.d0) cout <<"NO POSSIBLE SUBSTITUTIONS" <<endl;
-  }
-  return substitutions;
-}
 
  NodeL getSubstitutions2(Graph& facts, NodeL& relations, int verbose){
    CHECK(relations.N,"");
@@ -460,7 +340,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
          return NodeL(); //early failure
        }
      }else{ //negated boolean
-       Node *neg = getEqualFactInKB(facts, rel, false);
+       bool neg = getEqualFactInKB(facts, rel, false);
        if(neg){
          if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS (" <<*rel <<" not true)" <<endl;
          return NodeL(); //early failure

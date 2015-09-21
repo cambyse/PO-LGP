@@ -6,17 +6,17 @@ struct RM_EditCallback:GraphEditCallback{
   RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM), _log(RMM._log){}
   virtual void cb_new(Node *it){
     LOG(3) <<"state cb -- new fact: " <<*it;
+    RMM.threadStep();
   }
   virtual void cb_delete(Node *it){
     LOG(3) <<"state cb -- del fact: " <<*it;
-    bool lockedHere=false;
-    if(!RMM.A.v->rwlock.isLocked()){ lockedHere=true; RMM.A.writeAccess(); }
+    RMM.A.writeAccess();
     for(Activity *act:RMM.A()) if(act->fact==it){
       LOG(3) <<"removing activity '" <<*act <<"'";
       RMM.A().removeValue(act);
       delete act;
     }
-    if(lockedHere) RMM.A.deAccess();
+    RMM.A.deAccess();
   }
 };
 
@@ -45,22 +45,24 @@ void RelationalMachineModule::step(){
   effects().clear();
   effects.deAccess();
   LOG(1) <<std::setprecision(2) <<std::fixed <<MT::realTime() <<"sec: it=" <<RM.var->revision.getValue()<<" EFFECT=" <<effs;
-  if(!effs.N && step_count) return; //on 1st iteration we need a step!
+//  if(!effs.N && step_count) return; //on 1st iteration we need a step!
 
-  RM.writeAccess();
-  A.writeAccess();
-  if(effs.N){
-    RM().applyEffect(effs);
+//  if(effs.N){
+    RM.writeAccess();
+    if(effs.N) RM().applyEffect(effs);
     RM().fwdChainRules();
     LOG(2) <<"STATE =\n  " <<RM().getState();
     LOG(4) <<"KB =\n  " <<RM().getKB();
-  }
+    RM.deAccess();
+//  }
 
-  if(!step_count || effs.N){
+  if(true || !step_count || effs.N){
+    RM.readAccess();
+    A.writeAccess();
     state.set() = RM().getState();
 
     //-- sync with activities: add activities for non-associated
-    Graph &state = *RM().state;
+    const Graph &state = *RM().state;
     MT::Array<Activity*> fact2act(state.N);
     fact2act.setUni(NULL);
     LOG(3) <<"Syncing facts with activities..";
@@ -77,9 +79,9 @@ void RelationalMachineModule::step(){
         LOG(3) <<"Fact '" <<*it <<"' cannot be matched/created with an activity";
       }
     }
+    A.deAccess();
+    RM.deAccess();
   }
-  A.deAccess();
-  RM.deAccess();
 
   //TODO: cleanup? remove NULL facts from state?
 }

@@ -35,12 +35,14 @@ void TaskCtrlActivity::step(double dt){
   convStr <<")";
   if(isConv()){
     if(!conv){
-      if(fact) taskController->effects.set()() <<convStr <<", ";
+//      if(fact) taskController->effects.set()() <<convStr <<", ";
+      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=true;
     }
   }else{
     if(conv){
-      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+//      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=false;
     }
   }

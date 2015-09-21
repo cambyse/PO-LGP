@@ -23,7 +23,8 @@ struct RelationalMachine{
   void init(const char* filename);
 
   bool queryCondition(MT::String query) const; ///< return indicates coverage of the condition
-  bool applyEffect(MT::String effect);   ///< return indicates change of state
+  bool applyEffect(MT::String effect, bool fwdChain=false);   ///< return indicates change of state
+  bool applyEffect(Node* literal, bool fwdChain=false);
   NodeL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
   Node* declareNewSymbol(MT::String symbolStr);

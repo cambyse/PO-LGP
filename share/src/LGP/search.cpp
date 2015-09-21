@@ -30,7 +30,7 @@ void runMonteCarlo(Graph& G){
       for(Node* rule:rules){
         //      cout <<"*** RULE: " <<*rule <<endl;
         //      cout <<  "Substitutions:" <<endl;
-        NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
+        NodeL subs = getRuleSubstitutions2(state, rule, (verbose-3) );
         for(uint s=0;s<subs.d0;s++){
           decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
         }

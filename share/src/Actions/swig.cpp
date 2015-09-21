@@ -24,13 +24,14 @@ struct SwigSystem : System{
 
   Log _log;
   TaskControllerModule *tcm;
+  RelationalMachineModule *rmm;
 
   SwigSystem():_log("SwigSystem"){
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-    addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
+    rmm=addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
@@ -342,8 +343,10 @@ void ActionSwigInterface::execScript(const char* filename){
         S->RM.waitForNextRevision();
       }
     }else{ //interpret as set fact
-      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
-      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
+//      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
+      S->RM.set()->applyEffect(n, true);
+//      S->rmm->threadStep();
+//      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
     }
   }
 }

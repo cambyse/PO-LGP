@@ -4,6 +4,7 @@
 #include <Motion/feedbackControl.h>
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
+#include <FOL/relationalMachine.h>
 
 #ifdef MT_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -21,6 +22,7 @@ struct TaskControllerModule : Module {
   ACCESS(MT::String, effects)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
+  ACCESS(RelationalMachine, RM)
   ACCESS(bool, fixBase)
 #ifdef MT_ROS
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
@@ -33,7 +35,6 @@ struct TaskControllerModule : Module {
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose
-//  ofstream fil; //< file for diagnostics
   bool useRos;
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
   bool verbose;

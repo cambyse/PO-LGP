@@ -86,8 +86,8 @@ int main(int argc,char **argv){
 //  rnd.clockSeed();
   rnd.seed(MT::getParameter<int>("seed",0));
 
-//  ijcaiExperiment();
-  newMethod();
+  ijcaiExperiment();
+  //  newMethod();
 
   return 0;
 }

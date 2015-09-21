@@ -56,6 +56,9 @@ struct FOL_World:MCTS_Environment{
   int verbFil;
   ofstream fil;
 
+  double lastStepDuration;
+  double lastStepProbability;
+
   FOL_World();
   FOL_World(istream& fil);
   virtual ~FOL_World();
