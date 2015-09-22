@@ -12,8 +12,11 @@
 // utils
 //
 
+namespace tf{ class Transform; }
+
 bool rosOk();
-void rosCheckInit();
+void rosCheckInit(const char* module_name="pr2_module");
+ors::Transformation ros_cvrt(const tf::Transform&);
 
 //===========================================================================
 //

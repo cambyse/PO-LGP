@@ -6,6 +6,9 @@
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
+#include <Gui/mesh.h>
+
+#include <tf/transform_listener.h>
 
 arr conv_points2arr(const std::vector<geometry_msgs::Point>& pts){
   uint n=pts.size();
@@ -39,7 +42,7 @@ struct MySystem:System{
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
 
-  ACCESS(arrA, clusters)
+  ACCESS(MT::Array<ors::Mesh>, clusters)
 //  ACCESS(arr, wrenchL)
 //  ACCESS(arr, wrenchR)
 //  ACCESS(byteA, rgb_leftEye)
@@ -76,6 +79,7 @@ struct Main{
   OpenGL gl;
 
   MT::Array<std::tuple<int, arr, arr> > trackedClusters;
+  tf::TransformListener listener;
 
   MySystem S;
 
@@ -83,6 +87,13 @@ struct Main{
     nh = new ros::NodeHandle;
     sub = nh->subscribe( "/tabletop/clusters", 1, &Main::callback, this);
 //    pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
+
+    gl.setClearColors(1., 1., 1., 1.);
+
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
+    gl.camera.upright();
+
     engine().open(S);
 
   }
@@ -96,8 +107,25 @@ struct Main{
   void loop(){
     for(;;){
       S.clusters.readAccess();
+      S.kinect_points.readAccess();
+      S.kinect_pointColors.readAccess();
+
+      gl.clear();
+      gl.add(glStandardScene, 0);
+      for(ors::Mesh& m:S.clusters()){
+        m.makeConvexHull();
+        gl.add(ors::glDrawMesh, &m);
+        cout <<"adding mesh: " <<m.V.d0 <<endl;
+        cout <<sum(m.V,0)/(double)m.V.d0 <<endl;
+      }
+      arr ptcl[2];
+      ptcl[0].referTo(S.kinect_points());
+      ptcl[1].referTo(S.kinect_pointColors());
+      gl.add(glDrawPointCloud, ptcl);
       gl.update();
       S.clusters.deAccess();
+      S.kinect_points.deAccess();
+      S.kinect_pointColors.deAccess();
       ros::spinOnce();
     }
   }
@@ -105,10 +133,15 @@ struct Main{
   void callback(const visualization_msgs::MarkerArray::ConstPtr& msg) {
     uint n=msg->markers.size();
 
-    arrA clusters(n);
+    MT::Array<ors::Mesh> clusters(n);
+    cout <<n <<endl;
 
     for(uint i=0;i<n;i++){
-      clusters(i) = conv_points2arr(msg->markers[i].points);
+      tf::StampedTransform transform;
+      listener.lookupTransform("/base_link", msg->markers[i].header.frame_id, msg->markers[i].header.stamp, transform);
+      ors::Transformation X = ros_cvrt(transform);
+      clusters(i).V = conv_points2arr(msg->markers[i].points);
+      X.applyOnPointArray( clusters(i).V );
     }
 
     S.clusters.set() = clusters;
@@ -121,7 +154,7 @@ struct Main{
 
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
-  rosCheckInit();
+  rosCheckInit("intoOrs");
   Main thing;
   thing.loop();
   return 0;

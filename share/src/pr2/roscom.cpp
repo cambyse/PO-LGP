@@ -7,21 +7,36 @@
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <std_msgs/String.h>
+#include <Core/geo.h>
+#include <tf/tf.h>
 
 
 //===========================================================================
 // HELPERS
-void rosCheckInit(){
+void rosCheckInit(const char* module_name){
 // TODO make static variables to singleton
   static Mutex mutex;
   static bool inited = false;
 
   mutex.lock();
   if(!inited) {
-    ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
+    ros::init(MT::argc, MT::argv, module_name, ros::init_options::NoSigintHandler);
     inited = true;
   }
   mutex.unlock();
+}
+
+ors::Transformation ros_cvrt(const tf::Transform &trans){
+  ors::Transformation X;
+  tf::Quaternion q = trans.getRotation();
+  tf::Vector3 t = trans.getOrigin();
+  X.rot.set(q.w(), q.x(), q.y(), q.z());
+  X.pos.set(t.x(), t.y(), t.z());
+  return X;
+}
+
+timespec cvrt(const ros::Time& time){
+  return {time.sec, time.nsec};
 }
 
 bool rosOk(){

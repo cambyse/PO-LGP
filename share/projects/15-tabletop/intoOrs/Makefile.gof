@@ -1,6 +1,10 @@
 BASE = ../../..
 
 ROS = 1
-DEPEND =  Core Perception System pr2
+PLIB = 1
+PCL = 1
+GL = 1
+
+DEPEND =  Core Perception System Gui Ors pr2
 
 include $(BASE)/gofMake/generic.mk

@@ -1437,12 +1437,12 @@ void Mesh::glDraw() {
   glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
 
   if(turnOnLight) { glEnable(GL_LIGHTING); }
-#elif 0 //simple with vertex normals
+#elif 1 //simple with vertex normals
   uint i, v;
   glShadeModel(GL_SMOOTH);
   glBegin(GL_TRIANGLES);
   for(i=0; i<T.d0; i++) {
-    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    if(C.d0==T.d0)  glColor(C(i, 0), C(i, 1), C(i, 2),1.);
     v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
     v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
     v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
