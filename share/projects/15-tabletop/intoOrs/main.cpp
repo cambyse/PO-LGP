@@ -1,6 +1,7 @@
 #include <Core/util.h>
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <Core/array-vector.h>
 #include <System/engine.h>
 #include <Perception/perception.h>
@@ -41,7 +42,10 @@ struct MySystem:System{
   ACCESS(uint16A, kinect_depth)
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
+  ACCESS(ors::Transformation, kinect_frame)
 
+
+  ACCESS(ors::Mesh, pointCloud)
   ACCESS(MT::Array<ors::Mesh>, clusters)
 //  ACCESS(arr, wrenchL)
 //  ACCESS(arr, wrenchR)
@@ -72,8 +76,7 @@ struct MySystem:System{
 
 struct Main{
   ros::NodeHandle* nh;
-  ros::Subscriber sub;
-  ros::Publisher pub;
+  ros::Subscriber sub_clusters;
   double threshold;
 
   OpenGL gl;
@@ -85,7 +88,7 @@ struct Main{
 
   Main():threshold(.1){
     nh = new ros::NodeHandle;
-    sub = nh->subscribe( "/tabletop/clusters", 1, &Main::callback, this);
+    sub_clusters = nh->subscribe( "/tabletop/clusters", 1, &Main::cb_clusters, this);
 //    pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
 
     gl.setClearColors(1., 1., 1., 1.);
@@ -106,47 +109,68 @@ struct Main{
 
   void loop(){
     for(;;){
+
+      try{
+        tf::StampedTransform transform;
+        listener.lookupTransform("/base_link", "/head_mount_kinect_rgb_optical_frame", ros::Time(0), transform);
+        S.kinect_frame.set() = ros_cvrt(transform);
+      }
+      catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+        continue;
+      }
+
+
+      S.pointCloud.writeAccess();
+      S.pointCloud().V = S.kinect_points.get();
+      S.pointCloud().C = S.kinect_pointColors.get();
+      S.pointCloud.deAccess();
+
       S.clusters.readAccess();
-      S.kinect_points.readAccess();
-      S.kinect_pointColors.readAccess();
+      S.pointCloud.readAccess();
 
       gl.clear();
       gl.add(glStandardScene, 0);
       for(ors::Mesh& m:S.clusters()){
-//        m.makeConvexHull();
         gl.add(ors::glDrawMesh, &m);
         cout <<"adding mesh: " <<m.V.d0 <<endl;
-        cout <<sum(m.V,0)/(double)m.V.d0 <<endl;
       }
-      arr ptcl[2];
-      ptcl[0].referTo(S.kinect_points());
-      ptcl[1].referTo(S.kinect_pointColors());
-      gl.add(glDrawPointCloud, ptcl);
+      gl.add(ors::glDrawMesh, &S.pointCloud());
       gl.update();
       S.clusters.deAccess();
-      S.kinect_points.deAccess();
-      S.kinect_pointColors.deAccess();
+      S.pointCloud.deAccess();
       ros::spinOnce();
     }
   }
 
-  void callback(const visualization_msgs::MarkerArray::ConstPtr& msg) {
+  void cb_clusters(const visualization_msgs::MarkerArray::ConstPtr& msg) {
     uint n=msg->markers.size();
 
     MT::Array<ors::Mesh> clusters(n);
-    cout <<n <<endl;
+//    cout <<n <<endl;
 
     for(uint i=0;i<n;i++){
-//      tf::StampedTransform transform;
-//      listener.lookupTransform("/base_link", msg->markers[i].header.frame_id, msg->markers[i].header.stamp, transform);
-//      ors::Transformation X = ros_cvrt(transform);
+      ors::Transformation X;
+      try{
+        tf::StampedTransform transform;
+        listener.lookupTransform("/base_link", msg->markers[i].header.frame_id,
+                                 ros::Time(0), transform);
+        X = ros_cvrt(transform);
+      }
+      catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+        continue;
+      }
+
       clusters(i).V = conv_points2arr(msg->markers[i].points);
-//      X.applyOnPointArray( clusters(i).V );
+      X.applyOnPointArray( clusters(i).V );
     }
 
     S.clusters.set() = clusters;
-
   }
+
 };
 
 
