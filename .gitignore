@@ -10,7 +10,7 @@ parser.output
 lex.yy.c
 *_moc.cpp
 *_ui.h
-
+callgrind.out.*
 
 %% EXECUTABLE
 *.exe

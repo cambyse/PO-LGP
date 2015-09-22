@@ -29,6 +29,9 @@
 #define FORCE_DEBUG_LEVEL 0
 #endif
 
+#ifdef DEBUG
+// DEBUG macros in function
+
 #define IF_DEBUG(level) if(level<=FORCE_DEBUG_LEVEL || (FORCE_DEBUG_LEVEL==0 && level<=DEBUG_LEVEL))
 
 #define DEBUG_ERROR(message) {                                          \
@@ -49,13 +52,20 @@
         DEBUG_ERROR("This line should never be reached");       \
     }
 
-#define DEBUG_EXPECT(level, condition) {                \
-        IF_DEBUG(level) {                               \
-            if(!(condition)) {                          \
-                DEBUG_ERROR("Condition '" << #condition << "' is not fulfilled"); \
-            }                                           \
-        }                                               \
-    }                                                   \
+#define DEBUG_EXPECT(condition) {                       \
+        if(!(condition)) {                                              \
+            DEBUG_ERROR("Condition '" << #condition << "' is not fulfilled"); \
+        }                                                               \
+    }
+
+#define DEBUG_EXPECT_APPROX(value_1, value_2) {  \
+        if(fabs((value_1)-(value_2))>1e-10) {                           \
+            DEBUG_ERROR("Not approximately equal ('" << #value_1 << "' and '" << #value_2 << "')"); \
+            DEBUG_ERROR("    " << #value_1 << " = " << value_1);        \
+            DEBUG_ERROR("    " << #value_2 << " = " << value_2);        \
+            DEBUG_ERROR("    " << "difference = " << (value_1)-(value_2)); \
+        }                                                               \
+    }
 
 // assert of errors and warnings for unit tests
 
@@ -70,6 +80,31 @@
         {call;}                                                 \
         EXPECT_EQ("[35m" msg "[0m\n", stream.get_text());   \
     }
+
+#else // DEBUG
+
+#define IF_DEBUG(level) if(false)
+
+#define DEBUG_ERROR(message) {}
+
+#define DEBUG_WARNING(message) {}
+
+#define DEBUG_OUT(level,message) {}
+
+#define DEBUG_DEAD_LINE {}
+
+#define DEBUG_EXPECT(condition) {}
+
+#define DEBUG_EXPECT_APPROX(value_1, value_2) {}
+
+// assert of errors and warnings for unit tests
+
+#define assert_error(call, msg) {}
+
+#define assert_warning(call, msg) {}
+
+#endif // DEBUG
+
 #else
 static_assert(false, "Including this file multiple times is usually not a good idea. Include 'debug_exclude.h' to exclude.");
 #endif /* DEBUG_H_ */

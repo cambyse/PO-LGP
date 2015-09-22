@@ -16,17 +16,18 @@ struct RelationalMachine{
   Graph KB;     ///< knowledge base
   Graph *state; ///< the state within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private)
-  bool verbose;
+  Log _log;
 
   RelationalMachine();
   RelationalMachine(const char* filename);
   void init(const char* filename);
 
   bool queryCondition(MT::String query) const; ///< return indicates coverage of the condition
-  bool applyEffect(MT::String effect);   ///< return indicates change of state
+  bool applyEffect(MT::String effect, bool fwdChain=false);   ///< return indicates change of state
+  bool applyEffect(Node* literal, bool fwdChain=false);
   NodeL fwdChainRules();                 ///< progresses the state by applying all rules until convergence
 
-  Node* declareNewSymbol(MT::String symbol);
+  Node* declareNewSymbol(MT::String symbolStr);
   MT::String getKB();
   MT::String getState();
   MT::String getRules();

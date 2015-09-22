@@ -32,7 +32,7 @@ namespace node_finder {
     }
     arc_node_t PlainTree::find_action_node(const node_t & observation_node,
                                           const action_handle_t & action) {
-        DEBUG_EXPECT(0,(*node_info_map)[observation_node].type==NODE_TYPE::OBSERVATION_NODE);
+        DEBUG_EXPECT((*node_info_map)[observation_node].type==NODE_TYPE::OBSERVATION_NODE);
         for(out_arc_it_t arc(*graph,observation_node); arc!=INVALID; ++arc) {
             node_t action_node = graph->target(arc);
             if(*((*node_info_map)[action_node].action)==*action) {
@@ -44,7 +44,7 @@ namespace node_finder {
     arc_node_t PlainTree::find_observation_node(const node_t & action_node,
                                                const observation_handle_t & observation) {
         DEBUG_OUT(1,"Find observation node: PlainTree");
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
         for(out_arc_it_t arc(*graph,action_node); arc!=INVALID; ++arc) {
             node_t observation_node = graph->target(arc);
             if(*((*node_info_map)[observation_node].observation)==*observation) {
@@ -70,7 +70,7 @@ namespace node_finder {
         }
 
         DEBUG_OUT(1,"Find observation node: ObservationTree");
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
 
         for(in_arc_it_t arc_from_parent_observation_node(*graph,action_node);
             arc_from_parent_observation_node!=INVALID;
@@ -141,7 +141,7 @@ namespace node_finder {
         }
 
         // look up in observation map
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
         depth_t depth = get_depth(graph->source(in_arc_it_t(*graph,action_node)))+1;
         DEBUG_OUT(1,"Find observation node: FullDAG");
         if((depth_t)observation_maps.size()>depth) {
@@ -163,7 +163,7 @@ namespace node_finder {
         } else {
             node_t action_node = graph->source(arc);
             arc = in_arc_it_t(*graph,action_node);
-            DEBUG_EXPECT(0,arc!=INVALID);
+            DEBUG_EXPECT(arc!=INVALID);
             depth = get_depth(graph->source(arc))+1;
         }
         (*depth_map)[observation_node] = depth + depth_offset;
@@ -183,11 +183,11 @@ namespace node_finder {
     }
     void FullDAG::erase_observation_node(const node_t & observation_node) {
         depth_t depth = get_depth(observation_node);
-        DEBUG_EXPECT(0,(depth_t)observation_maps.size()>depth);
+        DEBUG_EXPECT((depth_t)observation_maps.size()>depth);
         observation_handle_t observation = (*node_info_map)[observation_node].observation;
         if(observation!=nullptr) {
             int n = observation_maps[depth].erase(observation);
-            DEBUG_EXPECT(0,n==1);
+            DEBUG_EXPECT(n==1);
         }
         if(depth==0 && observation_maps[0].size()==0) {
             // first map is empty so we can erase it
@@ -219,7 +219,7 @@ namespace node_finder {
 
         // look up in observation map
         DEBUG_OUT(1,"Find observation node: FullGraph");
-        DEBUG_EXPECT(0,(*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
+        DEBUG_EXPECT((*node_info_map)[action_node].type==NODE_TYPE::ACTION_NODE);
         auto observation_node_it = observation_map.find(observation);
         if(observation_node_it!=observation_map.end()) {
             return arc_node_t(INVALID,observation_node_it->second,false,false);
@@ -237,7 +237,7 @@ namespace node_finder {
         observation_handle_t observation = (*node_info_map)[observation_node].observation;
         if(observation!=nullptr) {
             int n = observation_map.erase(observation);
-            DEBUG_EXPECT(0,n==1);
+            DEBUG_EXPECT(n==1);
         }
         DEBUG_OUT(1,"Erased observation node (id=" << graph->id(observation_node) << ")");
     }

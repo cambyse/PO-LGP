@@ -9,7 +9,9 @@ ors::Transformation t1, t2;
 ors::Vector p1, p2;
 
 void draw(void*){
-  glColor(.8, .8, .8, .6);
+  glDisable(GL_DEPTH_TEST);
+
+  glColor(.8, .8, .8, .8);
   glTransform(t1);  ors::glDrawMesh(&m1);
   glTransform(t2);  ors::glDrawMesh(&m2);
   glLoadIdentity();
@@ -24,16 +26,18 @@ void draw(void*){
   glLoadIdentity();
 }
 
+extern bool orsDrawWires;
 void TEST(GJK) {
   OpenGL gl;
   gl.add(glStandardScene);
   gl.add(draw, &m2);
+  orsDrawWires = true;
 
   t1.setZero();
   t2.setZero();
 
-  m1.setRandom();  t1.pos.set(-0., -0., 1.);
-  m2.setRandom();  t2.pos.set( 0., 0., 1.5);
+  m1.setRandom();  m1.clean();  t1.pos.set(-0., -0., 1.);
+  m2.setRandom();  m2.clean();  t2.pos.set( 0., 0., 1.5);
 
   gl.update();
 
@@ -41,7 +45,7 @@ void TEST(GJK) {
     t1.pos.y += .1; t1.addRelativeRotationDeg(10, 0., 1., 0.);
     t2.pos.y -= .2; t2.addRelativeRotationDeg(10, 1., 0., 0.);
 
-    double d=GJK_distance(m1, m2, t1, t2, p1, p2);
+    double d=GJK_sqrDistance(m1, m2, t1, t2, p1, p2, NoVector, NoVector, NoPointType, NoPointType);
     double c_dist=(t1.pos-t2.pos).length();
     cout <<"distance = " <<d <<"\np1=" <<p1 <<"\np2=" <<p2 <<"\ncenter dist=" <<c_dist <<endl;
     CHECK_LE(d, c_dist,"distance doesn't make sense");

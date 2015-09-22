@@ -751,8 +751,8 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
   ors::Body *tar = s.world->getBodyByName("drawer1");
 
   // add graph operator
-  ors::GraphOperator *op1 = new ors::GraphOperator();
-  op1->symbol = ors::GraphOperator::addRigid;
+  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
+  op1->symbol = ors::KinematicSwitch::addRigid;
   op1->timeOfApplication = contactTime;
   op1->fromId = s.world->getBodyByName("endeffR")->index;
   op1->toId = s.world->getBodyByName("drawer1")->index;

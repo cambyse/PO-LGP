@@ -1,7 +1,7 @@
 PROJECT_NAME           = "Representation Library"
 OUTPUT_DIRECTORY       = doc
-GENERATE_TAGFILE       = doc/doxy.tag
-TAGFILES	       = ../doc/doxy.tag=../../../doc/html
+# GENERATE_TAGFILE       = doc/doxy.tag
+# TAGFILES	       = ../doc/doxy.tag=../../../doc/html
 EXAMPLE_PATH           = doc
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES

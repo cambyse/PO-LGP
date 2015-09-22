@@ -34,6 +34,7 @@ public:
     virtual bool has_min_reward() const override;
     virtual reward_t min_reward() const override;
     virtual bool is_markov() const override;
+    virtual void write(std::ostream & out) const override;
 };
 
 #endif /* TEMPLATEENVIRONMENT_H_ */

@@ -494,7 +494,7 @@ CG & CG::plot_graph(const char* file_name) {
         arc_properties[arc] = QString("label=<%1>").
             arg(arc_values[arc]);
     }
-    util::graph_to_pdf(file_name, graph, "", &node_properties, "", &arc_properties);
+    util::plot_graph(file_name, graph, "", &node_properties, "", &arc_properties);
     return *this;
 }
 

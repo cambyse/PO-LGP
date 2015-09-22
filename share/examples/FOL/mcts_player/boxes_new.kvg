@@ -1,6 +1,6 @@
 ## Syntactic keywords
-Keyword Terminate
-#Rule
+QUIT
+Terminate
 
 ## activities
 grasping
@@ -22,12 +22,12 @@ fixed    # object X and Y are fixed together
 never    # (for debugging)
 
 ## constants
-Constant A1
-Constant A2
-Constant A3
-Constant Handle
-Constant Long1
-#Constant Long2
+A1
+A2
+A3
+Handle
+Long1
+Long2
 
 ## initial state
 START_STATE {
@@ -36,14 +36,16 @@ START_STATE {
 (agent A3) (free A3)
 (object Handle)
 (object Long1)
-#(object Long2)
+(object Long2)
 }
 
-### terminal state
-
-terminal { (fixed Handle Long1) } #(fixed Handle Long2) }
-
 ### RULES
+
+#termination rule
+Rule {
+  { (fixed Handle Long1) (fixed Handle Long2) }
+  { (QUIT) }
+}
 
 DecisionRule activate_grasping {
   X, Y
@@ -56,7 +58,7 @@ Rule {
   { (Terminate grasping X Y) }
   { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
   { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
-  p=[.5 .5]
+  p=[.9 0.1]
 }
 
 DecisionRule activate_releasing {
@@ -106,4 +108,15 @@ Rule {
   X, Y, Z
   { (Terminate fixing X Y Z) }
   { (Terminate fixing X Y Z)! (fixing X Y Z)! (fixed X Y) (fixed Y X) (hasScrew Z)! (free Z) (busy X)! (busy Y)! (busy Z)! } #NOTE: fixed needs to be symmetric: both predicates are added!
+}
+
+
+
+### Reward
+
+REWARD {
+  r=100.
+  { { (fixed Handle Long1) (fixed Handle Long2) } }
+  r=20.
+  { {} (activate_fixing) }
 }

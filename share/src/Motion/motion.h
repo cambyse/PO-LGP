@@ -41,6 +41,13 @@ struct TaskMap {
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
+  VectorFunction vf(ors::KinematicWorld& G){
+    return [this, &G](arr& y, arr& J, const arr& x) -> void {
+      G.setJointState(x);
+      phi(y, J, G, -1);
+    };
+  }
+
   TaskMap():type(sumOfSqrTT),order(0) {}
   virtual ~TaskMap() {};
 };
@@ -61,7 +68,7 @@ struct Task {
   uint dim_phi(const ors::KinematicWorld& G, uint t){
     if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
-  Task(TaskMap* m):map(*m), active(true){}
+  Task(TaskMap* m):map(*m), active(true){} //TODO: require type here!!
 
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),
@@ -84,7 +91,10 @@ struct MotionProblem {
 
   //-- task cost descriptions
   MT::Array<Task*> taskCosts;
-  
+
+  //-- kinematic switches along the motion
+  MT::Array<ors::KinematicSwitch*> switches;
+
   //-- trajectory length and tau
   uint T; ///< number of time steps
   double tau; ///< duration of single step
@@ -126,7 +136,8 @@ struct MotionProblem {
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
-  
+  Graph getReport();
+
   void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 

@@ -50,6 +50,7 @@ namespace ors {
 
 double& Vector::operator()(uint i) {
   CHECK(i<3,"out of range");
+  isZero=false;
   return (&x)[i];
 }
 
@@ -1011,6 +1012,8 @@ void Transformation::setInverse(const Transformation& f) {
   if(f.zeroVels) {
     rot = -f.rot;
     pos = - (rot * f.pos);
+    vel.setZero();
+    angvel.setZero();
     zeroVels = true;
   } else {
     rot = -f.rot;
@@ -1098,6 +1101,17 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
   m[2]=M.m02; m[6]=M.m12; m[10]=M.m22; m[14]=-pinv.z;
   m[3]=0.;   m[7]=0.;   m[11]=0.;   m[15]=1.;
   return m;
+}
+
+void Transformation::applyOnPointArray(arr& pts){
+  if(!(pts.nd==2 && pts.d1==3)){
+    LOG(-1) <<"wrong pts dimensions for transformation:" <<pts.dim();
+    return;
+  }
+  arr R = ~rot.getArr(); //transposed, only to make it applicable to an n-times-3 array
+  arr t = ARRAY(pos);
+  pts = pts * R;
+  for(uint i=0;i<pts.d0;i++) pts[i]() += t; //inefficient...
 }
 
 bool Transformation::isZero() const {

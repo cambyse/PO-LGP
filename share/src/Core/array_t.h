@@ -502,10 +502,10 @@ template<class T> void MT::Array<T>::setAppend(const MT::Array<T>& x) {
 }
 
 /// remove and return the first element of the array (must have size>1)
-template<class T> T MT::Array<T>::popFirst() { T x; x=elem(0);   remove(0);   return x; }
+template<class T> T MT::Array<T>::popFirst() { T x; x=elem(0); remove(0);   return x; }
 
 /// remove and return the last element of the array (must have size>1)
-template<class T> T MT::Array<T>::popLast() { T x; x=elem(N-1); remove(N-1); return x; }
+template<class T> T MT::Array<T>::popLast() { T x=elem(N-1); resizeCopy(N-1); return x; }
 
 /// reverse this array
 template<class T> void MT::Array<T>::reverse() {
@@ -715,6 +715,12 @@ template<class T> T& MT::Array<T>::rndElem() const {
 /// scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
   CHECK(nd<=2 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
+  return *p;
+}
+
+/// reference to the last element
+template<class T> T& MT::Array<T>::first() const {
+  CHECK(N, "can't take first of none");
   return *p;
 }
 
@@ -1235,7 +1241,7 @@ template<class T> void MT::Array<T>::setRandomPerm(int n) {
 
 /// 'this' becomes a copy (not reference to!) of the 1D C array
 template<class T> void MT::Array<T>::setCarray(const T *buffer, uint D0) {
-  resize(D0);
+  if(N!=D0) resize(D0);
   uint i;
   if(memMove && typeid(T)==typeid(T))
     memmove(p, buffer, sizeT*d0);
@@ -1434,17 +1440,16 @@ template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
 /// fast find method in a sorted array, returns index where x would fit into array
 template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
   if(!N) return 0;
-  if(comp(x, elem(0))) return 0;
-  if(comp(elem(N-1), x)) return N;
-  uint lo=0, up=N-1, mi=lo+(up-lo)/2;
-  while(lo<=up) {
-    mi=lo+(up-lo)/2;
-    if(elem(mi) == x) return mi;
-    if(comp(x, elem(mi))) up=mi-1; else lo=mi+1;
-    if(comp(x, elem(lo))) return lo;
-    if(comp(elem(up), x)) return up+1;
+  T *lo=p, *hi=p+N-1, *mi;
+  if(comp(x, *lo)) return 0;
+  if(comp(*hi, x)) return N;
+  for(;;){
+    if(lo+1>=hi) return hi-p;
+    mi=lo+(hi-lo)/2; //works (the minus operator on pointers gives #objects)
+    if(comp(*mi, x)) lo=mi; else hi=mi;
   }
-  return mi;
+  HALT("you shouldn't be here");
+  return 0;
 }
 
 /// fast find method in a sorted array, returns index to element equal to x
@@ -1467,7 +1472,9 @@ template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp
 template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
   uint cand_pos = rankInSorted(x, comp);
-  if(cand_pos == N  ||  elem(cand_pos) != x) insert(cand_pos, x);
+  if(cand_pos<N && elem(cand_pos  )==x) return cand_pos;
+  if(cand_pos>0 && elem(cand_pos-1)==x) return cand_pos-1;
+  insert(cand_pos, x);
   return cand_pos;
 }
 
@@ -1776,9 +1783,15 @@ template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
     return;
   }
   if(y.nd==2) {
-    uint i, j, d0=y.d1, d1=y.d0;
-    x.resize(d0, d1);
-    for(i=0; i<d0; i++) for(j=0; j<d1; j++) x.p[i*d1+j]=y.p[j*d0+i];
+    x.resize(y.d1, y.d0);
+//    for(i=0; i<d0; i++)
+    T *xp=x.p;
+    for(uint i=0; i<x.d0; i++){
+      T *yp=y.p+i, *xstop=xp+x.d1;
+      uint ystep=y.d1;
+      for(; xp!=xstop; xp++, yp+=ystep) *xp = *yp;
+//      for(j=0; j<d1; j++) x.p[i*d1+j]=y.p[j*d0+i];
+    }
     return;
   }
   if(y.nd==1) {
@@ -1823,6 +1836,11 @@ template<class T> void checkNan(const MT::Array<T>& x) {
     //CHECK(x.elem(i)!=NAN, "found a NaN" <<x.elem(i) <<'[' <<i <<']');
     CHECK_EQ(x.elem(i),x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
   }
+}
+
+template<class T> void sort(MT::Array<T>& x) {
+  T *pstop=x.p+x.N;
+  std::sort(x.p, pstop);
 }
 
 template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
@@ -2308,8 +2326,13 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
   }
   if(y.nd==1 && z.nd==2) {  //vector x matrix -> index-wise
     CHECK_EQ(y.N,z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
-    x=z;
-    for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
+    x = z;
+    for(uint i=0;i<x.d0;i++){
+      double yi=y(i);
+      T *xp=&x(i,0), *xstop=xp+x.d1;
+      for(; xp!=xstop; xp++) *xp *= yi;
+//      x[i]() *= y(i);
+    }
     return;
   }
   if(y.nd==2 && z.nd==1) {  //matrix x vector -> index-wise
@@ -2320,11 +2343,11 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
   }
   if(y.dim() == z.dim()) { //matrix x matrix -> element-wise
     x = y;
-    for(uint i = 0; i < x.N; i++)
-      x.elem(i) *= z.elem(i);
+    T *xp=x.p, *xstop=x.p+x.N, *zp=z.p;
+    for(; xp!=xstop; xp++, zp++) *xp *= *zp;
     return;
   }
-  HALT("operator% not implemented for "<<y.dim() <<"%" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+  HALT("operator% not implemented for "<<y.dim() <<" %" <<z.dim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
 }
 
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
@@ -3183,8 +3206,7 @@ inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
   MT::Array<T> func (const MT::Array<T>& y){    \
     MT::Array<T> x;           \
     if(&x!=&y) x.resizeAs(y);         \
-    T *xp=x.p, *xstop=xp+x.N;            \
-    const T *yp=y.p;            \
+    T *xp=x.p, *xstop=xp+x.N, *yp=y.p;            \
     for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
     return x;         \
   }

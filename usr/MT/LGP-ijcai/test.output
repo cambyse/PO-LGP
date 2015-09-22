@@ -1,0 +1,1259 @@
+initCmdLine:util.cpp:605(0) ** cmd line arguments: './x.exe '
+fx=0.126575
+reward=42.2
+*** Entering Thread 'GTK thread'
+fx=0.239629
+reward=62.8
+fx=0.363682
+reward=43.4
+fx=0.240382
+reward=42.8
+fx=0.117039
+reward=42.2
+fx=0.245481
+reward=62.8
+fx=0.231806
+reward=52.8
+fx=0.355893
+reward=63.4
+fx=0.236129
+reward=42.8
+fx=0.371351
+reward=43.4
+fx=0.229833
+reward=42.8
+fx=0.239143
+reward=42.8
+fx=0.35408
+reward=43.4
+fx=0.233501
+reward=42.8
+fx=0.102798
+reward=42.2
+fx=0.414127
+reward=43.4
+fx=0.237714
+reward=42.8
+fx=0.128684
+reward=62.2
+fx=0.335975
+reward=43.4
+fx=0.104347
+reward=42.2
+fx=0.118769
+reward=62.2
+fx=0.344488
+reward=63.4
+fx=0.113368
+reward=62.2
+fx=0.237426
+reward=42.8
+fx=0.221917
+reward=42.8
+fx=0.21036
+reward=42.8
+fx=0.13152
+reward=42.2
+fx=0.105713
+reward=62.2
+fx=0.124694
+reward=42.2
+fx=0.122718
+reward=42.2
+fx=0.222979
+reward=42.8
+fx=0.12188
+reward=42.2
+fx=0.104363
+reward=42.2
+fx=0.11045
+reward=52.2
+fx=0.245484
+reward=42.8
+fx=0.240165
+reward=62.8
+fx=0.218549
+reward=52.8
+fx=0.117332
+reward=42.2
+fx=0.366541
+reward=63.4
+fx=0.218735
+reward=62.8
+fx=0.346115
+reward=43.4
+fx=0.267285
+reward=62.8
+fx=0.226185
+reward=42.8
+fx=0.251106
+reward=42.8
+fx=0.218813
+reward=42.8
+fx=0.228433
+reward=42.8
+fx=0.114681
+reward=42.2
+fx=0.337509
+reward=43.4
+fx=0.24264
+reward=42.8
+fx=0.242481
+reward=52.8
+fx=0.239162
+reward=42.8
+fx=0.246329
+reward=42.8
+fx=0.204267
+reward=42.8
+fx=0.224849
+reward=42.8
+fx=0.345859
+reward=43.4
+fx=0.376116
+reward=63.4
+fx=0.250183
+reward=62.8
+fx=0.230774
+reward=42.8
+fx=0.240908
+reward=42.8
+fx=0.120587
+reward=42.2
+fx=0.352806
+reward=43.4
+fx=0.204598
+reward=42.8
+fx=0.239958
+reward=62.8
+fx=0.351637
+reward=53.4
+fx=0.24433
+reward=62.8
+fx=0.120752
+reward=42.2
+fx=0.261529
+reward=62.8
+fx=0.126483
+reward=42.2
+fx=0.101152
+reward=42.2
+fx=0.237407
+reward=42.8
+fx=0.239715
+reward=42.8
+fx=0.126553
+reward=42.2
+fx=0.105699
+reward=42.2
+fx=0.126855
+reward=62.2
+fx=0.347842
+reward=43.4
+fx=0.10571
+reward=42.2
+fx=0.125
+reward=62.2
+fx=0.131356
+reward=62.2
+fx=0.255773
+reward=52.8
+fx=0.232574
+reward=42.8
+fx=0.124487
+reward=62.2
+fx=0.0779158
+reward=42.2
+fx=0.22388
+reward=42.8
+fx=0.266736
+reward=42.8
+fx=0.344199
+reward=43.4
+fx=0.359664
+reward=43.4
+fx=0.347662
+reward=43.4
+fx=0.347636
+reward=53.4
+fx=0.359492
+reward=43.4
+fx=0.26347
+reward=62.8
+fx=0.108914
+reward=42.2
+fx=0.241673
+reward=62.8
+fx=0.357991
+reward=63.4
+fx=0.245692
+reward=42.8
+fx=0.229053
+reward=62.8
+fx=0.20128
+reward=42.8
+fx=0.228242
+reward=52.8
+fx=0.103615
+reward=42.2
+fx=0.130435
+reward=62.2
+fx=0.239614
+reward=42.8
+fx=0.354573
+reward=43.4
+fx=0.35635
+reward=43.4
+fx=0.357139
+reward=43.4
+fx=0.246541
+reward=62.8
+fx=0.232338
+reward=42.8
+fx=0.226542
+reward=52.8
+fx=0.259815
+reward=62.8
+fx=0.238709
+reward=62.8
+fx=0.103562
+reward=42.2
+fx=0.233095
+reward=52.8
+fx=0.234103
+reward=42.8
+fx=0.248844
+reward=42.8
+fx=0.359427
+reward=43.4
+fx=0.244316
+reward=62.8
+fx=0.224457
+reward=42.8
+fx=0.229013
+reward=62.8
+fx=0.245111
+reward=42.8
+fx=0.123541
+reward=42.2
+fx=0.330622
+reward=43.4
+fx=0.360347
+reward=43.4
+fx=0.241227
+reward=62.8
+fx=0.34842
+reward=43.4
+fx=0.105727
+reward=62.2
+fx=0.356735
+reward=43.4
+fx=0.352062
+reward=43.4
+fx=0.23924
+reward=42.8
+fx=0.118215
+reward=42.2
+fx=0.118358
+reward=42.2
+fx=0.254611
+reward=62.8
+fx=0.124538
+reward=42.2
+fx=0.354795
+reward=43.4
+fx=0.226279
+reward=42.8
+fx=0.096548
+reward=42.2
+fx=0.208848
+reward=42.8
+fx=0.107411
+reward=42.2
+fx=0.119241
+reward=62.2
+fx=0.233266
+reward=42.8
+fx=0.35054
+reward=43.4
+fx=0.090344
+reward=42.2
+fx=0.266725
+reward=42.8
+fx=0.255293
+reward=42.8
+fx=0.247183
+reward=42.8
+fx=0.112882
+reward=52.2
+fx=0.352013
+reward=63.4
+fx=0.241149
+reward=42.8
+fx=0.246366
+reward=42.8
+fx=0.240189
+reward=62.8
+fx=0.239846
+reward=42.8
+fx=0.371407
+reward=63.4
+fx=0.223288
+reward=52.8
+fx=0.336503
+reward=43.4
+fx=0.359295
+reward=63.4
+fx=0.3606
+reward=63.4
+fx=0.123517
+reward=42.2
+fx=0.129892
+reward=62.2
+fx=0.233453
+reward=42.8
+fx=0.214382
+reward=42.8
+fx=0.22283
+reward=42.8
+fx=0.352307
+reward=43.4
+fx=0.214076
+reward=62.8
+fx=0.232546
+reward=42.8
+fx=0.119126
+reward=62.2
+fx=0.115184
+reward=42.2
+fx=0.346569
+reward=43.4
+fx=0.241494
+reward=42.8
+fx=0.343477
+reward=43.4
+fx=0.126329
+reward=42.2
+fx=0.233376
+reward=42.8
+fx=0.352348
+reward=43.4
+fx=0.351704
+reward=53.4
+fx=0.246024
+reward=62.8
+fx=0.256723
+reward=62.8
+fx=0.25858
+reward=62.8
+fx=0.2349
+reward=42.8
+fx=0.350388
+reward=43.4
+fx=0.249529
+reward=62.8
+fx=0.244584
+reward=62.8
+fx=0.116174
+reward=62.2
+fx=0.309285
+reward=33.4
+fx=0.242413
+reward=42.8
+fx=0.125076
+reward=62.2
+fx=0.23893
+reward=42.8
+fx=0.119858
+reward=42.2
+fx=0.10452
+reward=42.2
+fx=0.115744
+reward=42.2
+fx=0.357128
+reward=43.4
+fx=0.232775
+reward=62.8
+fx=0.113787
+reward=42.2
+fx=0.200783
+reward=42.8
+fx=0.242229
+reward=42.8
+fx=0.36411
+reward=63.4
+fx=0.111722
+reward=52.2
+fx=0.243899
+reward=62.8
+fx=0.234744
+reward=62.8
+fx=0.233962
+reward=42.8
+fx=0.254988
+reward=62.8
+fx=0.224303
+reward=62.8
+fx=0.0996944
+reward=42.2
+fx=0.12887
+reward=42.2
+fx=0.249808
+reward=42.8
+BEST:
+ 0 0 0 0 0 0 0 0 0 1 0 0 0
+  0 0 0 0 0 0 0 0 0 0 1 0 0
+  0 0 0 0 0 0 0 0 0 0 0 1 0
+  0 0 0 0 0 0 0 0 0 0 0 0 1
+creating ProxyTaskMap with shape list
+creating ProxyTaskMap with shape list
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+kinematicsProxyCost:ors.cpp:2071(-1) proxy->cenN is not normalized: objects seem to be at exactly the same place -- WARNING
+*** optNewton: starting point f(x)=52031.6 alpha=1 beta=0.1
+***** optConstrained: method=AnyTimeAugmentedLagrangian
+** optConstr. it=0 mu=1 nu=1 muLB=0
+optNewton it=  1 	beta=0.1 	|Delta|=0.5 	evals=2 	alpha=1 	f(y)=26226.3 - ACCEPT
+optNewton it=  2 	beta=0.1 	|Delta|=0.5 	evals=3 	alpha=1 	f(y)=13622.1 - ACCEPT
+optNewton it=  3 	beta=0.1 	|Delta|=0.5 	evals=4 	alpha=1 	f(y)=5313.37 - ACCEPT
+optNewton it=  4 	beta=0.1 	|Delta|=0.5 	evals=5 	alpha=1 	f(y)=1039.68 - ACCEPT
+optNewton it=  5 	beta=0.1 	|Delta|=0.5 	evals=6 	alpha=1 	f(y)=443.36 - ACCEPT
+optNewton it=  6 	beta=0.1 	|Delta|=0.490963 	evals=7 	alpha=1 	f(y)=13.5328 - ACCEPT
+optNewton it=  7 	beta=0.1 	|Delta|=0.378171 	evals=8 	alpha=1 	f(y)=7.97134 - ACCEPT
+optNewton it=  8 	beta=0.1 	|Delta|=0.307603 	evals=9 	alpha=1 	f(y)=7.07101 - ACCEPT
+optNewton it=  9 	beta=0.1 	|Delta|=0.116058 	evals=10 	alpha=1 	f(y)=0.961245 - ACCEPT
+optNewton it= 10 	beta=0.1 	|Delta|=0.0816412 	evals=11 	alpha=1 	f(y)=0.535747 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+0 11 f(x)=0.533187 	g_compl=0.0825925 	h_compl=0
+** optConstr. it=1 mu=1.2 nu=1.2 muLB=0
+optNewton it= 11 	beta=0.1 	|Delta|=0.0753418 	evals=12 	alpha=1 	f(y)=2.74787 - reject
+				 	evals=13 	alpha=0.1 	f(y)=0.596886 - reject
+				 	evals=14 	alpha=0.01 	f(y)=0.5405 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+1 14 f(x)=0.532476 	g_compl=0.0813666 	h_compl=0
+** optConstr. it=2 mu=1.44 nu=1.44 muLB=0
+optNewton it= 12 	beta=0.1 	|Delta|=0.0752959 	evals=15 	alpha=0.02 	f(y)=0.548039 - reject
+				 	evals=16 	alpha=0.002 	f(y)=0.546838 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+2 16 f(x)=0.532335 	g_compl=0.0811616 	h_compl=0
+** optConstr. it=3 mu=1.728 nu=1.728 muLB=0
+optNewton it= 13 	beta=0.1 	|Delta|=0.0752867 	evals=17 	alpha=0.004 	f(y)=0.554083 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+3 17 f(x)=0.532063 	g_compl=0.0802908 	h_compl=0
+** optConstr. it=4 mu=2.0736 nu=2.0736 muLB=0
+optNewton it= 14 	beta=0.1 	|Delta|=0.0752683 	evals=18 	alpha=0.008 	f(y)=0.561794 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+4 18 f(x)=0.531524 	g_compl=0.078263 	h_compl=0
+** optConstr. it=5 mu=2.48832 nu=2.48832 muLB=0
+optNewton it= 15 	beta=0.1 	|Delta|=0.0752316 	evals=19 	alpha=0.016 	f(y)=0.568522 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+5 19 f(x)=0.530454 	g_compl=0.0737659 	h_compl=0
+** optConstr. it=6 mu=2.98598 nu=2.98598 muLB=0
+optNewton it= 16 	beta=0.1 	|Delta|=0.0751581 	evals=20 	alpha=0.032 	f(y)=0.570495 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+6 20 f(x)=0.528343 	g_compl=0.0642087 	h_compl=0
+** optConstr. it=7 mu=3.58318 nu=3.58318 muLB=0
+optNewton it= 17 	beta=0.1 	|Delta|=0.0750113 	evals=21 	alpha=0.064 	f(y)=0.559657 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+7 21 f(x)=0.524214 	g_compl=0.0449933 	h_compl=0
+** optConstr. it=8 mu=4.29982 nu=4.29982 muLB=0
+optNewton it= 18 	beta=0.1 	|Delta|=0.0747176 	evals=22 	alpha=0.128 	f(y)=0.524263 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+8 22 f(x)=0.516263 	g_compl=0.00931733 	h_compl=0
+** optConstr. it=9 mu=5.15978 nu=5.15978 muLB=0
+optNewton it= 19 	beta=0.1 	|Delta|=0.0741301 	evals=23 	alpha=0.256 	f(y)=0.465275 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+9 23 f(x)=0.501302 	g_compl=0.0059675 	h_compl=0
+** optConstr. it=10 mu=6.19174 nu=6.19174 muLB=0
+optNewton it= 20 	beta=0.1 	|Delta|=0.0729544 	evals=24 	alpha=0.512 	f(y)=9.11433 - reject
+				 	evals=25 	alpha=0.0512 	f(y)=0.58418 - reject
+				 	evals=26 	alpha=0.00512 	f(y)=0.475122 - reject
+				 	evals=27 	alpha=0.000512 	f(y)=0.47455 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+10 27 f(x)=0.501272 	g_compl=0.00675225 	h_compl=0
+** optConstr. it=11 mu=7.43008 nu=7.43008 muLB=0
+optNewton it= 21 	beta=0.1 	|Delta|=0.0729521 	evals=28 	alpha=0.001024 	f(y)=0.485701 - ACCEPT
+						--- stopping criterion='absMax(Delta)<o.stopTolerance'
+11 28 f(x)=0.501214 	g_compl=0.00673613 	h_compl=0
+ --- optConstrained StoppingCriterion Delta<0.01
+*** MotionProblem -- CostReport
+ * task costs:
+	 'transitions' order=2 type=2 	costs=0.486686 	constraints=0
+	 'pose' order=0 type=2 	costs=0.0121816 	constraints=0
+	 'pap_pos' order=0 type=2 	costs=0.00162584 	constraints=0
+	 'psp_quat' order=0 type=2 	costs=0.000151367 	constraints=0
+	 'psp_zeroPosVel' order=1 type=2 	costs=0.000102695 	constraints=0
+	 'pap_zeroQuatVel' order=1 type=2 	costs=1.85744e-05 	constraints=0
+	 'graspJoint' order=1 type=2 	costs=8.25504e-05 	constraints=0
+	 'pap_upDownPosVel' order=1 type=2 	costs=0.000364908 	constraints=0
+	 'object_collisions' order=0 type=3 	costs=0 	constraints=0.00080703
+	 'hand_collisions' order=0 type=3 	costs=0 	constraints=0.0059291
+	 total task        = 0.501214
+	 total constraints = 0.00673613

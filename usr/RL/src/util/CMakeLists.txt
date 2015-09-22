@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 find_package(Qt5Core)
 
@@ -32,6 +32,7 @@ add_library(util
     template_lib.h
     util.cpp
     util.h
+    softmax.h
 )
 
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

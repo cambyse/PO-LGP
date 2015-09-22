@@ -1,0 +1,5 @@
+BASE = ../../../share
+
+DEPEND = Motion Core Ors Gui Optim FOL LGP
+
+include $(BASE)/gofMake/generic.mk

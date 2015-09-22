@@ -22,12 +22,15 @@ namespace tree_policy {
      * common tree policy is UCB1 but a Uniform policy may also be used. */
     class TreePolicy {
     public:
+        //----typedefs/classes----//
+        typedef std::tuple<action_container_t,std::vector<double>> action_probability_t;
         //----members----//
         std::shared_ptr<AbstractEnvironment> environment = nullptr;
         const graph_t * graph = nullptr;
         const node_info_map_t * node_info_map = nullptr;
         const mcts_node_info_map_t * mcts_node_info_map = nullptr;
         const mcts_arc_info_map_t * mcts_arc_info_map = nullptr;
+        bool restrict_to_existing = false;
     public:
         //----methods----//
         virtual ~TreePolicy() = default;
@@ -36,7 +39,13 @@ namespace tree_policy {
                           const node_info_map_t & node_info_map,
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map);
-        virtual action_handle_t get_action(const node_t & state_node) const = 0;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const = 0;
+        virtual action_handle_t get_action(const node_t & state_node) const final;
+        friend std::ostream& operator<<(std::ostream & out, const TreePolicy & policy) {
+            policy.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
 
     /**
@@ -44,7 +53,8 @@ namespace tree_policy {
     class Uniform: public TreePolicy {
     public:
         virtual ~Uniform() = default;
-        virtual action_handle_t get_action(const node_t & state_node) const override;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"Uniform()";};
     };
 
     /**
@@ -59,19 +69,22 @@ namespace tree_policy {
                           const node_info_map_t & node_info_map,
                           const mcts_node_info_map_t & mcts_node_info_map,
                           const mcts_arc_info_map_t & mcts_arc_info_map) override;
-        virtual action_handle_t get_action(const node_t & state_node) const override final;
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const = 0;
+        virtual action_probability_t get_action_probabilities(const node_t & state_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const = 0;
+        bool print_choice = false;
+        double soft_max_temperature = 0;
     };
 
     /**
      * Sample the action with highes value. */
     class Optimal: public MaxPolicy {
     public:
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"Optimal(T="<<soft_max_temperature<<")";}
     };
 
     /**
@@ -89,36 +102,65 @@ namespace tree_policy {
          * exploration. The default value is Cp=1/√2, which was shown by Kocsis
          * and Szepesvári to satisfy the Hoeffding ineqality. */
         UCB1(double Cp = 0.70710678118654746);
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
         virtual void set_exploration(double ex) {Cp = ex;}
+        virtual void write(std::ostream & out) const override {out<<"UCB1(Cp="<<Cp<<";T="<<soft_max_temperature<<")";}
     protected:
         double Cp;
     };
 
     /**
-     * Sample action with maximum upper bound. This is similar to UCB1 except
-     * that the bound is computed as \f[
+     * Tree policy that uses the variance of return to compute the upper bound.
+     * This is similar to UCB1 except that the bound is computed as
      *
-     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + C_p \sqrt{\widetilde{Q}_{(s,a)}}
+     * \f[
+     * Q_{(s,a)}^+ = \widehat{Q}_{(s,a)} + \sqrt{\frac{2V\zeta\log n}{n_j}} + c \frac{3b\zeta\log n}{n_j}
+     * \f]
      *
-     * \f] where \f$\widehat{Q}_{(s,a)}\f$ is the mean value,
-     * \f$\widetilde{Q}_{(s,a)}\f$ is the variance of the value, and \f$C_p\f$
-     * (as in UCB1) balances exploration and exploitation. These bounds take
-     * into account uncertainty further down in the tree. */
-    class UCB_Plus: public MaxPolicy {
+     * where V is the variance of the return (not of the value!), b is the upper
+     * bound on the reward (assuming zero as lower bound), and zeta and c > 0
+     * control the behavior. */
+    class UCB_Variance: public MaxPolicy {
     public:
         /**
-         * Constructor. @param Cp This is the scaling parameter for
+         * Constructor. @param c This is the scaling parameter for
          * exploration.*/
-        UCB_Plus(double Cp = 1);
-        virtual reward_t score(const node_t & state_node,
-                               const arc_t & to_action_arc,
-                               const node_t & action_node) const override;
-        virtual void set_exploration(double ex) {Cp = ex;}
+        UCB_Variance(double zeta = 1.2, double c = 1);
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {c = ex;}
+        virtual void write(std::ostream & out) const override {out<<"UCB_Variance(zeta=" << zeta << ";c="<<c<<";b="<<reward_bound()<<";T="<<soft_max_temperature<<")";}
+        virtual double reward_bound() const;
     protected:
-        double Cp;
+        double zeta, c;
+    };
+
+    class HardUpper: public MaxPolicy {
+    public:
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
+        virtual void write(std::ostream & out) const override {out<<"HardUpper(T="<<soft_max_temperature<<")";}
+    };
+
+    /**
+     * Uses the full statistics to compute quantiles. */
+    class Quantile: public MaxPolicy {
+    public:
+        Quantile(double Cp,
+                 double quantile,
+                 double min_return = 0,
+                 double max_return = 0,
+                 double prior_counts = 0);
+        virtual double score(const node_t & state_node,
+                             const arc_t & to_action_arc,
+                             const node_t & action_node) const override;
+        virtual void set_exploration(double ex) {Cp = ex;}
+        virtual void write(std::ostream & out) const override {out<<"Quantile(Cp="<<Cp<<";q="<<quantile<<";T="<<soft_max_temperature<<")";}
+        double Cp, quantile, min_return, max_return, prior_counts;
     };
 
 } // end namespace tree_policy

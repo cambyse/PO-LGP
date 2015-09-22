@@ -137,7 +137,7 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     }
     b->name = s->name;
     //position on grid
-    b->X.addRelativeTranslation(0,.5*s->size[1],.5*s->size[2]);
+    b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
     y += .1 + s->size[1]+s->size[3];
     if(y>1.){ x+=.4; y=-1.; }
 
@@ -223,14 +223,14 @@ void coreExperiment(){
     nObjects = world.bodies.N - nObjects;
 //    world .gl().watch();
 
-    ors::KinematicWorld world_best;
+    ors::KinematicWorld world_best, world_display;
     Graph symbols_best;
     double f_best=0.;
 
     double MCTS_time=0., lev1_time=0., lev2_time=0., lev3_time=0.;
 
     uint s;
-    for(s=0;s<100;s++){
+    for(s=0;s<200;s++){
       ors::KinematicWorld world_sol(world);
       Graph symbols_sol(symbols);
       MT::timerRead(true);
@@ -247,15 +247,20 @@ void coreExperiment(){
         world_best = world_sol;
         symbols_best = symbols_sol;
       }
-      gl.drawers(1).classP= &world_sol;
+//      gl.drawers(1).classP= &world_sol;
+      world_display=world_sol;
+      world_display.gl().update();
 //      gl.update();
-//      world_sol.gl().watch();
+//      world_sol.gl().update();
     }
     cout <<"BEST:" <<endl;
     world_best >>FILE("z.world_best.kvg");
     symbols_best >>FILE("z.symbols_best.kvg");
 
-    gl.drawers(1).classP= &world_best;
+    world_display=world_best;
+    world_display.gl().update();
+
+//    gl.drawers(1).classP= &world_best;
     gl.update();
 //    gl.watch();
 
@@ -271,8 +276,11 @@ void coreExperiment(){
 
 //===========================================================================
 int main(int argc,char **argv){
-  coreExperiment();
+  MT::initCmdLine(argc, argv);
 //  rnd.clockSeed();
+  rnd.seed(MT::getParameter<int>("seed",0));
+
+  coreExperiment();
 //  generateRandomProblems();
 //  return 0;
 //  optimizeFinal();

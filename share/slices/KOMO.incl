@@ -4,12 +4,16 @@ share/src/Gui
 share/src/Ors
 share/src/Optim
 share/src/Motion
+share/src/Hardware/gamepad
 
-share/examples/KOMO
+share/examples/KOMO/easy
+share/examples/KOMO/exec
 share/examples/Ors/ors_editor
 
 share/include/lapack
 share/src/extern/SWIFT
 share/src/extern/SWIFT_decomposer
+share/src/extern/GJK
+share/src/extern/GJK
 
 share/data/pr2_model

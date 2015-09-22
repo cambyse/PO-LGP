@@ -10,7 +10,7 @@ void TaskCtrlActivity::configure(Node *fact) {
   for(Node *p:fact->parents) name <<p->keys.last();
   taskController = taskControllerModule();
   CHECK(taskController,"");
-  Activity::fact = fact;
+  this->fact = fact;
   Graph *specs = &NoGraph;
   if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
   configure2(name, *specs, taskController->modelWorld.set());
@@ -35,12 +35,14 @@ void TaskCtrlActivity::step(double dt){
   convStr <<")";
   if(isConv()){
     if(!conv){
-      if(fact) taskController->effects.set()() <<convStr <<", ";
+//      if(fact) taskController->effects.set()() <<convStr <<", ";
+      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=true;
     }
   }else{
     if(conv){
-      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+//      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=false;
     }
   }
@@ -90,7 +92,7 @@ void HomingActivity::configure2(const char *name, Graph& specs, ors::KinematicWo
   task->y_ref=taskController->q0;
 
   Node* it;
-  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if(&specs && (it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
 
   wheeljoint = world.getJointByName("worldTranslationRotation");
 }
