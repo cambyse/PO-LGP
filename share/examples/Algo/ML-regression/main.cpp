@@ -63,6 +63,66 @@ void testLinReg(const char *datafile=NULL) {
 
 //===========================================================================
 
+void testRobustRegression(const char *datafile=NULL) {
+  if(!datafile){ //store artificial data to a file
+    datafile="z.train";
+    arr X,y;
+    artificialData(X, y);
+    FILE(datafile) <<catCol(X,y);
+  }
+
+  //-- load data from a file
+  arr X,y;
+  X <<FILE(datafile);
+  y = (~X)[X.d1-1];    //last row of transposed X
+  X.delColumns(X.d1-1);
+
+  //-- generate features
+  arr Phi = makeFeatures(X);
+
+  //-- compute optimal parameters
+  arr Sigma;
+  arr beta = ridgeRegression(Phi, y, -1., Sigma);
+  cout <<"estimated beta = "<< beta <<endl;
+  if(beta.N==beta_true.N) cout <<"max-norm beta-beta_true = " <<maxDiff(beta, beta_true) <<endl; //beta_true is global and generated during artificialData
+  double sigma = sqrt(sumOfSqr(Phi*beta-y)/(X.d0-1));
+  cout <<"Mean error (sdv) = " <<sigma <<endl;
+
+  //-- evaluate model on a grid
+  arr X_grid,y_grid;
+  X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
+  Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
+  y_grid = Phi*beta;
+  arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+MT::sqr(sigma)*/);
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    //plotFunction(X_grid, y_grid);
+    plotPoints(X,y);
+    plot(true);
+  }
+  FILE("z.model") <<~y_grid;
+
+  //-- gnuplot
+  MT::arrayBrackets="  ";
+//  if(X.d1==1){
+//    FILE("z.model") <<catCol(X_grid, y_grid);
+//    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
+//  }
+  if(X.d1==2){
+    FILE("z.model") <<y_grid.reshape(31,31);
+    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
+                   'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+  }
+}
+
+//===========================================================================
+
 void testKernelReg(const char *datafile=NULL) {
   if(!datafile){ //store artificial data to a file
     datafile="z.train";
@@ -352,6 +412,7 @@ int main(int argc, char *argv[]) {
     case 4:  testCV();  break;
     case 5:  testKernelReg();  break;
     case 6:  testKernelLogReg();  break;
+    case 7:  testRobustRegression();  break;
       break;
   }
   

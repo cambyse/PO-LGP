@@ -43,6 +43,23 @@ bool rosOk(){
   return ros::ok();
 }
 
+ors::Transformation ros_cvrt(const tf::Transform &trans){
+  ors::Transformation X;
+  tf::Quaternion q = trans.getRotation();
+  tf::Vector3 t = trans.getOrigin();
+  X.rot.set(q.w(), q.x(), q.y(), q.z());
+  X.pos.set(t.x(), t.y(), t.z());
+  return X;
+}
+
+timespec cvrt(const ros::Time& time){
+  return {time.sec, time.nsec};
+}
+
+double cvrt2double(const ros::Time& time){
+  return (double)(time.sec) + 1e-9d*(double)(time.nsec);
+}
+
 //===========================================================================
 // RosCom_Spinner
 struct sRosCom_Spinner{
@@ -168,14 +185,14 @@ struct sRosCom_KinectSync{
   ros::Subscriber sub_depth;
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
-    base->kinect_rgb.set() = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
+    base->kinect_rgb.set( cvrt2double(msg->header.stamp) ) = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
   }
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
     byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
-    base->kinect_depth.set() = ref;
+    base->kinect_depth.set( cvrt2double(msg->header.stamp) ) = ref;
   }
 };
 
@@ -338,3 +355,5 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
+
+

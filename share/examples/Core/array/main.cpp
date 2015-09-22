@@ -286,6 +286,23 @@ void TEST(Permutation){
   for(uint i=0;i<p.N;i++) cout <<i <<":" <<p(i) <<"\n";
 }
 
+
+//===========================================================================
+
+void TEST(Sorted){
+  cout <<"\n*** sorted\n";
+  uintA x;
+  rnd.seed(3);
+
+  for(uint k=0;k<100;k++){
+    uint y=rnd(99);
+    if(!x.N || y>x.last()) x.insertInSorted(y, MT::greater);
+    if(x.N>33) x.popLast();
+    cout <<x <<endl;
+    CHECK(x.isSorted(MT::greaterEqual),"");
+  }
+}
+
 //===========================================================================
 
 void TEST(Gnuplot){
@@ -641,7 +658,7 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-  testEigenValues();;
+  testSorted();
   return 0;
 
   testBasics();
@@ -658,6 +675,7 @@ int MAIN(int argc, char *argv[]){
   testPermutation();
   testGnuplot();
   testDeterminant();
+  testEigenValues();;
   testRowShiftedPackedMatrix();
   testInverse();
   testMM();

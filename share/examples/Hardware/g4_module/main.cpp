@@ -26,13 +26,13 @@ struct G4System:System{
 void serialRun(){
   G4System S;
 
-  S.open();
+  S.openAll();
   for(uint i=0;i<100;i++){
-    S.step();
+    S.stepAll();
     MT::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
-  S.close();
+  S.closeAll();
 }
 
 

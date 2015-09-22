@@ -77,6 +77,12 @@ namespace node_finder {
          * \warning This function should be call \e before the node or any
          * connections were removed in the graph. */
         virtual void erase_observation_node(const node_t & observation_node) = 0;
+
+        friend std::ostream& operator<<(std::ostream & out, const NodeFinder & finder) {
+            finder.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
 
     /**
@@ -98,6 +104,7 @@ namespace node_finder {
         virtual void add_observation_node(const node_t & observation_node) override {}
         virtual void erase_action_node(const node_t & action_node) override {}
         virtual void erase_observation_node(const node_t & observation_node) override {}
+        virtual void write(std::ostream & out) const override {out<<"PlainTree()";}
     };
 
     /**
@@ -109,6 +116,7 @@ namespace node_finder {
     public:
         virtual arc_node_t find_observation_node(const node_t & action_node,
                                                  const observation_handle_t & observation) override;
+        virtual void write(std::ostream & out) const override {out<<"ObservationTree()";}
     };
 
     /**
@@ -158,6 +166,7 @@ namespace node_finder {
                                                  const observation_handle_t & observation) override;
         virtual void add_observation_node(const node_t & observation_node) override;
         virtual void erase_observation_node(const node_t & observation_node) override;
+        virtual void write(std::ostream & out) const override {out<<"FullDAG()";}
     };
 
     /**
@@ -180,6 +189,7 @@ namespace node_finder {
                                                  const observation_handle_t & observation) override;
         virtual void add_observation_node(const node_t & observation_node) override;
         virtual void erase_observation_node(const node_t & observation_node) override;
+        virtual void write(std::ostream & out) const override {out<<"FullGraph()";}
     };
 
 }; // end namespace node_finder

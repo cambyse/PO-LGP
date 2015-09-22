@@ -1,0 +1,4 @@
+LAPACK = 0
+
+GTKGL = 0
+FREEGLUT = 0

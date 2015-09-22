@@ -28,6 +28,26 @@ Singleton<Engine> SingleEngine;
 
 System& NoSystem = *((System*)NULL);
 
+void signalhandler(int s){
+  int calls = engine().shutdown.incrementValue();
+  cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
+  if(calls==1){
+    LOG(0) <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
+  }
+  if(calls==2){
+    LOG(0) <<" -- smoothly closing modules directly" <<endl;
+    engine().close(); //might lead to a hangup of the main loop, but processes should close
+  }
+  if(calls==3){
+    LOG(0) <<" -- cancelling threads to force closing" <<endl;
+    engine().cancel();
+  }
+  if(calls>3){
+    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
+    exit(1);
+  }
+}
+
 //===========================================================================
 //
 // Variable
@@ -201,7 +221,7 @@ Module* System::addModule(const char *dclName, const char *name, Module::StepMod
   Module *m = (Module*)modReg->getValue<Type>()->newInstance();
   currentlyCreating = NULL;
   for(Access *a: m->accesses) a->module = m;
-  modules.append(m);
+  this->append(m);
 
   m->mode = mode;
   m->beat = beat;
@@ -237,7 +257,7 @@ void System::connect(){
   //first collect all accesses; the union of System accesses and all module accesses
   AccessL accs;
 
-  for(Module *m: modules){ for(Access *a: m->accesses) accs.append(a); }
+  for(Module *m: *this){ for(Access *a: m->accesses) accs.append(a); }
   for(Access *a: accesses) accs.append(a);
 
   for(Access *a: accs){
@@ -254,6 +274,26 @@ void System::connect(){
   }
 }
 
+void System::run(bool waitForOpened){
+  connect();
+
+  signal(SIGINT, signalhandler);
+
+  //open modules
+  for(Module *m: *this) m->threadOpen();
+  if(waitForOpened) for(Module *m: *this) m->waitForOpened();
+
+  //loop modules
+  for(Module *m: *this){
+    //start looping if in loop mode:
+    switch(m->mode){
+      case Module::loopWithBeat:  m->threadLoopWithBeat(m->beat);  break;
+      case Module::loopFull:      m->threadLoop();  break;
+      default:  break;
+    }
+  }
+}
+
 Graph System::graph() const{
   Graph g;
   g.append<bool>({"SystemModule", name}, {}, NULL, false);
@@ -261,7 +301,7 @@ Graph System::graph() const{
   std::map<RevisionedAccessGatedClass*, Node*> vit;
   for(RevisionedAccessGatedClass *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
-  for(Module *m: modules){
+  for(Module *m: *this){
     Node *mit = g.append({"Module", m->name}, {}, &m, false);
     g.checkConsistency();
     for(Access *a: m->accesses){
@@ -289,25 +329,6 @@ void System::write(ostream& os) const{
 // Engine
 //
 
-void signalhandler(int s){
-  int calls = engine().shutdown.incrementValue();
-  cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
-  if(calls==1){
-    LOG(0) <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
-  }
-  if(calls==2){
-    LOG(0) <<" -- smoothly closing modules directly" <<endl;
-    engine().close(); //might lead to a hangup of the main loop, but processes should close
-  }
-  if(calls==3){
-    LOG(0) <<" -- cancelling threads to force closing" <<endl;
-    engine().cancel();
-  }
-  if(calls>3){
-    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
-    exit(1);
-  }
-}
 
 Engine& engine(){  return SingleEngine(); }
 
@@ -331,9 +352,9 @@ void Engine::open(System& S, bool waitForOpened){
 
   //open modules
   if(mode==threaded){
-    for(Module *m: S.modules) m->threadOpen();
-    if(waitForOpened) for(Module *m: S.modules) m->waitForOpened();
-    for(Module *m: S.modules){
+    for(Module *m: S) m->threadOpen();
+    if(waitForOpened) for(Module *m: S) m->waitForOpened();
+    for(Module *m: S){
       //start looping if in loop mode:
       switch(m->mode){
       case Module::loopWithBeat:  m->threadLoopWithBeat(m->beat);  break;
@@ -344,13 +365,13 @@ void Engine::open(System& S, bool waitForOpened){
   }
 
   if(mode==serial){
-    for(Module *m: S.modules) m->open();
+    for(Module *m: S) m->open();
   }
 }
 
 void Engine::step(System &S){
   if(&S) system=&S;
-  for(Module *m: S.modules) step(*m);
+  for(Module *m: S) step(*m);
 }
 
 void Engine::step(Module &m, bool threadedOnly){
@@ -365,13 +386,13 @@ void Engine::test(System& S){
   CHECK(mode!=threaded,"");
   mode=serial;
   open(S);
-  for(Module *m: S.modules) m->test();
+  for(Module *m: S) m->test();
   close(S);
 }
 
 void Engine::close(System& S){
   if(&S) system=&S;
-  for(Module *m: system->modules){
+  for(Module *m: *system){
     if(mode==threaded) m->threadClose();
     if(mode==serial)   m->close();
   }
@@ -379,7 +400,7 @@ void Engine::close(System& S){
 
 void Engine::cancel(System& S){
   if(&S) system=&S;
-  for(Module *m: system->modules){
+  for(Module *m: *system){
     if(mode==threaded) m->threadCancel();
   }
 }

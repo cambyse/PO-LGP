@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 # add current directory to include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # build type: release / debug / unit_tests
+add_definitions(-Wall -Wnon-virtual-dtor)
 if(CMAKE_BUILD_TYPE MATCHES unit_tests|UNIT_TESTS)
     # only GTest executable, not MazeGUI and BatchWorker executables
 
@@ -37,8 +38,6 @@ else()
     message(FATAL_ERROR "Unkown or unspecified Build Type. Use '-DCMAKE_BUILD_TYPE=<type>' with <type> being RELEASE, DEBUG, or UNIT_TESTS when calling cmake")
 
 endif()
-
-add_definitions(-Wall -Wnon-virtual-dtor)
 
 # add all other directories
 add_subdirectory(ActiveOnlineSearch)

@@ -1,6 +1,7 @@
 #include "TemporallyExtendedLinearQ.h"
 
 #include "ConjunctiveAdjacency.h"
+#include "../util/softmax.h"
 #include "../util/util.h"
 #include "../util/QtUtil.h"
 #include "../util/ProgressBar.h"
@@ -93,7 +94,7 @@ TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
 TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
     row_vec_t action_values = get_action_values(ins);
     col_vec_t policy = util::soft_max((col_vec_t)action_values.t(), soft_max_temperature);
-    int idx = util::draw_idx(policy);
+    int idx = util::random_select_idx(policy);
     for(action_ptr_t action : action_space) {
         --idx;
         if(idx<0) {

@@ -50,6 +50,7 @@ namespace ors {
 
 double& Vector::operator()(uint i) {
   CHECK(i<3,"out of range");
+  isZero=false;
   return (&x)[i];
 }
 
@@ -1011,6 +1012,8 @@ void Transformation::setInverse(const Transformation& f) {
   if(f.zeroVels) {
     rot = -f.rot;
     pos = - (rot * f.pos);
+    vel.setZero();
+    angvel.setZero();
     zeroVels = true;
   } else {
     rot = -f.rot;

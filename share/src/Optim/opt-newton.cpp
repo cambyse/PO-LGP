@@ -148,7 +148,7 @@ OptNewton::~OptNewton(){
   if(o.fmin_return) *o.fmin_return=fx;
   if(o.verbose>0) fil.close();
 #ifndef MT_MSVC
-  if(o.verbose>1) gnuplot("plot 'z.opt' us 1:3 w l", NULL, true);
+//  if(o.verbose>1) gnuplot("plot 'z.opt' us 1:3 w l", NULL, true);
 #endif
   if(o.verbose>1) cout <<"--- optNewtonStop: f(x)=" <<fx <<endl;
 }

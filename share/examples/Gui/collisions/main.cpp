@@ -139,8 +139,8 @@ void TEST(Distance){
   ors::KinematicWorld W;
   ors::Shape A(W, NoBody), B(W, NoBody);
   A.type = B.type = ors::SSBoxST;
-  memmove(A.size, ARR(.5, .0, .0, .05).p, 4*sizeof(double));
-  memmove(B.size, ARR(.5, .0, .0, .05).p, 4*sizeof(double));
+  memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
+  memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   for(uint k=0;k<200;k++){
     A.X.setRandom(); A.X.pos(2) += 2.;
     B.X.setRandom(); B.X.pos(2) += 2.;

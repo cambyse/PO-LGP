@@ -284,6 +284,47 @@ The method uses implicit parameters (grabbed from cfg file or command line or de
 \end{code}
 
 
+\subsection{Using a specs file}
+
+Example:
+\begin{code}
+\begin{verbatim}
+KOMO{
+  T = 100
+  duration = 5
+}
+
+Task sqrAccelerations{
+  map={ type=qItself }
+  order=2    # accelerations (default is 0)
+  time=[0 1] # from start to end (default is [0 1])
+  type=cost  # squared costs (default is 'cost')
+  scale=1    # factor of the map (default is [1])
+  target=[0] # offset of the map (default is [0])
+}
+
+Task finalHandPosition{
+  map={ type=pos ref1=hand ref2=obj vec1=[0 0 .1] }
+  time=[1 1] # only final
+  type=equal # hard equality constraint
+}
+
+Task finalAlignmentPosition{
+  map={ type=vecAlign ref1=hand vec1=[1 0 0] vec2=[0 1 0]}
+  time=[1 1] # only final
+  type=equal # hard equality constraint
+  target=[1] # scalar product between vec1@hand and vec2@world shall be 1
+}
+
+Task collisions{
+  map={ type=collisionIneq margin=0.05 }
+  type=inEq # hard inequality constraint
+}
+\end{verbatim}
+\end{code}
+
+
+
 \subsection{Expert using the included kinematics engine}
 
 See the implementation of @moveTo@! This really is the core guide to
@@ -376,11 +417,6 @@ display the cost arising in the different tasks over time.
 There is many places the code code be improved (beyond documenting it
 better):
 \begin{items}
-\item Implementing equality constraints: For a lack of necessity the
-code does not yet handle equality constraints. We typically handle
-equality tasks (reach a point) using cost terms; while focussing on
-inequality constraints for collisions and joint limits.
-
 \item The KinematicEngine should be abstracted to allow for easier
 plugin of alternative engines.
 

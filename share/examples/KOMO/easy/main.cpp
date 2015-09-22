@@ -8,7 +8,7 @@ void TEST(Easy){
   ors::KinematicWorld G("test.ors");
   cout <<"configuration space dim=" <<G.q.N <<endl;
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
+  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
 }
 
 //===========================================================================
@@ -32,7 +32,7 @@ void TEST(EasyPR2){
     G.setJointState(G.q);
   }
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
+  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
 }
 
 //===========================================================================
@@ -54,7 +54,7 @@ void TEST(FinalPosePR2){
 void TEST(EasyAlign){
   ors::KinematicWorld G("test.ors");
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"), 7); //aligns all 3 axes
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
+  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
 }
 
 //===========================================================================
@@ -64,7 +64,7 @@ void TEST(EasyAlign2){
   ors::Shape *s = G.getShapeByName("target");
   s->rel.addRelativeRotationDeg(90,1,0,0);
   arr x = moveTo(G, *G.getShapeByName("endeff"), *s, 7, 2); //aligns all 3 axes
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, "planned trajectory", 0.01);
+  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
 }
 
 //===========================================================================
@@ -74,9 +74,9 @@ int main(int argc,char** argv){
 
 //  testEasy();
 //  testEasyAlign();
-//  testEasyAlign2();
+  testEasyAlign2();
 //  testEasyPR2();
-  testFinalPosePR2();
+//  testFinalPosePR2();
   return 0;
 }
 

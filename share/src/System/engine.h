@@ -35,8 +35,8 @@ typedef MT::Array<RevisionedAccessGatedClass*> VariableL;
  * A list of Modules and Variables that can be autoconnected and, as a group, opened, stepped and closed
  */
 
-struct System{
-  ModuleL modules;
+struct System:ModuleL{
+//  ModuleL modules;
   VariableL vars;
   AccessL accesses;
   MT::String name;
@@ -45,9 +45,15 @@ struct System{
     currentlyCreatingAccessL=&accesses;
   }
 
-  virtual void stepAll(){  for(Module *m: modules) m->step();  }
-  virtual void openAll(){  for(Module *m: modules) m->open();  }
-  virtual void closeAll(){  for(Module *m: modules) m->close();  }
+  virtual void stepAll(){  for(Module *m: *this) m->step();  }
+  virtual void openAll(){  for(Module *m: *this) m->open();  }
+  virtual void closeAll(){  for(Module *m: *this) m->close();  }
+
+  void run(bool waitForOpened=true);
+  void close(){
+    for(Module *m: *this)  m->threadClose();
+  }
+
 
   //-- add variables
   template<class T> Variable<T>* addVariable(const char *name){
@@ -70,15 +76,18 @@ struct System{
   }
 
   //-- add modules
+  void addModule(Module& m, Module::StepMode mode=Module::listenFirst, double beat=0.){
+    currentlyCreating=NULL;
+    for(Access *a: m.accesses) CHECK(a->module == &m,"");
+    this->append(&m);
+    m.mode = mode;
+    m.beat = beat;
+  }
+
   template<class T> T* addModule(const char *name=NULL, Module::StepMode mode=Module::listenFirst, double beat=0.){
     T *m = new T;
     CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
-    currentlyCreating=NULL;
-    for(Access *a: m->accesses) a->module = m;
-    modules.append(m);
-
-    m->mode = mode;
-    m->beat = beat;
+    addModule(*m, mode, beat);
     return m;
   }
 

@@ -75,7 +75,7 @@ void testFolSubstitution(){
   Graph KB;
 
 //  FILE("boxes.kvg") >>G;
-  FILE("substTest.kvg") >>KB;
+  FILE("substTest.g") >>KB;
 
   NodeL rules = KB.getNodes("Rule");
   NodeL constants = KB.getNodes("Constant");
@@ -84,7 +84,7 @@ void testFolSubstitution(){
   for(Node* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
     cout <<  "Substitutions:" <<endl;
-    NodeL subs = getRuleSubstitutions(state, rule, constants, true);
+    NodeL subs = getRuleSubstitutions2(state, rule, 2);
     cout <<"BEFORE state="; state.write(cout, " "); cout <<endl;
     for(uint s=0;s<subs.d0;s++){
       Node *effect = rule->graph().last();
@@ -97,11 +97,22 @@ void testFolSubstitution(){
 
 //===========================================================================
 
+void testFolFunction(){
+  Graph KB(FILE("functionTest.g"));
+
+  Graph& state = KB.getNode("STATE")->graph();
+  Graph& func = KB.getNode("func")->graph();
+
+  cout <<"f=" <<evaluateFunction(func, state, 3) <<endl;
+}
+
+//===========================================================================
+
 void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
   MT::rnd.seed(3);
-  uint verbose=3;
+  int verbose=2;
 
   for(uint k=0;k<10;k++){
     Graph KB = Gorig;
@@ -109,7 +120,6 @@ void testMonteCarlo(){
     Node *Terminate_keyword = KB["Terminate"];
     Graph& state = KB.getNode("STATE")->graph();
     NodeL rules = KB.getNodes("Rule");
-    NodeL constants = KB.getNodes("Constant");
     Graph& terminal = KB.getNode("terminal")->graph();
 
     for(uint h=0;h<100;h++){
@@ -122,7 +132,8 @@ void testMonteCarlo(){
         //-- get all possible decisions
         MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
-          NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
+          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
+//          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
           for(uint s=0;s<subs.d0;s++){
             decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
           }
@@ -210,7 +221,8 @@ int main(int argn, char** argv){
 //  testPolFwdChaining();
 //  testFolFwdChaining();
 //  testFolDisplay();
-  testFolSubstitution();
+//  testFolSubstitution();
+  testFolFunction();
 //  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 }

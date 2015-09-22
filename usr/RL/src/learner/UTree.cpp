@@ -432,13 +432,13 @@ void UTree::to_pdf(QString file_name) {
             arg(node_info_map[target].parent_return_value);
     }
 
-    util::graph_to_pdf(file_name.toLatin1(),
-                       graph,
-                       "style=filled truecolor=true",
-                       &node_map,
-                       "",
-                       &arc_map,
-                       false);
+    util::plot_graph(file_name.toLatin1(),
+                     graph,
+                     "style=filled truecolor=true",
+                     &node_map,
+                     "",
+                     &arc_map,
+                     false);
 }
 
 void UTree::clear_tree() {

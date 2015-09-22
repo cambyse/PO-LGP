@@ -93,7 +93,7 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
   arr lambda(T+1,1); lambda.setZero();
   x = repmat(~MP.x0,T+1,1);
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
+  optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
 
   displayTrajectory(x,MP.T,MP.world,"world");
   displayTrajectory(x,MP.T,MP.world,"world");

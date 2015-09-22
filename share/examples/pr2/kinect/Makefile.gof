@@ -1,0 +1,11 @@
+BASE = ../../..
+
+OBJS = main.o
+
+ROS = 1
+PLIB = 1
+PCL = 1
+GL = 1
+DEPEND = Core System Hardware_gamepad Motion Ors Gui pr2 Perception
+
+include $(BASE)/gofMake/generic.mk

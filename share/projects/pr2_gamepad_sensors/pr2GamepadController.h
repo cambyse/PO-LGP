@@ -1,4 +1,5 @@
 #pragma once
+#include <Core/array.h>
 
 struct Pr2GamepadController:Module{
   ACCESS(CtrlMsg, ctrl_ref)
@@ -63,10 +64,10 @@ struct Pr2GamepadController:Module{
 
     //-- force task
     uint mode = 0;
-    if(gamepadState.N) mode = uint(gamepadState(0));
+    if(gamepad.N) mode = uint(gamepad(0));
     if(mode==2){
       arr y_fL, J_fL;
-      MP->world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+      MP->world.kinematicsPos(y_fL, J_fL, ftL_shape->body, ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
       J_fL = J_fL.sub(0,1,0,-1);

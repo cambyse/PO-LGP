@@ -111,8 +111,8 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
   ors::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");
   arr J_ft, J;
-  world.kinematicsPos         (NoArr, J,   body, &vec);
-  world.kinematicsPos_wrtFrame(NoArr, J_ft,body, &vec, l_ft_sensor);
+  world.kinematicsPos         (NoArr, J,   body, vec);
+  world.kinematicsPos_wrtFrame(NoArr, J_ft,body, vec, l_ft_sensor);
 
   //-- compute the control coefficients
   u_bias = ~J*f_ref;
@@ -262,3 +262,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr q_ddot = inverse_SymPosDef(A) * a;
   return q_ddot;
 }
+
+RUN_ON_INIT_BEGIN(CtrlTask)
+MT::Array<CtrlTask*>::memMove=true;
+RUN_ON_INIT_END(CtrlTask)

@@ -22,6 +22,11 @@
 
 //===========================================================================
 
+/// creates a task map based on specs
+TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world);
+
+//===========================================================================
+
 /// defines a transition cost vector, which is q.N-dimensional and captures
 /// accelerations or velocities over consecutive time steps
 struct TransitionTaskMap:TaskMap {
@@ -61,7 +66,7 @@ struct DefaultTaskMap:TaskMap {
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
 
-  DefaultTaskMap(Graph& parameters, const ors::KinematicWorld& G);
+  DefaultTaskMap(const Graph& parameters, const ors::KinematicWorld& G);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
@@ -133,6 +138,19 @@ struct CollisionConstraint:TaskMap {
   CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
+struct TaskMap_GJK:TaskMap{
+  int i, j;               ///< which shapes does it refer to?
+//  ors::Vector vec1, vec2; ///< additional position or vector
+  bool exact;
+
+  TaskMap_GJK(const ors::Shape *s1, const ors::Shape *s2, bool exact);
+  TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& W, int t=-1);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
 };
 
 //===========================================================================

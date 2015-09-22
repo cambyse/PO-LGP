@@ -1,12 +1,10 @@
 #include <FOL/fol.h>
-#include <Gui/graphview.h>
-#include <MCTS/solver_marc.h>
 #include <FOL/fol_mcts_world.h>
 
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.kvg"));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -28,20 +26,26 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  FOL_World world("boxes_new.kvg");
+  const char *file = "../mcts/toolbox.kvg";
+  if(MT::argc>1) file = MT::argv[1];
+
+  FOL_World world(FILE(file));
+  world.verbose = MT::getParameter<int>("verbose", 2);
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();
     auto actions = world.get_actions();
     cout <<"********************" <<endl;
-    cout <<"CHOICES:" <<endl;
+    cout <<"STATE: ";
+    world.get_info(MCTS_Environment::writeState);
+    cout <<"\nCHOICES:" <<endl;
     cout <<"(q) quit" <<endl;
     cout <<"(r) reset_state" <<endl;
     cout <<"(m) make_current_initial" <<endl;
     uint c=0;
     if(!terminal) for(auto& a:actions){ cout <<"(" <<c++ <<") DECISION: " <<*a <<endl; }
 
-    char cmd;
+    char cmd='1';
     std::cin >>cmd;
     cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
@@ -49,9 +53,7 @@ void TEST(PlayFOL_World){
       auto &a = actions[int(cmd-'0')];
       cout <<"executing decision " <<*a <<endl;
       auto res=world.transition(a);
-      cout <<"->  result: obs=" <<*res.first <<" reward=" <<res.second <<"\n new state=" <<endl;
-      world.get_info(MCTS_Environment::writeState);
-      cout <<endl;
+      cout <<"->  result: obs=" <<*res.first <<" reward=" <<res.second <<endl;
     }else switch(cmd){
       case 'q': go=false; break;
       case 'r': world.reset_state(); break;
@@ -64,6 +66,7 @@ void TEST(PlayFOL_World){
 //===========================================================================
 
 int main(int argn, char** argv){
+  MT::initCmdLine(argn, argv);
   rnd.clockSeed();
 
 //  testMCTS();

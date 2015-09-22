@@ -23,15 +23,15 @@ void testSliding() {
   MP.makeContactsAttractive=false;
   arr refGoal1 = ARRAY(MP.world.getShapeByName("target")->X.pos);
 
-  ors::GraphOperator *op1 = new ors::GraphOperator();
-  op1->symbol = ors::GraphOperator::addRigid;
+  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
+  op1->symbol = ors::KinematicSwitch::addRigid;
   op1->timeOfApplication = MP.T/2;
   op1->fromId = world.getBodyByName("graspRef")->index;
   op1->toId = world.getBodyByName("obj1")->index;
   world.operators.append(op1);
 
-  ors::GraphOperator *op2 = new ors::GraphOperator();
-  op2->symbol = ors::GraphOperator::deleteJoint;
+  ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
+  op2->symbol = ors::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = MP.T/2;
   op2->fromId = world.getBodyByName("table")->index;
   op2->toId = world.getBodyByName("obj1")->index;

@@ -51,7 +51,7 @@ struct Node_typed :Node {
   Node_typed(Graph& container, T *value, bool ownsValue):Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
@@ -59,11 +59,11 @@ struct Node_typed :Node {
     : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   virtual ~Node_typed(){
-    if(container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
     if(ownsValue) delete value;
     value=NULL;
   }
@@ -168,23 +168,39 @@ template<class T> const T *Node::getValue() const {
 }
 
 template<class T> NodeInitializer::NodeInitializer(const char* key, const T& x){
-  it = new Node_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));
 }
 
 template<class T> NodeInitializer::NodeInitializer(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  it = new Node_typed<T>(NoGraph, new T(x), true);
+  it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));
 }
 
-template<class T> T* Graph::getValue(const char *key) {
+template<class T> T& Graph::get(const char *key) const {
+  Node *it = getNode(key);
+  if(!it) HALT("node '"<< key<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
+  T* val=it->getValue<T>();
+  if(!val) HALT("node " <<*it <<" does not have type '"<<typeid(T).name() <<"'");
+  return *val;
+}
+
+template<class T> const T& Graph::get(const char *key, const T& defaultValue) const{
+  Node *it = getNode(key);
+  if(!it) return defaultValue;
+  T* val=it->getValue<T>();
+  if(!val) return defaultValue;
+  return *val;
+}
+
+template<class T> T* Graph::getValue(const char *key) const {
   Node *it = getNode(key);
   if(!it) return NULL;
   return it->getValue<T>();
 }
 
-template<class T> T* Graph::getValue(const StringA &keys) {
+template<class T> T* Graph::getValue(const StringA &keys) const {
   Node *it = getNode(keys);
   if(!it) return NULL;
   return it->getValue<T>();
@@ -206,8 +222,12 @@ template<class T> Node *Graph::append(T *x, bool ownsValue) {
   return new Node_typed<T>(*this, x, ownsValue);
 }
 
-template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
-  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+//template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
+//  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+//}
+
+template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
+  return new Node_typed<T>(*this, keys, parents, new T(x), true);
 }
 
 template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, T *x, bool ownsValue) {

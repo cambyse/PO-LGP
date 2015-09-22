@@ -316,6 +316,20 @@ void Mesh::makeConvexHull() {
 #endif
 }
 
+void Mesh::setSSC(const ors::Mesh& m, double r, uint fineness){
+  Mesh ball;
+  ball.setSphere(fineness);
+  ball.scale(r);
+
+  clear();
+  for(uint i=0;i<m.V.d0;i++){
+    ball.translate(m.V(i,0), m.V(i,1), m.V(i,2));
+    addMesh(ball);
+    ball.translate(-m.V(i,0), -m.V(i,1), -m.V(i,2));
+  }
+  makeConvexHull();
+}
+
 
 /** @brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
@@ -549,6 +563,7 @@ void getTriNormals(const Mesh& m, arr& Tn) {
   }
 }
 
+/// flips all faces
 void Mesh::flipFaces() {
   uint i, a;
   for(i=0; i<T.d0; i++) {
@@ -558,6 +573,7 @@ void Mesh::flipFaces() {
   }
 }
 
+/// check whether this is really a closed mesh, and flip inconsistent faces
 void Mesh::clean() {
   uint i, j, idist=0;
   Vector a, b, c, m;
@@ -809,6 +825,27 @@ double Mesh::getRadius() {
   double r=0.;
   for(uint i=0;i<V.d0;i++) r=MT::MAX(r, sumOfSqr(V[i]));
   return sqrt(r);
+}
+
+double triArea(const arr& a, const arr& b, const arr& c){
+#if 1
+  return .5*length(crossProduct(b-a, c-a));
+#else
+  arr B=b;
+  arr C=c;
+  B-=a;
+  C-=a;
+  return .5*::sqrt(sumOfSqr(B)*sumOfSqr(C)-MT::sqr(scalarProduct(B,C)));
+//  B -= (scalarProduct(B,C)/sumOfSqr(C)) * C;
+//  CHECK_ZERO(scalarProduct(B,C), 1e-4, "");
+//  return .5*length(B)*length(C);
+#endif
+}
+
+double Mesh::getArea() const{
+  double A=0.;
+  for(uint i=0;i<T.d0;i++) A += triArea(V[T(i,0)], V[T(i,1)], V[T(i,2)]);
+  return A;
 }
 
 void Mesh::write(std::ostream& os) const {
@@ -1420,7 +1457,6 @@ void Mesh::glDraw() {
     glDrawElements(GL_LINE_STRIP, T.N, GL_UNSIGNED_INT, T.p);
     //glDrawArrays(GL_LINE_STRIP, 0, V.d0);
 #endif
-    return;
   }
 #if 1
   GLboolean turnOnLight=false;
@@ -1520,22 +1556,109 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 //
 
 #ifdef MT_extern_GJK
-double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
-                    ors::Transformation& t1, ors::Transformation& t2,
-                    ors::Vector& p1, ors::Vector& p2){
+GJK_point_type& NoPointType = *((GJK_point_type*)NULL);
+double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
+                       const ors::Transformation& t1, const ors::Transformation& t2,
+                       ors::Vector& p1, ors::Vector& p2,
+                       ors::Vector& e1, ors::Vector& e2,
+                       GJK_point_type& pt1, GJK_point_type& pt2){
+  // convert meshes to 'Object_structures'
   Object_structure m1,m2;
   MT::Array<double*> Vhelp1, Vhelp2;
-  m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(Vhelp1);  m1.rings=NULL;
+  m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(Vhelp1);  m1.rings=NULL; //TODO: rings would make it faster
   m2.numpoints = mesh2.V.d0;  m2.vertices = mesh2.V.getCarray(Vhelp2);  m2.rings=NULL;
 
+  // convert transformations to affine matrices
   arr T1,T2;
   MT::Array<double*> Thelp1, Thelp2;
   if(&t1){  T1=t1.getAffineMatrix();  T1.getCarray(Thelp1);  }
   if(&t2){  T2=t2.getAffineMatrix();  T2.getCarray(Thelp2);  }
 
-  double d = gjk_distance(&m1, Thelp1.p, &m2, Thelp2.p, (&p1?p1.p():NULL), (&p2?p2.p():NULL), NULL, 0);
+  // call GJK
+  simplex_point simplex;
+  double d2 = gjk_distance(&m1, Thelp1.p, &m2, Thelp2.p, (&p1?p1.p():NULL), (&p2?p2.p():NULL), &simplex, 0);
 
-  return sqrt(d);
+//  cout <<"simplex npts=" <<simplex.npts <<endl;
+//  cout <<"simplex lambda=" <<arr(simplex.lambdas, 4) <<endl;
+//  cout <<"simplex 1=" <<intA(simplex.simplex1, 4) <<endl;
+//  cout <<"simplex 2=" <<intA(simplex.simplex2, 4) <<endl;
+
+//  arr P1=zeros(3), P2=zeros(3);
+//  for(int i=0;i<simplex.npts;i++) P1 += simplex.lambdas[i] * arr(simplex.coords1[i],3);
+//  for(int i=0;i<simplex.npts;i++) P2 += simplex.lambdas[i] * arr(simplex.coords2[i],3);
+//  cout <<"P1=" <<P1 <<", " <<p1 <<endl;
+//  cout <<"P2=" <<P2 <<", " <<p2 <<endl;
+
+  // analyze point types
+  if(&e1 && &e2){
+    e1.setZero();
+    e2.setZero();
+    pt1=GJK_vertex;
+    pt2=GJK_vertex;
+    if(d2<1e-6) return d2;
+
+    if(simplex.npts==1){
+
+    }else if(simplex.npts==2){
+
+      if(simplex.simplex1[0]==simplex.simplex1[1]){
+        pt1=GJK_vertex;
+      }else{
+        pt1=GJK_edge;
+        for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[1][i];
+        e1.normalize();
+      }
+      if(simplex.simplex2[0]==simplex.simplex2[1]){
+        pt2=GJK_vertex;
+      }else{
+        pt2=GJK_edge;
+        for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[1][i];
+        e2.normalize();
+      }
+
+    }else if(simplex.npts==3){
+
+      // 1st point
+      if(simplex.simplex1[0]==simplex.simplex1[1] && simplex.simplex1[0]==simplex.simplex1[2]){
+        pt1=GJK_vertex;
+      }else if(simplex.simplex1[0]!=simplex.simplex1[1] && simplex.simplex1[0]!=simplex.simplex1[2] && simplex.simplex1[1]!=simplex.simplex1[2]){
+        pt1=GJK_face;
+      }else{
+        pt1=GJK_edge;
+        if(simplex.simplex1[0]==simplex.simplex1[1]){
+          for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[2][i];
+        }else{
+          for(uint i=0;i<3;i++) e1(i) = simplex.coords1[0][i] - simplex.coords1[1][i];
+        }
+        e1.normalize();
+      }
+
+      // 2nd point
+      if(simplex.simplex2[0]==simplex.simplex2[1] && simplex.simplex2[0]==simplex.simplex2[2]){
+        pt2=GJK_vertex;
+      }else if(simplex.simplex2[0]!=simplex.simplex2[1] && simplex.simplex2[0]!=simplex.simplex2[2] && simplex.simplex2[1]!=simplex.simplex2[2]){
+        pt2=GJK_face;
+      }else{
+        pt2=GJK_edge;
+        if(simplex.simplex2[0]==simplex.simplex2[1]){
+          for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[2][i];
+        }else{
+          for(uint i=0;i<3;i++) e2(i) = simplex.coords2[0][i] - simplex.coords2[1][i];
+        }
+        e2.normalize();
+      }
+
+    }else{
+      if(d2>EPSILON) LOG(-2) <<"GJK converges to simplex!";
+    }
+
+//    cout <<"point types= " <<pt1 <<' ' <<pt2 <<endl;
+//    CHECK(!(pt1==3 && pt2==3),"");
+//    CHECK(!(pt1==2 && pt2==3),"");
+//    CHECK(!(pt1==3 && pt2==2),"");
+  }
+
+  return d2;
 }
 #else
 double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,

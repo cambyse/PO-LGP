@@ -1,7 +1,7 @@
 PROJECT_NAME           = ""
 OUTPUT_DIRECTORY       = doc
-GENERATE_TAGFILE       = doc/doxy.tag
-TAGFILES	       = ../doc/doxy.tag=../../../doc/html
+# GENERATE_TAGFILE       = doc/doxy.tag
+# TAGFILES	       = ../doc/doxy.tag=../../../doc/html
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 EXTRACT_ALL            = YES

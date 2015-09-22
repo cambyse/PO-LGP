@@ -10,11 +10,8 @@ struct RelationalMachineModule : Module{
   ACCESS(MT::String, state)
   ACCESS(RelationalMachine, RM)
 
-private:
+  Log _log;
 
-  ofstream fil;
-
-public:
   RelationalMachineModule();
   ~RelationalMachineModule();
 
