@@ -4,7 +4,6 @@
 
 void TEST(RM){
   RelationalMachine RM("machine.fol");
-  RM.verbose=true;
 
   cout <<"symbols = " <<RM.getSymbols() <<endl;
   cout <<"rules = " <<RM.getRules() <<endl;

@@ -21,6 +21,24 @@
 
 //===========================================================================
 
+struct KOMO{
+  ors::KinematicWorld world;
+  struct MotionProblem *MP;
+  struct MotionProblemFunction *MPF;
+  arr x, dual;
+
+  KOMO(const Graph& specs);
+  void init(const Graph& specs);
+  void reset();
+  void step();
+  void run();
+  Graph getReport();
+  void checkGradients();
+  void displayTrajectory(bool wait=true);
+};
+
+//===========================================================================
+
 /// Return a trajectory that moves the endeffector to a desired target position
 arr moveTo(ors::KinematicWorld& world, //in initial state
            ors::Shape& endeff,         //endeffector to be moved

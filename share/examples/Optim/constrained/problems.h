@@ -1,6 +1,6 @@
 #include <Optim/optimization.h>
 
-struct CoveringSpheresProblem:ConstrainedProblem {
+struct CoveringSpheresProblem:ConstrainedProblemMix {
   const arr& x;
   double p, alpha;
   uint s;

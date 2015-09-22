@@ -38,7 +38,7 @@ struct EndStateProgram:ConstrainedProblemMix{
         b1=b2; b2=z;
       }//b2 should be the board
       arr y,J;
-      world.kinematicsRelPos(y, J, b1, NULL, b2, NULL);
+      world.kinematicsRelPos(y, J, b1, NoVector, b2, NoVector);
       arr range(3);
       double d1 = .5*b1->shapes(0)->size[0] + b1->shapes(0)->size[3];
       double d2 = .5*b2->shapes(0)->size[0] + b2->shapes(0)->size[3];
@@ -68,7 +68,7 @@ struct EndStateProgram:ConstrainedProblemMix{
       if(&tt) tt.append(ineqTT, 4);
     }
 
-    //-- supporters below object -> maximize their distances and center
+    //-- supporters below object -> maximize their distances to center
     NodeL objs=symbolicState.getNodes("Object");
     for(Node *obj:objs){
       NodeL supporters;
@@ -213,7 +213,7 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   opt.run();
   //  checkJacobianCP(f, x, 1e-4);
   world.setJointState(x);
-  return opt.UCP.get_sumOfSquares();
+  return opt.UCP.get_costs();
 }
 
 //===========================================================================

@@ -28,7 +28,6 @@ struct Convert {
   void *data;
   ScalarFunction sf;
   VectorFunction vf;
-  ConstrainedProblem cp;
   ConstrainedProblemMix cpm;
 
   Convert(const ScalarFunction&);
@@ -39,7 +38,6 @@ struct Convert {
   ~Convert();
   operator ScalarFunction();
   operator VectorFunction();
-  operator ConstrainedProblem();
   operator ConstrainedProblemMix();
   operator KOrderMarkovFunction&();
 };
@@ -49,5 +47,4 @@ ScalarFunction convert_cstylefs_ScalarFunction(double(*fs)(arr*, const arr&, voi
 VectorFunction convert_cstylefv_VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
 ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f);
 VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f);
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f);
 ConstrainedProblemMix convert_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f);

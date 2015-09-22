@@ -186,8 +186,8 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   ors::Body *tar = world->getBodyByName("drawer1");
 
   // add graph operator
-  ors::GraphOperator *op1 = new ors::GraphOperator();
-  op1->symbol = ors::GraphOperator::addRigid;
+  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
+  op1->symbol = ors::KinematicSwitch::addRigid;
   op1->timeOfApplication = contactTime;
   op1->fromId = world->getBodyByName("endeffR")->index;
   op1->toId = world->getBodyByName("drawer1")->index;

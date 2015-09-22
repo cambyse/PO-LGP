@@ -1,121 +1,16 @@
 #include <FOL/fol.h>
-#include <Gui/graphview.h>
 #include <MCTS/solver_marc.h>
+#include <MCTS/solver_PlainMC.h>
 #include <FOL/fol_mcts_world.h>
 
-//===========================================================================
-
-void TEST(MonteCarlo){
-  Graph Gorig;
-  FILE("boxes_new.kvg") >>Gorig;
-  MT::rnd.seed(3);
-  uint verbose=3;
-
-  for(uint k=0;k<10;k++){
-    Graph KB = Gorig;
-    KB.checkConsistency();
-    Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getNode("STATE")->graph();
-    NodeL rules = KB.getNodes("Rule");
-    NodeL constants = KB.getNodes("Constant");
-    Graph& terminal = KB.getNode("terminal")->graph();
-
-    for(uint h=0;h<100;h++){
-      if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
-
-      if(verbose>2){ cout <<"*** state = "; state.write(cout, " "); cout <<endl; }
-
-      bool forceWait=false, decideWait=false;
-      if(MT::rnd.uni()<.8){ //normal rule decision
-        //-- get all possible decisions
-        MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
-        for(Node* rule:rules){
-          NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
-          for(uint s=0;s<subs.d0;s++){
-            decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
-          }
-        }
-
-        if(verbose>2) cout <<"*** # possible decisions: " <<decisions.N <<endl;
-        if(verbose>3) for(auto d:decisions){
-          cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
-        }
-
-        if(!decisions.N){
-          forceWait=true;
-        }else{
-          //-- pick a random decision
-          uint deci = MT::rnd(decisions.N);
-          std::pair<Node*, NodeL>& d = decisions(deci);
-          if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl; }
-
-          Node *effect = d.first->graph().last();
-          if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(d.second, cout); cout <<endl; }
-          applyEffectLiterals(state, effect->graph(), d.second, &d.first->graph());
-        }
-      }else{
-        decideWait=true;
-      }
-
-      if(forceWait || decideWait){
-        if(verbose>2){ cout <<"*** WAIT decision " <<endl; }
-
-        //-- find minimal wait time
-        double w=1e10;
-        for(Node *i:state){
-          if(i->getValueType()==typeid(double)){
-            double wi = *i->getValue<double>();
-            if(w>wi) w=wi;
-          }
-        }
-
-        if(w==1e10){
-          if(verbose>2) cout <<"*** not applicable" <<endl;
-          if(forceWait){ cout <<"*** STUCK - NO FEASIBLE SOLUTION FOUND" <<endl;  break; }
-        }else{
-          //-- subtract w from all times and collect all activities with minimal wait time
-          NodeL activities;
-          for(Node *i:state){
-            if(i->getValueType()==typeid(double)){
-              double &wi = *i->getValue<double>();
-              wi -= w;
-              if(fabs(wi)<1e-10) activities.append(i);
-            }
-          }
-
-          //-- for all these activities call the terminate operator
-          for(Node *act:activities){
-            Node *predicate = act->parents(0);
-            Node *rule = KB.getChild(Terminate_keyword, predicate);
-            if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
-            Node *effect = rule->graph().last();
-            NodeL vars = getSymbolsOfScope(rule->graph());
-            NodeL subs(vars.N); subs.setZero();
-            CHECK(vars.N==act->parents.N-1,"");
-            for(uint i=0;i<vars.N;i++) subs(i) = act->parents(i+1);
-
-            if(verbose>2){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs, cout); cout <<endl; }
-            applyEffectLiterals(state, effect->graph(), subs, &rule->graph());
-          }
-        }
-      }
-
-      //-- test the terminal state
-      if(allFactsHaveEqualsInScope(state, terminal)){
-        if(verbose>0) cout <<"************* TERMINAL STATE FOUND (h=" <<h <<") ************" <<endl;
-        if(verbose>1){ cout <<"*** FINAL STATE = "; state.write(cout, " "); cout <<endl; }
-        break;
-      }
-    }
-  }
-}
 
 //===========================================================================
 
 void TEST(MCTS){
-  FOL_World world("boxes_new.kvg");
-  MCTS mcts(world);
+  FOL_World world(FILE("boxes_new.kvg"));
+  MCTS mcts(world);   //WARNING: this version only works for deterministic worlds!!
   world.verbose=0;
+  world.verbFil=0;
   mcts.verbose=1;
   mcts.beta=100.;
 //  Graph G = mcts.getGraph();
@@ -150,8 +45,33 @@ void TEST(MCTS){
 
 //===========================================================================
 
+void TEST(MC){
+  FOL_World world(FILE("boxes_new.g"));
+  PlainMC mc(world);
+  world.verbose=0;
+  world.verbFil=0;
+  mc.verbose=0;
+
+  FILE("z") <<world.KB;
+
+  for(uint s=0;s<100;s++){
+    cout <<"******************************************** STEP " <<s <<endl;
+    mc.reset();
+    for(uint k=0;k<100;k++) mc.addRollout(100);
+    mc.report();
+    auto a = mc.getBestAction();
+    cout <<"******** ACTION " <<*a <<endl;
+    world.reset_state();
+    world.transition(a);
+    if(world.is_terminal_state()) break;
+    world.make_current_state_default();
+  }
+}
+
+//===========================================================================
+
 void TEST(FOL_World){
-  FOL_World world("boxes_new.kvg");
+  FOL_World world(FILE("boxes_new.g"));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -163,61 +83,76 @@ void TEST(FOL_World){
 
   world.get_actions();
 
-  world.make_current_state_default();
+  //-- test write_state/set_state
+  MT::String str;
+  world.write_state(str);
+  cout <<"\nBEFORE rndAction:" <<endl;  world.write_state(cout);
+  world.transition_randomly();
+  cout <<"\nAFTER rndAction:" <<endl;  world.write_state(cout);
+  world.set_state(str);
+  cout <<"\nAFTER set_state:" <<endl;  world.write_state(cout);
 
-  world.reset_state();
-  world.get_actions();
+
+//  world.make_current_state_default();
+//  world.reset_state();
+//  world.get_actions();
 }
 
 //===========================================================================
 
 void TEST(Determinism){
-  FOL_World world("boxes_new.kvg");
-  world.verbose=1;
 
   for(uint k=0;k<100;k++){
-    world.fil.close();
-    MT::open(world.fil,"z.FOL_World");
+    FOL_World world(FILE("boxes_new.kvg"));
 
     //-- generate a random rollout
     world.reset_state();
-    MT::Array<FOL_World::Handle> decisions;
+    MT::Array<FOL_World::Handle> actions;
+    MT::Array<FOL_World::Handle> observations;
+    MT::Array<double> rewards;
+    MT::Array<MT::String> states;
     for(;;){
-      auto actions = world.get_actions();
-      FOL_World::Handle action = actions[rand()%actions.size()];
-      decisions.append(action);
-      world.transition(action);
+      auto A = world.get_actions();
+      FOL_World::Handle action = A[rnd()%A.size()];
+      auto res = world.transition(action);
+      actions.append(action);
+      observations.append(res.first);
+      rewards.append(res.second);
+      states.append(STRING(*world.state));
       if(world.is_terminal_state()) break;
     }
-
-    MT::String res;
-    res <<*world.state;
 
     world.fil.close();
     MT::open(world.fil,"z.FOL_World2");
 
-    //-- now repeat
+    //-- now repeat and check: same observations => same rollout
     world.reset_state();
     uint t=0;
     for(;;t++){
-      world.transition(decisions(t));
+      world.make_current_state_default();
+      std::pair<FOL_World::Handle, double> res;
+      for(;;){ //repeat stochastic transition until you get the same observation
+        res = world.transition(actions(t));
+        if(*res.first==*observations(t)) break; //observations match... move on
+        world.reset_state();
+      }
+      CHECK_EQ(*observations(t), *res.first, "");
+      CHECK_EQ(rewards(t), res.second, "");
+      CHECK_EQ(states(t), STRING(*world.state), "");
       if(world.is_terminal_state()) break;
     }
-    CHECK_EQ(t+1, decisions.N,"");
-    MT::String res2;
-    res2 <<*world.state;
-    CHECK_EQ(res, res2, "");
+    CHECK_EQ(t+1, actions.N,"");
   }
 }
 
 //===========================================================================
 
 int main(int argn, char** argv){
-  rnd.clockSeed();
-//  srand(timenow)
+  //rnd.clockSeed();
+  //srand(rnd());
 
 //  testMCTS();
-
+  testMC();
 //  testFOL_World();
-  testDeterminism();
+//  testDeterminism();
 }

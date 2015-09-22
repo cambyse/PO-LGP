@@ -63,16 +63,18 @@ namespace util {
         class STRING_3_T = QString,
         class STRING_4_T = QString,
         class STRING_5_T = QString,
-        class STRING_6_T = QString>
-        void graph_to_pdf(const char* file_name,
-                          const GRAPH_T & graph,
-                          const STRING_1_T general_node_properties = "",
-                          const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
-                          const STRING_3_T general_arc_properties = "",
-                          const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
-                          bool delete_dot_file = true,
-                          const STRING_5_T command = "dot",
-                          const STRING_6_T parameters = "-Tpdf") {
+        class STRING_6_T = QString,
+        class STRING_7_T = QString>
+        void plot_graph(const char* file_name,
+                        const GRAPH_T & graph,
+                        const STRING_1_T general_node_properties = "",
+                        const typename GRAPH_T::template NodeMap<STRING_2_T> * node_properties = nullptr,
+                        const STRING_3_T general_arc_properties = "",
+                        const typename GRAPH_T::template ArcMap<STRING_4_T> * arc_properties = nullptr,
+                        const STRING_5_T graph_properties = "",
+                        bool delete_dot_file = true,
+                        const STRING_6_T command = "dot",
+                        const STRING_7_T parameters = "-Tpdf") {
 
         //-------------------//
         // random file names //
@@ -86,7 +88,10 @@ namespace util {
         // the file content //
         //------------------//
         // start graph
-        QString dot("digraph G {\n");
+        QString dot = "digraph G {\n";;
+        if(QString(graph_properties)!=QString("")) {
+            dot += QString("\tgraph [%1];\n").arg(graph_properties);
+        }
         // add nodes
         for(typename GRAPH_T::NodeIt node(graph); node!=lemon::INVALID; ++node) {
             auto properties = QString("%1 %2").arg(general_node_properties).arg(node_properties?(*node_properties)[node]:"").simplified();

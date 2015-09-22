@@ -56,10 +56,11 @@ struct Mesh {
   void setCylinder(double r, double l, uint fineness=3);
   void setCappedCylinder(double r, double l, uint fineness=3);
   void setSSBox(double x, double y, double z, double r, uint fineness=3);
-  void setGrid(uint X, uint Y);
+  void setSSC(const ors::Mesh& m, double r, uint fineness=3);
   void setImplicitSurface(ScalarFunction f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);
-  
+  void setGrid(uint X, uint Y);
+
   /// @name transform and modify
   void subDevide();
   void scale(double f);
@@ -78,6 +79,9 @@ struct Mesh {
   void flipFaces();
   Vector getMeanVertex();
   double getRadius();
+  double getArea() const;
+  double getVolume();
+
 
   //[preliminary]]
   void skin(uint i);
@@ -171,9 +175,13 @@ void getDelaunayEdges(uintA& E, const arr& V);
 // GJK interface
 //
 
-double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
-                    ors::Transformation& t1, ors::Transformation& t2,
-                    ors::Vector& p1, ors::Vector& p2);
+enum GJK_point_type { GJK_vertex=1, GJK_edge, GJK_face };
+extern GJK_point_type& NoPointType;
+double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
+                    const ors::Transformation& t1, const ors::Transformation& t2,
+                    ors::Vector& p1, ors::Vector& p2,
+                    ors::Vector& e1, ors::Vector& e2,
+                    GJK_point_type& pt1, GJK_point_type& pt2);
 
 
 #endif

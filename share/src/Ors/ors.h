@@ -42,8 +42,8 @@ struct OdeInterface;
 namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue };
+enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
 
@@ -52,7 +52,7 @@ struct Shape;
 struct Body;
 struct KinematicWorld;
 struct Proxy;
-struct GraphOperator;
+struct KinematicSwitch;
 } // END of namespace
 
 //===========================================================================
@@ -61,7 +61,7 @@ typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
 typedef MT::Array<ors::Body*>  BodyL;
 typedef MT::Array<ors::Proxy*> ProxyL;
-typedef MT::Array<ors::GraphOperator*> GraphOperatorL;
+typedef MT::Array<ors::KinematicSwitch*> KinematicSwitchL;
 typedef MT::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
@@ -160,7 +160,7 @@ struct Shape {
   ShapeType type;
   double size[4];  //TODO: obsolete: directly translate to mesh?
   double color[3]; //TODO: obsolete: directly translate to mesh?
-  Mesh mesh;
+  Mesh mesh, sscCore;
   double mesh_radius;
   bool cont;           ///< are contacts registered (or filtered in the callback)
   Graph ats;   ///< list of any-type attributes
@@ -204,7 +204,6 @@ struct KinematicWorld {
   JointL joints;
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
-  GraphOperatorL operators;
 
   bool isLinkTree;
   static uint setJointStateCount;
@@ -269,24 +268,24 @@ struct KinematicWorld {
   void setAgent(uint agent, bool calcVels=false);
 
   /// @name kinematics
-  void kinematicsPos (arr& y, arr& J, Body *b, ors::Vector *rel=0) const;
-  void kinematicsVec (arr& y, arr& J, Body *b, ors::Vector *vec=0) const;
+  void kinematicsPos (arr& y, arr& J, Body *b, const Vector& rel=NoVector) const; //TODO: make vector& not vector*
+  void kinematicsVec (arr& y, arr& J, Body *b, const ors::Vector& vec=NoVector) const;
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
   void jacobianR(arr& J, Body *b) const;
-  void kinematicsRelPos (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const;
-  void kinematicsRelVec (arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const;
+  void kinematicsRelVec (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const;
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: deprecated?
-  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const;
+  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name High level (inverse) kinematics
-  void inverseKinematicsPos(Body& body, const arr& ytarget, ors::Vector* rel_offset=NULL, int max_iter=3);
+  void inverseKinematicsPos(Body& body, const arr& ytarget, const ors::Vector& rel_offset=NoVector, int max_iter=3);
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
@@ -301,7 +300,10 @@ struct KinematicWorld {
   double getEnergy() const;
   double getJointErrors() const;
   ors::Proxy* getContact(uint a, uint b) const;
-  
+
+  /// @name get infos
+  arr getHmetric() const;
+
   /// @name forces and gravity
   void clearForces();
   void addForce(ors::Vector force, Body *n);
@@ -333,12 +335,12 @@ struct KinematicWorld {
 
 //===========================================================================
 
-struct GraphOperator{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid };
+struct KinematicSwitch{
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid, addRigidRel };
   OperatorSymbol symbol;
   uint timeOfApplication;
   uint fromId, toId;
-  GraphOperator();
+  KinematicSwitch();
   void apply(KinematicWorld& G);
 };
 
@@ -415,7 +417,10 @@ extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
+inline void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false){
+  displayTrajectory(x, steps, G, {}, tag, delay, dim_z, copyG);
+}
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);

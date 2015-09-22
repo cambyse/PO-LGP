@@ -271,6 +271,12 @@ void ors::Shape::parseAts() {
     case ors::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       break;
+    case ors::sscST:
+      CHECK(size[3]>1e-10,"");
+      CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+      sscCore=mesh;
+      mesh.setSSC(sscCore, size[3]);
+      break;
   }
 
   //center the mesh:
@@ -400,7 +406,7 @@ void ors::Joint::reset() {
 
 void ors::Joint::parseAts() {
   //interpret some of the attributes
-  double d;
+  double d=0.;
   ats.getValue<Transformation>(A, "A");
   ats.getValue<Transformation>(A, "from");
   if(ats.getValue<bool>("BinvA")) B.setInverse(A);
@@ -454,6 +460,7 @@ uint ors::Joint::qDim() {
   if(type==JT_trans3) return 3;
   if(type==JT_universal) return 2;
   if(type==JT_quatBall) return 4;
+  if(type==JT_free) return 7;
   if(type==JT_glue || type==JT_fixed) return 0;
   HALT("shouldn't be here");
   return 0;
@@ -530,7 +537,6 @@ ors::KinematicWorld::~KinematicWorld() {
 
 void ors::KinematicWorld::init(const char* filename) {
   *this <<FILE(filename);
-  calc_q_from_Q();
 }
 
 void ors::KinematicWorld::clear() {
@@ -876,6 +882,23 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
         n+=4;
       } break;
 
+      case JT_free: {
+        q(n+0)=j->Q.pos.x;
+        q(n+1)=j->Q.pos.y;
+        q(n+2)=j->Q.pos.z;
+        q(n+3)=j->Q.rot.w;
+        q(n+4)=j->Q.rot.x;
+        q(n+5)=j->Q.rot.y;
+        q(n+6)=j->Q.rot.z;
+        if(calcVels) {
+          qdot(n)=j->Q.vel.x;
+          qdot(n+1)=j->Q.vel.y;
+          qdot(n+2)=j->Q.vel.z;
+          NIY;  // velocity: need to fix
+        }
+        n+=7;
+      } break;
+
       case JT_transX: {
         q(n)=j->Q.pos.x;
         if(calcVels) qdot(n)=j->Q.vel.x;
@@ -986,9 +1009,19 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
         case JT_quatBall:{
           j->Q.rot.set(q.p+n);
           j->Q.rot.normalize();
-          j->Q.rot.isZero=false; //TODO: WHY???? (gradient check fails without!)
+          j->Q.rot.isZero=false; //WHY? (gradient check fails without!)
           if(calcVels) NIY;
           n+=4;
+        } break;
+
+        case JT_free:{
+          j->Q.pos.set(q.p+n);
+          if(calcVels){ j->Q.vel.set(qdot.p+n); j->Q.zeroVels=false; }
+          j->Q.rot.set(q.p+n+3);
+          j->Q.rot.normalize();
+          j->Q.rot.isZero=false;
+          if(calcVels) NIY;
+          n+=7;
         } break;
 
         case JT_transX: {
@@ -1085,7 +1118,7 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
 
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
-void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *rel) const {
+void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vector& rel) const {
   if(!b){
     MT_MSG("WARNING: calling kinematics for NULL body");
     if(&y) y.resize(3).setZero();
@@ -1095,7 +1128,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
 
   //get position
   ors::Vector pos_world = b->X.pos;
-  if(rel) pos_world += b->X.rot*(*rel);
+  if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = ARRAY(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
@@ -1142,12 +1175,13 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
           arr R = (j->X.rot*j->Q.rot).getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx+1);
         }
-        else if(j->type==JT_trans3) {
+        if(j->type==JT_trans3 || j->type==JT_free) {
           if(j->mimic) NIY;
           arr R = j->X.rot.getArr();
           J.setMatrixBlock(R, 0, j_idx);
         }
-        else if(j->type==JT_quatBall) {
+        if(j->type==JT_quatBall || j->type==JT_free) {
+          uint offset = (j->type==JT_free)?3:0;
           ors::Quaternion e;
           ors::Vector axis, tmp;
           for(uint i=0;i<4;i++){
@@ -1159,11 +1193,11 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
             axis.set(e.x, e.y, e.z);
             axis = j->X.rot*axis;
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
-            tmp = axis ^ (pos_world-j->X.pos);
-            J(0, j_idx+i) += tmp.x;
-            J(1, j_idx+i) += tmp.y;
-            J(2, j_idx+i) += tmp.z;
+            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+            tmp = axis ^ (pos_world-(j->X.pos+j->X.rot*j->Q.pos));
+            J(0, j_idx+offset+i) += tmp.x;
+            J(1, j_idx+offset+i) += tmp.y;
+            J(2, j_idx+offset+i) += tmp.z;
           }
         }
       }
@@ -1177,12 +1211,12 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
   of the i-th body W.R.T. the 6 axes of an arbitrary shape-frame, NOT the robot's joints (3 x 6 tensor)
   WARNING: this does not check if s is actually in the kinematic chain from root to b.
 */
-void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, ors::Vector *rel, Shape *s) const {
+void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const {
   if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
 
   //get position
   ors::Vector pos_world = b->X.pos;
-  if(rel) pos_world += b->X.rot*(*rel);
+  if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = ARRAY(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
@@ -1286,11 +1320,11 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 /// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, ors::Vector *vec) const {
+void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vector& vec) const {
   //get the vectoreference frame
   ors::Vector vec_referene;
-  if(vec) vec_referene = b->X.rot*(*vec);
-  else    vec_referene = b->X.rot.getZ();
+  if(&vec) vec_referene = b->X.rot*vec;
+  else     vec_referene = b->X.rot.getZ();
   if(&y) y = ARRAY(vec_referene); //return the vec
   if(&J){
     arr A;
@@ -1337,7 +1371,8 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
           J(1, j_idx) += j->axis.y;
           J(2, j_idx) += j->axis.z;
         }
-        else if(j->type==JT_quatBall) {
+        if(j->type==JT_quatBall || j->type==JT_free) {
+          uint offset = (j->type==JT_free)?3:0;
           ors::Quaternion e;
           ors::Vector axis;
           for(uint i=0;i<4;i++){
@@ -1348,11 +1383,11 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
             e = e / j->Q.rot;
             axis.set(e.x, e.y, e.z);
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
+            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
             axis = j->X.rot*axis;
-            J(0, j_idx+i) += axis.x;
-            J(1, j_idx+i) += axis.y;
-            J(2, j_idx+i) += axis.z;
+            J(0, j_idx+offset+i) += axis.x;
+            J(1, j_idx+offset+i) += axis.y;
+            J(2, j_idx+offset+i) += axis.z;
           }
         }
         //all other joints: J=0 !!
@@ -1364,7 +1399,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
 }
 
 /// The position vec1, attached to b1, relative to the frame of b2 (plus vec2)
-void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2, ors::Vector *vec2) const {
+void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const {
   arr y1,y2,J1,J2;
   kinematicsPos(y1, J1, b1, vec1);
   kinematicsPos(y2, J2, b2, vec2);
@@ -1378,7 +1413,7 @@ void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, ors::Vector
 }
 
 /// The vector vec1, attached to b1, relative to the frame of b2
-void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, ors::Vector *vec1, Body *b2) const {
+void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const {
   arr y1,J1;
   kinematicsVec(y1, J1, b1, vec1);
 //  kinematicsVec(y2, J2, b2, vec2);
@@ -1699,12 +1734,12 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
+  clear();
+
   Graph *G = new Graph();
   G->read(is);
   G->checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
-  
-  clear();
   
   NodeL bs = G->getNodes("body");
   for_list(Node,  it,  bs) {
@@ -1837,12 +1872,13 @@ void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
     ors::Shape *b = shapes(p->b);
     (*os)
         <<p_COUNT <<" ("
-        <<a <<':' <<a->body->name <<")-("
-        <<b <<':' <<b->body->name
+        <<a->name <<':' <<a->body->name <<")-("
+        <<b->name <<':' <<b->body->name
         <<") d=" <<p->d
         <<" |A-B|=" <<(p->posB-p->posA).length()
         <<" cenD=" <<p->cenD
-        <<" d^2=" <<(p->posB-p->posA).lengthSqr()
+//        <<" d^2=" <<(p->posB-p->posA).lengthSqr()
+        <<" v=" <<(p->posB-p->posA)
         <<" normal=" <<p->normal
         <<" posA=" <<p->posA
         <<" posB=" <<p->posB
@@ -1975,8 +2011,8 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
       brel=b->X.rot/(p->posB-b->X.pos);
       CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
       arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
-      kinematicsPos(NoArr, Jpos, a->body, &arel);  J += (normal*Jpos);
-      kinematicsPos(NoArr, Jpos, b->body, &brel);  J -= (normal*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body, arel);  J += (normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body, brel);  J -= (normal*Jpos);
     }
   }
 }
@@ -2023,8 +2059,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
       arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
           
-      kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d2/margin*(normal*Jpos);
-      kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d2/margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body, arel);  J -= d2/margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body, brel);  J += d2/margin*(normal*Jpos);
     }
         
     if(useCenterDist && d2>0.){
@@ -2036,8 +2072,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       }else{
         arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
         
-        kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= d1/ab_radius*(normal*Jpos);
-        kinematicsPos(NoArr, Jpos, b->body, &brel);  J += d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, a->body, arel);  J -= d1/ab_radius*(normal*Jpos);
+        kinematicsPos(NoArr, Jpos, b->body, brel);  J += d1/ab_radius*(normal*Jpos);
       }
     }
   }
@@ -2076,8 +2112,8 @@ void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, do
     }
     normal.reshape(1, 3);
 
-    kinematicsPos(NoArr, Jpos, a->body, &arel);  J -= (normal*Jpos);
-    kinematicsPos(NoArr, Jpos, b->body, &brel);  J += (normal*Jpos);
+    kinematicsPos(NoArr, Jpos, a->body, arel);  J -= (normal*Jpos);
+    kinematicsPos(NoArr, Jpos, b->body, brel);  J += (normal*Jpos);
   }
 }
 
@@ -2103,8 +2139,8 @@ void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
     CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p(), 3); dnormal.reshape(1, 3);
     grad.setZero();
-    kinematicsPos(NoArr, Jpos, a->body, &arel); grad += dnormal*Jpos; //moving a long normal b->a increases distance
-    kinematicsPos(NoArr, Jpos, b->body, &brel); grad -= dnormal*Jpos; //moving b long normal b->a decreases distance
+    kinematicsPos(NoArr, Jpos, a->body, arel); grad += dnormal*Jpos; //moving a long normal b->a increases distance
+    kinematicsPos(NoArr, Jpos, b->body, brel); grad -= dnormal*Jpos; //moving b long normal b->a decreases distance
     J.append(grad);
     con++;
   }
@@ -2126,7 +2162,7 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
 
 /// Compute the new configuration q such that body is located at ytarget (with deplacement rel).
 void ors::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
-                                               ors::Vector *rel_offset, int max_iter) {
+                                               const ors::Vector& rel_offset, int max_iter) {
   arr q0, q;
   getJointState(q0);
   q = q0;
@@ -2186,6 +2222,16 @@ ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
   return NULL;
 }
 
+arr ors::KinematicWorld::getHmetric() const{
+  arr H(getJointStateDimension());
+  for(ors::Joint *j:joints){
+    double h=j->H;
+    CHECK(h>0.,"Hmetric should be larger than 0");
+    for(uint k=0;k<j->qDim();k++) H(j->qIndex+k)=h;
+  }
+  return H;
+}
+
 /** @brief */
 double ors::KinematicWorld::getEnergy() const {
   double m, v, E;
@@ -2210,7 +2256,7 @@ double ors::KinematicWorld::getEnergy() const {
 void ors::KinematicWorld::removeUselessBodies() {
   //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    cout <<" -- removing useless body " <<b->name <<" with in-joints ( ";
+    cout <<" -- removing useless body " <<b->name <<endl;
     delete b;
   }
   //-- reindex
@@ -2304,30 +2350,41 @@ void ors::KinematicWorld::meldFixedJoints() {
 
 //===========================================================================
 
-ors::GraphOperator::GraphOperator():
+ors::KinematicSwitch::KinematicSwitch():
   symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
-void ors::GraphOperator::apply(KinematicWorld& G){
-  Body *from=G.bodies(fromId), *to=G.bodies(toId);
+void ors::KinematicSwitch::apply(KinematicWorld& G){
+  Shape *from=G.shapes(fromId), *to=G.shapes(toId);
   if(symbol==deleteJoint){
-    Joint *j = G.getJointByBodies(from, to);
+    Joint *j = G.getJointByBodies(from->body, to->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
     delete j;
     return;
   }
   if(symbol==addRigid){
 //    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
-    Joint *j = new Joint(G, from, to);
+    Joint *j = new Joint(G, from->body, to->body);
 
     // Keep Object Orientation
-//    Transformation A = from->X;
+    //    Transformation A = from->X;
   //  Transformation B = to->X;
     //A.pos *= 0.;
    // B.pos *= 0.;
    // j->A.setDifference(A, B);
     j->type=JT_fixed;
+    j->A = from->rel;
+    j->B = -to->rel;
 //    j->agent=1;
+    G.isLinkTree=false;
+    return;
+  }
+  if(symbol==addRigidRel){
+    Joint *j = new Joint(G, from->body, to->body);
+    j->type=JT_fixed;
+    j->A.setDifference(from->body->X, to->body->X);
+//    j->A = from->rel * (to->body->X/from->body->X);
+//    j->B = -to->rel;
     G.isLinkTree=false;
     return;
   }

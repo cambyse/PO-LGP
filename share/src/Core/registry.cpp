@@ -28,12 +28,6 @@ Singleton<Graph> SingleRegistry;
 
 Graph& registry(){ return SingleRegistry(); }
 
-namespace MT {
-extern std::ifstream cfgFile;
-extern bool cfgFileOpen;
-extern Mutex cfgFileMutex;
-}
-
 extern Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
 
 void initRegistry(int argc, char* argv[]){
@@ -57,6 +51,6 @@ void initRegistry(int argc, char* argv[]){
   }
 
   MT::openConfigFile();
-  MT::cfgFile >>registry();
+  globalThings().cfgFile >>registry();
 
 }

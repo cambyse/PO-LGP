@@ -222,7 +222,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
       c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
       if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       //linear transform (target shift)
-      if(c->map.type==sumOfSqrTT){
+      if(true){ //c->map.type==sumOfSqrTT){
         if(c->target.N==1) y -= c->target(0);
         else if(c->target.nd==1) y -= c->target;
         else if(c->target.nd==2) y -= c->target[t];
@@ -299,8 +299,10 @@ void MotionProblem::activateAllTaskCosts(bool active) {
 
 void MotionProblem::costReport(bool gnuplt) {
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  cout <<"Size of cost matrix:" <<phiMatrix.dim() <<endl;
-  uint T=phiMatrix.d0-1;
+  if(phiMatrix.N!=T+1){
+    CHECK(phiMatrix.N==0,"");
+    phiMatrix.resize(T+1);
+  }
 
   arr plotData(T+1,taskCosts.N); plotData.setZero();
 
@@ -434,6 +436,57 @@ void MotionProblem::costReport(bool gnuplt) {
   if(gnuplt) gnuplot("load 'z.costReport.plt'");
 }
 
+Graph MotionProblem::getReport() {
+  if(phiMatrix.N!=T+1){
+    CHECK(phiMatrix.N==0,"");
+    phiMatrix.resize(T+1);
+  }
+
+  //-- collect all task costs and constraints
+  arr taskC(taskCosts.N); taskC.setZero();
+  arr taskG(taskCosts.N); taskG.setZero();
+  for(uint t=0; t<=T; t++){
+    uint m=0;
+    for(uint i=0; i<taskCosts.N; i++) {
+      Task *c = taskCosts(i);
+      uint d=c->dim_phi(world, t);
+      for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
+      if(d){
+        if(c->map.type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
+        if(c->map.type==ineqTT){
+          for(uint j=0;j<d;j++){
+            double g=phiMatrix(t)(m+j);
+            if(g>0.) taskG(i) += g;
+          }
+        }
+        if(c->map.type==eqTT){
+          for(uint j=0;j<d;j++) taskG(i) += fabs(phiMatrix(t)(m+j));
+        }
+        m += d;
+      }
+    }
+    CHECK_EQ(m , phiMatrix(t).N, "");
+  }
+
+  Graph report;
+  double totalC=0., totalG=0.;
+  for(uint i=0; i<taskCosts.N; i++) {
+    Task *c = taskCosts(i);
+    Graph *g=new Graph();
+    report.append<Graph>({c->name}, {}, g, true);
+    g->append<double>({"order"}, {}, c->map.order);
+    g->append<MT::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
+    g->append<double>({"sqrCosts"}, {}, taskC(i));
+    g->append<double>({"constraints"}, {}, taskG(i));
+    totalC += taskC(i);
+    totalG += taskG(i);
+  }
+  report.append<double>({"total","sqrCosts"}, {}, totalC);
+  report.append<double>({"total","constraints"}, {}, totalG);
+
+  return report;
+}
+
 arr MotionProblem::getInitialization(){
   return replicate(x0, T+1);
 }
@@ -465,12 +518,12 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   CHECK(t<=T,"");
 
   //-- manage configurations and set x_bar states
-  if(configurations.N!=k+1 || (MP.world.operators.N && t==0)){
+  if(configurations.N!=k+1 || (MP.switches.N && t==0)){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
-  if(!MP.world.operators.N){ //this efficiency gain only works without operators yet...
+  if(!MP.switches.N){ //this efficiency gain only works without switches yet...
     uintA match(k+1); match=UINT_MAX;
     boolA used(k+1); used=false;
     uintA unused;
@@ -485,11 +538,11 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
     for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
     configurations.permute(match);
   }
-  //apply potential graph operators
-  for(ors::GraphOperator *op:MP.world.operators){
+  //apply potential graph switches
+  for(ors::KinematicSwitch *sw:MP.switches){
     for(uint i=0;i<=k;i++){
-      if(t+i>=k && op->timeOfApplication==t-k+i){
-        op->apply(*configurations(i));
+      if(t+i>=k && sw->timeOfApplication==t-k+i){
+        sw->apply(*configurations(i));
         if(MP.useSwift) configurations(i)->swift().initActivations(*configurations(i));
       }
     }

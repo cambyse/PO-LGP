@@ -15,7 +15,7 @@ TaskControllerModule::TaskControllerModule()
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>());
+  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
   modelWorld.set() = realWorld;
   feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
   globalTaskControllerModule=this;
@@ -49,7 +49,7 @@ void TaskControllerModule::open(){
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-  MT::open(fil,"z.TaskControllerModule");
+//  MT::open(fil,"z.TaskControllerModule");
 
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
@@ -120,12 +120,12 @@ void TaskControllerModule::step(){
     arr uobs =  ctrl_obs.get()->u_bias;
     if(fLobs.N && uobs.N){
       arr Jft, J;
-      realWorld.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      realWorld.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,realWorld.getShapeByName("l_ft_sensor"));
+      realWorld.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
+      realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
 //      MT::arrayBrackets="  ";
-      fil <<t <<' ' <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
+//      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
 //      MT::arrayBrackets="[]";
     }
   }
@@ -176,7 +176,6 @@ void TaskControllerModule::step(){
     refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
   }
 
-
   //-- compute the force feedback control coefficients
   uint count=0;
   ctrlTasks.readAccess();
@@ -196,5 +195,5 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-  fil.close();
+//  fil.close();
 }

@@ -245,9 +245,11 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET -I/opt/ros/$(ROS_VERSION)/include/pcl-1.6 -I$(MLR_LIBPATH)/include/pcl-1.7 -I/usr/include/vtk-5.8
-LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common -lvtkCommon -lvtkFiltering -lvtkRendering
-CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
+CXXFLAGS  +=  -DMLR_PCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common
+#-lvtkCommon -lvtkFiltering -lvtkRendering
+CPATH := $(CPATH):/opt/ros/$(ROS_VERSION)/include/pcl_ros:/usr/include/eigen3:/usr/include/pcl-1.7:
+#/usr/include/ni::/usr/include/vtk-5.8:
 LPATH += /opt/ros/$(ROS_VERSION)/lib
 FREENECT = 1
 endif
@@ -256,6 +258,13 @@ ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
 CPATH := $(CPATH):/usr/include/libusb-1.0
 LIBS += -lfreenect -lusb-1.0
+endif
+
+ifeq ($(FREENECT_LOC),1)
+CXXFLAGS += -DMLR_FREENECT
+CPATH := $(HOME)/git/libfreenect/include:$(CPATH):/usr/include/libusb-1.0
+LPATH += $(HOME)/git/libfreenect/build/lib
+LIBS += -lfreenect -lusb-1.0 -lpthread
 endif
 
 ifeq ($URGLASER),1)
@@ -356,7 +365,7 @@ LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lur
 endif
 ifeq ($(ROS_VERSION),indigo)
 CXXFLAGS  += -DMT_ROS_INDIGO
-LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl
+LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl -ltf -lboost_system
 endif
 
 endif

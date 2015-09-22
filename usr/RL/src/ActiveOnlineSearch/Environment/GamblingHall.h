@@ -46,6 +46,7 @@ public:
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
     virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream &) const override;
 };
 
 #endif /* GAMBLINGHALL_H_ */

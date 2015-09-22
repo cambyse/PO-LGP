@@ -22,6 +22,7 @@ struct MySystem:System{
   ACCESS(uint16A, kinect_depth)
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
+  ACCESS(arr, kinect_points_world)
 
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
@@ -35,7 +36,7 @@ struct MySystem:System{
     if(MT::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+//      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
       addModule<RosCom_CamsSync>(NULL, Module::loopWithBeat, 1.);
       addModule<RosCom_ArmCamsSync>(NULL, Module::loopWithBeat, 1.);
@@ -49,7 +50,7 @@ struct MySystem:System{
     addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
     addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-    addModule<Pr2GamepadController>(NULL, Module::loopWithBeat, .01);
+//    addModule<Pr2GamepadController>(NULL, Module::loopWithBeat, .01);
     connect();
   }
 };
@@ -70,7 +71,7 @@ void TEST(Sensors){
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
-  primitives.P.append(new ArrCloudView(S.kinect_points, S.kinect_pointColors));
+  primitives.P.append(new ArrCloudView(S.kinect_points_world, S.kinect_pointColors));
   gl.lock.unlock();
 
   engine().open(S);
@@ -92,7 +93,12 @@ void TEST(Sensors){
       cout <<"No joint signals: q_obs.N=" <<q_obs.N <<" G.q.N=" <<primitives.G.q.N <<endl;
     }
     gl.lock.writeLock();
+#if 0
     primitives.P(0)->X = kinShape->X;
+#else
+    S.kinect_points_world.set() = S.kinect_points.get();
+    kinShape->X.applyOnPointArray( S.kinect_points_world.set() );
+#endif
     gl.lock.unlock();
     if(!(t%10)) gl.update();
 

@@ -1,6 +1,7 @@
 BASE = ../../..
 
 LIBUSB = 1
-DEPEND = Core System Hardware_kinect Perception Gui Ors
+DEPEND = Core System Gui Hardware_kinect
+# Perception Gui Ors
 
 include $(BASE)/gofMake/generic.mk

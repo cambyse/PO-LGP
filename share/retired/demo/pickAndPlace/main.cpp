@@ -4,7 +4,7 @@
 #include <hardware/kinect.h>
 #include <hardware/hardware.h>
 
-#ifdef PCL
+#ifdef MLR_PCL
 #include <pcl/visualization/pcl_visualizer.h>
 #endif
 

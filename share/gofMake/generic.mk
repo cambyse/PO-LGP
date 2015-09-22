@@ -13,7 +13,7 @@ BASE_REAL = $(shell realpath $(BASE))
 # load user options from the local make-config
 #
 ################################################################################
-include $(BASE)/gofMake/config.mk
+-include $(BASE)/gofMake/config.mk
 -include $(BASE)/gofMake/z.mk
 
 
@@ -171,8 +171,8 @@ cleanLocks: force
 
 depend: generate_Makefile.dep
 
-%/config.mk: %/config.mk.default
-	cp $< $@
+#%/config.mk: %/config.mk.default
+#	cp $< $@
 
 info: force
 	@echo; echo ----------------------------------------

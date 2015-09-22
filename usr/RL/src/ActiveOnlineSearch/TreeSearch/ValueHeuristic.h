@@ -5,12 +5,8 @@
 
 namespace value_heuristic {
 
-    typedef MonteCarloTreeSearch::graph_t              graph_t;
     typedef MonteCarloTreeSearch::mcts_node_info_map_t mcts_node_info_map_t;
-    typedef MonteCarloTreeSearch::node_info_map_t      node_info_map_t;
     typedef MonteCarloTreeSearch::node_t               node_t;
-    typedef AbstractEnvironment::action_handle_t       action_handle_t;
-    typedef AbstractEnvironment::observation_handle_t  observation_handle_t;
     typedef AbstractEnvironment::reward_t              reward_t;
 
     /**
@@ -30,7 +26,12 @@ namespace value_heuristic {
         virtual void init(double discount,
                           std::shared_ptr<AbstractEnvironment> environment);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const = 0;
+                                        mcts_node_info_map_t & mcts_node_info_map) = 0;
+        friend std::ostream& operator<<(std::ostream & out, const ValueHeuristic & heuristic) {
+            heuristic.write(out);
+            return out;
+        }
+        virtual void write(std::ostream &) const = 0;
     };
 
     /**
@@ -39,23 +40,34 @@ namespace value_heuristic {
     public:
         virtual ~Zero() = default;
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual void write(std::ostream & out) const override{out<<"Zero()";}
     };
 
     /**
      * This heuristic does a rollout to initialize value/return. */
-    class Rollout: public ValueHeuristic {
+    class RolloutStatistics: public ValueHeuristic {
     public:
         /**
          * Constructor with rollout length. For negative values the rollout is
          * either one step (if the environment does not have a terminal state)
          * or infinite until reaching a terminal state. */
-        Rollout(int rollout_length = -1);
-        virtual ~Rollout() = default;
+        RolloutStatistics(double prior_counts = -1);
+        virtual ~RolloutStatistics() = default;
+        virtual void init(double disc,
+                          std::shared_ptr<AbstractEnvironment> env);
         virtual void add_value_estimate(const node_t & state_node,
-                                        mcts_node_info_map_t & mcts_node_info_map) const override;
+                                        mcts_node_info_map_t & mcts_node_info_map) override;
+        virtual RolloutStatistics & prior_counts(double prior_counts);
+        virtual void write(std::ostream & out) const override{out<<"RolloutStatistics(discount="<<discount<<")";}
     protected:
-        int rollout_length;
+        double _prior_counts;
+        /** If false the variance is computed as the mean squared deviation from
+         * the mean value (i.e. the sample variance), if true this term is then
+         * corrected by multiplying it with n/(n-1) with n being the number of
+         * samples, so that it become an estimate of the true (distribution)
+         * variance. */
+        static const bool remove_bias = false;
     };
 
 } // end namespace value_heuristic

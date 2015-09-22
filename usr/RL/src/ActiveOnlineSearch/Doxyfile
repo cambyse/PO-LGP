@@ -1,8 +1,8 @@
 PROJECT_NAME           = "ActiveOnlineSearch"
 OUTPUT_DIRECTORY       = doc
-GENERATE_TAGFILE       = doc/doxy.tag
-TAGFILES	       = ../doc/doxy.tag=../../../doc/html
- 		       	 #../util/doc/doxy.tag=../../../util/doc/html
+#GENERATE_TAGFILE       = doc/doxy.tag
+#TAGFILES	       = ../doc/doxy.tag=../../../doc/html
+# 		       	 #../util/doc/doxy.tag=../../../util/doc/html
 EXAMPLE_PATH	       = doc examples
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
@@ -15,3 +15,5 @@ HTML_EXTRA_FILES       = doc/images/graph.jpg
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES
+SOURCE_BROWSER	       = YES
+USE_MATHJAX	       = YES
