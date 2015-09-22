@@ -1435,6 +1435,10 @@ void glDrawMesh(void *classP) {
 
 /// GL routine to draw a ors::Mesh
 void Mesh::glDraw() {
+  if(!T.N){
+    glDrawPointCloud(V, C);
+    return;
+  }
   if(V.d0!=Vn.d0 || T.d0!=Tn.d0) {
     computeNormals();
   }

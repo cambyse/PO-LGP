@@ -113,7 +113,7 @@ struct Main{
       gl.clear();
       gl.add(glStandardScene, 0);
       for(ors::Mesh& m:S.clusters()){
-        m.makeConvexHull();
+//        m.makeConvexHull();
         gl.add(ors::glDrawMesh, &m);
         cout <<"adding mesh: " <<m.V.d0 <<endl;
         cout <<sum(m.V,0)/(double)m.V.d0 <<endl;
@@ -137,11 +137,11 @@ struct Main{
     cout <<n <<endl;
 
     for(uint i=0;i<n;i++){
-      tf::StampedTransform transform;
-      listener.lookupTransform("/base_link", msg->markers[i].header.frame_id, msg->markers[i].header.stamp, transform);
-      ors::Transformation X = ros_cvrt(transform);
+//      tf::StampedTransform transform;
+//      listener.lookupTransform("/base_link", msg->markers[i].header.frame_id, msg->markers[i].header.stamp, transform);
+//      ors::Transformation X = ros_cvrt(transform);
       clusters(i).V = conv_points2arr(msg->markers[i].points);
-      X.applyOnPointArray( clusters(i).V );
+//      X.applyOnPointArray( clusters(i).V );
     }
 
     S.clusters.set() = clusters;

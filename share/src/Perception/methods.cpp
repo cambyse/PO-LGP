@@ -1,8 +1,6 @@
 #include "methods.h"
 #ifdef MLR_PCL
 
-#ifdef MLR_PCL
-
 void conv_ArrCloud_PclCloud(pcl::PointCloud<PointT>::Ptr& pcl_cloud,
                          const arr& kinect_points,
                          const arr& kinect_pointColors){

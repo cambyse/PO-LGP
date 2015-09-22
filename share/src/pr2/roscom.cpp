@@ -43,19 +43,6 @@ bool rosOk(){
   return ros::ok();
 }
 
-ors::Transformation ros_cvrt(const tf::Transform &trans){
-  ors::Transformation X;
-  tf::Quaternion q = trans.getRotation();
-  tf::Vector3 t = trans.getOrigin();
-  X.rot.set(q.w(), q.x(), q.y(), q.z());
-  X.pos.set(t.x(), t.y(), t.z());
-  return X;
-}
-
-timespec cvrt(const ros::Time& time){
-  return {time.sec, time.nsec};
-}
-
 double cvrt2double(const ros::Time& time){
   return (double)(time.sec) + 1e-9d*(double)(time.nsec);
 }
