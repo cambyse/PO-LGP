@@ -6,3 +6,4 @@ object_detector.cpp
 object_detector.h
 plane.cpp
 plane.h
+../trackedClusters/main.cpp
