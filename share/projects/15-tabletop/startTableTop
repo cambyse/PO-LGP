@@ -1,0 +1,2 @@
+rosrun rviz rviz
+rosrun object_recognition_core detection -c detection.table.ros.ork
