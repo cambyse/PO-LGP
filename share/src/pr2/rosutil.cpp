@@ -1,5 +1,10 @@
 #include "rosutil.h"
 
+
+bool rosOk(){
+  return ros::ok();
+}
+
 void rosCheckInit(const char* module_name){
 // TODO make static variables to singleton
   static Mutex mutex;
@@ -12,6 +17,7 @@ void rosCheckInit(const char* module_name){
   }
   mutex.unlock();
 }
+
 
 ors::Transformation cvrt_pose2transformation(const tf::Transform &trans){
   ors::Transformation X;
@@ -33,15 +39,25 @@ ors::Transformation cvrt_pose2transformation(const geometry_msgs::Pose &pose){
   return X;
 }
 
-timespec cvrt(const ros::Time& time){
+void cvrt_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped& pose){
+  auto& _quat=pose.pose.pose.orientation;
+  auto& _pos=pose.pose.pose.position;
+  ors::Quaternion quat(_quat.w, _quat.x, _quat.y, _quat.z);
+  ors::Vector pos(_pos.x, _pos.y, _pos.z);
+
+  double angle;
+  ors::Vector rotvec;
+  quat.getRad(angle, rotvec);
+  q(qIndex+0) = pos(0);
+  q(qIndex+1) = pos(1);
+  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+}
+
+timespec cvrt_time2timespec(const ros::Time& time){
   return {time.sec, time.nsec};
 }
 
-bool rosOk(){
-  return ros::ok();
-}
-
-double cvrt2double(const ros::Time& time){
+double cvrt_time2double(const ros::Time& time){
   return (double)(time.sec) + 1e-9d*(double)(time.nsec);
 }
 
@@ -94,3 +110,5 @@ std::vector<geometry_msgs::Point> conv_arr2points(const arr& pts){
   }
   return P;
 }
+
+

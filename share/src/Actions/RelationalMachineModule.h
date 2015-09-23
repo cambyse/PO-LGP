@@ -12,7 +12,7 @@ struct RelationalMachineModule : Module{
 
   Log _log;
 
-  RelationalMachineModule();
+  RelationalMachineModule(ModuleL& S=NoModuleL);
   ~RelationalMachineModule();
 
   /// @name module implementations

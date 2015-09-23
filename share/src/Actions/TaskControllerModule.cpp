@@ -2,6 +2,10 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
+#ifdef MT_ROS
+#  include <pr2/rosutil.h>
+#endif
+
 TaskControllerModule *globalTaskControllerModule=NULL;
 TaskControllerModule *taskControllerModule(){
   return globalTaskControllerModule;
@@ -15,36 +19,20 @@ TaskControllerModule::TaskControllerModule(ModuleL& system)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
-  modelWorld.set() = realWorld;
-  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
+//  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
   globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){
-  delete feedbackController;
 }
 
 void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
-#ifdef MT_ROS
-void cvrt_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  auto& q=pose.pose.pose.orientation;
-  auto& p=pose.pose.pose.position;
-  ors::Quaternion quat(q.w, q.x, q.y, q.z);
-  ors::Vector pos(p.x, p.y, p.z);
-
-  double angle;
-  ors::Vector rotvec;
-  quat.getRad(angle, rotvec);
-  q(qIndex+0) = pos(0);
-  q(qIndex+1) = pos(1);
-  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
-}
-#endif
-
 void TaskControllerModule::open(){
+  modelWorld.set() = realWorld;
+  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
+
   modelWorld.get()->getJointState(q_model, qdot_model);
 
   feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
@@ -53,11 +41,13 @@ void TaskControllerModule::open(){
 
 //  MT::open(fil,"z.TaskControllerModule");
 
+#if 1
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
   modelWorld().gl().add(ors::glDrawGraph, &realWorld);
   modelWorld().gl().add(changeColor2);
   modelWorld.deAccess();
+#endif
 
   useRos = MT::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
@@ -112,7 +102,9 @@ void TaskControllerModule::step(){
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
+#if 1
     modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+#endif
   }
 
   //-- code to output force signals
@@ -198,4 +190,5 @@ void TaskControllerModule::step(){
 
 void TaskControllerModule::close(){
 //  fil.close();
+  delete feedbackController;
 }

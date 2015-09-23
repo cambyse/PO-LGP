@@ -6,18 +6,7 @@
 #include <Core/geo.h>
 #include <Ors/ors.h>
 
-
-//===========================================================================
-//
-// utils
-//
-
-namespace tf{ class Transform; }
-
-bool rosOk();
-void rosCheckInit(const char* module_name="pr2_module");
-ors::Transformation cvrt_pose2transformation(const tf::Transform&);
-timespec cvrt_pose2transformation(const ros::Time&);
+#include "rosutil.h"
 
 //===========================================================================
 //

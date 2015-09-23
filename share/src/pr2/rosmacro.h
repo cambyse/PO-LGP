@@ -26,7 +26,6 @@
     ros::Subscriber _sub; \
     ROSSUB_##var_name() : Module(#var_name) {} \
     void open() { \
-      rosCheckInit(); \
       this->_nh = new ros::NodeHandle; \
       this->_sub  = this->_nh->subscribe( \
         topic_name, 1, &ROSSUB_##var_name::callback, this); \
@@ -47,7 +46,6 @@ struct ROSSUB_##var_name : Module { \
   ACCESS(msg_type, var_name) \
   ROSSUB_##var_name() : Module(#var_name) {} \
   void open() { \
-    rosCheckInit(); \
     LOG(-1) <<"fake subscriber: " <<#var_name <<" -- compiled without MLR_ROS flag"; \
   } \
   void step() {} \

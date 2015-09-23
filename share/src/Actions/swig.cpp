@@ -28,8 +28,11 @@ struct OrsViewer:Module{
     LOG(-1) <<"HERE"<< endl;
   }
   void step(){
+    openGlLock();
     copy = modelWorld.get();
-    copy.watch(false);
+    openGlUnlock();
+    copy.gl().update(NULL, false, false, true);//watch(false);
+    MT::wait(.03);
   }
   void close(){}
 };
@@ -43,7 +46,6 @@ struct PerceptionObjects2Ors : Module{
   void step(){
     perceptionObjects.readAccess();
     modelWorld.readAccess();
-    openGlLock();
 
     for(visualization_msgs::Marker& marker : perceptionObjects().markers){
       MT::String name;
@@ -65,7 +67,6 @@ struct PerceptionObjects2Ors : Module{
 
     perceptionObjects.deAccess();
     modelWorld.deAccess();
-    openGlUnlock();
   }
   void close(){}
 };
@@ -86,16 +87,19 @@ struct SwigSystem : System{
   ACCESS(AlvarMarker, ar_pose_markers)
   ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
 
-  Log _log;
   TaskControllerModule tcm;
+  RelationalMachineModule rmm;
+//  OrsViewer orsviewer;
 
-  SwigSystem():_log("SwigSystem"), tcm(*this){
-    addModule<OrsViewer>(NULL, Module::listenFirst);
+  Log _log;
+
+  SwigSystem(): tcm(*this), rmm(*this), /*orsviewer(*this),*/ _log("SwigSystem"){
+
 //    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-    modelWorld.linkToVariable(tcm.modelWorld.v);
+//    modelWorld.linkToVariable(tcm.modelWorld.v);
+//    orsviewer.modelWorld.linkToVariable(tcm.modelWorld.v);
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-    addModule<RelationalMachineModule>(NULL, Module::listenFirst);
 
     addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
@@ -411,7 +415,7 @@ void ActionSwigInterface::execScript(const char* filename){
     }else{ //interpret as set fact
 //      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
       S->RM.set()->applyEffect(n, true);
-      S->rmm->threadStep();
+//      S->rmm->threadStep();
 //      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
     }
   }
