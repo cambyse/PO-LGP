@@ -1,11 +1,57 @@
 #include "rosutil.h"
 
+void rosCheckInit(const char* module_name){
+// TODO make static variables to singleton
+  static Mutex mutex;
+  static bool inited = false;
+
+  mutex.lock();
+  if(!inited) {
+    ros::init(MT::argc, MT::argv, module_name, ros::init_options::NoSigintHandler);
+    inited = true;
+  }
+  mutex.unlock();
+}
+
+ors::Transformation cvrt_pose2transformation(const tf::Transform &trans){
+  ors::Transformation X;
+  X.setZero();
+  tf::Quaternion q = trans.getRotation();
+  tf::Vector3 t = trans.getOrigin();
+  X.rot.set(q.w(), q.x(), q.y(), q.z());
+  X.pos.set(t.x(), t.y(), t.z());
+  return X;
+}
+
+ors::Transformation cvrt_pose2transformation(const geometry_msgs::Pose &pose){
+  ors::Transformation X;
+  X.setZero();
+  auto& q = pose.orientation;
+  auto& t = pose.position;
+  X.rot.set(q.w, q.x, q.y, q.z);
+  X.pos.set(t.x, t.y, t.z);
+  return X;
+}
+
+timespec cvrt(const ros::Time& time){
+  return {time.sec, time.nsec};
+}
+
+bool rosOk(){
+  return ros::ok();
+}
+
+double cvrt2double(const ros::Time& time){
+  return (double)(time.sec) + 1e-9d*(double)(time.nsec);
+}
+
 ors::Transformation ros_getTransform(const std::string& from, const std::string& to, tf::TransformListener& listener){
   ors::Transformation X;
+  X.setZero();
   try{
     tf::StampedTransform transform;
     listener.lookupTransform(from, to, ros::Time(0), transform);
-    X = ros_cvrt(transform);
+    X = cvrt_pose2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());

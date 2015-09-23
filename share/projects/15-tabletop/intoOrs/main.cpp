@@ -52,7 +52,7 @@ struct PerceptionObjects2Ors : Module{
         s->name=name;
         if(marker.type==marker.CYLINDER){
           s->type = ors::cylinderST;
-          s->size[3] = .5*(marker.scale.x+marker.scale.y);
+          s->size[3] = .25*(marker.scale.x+marker.scale.y);
           s->size[2] = marker.scale.z;
         }else if(marker.type==marker.POINTS){
           s->type = ors::meshST;
@@ -60,7 +60,11 @@ struct PerceptionObjects2Ors : Module{
           s->mesh.C = conv_colors2arr(marker.colors);
         }else NIY;
       }
-      s->X = s->rel = ros_getTransform("base_link", marker.header.frame_id, listener);
+      //      s->size[0] = marker.scale.x;
+      //      s->size[1] = marker.scale.y;
+      //      s->size[2] = marker.scale.z;
+      //      s->size[3] = .25*(marker.scale.x+marker.scale.y);
+      s->X = s->rel = ros_getTransform("base_link", marker.header.frame_id, listener) * cvrt_pose2transformation(marker.pose);
     }
 
     perceptionObjects.deAccess();
@@ -69,15 +73,13 @@ struct PerceptionObjects2Ors : Module{
   void close(){}
 };
 
-ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
+ROSSUB("/tabletop/rs_fitted", visualization_msgs::MarkerArray, perceptionObjects);
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
 
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(uint16A, kinect_depth)
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
   ACCESS(ors::Transformation, kinect_frame)
@@ -102,7 +104,7 @@ struct MySystem:System{
 
 struct Main{
   ros::NodeHandle* nh;
-  ros::Subscriber sub;
+//  ros::Subscriber sub;
 
   OpenGL gl;
 
@@ -113,7 +115,7 @@ struct Main{
 
   Main(){
     nh = new ros::NodeHandle;
-    sub = nh->subscribe( "/tabletop/clusters", 1, &Main::cb_clusters, this);
+//    sub = nh->subscribe( "/tabletop/clusters", 1, &Main::cb_clusters, this);
 
     gl.setClearColors(1., 1., 1., 1.);
 
@@ -136,8 +138,6 @@ struct Main{
 
   void loop(){
     for(;;){
-      cout <<"HI=" <<S.perceptionObjects.get()->markers.size() <<endl;
-
       arr q_real = S.ctrl_obs.get()->q;
       if(q_real.N>1)
         S.modelWorld.set()->setJointState(q_real);
@@ -163,22 +163,6 @@ struct Main{
       S.modelWorld.deAccess();
       ros::spinOnce();
     }
-  }
-
-  void cb_clusters(const visualization_msgs::MarkerArray::ConstPtr& msg) {
-    uint n=msg->markers.size();
-
-    MT::Array<ors::Mesh> clusters(n);
-
-    for(uint i=0;i<n;i++){
-      ors::Transformation X = ros_getTransform("/base_link", msg->markers[i].header.frame_id, listener);
-
-      clusters(i).V = conv_points2arr(msg->markers[i].points);
-      clusters(i).C = conv_colors2arr(msg->markers[i].colors);
-      X.applyOnPointArray( clusters(i).V );
-    }
-
-    S.clusters.set() = clusters;
   }
 
 };

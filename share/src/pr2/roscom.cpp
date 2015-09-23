@@ -14,42 +14,6 @@
 
 
 //===========================================================================
-// HELPERS
-void rosCheckInit(const char* module_name){
-// TODO make static variables to singleton
-  static Mutex mutex;
-  static bool inited = false;
-
-  mutex.lock();
-  if(!inited) {
-    ros::init(MT::argc, MT::argv, module_name, ros::init_options::NoSigintHandler);
-    inited = true;
-  }
-  mutex.unlock();
-}
-
-ors::Transformation ros_cvrt(const tf::Transform &trans){
-  ors::Transformation X;
-  tf::Quaternion q = trans.getRotation();
-  tf::Vector3 t = trans.getOrigin();
-  X.rot.set(q.w(), q.x(), q.y(), q.z());
-  X.pos.set(t.x(), t.y(), t.z());
-  return X;
-}
-
-timespec cvrt(const ros::Time& time){
-  return {time.sec, time.nsec};
-}
-
-bool rosOk(){
-  return ros::ok();
-}
-
-double cvrt2double(const ros::Time& time){
-  return (double)(time.sec) + 1e-9d*(double)(time.nsec);
-}
-
-//===========================================================================
 // RosCom_Spinner
 struct sRosCom_Spinner{
 };
