@@ -1,7 +1,5 @@
 #pragma once
 
-#ifdef MT_ROS
-
 #include <ros/ros.h>
 #include <Core/module.h>
 
@@ -19,10 +17,13 @@
  *
  *  See ../../examples/pr2/generic_ros_sync/main.cpp for more.
  */
+#ifdef MT_ROS
+
 #define ROSSUB(topic_name, msg_type, var_name) \
-  class ROSSUB_##var_name : public Module { \
-  public: \
+  struct ROSSUB_##var_name : Module { \
     ACCESS(msg_type, var_name) \
+    ros::NodeHandle* _nh; \
+    ros::Subscriber _sub; \
     ROSSUB_##var_name() : Module(#var_name) {} \
     void open() { \
       rosCheckInit(); \
@@ -38,10 +39,20 @@
     void callback(const msg_type::ConstPtr& msg) { \
       this->var_name.set() = *msg; \
     } \
-  private: \
-    ros::NodeHandle* _nh; \
-    ros::Subscriber _sub; \
-    \
   };
+
+#else
+
+struct ROSSUB_##var_name : Module { \
+  ACCESS(msg_type, var_name) \
+  ROSSUB_##var_name() : Module(#var_name) {} \
+  void open() { \
+    rosCheckInit(); \
+    LOG(-1) <<"fake subscriber: " <<#var_name <<" -- compiled without MLR_ROS flag"; \
+  } \
+  void step() {} \
+  void close() {} \
+  void callback(const msg_type::ConstPtr& msg) {} \
+};
 
 #endif
