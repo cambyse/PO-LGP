@@ -23,6 +23,7 @@ struct MySystem:System{
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+
     }
     connect();
   }

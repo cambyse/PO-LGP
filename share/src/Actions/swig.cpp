@@ -7,9 +7,72 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <pr2/rosutil.h>
+#include <Gui/opengl.h>
+
+void openGlLock();
+void openGlUnlock();
+
+//void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
+//void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
+
+struct OrsViewer:Module{
+  ACCESS(ors::KinematicWorld, modelWorld)
+
+  ors::KinematicWorld copy;
+
+  OrsViewer(ModuleL& S=NoModuleL):Module("OrsViewer", S, listenFirst) {
+  }
+  void open(){
+    LOG(-1) <<"HERE"<< endl;
+  }
+  void step(){
+    copy = modelWorld.get();
+    copy.watch(false);
+  }
+  void close(){}
+};
+
+struct PerceptionObjects2Ors : Module{
+  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESS(ors::KinematicWorld, modelWorld)
+  PerceptionObjects2Ors(ModuleL& S=NoModuleL): Module("PerceptionObjects2Ors", S, listenFirst){
+  }
+  void open(){}
+  void step(){
+    perceptionObjects.readAccess();
+    modelWorld.readAccess();
+    openGlLock();
+
+    for(visualization_msgs::Marker& marker : perceptionObjects().markers){
+      MT::String name;
+      name <<"obj" <<marker.id;
+      ors::Shape *s = modelWorld->getShapeByName(name);
+      if(!s){
+        s = new ors::Shape(modelWorld(), NoBody);
+        if(marker.type==marker.CYLINDER){
+          s->type = ors::cylinderST;
+          s->size[3] = .5*(marker.scale.x+marker.scale.y);
+          s->size[2] = marker.scale.z;
+        }else if(marker.type==marker.POINTS){
+          s->type = ors::meshST;
+          s->mesh.V = conv_points2arr(marker.points);
+          s->mesh.C = conv_colors2arr(marker.colors);
+        }else NIY;
+      }
+    }
+
+    perceptionObjects.deAccess();
+    modelWorld.deAccess();
+    openGlUnlock();
+  }
+  void close(){}
+};
 
 #ifdef MT_ROS
-ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
+ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom);
+ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
 #endif
 
 // ============================================================================
@@ -21,27 +84,31 @@ struct SwigSystem : System{
   ACCESS(MT::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
+  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
 
   Log _log;
   TaskControllerModule *tcm;
   RelationalMachineModule *rmm;
 
   SwigSystem():_log("SwigSystem"){
+    addModule<OrsViewer>(NULL, Module::listenFirst);
     tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-    rmm=addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
+    rmm=addModule<RelationalMachineModule>(NULL, Module::listenFirst);
 
+    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
+
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
 #ifdef MT_ROS
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
       addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
+      addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
 #endif
-      // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
     // make the base movable by default
@@ -345,7 +412,7 @@ void ActionSwigInterface::execScript(const char* filename){
     }else{ //interpret as set fact
 //      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
       S->RM.set()->applyEffect(n, true);
-//      S->rmm->threadStep();
+      S->rmm->threadStep();
 //      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
     }
   }

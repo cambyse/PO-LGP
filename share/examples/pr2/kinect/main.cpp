@@ -73,12 +73,12 @@ void TEST(Sensors){
     FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
     ors::Transformation X;
-    timespec tstamp = S.kinect_depth.get().v->data_time;
+    double tstamp = S.kinect_depth.get().v->data_time;
     cout <<tstamp <<endl;
     try{
       tf::StampedTransform transform;
       listener.lookupTransform("/base_footprint", "/head_mount_kinect_ir_optical_frame",
-                               ros::Time(tstamp.tv_sec, tstamp.tv_nsec), transform);
+                               ros::Time(0), transform);
       X = ros_cvrt(transform);
     }
     catch (tf::TransformException &ex) {

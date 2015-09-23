@@ -1,4 +1,5 @@
 #include "roscom.h"
+#include "rosutil.h"
 
 #ifdef MT_ROS
 #include <ros/ros.h>
@@ -9,6 +10,7 @@
 #include <std_msgs/String.h>
 #include <Core/geo.h>
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
 
 
 //===========================================================================
@@ -170,6 +172,8 @@ struct sRosCom_KinectSync{
   ros::NodeHandle nh;
   ros::Subscriber sub_rgb;
   ros::Subscriber sub_depth;
+  tf::TransformListener listener;
+
   void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
     base->kinect_rgb.set( cvrt2double(msg->header.stamp) ) = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
@@ -179,7 +183,9 @@ struct sRosCom_KinectSync{
     byteA data = ARRAY(msg->data);
     uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
-    base->kinect_depth.set( cvrt2double(msg->header.stamp) ) = ref;
+    double time=cvrt2double(msg->header.stamp);
+    base->kinect_depth.set( time ) = ref;
+    base->kinect_frame.set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
   }
 };
 
@@ -188,7 +194,7 @@ void RosCom_KinectSync::open(){
   s = new sRosCom_KinectSync;
   s->base = this;
   s->sub_rgb = s->nh.subscribe("/kinect_head/rgb/image_color", 1, &sRosCom_KinectSync::cb_rgb, s);
-  s->sub_depth = s->nh.subscribe("/kinect_head/depth_registered/image_raw", 1, &sRosCom_KinectSync::cb_depth, s);
+  s->sub_depth = s->nh.subscribe("/kinect_head/depth/image_raw", 1, &sRosCom_KinectSync::cb_depth, s);
 }
 
 void RosCom_KinectSync::step(){
