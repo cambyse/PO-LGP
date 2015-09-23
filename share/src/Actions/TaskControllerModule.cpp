@@ -7,8 +7,8 @@ TaskControllerModule *taskControllerModule(){
   return globalTaskControllerModule;
 }
 
-TaskControllerModule::TaskControllerModule()
-    : Module("TaskControllerModule")
+TaskControllerModule::TaskControllerModule(ModuleL& system)
+    : Module("TaskControllerModule", system, Module::loopWithBeat, .01)
     , realWorld("model.kvg")
     , feedbackController(NULL)
     , q0(realWorld.q)
@@ -29,9 +29,11 @@ void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 #ifdef MT_ROS
-void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
-  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
+void cvrt_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
+  auto& q=pose.pose.pose.orientation;
+  auto& p=pose.pose.pose.position;
+  ors::Quaternion quat(q.w, q.x, q.y, q.z);
+  ors::Vector pos(p.x, p.y, p.z);
 
   double angle;
   ors::Vector rotvec;
@@ -79,7 +81,7 @@ void TaskControllerModule::step(){
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
 #ifdef MT_ROS
-      setOdom(q_real, trans->qIndex, pr2_odom.get());
+      cvrt_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
 #endif
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){

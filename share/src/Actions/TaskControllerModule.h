@@ -22,7 +22,6 @@ struct TaskControllerModule : Module {
   ACCESS(MT::String, effects)
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
-  ACCESS(RelationalMachine, RM)
   ACCESS(bool, fixBase)
 #ifdef MT_ROS
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
@@ -40,7 +39,7 @@ struct TaskControllerModule : Module {
   bool verbose;
 
 public:
-  TaskControllerModule();
+  TaskControllerModule(ModuleL& system=NoModuleL);
   ~TaskControllerModule();
 
   /// @name module implementations

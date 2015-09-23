@@ -7,10 +7,9 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
+#include <pr2/rosmacro.h>
 
-#ifdef MT_ROS
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
-#endif
 
 // ============================================================================
 struct SwigSystem : System{
@@ -23,24 +22,21 @@ struct SwigSystem : System{
   ACCESS(AlvarMarker, ar_pose_markers)
 
   Log _log;
-  TaskControllerModule *tcm;
-  RelationalMachineModule *rmm;
+  TaskControllerModule tcm;
 
-  SwigSystem():_log("SwigSystem"){
-    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-    modelWorld.linkToVariable(tcm->modelWorld.v);
+  SwigSystem():_log("SwigSystem"), tcm(*this){
+//    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    modelWorld.linkToVariable(tcm.modelWorld.v);  //tcm already created a variable -> you need to adopt THAT one in the system
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-    rmm=addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
+    addModule<RelationalMachineModule>(NULL, Module::listenFirst, .01);
 
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-#ifdef MT_ROS
       addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
       addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
-#endif
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
     connect();
@@ -67,7 +63,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 // ============================================================================
 // ActionSwigInterface
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
-  S->tcm->verbose=false;
+  S->tcm.verbose=false;
   engine().open(*S, true);
 
   createNewSymbol("conv");
@@ -105,78 +101,78 @@ void ActionSwigInterface::Cancel(){
 stringV ActionSwigInterface::getShapeList(){
   stringV strs;
   std::stringstream tmp;
-  S->tcm->modelWorld.readAccess();
-  for(ors::Shape *shape: S->tcm->modelWorld().shapes){
+  S->modelWorld.readAccess();
+  for(ors::Shape *shape: S->modelWorld().shapes){
     tmp.str(""),
     tmp.clear();
     tmp <<shape->name;
     strs.push_back(tmp.str());
   }
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return strs;
 }
 
 stringV ActionSwigInterface::getBodyList(){
   stringV strs;
   std::stringstream tmp;
-  S->tcm->modelWorld.readAccess();
-  for(ors::Body *body: S->tcm->modelWorld().bodies){
+  S->modelWorld.readAccess();
+  for(ors::Body *body: S->modelWorld().bodies){
     tmp.str(""),
     tmp.clear();
     tmp << body->name;
     strs.push_back(tmp.str());
   }
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return strs;
 }
 
 stringV ActionSwigInterface::getJointList(){
   stringV strs;
   std::stringstream tmp;
-  S->tcm->modelWorld.readAccess();
-  for(ors::Joint *joint: S->tcm->modelWorld().joints){
+  S->modelWorld.readAccess();
+  for(ors::Joint *joint: S->modelWorld().joints){
     tmp.str(""),
     tmp.clear();
     tmp << joint->name;
     strs.push_back(tmp.str());
   }
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return strs;
 }
 
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
-  S->tcm->modelWorld.readAccess();
-  ors::Body *body = S->tcm->modelWorld().getBodyByName(bodyName.c_str());
+  S->modelWorld.readAccess();
+  ors::Body *body = S->modelWorld().getBodyByName(bodyName.c_str());
   D["name"]= bodyName;
   D["type"] = std::to_string(body->type);
   D["Q"] =  STRING('[' <<body->X.rot<<']');
   D["pos"] = STRING('[' <<body->X.pos<<']');
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return D;
 }
 
 dict ActionSwigInterface::getJointByName(std::string jointName){
   dict D;
-  S->tcm->modelWorld.readAccess();
-  ors::Joint *joint = S->tcm->modelWorld().getJointByName(jointName.c_str());
+  S->modelWorld.readAccess();
+  ors::Joint *joint = S->modelWorld().getJointByName(jointName.c_str());
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return D;
 }
 
 dict ActionSwigInterface::getShapeByName(std::string shapeName){
   dict D;
-  S->tcm->modelWorld.readAccess();
-  ors::Shape *shape = S->tcm->modelWorld().getShapeByName(shapeName.c_str());
+  S->modelWorld.readAccess();
+  ors::Shape *shape = S->modelWorld().getShapeByName(shapeName.c_str());
   D["name"]= shapeName;
   D["type"] = std::to_string(shape->type);
   D["Q"] =  STRING('[' <<shape->X.rot<<']');
   D["pos"] = STRING('[' <<shape->X.pos<<']');
-  S->tcm->modelWorld.deAccess();
+  S->modelWorld.deAccess();
   return D;
 }
 
@@ -336,11 +332,12 @@ void ActionSwigInterface::execScript(const char* filename){
 
   Node *s = S->RM.get()->KB.getNode("Script");
   Graph& script = s->graph();
+  int rev=0;
   for(Node* n:script){
     if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
-        S->RM.waitForNextRevision();
+        rev=S->RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact
 //      applySubstitutedLiteral(*S->RM.set()->state, n, {}, NULL);
