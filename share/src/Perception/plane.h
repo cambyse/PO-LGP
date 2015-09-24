@@ -18,6 +18,7 @@ typedef pcl::PointXYZRGB PointT;
 
 
 void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointIndices::Ptr> &outInliers , uint numPlanes);
+//void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointCloud<PointT>::Ptr> &outInliers , uint numPlanes);
 
 void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointCloud<PointT>::Ptr outCloud,double minLimit, double maxLimit);
 
