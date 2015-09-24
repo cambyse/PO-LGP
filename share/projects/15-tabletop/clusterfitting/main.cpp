@@ -52,6 +52,7 @@ struct Fitting{
     Fitting():threshold(.1){
         nh = new ros::NodeHandle;
         sub = nh->subscribe( "/tabletop/clusters", 1, &Fitting::callback, this);
+        //sub = nh->subscribe( "/tabletop/tracked_clusters", 1, &Fitting::callback, this);
         //pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
         //sub = nh->subscribe( "/tabletop/tracked_clusters", 1, &Fitting::callback, this);
         pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/fitted_clusters", 1);
@@ -73,56 +74,50 @@ struct Fitting{
             pcl::PointCloud<PointT>::Ptr onePCL (new pcl::PointCloud<PointT>);
             conv_2_PCL(onePCL,marker.points);
 
-
-
             // detect cylinder
             pcl::PointCloud<pcl::Normal>::Ptr normal_extracted (new pcl::PointCloud<pcl::Normal>);
             normalEstimator(onePCL,normal_extracted,50);
 
             pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-            found = cylinderDetector(onePCL,normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
 
-            if(found)
+            bool foundCylinder = cylinderDetector(onePCL,normal_extracted,coefficients_cylinder,inliers_cylinder,0.01,0.05);
+
+
+            //Returning the parametric model
+            if(foundCylinder)
             {
-                visualization_msgs::Marker marker;
-                marker.ns = "my_namespace";
-                marker.id = rand(); // TODO
 
-                marker.header.frame_id = "base_link";
-                marker.header.stamp = ros::Time();
-                marker.action = visualization_msgs::Marker::ADD;
-                marker.lifetime = ros::Duration(2.);
+                cout<<"found cylinder "<<endl;
 
 
+                int markerid = marker.id;
+
+                visualization_msgs::Marker marker_add, marker_del;
+/*/
+                marker_del.id = markerid; // TODO
+
+                marker_del.ns = "my_namespace";
+                marker_del.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                marker_del.header.stamp = ros::Time();
+                marker_del.action = visualization_msgs::Marker::DELETE;
+                //marker.lifetime = ros::Duration(2.);
+                marker_del.type = visualization_msgs::Marker::CYLINDER;
 
 
-                marker.type = visualization_msgs::Marker::CYLINDER;
-
-                // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-                marker.action = visualization_msgs::Marker::ADD;
-
-                // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
-
-                geometry_msgs::PointStamped pt;
-                 geometry_msgs::PointStamped pt_transformed;
-                  //pt.header  =  coefficients_cylinder->header;
-                  pt.header.frame_id  = marker.header.frame_id;
-                  pt.header.stamp     = marker.header.stamp;
-                  pt.point.x = coefficients_cylinder->values[0];
-                  pt.point.y = coefficients_cylinder->values[1];
-                  pt.point.z = coefficients_cylinder->values[2];
-
-                  tf::TransformListener listener;
-                  const std::string target_frame = "base_link";
-                  const std::string original_frame = "camera_rgb_optical_frame";
-                  const ros::Time time = ros::Time::now();
-                  listener.waitForTransform(target_frame, original_frame, time, ros::Duration(1.0));
-                  listener.transformPoint(target_frame, time, pt, original_frame, pt_transformed);
+/*/
+                marker_add.ns = "my_namespace";
+                marker_add.id = markerid;
+                marker_add.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                marker_add.header.stamp = ros::Time();
+                marker_add.action = visualization_msgs::Marker::ADD;
+                marker_add.lifetime = ros::Duration(15.);
+                marker_add.type = visualization_msgs::Marker::CYLINDER;
 
 
-                marker.pose.position.x =  pt_transformed.point.x;
-                marker.pose.position.y =  pt_transformed.point.y;
-                marker.pose.position.z =  pt_transformed.point.z;
+                marker_add.pose.position.x =  coefficients_cylinder->values[0];
+                marker_add.pose.position.y =  coefficients_cylinder->values[1];
+                marker_add.pose.position.z =  coefficients_cylinder->values[2];
+
                 double ax = coefficients_cylinder->values[3];
                 double ay = coefficients_cylinder->values[4];
                 double az = coefficients_cylinder->values[5];
@@ -131,24 +126,147 @@ struct Fitting{
                 quat.setDiff(ors::Vector(0,0,1), ors::Vector(ax, ay, az));
 
 
-                marker.pose.orientation.x = quat.x;
-                marker.pose.orientation.y = quat.y;
-                marker.pose.orientation.z = quat.z;
-                marker.pose.orientation.w = quat.w;
+                marker_add.pose.orientation.x = quat.x;
+                marker_add.pose.orientation.y = quat.y;
+                marker_add.pose.orientation.z = quat.z;
+                marker_add.pose.orientation.w = quat.w;
 
                 // Set the scale of the marker -- 1x1x1 here means 1m on a side
-                marker.scale.x = coefficients_cylinder->values[6];
-                marker.scale.y = coefficients_cylinder->values[6];
-                marker.scale.z = coefficients_cylinder->values[6];
+                marker_add.scale.x = 2*coefficients_cylinder->values[6];
+                marker_add.scale.y = 2*coefficients_cylinder->values[6];
+                marker_add.scale.z = 2*coefficients_cylinder->values[6];
 
                 // Set the color -- be sure to set alpha to something non-zero!
-                marker.color.r = 0.0f;
-                marker.color.g = 1.0f;
-                marker.color.b = 0.0f;
-                marker.color.a = 1.0;
+                marker_add.color.r = 0.0f;
+                marker_add.color.g = 1.0f;
+                marker_add.color.b = 0.0f;
+                marker_add.color.a = 1.0;
 
-                marker_array.markers.push_back(marker);
+                marker_array.markers.push_back(marker_add);
             }
+
+
+            ors::Quaternion orientation;
+            arr center(3);
+            arr length(3);
+            std::vector<pcl::ModelCoefficients::Ptr> outCoefficients;
+
+            bool foundCube = IsABox(onePCL,normal_extracted,outCoefficients,orientation,center,length);
+
+            //Returning the parametric model
+            if(foundCube)
+            {
+
+                cout<<"found a box "<<endl;
+                int markerid = rand();
+
+                visualization_msgs::Marker marker_add, marker_del;
+/*/
+                marker_del.id = markerid; // TODO
+
+                marker_del.ns = "my_namespace";
+                marker_del.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                marker_del.header.stamp = ros::Time();
+                marker_del.action = visualization_msgs::Marker::DELETE;
+                //marker.lifetime = ros::Duration(2.);
+                marker_del.type = visualization_msgs::Marker::CUBE;
+/*/
+
+
+                marker_add.ns = "my_namespace";
+                marker_add.id = markerid;
+                marker_add.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                marker_add.header.stamp = ros::Time();
+                marker_add.action = visualization_msgs::Marker::ADD;
+                marker_add.lifetime = ros::Duration(10.);
+                marker_add.type = visualization_msgs::Marker::CUBE;
+
+
+                marker_add.pose.position.x =  center(0);
+                marker_add.pose.position.y =  center(1);
+                marker_add.pose.position.z =  center(2);
+
+
+                marker_add.pose.orientation.x = orientation.x;
+                marker_add.pose.orientation.y = orientation.y;
+                marker_add.pose.orientation.z = orientation.z;
+                marker_add.pose.orientation.w = orientation.w;
+
+               // Set the scale of the marker -- 1x1x1 here means 1m on a side
+               marker_add.scale.x = length(0);
+               marker_add.scale.y = length(1);
+               marker_add.scale.z = length(2);
+
+
+                // Set the color -- be sure to set alpha to something non-zero!
+                marker_add.color.r = 1.0f;
+                marker_add.color.g = 0.0f;
+                marker_add.color.b = 0.0f;
+                marker_add.color.a = 1.0;
+
+                marker_array.markers.push_back(marker_add);
+
+                //plane
+                for(int ii=0;ii<3;ii++){
+                    visualization_msgs::Marker marker_add, marker_del;
+    /*/
+                    marker_del.id = markerid; // TODO
+
+                    marker_del.ns = "my_namespace";
+                    marker_del.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                    marker_del.header.stamp = ros::Time();
+                    marker_del.action = visualization_msgs::Marker::DELETE;
+                    //marker.lifetime = ros::Duration(2.);
+                    marker_del.type = visualization_msgs::Marker::CUBE;
+    /*/
+
+
+                    marker_add.ns = "my_namespace";
+                    marker_add.id = rand();
+                    marker_add.header.frame_id = "head_mount_kinect_rgb_optical_frame";
+                    marker_add.header.stamp = ros::Time();
+                    marker_add.action = visualization_msgs::Marker::ADD;
+                    marker_add.lifetime = ros::Duration(10.);
+                    marker_add.type = visualization_msgs::Marker::ARROW;
+
+
+                    marker_add.pose.position.x =  center(0);
+                    marker_add.pose.position.y =  center(1);
+                    marker_add.pose.position.z =  center(2);
+
+                    double ax = outCoefficients[ii]->values[0];
+                    double ay = outCoefficients[ii]->values[1];
+                    double az = outCoefficients[ii]->values[2];
+
+                    ors::Quaternion quat;
+                    quat.setDiff(ors::Vector(1,0,0), ors::Vector(ax, ay, az));
+
+
+                    marker_add.pose.orientation.x = quat.x;
+                    marker_add.pose.orientation.y = quat.y;
+                    marker_add.pose.orientation.z = quat.z;
+                    marker_add.pose.orientation.w = quat.w;
+
+                   // Set the scale of the marker -- 1x1x1 here means 1m on a side
+                   marker_add.scale.x = 0.5;
+                   marker_add.scale.y = 0.05;
+                   marker_add.scale.z = 0.05;
+
+
+                    // Set the color -- be sure to set alpha to something non-zero!
+                    marker_add.color.r = 0.0f;
+                    marker_add.color.g = 0.0f;
+                    marker_add.color.b = 1.0f;
+                    marker_add.color.a = 1.0;
+
+                    marker_array.markers.push_back(marker_add);
+                }
+
+
+
+
+            }
+
 
         }
 
