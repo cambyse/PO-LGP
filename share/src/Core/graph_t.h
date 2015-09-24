@@ -33,7 +33,7 @@ template <typename B, typename D> struct MLR_is_base_of {
 };
 ///////////////STOP
 
-struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType, more tricks are possible
+struct RootType { virtual ~RootType() {} }; ///< if types derive from RootType, more tricks are possible
 
 //===========================================================================
 //
@@ -41,14 +41,15 @@ struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType,
 //
 
 template<class T>
-struct Node_typed :Node {
+struct Node_typed : Node {
   T *value;
   bool ownsValue;
 
   Node_typed():value(NULL), ownsValue(false) { HALT("shouldn't be called, right? Always want to append to container"); }
 
   /// directly store pointer to value
-  Node_typed(Graph& container, T *value, bool ownsValue):Node(container), value(value), ownsValue(ownsValue) {
+  Node_typed(Graph& container, T *value, bool ownsValue)
+    : Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
     if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);

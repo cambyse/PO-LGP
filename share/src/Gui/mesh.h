@@ -38,7 +38,7 @@ struct Mesh {
   arr C;                ///< vertex colors
   
   uintA T;              ///< triangles (faces)
-  arr   Tn;             ///< vertex normals
+  arr   Tn;             ///< triangle normals
 
   long parsing_pos_start;
   long parsing_pos_end;

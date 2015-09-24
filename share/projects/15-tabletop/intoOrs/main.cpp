@@ -1,5 +1,7 @@
 #include <Core/util.h>
+#include <pr2/rosutil.h>
 #include <pr2/roscom.h>
+#include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <Core/array-vector.h>
@@ -11,73 +13,98 @@
 
 #include <tf/transform_listener.h>
 
-arr conv_points2arr(const std::vector<geometry_msgs::Point>& pts){
-  uint n=pts.size();
-  arr P(n,3);
-  for(uint i=0;i<n;i++){
-    P(i,0) = pts[i].x;
-    P(i,1) = pts[i].y;
-    P(i,2) = pts[i].z;
-  }
-  return P;
-}
-std::vector<geometry_msgs::Point> conv_arr2points(const arr& pts){
-  uint n=pts.d0;
-  std::vector<geometry_msgs::Point> P(n);
-  for(uint i=0;i<n;i++){
-    P[i].x = pts(i, 0);
-    P[i].y = pts(i, 1);
-    P[i].z = pts(i, 2);
-  }
-  return P;
-}
 
+struct OrsViewer:Module{
+  ACCESS(ors::KinematicWorld, modelWorld)
+
+  ors::KinematicWorld copy;
+
+  OrsViewer(ModuleL& S=NoModuleL):Module("OrsViewer", S, listenFirst) {
+  }
+  void open(){
+    LOG(-1) <<"HERE"<< endl;
+  }
+  void step(){
+    copy = modelWorld.get();
+    copy.watch(false);
+  }
+  void close(){}
+};
+
+struct PerceptionObjects2Ors : Module{
+  tf::TransformListener listener;
+
+  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESS(ors::KinematicWorld, modelWorld)
+  PerceptionObjects2Ors(ModuleL& S=NoModuleL): Module("PerceptionObjects2Ors", S, listenFirst){
+  }
+  void open(){}
+  void step(){
+    perceptionObjects.readAccess();
+    modelWorld.readAccess();
+
+    for(visualization_msgs::Marker& marker : perceptionObjects().markers){
+      MT::String name;
+      name <<"obj" <<marker.id;
+      ors::Shape *s = modelWorld->getShapeByName(name);
+      if(!s){
+        s = new ors::Shape(modelWorld(), NoBody);
+        s->name=name;
+        if(marker.type==marker.CYLINDER){
+          s->type = ors::cylinderST;
+          s->size[3] = .25*(marker.scale.x+marker.scale.y);
+          s->size[2] = marker.scale.z;
+        }else if(marker.type==marker.POINTS){
+          s->type = ors::meshST;
+          s->mesh.V = conv_points2arr(marker.points);
+          s->mesh.C = conv_colors2arr(marker.colors);
+        }else NIY;
+      }
+      //      s->size[0] = marker.scale.x;
+      //      s->size[1] = marker.scale.y;
+      //      s->size[2] = marker.scale.z;
+      //      s->size[3] = .25*(marker.scale.x+marker.scale.y);
+      s->X = s->rel = ros_getTransform("base_link", marker.header.frame_id, listener) * cvrt_pose2transformation(marker.pose);
+    }
+
+    perceptionObjects.deAccess();
+    modelWorld.deAccess();
+  }
+  void close(){}
+};
+
+ROSSUB("/tabletop/rs_fitted", visualization_msgs::MarkerArray, perceptionObjects);
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
 
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(uint16A, kinect_depth)
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
   ACCESS(ors::Transformation, kinect_frame)
 
+  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
+
 
   ACCESS(ors::Mesh, pointCloud)
   ACCESS(MT::Array<ors::Mesh>, clusters)
-//  ACCESS(arr, wrenchL)
-//  ACCESS(arr, wrenchR)
-//  ACCESS(byteA, rgb_leftEye)
-//  ACCESS(byteA, rgb_rightEye)
-//  ACCESS(byteA, rgb_leftArm)
-//  ACCESS(byteA, rgb_rightArm)
 
   MySystem(){
     addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
     addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
-//    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-//    addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
-//    addModule<RosCom_CamsSync>(NULL, Module::loopWithBeat, 1.);
-//    addModule<RosCom_ArmCamsSync>(NULL, Module::loopWithBeat, 1.);
-//    addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftArm"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightArm"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftEye"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module::listenFirst);
     addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+    addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
+
+    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
     connect();
   }
 };
 
 struct Main{
   ros::NodeHandle* nh;
-  ros::Subscriber sub_clusters;
-  double threshold;
+//  ros::Subscriber sub;
 
   OpenGL gl;
 
@@ -86,10 +113,9 @@ struct Main{
 
   MySystem S;
 
-  Main():threshold(.1){
+  Main(){
     nh = new ros::NodeHandle;
-    sub_clusters = nh->subscribe( "/tabletop/clusters", 1, &Main::cb_clusters, this);
-//    pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
+//    sub = nh->subscribe( "/tabletop/clusters", 1, &Main::cb_clusters, this);
 
     gl.setClearColors(1., 1., 1., 1.);
 
@@ -97,7 +123,10 @@ struct Main{
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
 
+    S.modelWorld.set()->init("model.kvg");
+
     engine().open(S);
+
 
   }
   ~Main(){
@@ -109,18 +138,9 @@ struct Main{
 
   void loop(){
     for(;;){
-
-      try{
-        tf::StampedTransform transform;
-        listener.lookupTransform("/base_link", "/head_mount_kinect_rgb_optical_frame", ros::Time(0), transform);
-        S.kinect_frame.set() = ros_cvrt(transform);
-      }
-      catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
-        continue;
-      }
-
+      arr q_real = S.ctrl_obs.get()->q;
+      if(q_real.N>1)
+        S.modelWorld.set()->setJointState(q_real);
 
       S.pointCloud.writeAccess();
       S.pointCloud().V = S.kinect_points.get();
@@ -129,46 +149,20 @@ struct Main{
 
       S.clusters.readAccess();
       S.pointCloud.readAccess();
+      S.modelWorld.readAccess();
 
       gl.clear();
       gl.add(glStandardScene, 0);
-      for(ors::Mesh& m:S.clusters()){
-        gl.add(ors::glDrawMesh, &m);
-        cout <<"adding mesh: " <<m.V.d0 <<endl;
-      }
+      gl.add(ors::glDrawGraph, &S.modelWorld());
+//      for(ors::Mesh& m:S.clusters()) gl.add(ors::glDrawMesh, &m);
       gl.add(ors::glDrawMesh, &S.pointCloud());
       gl.update();
+
       S.clusters.deAccess();
       S.pointCloud.deAccess();
+      S.modelWorld.deAccess();
       ros::spinOnce();
     }
-  }
-
-  void cb_clusters(const visualization_msgs::MarkerArray::ConstPtr& msg) {
-    uint n=msg->markers.size();
-
-    MT::Array<ors::Mesh> clusters(n);
-//    cout <<n <<endl;
-
-    for(uint i=0;i<n;i++){
-      ors::Transformation X;
-      try{
-        tf::StampedTransform transform;
-        listener.lookupTransform("/base_link", msg->markers[i].header.frame_id,
-                                 ros::Time(0), transform);
-        X = ros_cvrt(transform);
-      }
-      catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
-        continue;
-      }
-
-      clusters(i).V = conv_points2arr(msg->markers[i].points);
-      X.applyOnPointArray( clusters(i).V );
-    }
-
-    S.clusters.set() = clusters;
   }
 
 };

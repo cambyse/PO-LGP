@@ -17,10 +17,11 @@ struct RM_EditCallback:GraphEditCallback{
       delete act;
     }
     RMM.A.deAccess();
+    RMM.threadStep();
   }
 };
 
-RelationalMachineModule::RelationalMachineModule():Module("RelationalMachineModule"),
+RelationalMachineModule::RelationalMachineModule(ModuleL& S):Module("RelationalMachineModule", S, listenFirst),
   _log("RelationalMachineModule"){
 }
 
@@ -44,33 +45,32 @@ void RelationalMachineModule::step(){
   MT::String effs = effects();
   effects().clear();
   effects.deAccess();
-  LOG(1) <<std::setprecision(2) <<std::fixed <<MT::realTime() <<"sec: it=" <<RM.var->revision.getValue()<<" EFFECT=" <<effs;
-//  if(!effs.N && step_count) return; //on 1st iteration we need a step!
 
-//  if(effs.N){
-    RM.writeAccess();
-    if(effs.N) RM().applyEffect(effs);
-    RM().fwdChainRules();
-    LOG(2) <<"STATE =\n  " <<RM().getState();
-    LOG(4) <<"KB =\n  " <<RM().getKB();
-    RM.deAccess();
-//  }
+  LOG(1) <<std::setprecision(2) <<std::fixed <<MT::realTime() <<"sec: it=" <<RM.var->revision.getValue()<<" EFFECT=" <<effs;
+
+  RM.writeAccess();
+  if(effs.N) RM().applyEffect(effs);
+  RM().fwdChainRules();
+  LOG(2) <<"STATE =\n  " <<RM().getState();
+  LOG(4) <<"KB =\n  " <<RM().getKB();
+  RM.deAccess();
+
+  state.set() = RM.get()->getState();
 
   if(true || !step_count || effs.N){
     RM.readAccess();
     A.writeAccess();
-    state.set() = RM().getState();
 
     //-- sync with activities: add activities for non-associated
-    const Graph &state = *RM().state;
-    MT::Array<Activity*> fact2act(state.N);
-    fact2act.setUni(NULL);
+    const Graph &RMstate = *RM().state;
+    MT::Array<Activity*> fact2act(RMstate.N);
+    fact2act.setZero();
     LOG(3) <<"Syncing facts with activities..";
-    for(Activity *act:A()){
-      CHECK(act->fact == state(act->fact->index),"SOMETHING'S WRONG!");
+    for(Activity *act:A()){ //every activity has a pointer act->fact to its fact
+      CHECK(act->fact == RMstate(act->fact->index),"SOMETHING'S WRONG!");
       fact2act(act->fact->index) = act;
     }
-    for(Node *it:state) if(fact2act(it->index)==NULL){ //fact is not associated yet
+    for(Node *it:RMstate) if(fact2act(it->index)==NULL){ //fact is not associated yet
       Activity *act = newActivity(it);
       if(act){
         A().append(act);
@@ -82,7 +82,5 @@ void RelationalMachineModule::step(){
     A.deAccess();
     RM.deAccess();
   }
-
-  //TODO: cleanup? remove NULL facts from state?
 }
 
