@@ -29,8 +29,6 @@ bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subs
 //---------- finding possible variable substitutions
 
 void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node *literal, Graph* varScope);
-//NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose=0);
-//NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose=0);
 NodeL getSubstitutions2(Graph& facts, NodeL& relations, int verbose=0);
 NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose=0);
 

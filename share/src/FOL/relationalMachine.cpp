@@ -82,7 +82,7 @@ MT::String RelationalMachine::getKB() {
   return str;
 }
 
-MT::String RelationalMachine::getState(){
+MT::String RelationalMachine::getState() const{
   MT::String str;
   state->write(str, "\n  ");
   return str;

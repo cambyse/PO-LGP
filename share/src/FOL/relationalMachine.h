@@ -29,7 +29,7 @@ struct RelationalMachine{
 
   Node* declareNewSymbol(MT::String symbolStr);
   MT::String getKB();
-  MT::String getState();
+  MT::String getState() const;
   MT::String getRules();
   StringA getSymbols();
 };

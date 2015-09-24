@@ -52,8 +52,6 @@ void TEST(MC){
   world.verbFil=0;
   mc.verbose=0;
 
-  FILE("z") <<world.KB;
-
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
     mc.reset();

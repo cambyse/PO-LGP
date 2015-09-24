@@ -1,10 +1,9 @@
 BASE = ../../..
 
-OBJS = main.o plane.o object.o object_detector.o
+OPTIM=fast
+OBJS = main.o
 ROS = 1
-PCL = 1
-DEPEND =  Core pr2 
-
-LIBS += -lboost_system
+PCL=1
+DEPEND =  Core pr2 Perception
 
 include $(BASE)/gofMake/generic.mk

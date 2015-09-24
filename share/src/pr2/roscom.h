@@ -6,18 +6,7 @@
 #include <Core/geo.h>
 #include <Ors/ors.h>
 
-
-//===========================================================================
-//
-// utils
-//
-
-namespace tf{ class Transform; }
-
-bool rosOk();
-void rosCheckInit(const char* module_name="pr2_module");
-ors::Transformation ros_cvrt(const tf::Transform&);
-timespec ros_cvrt(const ros::Time&);
+#include "rosutil.h"
 
 //===========================================================================
 //
@@ -106,10 +95,17 @@ void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctr
 
 //===========================================================================
 /// This module syncs the kinect
-BEGIN_MODULE(RosCom_KinectSync)
+struct RosCom_KinectSync : Module {
+  struct sRosCom_KinectSync *s;
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
-END_MODULE()
+  ACCESS(ors::Transformation, kinect_frame)
+
+  RosCom_KinectSync(): Module("RosCom_KinectSync"), s(NULL) {}
+  virtual void open();
+  virtual void step();
+  virtual void close();
+};
 
 //===========================================================================
 /// This module syncs the left & right eye
