@@ -1,0 +1,6 @@
+BASE = ../../..
+
+ROS = 1
+DEPEND =  Gui Core pr2
+
+include $(BASE)/gofMake/generic.mk
