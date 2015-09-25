@@ -55,6 +55,8 @@ void Motion_Interface::setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWit
 
 void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 {
+  MT::wait(1.);
+
   double dt = T/X.d0;
   Xref = X;
   arr Xdot;
@@ -109,7 +111,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
     refs.u_bias = zeros(q.N);
     refs.Kp = 2.0;
     refs.Kd = 1.2;
-    refs.Kint = .7;
+    refs.Kint = .8;
     refs.gamma = 1.;
     refs.velLimitRatio = .2;
     refs.effLimitRatio = 1.;
@@ -168,7 +170,7 @@ void Motion_Interface::gotoPosition(arr x)
 
 void Motion_Interface::recordDemonstration(arr &X,double T)
 {
-  MT::wait(10.);
+  MT::wait(5.);
 
   /// send zero gains
   CtrlMsg refs;
@@ -188,17 +190,19 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
 
   // fix head joint
   uint idx = world->getJointByName("head_pan_joint")->qIndex;
-  refs.Kp(idx,idx) = 1.;
+  refs.Kp(idx,idx) = 2.0;
   idx = world->getJointByName("head_tilt_joint")->qIndex;
-  refs.Kp(idx,idx) = 1.;
+  refs.Kp(idx,idx) = 2.0;
 
 
   S.ctrl_ref.set() = refs;
 
 
 
-  MT::wait(2.);
-  cout << "start recording" << endl;
+  MT::wait(3.);
+  cout << "//////////////////////////////////////////////////////////////////" << endl;
+  cout << "START RECORDING" << endl;
+  cout << "//////////////////////////////////////////////////////////////////" << endl;
   ors::Joint *trans = world->getJointByName("worldTranslationRotation");
 
   /// record demonstrations
@@ -211,21 +215,23 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
     MT::wait(0.1);
     t = t + MT::timerRead(true);
   }
-  cout << "stop recording" << endl;
+  cout << "//////////////////////////////////////////////////////////////////" << endl;
+  cout << "STOP RECORDING" << endl;
+  cout << "//////////////////////////////////////////////////////////////////" << endl;
 
   /// reset gains
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
   refs.Kp.clear();
-  refs.Kp = ARR(1.5);
+  refs.Kp = ARR(2.0);
   refs.Kd = 1.2;
   refs.Kint = ARR(.003);
   S.ctrl_ref.set() = refs;
 }
 
-void Motion_Interface::sendZeroGains()
+void Motion_Interface::stopMotion(bool sendZeroGains)
 {
-  cout << "sending zero gains" << endl;
+  cout << "stopping motion" << endl;
 
   /// send zero gains
   CtrlMsg refs;
@@ -235,24 +241,32 @@ void Motion_Interface::sendZeroGains()
   refs.Ki.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q.N);
-  refs.Kp = 0.;
-  refs.Kd = 0.;
-  refs.Kint.clear();
+  if (sendZeroGains) {
+    cout << "sending zero gains" << endl;
+    refs.Kp = 0.;
+    refs.Kd = 0.;
+    refs.Kint.clear();
+  } else {
+    refs.Kp = ARR(2.0);
+    refs.Kd =  ARR(1.2);
+    refs.Kint = ARR(.003);
+  }
   refs.gamma = 1.;
   refs.velLimitRatio = .1;
   refs.effLimitRatio = 1.;
-  refs.intLimitRatio = .1;
+  refs.intLimitRatio = 1.;
   S.ctrl_ref.set() = refs;
 
-  world->watch(true,"press button to reset gains");
+  world->watch(true,"press button to continue");
 
-  cout << "resetting gains" << endl;
   /// reset gains
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
-  refs.Kp = 1.;
-  refs.Kd = 1.;
+  refs.Kp = ARR(2.0);
+  refs.Kd =  ARR(1.2);
+  refs.Kint = ARR(.003);
   S.ctrl_ref.set() = refs;
+  cout << "continuing motion" << endl;
 }
 
 /// save last run

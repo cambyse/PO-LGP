@@ -11,6 +11,14 @@
 #define  BUFSIZE 512
 
 void TEST(Matrices) {
+  arr expl = randn(5)*1000.;
+  cout << expl << endl;
+  for (uint i=0;i<expl.d0;i++) {
+    expl(i) = max(ARR(min(ARR(100.,expl(i))),-100.));
+  }
+  cout << expl << endl;
+  return;
+
   ors::KinematicWorld G("chain.ors");
   MotionProblem MP(G);
 
@@ -234,13 +242,35 @@ void TEST(Transformation) {
   world.watch(true);
 }
 
+void TEST(PointCloud) {
+  ors::KinematicWorld world("chain.ors");
+  arr pc;
+  pc.append(~ARR(1.,1.,1.));
+  pc.append(~ARR(2.,2.,2.));
+  pc = fabs(randn(30,3)*1.);
+
+  world.gl().add(glDrawPointCloud,&pc);
+  world.gl().update();
+  world.watch(true);
+}
+
+void TEST(PR2) {
+  ors::KinematicWorld world("pr2.kvg");
+  world.getBodyByName("point1")->X = world.getShapeByName("head_mount_kinect_rgb_link")->X;
+  world.calc_fwdPropagateFrames();
+  world.watch(true);
+
+}
+
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
-//  testMatrices();
+  testMatrices();
 //  testGradCheck();
-  testMatlab();
+//  testMatlab();
 //  testMatlabGP();
 //  testTransformation();
+//  testPointCloud();
+//  testPR2();
   return 0;
 }
 

@@ -46,7 +46,7 @@ struct Motion_Interface
   void executeTrajectory(arr &X, double T, bool recordData = false);
   void gotoPosition(arr x);
   void recordDemonstration(arr &X, double T);
-  void sendZeroGains();
+  void stopMotion(bool sendZeroGains = false);
   void logging(MT::String folder, uint id);
 
   void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);

@@ -13,10 +13,11 @@ struct TaskManager
   arr constraintCP;
   ors::KinematicWorld *world;
   TaskType type;
-
+  arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
+  arr PX1f,PX1c,PX2f,PX2c;
   TaskManager() {};
   virtual void addConstraints(MotionProblem *MP, const arr &X) = 0;
-  virtual void updateVisualization(ors::KinematicWorld &world, arr &X) = 0;
+  virtual void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
   virtual void computeConstraintTime(const arr &F,const arr &X) = 0;
   virtual bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo) = 0;
   virtual bool success(const arr &X, const arr &Y) = 0;
@@ -25,10 +26,10 @@ struct TaskManager
 };
 
 struct DoorTask:TaskManager {
-  arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
+
   DoorTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = DOOR;}
   void addConstraints(MotionProblem *MP, const arr &X);
-  void updateVisualization(ors::KinematicWorld &world, arr &X);
+  void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
   bool success(const arr &X, const arr &Y);
@@ -36,10 +37,9 @@ struct DoorTask:TaskManager {
 };
 
 struct GraspTask:TaskManager {
-  arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
   GraspTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = GRASP;}
   void addConstraints(MotionProblem *MP, const arr &X);
-  void updateVisualization(ors::KinematicWorld &world, arr &X);
+  void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
   bool success(const arr &X, const arr &Y);

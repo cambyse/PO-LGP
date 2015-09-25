@@ -38,6 +38,10 @@ if (optPlot)
   plot3(X(YS==1,1),X(YS==1,2),Y(YS==1),'g.','MarkerSize',20);
   plot3(X(YS==-1,1),X(YS==-1,2),Y(YS==-1)*0+max(Y(YS==1)),'r.','MarkerSize',20);
   plot3(x_exp(1),x_exp(2),yr(k),'k.','MarkerSize',30);
+  X_success = X(YS==1,:);
+  Y_success = Y(YS==1);
+  [~,max_idx] = max(Y_success);
+  plot3(X_success(max_idx,1),X_success(max_idx,2),Y_success(max_idx),'m.','MarkerSize',40);
   view([-60,55]);
   grid on;
   
@@ -51,6 +55,8 @@ if (optPlot)
   plot3(X(YS==1,1),X(YS==1,2),YS(YS==1),'g.','MarkerSize',20);
   plot3(X(YS==-1,1),X(YS==-1,2),YS(YS==-1)*0,'r.','MarkerSize',20);
   plot3(x_exp(1),x_exp(2),1,'k.','MarkerSize',30);
+  plot3(X_success(max_idx,1),X_success(max_idx,2),1,'m.','MarkerSize',40);
+
   grid on;
   
   %
@@ -62,11 +68,16 @@ if (optPlot)
   plot3(t(:,1),t(:,2),a,'.')
   plot3(t(:,1),t(:,2),PI,'r.')
 %   set(s,'FaceColor','flat','LineStyle','none');
-  plot3(x_exp(1),x_exp(2),1,'m.','MarkerSize',40)
+  plot3(x_exp(1),x_exp(2),1,'k.','MarkerSize',40)
+  plot3(X_success(max_idx,1),X_success(max_idx,2),1,'m.','MarkerSize',40);
+
   % legend('a');
   view([-73,16]);
   grid on;
   zlim([1e-3,max([a;1])])
+  
+  [~,max_idx2] = min(sum(abs(X-repmat(X_success(max_idx,:),size(X,1),1)),2))
+
   
  end
 end

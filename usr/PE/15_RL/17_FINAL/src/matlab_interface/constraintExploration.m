@@ -26,7 +26,7 @@ PI = normcdf((yr-vMax-e)./sqrt(sr2));
 
 % compute boundary uncertainty
 BU = sqrt(fcs2(idxB))/exp(gpc.hypC.cov(end));
-BU(BU<0.25)=0;
+BU(BU<0.2)=0;
 
 a = zeros(size(t,1),1);
 a(idxB) = BU;

@@ -22,7 +22,6 @@ int main(int argc,char **argv){
   MT::String folder = MT::getParameter<MT::String>("folder");
   MT::String taskName = MT::getParameter<MT::String>("taskName");
 
-
   ors::KinematicWorld world(STRING("../model.kvg"));
   TaskManager *task;
   if (taskName == "door") {
@@ -44,12 +43,22 @@ int main(int argc,char **argv){
     Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
     Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
+    count = 0;
+
+//    Xdemo << FILE(STRING(folder<<"/mfX4.dat"));
+//    Fdemo << FILE(STRING(folder<<"/mfFLact4.dat"));
+//    Mdemo << FILE(STRING(folder<<"/mfMact4.dat"));
+//    Xdemo << FILE(STRING(folder<<"/phaseX.dat"));
+//    Fdemo << FILE(STRING(folder<<"/phaseFLact.dat"));
+//    Mdemo << FILE(STRING(folder<<"/phaseMact.dat"));
+//    count = 27;
   } else {
     mi->recordDemonstration(Xdemo,duration);
 
     if (visualize) { world.watch(true,"Press Enter to play motion"); displayTrajectory(Xdemo,-1,world,"demonstration "); world.watch(true,"Press Enter to continue"); }
     mi->gotoPosition(Xdemo[0]);
     mi->executeTrajectory(Xdemo,duration,true);
+
 
 
     Xdemo = mi->Xact;
@@ -92,9 +101,9 @@ int main(int argc,char **argv){
 
     if (visualize) {
       task->updateVisualization(world,Xn);
-      world.watch(true,"press enter to visualize trajectory");
+//      world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
-      world.watch(true,"press enter to execute trajectory");
+//      world.watch(true,"press enter to execute trajectory");
     }
 
     /// execute trajectory on robot
@@ -111,7 +120,7 @@ int main(int argc,char **argv){
         X = Xn;
         mi->logging(STRING(folder<<"/mb"),count);
         if (useRos) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
-      } else { mi->sendZeroGains(); }
+      } else { mi->stopMotion(); }
     }else{
       write(LIST<arr>(X),STRING(folder<<"/mbX.dat"));
       write(LIST<arr>(X),STRING(folder<<"/mbX"<<count<<".dat"));

@@ -48,6 +48,7 @@ int main(int argc,char **argv){
   arr X = Xdemo;
   uint count = 0;
   for (;;) {
+    cout << "iteration: " << count << endl;
     /// apply phase optimization
     uint k = 2;
     PhaseOptimization P(X,k,1);
@@ -58,9 +59,9 @@ int main(int argc,char **argv){
     arr Xn = Xres;
 
     if (visualize) {
-      world.watch(true,"press enter to visualize trajectory");
+//      world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
-      world.watch(true,"press enter to execute candidate");
+//      world.watch(true,"press enter to execute candidate");
     }
 
     /// goto iniitial position

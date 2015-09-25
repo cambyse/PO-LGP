@@ -21,13 +21,16 @@ void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
 
 }
 
-void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
+void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,constraintCP(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,constraintCP(0),constraintCP(1));
   drawLine(world,X,Pdemo2f,"endeffC2",0,0,constraintCP(0));
   drawLine(world,X,Pdemo2c,"endeffC2",2,constraintCP(0),constraintCP(1));
 
-  /// draw demo
+  if (&Y) {
+    drawLine(world,Y,PX1f,"endeffC1",1,0,constraintCP(1));
+    drawLine(world,Y,PX2f,"endeffC2",1,0,constraintCP(1));
+  }
 }
 
 void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
@@ -90,6 +93,9 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     world->gl().update(STRING(t));
   }
 
+  world->gl().update();
+
+
   arr offsetC1 = CP1[constraintCP(0)] - C1trans[constraintCP(0)];
   arr offsetC2 = CP2[constraintCP(0)] - C2trans[constraintCP(0)];
 
@@ -116,21 +122,22 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
 
+
   t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));
   t->setCostSpecs(0,MP.T, C1trans, 1e3);
   t =MP.addTask("posC2", new DefaultTaskMap(posTMT,*world,"endeffC2"));
   t->setCostSpecs(0,MP.T, C2trans, 1e3);
 
   /// fix unused joints
-//  t = MP.addTask("worldTranslationRotation", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex, world->getJointStateDimension()));
-//  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
-//  t = MP.addTask("worldTranslationRotation1", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex+1, world->getJointStateDimension()));
-//  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
-//  t = MP.addTask("worldTranslationRotation2", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex+2, world->getJointStateDimension()));
-//  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
-//  t = MP.addTask("torso", new qItselfConstraint(world->getJointByName("torso_lift_joint")->qIndex, world->getJointStateDimension()));
-//  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
-//  t->map.order = 1;
+  t = MP.addTask("worldTranslationRotation", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex, world->getJointStateDimension()));
+  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
+  t = MP.addTask("worldTranslationRotation1", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex+1, world->getJointStateDimension()));
+  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
+  t = MP.addTask("worldTranslationRotation2", new qItselfConstraint(world->getJointByName("worldTranslationRotation")->qIndex+2, world->getJointStateDimension()));
+  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
+  t = MP.addTask("torso", new qItselfConstraint(world->getJointByName("torso_lift_joint")->qIndex, world->getJointStateDimension()));
+  t->setCostSpecs(0.,MP.T, ARR(0.), 1.);
+  t->map.order = 1;
 
 
   MotionProblemFunction MPF(MP);
@@ -150,8 +157,8 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 //  drawPoints(*world,Xn,Pn2,"endeffC2",1);
 
   // check if gripper limits are exceeded
-  cout << " parameter min=" << Xn.col(24).min() << " max=" << Xn.col(24).max() << endl;
-  cout << " parameter lim upper=" << world->getJointByName("l_gripper_joint")->limits(1) << " lower=" << world->getJointByName("l_gripper_joint")->limits(0) << endl;
+//  cout << " parameter min=" << Xn.col(24).min() << " max=" << Xn.col(24).max() << endl;
+//  cout << " parameter lim upper=" << world->getJointByName("l_gripper_joint")->limits(1) << " lower=" << world->getJointByName("l_gripper_joint")->limits(0) << endl;
 
   if (Xn.col(24).max() > world->getJointByName("l_gripper_joint")->limits(1) || Xn.col(24).min() < world->getJointByName("l_gripper_joint")->limits(0)){
     cout << "limit reached" << endl;
@@ -162,5 +169,5 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 }
 
 double DoorTask::reward(const arr &Z){
-  return exp(-.2*sumOfAbs(Z)/Z.d0);
+  return exp(-.05*sumOfAbs(Z)/Z.d0);
 }

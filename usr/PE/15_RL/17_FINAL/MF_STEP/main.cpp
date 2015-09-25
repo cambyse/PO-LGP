@@ -45,7 +45,7 @@ int main(int argc,char **argv){
 
   /// initialize model free strategy
   arr paramLim;
-  paramLim.append(~ARR(-0.04,0.04)); // hand opening
+  paramLim.append(~ARR(-0.06,0.06)); // hand opening
   paramLim.append(~ARR(-0.12,0.12)); // hand position
   MF_strategy *mfs = new MF_strategy(2,paramLim,taskName);
   arr x0 = Xdemo[0];
@@ -76,6 +76,7 @@ int main(int argc,char **argv){
 
 
   for(;;) {
+    cout << "\n Iteration: " << count << endl;
     /// choose next datapoint
     mfs->evaluate(x);
 
@@ -85,9 +86,9 @@ int main(int argc,char **argv){
 
     if (visualize) {
       task->updateVisualization(world,Xn);
-      world.watch(true,"press enter to visualize trajectory");
+//      world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
-      world.watch(true,"press enter to execute candidate");
+//      world.watch(true,"press enter to execute candidate");
     }
     x0 = Xn[0];
 
@@ -114,12 +115,12 @@ int main(int argc,char **argv){
 
     /// logging
     mfs->save(STRING(folder<<"/"));
-    if (useRos) { mi->logging(STRING(folder<<"/mf"),count); }
+    if (useRos && result) { mi->logging(STRING(folder<<"/mf"),count); }
 
     if (result) {
       if (useRos) {Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
     } else {
-      if (useRos) {mi->sendZeroGains();}
+      if (useRos) {mi->stopMotion();}
     }
 
     count++;
