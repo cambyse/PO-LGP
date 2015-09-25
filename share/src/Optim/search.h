@@ -41,4 +41,5 @@ struct SearchCMA{
   void step(arr& samples, arr& costs);
 
   void getBestSample(arr& sample);
+  void getMean(arr& mean);
 };

@@ -75,3 +75,8 @@ void SearchCMA::getBestSample(arr &sample) {
   sample.resize(s->evo.sp.N);
   sample.setCarray(s->evo.rgxbestever,sample.N);
 }
+
+void SearchCMA::getMean(arr &mean) {
+  mean.resize(s->evo.sp.N);
+  mean.setCarray(s->evo.rgxmean,mean.N);
+}

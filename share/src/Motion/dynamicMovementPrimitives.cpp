@@ -20,10 +20,12 @@
 #include <Gui/plot.h>
 #include <Motion/motion.h>
 
-DynamicMovementPrimitives::DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_) {
+DynamicMovementPrimitives::DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_, double lambda_) {
   y_ref = y_ref_;
   dt = dt_;
   nBase = nBase_;
+
+  lambda = lambda_;
 
   T = y_ref.d0*dt;
   tau = 0.5/T;
@@ -99,7 +101,7 @@ void DynamicMovementPrimitives::trainDMP() {
 
   for(i = 0; i<dimY; i++) {
     FT = (trajdd.col(i)/(tau*tau) - alphay*(betay*(goal(i)-y_ref.col(i)) -trajd.col(i)/tau))/amp(i);
-    weights.append(~(inverse(~PHI*PHI + eye(PHI.d1)*1e-7)*(~PHI)*FT));
+    weights.append(~(inverse(~PHI*PHI + eye(PHI.d1)*lambda)*(~PHI)*FT));
   }
   weights=~weights;
 
