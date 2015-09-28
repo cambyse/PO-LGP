@@ -11,9 +11,10 @@ void TaskCtrlActivity::configure(Node *fact) {
   taskController = taskControllerModule();
   CHECK(taskController,"");
   this->fact = fact;
-  Graph *specs = &NoGraph;
-  if(fact->getValueType()==typeid(Graph)) specs = &fact->graph();
-  configure2(name, *specs, taskController->modelWorld.set());
+  if(fact->getValueType()==typeid(Graph))
+    configure2(name, fact->graph(), taskController->modelWorld.set());
+  else
+    configure2(name, NoGraph, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
 }
@@ -34,18 +35,22 @@ void TaskCtrlActivity::step(double dt){
   for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
   convStr <<")";
   if(isConv()){
-    if(!conv){
+    if(!conv){ //changed conv! -> conv
       if(fact) taskController->effects.set()() <<convStr <<", ";
-//      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=true;
     }
   }else{
-    if(conv){
+    if(conv){ //changed conv -> conv!
       if(fact) taskController->effects.set()() <<convStr <<"!, ";
-//      if(fact) taskController->RM.set()->applyEffect(convStr, true);
       conv=false;
     }
   }
+}
+
+bool TaskCtrlActivity::isConv(){
+  return (task->y.N && task->y.N==task->y_ref.N
+      && maxDiff(task->y, task->y_ref)<stopTolerance
+      && maxDiff(task->v, task->v_ref)<stopTolerance);
 }
 
 //===========================================================================

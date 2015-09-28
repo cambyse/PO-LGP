@@ -28,3 +28,11 @@ template<class T> MT::Array<T> ARRAY(const std::vector<T>& v){
 template<class T> std::vector<T> VECTOR(const MT::Array<T>& x){
   return std::vector<T>(x.begin(), x.end());
 }
+
+template<class T> MT::Array<T> conv_stlvec2array(const std::vector<T>& v){
+  return MT::Array<T>(&v.front(), v.size());
+}
+
+template<class T> std::vector<T> conv_array2stlvec(const MT::Array<T>& x){
+  return std::vector<T>(x.begin(), x.end());
+}

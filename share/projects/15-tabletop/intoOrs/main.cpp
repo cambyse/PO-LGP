@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <pr2/rosutil.h>
+#include <pr2/util.h>
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -64,7 +64,7 @@ struct PerceptionObjects2Ors : Module{
       //      s->size[1] = marker.scale.y;
       //      s->size[2] = marker.scale.z;
       //      s->size[3] = .25*(marker.scale.x+marker.scale.y);
-      s->X = s->rel = ros_getTransform("base_link", marker.header.frame_id, listener) * cvrt_pose2transformation(marker.pose);
+      s->X = s->rel = ros_getTransform("base_link", marker.header.frame_id, listener) * conv_pose2transformation(marker.pose);
     }
 
     perceptionObjects.deAccess();
@@ -87,6 +87,7 @@ struct MySystem:System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
 
+  ACCESS(arr, wrenchL)
 
   ACCESS(ors::Mesh, pointCloud)
   ACCESS(MT::Array<ors::Mesh>, clusters)
@@ -95,7 +96,13 @@ struct MySystem:System{
     addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
     addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
     addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
+
+#if 1
+    new Subscriber<visualization_msgs::MarkerArray>("/tabletop/rs_fitted", perceptionObjects);
+    new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
+#else
     addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
+#endif
 
     addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
     connect();

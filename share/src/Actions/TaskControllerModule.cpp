@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 
 #ifdef MT_ROS
-#  include <pr2/rosutil.h>
+#  include <pr2/roscom.h>
 #endif
 
 TaskControllerModule *globalTaskControllerModule=NULL;
@@ -70,8 +70,11 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-#ifdef MT_ROS
-      cvrt_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
+
+#if 0
+    conv_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
+#else
+    q_real.subRange(trans->qIndex, trans->qIndex+3) = pr2_odom.get();
 #endif
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){

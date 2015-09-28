@@ -1,16 +1,26 @@
 #pragma once
-// roscom makes MLR speak with ROS.
+
+#include <tf/transform_listener.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <std_msgs/ColorRGBA.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <sensor_msgs/Image.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <std_msgs/String.h>
+#include <visualization_msgs/MarkerArray.h>
+
 //===========================================================================
+
 #include <Core/module.h>
 #include <Core/array.h>
 #include <Core/geo.h>
 #include <Ors/ors.h>
+#include <ros_msg/JointState.h>
 
-#include "rosutil.h"
 
 //===========================================================================
 //
-// variable declarations
+// utils
 //
 
 //-- a basic message type for communication with the PR2 controller
@@ -25,6 +35,145 @@ struct CtrlMsg{
           double velLimitRatio, double effLimitRatio, double gamma)
     :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
 };
+
+void rosCheckInit(const char* module_name="pr2_module");
+bool rosOk();
+
+//-- ROS -> MLR
+ors::Transformation conv_pose2transformation(const tf::Transform&);
+ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
+void                conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);
+arr                 conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped &pose);
+double              conv_time2double(const ros::Time& time);
+timespec            conv_time2timespec(const ros::Time&);
+arr                 conv_wrench2arr(const geometry_msgs::WrenchStamped& msg);
+byteA               conv_image2byteA(const sensor_msgs::Image& msg);
+uint16A             conv_image2uint16A(const sensor_msgs::Image& msg);
+arr                 conv_points2arr(const std::vector<geometry_msgs::Point>& pts);
+arr                 conv_colors2arr(const std::vector<std_msgs::ColorRGBA>& pts);
+CtrlMsg             conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg);
+ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::MarkerArray& markers);
+
+//-- MLR -> ROS
+std::vector<geometry_msgs::Point> conv_arr2points(const arr& pts);
+marc_controller_pkg::JointState   conv_CtrlMsg2JointState(const CtrlMsg& ctrl);
+
+//-- get transformations
+ors::Transformation ros_getTransform(const std::string& from, const std::string& to, tf::TransformListener& listener);
+ors::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener);
+
+
+//===========================================================================
+//
+// subscribing a message directly into an Access
+//
+
+template<class msg_type>
+struct Subscriber {
+  Access_typed<msg_type>& access;
+  ros::NodeHandle* nh;
+  ros::Subscriber sub;
+  Subscriber(const char* topic_name, Access_typed<msg_type>& _access)
+    : access(_access) {
+    nh = new ros::NodeHandle;
+    sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
+  }
+  ~Subscriber(){
+    nh->shutdown();
+    delete nh;
+  }
+  void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
+};
+
+
+//===========================================================================
+//
+// subscribing a message into an MLR-type-Access via a conv_* function
+//
+
+template<class msg_type, class var_type, var_type conv(const msg_type&)>
+struct SubscriberConv {
+  Access_typed<var_type>& access;
+  ros::NodeHandle *nh;
+  ros::Subscriber sub;
+  SubscriberConv(const char* topic_name, Access_typed<var_type>& _access)
+    : access(_access) {
+    nh = new ros::NodeHandle;
+    sub = nh->subscribe( topic_name, 1, &SubscriberConv::callback, this);
+  }
+  ~SubscriberConv(){
+    nh->shutdown();
+    delete nh;
+  }
+  void callback(const typename msg_type::ConstPtr& msg) { access.set() = conv(*msg); }
+};
+
+
+//===========================================================================
+//
+// subscribing a message into an MLR-type-Access via a conv_* function
+//
+
+template<class msg_type, class var_type, msg_type conv(const var_type&)>
+struct PublisherConv : Thread{
+  Access_typed<var_type>& access;
+  ros::NodeHandle *nh;
+  ros::Publisher pub;
+  const char* topic_name;
+
+  PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
+      : Thread(STRING("Publisher_"<<_access.name <<"->" <<topic_name)),
+        access(_access),
+        topic_name(_topic_name){
+    listenTo(*access.var);
+  }
+  void open(){
+    nh = new ros::NodeHandle;
+    pub = nh->advertise<marc_controller_pkg::JointState>(topic_name, 1);
+  }
+  void step(){
+    pub.publish(conv(access.get()));
+  }
+  void close(){
+    nh->shutdown();
+    delete nh;
+  }
+};
+
+
+//template<class msg_type>
+//struct Subscriber : Module {
+//  Access_typed<msg_type> access;
+//  ros::NodeHandle* nh;
+//  ros::Subscriber sub;
+//  const char* topic_name;
+//  Subscriber(const char* topic_name, const char* var_name, ModuleL& S=NoModuleL)
+//    : Module(STRING("Subscriber_"<<topic_name <<"->" <<var_name), S, loopWithBeat, .01),
+//      access(this, var_name),
+//      topic_name(topic_name) {}
+//  void open() {
+//    nh = new ros::NodeHandle;
+//    sub  = nh->subscribe( topic_name, 1, &Subscriber<msg_type>::callback, this);
+//  }
+//  void step() {}
+//  void close() {
+//    nh->shutdown();
+//    delete nh;
+//  }
+//  void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
+//};
+
+//===========================================================================
+//
+// OLD
+//
+
+
+//===========================================================================
+//
+// variable declarations
+//
+
 
 //-- a basic message type for communication with the soft hand controller
 struct SoftHandMsg{
@@ -133,3 +282,4 @@ END_MODULE()
 BEGIN_MODULE(RosCom_SoftHandSync)
   ACCESS(SoftHandMsg, sh_ref)
 END_MODULE()
+

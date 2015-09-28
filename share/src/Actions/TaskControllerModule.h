@@ -23,9 +23,7 @@ struct TaskControllerModule : Module {
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(bool, fixBase)
-#ifdef MT_ROS
-  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
-#endif
+  ACCESS(arr, pr2_odom)
 
   //non-protected members
 //private:

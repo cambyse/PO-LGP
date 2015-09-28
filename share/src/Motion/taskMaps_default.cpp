@@ -172,10 +172,11 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
 
   if(type==gazeAtTMT){
     CHECK(i>=0, "ref1 is not set!");
+    if(ivec.length()<1e-10) ivec.set(0.,0.,-1.);
     ors::Vector vec_i = G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
     ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
-    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
+    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
     arr pi,Jpi, xi,Jxi, yi,Jyi, pj,Jpj;
     G.kinematicsPos(pi, Jpi, body_i, vec_i);
     G.kinematicsVec(xi, Jxi, body_i, vec_xi);

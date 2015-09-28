@@ -124,6 +124,12 @@ struct Access_typed:Access{
     if(module) module->accesses.append(this);
     else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
   }
+  Access_typed(Module* _module, const char* name, Variable<T> *v=NULL)
+    : Access(name, new Type_typed<T, void>(), _module, (RevisionedAccessGatedClass*)v), v(v){
+    CHECK(module,"");
+    module->accesses.append(this);
+  }
+
   ~Access_typed(){ delete type; }
   T& operator()(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return v->data; }
   T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }

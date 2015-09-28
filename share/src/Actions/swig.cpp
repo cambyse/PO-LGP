@@ -8,7 +8,7 @@
 #include <System/engine.h>
 #include <pr2/rosalvar.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <pr2/rosutil.h>
+#include <pr2/roscom.h>
 #include <Gui/opengl.h>
 
 void openGlLock();
@@ -86,6 +86,9 @@ struct SwigSystem : System{
   ACCESS(ors::KinematicWorld, modelWorld)
   ACCESS(AlvarMarker, ar_pose_markers)
   ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESS(arr, pr2_odom)
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
@@ -106,11 +109,19 @@ struct SwigSystem : System{
 
     if(MT::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
-      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
-      addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
+//      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
+      //addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
+      //addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+
+      new SubscriberConv<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+      new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
+      new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
+
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+
     }
     connect();
     // make the base movable by default

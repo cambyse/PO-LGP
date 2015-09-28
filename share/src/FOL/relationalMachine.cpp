@@ -1,9 +1,9 @@
 #include "relationalMachine.h"
 
-RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), _log("RelationalMachine"){
+RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
 }
 
-RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), _log("RelationalMachine"){
+RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
   init(filename);
 }
 
@@ -32,7 +32,7 @@ bool RelationalMachine::queryCondition(MT::String query) const{
     LOG(-1) <<"queryCondition "<<query <<" -- syntax error of query:" ;
     return false;
   }
-  LOG(1) <<"  query=" <<*tmp <<"  outcome=" <<(q?"TRUE":"FALSE");
+  LOG(2) <<"  query=" <<*tmp <<"  outcome=" <<(q?"TRUE":"FALSE");
   return q;
 }
 
@@ -64,7 +64,7 @@ bool RelationalMachine::applyEffect(Node* literal, bool fwdChain){
 NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
   forwardChaining_FOL(KB, NULL, *tmp, false);
-  LOG(1) <<"  changes=" <<*tmp;
+  LOG(2) <<"  changes=" <<*tmp;
   LOG(2) <<"  new state=\n  " <<getState();
   return *tmp;
 }
