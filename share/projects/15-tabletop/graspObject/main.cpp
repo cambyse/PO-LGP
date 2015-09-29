@@ -39,13 +39,17 @@ int main(int argc, char** argv){
   S.createNewSymbol("r_gripper_joint");
   S.createNewSymbol("gaze");
 
-  /// look at object
-#if 0
+  /// look at object -- three ways to create the activity
+#if 1
   S.setFact("(GazeTask){ PD=[.5, .9, .5, 10.] }");
   S.waitForCondition("(conv GazeTask)");
   S.setFact("(GazeTask)!, (conv GazeTask)!");
-#else
+#elif 0
   S.setFact("(FollowReferenceActivity endeffHead testObject){ type=gazeAt, PD=[.5, .9, .5, 10.] }");
+  S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
+  S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
+#else
+  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "endeffHead", "testObject"}, { NO(type, MT::String("gazeAt")), NO(PD, ARR(.5, .9, .5, 10.))});
   S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
   S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
 #endif

@@ -89,6 +89,8 @@ struct SwigSystem : System{
   ACCESS(arr, pr2_odom)
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(ActivityL, A)
+
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
@@ -101,6 +103,9 @@ struct SwigSystem : System{
 //    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
 //    modelWorld.linkToVariable(tcm.modelWorld.v);
 //    orsviewer.modelWorld.linkToVariable(tcm.modelWorld.v);
+
+    activities().name = "A";
+    this->vars.append(&activities());
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
 
@@ -337,35 +342,6 @@ int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals)
   }
 
 }
-//void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
-//#if 1
-//  startActivity(lit2str(literal), parameters);
-//#else
-//  S->RM.writeAccess();
-//  for(auto i:literal) parents.append(S->RM().elem(i));
-//  state.append<bool>({}, parents, NULL, false);
-//  S->RM.deAccess();
-//#endif
-//}
-
-//void ActionSwigInterface::waitForCondition(intV literals){
-//#if 1
-//  waitForCondition(lit2str(literals));
-//#else
-//  S->RM.readAccess();
-//  for(auto i:literal) lit.append(S->RM().elem(i));
-//  S->RM.deAccess();
-
-//  bool cont = true;
-//  while (cont) {
-//    S->RM.waitForNextRevision();
-//    S->RM.readAccess();
-//    Item *it = getEqualFactInKB(state, lit);
-//    if(it) cont=false;
-//    S->RM.deAccess();
-//  }
-//#endif
-//}
 
 void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));
@@ -409,6 +385,10 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   s->activity.machine->parseTaskDescription(*td);
 #endif
   return symbol->index;
+}
+
+Graph& ActionSwigInterface::getState(){
+  return *S->RM.get()->state;
 }
 
 void ActionSwigInterface::execScript(const char* filename){

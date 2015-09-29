@@ -5,16 +5,10 @@
 
 extern TaskControllerModule *taskControllerModule();
 
-void TaskCtrlActivity::configure(Node *fact) {
-  name.clear();
-  for(Node *p:fact->parents) name <<p->keys.last();
+void TaskCtrlActivity::configure() {
   taskController = taskControllerModule();
   CHECK(taskController,"");
-  this->fact = fact;
-  if(fact->getValueType()==typeid(Graph))
-    configure2(name, fact->graph(), taskController->modelWorld.set());
-  else
-    configure2(name, NoGraph, taskController->modelWorld.set());
+  configure2(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
 }

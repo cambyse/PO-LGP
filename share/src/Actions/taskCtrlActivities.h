@@ -12,7 +12,7 @@ struct TaskCtrlActivity : Activity{
 
   TaskCtrlActivity():taskController(NULL), map(NULL), task(NULL), stopTolerance(1e-2), conv(false){}
   virtual ~TaskCtrlActivity();
-  virtual void configure(Node *fact); ///< calls configure2 and registers
+  virtual void configure(); ///< calls configure2 and registers
   virtual void step(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world) = 0;

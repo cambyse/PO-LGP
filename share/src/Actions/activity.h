@@ -3,22 +3,31 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 
+
 struct Activity {
-  MT::String name;     ///< name, just for reporting
+  StringA symbols;     ///< the symbols that an abstract fact representing this activity should have
+  Graph params;        ///< parameters of this activity
   Node *fact;          ///< pointer to the fact in the state of a KB
   double activityTime; ///< for how long it this activity running yet
 
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
-  virtual void configure(Node *fact) = 0;
+  void associateToExistingFact(Node *fact);
+  void createFactRepresentative(Graph& state);
+
+  virtual void configure() = 0; ///< configure yourself from an abstract fact (and its graph parameters)
   virtual void step(double dt) = 0;
-  void write(ostream& os) const { os <<"Activity '" <<name <<"' (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
+
+  void write(ostream& os) const { os <<"Activity (" <<symbols <<"){" <<params <<"} (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
 };
 stdOutPipe(Activity)
 
 //===========================================================================
 
 typedef MT::Array<Activity*> ActivityL;
+
+/// global list of activities
+Variable<ActivityL>& activities();
 
 /// global registry of activity classes/types (implementations)
 Graph& activityRegistry();
@@ -30,6 +39,22 @@ template<class T> void registerActivity(const char* key){
 
 /// create/launch a new activity based on the fact
 Activity* newActivity(Node *fact);
+
+/// create/launch a new activity based on the type, symbols and params; adds a fact to relationalState
+template<class T>
+void newActivity(Graph& relationalState, const StringA& symbols, const Graph& params){
+  Activity *act = dynamic_cast<Activity*>(new T);
+  act->symbols = symbols;
+  act->params = params;
+
+  //-- add refs to specs for other symbols
+  for(uint i=1;i<symbols.N;i++){
+    new Node_typed<MT::String>(act->params, {STRING("ref"<<i)}, {}, new MT::String(symbols(i)), true);
+  }
+
+  act->createFactRepresentative(relationalState);
+  activities().set()->append(act);
+}
 
 //===========================================================================
 
@@ -43,6 +68,7 @@ struct ActivitySpinnerModule : Module{
   void step(){
     A.readAccess();
     for(Activity *act:A()) act->step(0.01);
+//    for(Activity *act:A()) act->write(cout);
     A.deAccess();
   }
   void close(){}

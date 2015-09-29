@@ -55,6 +55,8 @@ struct ActionSwigInterface{
   int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());
 
 
+  struct Graph& getState();
+
   //-- testing...
   void execScript(const char* filename);
 };
