@@ -21,7 +21,7 @@
 #include <Core/module.h>
 
 struct FloatA_Recorder: Module{
-  ACCESS(floatA, x)
+  ACCESSnew(floatA, x)
 
   FloatA_Recorder();
 

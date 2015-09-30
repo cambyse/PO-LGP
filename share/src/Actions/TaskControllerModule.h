@@ -16,14 +16,14 @@ extern struct TaskControllerModule *taskControllerModule();
 /// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
   //protected access points
-  ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
-  ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
-  ACCESS(MT::Array<CtrlTask*>, ctrlTasks)
-  ACCESS(MT::String, effects)
-  ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarkers, ar_pose_marker)
-  ACCESS(bool, fixBase)
-  ACCESS(arr, pr2_odom)
+  ACCESSnew(CtrlMsg, ctrl_ref) //< the message send to the RTController
+  ACCESSnew(CtrlMsg, ctrl_obs) //< the message received from the RTController
+  ACCESSnew(MT::Array<CtrlTask*>, ctrlTasks)
+  ACCESSnew(MT::String, effects)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
+  ACCESSnew(AlvarMarkers, ar_pose_marker)
+  ACCESSnew(bool, fixBase)
+  ACCESSnew(arr, pr2_odom)
 
   //non-protected members
 //private:
@@ -37,7 +37,7 @@ struct TaskControllerModule : Module {
   bool verbose;
 
 public:
-  TaskControllerModule(ModuleL& system=NoModuleL);
+  TaskControllerModule();
   ~TaskControllerModule();
 
   /// @name module implementations

@@ -1,10 +1,6 @@
 #include "activity.h"
 
-Singleton<Variable<ActivityL> > Activities;
-Variable<ActivityL>& activities(){ return Activities(); }
-
-Singleton<Graph> ActivityRegistry;
-Graph& activityRegistry(){ return ActivityRegistry(); }
+Singleton<Graph> activityRegistry;
 
 //===========================================================================
 

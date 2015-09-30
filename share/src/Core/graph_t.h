@@ -179,6 +179,12 @@ template<class T> NodeInitializer::NodeInitializer(const char* key, const String
   it->keys.append(STRING(key));
 }
 
+template<class T> Node* Graph::getTypedNode(const char *key) const {
+  NodeL nodes = getNodes(key);
+  for(Node* n:nodes) if(n->getValueType()==typeid(T)) return n;
+  return NULL;
+}
+
 template<class T> T& Graph::get(const char *key) const {
   Node *it = getNode(key);
   if(!it) HALT("node '"<< key<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");

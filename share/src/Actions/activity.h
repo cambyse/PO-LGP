@@ -26,11 +26,8 @@ stdOutPipe(Activity)
 
 typedef MT::Array<Activity*> ActivityL;
 
-/// global list of activities
-Variable<ActivityL>& activities();
-
 /// global registry of activity classes/types (implementations)
-Graph& activityRegistry();
+extern Singleton<Graph> activityRegistry;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
@@ -53,15 +50,15 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
   }
 
   act->createFactRepresentative(relationalState);
-  activities().set()->append(act);
+  moduleSystem().getValue<Variable<ActivityL> >("A") -> set()->append(act);
 }
 
 //===========================================================================
 
 struct ActivitySpinnerModule : Module{
-  ACCESS(ActivityL, A)
+  ACCESSnew(ActivityL, A)
 
-  ActivitySpinnerModule() : Module("ActivitySpinnerModule") {}
+  ActivitySpinnerModule() : Module("ActivitySpinnerModule", NoModuleL, Module::loopWithBeat, .01) {}
 
   /// @name module implementations
   void open(){}

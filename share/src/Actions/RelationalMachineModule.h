@@ -5,14 +5,14 @@
 #include <Actions/activity.h>
 
 struct RelationalMachineModule : Module{
-  ACCESS(MT::String, effects)
-  ACCESS(ActivityL, A)
-  ACCESS(MT::String, state)
-  ACCESS(RelationalMachine, RM)
+  ACCESSnew(MT::String, effects)
+  ACCESSnew(ActivityL, A)
+  ACCESSnew(MT::String, state)
+  ACCESSnew(RelationalMachine, RM)
 
   Log _log;
 
-  RelationalMachineModule(ModuleL& S=NoModuleL);
+  RelationalMachineModule();
   ~RelationalMachineModule();
 
   /// @name module implementations

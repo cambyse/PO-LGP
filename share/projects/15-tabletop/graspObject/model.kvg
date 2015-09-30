@@ -20,4 +20,4 @@ shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] si
 
 shape mymarker(world){ type=5 color=[1 1 0] size=[.2 0 0 0]}
 
-shape testObject(){ rel=<T t(.7 .3 1.5)> type=2 color=[1 0 0] size=[0 0 .2 .05]}
+shape testObject(){ rel=<T t(.7 .2 1.2)> type=2 color=[1 0 0] size=[0 0 .2 .05]}

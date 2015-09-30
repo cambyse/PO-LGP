@@ -1,5 +1,6 @@
 #include <System/engine.h>
 #include <Gui/graphview.h>
+#include <Core/module.h>
 
 //NOTE: ComputeSum does not need to be included when using registry only!
 #include "ComputeSum_Module.h"
@@ -12,7 +13,7 @@
 
 void way0(){
   ComputeSum C;
-  System dummy; dummy.modules.append(&C); dummy.connect();  //createVariables(LIST<Module>(C));
+  System dummy; dummy.append(&C); dummy.connect();  //createVariables(LIST<Module>(C));
   C.x.set() = ARR(1., 2., 3.);
   C.open();
   C.step();
@@ -119,7 +120,7 @@ void TEST(SystemConnect) {
 //===========================================================================
 
 int MAIN(int argc, char** argv){
-  int mode=0;
+  int mode=1;
   if(argc>1) mode=atoi(argv[1]);
   switch(mode){
     case 0: way0(); way1(); way2(); testSystemConnect(); break;

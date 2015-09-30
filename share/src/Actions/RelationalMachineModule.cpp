@@ -21,7 +21,7 @@ struct RM_EditCallback:GraphEditCallback{
   }
 };
 
-RelationalMachineModule::RelationalMachineModule(ModuleL& S):Module("RelationalMachineModule", S, listenFirst),
+RelationalMachineModule::RelationalMachineModule():Module("RelationalMachineModule", NoModuleL, listenFirst),
   _log("RelationalMachineModule"){
 }
 

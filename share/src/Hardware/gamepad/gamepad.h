@@ -6,8 +6,8 @@
 
 struct GamepadInterface:Module {
   struct jsJoystick *joystick;
-  ACCESS(arr, gamepadState)
-  ACCESS(bool, quitSignal)
+  ACCESSnew(arr, gamepadState)
+  ACCESSnew(bool, quitSignal)
   GamepadInterface();
   void open();
   void step();

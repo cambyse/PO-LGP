@@ -11,8 +11,8 @@ TaskControllerModule *taskControllerModule(){
   return globalTaskControllerModule;
 }
 
-TaskControllerModule::TaskControllerModule(ModuleL& system)
-    : Module("TaskControllerModule", system, Module::loopWithBeat, .01)
+TaskControllerModule::TaskControllerModule()
+    : Module("TaskControllerModule", NoModuleL, Module::loopWithBeat, .01)
     , realWorld("model.kvg")
     , feedbackController(NULL)
     , q0(realWorld.q)

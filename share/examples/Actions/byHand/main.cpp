@@ -97,8 +97,8 @@ int main(int argc, char** argv) {
   S.createNewSymbol("wheels");
 
 //  script1(S);
-  script2(S);
-//  script3(S);
+//  script2(S);
+  script3(S);
 
   return 0;
 }

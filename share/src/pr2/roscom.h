@@ -213,17 +213,27 @@ options. (In their constructor?)
 */
 //===========================================================================
 /// This module only calls ros:spinOnce() in step() and loops full speed -- to sync the process with the ros server
-BEGIN_MODULE(RosCom_Spinner)
-END_MODULE()
+//BEGIN_MODULE(RosCom_Spinner)
+//END_MODULE()
+
+struct RosCom_Spinner:Module{
+  RosCom_Spinner():Module("RosCom_Spinner", NoModuleL, Module::loopWithBeat, .001){}
+  void open(){ rosCheckInit(); }
+  void step(){ ros::spinOnce(); }
+  void close(){}
+};
 
 //===========================================================================
 /// This module syncs the controller state and refs with the real time hardware controller (marc_controller_...)
-BEGIN_MODULE(RosCom_ControllerSync)
-  ACCESS(CtrlMsg, ctrl_ref)
-  ACCESS(CtrlMsg, ctrl_obs)
-//  ACCESS(JointControllerRefsMsg, ctrl_refs)
-//  ACCESS(JointControllerStateMsg, ctrl_state)
-END_MODULE()
+//struct RosCom_ControllerSync:Module{
+//  struct sRosCom_ControllerSync *s;
+//  ACCESSnew(CtrlMsg, ctrl_ref)
+//  ACCESSnew(CtrlMsg, ctrl_obs)
+//  RosCom_ControllerSync():Module("RosCom_ControllerSync", NoModuleL, listenFirst){}
+//  void open();
+//  void step();
+//  void close();
+//};
 
 // Helper function so sync ors with the real PR2
 /**
@@ -244,42 +254,42 @@ void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctr
 
 //===========================================================================
 /// This module syncs the kinect
-struct RosCom_KinectSync : Module {
-  struct sRosCom_KinectSync *s;
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(uint16A, kinect_depth)
-  ACCESS(ors::Transformation, kinect_frame)
+//struct RosCom_KinectSync : Module {
+//  struct sRosCom_KinectSync *s;
+//  ACCESS(byteA, kinect_rgb)
+//  ACCESS(uint16A, kinect_depth)
+//  ACCESS(ors::Transformation, kinect_frame)
 
-  RosCom_KinectSync(): Module("RosCom_KinectSync"), s(NULL) {}
-  virtual void open();
-  virtual void step();
-  virtual void close();
-};
+//  RosCom_KinectSync(): Module("RosCom_KinectSync"), s(NULL) {}
+//  virtual void open();
+//  virtual void step();
+//  virtual void close();
+//};
 
 //===========================================================================
 /// This module syncs the left & right eye
-BEGIN_MODULE(RosCom_CamsSync)
-  ACCESS(byteA, rgb_leftEye)
-  ACCESS(byteA, rgb_rightEye)
-END_MODULE()
+//BEGIN_MODULE(RosCom_CamsSync)
+//  ACCESS(byteA, rgb_leftEye)
+//  ACCESS(byteA, rgb_rightEye)
+//END_MODULE()
 
 //===========================================================================
 /// This module syncs the left & right arm cams
-BEGIN_MODULE(RosCom_ArmCamsSync)
-  ACCESS(byteA, rgb_leftArm)
-  ACCESS(byteA, rgb_rightArm)
-END_MODULE()
+//BEGIN_MODULE(RosCom_ArmCamsSync)
+//  ACCESS(byteA, rgb_leftArm)
+//  ACCESS(byteA, rgb_rightArm)
+//END_MODULE()
 
 //===========================================================================
 /// Sync the FT sensor
-BEGIN_MODULE(RosCom_ForceSensorSync)
-  ACCESS(arr, wrenchL)
-  ACCESS(arr, wrenchR)
-END_MODULE()
+//BEGIN_MODULE(RosCom_ForceSensorSync)
+//  ACCESS(arr, wrenchL)
+//  ACCESS(arr, wrenchR)
+//END_MODULE()
 
 //===========================================================================
 /// This module syncs the soft hand
-BEGIN_MODULE(RosCom_SoftHandSync)
-  ACCESS(SoftHandMsg, sh_ref)
-END_MODULE()
+//BEGIN_MODULE(RosCom_SoftHandSync)
+//  ACCESS(SoftHandMsg, sh_ref)
+//END_MODULE()
 

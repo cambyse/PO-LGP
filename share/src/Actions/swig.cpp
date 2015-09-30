@@ -5,7 +5,6 @@
 #include "TaskControllerModule.h"
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
 #include <pr2/rosalvar.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <pr2/roscom.h>
@@ -18,7 +17,7 @@ void openGlUnlock();
 //void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 struct OrsViewer:Module{
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
 
   ors::KinematicWorld copy;
 
@@ -38,8 +37,8 @@ struct OrsViewer:Module{
 };
 
 struct PerceptionObjects2Ors : Module{
-  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESSnew(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
   PerceptionObjects2Ors(ModuleL& S=NoModuleL): Module("PerceptionObjects2Ors", S, listenFirst){
   }
   void open(){}
@@ -71,49 +70,41 @@ struct PerceptionObjects2Ors : Module{
   void close(){}
 };
 
-#ifdef MT_ROS
-ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom);
-ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
-#endif
+//#ifdef MT_ROS
+//ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom);
+//ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
+//#endif
 
 // ============================================================================
-struct SwigSystem : System{
-  ACCESS(bool, quitSignal)
-  ACCESS(bool, fixBase)
-  ACCESS(RelationalMachine, RM)
-  ACCESS(MT::String, effects)
-  ACCESS(MT::String, state)
-  ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarker, ar_pose_markers)
-  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESS(arr, pr2_odom)
-  ACCESS(CtrlMsg, ctrl_ref)
-  ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(ActivityL, A)
+struct SwigSystem {
+  ACCESSname(ActivityL, A)
+  ACCESSname(bool, quitSignal)
+  ACCESSname(bool, fixBase)
+  ACCESSname(RelationalMachine, RM)
+  ACCESSname(MT::String, effects)
+  ACCESSname(MT::String, state)
+  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(AlvarMarker, ar_pose_markers)
+  ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSname(arr, pr2_odom)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
 
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
 //  OrsViewer orsviewer;
+  ActivitySpinnerModule aspin;
+  GamepadInterface gamepad;
 
   Log _log;
 
-  SwigSystem(): tcm(*this), rmm(*this), /*orsviewer(*this),*/ _log("SwigSystem"){
+  SwigSystem(): _log("SwigSystem"){
 
-//    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-//    modelWorld.linkToVariable(tcm.modelWorld.v);
-//    orsviewer.modelWorld.linkToVariable(tcm.modelWorld.v);
-
-    activities().name = "A";
-    this->vars.append(&activities());
-
-    addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-
-    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
+//    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
 
     if(MT::getParameter<bool>("useRos",false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+      new RosCom_Spinner();
 //      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
       //addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
@@ -128,12 +119,14 @@ struct SwigSystem : System{
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
 
     }
-    connect();
+//    connect();
+
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
+
+    cout <<"SYSTEM=" <<moduleSystem() <<endl;
   }
 };
-
 
 // ============================================================================
 MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
@@ -153,7 +146,8 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 // ActionSwigInterface
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   S->tcm.verbose=false;
-  engine().open(*S, true);
+
+  threadOpenModules(moduleSystem(), true);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
@@ -161,7 +155,7 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   createNewSymbol("go");
 //  new CoreTasks(*s->activity.machine);
 
-  S->LOG(1) <<"Registered Activities=" <<activityRegistry();
+//  S->LOG(1) <<"Registered Activities=" <<activityRegistry();
   for(Node *n:activityRegistry()){
     S->LOG(1) <<"adding symbol for " <<n->keys(0);
     createNewSymbol(n->keys(0).p);
@@ -177,9 +171,8 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
 
 
 ActionSwigInterface::~ActionSwigInterface(){
-  engine().close(*S);
+  threadCloseModules(moduleSystem());
 }
-
 
 void ActionSwigInterface::Cancel(){
   //engine().cancel(*S);

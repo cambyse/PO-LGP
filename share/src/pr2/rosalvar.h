@@ -18,7 +18,7 @@
 
 //===========================================================================
 /// Generic subscriber to the AR maker alvar
-ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
+//ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
 
 
 //===========================================================================

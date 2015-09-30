@@ -22,5 +22,56 @@ Module *currentlyCreating = NULL;
 AccessL *currentlyCreatingAccessL = NULL;
 ModuleL& NoModuleL = *((ModuleL*)NULL);
 
+Singleton<Graph> moduleSystem;
 
-void Module::createVariables(){ for(Access *a:accesses) a->createVariable(); }
+void openModules(Graph&){
+  NodeL ms = moduleSystem().getTypedNodes<Module>();
+  for(Node* m:ms){ m->V<Module>().open(); }
+}
+
+void stepModules(Graph&){
+  NodeL ms = moduleSystem().getTypedNodes<Module>();
+  for(Node* m:ms){ m->V<Module>().step(); }
+}
+
+void closeModules(Graph&){
+  NodeL ms = moduleSystem().getTypedNodes<Module>();
+  for(Node* m:ms){ m->V<Module>().close(); }
+}
+
+
+Node* getModuleNode(Module *module){
+  NodeL ms = moduleSystem().getTypedNodes<Module>();
+  for(auto& m:ms){ if(m->getValue<Module>()==module) return m; }
+  MT_MSG("module not found!");
+  return NULL;
+}
+
+Node* getVariable(const char* name){
+  return moduleSystem().getNode(name);
+//  NodeL vars = moduleSystem().getTypedNodes<RevisionedAccessGatedClass>();
+//  for(auto& v:vars){ if(v->V<RevisionedAccessGatedClass>().name==name) return v; }
+//  MT_MSG("module not found!");
+//  return NULL;
+}
+
+
+void threadOpenModules(Graph&, bool waitForOpened){
+//  signal(SIGINT, signalhandler);
+  NodeL mods = moduleSystem().getTypedNodes<Module>();
+  for(Node *m: mods) m->V<Module>().threadOpen();
+  if(waitForOpened) for(Node *m: mods) m->V<Module>().waitForOpened();
+  for(Node *m: mods){
+    Module& mod=m->V<Module>();
+    switch(mod.mode){
+      case Module::loopWithBeat:  mod.threadLoopWithBeat(mod.beat);  break;
+      case Module::loopFull:      mod.threadLoop();  break;
+      default:  break;
+    }
+  }
+}
+
+void threadCloseModules(Graph&){
+  NodeL mods = moduleSystem().getTypedNodes<Module>();
+  for(Node *m: mods) m->V<Module>().threadClose();
+}

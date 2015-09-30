@@ -44,6 +44,18 @@ extern ModuleL& NoModuleL;
 extern AccessL *currentlyCreatingAccessL;
 
 //===========================================================================
+
+extern Singleton<Graph> moduleSystem;
+Node *getModuleNode(Module*);
+Node *getVariable(const char* name);
+//void createVariables(Graph&);
+void openModules(Graph&);
+void stepModules(Graph&);
+void closeModules(Graph&);
+void threadOpenModules(Graph&, bool waitForOpened);
+void threadCloseModules(Graph&);
+
+//===========================================================================
 //
 /** This is the core abstraction for users to code modules: derive
     from this class (and perhaps REGISTER_MODULE(...)) to enable the
@@ -62,7 +74,11 @@ struct Module : Thread{
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL, ModuleL& system=NoModuleL, StepMode mode=listenFirst, double beat=1.):Thread(_name), mode(mode), beat(beat){ currentlyCreating=this; if(&system) system.append(this); }
+  Module(const char* _name=NULL, ModuleL& system=NoModuleL, StepMode mode=listenFirst, double beat=1.):Thread(_name), mode(mode), beat(beat){
+    currentlyCreating=this;
+    if(&system) system.append(this);
+    new Node_typed<Module>(moduleSystem(), {"Module", _name}, {}, this, false);
+  }
   virtual ~Module(){}
 
   /** The most important method of all of this: step does the actual
@@ -70,7 +86,7 @@ struct Module : Thread{
       the variables by calling the x.get(), x.set() or
       x.[read|write|de]Access(), where ACCESS(TYPE, x) was
       declared. */
-  virtual void step() = 0;
+  virtual void step(){ HALT("you should not run a virtual module"); }
 
   /** use this to open drivers/devices/files and initialize
       parameters; this is called within the thread */
@@ -119,15 +135,32 @@ template<class T>
 struct Access_typed:Access{
   Variable<T> *v;
 
-  Access_typed(const char* name, Variable<T> *v=NULL)
-    : Access(name, new Type_typed<T, void>(), currentlyCreating, (RevisionedAccessGatedClass*)v), v(v){
-    if(module) module->accesses.append(this);
-    else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
-  }
-  Access_typed(Module* _module, const char* name, Variable<T> *v=NULL)
-    : Access(name, new Type_typed<T, void>(), _module, (RevisionedAccessGatedClass*)v), v(v){
-    CHECK(module,"");
-    module->accesses.append(this);
+//  Access_typed(const char* name, Variable<T> *v=NULL)
+//    : Access(name, new Type_typed<T, void>(), currentlyCreating, (RevisionedAccessGatedClass*)v), v(v){
+//    if(module) module->accesses.append(this);
+//    else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
+//    NIY;
+//  }
+  Access_typed(Module* _module, const char* name)
+    : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
+    Node *vnode = moduleSystem().getNode(name);
+    if(!vnode){
+      v = new Variable<T>(name);
+      vnode = new Node_typed<Variable<T> >(moduleSystem(), {"Variable", name}, {}, v, true);
+    }else{
+      v = &vnode->V<Variable<T> >();
+    }
+    var=(RevisionedAccessGatedClass*)v;
+    if(module){
+      module->accesses.append(this);
+      Node *m = getModuleNode(module);
+      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {m,vnode}, this, false);
+      if(module->mode==Module::listenAll || (module->mode==Module::listenFirst && module->accesses.N==1) ){
+        var->listeners.setAppend(module);
+      }
+    }else{
+      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {vnode}, this, false);
+    }
   }
 
   ~Access_typed(){ delete type; }
@@ -136,7 +169,12 @@ struct Access_typed:Access{
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
   typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
-  virtual void createVariable(const char *_name=NULL){ CHECK(!v &&!var,"");  if(_name) name=_name; v=new Variable<T>(name);  var=(RevisionedAccessGatedClass*)v; }
+  virtual void createVariable(const char *_name=NULL){
+    CHECK(!v &&!var,"");
+    if(_name) name=_name;
+    v=new Variable<T>(name);
+    var=(RevisionedAccessGatedClass*)v;
+  }
   virtual void linkToVariable(RevisionedAccessGatedClass *_var){
     CHECK(_var, "you gave me a nullptr");
     var=_var;
@@ -145,6 +183,13 @@ struct Access_typed:Access{
   }
 };
 
+//===========================================================================
+//
+// dealing with the globally registrated (in moduleSystem) modules
+//
+
+
+
 
 //===========================================================================
 //
@@ -152,11 +197,22 @@ struct Access_typed:Access{
     member, use the macro ACCESS(TYPE, name). This is almost
     equivalent, but automatically assigns the name. */
 
+#if 1
+
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
   __##name##__Access():Access_typed<type>(#name){} \
 } name;
 
+#else
+
+#define ACCESS(type, name) Access_typed<type> name = Access_typed<type>(this, #name);
+
+
+#endif
+
+#define ACCESSnew(type, name) Access_typed<type> name = Access_typed<type>(this, #name);
+#define ACCESSname(type, name) Access_typed<type> name = Access_typed<type>(NULL, #name);
 
 //===========================================================================
 //
@@ -197,6 +253,6 @@ inline void operator>>(istream&, Module&){ NIY }
 inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
-inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<a.module->name <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
+inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:MT::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
 
 #endif

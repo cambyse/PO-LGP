@@ -1,3 +1,5 @@
+#ifdef MLR_PCL
+
 #include "plane.h"
 
 void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointIndices::Ptr> &outInliers , uint numPlanes)
@@ -119,3 +121,5 @@ void substractPlane(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointIndices::Ptr 
   extract.setNegative (true);
   extract.filter (*outCloud);
 }
+
+#endif

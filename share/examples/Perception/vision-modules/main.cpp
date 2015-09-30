@@ -2,11 +2,7 @@
 #include <Gui/graphview.h>
 #include <Perception/perception.h>
 
-//NOTE: no actual perception code is included - only system!
-void lib_Perception(); //this is enough to ensure the linking and loading of registry entries
-
 void TEST(ModuleVision) {
-  lib_Perception();
   cout <<registry() <<endl;
 
   System S;
@@ -49,6 +45,31 @@ void TEST(ModuleVision) {
   }
 
   engine().close(S);
+
+  cout <<"bye bye" <<endl;
+}
+
+void TEST(ModuleVision2) {
+  cout <<registry() <<endl;
+
+  OpencvCamera cam;
+  CvtGray cvtGray;
+  MotionFilter mofi;
+  DifferenceFilter difi("rgb", "ground", "diffImage");
+  CannyFilter canniFi("gray", "canny");
+
+  ImageViewer iv1("rgb");
+  ImageViewer iv2("gray");
+  ImageViewer iv3("motion");
+  ImageViewer iv4("diffImage");
+  ImageViewer iv5("canny");
+
+
+  cout <<moduleSystem() <<endl;
+
+  threadOpenModules(moduleSystem(), true);
+  MT::wait(60.);
+  threadCloseModules(moduleSystem());
 
   cout <<"bye bye" <<endl;
 }
