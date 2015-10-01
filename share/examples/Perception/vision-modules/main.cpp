@@ -1,7 +1,7 @@
-#include <System/engine.h>
 #include <Gui/graphview.h>
 #include <Perception/perception.h>
 
+#if 0
 void TEST(ModuleVision) {
   cout <<registry() <<endl;
 
@@ -48,6 +48,7 @@ void TEST(ModuleVision) {
 
   cout <<"bye bye" <<endl;
 }
+#endif
 
 void TEST(ModuleVision2) {
   cout <<registry() <<endl;
@@ -77,7 +78,7 @@ void TEST(ModuleVision2) {
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
 
-  testModuleVision();
+  testModuleVision2();
 
   return 0;
 }

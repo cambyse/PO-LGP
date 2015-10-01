@@ -17,11 +17,11 @@ void openGlUnlock();
 //void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 struct OrsViewer:Module{
-  ACCESSnew(ors::KinematicWorld, modelWorld)
+  ACCESSlisten(ors::KinematicWorld, modelWorld)
 
   ors::KinematicWorld copy;
 
-  OrsViewer(ModuleL& S=NoModuleL):Module("OrsViewer", S, listenFirst) {
+  OrsViewer():Module("OrsViewer") {
   }
   void open(){
     LOG(-1) <<"HERE"<< endl;
@@ -37,9 +37,9 @@ struct OrsViewer:Module{
 };
 
 struct PerceptionObjects2Ors : Module{
-  ACCESSnew(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESSnew(ors::KinematicWorld, modelWorld)
-  PerceptionObjects2Ors(ModuleL& S=NoModuleL): Module("PerceptionObjects2Ors", S, listenFirst){
+  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){
   }
   void open(){}
   void step(){

@@ -63,11 +63,9 @@ void threadOpenModules(Graph&, bool waitForOpened){
   if(waitForOpened) for(Node *m: mods) m->V<Module>().waitForOpened();
   for(Node *m: mods){
     Module& mod=m->V<Module>();
-    switch(mod.mode){
-      case Module::loopWithBeat:  mod.threadLoopWithBeat(mod.beat);  break;
-      case Module::loopFull:      mod.threadLoop();  break;
-      default:  break;
-    }
+    if(mod.beat>0.) mod.threadLoopWithBeat(mod.beat);
+    else if(mod.beat<-.1) mod.threadLoop();
+    //otherwise the module is listening (hopefully)
   }
 }
 

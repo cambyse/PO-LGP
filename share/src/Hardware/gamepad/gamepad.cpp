@@ -6,7 +6,7 @@
 #undef min
 #undef max
 
-GamepadInterface::GamepadInterface():Module("GamepadInterface", NoModuleL, Module::loopWithBeat, .01){}
+GamepadInterface::GamepadInterface():Module("GamepadInterface", Module::loopWithBeat, .01){}
 
 void GamepadInterface::open(){
   jsInit();

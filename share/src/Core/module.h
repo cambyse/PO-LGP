@@ -39,16 +39,12 @@ struct Access;
 struct Module;
 typedef MT::Array<Access*> AccessL;
 typedef MT::Array<Module*> ModuleL;
-extern Module *currentlyCreating;
-extern ModuleL& NoModuleL;
-extern AccessL *currentlyCreatingAccessL;
 
 //===========================================================================
 
 extern Singleton<Graph> moduleSystem;
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
-//void createVariables(Graph&);
 void openModules(Graph&);
 void stepModules(Graph&);
 void closeModules(Graph&);
@@ -65,19 +61,15 @@ void threadCloseModules(Graph&);
     necessary */
 
 struct Module : Thread{
-  enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull, dontLoop };
-  AccessL accesses;
-  StepMode mode;
+  Node *reg;
   double beat;
 
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL, ModuleL& system=NoModuleL, StepMode mode=listenFirst, double beat=1.):Thread(_name), mode(mode), beat(beat){
-    currentlyCreating=this;
-    if(&system) system.append(this);
-    new Node_typed<Module>(moduleSystem(), {"Module", _name}, {}, this, false);
+  Module(const char* _name=NULL, double beat=0.):Thread(_name), reg(NULL), beat(beat){
+    reg = new Node_typed<Module>(moduleSystem(), {"Module", _name}, {}, this, false);
   }
   virtual ~Module(){}
 
@@ -121,8 +113,6 @@ struct Access{
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
   int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
   int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
-  virtual void createVariable(const char *_name=NULL) = 0;
-  virtual void linkToVariable(RevisionedAccessGatedClass *v) = 0;
 //  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
   double& dataTime(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
 };
@@ -135,13 +125,7 @@ template<class T>
 struct Access_typed:Access{
   Variable<T> *v;
 
-//  Access_typed(const char* name, Variable<T> *v=NULL)
-//    : Access(name, new Type_typed<T, void>(), currentlyCreating, (RevisionedAccessGatedClass*)v), v(v){
-//    if(module) module->accesses.append(this);
-//    else if(currentlyCreatingAccessL) currentlyCreatingAccessL->append(this);
-//    NIY;
-//  }
-  Access_typed(Module* _module, const char* name)
+  Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = moduleSystem().getNode(name);
     if(!vnode){
@@ -152,12 +136,9 @@ struct Access_typed:Access{
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){
-      module->accesses.append(this);
       Node *m = getModuleNode(module);
       new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {m,vnode}, this, false);
-      if(module->mode==Module::listenAll || (module->mode==Module::listenFirst && module->accesses.N==1) ){
-        var->listeners.setAppend(module);
-      }
+      if(moduleListens) var->listeners.setAppend(module);
     }else{
       new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {vnode}, this, false);
     }
@@ -169,18 +150,6 @@ struct Access_typed:Access{
   typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
   typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
-  virtual void createVariable(const char *_name=NULL){
-    CHECK(!v &&!var,"");
-    if(_name) name=_name;
-    v=new Variable<T>(name);
-    var=(RevisionedAccessGatedClass*)v;
-  }
-  virtual void linkToVariable(RevisionedAccessGatedClass *_var){
-    CHECK(_var, "you gave me a nullptr");
-    var=_var;
-    v = dynamic_cast<Variable<T>*>(_var);
-    CHECK(v, "Access of type " <<typeid(T).name() <<" cannot be assigned to GatedClass of type " <<typeid(*_var).name());
-  }
 };
 
 //===========================================================================
@@ -212,6 +181,7 @@ struct __##name##__Access:Access_typed<type>{ \
 #endif
 
 #define ACCESSnew(type, name) Access_typed<type> name = Access_typed<type>(this, #name);
+#define ACCESSlisten(type, name) Access_typed<type> name = Access_typed<type>(this, #name, true);
 #define ACCESSname(type, name) Access_typed<type> name = Access_typed<type>(NULL, #name);
 
 //===========================================================================

@@ -58,7 +58,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
 struct ActivitySpinnerModule : Module{
   ACCESSnew(ActivityL, A)
 
-  ActivitySpinnerModule() : Module("ActivitySpinnerModule", NoModuleL, Module::loopWithBeat, .01) {}
+  ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
 
   /// @name module implementations
   void open(){}

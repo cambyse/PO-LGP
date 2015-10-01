@@ -217,7 +217,7 @@ options. (In their constructor?)
 //END_MODULE()
 
 struct RosCom_Spinner:Module{
-  RosCom_Spinner():Module("RosCom_Spinner", NoModuleL, Module::loopWithBeat, .001){}
+  RosCom_Spinner():Module("RosCom_Spinner", .001){}
   void open(){ rosCheckInit(); }
   void step(){ ros::spinOnce(); }
   void close(){}
@@ -229,7 +229,7 @@ struct RosCom_Spinner:Module{
 //  struct sRosCom_ControllerSync *s;
 //  ACCESSnew(CtrlMsg, ctrl_ref)
 //  ACCESSnew(CtrlMsg, ctrl_obs)
-//  RosCom_ControllerSync():Module("RosCom_ControllerSync", NoModuleL, listenFirst){}
+//  RosCom_ControllerSync():Module("RosCom_ControllerSync", listenFirst){}
 //  void open();
 //  void step();
 //  void close();

@@ -5,7 +5,7 @@
 #include <Actions/activity.h>
 
 struct RelationalMachineModule : Module{
-  ACCESSnew(MT::String, effects)
+  ACCESSlisten(MT::String, effects)
   ACCESSnew(ActivityL, A)
   ACCESSnew(MT::String, state)
   ACCESSnew(RelationalMachine, RM)

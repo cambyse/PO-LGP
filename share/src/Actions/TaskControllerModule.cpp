@@ -12,7 +12,7 @@ TaskControllerModule *taskControllerModule(){
 }
 
 TaskControllerModule::TaskControllerModule()
-    : Module("TaskControllerModule", NoModuleL, Module::loopWithBeat, .01)
+    : Module("TaskControllerModule", .01)
     , realWorld("model.kvg")
     , feedbackController(NULL)
     , q0(realWorld.q)
