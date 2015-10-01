@@ -10,8 +10,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #endif
 
-extern struct TaskControllerModule *taskControllerModule();
-
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
@@ -40,7 +38,6 @@ public:
   TaskControllerModule();
   ~TaskControllerModule();
 
-  /// @name module implementations
   void open();
   void step();
   void close();

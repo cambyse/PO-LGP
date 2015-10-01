@@ -124,7 +124,7 @@ struct Access_typed:Access{
 
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode(name);
+    Node *vnode = registry().getNode("Variable", name);
     if(!vnode){
       v = new Variable<T>(name);
       vnode = new Node_typed<Variable<T> >(registry(), {"Variable", name}, {}, v, true);

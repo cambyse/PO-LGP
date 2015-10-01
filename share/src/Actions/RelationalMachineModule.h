@@ -15,7 +15,6 @@ struct RelationalMachineModule : Module{
   RelationalMachineModule();
   ~RelationalMachineModule();
 
-  /// @name module implementations
   void open();
   void step();
   void close();

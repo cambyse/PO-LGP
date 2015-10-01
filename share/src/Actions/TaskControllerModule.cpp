@@ -6,11 +6,6 @@
 #  include <pr2/roscom.h>
 #endif
 
-TaskControllerModule *globalTaskControllerModule=NULL;
-TaskControllerModule *taskControllerModule(){
-  return globalTaskControllerModule;
-}
-
 TaskControllerModule::TaskControllerModule()
     : Module("TaskControllerModule", .01)
     , realWorld("model.kvg")
@@ -19,8 +14,6 @@ TaskControllerModule::TaskControllerModule()
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-//  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
-  globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){

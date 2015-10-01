@@ -3,6 +3,7 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 
+//===========================================================================
 
 struct Activity {
   StringA symbols;     ///< the symbols that an abstract fact representing this activity should have
@@ -26,12 +27,9 @@ stdOutPipe(Activity)
 
 typedef MT::Array<Activity*> ActivityL;
 
-/// global registry of activity classes/types (implementations)
-extern Singleton<Graph> activityRegistry;
-
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Node_typed<Type>(activityRegistry(), {key}, {}, new Type_typed<T,void>, true);
+  new Node_typed<Type>(registry(), {"Activity", key}, {}, new Type_typed<T,void>, true);
 }
 
 /// create/launch a new activity based on the fact
@@ -60,7 +58,6 @@ struct ActivitySpinnerModule : Module{
 
   ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
 
-  /// @name module implementations
   void open(){}
   void step(){
     A.readAccess();

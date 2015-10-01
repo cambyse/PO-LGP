@@ -153,17 +153,17 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   createNewSymbol("contact");
   createNewSymbol("timeout");
   createNewSymbol("go");
-//  new CoreTasks(*s->activity.machine);
 
-//  S->LOG(1) <<"Registered Activities=" <<activityRegistry();
-  for(Node *n:activityRegistry()){
-    S->LOG(1) <<"adding symbol for " <<n->keys(0);
-    createNewSymbol(n->keys(0).p);
+  S->LOG(1) <<"Activity Symbols:";
+  NodeL acts = registry().getNodes("Activity");
+  for(Node *n:acts){
+    S->LOG(1) <<"  adding symbol for " <<n->keys(0);
+    createNewSymbol(n->keys.last().p);
   }
   S->LOG(1) <<"Shape Symbols:";
   S->modelWorld.writeAccess();
   for(ors::Shape *sh:S->modelWorld().shapes){
-    S->LOG(1) <<"adding symbol for Shape " <<sh->name;
+    S->LOG(1) <<"  adding symbol for Shape " <<sh->name;
     createNewSymbol(sh->name.p);
   }
   S->modelWorld.deAccess();

@@ -1,7 +1,5 @@
 #include "activity.h"
 
-Singleton<Graph> activityRegistry;
-
 //===========================================================================
 
 void Activity::associateToExistingFact(Node* fact){
@@ -33,7 +31,7 @@ Activity* newActivity(Node *fact){
   }
 
   LOG(3) <<"creating new activity of symbol '" <<*symbol <<"' and specs '" <<*specs <<"'";
-  Node *actType = activityRegistry().getNode(symbol->keys.last());
+  Node *actType = registry().getNode("Activity", symbol->keys.last());
   if(!actType){
     LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*symbol <<", specs=" <<*specs <<")";
     return NULL;

@@ -3,11 +3,9 @@
 
 #include "taskCtrlActivities.h"
 
-extern TaskControllerModule *taskControllerModule();
-
 void TaskCtrlActivity::configure() {
-  taskController = taskControllerModule();
-  CHECK(taskController,"");
+  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
+  CHECK(taskController,"that didn't work");
   configure2(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
   conv=false;
