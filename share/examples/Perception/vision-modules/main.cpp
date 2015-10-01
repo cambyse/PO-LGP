@@ -65,12 +65,14 @@ void TEST(ModuleVision2) {
   ImageViewer iv4("diffImage");
   ImageViewer iv5("canny");
 
+  cout <<registry() <<endl;
 
-  cout <<moduleSystem() <<endl;
-
-  threadOpenModules(moduleSystem(), true);
-  MT::wait(60.);
-  threadCloseModules(moduleSystem());
+  threadOpenModules(true);
+  for(uint i=0;i<30;i++){
+    MT::wait(1.);
+    modulesReportCycleTimes();
+  }
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }

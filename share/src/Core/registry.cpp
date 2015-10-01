@@ -24,9 +24,7 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<Graph> SingleRegistry;
-
-Graph& registry(){ return SingleRegistry(); }
+Singleton<Graph> registry;
 
 extern Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
 

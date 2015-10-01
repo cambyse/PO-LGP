@@ -124,7 +124,7 @@ struct SwigSystem {
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
 
-    cout <<"SYSTEM=" <<moduleSystem() <<endl;
+    cout <<"SYSTEM=" <<registry() <<endl;
   }
 };
 
@@ -147,7 +147,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   S->tcm.verbose=false;
 
-  threadOpenModules(moduleSystem(), true);
+  threadOpenModules(true);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
@@ -171,7 +171,7 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
 
 
 ActionSwigInterface::~ActionSwigInterface(){
-  threadCloseModules(moduleSystem());
+  threadCloseModules();
 }
 
 void ActionSwigInterface::Cancel(){

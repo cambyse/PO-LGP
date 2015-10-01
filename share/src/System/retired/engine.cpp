@@ -28,25 +28,6 @@ Singleton<Engine> SingleEngine;
 
 System& NoSystem = *((System*)NULL);
 
-void signalhandler(int s){
-  int calls = engine().shutdown.incrementValue();
-  cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
-  if(calls==1){
-    LOG(0) <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
-  }
-  if(calls==2){
-    LOG(0) <<" -- smoothly closing modules directly" <<endl;
-    engine().close(); //might lead to a hangup of the main loop, but processes should close
-  }
-  if(calls==3){
-    LOG(0) <<" -- cancelling threads to force closing" <<endl;
-    engine().cancel();
-  }
-  if(calls>3){
-    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
-    exit(1);
-  }
-}
 
 //===========================================================================
 //

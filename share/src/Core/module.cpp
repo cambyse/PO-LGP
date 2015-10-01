@@ -16,60 +16,97 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+#include <signal.h>
+#include <iomanip>
+
 #include "module.h"
 
-Module *currentlyCreating = NULL;
-AccessL *currentlyCreatingAccessL = NULL;
-ModuleL& NoModuleL = *((ModuleL*)NULL);
+Singleton<ConditionVariable> shutdown;
 
-Singleton<Graph> moduleSystem;
+void signalhandler(int s){
+  int calls = shutdown().incrementValue();
+  cerr <<"\n*** System received signal " <<s <<" -- count=" <<calls;
+  if(calls==1){
+    LOG(0) <<" -- waiting for main loop to break on shutdown().getValue()" <<endl;
+  }
+  if(calls==2){
+    LOG(0) <<" -- smoothly closing modules directly" <<endl;
+    threadCloseModules(); //might lead to a hangup of the main loop, but processes should close
+    LOG(0) <<" -- DONE" <<endl;
+  }
+  if(calls==3){
+    LOG(0) <<" -- cancelling threads to force closing" <<endl;
+    threadCancelModules();
+    LOG(0) <<" -- DONE" <<endl;
+  }
+  if(calls>3){
+    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
+    exit(1);
+  }
+}
 
-void openModules(Graph&){
-  NodeL ms = moduleSystem().getTypedNodes<Module>();
+void openModules(){
+  NodeL ms = registry().getTypedNodes<Module>();
   for(Node* m:ms){ m->V<Module>().open(); }
 }
 
-void stepModules(Graph&){
-  NodeL ms = moduleSystem().getTypedNodes<Module>();
+void stepModules(){
+  NodeL ms = registry().getTypedNodes<Module>();
   for(Node* m:ms){ m->V<Module>().step(); }
 }
 
-void closeModules(Graph&){
-  NodeL ms = moduleSystem().getTypedNodes<Module>();
+void closeModules(){
+  NodeL ms = registry().getTypedNodes<Module>();
   for(Node* m:ms){ m->V<Module>().close(); }
 }
 
 
 Node* getModuleNode(Module *module){
-  NodeL ms = moduleSystem().getTypedNodes<Module>();
+  NodeL ms = registry().getTypedNodes<Module>();
   for(auto& m:ms){ if(m->getValue<Module>()==module) return m; }
   MT_MSG("module not found!");
   return NULL;
 }
 
 Node* getVariable(const char* name){
-  return moduleSystem().getNode(name);
-//  NodeL vars = moduleSystem().getTypedNodes<RevisionedAccessGatedClass>();
+  return registry().getNode(name);
+//  NodeL vars = registry().getTypedNodes<RevisionedAccessGatedClass>();
 //  for(auto& v:vars){ if(v->V<RevisionedAccessGatedClass>().name==name) return v; }
 //  MT_MSG("module not found!");
 //  return NULL;
 }
 
 
-void threadOpenModules(Graph&, bool waitForOpened){
-//  signal(SIGINT, signalhandler);
-  NodeL mods = moduleSystem().getTypedNodes<Module>();
+void threadOpenModules(bool waitForOpened){
+  signal(SIGINT, signalhandler);
+  NodeL mods = registry().getTypedNodes<Module>();
   for(Node *m: mods) m->V<Module>().threadOpen();
   if(waitForOpened) for(Node *m: mods) m->V<Module>().waitForOpened();
   for(Node *m: mods){
     Module& mod=m->V<Module>();
-    if(mod.beat>0.) mod.threadLoopWithBeat(mod.beat);
-    else if(mod.beat<-.1) mod.threadLoop();
+    if(mod.metronome.ticInterval>=0.) mod.threadLoop();
     //otherwise the module is listening (hopefully)
   }
 }
 
-void threadCloseModules(Graph&){
-  NodeL mods = moduleSystem().getTypedNodes<Module>();
+void threadCloseModules(){
+  NodeL mods = registry().getTypedNodes<Module>();
   for(Node *m: mods) m->V<Module>().threadClose();
 }
+
+void threadCancelModules(){
+  NodeL mods = registry().getTypedNodes<Module>();
+  for(Node *m: mods) m->V<Module>().threadCancel();
+}
+
+
+void modulesReportCycleTimes(){
+  cout <<"Cycle times for all Modules (msec):" <<endl;
+  NodeL mods = registry().getTypedNodes<Module>();
+  for(Node *m: mods){
+    Module& mod=m->V<Module>();
+    cout <<std::setw(30) <<mod.name <<" : ";
+    mod.timer.report();
+  }
+}
+

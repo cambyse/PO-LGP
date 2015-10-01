@@ -39,17 +39,19 @@ struct Access;
 struct Module;
 typedef MT::Array<Access*> AccessL;
 typedef MT::Array<Module*> ModuleL;
+extern Singleton<ConditionVariable> shutdown;
 
 //===========================================================================
 
-extern Singleton<Graph> moduleSystem;
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
-void openModules(Graph&);
-void stepModules(Graph&);
-void closeModules(Graph&);
-void threadOpenModules(Graph&, bool waitForOpened);
-void threadCloseModules(Graph&);
+void openModules();
+void stepModules();
+void closeModules();
+void threadOpenModules(bool waitForOpened);
+void threadCloseModules();
+void threadCancelModules();
+void modulesReportCycleTimes();
 
 //===========================================================================
 //
@@ -61,15 +63,13 @@ void threadCloseModules(Graph&);
     necessary */
 
 struct Module : Thread{
-  Node *reg;
-  double beat;
 
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL, double beat=0.):Thread(_name), reg(NULL), beat(beat){
-    reg = new Node_typed<Module>(moduleSystem(), {"Module", _name}, {}, this, false);
+  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
+    new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
   }
   virtual ~Module(){}
 
@@ -87,9 +87,6 @@ struct Module : Thread{
   /** use this to close drivers/devices/files; this is called within
       the thread */
   virtual void close(){}
-  virtual bool test(){ return true; } ///< define a unit test
-
-  void createVariables();
 };
 
 
@@ -127,20 +124,20 @@ struct Access_typed:Access{
 
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = moduleSystem().getNode(name);
+    Node *vnode = registry().getNode(name);
     if(!vnode){
       v = new Variable<T>(name);
-      vnode = new Node_typed<Variable<T> >(moduleSystem(), {"Variable", name}, {}, v, true);
+      vnode = new Node_typed<Variable<T> >(registry(), {"Variable", name}, {}, v, true);
     }else{
       v = &vnode->V<Variable<T> >();
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){
       Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {m,vnode}, this, false);
-      if(moduleListens) var->listeners.setAppend(module);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      if(moduleListens) module->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {vnode}, this, false);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
     }
   }
 

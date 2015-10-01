@@ -50,7 +50,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
   }
 
   act->createFactRepresentative(relationalState);
-  moduleSystem().getValue<Variable<ActivityL> >("A") -> set()->append(act);
+  registry().getValue<Variable<ActivityL> >("A") -> set()->append(act);
 }
 
 //===========================================================================

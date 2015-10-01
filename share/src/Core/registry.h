@@ -33,7 +33,7 @@
 // global registry of anything using a singleton Graph
 //
 
-Graph& registry();
+extern Singleton<Graph> registry;
 void initRegistry(int argc, char *argv[]);
 
 //macros to be used in *.cpp files
