@@ -1,7 +1,5 @@
 BASE = ../..
 
-OBJS = main.o ../pcl_sprint_projections/dataStructures.o ../pcl_sprint_projections/methods.o
-
 ROS = 1
 PLIB = 1
 PCL = 1

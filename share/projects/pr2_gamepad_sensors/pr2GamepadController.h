@@ -50,8 +50,8 @@ struct Pr2GamepadController:Module{
     zero_qdot.resize(qdot.N).setZero();
   }
   void step(){
-    arr gamepadState = this->gamepadState.get();
-    j2t->updateTasks(gamepadState);
+    arr gamepad = this->gamepadState.get();
+    j2t->updateTasks(gamepad);
 
     //compute control
     arr a = MP->operationalSpaceControl();
