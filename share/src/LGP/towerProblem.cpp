@@ -98,7 +98,7 @@ void TowerProblem_new::setRandom(){
   Node *BOARD = fol_root.KB["Board"];
   Graph& state = fol_root.KB["STATE"]->graph();
 
-  uint n = 10+rnd(20);
+  uint n = 3; //10+rnd(20);
   double x=-1.6, y=-1.;
   for(uint i=0;i<n;i++){
     //add an object to the geometry

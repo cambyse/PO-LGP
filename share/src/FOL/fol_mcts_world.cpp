@@ -2,7 +2,7 @@
 #include "fol_mcts_world.h"
 #include "fol.h"
 
-#define DEBUG(x)
+#define DEBUG(x) x
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
@@ -25,12 +25,14 @@ void FOL_World::Decision::write(ostream& os) const{
 FOL_World::FOL_World()
     : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
       state(NULL), tmp(NULL), verbose(0), verbFil(0),
-      lastStepDuration(0.), lastStepProbability(1.) {}
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {}
 
 FOL_World::FOL_World(istream& is)
     : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
       state(NULL), tmp(NULL), verbose(0), verbFil(0),
-      lastStepDuration(0.), lastStepProbability(1.) {
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {
   init(is);
 }
 
@@ -76,6 +78,14 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   double reward=0.;
   T_step++;
   reward -= stepCost;
+
+  //-- store the old state; make a new state that is child of the old
+  if(generateStateTree){
+    Node *new_state = new Node_typed<Graph>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph(), true);
+    new_state->graph().copy(*state, &KB);
+    state = &new_state->graph();
+    DEBUG(KB.checkConsistency());
+  }
 
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
@@ -182,7 +192,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- generic world transitioning
   int decisionObservation = 0;
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
+  forwardChaining_FOL(KB, *state, NULL, NoGraph, verbose-3, &decisionObservation);
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -289,7 +299,7 @@ void FOL_World::reset_state(){
   FILE("z.after") <<KB;
 
   //-- forward chain rules
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3); //, &decisionObservation);
+  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, NoGraph, verbose-3); //, &decisionObservation);
 
   //-- check for terminal
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -338,4 +348,13 @@ void FOL_World::set_state(MT::String& s){
   state->clear();
   s >>"{";
   state->read(s);
+}
+
+Graph*FOL_World::getState(){
+  return state;
+}
+
+void FOL_World::setState(Graph *s){
+  state = s;
+  CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
 }

@@ -23,6 +23,7 @@
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
 #include <climits>
+#include <iomanip>
 
 //===========================================================================
 
@@ -263,6 +264,13 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
 
   CHECK_EQ(phi.N, dim_phi(*G.last(), t), "");
+
+  //memorize for report
+  if(!phiMatrix.N) phiMatrix.resize(T+1);
+  if(!ttMatrix.N) ttMatrix.resize(T+1);
+  phiMatrix(t) = phi;
+  if(&tt) ttMatrix(t) = tt;
+
   return ineqHold;
 }
 
@@ -295,6 +303,24 @@ StringA MotionProblem::getPhiNames(const ors::KinematicWorld& G, uint t){
 
 void MotionProblem::activateAllTaskCosts(bool active) {
   for(Task *c: taskCosts) c->active=active;
+}
+
+void MotionProblem::featureReport() {
+  cout <<"*** MotionProblem -- FeatureReport" <<endl;
+
+  //-- collect all task costs and constraints
+  for(uint t=0; t<=T; t++){
+    uint m=0;
+    for(uint i=0; i<taskCosts.N; i++) {
+      Task *c = taskCosts(i);
+      uint d=c->dim_phi(world, t);
+      for(uint i=0;i<d;i++){
+        cout <<"  " <<t <<' ' <<std::setw(10) <<c->name <<' ' <<c->map.order <<' ' <<c->map.type <<' ' <<ttMatrix(t)(m+i) <<' ' <<phiMatrix(t)(m+i) <<endl;
+      }
+      m += d;
+    }
+    CHECK_EQ(m , phiMatrix(t).N, "");
+  }
 }
 
 void MotionProblem::costReport(bool gnuplt) {
@@ -491,6 +517,22 @@ arr MotionProblem::getInitialization(){
   return replicate(x0, T+1);
 }
 
+void MotionProblem::inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x){
+  CHECK(!T,"");
+  CHECK(!k_order,"");
+  CHECK(!switches.N,"");
+
+  setState(x);
+  getPhi(y, J, tt, 0, {&world}, tau);
+//  double h=1./sqrt(tau);
+//  y.append(h*(x-x0));
+//  if(&J) J.append(h*eye(x.N));
+//  if(&tt) tt.append(consts(sumOfSqrTT, x.N));
+
+//  phiMatrix(0).append(h*(x-x0));
+//  ttMatrix(0).append(consts(sumOfSqrTT, x.N));
+}
+
 //===========================================================================
 
 arr MotionProblemFunction::get_prefix() {
@@ -572,13 +614,6 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   if(&J) CHECK_EQ(J.d0, phi.N,"");
 //  if(&J_z) CHECK_EQ(J.d0,phi.N,"");
 
-  //store in CostMatrix
-  if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
-  MP.phiMatrix(t) = phi;
-  if(&tt){
-    if(!MP.ttMatrix.N) MP.ttMatrix.resize(get_T()+1);
-    MP.ttMatrix(t) = tt;
-  }
 }
 
 StringA MotionProblemFunction::getPhiNames(uint t){

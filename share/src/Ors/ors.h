@@ -243,8 +243,8 @@ struct KinematicWorld {
   void makeLinkTree();            ///< modify transformations so that B's become identity
   void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); }
   void glueBodies(Body *a, Body *b);
-  void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
-  void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
+  void meldFixedJoints(int verbose=0);         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
+  void removeUselessBodies(int verbose=0);     ///< prune non-articulated bodies; they become shapes of other bodies
   bool checkConsistency();
   
   /// @name computations on the graph

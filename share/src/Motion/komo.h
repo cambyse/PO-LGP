@@ -18,6 +18,7 @@
 
 #pragma once
 #include <Ors/ors.h>
+#include <Optim/optimization.h>
 
 //===========================================================================
 

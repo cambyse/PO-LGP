@@ -63,7 +63,7 @@ bool RelationalMachine::applyEffect(Node* literal, bool fwdChain){
 
 NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
-  forwardChaining_FOL(KB, NULL, *tmp, false);
+  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, *tmp, false);
   LOG(2) <<"  changes=" <<*tmp;
   LOG(2) <<"  new state=\n  " <<getState();
   return *tmp;

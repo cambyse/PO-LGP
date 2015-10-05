@@ -70,8 +70,8 @@ LIBS += -lGLEW -lglut -lGLU -lGL -lX11
 endif
 
 ifeq ($(QT),1)
-CXXFLAGS  += -DMT_QT `pkg-config --cflags  QtCore QtGui QtOpenGL`
-LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
+CXXFLAGS  += -DMT_QT `pkg-config --cflags  Qt5Core Qt5Gui Qt5OpenGL Qt5Svg`
+LIBS      += `pkg-config --libs Qt5Core Qt5Gui Qt5OpenGL Qt5Svg`
 endif
 
 ifeq ($(GTK),1)

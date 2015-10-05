@@ -44,8 +44,8 @@ ifndef CXX
 CXX	= g++
 CC	= gcc
 endif
-MOC = moc-qt4
-UIC = uic-qt4
+MOC = moc
+UIC = uic
 YACC = bison -d
 
 ifndef MLR_LIBPATH

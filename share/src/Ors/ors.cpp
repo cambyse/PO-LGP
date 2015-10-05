@@ -2253,10 +2253,10 @@ double ors::KinematicWorld::getEnergy() const {
   return E;
 }
 
-void ors::KinematicWorld::removeUselessBodies() {
+void ors::KinematicWorld::removeUselessBodies(int verbose) {
   //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    cout <<" -- removing useless body " <<b->name <<endl;
+    if(verbose>0) LOG(0) <<" -- removing useless body " <<b->name <<endl;
     delete b;
   }
   //-- reindex
@@ -2311,10 +2311,10 @@ bool ors::KinematicWorld::checkConsistency(){
   return true;
 }
 
-void ors::KinematicWorld::meldFixedJoints() {
+void ors::KinematicWorld::meldFixedJoints(int verbose) {
   checkConsistency();
   for(Joint *j: joints) if(j->type==JT_fixed) {
-    cout <<" -- melding fixed joint " <<j->name <<" (" <<j->from->name <<' ' <<j->to->name <<" )" <<endl;
+    if(verbose>0) LOG(0) <<" -- melding fixed joint " <<j->name <<" (" <<j->from->name <<' ' <<j->to->name <<" )" <<endl;
     Body *a = j->from;
     Body *b = j->to;
     Transformation bridge = j->A * j->Q * j->B;

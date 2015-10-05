@@ -1,13 +1,9 @@
 KOMO{
   model = '../easy/model.kvg'
-  T = 1
-  duration = 5
-}
-
-Task step{ #these are the 'motion costs', stepping from the initial pose to the final
-  map={ type=qItself }
-  order=1
-  scale=1
+  T = 0
+  k_order = 0
+  duration = 100
+  activateAllContacts
 }
 
 Task finalHandPosition{
@@ -22,3 +18,4 @@ Task collisions{
   type=inequal # hard inequality constraint
   scale = .1
 }
+

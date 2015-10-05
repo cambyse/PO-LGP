@@ -51,7 +51,11 @@ struct Node_typed : Node {
   Node_typed(Graph& container, T *value, bool ownsValue)
     : Node(container), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
+    if(value && typeid(T)==typeid(Graph)){
+      Node *node = graph().isNodeOfParentGraph;
+      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
+      if(!node) graph().isNodeOfParentGraph = this;
+    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -59,7 +63,11 @@ struct Node_typed : Node {
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, T *value, bool ownsValue)
     : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
     CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-    if(value && typeid(T)==typeid(Graph)) graph().isNodeOfParentGraph = this;
+    if(value && typeid(T)==typeid(Graph)){
+      Node *node = graph().isNodeOfParentGraph;
+      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
+      if(!node) graph().isNodeOfParentGraph = this;
+    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 

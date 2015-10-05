@@ -55,9 +55,11 @@ struct FOL_World:MCTS_Environment{
   int verbose;
   int verbFil;
   ofstream fil;
+  bool generateStateTree;
 
   double lastStepDuration;
   double lastStepProbability;
+  long count;
 
   FOL_World();
   FOL_World(istream& fil);
@@ -75,4 +77,8 @@ struct FOL_World:MCTS_Environment{
   virtual double get_info_value(InfoTag tag) const;
   void write_state(ostream&);
   void set_state(MT::String&);
+
+  //-- internal access
+  Graph* getState();
+  void setState(Graph*);
 };

@@ -19,19 +19,23 @@ void KOMO::init(const Graph& specs){
   uint timeSteps=glob.get<double>("T");
   double duration=glob.get<double>("duration");
   uint phases=glob.get<double>("phases", 1);
+  uint k_order=glob.get<double>("k_order", 2);
 
   world.read(model);
   world.meldFixedJoints();
   world.removeUselessBodies();
   makeConvexHulls(world.shapes);
-//  for(ors::Shape *s:world.shapes) s->cont=true;
+  if(glob["activateAllContacts"]){
+    for(ors::Shape *s:world.shapes) s->cont=true;
+    //    LOG(0) <<"Shape without contact: '" <<s->name <<"'";
+  }
   world.swift().initActivations(world);
   FILE("z.komo.model") <<world;
 
   MP = new MotionProblem(world);
-  MPF = new MotionProblemFunction(*MP);
   if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
-  if(timeSteps==0) MP->k_order=1;
+  MP->k_order=k_order;
+
 
   NodeL tasks = specs.getNodes("Task");
   for(Node *t:tasks){
@@ -63,10 +67,25 @@ void KOMO::init(const Graph& specs){
     MP->switches.append(sw);
   }
 
+  if(MP->T || MP->k_order){
+    MPF = new MotionProblemFunction(*MP);
+  }else{
+    LOG(0) <<"InvKin mode";
+    TaskMap *map = new TaskMap_qItself();
+    Task *task = MP->addTask("transition", map);
+    map->order = 0;
+    map->type=sumOfSqrTT;
+    task->setCostSpecs(0, 0, MP->x0, 1./(MP->tau*MP->tau));
+  }
+
 }
 
 void KOMO::reset(){
-  x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
+  if(MP->T || MP->k_order){
+    x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
+  }else{
+    x=MP->x0;
+  }
   rndGauss(x,.01,true); //don't initialize at a singular config
 }
 
@@ -76,10 +95,14 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-  optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2)); //parameters are set in cfg!!
+  if(MP->T || MP->k_order){
+    optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2));
+  }else{
+    optConstrainedMix(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+  }
   cout <<"** optimization time=" <<MT::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-//    checkJacobian(Convert(MF), x, 1e-5);
+  //    checkJacobian(Convert(MF), x, 1e-5);
   MP->costReport(false);
 }
 
@@ -88,16 +111,25 @@ Graph KOMO::getReport(){
 }
 
 void KOMO::checkGradients(){
-  checkJacobianCP(Convert(*MPF), x, 1e-4);
+  if(MP->T || MP->k_order){
+    checkJacobianCP(Convert(*MPF), x, 1e-4);
+  }else{
+    checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
+  }
 }
 
 void KOMO::displayTrajectory(bool wait){
-  ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
-//  orsDrawProxies=true;
+  if(MP->T || MP->k_order){
+    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+  //  orsDrawProxies=true;
   // for(uint t=0;t<x.d0;t++){
   //   MP->setState(x[t]);
   //   MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
   // }
+  }else{
+    MP->setState(x);
+    MP->world.gl().watch("KOMO InvKin mode");
+  }
   // if(wait) MP->world.gl().watch();
 }
 
@@ -141,7 +173,7 @@ arr moveTo(ors::KinematicWorld& world,
     }
     cout <<"** optimization time=" <<MT::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-//    checkJacobian(Convert(MF), x, 1e-5);
+    //    checkJacobian(Convert(MF), x, 1e-5);
     MP.costReport();
   }
 
@@ -210,4 +242,5 @@ void setTasks(MotionProblem& MP,
   }
 }
 
+//===========================================================================
 

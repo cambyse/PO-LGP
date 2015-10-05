@@ -103,7 +103,7 @@ struct MotionProblem {
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
-  arr postfix; ///< fixing the set of statex x[T-k]...x[T]
+  arr postfix; ///< fixing the set of statex x[T-k]...x[T] //TODO: remove?
   //TODO: add methods to properly set the prefix given x0,v0?
 
   //-- stationary parameters
@@ -130,11 +130,12 @@ struct MotionProblem {
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
+  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
   uint dim_phi(const ors::KinematicWorld& G, uint t);
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
+  void featureReport();
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
@@ -144,6 +145,15 @@ struct MotionProblem {
   //-- helpers
   arr getH_rate_diag();
   arr getInitialization();
+
+  //-- inverse Kinematics
+  void inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x);
+
+  ConstrainedProblemMix InvKinProblem(){
+    return [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+      this->inverseKinematics(phi, J, tt, x);
+    };
+  }
 };
 
 

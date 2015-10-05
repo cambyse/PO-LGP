@@ -6,32 +6,6 @@
 #include <Ors/ors.h>
 #include <Motion/taskMaps.h>
 
-ors::Vector p1, p2;
-ors::Vector e1, e2;
-GJK_point_type pt1, pt2;
-
-void draw(void*){
-  glDisable(GL_DEPTH_TEST);
-
-  glColor(1., 0., 0., .9);
-  glDrawDiamond(p1.x, p1.y, p1.z, .1, .1, .1);
-  glDrawDiamond(p2.x, p2.y, p2.z, .1, .1, .1);
-  glBegin(GL_LINES);
-  glVertex3f(p1.x, p1.y, p1.z);
-  glVertex3f(p2.x, p2.y, p2.z);
-  glEnd();
-  glBegin(GL_LINES);
-  glVertex3f(p1.x, p1.y, p1.z);
-  glVertex3f(p1.x+e1.x, p1.y+e1.y, p1.z+e1.z);
-  glEnd();
-  glBegin(GL_LINES);
-  glVertex3f(p2.x, p2.y, p2.z);
-  glVertex3f(p2.x+e2.x, p2.y+e2.y, p2.z+e2.z);
-  glEnd();
-  glLoadIdentity();
-}
-
-extern bool orsDrawWires;
 
 struct TowerProgram:ConstrainedProblemMix{
   ors::KinematicWorld& world;
@@ -131,10 +105,7 @@ void optTowers() {
   arr x0 = W.getJointState();
 
 
-//  animateConfiguration(W);
-//  orsDrawWires=true;
   cout <<logicState <<endl;
-  W.gl().add(draw);
   W.gl().update();
 
   arr x=x0;

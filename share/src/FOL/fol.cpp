@@ -479,10 +479,11 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
  }
 
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
+bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
-  Graph& state = KB.getNode("STATE")->graph();
+  CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
+//  Graph& state = KB.getNode("STATE")->graph();
 
   for(;;){
     DEBUG(KB.checkConsistency();)

@@ -284,7 +284,7 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
   uint num, T=x.d0-1;
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(uint k=0; k<=(uint)num; k++) {
-    uint t = k*T/num;
+    uint t = (T?(k*T/num):0);
     if(switches.N){
       for(ors::KinematicSwitch *sw: switches)
         if(sw->timeOfApplication==t)

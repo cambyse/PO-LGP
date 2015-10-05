@@ -4,9 +4,11 @@
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>
+#include <LGP/manipulationTree.h>
 
 //===========================================================================
 
+#if 0
 void ijcaiExperiment(){
   orsDrawJoints=false;
   orsDrawAlpha=1.;
@@ -59,17 +61,27 @@ void ijcaiExperiment(){
     fil <<k <<' ' <<towers.nObjects <<' ' <<MCTS_time/repeat <<' ' <<lev1_time/repeat <<' ' <<best->effPoseReward <<' ' <<lev2_time <<endl;
   }
 }
-
+#endif
 //===========================================================================
 
 void newMethod(){
   TowerProblem_new towers; //generates a randomize towers problem
 
-  //ManipulationTree T(towers.world, towers.symbols);
+//  towers.world_root.watch(true);
 
-  auto actions = towers.fol_root.get_actions();
-  uint c=0;
-  for(auto& a:actions){ cout <<"(" <<c++ <<") DECISION: " <<*a <<endl; }
+  ManipulationTree_Node root(towers);
+
+  ManipulationTree_Node *node = &root;
+
+  node->expand();
+  for(ManipulationTree_Node *n:node->children) n->expand();
+
+  root.dump();
+  root.fol.KB.checkConsistency();
+
+  cout <<root.fol.KB <<endl;
+
+
 
 //  for(;;){
 //    T.addRollout(); //uses a tree policy to walk to a leaf, expands, r
@@ -86,8 +98,8 @@ int main(int argc,char **argv){
 //  rnd.clockSeed();
   rnd.seed(MT::getParameter<int>("seed",0));
 
-  ijcaiExperiment();
-  //  newMethod();
+//  ijcaiExperiment();
+    newMethod();
 
   return 0;
 }
