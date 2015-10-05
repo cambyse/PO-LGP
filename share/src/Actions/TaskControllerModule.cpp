@@ -63,12 +63,7 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-
-#if 0
-    conv_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
-#else
-    q_real.subRange(trans->qIndex, trans->qIndex+3) = pr2_odom.get();
-#endif
+      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
@@ -83,6 +78,7 @@ void TaskControllerModule::step(){
       }
     }
   }
+
   if(syncModelStateWithRos){
     cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
     cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;

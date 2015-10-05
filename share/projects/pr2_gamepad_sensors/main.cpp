@@ -1,5 +1,4 @@
 #include <Motion/feedbackControl.h>
-#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
@@ -10,94 +9,121 @@
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 
-#include "../pcl_sprint_projections/dataStructures.h"
 #include "pr2GamepadController.h"
 
-struct MySystem:System{
-  ACCESS(CtrlMsg, ctrl_ref)
-  ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(arr, gamepadState)
+struct MySystem {
+  ACCESSname(CtrlMsg, ctrl_obs)
+  ACCESSname(arr, gamepadState)
 
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(uint16A, kinect_depth)
-  ACCESS(arr, kinect_points)
-  ACCESS(arr, kinect_pointColors)
-  ACCESS(arr, kinect_points_world)
+  ACCESSname(byteA, kinect_rgb)
+  ACCESSname(uint16A, kinect_depth)
+  ACCESSname(ors::Transformation, kinect_frame)
 
-  ACCESS(arr, wrenchL)
-  ACCESS(arr, wrenchR)
-  ACCESS(byteA, rgb_leftEye)
-  ACCESS(byteA, rgb_rightEye)
-  ACCESS(byteA, rgb_leftArm)
-  ACCESS(byteA, rgb_rightArm)
+  ACCESSname(arr, kinect_points)
+  ACCESSname(arr, kinect_pointColors)
+  ACCESSname(arr, kinect_points_world)
+
+  ACCESSname(arr, wrenchL)
+  ACCESSname(arr, wrenchR)
+  ACCESSname(byteA, rgb_leftEye)
+  ACCESSname(byteA, rgb_rightEye)
+  ACCESSname(byteA, rgb_leftArm)
+  ACCESSname(byteA, rgb_rightArm)
+
+  GamepadInterface gamepad;
 
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
-//      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
-      addModule<RosCom_CamsSync>(NULL, Module::loopWithBeat, 1.);
-      addModule<RosCom_ArmCamsSync>(NULL, Module::loopWithBeat, 1.);
+      new RosCom_Spinner();
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
+//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/left/image_rect_color", rgb_leftEye);
+//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/right/image_rect_color", rgb_rightEye);
+//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/l_forearm_cam/image_rect_color", rgb_leftArm);
+//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/r_forearm_cam/image_rect_color", rgb_rightArm);
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
+
     }
-//    addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftArm"}, Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightArm"}, Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftEye"}, Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+    new KinectDepthPacking();
+    new ImageViewer("kinect_rgb");
+    new ImageViewer("kinect_depthRgb");
+//    new ImageViewer("rgb_leftArm");
+//    new ImageViewer("rgb_rightArm");
+//    new ImageViewer("rgb_leftEye");
+//    new ImageViewer("rgb_rightEye");
+    new Kinect2PointCloud();
+    new PointCloudViewer();
 //    addModule<Pr2GamepadController>(NULL, Module::loopWithBeat, .01);
-    connect();
+    cout <<"SYSTEM=" <<registry() <<endl;
+
   }
 };
 
 void TEST(Sensors){
 
-
   MySystem S;
 
-  DisplayPrimitives primitives;
+  ors::KinematicWorld world("model.kvg");
   OpenGL gl;
-  gl.camera = kinectCam;
+  gl.setClearColors(1., 1., 1., 1.);
+  gl.camera.setPosition(10., -15., 8.);
+  gl.camera.focus(0, 0, 1.);
+  gl.camera.upright();
+
+//  gl.camera = kinectCam;
   gl.add(glStandardScene, NULL);
-  primitives.G.init("model.kvg");
-  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
-  ors::Shape *wrenchDispL = primitives.G.getShapeByName("wrenchDispL");
-  ors::Shape *wrenchDispR = primitives.G.getShapeByName("wrenchDispR");
-  gl.add(glDrawPrimitives, &primitives);
+  gl.add(ors::glDrawGraph, &world);
+//  primitives.G.init("model.kvg");
+//  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+//  ors::Shape *wrenchDispL = primitives.G.getShapeByName("wrenchDispL");
+//  ors::Shape *wrenchDispR = primitives.G.getShapeByName("wrenchDispR");
+//  gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
-  primitives.P.append(new ArrCloudView(S.kinect_points_world, S.kinect_pointColors));
+//  primitives.P.append(new ArrCloudView(S.kinect_points_world, S.kinect_pointColors));
   gl.lock.unlock();
 
-  engine().open(S);
+  threadOpenModules(true);
 
   for(uint t=0;;t++){
     arr gamepadState = S.gamepadState.get();
-    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
-    if(engine().shutdown.getValue()>0) break;
+    if(t>10 && stopButtons(gamepadState)) shutdown().incrementValue();
+    if(shutdown().getValue()>0) break;
     S.gamepadState.var->waitForNextRevision();
 
+    //-- update world
+    gl.lock.writeLock();
     // joint sensors
     arr q_obs    = S.ctrl_obs.get()->q;
     arr qdot_obs = S.ctrl_obs.get()->qdot;
-    if(q_obs.N==primitives.G.q.N && qdot_obs.N==primitives.G.qdot.N){
-      gl.lock.writeLock();
-      primitives.G.setJointState(q_obs,qdot_obs);
-      gl.lock.unlock();
+    if(q_obs.N==world.q.N){
+      world.setJointState(q_obs, qdot_obs);
     }else{
-      cout <<"No joint signals: q_obs.N=" <<q_obs.N <<" G.q.N=" <<primitives.G.q.N <<endl;
+      LOG(0) <<"joint dim unequal: " <<q_obs.N <<' ' <<world.q.N;
     }
+
+    //kinect point cloud
+    if(S.kinect_points.get()->N){
+      ors::Shape *s = world.getShapeByName("kinectCloud");
+      if(!s){
+        s = new ors::Shape(world, NoBody);
+        s->name="kinectCloud";
+        s->type = ors::meshST;
+      }
+      s->mesh.V = S.kinect_points.get();
+      s->mesh.C = S.kinect_pointColors.get();
+      s->X = s->rel = S.kinect_frame.get();
+    }
+
+    gl.lock.unlock();
+
     gl.lock.writeLock();
 #if 0
     primitives.P(0)->X = kinShape->X;
 #else
-    S.kinect_points_world.set() = S.kinect_points.get();
-    kinShape->X.applyOnPointArray( S.kinect_points_world.set() );
+//    S.kinect_points_world.set() = S.kinect_points.get();
+//    kinShape->X.applyOnPointArray( S.kinect_points_world.set() );
 #endif
     gl.lock.unlock();
     if(!(t%10)) gl.update();
@@ -111,19 +137,21 @@ void TEST(Sensors){
       rot.setDeg(-90, 0, 1, 0);
       tmp.setDeg(90, 0, 0, 1);
       rot = rot*tmp;
-      wrenchDispR->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wR.sub(0,2)));
-      wrenchDispR->rel.rot.setVec(-1.*(rot*ors::Vector(wR.sub(3,-1))));;
-      wrenchDispL->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wL.sub(0,2)));
-      wrenchDispL->rel.rot.setVec(-1.*(rot*ors::Vector(wL.sub(3,-1))));;
+//      wrenchDispR->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wR.sub(0,2)));
+//      wrenchDispR->rel.rot.setVec(-1.*(rot*ors::Vector(wR.sub(3,-1))));;
+//      wrenchDispL->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wL.sub(0,2)));
+//      wrenchDispL->rel.rot.setVec(-1.*(rot*ors::Vector(wL.sub(3,-1))));;
     }
   }
 
-  engine().close(S);
+  threadCloseModules();
+  modulesReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
+  rosCheckInit("pr2_sensors");
   testSensors();
 
   return 0;

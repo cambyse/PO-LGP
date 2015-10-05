@@ -94,18 +94,53 @@ struct Subscriber {
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConv {
   Access_typed<var_type>& access;
+  Access_typed<ors::Transformation> *frame;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
-  SubscriberConv(const char* topic_name, Access_typed<var_type>& _access)
-    : access(_access) {
+  tf::TransformListener listener;
+  SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
+    : access(_access), frame(_frame) {
     nh = new ros::NodeHandle;
-    sub = nh->subscribe( topic_name, 1, &SubscriberConv::callback, this);
+    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+    cout <<"done" <<endl;
   }
   ~SubscriberConv(){
     nh->shutdown();
     delete nh;
   }
-  void callback(const typename msg_type::ConstPtr& msg) { access.set() = conv(*msg); }
+  void callback(const typename msg_type::ConstPtr& msg) {
+    double time=conv_time2double(msg->header.stamp);
+    access.set( time ) = conv(*msg);
+    if(frame){
+      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
+    }
+  }
+};
+
+
+//===========================================================================
+//
+// subscribing a message into an MLR-type-Access via a conv_* function
+//
+
+template<class msg_type, class var_type, var_type conv(const msg_type&)>
+struct SubscriberConvNoHeader {
+  Access_typed<var_type>& access;
+  ros::NodeHandle *nh;
+  ros::Subscriber sub;
+  SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
+    : access(_access) {
+    nh = new ros::NodeHandle;
+    sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+  }
+  ~SubscriberConvNoHeader(){
+    nh->shutdown();
+    delete nh;
+  }
+  void callback(const typename msg_type::ConstPtr& msg) {
+    access.set() = conv(*msg);
+  }
 };
 
 
@@ -115,17 +150,17 @@ struct SubscriberConv {
 //
 
 template<class msg_type, class var_type, msg_type conv(const var_type&)>
-struct PublisherConv : Thread{
-  Access_typed<var_type>& access;
+struct PublisherConv : Module{
+  Access_typed<var_type> access;
   ros::NodeHandle *nh;
   ros::Publisher pub;
   const char* topic_name;
 
   PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
-      : Thread(STRING("Publisher_"<<_access.name <<"->" <<topic_name)),
-        access(_access),
+      : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name)),
+        access(this, _access, true),
         topic_name(_topic_name){
-    listenTo(*access.var);
+//    listenTo(*access.var);
   }
   void open(){
     nh = new ros::NodeHandle;
@@ -140,9 +175,13 @@ struct PublisherConv : Thread{
   }
 };
 
+//===========================================================================
+//
+// maybe useful for expensive conversion: a subscriber module
+//
 
 //template<class msg_type>
-//struct Subscriber : Module {
+//struct SubscriberModule : Module {
 //  Access_typed<msg_type> access;
 //  ros::NodeHandle* nh;
 //  ros::Subscriber sub;
@@ -185,24 +224,6 @@ struct SoftHandMsg{
 //inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 //inline void operator>>(istream& os, CtrlMsg& m){  }
 
-//===========================================================================
-
-////-- the message that defines the motor level controller: feedback regulators on q, q_dot, fL and fR
-//struct JointControllerRefsMsg{
-//  arr q_ref, qdot_ref, fL_ref, fR_ref, u_bias;
-//  arr Kq_matrix, Kd_matrix, KfL_matrix, KfR_matrix;
-//};
-//inline void operator<<(ostream& os, const JointControllerRefsMsg& m){ os<<"JointControllerRefsMsg - NIY"; }
-//inline void operator>>(istream& os, JointControllerRefsMsg& m){  }
-
-////===========================================================================
-
-////-- the message that defines the state (of the controller) on the joint level
-//struct JointControllerStateMsg{
-//  arr q_real, qdot_real, fL_real, fR_real, u_cmd, u_real;
-//};
-//inline void operator<<(ostream& os, const JointControllerStateMsg& m){ os<<"JointControllerStateMsg - NIY"; }
-//inline void operator>>(istream& os, JointControllerStateMsg& m){  }
 
 //===========================================================================
 //
@@ -251,34 +272,6 @@ void initialSyncJointStateWithROS(ors::KinematicWorld& world, Access_typed<CtrlM
  * If useRos==false then nothing happens.
  */
 void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
-
-//===========================================================================
-/// This module syncs the kinect
-//struct RosCom_KinectSync : Module {
-//  struct sRosCom_KinectSync *s;
-//  ACCESS(byteA, kinect_rgb)
-//  ACCESS(uint16A, kinect_depth)
-//  ACCESS(ors::Transformation, kinect_frame)
-
-//  RosCom_KinectSync(): Module("RosCom_KinectSync"), s(NULL) {}
-//  virtual void open();
-//  virtual void step();
-//  virtual void close();
-//};
-
-//===========================================================================
-/// This module syncs the left & right eye
-//BEGIN_MODULE(RosCom_CamsSync)
-//  ACCESS(byteA, rgb_leftEye)
-//  ACCESS(byteA, rgb_rightEye)
-//END_MODULE()
-
-//===========================================================================
-/// This module syncs the left & right arm cams
-//BEGIN_MODULE(RosCom_ArmCamsSync)
-//  ACCESS(byteA, rgb_leftArm)
-//  ACCESS(byteA, rgb_rightArm)
-//END_MODULE()
 
 //===========================================================================
 /// Sync the FT sensor
