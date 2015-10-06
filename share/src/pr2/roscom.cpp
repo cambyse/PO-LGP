@@ -138,11 +138,11 @@ arr conv_wrench2arr(const geometry_msgs::WrenchStamped& msg){
 }
 
 byteA conv_image2byteA(const sensor_msgs::Image& msg){
-  return conv_stlvec2array<byte>(msg.data).reshape(msg.height, msg.width, 3);
+  return conv_stdvec2arr<byte>(msg.data).reshape(msg.height, msg.width, 3);
 }
 
 uint16A conv_image2uint16A(const sensor_msgs::Image& msg){
-  byteA data = conv_stlvec2array<byte>(msg.data);
+  byteA data = conv_stdvec2arr<byte>(msg.data);
   uint16A ref((const uint16_t*)data.p, data.N/2);
   return ref.reshape(msg.height, msg.width);
 }
