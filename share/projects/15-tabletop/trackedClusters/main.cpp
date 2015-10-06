@@ -133,7 +133,7 @@ struct Tracker{
             new_marker.scale.y = .001;
             new_marker.id = cluster_it->id;
             new_marker.lifetime = ros::Duration(0.5);
-            new_marker.header.stamp = ros::Time::now();
+            new_marker.header.stamp = ros::Time(0.);
             new_marker.header.frame_id = cluster_it->frame_id;
 
             new_marker.color.a = 1.0; // Don't forget to set the alpha!

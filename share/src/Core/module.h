@@ -122,6 +122,23 @@ template<class T>
 struct Access_typed:Access{
   Variable<T> *v;
 
+//  Access_typed(const Access_typed<T>& acc) = delete;
+
+  Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
+    : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
+    Node *vnode = registry().getNode("Variable", name);
+    v = acc.v;
+    var = acc.var;
+    CHECK(vnode && &vnode->V<Variable<T> >()==v,"something's wrong")
+    if(module){
+      Node *m = getModuleNode(module);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      if(moduleListens) module->listenTo(*var);
+    }else{
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
+    }
+  }
+
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = registry().getNode("Variable", name);
@@ -167,7 +184,7 @@ struct Access_typed:Access{
 
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
-  __##name##__Access():Access_typed<type>(#name){} \
+  __##name##__Access():Access_typed<type>(NULL, #name){} \
 } name;
 
 #else

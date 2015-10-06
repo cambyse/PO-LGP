@@ -13,9 +13,6 @@
 void openGlLock();
 void openGlUnlock();
 
-//void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
-//void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
-
 struct OrsViewer:Module{
   ACCESSlisten(ors::KinematicWorld, modelWorld)
 
@@ -70,12 +67,8 @@ struct PerceptionObjects2Ors : Module{
   void close(){}
 };
 
-//#ifdef MT_ROS
-//ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom);
-//ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
-//#endif
-
 // ============================================================================
+
 struct SwigSystem {
   ACCESSname(ActivityL, A)
   ACCESSname(bool, quitSignal)
@@ -104,22 +97,18 @@ struct SwigSystem {
 //    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
 
     if(MT::getParameter<bool>("useRos",false)){
+      rosCheckInit("SwigSystem");
       new RosCom_Spinner();
-//      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
-      //addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
       //addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
 
-      new SubscriberConv<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
       new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
-
-      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-
     }
-//    connect();
 
     // make the base movable by default
     fixBase.set() = MT::getParameter<bool>("fixBase", false);
@@ -129,6 +118,7 @@ struct SwigSystem {
 };
 
 // ============================================================================
+
 MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
   MT::String str;
   str <<'(';
@@ -144,6 +134,7 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
+
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   S->tcm.verbose=false;
 

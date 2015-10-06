@@ -1,12 +1,10 @@
 BASE = ../..
 
-OBJS = main.o ../pcl_sprint_projections/dataStructures.o ../pcl_sprint_projections/methods.o
-
 ROS = 1
 PLIB = 1
 PCL = 1
 GL = 1
-DEPEND = Core System Hardware_gamepad Motion Ors Gui pr2 Perception
+DEPEND = Core Hardware_gamepad Motion Ors Gui pr2 Perception
 
 LPATHS += /opt/ros/groovy/lib
 

@@ -325,6 +325,7 @@ class ActionSwigInterface(_object):
     def waitForQuitSymbol(self): return _swig.ActionSwigInterface_waitForQuitSymbol(self)
     def createNewSymbol(self, *args): return _swig.ActionSwigInterface_createNewSymbol(self, *args)
     def defineNewTaskSpaceControlAction(self, *args): return _swig.ActionSwigInterface_defineNewTaskSpaceControlAction(self, *args)
+    def getState(self): return _swig.ActionSwigInterface_getState(self)
     def execScript(self, *args): return _swig.ActionSwigInterface_execScript(self, *args)
 ActionSwigInterface_swigregister = _swig.ActionSwigInterface_swigregister
 ActionSwigInterface_swigregister(ActionSwigInterface)

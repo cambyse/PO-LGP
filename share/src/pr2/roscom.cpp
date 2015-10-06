@@ -361,35 +361,6 @@ void syncJointStateWitROS(ors::KinematicWorld& world,
 //  s->nh.shutdown();
 //}
 
-////===========================================================================
-//// RosCom_CamsSync
-//struct sRosCom_CamsSync{
-//  RosCom_CamsSync *base;
-//  ros::NodeHandle nh;
-//  ros::Subscriber sub_left;
-//  ros::Subscriber sub_right;
-//  void cb_left(const sensor_msgs::Image::ConstPtr& msg){
-//    base->rgb_leftEye.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
-//  }
-//  void cb_right(const sensor_msgs::Image::ConstPtr& msg){
-//    base->rgb_rightEye.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
-//  }
-//};
-
-//void RosCom_CamsSync::open(){
-//  rosCheckInit();
-//  s = new sRosCom_CamsSync;
-//  s->base = this;
-//  s->sub_left  = s->nh.subscribe("/wide_stereo/left/image_rect_color", 1, &sRosCom_CamsSync::cb_left, s);
-//  s->sub_right = s->nh.subscribe("/wide_stereo/right/image_rect_color", 1, &sRosCom_CamsSync::cb_right, s);
-//}
-
-//void RosCom_CamsSync::step(){
-//}
-
-//void RosCom_CamsSync::close(){
-//  s->nh.shutdown();
-//}
 
 ////===========================================================================
 //// RosCom_ArmCamsSync
