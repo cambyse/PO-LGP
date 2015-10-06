@@ -132,7 +132,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 
         markers = S.ar_pose_marker.get();
         syncMarkers(*world, markers);
-        Mact.append(~ARRAY(world->getBodyByName("marker4")->X.pos));
+        Mact.append(~conv_vec2arr(world->getBodyByName("marker4")->X.pos));
       }
     }
   }

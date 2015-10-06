@@ -105,7 +105,7 @@ public:
     c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                                {0.,0.,0.}, 1e3,

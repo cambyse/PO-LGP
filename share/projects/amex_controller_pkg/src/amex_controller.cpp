@@ -160,7 +160,7 @@ void AmexController::initRosServices(){
   setFilterGainsClient.waitForExistence();
 
   if (useGoalPub) {
-    refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+    refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
     getGoalClient = nh.serviceClient<goal_publisher::GetGoal>("/get_goal",true);
     getGoalClient.waitForExistence();
   }

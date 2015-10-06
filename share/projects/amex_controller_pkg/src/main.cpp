@@ -59,12 +59,12 @@ int main(int argc, char** argv)
     // Use AR Tag
     useARtag = true;
     get_init_goal_client.call(initCamGoal);
-    arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+    arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
     goal = refFrame + ARR(initCamGoal.response.x,initCamGoal.response.y,initCamGoal.response.z);
   } else {
     // Use goal from scene file
     useARtag = false;
-    goal = ARRAY(world.getBodyByName("goalRef")->X.pos);
+    goal = conv_vec2arr(world.getBodyByName("goalRef")->X.pos);
   }
 
   /// Create reference plan with optimizer

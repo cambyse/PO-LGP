@@ -345,7 +345,7 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
       ors::Transformation rel;
       rel.setDifference(global_ANN_shape->X, s->X);
       rel.rot.getMatrix(R.p);
-      t = ARRAY(rel.pos);
+      t = conv_vec2arr(rel.pos);
       
       //check for each vertex
       for(i=0; i<s->mesh.V.d0; i++) {

@@ -102,7 +102,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   ors::Vector ivec,jvec;
 
   //general target
-  target = ARRAY(target_shape->X.pos);
+  target = conv_vec2arr(target_shape->X.pos);
   //xtarget(2) += .02; //grasp it 2cm above center
   
   //-- graspCenter -> predefined point (xtarget)
@@ -225,7 +225,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   ors::Vector ivec,jvec;
 
   //general target
-  target = ARRAY(target_shape->X.pos);
+  target = conv_vec2arr(target_shape->X.pos);
 
   //-- graspCenter -> predefined point (xtarget)
   Task *c;
@@ -357,7 +357,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   //general target
   arr xtarget;
   if(onto) {
-    xtarget = ARRAY(onto->X.pos);
+    xtarget = conv_vec2arr(onto->X.pos);
     xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   }
   else {

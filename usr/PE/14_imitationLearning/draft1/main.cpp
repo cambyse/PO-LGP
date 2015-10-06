@@ -19,7 +19,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     makeConvexHulls(world.shapes);
     MotionProblem MP(world);
     MP.loadTransitionParameters();
-    arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
+    arr refGoal = conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;

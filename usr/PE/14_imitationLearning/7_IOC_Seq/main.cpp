@@ -21,7 +21,7 @@ void testSliding() {
   MotionProblem MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getShapeByName("target")->X.pos);
+  arr refGoal1 = conv_vec2arr(MP.world.getShapeByName("target")->X.pos);
 
   ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
   op1->symbol = ors::KinematicSwitch::addRigid;
@@ -44,13 +44,13 @@ void testSliding() {
 
   TaskCost *c;
   c = MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  c->setCostSpecs(MP.T/2, MP.T/2, ARRAY(obj->X.pos), 1e4);
+  c->setCostSpecs(MP.T/2, MP.T/2, conv_vec2arr(obj->X.pos), 1e4);
 
   c = MP.addTask("quat", new DefaultTaskMap(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
   c->setCostSpecs(MP.T/2, MP.T/2, {0.,0.,-1.}, 1e3);
 
   c = MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  c->setCostSpecs(MP.T, MP.T, ARRAY(tar->X.pos), 1e3);
+  c->setCostSpecs(MP.T, MP.T, conv_vec2arr(tar->X.pos), 1e3);
 
   c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, world));
   c->map.order=1; //make this a velocity variable!

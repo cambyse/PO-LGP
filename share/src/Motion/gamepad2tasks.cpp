@@ -91,8 +91,8 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         vel = MP.world.getShapeByName("endeffBase") -> X.rot * vel;
       }
 //      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
-      pdt->y_ref = pdt->y + 0.01*ARRAY(vel);
-      pdt->v_ref = ARRAY(vel); //setZero();
+      pdt->y_ref = pdt->y + 0.01*conv_vec2arr(vel);
+      pdt->v_ref = conv_vec2arr(vel); //setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
       //-- left right: gaze control

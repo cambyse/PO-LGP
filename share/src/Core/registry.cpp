@@ -29,7 +29,6 @@ Singleton<Graph> registry;
 extern Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
 
 void initRegistry(int argc, char* argv[]){
-
   int n;
   for(n=1; n<argc; n++){
     if(argv[n][0]=='-'){
@@ -50,5 +49,4 @@ void initRegistry(int argc, char* argv[]){
 
   MT::openConfigFile();
   globalThings().cfgFile >>registry();
-
 }

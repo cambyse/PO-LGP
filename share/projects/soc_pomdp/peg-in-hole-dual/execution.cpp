@@ -208,6 +208,6 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 

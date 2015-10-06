@@ -272,7 +272,7 @@ void simpleMotion(){
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
 
-  arr refGoal = ARRAY(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e4);
@@ -312,7 +312,7 @@ void simpleMotion(){
 
   MP2.makeContactsAttractive=false;
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.,0.1);
-  arr refGoal2 = ARRAY(MP2.world.getBodyByName("goal")->X.pos);
+  arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
   c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);

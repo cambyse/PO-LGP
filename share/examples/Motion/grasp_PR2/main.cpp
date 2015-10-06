@@ -106,7 +106,7 @@ void TEST(PickAndPlace){
 
   Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -136,7 +136,7 @@ void TEST(PickAndPlace){
   MP.x0 = x[MP.T-1];
 
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!

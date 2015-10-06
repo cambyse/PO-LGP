@@ -1126,7 +1126,7 @@ void Transformation::applyOnPointArray(arr& pts){
     return;
   }
   arr R = ~rot.getArr(); //transposed, only to make it applicable to an n-times-3 array
-  arr t = ARRAY(pos);
+  arr t = conv_vec2arr(pos);
   pts = pts * R;
   for(uint i=0;i<pts.d0;i++) pts[i]() += t; //inefficient...
 }
@@ -1219,7 +1219,7 @@ std::ostream& operator<<(std::ostream& os, const Transformation& x)     { x.writ
 //===========================================================================
 
 double DistanceFunction_Sphere::fs(arr& g, arr& H, const arr& x){
-  arr d = x-ARRAY(t.pos);
+  arr d = x-conv_vec2arr(t.pos);
   double len = length(d);
   if(&g) g = d/len;
   if(&H) H = 1./len * (eye(3) - (d^d)/(len*len));
@@ -1247,8 +1247,8 @@ double DistanceFunction_Sphere::fs(arr& g, arr& H, const arr& x){
 //===========================================================================
 
 double DistanceFunction_Cylinder::fs(arr& g, arr& H, const arr& x){
-  arr z = ARRAY(t.rot.getZ());
-  arr c = ARRAY(t.pos);
+  arr z = conv_vec2arr(t.rot.getZ());
+  arr c = conv_vec2arr(t.pos);
   arr b = scalarProduct(x-c, z) * z;
   arr a = (x-c) - b;
   arr I(3,3);
@@ -1295,7 +1295,7 @@ double DistanceFunction_Cylinder::fs(arr& g, arr& H, const arr& x){
 
 double DistanceFunction_Box::fs(arr& g, arr& H, const arr& x){
   arr rot = t.rot.getArr();
-  arr a_rel = (~rot)*(x-ARRAY(t.pos));
+  arr a_rel = (~rot)*(x-conv_vec2arr(t.pos));
   arr dim = {dx, dy, dz};
 
   double d;

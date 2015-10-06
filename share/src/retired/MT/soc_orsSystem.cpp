@@ -184,7 +184,7 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
   TaskVariable *com = new DefaultTaskVariable("balance", *s->ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables({pos, col, com});
 
-  pos->y_target = ARRAY(s->ors->getShapeByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(s->ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -268,7 +268,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   else               col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables({pos, col});
 
-  pos->y_target = ARRAY(s->ors->getBodyByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(s->ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);

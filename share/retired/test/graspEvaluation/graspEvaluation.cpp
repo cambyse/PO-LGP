@@ -64,8 +64,8 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
     }
     if(p->d<distanceThreshold){
       cout <<"contact " <<i <<" d=" <<p->d <<" contact=" <<contact <<" normal=" <<normal <<endl;
-      contactPoints.append(ARRAY(contact));
-      contactNormals.append(ARRAY(normal));
+      contactPoints.append(conv_vec2arr(contact));
+      contactNormals.append(conv_vec2arr(normal));
     }
   }
   contactPoints.reshape(contactPoints.N/3,3);

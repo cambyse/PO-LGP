@@ -148,21 +148,21 @@ uint16A conv_image2uint16A(const sensor_msgs::Image& msg){
 }
 
 CtrlMsg conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg){
-  return CtrlMsg(ARRAY(msg.q), ARRAY(msg.qdot), ARRAY(msg.fL), ARRAY(msg.fR), ARRAY(msg.u_bias), ARRAY(msg.J_ft_inv), msg.velLimitRatio, msg.effLimitRatio, msg.gamma);
+  return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR), conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.J_ft_inv), msg.velLimitRatio, msg.effLimitRatio, msg.gamma);
 }
 
 marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
   marc_controller_pkg::JointState jointState;
   if(!ctrl.q.N) return jointState;
-  jointState.q = VECTOR(ctrl.q);
-  jointState.qdot= VECTOR(ctrl.qdot);
-  jointState.fL = VECTOR(ctrl.fL);
-  jointState.u_bias = VECTOR(ctrl.u_bias);
-  jointState.Kp = VECTOR(ctrl.Kp);
-  jointState.Kd = VECTOR(ctrl.Kd);
-  jointState.Ki = VECTOR(ctrl.Ki);
-  jointState.KiFT = VECTOR(ctrl.KiFT);
-  jointState.J_ft_inv = VECTOR(ctrl.J_ft_inv);
+  jointState.q = conv_arr2stdvec(ctrl.q);
+  jointState.qdot= conv_arr2stdvec(ctrl.qdot);
+  jointState.fL = conv_arr2stdvec(ctrl.fL);
+  jointState.u_bias = conv_arr2stdvec(ctrl.u_bias);
+  jointState.Kp = conv_arr2stdvec(ctrl.Kp);
+  jointState.Kd = conv_arr2stdvec(ctrl.Kd);
+  jointState.Ki = conv_arr2stdvec(ctrl.Ki);
+  jointState.KiFT = conv_arr2stdvec(ctrl.KiFT);
+  jointState.J_ft_inv = conv_arr2stdvec(ctrl.J_ft_inv);
   jointState.velLimitRatio = ctrl.velLimitRatio;
   jointState.effLimitRatio = ctrl.effLimitRatio;
   jointState.intLimitRatio = ctrl.intLimitRatio;
@@ -232,12 +232,12 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
 
 //  void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
 //    //  cout <<"** joinstState_callback" <<endl;
-//    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
+//    CtrlMsg m(conv_stdvec2arr(msg->q), conv_stdvec2arr(msg->qdot), conv_stdvec2arr(msg->fL), conv_stdvec2arr(msg->fR), conv_stdvec2arr(msg->u_bias), conv_stdvec2arr(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
 //    base->ctrl_obs.set() = m;
 //  }
 ////  void odom_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
 ////    //  cout <<"** joinstState_callback" <<endl;
-////    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
+////    CtrlMsg m(conv_stdvec2arr(msg->q), conv_stdvec2arr(msg->qdot), conv_stdvec2arr(msg->fL), conv_stdvec2arr(msg->fR), conv_stdvec2arr(msg->u_bias), conv_stdvec2arr(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
 ////    base->ctrl_obs.set() = m;
 ////  }
 //};
@@ -257,15 +257,15 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
 //  CtrlMsg m = ctrl_ref.get();
 //  if(!m.q.N) return;
 //  marc_controller_pkg::JointState jointRef;
-//  jointRef.q = VECTOR(m.q);
-//  jointRef.qdot= VECTOR(m.qdot);
-//  jointRef.fL = VECTOR(m.fL);
-//  jointRef.u_bias = VECTOR(m.u_bias);
-//  jointRef.Kp = VECTOR(m.Kp);
-//  jointRef.Kd = VECTOR(m.Kd);
-//  jointRef.Ki = VECTOR(m.Ki);
-//  jointRef.KiFT = VECTOR(m.KiFT);
-//  jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
+//  jointRef.q = conv_arr2stdvec(m.q);
+//  jointRef.qdot= conv_arr2stdvec(m.qdot);
+//  jointRef.fL = conv_arr2stdvec(m.fL);
+//  jointRef.u_bias = conv_arr2stdvec(m.u_bias);
+//  jointRef.Kp = conv_arr2stdvec(m.Kp);
+//  jointRef.Kd = conv_arr2stdvec(m.Kd);
+//  jointRef.Ki = conv_arr2stdvec(m.Ki);
+//  jointRef.KiFT = conv_arr2stdvec(m.KiFT);
+//  jointRef.J_ft_inv = conv_arr2stdvec(m.J_ft_inv);
 //  jointRef.velLimitRatio = m.velLimitRatio;
 //  jointRef.effLimitRatio = m.effLimitRatio;
 //  jointRef.intLimitRatio = m.intLimitRatio;
@@ -333,11 +333,11 @@ void syncJointStateWitROS(ors::KinematicWorld& world,
 
 //  void cb_rgb(const sensor_msgs::Image::ConstPtr& msg){
 //    //  cout <<"** sRosCom_KinectSync callback" <<endl;
-//    base->kinect_rgb.set( conv_time2double(msg->header.stamp) ) = ARRAY(msg->data).reshape(msg->height, msg->width, 3);
+//    base->kinect_rgb.set( conv_time2double(msg->header.stamp) ) = conv_stdvec2arr(msg->data).reshape(msg->height, msg->width, 3);
 //  }
 //  void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
 //    //  cout <<"** sRosCom_KinectSync callback" <<endl;
-//    byteA data = ARRAY(msg->data);
+//    byteA data = conv_stdvec2arr(msg->data);
 //    uint16A ref((const uint16_t*)data.p, data.N/2);
 //    ref.reshape(msg->height, msg->width);
 //    double time=conv_time2double(msg->header.stamp);

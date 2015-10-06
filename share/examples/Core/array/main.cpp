@@ -93,11 +93,11 @@ void TEST(Basics){
 void TEST(StdVectorCompat) {
   std::vector<double> x(3);
   x[0]=1.;
-  cout <<"std::vector to arr:" <<ARRAY(x) <<endl;
+  cout <<"std::vector to arr:" <<conv_stdvec2arr(x) <<endl;
   arr y(10);
   y.setStraightPerm(10);
-  x=VECTOR(y);
-  cout <<"arr -> std::vector -> arr = " <<ARRAY(x) <<endl;
+  x=conv_arr2stdvec(y);
+  cout <<"arr -> std::vector -> arr = " <<conv_stdvec2arr(x) <<endl;
 }
 
 //===========================================================================

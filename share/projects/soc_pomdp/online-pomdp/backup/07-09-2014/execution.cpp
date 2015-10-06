@@ -236,6 +236,6 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 

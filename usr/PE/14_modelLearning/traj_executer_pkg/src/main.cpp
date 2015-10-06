@@ -41,7 +41,7 @@ int main(int argc, char** argv)
   /// Get init position from robot
   tree_controller_pkg::GetJointState getInitJointStateSrv;
   getInitJointStateClient.call(getInitJointStateSrv);
-  arr q0 = ARRAY(getInitJointStateSrv.response.q);
+  arr q0 = conv_stdvec2arr(getInitJointStateSrv.response.q);
 
   ros::ServiceClient setCommandClient = nh.serviceClient<tree_controller_pkg::SetCommand>("/tree_rt_controller/set_command",true);
   tree_controller_pkg::SetCommand setCommandSrv;
@@ -117,9 +117,9 @@ int main(int argc, char** argv)
 
     gp->predict(state,u);
 
-    setCommandSrv.request.q = VECTOR(q0);
-    setCommandSrv.request.qd = VECTOR(q0*0.);
-    setCommandSrv.request.uGP = VECTOR(u);
+    setCommandSrv.request.q = conv_arr2stdvec(q0);
+    setCommandSrv.request.qd = conv_arr2stdvec(q0*0.);
+    setCommandSrv.request.uGP = conv_arr2stdvec(u);
     setCommandClient.call(setCommandSrv);
     loop_rate.sleep();
   }
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
   while ( t < dur ) {
     // get actual joint state
     getInitJointStateClient.call(getJointStateSrv);
-    q_act = ARRAY(getJointStateSrv.response.q);
+    q_act = conv_stdvec2arr(getJointStateSrv.response.q);
     world.setJointState(q_act);
     world.kinematicsPos(y_act,NoArr,world.getBodyByName("endeffR"));
     traj_act.append(~y_act);
@@ -164,9 +164,9 @@ int main(int argc, char** argv)
     pt = MT::timerRead(false) - pt;
     pred_time.append(pt);
 
-    setCommandSrv.request.q = VECTOR(q);
-    setCommandSrv.request.qd = VECTOR(qd);
-    setCommandSrv.request.uGP = VECTOR(u);
+    setCommandSrv.request.q = conv_arr2stdvec(q);
+    setCommandSrv.request.qd = conv_arr2stdvec(qd);
+    setCommandSrv.request.uGP = conv_arr2stdvec(u);
     setCommandClient.call(setCommandSrv);
 
     double timeDiff = MT::timerRead(true);

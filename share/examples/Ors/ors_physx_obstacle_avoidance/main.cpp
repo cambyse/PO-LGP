@@ -26,20 +26,20 @@ void TEST(PhysxObstacleAvoidance) {
   arr dir(3,1);
   ors::Proxy *p;
 
-  x = ARRAY(robot->X.pos);
+  x = conv_vec2arr(robot->X.pos);
 
   for (uint k=0; k<6; k++) {
     // set current goal
     MT::String bname;
     bname << "door" << k+1;
-    goal = ARRAY(ors.getBodyByName(bname)->X.pos);
+    goal = conv_vec2arr(ors.getBodyByName(bname)->X.pos);
     goal(2) = 1;
 
     // remove collision avoidance for current door
     (ors.getBodyByName(bname)->shapes(0))->cont = false;
 
     while (length(x - goal) > 1e-1) {
-      x = ARRAY(robot->X.pos);
+      x = conv_vec2arr(robot->X.pos);
 
       // direction towards goal
       dir = wGoal*(goal - x)/length(goal - x);
@@ -54,12 +54,12 @@ void TEST(PhysxObstacleAvoidance) {
 
         if ((p->d < eps) && (objA == "robot")) {
           ors.reportProxies();
-          dirObs = dirObs + ARRAY(p->normal);
+          dirObs = dirObs + conv_vec2arr(p->normal);
         }
 
         if ((p->d < eps) && (objB == "robot")) {
           ors.reportProxies();
-          dirObs = dirObs - ARRAY(p->normal)/p->d;
+          dirObs = dirObs - conv_vec2arr(p->normal)/p->d;
         }
       }
 

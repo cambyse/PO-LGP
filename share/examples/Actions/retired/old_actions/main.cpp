@@ -37,8 +37,8 @@ void grap_the_marker() {
   // align along marker
   auto target = m.s->world.getShapeByName("mymarker")->X;
   cout << "target:" << target << endl;
-  arr target_position = ARRAY(target.pos);
-  arr target_orientation = ARRAY(target.rot);
+  arr target_position = conv_vec2arr(target.pos);
+  arr target_orientation = conv_quat2arr(target.rot);
   Action* pose_to = new PoseTo(m, "endeffR", target_position, target_orientation);
 
   // TODO
@@ -217,7 +217,7 @@ void test_record() {
   for (uint i =0;i<1000;i++){
     arr q = activity.ctrl_obs.get()->q;
     arr qdot = activity.ctrl_obs.get()->qdot;
-    arr x = ARRAY(activity.machine->s->world.getShapeByName("endeffR")->X.pos);
+    arr x = conv_vec2arr(activity.machine->s->world.getShapeByName("endeffR")->X.pos);
     activity.machine->s->feedbackController.setState(q,qdot);
     activity.machine->s->q = q;
     activity.machine->s->qdot = qdot;

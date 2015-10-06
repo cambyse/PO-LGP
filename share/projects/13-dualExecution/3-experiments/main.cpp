@@ -153,7 +153,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 
 int main(int argc,char** argv){

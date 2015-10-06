@@ -208,7 +208,7 @@ public:
     //pose.rot.setDeg(90, 1, 0 ,0);
 
     cout << "aligning..." << endl;
-    auto t = activity.machine->add( new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+    auto t = activity.machine->add( new PoseTo("endeffL", conv_vec2arr(pose.pos), conv_quat2arr(pose.rot)));
     activity.machine->waitForActionCompletion(t);
     cout << "Done" << endl;
 
@@ -228,7 +228,7 @@ public:
       // cout << pose.rot << endl;
       pose.addRelativeRotationDeg(input.rot, 1, 0, 0);
       // cout << pose.rot << endl;
-      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      t = activity.machine->add(new PoseTo("endeffL", conv_vec2arr(pose.pos), conv_quat2arr(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done rotation
       advertise_manipulation_state("rotation stop");
@@ -239,7 +239,7 @@ public:
       advertise_manipulation_state("prismatic start");
       pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
       pose.pos.x += input.pris;
-      t = activity.machine->add(new PoseTo("endeffL", ARRAY(pose.pos), ARRAY(pose.rot)));
+      t = activity.machine->add(new PoseTo("endeffL", conv_vec2arr(pose.pos), conv_quat2arr(pose.rot)));
       activity.machine->waitForActionCompletion(t);
       // ROS: done prismatic
       advertise_manipulation_state("prismatic stop");

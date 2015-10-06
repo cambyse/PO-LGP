@@ -109,7 +109,7 @@ void executeTrajectory(String scene, ControlType cType){
   MotionProblem P(world);
   P.loadTransitionParameters();
 
-  arr goal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr goal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -170,7 +170,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   arr dir;
   if (moveGoal){
-    dir = ARRAY(world.getBodyByName("dir")->X.pos);
+    dir = conv_vec2arr(world.getBodyByName("dir")->X.pos);
     cout << dir << endl;
   } else {
     dir = {1.,0.,0.};
@@ -178,7 +178,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   std::vector<MObject*> mobstacles;
   if (moveObs) {
-    arr obsdir = ARRAY(world.getBodyByName("obsdir")->X.pos);
+    arr obsdir = conv_vec2arr(world.getBodyByName("obsdir")->X.pos);
     mobstacles.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.0005, obsdir));
   }
 

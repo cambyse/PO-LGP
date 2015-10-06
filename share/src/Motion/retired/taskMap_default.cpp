@@ -53,13 +53,13 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
       if(body_j==NULL) {
         G.kinematicsPos(y, J, body_i, &vec_i);
-        y -= ARRAY(vec_j);
+        y -= conv_vec2arr(vec_j);
         break;
       }
       ors::Vector pi = body_i->X * vec_i;
       ors::Vector pj = body_j->X * vec_j;
       ors::Vector c = body_j->X.rot / (pi-pj);
-      y = ARRAY(c);
+      y = conv_vec2arr(c);
       if(&J) {
         arr Ji, Jj, JRj;
         G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
@@ -89,7 +89,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
 //      fj = G.bodies(body_j)->X; fj.appendTransformation(jrel);
 //      f.setDifference(fi, fj);
 //      f.rot.getZ(c);
-//      y = ARRAY(c);
+//      y = conv_vec2arr(c);
       NIY; //TODO: Jacobian?
     } break;
     case vecAlignTMT: {
@@ -100,7 +100,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       arr zi,Ji,zj,Jj;
       G.kinematicsVec(zi, Ji, body_i, &vec_i);
       if(body_j==NULL) {
-        zj = ARRAY(vec_j);
+        zj = conv_vec2arr(vec_j);
         if(&J) { Jj.resizeAs(Ji); Jj.setZero(); }
       } else {
         G.kinematicsVec(zj, Jj, body_j, &vec_j);
@@ -168,7 +168,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
           G.kinematicsPos(NoArr, Ji, G.bodies(l), NULL);
           vi = G.bodies(l)->X.rot.getY();
           vi *= -1.;
-          zi = ARRAY(vi);
+          zi = conv_vec2arr(vi);
           J.append(~zi*Ji);
         }
         J.reshape(params.N, J.N/params.N);

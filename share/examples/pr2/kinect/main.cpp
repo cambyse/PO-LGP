@@ -79,7 +79,7 @@ void TEST(Sensors){
       tf::StampedTransform transform;
       listener.lookupTransform("/base_footprint", "/head_mount_kinect_ir_optical_frame",
                                ros::Time(0), transform);
-      X = cvrt_pose2transformation(transform);
+      X = conv_pose2transformation(transform);
     }
     catch (tf::TransformException &ex) {
       ROS_ERROR("%s",ex.what());

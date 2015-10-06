@@ -98,8 +98,8 @@ void TEST(QuaternionKinematics){
       arr y,J;
       G.kinematicsQuat(y, J, G.bodies.last());  //get the new endeffector position
       arr Jinv = pseudoInverse(J, NoArr, 1e-4); //~J*inverse_SymPosDef(J*~J);
-      if(scalarProduct(ARRAY(target),y)<0.) target.flipSign();
-      x += 0.05 * Jinv * (ARRAY(target)-y);                  //simulate a time step (only kinematically)
+      if(scalarProduct(conv_quat2arr(target),y)<0.) target.flipSign();
+      x += 0.05 * Jinv * (conv_quat2arr(target)-y);                  //simulate a time step (only kinematically)
       G.setJointState(x);
       G.watch(false, STRING("test quaternion task spaces -- time " <<t));
     }
@@ -524,7 +524,7 @@ void TEST(InverseKinematics) {
 
   ors::Body* drawer = world.getBodyByName("cabinet_drawer");
   ors::Body* marker = world.getBodyByName("marker");
-  arr destination = ARRAY(marker->X.pos);
+  arr destination = conv_vec2arr(marker->X.pos);
 
   cout << "destination: " << destination << endl;
   cout << "world state: " << world.q << endl;
@@ -537,7 +537,7 @@ void TEST(InverseKinematics) {
 
   cout << "moving destination (can't be reached)" << endl;
   marker->X.pos.set(2., 1., 1);
-  destination = ARRAY(marker->X.pos);
+  destination = conv_vec2arr(marker->X.pos);
   world.inverseKinematicsPos(*drawer, destination);
   cout << "destination: " << destination << endl;
   cout << "world state: " << world.q << endl;
@@ -545,7 +545,7 @@ void TEST(InverseKinematics) {
 
   cout << "moving destination (can't be reached)" << endl;
   marker->X.pos.set(-2., 0.1, 1.2);
-  destination = ARRAY(marker->X.pos);
+  destination = conv_vec2arr(marker->X.pos);
   world.inverseKinematicsPos(*drawer, destination);
   cout << "destination: " << destination << endl;
   cout << "world state: " << world.q << endl;

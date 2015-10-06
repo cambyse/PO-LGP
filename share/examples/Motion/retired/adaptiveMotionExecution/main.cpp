@@ -82,7 +82,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;

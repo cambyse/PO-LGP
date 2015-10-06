@@ -266,9 +266,9 @@ std::ostream& operator<<(std::ostream&, const Transformation&);
 // conversions to arr
 //
 
-inline arr ARRAY(const ors::Vector& v) {     return arr(&v.x, 3); }
-inline arr ARRAY(const ors::Quaternion& q) { return arr(&q.w, 4); }
-inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
+inline arr conv_vec2arr(const ors::Vector& v) {      return arr(&v.x, 3); }
+inline arr conv_quat2arr(const ors::Quaternion& q) { return arr(&q.w, 4); }
+inline arr conv_mat2arr(const ors::Matrix& m) {      return arr(&m.m00, 9); }
 
 
 //===========================================================================

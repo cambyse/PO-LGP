@@ -66,12 +66,12 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       m->referenceIds(tPick(i),0) = endeff_index;
       m->referenceIds(tPick(i),1) = idObject(i);
       t->prec(tPick(i))=posPrec;
-      //      t->target[tPick(i)]=ARRAY( world_initial.shapes(idObject(i))->X.pos );
+      //      t->target[tPick(i)]=conv_vec2arr( world_initial.shapes(idObject(i))->X.pos );
 
       //place
       m->referenceIds(tPlace(i),0) = idObject(i);
       t->prec(tPlace(i))=posPrec;
-      t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.pos );
+      t->target[tPlace(i)]=conv_vec2arr( world_final.shapes(idObject(i))->X.pos );
     }
 
     //pick & place quaternion
@@ -84,12 +84,12 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       m->referenceIds(tPick(i),0) = endeff_index;
       m->referenceIds(tPick(i),1) = idObject(i);
       t->prec(tPick(i))=posPrec;
-      //      t->target[tPlace(i)]=ARRAY( world_initial.shapes(idObject(i))->X.rot );
+      //      t->target[tPlace(i)]=conv_quat2arr( world_initial.shapes(idObject(i))->X.rot );
 
       //place
       m->referenceIds(tPlace(i),0) = idObject(i);
       t->prec(tPlace(i))=posPrec;
-      t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.rot );
+      t->target[tPlace(i)]=conv_quat2arr( world_final.shapes(idObject(i))->X.rot );
     }
 
     // zero position velocity

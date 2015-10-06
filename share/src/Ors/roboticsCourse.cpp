@@ -262,7 +262,7 @@ void VisionSimulator::getRandomWorldPoints(arr& X, uint N){
 }
 
 arr VisionSimulator::getCameraTranslation(){
-  return ARRAY(s->gl.camera.X->pos);
+  return conv_vec2arr(s->gl.camera.X->pos);
 }
 
 void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel){

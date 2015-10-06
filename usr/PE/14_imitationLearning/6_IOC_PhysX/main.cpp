@@ -311,8 +311,8 @@ void simpleMotion(){
   MotionProblem MP(world,false);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
-  arr refGoal2 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
+  arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
+  arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
   cout << refGoal1 << refGoal2 << endl;
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
@@ -351,7 +351,7 @@ void simpleMotion(){
     world.kinematicsVec(tmp,NoArr,world.getBodyByName("endeff"));
     xVecTraj.append(~tmp);
     world.physx().step(MP.tau);
-    boxTraj.append(~ARRAY(world.getBodyByName("box")->X.pos));
+    boxTraj.append(~conv_vec2arr(world.getBodyByName("box")->X.pos));
     //    world.gl().update();
     lambdaTraj.append(~ARR(boxTraj(t,1)>1e-5));
     //    world.watch(false);

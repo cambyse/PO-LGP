@@ -72,7 +72,7 @@ void scenario2() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
@@ -154,7 +154,7 @@ void scenario3() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
@@ -276,7 +276,7 @@ void scenario4() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;

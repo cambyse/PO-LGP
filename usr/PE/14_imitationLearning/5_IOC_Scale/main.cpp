@@ -273,8 +273,8 @@ void simpleMotion(){
   MotionProblem MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getBodyByName("goal1")->X.pos);
-  arr refGoal2 = ARRAY(MP.world.getBodyByName("goal2")->X.pos);
+  arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
+  arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);

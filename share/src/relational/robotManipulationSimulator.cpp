@@ -995,7 +995,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   
 #ifdef NEW_FEEDBACK_CONTROL
   uint t;
-  arr pos = ARRAY(obj->X.pos);
+  arr pos = conv_vec2arr(obj->X.pos);
   uint fingIdx = getBodyByName("fing1c")->index;
 
   FeedbackMotionControl MP(*this, false);
@@ -1076,7 +1076,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if(id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0; t<10; t++) {
-      x.y_target = ARRAY(obj->X.pos);
+      x.y_target = conv_vec2arr(obj->X.pos);
       if(isTable) {x.y_target(2) = neutralHeight-0.1;}
       MT::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
@@ -1093,7 +1093,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (2) move towards new object
   getJointState(q);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     if(isTable) {x.y_target(2) = neutralHeight-0.1;}
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
@@ -1120,7 +1120,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   }
   
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
 //     if (x.y_target(2) < neutralHeight)       // ALTE LOESUNG -- TOBIAS
 //       x.y_target(2) += SMALL_HEIGHT_STEP;    // ALTE LOESUNG -- TOBIAS
     x.y_target(2) = 1.2;
@@ -1674,7 +1674,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   // move manipulator towards box
   ors::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1716,7 +1716,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   // move manipulator towards box
   ors::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);

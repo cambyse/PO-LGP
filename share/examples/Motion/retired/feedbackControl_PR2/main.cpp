@@ -129,8 +129,8 @@ void executeTrajectoryWholeBody(String scene){
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  arr Rgoal = ARRAY(P.world.getBodyByName("RgoalRef")->X.pos);
-  arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
+  arr Rgoal = conv_vec2arr(P.world.getBodyByName("RgoalRef")->X.pos);
+  arr Lgoal = conv_vec2arr(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -369,7 +369,7 @@ void executeTrajectoryRightArm(String scene){
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr Rgoal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));

@@ -40,7 +40,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
   //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 2e5);
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos), 2e5);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,conv_vec2arr(target->X.pos), 2e5);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
   vel->map.order=1;
@@ -316,7 +316,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     }
     data.close();
 
-    FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeffR->X.pos);
+    FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeffR->X.pos);
   }
 
 

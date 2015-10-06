@@ -54,7 +54,7 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   /// tasks
   // first contact with door
   t =MP.addTask("posC", new DefaultTaskMap(posTMT, world, "endeffL",NoVector));
-  t->setCostSpecs(C, C, ARRAY(world.getShapeByName("handle")->X.pos), param(pC));
+  t->setCostSpecs(C, C, conv_vec2arr(world.getShapeByName("handle")->X.pos), param(pC));
   pC++;
 
   t =MP.addTask("vecC", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
@@ -110,7 +110,7 @@ void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   arr wallMarkerPos = wallMarker.subRange(0,2);
   ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRange(3,6));
 
-  arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
   ors::Quaternion door_rot = ors::Quaternion(0,1,0,0);//doorMarkerQuat;//ors::Quaternion(markerQuat0[1]);
   ors::Quaternion trans = world.getBodyByName("torso_lift_link")->X.rot;

@@ -354,7 +354,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       pi = bi->X.pos + bi->X.rot * irel.pos;
       pj = bj->X.pos + bj->X.rot * jrel.pos;
       c = bj->X.rot / (pi-pj);
-      y = ARRAY(c);
+      y = conv_vec2arr(c);
       ors.kinematicsPos(NoArr, Ji, bi, irel.pos);
       ors.kinematicsPos(NoArr, Jj, bj, jrel.pos);
       ors.jacobianR(JRj, bj);
@@ -380,7 +380,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       fi = bi->X; fi.appendTransformation(irel);
       fj = bj->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
-      y = ARRAY(f.rot.getZ());
+      y = conv_vec2arr(f.rot.getZ());
       NIY; //TODO: Jacobian?
       break;
     case rotTVT:       y.resize(3);  ors.jacobianR(J, bi);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
@@ -413,7 +413,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
         ors.kinematicsPos(NoArr, Ji, ors.bodies(l));
         vi = -ors.bodies(l)->X.rot.getY();
         vi *= -1.;
-        zi = ARRAY(vi);
+        zi = conv_vec2arr(vi);
         J.append(~zi*Ji);
       }
       J.reshape(params.N, J.N/params.N);
@@ -424,7 +424,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
-        zj = ARRAY((jrel*world_z));
+        zj = conv_vec2arr((jrel*world_z));
         Jj.resizeAs(Ji);
         Jj.setZero();
       } else {

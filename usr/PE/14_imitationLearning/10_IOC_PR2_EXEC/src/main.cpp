@@ -89,8 +89,8 @@ public:
       for (uint t =0; t<x.d0; t++) {
         goal.trajectory.points[t].positions.resize(7);
         goal.trajectory.points[t].velocities.resize(7);
-        goal.trajectory.points[t].positions = VECTOR(x[t]);
-        goal.trajectory.points[t].velocities = VECTOR(xd[t]);
+        goal.trajectory.points[t].positions = conv_arr2stdvec(x[t]);
+        goal.trajectory.points[t].velocities = conv_arr2stdvec(xd[t]);
         goal.trajectory.points[t].time_from_start = ros::Duration(dt*double(t));
       }
 
@@ -133,7 +133,7 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   world->setJointState(q0);
 
 
-  arr refFrame = ARRAY(world->getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(world->getBodyByName("torso_lift_link")->X.pos);
   ors::Quaternion refFrameQuat = world->getBodyByName("torso_lift_link")->X.rot;
   ors::Quaternion objQuat = refFrameQuat*markerQuat;
   arr markerOffset = objQuat.getArr()*{0.126,0.0,0.0415};

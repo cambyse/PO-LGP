@@ -176,7 +176,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
-//                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
+//                          conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e3);
 //  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
@@ -372,7 +372,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 // a binary predicate implemented as a function:
 // only applicable for the simple experiment in dual-execution paper.

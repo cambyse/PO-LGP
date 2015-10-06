@@ -139,7 +139,7 @@ void scenario1() {
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position_vel", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
@@ -193,7 +193,7 @@ void scenario2() {
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
@@ -234,7 +234,7 @@ void scenario2() {
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c2->map.order=1;
@@ -283,7 +283,7 @@ void scenario3() {
 
 
 
-  arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr goalRef = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;

@@ -66,19 +66,19 @@ void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
       J = n*(~n*J);
 
       W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/e1);
-      a=ARRAY(e1);
-      b=ARRAY(e2);
+      a=conv_vec2arr(e1);
+      b=conv_vec2arr(e2);
       double ab=scalarProduct(a,b);
       J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
 
       W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/e2);
-      a=ARRAY(e2);
-      b=ARRAY(e1);
+      a=conv_vec2arr(e2);
+      b=conv_vec2arr(e1);
       J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
     }
     if((pt1==GJK_vertex && pt2==GJK_edge) || (pt1==GJK_edge && pt2==GJK_vertex)){
       arr vec, Jv, n;
-      if(pt1==GJK_vertex) n=ARRAY(e2); else n=ARRAY(e1);
+      if(pt1==GJK_vertex) n=conv_vec2arr(e2); else n=conv_vec2arr(e1);
       J = J - n*(~n*J);
       if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
       if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));

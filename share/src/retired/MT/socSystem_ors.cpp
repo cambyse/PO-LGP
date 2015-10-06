@@ -175,7 +175,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
   TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables({pos, col, com});
 
-  pos->y_target = ARRAY(ors->getShapeByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -259,7 +259,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   else               col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables({pos, col});
 
-  pos->y_target = ARRAY(ors->getBodyByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -629,7 +629,7 @@ void drawOrsSocEnv(void*){
   MT::getParameter(midPrec, "midPrec");
   MT::getParameter(endPrec, "endPrec");
 
-  x0->y_target = ARRAY(sys.ors->getBodyByName("target")->X.pos);
+  x0->y_target = conv_vec2arr(sys.ors->getBodyByName("target")->X.pos);
   x0->v_target <<"[2 0 0]";
   x0->setInterpolatedTargetTrajectory(sys.s->T);
   x0->setPrecisionTrajectoryFinal (sys.s->T, midPrec, endPrec);

@@ -28,7 +28,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   //-- create a grasp object for the ors shape
   GraspObject *graspobj;
   switch(obj->type){
-      //graspobj = new GraspObject_InfCylinder(ARRAY(obj->X.pos), ARR(0,0,1), .04, 1.);
+      //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0,0,1), .04, 1.);
     case ors::cylinderST:  graspobj = new GraspObject_Cylinder1(obj);  break;
     case ors::boxST:  graspobj = new GraspObject_Box(obj);  break;
     default: NIY;

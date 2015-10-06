@@ -235,7 +235,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
 //  Ndecisions=decisions.N;
-  return VECTOR(decisions);
+  return conv_arr2stdvec(decisions);
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){

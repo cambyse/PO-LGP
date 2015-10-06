@@ -83,11 +83,11 @@ finalpos(0) -= 0.2 * i;
  MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
 
  //c = MP2.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(current), ors::Vector(0, 0, 0)));
- //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getBodyByName("reference")->X.rot), 1e2);
+ //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_quat2arr(G.getBodyByName("reference")->X.rot), 1e2);
 
 
 // ors::Quaternion my_quat; my_quat.set(0, 0, 0, 1);
-// MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(my_quat), 1e3);
+// MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_quat2arr(my_quat), 1e3);
 
 
 ors::Vector orient;  orient.set(0, 0, 1) ;
@@ -156,7 +156,7 @@ void testPickAndPlace(const char* target,arr finalpos){
 
 for (uint i=0;i<5;i++)  {
    // finalpos = {0.0,-1.0,0.8};
-//    finalpos = ARRAY(G.getBodyByName("chair_sitting")->X.pos);
+//    finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X.pos);
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName(targets(i))->index, 2);
 
@@ -184,12 +184,12 @@ for (uint i=0;i<5;i++)  {
   ors::Vector current; current.set(positions(i,0),positions(i,1),positions(i,2));
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
 
-//  arr relativ; relativ =ARRAY(G.getBodyByName("chair_sitting")->X*current);
+//  arr relativ; relativ = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
 //  relativ.reshape(relativ.N);
 //   for (uint j=0;j<3;j++)
 //    finalpos(j)+=relativ(j);//positions(i,j);
- // finalpos = ARRAY(G.getBodyByName("chair_sitting")->X*current);
-  finalpos = ARRAY(G.getBodyByName("chair_sitting")->X*current);
+ // finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
+  finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
 cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< endl;
 
 
@@ -213,7 +213,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   if (i>3) G.getBodyByName("reference")->X.rot.set(0,0.7,0.7,0);
 
   c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_quat2arr(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
 //
   //initialize trajectory
   for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
@@ -237,7 +237,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 }
 /*
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -297,7 +297,7 @@ void AssembleChair(){
       if (i<4) current.set(positions(i,0),positions(i,1)-0.16,positions(i,2));
        else current.set(positions(i,0),positions(i,1)+0.1,positions(i,2));
 
-      finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X*(original*current));
+      finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X*(original*current));
       G.getShapeByName(targets(i))->X.pos = finalpos;
       orientation.set(0,0,0,1);
        if (i>3) orientation.set(0,0.7,0.7,0);
@@ -330,8 +330,8 @@ for (uint i=0;i<5;i++)  {
 
     // current.set(positions(i,0),positions(i,1),positions(i,2));
 
-      finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X*(original*current));
-     // finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X.pos);
+      finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X*(original*current));
+     // finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X.pos);
          cout << "POS = "<< finalpos<< endl;
 
       Task *c;
@@ -353,7 +353,7 @@ for (uint i=0;i<5;i++)  {
       if (i>3) orientation.set(0,0.7,0.7,0);
 
       c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
+      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
     //
       //initialize trajectory
       for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;

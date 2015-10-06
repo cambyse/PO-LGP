@@ -304,7 +304,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     }
     data.close();
 
-    FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+    FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
   }
 
 

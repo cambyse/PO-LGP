@@ -12,7 +12,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
+                          conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
 c->map.order=1;

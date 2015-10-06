@@ -318,7 +318,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   arr q, dq;
   C->getJointState(q);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
@@ -335,7 +335,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   
   // (4) move upwards (to avoid collisions)
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     x.y_target(2) = 1.2;
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
@@ -452,7 +452,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   
   double z_target;
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
+    x.y_target = conv_vec2arr(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl
@@ -475,7 +475,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   //phase 3: down
   double* obj_shape = getShape(obj_index);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
+    x.y_target = conv_vec2arr(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl

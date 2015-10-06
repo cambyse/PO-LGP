@@ -68,14 +68,14 @@ public:
     Task *c;
     c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
                                {0.,0.,0.}, 1e3,
                                {0.,0.,0.}, 0.);
 
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {

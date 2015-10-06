@@ -216,7 +216,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     }
     data.close();
 
-    FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+    FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
   }
 
 
@@ -337,7 +337,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 
 
@@ -552,7 +552,7 @@ bool updated =false;
 }
 data.close();
 
-FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 
 
 

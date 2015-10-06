@@ -14,7 +14,7 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     makeConvexHulls(world.shapes);
     MotionProblem MP(world);
     MP.loadTransitionParameters();
-    arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
+    arr refGoal = conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;

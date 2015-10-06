@@ -1129,7 +1129,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
   //get position
   ors::Vector pos_world = b->X.pos;
   if(&rel) pos_world += b->X.rot*rel;
-  if(&y) y = ARRAY(pos_world); //return the output
+  if(&y) y = conv_vec2arr(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
   //get Jacobian
@@ -1202,7 +1202,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
           }
 #else
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
-          Jrot = crossProduct(Jrot, ARRAY(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
+          Jrot = crossProduct(Jrot, conv_vec2arr(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
           Jrot /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
 #endif
@@ -1224,7 +1224,7 @@ void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const 
   //get position
   ors::Vector pos_world = b->X.pos;
   if(&rel) pos_world += b->X.rot*rel;
-  if(&y) y = ARRAY(pos_world); //return the output
+  if(&y) y = conv_vec2arr(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
   //get Jacobian
@@ -1332,11 +1332,11 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vect
   ors::Vector vec_referene;
   if(&vec) vec_referene = b->X.rot*vec;
   else     vec_referene = b->X.rot.getZ();
-  if(&y) y = ARRAY(vec_referene); //return the vec
+  if(&y) y = conv_vec2arr(vec_referene); //return the vec
   if(&J){
     arr A;
     jacobianR(A, b);
-    J = crossProduct(A, ARRAY(vec_referene));
+    J = crossProduct(A, conv_vec2arr(vec_referene));
   }
 }
 
@@ -1345,7 +1345,7 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vect
 /// Jacobian of the i-th body's z-orientation vector
 void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const { //TODO: allow for relative quat
   ors::Quaternion rot_b = b->X.rot;
-  if(&y) y = ARRAY(rot_b); //return the vec
+  if(&y) y = conv_quat2arr(rot_b); //return the vec
   if(&J){
     arr A;
     jacobianR(A, b);
@@ -2009,7 +2009,7 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
 //    y(0) = d;
 //    if(&J){
 //      arr Jpos;
-//      arr normal = ARRAY(diff)/diff.length(); normal.reshape(1, 3);
+//      arr normal = conv_vec2arr(diff)/diff.length(); normal.reshape(1, 3);
 //      kinematicsPos(NoArr, Jpos, a->body);  J += (normal*Jpos);
 //      kinematicsPos(NoArr, Jpos, b->body);  J -= (normal*Jpos);
 //    }
@@ -2047,7 +2047,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
     y(0) = 1. - d/margin;
     if(&J){
       arr Jpos;
-      arr normal = ARRAY(diff)/diff.length(); normal.reshape(1, 3);
+      arr normal = conv_vec2arr(diff)/diff.length(); normal.reshape(1, 3);
       kinematicsPos(NoArr, Jpos, a->body);  J -= 1./margin*(normal*Jpos);
       kinematicsPos(NoArr, Jpos, b->body);  J += 1./margin*(normal*Jpos);
     }
@@ -2209,7 +2209,7 @@ double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
     x+=n->mass*n->X.pos;
   }
   x/=M;
-  x_ = ARRAY(x);
+  x_ = conv_vec2arr(x);
   return M;
 }
 
@@ -2428,8 +2428,8 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
         c = p->posB;
         cn= p->normal;
       }
-      C.append(ARRAY(c));
-      Cn.append(ARRAY(cn));
+      C.append(conv_vec2arr(c));
+      Cn.append(conv_vec2arr(cn));
     }
   }
   C .reshape(C.N/3, 3);
