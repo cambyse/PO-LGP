@@ -16,7 +16,7 @@ struct MySystem {
   ACCESSname(arr, pr2_odom)
   MySystem(){
     new GamepadInterface();
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       new RosCom_Spinner();
       new SubscriberConv<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
@@ -53,8 +53,8 @@ void TEST(Gamepad){
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
-  bool useRos = MT::getParameter<bool>("useRos", false);
-  bool fixBase = MT::getParameter<bool>("fixBase", false);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
+  bool fixBase = mlr::getParameter<bool>("fixBase", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -88,7 +88,7 @@ void TEST(Gamepad){
 
   arr fLobs,uobs;
   ofstream fil("z.forces");
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 
   for(uint t=0;;t++){
     S.gamepadState.var->waitForNextRevision();
@@ -212,7 +212,7 @@ void TEST(Gamepad){
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   rosCheckInit("pr2_gamepad");
   testGamepad();
   return 0;

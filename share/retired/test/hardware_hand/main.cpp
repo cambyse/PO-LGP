@@ -1,5 +1,5 @@
 
-//#define MT_IMPLEMENTATION
+//#define MLR_IMPLEMENTATION
 #include <Core/util.h>
 #include <Core/array.h>
 #include <signal.h>
@@ -22,15 +22,15 @@ void TEST(Move){
   cout <<"** single axis vel control" <<endl;
   sdh.hand->SetController( sdh.hand->eCT_POSE );
   //sdh.moveAll(ARR( 0,  -20,   0,  60,  90,  -20, 0),true);
-  //MT::wait();
+  //mlr::wait();
   sdh.moveAll(ARR( 0,  -20,  0,  0,  0,  -20, 0),true);
-  MT::wait();
+  mlr::wait();
   sdh.moveAll(ARR( 0,  -20,   0,  60,  90,  -20, 0),true);
-  MT::wait();
+  mlr::wait();
   sdh.moveAll(ARR( 0,  0, -20,  60,  90,  0, -20),true);
-  MT::wait();
+  mlr::wait();
   sdh.moveAll(ARR( 0,  0,  0,  0,  0,  0,  0),true);
-  MT::wait();
+  mlr::wait();
   
   std::cout << "Now move back and forth with \"velocity with acceleration ramp\" controller type:\n";
         
@@ -52,7 +52,7 @@ void TEST(Move){
       std::cout << "Setting target acceleration,velocity= " << std::setw(7) << sign * va[i].acceleration << " deg/(s*s)  " << std::setw(7) << sign * va[i].velocity << " deg/s\n";
       bool position_reached = false;
 
-      MT::timerStart();
+      mlr::timerStart();
       uint k=0;
       while(!position_reached ){
         sdh.setVelocity(axis_index, sign * va[i].velocity , va[i].acceleration); //set vel+acc in each step of a high freq loop
@@ -60,19 +60,19 @@ void TEST(Move){
         //std::cout << "  Actual angle: " << std::setw(7) << sdh.hand->GetAxisActualAngle( axis_index ) << " deg";
         //std::cout << ",  actual velocity: " << std::setw(7) << sdh.hand->GetAxisActualVelocity(axis_index) << " deg/s";
         //std::cout << ",  reference velocity: " << std::setw(7) << sdh.hand->GetAxisReferenceVelocity(axis_index) << " deg/s";
-        std::cout << ",  ellapsed time: " << MT::timerRead()/++k <<endl;
+        std::cout << ",  ellapsed time: " << mlr::timerRead()/++k <<endl;
         if ( sign > 0.0 )
           position_reached = (sdh.hand->GetAxisActualAngle(axis_index) >= 10.0);
         else
           position_reached = (sdh.hand->GetAxisActualAngle(axis_index) <= -10.0);
-        //MT::wait(0.05);
+        //mlr::wait(0.05);
       }
     }
   }
 
 
   sdh.setVelocity(axis_index, 0., 100.);
-  MT::wait( 1.);
+  mlr::wait( 1.);
   return;
 
 

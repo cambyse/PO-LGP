@@ -82,11 +82,11 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
 {
   if(useSwift) {
     makeConvexHulls(world.shapes);
-    world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+    world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
   }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
-  setTiming(MT::getParameter<uint>("timeSteps", 50), MT::getParameter<double>("duration", 5.));
+  setTiming(mlr::getParameter<uint>("timeSteps", 50), mlr::getParameter<double>("duration", 5.));
   k_order = 2;
 }
 
@@ -114,12 +114,12 @@ void MotionProblem::setTiming(uint timeSteps, double duration){
 arr MotionProblem::getH_rate_diag() {
   //transition cost metric
   arr W_diag;
-  if(MT::checkParameter<arr>("Wdiag")) {
-    W_diag = MT::getParameter<arr>("Wdiag");
+  if(mlr::checkParameter<arr>("Wdiag")) {
+    W_diag = mlr::getParameter<arr>("Wdiag");
   } else {
     W_diag = world.naturalQmetric();
   }
-  return MT::getParameter<double>("Hrate", 1.)*W_diag;
+  return mlr::getParameter<double>("Hrate", 1.)*W_diag;
 }
 
 Task* MotionProblem::addTask(const char* name, TaskMap *m){
@@ -221,7 +221,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   if(&tt){ //append all terms in mixed fashion
     for(Task *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
       c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
+      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
       //linear transform (target shift)
       if(true){ //c->map.type==sumOfSqrTT){
         if(c->target.N==1) y -= c->target(0);
@@ -239,7 +239,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
     //-- append task costs
     for(Task *c: taskCosts) if(c->map.type==sumOfSqrTT && c->active && c->prec.N>t && c->prec(t)){
       c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
+      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
       if(c->target.N==1) y -= c->target(0);
       else if(c->target.nd==1) y -= c->target;
       else y -= c->target[t];
@@ -501,7 +501,7 @@ Graph MotionProblem::getReport() {
     Graph *g=new Graph();
     report.append<Graph>({c->name}, {}, g, true);
     g->append<double>({"order"}, {}, c->map.order);
-    g->append<MT::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
+    g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));
     g->append<double>({"constraints"}, {}, taskG(i));
     totalC += taskC(i);
@@ -647,7 +647,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   }
 
   if(absMax(phi)>1e10){
-    MT_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
+    MLR_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
     MP.setState(x, NoArr);
     MP.getPhi(_phi, J_x, NoTermTypeA, MP.T, LIST(MP.world), MP.tau);
   }
@@ -672,7 +672,7 @@ MotionProblem_EndPoseFunction::MotionProblem_EndPoseFunction(MotionProblem& _MP)
 
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);
-  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MLR_PI*t/T)) * (qT-q0);
 }
 
 arr reverseTrajectory(const arr& q){

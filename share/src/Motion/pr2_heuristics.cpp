@@ -54,7 +54,7 @@ uintA _get_shape_indices(ors::Body* b) {
   return idx;
 }
 
-MT::Array<const char*> pr2_left_get_bodynames() {
+mlr::Array<const char*> pr2_left_get_bodynames() {
   return { 
     "base_footprint",
     "torso_lift_link",
@@ -72,7 +72,7 @@ MT::Array<const char*> pr2_left_get_bodynames() {
   };
 }
 
-MT::Array<const char*> pr2_full_get_bodynames() {
+mlr::Array<const char*> pr2_full_get_bodynames() {
   return { 
     "base_footprint",
     "fl_caster_rotation_link",
@@ -118,7 +118,7 @@ MT::Array<const char*> pr2_full_get_bodynames() {
 }
 
 uintA pr2_get_shapes(const ors::KinematicWorld &G) {
-  MT::Array<const char*> bodynames = pr2_left_get_bodynames();
+  mlr::Array<const char*> bodynames = pr2_left_get_bodynames();
   uintA shape_idx;
   for (const char* bodyname: bodynames) {
     shape_idx.append(_get_shape_indices(G.getBodyByName(bodyname)));

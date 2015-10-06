@@ -534,7 +534,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
   }
   if(plot){
     std::ofstream fil;
-    MT::open(fil, "z.trana");
+    mlr::open(fil, "z.trana");
     for(t=0;t<T;t++){
       fil
           <<"time " <<t
@@ -575,7 +575,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
     //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
-    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
+    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MLR_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
     if(t){
@@ -713,7 +713,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& q, bool plot){
 #endif
   if(plot){
     std::ofstream fil;
-    MT::open(fil, "z.trana");
+    mlr::open(fil, "z.trana");
     for(t=0;t<=T;t++){
       fil <<"time " <<t*tau
           <<"  ctrlC " <<ctrlC(t)
@@ -724,7 +724,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& q, bool plot){
       fil <<"  q "; q[t].writeRaw(fil);
       fil <<endl;
     }
-    MT::String cmd;
+    mlr::String cmd;
     cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
     for(i=0;i<m;i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
     gnuplot(cmd);
@@ -798,7 +798,7 @@ double getFilterCostMeassure(soc::SocSystemAbstraction& soci, arr& q, double& co
   }
   if(os){
     *os <<std::setw(3) <<0
-        <<"  time " <<MT::timerRead(false)
+        <<"  time " <<mlr::timerRead(false)
         <<"  cost1 " <<cost1
         <<"  cost2 " <<cost2
         <<"  length " <<length
@@ -853,33 +853,33 @@ soc::LQG* soc::LQG_multiScaleSolver(soc::SocSystemAbstraction& sys,
 }
 
 void soc::SocSolver::init(){
-  MT::getParameter(method, "method");
-  MT::getParameter(scalePowers, "scalePowers");
-  MT::getParameter(convergenceRate, "convergenceRate");
-  MT::getParameter(iterations, "iterations");
-  MT::getParameter(tolerance, "tolerance");
-  MT::getParameter(gradientMethod, "gradientMethod");
-  MT::getParameter(splinePoints, "splinePoints");
-  MT::getParameter(splineDegree, "splineDegree");
-  MT::getParameter(display, "display");
-  MT::getParameter(repeatThreshold, "repeatThreshold");
-  MT::getParameter(recomputeTaskThreshold, "recomputeTaskThreshold");
-  MT::Parameter<bool>   useAttractors("useAttractors", false);
+  mlr::getParameter(method, "method");
+  mlr::getParameter(scalePowers, "scalePowers");
+  mlr::getParameter(convergenceRate, "convergenceRate");
+  mlr::getParameter(iterations, "iterations");
+  mlr::getParameter(tolerance, "tolerance");
+  mlr::getParameter(gradientMethod, "gradientMethod");
+  mlr::getParameter(splinePoints, "splinePoints");
+  mlr::getParameter(splineDegree, "splineDegree");
+  mlr::getParameter(display, "display");
+  mlr::getParameter(repeatThreshold, "repeatThreshold");
+  mlr::getParameter(recomputeTaskThreshold, "recomputeTaskThreshold");
+  mlr::Parameter<bool>   useAttractors("useAttractors", false);
     
-  if(MT::getParameter<int>("file")){
-    MT::getParameter(filename, "filename");
+  if(mlr::getParameter<int>("file")){
+    mlr::getParameter(filename, "filename");
     cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
-    if(MT::getParameter<int>("solverCout")) os = &cout;  else  os = NULL;
+    if(mlr::getParameter<int>("solverCout")) os = &cout;  else  os = NULL;
   }
 }
 
 void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
   sys.os = os;
   countSetq=countMsg=0;
-  MT::timerStart();
-  MT::Array<soc::AICO> aicos(scalePowers);
+  mlr::timerStart();
+  mlr::Array<soc::AICO> aicos(scalePowers);
   switch(method){
     case AICO:
       cout <<"\n** AICO optimization (convergenceRate=" <<convergenceRate <<", repeatThreshold=" <<repeatThreshold <<")" <<endl;
@@ -937,16 +937,16 @@ void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
   }
 
   ofstream summary;
-  if(MT::checkCmdLineTag("file")){
+  if(mlr::checkCmdLineTag("file")){
     //q >>FILE(filename+".q");
-    MT::String str(filename);
+    mlr::String str(filename);
     summary.open(str+".dat");
     sys.os=&summary;
   }else{
     sys.os=&cout;
   }
     
-  (*sys.os) <<filename <<" totalTime= " <<MT::timerRead() <<" #setq= " <<countSetq <<" #msg= " <<countMsg <<endl;
+  (*sys.os) <<filename <<" totalTime= " <<mlr::timerRead() <<" #setq= " <<countSetq <<" #msg= " <<countMsg <<endl;
   sys.analyzeTrajectory(q, display>0);
   //if(display) for(;;) sys.displayTrajectory(q, NULL, 1, "final");
   if(display) sys.displayTrajectory(q, NULL, 1, "final");

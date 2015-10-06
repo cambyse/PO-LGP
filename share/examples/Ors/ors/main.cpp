@@ -20,7 +20,7 @@ void TEST(LoadSave){
 
   for(uint i=0;i<0;i++){
     G.watch(true);
-//    MT::wait(.1)
+//    mlr::wait(.1)
   }
 }
 
@@ -144,31 +144,31 @@ void TEST(KinematicSpeed){
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
-  MT::timerStart();
+  mlr::timerStart();
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
     G.setJointState(x);
   }
-  cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
+  cout <<"kinematics timing: "<< mlr::timerRead() <<"sec" <<endl;
 #endif
 
   ors::Transformation t,s; t.setRandom(); s.setRandom();
-  MT::timerStart();
+  mlr::timerStart();
   for(uint k=0;k<NUM;k++){
     t.appendTransformation(s);
   }
-  cout <<"transformation appending: "<< MT::timerRead() <<"sec" <<endl;
+  cout <<"transformation appending: "<< mlr::timerRead() <<"sec" <<endl;
 
   ors::Matrix A,B,Y; A.setRandom(); B.setRandom();
   ors::Vector a,b,y; a.setRandom(); b.setRandom();
-  MT::timerStart();
+  mlr::timerStart();
   for(uint k=0;k<NUM;k++){
     Y=A*B;
     y=a+A*b;
     a=y;
     A=Y;
   }
-  cout <<"matrix timing: "<< MT::timerRead() <<"sec" <<endl;
+  cout <<"matrix timing: "<< mlr::timerRead() <<"sec" <<endl;
 }
 
 //===========================================================================
@@ -250,7 +250,7 @@ void generateSequence(arr &X, uint T, uint n){
   rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
   
   //convert into a smooth spline (1/0.03 points per via point):
-  X = MT::Spline(T,P).eval();
+  X = mlr::Spline(T,P).eval();
 }
 
 void TEST(PlayStateSequence){
@@ -270,7 +270,7 @@ void TEST(PlayStateSequence){
 // ODE test
 //
 
-#ifdef MT_ODE
+#ifdef MLR_ODE
 void TEST(PlayTorqueSequenceInOde){
   ors::KinematicWorld G("arm7.ors");
   G.ode();
@@ -408,7 +408,7 @@ void TEST(Dynamics){
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
       arr x=cat(q,qd).reshape(2,q.N);
-      MT::rk4_2ndOrder(x, x, diffEqn, dt);
+      mlr::rk4_2ndOrder(x, x, diffEqn, dt);
       q=x[0]; qd=x[1];
       if(t>300){
         friction=true;
@@ -476,7 +476,7 @@ void TEST(ContactDynamics){
       dt=.01;
       addContactsToDynamics=false;
     }
-    cross=MT::rk4dd_switch(q,qd,s,q,qd,s,ddf_joints,switchfunction,dt,1e-4);
+    cross=mlr::rk4dd_switch(q,qd,s,q,qd,s,ddf_joints,switchfunction,dt,1e-4);
     //G.reportProxies();
     cout <<"*** s = " <<s <<endl;
     G.gl().text.clear() <<"t=" <<t <<"  using RK4_switch,  energy=" <<G.getEnergy();
@@ -492,7 +492,7 @@ void TEST(ContactDynamics){
 
 #if 0
 static void drawTrimesh(void* _mesh){
-#if MT_GL
+#if MLR_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
   mesh->glDraw();
@@ -501,11 +501,11 @@ static void drawTrimesh(void* _mesh){
 }
 
 void TEST(BlenderImport){
-  MT::timerStart();
+  mlr::timerStart();
   ors::Mesh mesh;
   ors::KinematicWorld bl;
   readBlender("blender-export",mesh,bl);
-  cout <<"loading time =" <<MT::timerRead() <<"sec" <<endl;
+  cout <<"loading time =" <<mlr::timerRead() <<"sec" <<endl;
   OpenGL gl;
   G.gl().add(glStandardScene, NULL);
   G.gl().add(drawTrimesh,&mesh);
@@ -570,7 +570,7 @@ int MAIN(int argc,char **argv){
   testDynamics();
   testContacts();
   testLimits();
-#ifdef MT_ODE
+#ifdef MLR_ODE
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();
 #endif

@@ -33,7 +33,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
 }
 
 double gamepadSignalMap(double x){
-  return MT::sign(x)*(exp(MT::sqr(x))-1.);
+  return mlr::sign(x)*(exp(mlr::sqr(x))-1.);
 }
 
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
@@ -48,7 +48,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   if(gamepadState.N<6) return false;
 
-  double gamepadRate=MT::getParameter<double>("gamepadRate",.1);
+  double gamepadRate=mlr::getParameter<double>("gamepadRate",.1);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
   double gamepadLeftRight   = -gamepadRate*gamepadSignalMap(gamepadState(4));
   double gamepadForwardBack = -gamepadRate*gamepadSignalMap(gamepadState(3));

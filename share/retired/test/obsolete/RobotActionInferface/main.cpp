@@ -37,7 +37,7 @@ void TEST(Actions){
   //ors::Mesh mesh;
   //mesh.readOffFile("m494.off");
   //R.setMesh("world",mesh);
-  //MT::wait();
+  //mlr::wait();
   
   //R.reach("tipNormal1", ARR(0.,-1.,1.), .1);
   //R.homing();
@@ -50,10 +50,10 @@ void TEST(Actions){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
-  switch(MT::getParameter<int>("mode")){
+  switch(mlr::getParameter<int>("mode")){
     case 0:  testGamepad();  break;
     case 1:  testActions();  break;
     case 2:  testPattern();  break;

@@ -30,7 +30,7 @@ struct Pr2GamepadController:Module{
     j2t = new Gamepad2Tasks(*MP);
 
 
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       //-- wait for first q observation!
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       for(;;){

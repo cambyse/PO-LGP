@@ -15,16 +15,16 @@
 
 void run() {
 
-  bool visTest = MT::getParameter<uint>("visTest");
-  uint verbose = MT::getParameter<uint>("verbose");
+  bool visTest = mlr::getParameter<uint>("visTest");
+  uint verbose = mlr::getParameter<uint>("verbose");
 
   /// create some motion scenes
   MotionFactory* mf = new MotionFactory();
-  MT::Array<Scene > trainScenes;
-  MT::Array<Scene > testScenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene > trainScenes;
+  mlr::Array<Scene > testScenes;
+  mlr::Array<CostWeight> weights;
   mf->costScale=1e2;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
+  mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 
 
   /// create ikmo problem
@@ -56,10 +56,10 @@ void run() {
 /*
   /// 1. Create training and test scenarios
   MotionFactory* mf = new MotionFactory();
-  MT::Array<Scene > trainScenes;
-  MT::Array<Scene > testScenes;
+  mlr::Array<Scene > trainScenes;
+  mlr::Array<Scene > testScenes;
   mf->costScale=1e2;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,numDem,visDemo);
+  mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,numDem,visDemo);
 
   /// 2. Define parameter and start point
   cout << "Number of parameters: " << mf->numParam << endl;
@@ -79,7 +79,7 @@ void run() {
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-7));
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-9));
 
-  if (!MT::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
+  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
   ioc.costReport(w);
 
   /// 3. Evaluate code on test scenarios
@@ -95,7 +95,7 @@ void run() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run();
   return 0;
 }

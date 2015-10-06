@@ -121,7 +121,7 @@ void TaskVariable::setGains(double pgain, double dgain, bool onReal) {
 void TaskVariable::setGainsAsNatural(double oscPeriod, double dampingRatio, bool onReal) {
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
-  Pgain = MT::sqr(MT_PI/oscPeriod);
+  Pgain = mlr::sqr(MLR_PI/oscPeriod);
   Dgain = 4.*dampingRatio*sqrt(Pgain);
   if(!y_prec) y_prec=100.;
 }
@@ -130,7 +130,7 @@ void TaskVariable::setGainsAsAttractor(double decaySteps, double oscillations, b
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Dgain=2./decaySteps;
-  Pgain=Dgain*Dgain*(MT_PI*MT_PI*oscillations*oscillations + .25);
+  Pgain=Dgain*Dgain*(MLR_PI*MLR_PI*oscillations*oscillations + .25);
   if(!y_prec) y_prec=100.;
 }
 
@@ -148,10 +148,10 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv) {
   for(t=0; t<T; t++) {
     a = (double)t/(T-1);
     y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
-    y_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./y_prec) + ((double)1.-a)*funnelsdv);
+    y_prec_trajectory(t) = (double)1./mlr::sqr(sqrt((double)1./y_prec) + ((double)1.-a)*funnelsdv);
     
     v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
-    v_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./v_prec) + ((double)1.-a)*funnelvsdv);
+    v_prec_trajectory(t) = (double)1./mlr::sqr(sqrt((double)1./v_prec) + ((double)1.-a)*funnelvsdv);
   }
 }
 
@@ -376,7 +376,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
         break;
       }
       //relative
-      MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
+      MLR_MSG("warning - don't have a correct Jacobian for this TVType yet");
       fi = bi->X; fi.appendTransformation(irel);
       fj = bj->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
@@ -744,7 +744,7 @@ void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives) {
 void reportState(TaskVariableList& CS, ostream& os, bool onlyActives) {
   ;
   uint i;
-  MT::IOraw=true;
+  mlr::IOraw=true;
   for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
       os <<CS(i)->y;
     }
@@ -997,7 +997,7 @@ void bayesianPlanner_obsolete(ors::KinematicWorld *ors, TaskVariableList& CS, Sw
   z.setZero();
   Zinv.setZero();
 
-  MT::timerStart();
+  mlr::timerStart();
 
   uint k, t, dt, t0;
   for(k=0;k<iterations;k++){
@@ -1086,7 +1086,7 @@ void bayesianPlanner_obsolete(ors::KinematicWorld *ors, TaskVariableList& CS, Sw
       cost1 += cost_t = getCost(CS, W, t);  //cout <<"cost = " <<cost_t <<endl;
     }
     *os <<std::setw(3) <<k
-        <<"  time " <<MT::timerRead(false)
+        <<"  time " <<mlr::timerRead(false)
         <<"  cost1 " <<cost1
         <<"  cost2 " <<cost2
         <<"  length " <<length
@@ -1101,14 +1101,14 @@ void bayesianPlanner_obsolete(ors::KinematicWorld *ors, TaskVariableList& CS, Sw
 void SMAC::readCVdef(std::istream& is) {
   char c;
   TaskVariable *cv;
-  MT::String name, ref1, ref2;
+  mlr::String name, ref1, ref2;
   ors::Transformation f;
   uint i, j, k;
   arr mat;
-  MT::String::readSkipSymbols=" \n\r\t";
-  MT::String::readStopSymbols=" \n\r\t";
+  mlr::String::readSkipSymbols=" \n\r\t";
+  mlr::String::readStopSymbols=" \n\r\t";
   for(;;) {
-    MT::skip(is);
+    mlr::skip(is);
     is.get(c);
     if(!is.good()) break;
     cv=&CVs.append();

@@ -23,7 +23,7 @@ struct MySystem:System{
 };
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   MySystem S;
   engine().open(S);
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv){
   SoftHandMsg deflate("deflate");
 
   S.sh_ref.set() = grasp;
-  MT::wait(5.);
+  mlr::wait(5.);
   S.sh_ref.set() = deflate;
 
   return 0;

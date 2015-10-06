@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 #include <MT/util.h>
 #include <MT/ors.h>
 
@@ -76,10 +76,10 @@ void TEST(Tracking){
   //mop::bayesianIKTrajectory(mop,q);
   //mop::bayesianIKTrajectory(mop,q,1e-4);
   //mop.displayTrajectory(q,1,"initially planned");
-  double rate=MT::getParameter<double>("rate");
-  double threshold=MT::getParameter<double>("threshold");
-  uint display=MT::getParameter<uint>("display");
-  uint iterations=MT::getParameter<uint>("iterations");
+  double rate=mlr::getParameter<double>("rate");
+  double threshold=mlr::getParameter<double>("threshold");
+  uint display=mlr::getParameter<uint>("display");
+  uint iterations=mlr::getParameter<uint>("iterations");
   mop.dynamic=false;
   mop::BayesianKinematicMotionPlanning(mop,q,iterations,rate,threshold,display);
   plotClear();
@@ -137,7 +137,7 @@ void drawBase(void*){
 
 void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../../share/configurations/schunk.ors"){
   char *path,*name,cwd[200];
-  MT::decomposeFilename(path,name,file);
+  mlr::decomposeFilename(path,name,file);
   getcwd(cwd,200);
   chdir(path);
   
@@ -234,7 +234,7 @@ void TEST(Control){
     gl.text.clear() <<"time " <<t <<endl;
     gl.update();
     //if(x.state==1) break;
-    cout <<std::setprecision(2) <<MT::timerRead(true) <<"secs" <<endl;
+    cout <<std::setprecision(2) <<mlr::timerRead(true) <<"secs" <<endl;
   }
   gl.watch();
   schunk.zeroVelAll();

@@ -30,7 +30,7 @@
  */
 
 
-#ifdef MT_QHULL
+#ifdef MLR_QHULL
 
 #include "mesh.h"
 #include "plot.h"
@@ -162,7 +162,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
     int curlong, totlong;
     qh_memfreeshort(&curlong, &totlong);
     if(curlong || totlong)
-      MT_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
+      MLR_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
   }
   
   return bestdist;
@@ -201,7 +201,7 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
     CHECK_EQ(l,vertices.N-2, "");
     W[l]() = v-w;
     W[l+1]() = p-y; //not important (is already orthogonal to the full facet)
-    MT::Array<double*> tmp;
+    mlr::Array<double*> tmp;
     qh_gram_schmidt(X.d1, W.getCarray(tmp)); //orthogonalize local basis vectors
     subn = W[l]; //this entry should now be orthogonal to the sub-facet
     
@@ -261,7 +261,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
     r.setDiff(Vector_z, n);//rotate cone's z-axis into contact normal n
     
     for(j=0; j<S; j++) {   //each sample, equidistant on a circle
-      double angle = j*MT_2PI/S;
+      double angle = j*MLR_2PI/S;
       ors::Vector f(cos(angle)*mu, sin(angle)*mu, 1.);  //force point sampled from cone
       
       f = r*f;                         //rotate
@@ -345,7 +345,7 @@ void getTriangulatedHull(uintA& T, arr& V) {
   FORALLfacets {
     i=0;
     FOREACHvertex_(facet->vertices) {
-      if(i<3) T(f, i)=vertex->id; else MT_MSG("face " <<f <<" has " <<i <<" vertices" <<endl);
+      if(i<3) T(f, i)=vertex->id; else MLR_MSG("face " <<f <<" has " <<i <<" vertices" <<endl);
       i++;
     }
     if(facet->toporient) {
@@ -359,7 +359,7 @@ void getTriangulatedHull(uintA& T, arr& V) {
   int curlong, totlong;
   qh_memfreeshort(&curlong, &totlong);
   if(curlong || totlong)
-    MT_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
+    MLR_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
     
   V=Vnew;
 }
@@ -393,7 +393,7 @@ void getDelaunayEdges(uintA& E, const arr& V) {
   int curlong, totlong;
   qh_memfreeshort(&curlong, &totlong);
   if(curlong || totlong)
-    MT_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
+    MLR_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
 }
 
 
@@ -453,12 +453,12 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
   qh_memfreeshort(&curlong, &totlong);   //free short memory and memory allocator
   
   if(curlong || totlong)
-    MT_MSG("qhull did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)");
+    MLR_MSG("qhull did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)");
 }
 
 #endif
 
-#else ///MT_QHULL
+#else ///MLR_QHULL
 #include <Core/util.h>
 #include <Core/array.h>
 #include <Core/geo.h>

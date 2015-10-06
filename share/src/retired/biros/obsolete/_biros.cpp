@@ -25,7 +25,7 @@ ThreadInfoWin::~ThreadInfoWin() {
 }
 
 void ThreadInfoWin::open() {
-  //MT::open(log, "LOG.threads");
+  //mlr::open(log, "LOG.threads");
   Fl::visual(FL_DOUBLE|FL_INDEX);
   s->show();
   Fl::check();
@@ -122,7 +122,7 @@ ThreadInfoWin::~ThreadInfoWin() {
 }
 
 void ThreadInfoWin::open() {
-  //MT::open(s->log, "LOG.threads");
+  //mlr::open(s->log, "LOG.threads");
   s->display = XOpenDisplay(NULL);
   if(!s->display) HALT("Cannot open display");
   s->window = XCreateSimpleWindow(s->display, DefaultRootWindow(s->display),

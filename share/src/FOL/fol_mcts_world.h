@@ -76,7 +76,7 @@ struct FOL_World:MCTS_Environment{
   virtual bool get_info(InfoTag tag) const;
   virtual double get_info_value(InfoTag tag) const;
   void write_state(ostream&);
-  void set_state(MT::String&);
+  void set_state(mlr::String&);
 
   //-- internal access
   Graph* getState();

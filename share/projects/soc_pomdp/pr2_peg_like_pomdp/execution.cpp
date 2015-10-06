@@ -191,7 +191,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     world.setJointState(x[0]);
 
     for(uint t=0;t<x.d0 + 100;t++){
-        //MT::wait(.1);
+        //mlr::wait(.1);
 
 
       MC.setState(q, qdot);
@@ -305,7 +305,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
       //    vid->addFrame(world.gl().captureImage);
 
       //write data
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
           <<table->X.pos.z <<' '
          <<endeffR->X.pos.z <<' '

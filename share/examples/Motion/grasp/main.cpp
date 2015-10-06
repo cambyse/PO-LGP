@@ -6,15 +6,15 @@
 
 void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
-//  double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
+//  double seconds = mlr::getParameter<double>("reachPlanTrajectoryDuration");
 
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   MotionProblem P(G);
 
 
-//  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+//  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
 //  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
 //  sys.initBasics(NULL,NULL,&gl,T,seconds,true,&W);
   
@@ -73,7 +73,7 @@ void TEST(GraspHeuristic){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testGraspHeuristic();
   

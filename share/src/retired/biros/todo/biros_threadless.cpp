@@ -48,10 +48,10 @@ struct Action {
 };
 
 struct sThreadless {
-  MT::Array<MT::Array<Log> > logs; // list of log entries for every variable
+  mlr::Array<mlr::Array<Log> > logs; // list of log entries for every variable
   
   // get all filenames in a directory
-  int getdir(MT::Array<MT::String> &files, const MT::String dir) {
+  int getdir(mlr::Array<mlr::String> &files, const mlr::String dir) {
     DIR *dp;
     struct dirent *dirp;
     if ((dp  = opendir(STRING(dir))) == NULL) {
@@ -60,16 +60,16 @@ struct sThreadless {
     }
     
     while ((dirp = readdir(dp)) != NULL) {
-      files.append(MT::String(dirp->d_name));
+      files.append(mlr::String(dirp->d_name));
     }
     closedir(dp);
     return 0;
   }
   
   // read variable log from filename
-  void readfile(MT::String& filename) {
+  void readfile(mlr::String& filename) {
     //cout << "reading file " << logs.N << ": " << filename << endl;
-    MT::Array<Log> *var_log = new MT::Array<Log>;
+    mlr::Array<Log> *var_log = new mlr::Array<Log>;
     var_log->memMove = true;
     logs.append(*var_log);
     FILE* accessInputFile = fopen(STRING("log/" << filename), "r");
@@ -93,9 +93,9 @@ struct sThreadless {
 // get logs from files
 Threadless::Threadless() :
     s(new sThreadless) {
-  MT::Array<MT::String> filenames;
-  s->getdir(filenames, MT::String("./log/"));
-  MT::String name;
+  mlr::Array<mlr::String> filenames;
+  s->getdir(filenames, mlr::String("./log/"));
+  mlr::String name;
   for_list(name, filenames) {
     if ('a' == name(0)) {
       s->readfile(name);
@@ -137,7 +137,7 @@ const int Threadless::nextProcess() {
   // 2.
   // test for conflicts
   Log access;
-  MT::Array<Action> allowed;
+  mlr::Array<Action> allowed;
   bool conflict = true;
   // go through all possible accesses
   for (uint var=0; var < numVars; var++) {
@@ -148,7 +148,7 @@ const int Threadless::nextProcess() {
       conflict = false;
       // test for conflicts for this access in all variable logs
       for (uint var2=0; var2 < numVars; var2++) {
-        MT::Array<Log> log = s->logs(var2);
+        mlr::Array<Log> log = s->logs(var2);
         // go through log
         for (uint j=0; j < log.N; j++) {
           // same pID

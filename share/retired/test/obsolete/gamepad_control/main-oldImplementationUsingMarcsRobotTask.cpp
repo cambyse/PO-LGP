@@ -50,13 +50,13 @@ void testVision(){
   R.open();
   R.gamepad();
   for(uint k=0;k<100 && !R.signalStop;k++){
-    cout <<"loc mode" <<endl; MT::wait(1.);
+    cout <<"loc mode" <<endl; mlr::wait(1.);
     R.localizeObject("S3");
-    cout <<"gamepad mode" <<endl; MT::wait(1.);
+    cout <<"gamepad mode" <<endl; mlr::wait(1.);
     R.gamepad();
-    cout <<"reach mode" <<endl; MT::wait(1.);
+    cout <<"reach mode" <<endl; mlr::wait(1.);
     R.reachObject();
-    cout <<"gamepad mode" <<endl; MT::wait(1.);
+    cout <<"gamepad mode" <<endl; mlr::wait(1.);
     R.gamepad();
   }
   R.close();
@@ -128,7 +128,7 @@ void testSequence(){
 }
   
 void replayTrajectory(){
-  MT::String file = MT::getParameter<MT::String>("nikolayTrajectory");
+  mlr::String file = mlr::getParameter<mlr::String>("nikolayTrajectory");
   MarcsRobotTask R;
   R.open();
   R.gamepad();
@@ -140,10 +140,10 @@ void replayTrajectory(){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
-  switch(MT::getParameter<int>("mode",0)){
+  switch(mlr::getParameter<int>("mode",0)){
     case 0:  testGamepad();  break;
     case 1:  testActions();  break;
     case 2:  testReachPlanning();  break;

@@ -32,7 +32,7 @@
 
 #include "ors_ode.h"
 
-#ifdef MT_ODE
+#ifdef MLR_ODE
 
 #ifndef dDOUBLE
 #  define dDOUBLE
@@ -45,7 +45,7 @@
 #  include <ode/internal/collision_kernel.h>
 #  include <ode/internal/collision_transform.h>
 
-#  ifdef MT_MSVC
+#  ifdef MLR_MSVC
 #    undef HAVE_UNISTD_H
 #    undef HAVE_SYS_TIME_H
 #  endif
@@ -150,7 +150,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
           break;
         case ors::cappedCylinderST:
           dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-          //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
+          //                 MLR_MSG("ODE: setting Cylinder instead of capped cylinder mass");
           dBodySetMass(b, &odeMass);
           geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
           break;
@@ -229,7 +229,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
       dJointSetFixed(jointF);
     }
   }
-#ifndef MT_ode_nojoints
+#ifndef MLR_ode_nojoints
   for(ors::Body *n: C.bodies) {
     for_list(ors::Joint,  e,  n->inLinks) {
       switch(e->type) {
@@ -550,7 +550,7 @@ void OdeInterface::exportStateToOde() {
     CP3(b->lvel, n->X.vel.p());
     CP3(b->avel, n->X.angvel.p());
     //n->copyFrameToOde();
-#ifndef MT_ode_nojoints
+#ifndef MLR_ode_nojoints
     for_list(ors::Joint,  e,  n->inLinks) if(e->type!=ors::JT_glue) {
       dxJointHinge* hj=(dxJointHinge*)joints(e->index);
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
@@ -787,7 +787,7 @@ void OdeInterface::pidJointVel(ors::Joint *e, double v0, double vGain) {
   
   v=-dJointGetHingeAngleRate(joints(e->index));
   f = vGain*(v0-v);
-  if(fabs(f)>vGain) f=MT::sign(f)*vGain;
+  if(fabs(f)>vGain) f=mlr::sign(f)*vGain;
   std::cout <<"PIDv:" <<v0 <<' ' <<v <<" -> " <<f <<std::endl;
   dJointSetAMotorParam(motors(e->index), dParamFMax, 0);
   dJointAddHingeTorque(joints(e->index), -f);
@@ -908,7 +908,7 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
   
   x.z=0.;
   
-  MT::Array<ors::Vector> v;
+  mlr::Array<ors::Vector> v;
   //collect list of floor contacts
   for(i=0; i<conts.N; i++) {
     c = conts(i);
@@ -927,7 +927,7 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
   
   //construct boundaries
   Bound b;
-  MT::Array<Bound> bounds;
+  mlr::Array<Bound> bounds;
   double s;
   bool f;
   for(i=0; i<v.N; i++) for(j=0; j<i; j++) {
@@ -1074,7 +1074,7 @@ bool inFloorContacts(ors::Vector& x);
 #endif
 
 #else
-OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) { MT_MSG("WARNING - creating dummy OdeInterface"); }
+OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) { MLR_MSG("WARNING - creating dummy OdeInterface"); }
 OdeInterface::~OdeInterface() {}
 void OdeInterface::step(double dtime) {}
 void OdeInterface::clear() {}

@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_util_t_cpp
-#define MT_util_t_cpp
+#ifndef MLR_util_t_cpp
+#define MLR_util_t_cpp
 
 #include "util.h"
 #include <map>
@@ -26,12 +26,12 @@
 #include <sstream>
 #include <string.h>
 #include <iomanip>
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 #  include <unistd.h>
 #endif
 
 
-namespace MT {
+namespace mlr {
 /** @brief Search for a command line option \c -tag and, if found, pipe the
  next command line option into \c value by the
  \c operator>>(istream&, type&). Returns false on failure. */

@@ -15,7 +15,7 @@ KOMO::KOMO(const Graph& specs){
 
 void KOMO::init(const Graph& specs){
   Graph &glob = specs.get<Graph>("KOMO");
-  MT::FileToken model = glob.get<MT::FileToken>("model");
+  mlr::FileToken model = glob.get<mlr::FileToken>("model");
   uint timeSteps=glob.get<double>("T");
   double duration=glob.get<double>("duration");
   uint phases=glob.get<double>("phases", 1);
@@ -43,7 +43,7 @@ void KOMO::init(const Graph& specs){
     TaskMap *map = newTaskMap( T["map"]->graph(), world);
     Task *task = MP->addTask(t->keys.last(), map);
     map->order = T.V<double>("order", 0);
-    MT::String type = T.V<MT::String>("type", STRING("sumOfSqr"));
+    mlr::String type = T.V<mlr::String>("type", STRING("sumOfSqr"));
     if(type=="sumOfSqr") map->type=sumOfSqrTT;
     else if(type=="inequal") map->type=ineqTT;
     else if(type=="equal") map->type=eqTT;
@@ -56,14 +56,14 @@ void KOMO::init(const Graph& specs){
   for(Node *s:switches){
     Graph &S = s->graph();
     ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-    MT::String type = S.get<MT::String>("type");
+    mlr::String type = S.get<mlr::String>("type");
     if(type=="addRigid") sw->symbol = ors::KinematicSwitch::addRigid;
     else if(type=="addRigidRel") sw->symbol = ors::KinematicSwitch::addRigidRel;
     else if(type=="deleteJoint") sw->symbol = ors::KinematicSwitch::deleteJoint;
     else HALT("unknown type: "<< type);
     sw->timeOfApplication = S.get<double>("timeOfApplication")*timeSteps+1;
-    sw->fromId = world.getShapeByName(S.get<MT::String>("from"))->index;
-    sw->toId = world.getShapeByName(S.get<MT::String>("to"))->index;
+    sw->fromId = world.getShapeByName(S.get<mlr::String>("from"))->index;
+    sw->toId = world.getShapeByName(S.get<mlr::String>("to"))->index;
     MP->switches.append(sw);
   }
 
@@ -100,7 +100,7 @@ void KOMO::run(){
   }else{
     optConstrainedMix(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
-  cout <<"** optimization time=" <<MT::timerRead()
+  cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
   //    checkJacobian(Convert(MF), x, 1e-5);
   MP->costReport(false);
@@ -161,17 +161,17 @@ arr moveTo(ors::KinematicWorld& world,
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize
-  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
   ors::KinematicWorld::setJointStateCount=0;
   for(uint k=0;k<iterate;k++){
-    MT::timerStart();
+    mlr::timerStart();
     if(colPrec<0){
       optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
     }
-    cout <<"** optimization time=" <<MT::timerRead()
+    cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
     //    checkJacobian(Convert(MF), x, 1e-5);
     MP.costReport();
@@ -189,11 +189,11 @@ void setTasks(MotionProblem& MP,
               double duration){
 
   //-- parameters
-  double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
-  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
-  double margin = MT::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
-  double zeroVelPrec = MT::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
-  double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
+  double posPrec = mlr::getParameter<double>("KOMO/moveTo/precision", 1e3);
+  double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  double margin = mlr::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
+  double zeroVelPrec = mlr::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
+  double alignPrec = mlr::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
 
   //-- set up the MotionProblem
   target.cont=false; //turn off contact penalization with the target

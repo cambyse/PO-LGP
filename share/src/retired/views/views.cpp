@@ -1,6 +1,6 @@
 #include "views.h"
 
-#ifdef MT_GTK
+#ifdef MLR_GTK
 
 #include <Gui/gtk.h>
 #include <Ors/ors.h>
@@ -74,14 +74,14 @@ void View::gtkUpdate(){
   }else if(widget){
     gtkLock();
     GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
-    MT::String str;
+    mlr::String str;
     write(str);
     gtk_text_buffer_set_text (buffer, str, -1);
     gtkUnlock();
   }
 }
 
-#else //MT_GTK
+#else //MLR_GTK
 
 View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) { s=NULL; }
 View::~View(){}

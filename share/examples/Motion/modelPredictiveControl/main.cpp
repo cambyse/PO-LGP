@@ -83,7 +83,7 @@ void plotTraj(arr &x, double dt) {
   // Plot optimal trajectory
   // Plot position
   write(LIST<arr>(x),"out/x.output");
-  MT::String n;
+  mlr::String n;
   n<<"set term wxt "<<++figID<<" title 'position x'";
   gnuplot(n);
   gnuplot("plot 'out/x.output'using 1");
@@ -214,7 +214,7 @@ void scenario2() {
   optNewton(xRef, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   plotTraj(xRef,dt);
-  MT::wait(2);
+  mlr::wait(2);
   //  displayTrajectory(xRef, 1, G, gl,"planned trajectory");
 
 
@@ -229,7 +229,7 @@ void scenario2() {
   cout << "P.T: " << P.T << endl;
 
   // reset costs
-  MT::timerStart();
+  mlr::timerStart();
   Task *c2;
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
@@ -252,7 +252,7 @@ void scenario2() {
   x.setZero();
 
   optNewton(x, Convert(F), OPT(verbose=1, stopIters=20, damping=1e-3, maxStep=1., stopTolerance=1e-2));
-  cout <<"Optimization time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"Optimization time: " <<mlr::timerRead() <<"sec" <<endl;
 
   plotTraj(x,dt);
 
@@ -337,7 +337,7 @@ void scenario3() {
   double t = 0.;
   double t_final = T*dt;
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, {0.,0.,1.});
+  MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.01, {0.,0.,1.});
   MPC mpc(P,x);
   world.setJointState(q);
   world.getJointState(q);
@@ -364,9 +364,9 @@ void scenario3() {
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",3)){
+  switch(mlr::getParameter<int>("mode",3)){
   case 1:  scenario1();  break;
   case 2:  scenario2();  break;
   case 3:  scenario3();  break;

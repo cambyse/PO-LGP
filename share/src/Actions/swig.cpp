@@ -28,7 +28,7 @@ struct OrsViewer:Module{
     copy = modelWorld.get();
     openGlUnlock();
     copy.gl().update(NULL, false, false, true);//watch(false);
-    MT::wait(.03);
+    mlr::wait(.03);
   }
   void close(){}
 };
@@ -44,7 +44,7 @@ struct PerceptionObjects2Ors : Module{
     modelWorld.readAccess();
 
     for(visualization_msgs::Marker& marker : perceptionObjects().markers){
-      MT::String name;
+      mlr::String name;
       name <<"obj" <<marker.id;
       ors::Shape *s = modelWorld->getShapeByName(name);
       if(!s){
@@ -74,8 +74,8 @@ struct SwigSystem {
   ACCESSname(bool, quitSignal)
   ACCESSname(bool, fixBase)
   ACCESSname(RelationalMachine, RM)
-  ACCESSname(MT::String, effects)
-  ACCESSname(MT::String, state)
+  ACCESSname(mlr::String, effects)
+  ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
   ACCESSname(AlvarMarker, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
@@ -96,7 +96,7 @@ struct SwigSystem {
 
 //    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
 
-    if(MT::getParameter<bool>("useRos",false)){
+    if(mlr::getParameter<bool>("useRos",false)){
       rosCheckInit("SwigSystem");
       new RosCom_Spinner();
       //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
@@ -111,7 +111,7 @@ struct SwigSystem {
     }
 
     // make the base movable by default
-    fixBase.set() = MT::getParameter<bool>("fixBase", false);
+    fixBase.set() = mlr::getParameter<bool>("fixBase", false);
 
     cout <<"SYSTEM=" <<registry() <<endl;
   }
@@ -119,8 +119,8 @@ struct SwigSystem {
 
 // ============================================================================
 
-MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
-  MT::String str;
+mlr::String lits2str(const stringV& literals, const dict& parameters=dict()){
+  mlr::String str;
   str <<'(';
   for(auto& i:literals) str <<' ' <<i;
   str <<')';
@@ -354,7 +354,7 @@ stringV ActionSwigInterface::getSymbols() {
 
 int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName, const stringV& parentSymbols, const dict& parameters){
 #if 1
-  MT::String str;
+  mlr::String str;
   str <<symbolName.c_str() <<lits2str(parentSymbols, parameters);
   Node *symbol = S->RM.set()->declareNewSymbol(str);
 #else

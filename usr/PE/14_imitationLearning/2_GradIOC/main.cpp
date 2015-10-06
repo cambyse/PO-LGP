@@ -34,7 +34,7 @@ struct IOC_DemoCost {
   }
 
   double eval(arr& df, arr& Hf, const arr& x) {
-    //    MT::timerStart(true);
+    //    mlr::timerStart(true);
     // compute w vector
     arr w;
 
@@ -99,7 +99,7 @@ struct IOC_DemoCost {
       }
     }
 
-    //    cout << "4: "  << MT::timerRead(true) << endl;
+    //    cout << "4: "  << mlr::timerRead(true) << endl;
     return y;
   }
 };
@@ -120,12 +120,12 @@ struct IOC:ConstrainedProblem {
   uint n;
   uint T;
 
-  MT::Array<Demonstration*> &demos;
+  mlr::Array<Demonstration*> &demos;
 
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+1;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
+  IOC(mlr::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
     T = demos(0)->MP.T;
 
@@ -196,7 +196,7 @@ struct IOC:ConstrainedProblem {
 
 
 void simpleMotion(){
-  MT::Array<Demonstration*> demos;
+  mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
   ors::KinematicWorld world("scene");
@@ -298,7 +298,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   simpleMotion();
 
   return 0;

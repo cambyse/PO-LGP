@@ -64,7 +64,7 @@ void closeModules(){
 Node* getModuleNode(Module *module){
   NodeL ms = registry().getTypedNodes<Module>();
   for(auto& m:ms){ if(m->getValue<Module>()==module) return m; }
-  MT_MSG("module not found!");
+  MLR_MSG("module not found!");
   return NULL;
 }
 
@@ -72,7 +72,7 @@ Node* getVariable(const char* name){
   return registry().getNode(name);
 //  NodeL vars = registry().getTypedNodes<RevisionedAccessGatedClass>();
 //  for(auto& v:vars){ if(v->V<RevisionedAccessGatedClass>().name==name) return v; }
-//  MT_MSG("module not found!");
+//  MLR_MSG("module not found!");
 //  return NULL;
 }
 

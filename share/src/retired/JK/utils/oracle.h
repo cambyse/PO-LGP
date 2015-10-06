@@ -7,36 +7,36 @@
 
 class Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const = 0;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const = 0;
     
 };
 
 class OnOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 
 class CloseOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 
 class HigherOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 
 class InsideOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 class OutOfReachOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 class UprightOracle : public Oracle {
   public:
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 
 class HumanOracle : public Oracle {
@@ -44,7 +44,7 @@ class HumanOracle : public Oracle {
 		const char* predicate;
   public:
 		HumanOracle(const char* predicate);
-    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+    virtual const int classify(const mlr::Array<arr>& data, const int set = 0) const;
 };
 
 #endif //_ORACLE_H_

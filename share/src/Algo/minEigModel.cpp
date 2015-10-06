@@ -70,7 +70,7 @@ void MinEigModel::reweightWithError(uintA& pts, double margin){
   if(margin<0.) margin = ::sqrt(eig.lambda_lo);
   for(uint j=pts.N;j--;){
     uint i=pts(j);
-    double coeff = -.1 * MT::sqr(scalarProduct(data.X[i]-mean, eig.x_lo)/margin);
+    double coeff = -.1 * mlr::sqr(scalarProduct(data.X[i]-mean, eig.x_lo)/margin);
     weights(i) = ::exp(coeff);
     if(coeff<-5. || weights(i)<.1){
       pts.remove(j);
@@ -89,7 +89,7 @@ void MinEigModel::computeConvexHull(){
 
 void MinEigModel::calcDensity(){
   computeConvexHull();
-  density = stat_n * MT::sqr(mean(2)) / convexHull.getArea();
+  density = stat_n * mlr::sqr(mean(2)) / convexHull.getArea();
 }
 
 void MinEigModel::glDraw(){

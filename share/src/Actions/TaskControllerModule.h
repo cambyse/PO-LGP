@@ -6,7 +6,7 @@
 #include <pr2/rosalvar.h>
 #include <FOL/relationalMachine.h>
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #endif
 
@@ -16,8 +16,8 @@ struct TaskControllerModule : Module {
   //protected access points
   ACCESSnew(CtrlMsg, ctrl_ref) //< the message send to the RTController
   ACCESSnew(CtrlMsg, ctrl_obs) //< the message received from the RTController
-  ACCESSnew(MT::Array<CtrlTask*>, ctrlTasks)
-  ACCESSnew(MT::String, effects)
+  ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESSnew(mlr::String, effects)
   ACCESSnew(ors::KinematicWorld, modelWorld)
   ACCESSnew(AlvarMarkers, ar_pose_marker)
   ACCESSnew(bool, fixBase)

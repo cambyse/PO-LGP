@@ -41,7 +41,7 @@ void TEST(SimpleImplicitSurfaces) {
   gl.add(glStandardScene,NULL);
   gl.add(ors::glDrawMesh,&m);
 
-  MT::Array<ScalarFunction*> fcts = {&blobby, &sphere, &torus, &cylinder};
+  mlr::Array<ScalarFunction*> fcts = {&blobby, &sphere, &torus, &cylinder};
 
   for(ScalarFunction* f: fcts){
     m.setImplicitSurface(*f,-10.,10.,100);
@@ -59,7 +59,7 @@ void TEST(DistanceFunctions) {
   gl.add(glStandardScene,NULL);
   gl.add(ors::glDrawMesh,&m);
 
-  MT::Array<ScalarFunction*> fcts = {
+  mlr::Array<ScalarFunction*> fcts = {
     new DistanceFunction_Sphere(t, 1.),
     new DistanceFunction_Box(t, 1., 2., 3.),
     new DistanceFunction_Cylinder(t, 1., 2.)

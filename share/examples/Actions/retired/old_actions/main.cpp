@@ -90,7 +90,7 @@ void TEST(FollowTrajectory) {
   Action *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
 
   cout <<"I'm here...waiting" <<endl;
-  MT::wait(7.);
+  mlr::wait(7.);
 
   engine().close(activity);
 }
@@ -104,7 +104,7 @@ void TEST(Push) {
   Action *a, *b;
 
   b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
-                          {1./MT_SQRT2, 0, -1./MT_SQRT2}, {}, -1., .5, .9, .1, 10., 100., -1.);
+                          {1./MLR_SQRT2, 0, -1./MLR_SQRT2}, {}, -1., .5, .9, .1, 10., 100., -1.);
 
   a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
                           {.7, .3, .7}, {}, -1., .5, .9, .1, 10.);
@@ -136,12 +136,12 @@ void TEST(Push) {
 #endif
 
 //  cout << "waiting" << endl;
-//  MT::wait(3);
+//  mlr::wait(3);
 //  cout << "pushing" << endl;
 //  Action* push = new PushForce(*activity.machine, "endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/);
 //  activity.machine->waitForActionCompletion(push);
 
-  MT::wait(1.);
+  mlr::wait(1.);
   engine().close(activity);
 }
 
@@ -173,7 +173,7 @@ void test_collision() {
   new MoveEffTo(*activity.machine, "endeffL", {.8, -.1, .9});
   activity.machine->waitForActionCompletion();
   cout << "actions done" << endl;
-  MT::wait(5);
+  mlr::wait(5);
   engine().close(activity);
 }
 
@@ -191,7 +191,7 @@ void idle2() {
 //  new OrientationQuat("endeffR", {1, 1, 0, 0});
 
   activity.machine->waitForActionCompletion();
-  MT::wait(5);
+  mlr::wait(5);
 
 
   // new MoveEffTo(*activity.machine, "endeffR", {.6, -.2, .9});
@@ -224,7 +224,7 @@ void test_record() {
 
     trajQ.append(~q);
     trajX.append(~x);
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
   cout << "End recording" << endl;
 
@@ -252,13 +252,13 @@ void test_replay() {
   cout <<"Goto init position" <<endl;
   Action* right = new MoveEffTo(*activity.machine, "endeffR", x0);
   activity.machine->waitForActionCompletion(right);
-  MT::wait(3.);
+  mlr::wait(3.);
 
   // 2. execute trajectory
   TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
   Action *a = new FollowReferenceInTaskSpace(*activity.machine, "replay task", t, trajX, 10.);
   cout <<"Execute trajectory" <<endl;
-  MT::wait(10.);
+  mlr::wait(10.);
 
   engine().close(activity);
 }
@@ -266,7 +266,7 @@ void test_replay() {
 
 // ============================================================================
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   
   testPush();
 //  idle();

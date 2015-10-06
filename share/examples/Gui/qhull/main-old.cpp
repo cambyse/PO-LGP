@@ -1,5 +1,5 @@
 #ifdef OLD_CODE
-struct Node{ MT::Array<double> point; arr& data(){ return point; } };
+struct Node{ mlr::Array<double> point; arr& data(){ return point; } };
 istream& operator>>(istream& is,Node& n){ return is >>n.point; }
 ostream& operator<<(ostream& os,const Node& n){ return os <<n.point; }
 
@@ -24,12 +24,12 @@ void testDelaunay(){
     n->disp().size=.01;
   }
 
-  cout <<"starting triangulation... ";  cout.flush(); MT::resetTimer();
+  cout <<"starting triangulation... ";  cout.flush(); mlr::resetTimer();
 
   //triangulate
   delaunay(g,dim);
 
-  cout <<MT::getTimer() <<"sec " <<g.E <<"edges" <<endl;
+  cout <<mlr::getTimer() <<"sec " <<g.E <<"edges" <<endl;
 
   OpenGL gl; gl.add(g); gl.watch();
 

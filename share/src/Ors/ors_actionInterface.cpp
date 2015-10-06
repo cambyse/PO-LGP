@@ -68,7 +68,7 @@ void drawOrsActionInterfaceEnv(void*) {
 
 void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) {
     C->ode().exportStateToOde();
     C->ode().step(.01);
@@ -80,7 +80,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInter
   if(swift) {
     swift->step(*C);
   } else {
-#ifdef MT_ODE
+#ifdef MLR_ODE
     C->ode().importProxiesFromOde();
 #endif
   }
@@ -112,7 +112,7 @@ ActionInterface::~ActionInterface() {
 void ActionInterface::shutdownAll() {
   if(C) delete C;          C=0;
   if(gl) delete gl;        gl=0;
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) delete ode;      ode=0;
 #endif
   if(swift) delete swift;  swift=0;
@@ -121,7 +121,7 @@ void ActionInterface::shutdownAll() {
 void ActionInterface::loadConfiguration(const char* ors_filename) {
 
 //  char *path, *name, cwd[200];
-//  MT::decomposeFilename(path, name, ors_filename);
+//  mlr::decomposeFilename(path, name, ors_filename);
 //  getcwd(cwd, 200);
 //  chdir(path);
   
@@ -183,7 +183,7 @@ void ActionInterface::watch() {
 void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
                                double ode_coll_cfm, double ode_friction) {
   CHECK(C, "load a configuration first");
-#ifdef MT_ODE
+#ifdef MLR_ODE
   C->ode();
   
   // SIMULATOR PARAMETER

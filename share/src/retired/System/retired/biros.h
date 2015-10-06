@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#ifndef MT_biros_h
-#define MT_biros_h
+#ifndef MLR_biros_h
+#define MLR_biros_h
 
 #include <Core/array.h>
 #include <Core/util.h>
@@ -48,8 +48,8 @@
 
 struct Variable;
 struct Parameter;
-typedef MT::Array<Variable*> VariableL;
-typedef MT::Array<Parameter*> ParameterL;
+typedef mlr::Array<Variable*> VariableL;
+typedef mlr::Array<Parameter*> ParameterL;
 
 
 
@@ -136,8 +136,8 @@ struct Parameter_typed:Parameter {
   Parameter_typed(const char* _name, const T& _default):Parameter() {
     name = _name;
     pvalue = &value;
-    if(&_default) MT::getParameter<T>(value, name, _default);
-    else          MT::getParameter<T>(value, name);
+    if(&_default) mlr::getParameter<T>(value, name, _default);
+    else          mlr::getParameter<T>(value, name);
   }
   void writeValue(ostream& os) const { os <<value; }
   const char* typeName() const { return typeid(T).name(); }
@@ -235,7 +235,7 @@ struct WorkingCopy {
     return last_revision != var->get_revision();
   }
   void push() {
-    if (var->get_revision()>last_revision) MT_MSG("Warning: push overwrites revision");
+    if (var->get_revision()>last_revision) MLR_MSG("Warning: push overwrites revision");
     var->writeAccess(p);
     NIY //never do this: you can't overwrite the members name, field, s, id, revision, etc!!
     *var = copy;
@@ -266,7 +266,7 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
 
 #include "biros_t.cxx"
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "biros.cpp"
 #endif
 

@@ -7,9 +7,9 @@
 #include <Ors/ors_swift.h>
 
 void pickandplace(arr finalpos){
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   for(ors::Shape*s: G.shapes) s->cont = true;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back_main","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back_main","chair_sitting"};
   const char* actuator = "l_wrist_roll_link";
   uint current =5;
 
@@ -141,7 +141,7 @@ void testPickAndPlace(const char* target,arr finalpos){
   positions.resize(5,7);
    ifstream out3("constraints.txt"); positions.readRaw(out3); out3.close();
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
 //for(ors::Shape *s: G.shapes)
@@ -152,7 +152,7 @@ void testPickAndPlace(const char* target,arr finalpos){
 
 
   arr x, xT;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
 
 for (uint i=0;i<5;i++)  {
    // finalpos = {0.0,-1.0,0.8};
@@ -285,7 +285,7 @@ void AssembleChair(){
 
 
   arr x, xT;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
   arr finalpos; ors::Vector current; ors::Quaternion original; ors::Quaternion orientation;
    original.set(sqrt(0.5),-sqrt(0.5),0,0);
   //original.set(0,0,0,1);
@@ -420,7 +420,7 @@ for (uint i=0;i<5;i++)  {
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
  testPickAndPlace("leg4",{0.0,-1.0,0.8});
 //  AssembleChair();

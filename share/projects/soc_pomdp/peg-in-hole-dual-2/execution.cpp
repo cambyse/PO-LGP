@@ -293,7 +293,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
       //    vid->addFrame(world.gl().captureImage);
 
       //write data
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
           <<table->X.pos.z <<' '
          <<endeff->X.pos.z <<' '

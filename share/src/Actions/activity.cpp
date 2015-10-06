@@ -11,7 +11,7 @@ void Activity::associateToExistingFact(Node* fact){
 
 void Activity::createFactRepresentative(Graph& state){
   CHECK(symbols.N>0,"need symbols to create a Fact that represents this activity");
-  if(!params.N) MT_MSG("Are you sure to create a fact without params?");
+  if(!params.N) MLR_MSG("Are you sure to create a fact without params?");
   this->fact = new Node_typed<Graph>(state, {}, state.getNodes(symbols), &params, false);
   configure();
 }
@@ -27,7 +27,7 @@ Activity* newActivity(Node *fact){
 
   //-- add refs to specs for other symbols
   if(specs->getValueType()==typeid(Graph)) for(uint i=1;i<fact->parents.N;i++){
-    new Node_typed<MT::String>(specs->graph(), {STRING("ref"<<i)}, {}, new MT::String(fact->parents(i)->keys.last()), true);
+    new Node_typed<mlr::String>(specs->graph(), {STRING("ref"<<i)}, {}, new mlr::String(fact->parents(i)->keys.last()), true);
   }
 
   LOG(3) <<"creating new activity of symbol '" <<*symbol <<"' and specs '" <<*specs <<"'";

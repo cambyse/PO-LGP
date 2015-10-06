@@ -33,7 +33,7 @@ void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
 void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
   constraintTime = zeros(F.d0); constraintTime.flatten();
   for (uint t=0;t<F.d0;t++){
-    if(fabs(F(t,5))> MT::getParameter<double>("contact_threshold")) {
+    if(fabs(F(t,5))> mlr::getParameter<double>("contact_threshold")) {
 //      constraintTime(t) = 1.;
       constraintTime.subRange(t-5,t) = 1.;
     }
@@ -108,7 +108,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
   MotionProblem MP(*world,false);
   MP.T = Xdemo.d0-1;
-  MP.tau = MT::getParameter<double>("duration")/MP.T;
+  MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];
 
   //--tasks

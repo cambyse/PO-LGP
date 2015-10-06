@@ -19,12 +19,12 @@ extern double stickyWeight;
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   uint T = 200; //time horizon
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
   arr x, y, dual;
   double height = 0.0;
@@ -52,7 +52,7 @@ int main(int argc,char **argv){
 
 //replay of trajectory
   for(int t=0;t<x.d0;t++){
-      //MT::wait(.1);
+      //mlr::wait(.1);
       ors::Shape *endeff = world.getShapeByName("peg");
 
       world.setJointState(x[t]);

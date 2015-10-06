@@ -45,11 +45,11 @@ void RobotActionInterface::close(){
 
 void RobotActionInterface::wait(double sec){
   s->robotProcesses.ctrl.change_task(Stop::a());
-  double time=MT::realTime();
+  double time=mlr::realTime();
   for(; !schunkShutdown;){
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
-    if(sec>0 && MT::realTime()-time>sec) break;
+    if(sec>0 && mlr::realTime()-time>sec) break;
   }
   //while(s->robotProcesses.gamepad.state(0)!=0) s->robotProcesses.step();
 }
@@ -57,7 +57,7 @@ void RobotActionInterface::wait(double sec){
 void RobotActionInterface::gamepad(){
   s->robotProcesses.ctrl.change_task(Gamepad::a());
   for(; !schunkShutdown;){
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
   }
   s->robotProcesses.ctrl.change_task(Stop::a());
@@ -68,7 +68,7 @@ void RobotActionInterface::gamepad(){
 void RobotActionInterface::homing(){
   s->robotProcesses.ctrl.change_task(Homing::a());
   for(; !schunkShutdown;){
-    MT::wait(.2);
+    mlr::wait(.2);
     double dist=length(s->robotProcesses.ctrl.q_reference);
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
@@ -96,7 +96,7 @@ void RobotActionInterface::reach(const char* shapeName, const arr& posGoal, doub
   s->robotProcesses.ctrl.taskLock.unlock();
   
   for(; !schunkShutdown;){
-    MT::wait(.2);
+    mlr::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
     if(s->robotProcesses.gamepad.state(0)&0x30) break;
@@ -135,7 +135,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   s->robotProcesses.ctrl.taskLock.unlock();
   
   for(; !schunkShutdown;){
-    MT::wait(.2);
+    mlr::wait(.2);
     cout <<"\rdist = " <<TV.err <<std::flush;
     if(TV.err<1e-2) break;
     if(s->robotProcesses.gamepad.state(0)&0x30) break;
@@ -180,9 +180,9 @@ void RobotActionInterface::perceiveObjects(PerceptionModule perc){
           s->robotProcesses.gui.ors2->copyShapesAndJoints(s->robotProcesses.ctrl.ors);
           s->robotProcesses.gui.processLock.unlock();
           bPerceive = true;
-          MT_MSG("objs found");
+          MLR_MSG("objs found");
         }else{
-          MT_MSG("looking at objects"
+          MLR_MSG("looking at objects"
                  <<perc.output->objects(0).found <<", "
                  <<perc.output->objects(1).found <<", "
                  <<perc.output->objects(2).found
@@ -193,7 +193,7 @@ void RobotActionInterface::perceiveObjects(PerceptionModule perc){
     perc.output->deAccess(NULL);
     if(bPerceive) break;
     
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) break;
   }
 }
@@ -232,11 +232,11 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
     
     if(bPlanDone)  break;
     
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
-  MT::wait(.5); //make the robot really stop...
+  mlr::wait(.5); //make the robot really stop...
   
   s->robotProcesses.ctrl.taskLock.writeLock();
   reattachShape((s->robotProcesses.ctrl.ors), &s->robotProcesses.ctrl.swift, objShape, "m9", "table");
@@ -250,7 +250,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   s->robotProcesses.ctrl.forceColLimTVs=false;
   s->robotProcesses.ctrl.taskLock.unlock();
   
-  MT::wait(3.);
+  mlr::wait(3.);
   
   s->robotProcesses.ctrl.taskLock.writeLock();
   s->robotProcesses.ctrl.forceColLimTVs=true;
@@ -297,11 +297,11 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
     
     if(bPlanDone)  break;
     
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
-  MT::wait(.5); //make the robot really stop...
+  mlr::wait(.5); //make the robot really stop...
   
   s->robotProcesses.ctrl.taskLock.writeLock();
   reattachShape(s->robotProcesses.ctrl.ors, &s->robotProcesses.ctrl.swift, objShape, "OBJECTS", belowToShape);
@@ -314,7 +314,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   s->robotProcesses.ctrl.forceColLimTVs=false;
   s->robotProcesses.ctrl.taskLock.unlock();
   
-  MT::wait(3.);
+  mlr::wait(3.);
   
   s->robotProcesses.ctrl.taskLock.writeLock();
   s->robotProcesses.ctrl.forceColLimTVs=true;
@@ -353,11 +353,11 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner, const
     
     if(bPlanDone)  break;
     
-    MT::wait(.2);
+    mlr::wait(.2);
     if(s->robotProcesses.gamepad.state(0)==16 || s->robotProcesses.gamepad.state(0)==32) return;
   }
   
-  MT::wait(.5); //make the robot really stop...
+  mlr::wait(.5); //make the robot really stop...
 }
 
 void RobotActionInterface::graspISF(){

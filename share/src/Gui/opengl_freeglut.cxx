@@ -18,7 +18,7 @@
 
 
 
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 #  define FREEGLUT_STATIC
 #endif
 #include <GL/freeglut.h>
@@ -55,7 +55,7 @@ Singleton<FreeglutInitializer> SingleOpengl;
 // special trick for the event loop
 //
 
-#ifdef MT_Linux
+#ifdef MLR_Linux
 struct SFG_Display_dummy {
   _XDisplay *Display;
 };
@@ -79,13 +79,13 @@ static void sleepForEvents(void) {
       if(errno != EINTR)
         fgWarning("freeglut select() error: %d", errno);
 #else
-      MT_MSG("freeglut select() error");
+      MLR_MSG("freeglut select() error");
 #endif
     }
   }
 }
 
-#elif defined MT_MSVC
+#elif defined MLR_MSVC
 
 static void sleepForEvents(void) {
   MsgWaitForMultipleObjects(0, NULL, FALSE, 10/*msec*/, QS_ALLINPUT);
@@ -111,7 +111,7 @@ struct sOpenGL {
   ors::Quaternion downRot;
 
   //-- engine specific data
-  static MT::Array<OpenGL*> glwins;    ///< global window list
+  static mlr::Array<OpenGL*> glwins;    ///< global window list
   int windowID;                        ///< id of this window in the global glwins list
   
   //-- callbacks
@@ -129,14 +129,14 @@ struct sOpenGL {
   static void unlock() { SingleOpengl().lock.unlock(); }
   void lock_win() { lock(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
   void unlock_win() {
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
     glXMakeCurrent(fgDisplay.Display, None, NULL);
 #endif
     unlock();
   } //releases the context
 };
 
-MT::Array<OpenGL*> sOpenGL::glwins;
+mlr::Array<OpenGL*> sOpenGL::glwins;
 
 
 //===========================================================================

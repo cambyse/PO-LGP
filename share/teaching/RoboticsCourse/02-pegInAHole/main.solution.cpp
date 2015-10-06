@@ -2,7 +2,7 @@
 
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);
-  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MLR_PI*t/T)) * (qT-q0);
 }
 
 void getTaskVector(arr& Phi, arr& PhiJ,  Simulator& S, const arr& pos_target, const arr& dir_target, bool collisions){
@@ -87,8 +87,8 @@ void taskSpaceInterpolation(const arr& q0, Simulator& S, uint T, const arr& pos_
 
   for(uint t=0;t<=T;t++){
     getTaskVector(Phi, PhiJ, S,
-                  pos0 + .5 * (1.-cos(MT_PI*t/T)) * (pos_target-pos0),
-                  dir0 + .5 * (1.-cos(MT_PI*t/T)) * (dir_target-dir0),
+                  pos0 + .5 * (1.-cos(MLR_PI*t/T)) * (pos_target-pos0),
+                  dir0 + .5 * (1.-cos(MLR_PI*t/T)) * (dir_target-dir0),
                   collisions);
 
     //compute joint updates
@@ -123,11 +123,11 @@ void peg_in_a_hole(){
   // b)
   cout <<"q-space interpolation:" <<endl;
   for(uint t=0;t<=T;t++){
-    q = q0 + .5 * (1.-cos(MT_PI*t/T)) * (q1-q0);
+    q = q0 + .5 * (1.-cos(MLR_PI*t/T)) * (q1-q0);
     S.setJointAngles(q);
   }
   for(uint t=0;t<=T;t++){
-    q = q1 + .5 * (1.-cos(MT_PI*t/T)) * (q2-q1);
+    q = q1 + .5 * (1.-cos(MLR_PI*t/T)) * (q2-q1);
     S.setJointAngles(q);
   }
   S.watch();
@@ -141,7 +141,7 @@ void peg_in_a_hole(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   peg_in_a_hole();
 

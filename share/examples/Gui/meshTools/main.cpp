@@ -24,8 +24,8 @@ void drawInit(void*){
 void TEST(MeshTools) {
   cout <<USAGE <<endl;
 
-  MT::String file;
-  if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
+  mlr::String file;
+  if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
   else file="../opengl/base-male-nude.obj"; //m494.off
 
   OpenGL *gl=NULL;
@@ -38,7 +38,7 @@ void TEST(MeshTools) {
   file(file.N-4)=0; //replace . by 0
 
   //modify
-  if(MT::checkCmdLineTag("view")){
+  if(mlr::checkCmdLineTag("view")){
     cout <<"viewing..." <<endl;
     if(!gl) gl=new OpenGL;
     gl->clear();
@@ -46,64 +46,64 @@ void TEST(MeshTools) {
     gl->add(ors::glDrawMesh,&mesh);
     gl->watch();
   }
-  if(MT::checkCmdLineTag("box")){
+  if(mlr::checkCmdLineTag("box")){
     cout <<"box" <<endl;
     mesh.box();
   }
-  if(MT::checkCmdLineTag("scale")){
+  if(mlr::checkCmdLineTag("scale")){
     double s;
-    MT::getParameter(s,"scale");
+    mlr::getParameter(s,"scale");
     cout <<"scale " <<s <<endl;
     mesh.scale(s);
   }
-  if(MT::checkCmdLineTag("qhull")){
+  if(mlr::checkCmdLineTag("qhull")){
     cout <<"qhull..." <<endl;
     mesh.deleteUnusedVertices();
-#ifdef MT_QHULL
+#ifdef MLR_QHULL
     getTriangulatedHull(mesh.T,mesh.V);
 #else
-    MT_MSG("can'd use qhull - compiled without MT_QHULL flag");
+    MLR_MSG("can'd use qhull - compiled without MLR_QHULL flag");
 #endif
   }
-  if(MT::checkCmdLineTag("fuse")){
+  if(mlr::checkCmdLineTag("fuse")){
     double f;
-    MT::getParameter(f,"fuse");
+    mlr::getParameter(f,"fuse");
     cout <<"fuse " <<f <<endl;
     mesh.fuseNearVertices(f);
   }
-  if(MT::checkCmdLineTag("clean")){
+  if(mlr::checkCmdLineTag("clean")){
     cout <<"clean" <<endl;
     mesh.clean();
   }
-  if(MT::checkCmdLineTag("flip")){
+  if(mlr::checkCmdLineTag("flip")){
     cout <<"clean" <<endl;
     //mesh.fuseNearVertices(1e-2);
     mesh.flipFaces();
   }
-  if(MT::checkCmdLineTag("center")){
+  if(mlr::checkCmdLineTag("center")){
     cout <<"center" <<endl;
     mesh.center();
   }
-  if(MT::checkCmdLineTag("swift")){
+  if(mlr::checkCmdLineTag("swift")){
     mesh.writeTriFile(STRING(file<<"_x.tri"));
-    MT::String cmd;
+    mlr::String cmd;
     cmd <<"decomposer_c-vs6d.exe -df " <<file <<"_x.dcp -hf " <<file <<"_x.chr " <<file <<"_x.tri";
     cout <<"swift: " <<cmd <<endl;
-    if(system(cmd)) MT_MSG("system call failed");
+    if(system(cmd)) MLR_MSG("system call failed");
   }
-  if(MT::checkCmdLineTag("decomp")){
+  if(mlr::checkCmdLineTag("decomp")){
     cout <<"decomposing..." <<endl;
     intA triangleAssignments;
-    MT::Array<MT::Array<uint> > shapes;
+    mlr::Array<mlr::Array<uint> > shapes;
     decompose(mesh, STRING(file<<"_x.dcp"), triangleAssignments, shapes);
     mesh.C.resize(mesh.T.d0,3);
     for(uint t=0;t<mesh.T.d0;t++){
-      MT::Color col;
+      mlr::Color col;
       col.setIndex(triangleAssignments(t));
       mesh.C(t,0) = col.r;  mesh.C(t,1) = col.g;  mesh.C(t,2) = col.b;
     }
   }
-  if(MT::checkCmdLineTag("view")){
+  if(mlr::checkCmdLineTag("view")){
     cout <<"viewing..." <<endl;
     if(!gl) gl=new OpenGL;
     gl->clear();
@@ -111,7 +111,7 @@ void TEST(MeshTools) {
     gl->add(ors::glDrawMesh,&mesh);
     gl->watch();
   }
-  if(MT::checkCmdLineTag("save")){
+  if(mlr::checkCmdLineTag("save")){
     cout <<"saving..." <<endl;
     cout << "\tto " << file <<"_x.tri" << endl;
     mesh.writeTriFile(STRING(file<<"_x.tri"));
@@ -125,7 +125,7 @@ void TEST(MeshTools) {
 }
 
 int MAIN(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   testMeshTools();
 

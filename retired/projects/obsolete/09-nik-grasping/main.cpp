@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 //#define NIKOLAY
 
 #include <MT/ors.h>
@@ -31,11 +31,11 @@ void TEST(Plan){
   ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
-  nShape = MT::getParameter<int>("nShape");
+  nShape = mlr::getParameter<int>("nShape");
   if(!nShape)
-    init(ors,gl, MT::getParameter<String>("sFile1"));
+    init(ors,gl, mlr::getParameter<String>("sFile1"));
   else
-    init(ors,gl,MT::getParameter<String>("sFile2"));
+    init(ors,gl,mlr::getParameter<String>("sFile2"));
   swift.init(ors,.05);
  //BayesianKinematicMotionPlanning(soci,q,30,.7,.001,1);
   //PlanGraspM(ors,swift,gl);
@@ -53,10 +53,10 @@ void TEST(Plan){
   soci.initBasics(&ors,&swift,&gl,200,1.,false,NULL);
   
   soc::AICO aico;
-  int display=MT::getParameter<int>("reachPlanDisplay");
-  double eps=MT::getParameter<double>("reachPlanEps");
-  double rate=MT::getParameter<double>("reachPlanRate");
-  uint K=MT::getParameter<uint>("reachPlanK");
+  int display=mlr::getParameter<int>("reachPlanDisplay");
+  double eps=mlr::getParameter<double>("reachPlanEps");
+  double rate=mlr::getParameter<double>("reachPlanRate");
+  uint K=mlr::getParameter<uint>("reachPlanK");
 
   aico.init(soci,rate,eps,0.,display,0,NULL);
   
@@ -77,9 +77,9 @@ void TEST(Plan){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   
-  useDisplay=MT::getParameter<int>("reachPlanDisplay");
-  MT::IOraw = true;
+  useDisplay=mlr::getParameter<int>("reachPlanDisplay");
+  mlr::IOraw = true;
   testPlan();
 }

@@ -12,7 +12,7 @@ struct CartPoleState{
   CartPoleState(){
     x=0.;
     v=0.;
-    theta=.05; //slighly non-upright //MT_PI; //haning down
+    theta=.05; //slighly non-upright //MLR_PI; //haning down
     omega=0.;
 
     gl.add(drawEnv, this);

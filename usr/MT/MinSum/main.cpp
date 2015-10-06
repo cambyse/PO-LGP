@@ -108,7 +108,7 @@ void TEST(RndNet){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   
   //testChain();
   //test2();

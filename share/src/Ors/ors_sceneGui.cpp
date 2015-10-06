@@ -187,7 +187,7 @@ void OrsSceneGui::edit() {
 }
 
 /*
-    while(MT::contains(gl.exitkeys, gl.pressedkey)){
+    while(mlr::contains(gl.exitkeys, gl.pressedkey)){
       switch(gl.pressedkey){
         case '1':  orsDrawBodies^=1;  break;
         case '2':  orsDrawShapes^=1;  break;

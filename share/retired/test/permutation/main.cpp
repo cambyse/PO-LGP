@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include <Core/array.h>
 
-using namespace MT;
+using namespace mlr;
 
 
 int main(int argc, char *argv[]){

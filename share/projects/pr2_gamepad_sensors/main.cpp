@@ -33,7 +33,7 @@ struct MySystem {
   GamepadInterface gamepad;
 
   MySystem(){
-    if(MT::getParameter<bool>("useRos", true)){
+    if(mlr::getParameter<bool>("useRos", true)){
       new RosCom_Spinner();
       new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
       new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
@@ -150,7 +150,7 @@ void TEST(Sensors){
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   rosCheckInit("pr2_sensors");
   testSensors();
 

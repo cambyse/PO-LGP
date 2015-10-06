@@ -43,8 +43,8 @@ struct LiteralStorage {
   Symbol* s;
 #if 1
   LitL mem_arity0;
-  MT::Array< short > indices;
-  MT::Array< LitL* > mem;
+  mlr::Array< short > indices;
+  mlr::Array< LitL* > mem;
     
   LiteralStorage(Symbol* _s) : s(_s) {
     if (s->arity == 1) {
@@ -69,11 +69,11 @@ struct LiteralStorage {
   }
 #else
   std::map<uint, uint> map_indices_arg1;
-  MT::Array< std::map<uint, uint> > maps_indices_arg2;
+  mlr::Array< std::map<uint, uint> > maps_indices_arg2;
   
   LitL mem_arity0;
-  MT::Array< LitL >  mem_arity1;
-  MT::Array< MT::Array< LitL> >  mem_arity2plus;
+  mlr::Array< LitL >  mem_arity1;
+  mlr::Array< mlr::Array< LitL> >  mem_arity2plus;
   
   
   LiteralStorage(Symbol* _s) : s(_s) {
@@ -100,7 +100,7 @@ struct LiteralStorage {
 
 
 struct LiteralStorage_Container {
-  MT::Array< LiteralStorage* > literal_storages;
+  mlr::Array< LiteralStorage* > literal_storages;
   LiteralStorage_Container() {}
   ~LiteralStorage_Container() {listDelete(literal_storages);}
 };
@@ -266,7 +266,7 @@ Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType
     uint idx_1;
     if (iter == ls->map_indices_arg1.end()  ||  args(0) < iter->first) {
       // add memory
-      MT::Array< LitL> new_outer_list;
+      mlr::Array< LitL> new_outer_list;
       ls->mem_arity2plus.append(new_outer_list);
       // add to args_pos2
       std::map< uint, uint> new_arg2_map;
@@ -317,19 +317,19 @@ Literal* Literal::getVarComparison(Symbol* s, const uintA& args) {
 Literal* Literal::get(const char* text) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"Literal::get [START]"<<endl;}
-  MT::String mt_string(text);
+  mlr::String mt_string(text);
   if (DEBUG>0) {PRINT(mt_string);}
   
   double value = 1.;
   
   // Special negation with "-" for binary predicates
-  if (MT::peerNextChar(mt_string) == '-') {
+  if (mlr::peerNextChar(mt_string) == '-') {
     value = 0.;
     skipOne(mt_string);
   }
   
   // Symbol
-  MT::String name;
+  mlr::String name;
   name.read(mt_string, NULL, "(");
   if (DEBUG>0) PRINT(name);
   Symbol* s = Symbol::get(name);
@@ -340,10 +340,10 @@ Literal* Literal::get(const char* text) {
   uintA args(s->arity);
   uint i;
   FOR1D(args, i) {
-    MT::String arg;
+    mlr::String arg;
     arg.read(mt_string, NULL, "/, )");
     if (DEBUG>0) {PRINT(arg);}
-    if (isdigit(MT::peerNextChar(arg))) {
+    if (isdigit(mlr::peerNextChar(arg))) {
       arg >> args(i);
     }
     else {  // for string variables
@@ -362,7 +362,7 @@ Literal* Literal::get(const char* text) {
   
   // Value
   Literal::ComparisonType comp_type;
-  if (MT::peerNextChar(mt_string) == -1  &&  s->range_type == Symbol::binary) {
+  if (mlr::peerNextChar(mt_string) == -1  &&  s->range_type == Symbol::binary) {
     comp_type = Literal::comparison_equal;
   }
   else {
@@ -370,7 +370,7 @@ Literal* Literal::get(const char* text) {
     mt_string >> op;
     if (DEBUG>0) {PRINT(op);}
     if (op == '>') {
-      if (MT::peerNextChar(mt_string) == '=') {
+      if (mlr::peerNextChar(mt_string) == '=') {
         mt_string >> op;
         comp_type = Literal::comparison_greaterEqual;
       }
@@ -378,7 +378,7 @@ Literal* Literal::get(const char* text) {
         comp_type = Literal::comparison_greater;
     }
     else if (op == '<') {
-      if (MT::peerNextChar(mt_string) == '=') {
+      if (mlr::peerNextChar(mt_string) == '=') {
         mt_string >> op;
         comp_type = Literal::comparison_lessEqual;
       }
@@ -386,7 +386,7 @@ Literal* Literal::get(const char* text) {
         comp_type = Literal::comparison_less;
     }
     else if (op == '+') {
-      if (MT::peerNextChar(mt_string) == '=') {
+      if (mlr::peerNextChar(mt_string) == '=') {
         mt_string >> op;
         comp_type = Literal::comparison_offset;
       }
@@ -394,7 +394,7 @@ Literal* Literal::get(const char* text) {
     else
       comp_type = Literal::comparison_equal;
 
-    if (MT::peerNextChar(mt_string) == '?')
+    if (mlr::peerNextChar(mt_string) == '?')
       l = Literal::getVarComparison(s, args);
     else
       mt_string >> value;
@@ -413,16 +413,16 @@ void Literal::get(LitL& lits, const char* text) {
   if (DEBUG>0) {cout<<"Literal::get(LitL) [START]"<<endl;}
   if (DEBUG>0) {PRINT(text);}
   lits.clear();
-  MT::String mt_string(text);
-  MT::String name;
-  while (MT::skip(mt_string) != -1) {
-    MT::String lit_text;
+  mlr::String mt_string(text);
+  mlr::String name;
+  while (mlr::skip(mt_string) != -1) {
+    mlr::String lit_text;
     lit_text.read(mt_string, NULL, ")", 1);
-    if (MT::peerNextChar(mt_string) == ',') MT::skipOne(mt_string);
-//     MT::skip(std::istream& is,const char *skipchars=" \n\r\t",bool skipCommentLines=true);
-    char c = MT::peerNextChar(mt_string);
+    if (mlr::peerNextChar(mt_string) == ',') mlr::skipOne(mt_string);
+//     mlr::skip(std::istream& is,const char *skipchars=" \n\r\t",bool skipCommentLines=true);
+    char c = mlr::peerNextChar(mt_string);
     if (c == '='  ||  c == '>'  ||  c == '<' || c == '+') {
-      MT::String comparison;
+      mlr::String comparison;
       comparison.read(mt_string, NULL, " \n", 1);
       lit_text << ")" << comparison;
     }
@@ -567,7 +567,7 @@ bool Literal::typeCheck() {
 
 void Literal::getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value, bool withRepeatingArguments) {
   lits.clear();
-  MT::Array< uintA > args_lists;
+  mlr::Array< uintA > args_lists;
   TL::allPermutations(args_lists, constants, s->arity, withRepeatingArguments, true);
   uint i;
   FOR1D(args_lists, i) {
@@ -730,7 +730,7 @@ int Literal::findPattern(const LitL& actions, uint minRepeats) {
 
 Literal* Literal::getLiteral_default_action() {
   uintA empty;
-  return get(Symbol::get(MT::String("default"), 0, Symbol::action), empty, 1.);
+  return get(Symbol::get(mlr::String("default"), 0, Symbol::action), empty, 1.);
 }
 
 
@@ -738,7 +738,7 @@ Literal* l_doNothing = NULL;
 Literal* Literal::getLiteral_doNothing() {
   if (l_doNothing == NULL) {
     uintA empty;
-    l_doNothing = get(Symbol::get(MT::String("doNothing"), 0, Symbol::action), empty, 1.);
+    l_doNothing = get(Symbol::get(mlr::String("doNothing"), 0, Symbol::action), empty, 1.);
   }
   return l_doNothing;
 }
@@ -756,7 +756,7 @@ void write(const LitL& lits, ostream& os) {
 }
 
 
-void write(const MT::Array< LitL >& outcomes, ostream& os) {
+void write(const mlr::Array< LitL >& outcomes, ostream& os) {
   uint k;
   FOR1D(outcomes, k) {
     os << "(" << k << ") ";
@@ -778,7 +778,7 @@ SymbolicState::SymbolicState() {
 }
 
 
-SymbolicState::SymbolicState(const MT::Array<Literal*>& _lits) {
+SymbolicState::SymbolicState(const mlr::Array<Literal*>& _lits) {
   derived_lits_are_calculated = false;
   this->lits = _lits;
   reason::derive(this);
@@ -800,7 +800,7 @@ void SymbolicState::read(ifstream& in, bool read_constants) {
   if (read_constants) {
     in >> state_constants;
   }
-  MT::String line;
+  mlr::String line;
   line.read(in, NULL, "\n");
   Literal::get(lits, line);
   if (!read_constants) {
@@ -1098,12 +1098,12 @@ StateTransitionL& StateTransition::read_SASAS(const char* filename) {
   static StateTransitionL experiences;
   ifstream in(filename);
   if (!in.is_open()) {HALT("File not found: "<<filename);}
-  MT::skip(in);
+  mlr::skip(in);
   bool read_state = true;
   SymbolicState* state, *state_old = NULL;
   Literal* action = NULL;
-  while (MT::skip(in) != -1) {
-    if (DEBUG>2) {PRINT(MT::peerNextChar(in));}
+  while (mlr::skip(in) != -1) {
+    if (DEBUG>2) {PRINT(mlr::peerNextChar(in));}
     if (read_state) {
       state = new SymbolicState;
       state->read(in);
@@ -1114,7 +1114,7 @@ StateTransitionL& StateTransition::read_SASAS(const char* filename) {
       state_old = state;
     }
     else {
-      MT::String line;
+      mlr::String line;
       line.read(in, NULL, "\n");
       if (DEBUG>1) {cout<<"READING ACTION:"<<endl; PRINT(line);}
       action = Literal::get(line);
@@ -1134,21 +1134,21 @@ StateTransitionL& StateTransition::read_SAS_SAS(const char* filename) {
   static StateTransitionL experiences;
   ifstream in(filename);
   if (!in.is_open()) {HALT("File not found: "<<filename);}
-  MT::skip(in);
+  mlr::skip(in);
   SymbolicState* state_pre, *state_post = NULL;
   Literal* action = NULL;
-  while (MT::skip(in) != -1) {
-    if (DEBUG>2) {PRINT(MT::peerNextChar(in));}
+  while (mlr::skip(in) != -1) {
+    if (DEBUG>2) {PRINT(mlr::peerNextChar(in));}
     state_pre = new SymbolicState;
     state_pre->read(in);
-    MT::String line;
+    mlr::String line;
     line.read(in, NULL, "\n");
     if (DEBUG>1) {cout<<"READING ACTION:"<<endl; PRINT(line);}
     action = Literal::get(line);
     state_post = new SymbolicState;
     state_post->read(in);
     double reward = 0.;
-    char c = MT::skip(in);
+    char c = mlr::skip(in);
     if (isdigit(c) || c == '-') {
       in >> reward;
     }

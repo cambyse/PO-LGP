@@ -26,34 +26,34 @@ void concurrent_plan() {
   cout<<endl<<"READ CONFIG:"<<endl;
 	
   uint randSeed;
-  MT::getParameter(randSeed, "randSeed");
+  mlr::getParameter(randSeed, "randSeed");
   rnd.seed(randSeed);
   PRINT(randSeed);
   
   uint plan_type;
-  MT::getParameter(plan_type, "plan_type");
+  mlr::getParameter(plan_type, "plan_type");
   PRINT(plan_type);
   
   double discountFactor;
-  MT::getParameter(discountFactor, "discountFactor");
+  mlr::getParameter(discountFactor, "discountFactor");
   PRINT(discountFactor);
   
   
   double SST_noise_scaling_factor;
-  MT::getParameter(SST_noise_scaling_factor, "noise_scaling_factor");
+  mlr::getParameter(SST_noise_scaling_factor, "noise_scaling_factor");
   PRINT(SST_noise_scaling_factor);
   
   
   uint UCT_horizon;
-  MT::getParameter(UCT_horizon, "UCT_horizon");
+  mlr::getParameter(UCT_horizon, "UCT_horizon");
   PRINT(UCT_horizon);
   
   uint UCT_c;
-  MT::getParameter(UCT_c, "UCT_c");
+  mlr::getParameter(UCT_c, "UCT_c");
   PRINT(UCT_c);
   
   uint UCT_numEpisodes;
-  MT::getParameter(UCT_numEpisodes, "UCT_numEpisodes");
+  mlr::getParameter(UCT_numEpisodes, "UCT_numEpisodes");
   PRINT(UCT_numEpisodes);
   
   uint horizon;
@@ -62,24 +62,24 @@ void concurrent_plan() {
   PRINT(horizon);
   
     
-  MT::String rulesFile_name;
-  MT::getParameter(rulesFile_name, "file_rules");
+  mlr::String rulesFile_name;
+  mlr::getParameter(rulesFile_name, "file_rules");
   PRINT(rulesFile_name);
   
-  MT::String stateFile_name;
-  MT::getParameter(stateFile_name, "file_state");
+  mlr::String stateFile_name;
+  mlr::getParameter(stateFile_name, "file_state");
   PRINT(stateFile_name);
 
-  MT::String terminalFile_name;
-  MT::getParameter(terminalFile_name, "file_terminal");
+  mlr::String terminalFile_name;
+  mlr::getParameter(terminalFile_name, "file_terminal");
   PRINT(terminalFile_name);
   
-  MT::String rewardFile_name;
-  MT::getParameter(rewardFile_name, "file_reward");
+  mlr::String rewardFile_name;
+  mlr::getParameter(rewardFile_name, "file_reward");
   PRINT(rewardFile_name);
   
-  MT::String symbolsFile_name;
-  MT::getParameter(symbolsFile_name, "file_symbols");
+  mlr::String symbolsFile_name;
+  mlr::getParameter(symbolsFile_name, "file_symbols");
   PRINT(symbolsFile_name);
 	
 
@@ -188,7 +188,7 @@ void concurrent_plan() {
 //   reward = new relational::LiteralReward(lit);
   // (1b) LiteralListReward
   //relational::LitL lits_reward;
-  //relational::Literal::get(lits_reward, MT::String("on(66 69) on(69 67)"));
+  //relational::Literal::get(lits_reward, mlr::String("on(66 69) on(69 67)"));
   reward = new relational::LiteralListReward(sTerminal.lits);//lits_reward);
 
   // (2) STACKING REWARD 
@@ -336,12 +336,12 @@ void concurrent_plan() {
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   cout.precision(3);
-  MT::String config_file;
-  MT::getParameter(config_file, MT::String("confFile"), MT::String("config"));
+  mlr::String config_file;
+  mlr::getParameter(config_file, mlr::String("confFile"), mlr::String("config"));
   cout << "Config-file: " << config_file << endl;
-  MT::openConfigFile(config_file);
+  mlr::openConfigFile(config_file);
   concurrent_plan();
   return 0;
 }

@@ -32,7 +32,7 @@ struct PclCloudView:Primitive{
 };
 
 struct DisplayPrimitives{
-  MT::Array<Primitive*> P;
+  mlr::Array<Primitive*> P;
   ors::KinematicWorld G;
 
   void glDraw(){

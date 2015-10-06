@@ -19,7 +19,7 @@
 
 #include "mesh.h"
 
-#ifdef MT_extern_Lewiner
+#ifdef MLR_extern_Lewiner
 #  include <extern/Lewiner/MarchingCubes.h>
 
 

@@ -14,7 +14,7 @@ void draw(void*){
 struct EncodingExampleSystem:System{
   ACCESS(byteA, rgb);
   EncodingExampleSystem(){
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
     addModule<OpencvCamera>(NULL, Module::loopFull);
     addModule<ImageViewer>(NULL, {"rgb"}, Module::listenFirst);
     addModule<VideoEncoder>(NULL, {"rgb"}, Module::listenFirst);

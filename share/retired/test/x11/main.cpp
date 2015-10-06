@@ -36,10 +36,10 @@
    XSetForeground(d, gc, 0x000000);
 
 
-   MT::String txt;
+   mlr::String txt;
 
    for(uint i=0;i<10;i++){
-     MT::wait(1.);
+     mlr::wait(1.);
      txt.clear() <<"hallo " <<i;
      
      XClearWindow(d,w);

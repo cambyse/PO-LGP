@@ -94,9 +94,9 @@ void moveHand(){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, ori, dual;
   getTrajectory(x, y, ori, dual, world);

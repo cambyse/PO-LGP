@@ -8,7 +8,7 @@ RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL
 }
 
 void RelationalMachine::init(const char* filename){
-  MT::FileToken fil(filename);
+  mlr::FileToken fil(filename);
   if(fil.exists()){
     fil >>KB;
     KB.checkConsistency();
@@ -21,7 +21,7 @@ void RelationalMachine::init(const char* filename){
   tmp   = &KB["TMP"]->graph();
 }
 
-bool RelationalMachine::queryCondition(MT::String query) const{
+bool RelationalMachine::queryCondition(mlr::String query) const{
   tmp->clear();
   bool q=false;
   try{
@@ -36,7 +36,7 @@ bool RelationalMachine::queryCondition(MT::String query) const{
   return q;
 }
 
-bool RelationalMachine::applyEffect(MT::String effect, bool fwdChain){
+bool RelationalMachine::applyEffect(mlr::String effect, bool fwdChain){
   tmp->clear();
   bool e=false;
   try{
@@ -69,28 +69,28 @@ NodeL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
-Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey=MT::String());
+Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, mlr::String prefixedKey=mlr::String());
 
-Node* RelationalMachine::declareNewSymbol(MT::String symbolStr){
+Node* RelationalMachine::declareNewSymbol(mlr::String symbolStr){
   Node *it = readNode(KB, symbolStr, false, false);
   return it;
 }
 
-MT::String RelationalMachine::getKB() {
-  MT::String str;
+mlr::String RelationalMachine::getKB() {
+  mlr::String str;
   KB.write(str, "\n  ");
   return str;
 }
 
-MT::String RelationalMachine::getState() const{
-  MT::String str;
+mlr::String RelationalMachine::getState() const{
+  mlr::String str;
   state->write(str, "\n  ");
   return str;
 }
 
-MT::String RelationalMachine::getRules(){
+mlr::String RelationalMachine::getRules(){
   NodeL rules = KB.getNodes("Rule");
-  MT::String str;
+  mlr::String str;
   listWrite(rules, str, "\n  ", "[]");
   return str;
 }

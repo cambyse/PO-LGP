@@ -1,7 +1,7 @@
 #include "roscom.h"
 #include "util.h"
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
@@ -292,7 +292,7 @@ void RosCom_SoftHandSync::close(){
 
 
 //===========================================================================
-#else // MT_ROS no defined
+#else // MLR_ROS no defined
 
 void RosCom_Spinner::open(){ NICO }
 void RosCom_Spinner::step(){ NICO }

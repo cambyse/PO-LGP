@@ -63,7 +63,7 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  this->Pgain = MT::sqr(1./lambda);
+  this->Pgain = mlr::sqr(1./lambda);
   this->Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
@@ -264,5 +264,5 @@ arr FeedbackMotionControl::operationalSpaceControl(){
 }
 
 RUN_ON_INIT_BEGIN(CtrlTask)
-MT::Array<CtrlTask*>::memMove=true;
+mlr::Array<CtrlTask*>::memMove=true;
 RUN_ON_INIT_END(CtrlTask)

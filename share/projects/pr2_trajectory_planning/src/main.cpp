@@ -107,7 +107,7 @@ arr create_endpose(ors::KinematicWorld& G) {
 }
 
 arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
-  double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
+  double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
   MotionProblem P(&G);
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
   cout << "after wait...proceding" << endl;
 
   // MLR
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   int seed = time(NULL);
 
   rnd.seed(seed);
@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
   DEBUG_VAR(main, opt_trajectory);
-  MT::wait();
+  mlr::wait();
   show_trajectory(G, gl, opt_trajectory, "optimized");
 
   std::cout << "Should I run the trajectory on the /real/ PR2? (y/N)" << std::endl;

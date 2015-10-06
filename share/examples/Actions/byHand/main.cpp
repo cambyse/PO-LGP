@@ -55,7 +55,7 @@ void script1(ActionSwigInterface& S){
 
 
 void script2(ActionSwigInterface& S){
-  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "wheels"}, { NO(type, MT::String("wheels")), NO(target, ARR(0, .3, .2)), NO(PD, ARR(.5, .9, .5, 10.))});
+  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "wheels"}, { NO(type, mlr::String("wheels")), NO(target, ARR(0, .3, .2)), NO(PD, ARR(.5, .9, .5, 10.))});
   S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");

@@ -79,14 +79,14 @@ ifeq ($(OPTIM),penibel)
 CXXFLAGS := -g -Wall -Wextra $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),fast)
-CXXFLAGS := -O3 -Wall -DMT_NOCHECK $(CXXFLAGS)
+CXXFLAGS := -O3 -Wall -DMLR_NOCHECK $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),prof)
-CXXFLAGS := -O3 -pg -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
+CXXFLAGS := -O3 -pg -Wall -DMLR_NOCHECK -fno-inline $(CXXFLAGS)
 LDFLAGS += -pg
 endif
 ifeq ($(OPTIM),callgrind)
-CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
+CXXFLAGS := -O3 -g -Wall -DMLR_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
 
@@ -131,7 +131,7 @@ SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
 
 BUILDS := $(DEPEND:%=$(BASE)/lib/lib%.so) $(BUILDS)
 LIBS := $(DEPEND:%=-l%) $(LIBS)
-CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
+CXXFLAGS := $(DEPEND:%=-DMLR_%) $(CXXFLAGS)
 
 
 ################################################################################

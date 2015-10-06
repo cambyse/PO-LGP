@@ -18,10 +18,10 @@
 
 
 void glDrawFloor(float, float, float, float){ NICO }
-void glGrabImage(MT::Array<unsigned char>&){ NICO }
+void glGrabImage(mlr::Array<unsigned char>&){ NICO }
 void glStandardLight(void*){ NICO }
 void glDrawAxes(double){ NICO }
-void glDrawPointCloud(MT::Array<double>&, MT::Array<double>&) { NICO }
+void glDrawPointCloud(mlr::Array<double>&, mlr::Array<double>&) { NICO }
 void glDrawSphere(float) { NICO }
 void glDrawCappedCylinder(float, float) { NICO }
 void glDrawText(char const*, float, float, float){ NICO }
@@ -30,16 +30,16 @@ void glDrawDisk(float){ NICO }
 void glDrawBox(float, float, float){ NICO }
 void glDrawCylinder(float, float, bool){ NICO }
 
-//void OpenGL::watchImage(MT::Array<unsigned char> const&, bool, float){}
+//void OpenGL::watchImage(mlr::Array<unsigned char> const&, bool, float){}
 
 struct sOpenGL {
   sOpenGL(OpenGL *gl, const char* title, int w, int h, int posx, int posy){
-    MT_MSG("creating dummy OpenGL object");
+    MLR_MSG("creating dummy OpenGL object");
     gl->width=1;
     gl->height=1;
   }
   sOpenGL(OpenGL *gl, void *container){
-    MT_MSG("creating dummy OpenGL object");
+    MLR_MSG("creating dummy OpenGL object");
     gl->width=1;
     gl->height=1;
   }

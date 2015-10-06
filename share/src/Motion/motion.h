@@ -61,7 +61,7 @@ struct TaskMap {
 
 struct Task {
   TaskMap& map;
-  MT::String name;
+  mlr::String name;
   bool active;
   arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
 
@@ -90,10 +90,10 @@ struct MotionProblem {
   //******* the following three sections are parameters that define the problem
 
   //-- task cost descriptions
-  MT::Array<Task*> taskCosts;
+  mlr::Array<Task*> taskCosts;
 
   //-- kinematic switches along the motion
-  MT::Array<ors::KinematicSwitch*> switches;
+  mlr::Array<ors::KinematicSwitch*> switches;
 
   //-- trajectory length and tau
   uint T; ///< number of time steps
@@ -112,7 +112,7 @@ struct MotionProblem {
   //-- return values of an optimizer
   arrA phiMatrix;
   arr dualMatrix;
-  MT::Array<TermTypeA> ttMatrix;
+  mlr::Array<TermTypeA> ttMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
@@ -166,7 +166,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
   WorldL configurations;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
+  MotionProblemFunction(MotionProblem& _P):MP(_P) { mlr::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);

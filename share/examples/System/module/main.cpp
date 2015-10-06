@@ -55,7 +55,7 @@ void way1(){
 #else //threaded
   m->thread->threadOpen();
   m->thread->threadStep();
-  MT::wait(.001); //give it a tiny tiny bit of time to at least step once (it could happen that the condition variable has not waken up to detect the step BEFORE threadClose chanes the state again)
+  mlr::wait(.001); //give it a tiny tiny bit of time to at least step once (it could happen that the condition variable has not waken up to detect the step BEFORE threadClose chanes the state again)
   mt->threadClose();
 #endif
 

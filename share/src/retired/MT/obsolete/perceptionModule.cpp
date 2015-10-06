@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 #undef COUNT
 //#include <opencv/highgui.h>
 #include <opencv2/opencv.hpp>
@@ -51,8 +51,8 @@ void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N
     weights.resize(N); weights=1.;
     if(grad){ grad->resize(N, 2, 3);  grad->setZero(); }
     for(uint i=0; i<N; i++){
-      points(i, 0) = params(0) + cos(MT_2PI/N*i)*params(2);  if(grad){(*grad)(i, 0, 0) = 1.; (*grad)(i, 0, 2) = cos(MT_2PI/N*i); }
-      points(i, 1) = params(1) + sin(MT_2PI/N*i)*params(2);  if(grad){(*grad)(i, 1, 1) = 1.; (*grad)(i, 1, 2) = sin(MT_2PI/N*i); }
+      points(i, 0) = params(0) + cos(MLR_2PI/N*i)*params(2);  if(grad){(*grad)(i, 0, 0) = 1.; (*grad)(i, 0, 2) = cos(MLR_2PI/N*i); }
+      points(i, 1) = params(1) + sin(MLR_2PI/N*i)*params(2);  if(grad){(*grad)(i, 1, 1) = 1.; (*grad)(i, 1, 2) = sin(MLR_2PI/N*i); }
     }
     return;
   }
@@ -75,14 +75,14 @@ void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N
     }
     //top curve
     for(uint i=0; i<N; i++){
-      points(2*N+i, 0) = params(0) + cos(MT_PI*(i+1)/(N+1))*.5*params(2);              if(grad){(*grad)(2*N+i, 0, 0) = 1.; (*grad)(2*N+i, 0, 2) = cos(MT_PI*(i+1)/(N+1))*.5; }
-      points(2*N+i, 1) = params(1) + .5*params(3) + sin(MT_PI*(i+1)/(N+1))*params(4);  if(grad){(*grad)(2*N+i, 1, 1) = 1.; (*grad)(2*N+i, 1, 3) = +.5; (*grad)(2*N+i, 1, 4) = +sin(MT_PI*(i+1)/(N+1)); }
-      weights(2*N+i) = params(2); //MT_PI * sqrt(*params(2)/8. + params(4)*params(4)/2.);
+      points(2*N+i, 0) = params(0) + cos(MLR_PI*(i+1)/(N+1))*.5*params(2);              if(grad){(*grad)(2*N+i, 0, 0) = 1.; (*grad)(2*N+i, 0, 2) = cos(MLR_PI*(i+1)/(N+1))*.5; }
+      points(2*N+i, 1) = params(1) + .5*params(3) + sin(MLR_PI*(i+1)/(N+1))*params(4);  if(grad){(*grad)(2*N+i, 1, 1) = 1.; (*grad)(2*N+i, 1, 3) = +.5; (*grad)(2*N+i, 1, 4) = +sin(MLR_PI*(i+1)/(N+1)); }
+      weights(2*N+i) = params(2); //MLR_PI * sqrt(*params(2)/8. + params(4)*params(4)/2.);
     }
     //bottom curve
     for(uint i=0; i<N; i++){
-      points(3*N+i, 0) = params(0) + cos(MT_PI*(i+1)/(N+1))*.5*params(2);              if(grad){(*grad)(3*N+i, 0, 0) = 1.; (*grad)(3*N+i, 0, 2) = cos(MT_PI*(i+1)/(N+1))*.5; }
-      points(3*N+i, 1) = params(1) - .5*params(3) - sin(MT_PI*(i+1)/(N+1))*params(4);  if(grad){(*grad)(3*N+i, 1, 1) = 1.; (*grad)(3*N+i, 1, 3) = -.5; (*grad)(3*N+i, 1, 4) = -sin(MT_PI*(i+1)/(N+1)); }
+      points(3*N+i, 0) = params(0) + cos(MLR_PI*(i+1)/(N+1))*.5*params(2);              if(grad){(*grad)(3*N+i, 0, 0) = 1.; (*grad)(3*N+i, 0, 2) = cos(MLR_PI*(i+1)/(N+1))*.5; }
+      points(3*N+i, 1) = params(1) - .5*params(3) - sin(MLR_PI*(i+1)/(N+1))*params(4);  if(grad){(*grad)(3*N+i, 1, 1) = 1.; (*grad)(3*N+i, 1, 3) = -.5; (*grad)(3*N+i, 1, 4) = -sin(MLR_PI*(i+1)/(N+1)); }
       weights(3*N+i) = params(2);
     }
     return;
@@ -96,24 +96,24 @@ void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N
     //if(params(4)<0.){ params(4) *= -1.; params(5) *= -1.; }
     //vertical bars
     for(uint i=0; i<N; i++){
-      points(i, 0) = params(0) - .5*params(2) - .5*MT::sign(params(4))*params(4);                      if(grad){(*grad)(i, 0, 0)=1.; (*grad)(i, 0, 2)=-.5; (*grad)(i, 0, 4)=-.5*MT::sign(params(4)); }
-      points(i, 1) = params(1) - .5*params(3) - .5*MT::sign(params(4))*params(5) + params(3)*i/(N-1);  if(grad){(*grad)(i, 1, 1)=1.; (*grad)(i, 1, 3)=-.5+double(i)/(N-1); (*grad)(i, 1, 5)=-.5*MT::sign(params(4));  }
+      points(i, 0) = params(0) - .5*params(2) - .5*mlr::sign(params(4))*params(4);                      if(grad){(*grad)(i, 0, 0)=1.; (*grad)(i, 0, 2)=-.5; (*grad)(i, 0, 4)=-.5*mlr::sign(params(4)); }
+      points(i, 1) = params(1) - .5*params(3) - .5*mlr::sign(params(4))*params(5) + params(3)*i/(N-1);  if(grad){(*grad)(i, 1, 1)=1.; (*grad)(i, 1, 3)=-.5+double(i)/(N-1); (*grad)(i, 1, 5)=-.5*mlr::sign(params(4));  }
       weights(i) = params(3);
     }
     for(uint i=0; i<N; i++){
-      points(N+i, 0) = params(0) + .5*params(2) + .5*MT::sign(params(4))*params(4);                      if(grad){(*grad)(N+i, 0, 0)=1.; (*grad)(N+i, 0, 2)=+.5; (*grad)(N+i, 0, 4)=+.5*MT::sign(params(4)); }
-      points(N+i, 1) = params(1) - .5*params(3) + .5*MT::sign(params(4))*params(5) + params(3)*i/(N-1);  if(grad){(*grad)(N+i, 1, 1)=1.; (*grad)(N+i, 1, 3)=-.5+double(i)/(N-1); (*grad)(N+i, 1, 5)=+.5*MT::sign(params(4)); }
+      points(N+i, 0) = params(0) + .5*params(2) + .5*mlr::sign(params(4))*params(4);                      if(grad){(*grad)(N+i, 0, 0)=1.; (*grad)(N+i, 0, 2)=+.5; (*grad)(N+i, 0, 4)=+.5*mlr::sign(params(4)); }
+      points(N+i, 1) = params(1) - .5*params(3) + .5*mlr::sign(params(4))*params(5) + params(3)*i/(N-1);  if(grad){(*grad)(N+i, 1, 1)=1.; (*grad)(N+i, 1, 3)=-.5+double(i)/(N-1); (*grad)(N+i, 1, 5)=+.5*mlr::sign(params(4)); }
       weights(N+i) = params(3);
     }
     //horizontal bars
     for(uint i=0; i<N; i++){
-      points(2*N+i, 0) = params(0) - .5*params(2) - .5*MT::sign(params(5))*params(4) + params(2)*i/(N-1);   if(grad){(*grad)(2*N+i, 0, 0)=1.; (*grad)(2*N+i, 0, 2)=-.5+double(i)/(N-1); (*grad)(2*N+i, 0, 4)=-.5*MT::sign(params(5));  }
-      points(2*N+i, 1) = params(1) - .5*params(3) - .5*MT::sign(params(5))*params(5);                       if(grad){(*grad)(2*N+i, 1, 1)=1.; (*grad)(2*N+i, 1, 3)=-.5; (*grad)(2*N+i, 1, 5)=-.5*MT::sign(params(5)); }
+      points(2*N+i, 0) = params(0) - .5*params(2) - .5*mlr::sign(params(5))*params(4) + params(2)*i/(N-1);   if(grad){(*grad)(2*N+i, 0, 0)=1.; (*grad)(2*N+i, 0, 2)=-.5+double(i)/(N-1); (*grad)(2*N+i, 0, 4)=-.5*mlr::sign(params(5));  }
+      points(2*N+i, 1) = params(1) - .5*params(3) - .5*mlr::sign(params(5))*params(5);                       if(grad){(*grad)(2*N+i, 1, 1)=1.; (*grad)(2*N+i, 1, 3)=-.5; (*grad)(2*N+i, 1, 5)=-.5*mlr::sign(params(5)); }
       weights(2*N+i) = params(3);
     }
     for(uint i=0; i<N; i++){
-      points(3*N+i, 0) = params(0) - .5*params(2) + .5*MT::sign(params(5))*params(4) + params(2)*i/(N-1);   if(grad){(*grad)(3*N+i, 0, 0)=1.; (*grad)(3*N+i, 0, 2)=-.5+double(i)/(N-1); (*grad)(3*N+i, 0, 4)=+.5*MT::sign(params(5));  }
-      points(3*N+i, 1) = params(1) + .5*params(3) + .5*MT::sign(params(5))*params(5);                       if(grad){(*grad)(3*N+i, 1, 1)=1.; (*grad)(3*N+i, 1, 3)=+.5; (*grad)(3*N+i, 1, 5)=+.5*MT::sign(params(5)); }
+      points(3*N+i, 0) = params(0) - .5*params(2) + .5*mlr::sign(params(5))*params(4) + params(2)*i/(N-1);   if(grad){(*grad)(3*N+i, 0, 0)=1.; (*grad)(3*N+i, 0, 2)=-.5+double(i)/(N-1); (*grad)(3*N+i, 0, 4)=+.5*mlr::sign(params(5));  }
+      points(3*N+i, 1) = params(1) + .5*params(3) + .5*mlr::sign(params(5))*params(5);                       if(grad){(*grad)(3*N+i, 1, 1)=1.; (*grad)(3*N+i, 1, 3)=+.5; (*grad)(3*N+i, 1, 5)=+.5*mlr::sign(params(5)); }
       weights(3*N+i) = params(3);
     }
     return;
@@ -181,7 +181,7 @@ void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N
         double a=double(i)/(N-1);
         points(k*N+i, 0) = (1.-a)*params(2*k+0) + a*params(2*kp+0);  if(grad){(*grad)(k*N+i, 0, 2*k+0)=1.-a; (*grad)(k*N+i, 0, 2*kp+0)=a; }
         points(k*N+i, 1) = (1.-a)*params(2*k+1) + a*params(2*kp+1);  if(grad){(*grad)(k*N+i, 1, 2*k+1)=1.-a; (*grad)(k*N+i, 1, 2*kp+1)=a; }
-        weights(k*N+i)  = sqrt(MT::sqr(params(2*k+0)-params(2*kp+0))+MT::sqr(params(2*k+1)-params(2*kp+1)));
+        weights(k*N+i)  = sqrt(mlr::sqr(params(2*k+0)-params(2*kp+0))+mlr::sqr(params(2*k+1)-params(2*kp+1)));
       }
     }
     return;
@@ -236,7 +236,7 @@ struct ShapeFitProblem:public ScalarFunction {
   }
 };
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, const floatA& theta, byteA *disp=NULL, bool reuseParams=false){
   CvMatDonor cvMatDonor;
   if(disp){
@@ -324,12 +324,12 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     problem.distImage = pow(distImage, 2.f);
     problem.display = false;
     
-    MT::timerStart();
+    mlr::timerStart();
     double cost;
     Rprop rprop;
     rprop.init();
     rprop.loop(params, problem, &cost, 1.e-1, 1., 100, 0);
-    // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
+    // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<mlr::timerRead() <<endl;
     
     problem.fs(NoArr, NoArr, params);
     byteA img; copy(img, 10.f*problem.distImage);
@@ -357,11 +357,11 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
 
 void PerceptionModule::open(){
   ifstream fil;
-  MT::open(fil, "../../configurations/calib_P");
+  mlr::open(fil, "../../configurations/calib_P");
   Pl.readTagged(fil, "PL");
   Pr.readTagged(fil, "PR");
   fil.close();
-  MT::getParameter(objectType, "percObjectType");
+  mlr::getParameter(objectType, "percObjectType");
 }
 
 //===========================================================================
@@ -371,7 +371,7 @@ void PerceptionModule::open(){
 
 
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 void PerceptionModule::step(){
   CvMatDonor cvMatDonor;
   
@@ -499,7 +499,7 @@ void PerceptionModule::step(){
 #endif
 
 
-void realizeObjectsInOrs(ors::KinematicWorld& ors, const MT::Array<Object>& objects){
+void realizeObjectsInOrs(ors::KinematicWorld& ors, const mlr::Array<Object>& objects){
   Object *obj;  uint i;
   ors::Body *o = ors.getBodyByName("o1");
   uint indFirst = o->index;//hack to get consecutive bodies
@@ -560,6 +560,6 @@ void copyBodyInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B){
   }
 }
 
-#ifndef MT_OPENCV
+#ifndef MLR_OPENCV
 void PerceptionModule::step(){ NIY; }
 #endif

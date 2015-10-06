@@ -106,12 +106,12 @@ struct Node_typed : Node {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     if(!itt->value || !value) return false;
-#ifdef MT_CLANG
+#ifdef MLR_CLANG
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 #endif
     return memcmp(itt->value, value, sizeof(T))==0;
-#ifdef MT_CLANG
+#ifdef MLR_CLANG
 #  pragma clang diagnostic pop
 #endif
   }
@@ -154,7 +154,7 @@ template<class T> T *Node::getValue() {
       }
     }
     if(!typed){
-      MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
+      MLR_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
       return NULL;
     }
   }
@@ -170,7 +170,7 @@ template<class T> const T *Node::getValue() const {
         typed = dynamic_cast<const Node_typed<T>*>(graph->elem(0));
       }
     }
-    MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
+    MLR_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
     return NULL;
   }
   return typed->value;
@@ -221,8 +221,8 @@ template<class T> T* Graph::getValue(const StringA &keys) const {
   return it->getValue<T>();
 }
 
-template<class T> MT::Array<T*> Graph::getTypedValues(const char* key) {
-  MT::Array<T*> ret;
+template<class T> mlr::Array<T*> Graph::getTypedValues(const char* key) {
+  mlr::Array<T*> ret;
   for(Node *it: (*this)) if(it->getValueType()==typeid(T)) {
     if(!key) ret.append(it->getValue<T>());
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
@@ -238,7 +238,7 @@ template<class T> Node *Graph::append(T *x, bool ownsValue) {
 }
 
 //template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
-//  return new Node_typed<T>(*this, {MT::String(key)}, {}, x, ownsValue);
+//  return new Node_typed<T>(*this, {mlr::String(key)}, {}, x, ownsValue);
 //}
 
 template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
@@ -249,8 +249,8 @@ template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents,
   return new Node_typed<T>(*this, keys, parents, x, ownsValue);
 }
 
-template <class T> MT::Array<T*> Graph::getDerivedValues() {
-  MT::Array<T*> ret;
+template <class T> mlr::Array<T*> Graph::getDerivedValues() {
+  mlr::Array<T*> ret;
   for(Node *it: (*this)) {
     if(it->is_derived_from_RootType()) {
       T *val= dynamic_cast<T*>(((Node_typed<RootType>*)it)->value);

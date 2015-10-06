@@ -79,7 +79,7 @@ public:
 
   void init_ors(int argc, char** argv)
   {
-    MT::initCmdLine(argc,argv);
+    mlr::initCmdLine(argc,argv);
 
     init(G, gl, "../git/mlr/share/examples/Motion/pfc/model.kvg");
     makeConvexHulls(G.shapes);

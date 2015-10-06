@@ -245,7 +245,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   ors::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
   MC.qitselfPD.active=false;
@@ -274,7 +274,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   arr y = ally[0];
   arr dual = alldual[0];
 
-  MT::Array<bool> particles;
+  mlr::Array<bool> particles;
   particles.resize(allx.d0);
   uint eligible_counts = allx.d0;
   uint index = 0, prev=index;
@@ -361,7 +361,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '

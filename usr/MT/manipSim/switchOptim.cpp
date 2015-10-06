@@ -22,9 +22,9 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
     : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
     ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
 
-    double posPrec = MT::getParameter<double>("LGP/precision", 1e3);
-    double colPrec = MT::getParameter<double>("LGP/collisionPrecision", -1e0);
-    double margin = MT::getParameter<double>("LGP/collisionMargin", .05);
+    double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
+    double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);
+    double margin = mlr::getParameter<double>("LGP/collisionMargin", .05);
 
     //get the actions!
     Node *actionSequence=symbolicState["actionSequence"];

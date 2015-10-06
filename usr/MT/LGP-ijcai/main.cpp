@@ -28,15 +28,15 @@ void ijcaiExperiment(){
     for(repeat=0;repeat<200;repeat++){
       //generate a new 'symbolic node' (here by fully unrolling)
       ManipulationTree_Node *node = new ManipulationTree_Node(root);
-      MT::timerRead(true);
+      mlr::timerRead(true);
       runMonteCarlo(node->symbols);
-      MCTS_time += MT::timerRead(true);
+      MCTS_time += mlr::timerRead(true);
 
       //generate the respective effective pose problem
       EffectivePoseProblem effectivePoseProblem(node->effKinematics, node->symbols, 0);
       node->effPoseCost = effectivePoseProblem.optimize(node->effPose);
       double rx = towers.reward(node->effKinematics, node->symbols);
-      lev1_time += MT::timerRead(true);
+      lev1_time += mlr::timerRead(true);
       cout <<"fx=" <<node->effPoseCost <<endl;
       cout <<"reward=" <<rx <<endl;
       node->effPoseReward = rx-node->effPoseCost;
@@ -52,10 +52,10 @@ void ijcaiExperiment(){
     world_display=best->effKinematics;
     world_display.gl().update();
 
-    MT::timerRead(true);
+    mlr::timerRead(true);
     PathProblem pathProblem(towers.world, best->effKinematics, best->symbols, 20, 0);
     best->pathCosts = pathProblem.optimize(best->path);
-    lev2_time = MT::timerRead(true);
+    lev2_time = mlr::timerRead(true);
     cout <<"f_path=" <<best->pathCosts <<endl;
 
     fil <<k <<' ' <<towers.nObjects <<' ' <<MCTS_time/repeat <<' ' <<lev1_time/repeat <<' ' <<best->effPoseReward <<' ' <<lev2_time <<endl;
@@ -94,9 +94,9 @@ void newMethod(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 //  rnd.clockSeed();
-  rnd.seed(MT::getParameter<int>("seed",0));
+  rnd.seed(mlr::getParameter<int>("seed",0));
 
 //  ijcaiExperiment();
     newMethod();

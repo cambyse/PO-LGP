@@ -18,7 +18,7 @@ void problem7(){
   soc::SocSystem_Ors sys_one;// for 1-step              
   soc::SocSystem_Ors sys;  
   ors::KinematicWorld ors;
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("kuka.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("kuka.ors")));
 
   OpenGL gl;                       
   arr p,q0;      
@@ -27,10 +27,10 @@ void problem7(){
   arr Binv = arr(dim,dim);     
   arr B = arr(dim,dim);                    
     arr r,R,bopt ;       
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
                                                         
-  double alpha=MT::getParameter<double>("alpha");
-  bool usebwd=MT::getParameter<double>("usebwd") ; 
+  double alpha=mlr::getParameter<double>("alpha");
+  bool usebwd=mlr::getParameter<double>("usebwd") ; 
   double time=8.32;//0.5; // For now - empirical time
   char* obj = "target"; 
   // soc for optimization     
@@ -50,12 +50,12 @@ arr kBinv,b;
  sys.initBasics(NULL,NULL,&gl,T,time,true,NULL);
  //createStandardRobotTaskVariables(sys);
  //(sys,T,obj);
-  double reachPlanHomeComfort=MT::getParameter<double>("reachPlanHomeComfort");
- double reachPlanEndPrec=MT::getParameter<double>("reachPlanEndPrec");
- double reachPlanMidPrec=MT::getParameter<double>("reachPlanMidPrec");
- double reachPlanEndVelPrec=MT::getParameter<double>("reachPlanEndVelPrec");
- double reachPlanColPrec=MT::getParameter<double>("reachPlanColPrec");
- double reachPlanLimPrec=MT::getParameter<double>("reachPlanLimPrec");
+  double reachPlanHomeComfort=mlr::getParameter<double>("reachPlanHomeComfort");
+ double reachPlanEndPrec=mlr::getParameter<double>("reachPlanEndPrec");
+ double reachPlanMidPrec=mlr::getParameter<double>("reachPlanMidPrec");
+ double reachPlanEndVelPrec=mlr::getParameter<double>("reachPlanEndVelPrec");
+ double reachPlanColPrec=mlr::getParameter<double>("reachPlanColPrec");
+ double reachPlanLimPrec=mlr::getParameter<double>("reachPlanLimPrec");
  
  
  
@@ -115,9 +115,9 @@ if (usebwd){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv); 
+  mlr::initCmdLine(argc,argv); 
  
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
 
   case 7:  problem7();  break;

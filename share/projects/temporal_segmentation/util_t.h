@@ -13,7 +13,7 @@ Collector& Collector::operator<<(const T &t) {
 }
 // }}}
 template<class T>
-void split(MT::Array<MT::Array<T*> > &trainlist, MT::Array<MT::Array<T*> > &testlist, const MT::Array<T*> &list, uint nsplits) {
+void split(mlr::Array<mlr::Array<T*> > &trainlist, mlr::Array<mlr::Array<T*> > &testlist, const mlr::Array<T*> &list, uint nsplits) {
   uint ndata = list.N;
   CHECK(nsplits <= ndata, STRING("Not enough data (" << ndata << ") for " << nsplits << " splits."));
 

@@ -36,11 +36,11 @@ System& NoSystem = *((System*)NULL);
 
 //struct sVariable {
 //  virtual ~sVariable(){}
-//  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
+//  mlr::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
 //  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
 
-//  virtual void serializeToString(MT::String &string) const;
-//  virtual void deSerializeFromString(const MT::String &string);
+//  virtual void serializeToString(mlr::String &string) const;
+//  virtual void deSerializeFromString(const mlr::String &string);
 
 //  sVariable():loggerData(NULL){}
 //};
@@ -85,7 +85,7 @@ System& NoSystem = *((System*)NULL);
 //  engine().acc->queryWriteAccess(this, p);
 //  rwlock.writeLock();
 //  int r = revision.incrementValue();
-//  revision_time = MT::clockTime();
+//  revision_time = mlr::clockTime();
 //  engine().acc->logWriteAccess(this, p);
 //  for(Module *l: listeners) if(l!=m) engine().step(*l, true);
 //  return r;
@@ -133,10 +133,10 @@ System& NoSystem = *((System*)NULL);
 //  return *s->fields(i);
 //}
 
-//void sVariable::serializeToString(MT::String &string) const {
+//void sVariable::serializeToString(mlr::String &string) const {
 //#if 0
 //  string.clear();
-//  MT::String field_string;
+//  mlr::String field_string;
 //  field_string.clear();
 
 //  // go through fields
@@ -158,9 +158,9 @@ System& NoSystem = *((System*)NULL);
 //  NIY
 //}
 
-//void sVariable::deSerializeFromString(const MT::String &string) {
+//void sVariable::deSerializeFromString(const mlr::String &string) {
 //#if 0
-//  MT::String string_copy(string), field_string;
+//  mlr::String string_copy(string), field_string;
 //  field_string.clear();
 //  uint j = 0;
 //  for (uint i=0; i< fields.N; i++) {
@@ -196,7 +196,7 @@ Module* System::addModule(const char *dclName, const char *name, Module::StepMod
   //find the dcl in the registry
   Node *modReg = registry().getNode("Decl_Module", dclName);
   if(!modReg){
-    MT_MSG("could not find Decl_Module " <<dclName);
+    MLR_MSG("could not find Decl_Module " <<dclName);
     return NULL;
   }
   Module *m = (Module*)modReg->getValue<Type>()->newInstance();
@@ -357,7 +357,7 @@ void Engine::step(System &S){
 
 void Engine::step(Module &m, bool threadedOnly){
   if(threadedOnly && mode!=threaded) return;
-  if(mode==none) MT_MSG("ommiting stepping: no step mode");
+  if(mode==none) MLR_MSG("ommiting stepping: no step mode");
   if(mode==threaded) m.threadStep();
   if(mode==serial)   m.step();
 }
@@ -491,7 +491,7 @@ void EventController::queryWriteAccess(RevisionedAccessGatedClass *v, const Modu
 
 void EventController::logReadAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -500,7 +500,7 @@ void EventController::logReadAccess(const RevisionedAccessGatedClass *v, const M
 
 void EventController::logWriteAccess(const RevisionedAccessGatedClass *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -522,7 +522,7 @@ void EventController::logWriteDeAccess(const RevisionedAccessGatedClass *v, cons
 
 void EventController::logStepBegin(const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepBegin, 0, p->step_count, MT::realTime());
+  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepBegin, 0, p->step_count, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -531,7 +531,7 @@ void EventController::logStepBegin(const Module *p) {
 
 void EventController::logStepEnd(const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepEnd, 0, p->step_count, MT::realTime());
+  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepEnd, 0, p->step_count, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -581,7 +581,7 @@ void EventController::dumpEventList(){
 
   if(!eventsFile){
     eventsFile = new ofstream;
-    MT::open(*eventsFile,"z.eventLog");
+    mlr::open(*eventsFile,"z.eventLog");
   }
 
   writeEventList(*eventsFile, false, 0, true);

@@ -14,8 +14,8 @@ public:
   DataReader();
   int readDataFile(const std::string& dataFile, const std::string& relationalFile);
   
-  MT::Array<MT::Array<double> >& getData() const;
-  MT::Array<int>& getClasses() const;
+  mlr::Array<mlr::Array<double> >& getData() const;
+  mlr::Array<int>& getClasses() const;
   int getClass(const std::string predicate) const;
 };
 

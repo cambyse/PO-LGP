@@ -5,8 +5,8 @@ AmexController::AmexController(ros::NodeHandle &_nh, ors::KinematicWorld &_world
   world = _world;
   useGoalPub = _useGoalPub;
   refPlan = _refPlan;
-  dtAmex = MT::getParameter<double>("dtAmex");
-  folder = MT::getParameter<String>("evalName");
+  dtAmex = mlr::getParameter<double>("dtAmex");
+  folder = mlr::getParameter<String>("evalName");
 
   x0 = _refPlan[0];
   q0 = _q0; arr qd0 = 0.*q0;
@@ -14,7 +14,7 @@ AmexController::AmexController(ros::NodeHandle &_nh, ors::KinematicWorld &_world
   TRef = _TRef;
   NUM_JOINTS = q0.d0;
 
-  goalMO = new MObject(&world, MT::String("goal"), MObject::GOAL , 0.000, {1.,0.,0.});
+  goalMO = new MObject(&world, mlr::String("goal"), MObject::GOAL , 0.000, {1.,0.,0.});
   amex = new AdaptiveMotionExecution(world,refPlan,dtAmex,TRef,x0,q0,*goalMO,true);
 
   world.setJointState(q0,qd0);

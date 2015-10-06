@@ -1,4 +1,4 @@
-#ifdef MT_BUMBLE
+#ifdef MLR_BUMBLE
 
 //=============================================================================
 // Copyright � 2008 Point Grey Research, Inc. All Rights Reserved.

@@ -22,8 +22,8 @@
 /// @addtogroup group_Core
 /// @{
 
-#ifndef MT_geo_h
-#define MT_geo_h
+#ifndef MLR_geo_h
+#define MLR_geo_h
 
 #include "array.h"
 

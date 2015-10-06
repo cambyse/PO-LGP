@@ -38,7 +38,7 @@ bool orsDrawMeshes=true, orsDrawZlines=false;
 double orsDrawAlpha=1.00;
 uint orsDrawLimit=0;
 
-#ifdef MT_GL
+#ifdef MLR_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
 

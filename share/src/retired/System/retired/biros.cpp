@@ -99,7 +99,7 @@ bool setNice(int nice) {
   pid_t tid = syscall(SYS_gettid);
   //int old_nice = getpriority(PRIO_PROCESS, tid);
   int ret = setpriority(PRIO_PROCESS, tid, nice);
-  if(ret) MT_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
+  if(ret) MLR_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
   //std::cout <<"tid=" <<tid <<" old nice=" <<old_nice <<" wanted nice=" <<nice <<std::flush;
   //nice = getpriority(PRIO_PROCESS, tid);
   //std::cout <<" new nice=" <<nice <<std::endl;
@@ -109,7 +109,7 @@ bool setNice(int nice) {
 
 void setRRscheduling(int priority) {
   pid_t tid = syscall(SYS_gettid);
-  MT_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
+  MLR_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
   sched_param sp; sp.sched_priority=priority;
   int rc = sched_setscheduler(tid, SCHED_RR, &sp);
   if(rc) switch (errno) {
@@ -117,7 +117,7 @@ void setRRscheduling(int priority) {
         HALT("The process whose ID is" <<tid <<"could not be found.");
         break;
       case EPERM:
-        MT_MSG("ERROR: Not enough privileges! Priority unchanged! Run with sudo to use this feature!");
+        MLR_MSG("ERROR: Not enough privileges! Priority unchanged! Run with sudo to use this feature!");
         break;
       case EINVAL:
       default: HALT(errno <<strerror(errno));
@@ -126,7 +126,7 @@ void setRRscheduling(int priority) {
   rc=sched_rr_get_interval(tid, &interval);
   std::cout <<"RR scheduling interval = " <<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
   CHECK(!rc, "sched_rr_get_interval failed:" <<errno <<strerror(errno));
-  MT_MSG("Scheduling policy changed: new sched="
+  MLR_MSG("Scheduling policy changed: new sched="
          <<sched_getscheduler(tid) <<" new priority=" <<priority);
 }
 
@@ -310,7 +310,7 @@ void writeInfo(ostream& os, Variable& v, bool brief, char nl){
 
 void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl){
   if(brief){
-    MT::String str;
+    mlr::String str;
     f.writeValue(str);
     if(str.N>20) str.resize(20,true);
     os <<str;
@@ -323,7 +323,7 @@ void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl){
 
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
   if(brief){
-    MT::String str;
+    mlr::String str;
     pa.writeValue(str);
     if(str.N>20) str.resize(20,true);
     for(uint i=0;i<str.N;i++) if(str(i)=='\n') str(i)=' ';

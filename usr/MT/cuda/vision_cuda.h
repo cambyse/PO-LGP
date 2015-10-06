@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_vision_cuda_h
-#define MT_vision_cuda_h
+#ifndef MLR_vision_cuda_h
+#define MLR_vision_cuda_h
 
 typedef unsigned char byte;
 

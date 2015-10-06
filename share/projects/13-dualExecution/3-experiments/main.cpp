@@ -38,9 +38,9 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   Convert ConstrainedP(MF);
 
   //-- optimize
-  MT::timerStart();
+  mlr::timerStart();
   optConstrainedMix(x, dual, Convert(MF));
-  cout <<"** optimization time = " <<MT::timerRead() <<endl;
+  cout <<"** optimization time = " <<mlr::timerRead() <<endl;
   MP.dualMatrix = dual;
   MP.costReport();
 
@@ -66,7 +66,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   ors::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world, false);
   MC.qitselfPD.active=true;
@@ -142,7 +142,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
     //vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -157,9 +157,9 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, dual;
   getTrajectory(x, y, dual, world);

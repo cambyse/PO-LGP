@@ -7,7 +7,7 @@
 // ============================================================================
 class PerceptsVar : public Variable {
 public:
-  FIELD(MT::Array<ors::Vector*>, objects);
+  FIELD(mlr::Array<ors::Vector*>, objects);
 
   PerceptsVar() : Variable("percpets variable") {
     reg_objects();

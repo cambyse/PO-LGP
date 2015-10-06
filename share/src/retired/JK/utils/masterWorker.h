@@ -17,8 +17,8 @@ template<class Job, class Result> class Workspace : public Variable {
   public:
     Workspace<Job, Result>(const char* name) : Variable(name) { reg_working_jobs(); reg_jobs(); reg_results(); working_jobs = 0; };
     Workspace<Job, Result>();
-    FIELD(MT::Array<Job>, jobs);
-    FIELD(MT::Array<Result>, results);
+    FIELD(mlr::Array<Job>, jobs);
+    FIELD(mlr::Array<Result>, results);
     FIELD(int, working_jobs);
 };
 
@@ -76,7 +76,7 @@ template<class Job, class Result> class WorkerFactory {
     virtual Worker<Job, Result>* createWorker() = 0;  
 };
 
-#ifdef MT_IMPLEMENT_TEMPLATES
+#ifdef MLR_IMPLEMENT_TEMPLATES
 #include "masterWorker.cpp"
 #endif
 

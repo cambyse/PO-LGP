@@ -2,7 +2,7 @@
 
 TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
   TaskMap *map;
-  MT::String type = specs.V<MT::String>("type", "pos");
+  mlr::String type = specs.V<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
@@ -10,7 +10,7 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
   }else if(type=="proxy"){
     map = new ProxyTaskMap(allPTMT, {0u}, specs.V<double>("margin", 0.1) );
   }else if(type=="qItself"){
-    if(specs["ref1"]) map = new TaskMap_qItself(world, specs["ref1"]->V<MT::String>());
+    if(specs["ref1"]) map = new TaskMap_qItself(world, specs["ref1"]->V<mlr::String>());
     else if(specs["Hmetric"]) map = new TaskMap_qItself(specs["Hmetric"]->V<double>()*world.getHmetric());
     else map = new TaskMap_qItself();
   }else if(type=="GJK_vec"){
@@ -29,8 +29,8 @@ TaskMap_GJK::TaskMap_GJK(const ors::Shape* s1, const ors::Shape* s2, bool exact)
 
 TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact) : exact(exact){
   Node *it;
-  if((it=specs["ref1"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
-  if((it=specs["ref2"])){ auto name=it->V<MT::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+  if((it=specs["ref1"])){ auto name=it->V<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["ref2"])){ auto name=it->V<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
 //  if((it=specs["vec1"])) vec1 = ors::Vector(it->V<arr>());  else vec1.setZero();
 //  if((it=specs["vec2"])) vec2 = ors::Vector(it->V<arr>());  else vec2.setZero();
 }

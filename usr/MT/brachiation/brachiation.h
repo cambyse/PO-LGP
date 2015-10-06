@@ -24,6 +24,6 @@ struct BrachiationSystem:ControlledSystem {
   void getTaskCosts(arr& phi, arr& phiJ, uint t);
 
   void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false);
-  void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t);
+  void getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t);
 };
 

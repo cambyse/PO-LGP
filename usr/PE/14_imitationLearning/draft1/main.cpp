@@ -104,7 +104,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   std::vector<arr> demos;
   arr q0;
@@ -120,12 +120,12 @@ int main(int argc,char **argv) {
     /// run cma
     cma.step(samples, values);
 //    cout << exp(samples) << endl;
-    MT::timerStart(true);
+    mlr::timerStart(true);
     for(uint i=0;i<samples.d0;i++) {
       /// simulate parameters for each scenario
       costs = 0.;
       std::vector<std::future<arr>> runs;
-      double t_d = MT::timerRead();
+      double t_d = mlr::timerRead();
       uint j = 0;
       while (j < demos.size()) {
         yRef1 = demos.at(j);
@@ -141,7 +141,7 @@ int main(int argc,char **argv) {
       }
       values(i) = costs/demos.size();
     }
-    cout <<"Time: "<< MT::timerPause() << endl;
+    cout <<"Time: "<< mlr::timerPause() << endl;
     cout <<"Min Value: " << values.min() << endl;
   }
   arr optParam = samples[values.minIndex()];

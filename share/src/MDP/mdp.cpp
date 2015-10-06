@@ -47,7 +47,7 @@ void mdp::writeMDP_arr(const MDP& mdp, const char *filename, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
   else os.open(filename);
-  if(!os.good()) MT_MSG("could not open file `" <<filename <<"' for output");
+  if(!os.good()) MLR_MSG("could not open file `" <<filename <<"' for output");
   mdp.Pxax.writeTagged(os, "Pxax", binary); os <<endl;
   mdp.Pyxa.writeTagged(os, "Pyxa", binary); os <<endl;
   mdp.Px  .writeTagged(os, "Px", binary);   os <<endl;
@@ -104,7 +104,7 @@ void mdp::readMDP_arr(MDP& mdp, const char *filename, bool binary){
   ifstream is;
   if(binary) is.open(filename, std::ios::binary);
   else is.open(filename);
-  if(!is.good()) MT_MSG("could not open file `" <<filename <<"' for input");
+  if(!is.good()) MLR_MSG("could not open file `" <<filename <<"' for input");
   mdp.Pxax.readTagged(is, "Pxax");
   mdp.Pyxa.readTagged(is, "Pyxa");
   mdp.Px  .readTagged(is, "Px");
@@ -133,13 +133,13 @@ void mdp::clearFSC(FSC_structured& fsc){
   fsc.transFacs.clear(); fsc.initFacs.clear();
 }
 
-void readStringList(MT::Array<MT::String>& strings, istream& is){
+void readStringList(mlr::Array<mlr::String>& strings, istream& is){
   char c;
-  MT::String str;
+  mlr::String str;
   is >>PARSE("(");
   strings.clear();
   for(;;){
-    MT::skip(is);
+    mlr::skip(is);
     is.get(c);
     if(c==')') break; else is.putback(c);
     str.read(is, " ", "), \t\r\n", false);
@@ -147,7 +147,7 @@ void readStringList(MT::Array<MT::String>& strings, istream& is){
   }
 }
 
-template<class T> void namesToSublist(MT::Array<T*>& sub, const MT::Array<MT::String>& strings, const MT::Array<T*>& list){
+template<class T> void namesToSublist(mlr::Array<T*>& sub, const mlr::Array<mlr::String>& strings, const mlr::Array<T*>& list){
   uint i;
   T *v;
   sub.clear();
@@ -189,9 +189,9 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
 #if 1 //new code
   clearMDP(mdp);
   ifstream is;
-  MT::open(is, filename);
+  mlr::open(is, filename);
   String tag, name;
-  MT::Array<MT::String> strings;
+  mlr::Array<mlr::String> strings;
   infer::VariableList vars;
   arr P;
   uint d;
@@ -245,7 +245,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   uint d;
   //variables
   for_list(Element, e,  H.T) if(e->type=="variable"){
-    d=get<MT::String>(e->ats, "values").N;
+    d=get<mlr::String>(e->ats, "values").N;
     mdp.vars.append(new infer::Variable(d, e->name));
   }
   //cout <<"read variables:" <<endl;  listWrite(mdp.vars, cout, "\n  ");
@@ -257,22 +257,22 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   e=listFindByType(H.T, "mdp");
   mdp.gamma = get<double>(e->ats, "discount")(0);
   //cout <<"\ngamma = " <<mdp.gamma <<endl;
-  MT::Array<MT::String> S;
-  S = get<MT::String>(e->ats, "initializationFacs");
+  mlr::Array<mlr::String> S;
+  S = get<mlr::String>(e->ats, "initializationFacs");
   for(uint i=0; i<S.N; i++) mdp.initFacs.append(listFindByName(mdp.facs, S(i)));
-  S = get<MT::String>(e->ats, "transitionFacs");
+  S = get<mlr::String>(e->ats, "transitionFacs");
   for(uint i=0; i<S.N; i++) mdp.transFacs.append(listFindByName(mdp.facs, S(i)));
-  S = get<MT::String>(e->ats, "rewardFacs");
+  S = get<mlr::String>(e->ats, "rewardFacs");
   for(uint i=0; i<S.N; i++) mdp.rewardFacs.append(listFindByName(mdp.facs, S(i)));
-  S = get<MT::String>(e->ats, "observationFacs");
+  S = get<mlr::String>(e->ats, "observationFacs");
   for(uint i=0; i<S.N; i++) mdp.obsFacs.append(listFindByName(mdp.facs, S(i)));
-  S = get<MT::String>(e->ats, "leftVars");
+  S = get<mlr::String>(e->ats, "leftVars");
   for(uint i=0; i<S.N; i++) mdp.leftVars.append(listFindByName(mdp.vars, S(i)));
-  S = get<MT::String>(e->ats, "rightVars");
+  S = get<mlr::String>(e->ats, "rightVars");
   for(uint i=0; i<S.N; i++) mdp.rightVars.append(listFindByName(mdp.vars, S(i)));
-  S = get<MT::String>(e->ats, "observationVars");
+  S = get<mlr::String>(e->ats, "observationVars");
   for(uint i=0; i<S.N; i++) mdp.obsVars.append(listFindByName(mdp.vars, S(i)));
-  S = get<MT::String>(e->ats, "controlVars");
+  S = get<mlr::String>(e->ats, "controlVars");
   for(uint i=0; i<S.N; i++) mdp.ctrlVars.append(listFindByName(mdp.vars, S(i)));
   
   //infer::Factor *f;
@@ -284,10 +284,10 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
 void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   clearMDP(mdp);
   ifstream is;
-  MT::open(is, filename);
+  mlr::open(is, filename);
   String tag, name;
-  MT::Array<MT::String> strings;
-  MT::Array<MT::Array<MT::String> > values;
+  mlr::Array<mlr::String> strings;
+  mlr::Array<mlr::Array<mlr::String> > values;
   infer::VariableList vars, rewardVars;
   infer::Factor *f;
   arr P;
@@ -650,7 +650,7 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       
       mazeToP(maze, Px, Pxax, Pyxa, Rax, false);
       mdp::tunnelRaxToPx(Pxax, Rax, Px);
-      mdp::addActionNoise(Pxax, MT::getParameter<double>("mazeNoise"));
+      mdp::addActionNoise(Pxax, mlr::getParameter<double>("mazeNoise"));
       mdp::showMaze();
       
       //mdp::addActionNoise(Pxax, .1);
@@ -878,7 +878,7 @@ void mdp::standardInitFsc_structured_lev1(FSC_structured& fsc, const MDP& mdp, u
   clearFSC(fsc);
   
   uint dx=mdp.Pxax.d0, da=mdp.Pxax.d1, dy=mdp.Pyxa.d0;
-  if(da>d0) MT_MSG("#actions > #node0-states: that's not going to work well!");
+  if(da>d0) MLR_MSG("#actions > #node0-states: that's not going to work well!");
   infer::Variable *x  = new infer::Variable(dx , "state(t)");
   infer::Variable *y  = new infer::Variable(dy , "observation(t)");
   infer::Variable *n0 = new infer::Variable(d0 , "node0(t)");
@@ -933,7 +933,7 @@ void mdp::standardInitFsc_structured_lev2(FSC_structured& fsc, const MDP& mdp, u
   clearFSC(fsc);
   
   uint dx=mdp.Pxax.d0, da=mdp.Pxax.d1, dy=mdp.Pyxa.d0;
-  if(da>d0) MT_MSG("#action > #node0-states: that's not going to work well!");
+  if(da>d0) MLR_MSG("#action > #node0-states: that's not going to work well!");
   infer::Variable *x  = new infer::Variable(dx , "state(t)");
   infer::Variable *y  = new infer::Variable(dy , "observation(t)");
   infer::Variable *n1 = new infer::Variable(d1 , "node1(t)");
@@ -968,7 +968,7 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP& mdp,
   
   uint dx=mdp.Pxax.d0, da=mdp.Pxax.d1, dy=mdp.Pyxa.d0;
   uint i, m=levels.N;
-  if(da>levels(0)) MT_MSG("#actions " <<da <<" > #node0-states " <<levels(0) <<" -- that's not going to work well!");
+  if(da>levels(0)) MLR_MSG("#actions " <<da <<" > #node0-states " <<levels(0) <<" -- that's not going to work well!");
   infer::VariableList nodes(m), nodes_(m);
   infer::Variable *x  = new infer::Variable(dx , "state(t)");
   infer::Variable *y  = new infer::Variable(dy , "observation(t)");
@@ -1018,7 +1018,7 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP_struc
   uint adim=1;
   for_list(infer::Variable,  v,  mdp.ctrlVars) adim*=v->dim;
   
-  if(adim>levels(0)) MT_MSG("#actions " <<adim <<" > #node0-states " <<levels(0) <<" -- that's not going to work well!");
+  if(adim>levels(0)) MLR_MSG("#actions " <<adim <<" > #node0-states " <<levels(0) <<" -- that's not going to work well!");
   infer::VariableList nodes(m), nodes_(m);
   for(i=m; i--;) nodes(i) = new infer::Variable(levels(i) , STRING("node" <<i));
   for(i=m; i--;) nodes_(i) = new infer::Variable(levels(i) , STRING("node" <<i <<"'"));

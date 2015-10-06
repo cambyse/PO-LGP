@@ -5,8 +5,8 @@
 
 #include <cstdlib>
 
-void BlocksWorldSampler::sample(MT::Array<arr>& sample) { 
-  MT::Array<arr> next_sample;
+void BlocksWorldSampler::sample(mlr::Array<arr>& sample) { 
+  mlr::Array<arr> next_sample;
   
   int numOfBlocks = 2;
 
@@ -30,8 +30,8 @@ void BlocksWorldSampler::sample(MT::Array<arr>& sample) {
   //JK_DEBUG(sample);
 }
 
-void OutOfReachSampler::sample(MT::Array<arr>& sample) { 
-  MT::Array<arr> next_sample;
+void OutOfReachSampler::sample(mlr::Array<arr>& sample) { 
+  mlr::Array<arr> next_sample;
   
   OutOfReachOracle o;
 
@@ -45,8 +45,8 @@ void OutOfReachSampler::sample(MT::Array<arr>& sample) {
     sample.reshape(1, 2);
   } while (out != o.classify(sample));
 }
-void UprightSampler::sample(MT::Array<arr>& sample) { 
-  MT::Array<arr> next_sample;
+void UprightSampler::sample(mlr::Array<arr>& sample) { 
+  mlr::Array<arr> next_sample;
   
   UprightOracle o;
 
@@ -60,8 +60,8 @@ void UprightSampler::sample(MT::Array<arr>& sample) {
   } while (out != o.classify(sample));
 }
 
-void TraySampler::sample(MT::Array<arr>& sample) { 
-  MT::Array<arr> next_sample;
+void TraySampler::sample(mlr::Array<arr>& sample) { 
+  mlr::Array<arr> next_sample;
 
   InsideOracle o;
   int numOfBlocks = 5;

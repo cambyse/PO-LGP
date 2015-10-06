@@ -16,7 +16,7 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
 
   /// Init ors
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   ors::KinematicWorld world;
   world.init(STRING("scene"));
   makeConvexHulls(world.shapes);
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
   AmexController amex(nh, world, to.refPlan, q0, to.TRef, useARtag);
   amex.initRosServices();
   amex.initController();
-  MT::wait();
+  mlr::wait();
   amex.startController();
 
 

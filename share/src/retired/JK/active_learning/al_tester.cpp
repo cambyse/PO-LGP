@@ -5,9 +5,9 @@
 #include <JK/utils/sampler.h>
 #include <JK/utils/oracle.h>
 
-double test(const uint numTests, const ActiveLearner* al, const ActiveLearningProblem* problem, const MT::String filename) {
+double test(const uint numTests, const ActiveLearner* al, const ActiveLearningProblem* problem, const mlr::String filename) {
   uint correct;
-  MT::Array<arr> sample;
+  mlr::Array<arr> sample;
 #pragma omp parallel for
   for(uint i=0;i<numTests;++i) {
     problem->sampler->sample(sample);

@@ -26,7 +26,7 @@ void TEST(Specs){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testSpecs();
 

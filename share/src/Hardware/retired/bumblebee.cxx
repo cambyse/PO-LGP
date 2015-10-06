@@ -20,7 +20,7 @@
 #include "hardware.h"
 #include <perception/perception.h>
 
-#ifdef MT_BUMBLE
+#ifdef MLR_BUMBLE
   
 #include <MT/vision.h>
 
@@ -110,7 +110,7 @@ Camera::~Camera(){
 void Camera::open(){
   s->cam = new Bumblebee();
   ifstream fil;
-  MT::open(fil,"../../configurations/camera.cfg");
+  mlr::open(fil,"../../configurations/camera.cfg");
   s->calib.read(fil);
   step();
 };
@@ -468,7 +468,7 @@ void CalibrationParameters::write(std::ostream& os) const{
 }
 
 void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
   CvMatDonor cvMatDonor;
   if(!map1L.N){
     map1L.resize(imgL.d0,imgL.d1);
@@ -492,7 +492,7 @@ void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
 }
 
 void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
   CvMatDonor cvMatDonor;
   cvPerspectiveTransform(CVMAT(stereo), CVMAT(world), CVMAT(Q));
 #else
@@ -500,7 +500,7 @@ void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
 #endif
 }
 
-#else //MT_BUMBLE
+#else //MLR_BUMBLE
 
 struct sCamera{
   Image *camL,* camR;
@@ -511,7 +511,7 @@ Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
   s->camL = biros().getVariable<Image>("CameraL", this);
   biros().getVariable(s->camR, "CameraR", this);
-  MT::String filename = biros().getParameter<MT::String>("DummyCameraFile", STRING("DummyCameraImage_"), this);
+  mlr::String filename = biros().getParameter<mlr::String>("DummyCameraFile", STRING("DummyCameraImage_"), this);
   read_ppm(s->dummyL, STRING(filename <<"L.ppm"));
   read_ppm(s->dummyR, STRING(filename <<"R.ppm"));
 };

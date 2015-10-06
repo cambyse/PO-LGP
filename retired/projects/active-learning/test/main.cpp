@@ -6,13 +6,13 @@
 #include <MT/array_t.cpp>
 
 void testNaiveBayesClassificator() {
-  MT::Array<arr> traindata;
+  mlr::Array<arr> traindata;
   traindata.append(ARR(0.61, 0.));
   traindata.append(ARR(0.44, 0.));
   traindata.append(ARR(0., 0.67));
   traindata.append(ARR(0., 0.76));
 
-  MT::Array<int> classes;
+  mlr::Array<int> classes;
   classes.resize(4);
   classes(0) = 0;
   classes(1) = 0;
@@ -23,7 +23,7 @@ void testNaiveBayesClassificator() {
   NaiveBayesClassificator c;
   c.setTrainingsData(traindata, classes);
 
-  MT::Array<arr> testdata;
+  mlr::Array<arr> testdata;
   testdata.append(ARR(0., 0.7));
   testdata.reshape(1,1);
   int cl = c.classify(testdata);
@@ -76,13 +76,13 @@ void testBayesOnRealData() {
 }
 
 void testSampling() {
-  MT::Array<arr> traindata;
+  mlr::Array<arr> traindata;
   traindata.append(ARR(0.61, 0.));
   traindata.append(ARR(0.44, 0.));
   traindata.append(ARR(0., 0.67));
   traindata.append(ARR(0., 0.76));
 
-  MT::Array<int> classes;
+  mlr::Array<int> classes;
   classes.resize(4);
   classes(0) = 0;
   classes(1) = 0;
@@ -93,7 +93,7 @@ void testSampling() {
   NaiveBayesClassificator c;
   c.setTrainingsData(traindata, classes);
 
-  MT::Array<arr> test;
+  mlr::Array<arr> test;
   c.nextSample(test);
   std::cout << test << std::endl;
 

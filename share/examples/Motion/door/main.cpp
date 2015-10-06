@@ -211,7 +211,7 @@ void TEST(Door3){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 //  testDoor1();
 //  testDoor2();
   testDoor3();

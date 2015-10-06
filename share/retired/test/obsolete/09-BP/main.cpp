@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <MT/BinaryBP.h>
 
@@ -115,7 +115,7 @@ void TEST(EvidenceDiscounting){
   // my standard loopy BP:
   LoopyBP lbp;
   convert(lbp,net);
-  MT::Array<Factor> bb;
+  mlr::Array<Factor> bb;
   for(t=0;t<100;t++) lbp.step();
   lbp.getVarBeliefs(bb);
   for(i=0;i<bb.N;i++) b(i) = .5 * log(bb(i).P(1)/bb(i).P(0));

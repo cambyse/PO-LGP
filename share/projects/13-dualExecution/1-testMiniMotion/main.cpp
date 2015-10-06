@@ -28,9 +28,9 @@ c->map.order=1;
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x = getSimpleTrajectory(G);
   arr x2 = reverseTrajectory(x);

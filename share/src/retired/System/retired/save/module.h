@@ -7,8 +7,8 @@
   -- this should be independent of the ``middleware''/biros/ROS/whatever
 
  */
-#ifndef MT_module_h
-#define MT_module_h
+#ifndef MLR_module_h
+#define MLR_module_h
 
 #include <Core/array.h>
 #include <Core/registry.h>
@@ -31,9 +31,9 @@
 struct Access;
 struct Module;
 struct Variable;
-typedef MT::Array<Access*> AccessL;
-typedef MT::Array<Module*> ModuleL;
-typedef MT::Array<Variable*> VariableL;
+typedef mlr::Array<Access*> AccessL;
+typedef mlr::Array<Module*> ModuleL;
+typedef mlr::Array<Variable*> VariableL;
 
 
 //===========================================================================
@@ -126,7 +126,7 @@ struct Access_typed:Access{
 template<class T, class P>
 Node* registerNode(T *instance, const char *key1, const char* key2, Node *parent1=NULL, Node *parent2=NULL){
   NodeL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
-  StringA keys; if(key1) keys.append(MT::String(key1)); if(key2) keys.append(MT::String(key2));
+  StringA keys; if(key1) keys.append(mlr::String(key1)); if(key2) keys.append(mlr::String(key2));
   Type *ti = new Type_typed<T,P>(NULL, NULL);
   return new Node_typed<Type>(keys, parents, ti, &registry());
 }
@@ -169,7 +169,7 @@ template<class T, class N, class P> struct Registrator{
     StaticRegistrator():reg(NULL){ //called whenever a module/access is DECLARED
       Node *parent = NULL;
       const char *declkey="Decl_Module";
-      MT::String name;
+      mlr::String name;
       if(typeid(P)!=typeid(void)){ //dependence registry
         parent = registry().getNode("Decl_Module", typeid(P).name());
         declkey="Decl_Access";
@@ -181,7 +181,7 @@ template<class T, class N, class P> struct Registrator{
         nam = &nam[i+2];
         for(i=strlen(nam);;i--) if(nam[i]=='_' && nam[i+1]=='_') break;
         name.set(nam,i);
-        MT_MSG("StaticRegistrator of type " <<typeid(N).name() <<" named " <<name);
+        MLR_MSG("StaticRegistrator of type " <<typeid(N).name() <<" named " <<name);
       }else{
         name = typeid(T).name();
       }

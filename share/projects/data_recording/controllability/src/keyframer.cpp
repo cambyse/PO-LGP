@@ -298,7 +298,7 @@ void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
     for(uint d = 0; d < ndims; d++) {
       cout << " * computing " << typeSpline << " for sensor " << i << ", dim " << d << endl;
       tx = (~x[i])[d];
-      MT::Spline spl(nframes, tx);
+      mlr::Spline spl(nframes, tx);
       ty = spl.smooth(lambda);
       for(uint f = 0; f < nframes; f++)
         y(i, f, d) = ty(f);
@@ -835,26 +835,26 @@ void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_z_pAVar(t, k) = ::exp(
-            -.5 * MT::sqr(pAVar(t) - mu_pAVar(k)) / MT::sqr(sigma_pAVar(k))
+            -.5 * mlr::sqr(pAVar(t) - mu_pAVar(k)) / mlr::sqr(sigma_pAVar(k))
         );
         rho_z_qAVar(t, k) = ::exp(
-            -.5 * MT::sqr(qAVar(t) - mu_qAVar(k)) / MT::sqr(sigma_qAVar(k))
+            -.5 * mlr::sqr(qAVar(t) - mu_qAVar(k)) / mlr::sqr(sigma_qAVar(k))
         );
       }
       for(uint r = 0; r < R; r++) {
         rho_r(t, r) = ::exp(
-            -.5 * MT::sqr(dpVar(t) - mu_dpVar(r)) / MT::sqr(sigma_dpVar(r))
-            -.5 * MT::sqr(dqVar(t) - mu_dqVar(r)) / MT::sqr(sigma_dqVar(r))
+            -.5 * mlr::sqr(dpVar(t) - mu_dpVar(r)) / mlr::sqr(sigma_dpVar(r))
+            -.5 * mlr::sqr(dqVar(t) - mu_dqVar(r)) / mlr::sqr(sigma_dqVar(r))
         );
         //double tmp = 0;
-        //for(uint tt = MT::MAX(0, t - wlen/2); tt < MT::MIN(T, t + wlen/2); tt++)
-          //tmp += MT::sqr( dp(t, 0) - mu_r_p(r, 0)) / MT::sqr(sigma_r_p(r, 0))
-                //+ MT::sqr( dp(t, 1) - mu_r_p(r, 1)) / MT::sqr(sigma_r_p(r, 1))
-                //+ MT::sqr( dp(t, 2) - mu_r_p(r, 2)) / MT::sqr(sigma_r_p(r, 2));
-                //+ MT::sqr( dq(t, 0) - mu_r_q(r, 0)) / MT::sqr(sigma_r_q(r, 0))
-                //+ MT::sqr( dq(t, 1) - mu_r_q(r, 1)) / MT::sqr(sigma_r_q(r, 1))
-                //+ MT::sqr( dq(t, 2) - mu_r_q(r, 2)) / MT::sqr(sigma_r_q(r, 2))
-                //+ MT::sqr( dq(t, 3) - mu_r_q(r, 3)) / MT::sqr(sigma_r_q(r, 3))
+        //for(uint tt = mlr::MAX(0, t - wlen/2); tt < mlr::MIN(T, t + wlen/2); tt++)
+          //tmp += mlr::sqr( dp(t, 0) - mu_r_p(r, 0)) / mlr::sqr(sigma_r_p(r, 0))
+                //+ mlr::sqr( dp(t, 1) - mu_r_p(r, 1)) / mlr::sqr(sigma_r_p(r, 1))
+                //+ mlr::sqr( dp(t, 2) - mu_r_p(r, 2)) / mlr::sqr(sigma_r_p(r, 2));
+                //+ mlr::sqr( dq(t, 0) - mu_r_q(r, 0)) / mlr::sqr(sigma_r_q(r, 0))
+                //+ mlr::sqr( dq(t, 1) - mu_r_q(r, 1)) / mlr::sqr(sigma_r_q(r, 1))
+                //+ mlr::sqr( dq(t, 2) - mu_r_q(r, 2)) / mlr::sqr(sigma_r_q(r, 2))
+                //+ mlr::sqr( dq(t, 3) - mu_r_q(r, 3)) / mlr::sqr(sigma_r_q(r, 3))
         //rho_r(t, r) = ::exp( -.5 * tmp);
       }
       rho_z_dVar[t]() = ~rho_r[t] * p_r;
@@ -1154,23 +1154,23 @@ void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint j = 0; j < J; j++) {
         rho_y_pVar(t, j) = ::exp(
-            -.5 * MT::sqr(pAVar(t) - mu_pVar(j)) / MT::sqr(sigma_pVar(j))
-            -.5 * MT::sqr(pBVar(t) - mu_pVar(j)) / MT::sqr(sigma_pVar(j))
+            -.5 * mlr::sqr(pAVar(t) - mu_pVar(j)) / mlr::sqr(sigma_pVar(j))
+            -.5 * mlr::sqr(pBVar(t) - mu_pVar(j)) / mlr::sqr(sigma_pVar(j))
           );
         rho_y_qVar(t, j) = ::exp(
-            -.5 * MT::sqr(qAVar(t) - mu_qVar(j)) / MT::sqr(sigma_qVar(j))
-            -.5 * MT::sqr(qBVar(t) - mu_qVar(j)) / MT::sqr(sigma_qVar(j))
+            -.5 * mlr::sqr(qAVar(t) - mu_qVar(j)) / mlr::sqr(sigma_qVar(j))
+            -.5 * mlr::sqr(qBVar(t) - mu_qVar(j)) / mlr::sqr(sigma_qVar(j))
           );
         double tmp_dp, tmp_dq;
         tmp_dp = tmp_dq = 0;
-        for(uint tt = MT::MAX(0, t - wlen/2); tt < MT::MIN(T, t + wlen/2); tt++) {
-          tmp_dp += MT::sqr( dp(t, 0) - mu_dp(j, 0)) / MT::sqr(sigma_dp(j, 0))
-                  + MT::sqr( dp(t, 1) - mu_dp(j, 1)) / MT::sqr(sigma_dp(j, 1))
-                  + MT::sqr( dp(t, 2) - mu_dp(j, 2)) / MT::sqr(sigma_dp(j, 2));
-          tmp_dq += MT::sqr( dq(t, 0) - mu_dq(j, 0)) / MT::sqr(sigma_dq(j, 0))
-                  + MT::sqr( dq(t, 1) - mu_dq(j, 1)) / MT::sqr(sigma_dq(j, 1))
-                  + MT::sqr( dq(t, 2) - mu_dq(j, 2)) / MT::sqr(sigma_dq(j, 2))
-                  + MT::sqr( dq(t, 3) - mu_dq(j, 3)) / MT::sqr(sigma_dq(j, 3));
+        for(uint tt = mlr::MAX(0, t - wlen/2); tt < mlr::MIN(T, t + wlen/2); tt++) {
+          tmp_dp += mlr::sqr( dp(t, 0) - mu_dp(j, 0)) / mlr::sqr(sigma_dp(j, 0))
+                  + mlr::sqr( dp(t, 1) - mu_dp(j, 1)) / mlr::sqr(sigma_dp(j, 1))
+                  + mlr::sqr( dp(t, 2) - mu_dp(j, 2)) / mlr::sqr(sigma_dp(j, 2));
+          tmp_dq += mlr::sqr( dq(t, 0) - mu_dq(j, 0)) / mlr::sqr(sigma_dq(j, 0))
+                  + mlr::sqr( dq(t, 1) - mu_dq(j, 1)) / mlr::sqr(sigma_dq(j, 1))
+                  + mlr::sqr( dq(t, 2) - mu_dq(j, 2)) / mlr::sqr(sigma_dq(j, 2))
+                  + mlr::sqr( dq(t, 3) - mu_dq(j, 3)) / mlr::sqr(sigma_dq(j, 3));
         }
         rho_y_dp(t, j) = ::exp( -.5 * tmp_dp);
         rho_y_dq(t, j) = ::exp( -.5 * tmp_dq);
@@ -1180,7 +1180,7 @@ void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++)
         rho_z_c(t, k) = ::exp(
-            -.5 * MT::sqr(c(t) - mu_c(k)) / (sigma_c(k) * sigma_c(k))
+            -.5 * mlr::sqr(c(t) - mu_c(k)) / (sigma_c(k) * sigma_c(k))
             );
       rho_z_cpq[t]() = rho_z_c[t] % (~p_y * rho_y_pqd[t]);
       rho_z_cypq[t]() = p_y % (rho_y_pqd[t] ^ rho_z_c[t]);
@@ -1446,10 +1446,10 @@ void KeyFramer::EM(Graph &kvg, const String &b1, const String &b2, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint j = 0; j < J; j++) {
         rho_y_p(t, j) = ::exp(
-            -.5 * MT::sqr(dpVar(t) - mu_dpVar(j)) / MT::sqr(sigma_dpVar(j))
+            -.5 * mlr::sqr(dpVar(t) - mu_dpVar(j)) / mlr::sqr(sigma_dpVar(j))
           );
         rho_y_q(t, j) = ::exp(
-            -.5 * MT::sqr(dqVar(t) - mu_dqVar(j)) / MT::sqr(sigma_dqVar(j))
+            -.5 * mlr::sqr(dqVar(t) - mu_dqVar(j)) / mlr::sqr(sigma_dqVar(j))
           );
       }
     }
@@ -1457,7 +1457,7 @@ void KeyFramer::EM(Graph &kvg, const String &b1, const String &b2, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++)
         rho_z_c(t, k) = ::exp(
-            -.5 * MT::sqr(c(t) - mu_c(k)) / (sigma_c(k) * sigma_c(k))
+            -.5 * mlr::sqr(c(t) - mu_c(k)) / (sigma_c(k) * sigma_c(k))
             );
       rho_z_cpq[t]() = rho_z_c[t] % (~p_y * rho_y_pqd[t]);
       rho_z_cypq[t]() = p_y % (rho_y_pqd[t] ^ rho_z_c[t]);
@@ -1689,10 +1689,10 @@ void KeyFramer::EM(Graph &kvg, const String &bb, uint wlen) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_z_pVar(t, k) = ::exp(
-            -.5 * MT::sqr(pVar(t) - mu_pVar(k)) / MT::sqr(sigma_pVar(k))
+            -.5 * mlr::sqr(pVar(t) - mu_pVar(k)) / mlr::sqr(sigma_pVar(k))
           );
         rho_z_qVar(t, k) = ::exp(
-            -.5 * MT::sqr(qVar(t) - mu_qVar(k)) / MT::sqr(sigma_qVar(k))
+            -.5 * mlr::sqr(qVar(t) - mu_qVar(k)) / mlr::sqr(sigma_qVar(k))
           );
       }
     }
@@ -1919,10 +1919,10 @@ void KeyFramer::EM_m(Graph &kvg, const String &bb) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_mp(t, k) = ::exp(
-            -.5 * MT::sqr(pSpeedGP(t) - mu_pSpeedGP(k)) / MT::sqr(sigma_pSpeedGP(k))
+            -.5 * mlr::sqr(pSpeedGP(t) - mu_pSpeedGP(k)) / mlr::sqr(sigma_pSpeedGP(k))
           );
         rho_mq(t, k) = ::exp(
-            -.5 * MT::sqr(qSpeedGP(t) - mu_qSpeedGP(k)) / MT::sqr(sigma_qSpeedGP(k))
+            -.5 * mlr::sqr(qSpeedGP(t) - mu_qSpeedGP(k)) / mlr::sqr(sigma_qSpeedGP(k))
           );
       }
       rho_z[t]().setZero();
@@ -2189,10 +2189,10 @@ void KeyFramer::EM_r(Graph &kvg, const String &bA, const String &bB) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_mp(t, k) = ::exp(
-            -.5 * MT::sqr(dpSpeedGP(t) - mu_dpSpeedGP(k)) / MT::sqr(sigma_dpSpeedGP(k))
+            -.5 * mlr::sqr(dpSpeedGP(t) - mu_dpSpeedGP(k)) / mlr::sqr(sigma_dpSpeedGP(k))
           );
         rho_mq(t, k) = ::exp(
-            -.5 * MT::sqr(dqSpeedGP(t) - mu_dqSpeedGP(k)) / MT::sqr(sigma_dqSpeedGP(k))
+            -.5 * mlr::sqr(dqSpeedGP(t) - mu_dqSpeedGP(k)) / mlr::sqr(sigma_dqSpeedGP(k))
           );
       }
       rho_z[t]().setZero();
@@ -2398,7 +2398,7 @@ void KeyFramer::EM_c(Graph &kvg, const String &bA, const String &bB) {
     for(uint t = 0; t < T; t++)
       for(uint k = 0; k < K; k++)
         rho_z(t, k) = ::exp(
-            -.5 * MT::sqr(dist(t) - mu_dist(k)) / MT::sqr(sigma_dist(k))
+            -.5 * mlr::sqr(dist(t) - mu_dist(k)) / mlr::sqr(sigma_dist(k))
           );
     // }}}
     // E-STEP {{{
@@ -2725,26 +2725,26 @@ void KeyFramer::EM_z_with_c(Graph &kvg, const String &subj, const String &obj) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_c(t, k) = ::exp(
-            -.5 * MT::sqr(dist(t) - mu_c(k)) / MT::sqr(sigma_c(k))
+            -.5 * mlr::sqr(dist(t) - mu_c(k)) / mlr::sqr(sigma_c(k))
           );
         rho_rdp(t, k) = ::exp(
-            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+            -.5 * mlr::sqr(dpSpeed(t) - mu_dp(k)) / mlr::sqr(sigma_dp(k))
           );
         rho_rdq(t, k) = ::exp(
-            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+            -.5 * mlr::sqr(dqSpeed(t) - mu_dq(k)) / mlr::sqr(sigma_dq(k))
           );
         rho_mp(t, k) = ::exp(
-            -.5 * MT::sqr(pSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            -.5 * mlr::sqr(pSpeed(t) - mu_p(k)) / mlr::sqr(sigma_p(k))
           );
         rho_mq(t, k) = ::exp(
-            -.5 * MT::sqr(qSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            -.5 * mlr::sqr(qSpeed(t) - mu_q(k)) / mlr::sqr(sigma_q(k))
           );
 #ifdef with_object_emission
         rho_mpB(t, k) = ::exp(
-            -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            -.5 * mlr::sqr(pBSpeed(t) - mu_p(k)) / mlr::sqr(sigma_p(k))
           );
         rho_mqB(t, k) = ::exp(
-            -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            -.5 * mlr::sqr(qBSpeed(t) - mu_q(k)) / mlr::sqr(sigma_q(k))
           );
 #endif
       }
@@ -3185,23 +3185,23 @@ void KeyFramer::EM_z(Graph &kvg, const String &bA, const String &bB) {
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_mp(t, k) = ::exp(
-            -.5 * MT::sqr(pSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            -.5 * mlr::sqr(pSpeed(t) - mu_p(k)) / mlr::sqr(sigma_p(k))
           );
         rho_mq(t, k) = ::exp(
-            -.5 * MT::sqr(qSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            -.5 * mlr::sqr(qSpeed(t) - mu_q(k)) / mlr::sqr(sigma_q(k))
           );
         rho_rdp(t, k) = ::exp(
-            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+            -.5 * mlr::sqr(dpSpeed(t) - mu_dp(k)) / mlr::sqr(sigma_dp(k))
           );
         rho_rdq(t, k) = ::exp(
-            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+            -.5 * mlr::sqr(dqSpeed(t) - mu_dq(k)) / mlr::sqr(sigma_dq(k))
           );
 #ifdef with_object_emission
         rho_mpB(t, k) = ::exp(
-            -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            -.5 * mlr::sqr(pBSpeed(t) - mu_p(k)) / mlr::sqr(sigma_p(k))
           );
         rho_mqB(t, k) = ::exp(
-            -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            -.5 * mlr::sqr(qBSpeed(t) - mu_q(k)) / mlr::sqr(sigma_q(k))
           );
 #endif
       }
@@ -3613,23 +3613,23 @@ void KeyFramer::EM_z(Graph &kvg, const StringA &bA, const String &bB) {
       for(uint t = 0; t < T; t++) {
         for(uint k = 0; k < K; k++) {
           rho_mp(a, t, k) = ::exp(
-              -.5 * MT::sqr(pSpeed(a, t) - mu_p(k)) / MT::sqr(sigma_p(k))
+              -.5 * mlr::sqr(pSpeed(a, t) - mu_p(k)) / mlr::sqr(sigma_p(k))
             );
           rho_mq(a, t, k) = ::exp(
-              -.5 * MT::sqr(qSpeed(a, t) - mu_q(k)) / MT::sqr(sigma_q(k))
+              -.5 * mlr::sqr(qSpeed(a, t) - mu_q(k)) / mlr::sqr(sigma_q(k))
             );
           rho_rdp(a, t, k) = ::exp(
-              -.5 * MT::sqr(dpSpeed(a, t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+              -.5 * mlr::sqr(dpSpeed(a, t) - mu_dp(k)) / mlr::sqr(sigma_dp(k))
             );
           rho_rdq(a, t, k) = ::exp(
-              -.5 * MT::sqr(dqSpeed(a, t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+              -.5 * mlr::sqr(dqSpeed(a, t) - mu_dq(k)) / mlr::sqr(sigma_dq(k))
             );
 #ifdef with_object_emission
           rho_mpB(t, k) = ::exp(
-              -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+              -.5 * mlr::sqr(pBSpeed(t) - mu_p(k)) / mlr::sqr(sigma_p(k))
             );
           rho_mqB(t, k) = ::exp(
-              -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+              -.5 * mlr::sqr(qBSpeed(t) - mu_q(k)) / mlr::sqr(sigma_q(k))
             );
 #endif
         }

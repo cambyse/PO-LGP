@@ -37,7 +37,7 @@
  */
 struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) in task spaces
   TaskMap& map;
-  MT::String name;
+  mlr::String name;
   bool active;
   double prec;
 
@@ -79,7 +79,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
 struct ConstraintForceTask{
   TaskMap& map;
-  MT::String name;
+  mlr::String name;
   bool active;
 
   double desiredForce;
@@ -96,8 +96,8 @@ struct ConstraintForceTask{
  * FeedbackMotionControl contains all individual motions/CtrlTasks.
  */
 struct FeedbackMotionControl : MotionProblem {
-  MT::Array<CtrlTask*> tasks;
-  MT::Array<ConstraintForceTask*> forceTasks;
+  mlr::Array<CtrlTask*> tasks;
+  mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qitselfPD;
   arr H_rate_diag;
 

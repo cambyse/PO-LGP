@@ -588,6 +588,6 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-  MT::Array<TermType>::memMove=true;
+  mlr::Array<TermType>::memMove=true;
 RUN_ON_INIT_END()
 

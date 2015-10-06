@@ -17,10 +17,10 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_octave_h
-#define MT_octave_h
+#ifndef MLR_octave_h
+#define MLR_octave_h
 
-#ifdef MT_OCTAVE
+#ifdef MLR_OCTAVE
 #include <octave/oct.h>
 #include <octave/parse.h>
 

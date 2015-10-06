@@ -2,14 +2,14 @@
 
 void TEST(CheatSheet) {
   using namespace std;
-  // CHEAT SHEET for MT::Array
+  // CHEAT SHEET for mlr::Array
   
   cout << "##### CREATING MATRICES" << endl;
-  // Create MT::Array<double> with the 'arr' macro
+  // Create mlr::Array<double> with the 'arr' macro
   arr A;
-  // or MT::Array<int> with 'intA'
+  // or mlr::Array<int> with 'intA'
   intA B; 
-  // or MT::Array<uint> with 'intA'
+  // or mlr::Array<uint> with 'intA'
   uintA C; 
 
   // Use matlab-like function to create matrices

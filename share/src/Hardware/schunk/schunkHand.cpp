@@ -1,6 +1,6 @@
 #include "schunk.h"
 
-#ifdef MT_SCHUNK //NOTE THIS COMPILER FLAG!
+#ifdef MLR_SCHUNK //NOTE THIS COMPILER FLAG!
 
 #define NTCAN_CLEAN_NAMESPACE
 #include <sdh/sdh.h>
@@ -12,7 +12,7 @@ SchunkHand::SchunkHand():Module("SchunkHand"), isOpen(false), hand(NULL) {
 
 void SchunkHand::open() {
   //read parameters
-  sendMotion=MT::getParameter<bool>("schunkSendHandMotion", true);
+  sendMotion=mlr::getParameter<bool>("schunkSendHandMotion", true);
   
   cout <<" -- SchunkHand init .." <<std::flush;
   addShutdown(this, shutdownSDH);
@@ -98,7 +98,7 @@ void SchunkHand::setVelocities(const arr& v, double a) {
   CHECK(a>0., "always assume positive acceleration");
   uint i;
   std::vector<double> v_reference = hand->GetAxisReferenceVelocity(fingers);
-  std::vector<double> vel(7);  for (i=0; i<7; i++) vel[i]=v(i)/MT_PI*180.;
+  std::vector<double> vel(7);  for (i=0; i<7; i++) vel[i]=v(i)/MLR_PI*180.;
   std::vector<double> acc(7);  for (i=0; i<7; i++) acc[i]=a;
   try {
     hand->SetAxisTargetAcceleration(fingers, acc);
@@ -110,7 +110,7 @@ void SchunkHand::setVelocities(const arr& v, double a) {
     cerr <<"\ncaught unknown exception, giving up\n";
   }
 #else
-  for (uint i=0; i<7; i++) setVelocity(i, v(i)/MT_PI*180., a);
+  for (uint i=0; i<7; i++) setVelocity(i, v(i)/MLR_PI*180., a);
 #endif
 }
 
@@ -123,13 +123,13 @@ void SchunkHand::setZeroVelocities(double a) {
 void SchunkHand::getPos(arr &q) {
   std::vector<double> handq = hand->GetAxisActualAngle(fingers);
   q.resize(7);
-  for (uint i=0; i<7; i++) q(i) = handq[i]/180.*MT_PI;
+  for (uint i=0; i<7; i++) q(i) = handq[i]/180.*MLR_PI;
 }
 
 void SchunkHand::getVel(arr &v) {
   std::vector<double> handv = hand->GetAxisActualVelocity(fingers);
   v.resize(7);
-  for (uint i=0; i<7; i++) v(i) = handv[i]*MT_PI/180.;
+  for (uint i=0; i<7; i++) v(i) = handv[i]*MLR_PI/180.;
 }
 
 void SchunkHand::step() {
@@ -138,12 +138,12 @@ void SchunkHand::step() {
     getPos(q_real.set());
     getVel(v_real.set());
   } else {
-    MT::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
   }
   
 }
 
-#else //ndef MT_SCHUNK
+#else //ndef MLR_SCHUNK
 
 SchunkHand::SchunkHand() {}
 void SchunkHand::open() {}

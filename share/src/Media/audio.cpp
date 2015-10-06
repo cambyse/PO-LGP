@@ -1,11 +1,11 @@
-#ifdef MT_PORTAUDIO
+#ifdef MLR_PORTAUDIO
 
 #include <portaudio.h>
 #include "audio.h"
 
 SineSound::SineSound(float _sampleRate):sampleRate(_sampleRate){
   SIN.resize(1024);
-  for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MT_2PI*i)/SIN.N);
+  for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MLR_2PI*i)/SIN.N);
 }
 
 void SineSound::addNote(float freq, float a, float decay){

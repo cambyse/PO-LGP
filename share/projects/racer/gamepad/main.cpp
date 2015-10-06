@@ -45,12 +45,12 @@ void run(){
     }
   } S;
 
-  //double zeroTh=MT::getParameter<double>("zeroTh", 0.);
-  double k_th=MT::getParameter<double>("k_th", 0.);
-  double k_thDot=MT::getParameter<double>("k_thDot", 0.);
-  double k_acc=MT::getParameter<double>("k_acc", 0.);
-  double gamepad_gain = MT::getParameter<double>("gamepad_gain");
-  double gamepad_gain_vel = MT::getParameter<double>("gamepad_gain_vel");
+  //double zeroTh=mlr::getParameter<double>("zeroTh", 0.);
+  double k_th=mlr::getParameter<double>("k_th", 0.);
+  double k_thDot=mlr::getParameter<double>("k_thDot", 0.);
+  double k_acc=mlr::getParameter<double>("k_acc", 0.);
+  double gamepad_gain = mlr::getParameter<double>("gamepad_gain");
+  double gamepad_gain_vel = mlr::getParameter<double>("gamepad_gain_vel");
 
   //    engine().enableAccessLog();
   engine().open(S);
@@ -68,7 +68,7 @@ void run(){
 
     motor_vel += k_acc*u;
 //    cout <<"\r state = " <<x <<std::flush;
-//    cout <<"enc= " <<enc/MT_2PI <<std::endl;
+//    cout <<"enc= " <<enc/MLR_2PI <<std::endl;
 
     double turn = gamepad_gain_vel*J(1);
     S.controls.set()() = ARR(motor_vel+turn, motor_vel-turn, 10.);
@@ -90,7 +90,7 @@ void run(){
 }
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   //testGamepad();
 

@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#ifndef MT_cmaes_h
-#define MT_cmaes_h
+#ifndef MLR_cmaes_h
+#define MLR_cmaes_h
 
 /* --------------------------------------------------------- */
 /* --- File: cmaes_interface.h - Author: Nikolaus Hansen --- */

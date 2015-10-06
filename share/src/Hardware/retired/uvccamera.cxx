@@ -82,7 +82,7 @@ struct UVCCameraBuffer
 
 struct sUVCCamera
 {
-   MT::Array<UVCCameraBuffer> buffers_;               // pointers to frame data (mmap'd)
+   mlr::Array<UVCCameraBuffer> buffers_;               // pointers to frame data (mmap'd)
    uint                 frame_size_;
 
    bool                 is_initialized_;

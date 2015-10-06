@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_mesh_h
-#define MT_mesh_h
+#ifndef MLR_mesh_h
+#define MLR_mesh_h
 
 #include <Core/array.h>
 #include <Core/geo.h>

@@ -123,14 +123,14 @@ void TEST(PickAndPlace){
   for(;;)
     displayTrajectory(x, 1, G, "planned trajectory", -100., MF.dim_z());
 
-  MT::wait();
+  mlr::wait();
 
 }
 
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testPickAndPlace();
 

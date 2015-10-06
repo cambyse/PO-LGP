@@ -22,9 +22,9 @@ struct sG4Publisher{
 		time_offset -= (((time_t)time_offset)%86400);
 		
 #ifdef HAVE_ROS_G4
-		frame_id = MT::getParameter<MT::String>("g4_pub_frame", MT::String("world")).p;
+		frame_id = mlr::getParameter<mlr::String>("g4_pub_frame", mlr::String("world")).p;
 		if(!initialized) {
-			ros::init(MT::argc, MT::argv, "g4_publisher", ros::init::NoSigIntHandler);
+			ros::init(mlr::argc, mlr::argv, "g4_publisher", ros::init::NoSigIntHandler);
 			initialized = true;
 		}
 		br = new tf::TransformBroadcaster;

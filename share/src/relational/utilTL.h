@@ -24,12 +24,12 @@
 
 #include <limits>
 #include <float.h>
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 	#include <sys/time.h>
 	#include <sys/resource.h>
 #endif
-#ifndef MT_IMPLEMENT_TEMPLATES
-#define MT_IMPLEMENT_TEMPLATES
+#ifndef MLR_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 #endif
 #include <Core/array.h>
 #include <Core/util.h>
@@ -52,13 +52,13 @@
 
 
 //----- check macros:
-#ifndef MT_NOCHECK
+#ifndef MLR_NOCHECK
 #  define CHECK_(cond,code,msg) if(!(cond)) {cout<<endl<<endl<<endl<<endl;  code; HALT("CHECK failed: "<<msg);}
 #else
 #  define CHECK_(cond,code,msg)
 #endif
 
-#ifdef MT_MSVC
+#ifdef MLR_MSVC
 	#define pow(b, e) pow((double)b, (double)e)
 #endif
 
@@ -67,7 +67,7 @@ namespace TL {
   const double TL_DOUBLE_NIL = -98765.43211234589;
   const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
 
-#ifdef MT_MSVC
+#ifdef MLR_MSVC
     #define TL_INFINITY numeric_limits<double>::infinity();
 #else
 	const double TL_INFINITY = std::numeric_limits<double>::infinity();
@@ -79,11 +79,11 @@ inline bool isZero(double a) {return fabs(a) < 10e-15;}
 inline bool areEqual(double a, double b) {return isZero(a-b);}
 
 // vary from left to right (left-most argument varies the fastest)
-void allPermutations(MT::Array< uintA >& permutations, const uintA& arguments, uint length, bool withRepeat, bool returnEmptyIfNoneFound);
-void allPermutations(MT::Array< uintA >& permutations, const MT::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound); // different arguments
+void allPermutations(mlr::Array< uintA >& permutations, const uintA& arguments, uint length, bool withRepeat, bool returnEmptyIfNoneFound);
+void allPermutations(mlr::Array< uintA >& permutations, const mlr::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound); // different arguments
 
-void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, uint length);
-void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
+void allSubsets(mlr::Array< uintA >& subsets, const uintA& elements, uint length);
+void allSubsets(mlr::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
 
 bool containsAllElements(const uintA& superlist, const uintA& list);
 

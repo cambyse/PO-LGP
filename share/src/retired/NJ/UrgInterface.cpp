@@ -22,17 +22,17 @@ extern "C" {
 #include <math.h>
 }
 
-void shutdownURG(void* p){ MT_MSG("...");  UrgInterface *urg=(UrgInterface*)p;  urg->close();  }
+void shutdownURG(void* p){ MLR_MSG("...");  UrgInterface *urg=(UrgInterface*)p;  urg->close();  }
 
 struct UrgWorkspace{
-  MT::Array<long> data;
+  mlr::Array<long> data;
   bool isOpen;
   int scan_msec;
   urg_parameter_t *parameter;
   urg_t *urg;
 };
 
-arr  laserConvertCartesian(urg_t urg, MT::Array<long>& data,uint n){
+arr  laserConvertCartesian(urg_t urg, mlr::Array<long>& data,uint n){
   arr Coords(n,2);Coords.setZero();
   int min_length = 0, max_length = 0;
   uint j;
@@ -74,7 +74,7 @@ arr  laserConvertCartesian(urg_t urg, MT::Array<long>& data,uint n){
 #if 0
 
    
- MT::Array<arr> captureLaser(){
+ mlr::Array<arr> captureLaser(){
 
    
    const char device[] = "/dev/ttyACM3";
@@ -118,7 +118,7 @@ arr  laserConvertCartesian(urg_t urg, MT::Array<long>& data,uint n){
      printf("error");
    // urg_exit(&urg, "urg_requestData()");
    }
-   MT::Array<arr> laserpoints;
+   mlr::Array<arr> laserpoints;
    laserpoints.resize(CaptureTimes);
   // Obtain Data  
    for (i = 0; i < CaptureTimes; ++i) {

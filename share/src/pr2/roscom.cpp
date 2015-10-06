@@ -14,7 +14,7 @@ void rosCheckInit(const char* module_name){
 
   mutex.lock();
   if(!inited) {
-    ros::init(MT::argc, MT::argv, module_name, ros::init_options::NoSigintHandler);
+    ros::init(mlr::argc, mlr::argv, module_name, ros::init_options::NoSigintHandler);
     inited = true;
   }
   mutex.unlock();
@@ -54,7 +54,7 @@ arr conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped& pose){
   double angle;
   ors::Vector rotvec;
   quat.getRad(angle, rotvec);
-  return ARR(pos(0), pos(1), MT::sign(rotvec(2)) * angle);
+  return ARR(pos(0), pos(1), mlr::sign(rotvec(2)) * angle);
 }
 
 timespec conv_time2timespec(const ros::Time& time){
@@ -174,7 +174,7 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
   ors::KinematicWorld world;
   tf::TransformListener listener;
   for(const visualization_msgs::Marker& marker:markers.markers){
-    MT::String name;
+    mlr::String name;
     name <<"obj" <<marker.id;
     ors::Shape *s = world.getShapeByName(name);
     if(!s){
@@ -204,7 +204,7 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
 //
 
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 
 //===========================================================================
 // RosCom_Spinner
@@ -456,7 +456,7 @@ void syncJointStateWitROS(ors::KinematicWorld& world,
 
 
 //===========================================================================
-#else // MT_ROS no defined
+#else // MLR_ROS no defined
 
 void RosCom_Spinner::open(){ NICO }
 void RosCom_Spinner::step(){ NICO }

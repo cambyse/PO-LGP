@@ -1,6 +1,6 @@
 #include "schunk.h"
 
-#ifdef MT_SCHUNK //NOTE THIS COMPILER FLAG!
+#ifdef MLR_SCHUNK //NOTE THIS COMPILER FLAG!
 
 #define NTCAN_CLEAN_NAMESPACE
 #include <sdh/dsa.h>
@@ -94,7 +94,7 @@ void SchunkSkin::getFrame(uint16A& x) {
       f = ts->UpdateFrame().texel;
     } catch (SDH::cSDHLibraryException* e) {
       //HALT("schunk exception: " <<e->what());
-      MT_MSG("* * * schunk exception: " <<e->what());
+      MLR_MSG("* * * schunk exception: " <<e->what());
       delete e;
       return;
     }
@@ -142,7 +142,7 @@ void SchunkSkin::step() {
   getIntegrals(y_real.set());
 }
 
-#else //ndef MT_SCHUNK
+#else //ndef MLR_SCHUNK
 
 SchunkSkin::SchunkSkin() {}
 void SchunkSkin::open() {}

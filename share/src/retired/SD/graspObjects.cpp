@@ -72,7 +72,7 @@ uint plot_field_dens() {
   static bool read=true;
   if(read){
     read=false;
-    value = MT::getParameter<uint>("plotPotentialFieldDensity",50);
+    value = mlr::getParameter<uint>("plotPotentialFieldDensity",50);
   }
   return value;
 }
@@ -81,7 +81,7 @@ double plot_field() {
   static bool read=true;
   if(read){
     read=false;
-    value = MT::getParameter<double>("plotPotentialField");
+    value = mlr::getParameter<double>("plotPotentialField");
   }
   return value;
 }
@@ -108,14 +108,14 @@ PotentialField::buildMesh(){
   if (!m.V.N) m.setImplicitSurface(staticPhi,this,-range,range,resol);
   getEnclRect(mins,maxs);
 
-  if (mins == maxs) {MT_MSG("no surface found in "<<-range<<","<<range<<" at resolution"<<resol); return;}
+  if (mins == maxs) {MLR_MSG("no surface found in "<<-range<<","<<range<<" at resolution"<<resol); return;}
   mins-=ARR(step,step,step);// FIX: constants
   maxs+=ARR(step,step,step);
 
   arr off = .5 * (maxs + mins);
   //hi = (off-mins+.01*(maxs-mins)).max(); lo = -hi;// FIX: 100
   hi = (maxs-mins).max(); hi *= 1.5; lo = -hi;
-  MT_MSG("offs=" <<off<<"mins=" <<mins<<" ,maxs=" <<maxs<<", hi="<<hi<<", lo="<<lo);
+  MLR_MSG("offs=" <<off<<"mins=" <<mins<<" ,maxs=" <<maxs<<", hi="<<hi<<", lo="<<lo);
 
 
   offset_param_t po(off,this);
@@ -125,7 +125,7 @@ PotentialField::buildMesh(){
 
   if(0!=plot_field()){
     getEnclCube(lo,hi);
-    MT_MSG("new: hi="<<hi<<", lo="<<lo);
+    MLR_MSG("new: hi="<<hi<<", lo="<<lo);
     X.setGrid(3,lo,hi,plot_field_dens());
     dX.resizeAs(X);
     for(i=0;i<X.d0;i++){
@@ -183,7 +183,7 @@ void
 GraspObject::getNormGrad(arr& grad,const arr& x) {
   phi(&grad,NULL,NULL,x);
   double d=length(grad);
-  if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
+  if(d>1e-200) grad/=d; else MLR_MSG("gradient too small!");
 }
 
 /* =============== Inf cyllinder ================ */
@@ -220,10 +220,10 @@ GraspObject_InfCylinder::GraspObject_InfCylinder(arr c1,arr z1, double r1, doubl
 
 /* construct from cmd line params */
 GraspObject_InfCylinder::GraspObject_InfCylinder(){
-  c = MT::getParameter<arr>("center");
-  z = MT::getParameter<arr>("orientation");
-  r = MT::getParameter<double>("radius");
-  s = MT::getParameter<double>("sigma");
+  c = mlr::getParameter<arr>("center");
+  z = mlr::getParameter<arr>("orientation");
+  r = mlr::getParameter<double>("radius");
+  s = mlr::getParameter<double>("sigma");
 }
 
 /* =============== Cut cyllinder ================ */
@@ -278,11 +278,11 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
 
 /* construct from config */
 GraspObject_Cylinder1::GraspObject_Cylinder1(){
-  c = MT::getParameter<arr>("center");
-  z = MT::getParameter<arr>("orientation");
-  r = MT::getParameter<double>("radius");
-  s = MT::getParameter<double>("sigma");
-  h = MT::getParameter<double>("height");
+  c = mlr::getParameter<arr>("center");
+  z = mlr::getParameter<arr>("orientation");
+  r = mlr::getParameter<double>("radius");
+  s = mlr::getParameter<double>("sigma");
+  h = mlr::getParameter<double>("height");
 }
 
 /* construct from center, ori, radius,sigma, height */
@@ -342,11 +342,11 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
 
 GraspObject_Box::GraspObject_Box(){
  
-  c = MT::getParameter<arr>("center");
-  s = MT::getParameter<double>("sigma");
-  dim = ARR(.08,2*MT::getParameter<double>("radius"),MT::getParameter<double>("height"));
-  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
-             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+  c = mlr::getParameter<arr>("center");
+  s = mlr::getParameter<double>("sigma");
+  dim = ARR(.08,2*mlr::getParameter<double>("radius"),mlr::getParameter<double>("height"));
+  rot = ARR(MLR_SQRT2/2.,MLR_SQRT2/2.,0,
+             -MLR_SQRT2/2.,MLR_SQRT2/2.,0,
              0,0,1);
              /*axes = ARR(1,0,0,
              0,1,0,
@@ -358,8 +358,8 @@ GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, dou
   //assumes box is axis aligned
   c=center;
   dim = ARR(dx_,dy_,dz_);
-  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
-             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+  rot = ARR(MLR_SQRT2/2.,MLR_SQRT2/2.,0,
+             -MLR_SQRT2/2.,MLR_SQRT2/2.,0,
              0,0,1);
              /*axes = ARR(1,0,0,
              0,1,0,
@@ -394,9 +394,9 @@ GraspObject_Sphere::distanceToSurface(arr *grad,arr *hess,const arr& x){
 }
 
 GraspObject_Sphere::GraspObject_Sphere(){
-  c = MT::getParameter<arr>("center");
-  r = MT::getParameter<double>("radius");
-  s = MT::getParameter<double>("sigma");
+  c = mlr::getParameter<arr>("center");
+  r = mlr::getParameter<double>("radius");
+  s = mlr::getParameter<double>("sigma");
 }
 
 GraspObject_Sphere::GraspObject_Sphere(arr &c1, double r1, double s1){
@@ -442,8 +442,8 @@ GraspObject_GP::GraspObject_GP(const arr &cc,const double dd){
 }
 
 GraspObject_GP::GraspObject_GP(){
-  c = MT::getParameter<arr>("center");
-  d = MT::getParameter<double>("objsize");
+  c = mlr::getParameter<arr>("center");
+  d = mlr::getParameter<double>("objsize");
 
   isf_gp.set_size(d);
 }
@@ -457,7 +457,7 @@ GraspObject_GP::max_var(){
 
 GraspObject_GPblob::GraspObject_GPblob():GraspObject_GP(){
   // generate object
-  rnd.seed(MT::getParameter<uint>("seed", 1));
+  rnd.seed(mlr::getParameter<uint>("seed", 1));
   randomGP_on_random_points(isf_gp.gp, c);
   isf_gp.gp.recompute();
 }
@@ -473,9 +473,9 @@ GraspObject_GP_analytical_prior::GraspObject_GP_analytical_prior(GraspObject *_p
 
   // generate object around prior
   isf_gp.set_shape_prior(static_mu, prior);
-  rnd.seed(MT::getParameter<uint>("seed", 1));
+  rnd.seed(mlr::getParameter<uint>("seed", 1));
   randomGP_on_random_points(isf_gp.gp, c,
-      MT::Parameter<double>("objsize"),
+      mlr::Parameter<double>("objsize"),
       2); // NOTE: c == prior.c
   isf_gp.gp.recompute();
 }

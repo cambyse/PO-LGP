@@ -5,7 +5,7 @@ OBJS = main.o
 
 #gui_moc.o: gui_moc.cpp schunkMonitor_ui.h
 
-#CXXFLAGS += -DMT_QTGLUT
+#CXXFLAGS += -DMLR_QTGLUT
 
 FREEGLUT = 1
 #SWIFT = 1

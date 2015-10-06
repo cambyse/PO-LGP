@@ -84,7 +84,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         break;
       }
       //relative
-      MT_MSG("warning - don't have a correct Jacobian for this TMType yet");
+      MLR_MSG("warning - don't have a correct Jacobian for this TMType yet");
 //      fi = G.bodies(body_i)->X; fi.appendTransformation(irel);
 //      fj = G.bodies(body_j)->X; fj.appendTransformation(jrel);
 //      f.setDifference(fi, fj);

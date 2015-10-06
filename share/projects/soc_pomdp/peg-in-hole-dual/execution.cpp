@@ -122,7 +122,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   ors::Body *table = world.getBodyByName("hole");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
   MC.qitselfPD.active=false;
@@ -197,7 +197,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '

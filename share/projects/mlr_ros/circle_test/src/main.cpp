@@ -21,7 +21,7 @@ struct sSimulator {
   //state
   arr q,qdot,qddot;
 
-#ifdef MT_ODE
+#ifdef MLR_ODE
   OdeInterface ode;
 #endif
   sSimulator() : swift(G) { margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm

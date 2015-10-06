@@ -1,6 +1,6 @@
 #include "rosalvar.h"
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
@@ -29,7 +29,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
 
   for (AlvarMarker& marker : markers.markers) {
-    MT::String marker_name = STRING("marker" << marker.id);
+    mlr::String marker_name = STRING("marker" << marker.id);
 
     ors::Body *body = world.getBodyByName(marker_name);
     if (not body) {

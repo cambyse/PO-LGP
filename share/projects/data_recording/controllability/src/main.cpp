@@ -47,7 +47,7 @@ double data_loglike(const arr &data, uint t, uint s) {
 void cptest() {
   uint n = 10;
   arr data(n);
-  MT::Rnd rnd;
+  mlr::Rnd rnd;
   for(uint i = 0; i < n; i++) {
     if(i > 70)
       data(i) = 5 + rnd.gauss();
@@ -86,20 +86,20 @@ void cptest() {
   for(uint i = 0; i < data.d0; i++) {
     fgp.step(i);
     //fgp.replot();
-    //MT::wait(.5);
+    //mlr::wait(.5);
   }
   //fgp.replot();
   //fgp.exit();
-  MT::wait(10);
+  mlr::wait(10);
 }
 
 int main(int argc, char **argv) {
   //cptest();
   //exit(0);
 
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
-#ifndef MT_extern_SWIFT
+#ifndef MLR_extern_SWIFT
   cout << "no SWIFT loaded" << endl;
   return 1;
 #endif
@@ -113,9 +113,9 @@ int main(int argc, char **argv) {
   uint n, d;
 
   String basedir, segdir, traindirlist;
-  MT::getParameter(basedir, "basedir");
-  MT::getParameter(segdir, "segdir");
-  MT::getParameter(traindirlist, "traindirlist");
+  mlr::getParameter(basedir, "basedir");
+  mlr::getParameter(segdir, "segdir");
+  mlr::getParameter(traindirlist, "traindirlist");
 
   kf.kw().init(STRING(basedir << segdir << "world.ors"));
 
@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
   // }
 
   //int mode;
-  //MT::getParameter(mode, "mode", 0);
+  //mlr::getParameter(mode, "mode", 0);
   //switch(mode) {
     //case 0: // display ctrl-seq in ors
       //init_gl(kf.kw().gl());

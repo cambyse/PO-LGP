@@ -9,7 +9,7 @@ struct MyThread: Thread{
   void open(){}
   void close(){}
   void step(){
-    LOG(0) <<MT::realTime() <<"sec Thread " <<n;
+    LOG(0) <<mlr::realTime() <<"sec Thread " <<n;
   }
 };
 
@@ -20,7 +20,7 @@ void TEST(Logging){
   t2.threadLoopWithBeat(.25);
 
   LOG(0) <<"starting to wait";
-  MT::wait(3.);
+  mlr::wait(3.);
 
   LOG(0) <<"done with wait";
 
@@ -32,7 +32,7 @@ void TEST(Logging){
 //===========================================================================
 
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testLogging();
 
   return 0;

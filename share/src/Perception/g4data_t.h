@@ -1,11 +1,11 @@
 template <class T>
-MT::Array<T> G4ID::query(const MT::Array<T> &data, const String &sensor) {
+mlr::Array<T> G4ID::query(const mlr::Array<T> &data, const String &sensor) {
   return data[hsi(sensor)];
 }
 
 template <class T>
-MT::Array<T> G4ID::query(const MT::Array<T>  &data, const StringA &sensors) {
-  MT::Array<T> x;
+mlr::Array<T> G4ID::query(const mlr::Array<T>  &data, const StringA &sensors) {
+  mlr::Array<T> x;
   for(const String &sensor: sensors) {
     x.append(data[hsi(sensor)]);
   }

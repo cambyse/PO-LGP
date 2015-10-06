@@ -146,7 +146,7 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   arr objVecT;
 
   /// define drawer position
-  uint i = MT::getParameter<uint>("drawerId");
+  uint i = mlr::getParameter<uint>("drawerId");
   world->getBodyByName("drawer1")->X.rot =  objQuat;
   world->getBodyByName("wall1")->X.pos =  objPosT+{-0.1,0.165+0.026+0.03,-0.};
 
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
   q0 = {-1.0670164129825366, -0.18984927424139628, -0.03315145501668293, -1.944099090007652, 4.835668485707074, -1.748271129579642, -3.2440909535190334};
   cout << "Initial Position: " << q0 << endl;
   cout << "Send initial position to PR2 [Press Key]" << endl;
-  MT::wait();
+  mlr::wait();
   arm.startTrajectory(arm.armExtensionTrajectory(q0,1,0.));
   while(!arm.getState().isDone() && ros::ok())
   {
@@ -292,7 +292,7 @@ int main(int argc, char** argv)
 
   /// send trajectory to robot
   cout << "Send trajectory to PR2 [Press Key]" << endl;
-  MT::wait();
+  mlr::wait();
   arm.startTrajectory(arm.armExtensionTrajectory(x,2,dt));
   while(!arm.getState().isDone() && ros::ok())
   {

@@ -1,5 +1,5 @@
-#ifndef MT_threads_h
-#define MT_threads_h
+#ifndef MLR_threads_h
+#define MLR_threads_h
 
 #include <pthread.h>
 #include <iostream>
@@ -121,7 +121,7 @@ struct StepThread{
 };
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "threads.cpp"
 #endif
 

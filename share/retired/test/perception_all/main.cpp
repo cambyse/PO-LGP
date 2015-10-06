@@ -3,7 +3,7 @@
 #include <JK/utils/util.h>
 
 int main(int argc,char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   //ThreadInfoWin win;
   //win.threadLoopWithBeat(.1);
   
@@ -34,7 +34,7 @@ int main(int argc,char** argv) {
   loopWithBeat(Pview,.01);
   
   for(int i=0; i<10000; ++i) {
-    MT::wait(0.1);
+    mlr::wait(0.1);
     JK_DEBUG(percOut.objects.N);
     if(percOut.objects.N)
       JK_DEBUG(percOut.objects(0).center3d);

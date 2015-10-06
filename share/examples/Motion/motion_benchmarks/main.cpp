@@ -318,7 +318,7 @@ void eight_BM(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   circle_BM();
 //  star_BM();

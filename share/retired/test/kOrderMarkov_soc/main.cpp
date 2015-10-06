@@ -3,14 +3,14 @@
 #include <Gui/opengl.h>
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   OpenGL gl;
   
-  double D=MT::getParameter<double>("time_duration",4.);
-  uint _T=MT::getParameter<uint>("time_steps",200);
+  double D=mlr::getParameter<double>("time_duration",4.);
+  uint _T=mlr::getParameter<uint>("time_steps",200);
   OrsSystem sys;
-  sys.initBasics(NULL, NULL, &gl, _T, D, MT::getParameter<bool>("dynamic",false), NULL);
+  sys.initBasics(NULL, NULL, &gl, _T, D, mlr::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
@@ -85,7 +85,7 @@ int main(int argc,char** argv){
     write(LIST<arr>(x),"z.output");
     gnuplot("set term x11 1; plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
     displayTrajectory(sys, xx, NULL, 1, "planned trajectory");
-    MT::wait();
+    mlr::wait();
   }
   
   return 0;

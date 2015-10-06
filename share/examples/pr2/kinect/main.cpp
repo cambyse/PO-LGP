@@ -26,7 +26,7 @@ struct MySystem:System{
 
 
   MySystem(){
-    if(MT::getParameter<bool>("useRos", true)){
+    if(mlr::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
 //      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
@@ -104,7 +104,7 @@ void TEST(Sensors){
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testSensors();
 
   return 0;

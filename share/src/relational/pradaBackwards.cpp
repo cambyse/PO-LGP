@@ -123,14 +123,14 @@ void setUnchangeableValues(NID_DBN& net, const TL::State& state) {
 
 
 
-void calcBloxworld_homies(MT::Array< uintA >& gangs, const State& s, const LogicEngine& le) {
-  Predicate* p_HOMIES = le.getPredicate(MT::String("homies"));
+void calcBloxworld_homies(mlr::Array< uintA >& gangs, const State& s, const LogicEngine& le) {
+  Predicate* p_HOMIES = le.getPredicate(mlr::String("homies"));
   gangs.clear();
   uint i, k;
   boolA constants_covered(le.constants.N);
   constants_covered.setUni(false);
   FOR1D(le.constants, i) {
-    if (le.holds_straight(le.constants(i), MT::String("table"), s))
+    if (le.holds_straight(le.constants(i), mlr::String("table"), s))
       continue;
     if (constants_covered(i))
       continue;
@@ -145,8 +145,8 @@ void calcBloxworld_homies(MT::Array< uintA >& gangs, const State& s, const Logic
   }
 }
 
-void calcBloxworld_piles(MT::Array< uintA >& piles, const State& s, const LogicEngine& le) {
-  Predicate* p_ON = le.getPredicate(MT::String("on"));
+void calcBloxworld_piles(mlr::Array< uintA >& piles, const State& s, const LogicEngine& le) {
+  Predicate* p_ON = le.getPredicate(mlr::String("on"));
   bool inserted;
   uint i, k;
   FOR1D(s.pi_prim, i) {
@@ -330,7 +330,7 @@ void ZICKZACK_PRADA::resetGoalMixture(bool within) {
 void sampleGoalState_tower(Goal* goal, NID_DBN& net, uint t, const State& s0, double final_state_determinism_softener, LogicEngine* le, uintA& usedComponents) {
   PredicateListGoal det_goal(((PredicateListGoal*) goal)->pis);
   uintA boxes;
-  LogicEngine::getArguments(boxes, s0, *le->getPredicate(MT::String("box")));
+  LogicEngine::getArguments(boxes, s0, *le->getPredicate(mlr::String("box")));
   uintA args(2);
   uint k;
   FOR1D(det_goal.pis, k) {
@@ -356,7 +356,7 @@ void sampleGoalState_tower(Goal* goal, NID_DBN& net, uint t, const State& s0, do
 		cout<<"SAMPLING NEW BOX " << new_box << " from " << boxes << "!!"<<endl;
   }
   args(1) = goal_boxes__in_usage(0);
-  PredicateInstance* pi = le->getPI(le->getPredicate(MT::String("on")), true, args);
+  PredicateInstance* pi = le->getPI(le->getPredicate(mlr::String("on")), true, args);
   det_goal.pis(k) = pi;
   cout<<"SAMPLED GOAL STATE: "; det_goal.writeNice();  cout<<endl;
   mergeStartStateWithGoal(&det_goal, net, 0, s0, final_state_determinism_softener);
@@ -366,7 +366,7 @@ void sampleGoalState_tower(Goal* goal, NID_DBN& net, uint t, const State& s0, do
   FOR1D(boxes, q) {
     uintA args(1);
     args(0) = boxes(q);
-    PredicateInstance* pi = le->getPI(le->getPredicate(MT::String("closed")), true, args);
+    PredicateInstance* pi = le->getPI(le->getPredicate(mlr::String("closed")), true, args);
     PredicateRV* var = net.rvm->pi2v(pi);
     if (LogicEngine::holds(s0, pi)) {
       var->P(t,0) = 0.2;
@@ -380,7 +380,7 @@ void sampleGoalState_tower(Goal* goal, NID_DBN& net, uint t, const State& s0, do
 }
 
 
-MT::Array< MT::Array< uintA > > hack__usedComponents__piles; // Outer: gang, Inner: used gang-piles
+mlr::Array< mlr::Array< uintA > > hack__usedComponents__piles; // Outer: gang, Inner: used gang-piles
 
 void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::State& s0, TL::LogicEngine* le, double final_state_determinism_softener) {
   int DEBUG = 1;  // -1 = no info
@@ -390,11 +390,11 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   
   CHECK(s0.derivedDerived, "");
   
-  TL::Predicate* p_TABLE = le->getPredicate(MT::String("table"));
-  TL::Predicate* p_ON = le->getPredicate(MT::String("on"));
-  TL::Predicate* p_ABOVE = le->getPredicate(MT::String("above"));
-  TL::Predicate* p_INHAND = le->getPredicate(MT::String("inhand"));
-  //   TL::Predicate* p_CLEARED = le->getPredicate(MT::String("cleared"));
+  TL::Predicate* p_TABLE = le->getPredicate(mlr::String("table"));
+  TL::Predicate* p_ON = le->getPredicate(mlr::String("on"));
+  TL::Predicate* p_ABOVE = le->getPredicate(mlr::String("above"));
+  TL::Predicate* p_INHAND = le->getPredicate(mlr::String("inhand"));
+  //   TL::Predicate* p_CLEARED = le->getPredicate(mlr::String("cleared"));
   
   uint i, k;
   
@@ -407,7 +407,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   
   // Calculate all piles
   
-  MT::Array< uintA > all_piles;
+  mlr::Array< uintA > all_piles;
   calcBloxworld_piles(all_piles, s0, *le);
   
   if (DEBUG>0) {
@@ -423,7 +423,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   // (2) Determine classes to be ordered
   
   // Determine gangs (= gangs of homies)
-  MT::Array< uintA > gangs;
+  mlr::Array< uintA > gangs;
   calcBloxworld_homies(gangs, s0, *le);
   
   if (DEBUG>0) {
@@ -448,7 +448,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   FOR1D(gangs, i) {
     // If gang already inorder:
     //    completely copy all properties connected to these objects only.
-//     if (le->holds_straight(gangs(i)(0), MT::String("inorder"), s0)) {
+//     if (le->holds_straight(gangs(i)(0), mlr::String("inorder"), s0)) {
     if (false) {
       // HIEEEEEEEEEEEEEEEEEER TODO TODO TODO TODO TODO
       // TODO anpassen: falls einer inorder ist, sagt mglw. nichts aus; da andere  trotzdem nichts
@@ -462,7 +462,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
       num_missing_homies(i) = UINT_MAX;
       FOR1D(gangs(i), k) {
         // HACK for gangs with out-objects
-        if (le->holds_straight(gangs(i)(k), MT::String("out"), s0)) {
+        if (le->holds_straight(gangs(i)(k), mlr::String("out"), s0)) {
           num_missing_homies(i) = UINT_MAX;
           break;
         }
@@ -497,7 +497,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   FOR1D(gangs, i) {
     if (num_missing_homies(i) == 0) {
       FOR1D(gangs(i), k) {
-        if (!le->holds_straight(gangs(i)(k), MT::String("inorder"), s0)) {
+        if (!le->holds_straight(gangs(i)(k), mlr::String("inorder"), s0)) {
           num_missing_homies(i) = 1;
         }
       }
@@ -512,7 +512,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
   }
   
   // Determine gangs to be ordered
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   uintA unordered_gang_ids;
   FOR1D(gangs, i) {
     if (num_missing_homies(i) > 0)
@@ -688,7 +688,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
       uintA goal__target_pile;
       
       // (3.3.3.1)  Piles with targets on table
-      MT::Array< uintA > piles__target_on_table;
+      mlr::Array< uintA > piles__target_on_table;
       FOR1D(all_piles, i) {
         if (target_gang.findValue(all_piles(i)(1)) >= 0) {
           uintA newPile;
@@ -963,7 +963,7 @@ void ZICKZACK_PRADA::createBetas(arr& betas_p, arr& betas_f, NID_DBN& backward_n
       }
       if (number == 0)
         continue;
-      MT::String name;
+      mlr::String name;
       ground_actions(k)->name(name);
       printf("%-14s",(char*)name);
       for(t=0;t<action_choices.d0;t++) printf("%5u", action_choices(t,k));
@@ -987,10 +987,10 @@ void ZICKZACK_PRADA::createBetas(arr& betas_p, arr& betas_f, NID_DBN& backward_n
   }
   
   if (DEBUG>1) {
-    Predicate* p_TABLE = le->getPredicate(MT::String("table"));
-    Predicate* p_HOMIES = le->getPredicate(MT::String("homies"));
-    Predicate* p_BLOCK = le->getPredicate(MT::String("block"));
-    Predicate* p_BALL = le->getPredicate(MT::String("ball"));
+    Predicate* p_TABLE = le->getPredicate(mlr::String("table"));
+    Predicate* p_HOMIES = le->getPredicate(mlr::String("homies"));
+    Predicate* p_BLOCK = le->getPredicate(mlr::String("block"));
+    Predicate* p_BALL = le->getPredicate(mlr::String("ball"));
     cout<<"Significant beliefs (backward):"<<endl;
     printf("%-14s", "Time");
     for (t=0; t<betas_p.d0; t++) {
@@ -1064,20 +1064,20 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
   
   uint i, t, k;
   if (DEBUG>0) {
-//     MT::Array< uintA > piles;
+//     mlr::Array< uintA > piles;
 //     calcBloxworld_piles(piles, s0, *le);
-//     MT::Array< uintA > gangs;
+//     mlr::Array< uintA > gangs;
 //     calcBloxworld_homies(gangs, s0, *le);
-//     uint id_inhand = LogicEngine::getArgument(s0, *le->getPredicate(MT::String("inhand")));
+//     uint id_inhand = LogicEngine::getArgument(s0, *le->getPredicate(mlr::String("inhand")));
 //     cout<<"WORLD STATE INFO:"<<endl;
 // //     cout<<"- Homies:"<<endl;
 // //     FOR1D(gangs, i) {
 // //       cout<<i<<": ";
 // //       FOR1D(gangs(i), k) {
 // //         cout<<" "<<gangs(i)(k);
-// //         if (le->holds_straight(gangs(i)(k), MT::String("block"), s0))
+// //         if (le->holds_straight(gangs(i)(k), mlr::String("block"), s0))
 // //           cout<<"";
-// //         else if (le->holds_straight(gangs(i)(k), MT::String("ball"), s0))
+// //         else if (le->holds_straight(gangs(i)(k), mlr::String("ball"), s0))
 // //           cout<<"o";
 // //         else HALT("");
 // //       }
@@ -1120,7 +1120,7 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
   // Backward net
   CHECK(backward_net != NULL, "backward net should've been built by now!");
   
-  MT::Array< PredIA > overall_best_plans(num_goal_state_samples);
+  mlr::Array< PredIA > overall_best_plans(num_goal_state_samples);
   arr overall_best_values(num_goal_state_samples);
   uintA overall_best_max_depths(num_goal_state_samples, 2);
   
@@ -1129,8 +1129,8 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
   //  (1) Backward
   
   if (DEBUG>0) {cout << endl << "+++++++++++  BACKWARD ++++++++++++++" <<endl;}
-  MT::Array< arr > array_betas_p(num_goal_state_samples);
-  MT::Array< arr > array_betas_f(num_goal_state_samples);
+  mlr::Array< arr > array_betas_p(num_goal_state_samples);
+  mlr::Array< arr > array_betas_f(num_goal_state_samples);
   uintA used_final_state_components;
   for (k=0; k<num_goal_state_samples; k++) {
     arr betas_p, betas_f;
@@ -1156,10 +1156,10 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
   
   
   if (DEBUG>1) {
-    Predicate* p_TABLE = le->getPredicate(MT::String("table"));
-    Predicate* p_HOMIES = le->getPredicate(MT::String("homies"));
-    Predicate* p_BLOCK = le->getPredicate(MT::String("block"));
-    Predicate* p_BALL = le->getPredicate(MT::String("ball"));
+    Predicate* p_TABLE = le->getPredicate(mlr::String("table"));
+    Predicate* p_HOMIES = le->getPredicate(mlr::String("homies"));
+    Predicate* p_BLOCK = le->getPredicate(mlr::String("block"));
+    Predicate* p_BALL = le->getPredicate(mlr::String("ball"));
     cout<<"Significant beliefs (backward):"<<endl;
     printf("%-14s", "Time");
     for (t=0; t<all_betas_p.d0; t++) {
@@ -1204,7 +1204,7 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
   net->setState(s0.pi_prim, s0.fv_prim, 0);
   net->checkStateSoundness(0);
   
-  MT::Array< PredIA > action_seqs(num_samples_forward);
+  mlr::Array< PredIA > action_seqs(num_samples_forward);
   // for statistics
   action_choices.resize(horizon_forward, ground_actions.N);
   action_choices.setZero();
@@ -1261,7 +1261,7 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
       }
       if (number == 0)
         continue;
-      MT::String name;
+      mlr::String name;
       ground_actions(i)->name(name);
       printf("%-14s",(char*)name);
       for(t=0;t<action_choices.d0;t++) printf("%5u", action_choices(t,i));
@@ -1331,7 +1331,7 @@ bool ZICKZACK_PRADA::plan(PredIA& best_actions, double& best_value, uint num_sam
 //         COMBINING
 
 
-// void ZICKZACK_PRADA::combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const MT::Array< arr > & all_betas_p, const MT::Array< arr > & all_betas_f, double discount) {
+// void ZICKZACK_PRADA::combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const mlr::Array< arr > & all_betas_p, const mlr::Array< arr > & all_betas_f, double discount) {
 void ZICKZACK_PRADA::combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const arr& betas_p, const arr& betas_f, double discount) {
   uint DEBUG = 0;
 #ifdef USE_HAND_MADE_PLANS

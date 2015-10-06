@@ -25,7 +25,7 @@ stdOutPipe(Activity)
 
 //===========================================================================
 
-typedef MT::Array<Activity*> ActivityL;
+typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
@@ -44,7 +44,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
 
   //-- add refs to specs for other symbols
   for(uint i=1;i<symbols.N;i++){
-    new Node_typed<MT::String>(act->params, {STRING("ref"<<i)}, {}, new MT::String(symbols(i)), true);
+    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i)}, {}, new mlr::String(symbols(i)), true);
   }
 
   act->createFactRepresentative(relationalState);

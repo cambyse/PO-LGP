@@ -50,7 +50,7 @@ struct Dfdw:ConstrainedProblem {
   }
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
-//    MT::timerStart(true);
+//    mlr::timerStart(true);
     // compute w vector
     arr w=repmat(x.subRange(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
@@ -140,7 +140,7 @@ struct Dfdw:ConstrainedProblem {
       Jg.resize(dim_g(),dim_x());Jg.setZero();
       Jg=4.*~x*(sumOfSqr(x)-1.);
     }
-//    cout << "4: "  << MT::timerRead(true) << endl;
+//    cout << "4: "  << mlr::timerRead(true) << endl;
 
     return y;
   }
@@ -218,7 +218,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //    gradCheckExample();
   simpleMotion();
 

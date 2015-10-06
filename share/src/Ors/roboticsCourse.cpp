@@ -53,7 +53,7 @@ void Simulator::anchorKinematicChainIn(const char* bodyName){
 //    s->G.swift().setCutoff(.5);
 //  }
   
-//#ifdef MT_ODE
+//#ifdef MLR_ODE
 //  if(s->ode.isOpen){
 //    s->ode.clear();
 //    s->ode.createOde(s->G);
@@ -204,7 +204,7 @@ void Simulator::stepDynamics(const arr& Bu, double tau){
 }
 
 void Simulator::stepOde(const arr& qdot, double tau){
-#ifdef MT_ODE
+#ifdef MLR_ODE
   s->G.ode().setMotorVel(qdot, 100.);
   s->G.ode().step(tau);
   s->G.ode().importStateFromOde();
@@ -433,4 +433,4 @@ void glDrawCarSimulator(void *classP){
 }
 
 #include <Core/array_t.h>
-template MT::Array<CarSimulator::Gaussian>& MT::Array<CarSimulator::Gaussian>::resize(uint);
+template mlr::Array<CarSimulator::Gaussian>& mlr::Array<CarSimulator::Gaussian>::resize(uint);

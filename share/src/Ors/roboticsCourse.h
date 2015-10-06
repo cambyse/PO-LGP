@@ -18,8 +18,8 @@
 
 
 
-#ifndef MT_simulator_h
-#define MT_simulator_h
+#ifndef MLR_simulator_h
+#define MLR_simulator_h
 
 #include <Ors/ors.h>
 #include <Core/array.h>
@@ -94,7 +94,7 @@ struct CarSimulator{
   double dynamicsNoise, observationNoise;
   arr landmarks;
   arr particlesToDraw;
-  MT::Array<Gaussian> gaussiansToDraw;
+  mlr::Array<Gaussian> gaussiansToDraw;
   OpenGL *gl;
   
   CarSimulator();

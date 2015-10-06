@@ -47,7 +47,7 @@ struct Fitting{
     ros::Publisher pub;
     double threshold;
 
-    MT::Array<std::tuple<int, arr, arr> > trackedClusters;
+    mlr::Array<std::tuple<int, arr, arr> > trackedClusters;
 
     Fitting():threshold(.1){
         nh = new ros::NodeHandle;
@@ -295,7 +295,7 @@ void doit(){
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   cout<<"fitting cluster "<<endl;
   doit();
   return 0;

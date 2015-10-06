@@ -41,7 +41,7 @@ void TEST(ModuleVision) {
   if(engine().mode==Engine::serial){
     for(uint i=0;i<100;i++){ engine().step(S); }
   }else{
-    MT::wait(60.);
+    mlr::wait(60.);
   }
 
   engine().close(S);
@@ -69,7 +69,7 @@ void TEST(ModuleVision2) {
 
   threadOpenModules(true);
   for(uint i=0;i<30;i++){
-    MT::wait(1.);
+    mlr::wait(1.);
     modulesReportCycleTimes();
   }
   threadCloseModules();
@@ -78,7 +78,7 @@ void TEST(ModuleVision2) {
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testModuleVision2();
 

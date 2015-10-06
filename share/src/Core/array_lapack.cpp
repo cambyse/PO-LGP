@@ -19,14 +19,14 @@
 
 // file:///usr/share/doc/liblapack-doc/lug/index.html
 
-#ifdef MT_LAPACK
+#ifdef MLR_LAPACK
 
 #include "array.h"
 #include "util.h"
 
 extern "C" {
 #include "cblas.h"
-#ifdef MT_MSVC
+#ifdef MLR_MSVC
 #  include <lapack/blaswrap.h>
 #endif
 #include "f2c.h"
@@ -53,9 +53,9 @@ extern "C" {
 #endif
 
 #ifdef NO_BLAS
-void blas_MM(arr& X, const arr& A, const arr& B) {       MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
-void blas_MsymMsym(arr& X, const arr& A, const arr& B) { MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
-void blas_Mv(arr& y, const arr& A, const arr& x) {       MT::useLapack=false; innerProduct(y, A, x); MT::useLapack=true; };
+void blas_MM(arr& X, const arr& A, const arr& B) {       mlr::useLapack=false; innerProduct(X, A, B); mlr::useLapack=true; };
+void blas_MsymMsym(arr& X, const arr& A, const arr& B) { mlr::useLapack=false; innerProduct(X, A, B); mlr::useLapack=true; };
+void blas_Mv(arr& y, const arr& A, const arr& x) {       mlr::useLapack=false; innerProduct(y, A, x); mlr::useLapack=true; };
 #else
 void blas_MM(arr& X, const arr& A, const arr& B) {
   CHECK_EQ(A.d1,B.d0, "matrix multiplication: wrong dimensions");
@@ -67,9 +67,9 @@ void blas_MM(arr& X, const arr& A, const arr& B) {
               B.p, B.d1,
               0., X.p, X.d1);
 #if 0//test
-  MT::useLapack=false;
+  mlr::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(A*B, X, 0) <<std::endl;
-  MT::useLapack=true;
+  mlr::useLapack=true;
 #endif
 }
 
@@ -81,9 +81,9 @@ void blas_A_At(arr& X, const arr& A) {
               0., X.p, X.d1);
   for(uint i=0; i<X.d0; i++) for(uint j=0; j<i; j++) X(i,j) = X(j,i);
 #if 0//test
-  MT::useLapack=false;
+  mlr::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(A*~A, X, 0) <<std::endl;
-  MT::useLapack=true;
+  mlr::useLapack=true;
 #endif
 }
 
@@ -95,9 +95,9 @@ void blas_At_A(arr& X, const arr& A) {
               0., X.p, X.d1);
   for(uint i=0; i<X.d0; i++) for(uint j=0; j<i; j++) X(i,j) = X(j,i);
 #if 0//test
-  MT::useLapack=false;
+  mlr::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(~A*A, X, 0) <<std::endl;
-  MT::useLapack=true;
+  mlr::useLapack=true;
 #endif
 }
 
@@ -112,9 +112,9 @@ void blas_Mv(arr& y, const arr& A, const arr& x) {
               x.p, 1,
               0., y.p, 1);
 #if 0 //test
-  MT::useLapack=false;
+  mlr::useLapack=false;
   std::cout  <<"blas_Mv error = " <<maxDiff(A*x, y, 0) <<std::endl;
-  MT::useLapack=true;
+  mlr::useLapack=true;
 #endif
 }
 
@@ -167,7 +167,7 @@ arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
   }
   if(INFO) {
     uint k=(N>3?3:N); //number of required eigenvalues
-    MT::Array<integer> IWORK(5*N), IFAIL(N);
+    mlr::Array<integer> IWORK(5*N), IFAIL(N);
     arr WORK(7*N);
     integer M, IL=1, IU=k, LDQ=0, LDZ=1;
     double VL=0., VU=0., ABSTOL=1e-8;
@@ -283,7 +283,7 @@ void lapack_mldivide(arr& X, const arr& A, const arr& b) {
   X = b;
   arr LU = A;
   integer N = A.d1, NRHS = 1, LDA = A.d0, INFO;
-  MT::Array<integer> IPIV(N);
+  mlr::Array<integer> IPIV(N);
   
   dgesv_(&N, &NRHS, LU.p, &LDA, IPIV.p, X.p, &LDA, &INFO);
   CHECK(!INFO, "LAPACK gaussian elemination error info = " <<INFO);
@@ -347,9 +347,9 @@ dtrtri = invert triangular
 dlauum = multiply L'*L
 */
 
-#else //if defined MT_LAPACK
-#if !defined MT_MSVC && defined MT_NOCHECK
-#  warning "MT_LAPACK undefined - using inefficient implementations"
+#else //if defined MLR_LAPACK
+#if !defined MLR_MSVC && defined MLR_NOCHECK
+#  warning "MLR_LAPACK undefined - using inefficient implementations"
 #endif
 #include "util.h"
 #include "array.h"

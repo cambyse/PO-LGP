@@ -1,9 +1,9 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 
 #include <iostream>
 #include <map>
 #include <Infer/infer.h>
-#ifdef MT_DAI
+#ifdef MLR_DAI
 #  include <Infer/daiModule.h>
 #endif
 #include <stdlib.h>
@@ -271,7 +271,7 @@ void TEST(Loop){
   infer::LoopyBP lbp;
   lbp.initPairwise(vars,facs);
   for(uint t=0;t<3;t++) lbp.step();
-  MT::Array<infer::Factor> b;
+  mlr::Array<infer::Factor> b;
   lbp.getVarBeliefs(b);  cout <<b <<endl;
 }
 
@@ -318,9 +318,9 @@ void testGridBP2(){
 
 #include "rndNetBP.inc"
 void TEST(RndNetBP){
-  uint order=MT::getParameter<uint>("order");
-  uint N    =MT::getParameter<uint>("N");
-  double conn =MT::getParameter<double>("conn");
+  uint order=mlr::getParameter<uint>("order");
+  uint N    =mlr::getParameter<uint>("N");
+  double conn =mlr::getParameter<double>("conn");
   rndNetBPwithExcludeEchoMessages(N,2,conn,order);
 }
 
@@ -331,7 +331,7 @@ void TEST(PairBP){
   listWrite(vars,cout,"\n  ");  cout <<endl;
   listWrite(facs,cout,"\n  ");  cout <<endl;
   infer::LoopyBP lbp;
-  MT::Array<infer::Factor> b;
+  mlr::Array<infer::Factor> b;
   lbp.initPairwise(vars,facs);
   for(uint t=0;t<3;t++) lbp.step();
   lbp.getVarBeliefs(b);  cout <<b <<endl;
@@ -341,7 +341,7 @@ void TEST(PairBP){
   lbp.getVarBeliefs(b);  cout <<b <<endl;
 }
 
-#ifdef MT_DAI
+#ifdef MLR_DAI
 void TEST(Dai){
   infer::FactorList facs;
   infer::VariableList vars;
@@ -355,9 +355,9 @@ void TEST(Dai){
 #endif
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode")){
+  switch(mlr::getParameter<int>("mode")){
   case 0:  testTensorOperations();  break;
   case 1:  testBurglary();  break;
   case 2:  testHMMInference(10);  break;

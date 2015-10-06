@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     }
   }
   viewer.cells.reshape(grid_x, grid_y);
-  MT::Array<CellLife*> lifes;
+  mlr::Array<CellLife*> lifes;
   for(int x = 0; x < grid_x; ++x) {
     for(int y = 0; y < grid_y; ++y) {
       CellLife* life = new CellLife;
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   for(uint i = 0; i < lifes.N; ++i)
     lifes(i)->threadLoopWithBeat(0.3);
   viewer.threadLoopWithBeat(0.3);
-  MT::wait();
+  mlr::wait();
   viewer.threadStop();
   viewer.threadClose();
   for(uint i = 0; i < lifes.N; ++i) {

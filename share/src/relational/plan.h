@@ -150,7 +150,7 @@ private:
   #define DEFAULT__NID_UCT__NUM_EPISODES 500
   double c;
   uint numEpisodes;
-  MT::Array< StateActionValues* > s_a_values;
+  mlr::Array< StateActionValues* > s_a_values;
   StateActionValues* getStateActionValues(const SymbolicState& s);
   void killStateActionValues();
   void runEpisode(double& reward, const SymbolicState& s, uint t);
@@ -218,7 +218,7 @@ private:
   #define DEFAULT__NID_UCT__NUM_EPISODES 500
   double c;
   uint numEpisodes;
-  MT::Array< StateActionValues_Con* > s_a_values;
+  mlr::Array< StateActionValues_Con* > s_a_values;
   StateActionValues_Con* getStateActionValues(const SymbolicState& s);
   void killStateActionValues();
   void runEpisode(double& reward, const SymbolicState& s, uint t, SymbolicState& leafs);
@@ -356,7 +356,7 @@ class NotTheseStatesReward : public Reward {
 
 class RewardConjunction : public Reward {
   public:
-    MT::Array<Reward*> rewards;
+    mlr::Array<Reward*> rewards;
 
     RewardConjunction() : Reward(conjunction_of_rewards) {}
     virtual ~RewardConjunction() {}

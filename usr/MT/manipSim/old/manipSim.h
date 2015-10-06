@@ -2,7 +2,7 @@
 #include <Ors/ors.h>
 
 template<class NodeT>
-MT::Array<NodeT*> backtrack(const MT::Array<NodeT*>& T, const NodeT *leaf);
+mlr::Array<NodeT*> backtrack(const mlr::Array<NodeT*>& T, const NodeT *leaf);
 struct State;
 struct Action;
 struct SearchNode;
@@ -25,14 +25,14 @@ struct Domain{
 
 struct Action{
   ActionPredicate a;
-  MT::String p;
+  mlr::String p;
   uint i,j;
   Action():a(create_), i(0), j(0){}
   void setRandom(uint n);
   void write(ostream& os) const{ os <<actionPredicateString(a) <<p <<' ' <<i <<' ' <<j; }
 };
 stdOutPipe(Action)
-typedef MT::Array<Action*> ActionL_;
+typedef mlr::Array<Action*> ActionL_;
 
 
 //===========================================================================
@@ -44,7 +44,7 @@ struct Pose{
   void write(ostream& os) const{ os <<mean <<" [" <<min <<',' <<max <<"] [" <<rotRange <<"]"; }
 };
 stdOutPipe(Pose)
-typedef MT::Array<Pose*> PoseL;
+typedef mlr::Array<Pose*> PoseL;
 
 //===========================================================================
 
@@ -62,7 +62,7 @@ stdOutPipe(State)
 //===========================================================================
 
 struct SearchNode;
-typedef MT::Array<SearchNode*> SearchNodeL;
+typedef mlr::Array<SearchNode*> SearchNodeL;
 
 struct SearchNode{
   SearchNodeL* container;
@@ -89,8 +89,8 @@ stdOutPipe(SearchNode)
 
 
 template<class NodeT>
-MT::Array<NodeT*> backtrack(const MT::Array<NodeT*>& T, const NodeT *leaf){
-  MT::Array<NodeT*> path;
+mlr::Array<NodeT*> backtrack(const mlr::Array<NodeT*>& T, const NodeT *leaf){
+  mlr::Array<NodeT*> path;
   path.memMove=true;
   const NodeT *n = leaf;
   for(;;){

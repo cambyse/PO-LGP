@@ -15,7 +15,7 @@ int main() {
   for(;;){
     imu->step();
     
-    double time=MT::realTime();
+    double time=mlr::realTime();
     fil <<time
        <<' ' << imu->_accel[0] << ' ' <<imu->_accel[1] << ' ' <<imu->_accel[2] << ' '
       <<imu->_gyro[0] << ' ' << imu->_gyro[1] << ' ' << imu->_gyro[2] << ' ' << std::endl;

@@ -21,10 +21,10 @@
 #include <vector>
 #include "array.h"
 
-template<class T> MT::Array<T> conv_stlvec2array(const std::vector<T>& v){
-  return MT::Array<T>(&v.front(), v.size());
+template<class T> mlr::Array<T> conv_stlvec2array(const std::vector<T>& v){
+  return mlr::Array<T>(&v.front(), v.size());
 }
 
-template<class T> std::vector<T> conv_array2stlvec(const MT::Array<T>& x){
+template<class T> std::vector<T> conv_array2stlvec(const mlr::Array<T>& x){
   return std::vector<T>(x.begin(), x.end());
 }

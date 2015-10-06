@@ -136,7 +136,7 @@ void direct(int user_device_number = 0){
   }
 
   for(uint t=0;t<200;t++){
-    MT::wait(.01);
+    mlr::wait(.01);
     rgbLock.readLock();
     if(rgb.N){
       gl.background = rgb;

@@ -32,13 +32,13 @@
 PlotModule plotModule;
 
 struct sPlotModule {
-  MT::Array<arr> array;
-  MT::Array<arr> images;
-  MT::Array<arr> points;
-  MT::Array<arr> lines;
-  MT::Array<MT::String> legend;
-#ifdef MT_geo_h
-  MT::Array<ors::Vector> planes;
+  mlr::Array<arr> array;
+  mlr::Array<arr> images;
+  mlr::Array<arr> points;
+  mlr::Array<arr> lines;
+  mlr::Array<mlr::String> legend;
+#ifdef MLR_geo_h
+  mlr::Array<ors::Vector> planes;
   ors::Mesh mesh;
 #endif
 };
@@ -57,7 +57,7 @@ PlotModule::PlotModule() {
 }
 
 PlotModule::~PlotModule() {
-#ifdef MT_GL
+#ifdef MLR_GL
   if(gl) delete gl;
 #endif
   delete s;
@@ -78,7 +78,7 @@ void glDrawPlot(void *module) { plotDrawOpenGL(((PlotModule*)module)->s); }
 // C interface implementations
 //
 
-#ifdef MT_GL
+#ifdef MLR_GL
 void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double zl=-1., double zh=1., const char* name=0, uint width=600, uint height=600, int posx=0, int posy=0) {
   if(!plotModule.gl) {
     plotModule.gl=new OpenGL(name, width, height, posx, posy);
@@ -98,15 +98,15 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 #endif
 
 void plot(bool wait, const char* txt) {
-if(!MT::getInteractivity()){
+if(!mlr::getInteractivity()){
   wait=false;
 }
   switch(plotModule.mode) {
     case gnupl:
       plotDrawGnuplot(plotModule.s, wait);
-//      if(wait) MT::wait();
+//      if(wait) mlr::wait();
       break;
-#ifdef MT_GL
+#ifdef MLR_GL
     case opengl:
       if(txt) plotModule.gl->text = txt;
       //plotInitGL();
@@ -115,7 +115,7 @@ if(!MT::getInteractivity()){
       break;
 #else
     case opengl:
-      HALT("can't plot on OpenGL without MT_GL flag");
+      HALT("can't plot on OpenGL without MLR_GL flag");
       break;
 #endif
     case xfig:
@@ -133,7 +133,7 @@ void plotClear() {
 
 void plotGnuplot() { plotModule.mode=gnupl; }
 
-#ifdef MT_GL
+#ifdef MLR_GL
 void plotOpengl() { plotModule.mode=opengl; plotInitGL(); }
 
 void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, double zl, double zh) {
@@ -142,7 +142,7 @@ void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, do
   if(!plotModule.gl) plotInitGL(xl, xh, yl, yh, zl, zh);
 }
 #else
-void plotOpengl() { MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!"); }
+void plotOpengl() { MLR_MSG("dummy routine - compile with MLR_FREEGLUT to use this!"); }
 void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, double zl, double zh) { NICO }
 #endif
 
@@ -275,7 +275,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     uint i;
     for(i=0; i<d.d0; i++) { //standard Gaussian
       d(i, 0)=5. * ((i+.5)/d.d0 - .5);
-      d(i, 1)=1./::sqrt(MT_2PI)*::exp(-.5*d(i, 0)*d(i, 0));
+      d(i, 1)=1./::sqrt(MLR_2PI)*::exp(-.5*d(i, 0)*d(i, 0));
     }
     for(i=0; i<d.d0; i++) { //standard Gaussian
       d(i, 0) = ::sqrt(cov(0, 0)) * d(i, 0) + mean(0);
@@ -289,7 +289,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     uint i;
     if(cov.d0>2) { Cov=cov.sub(0, 1, 0, 1); } else { Cov.referTo(cov); }
     for(i=0; i<d.d0; i++) { //standard circle
-      phi=MT_2PI*((double)i)/(d.d0-1);
+      phi=MLR_2PI*((double)i)/(d.d0-1);
       d(i, 0)=cos(phi); d(i, 1)=sin(phi);
     }
     svd(U, w, V, Cov);
@@ -304,15 +304,15 @@ void plotCovariance(const arr& mean, const arr& cov) {
     double phi;
     uint i;
     for(i=0; i<101; i++) { //standard sphere
-      phi=MT_2PI*((double)i)/(101-1);
+      phi=MLR_2PI*((double)i)/(101-1);
       d(i, 0)=cos(phi); d(i, 1)=sin(phi); d(i, 2)=0.;
     }
     for(i=0; i<101; i++) {
-      phi=MT_2PI*((double)i)/(101-1);
+      phi=MLR_2PI*((double)i)/(101-1);
       d(101+i, 0)=cos(phi); d(101+i, 1)=0.; d(101+i, 2)=sin(phi);
     }
     for(i=0; i<101; i++) {
-      phi=MT_2PI*((double)i)/(101-1);
+      phi=MLR_2PI*((double)i)/(101-1);
       d(202+i, 0)=0.; d(202+i, 1)=cos(phi); d(202+i, 2)=sin(phi);
     }
     CHECK_EQ(cov.d0,3, "");
@@ -331,7 +331,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     //x-y
     Cov=cov.sub(0, 1, 0, 1);
     for(i=0; i<d.d0; i++) { //standard circle
-      phi=MT_2PI*((double)i)/(d.d0-1);
+      phi=MLR_2PI*((double)i)/(d.d0-1);
       d(i, 0)=cos(phi); d(i, 1)=sin(phi);
     }
     svd(U, w, V, Cov);
@@ -342,7 +342,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     //y-z
     Cov=cov.sub(1, 2, 1, 2);
     for(i=0; i<d.d0; i++) { //standard circle
-      phi=MT_2PI*((double)i)/(d.d0-1);
+      phi=MLR_2PI*((double)i)/(d.d0-1);
       d(i, 0)=cos(phi); d(i, 1)=sin(phi);
     }
     svd(U, w, V, Cov);
@@ -353,7 +353,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     //x-z
     Cov(0, 0)=cov(0, 0); Cov(1, 0)=cov(2, 0); Cov(0, 1)=cov(0, 2); Cov(1, 1)=cov(2, 2);
     for(i=0; i<d.d0; i++) { //standard circle
-      phi=MT_2PI*((double)i)/(d.d0-1);
+      phi=MLR_2PI*((double)i)/(d.d0-1);
       d(i, 0)=cos(phi); d(i, 1)=sin(phi);
     }
     svd(U, w, V, Cov);
@@ -395,7 +395,7 @@ void plotMatrixFlow(uintA& M, double len) {
   plotPoints(X);
 }
 
-#ifdef MT_gauss_h
+#ifdef MLR_gauss_h
 void plotGaussians(const GaussianA& G) {
   for(uint k=0; k<G.N; k++) { G(k).makeC(); plotCovariance(G(k).c, G(k).C); }
 }
@@ -410,11 +410,11 @@ void plotGaussians(const GaussianL& G) {
 //
 
 void plotDrawOpenGL(void *_data) {
-#ifdef MT_GL
+#ifdef MLR_GL
   sPlotModule& data=(*((sPlotModule*)_data));
   uint a, i, j;
   
-  MT::Color c;
+  mlr::Color c;
   
   double x=0., y=0., z=0.;
   
@@ -618,9 +618,9 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   uint i;
   
   //openfiles
-  MT::String gnuplotcmd;
+  mlr::String gnuplotcmd;
   std::ofstream gnuplotdata;
-  MT::open(gnuplotdata, "z.plotdata");
+  mlr::open(gnuplotdata, "z.plotdata");
   uint block=0;
   
   // include custom definition file if exists
@@ -633,8 +633,8 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   if(data.lines.N+data.points.N) gnuplotcmd <<"\nplot \\\n";
   
   //pipe data
-  bool ior=MT::IOraw;
-  MT::IOraw=true;
+  bool ior=mlr::IOraw;
+  mlr::IOraw=true;
   //lines
   for(i=0; i<data.lines.N; i++) {
     data.lines(i).write(gnuplotdata," ","\n","  ",false,false);
@@ -656,7 +656,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     data.points(i).write(gnuplotdata," ","\n","  ",false,false);
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
-    MT::String a=" with p";
+    mlr::String a=" with p";
     if(i<data.legend.N) a<< " title '" <<data.legend(i) <<"' ";
     PLOTEVERY(block, a);
     block++;
@@ -677,7 +677,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     PLOTEVERY(block, " with l notitle");
     block++;
   }
-  MT::IOraw=ior;
+  mlr::IOraw=ior;
   gnuplotcmd <<endl;
   
   //close files

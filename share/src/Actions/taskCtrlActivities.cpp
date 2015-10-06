@@ -23,7 +23,7 @@ void TaskCtrlActivity::step(double dt){
   step2(dt);
 
   //potentially report on stopping criteria
-  MT::String convStr = "(conv ";
+  mlr::String convStr = "(conv ";
   for(Node *p:fact->parents) convStr <<' ' <<p->keys.last();
   convStr <<")";
   if(isConv()){
@@ -50,10 +50,10 @@ bool TaskCtrlActivity::isConv(){
 void FollowReferenceActivity::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
   Node *it;
   if((it=specs["type"])){
-    if(it->V<MT::String>()=="wheels"){
+    if(it->V<mlr::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
-    }else if (it->V<MT::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<MT::String>())->qIndex,world.getJointStateDimension());
+    }else if (it->V<mlr::String>()=="qItself") {
+      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<mlr::String>())->qIndex,world.getJointStateDimension());
     }else{
       map = new DefaultTaskMap(specs, world);
     }
@@ -68,7 +68,7 @@ void FollowReferenceActivity::step2(double dt){
   //if trajectory, set reference depending on actionTime
   if(ref.nd==2){
     uint t = activityTime/trajectoryDuration * (ref.d0-1);
-    t = MT::MIN(t, ref.d0-1);
+    t = mlr::MIN(t, ref.d0-1);
     task->y_ref = ref[t];
     cout <<"STEPPING" <<endl;
   }

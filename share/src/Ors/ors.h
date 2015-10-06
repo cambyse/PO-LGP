@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_ors_h
-#define MT_ors_h
+#ifndef MLR_ors_h
+#define MLR_ors_h
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -57,12 +57,12 @@ struct KinematicSwitch;
 
 //===========================================================================
 
-typedef MT::Array<ors::Joint*> JointL;
-typedef MT::Array<ors::Shape*> ShapeL;
-typedef MT::Array<ors::Body*>  BodyL;
-typedef MT::Array<ors::Proxy*> ProxyL;
-typedef MT::Array<ors::KinematicSwitch*> KinematicSwitchL;
-typedef MT::Array<ors::KinematicWorld*> WorldL;
+typedef mlr::Array<ors::Joint*> JointL;
+typedef mlr::Array<ors::Shape*> ShapeL;
+typedef mlr::Array<ors::Body*>  BodyL;
+typedef mlr::Array<ors::Proxy*> ProxyL;
+typedef mlr::Array<ors::KinematicSwitch*> KinematicSwitchL;
+typedef mlr::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
 
@@ -78,7 +78,7 @@ struct Body {
   uint index;          ///< unique identifier TODO:do we really need index??
   JointL inLinks, outLinks;       ///< lists of in and out joints
   
-  MT::String name;     ///< name
+  mlr::String name;     ///< name
   Transformation X;    ///< body's absolute pose
   Graph ats;   ///< list of any-type attributes
   
@@ -118,7 +118,7 @@ struct Joint {
 
   JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
-  MT::String name;      ///< name
+  mlr::String name;      ///< name
   JointType type;       ///< joint type
   Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;     ///< transformation within the joint (usually dynamic)
@@ -154,7 +154,7 @@ struct Shape {
   uint index;
   Body *body;
   
-  MT::String name;     ///< name
+  mlr::String name;     ///< name
   Transformation X;
   Transformation rel;  ///< relative translation/rotation of the bodies geometry
   ShapeType type;
@@ -383,10 +383,10 @@ namespace ors {
 void glDrawGraph(void *classP);
 }
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
-uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes);
+uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const ShapeL& shapes);
+uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -455,7 +455,7 @@ struct Link {
   }
 };
 
-typedef MT::Array<ors::Link> LinkTree;
+typedef mlr::Array<ors::Link> LinkTree;
 
 void equationOfMotion(arr& M, arr& F, const LinkTree& tree,  const arr& qd);
 void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
@@ -479,8 +479,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
 
 /// @} // END of group ors_interfaces
 //===========================================================================
-#endif //MT_ORS_ONLY_BASICS
+#endif //MLR_ORS_ONLY_BASICS
 
 /// @}
 
-#endif //MT_ors_h
+#endif //MLR_ors_h

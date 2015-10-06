@@ -20,12 +20,12 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
   MotionProblem P(G);
 
   P.loadTransitionParameters();
-  P.H_rate_diag = MT::getParameter<arr>("Hratediag");
+  P.H_rate_diag = mlr::getParameter<arr>("Hratediag");
 
   cout << pr2_get_shapes(G) << endl;
 
   // add a collision cost with threshold 0 to avoid collisions
-  uintA shapes = MT::getParameter<uintA>("agent_shapes");
+  uintA shapes = mlr::getParameter<uintA>("agent_shapes");
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, col_prec);
 
@@ -39,21 +39,21 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
 }
 
 arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
-  double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
+  double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
   MotionProblem P(G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
-  uintA shapes = MT::getParameter<uintA>("agent_shapes");
+  uintA shapes = mlr::getParameter<uintA>("agent_shapes");
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
   c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
-  planner.joint_max = MT::getParameter<arr>("joint_max");
-  planner.joint_min = MT::getParameter<arr>("joint_min");
+  planner.joint_max = mlr::getParameter<arr>("joint_max");
+  planner.joint_min = mlr::getParameter<arr>("joint_min");
   std::cout << "Planner initialized" <<std::endl;
   
   return planner.getTrajectoryTo(target);
@@ -63,7 +63,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(G);
   P.loadTransitionParameters();
-  P.H_rate_diag = MT::getParameter<arr>("Hratediag");
+  P.H_rate_diag = mlr::getParameter<arr>("Hratediag");
   P.T = init_trajectory.d0-1;
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -91,14 +91,14 @@ void show_trajectory(ors::KinematicWorld& G, OpenGL& gl, arr& trajectory, const 
 }
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   ros::init(argc, argv, "Controller");
   int seed = time(NULL);
 
   rnd.seed(seed);
   
 
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
 

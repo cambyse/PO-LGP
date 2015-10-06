@@ -9,8 +9,8 @@
 void TEST(Specs){
   const char* specsfile="specs.g";
   const char* outprefix="z";
-  if(MT::argc>1) specsfile=MT::argv[1];
-  if(MT::argc>2) outprefix=MT::argv[2];
+  if(mlr::argc>1) specsfile=mlr::argv[1];
+  if(mlr::argc>2) outprefix=mlr::argv[2];
 
   Graph specs(specsfile);
   KOMO komo(specs);
@@ -37,9 +37,9 @@ void TEST(Specs){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  cout <<MT::String(FILE("USAGE"));
+  cout <<mlr::String(FILE("USAGE"));
 
   testSpecs();
 

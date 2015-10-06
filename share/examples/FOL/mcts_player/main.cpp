@@ -27,10 +27,10 @@ void TEST(FOL_World){
 
 void TEST(PlayFOL_World){
   const char *file = "../mcts/toolbox.kvg";
-  if(MT::argc>1) file = MT::argv[1];
+  if(mlr::argc>1) file = mlr::argv[1];
 
   FOL_World world(FILE(file));
-  world.verbose = MT::getParameter<int>("verbose", 2);
+  world.verbose = mlr::getParameter<int>("verbose", 2);
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();
@@ -66,7 +66,7 @@ void TEST(PlayFOL_World){
 //===========================================================================
 
 int main(int argn, char** argv){
-  MT::initCmdLine(argn, argv);
+  mlr::initCmdLine(argn, argv);
   rnd.clockSeed();
 
 //  testMCTS();

@@ -61,12 +61,12 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    mlr::getParameter(midPrec, "reachPlanMidPrec");
+    mlr::getParameter(endPrec, "reachPlanEndPrec");
+    mlr::getParameter(palmPrec, "reachPlanPalmPrec");
+    mlr::getParameter(colPrec, "reachPlanColPrec");
+    mlr::getParameter(limPrec, "reachPlanLimPrec");
+    mlr::getParameter(endVelPrec, "reachPlanEndVelPrec");
   }
   
   //set the time horizon
@@ -113,7 +113,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   //col lim and relax
   V=listFindByName(sys.vars(), "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, colPrec, 0.);
   V=listFindByName(sys.vars(), "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, limPrec, 0.);
-  V=listFindByName(sys.vars(), "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, MT::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars(), "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, mlr::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, mlr::getParameter<double>("reachPlanEndVelPrec"));
 }
 
 void setGraspGoals(OrsSystem& sys, uint T, const char* objShape){
@@ -140,8 +140,8 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   
   //general target
   double midPrec, endPrec;
-  MT::getParameter(midPrec, "reachPlanMidPrec");
-  MT::getParameter(endPrec, "reachPlanEndPrec");
+  mlr::getParameter(midPrec, "reachPlanMidPrec");
+  mlr::getParameter(endPrec, "reachPlanEndPrec");
   arr xtarget;
   xtarget = conv_vec2arr(onto->X.pos);
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
@@ -178,9 +178,9 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
   //col lim and relax
-  V=listFindByName(sys.vars(), "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
-  V=listFindByName(sys.vars(), "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanLimPrec"), 0.);
-  V=listFindByName(sys.vars(), "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, MT::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars(), "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, mlr::getParameter<double>("reachPlanColPrec"), 0.);
+  V=listFindByName(sys.vars(), "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, mlr::getParameter<double>("reachPlanLimPrec"), 0.);
+  V=listFindByName(sys.vars(), "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, mlr::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, mlr::getParameter<double>("reachPlanEndVelPrec"));
   
   //keep hand fixed
   //V=listFindByName(sys.vars(), "qhand");      V->y_target=V->y; V->setInterpolatedTargetsConstPrecisions(T, 1e1, 0.);
@@ -202,8 +202,8 @@ void setHomingGoals(OrsSystem& sys, uint T, const char* objShape, const char* be
   
   //general target
   double midPrec, endPrec;
-  MT::getParameter(midPrec, "homingPlanMidPrec");
-  MT::getParameter(endPrec, "homingPlanEndPrec");
+  mlr::getParameter(midPrec, "homingPlanMidPrec");
+  mlr::getParameter(endPrec, "homingPlanEndPrec");
   
   //endeff
   V=listFindByName(sys.vars(), "endeffector");
@@ -222,11 +222,11 @@ void setHomingGoals(OrsSystem& sys, uint T, const char* objShape, const char* be
   //}
   
   //col lim and relax
-  V=listFindByName(sys.vars(), "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
-  V=listFindByName(sys.vars(), "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanLimPrec"), 0.);
+  V=listFindByName(sys.vars(), "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, mlr::getParameter<double>("reachPlanColPrec"), 0.);
+  V=listFindByName(sys.vars(), "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, mlr::getParameter<double>("reachPlanLimPrec"), 0.);
   V=listFindByName(sys.vars(), "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
   V->setInterpolatedTargetsEndPrecisions(T,
                                          midPrec, endPrec,
-                                         midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+                                         midPrec, mlr::getParameter<double>("reachPlanEndVelPrec"));
 }
 

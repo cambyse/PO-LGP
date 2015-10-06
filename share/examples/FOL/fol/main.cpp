@@ -111,7 +111,7 @@ void testFolFunction(){
 void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
-  MT::rnd.seed(3);
+  mlr::rnd.seed(3);
   int verbose=2;
 
   for(uint k=0;k<10;k++){
@@ -128,9 +128,9 @@ void testMonteCarlo(){
       if(verbose>2){ cout <<"*** state = "; state.write(cout, " "); cout <<endl; }
 
       bool forceWait=false, decideWait=false;
-      if(MT::rnd.uni()<.8){ //normal rule decision
+      if(mlr::rnd.uni()<.8){ //normal rule decision
         //-- get all possible decisions
-        MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
+        mlr::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
           NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
 //          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
@@ -148,7 +148,7 @@ void testMonteCarlo(){
           forceWait=true;
         }else{
           //-- pick a random decision
-          uint deci = MT::rnd(decisions.N);
+          uint deci = mlr::rnd(decisions.N);
           std::pair<Node*, NodeL>& d = decisions(deci);
           if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 

@@ -116,8 +116,8 @@ void test2(){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-  MT::verboseLevel=1;
+  mlr::initCmdLine(argc,argv);
+  mlr::verboseLevel=1;
   
   test();
   //test2();

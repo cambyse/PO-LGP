@@ -19,24 +19,24 @@
 */
 
 
-#define MT_NoLognormScale
+#define MLR_NoLognormScale
 
-#ifdef MT_QT
+#ifdef MLR_QT
 #  include "gui.h"
 #endif
 #include <MDP/mdp_EMSolver.h>
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   uint mode;
-  MT::getParameter(mode,"mode",(uint)9);
+  mlr::getParameter(mode,"mode",(uint)9);
   
   mdp::EMSolver sol;
   sol.getParameters();
   
-#ifdef MT_QT
+#ifdef MLR_QT
   QApplication *app;
   Gui *gui;
 #endif
@@ -45,7 +45,7 @@ int main(int argc,char** argv){
   
   switch(mode){
   case 0:
-    MT::open(is,"README");
+    mlr::open(is,"README");
     while(is.good()){ is.getline(buf,256); cout <<buf <<endl; }
     break;
     case 1: {
@@ -87,7 +87,7 @@ int main(int argc,char** argv){
     sol.loop();
     break;
   case 9:
-#ifndef MT_QT
+#ifndef MLR_QT
     HALT("gui only works when compiling with QT");
 #else
     app = new QApplication(argc, argv);

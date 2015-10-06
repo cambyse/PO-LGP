@@ -146,11 +146,11 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   //------------------------------------------------//
   // Create obstacles and goals
   //------------------------------------------------//
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0015, dir);
+  MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0015, dir);
 
   std::vector<MObject*> mobjects;
 
-  mobjects.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.003, dir));
+  mobjects.push_back(new MObject(&world, mlr::String("obstacle"), MObject::OBSTACLE , 0.003, dir));
 //  gl.add(drawEnv,mobjects.at(0));
 
 
@@ -237,7 +237,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
     world.gl().update();
-    MT::wait(dtAmex);
+    mlr::wait(dtAmex);
     //    world.gl().watch();
   }
 
@@ -253,7 +253,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   runAMEX(String("scenes/scene1"),true,true,false);
 //    runAMEX(String("model.kvg"),true,false,false);
 //  runAMEX(String("scenes/apollo_right_ref"),true,true,false);

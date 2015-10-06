@@ -1,7 +1,7 @@
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
 #include <Gui/mesh.h>
-#ifdef MT_QT
+#ifdef MLR_QT
 #  include <QtGui/QApplication>
 #endif
 
@@ -288,7 +288,7 @@ void TEST(Image) {
 //extern void qtCheckInitialized();
 
 int MAIN(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testOfflineRendering();
   testTeapot();

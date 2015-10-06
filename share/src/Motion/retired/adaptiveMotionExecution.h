@@ -70,10 +70,10 @@ struct AdaptiveMotionExecution{
     arr colCosts;
 
     // Wrapped Trajectory
-    MT::Path *trajWrap;
+    mlr::Path *trajWrap;
 
     // Reference Trajectory
-    MT::Path *trajRef;
+    mlr::Path *trajRef;
     arr dtrajRef;
     arr goalRef;
     arr sRef;

@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <signal.h>
 #include <MT/ors.h>
@@ -30,7 +30,7 @@ void MyDemo::init(RobotProcessGroup *_master){
   robotProcesses = _master;
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
-  MT::IOraw = true;
+  mlr::IOraw = true;
   started_track = false;
 
   arr p2;
@@ -75,7 +75,7 @@ void MyDemo::init(RobotProcessGroup *_master){
 
   Kal1.Init();
   Kal2.Init();
-  MT::getParameter(bGoTarget,"goTarget");
+  mlr::getParameter(bGoTarget,"goTarget");
 }
 
 void MyDemo::initTaskVariables(ControllerModule *ctrl){
@@ -89,7 +89,7 @@ void MyDemo::initTaskVariables(ControllerModule *ctrl){
 
 
 void MyDemo::findObstacle(){
-  double time = MT::realTime();
+  double time = mlr::realTime();
   if(visStep != robotProcesses->evis.timer.steps && perc->objects.N == 2){//should manuallz remove 0 observations vision.min = 0
     visStep = robotProcesses->evis.timer.steps;
     arr vision1(4),vision2(4);
@@ -193,8 +193,8 @@ inline void rgb2hsv(byte *hsv,byte *rgb){
 int main(int argc,char** argv){
   //sudo chmod a+rw /dev/raw1394
   //sudo chmod a+rw /dev/video1394/0
-  MT::IOraw = true;
-  MT::initCmdLine(argc,argv);
+  mlr::IOraw = true;
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MyDemo demo;
@@ -202,7 +202,7 @@ int main(int argc,char** argv){
   demo.perc = &perc;
 
   robotProcesses.ctrl.task=&demo;
-  MT::getParameter(robotProcesses.evis.downScale,"downscale");//1 = 2 times smaller resolution
+  mlr::getParameter(robotProcesses.evis.downScale,"downscale");//1 = 2 times smaller resolution
   robotProcesses.open();//	robot.gui.ors->getBodyByName("OBJECTS")->X.p(0) = 100;
   perc.threadOpen();
   demo.obst = robotProcesses.ctrl.ors.getBodyByName("obstacle");
@@ -210,7 +210,7 @@ int main(int argc,char** argv){
   demo.future = robotProcesses.gui.ors->getBodyByName("obstacleF");
   demo.init(&robotProcesses);
 
-  arr atarget; MT::getParameter(atarget,"target");
+  arr atarget; mlr::getParameter(atarget,"target");
   demo.target = robotProcesses.gui.ors->getBodyByName("target");
   demo.target->X.p =  ors::Vector(atarget(0),atarget(1),atarget(2));
 

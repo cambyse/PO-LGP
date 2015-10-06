@@ -71,7 +71,7 @@ void TEST(Kinect2Surfels){
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //  testSurfels();
   testKinect2Surfels();

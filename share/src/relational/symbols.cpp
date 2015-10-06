@@ -33,7 +33,7 @@ namespace relational {
  * 
  ************************************************/
 
-MT::Array< Symbol* > Symbol::mem__all_symbols;
+mlr::Array< Symbol* > Symbol::mem__all_symbols;
 
 
 Symbol::Symbol() {
@@ -41,7 +41,7 @@ Symbol::Symbol() {
 }
 
 
-Symbol* Symbol::get(const MT::String& name, uint arity, SymbolType symbol_type, RangeType range_type) {
+Symbol* Symbol::get(const mlr::String& name, uint arity, SymbolType symbol_type, RangeType range_type) {
   Symbol* potential_s = NULL;
   // Special treatment for "default" symbol
   if (name == "default") {
@@ -77,7 +77,7 @@ Symbol* Symbol::get(const MT::String& name, uint arity, SymbolType symbol_type, 
 }
 
 
-Symbol* Symbol::get(const MT::String& name) {
+Symbol* Symbol::get(const mlr::String& name) {
   if (name == "default") {
     return get(name, 0, action, binary);
   }
@@ -91,7 +91,7 @@ Symbol* Symbol::get(const MT::String& name) {
 
 
 Symbol* Symbol::get(const char* name) {
-  return get(MT::String(name));
+  return get(mlr::String(name));
 }
 
 
@@ -140,7 +140,7 @@ bool Symbol::operator==(const Symbol& p) const {
   // not via id!!
   if (this->arity != p.arity  ||  this->symbol_type != p.symbol_type)
       return false;
-  return (MT::String) this->name == (MT::String) p.name;
+  return (mlr::String) this->name == (mlr::String) p.name;
 }
 
 
@@ -225,7 +225,7 @@ void Symbol::sort(SymL& symbols) {
         bool add = true;
         FOR1D(defining_symbols, k) {
           if (!symbols.contains(defining_symbols(k))) {
-            MT_MSG("WARNING: defining symbol "<<defining_symbols(k)->name<<" not among symbols to be sorted");
+            MLR_MSG("WARNING: defining symbol "<<defining_symbols(k)->name<<" not among symbols to be sorted");
             continue;
           }
           else if (!sorted_symbols.contains(defining_symbols(k))) {
@@ -257,7 +257,7 @@ void Symbol::sort(SymL& symbols) {
  ************************************************/
 
 
-ConjunctionSymbol* ConjunctionSymbol::get(const MT::String& name, uint arity, MT::Array<Literal* > base_literals, bool free_vars_all_quantified) {
+ConjunctionSymbol* ConjunctionSymbol::get(const mlr::String& name, uint arity, mlr::Array<Literal* > base_literals, bool free_vars_all_quantified) {
   Symbol* potential_s = Symbol::get(name);
   if (potential_s != NULL) {
     if ( potential_s->arity != arity
@@ -375,7 +375,7 @@ void ConjunctionSymbol::getDefiningSymbols(SymL & symbols, bool only_direct_pred
 TransClosureSymbol::TransClosureSymbol() {symbol_type = transclosure;}
 
 
-TransClosureSymbol* TransClosureSymbol::get(const MT::String& name, uint arity, Symbol* base_symbol) {
+TransClosureSymbol* TransClosureSymbol::get(const mlr::String& name, uint arity, Symbol* base_symbol) {
   Symbol* potential_s = Symbol::get(name);
   if (potential_s != NULL) {
     if ( potential_s->arity != arity
@@ -428,7 +428,7 @@ CountSymbol::CountSymbol () {
 }
 
 
-CountSymbol* CountSymbol::get(const MT::String& name, uint arity, Literal* base_literal) {
+CountSymbol* CountSymbol::get(const mlr::String& name, uint arity, Literal* base_literal) {
   Symbol* potential_s = Symbol::get(name);
   if (potential_s != NULL) {
     if ( potential_s->arity != arity
@@ -523,7 +523,7 @@ SumFunction::SumFunction() {
 }
 
 
-SumFunction* SumFunction::get(const MT::String& name, uint arity, Symbol* base_symbol) {
+SumFunction* SumFunction::get(const mlr::String& name, uint arity, Symbol* base_symbol) {
   Symbol* potential_s = Symbol::get(name);
   if (potential_s != NULL) {
     if ( potential_s->arity != arity
@@ -677,7 +677,7 @@ void RewardFunction::getDefiningSymbols(SymL & symbols, bool only_direct_predece
  ************************************************/
 
 //f(X) - f(Y)
-DifferenceFunction* DifferenceFunction::get(const MT::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const MT::Array< Literal* > &restriction_lits) {
+DifferenceFunction* DifferenceFunction::get(const mlr::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const mlr::Array< Literal* > &restriction_lits) {
   Symbol* potential_s = Symbol::get(name);
   if (potential_s != NULL) {
     if ( potential_s->arity != arity
@@ -724,7 +724,7 @@ void DifferenceFunction::write(ostream& os) const {
   }
   os << baseSymbol->name << " " << restrictionLits;
 }
-void DifferenceFunction::getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors) const {
+void DifferenceFunction::getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors) const {
   symbols.clear();
   if (!only_direct_predecessors) {
     SymL local_symbols;
@@ -797,7 +797,7 @@ void DisjunctionArgumentType::write(ostream& os) const {
 }
 
 
-ArgumentType* ArgumentType::get(const MT::String& name) {
+ArgumentType* ArgumentType::get(const mlr::String& name) {
   uint i;
   FOR1D(mem_all_argument_types, i) {
     if (mem_all_argument_types(i)->name == name) {
@@ -817,13 +817,13 @@ ArgumentType* ArgumentType::get(const MT::String& name) {
 
 ArgumentType* ArgumentType::read(ifstream& in) {
   uint DEBUG = 0;
-  MT::String line;
+  mlr::String line;
   line.read(in, NULL, "\n");
   if (DEBUG>0) PRINT(line);
   if(line.N == 0) return NULL;
  
   uint type, typeI;
-  MT::String name;
+  mlr::String name;
   line >> type;
   name.read(line, NULL, " ");
   line >> typeI;
@@ -866,7 +866,7 @@ void ArgumentType::get(ArgumentTypeL& all_argumentTypes) {
 }
 
 
-DisjunctionArgumentType* DisjunctionArgumentType::get(const MT::String& name, const ArgumentTypeL& base_types) {
+DisjunctionArgumentType* DisjunctionArgumentType::get(const mlr::String& name, const ArgumentTypeL& base_types) {
   uint i;
   FOR1D(mem_all_argument_types, i) {
     if (mem_all_argument_types(i)->name == name) {
@@ -950,19 +950,19 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, const char *filena
 void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"readSymbolsAndTypes [START]"<<endl;}
-//   MT_MSG("ArgumentTypeL types IGNORED THUS FAR!!");
+//   MLR_MSG("ArgumentTypeL types IGNORED THUS FAR!!");
   symbols.clear();
   
   // READING
   // Ignore description beginning of file.
   // Symbols
-  while (MT::skip(in) != -1  &&  MT::peerNextChar(in) != '[') {
+  while (mlr::skip(in) != -1  &&  mlr::peerNextChar(in) != '[') {
     if (DEBUG>0) {cout<<"***** Reading next symbol..."<<endl;}
-    MT::skip(in);
-    MT::String line;
+    mlr::skip(in);
+    mlr::String line;
     line.read(in, NULL, "\n");
     if (DEBUG>1) {PRINT(line);}
-    MT::String name;
+    mlr::String name;
     uint arity;
     name.read(line, NULL, " ");
     line >> arity;
@@ -970,7 +970,7 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
     if (DEBUG>1) {PRINT(arity);}
     
     // read type
-    MT::String symbol_type__string;
+    mlr::String symbol_type__string;
     symbol_type__string.read(line, NULL, " ");
     if (DEBUG>1) {PRINT(symbol_type__string);}
     Symbol::SymbolType symbol_type;
@@ -988,7 +988,7 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
     else HALT("unknown symbol_type:  "<<symbol_type__string);
     
     // read range
-    MT::String range_type__string;
+    mlr::String range_type__string;
     range_type__string.read(line, NULL, " ");
     if (DEBUG>1) {PRINT(range_type__string);}
     Symbol::RangeType range_type;
@@ -1012,18 +1012,18 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       s = Symbol::get(name, arity, symbol_type, range_type);
     }
     else if (symbol_type == Symbol::conjunction) {
-      MT::skip(line);
-      MT::skipUntil(line, " ");  // skip "<--"
-      while (MT::skip(line,"\n\r\t ,") != -1) {
+      mlr::skip(line);
+      mlr::skipUntil(line, " ");  // skip "<--"
+      while (mlr::skip(line,"\n\r\t ,") != -1) {
         bool free_vars_all_quantified = false;
-        while (isupper(MT::peerNextChar(line))) {
-          if (MT::peerNextChar(line) == 'A') free_vars_all_quantified = true;
-          else if (MT::peerNextChar(line) == 'E') free_vars_all_quantified = false;
+        while (isupper(mlr::peerNextChar(line))) {
+          if (mlr::peerNextChar(line) == 'A') free_vars_all_quantified = true;
+          else if (mlr::peerNextChar(line) == 'E') free_vars_all_quantified = false;
           // else do nothing
           // --> leading variable can be ignored (only for visualization)
-          MT::skipUntil(line, " ");
+          mlr::skipUntil(line, " ");
         }
-        MT::String substring;
+        mlr::String substring;
         line >> substring;
         LitL base_literals;
         if (DEBUG>0) {PRINT(substring);}
@@ -1033,11 +1033,11 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       }
     }
     else if (symbol_type == Symbol::transclosure) {
-      MT::skip(line);
-      MT::skipUntil(line, " ");  // skip "<--"
-      if (MT::peerNextChar(line) != '+') HALT("incorrect specification of transclosure symbol (expecting '+')");
-      MT::skipUntil(line, " ");  // skip "+"
-      MT::String base_symbol_name;
+      mlr::skip(line);
+      mlr::skipUntil(line, " ");  // skip "<--"
+      if (mlr::peerNextChar(line) != '+') HALT("incorrect specification of transclosure symbol (expecting '+')");
+      mlr::skipUntil(line, " ");  // skip "+"
+      mlr::String base_symbol_name;
       base_symbol_name.read(line, NULL, " ");
       if (DEBUG>2) {cout<<"base_symbol_name=\""<<base_symbol_name<<"\""<<endl;}
       Symbol* base_symbol = Symbol::get(base_symbol_name);
@@ -1045,35 +1045,35 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       s = TransClosureSymbol::get(name, arity, base_symbol);
     }
     else if (symbol_type == Symbol::count) {
-      MT::skip(line);
-      MT::skipUntil(line, " ");  // skip "<--"
-      if (MT::peerNextChar(line) != 'N') HALT("incorrect specification of transclosure symbol (expecting 'Num')");
-      MT::skipUntil(line, " ");  // skip "num"
+      mlr::skip(line);
+      mlr::skipUntil(line, " ");  // skip "<--"
+      if (mlr::peerNextChar(line) != 'N') HALT("incorrect specification of transclosure symbol (expecting 'Num')");
+      mlr::skipUntil(line, " ");  // skip "num"
       // leading variables can be ignored (only for visualization)
-      while (isupper(MT::peerNextChar(line))) {MT::skipUntil(line, " ");}
-      MT::String remaining_string;
+      while (isupper(mlr::peerNextChar(line))) {mlr::skipUntil(line, " ");}
+      mlr::String remaining_string;
       line >> remaining_string;
       Literal* base_literal = Literal::get(remaining_string);
       if (base_literal == NULL) {HALT("base_literal "<<remaining_string<<" does not exist");}
       s = CountSymbol::get(name, arity, base_literal);
     }
     else if (symbol_type == Symbol::sum) {
-      MT::skip(line);
-      MT::skipUntil(line, " ");  // skip "<--"
-      if (MT::peerNextChar(line) != 'S') HALT("incorrect specification of transclosure symbol (expecting 'Num')");
-      MT::skipUntil(line, " ");  // skip "sum"
+      mlr::skip(line);
+      mlr::skipUntil(line, " ");  // skip "<--"
+      if (mlr::peerNextChar(line) != 'S') HALT("incorrect specification of transclosure symbol (expecting 'Num')");
+      mlr::skipUntil(line, " ");  // skip "sum"
       // leading variables can be ignored (only for visualization)
-      while (isupper(MT::peerNextChar(line))) {MT::skipUntil(line, " ");}
-      MT::String remaining_string;
+      while (isupper(mlr::peerNextChar(line))) {mlr::skipUntil(line, " ");}
+      mlr::String remaining_string;
       line >> remaining_string;
       Symbol* base_symbol = Symbol::get(remaining_string);
       if (base_symbol == NULL) {HALT("base symbol "<<remaining_string<<" does not exist");}
       s = SumFunction::get(name, arity, base_symbol);
     }
     else if (symbol_type == Symbol::function_difference) {
-      MT::skip(line);
-      MT::skipUntil(line, " ");  // skip "<--"
-      MT::String substring;
+      mlr::skip(line);
+      mlr::skipUntil(line, " ");  // skip "<--"
+      mlr::String substring;
       line >> substring;
       LitL base_literals;
       base_literals.memMove = true;
@@ -1097,10 +1097,10 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
     s->range = range;
     symbols.append(s);
     if (DEBUG>0) {cout<<"Read-in symbol:  "<<*symbols.last()<<endl;}
-    MT::skip(in);
+    mlr::skip(in);
   }
 
-  if (MT::peerNextChar(in) == '[') HALT("Reading types not implemented yet");
+  if (mlr::peerNextChar(in) == '[') HALT("Reading types not implemented yet");
   // SORTING
   Symbol::sort(symbols);
   if (DEBUG>0) {cout<<"readSymbolsAndTypesSimpleFormat [END]"<<endl;}

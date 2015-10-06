@@ -16,9 +16,9 @@ template<class T> T* Biros::getVariable(const char* name, Module *p, bool requir
   if (!v && raw) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
   else if (!raw) {
     if(required) { HALT("can't find required biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not work"); }
-    else MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    else MLR_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
-  //else { MT_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
+  //else { MLR_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
   return v;
 }
 
@@ -40,7 +40,7 @@ template<class T>  T* Biros::getProcess(const char* name, Module *caller, bool r
   if (!p && raw) { HALT(name << " which is asked for by " << (caller?caller->name:STRING("NULL")) << " is of wrong type."); }
   else if (!raw) {
     if(required) { HALT("can't find required biros process'" <<name <<"' -- Caller '" <<(caller?caller->name:STRING("NULL")) <<"' will not work"); }
-    else MT_MSG("can't find biros process '" <<name <<"' -- Caller '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    else MLR_MSG("can't find biros process '" <<name <<"' -- Caller '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
   return p;
 }
@@ -65,7 +65,7 @@ template<class T> void Biros::setParameter(const char *name, T value) {
   writeAccess(p->module);
   par = (Parameter_typed<T>*)listFindByName(parameters, name);
   deAccess(p->module);
-  if (!par) MT_MSG("WARNING: cannot find " <<name
+  if (!par) MLR_MSG("WARNING: cannot find " <<name
                    <<" in parameters, nothing is changed.");
   par->value = value;
 }

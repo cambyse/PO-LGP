@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_array_t_cpp
-#define MT_array_t_cpp
+#ifndef MLR_array_t_cpp
+#define MLR_array_t_cpp
 
 #include "array.h"
 #include "util.h"
@@ -39,8 +39,8 @@
 // Array class
 //
 
-template<class T> char MT::Array<T>::memMove=(char)-1;
-template<class T> int MT::Array<T>::sizeT=-1;
+template<class T> char mlr::Array<T>::memMove=(char)-1;
+template<class T> int mlr::Array<T>::sizeT=-1;
 
 /** @brief Simple array container to store arbitrary-dimensional arrays
   (tensors); can buffer more memory than necessary for faster
@@ -54,7 +54,7 @@ template<class T> int MT::Array<T>::sizeT=-1;
   header, which contains lots of functions that can be applied on
   Arrays. */
 
-template<class T> void MT::Array<T>::init() {
+template<class T> void mlr::Array<T>::init() {
   reference=false;
   if(sizeT==-1) sizeT=sizeof(T);
   if(memMove==(char)-1) {
@@ -82,35 +82,35 @@ template<class T> void MT::Array<T>::init() {
 //***** constructors
 
 /// standard constructor -- this becomes an empty array
-template<class T> MT::Array<T>::Array():d(&d0) { init(); }
+template<class T> mlr::Array<T>::Array():d(&d0) { init(); }
 
 /// copy constructor
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a) { init(); operator=(a); }
+template<class T> mlr::Array<T>::Array(const mlr::Array<T>& a) { init(); operator=(a); }
 
 /// reference constructor
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i) { init(); referToSubDim(a, i); }
+template<class T> mlr::Array<T>::Array(const mlr::Array<T>& a, uint i) { init(); referToSubDim(a, i); }
 
 /// reference constructor
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j) { init(); referToSubDim(a, i, j); }
+template<class T> mlr::Array<T>::Array(const mlr::Array<T>& a, uint i, uint j) { init(); referToSubDim(a, i, j); }
 
 /// reference constructor
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j, uint k) { init(); referToSubDim(a, i, j, k); }
+template<class T> mlr::Array<T>::Array(const mlr::Array<T>& a, uint i, uint j, uint k) { init(); referToSubDim(a, i, j, k); }
 
 /// constructor with resize
-template<class T> MT::Array<T>::Array(uint i) { init(); resize(i); }
+template<class T> mlr::Array<T>::Array(uint i) { init(); resize(i); }
 
 /// constructor with resize
-template<class T> MT::Array<T>::Array(uint i, uint j) { init(); resize(i, j); }
+template<class T> mlr::Array<T>::Array(uint i, uint j) { init(); resize(i, j); }
 
 /// constructor with resize
-template<class T> MT::Array<T>::Array(uint i, uint j, uint k) { init(); resize(i, j, k); }
+template<class T> mlr::Array<T>::Array(uint i, uint j, uint k) { init(); resize(i, j, k); }
 
 /// this becomes a reference on the C-array \c p
-template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
+template<class T> mlr::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
 
 /**
- * @brief Initialization list for MT::Array
+ * @brief Initialization list for mlr::Array
  *
  * This makes it possible to initialize list like this:
 \code
@@ -120,17 +120,17 @@ arr a = { 1.1, 2, 25.7, 12 };
  *
  * @param list the list used to initialize the array.
  */
-template<class T> MT::Array<T>::Array(std::initializer_list<T> list) {
+template<class T> mlr::Array<T>::Array(std::initializer_list<T> list) {
   init();
   for(T t : list) append(t);
 }
 
-template<class T> MT::Array<T>::Array(MT::FileToken& f) {
+template<class T> mlr::Array<T>::Array(mlr::FileToken& f) {
   init();
   read(f.getIs());
 }
 
-template<class T> MT::Array<T>::~Array() {
+template<class T> mlr::Array<T>::~Array() {
   freeMEM();
 }
 
@@ -138,37 +138,37 @@ template<class T> MT::Array<T>::~Array() {
 //***** resize
 
 /// frees all memory; this becomes an empty array
-template<class T> void MT::Array<T>::clear() { freeMEM(); }
+template<class T> void mlr::Array<T>::clear() { freeMEM(); }
 
 /// resize 1D array, discard the previous contents
-template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0) { nd=1; d0=D0; resetD(); resizeMEM(d0, false); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resize(uint D0) { nd=1; d0=D0; resetD(); resizeMEM(d0, false); return *this; }
 
 /// resize but copy the previous contents
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0) { nd=1; d0=D0; resetD(); resizeMEM(d0, true); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopy(uint D0) { nd=1; d0=D0; resetD(); resizeMEM(d0, true); return *this; }
 
 /// reshape the dimensionality (e.g. from 2D to 1D); throw an error if this actually requires to resize the memory
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0) { CHECK_EQ(N, D0, "reshape must preserve total memory size"); nd=1; d0=D0; d1=d2=0; resetD(); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::reshape(uint D0) { CHECK_EQ(N, D0, "reshape must preserve total memory size"); nd=1; d0=D0; d1=d2=0; resetD(); return *this; }
 
 /// same for 2D ...
-template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, false); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resize(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, false); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, true); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopy(uint D0, uint D1) { nd=2; d0=D0; d1=D1; resetD(); resizeMEM(d0*d1, true); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1) { CHECK_EQ(N,D0*D1, "reshape must preserve total memory size"); nd=2; d0=D0; d1=D1; d2=0; resetD(); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::reshape(uint D0, uint D1) { CHECK_EQ(N,D0*D1, "reshape must preserve total memory size"); nd=2; d0=D0; d1=D1; d2=0; resetD(); return *this; }
 
 /// same for 3D ...
-template<class T> MT::Array<T>& MT::Array<T>::resize(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, false); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resize(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, false); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, true); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopy(uint D0, uint D1, uint D2) { nd=3; d0=D0; d1=D1; d2=D2; resetD(); resizeMEM(d0*d1*d2, true); return *this; }
 
 /// ...
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint D0, uint D1, uint D2) { CHECK_EQ(N,D0*D1*D2, "reshape must preserve total memory size"); nd=3; d0=D0; d1=D1; d2=D2; resetD(); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::reshape(uint D0, uint D1, uint D2) { CHECK_EQ(N,D0*D1*D2, "reshape must preserve total memory size"); nd=3; d0=D0; d1=D1; d2=D2; resetD(); return *this; }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
+template<class T> mlr::Array<T>& mlr::Array<T>::resize(uint ND, uint *dim) {
   nd=ND; d0=d1=d2=0; resetD();
   uint j;
   for(j=0; j<nd && j<3; j++) {(&d0)[j]=dim[j]; }
@@ -181,7 +181,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
 }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint ND, uint *dim) {
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopy(uint ND, uint *dim) {
   nd=ND; d0=d1=d2=0; resetD();
   uint j;
   for(j=0; j<nd && j<3; j++) {(&d0)[j]=dim[j]; }
@@ -194,7 +194,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint ND, uint *dim) {
 }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::reshape(uint ND, uint *dim) {
+template<class T> mlr::Array<T>& mlr::Array<T>::reshape(uint ND, uint *dim) {
   nd=ND; d0=d1=d2=0; resetD();
   uint j, S;
   for(j=0; j<nd && j<3; j++) {(&d0)[j]=dim[j]; }
@@ -205,16 +205,16 @@ template<class T> MT::Array<T>& MT::Array<T>::reshape(uint ND, uint *dim) {
 }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::resize(const Array<uint> &newD) { resize(newD.N, newD.p); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resize(const Array<uint> &newD) { resize(newD.N, newD.p); return *this; }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(const Array<uint> &newD) { resizeCopy(newD.N, newD.p); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopy(const Array<uint> &newD) { resizeCopy(newD.N, newD.p); return *this; }
 
 /// resize to multi-dimensional tensor
-template<class T> MT::Array<T>& MT::Array<T>::reshape(const Array<uint> &newD) { reshape(newD.N, newD.p); return *this; }
+template<class T> mlr::Array<T>& mlr::Array<T>::reshape(const Array<uint> &newD) { reshape(newD.N, newD.p); return *this; }
 
 
-template<class T> MT::Array<T>& MT::Array<T>::resizeAs(const MT::Array<T>& a) {
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeAs(const mlr::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
   resetD();
@@ -224,7 +224,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeAs(const MT::Array<T>& a) {
 }
 
 /// make it the same size as \c a and copy previous content
-template<class T> MT::Array<T>& MT::Array<T>::resizeCopyAs(const MT::Array<T>& a) {
+template<class T> mlr::Array<T>& mlr::Array<T>::resizeCopyAs(const mlr::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2; resetD();
   if(nd>3) { d=new uint[nd];  memmove(d, a.d, nd*sizeof(uint)); }
@@ -232,7 +232,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopyAs(const MT::Array<T>& a
   return *this;
 }
 
-template<class T> MT::Array<T>& MT::Array<T>::reshapeAs(const MT::Array<T>& a) {
+template<class T> mlr::Array<T>& mlr::Array<T>::reshapeAs(const mlr::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
   CHECK_EQ(N,a.N, "reshape must preserve total memory size");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2; resetD();
@@ -240,16 +240,16 @@ template<class T> MT::Array<T>& MT::Array<T>::reshapeAs(const MT::Array<T>& a) {
   return *this;
 }
 
-template<class T> MT::Array<T>& MT::Array<T>::flatten() {
+template<class T> mlr::Array<T>& mlr::Array<T>::flatten() {
   reshape(N);
   return *this;
 }
 
 /// return the size of memory allocated in bytes
-template<class T> uint MT::Array<T>::getMemsize() const { return M*sizeof(T); }
+template<class T> uint mlr::Array<T>::getMemsize() const { return M*sizeof(T); }
 
 /// multi-dimensional (tensor) access
-template<class T> T& MT::Array<T>::operator()(const Array<uint> &I) const {
+template<class T> T& mlr::Array<T>::operator()(const Array<uint> &I) const {
   CHECK_EQ(I.N , nd, "wrong dimensions");
   uint i, j;
   i=0;
@@ -258,7 +258,7 @@ template<class T> T& MT::Array<T>::operator()(const Array<uint> &I) const {
 }
 
 /// I becomes the index tuple for the absolute index i
-template<class T> void MT::Array<T>::getIndexTuple(Array<uint> &I, uint i) const {
+template<class T> void mlr::Array<T>::getIndexTuple(Array<uint> &I, uint i) const {
   uint j;
   CHECK(i<N, "out of range");
   I.resize(nd);
@@ -271,7 +271,7 @@ template<class T> void MT::Array<T>::getIndexTuple(Array<uint> &I, uint i) const
 }
 
 /// return the k-th dimensionality
-template<class T> uint MT::Array<T>::dim(uint k) const {
+template<class T> uint mlr::Array<T>::dim(uint k) const {
   CHECK(k<nd, "dimensionality range check error: " <<k <<"!<" <<nd);
   if(!d && k<3) return (&d0)[k]; else return d[k];
 }
@@ -280,14 +280,14 @@ template<class T> uint MT::Array<T>::dim(uint k) const {
 //***** sparse arrays
 
 /// return fraction of non-zeros in the array
-template<class T> double MT::Array<T>::sparsity() {
+template<class T> double mlr::Array<T>::sparsity() {
   uint i, m=0;
   for(i=0; i<N; i++) if(elem(i)) m++;
   return ((double)m)/N;
 }
 
 /// make sparse: create the \ref sparse index
-template<class T> void MT::Array<T>::makeSparse() {
+template<class T> void mlr::Array<T>::makeSparse() {
   CHECK(special!=sparseST, "only once yet");
   uintA* sparse;
   uint n=0;
@@ -330,7 +330,7 @@ template<class T> void MT::Array<T>::makeSparse() {
 #endif
 
 /// allocate memory (maybe using \ref flexiMem)
-template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
+template<class T> void mlr::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   if(n==N && Mforce<0) return; //no change
   CHECK(!reference, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
   if(n>N && n<=M){ N=n; return; } //memory is big enough, just increase N (copy does not matter)
@@ -356,21 +356,21 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   }
   if(Mnew!=Mold) {  //if M changed, allocate the memory
     uint64_t memoryNew = ((uint64_t)Mnew)*sizeT;
-#ifdef MT_GLOBALMEM
+#ifdef MLR_GLOBALMEM
     globalMemoryTotal -= ((uint64_t)Mold)*sizeT;
     globalMemoryTotal += memoryNew;
 #endif
     if(Mnew) {
       if(globalMemoryTotal>globalMemoryBound) { //helpers to limit global memory (e.g. to avoid crashing a machine)
         if(globalMemoryStrict) { //undo changes then throw an error
-          MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
+          MLR_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MLR_GLOBALMEM compile flag)");
           globalMemoryTotal += ((uint64_t)Mold)*sizeT;
           globalMemoryTotal -= memoryNew;
           p=pold; M=Mold;
           HALT("strict memory limit exceeded");
         } else { //just give a warning
           if(memoryNew>>20 || globalMemoryTotal-memoryNew<=globalMemoryBound) {
-            MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
+            MLR_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MLR_GLOBALMEM compile flag)");
           }
         }
       }
@@ -391,7 +391,7 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
 }
 
 ///this was a reference; becomes a copy
-template<class T> MT::Array<T>& MT::Array<T>::dereference(){
+template<class T> mlr::Array<T>& mlr::Array<T>::dereference(){
   CHECK(reference,"can only dereference a reference!");
   uint n=N;
   T* pold=p;
@@ -405,8 +405,8 @@ template<class T> MT::Array<T>& MT::Array<T>::dereference(){
 }
 
 /// free all memory and reset all pointers and sizes
-template<class T> void MT::Array<T>::freeMEM() {
-#ifdef MT_GLOBALMEM
+template<class T> void mlr::Array<T>::freeMEM() {
+#ifdef MLR_GLOBALMEM
   globalMemoryTotal -= M*sizeT;
 #endif
   if(M) delete[] p;
@@ -421,7 +421,7 @@ template<class T> void MT::Array<T>::freeMEM() {
 }
 
 /// reset the dimensionality pointer d to point to &d0
-template<class T> void MT::Array<T>::resetD() {
+template<class T> void mlr::Array<T>::resetD() {
   if(d && d!=&d0) delete[] d;
   d=&d0;
 }
@@ -431,7 +431,7 @@ template<class T> void MT::Array<T>::resetD() {
 //***** append, insert & remove
 
 /// append an (uninitialized) element to the array and return its reference -- the array becomes 1D!
-template<class T> T& MT::Array<T>::append() {
+template<class T> T& mlr::Array<T>::append() {
   if(nd==2 && d1==1)
     resizeCopy(d0+1, d1);
   else
@@ -440,7 +440,7 @@ template<class T> T& MT::Array<T>::append() {
 }
 
 /// append an element to the array -- the array becomes 1D!
-template<class T> T& MT::Array<T>::append(const T& x) {
+template<class T> T& mlr::Array<T>::append(const T& x) {
   if(N<M && nd==1){ //simple and fast
     N++;
     d0++;
@@ -452,14 +452,14 @@ template<class T> T& MT::Array<T>::append(const T& x) {
 }
 
 /// append an element to the array -- the array becomes 1D!
-template<class T> void MT::Array<T>::append(const T& x, uint multiple) {
-  MT::Array<T> tail(multiple);
+template<class T> void mlr::Array<T>::append(const T& x, uint multiple) {
+  mlr::Array<T> tail(multiple);
   tail = x;
   append(tail);
 }
 
 /// append another array to the array (by copying it) -- the array might become 1D!
-template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
+template<class T> void mlr::Array<T>::append(const mlr::Array<T>& x) {
   uint oldN=N, xN=x.N, i;
   if(!xN) return;
   if(!nd)
@@ -477,7 +477,7 @@ template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
 }
 
 /// append a C array to the array (by copying it) -- the array might become 1D!
-template<class T> void MT::Array<T>::append(const T *q, uint n) {
+template<class T> void mlr::Array<T>::append(const T *q, uint n) {
   uint oldN=N, i;
   if(nd==2 && d1==n)
     resizeCopy(d0+1, d1);
@@ -488,13 +488,13 @@ template<class T> void MT::Array<T>::append(const T *q, uint n) {
 }
 
 /// append an element to the array if it is not included yet -- the array becomes 1D! [TL]
-template<class T> void MT::Array<T>::setAppend(const T& x) {
+template<class T> void mlr::Array<T>::setAppend(const T& x) {
   if(findValue(x) < 0)
     append(x);
 }
 
 /// append elements of another array to the array which are not included yet -- the array might become 1D! [TL]
-template<class T> void MT::Array<T>::setAppend(const MT::Array<T>& x) {
+template<class T> void mlr::Array<T>::setAppend(const mlr::Array<T>& x) {
   uint i;
   FOR1D(x, i) {
     setAppend(x(i));
@@ -502,23 +502,23 @@ template<class T> void MT::Array<T>::setAppend(const MT::Array<T>& x) {
 }
 
 /// remove and return the first element of the array (must have size>1)
-template<class T> T MT::Array<T>::popFirst() { T x; x=elem(0); remove(0);   return x; }
+template<class T> T mlr::Array<T>::popFirst() { T x; x=elem(0); remove(0);   return x; }
 
 /// remove and return the last element of the array (must have size>1)
-template<class T> T MT::Array<T>::popLast() { T x=elem(N-1); resizeCopy(N-1); return x; }
+template<class T> T mlr::Array<T>::popLast() { T x=elem(N-1); resizeCopy(N-1); return x; }
 
 /// reverse this array
-template<class T> void MT::Array<T>::reverse() {
-  MT::Array<T> L2;
+template<class T> void mlr::Array<T>::reverse() {
+  mlr::Array<T> L2;
   uint i;
   for(i=this->N; i--;) L2.append(this->elem(i));
   *this = L2;
 }
 
 /// reverse the rows of this array
-template<class T> void MT::Array<T>::reverseRows() {
+template<class T> void mlr::Array<T>::reverseRows() {
   CHECK_EQ(this->nd , 2, "Can only reverse rows of 2 dim arrays. nd=" << this->nd);
-  MT::Array<T> L2;
+  mlr::Array<T> L2;
   uint i;
   for(i=this->d0; i--;) L2.append(this->operator[](i));
   L2.reshape(this->d0, this->d1);
@@ -526,7 +526,7 @@ template<class T> void MT::Array<T>::reverseRows() {
 }
 
 /// the array contains `copies' copies of the old one
-template<class T> void MT::Array<T>::replicate(uint copies) {
+template<class T> void mlr::Array<T>::replicate(uint copies) {
   if(copies<2) return;
   uint i, oldN=N;
   resizeCopy(copies*N);
@@ -538,7 +538,7 @@ template<class T> void MT::Array<T>::replicate(uint copies) {
 }
 
 /// inserts x at the position i -- the array becomes 1D! [only with memMove!]
-template<class T> void MT::Array<T>::insert(uint i, const T& x) {
+template<class T> void mlr::Array<T>::insert(uint i, const T& x) {
   CHECK(memMove, "only with memMove");
   uint Nold=N;
   resizeCopy(Nold+1);
@@ -547,13 +547,13 @@ template<class T> void MT::Array<T>::insert(uint i, const T& x) {
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
-template<class T> void MT::Array<T>::remove(uint i, uint n) {
+template<class T> void mlr::Array<T>::remove(uint i, uint n) {
   if(i==N-n) { resizeCopy(N-n); return; }
   if(memMove) {
     if(N>i+n) memmove(p+i, p+i+n, sizeT*(N-i-n));
     resizeCopy(N-n);
   } else {
-    //MT_MSG("don't use this!");
+    //MLR_MSG("don't use this!");
     reshape(N);
     for(uint j=i+n; j<N; j++) p[j-n] = p[j];
     resizeCopy(N-n);
@@ -561,13 +561,13 @@ template<class T> void MT::Array<T>::remove(uint i, uint n) {
 }
 
 /// remove some element by permuting the last element in its place -- the array becomes 1D!
-template<class T> void MT::Array<T>::removePerm(uint i) {
+template<class T> void mlr::Array<T>::removePerm(uint i) {
   p[i]=p[N-1];
   resizeCopy(N-1);
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!] (throws error if value does not exist)
-template<class T> void MT::Array<T>::removeValue(const T& x) {
+template<class T> void mlr::Array<T>::removeValue(const T& x) {
   CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) break;
@@ -576,7 +576,7 @@ template<class T> void MT::Array<T>::removeValue(const T& x) {
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
-template<class T> void MT::Array<T>::removeAllValues(const T& x) {
+template<class T> void mlr::Array<T>::removeAllValues(const T& x) {
   CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) { remove(i, 1); i--; }
@@ -585,7 +585,7 @@ template<class T> void MT::Array<T>::removeAllValues(const T& x) {
 /** @brief remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
  Returns true if value was found and deleted.
  Returns false if value was not found.*/
-template<class T> bool MT::Array<T>::removeValueSafe(const T& x) {
+template<class T> bool mlr::Array<T>::removeValueSafe(const T& x) {
   CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) break;
@@ -598,7 +598,7 @@ template<class T> bool MT::Array<T>::removeValueSafe(const T& x) {
 }
 
 /// replace n elements at pos i by the sequence x -- the array becomes 1D!  [only with memMove!]
-template<class T> void MT::Array<T>::replace(uint i, uint n, const MT::Array<T>& x) {
+template<class T> void mlr::Array<T>::replace(uint i, uint n, const mlr::Array<T>& x) {
   CHECK(memMove, "only with memMove");
   uint Nold=N;
   if(n==x.N) {
@@ -615,7 +615,7 @@ template<class T> void MT::Array<T>::replace(uint i, uint n, const MT::Array<T>&
 }
 
 /// deletes the i-th row [must be 2D]
-template<class T> void MT::Array<T>::delRows(uint i, uint k) {
+template<class T> void mlr::Array<T>::delRows(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK_EQ(nd,2, "only for matricies");
   CHECK(i+k<=d0, "range check error");
@@ -625,7 +625,7 @@ template<class T> void MT::Array<T>::delRows(uint i, uint k) {
 }
 
 /// inserts k rows at the i-th row [must be 2D]
-template<class T> void MT::Array<T>::insRows(uint i, uint k) {
+template<class T> void mlr::Array<T>::insRows(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK_EQ(nd,2, "only for matricies");
   CHECK(i<=d0, "range check error");
@@ -636,7 +636,7 @@ template<class T> void MT::Array<T>::insRows(uint i, uint k) {
 }
 
 /// deletes k columns starting from the i-th (i==d1 -> deletes the last k columns)
-template<class T> void MT::Array<T>::delColumns(uint i, uint k) {
+template<class T> void mlr::Array<T>::delColumns(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK(k>0, "");
   CHECK_EQ(nd,2, "only for matricies");
@@ -651,7 +651,7 @@ template<class T> void MT::Array<T>::delColumns(uint i, uint k) {
 }
 
 /// inserts k columns at the i-th column [must be 2D]
-template<class T> void MT::Array<T>::insColumns(uint i, uint k) {
+template<class T> void mlr::Array<T>::insColumns(uint i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK(k>0, "");
   CHECK_EQ(nd,2, "only for matricies");
@@ -666,7 +666,7 @@ template<class T> void MT::Array<T>::insColumns(uint i, uint k) {
 }
 
 /// changes the range of one dimension (generalization of ins/delColumn to arbitrary tensors)
-template<class T> void MT::Array<T>::resizeDim(uint k, uint dk) {
+template<class T> void mlr::Array<T>::resizeDim(uint k, uint dk) {
   if(dim(k)==dk) return;
   uint i;
   uint L=1, R=1, subR=1;
@@ -694,87 +694,87 @@ template<class T> void MT::Array<T>::resizeDim(uint k, uint dk) {
 //***** access operations
 
 /// return a uint-Array that contains (acutally refers to) the dimensions of 'this'
-template<class T> MT::Array<uint> MT::Array<T>::dim() const {
+template<class T> mlr::Array<uint> mlr::Array<T>::dim() const {
   Array<uint> dims(d, nd);
   dims.dereference();
   return dims;
 }
 
 /// the \c ith element
-template<class T> T& MT::Array<T>::elem(int i) const {
+template<class T> T& mlr::Array<T>::elem(int i) const {
   if(i<0) i+=N;
   CHECK(i>=0 && i<(int)N, "range error (" <<i <<">=" <<N <<")");
   return p[i];
 }
 
 /// a random element
-template<class T> T& MT::Array<T>::rndElem() const {
+template<class T> T& mlr::Array<T>::rndElem() const {
   return elem(rnd(N));
 }
 
 /// scalar reference (valid only for a 0-dim or 1-dim array of size 1)
-template<class T> T& MT::Array<T>::scalar() const {
+template<class T> T& mlr::Array<T>::scalar() const {
   CHECK(nd<=2 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 
 /// reference to the last element
-template<class T> T& MT::Array<T>::first() const {
+template<class T> T& mlr::Array<T>::first() const {
   CHECK(N, "can't take first of none");
   return *p;
 }
 
 /// reference to the last element
-template<class T> T& MT::Array<T>::last(int i) const {
+template<class T> T& mlr::Array<T>::last(int i) const {
   CHECK((int)N+i>=0, "can't take last ("<<i<<") from " <<N <<" elements");
   return p[N+i];
 }
 
 /// 1D access (throws an error if not 1D or out of range)
-template<class T> T& MT::Array<T>::operator()(uint i) const {
+template<class T> T& mlr::Array<T>::operator()(uint i) const {
   CHECK(nd==1 && i<d0,
         "1D range error (" <<nd <<"=1, " <<i <<"<" <<d0 <<")");
   return p[i];
 }
 
 /// 2D access
-template<class T> T& MT::Array<T>::operator()(uint i, uint j) const {
+template<class T> T& mlr::Array<T>::operator()(uint i, uint j) const {
   CHECK(nd==2 && i<d0 && j<d1 && special!=sparseST,
         "2D range error (" <<nd <<"=2, " <<i <<"<" <<d0 <<", " <<j <<"<" <<d1 <<")");
   return p[i*d1+j];
 }
 
 /// 3D access
-template<class T> T& MT::Array<T>::operator()(uint i, uint j, uint k) const {
+template<class T> T& mlr::Array<T>::operator()(uint i, uint j, uint k) const {
   CHECK(nd==3 && i<d0 && j<d1 && k<d2 && special!=sparseST,
         "3D range error (" <<nd <<"=3, " <<i <<"<" <<d0 <<", " <<j <<"<" <<d1 <<", " <<k <<"<" <<d2 <<")");
   return p[(i*d1+j)*d2+k];
 }
 
 /// get a subarray (e.g., row of a matrix); use in conjuction with operator()() to get a reference
-template<class T> MT::Array<T> MT::Array<T>::operator[](uint i) const { return Array(*this, i); }
+template<class T> mlr::Array<T> mlr::Array<T>::operator[](uint i) const { return Array(*this, i); }
 
 /// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
-template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j) const { return Array(*this, i, j); }
+template<class T> mlr::Array<T> mlr::Array<T>::subDim(uint i, uint j) const { return Array(*this, i, j); }
 
 /// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
-template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j, uint k) const { return Array(*this, i, j, k); }
+template<class T> mlr::Array<T> mlr::Array<T>::subDim(uint i, uint j, uint k) const { return Array(*this, i, j, k); }
 
 /// get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
-template<class T> MT::Array<T> MT::Array<T>::subRange(int i, int I) const { MT::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
+template<class T> mlr::Array<T> mlr::Array<T>::subRange(int i, int I) const { mlr::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
 
 
 /// convert a subarray into a reference (e.g. a[3]()+=.123)
-template<class T> MT::Array<T>& MT::Array<T>::operator()() { return (*this); }
+template<class T> mlr::Array<T>& mlr::Array<T>::operator()() { return (*this); }
 
 /// reference to the max entry
-template<class T> T& MT::Array<T>::max() const { CHECK(N, ""); uint i, m=0; for(i=1; i<N; i++) if(p[i]>p[m]) m=i; return p[m]; }
+template<class T> T& mlr::Array<T>::max() const { CHECK(N, ""); uint i, m=0; for(i=1; i<N; i++) if(p[i]>p[m]) m=i; return p[m]; }
 
 /// reference to the min entry
-template<class T> T& MT::Array<T>::min() const { CHECK(N, ""); uint i, m=0; for(i=1; i<N; i++) if(p[i]<p[m]) m=i; return p[m]; }
+template<class T> T& mlr::Array<T>::min() const { CHECK(N, ""); uint i, m=0; for(i=1; i<N; i++) if(p[i]<p[m]) m=i; return p[m]; }
 
 /// gets the min and max
-template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
+template<class T> void mlr::Array<T>::minmax(T& minVal, T& maxVal) const {
   CHECK(N, "");
   uint i;
   minVal=maxVal=p[0];
@@ -787,7 +787,7 @@ template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
 
 /*
 /// also returns the index (argmin) \c ind
-template<class T> T minA(const MT::Array<T>& v, uint & ind, uint start, uint end){
+template<class T> T minA(const mlr::Array<T>& v, uint & ind, uint start, uint end){
   CHECK(v.N>0, "");
   CHECK(v.N>start, "");
   CHECK(v.N>=end, "");
@@ -803,7 +803,7 @@ template<class T> T minA(const MT::Array<T>& v, uint & ind, uint start, uint end
 }
 
 /// also returns the index (argmax) \c ind
-template<class T> T maxA(const MT::Array<T>& v, uint & ind, uint start, uint end){
+template<class T> T maxA(const mlr::Array<T>& v, uint & ind, uint start, uint end){
   CHECK(v.N>0, "");
   CHECK(v.N>start, "");
   CHECK(v.N>=end, "");
@@ -824,18 +824,18 @@ template<class T> T maxA(const MT::Array<T>& v, uint & ind, uint start, uint end
 
 /** @brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
-template<class T> uint MT::Array<T>::maxIndex() const { uint i, m=0; for(i=0; i<N; i++) if(p[i]>p[m]) m=i; return m; }
+template<class T> uint mlr::Array<T>::maxIndex() const { uint i, m=0; for(i=0; i<N; i++) if(p[i]>p[m]) m=i; return m; }
 
 /** @brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
-template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j) const { CHECK_EQ(nd,2, "needs 2D array"); j=maxIndex(); i=j/d1; j=j%d1; }
+template<class T> void mlr::Array<T>::maxIndex(uint& i, uint& j) const { CHECK_EQ(nd,2, "needs 2D array"); j=maxIndex(); i=j/d1; j=j%d1; }
 
 /** @brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
-template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j, uint& k) const { CHECK_EQ(nd,3, "needs 3D array"); k=maxIndex(); i=k/(d1*d2); k=k%(d1*d2); j=k/d2; k=k%d2; }
+template<class T> void mlr::Array<T>::maxIndex(uint& i, uint& j, uint& k) const { CHECK_EQ(nd,3, "needs 3D array"); k=maxIndex(); i=k/(d1*d2); k=k%(d1*d2); j=k/d2; k=k%d2; }
 
 /// get the maximal and second maximal value
-template<class T> void MT::Array<T>::maxIndeces(uint& m1, uint& m2) const {
+template<class T> void mlr::Array<T>::maxIndeces(uint& m1, uint& m2) const {
   uint i;
   if(p[0]>p[1]) { m1=0; m2=1; } else { m1=1; m2=0; }
   for(i=2; i<N; i++) {
@@ -851,13 +851,13 @@ template<class T> void MT::Array<T>::maxIndeces(uint& m1, uint& m2) const {
 }
 
 /// the index of the minimum; precondition: the comparision operator > exists for type T
-template<class T> uint MT::Array<T>::minIndex() const { uint i, m=0; for(i=0; i<N; i++) if(p[i]<p[m]) m=i; return m; }
+template<class T> uint mlr::Array<T>::minIndex() const { uint i, m=0; for(i=0; i<N; i++) if(p[i]<p[m]) m=i; return m; }
 
 /// return the index of an entry equal to x, or -1
-template<class T> int MT::Array<T>::findValue(const T& x) const { uint i; for(i=0; i<N; i++) if(p[i]==x) return i; return -1; }
+template<class T> int mlr::Array<T>::findValue(const T& x) const { uint i; for(i=0; i<N; i++) if(p[i]==x) return i; return -1; }
 
 /// return all indices to entries equal to x
-template<class T> void MT::Array<T>::findValues(MT::Array<uint>& indices, const T& x) const {
+template<class T> void mlr::Array<T>::findValues(mlr::Array<uint>& indices, const T& x) const {
   indices.clear();
   uint i;
   for(i=0; i<N; i++)
@@ -867,7 +867,7 @@ template<class T> void MT::Array<T>::findValues(MT::Array<uint>& indices, const 
 // TL 17.07.08
 /** @brief whether at least one object is contained more than once
    */
-template<class T> bool MT::Array<T>::containsDoubles() const {
+template<class T> bool mlr::Array<T>::containsDoubles() const {
   if(N < 2)
     return false;
   uint i, j;
@@ -884,9 +884,9 @@ template<class T> bool MT::Array<T>::containsDoubles() const {
 /** @brief a sub array of a 1D Array (corresponds to matlab [i:I]); when
   the upper limit I is -1, it is replaced by the max limit (like
   [i:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
+template<class T> mlr::Array<T> mlr::Array<T>::sub(int i, int I) const {
   CHECK_EQ(nd,1, "1D range error ");
-  MT::Array<T> x;
+  mlr::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
   CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
@@ -899,9 +899,9 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
 /** @brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) const {
+template<class T> mlr::Array<T> mlr::Array<T>::sub(int i, int I, int j, int J) const {
   CHECK_EQ(nd,2, "2D range error ");
-  MT::Array<T> x;
+  mlr::Array<T> x;
   if(i<0) i+=d0;
   if(j<0) j+=d1;
   if(I<0) I+=d0;
@@ -916,9 +916,9 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
 /** @brief copies a sub array of a 3D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {
+template<class T> mlr::Array<T> mlr::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {
   CHECK_EQ(nd,3, "3D range error ");
-  MT::Array<T> x;
+  mlr::Array<T> x;
   if(i<0) i+=d0;
   if(j<0) j+=d1;
   if(k<0) j+=d2;
@@ -936,9 +936,9 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   runs from i to I (as explained above) while the second index runs
   over the columns explicitly referred to by cols. (col doesn't have
   to be ordered or could also contain some columns multiply) */
-template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols) const {
+template<class T> mlr::Array<T> mlr::Array<T>::sub(int i, int I, Array<uint> cols) const {
   CHECK_EQ(nd,2, "2D range error ");
-  MT::Array<T> x;
+  mlr::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
   CHECK(i>0 && I>0 && i<=I, "lower limit higher than upper!");
@@ -960,7 +960,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
  * @return  copy of row `row_index`.
  */
 template<class T>
-MT::Array<T> MT::Array<T>::row(uint row_index) const {
+mlr::Array<T> mlr::Array<T>::row(uint row_index) const {
   return sub(row_index, row_index, 0, d1 - 1);
 }
 
@@ -975,7 +975,7 @@ MT::Array<T> MT::Array<T>::row(uint row_index) const {
  * @return  copy of column `col_index`.
  */
 template<class T>
-MT::Array<T> MT::Array<T>::col(uint col_index) const {
+mlr::Array<T> mlr::Array<T>::col(uint col_index) const {
   return sub(0, d0 - 1, col_index, col_index);
 }
 
@@ -991,7 +991,7 @@ MT::Array<T> MT::Array<T>::col(uint col_index) const {
  * @return Copy of the rows from `start` to excluding `end_row`.
  */
 template<class T>
-MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
+mlr::Array<T> mlr::Array<T>::rows(uint start_row, uint end_row) const {
   return sub(start_row, end_row - 1, 0, d1 - 1);
 }
 
@@ -1007,7 +1007,7 @@ MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
  * @return Copy of the columns from `start_col` to excluding `end_col`.
  */
 template<class T>
-MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
+mlr::Array<T> mlr::Array<T>::cols(uint start_col, uint end_col) const {
   return sub(0, d0 - 1, start_col, end_col - 1);
 }
 
@@ -1016,13 +1016,13 @@ MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
 
 #if 0
 /// allocates, sets and returns the \c Array::pp pointer (of type \c T**)
-template<class T> T** MT::Array<T>::getCarray() const {
+template<class T> T** mlr::Array<T>::getCarray() const {
   CHECK(nd>=2, "only 2D or higher-D arrays gives C-array of type T**");
   HALT("I think this is buggy");
   if(special==hasCarrayST) return (T**) aux;
   T** pp;
-  ((MT::Array<T>*)this)->special = hasCarrayST;
-  ((MT::Array<T>*)this)->aux = pp = new T* [d0];
+  ((mlr::Array<T>*)this)->special = hasCarrayST;
+  ((mlr::Array<T>*)this)->aux = pp = new T* [d0];
   uint skip;
   if(nd==2) skip=d1; else skip=N/d0;
   for(uint i=0; i<d0; i++) pp[i]=p+i*skip;
@@ -1031,7 +1031,7 @@ template<class T> T** MT::Array<T>::getCarray() const {
 #endif
 
 /// makes this array a reference to the C buffer
-template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
+template<class T> void mlr::Array<T>::referTo(const T *buffer, uint n) {
   freeMEM();
   reference=true;
   nd=1; d0=n; d1=d2=0; N=n;
@@ -1040,7 +1040,7 @@ template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
 
 /** @brief returns an ordinary 2-dimensional C-pointer to the Array content.
   Requires the Array<T*> as buffer. */
-template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
+template<class T> T** mlr::Array<T>::getCarray(Array<T*>& Cpointers) const {
   CHECK_EQ(nd,2, "only 2D array gives C-array of type T**");
   Cpointers.resize(d0);
   for(uint i=0; i<d0; i++) Cpointers(i)=p+i*d1;
@@ -1049,7 +1049,7 @@ template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
 
 #if 0
 /// returns an ordinary 3-dimensional C-pointer-array
-template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>& array2d) const {
+template<class T> T*** mlr::Array<T>::getPointers(Array<T**>& array3d, Array<T*>& array2d) const {
   CHECK_EQ(nd,3, "only 3D array gives C-array of type T*** ");
   array2d.resize(d0, d1);
   for(uint i=0; i<d0; i++) {
@@ -1064,7 +1064,7 @@ template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>&
 //***** assignments
 
 /// set all elements to value \c v
-template<class T> MT::Array<T>& MT::Array<T>::operator=(const T& v) {
+template<class T> mlr::Array<T>& mlr::Array<T>::operator=(const T& v) {
   uint i;
   //if(memMove && typeid(T)==typeid(T)) memset(p, *((int*)&v), N); else
   CHECK(N,"assigning constant to empty array");
@@ -1073,9 +1073,9 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const T& v) {
 }
 
 /// copy operator
-template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
+template<class T> mlr::Array<T>& mlr::Array<T>::operator=(const mlr::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
-  //if(a.temp){ takeOver(*((MT::Array<T>*)&a)); return *this; }
+  //if(a.temp){ takeOver(*((mlr::Array<T>*)&a)); return *this; }
   resizeAs(a);
   uint i;
   if(memMove) memmove(p, a.p, sizeT*N);
@@ -1093,23 +1093,23 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
 
 /** @brief same as memset(p, 0, sizeT*N); precondition: memMove is
   true! */
-template<class T> void MT::Array<T>::setZero(byte zero) {
+template<class T> void mlr::Array<T>::setZero(byte zero) {
   CHECK(memMove, "can set array's memory to zero only if memMove option is true");
   memset(p, zero, sizeT*N);
 }
 
 /// concatenate 2D matrices (or vectors) column-wise
-template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
+template<class T> mlr::Array<T> catCol(const mlr::Array<mlr::Array<T>*>& X) {
   uint d0=X(0)->d0, d1=0;
-  for(MT::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
-  MT::Array<T> z(d0, d1);
+  for(mlr::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  mlr::Array<T> z(d0, d1);
   d1=0;
-  for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
+  for(mlr::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
   return z;
 }
 
 /// set all entries to same value x [default: don't change dimension]
-template<class T> void MT::Array<T>::setUni(const T& x, int d) {
+template<class T> void mlr::Array<T>::setUni(const T& x, int d) {
   if(d!=-1) resize(d);
   uint i;
   for(i=0; i<N; i++) elem(i)=x;
@@ -1117,17 +1117,17 @@ template<class T> void MT::Array<T>::setUni(const T& x, int d) {
 
 /** @brief becomes the n-dim identity matrix [default:
   don't change dimension (already has to be squared matrix)] */
-template<class T> void MT::Array<T>::setId(int d) {
+template<class T> void mlr::Array<T>::setId(int d) {
   CHECK(d!=-1 || (nd==2 && d0==d1), "need squared matrix to set to identity");
   if(d!=-1) resize(d, d);
   setZero();
   for(uint i=0; i<d0; i++) operator()(i, i)=(T)1;
 }
 
-template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
+template<class T> void mlr::Array<T>::setDiag(const T& x, int d) {
   CHECK(d!=-1 || nd==2, "need squared matrix to set to diagonal");
   if(d!=-1) resize(d, d);
-  if(d==-1) d=(int)MT::MIN(d0, d1);
+  if(d==-1) d=(int)mlr::MIN(d0, d1);
   setZero();
   uint i;
   for(i=0; i<(uint)d; i++) operator()(i, i)=x;
@@ -1135,7 +1135,7 @@ template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
 }
 
 /// sets x to be the diagonal matrix with diagonal v
-template<class T> void MT::Array<T>::setDiag(const MT::Array<T>& v) {
+template<class T> void mlr::Array<T>::setDiag(const mlr::Array<T>& v) {
   CHECK_EQ(v.nd,1, "can only give diagonal of 1D array");
   resize(v.d0, v.d0);
   setZero();
@@ -1145,7 +1145,7 @@ template<class T> void MT::Array<T>::setDiag(const MT::Array<T>& v) {
 }
 
 /// constructs the block matrix X=[A, B ; C, D]
-template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const MT::Array<T>& B, const MT::Array<T>& C, const MT::Array<T>& D) {
+template<class T> void mlr::Array<T>::setBlockMatrix(const mlr::Array<T>& A, const mlr::Array<T>& B, const mlr::Array<T>& C, const mlr::Array<T>& D) {
   CHECK(A.nd==2 && B.nd==2 && C.nd==2 && D.nd==2, "");
   CHECK(A.d0==B.d0 && A.d1==C.d1 && B.d1==D.d1 && C.d0==D.d0, "");
   resize(A.d0+C.d0, A.d1+B.d1);
@@ -1161,7 +1161,7 @@ template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const
 }
 
 /// constructs the block matrix X=[A, B ; C, D]
-template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const MT::Array<T>& B) {
+template<class T> void mlr::Array<T>::setBlockMatrix(const mlr::Array<T>& A, const mlr::Array<T>& B) {
   CHECK(A.nd==2 && B.nd==2, "");
   CHECK_EQ(A.d0,B.d0, "");
   resize(A.d0, A.d1+B.d1);
@@ -1171,7 +1171,7 @@ template<class T> void MT::Array<T>::setBlockMatrix(const MT::Array<T>& A, const
 
 
 /// constructs a vector x=[a, b]
-template<class T> void MT::Array<T>::setBlockVector(const MT::Array<T>& a, const MT::Array<T>& b) {
+template<class T> void mlr::Array<T>::setBlockVector(const mlr::Array<T>& a, const mlr::Array<T>& b) {
   CHECK(a.nd==1 && b.nd==1, "");
   resize(a.N+b.N);
   setVectorBlock(a, 0);   //for(i=0;i<a.N;i++) operator()(i    )=a(i);
@@ -1179,7 +1179,7 @@ template<class T> void MT::Array<T>::setBlockVector(const MT::Array<T>& a, const
 }
 
 /// write the matrix B into 'this' matrix at location lo0, lo1
-template<class T> void MT::Array<T>::setMatrixBlock(const MT::Array<T>& B, uint lo0, uint lo1) {
+template<class T> void mlr::Array<T>::setMatrixBlock(const mlr::Array<T>& B, uint lo0, uint lo1) {
   CHECK(B.nd==1 || B.nd==2, "");
   if(B.nd==2) {
     CHECK(nd==2 && lo0+B.d0<=d0 && lo1+B.d1<=d1, "");
@@ -1197,40 +1197,40 @@ template<class T> void MT::Array<T>::setMatrixBlock(const MT::Array<T>& B, uint 
 }
 
 /// B (need to be sized before) becomes a sub-matrix of 'this' taken at location lo0, lo1
-template<class T> void MT::Array<T>::getMatrixBlock(MT::Array<T>& B, uint lo0, uint lo1) const {
+template<class T> void mlr::Array<T>::getMatrixBlock(mlr::Array<T>& B, uint lo0, uint lo1) const {
   CHECK(nd==2 && B.nd==2 && lo0+B.d0<=d0 && lo1+B.d1<=d1, "");
   uint i, j;
   for(i=0; i<B.d0; i++) for(j=0; j<B.d1; j++) B(i, j)=operator()(lo0+i, lo1+j);
 }
 
 /// write the vector B into 'this' vector at location lo0
-template<class T> void MT::Array<T>::setVectorBlock(const MT::Array<T>& B, uint lo) {
+template<class T> void mlr::Array<T>::setVectorBlock(const mlr::Array<T>& B, uint lo) {
   CHECK(nd==1 && B.nd==1 && lo+B.N<=N, "");
   uint i;
   for(i=0; i<B.N; i++) operator()(lo+i)=B(i);
 }
 
 /// B (needs to be sized before) becomes sub-vector of 'this' at location lo
-template<class T> void MT::Array<T>::getVectorBlock(MT::Array<T>& B, uint lo) const {
+template<class T> void mlr::Array<T>::getVectorBlock(mlr::Array<T>& B, uint lo) const {
   CHECK(nd==1 && B.nd==1 && lo+B.N<=N, "");
   uint i;
   for(i=0; i<B.N; i++) B(i)=operator()(lo+i);
 }
 
 /// sorted permutation of length \c n
-template<class T> void MT::Array<T>::setStraightPerm(int n) {
+template<class T> void mlr::Array<T>::setStraightPerm(int n) {
   if(n!=-1) resize(n);
   for(uint i=0; i<N; i++) elem(i)=(T)i;
 }
 
 /// reverse sorted permutation of lenth \c N
-template<class T> void MT::Array<T>::setReversePerm(int n) {
+template<class T> void mlr::Array<T>::setReversePerm(int n) {
   if(n!=-1) resize(n);
   for(uint i=0; i<N; i++) elem(N-1-i)=(T)i;
 }
 
 /// permute all elements randomly
-template<class T> void MT::Array<T>::setRandomPerm(int n) {
+template<class T> void mlr::Array<T>::setRandomPerm(int n) {
   setStraightPerm(n);
   int j, r;
   for(j=N-1; j>=1; j--) {
@@ -1240,7 +1240,7 @@ template<class T> void MT::Array<T>::setRandomPerm(int n) {
 }
 
 /// 'this' becomes a copy (not reference to!) of the 1D C array
-template<class T> void MT::Array<T>::setCarray(const T *buffer, uint D0) {
+template<class T> void mlr::Array<T>::setCarray(const T *buffer, uint D0) {
   if(N!=D0) resize(D0);
   uint i;
   if(memMove && typeid(T)==typeid(T))
@@ -1249,7 +1249,7 @@ template<class T> void MT::Array<T>::setCarray(const T *buffer, uint D0) {
 }
 
 /// 'this' becomes a copy (not reference to!) of the 2D C array
-template<class T> void MT::Array<T>::setCarray(const T **buffer, uint D0, uint D1) {
+template<class T> void mlr::Array<T>::setCarray(const T **buffer, uint D0, uint D1) {
   resize(D0, D1);
   uint i, j;
   for(i=0; i<d0; i++) {
@@ -1260,7 +1260,7 @@ template<class T> void MT::Array<T>::setCarray(const T **buffer, uint D0, uint D
 }
 
 /// copy 'this' into a C array
-template<class T> void MT::Array<T>::copyInto(T *buffer) const {
+template<class T> void mlr::Array<T>::copyInto(T *buffer) const {
   CHECK_EQ(nd,1, "can only copy 1D Array into 1D C-array");
   uint i;
   if(memMove && typeid(T)==typeid(T)) memmove(buffer, p, sizeT*d0);
@@ -1268,7 +1268,7 @@ template<class T> void MT::Array<T>::copyInto(T *buffer) const {
 }
 
 /// copy 'this' into a C array
-template<class T> void MT::Array<T>::copyInto2D(T **buffer) const {
+template<class T> void mlr::Array<T>::copyInto2D(T **buffer) const {
   CHECK_EQ(nd,2, "can only copy 2D Array into 2D C-array");
   uint i, j;
   for(i=0; i<d0; i++) {
@@ -1278,7 +1278,7 @@ template<class T> void MT::Array<T>::copyInto2D(T **buffer) const {
 }
 
 /// make this array a reference to the array \c a
-template<class T> void MT::Array<T>::referTo(const MT::Array<T>& a) {
+template<class T> void mlr::Array<T>::referTo(const mlr::Array<T>& a) {
   freeMEM();
   reference=true; memMove=a.memMove;
   N=a.N; nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
@@ -1286,7 +1286,7 @@ template<class T> void MT::Array<T>::referTo(const MT::Array<T>& a) {
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, int i, int I) {
+template<class T> void mlr::Array<T>::referToSubRange(const mlr::Array<T>& a, int i, int I) {
   CHECK(a.nd<=3, "not implemented yet");
   freeMEM();
   resetD();
@@ -1310,7 +1310,7 @@ template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, int 
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint dim) {
+template<class T> void mlr::Array<T>::referToSubDim(const mlr::Array<T>& a, uint dim) {
   CHECK(a.nd>1, "can't create subarray of array less than 2 dimensions");
   CHECK(dim<a.d0, "SubDim range error (" <<dim <<"<" <<a.d0 <<")");
   freeMEM();
@@ -1330,7 +1330,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint d
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i, uint j) {
+template<class T> void mlr::Array<T>::referToSubDim(const mlr::Array<T>& a, uint i, uint j) {
   CHECK(a.nd>2, "can't create subsubarray of array less than 3 dimensions");
   CHECK(i<a.d0 && j<a.d1, "SubDim range error (" <<i <<"<" <<a.d0 <<", " <<j <<"<" <<a.d1 <<")");
   freeMEM();
@@ -1344,7 +1344,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i, uint j, uint k) {
+template<class T> void mlr::Array<T>::referToSubDim(const mlr::Array<T>& a, uint i, uint j, uint k) {
   CHECK(a.nd>3, "can't create subsubarray of array less than 3 dimensions");
   CHECK(i<a.d0 && j<a.d1 && k<a.d2, "SubDim range error (" <<i <<"<" <<a.d0 <<", " <<j <<"<" <<a.d1 <<", " <<k <<"<" <<a.d2 << ")");
   freeMEM();
@@ -1366,7 +1366,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
 /** @brief takes over the memory buffer from a; afterwards, this is a
   proper array with own memory and a is only a reference on the
   memory */
-template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
+template<class T> void mlr::Array<T>::takeOver(mlr::Array<T>& a) {
   freeMEM();
   memMove=a.memMove;
   N=a.N; nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
@@ -1376,7 +1376,7 @@ template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
   a.M=0;
 }
 
-template<class T> void MT::Array<T>::swap(Array<T>& a) {
+template<class T> void mlr::Array<T>::swap(Array<T>& a) {
   CHECK(!a.reference, "can't swap with a reference");
   if(N!=a.N) resizeAs(a);
   T* p_tmp = p;
@@ -1388,7 +1388,7 @@ template<class T> void MT::Array<T>::swap(Array<T>& a) {
   filling the range [lo, hi] in each dimension. Note: returned array is
   `flat', rather than grid-shaped. */
 template<class T> void
-MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
+mlr::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
   uint i, j, k;
   if(dim==1) {
     resize(steps+1, 1);
@@ -1421,14 +1421,14 @@ MT::Array<T>::setGrid(uint dim, T lo, T hi, uint steps) {
 
 //----- sorting etc
 /// sort this list
-template<class T> void MT::Array<T>::sort(ElemCompare comp) {
+template<class T> void mlr::Array<T>::sort(ElemCompare comp) {
   T *pstop=p+N;
   std::sort(p, pstop, comp);
 }
 
 
 /// check whether list is sorted
-template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
+template<class T> bool mlr::Array<T>::isSorted(ElemCompare comp) const {
   uint i;
   for(i=0; i<N-1; i++) {
     if(!comp(elem(i), elem(i+1))) return false;
@@ -1438,7 +1438,7 @@ template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
 
 
 /// fast find method in a sorted array, returns index where x would fit into array
-template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
+template<class T> uint mlr::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
   if(!N) return 0;
   T *lo=p, *hi=p+N-1, *mi;
   if(comp(x, *lo)) return 0;
@@ -1453,7 +1453,7 @@ template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) 
 }
 
 /// fast find method in a sorted array, returns index to element equal to x
-template<class T> int MT::Array<T>::findValueInSorted(const T& x, ElemCompare comp) const {
+template<class T> int mlr::Array<T>::findValueInSorted(const T& x, ElemCompare comp) const {
   uint cand_pos = rankInSorted(x, comp);
   if(cand_pos == N) return -1;
   else if(elem(cand_pos) != x) return -1;
@@ -1461,7 +1461,7 @@ template<class T> int MT::Array<T>::findValueInSorted(const T& x, ElemCompare co
 }
 
 /// fast insert method in a sorted array, the array remains sorted
-template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp) {
+template<class T> uint mlr::Array<T>::insertInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
   uint cand_pos = rankInSorted(x, comp);
   insert(cand_pos, x);
@@ -1469,7 +1469,7 @@ template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp
 }
 
 
-template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
+template<class T> uint mlr::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
   uint cand_pos = rankInSorted(x, comp);
   if(cand_pos<N && elem(cand_pos  )==x) return cand_pos;
@@ -1480,7 +1480,7 @@ template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare c
 
 
 /// fast remove method in a sorted array, the array remains sorted
-template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare comp) {
+template<class T> void mlr::Array<T>::removeValueInSorted(const T& x, ElemCompare comp) {
   uint i=findValueInSorted(x, comp);
   CHECK_EQ(elem(i),x, "value not found");
   remove(i);
@@ -1489,46 +1489,46 @@ template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare
 //***** permutations
 
 /// permute the elements \c i and \c j
-template<class T> void MT::Array<T>::permute(uint i, uint j) { T x=p[i]; p[i]=p[j]; p[j]=x; }
+template<class T> void mlr::Array<T>::permute(uint i, uint j) { T x=p[i]; p[i]=p[j]; p[j]=x; }
 
 /// permute the entries according to the given permutation
-template<class T> void MT::Array<T>::permute(const MT::Array<uint>& permutation) {
+template<class T> void mlr::Array<T>::permute(const mlr::Array<uint>& permutation) {
   CHECK(permutation.N<=N, "array smaller than permutation (" <<N <<"<" <<permutation.N <<")");
-  MT::Array<T> b=(*this);
+  mlr::Array<T> b=(*this);
   for(uint i=0; i<N; i++) elem(i)=b.elem(permutation(i));
 }
 
 /// permute the rows (operator[]) according to the given permutation
-template<class T> void MT::Array<T>::permuteRows(const MT::Array<uint>& permutation) {
+template<class T> void mlr::Array<T>::permuteRows(const mlr::Array<uint>& permutation) {
   CHECK(permutation.N<=d0, "array smaller than permutation ("<<N<<"<"<<permutation.N<<")");
-  MT::Array<T> b=(*this);
+  mlr::Array<T> b=(*this);
   for(uint i=0; i<d0; i++) operator[](i)()=b[permutation(i)];
 }
 
 /// apply the given 'permutation' on 'this'
-template<class T> void MT::Array<T>::permuteInv(const MT::Array<uint>& permutation) {
+template<class T> void mlr::Array<T>::permuteInv(const mlr::Array<uint>& permutation) {
   CHECK(permutation.N<=N, "array smaller than permutation (" <<N <<"<" <<permutation.N <<")");
-  MT::Array<T> b=(*this);
+  mlr::Array<T> b=(*this);
   for(uint i=0; i<N; i++) elem(permutation(i))=b.elem(i);
 }
 
 /// permute the rows (operator[]) according to the given permutation
-template<class T> void MT::Array<T>::permuteRowsInv(const MT::Array<uint>& permutation) {
+template<class T> void mlr::Array<T>::permuteRowsInv(const mlr::Array<uint>& permutation) {
   CHECK(permutation.N<=d0, "array smaller than permutation ("<<N<<"<"<<permutation.N<<")");
-  MT::Array<T> b=(*this);
+  mlr::Array<T> b=(*this);
   for(uint i=0; i<d0; i++) operator[](permutation(i))()=b[i];
 }
 
 /// randomly permute all entries of 'this'
-template<class T> void MT::Array<T>::permuteRandomly() {
+template<class T> void mlr::Array<T>::permuteRandomly() {
   uintA perm;
   perm.setRandomPerm(N);
   permute(perm);
 }
 
 /// push all elements forward or backward (depending on sign of offset)
-template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
-  MT::Array<T> tmp;
+template<class T> void mlr::Array<T>::shift(int offset, bool wrapAround) {
+  mlr::Array<T> tmp;
   CHECK(memMove, "pushing only works with memMove enabled");
   uint m=offset>0?offset:-offset;
   if(!m) return;
@@ -1548,13 +1548,13 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 
 
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
-template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
+template<class T> void mlr::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
   
-  if(!ELEMSEP) ELEMSEP=MT::arrayElemsep;
-  if(!LINESEP) LINESEP=MT::arrayLinesep;
-  if(!BRACKETS) BRACKETS=MT::arrayBrackets;
+  if(!ELEMSEP) ELEMSEP=mlr::arrayElemsep;
+  if(!LINESEP) LINESEP=mlr::arrayLinesep;
+  if(!BRACKETS) BRACKETS=mlr::arrayBrackets;
   
   if(binary) {
     writeDim(os);
@@ -1601,24 +1601,24 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
 }
 
 /** @brief prototype for operator>>, if there is a dimensionality tag: fast reading of ascii (if there is brackets[]) or binary (if there is \\0\\0 brackets) data; otherwise slow ascii read */
-template<class T> void MT::Array<T>::read(std::istream& is) {
+template<class T> void mlr::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
   T x;
   bool expectBracket=false;
 
-#define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<MT::lineCount <<"):\n" <<x)
+#define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<mlr::lineCount <<"):\n" <<x)
 
-  c=MT::peerNextChar(is);
+  c=mlr::peerNextChar(is);
   if(c=='['){
     is >>PARSE("[");
     expectBracket=true;
-    c=MT::peerNextChar(is);
+    c=mlr::peerNextChar(is);
   }
 
   if(c=='<'){
     readDim(is);
-    c=MT::peerNextChar(is);
+    c=mlr::peerNextChar(is);
     if(c==0) {  //binary read
       c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
       is.read((char*)p, sizeT*N);
@@ -1638,7 +1638,7 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
     uint i=0;
     d=0;
     for(;;) {
-      MT::skip(is, " \r\t");
+      mlr::skip(is, " \r\t");
       is.get(c);
       if(c==']' || !is.good()) { is.clear(); break; }
       if(c==';' || c=='\n') {  //set an array width
@@ -1664,7 +1664,7 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
 }
 
 /// write a dimensionality tag of format <d0 d1 d2 ...>
-template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
+template<class T> void mlr::Array<T>::writeDim(std::ostream& os) const {
   uint i;
   os <<'<';
   if(nd) os <<dim(0); else os <<0;
@@ -1673,7 +1673,7 @@ template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
 }
 
 /// read a dimensionality tag of format <d0 d1 d2 ...> and resize this array accordingly
-template<class T> void MT::Array<T>::readDim(std::istream& is) {
+template<class T> void mlr::Array<T>::readDim(std::istream& is) {
   char c;
   uint ND, dim[10];
   is >>PARSE("<");
@@ -1687,13 +1687,13 @@ template<class T> void MT::Array<T>::readDim(std::istream& is) {
 }
 
 /// OBSOLETE - I should remove this. IO-manip: arrays will be streamed as raw (without tags)
-template<class T> const MT::Array<T>& MT::Array<T>::ioraw() const { IOraw=true; return *this; }
+template<class T> const mlr::Array<T>& mlr::Array<T>::ioraw() const { IOraw=true; return *this; }
 
 /// IO-manip: arrays will be streamed non-raw (with tags)
-//template<class T> const MT::Array<T>& MT::Array<T>::ionoraw() const{ IOraw=false; return *this; }
+//template<class T> const mlr::Array<T>& mlr::Array<T>::ionoraw() const{ IOraw=false; return *this; }
 
 /// array must have correct size! simply streams in all elements sequentially
-template<class T> void MT::Array<T>::readRaw(std::istream& is) {
+template<class T> void mlr::Array<T>::readRaw(std::istream& is) {
   uint i;
   if(N){
     for(i=0; i<N; i++) {
@@ -1711,12 +1711,12 @@ template<class T> void MT::Array<T>::readRaw(std::istream& is) {
 }
 
 /// same as write(os, " ", "\n", "  ");
-template<class T> void MT::Array<T>::writeRaw(std::ostream& os) const {
+template<class T> void mlr::Array<T>::writeRaw(std::ostream& os) const {
   write(os, " ", "\n", "  ");
 }
 
 /// TL 15.07.08
-template<class T> void MT::Array<T>::writeWithIndex(std::ostream& os) const {
+template<class T> void mlr::Array<T>::writeWithIndex(std::ostream& os) const {
   uint i;
   FOR1D((*this), i) {
     os<<i <<" " <<elem(i) <<endl;
@@ -1726,13 +1726,13 @@ template<class T> void MT::Array<T>::writeWithIndex(std::ostream& os) const {
 //***** generic data files of double arrays
 
 /// write data with a name tag (convenient to write multiple data arrays into one file)
-template<class T> void MT::Array<T>::writeTagged(std::ostream& os, const char* tag, bool binary) const {
+template<class T> void mlr::Array<T>::writeTagged(std::ostream& os, const char* tag, bool binary) const {
   os <<tag <<' ';
   write(os, " ", "\n ", "[]", true, binary);
 }
 
 /// read data with a name tag (convenient to read multiple data arrays from one file)
-template<class T> bool MT::Array<T>::readTagged(std::istream& is, const char *tag) {
+template<class T> bool mlr::Array<T>::readTagged(std::istream& is, const char *tag) {
   if(tag) {
     String read_tag;
     read_tag.read(is, " \t\n\r", " \t\n\r");
@@ -1744,22 +1744,22 @@ template<class T> bool MT::Array<T>::readTagged(std::istream& is, const char *ta
 }
 
 /// write robustly in file
-template<class T> void MT::Array<T>::writeTagged(const char* filename, const char* tag, bool binary) const {
+template<class T> void mlr::Array<T>::writeTagged(const char* filename, const char* tag, bool binary) const {
   ofstream fil;
-  MT::open(fil, filename);
+  mlr::open(fil, filename);
   return writeTagged(fil, tag, binary);
 }
 
 /// read robustly from file
-template<class T> bool MT::Array<T>::readTagged(const char* filename, const char *tag) {
+template<class T> bool mlr::Array<T>::readTagged(const char* filename, const char *tag) {
   ifstream fil;
-  MT::open(fil, filename);
+  mlr::open(fil, filename);
   return readTagged(fil, tag);
 }
 
 /// gdb pretty printing
-template<class T> const char* MT::Array<T>::prt() {
-  static MT::String tmp;
+template<class T> const char* mlr::Array<T>::prt() {
+  static mlr::String tmp;
   tmp.clear();
   tmp <<"GDB Array<" <<typeid(T).name() <<"> dim=";
   writeDim(tmp);
@@ -1771,7 +1771,7 @@ template<class T> const char* MT::Array<T>::prt() {
 
 
 /// x = y^T
-template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
+template<class T> void transpose(mlr::Array<T>& x, const mlr::Array<T>& y) {
   CHECK(&x!=&y,"can't transpose matrix into itself");
   CHECK(y.nd<=3, "can only transpose up to 3D arrays");
   if(y.nd==3) {
@@ -1803,7 +1803,7 @@ template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
 }
 
 /// returns the diagonal x = diag(y) (the diagonal-vector of the symmetric 2D matrix y)
-template<class T> MT::Array<T> getDiag(const MT::Array<T>& y) {
+template<class T> mlr::Array<T> getDiag(const mlr::Array<T>& y) {
   CHECK(y.nd==2 && y.d0==y.d1, "can only give diagonal of symmetric 2D matrix");
   arr x;
   x.resize(y.d0);
@@ -1813,15 +1813,15 @@ template<class T> MT::Array<T> getDiag(const MT::Array<T>& y) {
 }
 
 /// inverse of a 2d matrix
-template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A) {
+template<class T> void inverse2d(mlr::Array<T>& Ainv, const mlr::Array<T>& A) {
   Ainv.resize(2, 2);
   Ainv(0, 0)=A(1, 1); Ainv(1, 1)=A(0, 0); Ainv(0, 1)=-A(0, 1); Ainv(1, 0)=-A(1, 0);
   Ainv/=(T)(A(0, 0)*A(1, 1)-A(0, 1)*A(1, 0));
 }
 
 /// sets x to be the diagonal matrix with diagonal v
-template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
-  MT::Array<T> y;
+template<class T> mlr::Array<T> skew(const mlr::Array<T>& v) {
+  mlr::Array<T> y;
   CHECK(v.nd==1 && v.N==3, "can only give diagonal of 1D array");
   y.resize(3, 3);
   y.p[0]=   0.; y.p[1]=-v(2); y.p[2]= v(1);
@@ -1831,19 +1831,19 @@ template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
 }
 
 /// check for Nans in the array (checks x.elem(i)==x.elem(i) for all elements)
-template<class T> void checkNan(const MT::Array<T>& x) {
+template<class T> void checkNan(const mlr::Array<T>& x) {
   for(uint i=0; i<x.N; i++) {
     //CHECK(x.elem(i)!=NAN, "found a NaN" <<x.elem(i) <<'[' <<i <<']');
     CHECK_EQ(x.elem(i),x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
   }
 }
 
-template<class T> void sort(MT::Array<T>& x) {
+template<class T> void sort(mlr::Array<T>& x) {
   T *pstop=x.p+x.N;
   std::sort(x.p, pstop);
 }
 
-template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
+template<class T> mlr::Array<T> replicate(const mlr::Array<T>& A, uint d0) {
   arr x;
   uintA d=A.dim();
   d.prepend(d0);
@@ -1856,7 +1856,7 @@ template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
   return x;
 }
 
-#ifdef MT_CLANG
+#ifdef MLR_CLANG
 #  pragma clang diagnostic pop
 #endif
 
@@ -1867,22 +1867,22 @@ template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
 
 /** @brief entropy \f$H_i = - \sum_x p(X_i=x) \ln p(X_i=x)\f$, where \f$x\f$ ranges
   from \c 0 to \c range-1, of the \c ith variable */
-template<class T> T entropy(const MT::Array<T>& v) {
+template<class T> T entropy(const mlr::Array<T>& v) {
   T t(0);
   for(uint i=v.N; i--;) if(v.p[i]) t-=(T)(v.p[i]*::log((double)v.p[i]));
-  return (T)(t/MT_LN2);
+  return (T)(t/MLR_LN2);
 }
 
 /// v = v / sum(v)
-template<class T> T normalizeDist(MT::Array<T>& v) {
+template<class T> T normalizeDist(mlr::Array<T>& v) {
   T Z=sum(v);
   if(Z>1e-100) v/=Z; else v=(T)1./(T)v.N;
   return Z;
 }
 
 /// v = v / sum(v)
-template<class T> void makeConditional(MT::Array<T>& P) {
-  MT_MSG("makeConditional: don't use this anymore because it normalizes over the second index!!!, rather use tensorCondNormalize and condition on _later_ indices");
+template<class T> void makeConditional(mlr::Array<T>& P) {
+  MLR_MSG("makeConditional: don't use this anymore because it normalizes over the second index!!!, rather use tensorCondNormalize and condition on _later_ indices");
   CHECK_EQ(P.nd,2, "");
   uint i, j;
   T pi;
@@ -1896,7 +1896,7 @@ template<class T> void makeConditional(MT::Array<T>& P) {
 //inline uintA TUP(uint i, uint j, uint k, uint l){                      uintA z(4); z(0)=i; z(1)=j; z(2)=k; z(3)=l; return z; }
 
 /// check whether this is a distribution over the first index w.r.t. the later indices
-template<class T> void checkNormalization(MT::Array<T>& v, double tol) {
+template<class T> void checkNormalization(mlr::Array<T>& v, double tol) {
   double p;
   uint i, j, k, l;
   switch(v.nd) {
@@ -1930,7 +1930,7 @@ template<class T> void checkNormalization(MT::Array<T>& v, double tol) {
   }
 }
 
-template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d) {
+template<class T> void eliminate(mlr::Array<T>& x, const mlr::Array<T>& y, uint d) {
   CHECK_EQ(y.nd,2, "only implemented for 2D yet");
   uint i, j;
   if(d==1) {
@@ -1943,7 +1943,7 @@ template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d)
   }
 }
 
-template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d, uint e) {
+template<class T> void eliminate(mlr::Array<T>& x, const mlr::Array<T>& y, uint d, uint e) {
   CHECK_EQ(y.nd,3, "only implemented for 3D yet");
   uint i, j, k;
   if(d==1 && e==2) {
@@ -1961,7 +1961,7 @@ template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d,
 }
 
 // Eliminates one-dimension, d, from a 3D-tensor, y, and puts the result in x.
-template<class T> void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, uint d) {
+template<class T> void eliminatePartial(mlr::Array<T>& x, const mlr::Array<T>& y, uint d) {
   CHECK_EQ(y.nd,3, "only implemented for 3D yet");
   uint i, j, k;
   if(d==2) {
@@ -1986,7 +1986,7 @@ template<class T> void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, 
 
 /// \f$\sum_i (v^i-w^i)^2\f$
 template<class T>
-T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
+T sqrDistance(const mlr::Array<T>& v, const mlr::Array<T>& w) {
   CHECK_EQ(v.N,w.N,
         "sqrDistance on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
@@ -1994,7 +1994,7 @@ T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
   return t;
 }
 
-template<class T> T maxDiff(const MT::Array<T>& v, const MT::Array<T>& w, uint *im) {
+template<class T> T maxDiff(const mlr::Array<T>& v, const mlr::Array<T>& w, uint *im) {
   CHECK_EQ(v.N,w.N,
         "maxDiff on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
@@ -2010,7 +2010,7 @@ template<class T> T maxDiff(const MT::Array<T>& v, const MT::Array<T>& w, uint *
   return t;
 }
 
-template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T tol) {
+template<class T> T maxRelDiff(const mlr::Array<T>& v, const mlr::Array<T>& w, T tol) {
   CHECK_EQ(v.N,w.N,
         "maxDiff on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0), a, b, c;
@@ -2026,7 +2026,7 @@ template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T t
 
 /// \f$\sum_{i|{\rm mask}_i={\rm true}} (v^i-w^i)^2\f$
 /*template<class T>
-  T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w, const MT::Array<bool>& mask){
+  T sqrDistance(const mlr::Array<T>& v, const mlr::Array<T>& w, const mlr::Array<bool>& mask){
   CHECK_EQ(v.N,w.N,
   "sqrDistance on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T d, t(0);
@@ -2036,21 +2036,21 @@ template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T t
 
 
 /// \f$\sqrt{\sum_{ij} g_{ij} (v^i-w^i) (v^j-w^j)}\f$
-template<class T> T sqrDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> d(v);
+template<class T> T sqrDistance(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w) {
+  mlr::Array<T> d(v);
   d -= w;
   return scalarProduct(g, d, d);
 }
 
 /// \f$\sqrt{\sum_i (v^i-w^i)^2}\f$
 template<class T>
-T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
+T euclideanDistance(const mlr::Array<T>& v, const mlr::Array<T>& w) {
   return (T)::sqrt((double)sqrDistance(v, w));
 }
 
 /// \f$\sqrt{\sum_i (v^i-w^i)^2}\f$
 template<class T>
-T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w) {
+T metricDistance(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w) {
   return (T)::sqrt((double)sqrDistance(g, v, w));
 }
 
@@ -2061,22 +2061,22 @@ T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T
 //
 
 /// \f$\sum_i x_i\f$
-template<class T> T sum(const MT::Array<T>& v) {
+template<class T> T sum(const mlr::Array<T>& v) {
   T t(0);
   for(uint i=v.N; i--; t+=v.p[i]) {};
   return t;
 }
 
-template<class T> T scalar(const MT::Array<T>& x) {
+template<class T> T scalar(const mlr::Array<T>& x) {
   return x.scalar();
 }
 
 /// \f$\sum_i x_i\f$
-template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
+template<class T> mlr::Array<T> sum(const mlr::Array<T>& v, uint d) {
   CHECK(v.nd>d, "array doesn't have this dimension");
-  MT::Array<T> x;
+  mlr::Array<T> x;
   x.referTo(v);
-  MT::Array<T> S;
+  mlr::Array<T> S;
   uint i, j, k;
   if(d==v.nd-1) {  //sum over last index - contiguous in memory
     x.reshape(x.N/x.dim(x.nd-1), x.dim(x.nd-1));
@@ -2115,33 +2115,33 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
 }
 
 /// \f$\sum_i |x_i|\f$
-template<class T> T sumOfAbs(const MT::Array<T>& v) {
+template<class T> T sumOfAbs(const mlr::Array<T>& v) {
   T t(0);
   for(uint i=v.N; i--; t+=(T)::fabs((double)v.p[i])) {};
   return t;
 }
 
 /// \f$\sum_i x_i^2\f$
-template<class T> T sumOfSqr(const MT::Array<T>& v) {
+template<class T> T sumOfSqr(const mlr::Array<T>& v) {
   T t(0);
   for(uint i=v.N; i--; t+=v.p[i]*v.p[i]) {};
   return t;
 }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
+template<class T> T length(const mlr::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
-template<class T> T var(const MT::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
+template<class T> T var(const mlr::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
 
 /// \f$\sum_i x_{ii}\f$
-template<class T> T trace(const MT::Array<T>& v) {
+template<class T> T trace(const mlr::Array<T>& v) {
   CHECK(v.nd==2 && v.d0==v.d1, "only for squared matrix");
   T t(0);
   for(uint i=0; i<v.d0; i++) t+=v(i, i);
   return t;
 }
 
-template<class T> T minDiag(const MT::Array<T>& v) {
+template<class T> T minDiag(const mlr::Array<T>& v) {
   CHECK(v.nd==2 && v.d0==v.d1, "only for squared matrix");
   T t=v(0, 0);
   for(uint i=1; i<v.d0; i++) if(v(i, i)<t) t=v(i, i);
@@ -2149,7 +2149,7 @@ template<class T> T minDiag(const MT::Array<T>& v) {
 }
 
 /// get absolute min (using fabs)
-template<class T> T absMin(const MT::Array<T>& x) {
+template<class T> T absMin(const mlr::Array<T>& x) {
   CHECK(x.N, "");
   uint i;
   T t((T)::fabs((double)x.p[0]));
@@ -2158,7 +2158,7 @@ template<class T> T absMin(const MT::Array<T>& x) {
 }
 
 /// get absolute maximum (using fabs)
-template<class T> T absMax(const MT::Array<T>& x) {
+template<class T> T absMax(const mlr::Array<T>& x) {
   if(!x.N) return (T)0;
   uint i;
   T t((T)::fabs((double)x.p[0]));
@@ -2173,7 +2173,7 @@ template<class T> T absMax(const MT::Array<T>& x) {
 //
 
 /// \f$\prod_i x_i\f$
-template<class T> T product(const MT::Array<T>& v) {
+template<class T> T product(const mlr::Array<T>& v) {
   T t(1);
   for(uint i=v.N; i--; t *= v.p[i]);
   return t;
@@ -2183,7 +2183,7 @@ template<class T> T product(const MT::Array<T>& v) {
   \f$\forall_{ik}:~ x_{ik} = \sum_j v_{ij}\, w_{jk}\f$ but also:
   \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$*/
 template<class T>
-void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+void innerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   /*
     if(y.nd==2 && z.nd==2 && y.N==z.N && y.d1==1 && z.d1==1){  //elem-wise
     HALT("make element-wise multiplication explicite!");
@@ -2193,8 +2193,8 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   */
   if(y.nd==2 && z.nd==1) {  //matrix x vector -> vector
     CHECK_EQ(y.d1,z.d0, "wrong dimensions for inner product");
-#ifdef MT_LAPACK
-    if(MT::useLapack && typeid(T)==typeid(double)) { blas_Mv(x, y, z); return; }
+#ifdef MLR_LAPACK
+    if(mlr::useLapack && typeid(T)==typeid(double)) { blas_Mv(x, y, z); return; }
 #endif
     uint i, d0=y.d0, dk=y.d1;
     T *a, *astop, *b, *c;
@@ -2213,19 +2213,19 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     CHECK_EQ(y.d1,z.d0, "wrong dimensions for inner product");
     uint i, j, d0=y.d0, d1=z.d1, dk=y.d1;
 #if 0
-    if(y.mtype==MT::Array<T>::diagMT) {
+    if(y.mtype==mlr::Array<T>::diagMT) {
       x.resize(d0, d1);
       for(i=0; i<d0; i++) for(j=0; j<d1; j++) x(i, j) = y(i, i) * z(i, j);
       return;
     }
-    if(z.mtype==MT::Array<T>::diagMT) {
+    if(z.mtype==mlr::Array<T>::diagMT) {
       x.resize(d0, d1);
       for(i=0; i<d0; i++) for(j=0; j<d1; j++) x(i, j) *= y(i, j) * z(j, j);
       return;
     }
 #endif
-#ifdef MT_LAPACK
-    if(MT::useLapack && typeid(T)==typeid(double)) { blas_MM(x, y, z); return; }
+#ifdef MLR_LAPACK
+    if(mlr::useLapack && typeid(T)==typeid(double)) { blas_MM(x, y, z); return; }
 #endif
     T *a, *astop, *b, *c;
     x.resize(d0, d1); x.setZero();
@@ -2254,34 +2254,34 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   if(y.nd==1 && z.nd==2) {  //vector^T x matrix -> vector^T
     HALT("This is a stupid old inconsistent case of matrix multiplication! Never use this convention! Change your code: transpose first term explicitly.");
     /*
-    MT::Array<T> zt;
+    mlr::Array<T> zt;
     transpose(zt, z);
     x = zt*y;
     */
   }
   if(y.nd==2 && z.nd==3) {
-    MT::Array<T> zz; zz.referTo(z);
+    mlr::Array<T> zz; zz.referTo(z);
     zz.reshape(z.d0, z.d1*z.d2);
     innerProduct(x, y, zz);
     x.reshape(y.d0, z.d1, z.d2);
     return;
   }
   if(y.nd==3 && z.nd==2) {
-    MT::Array<T> yy; yy.referTo(y);
+    mlr::Array<T> yy; yy.referTo(y);
     yy.reshape(y.d0*y.d1, y.d2);
     innerProduct(x, yy, z);
     x.reshape(y.d0, y.d1, z.d1);
     return;
   }
   if(y.nd==3 && z.nd==1) {
-    MT::Array<T> yy; yy.referTo(y);
+    mlr::Array<T> yy; yy.referTo(y);
     yy.reshape(y.d0*y.d1, y.d2);
     innerProduct(x, yy, z);
     x.reshape(y.d0, y.d1);
     return;
   }
   if(y.nd==1 && z.nd==3) {
-    MT::Array<T> zz; zz.referTo(z);
+    mlr::Array<T> zz; zz.referTo(z);
     zz.reshape(z.d0, z.d1*z.d2);
     innerProduct(x, y, zz);
     x.reshape(z.d1, z.d2);
@@ -2303,7 +2303,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
   x_{ijk} = v_{ij}\, w_{k}\f$ */
 template<class T>
-void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+void outerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {
     uint i, j, d0=y.d0, d1=z.d0;
     x.resize(d0, d1);
@@ -2318,7 +2318,7 @@ void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$
   \f$\forall_{i}:~ x_{ij} = v_{ij} w_{ij}\f$*/
 template<class T>
-void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+void indexWiseProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {  //vector x vector -> element wise
     x=y;
     x*=z;
@@ -2353,10 +2353,10 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
 /** @brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
   x_{ijk} = v_{ij}\, w_{k}\f$ */
 template<class T>
-MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
+mlr::Array<T> crossProduct(const mlr::Array<T>& y, const mlr::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {
     CHECK(y.N==3 && z.N==3,"cross product only works for 3D vectors!");
-    MT::Array<T> x(3);
+    mlr::Array<T> x(3);
     x.p[0]=y.p[1]*z.p[2]-y.p[2]*z.p[1];
     x.p[1]=y.p[2]*z.p[0]-y.p[0]*z.p[2];
     x.p[2]=y.p[0]*z.p[1]-y.p[1]*z.p[0];
@@ -2365,7 +2365,7 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
   if(y.nd==2 && z.nd==1) { //every COLUMN of y is cross-product'd with z!
     CHECK(y.d0==3 && z.N==3,"cross product only works for 3D vectors!");
 #if 0
-    MT::Array<T> x(3, y.d1);
+    mlr::Array<T> x(3, y.d1);
     for(uint i=0;i<y.d1;i++){
       x(0,i)=y(1,i)*z(2)-y(2,i)*z(1);
       x(1,i)=y(2,i)*z(0)-y(0,i)*z(2);
@@ -2373,8 +2373,8 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
     }
     return x;
 #else
-    MT::Array<T> x(y.d1, 3);
-    MT::Array<T> yt = ~y;
+    mlr::Array<T> x(y.d1, 3);
+    mlr::Array<T> yt = ~y;
     double *xp, *yp, *zp=z.p;
     for(uint i=0;i<y.d1;i++){
       xp = &x(i,0); yp = &yt(i,0);
@@ -2390,7 +2390,7 @@ MT::Array<T> crossProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
 
 /// \f$\sum_i v_i\, w_i\f$, or \f$\sum_{ij} v_{ij}\, w_{ij}\f$, etc.
 template<class T>
-T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {
+T scalarProduct(const mlr::Array<T>& v, const mlr::Array<T>& w) {
   CHECK_EQ(v.N,w.N,
         "scalar product on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T t(0);
@@ -2400,7 +2400,7 @@ T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {
 
 /// \f$\sum_{ij} g_{ij}\, v_i\, w_i\f$
 template<class T>
-T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w) {
+T scalarProduct(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w) {
   CHECK(v.N==w.N && g.nd==2 && g.d0==v.N && g.d1==w.N,
         "scalar product on different array dimensions (" <<v.N <<", " <<w.N <<")");
   T t(0);
@@ -2417,7 +2417,7 @@ T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>
 }
 
 template<class T>
-MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
+mlr::Array<T> diagProduct(const mlr::Array<T>& y, const mlr::Array<T>& z) {
   CHECK((y.nd==1 && z.nd==2) || (y.nd==2 && z.nd==1), "");
   arr x;
   uint i, j;
@@ -2436,29 +2436,29 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
   HALT("");
 }
 
-template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z;
+template<class T> mlr::Array<T> elemWiseMin(const mlr::Array<T>& v, const mlr::Array<T>& w) {
+  mlr::Array<T> z;
   z.resizeAs(v);
   for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)<w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }
 
-template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z;
+template<class T> mlr::Array<T> elemWiseMax(const mlr::Array<T>& v, const mlr::Array<T>& w) {
+  mlr::Array<T> z;
   z.resizeAs(v);
   for(uint i=0; i<v.N; i++) z(i) = v.elem(i)>w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }
 
-template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const T& w) {
-  MT::Array<T> z;
+template<class T> mlr::Array<T> elemWiseMax(const mlr::Array<T>& v, const T& w) {
+  mlr::Array<T> z;
   z.resizeAs(v.N);
   for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)>w?v.elem(i):w;
   return z;
 }
 
-template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
-  MT::Array<T> z;
+template<class T> mlr::Array<T> elemWiseMax(const T& v, const mlr::Array<T>& w) {
+  mlr::Array<T> z;
   z.resizeAs(w.N);
   for(uint i=0; i<w.N; i++) z.elem(i) = v>w.elem(i)?v:w.elem(i);
   return z;
@@ -2474,7 +2474,7 @@ template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
 
 /** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
-template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
+template<class T> void tensorCondNormalize(mlr::Array<T>& X, int left) {
   uint i, j, dl=1, dr;
   T sum;
   if(left>=0) {  //normalize over the left variables
@@ -2502,7 +2502,7 @@ template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
 
 /** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
-template<class T> void tensorCondMax(MT::Array<T>& X, uint left) {
+template<class T> void tensorCondMax(mlr::Array<T>& X, uint left) {
   uint i, j, dl=1, dr, jmax;
   T pmax;
   for(j=0; j<left; j++) dl*=X.dim(j);
@@ -2520,7 +2520,7 @@ template<class T> void tensorCondMax(MT::Array<T>& X, uint left) {
   }
 }
 
-template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate) {
+template<class T> void tensorCond11Rule(mlr::Array<T>& X, uint left, double rate) {
   uint i, j, dl=1, dr, jmax1, jmax2;
   for(j=0; j<left; j++) dl*=X.dim(j);
   dr=X.N/dl;
@@ -2544,7 +2544,7 @@ template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate)
 
 /** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
-template<class T> void tensorCondSoftMax(MT::Array<T>& X, uint left, double beta) {
+template<class T> void tensorCondSoftMax(mlr::Array<T>& X, uint left, double beta) {
   uint i;
   for(i=0; i<X.N; i++) X.p[i] = (T)::exp(beta*X.p[i]);
   tensorCondNormalize(X, left);
@@ -2552,7 +2552,7 @@ template<class T> void tensorCondSoftMax(MT::Array<T>& X, uint left, double beta
 
 /** @brief checks whether X is a normalized distribution over the left leftmost-indexed
   variables */
-template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X, uint left, double tol) {
+template<class T> void tensorCheckCondNormalization(const mlr::Array<T>& X, uint left, double tol) {
   uint i, j, dl=1, dr;
   double sum;
   for(j=0; j<left; j++) dl*=X.dim(j);
@@ -2565,7 +2565,7 @@ template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X, uint 
   }
 }
 
-template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>& X, uint left, double logP, double tol) {
+template<class T> void tensorCheckCondNormalization_with_logP(const mlr::Array<T>& X, uint left, double logP, double tol) {
   uint i, j, dl=1, dr;
   double sum, coeff=::exp(logP);
   for(j=0; j<left; j++) dl*=X.dim(j);
@@ -2587,11 +2587,11 @@ template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>
   tensor(C, A, TUP(4, 2, 1), B, TUP(3, 0), 2); Here, the `2` indicates that
   the last two indices of i_0, .., i_4 are summed over, and C only
   becomes a 3rd rank instead of 5th rank tensor */
-template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum) {
+template<class T> void tensorEquation(mlr::Array<T> &X, const mlr::Array<T> &A, const uintA &pickA, const mlr::Array<T> &B, const uintA &pickB, uint sum) {
   CHECK(&X!=&A && &X!=&B, "output tensor must be different from input tensors");
   CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: " <<A.nd <<"!=" <<pickA.N <<" " <<B.nd <<"!=" <<pickB.N);
   
-  uint n=1+MT::MAX(pickA.max(), pickB.max());
+  uint n=1+mlr::MAX(pickA.max(), pickB.max());
   uint i, j, r, s, N, res;
   intA a(n), b(n);
   uintA d(n), dx(n-sum), I, Ia(A.nd), Ib(B.nd);
@@ -2617,7 +2617,7 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
     if(a(i)!=-1) r=A.dim(a(i)); else r=0;
     if(b(i)!=-1) s=B.dim(b(i)); else s=0;
     CHECK(!r || !s || r==s, "inconsistent sharing dimensionalities: " <<r <<"!=" <<s);
-    d(i)=MT::MAX(r, s);
+    d(i)=mlr::MAX(r, s);
   }
   DEBUG_TENSOR(cout <<"full dimensionality d=" <<d <<endl;);
   
@@ -2653,10 +2653,10 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
   }
 }
 
-template<class T> void tensorEquation_doesntWorkLikeThat(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum) {
+template<class T> void tensorEquation_doesntWorkLikeThat(mlr::Array<T> &X, const mlr::Array<T> &A, const uintA &pickA, const mlr::Array<T> &B, const uintA &pickB, uint sum) {
   CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: " <<A.nd <<"!=" <<pickA.N <<" " <<B.nd <<"!=" <<pickB.N);
   
-  uint n=1+MT::MAX(pickA.max(), pickB.max());
+  uint n=1+mlr::MAX(pickA.max(), pickB.max());
   uint i, j;
   uintA a(n), b(n);
   
@@ -2717,7 +2717,7 @@ inline void getMultiDimIncrement(const uintA& Xdim, const uintA &Yid, uint* Ydim
 
 /** \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
   from X, where Y will share the slots `Yid' with X */
-template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
+template<class T> void tensorMarginal(mlr::Array<T> &Y, const mlr::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
@@ -2751,7 +2751,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
 
 /** \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
   from X, where Y will share the slots `Yid' with X */
-template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
+template<class T> void tensorPermutation(mlr::Array<T> &Y, const mlr::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK_EQ(Yid.N,X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
@@ -2771,7 +2771,7 @@ template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X,
 
 /** \f$Y_{i_2, i_0} = {\rm max}_{i_1} X_{i_0, i_1, i_2}\f$. Get the ``max-marginal'' Y
   from X, where Y will share the slots `Yid' with X (basis of max-product BP) */
-template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
+template<class T> void tensorMaxMarginal(mlr::Array<T> &Y, const mlr::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
   
@@ -2792,7 +2792,7 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
 
 /** @brief \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
-template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
+template<class T> void tensorAdd_old(mlr::Array<T> &X, const mlr::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
@@ -2814,7 +2814,7 @@ template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, con
   }
 }
 
-template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x, const uintA &xd, const uintA &ids) {
+template<class T> void tensorMarginal_old(mlr::Array<T> &y, const mlr::Array<T> &x, const uintA &xd, const uintA &ids) {
   uint i, j, k, n=product(xd);
   CHECK_EQ(x.N,n, "");
   //size y
@@ -2837,7 +2837,7 @@ template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x
 
 /** \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
-template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
+template<class T> void tensorMultiply(mlr::Array<T> &X, const mlr::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
@@ -2860,7 +2860,7 @@ template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, co
 /** \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
 // TODO cope with division by 0, in particular 0/0
-template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
+template<class T> void tensorDivide(mlr::Array<T> &X, const mlr::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
@@ -2876,12 +2876,12 @@ template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, cons
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++) {
     // TODO division by zero??
-    X.p[Xcount] = MT::DIV(X.p[Xcount], Y.p[Ycount]);
+    X.p[Xcount] = mlr::DIV(X.p[Xcount], Y.p[Ycount]);
     multiDimIncrement(Ycount, I, X.d, Yinc, Ydec, X.nd);
   }
 }
 
-template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
+template<class T> void tensorAdd(mlr::Array<T> &X, const mlr::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
   CHECK_EQ(Yid.N,Y.nd, "need to specify " <<Y.nd <<" slots, not " <<Yid.N);
   CHECK(Yid.N<=X.nd, "can't take slots " <<Yid <<" from " <<X.nd <<"D tensor");
@@ -2903,7 +2903,7 @@ template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const u
 
 /** multiply y onto x, where x has dimensions `d' and y shares the
   dimensions `ids' with x */
-template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y, const uintA &d, const uintA &ids) {
+template<class T> void tensorMultiply_old(mlr::Array<T> &x, const mlr::Array<T> &y, const uintA &d, const uintA &ids) {
   uint i, j, k, n=x.N;
   CHECK_EQ(n,product(d), "");
   
@@ -2928,9 +2928,9 @@ template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y
 
 /// x becomes the section of y and z
 template<class T>
-void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+void setSection(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   x.clear();
-  x.anticipateMEM(MT::MIN(y.N,z.N));
+  x.anticipateMEM(mlr::MIN(y.N,z.N));
   T* yp=y.p, *zp=z.p, *ystop=y.p+y.N, *zstop=z.p+z.N;
   for(yp=y.p;yp!=ystop;yp++){
     for(zp=z.p;zp!=zstop;zp++){
@@ -2943,7 +2943,7 @@ void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
 
 /// x becomes the section of y and z
 template<class T>
-void setUnion(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+void setUnion(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   uint i, j;
   if(&x!=&y) x=y;
   for(i=0; i<z.N; i++) {
@@ -2954,7 +2954,7 @@ void setUnion(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
 
 /// x becomes the section of y and z
 template<class T>
-void setMinus(MT::Array<T>& x, const MT::Array<T>& y) {
+void setMinus(mlr::Array<T>& x, const mlr::Array<T>& y) {
   uint i, j;
   for(i=0; i<x.N;) {
     for(j=0; j<y.N; j++) {
@@ -2967,10 +2967,10 @@ void setMinus(MT::Array<T>& x, const MT::Array<T>& y) {
   }
 }
 
-template<class T> MT::Array<T> setSectionSorted(const MT::Array<T>& x, const MT::Array<T>& y,
+template<class T> mlr::Array<T> setSectionSorted(const mlr::Array<T>& x, const mlr::Array<T>& y,
                                                 bool (*comp)(const T& a, const T& b) ) {
-  MT::Array<T> R;
-//  R.anticipateMEM(MT::MIN(x.N,y.N));
+  mlr::Array<T> R;
+//  R.anticipateMEM(mlr::MIN(x.N,y.N));
   T* xp=x.p, *yp=y.p, *xstop=x.p+x.N, *ystop=y.p+y.N;
   while(xp!=xstop && yp!=ystop){
     if(*xp==*yp){
@@ -2987,7 +2987,7 @@ template<class T> MT::Array<T> setSectionSorted(const MT::Array<T>& x, const MT:
 
 /// x becomes the section of y and z
 template<class T>
-void setMinusSorted(MT::Array<T>& x, const MT::Array<T>& y,
+void setMinusSorted(mlr::Array<T>& x, const mlr::Array<T>& y,
                     bool (*comp)(const T& a, const T& b) ){
   T *yp=y.p, *ystop=y.p+y.N;
   for(uint i=0;i<x.N;){
@@ -2999,8 +2999,8 @@ void setMinusSorted(MT::Array<T>& x, const MT::Array<T>& y,
 }
 
 /// share x and y at least one element?
-template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Array<T>& y) {
-  MT::Array<T> z;
+template<class T> uint numberSharedElements(const mlr::Array<T>& x, const mlr::Array<T>& y) {
+  mlr::Array<T> z;
   setSection(z, x, y);
   return z.N;
 }
@@ -3012,18 +3012,18 @@ template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Arr
 //
 
 /// Assign all elements of \c a to a uniformly distributed discrete value in {low, .., hi}
-template<class T> void rndInteger(MT::Array<T>& a, int low, int high, bool add) {
+template<class T> void rndInteger(mlr::Array<T>& a, int low, int high, bool add) {
   if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)(low+(int)rnd.num(1+high-low));
   else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(low+(int)rnd.num(1+high-low));
 }
 
 /// Assign all elements of \c a to a uniformly distributed continuous value in [low, hi]
-template<class T> void rndUniform(MT::Array<T>& a, double low, double high, bool add) {
+template<class T> void rndUniform(mlr::Array<T>& a, double low, double high, bool add) {
   if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)rnd.uni(low, high);
   else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)rnd.uni(low, high);
 }
 
-template<class T> void rndNegLogUniform(MT::Array<T>& a, double low, double high, bool add) {
+template<class T> void rndNegLogUniform(mlr::Array<T>& a, double low, double high, bool add) {
   if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)(-::log(rnd.uni(low, high)));
   else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(-::log(rnd.uni(low, high)));
 }
@@ -3033,21 +3033,21 @@ template<class T> void rndNegLogUniform(MT::Array<T>& a, double low, double high
     want the multivariate Gaussian to have a given standard deviation!
     If add is true, the Gaussian noise is added to the existing
     value */
-template<class T> void rndGauss(MT::Array<T>& x, double stdDev, bool add) {
+template<class T> void rndGauss(mlr::Array<T>& x, double stdDev, bool add) {
   if(!add) for(uint i=0; i<x.N; i++) x.p[i] =(T)(stdDev*rnd.gauss());
   else     for(uint i=0; i<x.N; i++) x.p[i]+=(T)(stdDev*rnd.gauss());
 }
 
 
 /// a gaussian random vector with Id covariance matrix (sdv = sqrt(dimension))
-/*template<class T> void rndGauss(MT::Array<T>& a, bool add){
+/*template<class T> void rndGauss(mlr::Array<T>& a, bool add){
   if(!add) for(uint i=0;i<a.N;i++) a.p[i]=rnd.gauss();
   else     for(uint i=0;i<a.N;i++) a.p[i]+=rnd.gauss();
   }*/
 
 /// returns an array with \c dim Gaussian noise elements
-/*template<class T> MT::Array<T>& rndGauss(double stdDev, uint dim){
-  static MT::Array<T> z;
+/*template<class T> mlr::Array<T>& rndGauss(double stdDev, uint dim){
+  static mlr::Array<T> z;
   stdDev/=::sqrt(dim);
   z.resize(dim);
   rndGauss(z, stdDev);
@@ -3057,7 +3057,7 @@ template<class T> void rndGauss(MT::Array<T>& x, double stdDev, bool add) {
 /** @brief from a vector of numbers, calculates the softmax distribution
   soft(i) = exp(beta*a(i)), and returns a random sample from
   this distribution (an index in {0, .., a.N-1}) */
-template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta) {
+template<class T> uint softMax(const mlr::Array<T>& a, arr& soft, double beta) {
   double norm=0., r;
   uint i; int sel=-1;
   resizeAs(soft, a);
@@ -3081,7 +3081,7 @@ template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta) {
 //
 
 
-namespace MT {
+namespace mlr {
 /// transpose
 template<class T> Array<T> operator~(const Array<T>& y) { Array<T> x; transpose(x, y); return x; }
 /// negative
@@ -3188,7 +3188,7 @@ template<class T> bool operator<(const Array<T>& v, const Array<T>& w) {
 /// @name arithmetic operators
 //
 
-template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
+template<class T> void negative(mlr::Array<T>& x, const mlr::Array<T>& y) {
   if(&x!=&y) x.resizeAs(y);
   T *xp=x.p, *xstop=xp+x.N;
   const T *yp=y.p;
@@ -3203,8 +3203,8 @@ inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
 
 #define UnaryFunction( func )         \
   template<class T>           \
-  MT::Array<T> func (const MT::Array<T>& y){    \
-    MT::Array<T> x;           \
+  mlr::Array<T> func (const mlr::Array<T>& y){    \
+    mlr::Array<T> x;           \
     if(&x!=&y) x.resizeAs(y);         \
     T *xp=x.p, *xstop=xp+x.N, *yp=y.p;            \
     for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
@@ -3248,39 +3248,39 @@ UnaryFunction(sigm);
 
 #define BinaryFunction( func )            \
   template<class T>             \
-  MT::Array<T> func(const MT::Array<T>& y, const MT::Array<T>& z){ \
+  mlr::Array<T> func(const mlr::Array<T>& y, const mlr::Array<T>& z){ \
     CHECK_EQ(y.N,z.N,             \
           "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")"); \
-    MT::Array<T> x;             \
+    mlr::Array<T> x;             \
     x.resizeAs(y);              \
     for(uint i=x.N;i--; ) x.p[i]= func(y.p[i], z.p[i]);      \
     return x;           \
   }                 \
   \
   template<class T>             \
-  MT::Array<T> func(const MT::Array<T>& y, T z){     \
-    MT::Array<T> x;             \
+  mlr::Array<T> func(const mlr::Array<T>& y, T z){     \
+    mlr::Array<T> x;             \
     x.resizeAs(y);              \
     for(uint i=x.N;i--; ) x.p[i]= func(y.p[i], z);     \
     return x;           \
   }                 \
   \
   template<class T>             \
-  MT::Array<T> func(T y, const MT::Array<T>& z){     \
-    MT::Array<T> x;             \
+  mlr::Array<T> func(T y, const mlr::Array<T>& z){     \
+    mlr::Array<T> x;             \
     x.resizeAs(z);              \
     for(uint i=x.N;i--; ) x.p[i]= func(y, z.p[i]);     \
     return x;           \
   }
 
 BinaryFunction(atan2);
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 BinaryFunction(pow);
 #endif
 BinaryFunction(fmod);
 #undef BinaryFunction
 
-#ifndef MT_doxy // exclude these macros when generating the documentation
+#ifndef MLR_doxy // exclude these macros when generating the documentation
 // (doxygen can't handle them...)
 #endif //(doxygen exclusion)
 
@@ -3288,7 +3288,7 @@ BinaryFunction(fmod);
 /*
 
 /// element-wise linear combination (plus with scalar factors for each array)
-template<class T> void plusSASA(MT::Array<T>& x, T a, const MT::Array<T>& y, T b, const MT::Array<T>& z){
+template<class T> void plusSASA(mlr::Array<T>& x, T a, const mlr::Array<T>& y, T b, const mlr::Array<T>& z){
 CHECK_EQ(y.N,z.N, "must have same size for adding!");
 uint i, n=y.N;
 x.resizeAs(y);
@@ -3298,16 +3298,16 @@ for(i=0;i<n;i++) x.p[i]=a*y.p[i]+b*z.p[i];
 
 
 #if 0
-#define IMPLEMENT_Array(x) void implement_Array_##x(){ MT::Array<x> dummy; }
-#define IMPLEMENT_Array_(x, key) void implement_Array_##key(){ MT::Array<x> dummy; }
+#define IMPLEMENT_Array(x) void implement_Array_##x(){ mlr::Array<x> dummy; }
+#define IMPLEMENT_Array_(x, key) void implement_Array_##key(){ mlr::Array<x> dummy; }
 
-template struct MT::Array<double>;
-template struct MT::Array<int>;
-template struct MT::Array<uint>;
-template struct MT::Array<float>;
-template struct MT::Array<byte>;
-template struct MT::Array<char>;
-template struct MT::Array<bool>;
+template struct mlr::Array<double>;
+template struct mlr::Array<int>;
+template struct mlr::Array<uint>;
+template struct mlr::Array<float>;
+template struct mlr::Array<byte>;
+template struct mlr::Array<char>;
+template struct mlr::Array<bool>;
 #define T double
 #  include "array_instantiate.cpp"
 #define T int
@@ -3319,27 +3319,27 @@ template struct MT::Array<bool>;
 // lists
 //
 
-template<class T> void listWrite(const MT::Array<T*>& L, std::ostream& os, const char *ELEMSEP, const char *delim) {
+template<class T> void listWrite(const mlr::Array<T*>& L, std::ostream& os, const char *ELEMSEP, const char *delim) {
   uint i;
   if(delim) os <<delim[0];
   for(i=0; i<L.N; i++) { if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
 
-template<class T> void listWriteNames(const MT::Array<T*>& L, std::ostream& os) {
+template<class T> void listWriteNames(const mlr::Array<T*>& L, std::ostream& os) {
   uint i;
   os <<'(';
   for(i=0; i<L.N; i++) { if(i) os <<' ';  if(L.elem(i)) os <<L.elem(i)->name; else os <<"<NULL>"; }
   os <<')' <<std::flush;
 }
 
-template<class T> void listRead(MT::Array<T*>& L, std::istream& is, const char *delim) {
+template<class T> void listRead(mlr::Array<T*>& L, std::istream& is, const char *delim) {
   CHECK(!L.N, "delete the list before reading!");
   CHECK(delim, "automatic list reading requires delimiters");
   char c;
-  if(delim) { MT::skip(is); is.get(c); CHECK_EQ(c,delim[0], "couldn't parse opening list delimiter"); }
+  if(delim) { mlr::skip(is); is.get(c); CHECK_EQ(c,delim[0], "couldn't parse opening list delimiter"); }
   for(;;) {
-    c=MT::peerNextChar(is);
+    c=mlr::peerNextChar(is);
     if(c==delim[1]) { is.get(c); break; }
     if(!is.good()) break;
     L.append(new T());
@@ -3347,21 +3347,21 @@ template<class T> void listRead(MT::Array<T*>& L, std::istream& is, const char *
   }
 }
 
-template<class T> void listClone(MT::Array<T*>& L, const MT::Array<T*>& M) {
+template<class T> void listClone(mlr::Array<T*>& L, const mlr::Array<T*>& M) {
   listDelete(L);
   L.resize(M.N);
   uint i;
   for(i=0; i<L.N; i++) L(i)=M(i)->newClone();
 }
 
-template<class T> void listResize(MT::Array<T*>& L, uint N) {
+template<class T> void listResize(mlr::Array<T*>& L, uint N) {
   listDelete(L);
   L.resize(N);
   uint i;
   for(i=0; i<N; i++) L(i)=new T();
 }
 
-template<class T> void listResizeCopy(MT::Array<T*>& L, uint N) {
+template<class T> void listResizeCopy(mlr::Array<T*>& L, uint N) {
   if(L.N<N){
     uint n=L.N;
     L.resizeCopy(N);
@@ -3372,40 +3372,40 @@ template<class T> void listResizeCopy(MT::Array<T*>& L, uint N) {
   }
 }
 
-template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {
+template<class T> void listCopy(mlr::Array<T*>& L, const mlr::Array<T*>& M) {
   listDelete(L);
   L.resize(M.N);
   for(uint i=0; i<L.N; i++) L(i)=new T(*M(i));
 }
 
-template<class T> void listDelete(MT::Array<T*>& L) {
+template<class T> void listDelete(mlr::Array<T*>& L) {
   for(uint i=L.N; i--;) delete L.elem(i);
   L.clear();
 }
 
-template<class T> void listReindex(MT::Array<T*>& L) {
+template<class T> void listReindex(mlr::Array<T*>& L) {
   for(uint i=0;i<L.N;i++) L.elem(i)->index=i;
 }
 
-template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
+template<class T> T* listFindByName(const mlr::Array<T*>& L, const char* name) {
   for_list(T,  e,  L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
-template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type) {
+template<class T> T* listFindByType(const mlr::Array<T*>& L, const char* type) {
   for_list(T,  e,  L) if(!strcmp(e->type, type)) return e;
   //std::cerr <<"type '" <<type <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
-template<class T> T* listFindValue(const MT::Array<T*>& L, const T& x) {
+template<class T> T* listFindValue(const mlr::Array<T*>& L, const T& x) {
   for_list(T,  e,  L) if(*e==x) return e;
   //std::cerr <<"value '" <<x <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
-template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop) {
+template<class T, class LowerOperator> void listSort(mlr::Array<T*>& L, LowerOperator lowerop) {
   std::sort(L.p, L.pstop, lowerop);
   //for(uint i=0;i<L.N;i++) L(i)->index=i;
 }
@@ -3416,7 +3416,7 @@ template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOper
 // graphs
 //
 
-template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array<edge*>& E) {
+template<class vert, class edge> void graphDelete(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
   listDelete(E);
   listDelete(V);
 }
@@ -3426,7 +3426,7 @@ template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to) {
   return NULL;
 }
 
-template<class vert, class edge> void graphRandomUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, double connectivity) {
+template<class vert, class edge> void graphRandomUndirected(mlr::Array<vert*>& V, mlr::Array<edge*>& E, uint N, double connectivity) {
   uint i, j;
   for(i=0; i<N; i++) V.append(new vert);
   for(i=0; i<N; i++) for(j=i+1; j<N; j++) {
@@ -3434,13 +3434,13 @@ template<class vert, class edge> void graphRandomUndirected(MT::Array<vert*>& V,
     }
 }
 
-template<class vert, class edge> void graphRandomLinear(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N) {
+template<class vert, class edge> void graphRandomLinear(mlr::Array<vert*>& V, mlr::Array<edge*>& E, uint N) {
   uint i;
   for(i=0; i<N; i++) V.append(new vert);
   for(i=1; i<N; i++) newEdge(i-1, i, E);
 }
 
-template<class vert, class edge> void graphRandomTree(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, uint roots) {
+template<class vert, class edge> void graphRandomTree(mlr::Array<vert*>& V, mlr::Array<edge*>& E, uint N, uint roots) {
   uint i;
   for(i=0; i<N; i++) V.append(new vert);
   CHECK(roots>=1, "");
@@ -3448,7 +3448,7 @@ template<class vert, class edge> void graphRandomTree(MT::Array<vert*>& V, MT::A
 }
 
 template<class vert, class edge>
-void graphMaximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const arr& W) {
+void graphMaximumSpanningTree(mlr::Array<vert*>& V, mlr::Array<edge*>& E, const arr& W) {
   CHECK(W.nd==2 && W.d0==W.d1, "");
   uint i;
   for(i=0; i<W.d0; i++) new_elem(V);
@@ -3480,7 +3480,7 @@ void graphMaximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const ar
   graphMakeLists(V, E);
 }
 
-/*template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, uint degree){
+/*template<class vert, class edge> void graphRandomFixedDegree(mlr::Array<vert*>& V, mlr::Array<edge*>& E, uint N, uint degree){
   uint i;
   for(i=0;i<N;i++) V.append(new vert);
   uintA D(N); D.setZero(); //degrees of vertices
@@ -3495,7 +3495,7 @@ void graphMaximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const ar
   graphWriteUndirected(cout, V, E);
 }*/
 
-template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, uint d) {
+template<class vert, class edge> void graphRandomFixedDegree(mlr::Array<vert*>& V, mlr::Array<edge*>& E, uint N, uint d) {
   // --- from Joris' libDAI!!
   // Algorithm 1 in "Generating random regular graphs quickly"
   // by A. Steger and N.C. Wormald
@@ -3569,7 +3569,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
 
 
 
-template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Array<edge*>& E, const uintA& layers, bool interConnections) {
+template<class vert, class edge> void graphLayered(mlr::Array<vert*>& V, mlr::Array<edge*>& E, const uintA& layers, bool interConnections) {
   uint i, j, a=0, b=0;
   uint l, L=layers.N;
   for(l=0; l<L; l++) {
@@ -3583,7 +3583,7 @@ template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Arra
   }
 }
 
-template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E) {
+template<class vert, class edge> void graphMakeLists(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
   for_list(vert,  v,  V) {
     v->outLinks.clear();
     v-> inLinks.clear();
@@ -3596,7 +3596,7 @@ template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Ar
   }
 }
 
-template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E) {
+template<class vert, class edge> void graphConnectUndirected(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
   for_list(vert,  v,  V) v->edges.clear();
   for_list(edge,  e,  E) {
     e->from = V(e->ifrom);
@@ -3606,11 +3606,11 @@ template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V
   }
 }
 
-template<class vert, class edge> edge *newEdge(vert *a, vert *b, MT::Array<edge*>& E) {
+template<class vert, class edge> edge *newEdge(vert *a, vert *b, mlr::Array<edge*>& E) {
   return newEdge(a->index, b->index, E);
 }
 
-template<class edge> edge *newEdge(uint a, uint b, MT::Array<edge*>& E) {
+template<class edge> edge *newEdge(uint a, uint b, mlr::Array<edge*>& E) {
   edge *e=new edge;
   e->index=E.N;
   E.append(e);
@@ -3618,7 +3618,7 @@ template<class edge> edge *newEdge(uint a, uint b, MT::Array<edge*>& E) {
   return e;
 }
 
-template<class vert, class edge> edge *new_edge_deprecated(vert *a, vert *b, MT::Array<edge*>& E) {
+template<class vert, class edge> edge *new_edge_deprecated(vert *a, vert *b, mlr::Array<edge*>& E) {
   edge *e=new edge;
   e->index=E.N;
   E.append(e);
@@ -3626,7 +3626,7 @@ template<class vert, class edge> edge *new_edge_deprecated(vert *a, vert *b, MT:
   return e;
 }
 
-template<class vert, class edge> edge *del_edge(edge *e, MT::Array<vert*>& V, MT::Array<edge*>& E, bool remakeLists) {
+template<class vert, class edge> edge *del_edge(edge *e, mlr::Array<vert*>& V, mlr::Array<edge*>& E, bool remakeLists) {
   //uint i, k=e-E.p;
   //E.remove(k);
   uint i;
@@ -3637,7 +3637,7 @@ template<class vert, class edge> edge *del_edge(edge *e, MT::Array<vert*>& V, MT
 }
 
 
-template<class vert, class edge> void graphWriteDirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
+template<class vert, class edge> void graphWriteDirected(std::ostream& os, const mlr::Array<vert*>& V, const mlr::Array<edge*>& E) {
   for_list(vert,  v,  V) {
     for_list(edge,  e,  v->inLinks) os <<e->ifrom <<' ';
     os <<"-> ";
@@ -3649,7 +3649,7 @@ template<class vert, class edge> void graphWriteDirected(std::ostream& os, const
   //for_list(Type,  e,  E) os <<e->from->name <<"->" <<e->to->name <<'\n';
 }
 
-template<class vert, class edge> void graphWriteUndirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
+template<class vert, class edge> void graphWriteUndirected(std::ostream& os, const mlr::Array<vert*>& V, const mlr::Array<edge*>& E) {
   for_list(vert,  v,  V) {
     os <<v_COUNT <<": ";
     for_list(edge,  e,  v->edges) if(e->ifrom==v_COUNT) os <<e->ito <<' '; else os <<e->ifrom <<' ';
@@ -3658,8 +3658,8 @@ template<class vert, class edge> void graphWriteUndirected(std::ostream& os, con
   for_list(edge,  e,  E) os <<e->ifrom <<"-" <<e->ito <<'\n';
 }
 
-template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Array<edge*>& E) {
-  MT::Array<vert*> noInputs;
+template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
+  mlr::Array<vert*> noInputs;
   noInputs.memMove=true;
   uintA newIndex(V.N);
   intA inputs(V.N);
@@ -3706,13 +3706,13 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
 }
 
 template<class vert, class edge>
-void graphRevertEdge(MT::Array<vert*>& V, MT::Array<edge*>& E, edge *e) {
+void graphRevertEdge(mlr::Array<vert*>& V, mlr::Array<edge*>& E, edge *e) {
   uint i=e->ifrom;  e->ifrom=e->ito;  e->ito=i;
   graphMakeLists(V, E);
 }
 
 template<class vert, class edge, class CompareOp>
-void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const CompareOp& cmp) {
+void maximumSpanningTree(mlr::Array<vert*>& V, mlr::Array<edge*>& E, const CompareOp& cmp) {
   vert *n;
   edge *m;
   boolA nodeAdded(V.N);  nodeAdded=false;
@@ -3741,11 +3741,11 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
   graphMakeLists(V, E);
 }
 
-/*template<class T> MT::Array<T> get(const AnyList& L, const char* tag){
+/*template<class T> mlr::Array<T> get(const AnyList& L, const char* tag){
   for_list(Any,  a,  L) if(!strcmp(a->tag, tag)) break;
   if(i==L.N) HALT("tag '" <<tag <<"' is not in this AnyList");
-  if(!a->n) return MT::Array<T>((T*)a->p, 1);
-  return MT::Array<T>((T*)a->p, a->n);
+  if(!a->n) return mlr::Array<T>((T*)a->p, 1);
+  return mlr::Array<T>((T*)a->p, a->n);
 }*/
 
 

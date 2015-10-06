@@ -216,9 +216,9 @@ struct PublisherConv : Module{
 
 //-- a basic message type for communication with the soft hand controller
 struct SoftHandMsg{
-  MT::String soft_hand_cmd;
+  mlr::String soft_hand_cmd;
   SoftHandMsg(){}
-  SoftHandMsg(const MT::String soft_hand_cmd)
+  SoftHandMsg(const mlr::String soft_hand_cmd)
     :soft_hand_cmd(soft_hand_cmd){}
 };
 //inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }

@@ -51,11 +51,11 @@ void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint ve
 }
 
 
-void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Array<Scene> &testScenes, MT::Array<CostWeight> &weights)
+void MotionFactory::createScenes(uint sID,mlr::Array<Scene> &trainScenes, mlr::Array<Scene> &testScenes, mlr::Array<CostWeight> &weights)
 {
-  vis = MT::getParameter<uint>("visDemo");
-  nS = MT::getParameter<uint>("numScenes");
-  optConstraintsParam = MT::getParameter<bool>("optConstraintsParam");
+  vis = mlr::getParameter<uint>("visDemo");
+  nS = mlr::getParameter<uint>("numScenes");
+  optConstraintsParam = mlr::getParameter<bool>("optConstraintsParam");
 
   // create training scenes
   for (uint i = 0; i < nS; i++) {
@@ -113,7 +113,7 @@ void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Arr
 }
 
 
-void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene0(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -213,7 +213,7 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("model.kvg");
 
   cout << "Joints: " << endl;
@@ -230,7 +230,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
 
   cout << "###########################################################" << endl;
   /// load demonstrations data
-  MT::String demoPath = MT::getParameter<MT::String>("demoPath");
+  mlr::String demoPath = mlr::getParameter<mlr::String>("demoPath");
   cout << "Demo: " << demoPath << endl;
   // load joint trajectory
   arr xDem; xDem << FILE(STRING(demoPath<<"_joints").p);
@@ -395,7 +395,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
 }
 
 /*
-void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -478,7 +478,7 @@ void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -578,7 +578,7 @@ void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint i)
+void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
@@ -652,7 +652,7 @@ void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint i)
+void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
@@ -832,7 +832,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
   arr x(T+1,n); x.setZero();arr lambdaTrain(2*T+1); lambdaTrain.setZero();
   x = repmat(~s.MP->x0,T+1,1);
 //    x = xDem;
-  if (i==1 && !MT::getParameter<bool>("evalOnly")) {
+  if (i==1 && !mlr::getParameter<bool>("evalOnly")) {
 
     optConstrained(x, lambdaTrain, Convert(MPF), OPT(verbose=0,stopTolerance=1e-3));//, allowOverstep=true));
 //    optConstrained(x, lambdaTrain, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,  allowOverstep=true));
@@ -870,7 +870,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
 
 
 
-void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);

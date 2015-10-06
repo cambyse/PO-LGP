@@ -38,7 +38,7 @@ bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
 
-#ifdef MT_GL
+#ifdef MLR_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
 
@@ -49,7 +49,7 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
 /**
  * @brief Bind ors to OpenGL.
@@ -77,7 +77,7 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
 }
 #endif
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
 /// static GL routine to draw a ors::KinematicWorld
 void ors::glDrawGraph(void *classP) {
@@ -297,7 +297,7 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
       Gcopy->gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     }else{
       Gcopy->gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
-      if(delay) MT::wait(delay);
+      if(delay) mlr::wait(delay);
     }
   }
   if(steps==1)
@@ -450,10 +450,10 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
     for(t=0; t<20; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       if(ino && ino->pollForModification()) return;
-      x(i)=x0(i) + .5*sin(MT_2PI*t/20);
+      x(i)=x0(i) + .5*sin(MLR_2PI*t/20);
       C.setJointState(x);
       C.gl().update(STRING("joint = " <<i), false, false, true);
-      MT::wait(0.01);
+      mlr::wait(0.01);
     }
   }
   C.setJointState(x0);
@@ -577,12 +577,12 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
-      MT::lineCount=1;
+      mlr::lineCount=1;
       C.gl().lock.writeLock();
       C <<FILE(filename);
       C.gl().lock.unlock();
     } catch(const char* msg) {
-      cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
+      cout <<"line " <<mlr::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       C.gl().watch();
       continue;
     }
@@ -596,14 +596,14 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 #else
     C.gl().watch();
 #endif
-if(!MT::getInteractivity()){
+if(!mlr::getInteractivity()){
     exit=true;
 }
   }
 }
 
 
-#if 0 //MT_ODE
+#if 0 //MLR_ODE
 void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
   C.gl().watch();
   uint t, T=200;
@@ -625,8 +625,8 @@ void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
 #endif
 #endif
 
-#else ///MT_GL
-#ifndef MT_ORS_ONLY_BASICS
+#else ///MLR_GL
+#ifndef MLR_ORS_ONLY_BASICS
 void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
 void ors::KinematicWorld::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }

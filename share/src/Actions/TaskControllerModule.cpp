@@ -2,7 +2,7 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 #  include <pr2/roscom.h>
 #endif
 
@@ -28,11 +28,11 @@ void TaskControllerModule::open(){
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-//  MT::open(fil,"z.TaskControllerModule");
+//  mlr::open(fil,"z.TaskControllerModule");
 
 #if 1
   modelWorld.writeAccess();
@@ -42,7 +42,7 @@ void TaskControllerModule::open(){
   modelWorld.deAccess();
 #endif
 
-  useRos = MT::getParameter<bool>("useRos",false);
+  useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
 }
 
@@ -110,9 +110,9 @@ void TaskControllerModule::step(){
       realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
+//      mlr::arrayBrackets="  ";
 //      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
-//      MT::arrayBrackets="[]";
+//      mlr::arrayBrackets="[]";
     }
   }
 

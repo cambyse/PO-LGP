@@ -12,7 +12,7 @@ Action::Action(ActionMachine& actionMachine, const char* name)
   if(it && &it->container != &actionMachine.KB()) it=NULL;
   if(it && it->getValueType()!=typeid(bool)) it=NULL;
   actionMachine.KB.deAccess();
-  //if(!it) MT_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
+  //if(!it) MLR_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
   if(it) symbol=it;
 }
 
@@ -70,7 +70,7 @@ void FollowReference::step(ActionMachine& M){
   CtrlTask *task=tasks(0);
   if(task->y_ref.nd==2){
     uint t = actionTime/trajectoryDuration * (ref.d0-1);
-    t = MT::MIN(t, ref.d0-1);
+    t = mlr::MIN(t, ref.d0-1);
     task->y_ref = ref[t];
     cout <<"STEPPING" <<endl;
   }
@@ -322,7 +322,7 @@ FollowReferenceInTaskSpace::FollowReferenceInTaskSpace(ActionMachine& actionMach
 
 void FollowReferenceInTaskSpace::step(ActionMachine& M){
   uint t = actionTime/duration * (ref.d0-1);
-  t = MT::MIN(t, ref.d0-1);
+  t = mlr::MIN(t, ref.d0-1);
   task->y_ref = ref[t];
   cout <<"STEPPING" <<endl;
 }

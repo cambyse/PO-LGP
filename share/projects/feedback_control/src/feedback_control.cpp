@@ -90,7 +90,7 @@ public:
 
   void init_ors(int argc, char** argv)
   {
-    MT::initCmdLine(argc,argv);
+    mlr::initCmdLine(argc,argv);
 
     init(G, gl, "../git/mlr/share/examples/Motion/pfc/model.kvg");
     makeConvexHulls(G.shapes);
@@ -161,7 +161,7 @@ public:
       xRef = ~cat(~xRef,~xRefVec);
     }
 
-    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
+    goalMO = new MObject(&G, mlr::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
 
     x0 = xRef[0]; // TODO: READ FROM SENSORS
     cout << x0 << endl;

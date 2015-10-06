@@ -5,8 +5,8 @@
 
 Singleton<Engine> singleton_Engine;
 
-typedef MT::Array<SystemDescription::ModuleEntry*> ModuleEntryL;
-typedef MT::Array<SystemDescription::VariableEntry*> VariableEntryL;
+typedef mlr::Array<SystemDescription::ModuleEntry*> ModuleEntryL;
+typedef mlr::Array<SystemDescription::VariableEntry*> VariableEntryL;
 
 //===========================================================================
 //
@@ -17,7 +17,7 @@ void SystemDescription::addModule(const char *dclName, const char *name, const N
   //find the dcl in the registry
   Node *modReg = registry().getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
-    MT_MSG("could not find Decl_Module" <<dclName);
+    MLR_MSG("could not find Decl_Module" <<dclName);
     return;
   }
   ModuleEntry *m = new ModuleEntry;
@@ -32,13 +32,13 @@ void SystemDescription::addModule(const char *dclName, const char *name, const N
     a->reg = accReg;
     a->type = accReg->value<Type>();
     if(!&vars || !vars.N){
-      system.append<AccessEntry>({MT::String("Access"), accReg->keys(1)}, {modIt}, a);
+      system.append<AccessEntry>({mlr::String("Access"), accReg->keys(1)}, {modIt}, a);
     }else{
       Node *varIt = vars(accReg_COUNT);
       VariableEntry *v = varIt->value<VariableEntry>();
       cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
            <<" with Variable (" <<*(v->type) <<")" <<endl;
-      system.append<AccessEntry>({MT::String("Access"), varIt->keys(1)}, {modIt, varIt}, new AccessEntry());
+      system.append<AccessEntry>({mlr::String("Access"), varIt->keys(1)}, {modIt, varIt}, new AccessEntry());
     }
   }
 }
@@ -58,14 +58,14 @@ void SystemDescription::complete(){
           cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
           v = new SystemDescription::VariableEntry;
           v->type = acc->value<Type>();
-          varIt = system.append<VariableEntry>({MT::String("Variable"}, acc->keys(1)}, v);
+          varIt = system.append<VariableEntry>({mlr::String("Variable"}, acc->keys(1)}, v);
         }else{
           v = varIt->value<VariableEntry>();
         }
         cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
              <<" with Variable " <<varIt->keys(1) <<"(" <<*(v->type) <<")" <<endl;
         m->accs.append(v);
-        system.append<AccessEntry>({MT::String("Access"), acc->keys(1)}, {it, varIt}, new AccessEntry());
+        system.append<AccessEntry>({mlr::String("Access"), acc->keys(1)}, {it, varIt}, new AccessEntry());
       }
     }
   }
@@ -81,7 +81,7 @@ void SystemDescription::complete(){
         cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
         v = new SystemDescription::VariableEntry;
         v->type = a->type;
-        varIt = system.append<VariableEntry>({MT::String("Variable"), accIt->keys(1)}, v);
+        varIt = system.append<VariableEntry>({mlr::String("Variable"), accIt->keys(1)}, v);
       }else{
         v = varIt->value<VariableEntry>();
       }
@@ -322,7 +322,7 @@ void EventController::queryWriteAccess(Variable *v, const Module *p){
 
 void EventController::logReadAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -331,7 +331,7 @@ void EventController::logReadAccess(const Variable *v, const Module *p) {
 
 void EventController::logWriteAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -353,7 +353,7 @@ void EventController::logWriteDeAccess(const Variable *v, const Module *p) {
 
 void EventController::logStepBegin(const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(NULL, p, Event::stepBegin, 0, p->step_count, MT::realTime());
+  Event *e = new Event(NULL, p, Event::stepBegin, 0, p->step_count, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -362,7 +362,7 @@ void EventController::logStepBegin(const Module *p) {
 
 void EventController::logStepEnd(const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(NULL, p, Event::stepEnd, 0, p->step_count, MT::realTime());
+  Event *e = new Event(NULL, p, Event::stepEnd, 0, p->step_count, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -414,7 +414,7 @@ void EventController::dumpEventList(){
 
   if(!eventsFile){
     eventsFile = new ofstream;
-    MT::open(*eventsFile,"z.eventLog");
+    mlr::open(*eventsFile,"z.eventLog");
   }
 
   writeEventList(*eventsFile, false, 0, true);

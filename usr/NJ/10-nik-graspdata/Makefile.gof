@@ -6,7 +6,7 @@ OBJS = main.o \
 
 default: x.exe
 
-CXXFLAGS += -DMT_NO_GLOBALMEM
+CXXFLAGS += -DMLR_NO_GLOBALMEM
 ##OPTIM = fast
 
 FREEGLUT = 1
@@ -20,7 +20,7 @@ NILS = 1
 #BUMBLE = 1
 #CUDA = 1
 
-CXXFLAGS += -DMT_Lewiner
+CXXFLAGS += -DMLR_Lewiner
 
 CLEAN = *_moc.cpp *_ui.h MT.log
 

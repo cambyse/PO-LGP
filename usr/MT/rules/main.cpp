@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 #include <Core/array.h>
 #include <MT/util.h>
 #include <MT/infer.h>
@@ -36,7 +36,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   StateVariable *s;
   infer::Factor *f;
   infer::Variable *v_pre,*v_mod,*v_post;
-  MT::String txt;
+  mlr::String txt;
   uint totalIndicators=0;
   for_list(Type,  s,  S){
     if(s->dim==2){
@@ -64,7 +64,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
     }
   }
 
-  MT::Array<infer::VariableList> rulesThatModIndicator(3*totalIndicators); //memorize for each output var which rule modifies it potentially
+  mlr::Array<infer::VariableList> rulesThatModIndicator(3*totalIndicators); //memorize for each output var which rule modifies it potentially
   Rule *r;
   infer::Variable *rule_var,*v;
   infer::VariableList lhsVars;
@@ -161,7 +161,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   
   StateVariableList S;
   RuleList R;

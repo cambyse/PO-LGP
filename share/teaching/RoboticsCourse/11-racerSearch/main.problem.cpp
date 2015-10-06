@@ -20,7 +20,7 @@ struct RacerState : VectorFunction{
   RacerState(){
     q.resize(2).setZero();
     q_dot.resize(2).setZero();
-    q(1) = .01; //1MT_PI/2; //slighly non-upright //MT_PI; //haning down
+    q(1) = .01; //1MT_PI/2; //slighly non-upright //MLR_PI; //haning down
 
     //init constants
     tau = 0.01;
@@ -28,8 +28,8 @@ struct RacerState : VectorFunction{
     l=.5;
     mA=.05;
     mB=.5;
-    IA=mA*MT::sqr(.5*r);
-    IB=mB*MT::sqr(.2*l);
+    IA=mA*mlr::sqr(.5*r);
+    IB=mB*mlr::sqr(.2*l);
     g = 9.8;
 
     dynamicsNoise = 0;

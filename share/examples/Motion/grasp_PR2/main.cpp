@@ -12,7 +12,7 @@ void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
   G.watch(true);
 
@@ -67,7 +67,7 @@ void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 //  G.watch(true);
 
@@ -159,7 +159,7 @@ void TEST(PickAndPlace){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //  testGraspHeuristic();
   testPickAndPlace();

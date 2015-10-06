@@ -1,10 +1,10 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 //--- usually, one of the following should be defined
 // on the compiler level - not here - but it's esasier to switch
 // for now
-//#define MT_FREEGLUT
-//#define MT_QT
+//#define MLR_FREEGLUT
+//#define MLR_QT
 
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
@@ -263,9 +263,9 @@ void testImage(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-#ifdef MT_QT
+#ifdef MLR_QT
   QApplication myapp(argc,argv);
 #endif
   

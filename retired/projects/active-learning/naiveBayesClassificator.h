@@ -13,13 +13,13 @@ private:
   sNaiveBayesClassificator* s;
   
 public:
-  NaiveBayesClassificator(Sampler<MT::Array<arr> >* sampler);
+  NaiveBayesClassificator(Sampler<mlr::Array<arr> >* sampler);
   virtual ~NaiveBayesClassificator();
 
-  virtual int classify(const MT::Array<arr>& features, int set = 0) const;
-  virtual void setTrainingsData(const MT::Array<arr>& features, const intA& classes);
-  virtual int nextSample(MT::Array<arr>& nextSample) const;
-  virtual void addData(const MT::Array<arr>& data, const int class_);
+  virtual int classify(const mlr::Array<arr>& features, int set = 0) const;
+  virtual void setTrainingsData(const mlr::Array<arr>& features, const intA& classes);
+  virtual int nextSample(mlr::Array<arr>& nextSample) const;
+  virtual void addData(const mlr::Array<arr>& data, const int class_);
 
 };
 

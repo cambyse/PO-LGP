@@ -23,8 +23,8 @@
 #include <Core/module.h>
 
 struct Module;
-typedef MT::Array<Module*> ModuleL;
-typedef MT::Array<RevisionedAccessGatedClass*> VariableL;
+typedef mlr::Array<Module*> ModuleL;
+typedef mlr::Array<RevisionedAccessGatedClass*> VariableL;
 
 //===========================================================================
 
@@ -39,7 +39,7 @@ struct System:ModuleL{
 //  ModuleL modules;
   VariableL vars;
   AccessL accesses;
-  MT::String name;
+  mlr::String name;
 
   System(const char* _name=NULL):name(_name){
     currentlyCreatingAccessL=&accesses;
@@ -172,7 +172,7 @@ struct EventRecord{
     variable(v), module(m), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
-typedef MT::Array<EventRecord*> EventRecordL;
+typedef mlr::Array<EventRecord*> EventRecordL;
 
 
 //===========================================================================
@@ -213,7 +213,7 @@ struct EventController{
   void logStepBegin(const Module *p);
   void logStepEnd(const Module *p);
 
-  MT::Array<ConditionVariable*> breakpointQueue;
+  mlr::Array<ConditionVariable*> breakpointQueue;
   Mutex breakpointMutex;
   void breakpointSleep(); //the caller goes to sleep
   void breakpointNext(); //first in the queue is being woke up

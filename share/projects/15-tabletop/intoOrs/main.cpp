@@ -40,7 +40,7 @@ struct PerceptionObjects2Ors : Module{
     modelWorld.readAccess();
 
     for(visualization_msgs::Marker& marker : perceptionObjects().markers){
-      MT::String name;
+      mlr::String name;
       name <<"obj" <<marker.id;
       ors::Shape *s = modelWorld->getShapeByName(name);
       if(!s){
@@ -89,7 +89,7 @@ struct MySystem {
   ACCESSname(arr, wrenchL)
 
   ACCESSname(ors::Mesh, pointCloud)
-  ACCESSname(MT::Array<ors::Mesh>, clusters)
+  ACCESSname(mlr::Array<ors::Mesh>, clusters)
 
   MySystem(){
     new RosCom_Spinner();
@@ -107,7 +107,7 @@ struct MySystem {
 struct Main{
   OpenGL gl;
 
-  MT::Array<std::tuple<int, arr, arr> > trackedClusters;
+  mlr::Array<std::tuple<int, arr, arr> > trackedClusters;
   tf::TransformListener listener;
 
   MySystem S;
@@ -165,7 +165,7 @@ struct Main{
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   rosCheckInit("intoOrs");
   Main thing;
   thing.loop();

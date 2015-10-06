@@ -138,7 +138,7 @@ KFScore KFModel::crossval(const G4FeatSeqL &seqlist) {
 
   uint nsplits = *params.get<uint>("nsplits");
 
-  MT::Array<G4FeatSeqL> trainseqlist, testseqlist;
+  mlr::Array<G4FeatSeqL> trainseqlist, testseqlist;
   split(trainseqlist, testseqlist, seqlist, nsplits);
   for(uint n = 0; n < nsplits; n++) {
     // take nth training split
@@ -268,7 +268,7 @@ void KFLogitReg::train(G4FeatSeqL &seqlist) {
   objf.jacobian = [&](const arr &beta) {
     p = data * beta;
     for(uint i = 0; i < p.N; i++)
-      p.elem(i) = MT::sigmoid(p.elem(i));
+      p.elem(i) = mlr::sigmoid(p.elem(i));
     return dataT * (p - target);
   };
 
@@ -306,7 +306,7 @@ arr KFLogitReg::sigma(G4FeatSeq &seq) {
   uint thinning = *seq.params.get<uint>("thinning");
 
   for(uint f_thin = 0; f_thin < seq.nframes_thin; f_thin++)
-    sigma.subRange(f_thin * thinning, (f_thin + 1) * thinning - 1)() = MT::sigmoid(scalarProduct(beta, seq.data[f_thin]));
+    sigma.subRange(f_thin * thinning, (f_thin + 1) * thinning - 1)() = mlr::sigmoid(scalarProduct(beta, seq.data[f_thin]));
   if(seq.nframes_thin * thinning < seq.nframes)
     sigma.subRange(seq.nframes_thin * thinning + 1, -1)() = sigma_thin.last();
 

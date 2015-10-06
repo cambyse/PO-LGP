@@ -38,11 +38,11 @@
 #include <Gui/opengl.h>
 #include <Algo/algos.h>
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 #  include <Core/registry.h>
 //#  include <Gui/plot.h>
 #endif
-#ifdef MT_extern_ply
+#ifdef MLR_extern_ply
 #  include <extern/ply/ply.h>
 #endif
 
@@ -57,7 +57,7 @@ void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 #define LEN .2
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
 uint ors::KinematicWorld::setJointStateCount = 0;
 
@@ -109,7 +109,7 @@ void ors::Body::reset() {
 void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
-  MT::String str;
+  mlr::String str;
   ats.getValue<Transformation>(X, "X");
   ats.getValue<Transformation>(X, "pose");
   
@@ -133,7 +133,7 @@ void ors::Body::parseAts() {
   // shapes that belong to the same body
   item = ats.getNode("meshes");
   if(item){
-    MT::FileToken *file = item->getValue<MT::FileToken>();
+    mlr::FileToken *file = item->getValue<mlr::FileToken>();
     CHECK(file,"somethings wrong");
 
     // if mesh is not .obj we only have one shape
@@ -233,14 +233,14 @@ void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
 void ors::Shape::parseAts() {
   double d;
   arr x;
-  MT::String str;
-  MT::FileToken *fil;
+  mlr::String str;
+  mlr::FileToken *fil;
   ats.getValue<Transformation>(rel, "rel");
   if(ats.getValue<arr>(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
   if(ats.getValue<arr>(x, "color"))         { CHECK_EQ(x.N,3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.getValue<double>(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats.getValue<bool>("contact"))         { cont=true; }
-  fil=ats.getValue<MT::FileToken>("mesh");  if(fil) { mesh.read(fil->getIs(), fil->name.getLastN(3).p); }
+  fil=ats.getValue<mlr::FileToken>("mesh");  if(fil) { mesh.read(fil->getIs(), fil->name.getLastN(3).p); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes
@@ -335,7 +335,7 @@ void ors::Shape::read(std::istream& is) {
   parseAts();
 }
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes) {
+uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const mlr::Array<ors::Shape*>& shapes) {
   uintA I(names.N);
   for(uint i=0; i<names.N; i++) {
     ors::Shape *s = listFindByName(shapes, names(i));
@@ -345,7 +345,7 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
   return I;
 }
 
-uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes) {
+uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes) {
   uintA I;
   resizeAs(I, shapes);
   for(uint i=0; i<shapes.N; i++) I.elem(i) = shapes.elem(i)->index;
@@ -449,7 +449,7 @@ void ors::Joint::parseAts() {
     limits.append(ctrl_limits);
   }
   //coupled to another joint requires post-processing by the Graph::read!!
-  if(ats.getValue<MT::String>("mimic")) mimic=(Joint*)1;
+  if(ats.getValue<mlr::String>("mimic")) mimic=(Joint*)1;
 }
 
 uint ors::Joint::qDim() {
@@ -574,8 +574,8 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   for(Joint *j: joints) if(j->mimic){
-    MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
+    mlr::String jointName;
+    bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
     j->mimic = listFindByName(G.joints, jointName);
     if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
@@ -691,7 +691,7 @@ arr ors::KinematicWorld::naturalQmetric(double power) const {
   BM=1.;
   for(uint i=BM.N; i--;) {
     for(uint j=0; j<bodies(i)->outLinks.N; j++) {
-      BM(i) = MT::MAX(BM(bodies(i)->outLinks(j)->to->index)+1., BM(i));
+      BM(i) = mlr::MAX(BM(bodies(i)->outLinks(j)->to->index)+1., BM(i));
 //      BM(i) += BM(bodies(i)->outLinks(j)->to->index);
     }
   }
@@ -731,7 +731,7 @@ void ors::KinematicWorld::revertJoint(ors::Joint *j) {
 /** @brief re-orient all joints (edges) such that n becomes
   the root of the configuration */
 void ors::KinematicWorld::reconfigureRoot(Body *root) {
-  MT::Array<Body*> list, list2;
+  mlr::Array<Body*> list, list2;
   Body **m,**mstop;
   list.append(root);
   uintA level(bodies.N);
@@ -845,7 +845,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
         //angle
         ors::Vector rotv;
         j->Q.rot.getRad(q(n), rotv);
-        if(q(n)>MT_PI) q(n)-=MT_2PI;
+        if(q(n)>MLR_PI) q(n)-=MLR_2PI;
         if(j->type==JT_hingeX && rotv*Vector_x<0.) q(n)=-q(n);
         if(j->type==JT_hingeY && rotv*Vector_y<0.) q(n)=-q(n);
         if(j->type==JT_hingeZ && rotv*Vector_z<0.) q(n)=-q(n);
@@ -865,8 +865,8 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
           q(n) = 2.0 * atan(j->Q.rot.x/j->Q.rot.w);
           q(n+1) = 2.0 * atan(j->Q.rot.y/j->Q.rot.w);
         } else {
-          q(n) = MT_PI;
-          q(n+1) = MT_PI;
+          q(n) = MLR_PI;
+          q(n+1) = MLR_PI;
         }
         
         if(calcVels) NIY; // velocity: need to fix
@@ -924,7 +924,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
         q(n+1)=j->Q.pos.y;
         ors::Vector rotv;
         j->Q.rot.getRad(q(n+2), rotv);
-        if(q(n+2)>MT_PI) q(n+2)-=MT_2PI;
+        if(q(n+2)>MLR_PI) q(n+2)-=MLR_2PI;
         if(rotv*Vector_z<0.) q(n+2)=-q(n+2);
         if(calcVels){
           qdot(n)=j->Q.vel.x;
@@ -937,7 +937,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels) {
       case JT_phiTransXY: {
         ors::Vector rotv;
         j->Q.rot.getRad(q(n), rotv);
-        if(q(n)>MT_PI) q(n)-=MT_2PI;
+        if(q(n)>MLR_PI) q(n)-=MLR_2PI;
         if(rotv*Vector_z<0.) q(n)=-q(n);
         ors::Vector relpos = j->Q.rot/j->Q.pos;
         q(n+1)=relpos.x;
@@ -1120,7 +1120,7 @@ void ors::KinematicWorld::setAgent(uint agent, bool calcVels){
   of the i-th body (3 x n tensor)*/
 void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vector& rel) const {
   if(!b){
-    MT_MSG("WARNING: calling kinematics for NULL body");
+    MLR_MSG("WARNING: calling kinematics for NULL body");
     if(&y) y.resize(3).setZero();
     if(&J) J.resize(3, getJointStateDimension()).setZero();
     return;
@@ -1230,7 +1230,7 @@ void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const 
   //get Jacobian
   J.resize(3, 6).setZero();
   ors::Vector diff = pos_world - s->X.pos;
-  MT::Array<ors::Vector> axes = {s->X.rot.getX(), s->X.rot.getY(), s->X.rot.getZ()};
+  mlr::Array<ors::Vector> axes = {s->X.rot.getX(), s->X.rot.getY(), s->X.rot.getZ()};
 
   //3 translational axes
   for(uint i=0;i<3;i++){
@@ -1528,7 +1528,7 @@ void ors::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qd
 }
 
 /*void ors::KinematicWorld::impulsePropagation(arr& qd1, const arr& qd0){
-  static MT::Array<Featherstone::Link> tree;
+  static mlr::Array<Featherstone::Link> tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   mimickImpulsePropagation(tree);
@@ -1566,21 +1566,21 @@ void ors::KinematicWorld::setShapeNames() {
 ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
   for(Body *b: bodies) if(b->name==name) return b;
   if(strcmp("glCamera", name)!=0)
-    MT_MSG("cannot find Body named '" <<name <<"' in Graph");
+    MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 
 /// find shape with specific name
 ors::Shape* ors::KinematicWorld::getShapeByName(const char* name) const {
   for(Shape *s: shapes) if(s->name==name) return s;
-  MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
+  MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find shape with specific name
 ors::Joint* ors::KinematicWorld::getJointByName(const char* name) const {
   for(Joint *j: joints) if(j->name==name) return j;
-  MT_MSG("cannot find Joint named '" <<name <<"' in Graph");
+  MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
   return NULL;
 }
 
@@ -1675,7 +1675,7 @@ void ors::KinematicWorld::stepPhysx(double tau){
 }
 
 void ors::KinematicWorld::stepOde(double tau){
-#ifdef MT_ODE
+#ifdef MLR_ODE
   ode().setMotorVel(qdot, 100.);
   ode().step(tau);
   ode().importStateFromOde();
@@ -1806,8 +1806,8 @@ void ors::KinematicWorld::read(std::istream& is) {
 
   if(nCoupledJoints){
     for(Joint *j: joints) if(j->mimic){
-      MT::String jointName;
-      bool good = j->ats.getValue<MT::String>(jointName, "mimic");
+      mlr::String jointName;
+      bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
       CHECK(good, "something is wrong");
       j->mimic = listFindByName(joints, jointName);
       if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
@@ -1828,7 +1828,7 @@ void ors::KinematicWorld::read(std::istream& is) {
 
 void ors::KinematicWorld::writePlyFile(const char* filename) const {
   ofstream os;
-  MT::open(os, filename);
+  mlr::open(os, filename);
   uint nT=0,nV=0;
   uint j;
   ors::Mesh *m;
@@ -2081,7 +2081,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       brel=b->X.rot/(p->cenB-b->X.pos);
 //      CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
       if(!p->cenN.isNormalized()){
-        MT_MSG("proxy->cenN is not normalized: objects seem to be at exactly the same place");
+        MLR_MSG("proxy->cenN is not normalized: objects seem to be at exactly the same place");
       }else{
         arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
         
@@ -2444,11 +2444,11 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 
 #include <Core/util_t.h>
 
-#ifndef  MT_ORS_ONLY_BASICS
-template MT::Array<ors::Shape*>::Array(uint);
-template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
+#ifndef  MLR_ORS_ONLY_BASICS
+template mlr::Array<ors::Shape*>::Array(uint);
+template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
 
 #include <Core/array_t.h>
-template MT::Array<ors::Joint*>::Array();
+template mlr::Array<ors::Joint*>::Array();
 #endif
 /** @} */

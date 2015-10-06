@@ -79,10 +79,10 @@ FieldRegistration& Variable::get_field(uint i) const{
   return *s->fields(i);
 }
 
-void sVariable::serializeToString(MT::String &string) const {
+void sVariable::serializeToString(mlr::String &string) const {
 #if 0
   string.clear();
-  MT::String field_string;
+  mlr::String field_string;
   field_string.clear();
 
   // go through fields
@@ -104,9 +104,9 @@ void sVariable::serializeToString(MT::String &string) const {
   NIY
 }
 
-void sVariable::deSerializeFromString(const MT::String &string) {
+void sVariable::deSerializeFromString(const mlr::String &string) {
 #if 0
-  MT::String string_copy(string), field_string;
+  mlr::String string_copy(string), field_string;
   field_string.clear();
   uint j = 0;
   for (uint i=0; i< fields.N; i++) {

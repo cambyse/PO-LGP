@@ -23,11 +23,11 @@
 #include <limits>
 #include "opengl.h"
 
-#ifdef MT_extern_ply
+#ifdef MLR_extern_ply
 #  include <extern/ply/ply.h>
 #endif
 
-#ifdef MT_extern_GJK
+#ifdef MLR_extern_GJK
 extern "C"{
 #  include <extern/GJK/gjk.h>
 }
@@ -78,7 +78,7 @@ void Mesh::setBox() {
 }
 
 void Mesh::setTetrahedron() {
-  double s2=MT_SQRT2/3., s6=sqrt(6.)/3.;
+  double s2=MLR_SQRT2/3., s6=sqrt(6.)/3.;
   double verts[12] = { 0., 0., 1. , 2.*s2, 0., -1./3., -s2, s6, -1./3., -s2, -s6, -1./3. };
   uint   tris [12] = { 0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2 };
   V.setCarray(verts, 12);
@@ -171,7 +171,7 @@ void Mesh::setCylinder(double r, double l, uint fineness) {
   uint i, j;
   double phi;
   for(i=0; i<div; i++) {  //vertices
-    phi=MT_2PI*i/div;
+    phi=MLR_2PI*i/div;
     V(i, 0)=r*::cos(phi);
     V(i, 1)=r*::sin(phi);
     V(i, 2)=.5*l;
@@ -205,9 +205,9 @@ void Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
   setSphere(fineness);
   scale(r);
   for(uint i=0;i<V.d0;i++){
-    V(i,0) += .5*MT::sign(V(i,0))*x;
-    V(i,1) += .5*MT::sign(V(i,1))*y;
-    V(i,2) += .5*MT::sign(V(i,2))*z;
+    V(i,0) += .5*mlr::sign(V(i,0))*x;
+    V(i,1) += .5*mlr::sign(V(i,1))*y;
+    V(i,2) += .5*mlr::sign(V(i,2))*z;
   }
 }
 
@@ -215,7 +215,7 @@ void Mesh::setCappedCylinder(double r, double l, uint fineness) {
   uint i;
   setSphere(fineness);
   scale(r);
-  for(i=0; i<V.d0; i++) V(i, 2) += .5*MT::sign(V(i, 2))*l;
+  for(i=0; i<V.d0; i++) V(i, 2) += .5*mlr::sign(V(i, 2))*l;
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D
@@ -309,7 +309,7 @@ void Mesh::addMesh(const Mesh& mesh2) {
 
 void Mesh::makeConvexHull() {
   if(!V.N) return;
-#ifndef  MT_ORS_ONLY_BASICS
+#ifndef  MLR_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
 #else
   NICO
@@ -521,7 +521,7 @@ void Mesh::fuseNearVertices(double tol) {
     if(p(i)!=i) continue;  //i has already been fused with p(i), and p(i) has already been checked...
     for(j=i+1; j<V.d0; j++) {
       if(V(j, 0)-V(i, 0)>tol) break;
-      if(MT::sqr(V(j, 0)-V(i, 0))+MT::sqr(V(j, 1)-V(i, 1))+MT::sqr(V(j, 2)-V(i, 2))<tol*tol) {
+      if(mlr::sqr(V(j, 0)-V(i, 0))+mlr::sqr(V(j, 1)-V(i, 1))+mlr::sqr(V(j, 2)-V(i, 2))<tol*tol) {
         //cout <<"fusing " <<i <<" " <<j <<" " <<V[i] <<" " <<V[j] <<endl;
         p(j)=i;
       }
@@ -625,7 +625,7 @@ void Mesh::clean() {
       //check all triangles that share A & B
       setSection(neighbors, VT[A], VT[B]);
       neighbors.removeAllValues(-1);
-      if(neighbors.N>2) MT_MSG("edge shared by more than 2 triangles " <<neighbors);
+      if(neighbors.N>2) MLR_MSG("edge shared by more than 2 triangles " <<neighbors);
       neighbors.removeValue(i);
       //if(!neighbors.N) cout <<"mesh.clean warning: edge has only one triangle that shares it" <<endl;
       
@@ -823,7 +823,7 @@ Vector Mesh::getMeanVertex() {
 
 double Mesh::getRadius() {
   double r=0.;
-  for(uint i=0;i<V.d0;i++) r=MT::MAX(r, sumOfSqr(V[i]));
+  for(uint i=0;i<V.d0;i++) r=mlr::MAX(r, sumOfSqr(V[i]));
   return sqrt(r);
 }
 
@@ -835,7 +835,7 @@ double triArea(const arr& a, const arr& b, const arr& c){
   arr C=c;
   B-=a;
   C-=a;
-  return .5*::sqrt(sumOfSqr(B)*sumOfSqr(C)-MT::sqr(scalarProduct(B,C)));
+  return .5*::sqrt(sumOfSqr(B)*sumOfSqr(C)-mlr::sqr(scalarProduct(B,C)));
 //  B -= (scalarProduct(B,C)/sumOfSqr(C)) * C;
 //  CHECK_ZERO(scalarProduct(B,C), 1e-4, "");
 //  return .5*length(B)*length(C);
@@ -868,7 +868,7 @@ void Mesh::read(std::istream& is, const char* fileExtension) {
 
 void Mesh::writeTriFile(const char* filename) {
   ofstream os;
-  MT::open(os, filename);
+  mlr::open(os, filename);
   os <<"TRI" <<endl <<endl
      <<V.d0 <<endl
      <<T.d0 <<endl <<endl;
@@ -889,7 +889,7 @@ void Mesh::readTriFile(std::istream& is) {
 
 void Mesh::writeOffFile(const char* filename) {
   ofstream os;
-  MT::open(os, filename);
+  mlr::open(os, filename);
   uint i;
   os <<"OFF\n" <<V.d0 <<' ' <<T.d0 <<' ' <<0 <<endl;
   for(i=0; i<V.d0; i++) os <<V(i, 0) <<' ' <<V(i, 1) <<' ' <<V(i, 2) <<endl;
@@ -912,7 +912,7 @@ void Mesh::readOffFile(std::istream& is) {
 
 void Mesh::readPlyFile(std::istream& is) {
   uint i, k, nVertices, nFaces;
-  MT::String str;
+  mlr::String str;
   is >>PARSE("ply") >>PARSE("format") >>str;
   if(str=="ascii") {
     is >>PARSE("1.0");
@@ -934,7 +934,7 @@ void Mesh::readPlyFile(std::istream& is) {
   }
 }
 
-#ifdef MT_extern_ply
+#ifdef MLR_extern_ply
 void Mesh::writePLY(const char *fn, bool bin) {
   struct PlyFace { unsigned char nverts;  int *verts; };
   struct Vertex { float x,  y,  z ;  };
@@ -1080,8 +1080,8 @@ void Mesh::readPLY(const char *fn) { NICO }
 
 void Mesh::readStlFile(std::istream& is) {
   //first check if binary
-  if(MT::parse(is, "solid", true)) { //is ascii
-    MT::String name;
+  if(mlr::parse(is, "solid", true)) { //is ascii
+    mlr::String name;
     is >>name;
     uint i, k=0, k0;
     double x, y, z;
@@ -1092,26 +1092,26 @@ void Mesh::readStlFile(std::istream& is) {
       k0=k;
       if(k>V.N-10) V.resizeCopy(2*V.N);
       if(!(i%100)) cout <<"\r" <<i <<' ' <<i*7;
-      if(MT::peerNextChar(is)!='f') break;
+      if(mlr::peerNextChar(is)!='f') break;
       is >>PARSE("facet");
-      is >>PARSE("normal") >>x >>y >>z;  MT::skip(is);
-      is >>PARSE("outer") >>PARSE("loop");      MT::skip(is);
-      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-      is >>PARSE("endloop");             MT::skip(is);
-      is >>PARSE("endfacet");            MT::skip(is);
+      is >>PARSE("normal") >>x >>y >>z;  mlr::skip(is);
+      is >>PARSE("outer") >>PARSE("loop");      mlr::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   mlr::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   mlr::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   mlr::skip(is);
+      is >>PARSE("endloop");             mlr::skip(is);
+      is >>PARSE("endfacet");            mlr::skip(is);
       if(!is.good()) {
-        MT_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
+        MLR_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
         is.clear();
         cout <<1 <<endl;
-        MT::skipUntil(is, "endfacet");
+        mlr::skipUntil(is, "endfacet");
         cout <<2 <<endl;
         k=k0;
       }
     }
     is >>PARSE("endsolid");
-    if(!is.good()) MT_MSG("couldn't read STL end tag (line" <<i*7+2);
+    if(!is.good()) MLR_MSG("couldn't read STL end tag (line" <<i*7+2);
     cout <<"... STL file read: #tris=" <<i <<" #lines=" <<i*7+2 <<endl;
     CHECK(!(k%9), "not mod 9..");
     V.resizeCopy(k/3, 3);
@@ -1158,7 +1158,7 @@ uint& Tni(uint, uint) { static uint dummy; return dummy; } //normal index
 uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 
-MT::String str;
+mlr::String str;
 
 char *strn(std::istream& is){
   str.read(is," \n\t\r"," \n\t\r",true); //we once had a character '\d' in there -- for Windows?
@@ -1189,14 +1189,14 @@ void Mesh::readObjFile(std::istream& is) {
         ex=true;
         break; //EOF
       case '#':
-        MT::skipRestOfLine(is);
+        mlr::skipRestOfLine(is);
         strn(is);
         break;
       case 'v':
         switch(str.p[1]) {
-          case '\0': nV++;    MT::skipRestOfLine(is); break;  // vertex
-          case 'n':  nN++;    MT::skipRestOfLine(is); break;  // normal
-          case 't':  nTex++;  MT::skipRestOfLine(is); break;  // texcoord
+          case '\0': nV++;    mlr::skipRestOfLine(is); break;  // vertex
+          case 'n':  nN++;    mlr::skipRestOfLine(is); break;  // normal
+          case 't':  nTex++;  mlr::skipRestOfLine(is); break;  // texcoord
           default: HALT("firstPass(): Unknown token '" <<str.p <<"'");  break;
         }
         strn(is);
@@ -1233,7 +1233,7 @@ void Mesh::readObjFile(std::istream& is) {
         }
         break;
         
-      default:  MT_MSG("unsupported .obj file tag '" <<str <<"'");  MT::skipRestOfLine(is);  strn(is);  break;
+      default:  MLR_MSG("unsupported .obj file tag '" <<str <<"'");  mlr::skipRestOfLine(is);  strn(is);  break;
     }
   }
   
@@ -1266,7 +1266,7 @@ void Mesh::readObjFile(std::istream& is) {
         ex=true;
         break; //EOF
       case '#':
-        MT::skipRestOfLine(is);
+        mlr::skipRestOfLine(is);
         strn(is);
         break;  //comment
       case 'v':               // v, vn, vt
@@ -1375,7 +1375,7 @@ void Mesh::readObjFile(std::istream& is) {
         }
         break;
         
-      default:  MT::skipRestOfLine(is);  strn(is);  break;
+      default:  mlr::skipRestOfLine(is);  strn(is);  break;
     }
   }
   
@@ -1392,7 +1392,7 @@ void Mesh::readObjFile(std::istream& is) {
  * @param filename file to parse.
  */
 uintA getSubMeshPositions(const char* filename) {
-  CHECK(MT::String(filename).endsWith("obj"),
+  CHECK(mlr::String(filename).endsWith("obj"),
         "getSubMeshPositions parses only obj files.");
   FILE* file;
   char buf[128];
@@ -1427,7 +1427,7 @@ uintA getSubMeshPositions(const char* filename) {
 }
 
 
-#ifdef MT_GL
+#ifdef MLR_GL
 /// static GL routine to draw a ors::Mesh
 void glDrawMesh(void *classP) {
   ((ors::Mesh*)classP)->glDraw();
@@ -1516,7 +1516,7 @@ void Mesh::glDraw() {
 #endif
 #endif
 }
-#else //MT_GL
+#else //MLR_GL
 void Mesh::glDraw() { NICO }
 void glDrawMesh(void*) { NICO }
 void glTransform(const ors::Transformation&) { NICO }
@@ -1526,7 +1526,7 @@ void glTransform(const ors::Transformation&) { NICO }
 
 void inertiaSphere(double *I, double& mass, double density, double radius) {
   double r2=radius*radius;
-  if(density) mass=density*4./3.*MT_PI*r2*radius;
+  if(density) mass=density*4./3.*MLR_PI*r2*radius;
   I[1]=I[2]=I[3]=I[5]=I[6]=I[7]=0.;
   I[0]=.4*mass*r2;
   I[4]=.4*mass*r2;
@@ -1544,7 +1544,7 @@ void inertiaBox(double *I, double& mass, double density, double dx, double dy, d
 
 void inertiaCylinder(double *I, double& mass, double density, double height, double radius) {
   double r2=radius*radius, h2=height*height;
-  if(density) mass=density*MT_PI*r2*height;
+  if(density) mass=density*MLR_PI*r2*height;
   I[1]=I[2]=I[3]=I[5]=I[6]=I[7]=0.;
   I[0]=mass/12.*(3.*r2+h2);
   I[4]=mass/12.*(3.*r2+h2);
@@ -1559,7 +1559,7 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 // GJK interface
 //
 
-#ifdef MT_extern_GJK
+#ifdef MLR_extern_GJK
 GJK_point_type& NoPointType = *((GJK_point_type*)NULL);
 double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
                        const ors::Transformation& t1, const ors::Transformation& t2,
@@ -1568,13 +1568,13 @@ double GJK_sqrDistance(const ors::Mesh& mesh1, const ors::Mesh& mesh2,
                        GJK_point_type& pt1, GJK_point_type& pt2){
   // convert meshes to 'Object_structures'
   Object_structure m1,m2;
-  MT::Array<double*> Vhelp1, Vhelp2;
+  mlr::Array<double*> Vhelp1, Vhelp2;
   m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(Vhelp1);  m1.rings=NULL; //TODO: rings would make it faster
   m2.numpoints = mesh2.V.d0;  m2.vertices = mesh2.V.getCarray(Vhelp2);  m2.rings=NULL;
 
   // convert transformations to affine matrices
   arr T1,T2;
-  MT::Array<double*> Thelp1, Thelp2;
+  mlr::Array<double*> Thelp1, Thelp2;
   if(&t1){  T1=t1.getAffineMatrix();  T1.getCarray(Thelp1);  }
   if(&t2){  T2=t2.getAffineMatrix();  T2.getCarray(Thelp2);  }
 

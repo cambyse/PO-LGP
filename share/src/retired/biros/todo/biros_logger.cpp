@@ -54,7 +54,7 @@ struct Revision {
 };
 
 struct VariableHistory {
-  MT::Array<Revision> revisions;
+  mlr::Array<Revision> revisions;
   pthread_mutex_t revisionAccessMutex;
   
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
@@ -191,12 +191,12 @@ private:
   /**
    * The actual pool of log stream
    */
-  MT::Array<LOGSTREAM*> logFiles;
+  mlr::Array<LOGSTREAM*> logFiles;
   
   /**
    * A pool of mutexes: one mutex per log
    */
-  MT::Array<pthread_mutex_t*> perLogFileMutex;
+  mlr::Array<pthread_mutex_t*> perLogFileMutex;
   pthread_mutexattr_t perLogFileMutex_attribute;
   
   /**
@@ -274,7 +274,7 @@ public:
   /* OPERATOR SECTION */
   
   /**
-   * Aquires a lock. NO array initialisation! NO stream opening/verification! Use operator()(int, MT::String) to prepare the stream.
+   * Aquires a lock. NO array initialisation! NO stream opening/verification! Use operator()(int, mlr::String) to prepare the stream.
    *
    * A previously prepared stream is returned.
    *
@@ -304,7 +304,7 @@ public:
       
     return operator()(index);
     
-  }//operator() (int, MT::String)
+  }//operator() (int, mlr::String)
   
   /* INIT SECTION */
   
@@ -428,9 +428,9 @@ struct sLogger {
   bool replay;
   
   // map from variableID to revision
-  MT::Array<VariableHistory*> varHistories;
+  mlr::Array<VariableHistory*> varHistories;
   
-  MT::Array<uint> maxSteps;
+  mlr::Array<uint> maxSteps;
   
   // secure structural changes to varHistories
   pthread_mutex_t varHistories_mutex;
@@ -611,9 +611,9 @@ struct sLogger {
     bool firstAccessIsRead = false;
     
     // Define the path so it may be used later on for debugs and so forth
-    MT::String fileName;
+    mlr::String fileName;
     fileName << "accessLog_" << i_var->name << '_' << id;
-    MT::String pathName;
+    mlr::String pathName;
     pathName << "log/" << fileName;
     
     // get access stream
@@ -754,7 +754,7 @@ void Logger::logRevision(const Variable *i_var) {
     const uint id = i_var->id;
     ostream &os = s->getORevisionLogFile(i_var);
     
-    MT::String string;
+    mlr::String string;
     i_var->serializeToString(string);
     os  << string
     << endl;
@@ -956,7 +956,7 @@ void Logger::setValueIfDbDriven(Variable *i_var) {
     const int id = i_var->id;
     
     // get string containing field info from log
-    MT::String string;
+    mlr::String string;
     istream &is = s->getIRevisionLogFile(i_var);
     string.read(is, "", "\n");
     is.sync();

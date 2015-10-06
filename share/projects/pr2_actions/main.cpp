@@ -33,7 +33,7 @@ void testActionMachine()
   );
   activity.machine->waitForActionCompletion(action);
 
-  // MT::wait(2);
+  // mlr::wait(2);
 
     // activity.machine->waitForActionCompletion(a3);
 
@@ -73,7 +73,7 @@ void test_push()
   GroundedAction* a_right = activity.machine->add(new MoveEffTo("endeffR", {.6, -.3, 1}));
   activity.machine->waitForActionCompletion(a_right);
   cout << "waiting" << endl;
-  MT::wait(3);
+  mlr::wait(3);
   GroundedAction* push = activity.machine->add(new PushForce("endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/));
   activity.machine->waitForActionCompletion(push);
 
@@ -108,7 +108,7 @@ void test_collision()
   activity.machine->add(new MoveEffTo("endeffL", {.8, -.1, .9}));
   activity.machine->waitForActionCompletion();
   cout << "actions done" << endl;
-  MT::wait(5);
+  mlr::wait(5);
   engine().close(activity);
 }
 
@@ -126,7 +126,7 @@ void idle2()
 //  activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
 
   activity.machine->waitForActionCompletion();
-  MT::wait(5);
+  mlr::wait(5);
 
   // activity.machine->add(new MoveEffTo("endeffR", {.6, -.2, .9}));
   // activity.machine->add(new AlignEffTo("endeffR", {1, 0, 0.}, {1, 0, 0}));
@@ -199,7 +199,7 @@ public:
   void run()
   {
     ors::Transformation pose; pose.setZero();
-    MT::wait(1.);
+    mlr::wait(1.);
     // align
     pose = activity.machine->s->feedbackController.world.getShapeByName("endeffL")->X;
     //pose.pos.x += .2;
@@ -233,7 +233,7 @@ public:
       // ROS: done rotation
       advertise_manipulation_state("rotation stop");
       cout << "Rotation DONE" << endl;
-      MT::wait(2);
+      mlr::wait(2);
 
       // ROS: manipulating prismatic
       advertise_manipulation_state("prismatic start");
@@ -282,7 +282,7 @@ public:
 // ============================================================================
 int main(int argc, char** argv)
 {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   // test_push();
   // idle();
   // idle2();

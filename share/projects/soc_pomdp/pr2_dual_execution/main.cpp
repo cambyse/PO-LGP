@@ -117,7 +117,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
 
     double mean_table_height = table->X.pos.z;
 
-    double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+    double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
     FeedbackMotionControl MP(world);
     MP.qitselfPD.active=true;
@@ -205,7 +205,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
       //    vid->addFrame(world.gl().captureImage);
 
       //write data
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
           <<table->X.pos.z <<' '
          <<endeff->X.pos.z <<' '
@@ -238,7 +238,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   //FeedbackMotionControl MC(world);
   activity.machine->s->MP.qitselfPD.active=true;
@@ -280,7 +280,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
   // remaining 100 steps is for reaching to the target.
   for(uint t=0;t<x.d0 + 100;t++)
-	{MT::wait(0.1);
+	{mlr::wait(0.1);
     activity.machine->s->MP.setState(q, qdot);
 
    // cout<< q<<endl;
@@ -326,7 +326,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -355,7 +355,7 @@ struct MySystem:System{
   ACCESS(arr, wrenchR)
   MySystem(){
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
@@ -390,7 +390,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
 
-  bool useRos = MT::getParameter<bool>("useRos", false);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -427,7 +427,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
   ors::Body *table = world.getBodyByName("table");
 
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
 
 
@@ -463,7 +463,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
 bool updated =false;
   for(uint t=0;t<x.d0 + 100;t++){
-      MT::wait(.1);
+      mlr::wait(.1);
 
       MP.setState(q, qdot);
     ////////////////////////////////////////////////////////////////////////////////
@@ -539,7 +539,7 @@ bool updated =false;
 
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -566,10 +566,10 @@ FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv
 int main(int argc, char** argv)
 {
 
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
 #if 0
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   //ActionSystem activity;
   //activity.machine->add(new CoreTasks());
 
@@ -582,7 +582,7 @@ int main(int argc, char** argv)
 
   uint T = 200; //time horizon
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
   //compute the primal and dual trajectories
   arr heights;
@@ -603,7 +603,7 @@ int main(int argc, char** argv)
 
   cout<<dual<<endl;
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
   //TESTING: Online POMDP planning
@@ -632,7 +632,7 @@ int main(int argc, char** argv)
 
   uint T = 200; //time horizon
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
   //compute the primal and dual trajectories
   //arr heights;
@@ -661,7 +661,7 @@ int main(int argc, char** argv)
       activity.machine->s->world.gl().update(STRING(t), true, false, true);
   }
 /*/
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
   //TESTING: Online POMDP planning

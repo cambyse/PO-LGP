@@ -14,8 +14,8 @@ void testDynamicSimulation(){
   S.watch();        //pause and watch initial posture
 
   double Delta = .01; //duration of one time step = .01sec
-  bool gravity = MT::getParameter<bool>("gravity",true);
-  bool control = MT::getParameter<bool>("control",true);
+  bool gravity = mlr::getParameter<bool>("gravity",true);
+  bool control = mlr::getParameter<bool>("control",true);
 
   for(uint i=0;i<1000;i++){
     
@@ -29,7 +29,7 @@ void testDynamicSimulation(){
       tau = -.1 * qdot; //pure friction
     }else{
       //separate PDs in each joint separately:
-      double lambda = 1./MT_2PI; //corresponds to 1 second period
+      double lambda = 1./MLR_2PI; //corresponds to 1 second period
       double xi = 1.;
       double Kp,Kd;
       Kp = 1./(lambda*lambda);
@@ -63,7 +63,7 @@ void testDynamicSimulation(){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testDynamicSimulation();
 

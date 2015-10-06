@@ -41,7 +41,7 @@ void FOL_World::init(istream& is){
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
 
-  MT_MSG("TODO: add action sequence to the representation");
+  MLR_MSG("TODO: add action sequence to the representation");
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
@@ -64,7 +64,7 @@ void FOL_World::init(istream& is){
     cout <<"*** reward fct=" <<*rewardFct <<endl;
     cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
-  MT::open(fil, "z.FOL_World");
+  mlr::open(fil, "z.FOL_World");
 
   start_T_step=0;
   start_T_real=0.;
@@ -222,7 +222,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
-  MT::Array<Handle> decisions; //tuples of rule and substitution
+  mlr::Array<Handle> decisions; //tuples of rule and substitution
   decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
   for(Node* rule:decisionRules){
 //    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
@@ -344,7 +344,7 @@ void FOL_World::write_state(ostream& os){
   state->write(os," ","{}");
 }
 
-void FOL_World::set_state(MT::String& s){
+void FOL_World::set_state(mlr::String& s){
   state->clear();
   s >>"{";
   state->read(s);

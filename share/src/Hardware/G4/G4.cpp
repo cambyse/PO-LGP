@@ -17,7 +17,7 @@ struct sG4Poller{
   intA hubList;
   intA hubMap;
 
-  MT::Array<G4_FRAMEDATA> framedata;
+  mlr::Array<G4_FRAMEDATA> framedata;
   floatA poses;
   timespec tstamp;
 
@@ -91,8 +91,8 @@ G4Poller::G4Poller():Module("G4Tracker"){
 }
 
 void G4Poller::open(){
-  String src_cfg_file = MT::getParameter<String>("g4_srcCfg");
-  uint numHubs = MT::getParameter<int>("g4_numHubs");
+  String src_cfg_file = mlr::getParameter<String>("g4_srcCfg");
+  uint numHubs = mlr::getParameter<int>("g4_numHubs");
   G4_CMD_STRUCT cs;
   int res;
 
@@ -108,7 +108,7 @@ void G4Poller::open(){
       } else {
         std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
       }
-      MT::wait(.1, false);
+      mlr::wait(.1, false);
     }
     if(res!=G4_ERROR_NONE)
       HALT("G4Tracker initialization failed 10 times. g4_init_sys returned " <<res);
@@ -128,7 +128,7 @@ void G4Poller::open(){
       s->hubs = cs.cds.iParam;
       if(s->hubs == (int)numHubs) break;
       cout << s->hubs << ", " << flush;
-      MT::wait(.1, false);
+      mlr::wait(.1, false);
     }
     if(k==10){
       cout <<" FAILED ... restarting" <<endl;

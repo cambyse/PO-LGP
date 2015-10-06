@@ -30,7 +30,7 @@ void TEST(PhysxObstacleAvoidance) {
 
   for (uint k=0; k<6; k++) {
     // set current goal
-    MT::String bname;
+    mlr::String bname;
     bname << "door" << k+1;
     goal = conv_vec2arr(ors.getBodyByName(bname)->X.pos);
     goal(2) = 1;
@@ -49,8 +49,8 @@ void TEST(PhysxObstacleAvoidance) {
       dirObs.setZero();
       for (uint j = 0; j < ors.proxies.N; j++) {
         p = ors.proxies(j);
-        MT::String objA(ors.shapes(p->a)->body->name.p);
-        MT::String objB(ors.shapes(p->b)->body->name.p);
+        mlr::String objA(ors.shapes(p->a)->body->name.p);
+        mlr::String objB(ors.shapes(p->b)->body->name.p);
 
         if ((p->d < eps) && (objA == "robot")) {
           ors.reportProxies();

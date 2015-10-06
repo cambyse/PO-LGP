@@ -1,5 +1,5 @@
-#ifndef MT_logging_h
-#define MT_logging_h
+#ifndef MLR_logging_h
+#define MLR_logging_h
 
 #include "biros.h"
 #include "biros_internal.h"

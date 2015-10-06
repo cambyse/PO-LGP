@@ -70,7 +70,7 @@ void RuleSetContainer_ground::init(const SymbolicExperienceL* _p_examples) {
   }
 }
 
-void RuleSetContainer_ground::append(Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule) {
+void RuleSetContainer_ground::append(Rule* rule, uintA& examples_of_this_rule, mlr::Array< uintA >& examples_per_outcome_of_this_rule) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleSetContainer_ground::append [START]"<<endl;}
   if (DEBUG>0) {rule->write(cout);  PRINT(examples_of_this_rule);  PRINT(examples_per_outcome_of_this_rule);}
@@ -96,7 +96,7 @@ void RuleSetContainer_ground::append(Rule* rule, uintA& examples_of_this_rule, M
     uintA empty;
     experiences_per_rule.append(empty);
     // (4 - B) update experiences_per_ruleOutcome
-    MT::Array< uintA > empty_outcome;
+    mlr::Array< uintA > empty_outcome;
     experiences_per_ruleOutcome.append(empty_outcome);
   }
   if (DEBUG>0) {PRINT(nonDefaultRules_per_experience);  PRINT(experiences_per_rule);  PRINT(experiences_per_ruleOutcome);}
@@ -123,8 +123,8 @@ void RuleSetContainer_ground::remove(uint id) {
     }
   }
   // (3) experiences_per_rule  and  experiences_per_ruleOutcome
-  MT::Array< uintA > experiences_per_rule__new(rules.num()); // rules have already new size
-  MT::Array< MT::Array < uintA > > experiences_per_ruleOutcome__new(rules.num());
+  mlr::Array< uintA > experiences_per_rule__new(rules.num()); // rules have already new size
+  mlr::Array< mlr::Array < uintA > > experiences_per_ruleOutcome__new(rules.num());
   FOR1D_(rules, i) {
     if (i<id) {
       experiences_per_rule__new(i) = experiences_per_rule(i);
@@ -170,12 +170,12 @@ void RuleSetContainer_ground::recomputeDefaultRule() {
   if (experiences_per_rule.N == 0) {
     uintA empty;
     experiences_per_rule.append(empty);
-    MT::Array< uintA > empty_outcome(2);
+    mlr::Array< uintA > empty_outcome(2);
     experiences_per_ruleOutcome.append(empty_outcome);
   }
   experiences_per_rule(0).clear();
   experiences_per_ruleOutcome(0).clear();
-  MT::Array< uintA > empty_outcome(2);
+  mlr::Array< uintA > empty_outcome(2);
   experiences_per_ruleOutcome(0) = empty_outcome;
   // experiences_per_rule
   uint i;
@@ -209,7 +209,7 @@ void RuleSetContainer_ground::recomputeDefaultRule() {
   if (DEBUG>0) {cout<<"recomputeDefault [END]"<<endl;}
 }
 
-void RuleSetContainer_ground::getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
+void RuleSetContainer_ground::getResponsibilities(arr& responsibilities, mlr::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
   responsibilities.clear();
   covered_experiences.clear();
   covered_experiences_num.clear();
@@ -234,7 +234,7 @@ void RuleSetContainer_ground::getResponsibilities(arr& responsibilities, MT::Arr
 }
 
 
-void rule_write_hack_ground(Rule* rule, MT::Array< uintA >& outcome_tripletts, ostream& os) {
+void rule_write_hack_ground(Rule* rule, mlr::Array< uintA >& outcome_tripletts, ostream& os) {
   CHECK(outcome_tripletts.N = rule->outcomes.N, "wrong size");
 //  os << "r" << endl;
   uint i, j;
@@ -439,9 +439,9 @@ void RuleSetContainer_ground::sanityCheck() const {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"sort [START]"<<endl;}
   RuleSet new__rules;
-  MT::Array< uintA > new__nonDefaultRules_per_experience;
-  MT::Array< uintA > new__experiences_per_rule;
-  MT::Array< MT::Array < uintA > > new__experiences_per_ruleOutcome;
+  mlr::Array< uintA > new__nonDefaultRules_per_experience;
+  mlr::Array< uintA > new__experiences_per_rule;
+  mlr::Array< mlr::Array < uintA > > new__experiences_per_ruleOutcome;
   
   uintA action_ids;
   uint i, k;
@@ -488,9 +488,9 @@ void RuleSetContainer_ground::sort() {
   }
   
   if (max_arity <= 2) {
-    MT::Array< uintA > new__nonDefaultRules_per_experience;
-    MT::Array< uintA > new__experiences_per_rule;
-    MT::Array< MT::Array < uintA > > new__experiences_per_ruleOutcome;
+    mlr::Array< uintA > new__nonDefaultRules_per_experience;
+    mlr::Array< uintA > new__experiences_per_rule;
+    mlr::Array< mlr::Array < uintA > > new__experiences_per_ruleOutcome;
     RuleSet rules_sorted;
     uintA action_ids;
     uint r, i;
@@ -571,7 +571,7 @@ void RuleSetContainer_ground::sort() {
     NIY;
     write(rules, "ground_rules.dat.unsorted_backup");
     
-    MT::Array< Rule* > ra_sorted;
+    mlr::Array< Rule* > ra_sorted;
     ra_sorted.memMove = true;
     uint r, r2, d;
     FOR1D_(rules, r) {
@@ -805,7 +805,7 @@ SearchOperator_ground::SearchOperator_ground(double alpha_PEN, double p_min, uin
 
 
 
-void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& potential_outcomes, const SymbolicExperienceL& covered_experiences, const Rule* old_rule, boolA& coverage) {
+void SearchOperator_ground::calcCoverage_outcomes(const mlr::Array< LitL >& potential_outcomes, const SymbolicExperienceL& covered_experiences, const Rule* old_rule, boolA& coverage) {
   // ACHTUNG: old_rule hat womoeglich andere Outcomes!!
   uint DEBUG = 0;
   if (DEBUG>0) cout << "calcOutcomesCoverage [START]" << endl;
@@ -937,7 +937,7 @@ void SearchOperator_ground::integrateNewRules(const RuleSetContainer_ground& rul
 
 // Algorithm of Figure 4 in Zettlemoyer (2007)
 void SearchOperator_ground::createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-        MT::Array< RuleSetContainer_ground >& set_of_new_rulesC) {
+        mlr::Array< RuleSetContainer_ground >& set_of_new_rulesC) {
   uint DEBUG = 0;
   set_of_new_rulesC.clear();
   reset();
@@ -970,7 +970,7 @@ void SearchOperator_ground::createRuleSets(const RuleSetContainer_ground& rulesC
 
 
 // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule) {
+void SearchOperator_ground::produceTrimmedOutcomes(mlr::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"produceTrimmedOutcomes [START]"<<endl;
   uint i;
@@ -983,7 +983,7 @@ void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, 
   CostFunction_ground::setOutcomesCoverage(coverage);
   if (DEBUG>3) PRINT(coverage)
   removed = false;
-  MT::Array< LitL > o_help;
+  mlr::Array< LitL > o_help;
   FOR1D(outcomes, i) {
     atleastone = sum(coverage.sub(i,i,0,coverage.d1-1));
     if (i < outcomes.N-1  &&  !atleastone) { // only for non-noise outcomes
@@ -1044,7 +1044,7 @@ void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, 
 // When we create new outcomes, we have to check whether there are outcomes with
 // (i) no examples covered or (ii) a probability of 0. In both cases, the corresponding
 // outcomes need to be deleted. --> method trimOutcomes(...), see above
-void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& coveredExamples, const uintA& covered_experiences_ids) {
+void SearchOperator_ground::induceOutcomes(Rule* ground_r, mlr::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& coveredExamples, const uintA& covered_experiences_ids) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
   
@@ -1062,7 +1062,7 @@ void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& c
   CostFunction_ground::setNoiseStateProbability(p_min);
       
   // (1) Determine basic outcomes = changes from pre to post = for each covered example a separate outcome
-  MT::Array< LitL > outcomes_basic;
+  mlr::Array< LitL > outcomes_basic;
   FOR1D(coveredExamples, i) {
     if (DEBUG>4) {cout<<"====== Using ex "<<i<<":"<<endl; coveredExamples(i)->write(cout);}
     bool covered = ruleReasoning::cover_groundRule_groundedAction(coveredExamples(i)->pre, coveredExamples(i)->action, ground_r);
@@ -1121,7 +1121,7 @@ void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& c
         prune(j) = true;
     }
   }
-  MT::Array< LitL > outcomes;
+  mlr::Array< LitL > outcomes;
   FOR1D(outcomes_basic, i) {
     if (!prune(i)) {
       outcomes.append(outcomes_basic(i));
@@ -1165,7 +1165,7 @@ void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& c
   bool change = false;
   boolA subsumes;
   arr probs_new;
-  MT::Array< LitL > outcomes_new;
+  mlr::Array< LitL > outcomes_new;
   boolA coverage_new;
   do {
     change = false;
@@ -1426,7 +1426,7 @@ void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& c
 
 
 // Return value needs to be MINIMIZEd.
-double SearchOperator_ground::learnParameters_constrainedCostfunction(const MT::Array< LitL >& outcomes, doubleA& probs) { 
+double SearchOperator_ground::learnParameters_constrainedCostfunction(const mlr::Array< LitL >& outcomes, doubleA& probs) { 
   uint DEBUG = 0;
   
   if (DEBUG > 0) {
@@ -1480,7 +1480,7 @@ double SearchOperator_ground::learnParameters_constrainedCostfunction(const MT::
   void (*df)(arr&,const arr&);
   df = CostFunction_ground::calc_grad;
   
-//  MT::checkGradient(f, df, probs, 0.05);
+//  mlr::checkGradient(f, df, probs, 0.05);
   
   arr gradients;
   cost = CostFunction_ground::calc(probs);
@@ -1591,14 +1591,14 @@ double SearchOperator_ground::learnParameters_constrainedCostfunction(const MT::
   double negativstProb = 1.0;
   FOR1D(probs, i) {
     if (probs(i) < -EPSILON__PROB_NEG2) {
-      MT::String warning;
+      mlr::String warning;
       warning << "Param. optimization failed - Significant negative probability: " << probs(i);
       HALT(warning)
     }
     if (probs(i) < -EPSILON__PROB_NEG1) {
-      MT::String warning;
+      mlr::String warning;
       warning << "Param. optimization awkward - Significant negative probability: " << probs(i);
-      MT_MSG(warning);
+      MLR_MSG(warning);
       pen_sum *= 1.3;
     }
     if (probs(i) < 0  &&  probs(i) < negativstProb)
@@ -1615,14 +1615,14 @@ double SearchOperator_ground::learnParameters_constrainedCostfunction(const MT::
   double EPSILON__PROB_SUM1 = 0.15;
   double EPSILON__PROB_SUM2 = 0.5;
   if (fabs(probSum - 1) > EPSILON__PROB_SUM2) {
-    MT::String warning;
+    mlr::String warning;
     warning << "Param. optimization failed - sum clearly different from 1: " << probSum << " found=" << (probs*probSum) << " rescaled=" << probs;
     HALT(warning);
   }
   if (fabs(probSum - 1) > EPSILON__PROB_SUM1) {
-    MT::String warning;
+    mlr::String warning;
     warning << "Param. optimization awkward - sum clearly different from 1: " << probSum << " found=" << (probs*probSum) << " rescaled=" << probs;
-    MT_MSG(warning);
+    MLR_MSG(warning);
   }
 
   if (DEBUG > 0) {
@@ -1637,7 +1637,7 @@ double SearchOperator_ground::learnParameters_constrainedCostfunction(const MT::
 
 
 
-double SearchOperator_ground::learnParameters(const MT::Array< LitL >& outcomes, doubleA& probs) {
+double SearchOperator_ground::learnParameters(const mlr::Array< LitL >& outcomes, doubleA& probs) {
 	return learnParameters_constrainedCostfunction(outcomes, probs);
 // 	Other Ideas:
 // 	(a) nur in die Richtung des groessten Gradienten gehen; dort bestimmte Schritteweise; Rest anpassen
@@ -1687,7 +1687,7 @@ void ExplainExperiences_ground::findRules(const RuleSetContainer_ground& rulesC_
       // Estimate new outcomes for r'
       CHECK(covered_experiences.N>0, "At least the explained example should be covered.")
       if (DEBUG>0) {cout<<"#Covering examples: "<<covered_experiences_ids<<"  "<<covered_experiences.N<<endl;}
-      MT::Array< uintA > examples_per_outcome;
+      mlr::Array< uintA > examples_per_outcome;
       induceOutcomes(newRule, examples_per_outcome, covered_experiences, covered_experiences_ids);
       rulesC_2add.append(newRule, covered_experiences_ids, examples_per_outcome);
 //       rulesC_2add.sanityCheck();
@@ -1718,17 +1718,17 @@ void trim_hack_ground(LitL& lits) {
   }
   if (lits.N == k)
     return;
-//   MT_MSG("IS TRIM_HACK UP TO DATE FOR THE PREDICATE IDs???");
+//   MLR_MSG("IS TRIM_HACK UP TO DATE FOR THE PREDICATE IDs???");
   if (DEBUG>0) {cout << "trim_hack_ground before: [N="<<lits.N<<"] "; write(lits); cout<<endl;}
   // only apply for primitive predicates
-  uint __TABLE_PRED_ID = logicObjectManager::getPredicate(MT::String("table"))->id;
-  uint __BLOCK_PRED_ID = logicObjectManager::getPredicate(MT::String("block"))->id;
-  uint __BALL_PRED_ID = logicObjectManager::getPredicate(MT::String("ball"))->id;
-  uint __ON_PRED_ID = logicObjectManager::getPredicate(MT::String("on"))->id;
-  uint __INHAND_PRED_ID = logicObjectManager::getPredicate(MT::String("inhand"))->id;
+  uint __TABLE_PRED_ID = logicObjectManager::getPredicate(mlr::String("table"))->id;
+  uint __BLOCK_PRED_ID = logicObjectManager::getPredicate(mlr::String("block"))->id;
+  uint __BALL_PRED_ID = logicObjectManager::getPredicate(mlr::String("ball"))->id;
+  uint __ON_PRED_ID = logicObjectManager::getPredicate(mlr::String("on"))->id;
+  uint __INHAND_PRED_ID = logicObjectManager::getPredicate(mlr::String("inhand"))->id;
   uint __BOX_PRED_ID = 1000000;
-  if (logicObjectManager::getPredicate(MT::String("box")) != NULL) {
-    __BOX_PRED_ID = logicObjectManager::getPredicate(MT::String("box"))->id;
+  if (logicObjectManager::getPredicate(mlr::String("box")) != NULL) {
+    __BOX_PRED_ID = logicObjectManager::getPredicate(mlr::String("box"))->id;
   }
   if (DEBUG>0) {
       cout<<"Did you adapt the predicate IDs correspondingly to logic_world_interface.h???"<<endl;
@@ -2045,7 +2045,7 @@ void DropPreconditions_ground::findRules(const RuleSetContainer_ground& rulesC_o
               covered_experiences(k)->write(cout);
           }
         }
-        MT::Array< uintA > examples_per_outcome;
+        mlr::Array< uintA > examples_per_outcome;
         induceOutcomes(newRule, examples_per_outcome, covered_experiences, covered_experiences_ids);
         rulesC_2add.append(newRule, covered_experiences_ids, examples_per_outcome);
         stop = true;
@@ -2173,7 +2173,7 @@ void DropPreconditions_approximativeVersion_ground::findRules(const RuleSetConta
           covered_experiences(k)->write(cout);
         }
       }
-      MT::Array< uintA > examples_per_outcome;
+      mlr::Array< uintA > examples_per_outcome;
       induceOutcomes(newRule, examples_per_outcome, covered_experiences, covered_experiences_ids);
       rulesC_2add.append(newRule, covered_experiences_ids, examples_per_outcome);
     }
@@ -2249,7 +2249,7 @@ void DropReferences_ground::findRules(const RuleSetContainer_ground& rulesC_old,
             covered_experiences(k)->write(cout);
           }
         }
-        MT::Array< uintA > examples_per_outcome;
+        mlr::Array< uintA > examples_per_outcome;
         induceOutcomes(newRule, examples_per_outcome, covered_experiences, covered_experiences_ids);
         rulesC_2add.append(newRule, covered_experiences_ids, examples_per_outcome);
         stop = true;
@@ -2294,7 +2294,7 @@ void DropReferences_ground::reset() {
 // --------------------------------------------------------------------
 
 void DropRules_ground::createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-          MT::Array< RuleSetContainer_ground >& one_rulesC_new) {
+          mlr::Array< RuleSetContainer_ground >& one_rulesC_new) {
   uint DEBUG = 0;
   one_rulesC_new.clear();
   uint i, j;
@@ -2372,7 +2372,7 @@ void SplitOnLiterals_ground::findRules(const RuleSetContainer_ground& rulesC_old
         calcCoverage_ground(covered_experiences, covered_experiences_ids, newRule_pos, examples);
         if (covered_experiences.N > 0) {
           if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" examples and will be kept."<<endl;
-          MT::Array< uintA > examples_per_outcome;
+          mlr::Array< uintA > examples_per_outcome;
           induceOutcomes(newRule_pos, examples_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule_pos, covered_experiences_ids, examples_per_outcome);
         }
@@ -2411,7 +2411,7 @@ void SplitOnLiterals_ground::findRules(const RuleSetContainer_ground& rulesC_old
               covered_experiences(k)->write(cout);
             }
           }
-          MT::Array< uintA > examples_per_outcome;
+          mlr::Array< uintA > examples_per_outcome;
           induceOutcomes(newRule_neg, examples_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule_neg, covered_experiences_ids, examples_per_outcome);
         }
@@ -2499,7 +2499,7 @@ void AddLiterals_ground::findRules(const RuleSetContainer_ground& rulesC_old, co
               covered_experiences(k)->write(cout);
             }
           }
-          MT::Array< uintA > examples_per_outcome;
+          mlr::Array< uintA > examples_per_outcome;
           induceOutcomes(newRule, examples_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule, covered_experiences_ids, examples_per_outcome);
         }
@@ -2680,7 +2680,7 @@ double RuleLearner_ground::score(RuleSetContainer_ground& rulesC, SymbolicExperi
       exLik = ruleReasoning::probability_abstractRule(rule, *examples(i)->pre, examples(i)->action, *examples(i)->post, p_min);
       #else
       uint o;
-      MT::Array< uintA >& exs_per_out = rulesC.experiences_per_ruleOutcome(covering_rules(0));
+      mlr::Array< uintA >& exs_per_out = rulesC.experiences_per_ruleOutcome(covering_rules(0));
       if (DEBUG>2) {PRINT(exs_per_out);}
       exLik = 0.0;
       FOR1D(exs_per_out, o) {
@@ -2830,7 +2830,7 @@ void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicEx
   }
   // log writing
   std::ofstream log;
-  MT::open(log, logfile);
+  mlr::open(log, logfile);
   log<<"# Search Operators:"<<endl;
   FOR1D(searchOperators, i) {
     log<<"# "<<i<<" "<<searchOperators(i)->getName()<<endl;
@@ -2861,7 +2861,7 @@ void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicEx
     if (DEBUG > 1) {if(so_useAgain) cout<<"Using op again."<<endl; else cout<<"Using fresh op."<<endl;}
     so_UsageHistory.append(op);
     num_so_applied(op)++;
-    MT::Array< RuleSetContainer_ground > set_of__rulesC_new;
+    mlr::Array< RuleSetContainer_ground > set_of__rulesC_new;
     searchOperators(op)->createRuleSets(rulesC, experiences, set_of__rulesC_new);
     if (set_of__rulesC_new.N == 0) {
       op_applicable(op) = false;
@@ -2930,7 +2930,7 @@ void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicEx
       else {cout << "No better rule-set was found (although I did my very best)." << endl;}
       if (round%10==0) {
         uintA covered_experiences_num;
-        MT::Array< uintA > covered_experiences;
+        mlr::Array< uintA > covered_experiences;
         arr responsibilities;
         rulesC.getResponsibilities(responsibilities, covered_experiences, covered_experiences_num);
         cout<<"Responsibilities after round "<<round<<":"<<endl;
@@ -2950,7 +2950,7 @@ void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicEx
 	
   // LOGFILE WRITING [start]
   std::ofstream log_info;
-  MT::String logfile_info;
+  mlr::String logfile_info;
   logfile_info << logfile << ".info";
   open(log_info, logfile_info);
   
@@ -2969,7 +2969,7 @@ void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicEx
   log_info<<endl;
   // responsibilities
   uintA covered_experiences_num;
-  MT::Array< uintA > covered_experiences;
+  mlr::Array< uintA > covered_experiences;
   arr responsibilities;
   rulesC.getResponsibilities(responsibilities, covered_experiences, covered_experiences_num);
   log_info<<"Responsibilities:"<<endl;

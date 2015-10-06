@@ -4,7 +4,7 @@
 #include <Ors/ors.h>
 #include <Perception/g4data.h>
 
-typedef MT::Array<Graph*> kvgL;
+typedef mlr::Array<Graph*> kvgL;
 
 struct KeyFramer {
   struct sKeyFramer;

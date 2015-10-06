@@ -3,7 +3,7 @@
 #include <Motion/taskMaps.h>
 
 
-void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
+void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
   uint trajIter;
   for (trajIter=0;trajIter<5;trajIter++) {
 

@@ -71,20 +71,20 @@ void Vector::setRandom(double range) { x=rnd.uni(-range, range); y=rnd.uni(-rang
 /// this=this/length(this)
 void Vector::normalize() {
   if(isZero){
-    MT_MSG("can't normalize length of null vector");
+    MLR_MSG("can't normalize length of null vector");
   }
   (*this)/=length();
 }
 
 /// this=this*l/length(this)
 void Vector::setLength(double l) {
-  if(isZero) MT_MSG("can't change length of null vector");
+  if(isZero) MLR_MSG("can't change length of null vector");
   (*this)*=l/length();
 }
 
 /// this=component of this normal to \c b, (unnormalized!)
 void Vector::makeNormal(const Vector& b) {
-  if(b.isZero) MT_MSG("can't makeNormal with null vector");
+  if(b.isZero) MLR_MSG("can't makeNormal with null vector");
   double l=b.length(), s=x*b.x+y*b.y+z*b.z;
   s/=l*l;
   x-=s*b.x; y-=s*b.y; z-=s*b.z;
@@ -92,7 +92,7 @@ void Vector::makeNormal(const Vector& b) {
 
 /// this=component of this colinear to \c b, (unnormalized!)
 void Vector::makeColinear(const Vector& b) {
-  if(b.isZero) MT_MSG("can't makeColinear with null vector");
+  if(b.isZero) MLR_MSG("can't makeColinear with null vector");
   // *this = ((*this)*b)/b.length()) * (*this);
   double l=b.length(), s=x*b.x+y*b.y+z*b.z;
   s/=l*l;
@@ -137,22 +137,22 @@ double Vector::radius() const { return ::sqrt(x*x+y*y); }
 /// the angle in the x/y-plane in [-pi, pi]
 double Vector::phi() const {
   double ph;
-  if(x==0. || ::fabs(x)<1e-10) ph=MT_PI/2.; else ph=::atan(y/x);
-  if(x<0.) { if(y<0.) ph-=MT_PI; else ph+=MT_PI; }
+  if(x==0. || ::fabs(x)<1e-10) ph=MLR_PI/2.; else ph=::atan(y/x);
+  if(x<0.) { if(y<0.) ph-=MLR_PI; else ph+=MLR_PI; }
   return ph;
 }
 
 /// the angle from the x/y-plane
-double Vector::theta() const { return ::atan(z/radius())+MT_PI/2.; }
+double Vector::theta() const { return ::atan(z/radius())+MLR_PI/2.; }
 
 //{ I/O
 void Vector::write(std::ostream& os) const {
-  if(!MT::IOraw) os <<'(' <<x <<' ' <<y <<' ' <<z <<')';
+  if(!mlr::IOraw) os <<'(' <<x <<' ' <<y <<' ' <<z <<')';
   else os <<' ' <<x <<' ' <<y <<' ' <<z;
 }
 
 void Vector::read(std::istream& is) {
-  if(!MT::IOraw) is >>PARSE("(") >>x >>y >>z >>PARSE(")");
+  if(!mlr::IOraw) is >>PARSE("(") >>x >>y >>z >>PARSE(")");
   else is >>x >>y >>z;
 }
 //}
@@ -484,8 +484,8 @@ void Quaternion::setRandom() {
   s=rnd.uni();
   s1=sqrt(1-s);
   s2=sqrt(s);
-  t1=MT_2PI*rnd.uni();
-  t2=MT_2PI*rnd.uni();
+  t1=MLR_2PI*rnd.uni();
+  t2=MLR_2PI*rnd.uni();
   w=cos(t2)*s2;
   x=sin(t1)*s1;
   y=cos(t1)*s1;
@@ -506,9 +506,9 @@ void Quaternion::setInterpolate(double t, const Quaternion& a, const Quaternion 
 }
 
 /// assigns the rotation to \c a DEGREES around the vector (x, y, z)
-void Quaternion::setDeg(double degree, double _x, double _y, double _z) { setRad(degree*MT_PI/180., _x, _y, _z); }
+void Quaternion::setDeg(double degree, double _x, double _y, double _z) { setRad(degree*MLR_PI/180., _x, _y, _z); }
 
-void Quaternion::setDeg(double degree, const Vector& vec) { setRad(degree*MT_PI/180., vec.x, vec.y, vec.z); }
+void Quaternion::setDeg(double degree, const Vector& vec) { setRad(degree*MLR_PI/180., vec.x, vec.y, vec.z); }
 
 /// assigns the rotation to \c a RADIANTS (2*PI-units) around the vector (x, y, z)
 void Quaternion::setRad(double angle, double _x, double _y, double _z) {
@@ -622,7 +622,7 @@ double Quaternion::getRad() const {
 /// gets rotation angle (in degree [0, 360])
 double Quaternion::getDeg() const {
   if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) return 0;
-  return 360./MT_PI*acos(w);
+  return 360./MLR_PI*acos(w);
 }
 
 /// gets rotation angle (in degree [0, 360]) and vector
@@ -630,7 +630,7 @@ void Quaternion::getDeg(double& degree, Vector& vec) const {
   if(w>=1. || w<=-1. || (x==0. && y==0. && z==0.)) { degree=0.; vec.set(0., 0., 1.); return; }
   degree=acos(w);
   double s=sin(degree);
-  degree*=360./MT_PI;
+  degree*=360./MLR_PI;
   vec.x=x/s; vec.y=y/s; vec.z=z/s;
 }
 
@@ -641,7 +641,7 @@ void Quaternion::getRad(double& angle, Vector& vec) const {
   double s=1./sin(angle);
   angle*=2;
   vec.x=s*x; vec.y=s*y; vec.z=s*z;
-  CHECK(angle>=0. && angle<=MT_2PI, "");
+  CHECK(angle>=0. && angle<=MLR_2PI, "");
 }
 
 /// gets the axis rotation vector with length equal to the rotation angle in rad
@@ -780,7 +780,7 @@ arr Quaternion::getJacobian() const{
 
 void Quaternion::writeNice(std::ostream& os) const { os <<"Quaternion: " <<getDeg() <<" around " <<getVec() <<"\n"; }
 void Quaternion::write(std::ostream& os) const {
-  if(!MT::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';
+  if(!mlr::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';
   else os <<' ' <<w <<' ' <<x <<' ' <<y <<' ' <<z;
 }
 void Quaternion::read(std::istream& is) { is >>PARSE("(") >>w >>x >>y  >>z >>PARSE(")"); normalize();}
@@ -888,7 +888,7 @@ Vector operator/(const Transformation& X, const Vector& c) {
 //==============================================================================
 
 /// initialize by reading from the string
-Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)()); return *this; }
+Transformation& Transformation::setText(const char* txt) { read(mlr::String(txt)()); return *this; }
 
 /// resets the position to origin, rotation to identity, velocities to zero, scale to unit
 Transformation& Transformation::setZero() {
@@ -932,7 +932,7 @@ void Transformation::addRelativeVelocity(double x, double y, double z) {
 /// add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityDeg(double degree, double x, double y, double z) {
   Vector W(x, y, z); W.normalize();
-  W*=degree*MT_PI/180.;
+  W*=degree*MLR_PI/180.;
   angvel+=rot*W;
   zeroVels = false;
 }
@@ -1154,7 +1154,7 @@ void Transformation::read(std::istream& is) {
   setZero();
   char c;
   double x[4];
-  MT::skip(is, " \n\r\t<|");
+  mlr::skip(is, " \n\r\t<|");
   for(;;) {
     is >>c;
     if(is.fail()) return;  //EOF I guess
@@ -1176,7 +1176,7 @@ void Transformation::read(std::istream& is) {
           //case 's': is>>PARSE("(")>>x[0]>>PARSE(")");                   scale(x[0]); break;
         case '|':
         case '>': is.putback(c); return; //those symbols finish the reading without error
-        default: MT_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
+        default: MLR_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
       }
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");
   }
@@ -1342,8 +1342,8 @@ double DistanceFunction_Box::fs(arr& g, arr& H, const arr& x){
 // explicit instantiations
 //
 
-template MT::Array<ors::Vector>::Array();
-template MT::Array<ors::Vector>::~Array();
+template mlr::Array<ors::Vector>::Array();
+template mlr::Array<ors::Vector>::~Array();
 
-template MT::Array<ors::Transformation*>::Array();
-template MT::Array<ors::Transformation*>::~Array();
+template mlr::Array<ors::Transformation*>::Array();
+template mlr::Array<ors::Transformation*>::~Array();

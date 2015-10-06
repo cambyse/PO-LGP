@@ -150,7 +150,7 @@ void TEST(Distance){
     if(d>0.) CHECK_ZERO(d-d2, 1e-4, "NOT EQUAL!");
     ors::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
-    W.watch(true); MT::wait(.1);
+    W.watch(true); mlr::wait(.1);
     W.proxies.clear();
   }
 }

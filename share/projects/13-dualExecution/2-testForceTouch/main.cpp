@@ -91,9 +91,9 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, dual;
   getTrajectory(x, y, dual, world);

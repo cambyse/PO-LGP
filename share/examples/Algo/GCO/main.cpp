@@ -47,7 +47,7 @@ struct MinEigModel{
   }
 
   double cost(const arr& phi){
-    return MT::sqr(scalarProduct(beta, phi-mu/n));
+    return mlr::sqr(scalarProduct(beta, phi-mu/n));
   }
 
   double f(const arr& phi){
@@ -61,8 +61,8 @@ struct MinEigModel{
 };
 
 struct ModelDrawer:OpenGL::GLDrawer{
-  MT::Array<MinEigModel>& M;
-  ModelDrawer(MT::Array<MinEigModel>& M):M(M){}
+  mlr::Array<MinEigModel>& M;
+  ModelDrawer(mlr::Array<MinEigModel>& M):M(M){}
   void glDraw(OpenGL &){
     uint c=0;
     for(MinEigModel &m:M) if(m.beta.N==3){
@@ -110,7 +110,7 @@ void displayData(){
 //  for(uint i=0;i<phi.d0;i++) phi(i,0) = pts(i,2); //depth only
 
   //-- models
-  MT::Array<MinEigModel> M(num_labels);
+  mlr::Array<MinEigModel> M(num_labels);
 
   ModelDrawer D(M);
   OpenGL gl;

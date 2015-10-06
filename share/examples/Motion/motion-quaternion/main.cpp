@@ -8,9 +8,9 @@
 #include <Optim/benchmarks.h>
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
   G.getShapeByName("target")->cont=false;
@@ -66,10 +66,10 @@ int main(int argc,char** argv){
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<5;k++){
-    MT::timerStart();
+    mlr::timerStart();
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
 
-    cout <<"** optimization time=" <<MT::timerRead() <<endl;
+    cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("load 'z.costReport.plt'", false, true);

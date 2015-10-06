@@ -40,8 +40,8 @@ namespace relational {
 
 class ArgumentType;
 class Symbol;
-typedef MT::Array< Symbol* > SymL;
-typedef MT::Array< ArgumentType* > ArgumentTypeL;
+typedef mlr::Array< Symbol* > SymL;
+typedef mlr::Array< ArgumentType* > ArgumentTypeL;
 
 class Symbol {
   protected:
@@ -50,7 +50,7 @@ class Symbol {
   public:
     // -----------------------------------
     // Essential data-fields
-    MT::String name;
+    mlr::String name;
     uint arity;
     
     enum SymbolType { 
@@ -81,21 +81,21 @@ class Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static Symbol* get(const MT::String& name, uint arity, SymbolType symbol_type = primitive, RangeType range_type = binary);
+    static Symbol* get(const mlr::String& name, uint arity, SymbolType symbol_type = primitive, RangeType range_type = binary);
     static Symbol* read(istream& in);
-    static Symbol* get(const MT::String& name);
+    static Symbol* get(const mlr::String& name);
     static Symbol* get(const char* name);
-    static void get(MT::Array< Symbol* >& all_symbols);
-    static void get_state(MT::Array< Symbol* >& symbols);
-    static void get_state_nonBinary(MT::Array< Symbol* >& symbols);
-    static void get_action(MT::Array< Symbol* >& symbols);
+    static void get(mlr::Array< Symbol* >& all_symbols);
+    static void get_state(mlr::Array< Symbol* >& symbols);
+    static void get_state_nonBinary(mlr::Array< Symbol* >& symbols);
+    static void get_action(mlr::Array< Symbol* >& symbols);
     virtual ~Symbol() {}
     virtual void write(ostream& os = cout) const;
     virtual bool operator==(const Symbol& s) const;
     virtual bool operator!=(const Symbol& s) const;
-    virtual void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    virtual void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
     
-    static MT::Array< Symbol* > mem__all_symbols;
+    static mlr::Array< Symbol* > mem__all_symbols;
     
     static void sort(SymL& symbols);
 };
@@ -112,14 +112,14 @@ class ConjunctionSymbol : public Symbol {
   public:
     // -----------------------------------
     // Essential data-fields
-    MT::Array<Literal* > base_literals;
+    mlr::Array<Literal* > base_literals;
     bool free_vars_all_quantified;
     
     // -----------------------------------
     // Convenience methods
-    static ConjunctionSymbol* get(const MT::String& name, uint arity, MT::Array<Literal* > base_literals, bool free_vars_all_quantified = true);
+    static ConjunctionSymbol* get(const mlr::String& name, uint arity, mlr::Array<Literal* > base_literals, bool free_vars_all_quantified = true);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
     void getFreeVars(uintA& freeVars) const;
     void getFreeVars(uintA& freeVars_pos, uintA& freeVars_neg) const;
     
@@ -141,9 +141,9 @@ class TransClosureSymbol : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static TransClosureSymbol* get(const MT::String& name, uint arity, Symbol* base_symbol);
+    static TransClosureSymbol* get(const mlr::String& name, uint arity, Symbol* base_symbol);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -158,9 +158,9 @@ class CountSymbol : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static CountSymbol* get(const MT::String& name, uint arity, Literal* base_literal);
+    static CountSymbol* get(const mlr::String& name, uint arity, Literal* base_literal);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -174,9 +174,9 @@ class AverageFunction : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static AverageFunction* get(const MT::String& name, uint arity, Symbol* base_symbol);
+    static AverageFunction* get(const mlr::String& name, uint arity, Symbol* base_symbol);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -190,9 +190,9 @@ class SumFunction : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static SumFunction* get(const MT::String& name, uint arity, Symbol* base_symbol);
+    static SumFunction* get(const mlr::String& name, uint arity, Symbol* base_symbol);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -206,9 +206,9 @@ class MaxFunction : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static MaxFunction* get(const MT::String& name, uint arity, Symbol* base_symbol);    
+    static MaxFunction* get(const mlr::String& name, uint arity, Symbol* base_symbol);    
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -222,9 +222,9 @@ class ChangeFunction : public Symbol {
     
     // -----------------------------------
     // Convenience methods
-    static ChangeFunction* get(const MT::String& name, uint arity, Symbol* base_symbol);
+    static ChangeFunction* get(const mlr::String& name, uint arity, Symbol* base_symbol);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -234,14 +234,14 @@ class RewardFunction : public Symbol {
   public:
     // -----------------------------------
     // Essential data-fields
-    MT::Array< Literal* > base_literals;
+    mlr::Array< Literal* > base_literals;
     double reward_value;
     
     // -----------------------------------
     // Convenience methods
-    static RewardFunction* get(const MT::String& name, uint arity, MT::Array< Literal* > base_literals, double reward_value);
+    static RewardFunction* get(const mlr::String& name, uint arity, mlr::Array< Literal* > base_literals, double reward_value);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 class DifferenceFunction : public Symbol {
@@ -256,15 +256,15 @@ class DifferenceFunction : public Symbol {
     // Essential data-fields
     Symbol *baseSymbol;
     Literal *baseFunctionLit1, *baseFunctionLit2;
-    MT::Array< Literal* > restrictionLits;
+    mlr::Array< Literal* > restrictionLits;
 
      void getFreeVars(uintA& freeVars) const;
     
     // -----------------------------------
     // Convenience methods
-    static DifferenceFunction* get(const MT::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const MT::Array< Literal* > &restriction_lits);
+    static DifferenceFunction* get(const mlr::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const mlr::Array< Literal* > &restriction_lits);
     void write(ostream& os) const;
-    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+    void getDefiningSymbols(mlr::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
 
@@ -285,7 +285,7 @@ class ArgumentType {
     enum ArgumentType_Type { simple, disjunction }; 
         
     ArgumentType_Type type;
-    MT::String name;
+    mlr::String name;
     
     // -----------------------------------
     // Convenience methods
@@ -294,7 +294,7 @@ class ArgumentType {
     virtual bool operator!=(const ArgumentType& t) const;
     virtual bool subsumes(const ArgumentType& t) const;
     virtual void write(ostream& os = cout) const;
-    static ArgumentType* get(const MT::String& name);
+    static ArgumentType* get(const mlr::String& name);
     static ArgumentType* read(ifstream& in);
     static void get(ArgumentTypeL& all_argumentTypes);
     
@@ -316,7 +316,7 @@ struct DisjunctionArgumentType : public ArgumentType {
     ~DisjunctionArgumentType() {}
     bool subsumes(const ArgumentType& t) const;
     void write(ostream& os = cout) const;
-    static DisjunctionArgumentType* get(const MT::String& name, const ArgumentTypeL& base_types);
+    static DisjunctionArgumentType* get(const mlr::String& name, const ArgumentTypeL& base_types);
 };
 
 

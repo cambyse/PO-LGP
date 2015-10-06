@@ -37,8 +37,8 @@
 
 struct Access;
 struct Module;
-typedef MT::Array<Access*> AccessL;
-typedef MT::Array<Module*> ModuleL;
+typedef mlr::Array<Access*> AccessL;
+typedef mlr::Array<Module*> ModuleL;
 extern Singleton<ConditionVariable> shutdown;
 
 //===========================================================================
@@ -99,7 +99,7 @@ struct Module : Thread{
     is the base class of Access_typed */
 
 struct Access{
-  MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
+  mlr::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
   RevisionedAccessGatedClass *var;   ///< which variable does it access
@@ -207,7 +207,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(name) \
-  new Node_typed<Type>(registry(), {MT::String("Decl_Module"), MT::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
+  new Node_typed<Type>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
   RUN_ON_INIT_END(name)
 
 
@@ -237,6 +237,6 @@ inline void operator>>(istream&, Module&){ NIY }
 inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
-inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:MT::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
+inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:mlr::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
 
 #endif

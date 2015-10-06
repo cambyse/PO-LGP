@@ -29,6 +29,6 @@ struct FloatA_Recorder: Module{
   virtual void close();
   virtual void step();
 
-  MT::String varName;
+  mlr::String varName;
   ofstream file;
 };

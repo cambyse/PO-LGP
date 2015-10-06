@@ -12,8 +12,8 @@ bool DoubleComp(const double& a,const double& b){ return a<b; }
 
 void TEST(Basics){
   cout <<"\n*** basic manipulations\n";
-  arr a;     //'arr' is a macro for MT::Array<double>
-  intA ints; //a macro for MT::Array<int>
+  arr a;     //'arr' is a macro for mlr::Array<double>
+  intA ints; //a macro for mlr::Array<int>
 
   a.resize(7,5);
   double *ap=a.p, *astop=ap+a.N;
@@ -51,7 +51,7 @@ void TEST(Basics){
   CHECK_EQ(a[1],a[2],"");
 
   //setting arrays ``by hand''
-  a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to MT::Array<double>({ ... })
+  a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to mlr::Array<double>({ ... })
   cout <<"\nset by hand:\n" <<a <<endl;
   ints = { 0, -1, -2, -3, -4 };
   cout <<"\nset by hand:\n" <<ints <<endl;
@@ -199,8 +199,8 @@ void TEST(Exception){
 
 void TEST(MemoryBound){
   cout <<"\n*** memory bound\n";
-  MT::globalMemoryBound=1ull<<20;
-  MT::globalMemoryStrict=true;
+  mlr::globalMemoryBound=1ull<<20;
+  mlr::globalMemoryStrict=true;
   arr A;
   try{
     A.resize(1000,1000,1000);
@@ -208,8 +208,8 @@ void TEST(MemoryBound){
     cout <<"caught memory restriction exception..." <<endl;
   }
   A.resize(1000);
-  cout <<"total memory allocated = " <<MT::globalMemoryTotal <<endl;
-  MT::globalMemoryBound=1ull<<30;
+  cout <<"total memory allocated = " <<mlr::globalMemoryTotal <<endl;
+  mlr::globalMemoryBound=1ull<<30;
 }
 
 //===========================================================================
@@ -221,26 +221,26 @@ void TEST(BinaryIO){
   ofstream fout("z.ascii"),bout("z.bin",ios::binary);
   ifstream fin("z.ascii") ,bin("z.bin",ios::binary);
 
-  MT::timerStart();
+  mlr::timerStart();
   a.write(fout," ","\n","[]",true,false);
-  cout <<"ascii write time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"ascii write time: " <<mlr::timerRead() <<"sec" <<endl;
   fout.close();
 
-  MT::timerStart();
+  mlr::timerStart();
   b.read(fin);
-  cout <<"ascii read time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"ascii read time: " <<mlr::timerRead() <<"sec" <<endl;
   fin.close();
 
   CHECK_ZERO(maxDiff(a,b), 1e-4, "ascii write-read error");
 
-  MT::timerStart();
+  mlr::timerStart();
   a.write(bout,NULL,NULL,NULL,true,true);
-  cout <<"binary write time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"binary write time: " <<mlr::timerRead() <<"sec" <<endl;
   bout.close();
 
-  MT::timerStart();
+  mlr::timerStart();
   b.read(bin);
-  cout <<"binary read time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"binary read time: " <<mlr::timerRead() <<"sec" <<endl;
   bin.close();
 
   CHECK_EQ(a,b,"binary IO failed!");
@@ -296,10 +296,10 @@ void TEST(Sorted){
 
   for(uint k=0;k<100;k++){
     uint y=rnd(99);
-    if(!x.N || y>x.last()) x.insertInSorted(y, MT::greater);
+    if(!x.N || y>x.last()) x.insertInSorted(y, mlr::greater);
     if(x.N>33) x.popLast();
     cout <<x <<endl;
-    CHECK(x.isSorted(MT::greaterEqual),"");
+    CHECK(x.isSorted(mlr::greaterEqual),"");
   }
 }
 
@@ -317,9 +317,9 @@ void TEST(Gnuplot){
   gnuplot(X);
 
   X.resize(100,2);
-  for(i=0;i<X.d0;i++){ X(i,0)=MT_PI*(2./(X.d0-1)*i-1.); X(i,1)=sin(X(i,0)); }
+  for(i=0;i<X.d0;i++){ X(i,0)=MLR_PI*(2./(X.d0-1)*i-1.); X(i,1)=sin(X(i,0)); }
   gnuplot(X);
-  MT::wait(1.);
+  mlr::wait(1.);
 }
 
 //===========================================================================
@@ -351,22 +351,22 @@ void TEST(MM){
 
   cout <<"speed test: " <<M <<'x' <<N <<'x' <<O <<" matrix multiplication..." <<std::endl;
 
-  MT::useLapack=false; 
-  MT::timerStart();
+  mlr::useLapack=false; 
+  mlr::timerStart();
   innerProduct(D,A,B);
-  double t_native=MT::timerRead();
+  double t_native=mlr::timerRead();
   cout <<"native time = " <<t_native <<std::endl;
 
-  if(!MT::lapackSupported){
+  if(!mlr::lapackSupported){
     cout <<"LAPACK not installed - only native algorithms" <<std::endl;
     return;
   }
 
-  MT::useLapack=true;
-  MT::timerStart();
+  mlr::useLapack=true;
+  mlr::timerStart();
   blas_MM(C,A,B);
-  double t_blas=MT::timerRead();
-  cout <<"blas time = " <<MT::timerRead() <<std::endl;
+  double t_blas=mlr::timerRead();
+  cout <<"blas time = " <<mlr::timerRead() <<std::endl;
 
   CHECK_ZERO(maxDiff(C,D), 1e-10, "blas MM is not equivalent to native matrix multiplication");
   CHECK(t_blas < t_native,"blas MM is slower than native");
@@ -384,24 +384,24 @@ void TEST(SVD){
   
   cout <<"speed test: " <<m <<'x' <<n <<" (rank=" <<r <<") SVD decomposition..." <<std::endl;
 
-  MT::useLapack=false;
-  MT::timerStart();
+  mlr::useLapack=false;
+  mlr::timerStart();
   svdr=svd(U,d,V,A);
-  double t_native = MT::timerRead();
+  double t_native = mlr::timerRead();
   cout <<"native SVD time = " <<t_native <<flush;
   D.setDiag(d);
   cout <<" error = " <<maxDiff(A, U*D*~V) <<" rank = " <<svdr <<"("<<r<<")"<<std::endl;
   CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "native SVD failed");
 
-  if(!MT::lapackSupported){
+  if(!mlr::lapackSupported){
     cout <<"LAPACK not installed - only native algorithms" <<std::endl;
     return;
   }
 
-  MT::useLapack=true;
-  MT::timerStart();
+  mlr::useLapack=true;
+  mlr::timerStart();
   svdr=svd(U,d,V,A);
-  double t_lapack = MT::timerRead();
+  double t_lapack = mlr::timerRead();
   cout <<"lapack SVD time = " <<t_lapack <<flush;
   D.setDiag(d);
   cout <<" error = " <<maxDiff(A, U*D*~V) <<" rank = " <<svdr <<"("<<r<<")" <<std::endl;
@@ -445,35 +445,35 @@ void TEST(Inverse){
   
   cout <<"speed test: " <<m <<'x' <<n <<" inversion..." <<std::endl;
 
-  MT::useLapack=false;
-  MT::timerStart();
+  mlr::useLapack=false;
+  mlr::timerStart();
   svdr=inverse_SVD(invA,A);
-  double t_native = MT::timerRead();
+  double t_native = mlr::timerRead();
   cout <<"native SVD inverse time = " <<t_native <<flush;
   cout <<" error = " <<maxDiff(A*invA,I) <<" rank = " <<svdr <<std::endl;
   CHECK_ZERO(maxDiff(A*invA,I), 1e-10, "native matrix inverse failed");
 
-  /*MT::timerStart();
-  MT::inverse_LU(invA,A);
-  cout <<"native LU  inverse time = " <<MT::timerRead(); cout.flush();
+  /*mlr::timerStart();
+  mlr::inverse_LU(invA,A);
+  cout <<"native LU  inverse time = " <<mlr::timerRead(); cout.flush();
   cout <<" error = " <<maxDiff(invA*A,I) <<std::endl;*/
   
-  if(!MT::lapackSupported){
+  if(!mlr::lapackSupported){
     cout <<"LAPACK not installed - only native algorithms" <<std::endl;
     return;
   }
 
-  MT::useLapack=true;
-  MT::timerStart();
+  mlr::useLapack=true;
+  mlr::timerStart();
   svdr=inverse_SVD(invA,A);
-  double t_lapack = MT::timerRead();
+  double t_lapack = mlr::timerRead();
   cout <<"lapack SVD inverse time = " <<t_lapack <<flush;
   cout <<" error = " <<maxDiff(A*invA, I) <<" rank = " <<svdr <<std::endl;
   CHECK_ZERO(maxDiff(A*invA, I), 1e-10, "lapack matrix inverse failed");
 
-  /*MT::timerStart();
-    MT::inverse_LU(invA,A);
-    cout <<"lapack LU  inverse time = " <<MT::timerRead(); cout.flush();
+  /*mlr::timerStart();
+    mlr::inverse_LU(invA,A);
+    cout <<"lapack LU  inverse time = " <<mlr::timerRead(); cout.flush();
     cout <<" error = " <<length(invA*A - I) <<std::endl;*/
   
   cout <<"\n*** symmetric matrix inverse\n";
@@ -484,9 +484,9 @@ void TEST(Inverse){
   
   cout <<"speed test: " <<m <<'x' <<m <<" symmetric inversion..." <<std::endl;
 
-  MT::timerStart();
+  mlr::timerStart();
   lapack_inverseSymPosDef(invA,A);
-  double t_symPosDef = MT::timerRead();
+  double t_symPosDef = mlr::timerRead();
   cout <<"lapack SymDefPos inverse time = " <<t_symPosDef <<flush;
   cout <<" error = " <<maxDiff(A*invA, I) <<std::endl;
   CHECK_ZERO(maxDiff(A*invA, I), 1e-6, "lapack SymDefPos inverse failed");
@@ -499,7 +499,7 @@ void TEST(Inverse){
 
 void TEST(GaussElimintation) {
   cout << "\n*** Gaussian elimination with partial pivoting \n";
-  if (MT::lapackSupported) {
+  if (mlr::lapackSupported) {
     arr A;
     A.append(ARR(7., 2., 4., 3.));
     A.append(ARR(3., 2., 6., 5.));
@@ -684,8 +684,8 @@ int MAIN(int argc, char *argv[]){
   testTensor();
   testGaussElimintation();
   
-  cout <<"\n ** total memory still allocated = " <<MT::globalMemoryTotal <<endl;
-  CHECK_ZERO(MT::globalMemoryTotal, 0, "memory not released");
+  cout <<"\n ** total memory still allocated = " <<mlr::globalMemoryTotal <<endl;
+  CHECK_ZERO(mlr::globalMemoryTotal, 0, "memory not released");
   
   return 0;
 }

@@ -85,7 +85,7 @@ bool reason::isPurelyAbstract(const Literal* lit) {
 
 
 void reason::setConstants(uintA& _constants) {
-  ArgumentType* default_type = ArgumentType::get(MT::String("any"));
+  ArgumentType* default_type = ArgumentType::get(mlr::String("any"));
   ArgumentTypeL _constants_types;
   uint i;
   FOR1D(_constants, i) {_constants_types.append(default_type);}
@@ -117,7 +117,7 @@ ArgumentType* reason::getArgumentTypeOfObject(uint object_id) {
     return mem__constants_types(idx);
   }
   else {
-    return ArgumentType::get(MT::String("any"));
+    return ArgumentType::get(mlr::String("any"));
   }
 }
 
@@ -133,7 +133,7 @@ ArgumentType* reason::getArgumentTypeOfObject(uint object_id) {
 bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const LitL& lits_given, const uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_conjunction [START]"<<endl;}
-//     double t_start = MT::cpuTime();
+//     double t_start = mlr::cpuTime();
   if (DEBUG>1) {cout<<"ConjunctionSymbol: "<<s<<endl<<"lits_given: "<<lits_given<<endl;}
   uint i, j, k;
   lits_derived.clear();
@@ -172,7 +172,7 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
     s.getFreeVars(freeVars_pos, freeVars_neg);
     if (DEBUG>1) {PRINT(freeVars_pos);  PRINT(freeVars_neg);}
     // only use constants which are provided in the state
-    MT::Array< uintA > args_list;
+    mlr::Array< uintA > args_list;
     TL::allPermutations(args_list, constants, s.arity, false, true);
     if (DEBUG>0) {PRINT(args_list);}
     // investigate each possible arguments-tuple
@@ -184,7 +184,7 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
       }
       if (DEBUG>2) {PRINT(sub_args);}
       // For the remaining positive free variables, *all* instantiations must hold.
-      MT::Array< uintA > args_freePos_lists;
+      mlr::Array< uintA > args_freePos_lists;
       TL::allPermutations(args_freePos_lists, constants, freeVars_pos.d0, true, true);
       if (DEBUG>2) {PRINT(args_freePos_lists);}
       FOR1D(args_freePos_lists, j) {
@@ -209,7 +209,7 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
       }
     }
   }
-//     double t_finish = MT::cpuTime();
+//     double t_finish = mlr::cpuTime();
 //     cout<<"derive_conjunction time = "<<(t_finish - t_start)<<endl;
   if (DEBUG>0) {cout<<"Derived literals ["<<lits_derived.N<<"]: "<<lits_derived<<endl;}
   if (DEBUG>0) {cout<<"derive_conjunction [END]"<<endl;}
@@ -289,7 +289,7 @@ bool reason::derive_count(LitL& lits_derived, CountSymbol& s, const LitL& lits_g
   if (DEBUG>0) {cout<<"derive_count [START]"<<endl;}
   if (DEBUG>0) {cout<<s<<endl;  PRINT(lits_given);  PRINT(constants);}
   uint i, j, k;
-  MT::Array< uintA > args_lists;
+  mlr::Array< uintA > args_lists;
   TL::allPermutations(args_lists, constants, s.arity, true, true);
 
   uintA freeVarsPos(s.arity);
@@ -386,7 +386,7 @@ bool reason::derive_avg(LitL& lits_derived, AverageFunction& s, const LitL& lits
   if (DEBUG>0) {cout<<"derive_avg [START]"<<endl;}
   CHECK_EQ(f.arity,0, "only implemented for zero-ary avg functions");
   uint i, k;
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   uintA local_constants;
   getConstants(s, local_constants);
   TL::allPermutations(combos, local_constants, f.f_base->arity, true, true);
@@ -429,7 +429,7 @@ bool reason::derive_sum(LitL& lits_derived, SumFunction& s, const LitL& lits_giv
   if (DEBUG>0) {cout<<"derive_sum [START]"<<endl;}
   CHECK_EQ(s.arity,0, "only implemented for zero-ary avg functions");
   uint i, k;
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   TL::allPermutations(combos, constants, s.base_symbol->arity, true, true);
   double sum = 0.0;
   FOR1D(combos, i) {
@@ -458,7 +458,7 @@ bool reason::derive_max(LitL& lits_derived, MaxFunction& s, const LitL& lits_giv
   if (DEBUG>0) {cout<<"derive_max [START]"<<endl;}
   CHECK_EQ(f.arity,0, "only implemented for zero-ary max functions");
   uint i, k;
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   uintA local_constants;
   getConstants(s, local_constants);
   TL::allPermutations(combos, local_constants, f.f_base->arity, true, true);

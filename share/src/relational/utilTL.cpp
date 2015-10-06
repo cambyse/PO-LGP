@@ -45,7 +45,7 @@ double TL::REPLACE_SIZE(double val) {
 }
 
 
-typedef MT::Array< uintA > PermutationsList;
+typedef mlr::Array< uintA > PermutationsList;
 
 
 
@@ -91,14 +91,14 @@ struct PermutationsMemory {
   
 #if 1
 // Version for arguments < 100
-  MT::Array< short > indices;
-  MT::Array<              // arg1-arg2
-    MT::Array<            // various arguments
+  mlr::Array< short > indices;
+  mlr::Array<              // arg1-arg2
+    mlr::Array<            // various arguments
       PermutationsList
     > 
   > mem;
-  MT::Array<              // arg1-arg2
-    MT::Array<            // various arguments
+  mlr::Array<              // arg1-arg2
+    mlr::Array<            // various arguments
       uintA
     >
   > mem_args;
@@ -137,9 +137,9 @@ struct PermutationsMemory {
       if (idx == 100) {
         if (DEBUG>0) {cout<<"creating memory list for args(0)-args(1)"<<endl;}
         // extend memory
-        MT::Array< PermutationsList > new_mem;
+        mlr::Array< PermutationsList > new_mem;
         mem.append(new_mem);
-        MT::Array< uintA > new_mem_args;
+        mlr::Array< uintA > new_mem_args;
         mem_args.append(new_mem_args);
         // update indices
         if (args.N > 1)
@@ -175,20 +175,20 @@ struct PermutationsMemory {
   
   
   std::map< uint, uint > map_1;
-  MT::Array< std::map< uint, uint > > map_2;
+  mlr::Array< std::map< uint, uint > > map_2;
   
   // 0 - argument1,  1 - argument2,  2 - lists
-  MT::Array<  // arg 1
-    MT::Array< // arg 2
-      MT::Array< // various arguments (starting with arg1 and arg2)
+  mlr::Array<  // arg 1
+    mlr::Array< // arg 2
+      mlr::Array< // various arguments (starting with arg1 and arg2)
         PermutationsList // lists
       >
     > 
   > mem__2plus;
   
-  MT::Array<  // arg 1
-    MT::Array< // arg 2
-      MT::Array< uintA > // arguments lists
+  mlr::Array<  // arg 1
+    mlr::Array< // arg 2
+      mlr::Array< uintA > // arguments lists
     > 
   > mem_args__2plus;
 #else
@@ -217,32 +217,32 @@ struct PermutationsMemory {
         map_2.append(new_map2);
         map_1[args(0)] = map_2.N-1;
         // memory - permutations
-        MT::Array< MT::Array< PermutationsList > > mem_list;
+        mlr::Array< mlr::Array< PermutationsList > > mem_list;
         mem__2plus.append(mem_list);
         CHECK_EQ(mem__2plus.N-1 , map_1[args(0)], "");
         // memory - arguments
-        MT::Array< MT::Array< uintA > > mem_args_list;
+        mlr::Array< mlr::Array< uintA > > mem_args_list;
         mem_args__2plus.append(mem_args_list);
       }
       int idx1 = map_1[args(0)];
       if (DEBUG>0) {PRINT(idx1);}
       if (map_2(idx1).count(args(1)) == 0) {
         // memory - permutations
-        MT::Array< PermutationsList > mem_list;
+        mlr::Array< PermutationsList > mem_list;
         if (DEBUG>0) {PRINT(mem_list);}
         mem__2plus(idx1).append(mem_list);
         if (DEBUG>0) {PRINT(mem__2plus(idx1));}
         map_2(idx1)[args(1)] = mem__2plus(idx1).N-1;
         // memory - arguments
-        MT::Array< uintA > mem_args_list;
+        mlr::Array< uintA > mem_args_list;
         mem_args__2plus(idx1).append(mem_args_list);
       }
       int idx2 = map_2(idx1)[args(1)];
       if (DEBUG>0) {PRINT(idx2);}
       if (DEBUG>0) {PRINT(mem__2plus(idx1));}
-      MT::Array< PermutationsList> & mem_prefix = mem__2plus(idx1)(idx2);
+      mlr::Array< PermutationsList> & mem_prefix = mem__2plus(idx1)(idx2);
       if (DEBUG>0) {PRINT(mem_prefix);}
-      MT::Array< uintA > & mem_args_prefix = mem_args__2plus(idx1)(idx2);
+      mlr::Array< uintA > & mem_args_prefix = mem_args__2plus(idx1)(idx2);
       if (DEBUG>0) {PRINT(mem_args_prefix);}
       uint i;
       FOR1D(mem_args_prefix, i) {
@@ -269,7 +269,7 @@ struct PermutationsMemory {
 
 
 struct PermutationsMemoryWrapper {
-  MT::Array< PermutationsMemory* > all_mem;
+  mlr::Array< PermutationsMemory* > all_mem;
   bool withRepeat;
   bool returnEmptyIfNoneFound;
   
@@ -278,7 +278,7 @@ struct PermutationsMemoryWrapper {
   
   ~PermutationsMemoryWrapper() {listDelete(all_mem);}
   
-  void get(MT::Array< uintA >& output_lists, const uintA& args, uint length) {
+  void get(mlr::Array< uintA >& output_lists, const uintA& args, uint length) {
     while (length >= all_mem.N) {
       all_mem.append(new PermutationsMemory(all_mem.N, withRepeat, returnEmptyIfNoneFound));
     } 
@@ -321,7 +321,7 @@ void TL::allPermutations(PermutationsList& permutationsList, const uintA& argume
 
 
 // different arguments
-void TL::allPermutations(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound)  {
+void TL::allPermutations(mlr::Array< uintA >& lists, const mlr::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound)  {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"allPermutations [START]"<<endl;}
   if (DEBUG>0) {PRINT(arguments_lists);  PRINT(returnEmptyIfNoneFound);}
@@ -334,7 +334,7 @@ void TL::allPermutations(MT::Array< uintA >& lists, const MT::Array< uintA >& ar
       return;
     }
     else {
-      MT_MSG("No lists returned!");
+      MLR_MSG("No lists returned!");
       return;
     }
   }
@@ -364,7 +364,7 @@ void TL::allPermutations(MT::Array< uintA >& lists, const MT::Array< uintA >& ar
 }
 
 
-void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueSubsets, bool withEmpty) {
+void TL::allSubsets(mlr::Array< uintA >& lists, const uintA& elements, bool trueSubsets, bool withEmpty) {
   uint DEBUG = 0;
   uint length;
   uint max_length = elements.N;
@@ -373,7 +373,7 @@ void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueS
     max_length -= 1;
   // others
   for (length=1; length<=max_length; length++) {
-    MT::Array< uintA > local_lists;
+    mlr::Array< uintA > local_lists;
     allPermutations(local_lists, elements, length, false, false);
     FOR1D(local_lists, i) {
       for (k=0; k<local_lists(i).N-1; k++) {
@@ -401,7 +401,7 @@ void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueS
   }
 }
 
-void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, uint length) {
+void TL::allSubsets(mlr::Array< uintA >& lists, const uintA& elements, uint length) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"allSubsets [START]"<<endl;}
   if (DEBUG>0) {
@@ -629,7 +629,7 @@ bool TL::isAcyclic(boolA adjMatrix) {
 
 double TL::getcputime() {
   double t = 0;
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
   struct timeval tim;
   struct rusage ru;
   getrusage(RUSAGE_SELF, &ru);

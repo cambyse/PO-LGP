@@ -24,7 +24,7 @@ void TEST(Mini) {
 }
 
 int MAIN(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testMini();
 

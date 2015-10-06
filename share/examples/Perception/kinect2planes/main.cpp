@@ -92,14 +92,14 @@ void TEST(Kinect2Planes){
     cout <<'.' <<endl;
   }
 #else
-  MT::wait(3.);
+  mlr::wait(3.);
 #endif
 
   S.close();
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testKinect2Planes();
 

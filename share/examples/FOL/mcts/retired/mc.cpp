@@ -3,7 +3,7 @@
 void TEST(MonteCarlo){
   Graph Gorig;
   FILE("boxes_new.kvg") >>Gorig;
-  MT::rnd.seed(3);
+  mlr::rnd.seed(3);
   uint verbose=3;
 
   for(uint k=0;k<10;k++){
@@ -21,9 +21,9 @@ void TEST(MonteCarlo){
       if(verbose>2){ cout <<"*** state = "; state.write(cout, " "); cout <<endl; }
 
       bool forceWait=false, decideWait=false;
-      if(MT::rnd.uni()<.8){ //normal rule decision
+      if(mlr::rnd.uni()<.8){ //normal rule decision
         //-- get all possible decisions
-        MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
+        mlr::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
           NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
           for(uint s=0;s<subs.d0;s++){
@@ -40,7 +40,7 @@ void TEST(MonteCarlo){
           forceWait=true;
         }else{
           //-- pick a random decision
-          uint deci = MT::rnd(decisions.N);
+          uint deci = mlr::rnd(decisions.N);
           std::pair<Node*, NodeL>& d = decisions(deci);
           if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl; }
 

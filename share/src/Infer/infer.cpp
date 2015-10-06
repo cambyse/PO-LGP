@@ -214,7 +214,7 @@ infer::Variable::Variable(uint _dim, const char *_name, uint _id){
 }
 
 infer::Variable::~Variable(){
-  if(factors.N) MT_MSG("you shouldn't destroy variables that are still linked to factors");
+  if(factors.N) MLR_MSG("you shouldn't destroy variables that are still linked to factors");
 }
 
 void infer::Variable::write(ostream& os) const {
@@ -313,7 +313,7 @@ void infer::Factor::setP(const arr& p){
 }
 
 void infer::Factor::setText(const char* str){
-  MT::String(str) >>P;
+  mlr::String(str) >>P;
   CHECK_EQ(P.N,product(dim), "infer::Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;
@@ -369,7 +369,7 @@ bool infer::Factor::operator==(infer::Factor& q){
   bool c4 = fabs(logP-q.logP)/(1+fabs(logP)+fabs(q.logP))<1e-10;
   bool r = c1  &&  c2  &&  c3  &&  c4;
   //if(!r){
-  //MT_MSG("unequal table factors: " <<id <<q.id <<dim <<q.dim <<maxDiff(P, q.P) <<' ' <<logP <<' ' <<q.logP);
+  //MLR_MSG("unequal table factors: " <<id <<q.id <<dim <<q.dim <<maxDiff(P, q.P) <<' ' <<logP <<' ' <<q.logP);
   //}
   return r;
 }
@@ -511,13 +511,13 @@ void infer::MessagePair::write(ostream& os) const {
 
 void infer::MessagePair::writeIds(ostream& os) const {
   NIY;
-  //MT::IOraw=true;
+  //mlr::IOraw=true;
   //os <<"[" <<f1->varIds <<" |" <<f2->varIds <<" ]";
-  //MT::IOraw=false;
+  //mlr::IOraw=false;
 }
 
 
-void checkMessagePairConsistency(MT::Array<infer::MessagePair*> messages){
+void checkMessagePairConsistency(mlr::Array<infer::MessagePair*> messages){
   uint i, k;
   int idx;
   infer::Factor* f;
@@ -642,7 +642,7 @@ void infer::FactorGraph::setCliqueBeliefs(const infer::FactorList& fs_orig){
       b = new infer::Factor(fs_orig(i)->variables);
       B_c.append(b);
     }
-//     MT_MSG("Rebuilding clique beliefs");
+//     MLR_MSG("Rebuilding clique beliefs");
   }
   CHECK_EQ(fs_orig.N , B_c.N, "Number of original factors does not fit number of clique beliefs.");
   FOR1D(B_c, i){
@@ -1206,7 +1206,7 @@ void getMarginal(infer::Factor& marginal, const infer::VariableList& marginalVar
 /* return a list of posteriors for each variable.
   We step through all variables, get the (last) factor over
   this variable, collect a belief for it, and marginalize it */
-void infer::getVariableBeliefs(MT::Array<arr>& post, const infer::VariableList& vars){
+void infer::getVariableBeliefs(mlr::Array<arr>& post, const infer::VariableList& vars){
   uint i, N=vars.N;
   post.resize(N);
   infer::Factor *f, belief, marg;
@@ -1395,7 +1395,7 @@ void infer::tensorWeightedAdd(infer::Factor& f, double w, const infer::Factor& m
 // ELIMINATION ALGORITHM methods
 //
 void infer::getJoint(infer::Factor& joint, const infer::FactorList& factors){
-  DEBUG_INFER(1, cout <<MT_HERE <<endl);
+  DEBUG_INFER(1, cout <<MLR_HERE <<endl);
   uint i;
   //get tuple of vars
   infer::VariableList jointVars;
@@ -1415,7 +1415,7 @@ that would create the smallest clique if all factors that involve this variable 
 */
 void infer::computeEliminationOrder(infer::VariableList& elimOrder, const infer::FactorList& factors, const infer::VariableList& elimVars){
   int DEBUG_INFER_LEVEL = 0;
-  DEBUG_INFER(1, cout <<MT_HERE <<endl);
+  DEBUG_INFER(1, cout <<MLR_HERE <<endl);
   DEBUG_INFER(2, cout <<"  input factors=\n" <<factors <<endl);
   DEBUG_INFER(1, cout <<"variables to eliminate=" <<elimVars <<endl);
   
@@ -1426,7 +1426,7 @@ void infer::computeEliminationOrder(infer::VariableList& elimOrder, const infer:
   uint f, v, e;
   
   // Determine for each variable the set of variables it is linked to.
-  MT::Array<infer::VariableList> connectedVarSets(elimVars.N);
+  mlr::Array<infer::VariableList> connectedVarSets(elimVars.N);
   for(v=0; v<elimVars.N; v++){
     for(f=0; f<factors.N; f++){
       if(factors(f)->variables.findValue(elimVars(v))>-1){
@@ -1518,7 +1518,7 @@ void infer::eliminateVariable(infer::FactorList& factors, infer::FactorList& new
 /** marginalizes a factor list over all variables except the "remaining_vars". The output is a
 single factor over the remaining_vars with the marginal. The factors list remains unchanged. */
 void infer::eliminationAlgorithm(infer::Factor& posterior, const infer::FactorList& factors, const infer::VariableList& remaining_vars){
-  DEBUG_INFER(1, cout <<MT_HERE <<endl);
+  DEBUG_INFER(1, cout <<MLR_HERE <<endl);
   uint i, f;
   checkConsistent(factors);
   
@@ -1612,7 +1612,7 @@ void checkJunctionTreeProperty_dfs(infer::Factor* node, infer::Factor* parent, i
       if(DEBUG > 0)
         cout <<"   --> going on that way" <<endl;
       // check that variable contained in MessagePair
-#ifndef MT_NOCHECK
+#ifndef MLR_NOCHECK
       infer::MessagePair* s = getMessagePair(node, neighbors(i));
 #endif
       CHECK(s->variables.findValue(id) != -1, "infer::Variable " <<id <<" is not contained in MessagePair " <<s->variables <<" for factors over " <<node->varIds <<" and " <<neighbors(i)->varIds <<"!" <<endl);
@@ -1741,7 +1741,7 @@ void infer::JunctionTree::buildTriangulatedCliques(const infer::FactorList& fact
   
   // edges matrix
   // indexed by var ids
-  MT::Array<bool> edges(elimOrder.N, elimOrder.N);
+  mlr::Array<bool> edges(elimOrder.N, elimOrder.N);
   FOR2D(edges, v, v2){
     edges(v, v2) = 0;
   }
@@ -1923,7 +1923,7 @@ void infer::JunctionTree::buildMaxSpanningTree(infer::FactorList& factors, const
   }
   
   
-  MT::Array<MessagePair*> candidate_msg_pairs;
+  mlr::Array<MessagePair*> candidate_msg_pairs;
   boolA candidate_msg_pairs_contained;
   FOR1D(factors, f){
     for(f2 = f+1; f2 < factors.N; f2++){
@@ -1946,7 +1946,7 @@ void infer::JunctionTree::buildMaxSpanningTree(infer::FactorList& factors, const
   
   // define elementary clusters
   // factorID --> Cluster (made of factor IDs)
-  MT::Array< uintA > clusters(factors.N);
+  mlr::Array< uintA > clusters(factors.N);
   FOR1D(factors, f){clusters(f).append(f);}
   if(DEBUG >= 1){
     cout <<"Elementary clusters [START]" <<endl;
@@ -2402,7 +2402,7 @@ void check_atLeastOneConditional(infer::VariableList& vars, infer::FactorList& f
 //
 
 void infer::connectThemUp(infer::VariableList& V, infer::FactorList& F){
-  MT_MSG("you shouldn't use this anymore!!");
+  MLR_MSG("you shouldn't use this anymore!!");
   for_list(Factor, f,  F) checkConsistent(*f);
 #if 0
   NIY;
@@ -2447,7 +2447,7 @@ void infer::LoopyBP::initPairwise(const infer::VariableList& _vars, const infer:
   }
 }
 
-void infer::LoopyBP::getVarBeliefs(MT::Array<infer::Factor>& beliefs, bool normalized){
+void infer::LoopyBP::getVarBeliefs(mlr::Array<infer::Factor>& beliefs, bool normalized){
   uint i;
   beliefs.resize(vars.N);
   for(i=0; i<vars.N; i++){
@@ -2474,7 +2474,7 @@ void loopyBP_bipartite(const infer::VariableList& vars, const infer::FactorList&
   infer::LoopyBP lbp;
   lbp.initBipartite(vars, facs);
   
-  MT::Array<infer::Factor> beliefs(vars.N);
+  mlr::Array<infer::Factor> beliefs(vars.N);
   uint t;
   for(t=0; t<T; t++){
     lbp.getVarBeliefs(beliefs);
@@ -2487,7 +2487,7 @@ void loopyBP_pairwise(const infer::VariableList& vars, const infer::FactorList& 
   infer::LoopyBP lbp;
   lbp.initPairwise(vars, facs);
   
-  MT::Array<infer::Factor> beliefs(vars.N);
+  mlr::Array<infer::Factor> beliefs(vars.N);
   uint t;
   for(t=0; t<T; t++){
     lbp.getVarBeliefs(beliefs);
@@ -2551,7 +2551,7 @@ void randomTree(Tree& tree, uint N, uint K, uint roots){
     else        tree(n).parent=rnd(n);  //random parent
     if(n<roots) tree(n).P.resize(K); //K-times-K joint factor (this, parent)
     else        tree(n).P.resize(K, K);
-    MT_MSG("fully random roots!");
+    MLR_MSG("fully random roots!");
     /*if(n<roots){ // deterministic roots for testing purposes
       tree(n).P(0) = 0.0;
       tree(n).P(1) = 1.0;
@@ -2568,7 +2568,7 @@ void randomTree(Tree& tree, uint N, uint K, uint roots){
 
 everything is ordered precisely */
 
-void tree2FactorGraph(infer::FactorGraph& fg, const MT::Array<TreeNode>& tree){
+void tree2FactorGraph(infer::FactorGraph& fg, const mlr::Array<TreeNode>& tree){
   uint i, N=tree.N;
   fg.V.resize(N);
   fg.F.resize(N);
@@ -2587,7 +2587,7 @@ void tree2FactorGraph(infer::FactorGraph& fg, const MT::Array<TreeNode>& tree){
   fg.resetCliqueBeliefs();
 }
 
-// void getPosteriors(MT::Array<arr>& posteriors, FactorGraph& model){
+// void getPosteriors(mlr::Array<arr>& posteriors, FactorGraph& model){
 //   uint i;
 //   FOR1D(model.V, i){
 //     uintA var_ids;
@@ -2598,14 +2598,14 @@ void tree2FactorGraph(infer::FactorGraph& fg, const MT::Array<TreeNode>& tree){
 //   }
 // }
 
-void treeInference(MT::Array<arr>& posteriors, const Tree& tree){
+void treeInference(mlr::Array<arr>& posteriors, const Tree& tree){
   infer::FactorGraph model;
   tree2FactorGraph(model, tree);
   treeInference(model.F(0), true);
   infer::getVariableBeliefs(posteriors, model.V);
 }
 
-void treeInference(MT::Array<arr>& posteriors, const Tree& forest, uintA& roots){
+void treeInference(mlr::Array<arr>& posteriors, const Tree& forest, uintA& roots){
   infer::FactorGraph model;
   tree2FactorGraph(model, forest);
   for(uint i=0; i<roots.N; i++){
@@ -2700,7 +2700,7 @@ void infer::treeInference(const infer::Factor *root, bool check_consitency){
   if(check_consitency){
     for(uint i=0; i<msgs.N; i++) checkConsistency(*msgs(i));
   }
-  //MT_MSG("everything consistent :-)");
+  //MLR_MSG("everything consistent :-)");
 }
 
 
@@ -2713,7 +2713,7 @@ void infer::inferMixLengthUnstructured(
   arr& alpha, arr& beta, arr& PT, double& PR, double& ET,
   const arr& S, const arr& R, const arr& P, double gamma, uint Tmax,
   bool updateMode){
-  DEBUG_INFER(1, cout <<MT_HERE <<endl);
+  DEBUG_INFER(1, cout <<MLR_HERE <<endl);
   arr a, b;
   double gt, gSum;
   uint t;
@@ -2749,7 +2749,7 @@ void infer::inferMixLengthUnstructured(
     }
     PT /= PR;
     ET /= PR;
-#ifndef MT_NOCHECK
+#ifndef MLR_NOCHECK
     //if the iteration above is only to Tmax instead of 2.*Tmax, the following check is true:
     //CHECK(fabs(scalarProduct(alpha, R)-PR)<1e-3, "");
     double dummy1 = scalarProduct(S, beta);
@@ -2782,7 +2782,7 @@ void infer::inferMixLengthStructured(
   const infer::FactorList& S, const infer::FactorList& R, const infer::FactorList& P, double gamma, uint Tmax,
   bool updateMode){
   
-  DEBUG_INFER(1, cout <<MT_HERE <<endl);
+  DEBUG_INFER(1, cout <<MLR_HERE <<endl);
   infer::Factor a, b, Shead, Rtail;
   double gt, gSum;
   uint t;
@@ -2834,7 +2834,7 @@ void infer::inferMixLengthStructured(
     infer::FactorList bwdList;      bwdList.append(&beta);   bwdList.append(P);
     for(t=0; t<=Tmax; t++){
       alpha.P *= gamma;
-      //MT_MSG("does that work??");
+      //MLR_MSG("does that work??");
       eliminationAlgorithm(alpha, fwdList, tailVars);  alpha.relinkTo(headVars); //alpha.variables=headVars;
       tensorWeightedAdd(alpha, 1., Shead);
       

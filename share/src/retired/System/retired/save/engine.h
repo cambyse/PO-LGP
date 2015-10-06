@@ -74,7 +74,7 @@ struct Event{
     variable(v), module(m), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
-typedef MT::Array<Event*> BirosEventL;
+typedef mlr::Array<Event*> BirosEventL;
 
 struct EventController{
   bool enableEventLog;
@@ -107,7 +107,7 @@ struct EventController{
   void logStepBegin(const Module *p);
   void logStepEnd(const Module *p);
 
-  MT::Array<ConditionVariable*> breakpointQueue;
+  mlr::Array<ConditionVariable*> breakpointQueue;
   Mutex breakpointMutex;
   void breakpointSleep(); //the caller goes to sleep
   void breakpointNext(); //first in the queue is being woke up

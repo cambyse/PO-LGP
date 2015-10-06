@@ -34,7 +34,7 @@ void TEST(MCTS){
 
   //--- generate some playouts of the optimal (non optimistic) policy
   world.fil.close();
-  MT::open(world.fil,"z.demos");
+  mlr::open(world.fil,"z.demos");
   mcts.beta=1.;
   world.verbose=0;
   for(uint k=0;k<10;k++){
@@ -82,7 +82,7 @@ void TEST(FOL_World){
   world.get_actions();
 
   //-- test write_state/set_state
-  MT::String str;
+  mlr::String str;
   world.write_state(str);
   cout <<"\nBEFORE rndAction:" <<endl;  world.write_state(cout);
   world.transition_randomly();
@@ -105,10 +105,10 @@ void TEST(Determinism){
 
     //-- generate a random rollout
     world.reset_state();
-    MT::Array<FOL_World::Handle> actions;
-    MT::Array<FOL_World::Handle> observations;
-    MT::Array<double> rewards;
-    MT::Array<MT::String> states;
+    mlr::Array<FOL_World::Handle> actions;
+    mlr::Array<FOL_World::Handle> observations;
+    mlr::Array<double> rewards;
+    mlr::Array<mlr::String> states;
     for(;;){
       auto A = world.get_actions();
       FOL_World::Handle action = A[rnd()%A.size()];
@@ -121,7 +121,7 @@ void TEST(Determinism){
     }
 
     world.fil.close();
-    MT::open(world.fil,"z.FOL_World2");
+    mlr::open(world.fil,"z.FOL_World2");
 
     //-- now repeat and check: same observations => same rollout
     world.reset_state();

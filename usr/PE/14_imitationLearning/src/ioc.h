@@ -50,7 +50,7 @@ struct IOC_DemoCost {
     }
     cout << lambda0 << endl;
 
-    MT::timerStart();
+    mlr::timerStart();
 
     PHI = v.y;
     JP = v.Jy;
@@ -69,7 +69,7 @@ struct IOC_DemoCost {
       /// Constrained case
       constrainsActive = true;
       // reduce Jg to only active part (lambda !=0)
-      MT::Array<uint> idx;
+      mlr::Array<uint> idx;
       lambda0.findValues(idx,0.);
       lambda0.removeAllValues(0.);
       Jg = unpack(JgP);
@@ -170,7 +170,7 @@ struct Scene {
 
 
 struct IOC:ConstrainedProblem {
-  MT::Array<Scene> scenes;
+  mlr::Array<Scene> scenes;
   arr xOpt;
   uint numParam;
   uint numLambda;
@@ -188,12 +188,12 @@ struct IOC:ConstrainedProblem {
   //    virtual uint dim_g() { return numParam+numLambda+1+7;}
   //  virtual uint dim_g() { return numParam+numLambda;}
 
-  IOC(MT::Array<Scene> &_scenes,uint _numParam):scenes(_scenes),numParam(_numParam) {
+  IOC(mlr::Array<Scene> &_scenes,uint _numParam):scenes(_scenes),numParam(_numParam) {
     n = scenes(0).MP->world.getJointStateDimension();
     T = scenes(0).MP->T;
 
-    learnTransitionCosts = MT::getParameter<bool>("learnTransitionCost");
-    normalizeParam = MT::getParameter<bool>("normalizeParam");
+    learnTransitionCosts = mlr::getParameter<bool>("learnTransitionCost");
+    normalizeParam = mlr::getParameter<bool>("normalizeParam");
 
     // precompute DWdx
     for (uint t=0;t<= T;t++) {
