@@ -1182,6 +1182,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
         }
         if(j->type==JT_quatBall || j->type==JT_free) {
           uint offset = (j->type==JT_free)?3:0;
+#if 0
           ors::Quaternion e;
           ors::Vector axis, tmp;
           for(uint i=0;i<4;i++){
@@ -1199,6 +1200,12 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
             J(1, j_idx+offset+i) += tmp.y;
             J(2, j_idx+offset+i) += tmp.z;
           }
+#else
+          arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
+          Jrot = crossProduct(Jrot, ARRAY(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
+          Jrot /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
+#endif
         }
       }
       if(!j->from->inLinks.N) break;
@@ -1373,6 +1380,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
         }
         if(j->type==JT_quatBall || j->type==JT_free) {
           uint offset = (j->type==JT_free)?3:0;
+#if 0
           ors::Quaternion e;
           ors::Vector axis;
           for(uint i=0;i<4;i++){
@@ -1389,6 +1397,11 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
             J(1, j_idx+offset+i) += axis.y;
             J(2, j_idx+offset+i) += axis.z;
           }
+#else
+          arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
+          Jrot /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
+#endif
         }
         //all other joints: J=0 !!
       }

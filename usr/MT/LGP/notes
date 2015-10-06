@@ -1,9 +1,0 @@
-FROM SCRATCH
-
-* ors world:
-  table, 5 objects, target poses (markers) for all five
-* converter: ors -> fol
-* fol world dynamics
-* fol world sampler
-* generate pose problems
-

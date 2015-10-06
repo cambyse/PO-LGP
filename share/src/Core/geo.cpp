@@ -761,6 +761,23 @@ double* Quaternion::getMatrixGL(double* m) const {
   return m;
 }
 
+/// this is a 3-by-4 matrix $J$, giving the angular velocity vector $w = J \dot q$  induced by a $\dot q$
+arr Quaternion::getJacobian() const{
+  arr J(3,4);
+  ors::Quaternion e;
+  for(uint i=0;i<4;i++){
+    if(i==0) e.set(1.,0.,0.,0.);
+    if(i==1) e.set(0.,1.,0.,0.);
+    if(i==2) e.set(0.,0.,1.,0.);
+    if(i==3) e.set(0.,0.,0.,1.);//TODO: the following could be simplified/compressed/made more efficient
+    e = e / *this;
+    J(0, i) = -2.*e.x;
+    J(1, i) = -2.*e.y;
+    J(2, i) = -2.*e.z;
+  }
+  return J;
+}
+
 void Quaternion::writeNice(std::ostream& os) const { os <<"Quaternion: " <<getDeg() <<" around " <<getVec() <<"\n"; }
 void Quaternion::write(std::ostream& os) const {
   if(!MT::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';

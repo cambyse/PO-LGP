@@ -556,7 +556,8 @@ void TEST(InverseKinematics) {
 
 int MAIN(int argc,char **argv){
 
-  testCopy();
+  testKinematics();
+  testQuaternionKinematics();
   return 0;
   testLoadSave();
   testCopy();
