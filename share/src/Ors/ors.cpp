@@ -35,6 +35,7 @@
 #include "ors_swift.h"
 #include "ors_physx.h"
 #include "ors_ode.h"
+#include <Geo/qhull.h>
 #include <Gui/opengl.h>
 #include <Algo/algos.h>
 

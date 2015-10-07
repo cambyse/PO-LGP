@@ -4,7 +4,7 @@
 #include <extern/SWIFT_decomposer/convex.h>
 #include <extern/SWIFT_decomposer/io.h>
 
-uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments, MT::Array<MT::Array<uint> >& shapes){
+uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments, mlr::Array<mlr::Array<uint> >& shapes){
   SWIFT_Scene swift;
   SWIFT_Tri_Mesh smesh;
   smesh.Create(mesh.V.p, (int*)mesh.T.p,

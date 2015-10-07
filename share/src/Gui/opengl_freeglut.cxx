@@ -26,7 +26,7 @@
 #include <GL/glx.h>
 
 #include "opengl.h"
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 
 void initGlEngine(){}

@@ -1,6 +1,6 @@
 #include "racer.h"
 #include <Algo/algos.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 void drawEnv(void*);
 

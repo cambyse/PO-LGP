@@ -1,4 +1,4 @@
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <Algo/algos.h>
 #include <Gui/plot.h>

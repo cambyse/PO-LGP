@@ -13,7 +13,7 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Ors/ors.h>
 #include <ros_msg/JointState.h>
 

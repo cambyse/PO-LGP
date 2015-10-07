@@ -21,7 +21,7 @@
 #define MLR_opengl_qt_h
 
 #include "opengl.h"
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 #include <GL/glut.h>
 #undef scroll

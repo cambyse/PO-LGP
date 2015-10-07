@@ -2,7 +2,7 @@
 #include "pomdp.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <vector>
 
 

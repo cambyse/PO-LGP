@@ -119,12 +119,6 @@ void TEST(Sensors){
     gl.lock.unlock();
 
     gl.lock.writeLock();
-#if 0
-    primitives.P(0)->X = kinShape->X;
-#else
-//    S.kinect_points_world.set() = S.kinect_points.get();
-//    kinShape->X.applyOnPointArray( S.kinect_points_world.set() );
-#endif
     gl.lock.unlock();
     if(!(t%10)) gl.update();
 

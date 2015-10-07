@@ -1,6 +1,6 @@
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #ifdef MLR_QT
 #  include <QtGui/QApplication>
 #endif

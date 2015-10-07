@@ -1,5 +1,5 @@
 #include "ros_module.h"
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 #include <sstream>
 #include <vector>

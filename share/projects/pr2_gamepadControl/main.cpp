@@ -18,7 +18,7 @@ struct MySystem {
     new GamepadInterface();
     if(mlr::getParameter<bool>("useRos", false)){
       new RosCom_Spinner();
-      new SubscriberConv<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
 
@@ -71,6 +71,17 @@ void TEST(Gamepad){
       trials++;
       if(trials>20){
         HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+      }
+    }
+
+    //-- wait for first odometry observation!
+    for(trials=0;useRos;){
+      S.pr2_odom.var->waitForNextRevision();
+      if(S.pr2_odom.get()->N==3) break;
+
+      trials++;
+      if(trials>20){
+        HALT("sync'ing real PR2 odometry failed")
       }
     }
 

@@ -19,8 +19,8 @@
 
 #include "plot.h"
 #include <Core/array_t.h>
-#include <Core/geo.h>
-#include "mesh.h"
+#include <Geo/geo.h>
+#include <Geo/mesh.h>
 #include "opengl.h"
 #include "color.h"
 

@@ -8,7 +8,7 @@
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Actions/swig.h>
 #include <tf/transform_listener.h>
 #include <Motion/taskMaps.h>

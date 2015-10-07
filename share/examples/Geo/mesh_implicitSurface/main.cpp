@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 
 //===========================================================================

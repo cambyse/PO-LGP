@@ -23,8 +23,8 @@
 #include <Core/util.h>
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Core/geo.h>
-#include <Gui/mesh.h>
+#include <Geo/geo.h>
+#include <Geo/mesh.h>
 
 /// @file
 /// @ingroup group_ors

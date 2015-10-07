@@ -1,7 +1,7 @@
 #include <extern/GCO/GCoptimization.h>
 #include <Core/array.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <GL/gl.h>
 
 const double scale=10000.;

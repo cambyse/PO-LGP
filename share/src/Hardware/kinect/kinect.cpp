@@ -21,7 +21,7 @@ struct sKinectThread{
 
 sKinectThread* single=NULL;
 
-KinectThread::KinectThread(ModuleL& system):Module("KinectThread", system, loopFull), verbose(0){
+KinectThread::KinectThread():Module("KinectThread", 0.), verbose(0){
   s = new sKinectThread;
   s->kin = this;
   s->depth_buffer.resize(480,640);

@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Algo/eigenValues.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include "dataNeighbored.h"
 
 struct MinEigModel{

@@ -28,6 +28,7 @@
 
 
 #include "ors.h"
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <iomanip>
 

@@ -1,8 +1,7 @@
-//
 
 #include <stdlib.h>
 
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 
 #include "swift_decomposer.inc"
@@ -26,7 +25,7 @@ void TEST(MeshTools) {
 
   mlr::String file;
   if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
-  else file="../opengl/base-male-nude.obj"; //m494.off
+  else file="../../Gui/opengl/base-male-nude.obj"; //m494.off
 
   OpenGL *gl=NULL;
 

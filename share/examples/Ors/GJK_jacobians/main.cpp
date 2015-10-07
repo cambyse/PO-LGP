@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <GL/gl.h>
 
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
 #include <Motion/taskMaps.h>

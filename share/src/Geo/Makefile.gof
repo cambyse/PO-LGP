@@ -6,6 +6,7 @@ QHULL = 1
 GJK = 1
 LEWINER = 1
 PLY = 1
+GL = 1
 
 DEPEND = Core
 

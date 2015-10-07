@@ -8,7 +8,7 @@
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <std_msgs/String.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
