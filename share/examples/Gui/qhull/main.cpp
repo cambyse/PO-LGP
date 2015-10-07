@@ -161,6 +161,19 @@ void TEST(FCinOrs){
   }
 }*/
 
+//===========================================================================
+
+void TEST(Speed){
+  uint N=20,D=2;
+  arr X(N,D);
+  MLR::timerReset();
+  for(uint i=0;i<100;i++){
+    rndUniform(X,-1.,1.,false);
+    distanceToConvexHull(X,origin,&p,&V,true);
+  }
+
+}
+
 int MAIN(int argc, char *argv[]){
   cout <<"QHull version = " <<qhullVersion() <<endl;
 

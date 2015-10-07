@@ -25,7 +25,7 @@
 #ifndef MLR_geo_h
 #define MLR_geo_h
 
-#include "array.h"
+#include <Core/array.h>
 
 namespace ors {
 

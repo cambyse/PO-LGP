@@ -17,13 +17,12 @@
     -----------------------------------------------------------------  */
 
 
-#undef abs
 #include <algorithm>
-#include "array_t.h"
+#include <Core/array.h>
 #include "geo.h"
 
 #ifndef MLR_NO_REGISTRY
-#include "registry.h"
+#include <Core/registry.h>
 REGISTER_TYPE_Key(T, ors::Transformation);
 #endif
 

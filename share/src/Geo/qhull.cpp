@@ -33,7 +33,7 @@
 #ifdef MLR_QHULL
 
 #include "mesh.h"
-#include "plot.h"
+//#include "plot.h"
 
 extern "C" {
   #include <qhull/qhull_a.h>
@@ -53,43 +53,43 @@ const char* qhullVersion() {
 
 //===========================================================================
 
-void plotQhullState(uint D) {
+void getQhullState(uint D, arr& points, arr& vertices, arr& lines) {
   uint i;
   double *point, *pointtemp;
   vertexT *vertex, **vertexp;
   facetT *facet;
-  arr x, line;
   
-  plotOpengl();
-  plotClear();
+//  plotOpengl();
+//  plotClear();
   
   cout <<"\n** points:";
   FORALLpoints {
-    x.setCarray(point, D);
-    cout <<"\n  " <<x;
-    plotPoints(x);
+    points.setCarray(point, D);
+    cout <<"\n  " <<points;
+//    plotPoints(x);
   }
   
   cout <<"\n** vertices:";
   FORALLvertices {
-    x.setCarray(vertex->point, D);
+    vertices.setCarray(vertex->point, D);
     i = (vertex->point - (qh first_point))/D;
-    cout <<"\n  " <<vertex->id <<"(" <<i <<")" <<":" <<x;
+    cout <<"\n  " <<vertex->id <<"(" <<i <<")" <<":" <<points;
   }
   
   cout <<"\n** facets:";
+  arr x;
   FORALLfacets {
     cout <<"\n  " <<facet->id <<":";
-    line.clear();
+    lines.clear();
     FOREACHvertex_(facet->vertices) {
       cout <<' ' <<vertex->id;
       x.setCarray(vertex->point, D);
-      line.append(x);
+      lines.append(x);
     }
     x.setCarray(((vertexT*)(facet->vertices->e[0].p))->point, D);
-    line.append(x);
-    line.reshape(line.N/D, D);
-    plotLine(line);
+    lines.append(x);
+    lines.reshape(lines.N/D, D);
+//    plotLine(line);
   }
   cout <<endl;
 }
@@ -141,17 +141,18 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
   
   if(QHULL_DEBUG_LEVEL>1) {
     arr line;
-    plotQhullState(X.d1);
-    plotPoints(y);
+    NIY;
+//    plotQhullState(X.d1);
+//    plotPoints(y);
     if(projectedPoint) {
       line.clear();
       line.append(y);
       line.append(*projectedPoint);
-      plotPoints(*projectedPoint);
+//      plotPoints(*projectedPoint);
       line.reshape(2, X.d1);
-      plotLine(line);
+//      plotLine(line);
     }
-    plot();
+//    plot();
     
     //cout <<"**best facet: " <<bestfacet->id <<endl;
     //FOREACHvertex_(facet->vertices) cout <<vertex->id <<' ';
@@ -461,7 +462,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #else ///MLR_QHULL
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/geo.h>
+#include "geo.h"
 int QHULL_DEBUG_LEVEL=0;
 const char* qhullVersion() { return "NONE"; }
 void getTriangulatedHull(uintA& T, arr& V) { NICO }

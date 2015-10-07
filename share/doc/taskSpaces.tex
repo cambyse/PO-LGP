@@ -1,0 +1,297 @@
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newenvironment{items}{
+\par\small
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+\input{macros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pdflatex
+\usepackage{framed}
+  \definecolor{shadecolor}{gray}{0.9}
+  \setlength{\FrameSep}{3pt}
+\usepackage{fancyvrb}
+\DefineShortVerb{\@}
+
+\newcommand{\pos}{{\textsf{pos}}}
+\newcommand{\eff}{{\textsf{eff}}}
+\newcommand{\rot}{{\textsf{rot}}}
+\newcommand{\veC}{{\textsf{vec}}}
+\newcommand{\quat}{{\textsf{quat}}}
+\newcommand{\col}{{\textsf{col}}}
+\newcommand{\TR}[2]{T_{{#1}\rightarrow{#2}}}
+\newcommand{\RO}[2]{R_{{#1}\rightarrow{#2}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Task Spaces}
+\author{M Toussaint}
+
+\begin{document}
+\maketitle
+
+\section{Purpose}
+
+Task spaces are defined by a mapping $\phi:~ q\to y$ from the joint
+state $q\in\RRR^n$ to a task space $y\in\RRR^m$. They are central in
+designing motion and manipulation, both, in the context of trajectory
+optimization as well as in specifying position/force/impedance
+controllers:
+
+For \textbf{trajectory optimization}, cost functions are defined by
+costs or constraints in task spaces. Given a single task space $\phi$,
+we may define
+\begin{items}
+\item costs $\norm{\phi(q)}^2$,
+\item an inequality constraint $\phi(q)\le 0$ (element-wise inequality),
+\item an equality constraint $\phi(q) = 0$.
+\end{items}
+All three assume that the `target' is at zero. For convenience, the
+code allows to specify an additional linear transform $\tilde\phi(q)
+\gets \rho(\phi(q)-y_\text{ref})$, defined by a target reference
+$y_\text{ref}$ and a scaling $\rho$. In KOMO, costs and constraints
+can also be defined on $k+1$-tuples of consecutive states in task
+space, allowing to have cost and constraints on task space velocities
+or accelerations. Trajectory optimization problems are defined by many
+such costs/constraints in various task spaces at various time steps.
+
+For simple \textbf{feedback control}, in each task space we may have
+\begin{items}
+\item a desired linear acceleration behavior in the task space
+\item a desired force or force constraint (upper bound) in the task
+  space
+\item a desired impedance around a reference
+\end{items}
+All of these can be fused to a joint-level force-feedback controller
+(details, see controller docu). On the higher level, the control mode
+is specified by defining multiple task spaces and the desired
+behaviors in these. (The activity of such tasks (on the symbolic
+level) is controlled by the RelationalMachine, see its docu.)
+
+In both cases, defining task spaces is the core.
+
+\section{Task Spaces}
+
+The notation is as in the robotics lecture slides. In particular,
+$\TR{W}{i}$ is the 4-by-4 homogeneous transform from world frame to
+the frame of shape $i$; and $\RO{W}{i}$ is its rotation matrix only.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Position}
+
+\subsubsection{absolute}
+
+parameters: shape index $i$, point offset $v$
+
+$\phi^\pos_{iv}(q) = \TR{W}{i}~ v$
+
+$J^\pos_{iv}(q)_{\cdot k} = [k\prec i]~ a_k \times(\phi^\pos_{iv}(q) - p_k)$
+
+\begin{items}
+\item $a_k,p_k$ are axis and position of joint $k$
+\item $[k\prec i]$ indicates whether joint $k$ is between root and
+shape $i$
+\item $J_{\cdot k}$ is the $k$th column of $J$
+\end{items}
+
+\subsubsection{difference}
+
+parameters: shape indices $i,j$, point offset $v$ in $i$ and $w$ in $j$
+
+$\phi^\pos_{iv-jw}(q) = \phi^\pos_{iv} - \phi^\pos_{jw}$
+$\phi^\pos_{iv-jw}(q) = J^\pos_{iv} - J^\pos_{jw}$
+
+\subsubsection{relative}
+
+parameters: shape indices $i,j$, point offset $v$ in $i$ and $w$ in $j$
+
+$\phi^\pos_{iv|jw}(q) = R_j^\1 (\phi^\pos_{iv} - \phi^\pos_{jw})$
+
+$J^\pos_{iv|jw}(q) = R_j^\1 [J^\pos_{iv}-J^\pos_{jw} - A_j \times (\phi^\pos_{iv} - \phi^\pos_{jw})]$
+
+Derivation: For $y=R p$ the derivative w.r.t.\ a rotation around axis
+$a$ is $y' = R p' + R' p = R p' + a \times R p$. For $y=R^\1 p$ the
+derivative is $y' = R^\1 p' - R^\1 (R') R^\1 p = R^\1 (p' - a \times
+p)$.  (For details see
+\url{http://ipvs.informatik.uni-stuttgart.de/mlr/marc/notes/3d-geometry.pdf})
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Vector}
+
+\subsubsection{absolute}
+
+parameters: shape index $i$, attached vector $v$
+
+$\phi^\veC_{iv}(q) = \RO{W}{i}~ v$
+
+$J^\veC_{iv}(q) = A_i\times \phi^\veC_{iv}(q)$
+\begin{items}
+\item $A_i$ is a matrix with columns $(A_i)_{\cdot k} = [k \prec i]~
+a_k$ containing the joint axes or zeros
+\item the short notation ``$A\times p$'' means that
+   each \emph{column} in $A$ takes the cross-product with $p$.
+\end{items}
+
+\subsubsection{difference}
+
+parameters: shape indices $i,j$, attached vectors $v$ in $i$ and $w$ in $j$
+
+$\phi^\veC_{iv-jw}(q) = \phi^\veC_{iv} - \phi^\veC_{jw}$
+
+$J^\veC_{iv-jw}(q) = J^\veC_{iv} - J^\veC_{jw}$
+
+\subsubsection{relative}
+
+parameters: shape indices $i,j$, attached vector $v$ in $i$
+
+$\phi^\veC_{iv|j}(q) = R_j^\1 \phi^\veC_{iv}$
+
+$J^\veC_{iv|j}(q) = R_j^\1 [J^\veC_{iv} - A_j \times \phi^\veC_{iv}]$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Quaternion}
+
+\subsubsection{absolute}
+
+parameters: shape index $i$
+
+$\phi^\quat_{i}(q) = \text{quaternion}(\RO{W}{i})$
+
+$J^\quat_{i}(q) = \text{special}$
+
+\subsubsection{difference}
+
+parameters: shape indices $i,j$
+
+$\phi^\quat_{i-j}(q) = \phi^\quat_{i} - \phi^\quat_{j}$
+
+$J^\quat_{i-j}(q) = J^\quat_{i} - J^\quat_{j}$
+
+\subsubsection{relative}
+
+parameters: shape indices $i,j$
+
+$\phi^\quat_{i|j}(q) = \phi^\quat_{j}^\1 \circ \phi^\quat_{i}$
+
+$J^\quat_{i-j}(q) = \text{not implemented}$
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Alignment}
+
+parameters: shape indices $i,j$, attached vectors $v,w$
+
+$\phi^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ \phi^\veC_{iv}$
+
+$J^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ J^\veC_{iv} +\phi^\veC_{iv}{}^\T~ J^\veC_{jw}$
+
+Note: \quad $\phi^\text{align}=1 \oto $ align \quad $\phi^\text{align}=-1 \oto $ anti-align \quad $\phi^\text{align}=0 \oto $ orthog.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Gaze}
+
+2D orthogonality measure of object relative to camera plane
+
+parameters: eye index $i$ with offset $v$; target index $j$ with
+offset $w$
+
+\begin{align}
+\phi^\text{gaze}_{iv,jw}(q)
+ &= \mat{c}{
+\phi^\veC_{i,e_x}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) \\
+\phi^\veC_{i,e_y}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) } \quad\in\RRR^2
+\end{align}
+Here $e_x=(1,0,0)$ and $e_y=(0,1,0)$ are the camera plane axes.
+
+Jacobians straight-forward
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{qItself}
+
+$\phi^\text{qItself}_{iv,jw}(q) = q$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Joint limits measure}
+
+parameters: joint limits $q_{\text{low}}, q_{\text{hi}}$, margin $m$
+
+$\phi_{\text{limits}}(q) = \frac{1}{m}\sum_{i=1}^n [m-q_i+q_{\text{low}}]^+ + [m+q_i-q_{\text{hi}}]^+$
+
+$J_{\text{limits}}(q)_{1,i} = - \frac{1}{m}[m-q_i+q_{\text{low}}>0] + \frac{1}{m}[m+q_i-q_{\text{hi}}>0]$
+
+$[x]^+ = x>0\text{?}x:0$ \qquad $[\cdots]$: indicator function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Collision limits measure}
+
+parameters: margin $m$
+
+$\phi_{\text{col}}(q) = \frac{1}{m}\sum_{k=1}^K [m-|p^a_k - p^b_k|]^+$
+
+$J_{\text{col}}(q) = \frac{1}{m} \sum_{k=1}^K [m-|p^a_k - p^b_k|>0]
+(- J^\pos_{p^a_k} + J^\pos_{p^b_k})^\T \frac{p^a_k - p^b_k}{|p^a_k - p^b_k|}$ 
+
+A collision detection engine returns a set $\{
+(a,b,p^a,p^b)_{k=1}^K \}$ of potential collisions between shape $a_k$
+and $b_k$, with nearest points $p^a_k$ on $a$ and $p^b_k$ on $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Shape distance measures (using SWIFT)}
+
+\begin{items}
+\item  allPTMT, //phi=sum over all proxies (as is standard)
+\item  listedVsListedPTMT, //phi=sum over all proxies between listed shapes
+\item  allVsListedPTMT, //phi=sum over all proxies against listed shapes
+\item  allExceptListedPTMT, //as above, but excluding listed shapes
+\item  bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
+\item  pairsPTMT, //sum over proxies of explicitly listed pairs (shapes is n-times-2)
+\item  allExceptPairsPTMT, //sum excluding these pairs
+\item  vectorPTMT //vector of all pair proxies (this is the only case
+  where dim(phi)>1)
+\end{items}
+
+\subsection{GJK pairwise shape distance (including negative)}
+
+\subsection{Plane distance}
+
+
+
+
+
+\end{document}

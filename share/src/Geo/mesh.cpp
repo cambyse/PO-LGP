@@ -19,9 +19,10 @@
 
 
 #include "mesh.h"
+#include "qhull.h"
 
 #include <limits>
-#include "opengl.h"
+//#include "opengl.h"
 
 #ifdef MLR_extern_ply
 #  include <extern/ply/ply.h>
