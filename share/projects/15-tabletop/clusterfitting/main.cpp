@@ -2,7 +2,6 @@
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/PointStamped.h>
-#include <Core/array-vector.h>
 #include <Perception/plane.h>
 #include <Perception/object_detector.h>
 #include <tf/transform_listener.h>

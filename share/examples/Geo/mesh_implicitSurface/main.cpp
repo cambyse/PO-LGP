@@ -39,7 +39,7 @@ void TEST(SimpleImplicitSurfaces) {
   ors::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
-  gl.add(ors::glDrawMesh,&m);
+  gl.add(glDrawMesh,&m);
 
   mlr::Array<ScalarFunction*> fcts = {&blobby, &sphere, &torus, &cylinder};
 
@@ -57,7 +57,7 @@ void TEST(DistanceFunctions) {
   ors::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
-  gl.add(ors::glDrawMesh,&m);
+  gl.add(glDrawMesh,&m);
 
   mlr::Array<ScalarFunction*> fcts = {
     new DistanceFunction_Sphere(t, 1.),

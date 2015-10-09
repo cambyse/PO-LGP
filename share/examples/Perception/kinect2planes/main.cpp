@@ -1,16 +1,14 @@
-#include <Perception/surfels.h>
-#include <Perception/kinect2pointCloud.h>
 #include <Gui/opengl.h>
-#include <Core/module.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>
-#include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Algo/dataNeighbored.h>
 #include <Perception/modelEnsemble.h>
 #include <pr2/roscom.h>
 
 void glDrawAxes(void*);
+
+//===========================================================================
 
 struct PointCloud2DataNeighbored:Module{
   Access_typed<arr> kinect_points;
@@ -27,10 +25,17 @@ struct PointCloud2DataNeighbored:Module{
     data.writeAccess();
     data->setData(kinect_points.get());
     data->setGridNeighborhood(480, 640);
+    arr costs = data->X.col(2).reshape(data->X.d0);
+    for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
+    costs *= costs;
+    costs /= sum(costs);
+    data->setCosts(costs);
 //    data->removeNonOk();
     data.deAccess();
   }
 };
+
+//===========================================================================
 
 struct PlaneFitter:Module{
   Access_typed<DataNeighbored> data;
@@ -49,8 +54,8 @@ struct PlaneFitter:Module{
       gl("planefitter",640,480){}
 
   void open(){
-    gl.addDrawer(&M);
     gl.add(glDrawPointCloud, &pts);
+    gl.addDrawer(&M);
     gl.camera.setPosition(0., 0., 0.);
     gl.camera.focus(0., 0., 1.);
     gl.camera.setZRange(.1, 10.);
@@ -73,6 +78,8 @@ struct PlaneFitter:Module{
 
 };
 
+//===========================================================================
+
 void TEST(Kinect2Planes){
   ACCESSname(byteA, kinect_rgb);
   ACCESSname(uint16A, kinect_depth);
@@ -83,7 +90,11 @@ void TEST(Kinect2Planes){
     new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
     new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
   }else{
-    new KinectThread;
+    if(mlr::getParameter<bool>("useFile", false)){
+      new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
+    }else{
+      new KinectThread;
+    }
   }
 
   ImageViewer iv("kinect_rgb");
@@ -96,7 +107,7 @@ void TEST(Kinect2Planes){
   threadOpenModules(true);
 
 #if 1
-  for(uint t=0;t<300;t++){
+  for(uint t=0;t<10;t++){
     if(shutdown().getValue()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;

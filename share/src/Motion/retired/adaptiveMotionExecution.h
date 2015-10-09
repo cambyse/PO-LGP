@@ -21,7 +21,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 #include <Ors/ors.h>
 #include <Core/util.h>
 #include <stdlib.h>

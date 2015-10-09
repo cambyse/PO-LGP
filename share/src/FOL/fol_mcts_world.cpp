@@ -1,4 +1,3 @@
-#include <Core/array-vector.h>
 #include "fol_mcts_world.h"
 #include "fol.h"
 

@@ -173,5 +173,5 @@ void GraspEvaluation::simulateInPhysX(){
   }
 }
 
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 template mlr::Array<ors::Body*>::Array(uint);

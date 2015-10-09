@@ -11,6 +11,10 @@
 using namespace std;
 
 
+void glDrawMesh(void *classP) {
+  ((ors::Mesh*)classP)->glDraw();
+}
+
 /************ first test ************/
 
 void draw1(void*){
@@ -116,7 +120,7 @@ void TEST(Mesh) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh);
+  gl.add(glDrawMesh,&mesh);
   gl.watch();
 }
 
@@ -138,11 +142,11 @@ void TEST(Obj) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh);
+  gl.add(glDrawMesh,&mesh);
   gl.watch();
   gl.clear();
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh2);
+  gl.add(glDrawMesh,&mesh2);
   gl.watch();
 }
 
@@ -234,13 +238,13 @@ void TEST(Texture) {
 //===========================================================================
 
 void TEST(OfflineRendering){
-  OpenGL gl("view", 40,40);
+  OpenGL gl("view", 40, 40);
   gl.add(draw1,0);
   gl.update();
   gl.renderInBack(200, 200);
   write_ppm(gl.captureImage,"z.ppm");
-  OpenGL gl2("captured", gl.captureImage.d1, gl.captureImage.d0);
-  gl2.watchImage(gl.captureImage, true, 1);
+//  OpenGL gl2("captured", gl.captureImage.d1, gl.captureImage.d0);
+//  gl2.watchImage(gl.captureImage, true, 1);
   cout <<"returned from watch - watch again" <<endl;
 }
 
@@ -291,6 +295,7 @@ int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   testOfflineRendering();
+  return 0;
   testTeapot();
   testGrab();
   testMultipleViews();

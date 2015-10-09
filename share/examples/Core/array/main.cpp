@@ -1,8 +1,5 @@
-#include <algorithm>
-#include <Core/util.h>
 #include <Core/array.h>
 #include "array_cheatsheet.h"
-#include <Core/array-vector.h>
 
 using namespace std;
 
@@ -658,13 +655,11 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-  testSorted();
-  return 0;
-
   testBasics();
   testCheatSheet();
   testInitializationList();
   testSimpleIterators();
+  testSorted();
   testRowsAndColumsAccess();
   testStdVectorCompat();
   testMatlab();

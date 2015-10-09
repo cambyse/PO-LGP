@@ -319,7 +319,7 @@ void MinSumGaussNewton::step(uint steps){
   }
 }
 
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 template mlr::Array<Fij>::Array();
 template mlr::Array<Fij>::~Array();
 template mlr::Array<Mu>::Array();

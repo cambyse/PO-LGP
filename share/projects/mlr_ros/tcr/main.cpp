@@ -4,8 +4,8 @@
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Core/array_t.h>
-#include <Core/util_t.h>
+#include <Core/array.tpp>
+#include <Core/util.tpp>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <ctime>

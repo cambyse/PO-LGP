@@ -3,7 +3,6 @@
 #include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <Core/array-vector.h>
 #include <System/engine.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>

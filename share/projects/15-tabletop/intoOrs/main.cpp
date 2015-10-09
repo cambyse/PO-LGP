@@ -3,7 +3,6 @@
 #include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <Core/array-vector.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
@@ -148,8 +147,8 @@ struct Main{
       gl.clear();
       gl.add(glStandardScene, 0);
       gl.add(ors::glDrawGraph, &S.modelWorld());
-//      for(ors::Mesh& m:S.clusters()) gl.add(ors::glDrawMesh, &m);
-      gl.add(ors::glDrawMesh, &S.pointCloud());
+//      for(ors::Mesh& m:S.clusters()) gl.add(glDrawMesh, &m);
+      gl.add(glDrawMesh, &S.pointCloud());
       gl.update();
 
       S.clusters.deAccess();

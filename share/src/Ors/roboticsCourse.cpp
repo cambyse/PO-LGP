@@ -432,5 +432,5 @@ void glDrawCarSimulator(void *classP){
 #endif
 }
 
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 template mlr::Array<CarSimulator::Gaussian>& mlr::Array<CarSimulator::Gaussian>::resize(uint);

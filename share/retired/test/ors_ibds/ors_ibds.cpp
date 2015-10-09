@@ -337,7 +337,7 @@ void drawEnv(void*) {
 void IbdsModule::create(ors::KinematicWorld& C) { NICO }
 void IbdsModule::step(){ NICO }
 
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 template mlr::Array<IBDS::RigidBody*>::Array();
 template mlr::Array<IBDS::RigidBody*>::~Array();
 

@@ -2443,13 +2443,13 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 //===========================================================================
 //-- template instantiations
 
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 
 #ifndef  MLR_ORS_ONLY_BASICS
 template mlr::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
 
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 template mlr::Array<ors::Joint*>::Array();
 #endif
 /** @} */

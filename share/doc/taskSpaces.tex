@@ -290,7 +290,64 @@ and $b_k$, with nearest points $p^a_k$ on $a$ and $p^b_k$ on $b$.
 
 \subsection{Plane distance}
 
+\section{Application}
 
+Just get a glimpse on how task space definitions are used to script
+motions, here is a script of a little PR2 dance. (The 'logic' below
+the script implements kind of macros -- that's part of the RAP.)
+(\texttt{wheels} is the same as qItself, but refers only to the 3 base coordinates)
+
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+cleanAll #this only declares a novel symbol...
+
+Script {
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffR) }  #this waits for convergence of activities
+  (cleanAll) #this switches off the current activities
+  (cleanAll)! #this switches off the switching-off
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}
+  (HomingActivity)
+  { (conv HomingActivity) (conv FollowReferenceActivity wheels) }
+}
+
+
+Rule {
+    X, Y, 
+    { (cleanAll) (conv X Y) }
+    { (conv X Y)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (MyTask X) }
+    { (MyTask X)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (FollowReferenceActivity X) }
+    { (FollowReferenceActivity X)! }
+}
+\end{Verbatim}
+\end{shaded}
 
 
 

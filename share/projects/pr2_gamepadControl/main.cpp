@@ -6,7 +6,6 @@
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <Core/array-vector.h>
 
 
 struct MySystem {

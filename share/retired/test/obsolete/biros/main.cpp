@@ -1,6 +1,6 @@
 #include <System/biros.h>
 #include <Core/util.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 
 //===========================================================================
 //

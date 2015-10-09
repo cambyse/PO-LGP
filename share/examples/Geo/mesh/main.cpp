@@ -12,8 +12,8 @@ void draw(void*){
   glDisable(GL_DEPTH_TEST);
 
   glColor(.8, .8, .8, .8);
-  glTransform(t1);  ors::glDrawMesh(&m1);
-  glTransform(t2);  ors::glDrawMesh(&m2);
+  glTransform(t1);  glDrawMesh(&m1);
+  glTransform(t2);  glDrawMesh(&m2);
   glLoadIdentity();
 
   glColor(1., 0., 0., .9);

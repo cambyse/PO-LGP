@@ -110,7 +110,7 @@ void testMesh(){
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh);
+  gl.add(glDrawMesh,&mesh);
   gl.watch();
 }
 
@@ -132,11 +132,11 @@ void testObj(){
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh);
+  gl.add(glDrawMesh,&mesh);
   gl.watch();
   gl.clear();
   gl.add(draw2,0);
-  gl.add(ors::glDrawMesh,&mesh2);
+  gl.add(glDrawMesh,&mesh2);
   gl.watch();
 }
 

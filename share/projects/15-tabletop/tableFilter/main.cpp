@@ -1,7 +1,6 @@
 #include <Core/util.h>
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <Core/array-vector.h>
 
 #include <tf/transform_listener.h>
 #include <object_recognition_msgs/TableArray.h>

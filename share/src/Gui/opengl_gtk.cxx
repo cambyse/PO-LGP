@@ -274,15 +274,19 @@ sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
   _gl->isUpdating.setValue(2);
-  gtkLock();
-  container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(container), title);
-  gtk_window_set_default_size(GTK_WINDOW(container), w, h);
-  gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
-  gtk_quit_add_destroy(1, GTK_OBJECT(container));
-  gtk_widget_show(container);
-  ownWin = true;
-  gtkUnlock();
+  if(w){
+    gtkLock();
+    container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(container), title);
+    gtk_window_set_default_size(GTK_WINDOW(container), w, h);
+    gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
+    gtk_quit_add_destroy(1, GTK_OBJECT(container));
+    gtk_widget_show(container);
+    ownWin = true;
+    gtkUnlock();
+  }else{
+    container=NULL;
+  }
 
   init(_gl, container);
 }
@@ -341,9 +345,13 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
   xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
   xdraw = glXGetCurrentDrawable();
   GtkAllocation allo;
-  gtk_widget_get_allocation(container, &allo);
-  gl->width=allo.width;
-  gl->height=allo.height;
+  if(container){
+    gtk_widget_get_allocation(container, &allo);
+    gl->width=allo.width;
+    gl->height=allo.height;
+  }else{
+    gl->isUpdating.setValue(0);
+  }
 
   gtkUnlock();
 //  MLR_MSG("creating sOpenGL OpenGL="<<gl <<" sOpenGL=" <<this <<" glArea="<<glArea);
@@ -396,12 +404,12 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
 }
 
 void sOpenGL::beginGlContext(){
-  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("failed to open context: sOpenGL="<<this);
+  if(gldrawable) if(!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("failed to open context: sOpenGL="<<this);
   xdraw = glXGetCurrentDrawable();
 }
 
 void sOpenGL::endGlContext(){
-  gdk_gl_drawable_gl_end(gldrawable);
+  if(gldrawable) gdk_gl_drawable_gl_end(gldrawable);
   glXMakeCurrent(xdisplay, None, NULL);
   //this is not necessary anymore, since the main loop is running in one thread now
 }

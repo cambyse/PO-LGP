@@ -239,4 +239,56 @@ inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <
 inline void operator>>(istream&, Access&){ NIY }
 inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:mlr::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
 
+
+//===========================================================================
+//
+// generic recorder module
+//
+
+template <class T>
+struct Recorder : Module{
+  Access_typed<T> access;
+  T buffer;
+  ofstream fil;
+
+  Recorder(const char* var_name):Module(STRING("Recorder_"<<var_name)), access(this, var_name, true){}
+
+  void open(){
+    mlr::open(fil, STRING("z." <<access.name <<'.' <<mlr::getNowString() <<".dat"));
+  }
+  void step(){
+    uint rev = access.readAccess();
+    buffer = access();
+    double time = access.var->revisionTime();
+    access.deAccess();
+    mlr::String tag;
+    tag.resize(30, false);
+    sprintf(tag.p, "%6i %13.6f", rev, time);
+    fil <<tag <<' ' <<buffer <<endl;
+  }
+  void close(){
+    fil.close();
+  }
+};
+
+
+//===========================================================================
+//
+// file replayer
+//
+
+template<class T>
+struct FileReplay : Module{
+  Access_typed<T> access;
+  T x;
+  FileReplay(const char* file_name, const char* var_name, double beatIntervalSec)
+    : Module(STRING("FileReplay_"<<var_name), beatIntervalSec),
+      access(this, var_name, false) {
+    x <<FILE(file_name);
+  }
+  void open(){}
+  void step(){ access.set() = x; }
+  void close(){}
+};
+
 #endif

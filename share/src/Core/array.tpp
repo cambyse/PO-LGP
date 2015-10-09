@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MLR_array_t_cpp
-#define MLR_array_t_cpp
+#ifndef MLR_array_tpp
+#define MLR_array_tpp
 
 #include "array.h"
 #include "util.h"
@@ -2305,9 +2305,20 @@ void innerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>&
 template<class T>
 void outerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {
+#if 1
     uint i, j, d0=y.d0, d1=z.d0;
     x.resize(d0, d1);
-    for(i=0; i<d0; i++) for(j=0; j<d1; j++) x.p[i*d1+j]=y.p[i]*z.p[j];
+    for(i=0; i<d0; i++) for(j=0; j<d1; j++) x.p[i*d1+j] = y.p[i] * z.p[j];
+#else
+    x.resize(y.N, z.N);
+    T yi, *zp=z.p, *zstop=zp+z.N, *xp;
+    for(uint i=0; i<y.N; i++){
+      yi=y.p[i];
+      xp=&x(i,0);
+      zp=z.p;
+      for(; zp!=zstop; zp++, xp++) *xp = yi * *zp;
+    }
+#endif
     return;
   }
   HALT("outer product - not yet implemented for these dimensions");
@@ -2328,7 +2339,7 @@ void indexWiseProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array
     CHECK_EQ(y.N,z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
     x = z;
     for(uint i=0;i<x.d0;i++){
-      double yi=y(i);
+      T yi=y.p[i];
       T *xp=&x(i,0), *xstop=xp+x.d1;
       for(; xp!=xstop; xp++) *xp *= yi;
 //      x[i]() *= y(i);

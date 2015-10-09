@@ -1,6 +1,5 @@
 #include "marc_controller_pkg/marc_controller.h"
 #include <pluginlib/class_list_macros.h>
-#include <Core/array-vector.h>
 #include <iomanip>
 #include <geometry_msgs/Twist.h>
 

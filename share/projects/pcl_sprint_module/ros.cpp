@@ -1,5 +1,4 @@
 #include <ros/ros.h>
-#include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>

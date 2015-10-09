@@ -1,6 +1,5 @@
 #include "roscom.h"
 
-#include <Core/array-vector.h>
 
 
 bool rosOk(){

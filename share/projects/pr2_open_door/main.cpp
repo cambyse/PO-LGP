@@ -4,7 +4,6 @@
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
-#include <Core/array-vector.h>
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>

@@ -18,7 +18,7 @@
 
 
 #include "plot.h"
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 #include <Geo/geo.h>
 #include <Geo/mesh.h>
 #include "opengl.h"

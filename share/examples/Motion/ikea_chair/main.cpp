@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
@@ -262,7 +262,7 @@ void test_Loading_submeshes()
     ors::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
     OpenGL gl;
-    gl.add(ors::glDrawMesh, &mesh);
+    gl.add(glDrawMesh, &mesh);
     gl.watch();
 }
 

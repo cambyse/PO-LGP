@@ -17,32 +17,50 @@
     -----------------------------------------------------------------  */
 
 
-void glDrawFloor(float, float, float, float){ NICO }
-void glGrabImage(mlr::Array<unsigned char>&){ NICO }
-void glStandardLight(void*){ NICO }
-void glDrawAxes(double){ NICO }
-void glDrawPointCloud(mlr::Array<double>&, mlr::Array<double>&) { NICO }
-void glDrawSphere(float) { NICO }
-void glDrawCappedCylinder(float, float) { NICO }
-void glDrawText(char const*, float, float, float){ NICO }
-void glDrawDiamond(float, float, float){ NICO }
-void glDrawDisk(float){ NICO }
-void glDrawBox(float, float, float){ NICO }
-void glDrawCylinder(float, float, bool){ NICO }
+//void glDrawFloor(float, float, float, float){ NICO }
+//void glGrabImage(mlr::Array<unsigned char>&){ NICO }
+//void glStandardLight(void*){ NICO }
+//void glDrawAxes(double){ NICO }
+//void glDrawPointCloud(mlr::Array<double>&, mlr::Array<double>&) { NICO }
+//void glDrawSphere(float) { NICO }
+//void glDrawCappedCylinder(float, float) { NICO }
+//void glDrawText(char const*, float, float, float){ NICO }
+//void glDrawDiamond(float, float, float){ NICO }
+//void glDrawDisk(float){ NICO }
+//void glDrawBox(float, float, float){ NICO }
+//void glDrawCylinder(float, float, bool){ NICO }
 
 //void OpenGL::watchImage(mlr::Array<unsigned char> const&, bool, float){}
+
+struct GlutInitializer{
+  Mutex lock;
+  GlutInitializer(){
+    lock.lock();
+    int argc=1;
+    char *argv[1]={(char*)"x"};
+    glutInit(&argc, argv);
+    lock.unlock();
+  }
+  ~GlutInitializer(){
+  }
+};
+
+Singleton<GlutInitializer> SingleGlut;
 
 struct sOpenGL {
   sOpenGL(OpenGL *gl, const char* title, int w, int h, int posx, int posy){
     MLR_MSG("creating dummy OpenGL object");
     gl->width=1;
     gl->height=1;
+    SingleGlut();
   }
   sOpenGL(OpenGL *gl, void *container){
     MLR_MSG("creating dummy OpenGL object");
     gl->width=1;
     gl->height=1;
   }
+  void beginGlContext(){}
+  void endGlContext(){}
   ors::Vector downVec, downPos, downFoc;
   ors::Quaternion downRot;
 };

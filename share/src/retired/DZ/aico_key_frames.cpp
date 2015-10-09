@@ -1,6 +1,6 @@
 #include <MT/soc.h>
 #include <Core/array.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 #include <Gui/opengl.h>
 #include <aico_key_frames.h>
 
