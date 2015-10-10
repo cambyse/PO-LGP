@@ -66,7 +66,7 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
 
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
-    *(gl.camera.X) = glCamera->X;
+    gl.camera.X = glCamera->X;
     gl.resize(500,500);
   } else {
     gl.camera.setPosition(10., -15., 8.);
@@ -542,21 +542,21 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
       case '7':  ors.writePlyFile("z.ply");  break;
-      case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-      case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-      case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-      case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-      case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
-      case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
+      case 'j':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
+      case 'k':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
+      case 'i':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
+      case ',':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
+      case 'l':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(.1, .0, 0);  break;
+      case 'h':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(.1, 0, 0);  break;
       case 'a':  gl.camera.focus(
-          (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-           ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
-          + *gl.camera.foc);
+          (gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
+           ^ gl.camera.X.rot*ors::Vector(1, 0, 0)) * .001
+          + gl.camera.foc);
         break;
-      case 's':  gl.camera.X->pos +=
+      case 's':  gl.camera.X.pos +=
           (
-            gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-            ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
+            gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
+            ^(gl.camera.X.rot * ors::Vector(1., 0, 0))
           ) * .01;
         break;
       case 'q' :

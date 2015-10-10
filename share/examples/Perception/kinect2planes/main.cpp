@@ -107,7 +107,7 @@ void TEST(Kinect2Planes){
   threadOpenModules(true);
 
 #if 1
-  for(uint t=0;t<10;t++){
+  for(uint t=0;t<100;t++){
     if(shutdown().getValue()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
@@ -119,7 +119,6 @@ void TEST(Kinect2Planes){
   threadCloseModules();
   modulesReportCycleTimes();
   cout <<"bye bye" <<endl;
-
 }
 
 int main(int argc,char **argv) {

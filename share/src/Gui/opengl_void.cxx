@@ -38,7 +38,7 @@ struct GlutInitializer{
     lock.lock();
     int argc=1;
     char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
+//    glutInit(&argc, argv);
     lock.unlock();
   }
   ~GlutInitializer(){
@@ -48,7 +48,7 @@ struct GlutInitializer{
 Singleton<GlutInitializer> SingleGlut;
 
 struct sOpenGL {
-  sOpenGL(OpenGL *gl, const char* title, int w, int h, int posx, int posy){
+  sOpenGL(OpenGL *gl){
     MLR_MSG("creating dummy OpenGL object");
     gl->width=1;
     gl->height=1;

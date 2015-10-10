@@ -4,20 +4,23 @@
 void draw1(void*){
   glStandardLight(NULL);
   glColor3f(1,0,0);
+  //glDrawBox(1.,1.,1.);
   glutSolidTeapot(1.);
 }
 
 struct Proc:public Thread{
   OpenGL *gl;
-  Proc(const char* name):Thread(name){};
+  Proc(const char* name):Thread(name, 0.01){};
   void open(){
     gl = new OpenGL(name);
     gl->add(draw1);
+    gl->update();
   }
   void close(){
     delete gl;
   }
   void step(){
+    HALT("you're never here, because theyr' not looped?")
     gl->update();
   }
 };

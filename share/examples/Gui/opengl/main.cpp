@@ -22,6 +22,7 @@ void draw1(void*){
   glColor(1,0,0);
   glFrontFace(GL_CW);
   glutSolidTeapot(1.);
+//  glDrawBox(1,.7,.5);
   glFrontFace(GL_CCW);
 }
 
@@ -294,9 +295,8 @@ void TEST(Image) {
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
-  testOfflineRendering();
-  return 0;
   testTeapot();
+  testOfflineRendering();
   testGrab();
   testMultipleViews();
   testTeapot();
