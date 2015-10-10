@@ -37,9 +37,8 @@ void test(){
   OpenGL gl;
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&M);
+  gl.camera.setKinect();
   gl.camera.setPosition(0., 0., -10.);
-  gl.camera.focus(0., 0., 1.);
-  gl.camera.focalLength = 580./480.;
 
 
   for(uint l=0;l<20;l++){

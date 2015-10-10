@@ -33,7 +33,7 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
@@ -62,7 +62,7 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
   gl.add(glStandardScene, 0);
   gl.add(ors::glDrawGraph, &graph);
-  gl.setClearColors(1., 1., 1., 1.);
+//  gl.setClearColors(1., 1., 1., 1.);
 
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
@@ -72,7 +72,6 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
-
   }
   gl.update();
 }
@@ -82,13 +81,15 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
 
 /// static GL routine to draw a ors::KinematicWorld
 void ors::glDrawGraph(void *classP) {
-  ((ors::KinematicWorld*)classP)->glDraw();
+  ((ors::KinematicWorld*)classP)->glDraw(NoOpenGL);
 }
 
 void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
-  if(orsDrawColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
+  if(orsDrawColors && !orsDrawIndexColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
+  if(orsDrawIndexColors) glColor3b((s->index>>16)&0xff, (s->index>>8)&0xff, s->index&0xff);
+
 
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
@@ -166,7 +167,7 @@ void glDrawShape(ors::Shape *s) {
 }
 
 /// GL routine to draw a ors::KinematicWorld
-void ors::KinematicWorld::glDraw() {
+void ors::KinematicWorld::glDraw(OpenGL&) {
   uint i=0;
   ors::Transformation f;
   double GLmatrix[16];

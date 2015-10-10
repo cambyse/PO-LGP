@@ -1631,7 +1631,11 @@ void ors::KinematicWorld::prefixNames() {
 OpenGL& ors::KinematicWorld::gl(){
   if(!s->gl){
     s->gl = new OpenGL;
-    bindOrsToOpenGL(*this,*s->gl);
+    s->gl->add(glStandardScene, 0);
+    s->gl->addDrawer(this);
+    s->gl->camera.setPosition(10., -15., 8.);
+    s->gl->camera.focus(0, 0, 1.);
+    s->gl->camera.upright();
   }
   return *s->gl;
 }
@@ -1665,6 +1669,24 @@ OdeInterface& ors::KinematicWorld::ode(){
 void ors::KinematicWorld::watch(bool pause, const char* txt){
   if(pause) gl().watch(txt);
   else gl().update(txt);
+}
+
+void ors::KinematicWorld::glGetMasks(byteA& indexRgb, byteA& depth){
+  gl().clear();
+  gl().addDrawer(this);
+  gl().setClearColors(0,0,0,0);
+  orsDrawIndexColors = true;
+  orsDrawMarkers = orsDrawJoints = false;
+  gl().renderInBack(true, true);
+  indexRgb = gl().captureImage;
+  depth = gl().captureDepth;
+
+  gl().clear();
+  gl().add(glStandardScene, 0);
+  gl().addDrawer(this);
+  gl().setClearColors(1,1,1,0);
+  orsDrawIndexColors = false;
+  orsDrawMarkers = orsDrawJoints = true;
 }
 
 void ors::KinematicWorld::stepSwift(){

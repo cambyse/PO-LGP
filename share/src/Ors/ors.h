@@ -193,7 +193,7 @@ struct Proxy {
 //===========================================================================
 
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
-struct KinematicWorld {
+struct KinematicWorld : GLDrawer{
   struct sKinematicWorld *s;
 
   /// @name data fields
@@ -319,6 +319,7 @@ struct KinematicWorld {
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
+  void glGetMasks(byteA& indexRgb, byteA& depth);
   void stepSwift();
   void stepPhysx(double tau);
   void stepOde(double tau);
@@ -327,7 +328,7 @@ struct KinematicWorld {
   /// @name I/O
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void glDraw();
+  void glDraw(struct OpenGL&);
 
   void reportProxies(std::ostream *os=&std::cout, double belowMargin=-1.);
   void writePlyFile(const char* filename) const; //TODO: move outside
@@ -412,7 +413,7 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors, orsDrawIndexColors;
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 

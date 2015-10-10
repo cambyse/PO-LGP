@@ -117,11 +117,8 @@ void displayData(){
 //  gl.add(glDrawAxes);
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&D);
+  gl.camera.setKinect();
   gl.camera.setPosition(0., 0., -10.);
-  gl.camera.focus(0., 0., 1.);
-//  gl.camera.setZRange(.1, 10.);
-//  gl.camera.heightAbs=gl.camera.heightAngle=0.;
-  gl.camera.focalLength = 580./480.;
 
 
   for(uint k=0;k<10;k++){
