@@ -838,7 +838,7 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
       //angle
       ors::Vector rotv;
       j->Q.rot.getRad(q(0), rotv);
-      if(q(0)>MT_PI) q(0)-=MT_2PI;
+      if(q(0)>MLR_PI) q(0)-=MLR_2PI;
       if(j->type==JT_hingeX && rotv*Vector_x<0.) q(0)=-q(0);
       if(j->type==JT_hingeY && rotv*Vector_y<0.) q(0)=-q(0);
       if(j->type==JT_hingeZ && rotv*Vector_z<0.) q(0)=-q(0);
@@ -858,8 +858,8 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
         q(0) = 2.0 * atan(j->Q.rot.x/j->Q.rot.w);
         q(1) = 2.0 * atan(j->Q.rot.y/j->Q.rot.w);
       } else {
-        q(0) = MT_PI;
-        q(1) = MT_PI;
+        q(0) = MLR_PI;
+        q(1) = MLR_PI;
       }
       
       if(calcVels) NIY; // velocity: need to fix
@@ -903,7 +903,7 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
       q(1)=j->Q.pos.y;
       ors::Vector rotv;
       j->Q.rot.getRad(q(2), rotv);
-      if(q(2)>MT_PI) q(2)-=MT_2PI;
+      if(q(2)>MLR_PI) q(2)-=MLR_2PI;
       if(rotv*Vector_z<0.) q(2)=-q(2);
       if(calcVels){
         qdot(0)=j->Q.vel.x;
@@ -916,7 +916,7 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
       q.resize(3);
       ors::Vector rotv;
       j->Q.rot.getRad(q(0), rotv);
-      if(q(0)>MT_PI) q(0)-=MT_2PI;
+      if(q(0)>MLR_PI) q(0)-=MLR_2PI;
       if(rotv*Vector_z<0.) q(0)=-q(0);
       ors::Vector relpos = j->Q.rot/j->Q.pos;
       q(1)=relpos.x;
@@ -957,7 +957,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
   qdot.resize(N).setZero();
 
   uint n=0;
-  for(Joint *j: joints) if(j->agent==agent){
+  for(Joint *j: joints) if(j->agent==(uint)agent){
     if(j->mimic) continue; //don't count dependent joints
     CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
     arr joint_q = calc_q_from_Q(j, calcVels);
@@ -965,7 +965,6 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
     for(uint i=0; i<joint_q.N; ++i)
       q(n+i) = joint_q(i);
     n += joint_q.N;
-=================== CHECK MERGE WITH SUBROUTINE
   }
   CHECK_EQ(n,N,"");
 }
@@ -973,7 +972,7 @@ void ors::KinematicWorld::calc_q_from_Q(bool calcVels, int agent) {
 void ors::KinematicWorld::calc_Q_from_q(bool calcVels, int agent){
   if(agent==-1) agent = q_agent;
   uint n=0;
-  for(Joint *j: joints) if(j->agent==agent){
+  for(Joint *j: joints) if(j->agent==(uint)agent){
     if(j->mimic){
       j->Q=j->mimic->Q;
     }else{

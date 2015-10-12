@@ -4,11 +4,8 @@
 
 
 // ============================================================================
-void SensorActivity::configure(Node *fact) {
-  Activity::configure(fact);
-
-  Graph* specs = getSpecsFromFact(fact);
-  configureSensor(*specs);
+void SensorActivity::configure() {
+  configureSensor(params);
   _isTriggered = false;
 }
 
@@ -17,7 +14,7 @@ void SensorActivity::step(double dt) {
 
   stepSensor();
 
-  MT::String doneString = "(done ";
+  mlr::String doneString = "(done ";
   if (isTriggered()) {
     cout << "I was isTriggered(): " << endl;
 

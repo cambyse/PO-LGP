@@ -1,4 +1,5 @@
 #include "swig.h"
+
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
@@ -115,7 +116,7 @@ struct SwigSystem {
     }
 
     // make the base movable by default
-    fixBase.set() = MT::getParameter<bool>("fixBase", false);
+    fixBase.set() = mlr::getParameter<bool>("fixBase", false);
 
     stopWaiting.set() = 0;
     waiters.set() = 0;
@@ -154,7 +155,7 @@ mlr::String lits2str(const stringV& literals, const dict& parameters=dict()){
 // ActionSwigInterface
 
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
-  S->tcm->verbose=false;
+  S->tcm.verbose=false;
 
   signal(SIGINT, signal_catch); //overwrite signal handler
 
@@ -303,13 +304,13 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
 
 doubleV ActionSwigInterface::getQ() {
   arr q = S->modelWorld.get()->getJointState();
-  return VECTOR<double>(q);
+  return conv_arr2stdvec(q);
 }
 
 doubleV ActionSwigInterface::getV() {
   arr q, qdot;
   S->modelWorld.get()->getJointState(q, qdot);
-  return VECTOR<double>(qdot);
+  return conv_arr2stdvec(qdot);
 }
 
 double ActionSwigInterface::getQDim() {
@@ -397,7 +398,6 @@ void ActionSwigInterface::waitForCondition(const char* query){
     if(S->stopWaiting.get() > 0) {
       S->stopWaiting.set()--;
       S->waiters.set()--;
-
       return;
     }
     S->state.waitForNextRevision();
@@ -429,7 +429,7 @@ void ActionSwigInterface::waitForAllCondition(const stringV queries){
   for(;;){
     bool allTrue = true;
     for(unsigned i=0; i < queries.size(); i++){
-      if(not S->RM.get()->queryCondition(MT::String(queries[i]))) {
+      if(not S->RM.get()->queryCondition(mlr::String(queries[i]))) {
         allTrue = false;
       }
     }
@@ -492,7 +492,7 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 }
 
 int ActionSwigInterface::getQIndex(std::string jointName) {
-  return S->tcm->modelWorld.get()->getJointByName(MT::String(jointName))->qIndex;
+  return S->tcm.modelWorld.get()->getJointByName(mlr::String(jointName))->qIndex;
 }
 
 Graph& ActionSwigInterface::getState(){

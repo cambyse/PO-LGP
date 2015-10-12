@@ -19,8 +19,6 @@
 #include "pr2_heuristics.h"
 #include <Ors/ors.h>
 
-MT::Array<const char*> pr2_get_joints();
-
 arr pr2_zero_pose(){
   arr q = { 0.1, 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003, 0, 0 };
   //{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, -1, 0.5, -1, -1.5, -2, 0, -0.5, 0, 0, 1, 0.5, 1, 1.5, -2, 0, 0.5, 0, 0 };
@@ -119,7 +117,7 @@ mlr::Array<const char*> pr2_full_get_bodynames() {
     
 }
 
-MT::Array<const char*> pr2_get_joints() {
+mlr::Array<const char*> pr2_get_joints() {
   return {    
     "worldTranslationRotation",
       "torso_lift_joint",

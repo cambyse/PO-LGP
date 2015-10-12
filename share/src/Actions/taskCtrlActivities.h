@@ -24,11 +24,11 @@ struct TaskCtrlActivity : Activity{
 };
 
 //===========================================================================
+
 struct FollowReferenceActivity : TaskCtrlActivity {
   arr ref;
   arr old_y;
   uint stuck_count;
-
   double trajectoryDuration; ///< -1 if this is only a point reference instead of a trajectory
 
   FollowReferenceActivity(){}
@@ -47,5 +47,3 @@ struct HomingActivity : TaskCtrlActivity {
   virtual bool isConv();
 };
 stdOutPipe(HomingActivity)
-
-

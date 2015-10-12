@@ -24,14 +24,14 @@
  * - anything gripper specific?
  */
 struct SensorActivity : Activity {
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(MT::String, effects);
+  ACCESSname(CtrlMsg, ctrl_obs);
+  ACCESSname(mlr::String, effects);
 
   bool _isTriggered;
   double _threshold;
 
   // Implement base class methods: modify KB
-  virtual void configure(Node *fact); ///< calls stepSensor and registers
+  virtual void configure(); ///< calls stepSensor and registers
   virtual void step(double dt); ///< calls stepSensor and sets facts
 
   // actually do control related stuff

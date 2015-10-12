@@ -47,6 +47,7 @@ bool TaskCtrlActivity::isConv(){
 }
 
 //===========================================================================
+
 void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
@@ -107,8 +108,8 @@ void HomingActivity::configureControl(const char *name, Graph& specs, ors::Kinem
 
 bool HomingActivity::isConv(){
   return task->y.N==task->y_ref.N
-      && maxDiff(task->y, task->y_ref) < stopTolerance
-      && maxDiff(task->v, task->v_ref) < stopTolerance;
+      && maxDiff(task->y, task->y_ref)<stopTolerance
+      && maxDiff(task->v, task->v_ref)<stopTolerance;
 }
 
 void HomingActivity::stepControl(double dt) {

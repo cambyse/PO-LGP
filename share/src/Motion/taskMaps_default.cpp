@@ -252,14 +252,16 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
 
 void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
+#if 0 //MT
   if(moduloTwoPi) for(ors::Joint *j: G.joints) {
     if(j->agent == G.q_agent) {
       if (j->type == ors::JT_hingeX or
           j->type == ors::JT_hingeY or
           j->type == ors::JT_hingeZ) { 
         ors::Vector rotv;
+	LOG(-1) <<"THIS is wierd!! Why here? This shoudl be done in calc_q_from_Q -- and Why do you read out from_Q instead of the one set?????";
         j->Q.rot.getRad(q(j->qIndex), rotv);
-        while(q(j->qIndex)>MT_PI) q(j->qIndex)-=MT_2PI;
+        while(q(j->qIndex)>MLR_PI) q(j->qIndex)-=MLR_2PI;
         if(j->type==ors::JT_hingeX && rotv*Vector_x<0.) q(j->qIndex)=-q(j->qIndex);
         if(j->type==ors::JT_hingeY && rotv*Vector_y<0.) q(j->qIndex)=-q(j->qIndex);
         if(j->type==ors::JT_hingeZ && rotv*Vector_z<0.) q(j->qIndex)=-q(j->qIndex);
@@ -268,6 +270,7 @@ void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   }
   //cout << "TM world: " << &G << endl;
   //cout << "q: " << q << endl;
+#endif
   if(M.N){
     if(M.nd==1){
       q=M%q; if(&J) J.setDiag(M);

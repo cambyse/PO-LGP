@@ -5,12 +5,12 @@
 // ============================================================================
 
 struct MyTask : TaskCtrlActivity {
-  virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
+  virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world);
+  virtual void stepControl(double dt){}
   virtual bool isConv();
 };
 
-void MyTask::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void MyTask::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new DefaultTaskMap(specs, world);
   task = new CtrlTask(name, *map, specs);
   stopTolerance=1e-2; //TODO: overwrite from specs
@@ -97,8 +97,8 @@ int main(int argc, char** argv) {
   S.createNewSymbol("wheels");
 
 //  script1(S);
-//  script2(S);
-  script3(S);
+  script2(S);
+//  script3(S);
 
   return 0;
 }
