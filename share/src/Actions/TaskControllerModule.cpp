@@ -92,16 +92,16 @@ void TaskControllerModule::step(){
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
-        syncModelStateWithRos = false;
-       streambuf *backup; 
-       ofstream muell; 
-      muell.open ("/dev/null"); 
-  
-      backup = cout.rdbuf();     // Konsolenpuffer merken 
-  
-      ostream konsole(backup);   // Neuen stream an Konsole binden 
-  
-      cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
+      syncModelStateWithRos = false;
+      
+      //supresses  c++ output
+
+       //streambuf *backup; 
+       //ofstream muell; 
+      //muell.open ("/dev/null"); 
+      //backup = cout.rdbuf();     // Konsolenpuffer merken 
+      //ostream konsole(backup);   // Neuen stream an Konsole binden 
+      //cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){
