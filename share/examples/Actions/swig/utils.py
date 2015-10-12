@@ -143,19 +143,4 @@ def side2wrist_joint(side=None):
               SIDE.RIGHT: "r_wrist_roll_joint"}
     return source.get(side, source[SIDE.DEFAULT])
 
-def setFixBase(base = True):
-    """
-    If True, the base is fixed.
-    If False, the robot is movable
-    One can set it in the MT.cfg, too.
-    """
-    interface.setFixBase(base)
-
-def setVerbose(verbose = True):
-    """
-    If true, bump state every tick.
-    If false, not.
-    """
-    interface.setVerbose(verbose)
-
 
