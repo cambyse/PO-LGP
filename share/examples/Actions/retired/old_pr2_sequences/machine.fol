@@ -1,5 +1,6 @@
 # These predicate symbols are used to indicate the 'state' of activities
 Symbol conv
+Symbol triggered
 Symbol timeout
 Symbol contact
 Symbol quit
@@ -8,11 +9,13 @@ Symbol quit
 # the control tasks of these activities are defined at the bottom of this file
 Action CoreTasks
 Action gazeAtHand
+Action sensorTest
 Action alignHand
 Action positionHand
 Action lowerHand
 Action controlForce
 Action homing
+Action SensorActivityABC
 
 
 # This is the initial state (just a propositional list of activities for now)

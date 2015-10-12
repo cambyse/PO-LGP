@@ -109,8 +109,8 @@ int main(int argc,char **argv)
 //   test_reach();
 //   checkAnalytics();
 //   test_quatTMT();
-  // test_reach();
-   test_qSingleTMT();
+  test_reach();
+  test_qSingleTMT();
 
   return 0;
 }

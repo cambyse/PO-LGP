@@ -14,7 +14,7 @@
 void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
-  body.X.pos.z = marker.pose.pose.position.z;
+  body.X.pos.z = marker.pose.pose.position.z ;
   body.X.rot.w = marker.pose.pose.orientation.w;
   body.X.rot.x = marker.pose.pose.orientation.x;
   body.X.rot.y = marker.pose.pose.orientation.y;
@@ -26,7 +26,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
-  ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
+  ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
 
   for (AlvarMarker& marker : markers.markers) {
     mlr::String marker_name = STRING("marker" << marker.id);
@@ -42,12 +42,41 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       shape->type = ors::markerST;
       shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
+    ors::Vector Y_old;
+    ors::Vector Z_old;
+    Z_old = world.getShapeByName(marker_name)->X.rot.getZ();
+    Y_old = world.getShapeByName(marker_name)->X.rot.getY();
     setBody(*body, marker);
-    // transform: torso_lift_link is the reference frame_id
-    body->X.pos += refFrame;  // TODO is this the proper way to do it?
+    ors::Transformation T;
+
+    T.setZero();
+    T.addRelativeRotationDeg(90.,0.,1.,0.);
+
+
+
+    body->X = refFrame * T * body->X;
+    body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
+    body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+
+
+   // while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
+  //   body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
+      //cout << "test" << endl;
+   // }
+    /*int i = 0;
+     while ( body->X.rot.getZ().angle(Z_old) > 1.3 || body->X.rot.getY().angle(Y_old) > 1.3){
+
+     body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
+     //cout << body->X.rot.getX().angle(X_old) << "new" << i << endl;
+      if (i == 3)break;
+      i++;
+   }*/
+
     world.getShapeByName(marker_name)->X = body->X;
 
   }
+
+
 
   if (createdNewMarkers) {
     world.swiftDelete();

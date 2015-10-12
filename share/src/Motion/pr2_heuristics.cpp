@@ -19,6 +19,8 @@
 #include "pr2_heuristics.h"
 #include <Ors/ors.h>
 
+MT::Array<const char*> pr2_get_joints();
+
 arr pr2_zero_pose(){
   arr q = { 0.1, 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003, 0, 0 };
   //{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, -1, 0.5, -1, -1.5, -2, 0, -0.5, 0, 0, 1, 0.5, 1, 1.5, -2, 0, 0.5, 0, 0 };
@@ -115,6 +117,39 @@ mlr::Array<const char*> pr2_full_get_bodynames() {
     "l_gripper_r_finger_tip_link"
   };
     
+}
+
+MT::Array<const char*> pr2_get_joints() {
+  return {    
+    "worldTranslationRotation",
+      "torso_lift_joint",
+      "head_pan_joint",
+      "laser_tilt_mount_joint",
+      "r_shoulder_pan_joint",
+      "l_shoulder_pan_joint",
+      "head_tilt_joint",
+      "r_shoulder_lift_joint",
+      "l_shoulder_lift_joint",
+      "r_upper_arm_roll_joint",
+      "l_upper_arm_roll_joint",
+      "r_elbow_flex_joint",
+      "l_elbow_flex_joint",
+      "r_forearm_roll_joint",
+      "l_forearm_roll_joint",
+      "r_wrist_flex_joint",
+      "l_wrist_flex_joint",
+      "r_wrist_roll_joint",
+      "l_wrist_roll_joint",
+      "r_gripper_l_finger_joint",
+      "r_gripper_r_finger_joint",
+      "l_gripper_l_finger_joint",
+      "l_gripper_r_finger_joint",
+      "r_gripper_l_finger_tip_joint",
+      "r_gripper_r_finger_tip_joint",
+      "l_gripper_l_finger_tip_joint",
+      "l_gripper_r_finger_tip_joint",
+      "r_gripper_joint",
+      "l_gripper_joint"};
 }
 
 uintA pr2_get_shapes(const ors::KinematicWorld &G) {

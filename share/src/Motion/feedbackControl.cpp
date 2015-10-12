@@ -33,6 +33,8 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
+  } else {
+    setGainsAsNatural(3., .7);
   }
   if((it=params["prec"])) prec = it->V<double>();
   if((it=params["target"])) y_ref = it->V<arr>();

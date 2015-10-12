@@ -18,6 +18,18 @@ void Activity::createFactRepresentative(Graph& state){
 
 //===========================================================================
 
+
+//===========================================================================
+// Activity
+void Activity::configure(Node *fact) {
+  name.clear();
+  for(Node *p : fact->parents){
+    name << p->keys.last();
+  }
+  Activity::fact = fact;
+}
+
+//===========================================================================
 Activity* newActivity(Node *fact){
   Node *symbol=fact->parents(0);
   while(symbol->parents.N) symbol=symbol->parents(0);
@@ -42,6 +54,16 @@ Activity* newActivity(Node *fact){
   return act;
 }
 
+//===========================================================================
+Graph* getSpecsFromFact(Node *fact) {
+  Graph* specs = &NoGraph;
+  if(fact->getValueType()==typeid(Graph)) {
+    specs = &fact->graph();
+  }
+  return specs;
+}
+
+//===========================================================================
 RUN_ON_INIT_BEGIN(Activity)
 ActivityL::memMove=true;
 RUN_ON_INIT_END(Activity)

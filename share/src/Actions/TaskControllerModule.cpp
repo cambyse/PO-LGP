@@ -1,6 +1,9 @@
 #include "TaskControllerModule.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
 
 #ifdef MLR_ROS
 #  include <pr2/roscom.h>
@@ -59,7 +62,9 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
+#ifdef MT_ROS
     pr2_odom.waitForRevisionGreaterThan(0);
+#endif
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
@@ -70,7 +75,16 @@ void TaskControllerModule::step(){
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
-        syncModelStateWithRos = false;
+      syncModelStateWithRos = false;
+      
+      //supresses  c++ output
+
+       //streambuf *backup; 
+       //ofstream muell; 
+      //muell.open ("/dev/null"); 
+      //backup = cout.rdbuf();     // Konsolenpuffer merken 
+      //ostream konsole(backup);   // Neuen stream an Konsole binden 
+      //cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){
@@ -88,7 +102,6 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
@@ -148,12 +161,13 @@ void TaskControllerModule::step(){
   refs.gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.);
+  refs.Ki = ARR(0.2);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
+  refs.intLimitRatio = ARR(0.7);
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {

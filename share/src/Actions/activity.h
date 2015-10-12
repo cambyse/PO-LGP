@@ -4,7 +4,11 @@
 #include <Core/module.h>
 
 //===========================================================================
-
+/**
+ * Activities are "things" that change the state of the KB.
+ *
+ * Activity (an ABC) defines the interface for each concrete activity.
+ */
 struct Activity {
   StringA symbols;     ///< the symbols that an abstract fact representing this activity should have
   Graph params;        ///< parameters of this activity
@@ -67,3 +71,6 @@ struct ActivitySpinnerModule : Module{
   }
   void close(){}
 };
+
+/// Return the spec from the fact
+Graph* getSpecsFromFact(Node *fact);
