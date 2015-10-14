@@ -44,7 +44,8 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
 
   //-- add refs to specs for other symbols
   for(uint i=1;i<symbols.N;i++){
-    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i)}, {}, new mlr::String(symbols(i)), true);
+    CHECK(!act->params[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
+    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i-1)}, {}, new mlr::String(symbols(i)), true);
   }
 
   act->createFactRepresentative(relationalState);

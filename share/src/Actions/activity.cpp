@@ -19,25 +19,27 @@ void Activity::createFactRepresentative(Graph& state){
 //===========================================================================
 
 Activity* newActivity(Node *fact){
-  Node *symbol=fact->parents(0);
-  while(symbol->parents.N) symbol=symbol->parents(0);
+  Node *activitySymbol=fact->parents(0);
+  while(activitySymbol->parents.N) activitySymbol=activitySymbol->parents(0);
 
-  Node *specs=fact;
-  while(specs->getValueType()!=typeid(Graph) && specs->parents.N) specs=specs->parents(0);
+  Node *activityParams=fact;
+  while(activityParams->getValueType()!=typeid(Graph) && activityParams->parents.N) activityParams=activityParams->parents(0);
 
-  //-- add refs to specs for other symbols
-  if(specs->getValueType()==typeid(Graph)) for(uint i=1;i<fact->parents.N;i++){
-    new Node_typed<mlr::String>(specs->graph(), {STRING("ref"<<i)}, {}, new mlr::String(fact->parents(i)->keys.last()), true);
+  //-- all other symbols in the literal ard added to the params
+  if(activityParams->getValueType()==typeid(Graph)) for(uint i=1;i<fact->parents.N;i++){
+    CHECK(!activityParams->graph()[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
+    new Node_typed<mlr::String>(activityParams->graph(), {STRING("ref"<<i-1)}, {}, new mlr::String(fact->parents(i)->keys.last()), true);
   }
 
-  LOG(3) <<"creating new activity of symbol '" <<*symbol <<"' and specs '" <<*specs <<"'";
-  Node *actType = registry().getNode("Activity", symbol->keys.last());
-  if(!actType){
-    LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*symbol <<", specs=" <<*specs <<")";
+  LOG(3) <<"creating new activity of symbol '" <<*activitySymbol <<"' and specs '" <<*activityParams <<"'";
+  Node *activityType = registry().getNode("Activity", activitySymbol->keys.last());
+  if(!activityType){
+    LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*activitySymbol <<", specs=" <<*activityParams <<")";
     return NULL;
   }
-  CHECK(actType->getValueType()==typeid(Type),"");
-  Activity *act = (Activity*)(actType->getValue<Type>()->newInstance());
+  CHECK(activityType->getValueType()==typeid(Type),"");
+
+  Activity *act = (Activity*)(activityType->getValue<Type>()->newInstance());
   act->associateToExistingFact(fact);
   return act;
 }

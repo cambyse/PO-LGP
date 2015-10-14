@@ -1,10 +1,9 @@
 #include <Motion/feedbackControl.h>
 #include "TaskControllerModule.h"
 #include "SensorActivities.h"
+#include "ControlActivities.h"
 
-#include "taskCtrlActivities.h"
-
-void TaskCtrlActivity::configure() {
+void ControlActivity::configure() {
   taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
@@ -12,13 +11,13 @@ void TaskCtrlActivity::configure() {
   conv=false;
 }
 
-TaskCtrlActivity::~TaskCtrlActivity(){
+ControlActivity::~ControlActivity(){
   taskController->ctrlTasks.set()->removeValue(task);
   delete task;
   delete map;
 }
 
-void TaskCtrlActivity::step(double dt){
+void ControlActivity::step(double dt){
   activityTime += dt;
 
   stepControl(dt);
@@ -40,7 +39,7 @@ void TaskCtrlActivity::step(double dt){
   }
 }
 
-bool TaskCtrlActivity::isConv(){
+bool ControlActivity::isConv(){
   return (task->y.N && task->y.N==task->y_ref.N
       && maxDiff(task->y, task->y_ref)<stopTolerance
       && maxDiff(task->v, task->v_ref)<stopTolerance);
@@ -51,6 +50,10 @@ bool TaskCtrlActivity::isConv(){
 void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
+  if((it=specs["ref0"])){
+    CHECK(!specs["type"], "can't specify type twice");
+    it->keys.last()="type"; //rename ref0 to type
+  }
   if((it=specs["type"])){
     if(it->V<mlr::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
@@ -122,7 +125,7 @@ void HomingActivity::stepControl(double dt) {
 
 //===========================================================================
 RUN_ON_INIT_BEGIN(Activities)
-registerActivity<FollowReferenceActivity>("FollowReferenceActivity");
+registerActivity<FollowReferenceActivity>("Control");
 registerActivity<HomingActivity>("HomingActivity");
 registerActivity<SensorActivity>("SensorActivity");
 RUN_ON_INIT_END(Activities)

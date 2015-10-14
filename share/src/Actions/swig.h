@@ -9,7 +9,7 @@ typedef std::vector<int> intV;
 typedef std::vector<std::string> stringV;
 typedef std::map<std::string, std::string> dict;
 using std::string;
-
+template<class T> struct Access_typed;
 
 struct ActionSwigInterface{
   struct SwigSystem *S;
@@ -65,7 +65,7 @@ struct ActionSwigInterface{
   //class pr2System* pr2_system; //MT: why??
 
 
-  struct Graph& getState();
+  Access_typed<struct RelationalMachine>& getRM();
 
   //-- testing...
   void execScript(const char* filename);

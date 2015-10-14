@@ -15,14 +15,14 @@
 #include <Motion/feedbackControl.h>
 
 
-struct GazeTask : TaskCtrlActivity {
+struct GazeTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
     map = new DefaultTaskMap(gazeAtTMT, world, "endeffHead", ors::Vector(0.,0.,-1.), "testObject");
     task = new CtrlTask(name, *map, specs);
   }
 };
 
-struct GraspTask : TaskCtrlActivity {
+struct GraspTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
     map = new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "testObject");
     task = new CtrlTask(name, *map, specs);

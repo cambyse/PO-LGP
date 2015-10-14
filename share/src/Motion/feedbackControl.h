@@ -55,12 +55,13 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetSignOnNegScalarProduct;
+  bool makeTargetModulo2PI;
 
   /// @{ @name The actual state when LAST getDesiredAcceleration was called
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false){}
+CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 

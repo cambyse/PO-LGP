@@ -495,9 +495,7 @@ int ActionSwigInterface::getQIndex(std::string jointName) {
   return S->tcm.modelWorld.get()->getJointByName(mlr::String(jointName))->qIndex;
 }
 
-Graph& ActionSwigInterface::getState(){
-  return *S->RM.get()->state;
-}
+Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;

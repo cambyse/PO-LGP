@@ -72,6 +72,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(type==posTMT){
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
+    CHECK(body_i,"");
     if(body_j==NULL) { //simple, no j reference
       G.kinematicsPos(y, J, body_i, vec_i);
       y -= conv_vec2arr(vec_j);

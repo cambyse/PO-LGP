@@ -6,15 +6,15 @@
 // ============================================================================
 /// A typical 'control activity' that adds a CtrlTask to the task list of the task controller.
 /// Der
-struct TaskCtrlActivity : Activity{
+struct ControlActivity : Activity{
   struct TaskControllerModule *taskController;
   struct TaskMap *map;
   struct CtrlTask* task;
   double stopTolerance;
   bool conv;
 
-  TaskCtrlActivity():taskController(NULL), map(NULL), task(NULL), stopTolerance(1e-2), conv(false){}
-  virtual ~TaskCtrlActivity();
+  ControlActivity():taskController(NULL), map(NULL), task(NULL), stopTolerance(1e-2), conv(false){}
+  virtual ~ControlActivity();
   virtual void configure(); ///< calls configure2 and registers
   virtual void step(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
@@ -25,7 +25,7 @@ struct TaskCtrlActivity : Activity{
 
 //===========================================================================
 
-struct FollowReferenceActivity : TaskCtrlActivity {
+struct FollowReferenceActivity : ControlActivity {
   arr ref;
   arr old_y;
   uint stuck_count;
@@ -39,7 +39,8 @@ struct FollowReferenceActivity : TaskCtrlActivity {
 };
 
 //===========================================================================
-struct HomingActivity : TaskCtrlActivity {
+
+struct HomingActivity : ControlActivity {
   ors::Joint *wheeljoint;
 
   virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world);
