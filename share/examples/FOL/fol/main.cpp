@@ -1,5 +1,5 @@
 #include <FOL/fol.h>
-#include <Gui/graphview.h>
+//#include <Gui/graphview.h>
 
 //===========================================================================
 
@@ -54,12 +54,13 @@ void testFolFwdChaining(){
   cout <<"INIT STATE = " <<state <<endl;
 
   Node *query=G["Query"]->graph()(0);
-  forwardChaining_FOL(G, query);
+  forwardChaining_FOL(G, state, query);
 //  cout <<"FINAL STATE = " <<state <<endl;
 }
 
 //===========================================================================
 
+#if 0
 void testFolDisplay(){
   Graph G;
   FILE("fol.kvg") >>G;
@@ -68,6 +69,7 @@ void testFolDisplay(){
   view.watch();
 
 }
+#endif
 
 //===========================================================================
 
@@ -217,11 +219,11 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-//  testFolLoadFile();
-//  testPolFwdChaining();
-//  testFolFwdChaining();
+  testFolLoadFile();
+  testPolFwdChaining();
+  testFolFwdChaining();
 //  testFolDisplay();
-//  testFolSubstitution();
+  testFolSubstitution();
   testFolFunction();
 //  testMonteCarlo();
   cout <<"BYE BYE" <<endl;

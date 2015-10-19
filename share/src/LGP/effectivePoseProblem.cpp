@@ -3,6 +3,8 @@
 
 //===========================================================================
 
+const char* touchSymbol="touch";
+
 EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_initial,
                                            const Graph& symbolics,
                                            int verbose)
@@ -15,7 +17,7 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_in
 
   //create the effective kinematicsx
   //  Node *actionSequence = symbolicState["actionSequence"];
-  Node *supportSymbol  = symbolics["supports"];
+  Node *supportSymbol  = symbolics[touchSymbol];
   Graph& state = symbolics["STATE"]->graph();
 
   for(Node *s:supportSymbol->parentOf) if(&s->container==&state){
@@ -48,7 +50,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
   if(&tt) tt.clear();
 
   //-- support symbols -> constraints of being inside!
-  Node *support=symbolicState["supports"];
+  Node *support=symbolicState[touchSymbol];
   Graph& state =symbolicState["STATE"]->graph();
   for(Node *constraint:support->parentOf) if(&constraint->container==&state){
     ors::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());

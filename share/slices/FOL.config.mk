@@ -1,4 +1,9 @@
-LAPACK = 0
+# In this file you can unset dependencies, e.g.
+# 
+# LAPACK=0 #to avoid need to include/link to LAPACK
+# PHYSX=0 #to avoid linking to Physx (Nvidia simulator)
+# GTK = 0 #to avoid linking to GTK
+# etc
+#
 
-GTKGL = 0
-FREEGLUT = 0
+LAPACK = 0

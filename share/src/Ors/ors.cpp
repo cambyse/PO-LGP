@@ -780,7 +780,7 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
 void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
   if(!qdim.N || q.N!=getJointStateDimension(agent)){
     getJointStateDimension(agent);
-    ((KinematicWorld*)this)->calc_q_from_Q(agent);
+    ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
   }
   _q=q;
   if(&_qdot){
@@ -792,7 +792,7 @@ void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
 arr ors::KinematicWorld::getJointState(int agent) const {
   if(!qdim.N || q.N!=getJointStateDimension(agent)){
     getJointStateDimension(agent);
-    ((KinematicWorld*)this)->calc_q_from_Q(agent);
+    ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
   }
   return q;
 }
