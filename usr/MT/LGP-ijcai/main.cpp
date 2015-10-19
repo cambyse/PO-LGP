@@ -33,7 +33,7 @@ void ijcaiExperiment(){
       MCTS_time += mlr::timerRead(true);
 
       //generate the respective effective pose problem
-      EffectivePoseProblem effectivePoseProblem(node->effKinematics, node->fol.KB, 0);
+      EffectivePoseProblem effectivePoseProblem(node->effKinematics, node->fol.KB, *root->folState, *node->folState, 0);
       node->effPoseCost = effectivePoseProblem.optimize(node->effPose);
       double rx = towers.psi(node->effKinematics, node->fol.KB);
       lev1_time += mlr::timerRead(true);
@@ -69,28 +69,44 @@ void newMethod(){
 
   TowerProblem_new towers; //generates a randomize towers problem
 
+//  cout <<towers.fol_root.KB <<endl;
   display=towers.world_root;
   display.gl().watch("root");
-  cout <<towers.fol_root.KB <<endl;
 
   ManipulationTree_Node root(towers);
 
-  ManipulationTree_Node *node = &root;
+//  ManipulationTree_Node *node = &root;
+  ManipulationTree_NodeL fringe={&root};
 
-  for(uint k=0;k<1;k++){
-    node->expand();
-//    for(ManipulationTree_Node *n:node->children) n->expand();
-    for(ManipulationTree_Node *n:node->children){
-      EffectivePoseProblem effectivePoseProblem(n->effKinematics, n->fol.KB, 0);
-      n->effPoseCost = effectivePoseProblem.optimize(n->effPose);
-      cout <<n->effKinematics <<endl;
-      display=n->effKinematics;
-      display.gl().watch("child");
+  for(uint k=0;k<2;k++){
+    ManipulationTree_NodeL newFringe;
+    for(ManipulationTree_Node *node:fringe){
+      cout <<"EXPANDING:\n" <<*node;
+      node->expand();
+      //    for(ManipulationTree_Node *n:node->children) n->expand();
+      for(ManipulationTree_Node *n:node->children){
+        FILE("z.fol").getOs() <<n->fol.KB <<endl <<n->folState->isNodeOfParentGraph->keys.last();
+        EffectivePoseProblem effectivePoseProblem(n->effKinematics, n->fol.KB, *node->folState, *n->folState, 0);
+        n->effPoseCost = effectivePoseProblem.optimize(n->effPose);
+//        cout <<"n->effPoseCost=" <<n->effPoseCost <<" : " <<n->effPose <<endl;
+
+        //      cout <<n->effKinematics <<endl;
+        display=n->effKinematics;
+        display.gl().watch("child pose");
+
+        //      PathProblem pathProblem(towers.world_root, n->effKinematics, n->fol.KB, 20, 0);
+        //      n->pathCosts = pathProblem.optimize(n->path);
+        newFringe.append(n);
+      }
+      cout <<"NEW SUBTREE:" <<endl;
+      cout <<*node <<endl;
     }
-    root.dump();
-    root.fol.KB.checkConsistency();
+    fringe = newFringe;
   }
 
+  cout <<"** FULL TREE" <<endl;
+  root.write();
+  root.fol.KB.checkConsistency();
 
   cout <<root.fol.KB <<endl;
 

@@ -172,7 +172,7 @@ void ors::Body::write(std::ostream& os) const {
   if(mass) os <<"mass=" <<mass <<' ';
   if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
 //  uint i; Node *a;
-//  for_list(Type,  a,  ats)
+//  for(Type *  a:  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
 }
 
@@ -221,11 +221,16 @@ void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
   memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
   if(!referenceMeshOnCopy){
     mesh=s.mesh;
+    sscCore=s.sscCore;
   }else{
     mesh.V.referTo(s.mesh.V);
     mesh.T.referTo(s.mesh.T);
     mesh.C.referTo(s.mesh.C);
     mesh.Vn.referTo(s.mesh.Vn);
+    sscCore.V.referTo(s.sscCore.V);
+    sscCore.T.referTo(s.sscCore.T);
+    sscCore.C.referTo(s.sscCore.C);
+    sscCore.Vn.referTo(s.sscCore.Vn);
   }
   mesh_radius=s.mesh_radius; cont=s.cont;
   ats=s.ats;
@@ -264,6 +269,7 @@ void ors::Shape::parseAts() {
       mesh.setCappedCylinder(size[3], size[2]);
       break;
     case ors::SSBoxST:
+      HALT("deprecated?")
       mesh.setSSBox(size[0], size[1], size[2], size[3]);
       break;
     case ors::markerST:
@@ -278,6 +284,13 @@ void ors::Shape::parseAts() {
       sscCore=mesh;
       mesh.setSSC(sscCore, size[3]);
       break;
+    case ors::ssBoxST:
+      CHECK(size[3]>1e-10,"");
+      sscCore.setBox();
+      sscCore.scale(size[0], size[1], size[2]);
+      mesh.setSSC(sscCore, size[3]);
+      break;
+    default: NIY;
   }
 
   //center the mesh:
@@ -325,7 +338,7 @@ void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   os <<"size=[" <<size[0] <<' '<<size[1] <<' '<<size[2] <<' '<<size[3] <<"] ";
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
-  for_list(Node, a, ats)
+  for(Node * a: ats)
   if(a->keys(0)!="rel" && a->keys(0)!="type" && a->keys(0)!="size") os <<*a <<' ';
 }
 
@@ -472,7 +485,7 @@ void ors::Joint::write(std::ostream& os) const {
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
   if(!Q.isZero()) os <<"Q=<T " <<Q <<" > ";
-  for_list(Node, a, ats)
+  for(Node * a: ats)
   if(a->keys(0)!="A" && a->keys(0)!="from"
       && a->keys(0)!="axis" //because this was subsumed in A during read
       && a->keys(0)!="B" && a->keys(0)!="to"
@@ -585,8 +598,8 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
   listCopy(shapes, G.shapes);
   listCopy(bodies, G.bodies);
   graphMakeLists(bodies, joints);
-  for_list(Body,  b,  bodies) b->shapes.clear();
-  for_list(Shape,  s,  shapes) {
+  for(Body *  b:  bodies) b->shapes.clear();
+  for(Shape *  s:  shapes) {
     b=bodies(s->ibody);
     s->body=b;
     b->shapes.append(s);
@@ -659,11 +672,11 @@ void ors::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
     frames A & B of each edge, this calculates the dynamic (relative) joint
     frame X for each edge (which includes joint transformation and errors) */
 void ors::KinematicWorld::calc_Q_from_BodyFrames() {
-  for_list(Joint,  e,  joints) {
-    ors::Transformation A(e->from->X), B(e->to->X);
-    A.appendTransformation(e->A);
-    B.appendInvTransformation(e->B);
-    e->Q.setDifference(A, B);
+  for(Joint *j:joints) {
+    ors::Transformation A(j->from->X), B(j->to->X);
+    A.appendTransformation(j->A);
+    B.appendInvTransformation(j->B);
+    j->Q.setDifference(A, B);
   }
 }
 
@@ -672,11 +685,11 @@ void ors::KinematicWorld::calc_Q_from_BodyFrames() {
     calcBodyFramesFromJoints() */
 void ors::KinematicWorld::clearJointErrors() {
   ors::Vector xaxis(1, 0, 0);
-  for_list(Joint,  e,  joints) {
-    e->Q.pos.setZero();
-    e->Q.vel.setZero();
-    e->Q.rot.alignWith(xaxis);
-    e->Q.angvel.makeColinear(xaxis);
+  for(Joint *j:joints) {
+    j->Q.pos.setZero();
+    j->Q.vel.setZero();
+    j->Q.rot.alignWith(xaxis);
+    j->Q.angvel.makeColinear(xaxis);
   }
 }
 
@@ -817,7 +830,7 @@ arr ors::KinematicWorld::getLimits() const {
 void ors::KinematicWorld::zeroGaugeJoints() {
   Joint *e;
   ors::Vector w;
-  for_list(Body,  n,  bodies) if(n->type!=staticBT) {
+  for(Body *  n:  bodies) if(n->type!=staticBT) {
     e=n->inLinks(0);
     if(e) {
       w=e->Q.rot / e->Q.angvel; e->Q.angvel.setZero();
@@ -942,6 +955,17 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j, bool calcVels) {
     } break;
     case JT_glue:
     case JT_fixed:
+      break;
+    case JT_free:
+      q.resize(7);
+      q(0)=j->Q.pos.x;
+      q(1)=j->Q.pos.y;
+      q(2)=j->Q.pos.z;
+      q(3)=j->Q.rot.w;
+      q(4)=j->Q.rot.x;
+      q(5)=j->Q.rot.y;
+      q(6)=j->Q.rot.z;
+      if(calcVels) NIY;  // velocity: need to fix
       break;
     default: NIY;
   }
@@ -1537,13 +1561,13 @@ void ors::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qd
 /// [prelim] some heuristic measure for the joint errors
 double ors::KinematicWorld::getJointErrors() const {
   double err=0.0;
-  for_list(Joint, e, joints) err+=e->Q.pos.lengthSqr();
+  for(Joint * e: joints) err+=e->Q.pos.lengthSqr();
   return ::sqrt(err);
 }
 
 /** @brief checks if all names of the bodies are disjoint */
 bool ors::KinematicWorld::checkUniqueNames() const {
-  for_list(Body,  n,  bodies) for(Body *b: bodies) {
+  for(Body *  n:  bodies) for(Body *b: bodies) {
     if(n==b) break;
     if(n->name==b->name) return false;
   }
@@ -1591,8 +1615,8 @@ ors::Joint* ors::KinematicWorld::getJointByBodies(const Body* from, const Body* 
 
 /// find joint connecting two bodies with specific names
 ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
-  for_list(Body, f, bodies) if(f->name==from) break;
-  for_list(Body, t, bodies) if(t->name==to) break;
+  Body *f = getBodyByName(from);
+  Body *t = getBodyByName(to);
   if(!f || !t) return 0;
   return graphGetEdge<Body, Joint>(f, t);
 }
@@ -1622,7 +1646,7 @@ uintA ors::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
 
 /** @brief creates uniques names by prefixing the node-index-number to each name */
 void ors::KinematicWorld::prefixNames() {
-  for_list(Body, n, bodies) n->name=STRING(n->index<< n->name);
+  for(Body * n: bodies) n->name=STRING(n->index<< n->name);
 }
 
 /// return a OpenGL extension
@@ -1776,7 +1800,7 @@ void ors::KinematicWorld::read(std::istream& is) {
 //  cout <<"***KVG:\n" <<G <<endl;
   
   NodeL bs = G->getNodes("body");
-  for_list(Node,  it,  bs) {
+  for(Node *  it:  bs) {
     CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
     
@@ -1872,7 +1896,7 @@ end_header\n";
   uint k=0;
   ors::Transformation t;
   ors::Vector v;
-  for_list(Shape, s, shapes) {
+  for(Shape * s: shapes) {
     m = &s->mesh;
     t = s->X;
     if(m->C.d0!=m->V.d0) {
@@ -1938,7 +1962,7 @@ void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
 
 /// clear all forces currently stored at bodies
 void ors::KinematicWorld::clearForces() {
-  for_list(Body,  n,  bodies) {
+  for(Body *  n:  bodies) {
     n->force.setZero();
     n->torque.setZero();
   }
@@ -1973,22 +1997,22 @@ void ors::KinematicWorld::frictionToForces(double coeff) {
   ors::Vector a;
   ors::Transformation X;
   double v;
-  for_list(Joint,  e,  joints) {
-    X = e->from->X;
-    X.appendTransformation(e->A);
+  for(Joint *j:joints) {
+    X = j->from->X;
+    X.appendTransformation(j->A);
     a = X.rot.getX();//rotation axis
     
-    v=e->Q.angvel.length();
-    if(e->Q.angvel*Vector_x<0.) v=-v;
+    v=j->Q.angvel.length();
+    if(j->Q.angvel*Vector_x<0.) v=-v;
     
-    e->from->torque -= (coeff*v)*a;
-    e->to->torque   += (coeff*v)*a;
+    j->from->torque -= (coeff*v)*a;
+    j->to->torque   += (coeff*v)*a;
   }
 }
 
 void ors::KinematicWorld::gravityToForces() {
   ors::Vector g(0, 0, -9.81);
-  for_list(Body,  n,  bodies) n->force += n->mass * g;
+  for(Body *  n:  bodies) n->force += n->mass * g;
 }
 
 /// compute forces from the current contacts
@@ -2225,7 +2249,7 @@ double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
   double M=0.;
   ors::Vector x;
   x.setZero();
-  for_list(Body,  n,  bodies) {
+  for(Body *  n:  bodies) {
     M+=n->mass;
     x+=n->mass*n->X.pos;
   }
@@ -2239,7 +2263,7 @@ void ors::KinematicWorld::getComGradient(arr &grad) const {
   double M=0.;
   arr J(3, getJointStateDimension());
   grad.resizeAs(J); grad.setZero();
-  for_list(Body, n, bodies) {
+  for(Body * n: bodies) {
     M += n->mass;
     kinematicsPos(NoArr, J, n);
     grad += n->mass * J;
@@ -2273,7 +2297,7 @@ double ors::KinematicWorld::getEnergy() const {
   ors::Vector w;
   
   E=0.;
-  for_list(Body, n, bodies) {
+  for(Body * n: bodies) {
     m=n->mass;
     ors::Quaternion &rot = n->X.rot;
     I=(rot).getMatrix() * n->inertia * (-rot).getMatrix();
@@ -2297,7 +2321,7 @@ void ors::KinematicWorld::removeUselessBodies(int verbose) {
   listReindex(bodies);
   listReindex(joints);
   checkConsistency();
-//  for_list(Joint, j, joints) j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+//  for(Joint * j: joints) j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 //  for(Shape *s: shapes) s->ibody = s->body->index;
   //-- clear all previous index related things
   qdim.clear();
@@ -2378,7 +2402,7 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
   //-- remove fixed joints and reindex
   for_list_rev(Joint, jj, joints) if(jj->type==JT_fixed) delete jj;
   listReindex(joints);
-  //for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+  //for(Joint * j: joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
   checkConsistency();
 }
 
@@ -2438,7 +2462,7 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
 double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
   ors::Vector c, cn;
   arr C, Cn;
-  for_list(ors::Proxy, p, ORS.proxies){
+  for(ors::Proxy * p: ORS.proxies){
     int body_a = ORS.shapes(p->a)->body?ORS.shapes(p->a)->body->index:-1;
     int body_b = ORS.shapes(p->b)->body?ORS.shapes(p->b)->body->index:-1;
     if(p->d<distanceThreshold && (body_a==(int)bodyIndex || body_b==(int)bodyIndex)) {

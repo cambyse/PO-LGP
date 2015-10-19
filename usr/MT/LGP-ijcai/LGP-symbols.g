@@ -4,35 +4,49 @@ QUIT
 #symbols
 Object
 Gsupport
+articulated
 loaded
 free
-hand
+#hand
 touch
+eff
+glued
 
 Board
 Cylin
 
 #objects
 table1
-a
-b
+table2
+#a
+#b
 
 START_STATE{
-  (Object table1)
-  (Object a)
-  (Object b)
-  (Board table1)
-  (Cylin a)  
-  (Cylin b)  
-  (free hand)
+  (Object table1) (Board table1)
+  (Object table2) (Board table2)
+# (Object a) (Cylin a)
+# (Object a) (Cylin b)
+  (Object eff) (articulated eff)
 }
 
 REWARD{}
 
-DecisionRule TouchObject {
-     X
-     { (free hand) (Object X) }
-     { (free hand)! (touch X) }
+DecisionRule Glue {
+     X, Y
+     { (articulated X) (Object Y) (articulated Y)! }
+     { (touch X Y) (articulated Y) (glued X Y) }
+}
+
+#noDecisionRule TouchObject {
+#     X
+#     { (free hand) (Object X) }
+#     { (free hand)! (touch eff X) (articulated X) }
+#}
+
+noDecisionRule Touch2 {
+     X, Y
+     { (articulated X) (Object Y) (touch X Y)! }
+     { (touch X Y) (articulated Y) }
 }
 
 noDecisionRule CylinOnBoard {

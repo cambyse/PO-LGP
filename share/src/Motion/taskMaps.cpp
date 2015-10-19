@@ -39,7 +39,8 @@ void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
   ors::Shape *s1 = i<0?NULL: W.shapes(i);
   ors::Shape *s2 = j<0?NULL: W.shapes(j);
   CHECK(s1 && s2,"");
-  CHECK(s1->type==ors::sscST && s2->type==ors::sscST,"");
+  CHECK(s1->sscCore.V.N,"");
+  CHECK(s2->sscCore.V.N,"");
   ors::Vector p1, p2, e1, e2;
   GJK_point_type pt1, pt2;
 

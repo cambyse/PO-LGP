@@ -93,6 +93,12 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
 
+  //-- remove the old decision-fact, if exists
+  for(uint i=state->N;i--;){
+    Node *n=state->elem(i);
+    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+  }
+
   //-- add the decision as a fact
   Node *decision = NULL;
   if(!d->waitDecision){
@@ -200,7 +206,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 
   //-- delete decision fact again
-  if(decision) delete decision;
+  //if(decision) delete decision;
 
   if(deadEnd) reward -= deadEndCost;
 

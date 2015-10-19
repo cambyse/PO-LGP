@@ -123,6 +123,7 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::SSBoxST:
+        HALT("deprecated??");
         if(orsDrawMeshes){
           if(!s->mesh.V.N) s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
           s->mesh.glDraw();
@@ -140,6 +141,14 @@ void glDrawShape(ors::Shape *s) {
       case ors::sscST:
         CHECK(s->sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
         if(!s->mesh.V.N) s->mesh.setSSC(s->sscCore, s->size[3]);
+        s->mesh.glDraw();
+        break;
+      case ors::ssBoxST:
+        if(!s->mesh.V.N || !s->sscCore.V.N){
+          s->sscCore.setBox();
+          s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
+          s->mesh.setSSC(s->sscCore, s->size[3]);
+        }
         s->mesh.glDraw();
         break;
       case ors::pointCloudST:
