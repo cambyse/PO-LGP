@@ -26,7 +26,7 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  const char *file = "../mcts/toolbox.kvg";
+  const char *file = "../PlannerExample/toolbox.kvg";
   if(mlr::argc>1) file = mlr::argv[1];
 
   FOL_World world(FILE(file));
