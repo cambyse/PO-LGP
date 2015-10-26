@@ -27,8 +27,8 @@ MCTS::PARAMS::PARAMS()
 
 MCTS::MCTS(std::shared_ptr<AbstractEnvironment> world, const PARAMS& params)
 :   World(world),
-    Params(params),
-    TreeDepth(0)
+    TreeDepth(0),
+    Params(params)
 {
     /*/
     VNODE::NumChildren = Simulator.GetNumActions();
@@ -236,7 +236,7 @@ int MCTS::GreedyUCB(VNODE* vnode, bool ucb) const
     int N = vnode->Value.GetCount();
     double logN = log(N + 1);
 
-    for (int action = 0; action < Actions.size(); action++)
+    for (uint action = 0; action < Actions.size(); action++)
     {
         double q;
         int n;

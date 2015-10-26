@@ -212,7 +212,7 @@ struct KinematicWorld : GLDrawer{
   KinematicWorld();
   KinematicWorld(const ors::KinematicWorld& other);
   KinematicWorld(const char* filename);
-  ~KinematicWorld();
+  virtual ~KinematicWorld();
   void operator=(const ors::KinematicWorld& G){ copy(G); }
   void copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy=false);
   
