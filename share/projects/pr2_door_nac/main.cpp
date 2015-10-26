@@ -85,9 +85,9 @@ int main(int argc,char **argv){
   int H = 1; //horizon
   int numCentres = 1;
   //int numRuns = 10; // runs for averaging performance
-  int numIterations = 30; //number of gradient updates
+  int numIterations = 10; //number of gradient updates
   uint kernel_type = 0;// 0 is RBF Kernel
-  mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
+  mdp::RKHSPol rkhs1(world,useRos,duration,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
   arr rewards;
   rkhs1.dim_A = 2;
@@ -102,6 +102,12 @@ int main(int argc,char **argv){
 
 
   if(loadFunctionalFile) rkhs1.loadOldFuncPolicy();
+
+  //world.watch(true);
+  rkhs1.prior1 = 0.035; //0.035
+  rkhs1.prior2 = 0.01; //0.01
+
+
   rewards = rkhs1.run();
 
   if(rkhs1.Algorithm==0)

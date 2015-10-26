@@ -34,6 +34,7 @@ private:
     arr FLdemo, Mdemo;
     arr paramLim;
     bool useRos;
+    double duration;
 
 
     int NumEps; //episodes for each iteration of gradient evalation
@@ -67,9 +68,14 @@ private:
 
     bool forwardDynamics(arr action, arr state, arr &nxtState, double &reward);
 
+    bool FIRST_TIME;
+
 
 
 public:
+    double prior1;
+    double prior2;
+
     arr StartingState;
     uint dim_A;
     uint dim_S;
@@ -78,7 +84,7 @@ public:
     double ACTION_MIN;
     ors::KinematicWorld *world;
 
-    RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
+    RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
 
     void setStart(const arr &start);
 
