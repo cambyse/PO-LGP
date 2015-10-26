@@ -6,11 +6,12 @@
 TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
   world = new ors::KinematicWorld(world_);
   world->q = world_.q;
-  engine().open(S);
 
-  useRos = MT::getParameter<bool>("useRos");
-  fixBase = MT::getParameter<bool>("fixBase",true);
-  fixTorso = MT::getParameter<bool>("fixTorso",true);
+  threadOpenModules(true); //engine().open(S);
+
+  useRos = mlr::getParameter<bool>("useRos");
+  fixBase = mlr::getParameter<bool>("fixBase",true);
+  fixTorso = mlr::getParameter<bool>("fixTorso",true);
 
   if (useRos) {
     //-- wait for first q observation!
@@ -60,8 +61,8 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
   cout <<"T: " << T << endl;
   arr Xdot;
   getVel(Xdot,X,dt);
-  MT::Spline XS(X.d0,X);
-  MT::Spline XdotS(Xdot.d0,Xdot);
+  mlr::Spline XS(X.d0,X);
+  mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
   if (recordData) {logTact.clear(); logXdes.clear(); logXact.clear(); logFLact.clear(); logUact.clear(); logMact.clear();}
@@ -76,7 +77,7 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
     q0 = world->getJointState();
   }
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   double t = 0.;
 
   while(t<T) {
@@ -101,8 +102,8 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
     /// set controller parameter
     if (useRos) { S.ctrl_ref.set() = refs;}
 
-    MT::wait(0.01);
-    t = t + MT::timerRead(true);
+    mlr::wait(0.01);
+    t = t + mlr::timerRead(true);
 
     world->setJointState(refs.q);
     world->gl().update();
@@ -149,7 +150,7 @@ void TrajectoryInterface::gotoPosition(arr x, double T) {
 
 
 void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T_start) {
-  MT::wait(T_start);
+  mlr::wait(T_start);
 
   /// send zero gains
   CtrlMsg refs_zero;
@@ -175,7 +176,7 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
 
   S.ctrl_ref.set() = refs_zero;
 
-  MT::wait(3.);
+  mlr::wait(3.);
   cout << "//////////////////////////////////////////////////////////////////" << endl;
   cout << "START RECORDING" << endl;
   cout << "//////////////////////////////////////////////////////////////////" << endl;
@@ -183,12 +184,12 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
   /// record demonstrations
   double t = 0.;
   X.clear();
-  MT::timerStart(true);
+  mlr::timerStart(true);
   while(t<T) {
     arr q = S.ctrl_obs.get()->q;
     X.append(~q);
-    MT::wait(dt);
-    t = t + MT::timerRead(true);
+    mlr::wait(dt);
+    t = t + mlr::timerRead(true);
   }
   cout << "//////////////////////////////////////////////////////////////////" << endl;
   cout << "STOP RECORDING" << endl;
@@ -231,7 +232,7 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 }
 
 
-void TrajectoryInterface::logging(MT::String folder, uint id) {
+void TrajectoryInterface::logging(mlr::String folder, uint id) {
   write(LIST<arr>(logXact),STRING(folder<<"Xact"<<id<<".dat"));
   write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
   write(LIST<arr>(logTact),STRING(folder<<"Tdes"<<id<<".dat"));
