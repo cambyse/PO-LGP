@@ -10,7 +10,7 @@ class CellViewer: public Process {
 	public:
     CellViewer() : Process("Cell Viewer Process") {};
 
-    MT::Array<Cell*> cells;
+    mlr::Array<Cell*> cells;
 
     void open();
     void step();

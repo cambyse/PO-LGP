@@ -52,7 +52,7 @@ protected:
   CvWindow                       *cvwindow_;
   uint                            size_[2];
   double                          edge_;
-  MT::Array<CalibrationImage*>    calibration_images_;
+  mlr::Array<CalibrationImage*>    calibration_images_;
   //doubleA                         KL_, KR_, dL_, dR_, R_, T_, E_, F_;
   //doubleA                         RL_, RR_, PL_, PR_, Q_;
 

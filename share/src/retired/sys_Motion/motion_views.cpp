@@ -31,7 +31,7 @@ void PoseView::glDraw() {
   uint n=geo().ors.getJointStateDimension();
   if(q.nd==1){
     if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
-    if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
+    if (q.N!=n){ MLR_MSG("pose view on wrong dimension");  return; }
     geo().ors.setJointState(q); //it's using the ors copy to interpret the pose array (field->p)
   }
   if(q.nd==2){

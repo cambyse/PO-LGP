@@ -15,8 +15,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#ifndef MT_socSystem_ors_h
-#define MT_socSystem_ors_h
+#ifndef MLR_socSystem_ors_h
+#define MLR_socSystem_ors_h
 /**
  * @file
  * @ingroup group_soc
@@ -40,7 +40,7 @@ namespace soc {
 struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::KinematicWorld *ors;
   SwiftInterface *swift;
-  MT::Array<TaskVariable*> vars;
+  mlr::Array<TaskVariable*> vars;
   struct sSocSystem_Ors *s;
 
   SocSystem_Ors();

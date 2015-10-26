@@ -6,26 +6,22 @@
 #include <pr2/rosalvar.h>
 #include <FOL/relationalMachine.h>
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #endif
-
-extern struct TaskControllerModule *taskControllerModule();
 
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
   //protected access points
-  ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
-  ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
-  ACCESS(MT::Array<CtrlTask*>, ctrlTasks)
-  ACCESS(MT::String, effects)
-  ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarkers, ar_pose_marker)
-  ACCESS(bool, fixBase)
-#ifdef MT_ROS
-  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
-#endif
+  ACCESSnew(CtrlMsg, ctrl_ref) //< the message send to the RTController
+  ACCESSnew(CtrlMsg, ctrl_obs) //< the message received from the RTController
+  ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESSnew(mlr::String, effects)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
+  ACCESSnew(AlvarMarkers, ar_pose_marker)
+  ACCESSnew(bool, fixBase)
+  ACCESSnew(arr, pr2_odom)
 
   //non-protected members
 //private:
@@ -39,10 +35,9 @@ struct TaskControllerModule : Module {
   bool verbose;
 
 public:
-  TaskControllerModule(ModuleL& system=NoModuleL);
+  TaskControllerModule();
   ~TaskControllerModule();
 
-  /// @name module implementations
   void open();
   void step();
   void close();

@@ -237,7 +237,7 @@ Literal* NID_SST::plan_action(const SymbolicState& current_state, uint max_runs)
       return action;
     }
   }
-  MT_MSG("NID_SST: No good action found.");
+  MLR_MSG("NID_SST: No good action found.");
   return NULL;
 }
 
@@ -311,7 +311,7 @@ NID_UCT_CON::~NID_UCT_CON() {
 }
 
 
-inline void test( MT::Array< StateActionValues_Con* > abc){
+inline void test( mlr::Array< StateActionValues_Con* > abc){
     uint DEBUG=0;
     if(DEBUG>0){
         uint i;
@@ -414,9 +414,9 @@ Literal* NID_UCT_CON::plan_action(const SymbolicState& s, uint max_runs) {
 #define THRESHOLD_UCT 0.0005
     if (s_a_info->values(max_id) > THRESHOLD_UCT)
       return ground_actions(max_id);
-    MT_MSG("NID_UCT_CON: No good action found --> Retry!");
+    MLR_MSG("NID_UCT_CON: No good action found --> Retry!");
   }
-  MT_MSG("NID_UCT_CON: Still no good action found. I'll give up :-(.");
+  MLR_MSG("NID_UCT_CON: Still no good action found. I'll give up :-(.");
   return NULL;
 }
 
@@ -583,20 +583,20 @@ void NID_UCT_CON::runEpisode(double& value, const SymbolicState& s, uint t, Symb
 
             //cout<< "  test "<<s_a_info->activityList(i)<<"  "<<*symbol_action <<"  "<<args <<endl;
 
-            if(symbol_action->name==MT::String("activate_pickup")){
+            if(symbol_action->name==mlr::String("activate_pickup")){
                 symbol_pAction = relational::Symbol::get("pickup");
             }
-            if(symbol_action->name==MT::String("activate_positioning")){
+            if(symbol_action->name==mlr::String("activate_positioning")){
                 symbol_pAction = relational::Symbol::get("positioning");
             }
-            if(symbol_action->name==MT::String("activate_screwing")){
+            if(symbol_action->name==mlr::String("activate_screwing")){
                 //cout<<args<<endl;
                 symbol_pAction = relational::Symbol::get("screwing");
                 if(args.d0>1) args.remove(1);//as screwing's arity =1, activate_screwing's is 3. Then we remove 2 args
                 if(args.d0>1) args.remove(1);
                 //cout<<args<<endl;
             }
-            if(symbol_action->name==MT::String("activate_release")){
+            if(symbol_action->name==mlr::String("activate_release")){
                 symbol_pAction = relational::Symbol::get("release");
             }
             arr values,indexes;
@@ -836,9 +836,9 @@ Literal* NID_UCT::plan_action(const SymbolicState& s, uint max_runs) {
 #define THRESHOLD_UCT 0.0005
     if (s_a_info->values(max_id) > THRESHOLD_UCT)
       return ground_actions(max_id);
-    MT_MSG("NID_UCT: No good action found --> Retry!");
+    MLR_MSG("NID_UCT: No good action found --> Retry!");
   }
-  MT_MSG("NID_UCT: Still no good action found. I'll give up :-(.");
+  MLR_MSG("NID_UCT: Still no good action found. I'll give up :-(.");
   return NULL;
 }
 
@@ -1003,12 +1003,12 @@ Reward::Reward(RewardType _reward_type) {
 Reward* Reward::read(const char* filename) {
   ifstream in(filename);
   if (!in.is_open()) HALT("File cannot be opened.");
-  MT::skip(in);
+  mlr::skip(in);
   uint type;
   in >> type;
-  MT::skip(in);
+  mlr::skip(in);
   if (type == Reward::reward_literal) {
-    MT::String line;
+    mlr::String line;
     line.read(in, NULL, "\n");
     Literal* lit = Literal::get(line);
     uint i;
@@ -1020,8 +1020,8 @@ Reward* Reward::read(const char* filename) {
   }
   else if (type == Reward::reward_literalList) {
     LitL lits;
-    while (MT::skip(in) != -1) {
-      MT::String line;
+    while (mlr::skip(in) != -1) {
+      mlr::String line;
       line.read(in, NULL, "\n");
       Literal* lit = Literal::get(line);
       uint i;
@@ -1034,7 +1034,7 @@ Reward* Reward::read(const char* filename) {
     return new LiteralListReward(lits);
   }
   else if (type == Reward::reward_maximize_function) {
-    MT::String line;
+    mlr::String line;
     line.read(in, NULL, "\n");
     NIY;
 //     FunctionAtom* fa = logicObjectManager::getFA(line);
@@ -1080,7 +1080,7 @@ bool LiteralReward::satisfied(const SymbolicState& state) const {
 
 bool LiteralReward::possible(const SymbolicState& state) const {
   // special implementation for robot manipulation domain
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
+  Symbol* p_OUT = Symbol::get(mlr::String("out"));
   if (p_OUT == NULL) return true;
   uint i;
   FOR1D(lit->args, i) {
@@ -1147,7 +1147,7 @@ bool LiteralListReward::possible(const SymbolicState& state) const {
   // BRING IN DOMAIN KNOWLEDGE
   
   // Desktop world domain
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
+  Symbol* p_OUT = Symbol::get(mlr::String("out"));
   uint i, k;
   if (p_OUT != NULL) {
     FOR1D(lits, k) {
@@ -1161,9 +1161,9 @@ bool LiteralListReward::possible(const SymbolicState& state) const {
   }
   
   // Ex-Blocksworld domain
-  Symbol* p_NO_DESTROYED_TABLE = Symbol::get(MT::String("no-destroyed-table"));
-  Symbol* p_ON_TABLE = Symbol::get(MT::String("on-table"));
-  Symbol* p_NO_DESTROYED = Symbol::get(MT::String("no-destroyed"));
+  Symbol* p_NO_DESTROYED_TABLE = Symbol::get(mlr::String("no-destroyed-table"));
+  Symbol* p_ON_TABLE = Symbol::get(mlr::String("on-table"));
+  Symbol* p_NO_DESTROYED = Symbol::get(mlr::String("no-destroyed"));
   if (p_NO_DESTROYED_TABLE != NULL  &&  p_ON_TABLE != NULL) {
     uintA empty;
     Literal* pi_no_destroyed_table = Literal::get(p_NO_DESTROYED_TABLE, empty, 1.);
@@ -1196,10 +1196,10 @@ bool LiteralListReward::possible(const SymbolicState& state) const {
   }
   
   // Triangle-tireworld domain
-  Symbol* p_VEHICLE_AT = Symbol::get(MT::String("vehicle-at"));
-  Symbol* p_SPARE_IN = Symbol::get(MT::String("spare-in"));
-  Symbol* p_NOT_FLATTIRE = Symbol::get(MT::String("not-flattire"));
-  Symbol* p_HASSPARE = Symbol::get(MT::String("hasspare"));
+  Symbol* p_VEHICLE_AT = Symbol::get(mlr::String("vehicle-at"));
+  Symbol* p_SPARE_IN = Symbol::get(mlr::String("spare-in"));
+  Symbol* p_NOT_FLATTIRE = Symbol::get(mlr::String("not-flattire"));
+  Symbol* p_HASSPARE = Symbol::get(mlr::String("hasspare"));
   if (p_VEHICLE_AT != NULL  &&  p_NOT_FLATTIRE != NULL) {
     uintA empty;
     Literal* pi_not_flattire = Literal::get(p_NOT_FLATTIRE, empty, 1.);
@@ -1414,7 +1414,7 @@ bool DisjunctionReward::satisfied(const SymbolicState& state) const {
 
 bool DisjunctionReward::possible(const SymbolicState& state) const {
   // TODO This is domain knowledge!
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
+  Symbol* p_OUT = Symbol::get(mlr::String("out"));
   uint i, k;
   if (p_OUT != NULL) {
     FOR1D(lits, k) {

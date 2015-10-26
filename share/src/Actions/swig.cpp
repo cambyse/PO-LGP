@@ -3,26 +3,24 @@
 #include <FOL/fol.h>
 #include <Ors/ors.h>
 #include "TaskControllerModule.h"
+#include "ActivitySpinnerModule.h"
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
 #include <pr2/rosalvar.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <pr2/rosutil.h>
+#include <pr2/roscom.h>
 #include <Gui/opengl.h>
+#include <csignal>
 
 void openGlLock();
 void openGlUnlock();
 
-//void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
-//void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
-
 struct OrsViewer:Module{
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESSlisten(ors::KinematicWorld, modelWorld)
 
   ors::KinematicWorld copy;
 
-  OrsViewer(ModuleL& S=NoModuleL):Module("OrsViewer", S, listenFirst) {
+  OrsViewer():Module("OrsViewer") {
   }
   void open(){
     LOG(-1) <<"HERE"<< endl;
@@ -32,15 +30,15 @@ struct OrsViewer:Module{
     copy = modelWorld.get();
     openGlUnlock();
     copy.gl().update(NULL, false, false, true);//watch(false);
-    MT::wait(.03);
+    mlr::wait(.03);
   }
   void close(){}
 };
 
 struct PerceptionObjects2Ors : Module{
-  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESS(ors::KinematicWorld, modelWorld)
-  PerceptionObjects2Ors(ModuleL& S=NoModuleL): Module("PerceptionObjects2Ors", S, listenFirst){
+  ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
+  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){
   }
   void open(){}
   void step(){
@@ -48,7 +46,7 @@ struct PerceptionObjects2Ors : Module{
     modelWorld.readAccess();
 
     for(visualization_msgs::Marker& marker : perceptionObjects().markers){
-      MT::String name;
+      mlr::String name;
       name <<"obj" <<marker.id;
       ors::Shape *s = modelWorld->getShapeByName(name);
       if(!s){
@@ -71,57 +69,77 @@ struct PerceptionObjects2Ors : Module{
   void close(){}
 };
 
-#ifdef MT_ROS
-ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom);
-ROSSUB("/tabletop/clusters", visualization_msgs::MarkerArray, perceptionObjects);
-#endif
-
 // ============================================================================
-struct SwigSystem : System{
-  ACCESS(bool, quitSignal)
-  ACCESS(bool, fixBase)
-  ACCESS(RelationalMachine, RM)
-  ACCESS(MT::String, effects)
-  ACCESS(MT::String, state)
-  ACCESS(ors::KinematicWorld, modelWorld)
-  ACCESS(AlvarMarker, ar_pose_markers)
-  ACCESS(visualization_msgs::MarkerArray, perceptionObjects)
+struct SwigSystem* _g_swig;
+
+struct SwigSystem {
+  ACCESSname(ActivityL, A)
+  ACCESSname(bool, quitSignal)
+  ACCESSname(bool, fixBase)
+  ACCESSname(RelationalMachine, RM)
+  ACCESSname(mlr::String, effects)
+  ACCESSname(mlr::String, state)
+  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(AlvarMarker, ar_pose_markers)
+  ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSname(arr, pr2_odom)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
+
+  ACCESSname(int, stopWaiting);
+  ACCESSname(int, waiters);
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
 //  OrsViewer orsviewer;
+  ActivitySpinnerModule aspin;
+  GamepadInterface gamepad;
 
   Log _log;
 
-  SwigSystem(): tcm(*this), rmm(*this), /*orsviewer(*this),*/ _log("SwigSystem"){
+  SwigSystem(): _log("SwigSystem"){
 
-//    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
-//    modelWorld.linkToVariable(tcm.modelWorld.v);
-//    orsviewer.modelWorld.linkToVariable(tcm.modelWorld.v);
+//    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
 
-    addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);
-
-    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-
-    if(MT::getParameter<bool>("useRos",false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
-      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
-      addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
+    if(mlr::getParameter<bool>("useRos",false)){
+      rosCheckInit("SwigSystem");
+      new RosCom_Spinner();
+      //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
+      //addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+      new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+      new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
+      new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
     }
-    connect();
+
     // make the base movable by default
-    fixBase.set() = MT::getParameter<bool>("fixBase", false);
+    fixBase.set() = mlr::getParameter<bool>("fixBase", false);
+
+    stopWaiting.set() = 0;
+    waiters.set() = 0;
+
+    _g_swig = this; //MT: what is _g_swig??
+
+    cout <<"SYSTEM=" <<registry() <<endl;
   }
 };
 
 
+void signal_catch(int signal) {
+  cout << "Waiters: " <<_g_swig->waiters.get() << endl;
+  _g_swig->stopWaiting.set() = _g_swig->waiters.get();
+  _g_swig->effects.set()() << "stop, ";
+  _g_swig->effects.set()() << "stop!, ";
+  cout << "Ctrl-C pressed, try to stop all facts." << endl;
+  raise(SIGABRT);
+}
 // ============================================================================
-MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
-  MT::String str;
+
+mlr::String lits2str(const stringV& literals, const dict& parameters=dict()){
+  mlr::String str;
   str <<'(';
   for(auto& i:literals) str <<' ' <<i;
   str <<')';
@@ -135,25 +153,29 @@ MT::String lits2str(const stringV& literals, const dict& parameters=dict()){
 
 // ============================================================================
 // ActionSwigInterface
+
 ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
   S->tcm.verbose=false;
-  engine().open(*S, true);
+
+  signal(SIGINT, signal_catch); //overwrite signal handler
+
+  threadOpenModules(true);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
   createNewSymbol("timeout");
   createNewSymbol("go");
-//  new CoreTasks(*s->activity.machine);
 
-  S->LOG(1) <<"Registered Activities=" <<activityRegistry();
-  for(Node *n:activityRegistry()){
-    S->LOG(1) <<"adding symbol for " <<n->keys(0);
-    createNewSymbol(n->keys(0).p);
+  S->LOG(1) <<"Activity Symbols:";
+  NodeL acts = registry().getNodes("Activity");
+  for(Node *n:acts){
+    S->LOG(1) <<"  adding symbol for " <<n->keys(0);
+    createNewSymbol(n->keys.last().p);
   }
   S->LOG(1) <<"Shape Symbols:";
   S->modelWorld.writeAccess();
   for(ors::Shape *sh:S->modelWorld().shapes){
-    S->LOG(1) <<"adding symbol for Shape " <<sh->name;
+    S->LOG(1) <<"  adding symbol for Shape " <<sh->name;
     createNewSymbol(sh->name.p);
   }
   S->modelWorld.deAccess();
@@ -161,9 +183,16 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
 
 
 ActionSwigInterface::~ActionSwigInterface(){
-  engine().close(*S);
+  threadCloseModules();
 }
 
+void ActionSwigInterface::setVerbose(bool verbose) {
+  S->tcm.verbose = verbose;
+}
+
+void ActionSwigInterface::setFixBase(bool base) {
+  S->fixBase.set() = base;
+}
 
 void ActionSwigInterface::Cancel(){
   //engine().cancel(*S);
@@ -213,6 +242,7 @@ stringV ActionSwigInterface::getJointList(){
   return strs;
 }
 
+
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
   S->modelWorld.readAccess();
@@ -220,6 +250,10 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
   D["name"]= bodyName;
   D["type"] = std::to_string(body->type);
   D["Q"] =  STRING('[' <<body->X.rot<<']');
+  D["X"] = STRING('[' <<body->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<body->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<body->X.rot.getZ()<< ']');
+
   D["pos"] = STRING('[' <<body->X.pos<<']');
   S->modelWorld.deAccess();
   return D;
@@ -232,7 +266,19 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
+  D["X"] = STRING('[' <<joint->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<joint->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<joint->X.rot.getZ()<< ']');
   D["pos"] = STRING('[' <<joint->X.pos<<']');
+
+  arr q;
+  S->modelWorld().getJointState(q);
+  arr qj(joint->qDim());
+  for (uint i=0;i<joint->qDim();i++) {
+     qj(i) = q(joint->qIndex+i);
+  }
+  D["q"] = STRING(qj);
+  D["axis"] = STRING('[' << joint->axis << ']');
   S->modelWorld.deAccess();
   return D;
 }
@@ -244,11 +290,33 @@ dict ActionSwigInterface::getShapeByName(std::string shapeName){
   D["name"]= shapeName;
   D["type"] = std::to_string(shape->type);
   D["Q"] =  STRING('[' <<shape->X.rot<<']');
+  D["X"] = STRING('[' <<shape->X.rot.getX()<< ']');
+  D["Y"] = STRING('[' <<shape->X.rot.getY()<< ']');
+  D["Z"] = STRING('[' <<shape->X.rot.getZ()<< ']');
+  D["phi"] = STRING('[' <<shape->X.rot.getX().phi()<< ']');
+  D["theta"] = STRING('[' <<shape->X.rot.getX().theta()<< ']');
+
   D["pos"] = STRING('[' <<shape->X.pos<<']');
   S->modelWorld.deAccess();
   return D;
 }
 
+
+doubleV ActionSwigInterface::getQ() {
+  arr q = S->modelWorld.get()->getJointState();
+  return conv_arr2stdvec(q);
+}
+
+doubleV ActionSwigInterface::getV() {
+  arr q, qdot;
+  S->modelWorld.get()->getJointState(q, qdot);
+  return conv_arr2stdvec(qdot);
+}
+
+double ActionSwigInterface::getQDim() {
+  int qdim = S->modelWorld.get()->getJointStateDimension();
+  return qdim;
+}
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
   Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
@@ -304,57 +372,80 @@ void ActionSwigInterface::stopActivity(const stringV& literals){
 }
 
 void ActionSwigInterface::waitForCondition(const stringV& literals){
+  S->waiters.set()++;
   for(;;){
-    if(isTrue(literals)) return;
-    S->state.waitForNextRevision();
-  }
-}
-
-void ActionSwigInterface::waitForCondition(const char* query){
-  for(;;){
-    if(S->RM.get()->queryCondition(query)) return;
-    S->state.waitForNextRevision();
-  }
-}
-
-int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
-  for(;;){
-    for(unsigned i=0; i < literals.size(); i++){
-      if(isTrue(literals[i])) return i;
+    if(isTrue(literals)) {
+      S->waiters.set()--;
+      return;
+    } 
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
     }
     S->state.waitForNextRevision();
   }
-
+  // this->stopFact(literals);
 }
-//void ActionSwigInterface::startActivity(intV literal, const dict& parameters){
-//#if 1
-//  startActivity(lit2str(literal), parameters);
-//#else
-//  S->RM.writeAccess();
-//  for(auto i:literal) parents.append(S->RM().elem(i));
-//  state.append<bool>({}, parents, NULL, false);
-//  S->RM.deAccess();
-//#endif
-//}
 
-//void ActionSwigInterface::waitForCondition(intV literals){
-//#if 1
-//  waitForCondition(lit2str(literals));
-//#else
-//  S->RM.readAccess();
-//  for(auto i:literal) lit.append(S->RM().elem(i));
-//  S->RM.deAccess();
+void ActionSwigInterface::waitForCondition(const char* query){
+  S->waiters.set()++;
+  for(;;){
+    if(S->RM.get()->queryCondition(query)){
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(query);
+}
 
-//  bool cont = true;
-//  while (cont) {
-//    S->RM.waitForNextRevision();
-//    S->RM.readAccess();
-//    Item *it = getEqualFactInKB(state, lit);
-//    if(it) cont=false;
-//    S->RM.deAccess();
-//  }
-//#endif
-//}
+int ActionSwigInterface::waitForOrCondition(const std::vector<stringV> literals){
+  S->waiters.set()++;
+  for(;;){
+    for(unsigned i=0; i < literals.size(); i++){
+      if(isTrue(literals[i])) {
+        S->waiters.set()--;
+        return i;
+      }
+      if(S->stopWaiting.get() > 0) {
+        S->stopWaiting.set()--;
+        S->waiters.set()--;
+        return -1;   
+      }
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(literals);
+}
+
+void ActionSwigInterface::waitForAllCondition(const stringV queries){
+  S->waiters.set()++;
+  for(;;){
+    bool allTrue = true;
+    for(unsigned i=0; i < queries.size(); i++){
+      if(not S->RM.get()->queryCondition(mlr::String(queries[i]))) {
+        allTrue = false;
+      }
+    }
+    if(allTrue) {
+      S->waiters.set()--;
+      return;  
+    }
+    if(S->stopWaiting.get() > 0) {
+      S->stopWaiting.set()--;
+      S->waiters.set()--;
+      return;
+    }
+    S->state.waitForNextRevision();
+  }
+  // this->stopFact(literals);
+}
 
 void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));
@@ -383,7 +474,7 @@ stringV ActionSwigInterface::getSymbols() {
 
 int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName, const stringV& parentSymbols, const dict& parameters){
 #if 1
-  MT::String str;
+  mlr::String str;
   str <<symbolName.c_str() <<lits2str(parentSymbols, parameters);
   Node *symbol = S->RM.set()->declareNewSymbol(str);
 #else
@@ -399,6 +490,12 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 #endif
   return symbol->index;
 }
+
+int ActionSwigInterface::getQIndex(std::string jointName) {
+  return S->tcm.modelWorld.get()->getJointByName(mlr::String(jointName))->qIndex;
+}
+
+Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;

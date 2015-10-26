@@ -12,8 +12,8 @@
 struct MySystem : System{
   ACCESS(bool, quitSignal)
   ACCESS(RelationalMachine, RM)
-  ACCESS(MT::String, effects)
-  ACCESS(MT::String, state)
+  ACCESS(mlr::String, effects)
+  ACCESS(mlr::String, state)
   ACCESS(ors::KinematicWorld, modelWorld)
 
   TaskControllerModule *tcm;
@@ -24,7 +24,7 @@ struct MySystem : System{
     addModule<RelationalMachineModule>(NULL, Module::listenFirst);
 
     addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos",false)){
+    if(mlr::getParameter<bool>("useRos",false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
 //      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);

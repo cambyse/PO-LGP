@@ -12,10 +12,10 @@ const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hrate 1e-0";
 void testRobotSystem(bool testFeedbackControl=false){
   OpenGL gl;
   
-  double D=MT::getParameter<double>("time_duration",4.);
-  uint T=MT::getParameter<uint>("time_steps",200);
+  double D=mlr::getParameter<double>("time_duration",4.);
+  uint T=mlr::getParameter<uint>("time_steps",200);
   soc::SocSystem_Ors sys;
-  sys.initBasics(NULL, NULL, &gl, T, D, MT::getParameter<bool>("dynamic",false), NULL);
+  sys.initBasics(NULL, NULL, &gl, T, D, mlr::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
@@ -75,7 +75,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   conv_VectorChainFunction P2(sys);
 #if 0
   x=x0;
-  for(uint t=0;t<=T;t++)  sys.testGradientsInCurrentState(x[t], t);  MT::wait();
+  for(uint t=0;t<=T;t++)  sys.testGradientsInCurrentState(x[t], t);  mlr::wait();
   checkJacobian((VectorFunction&)P2, x, 1e-4);
   //return 0;
 #endif
@@ -116,7 +116,7 @@ void testRobotSystem(bool testFeedbackControl=false){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   cout <<USAGE <<endl;
 
   testRobotSystem();

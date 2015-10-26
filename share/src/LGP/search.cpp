@@ -5,7 +5,7 @@
 
 
 void runMonteCarlo(Graph& G){
-//  MT::rnd.seed(3);
+//  mlr::rnd.seed(3);
   uint verbose=0;
 
   G.checkConsistency();
@@ -26,7 +26,7 @@ void runMonteCarlo(Graph& G){
 
     {
       //-- get all possible decisions
-      MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
+      mlr::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
       for(Node* rule:rules){
         //      cout <<"*** RULE: " <<*rule <<endl;
         //      cout <<  "Substitutions:" <<endl;
@@ -46,7 +46,7 @@ void runMonteCarlo(Graph& G){
         return;
       }else{
         //-- pick a random decision
-        uint deci = MT::rnd(decisions.N);
+        uint deci = mlr::rnd(decisions.N);
         std::pair<Node*, NodeL>& d = decisions(deci);
         if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 

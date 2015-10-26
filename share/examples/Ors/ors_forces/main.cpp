@@ -24,7 +24,7 @@ void move_robot(ors::KinematicWorld& G, int time) {
     //b->X.pos.y += dir * .01;
 }
 void TEST(OrsPhysx) {
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   OpenGL glPh;
 
   glPh.add(glStandardScene, NULL);
@@ -44,7 +44,7 @@ void TEST(OrsPhysx) {
 }
 
 int MAIN(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testOrsPhysx();
 
   return 0;

@@ -293,7 +293,7 @@ ConstraintForceTask *pd_c ;
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -304,7 +304,7 @@ ConstraintForceTask *pd_c ;
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 
 
@@ -317,9 +317,9 @@ ConstraintForceTask *pd_c ;
 /// \return
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   uint T = 200; //time horizon
   ors::Body *table = world.getBodyByName("table");
   double tableW = table->shapes(0)->size[1];
@@ -331,7 +331,7 @@ int main(int argc,char** argv){
   z = table->X.pos.z;
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
 
   //OpenGL gl;

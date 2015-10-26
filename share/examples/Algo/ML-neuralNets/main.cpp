@@ -6,8 +6,8 @@ struct NeuralNet{
   uintA h; ///< # of neurons in each layer, including output layer
   double lambda; ///< regularization
 
-  MT::Array<arr> w;
-  MT::Array<arr> g;
+  mlr::Array<arr> w;
+  mlr::Array<arr> g;
   double Error;
   uint missClass;
 
@@ -29,7 +29,7 @@ struct NeuralNet{
     CHECK(X_input.d1==h(0),"");
 
     //forward
-    MT::Array<arr> x(h.N);
+    mlr::Array<arr> x(h.N);
     x(0) = ~X_input;
     for(uint l=1;l<h.N-1;l++) x(l) = sigm( w(l-1)*x(l-1) );
     x(h.N-1) = w(h.N-2)*x(h.N-2);
@@ -55,7 +55,7 @@ struct NeuralNet{
       }
 
       //backward & gradient
-      MT::Array<arr> del(h.N);
+      mlr::Array<arr> del(h.N);
       del.last() = dE % y_target;
       for(uint l=h.N-1;l--;)     del(l) = (del(l+1)*w(l)) % ~(x(l) % (1.-x(l)));
       for(uint l=0;l<h.N-1;l++)  g(l) += ~(x(l) * del(l+1));
@@ -149,7 +149,7 @@ void TEST(NN) {
 //===========================================================================
 
 int main(int argc, char *argv[]) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testNN();
   

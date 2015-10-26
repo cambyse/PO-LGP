@@ -7,14 +7,14 @@ LIBS   += -lrt
 #OPTIM  = fast_debug
 OPTIM  = debug
 
-CXXFLAGS += -DMT_ORS_ONLY_BASICS -DMT_GLOBALMEM -DMT_NO_THREADS
+CXXFLAGS += -DMLR_ORS_ONLY_BASICS -DMLR_GLOBALMEM -DMLR_NO_THREADS
 
 FREEGLUT = 1
 ANN = 1
 LAPACK = 1
 #NO_BLAS = 1
 
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
+CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 
 OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS := $(OBJS:%.cpp=%.o)

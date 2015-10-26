@@ -441,7 +441,7 @@ Rule* Rule::read(ifstream& in) {
   CHECK(in.is_open(), "Input stream ain't open!");
   Rule* r = new Rule;
   
-  MT::String line, untrimmed_line;
+  mlr::String line, untrimmed_line;
   
   // Action
   line.read(in, NULL, "\n"); // ACTION:
@@ -469,10 +469,10 @@ Rule* Rule::read(ifstream& in) {
   if (DEBUG>0) {cout<<"Reading the outcomes:"<<endl;}
   line.read(in, NULL, "\n"); // OUTCOMES:
   CHECK((line(0)=='O' && line(1)=='U'),"bad outcomes:  "<<line);   CHECK(line.N < 11, "bad outcomes due to length");
-  MT::Array< LitL > outcomes;
+  mlr::Array< LitL > outcomes;
   bool noise_outcome_has_been_read = false;
-  while ( MT::peerNextChar(in) != ' '  &&  MT::peerNextChar(in) != 'P'  &&   MT::peerNextChar(in) != 'C'
-                                       &&  MT::peerNextChar(in) != 'R'&&  MT::peerNextChar(in) != 'A') {
+  while ( mlr::peerNextChar(in) != ' '  &&  mlr::peerNextChar(in) != 'P'  &&   mlr::peerNextChar(in) != 'C'
+                                       &&  mlr::peerNextChar(in) != 'R'&&  mlr::peerNextChar(in) != 'A') {
     line.read(in, NULL, "\n");
     if (DEBUG>1) PRINT(line);
     if (line.N<2) {
@@ -483,9 +483,9 @@ Rule* Rule::read(ifstream& in) {
     double prob;
     line >> prob;
     r->probs.append(prob);
-    MT::skip(line);
+    mlr::skip(line);
     LitL outcome;
-    MT::String rest_line;
+    mlr::String rest_line;
     rest_line.read(line);
     if (rest_line(0)=='<' && rest_line(3)=='i') {  // <noise> 
       noise_outcome_has_been_read = true;
@@ -497,18 +497,18 @@ Rule* Rule::read(ifstream& in) {
     else  // if neither noise outcome nor no-change
       Literal::get(outcome, rest_line);
     r->outcomes.append(outcome);
-    if (MT::skip(in) == -1)
+    if (mlr::skip(in) == -1)
       break;
     //  mglw. noch reward fuers outcome einlesen
-    if (MT::peerNextChar(in) == 'R') {
+    if (mlr::peerNextChar(in) == 'R') {
       while (r->outcome_rewards.N < r->outcomes.N-1) {  // possibly fill for previous unrewarded outcomes
         r->outcome_rewards.append(0.);
       }
-      MT::skipUntil(in, " ");
+      mlr::skipUntil(in, " ");
       double outcome_reward;
       in >> outcome_reward;
       r->outcome_rewards.append(outcome_reward);
-      if (MT::skip(in) == -1)
+      if (mlr::skip(in) == -1)
         break;
     }
   }
@@ -538,7 +538,7 @@ Rule* Rule::read(ifstream& in) {
 Rule* Rule::generateDefaultRule(double noiseProb, double minProb, double change) {
   Rule* newDefaultRule = new Rule;
   uintA args_empty;
-  newDefaultRule->action = Literal::get(Symbol::get(MT::String("default")), args_empty, 1.);
+  newDefaultRule->action = Literal::get(Symbol::get(mlr::String("default")), args_empty, 1.);
   LitL sameOutcome;
   newDefaultRule->outcomes.append(sameOutcome);
   LitL noiseOutcome;
@@ -637,7 +637,7 @@ RuleSet& RuleSet::operator=(const RuleSet& rs) {
 
 
 void RuleSet::sort() {
-  MT::Array< Rule* > ra_sorted;
+  mlr::Array< Rule* > ra_sorted;
   uint i, k;
   // default rule to the beginning!
   FOR1D(ra, i) {
@@ -671,7 +671,7 @@ void RuleSet::sort_using_args() {
   Symbol::get_action(symbols_action);
   
   if (max_arity <= 2) {
-    MT::Array< Rule* > ra_sorted;
+    mlr::Array< Rule* > ra_sorted;
     uintA action_ids;
     uint r, i;
     uint id;
@@ -702,7 +702,7 @@ void RuleSet::sort_using_args() {
     }
     
     // DEFAULT RULE always first rule
-    int action_idx = symbols_action.findValue(Symbol::get(MT::String("default")));
+    int action_idx = symbols_action.findValue(Symbol::get(mlr::String("default")));
     uint DEFAULT_ACTION_ID = action_idx * 100;
     action_ids.insert(0, DEFAULT_ACTION_ID);
     
@@ -731,7 +731,7 @@ void RuleSet::sort_using_args() {
   else {
     relational::write(*this, "ground_rules.dat.unsorted_backup");
     
-    MT::Array< Rule* > ra_sorted;
+    mlr::Array< Rule* > ra_sorted;
     ra_sorted.memMove = true;
     uint r, r2, d;
     FOR1D(this->ra, r) {
@@ -899,7 +899,7 @@ void RuleSet::read(const char* filename, RuleSet& rules) {
   }
   
   // read other rules
-  while (MT::skip(in) != -1) {
+  while (mlr::skip(in) != -1) {
     rules.append(Rule::read(in));
     if (DEBUG>0) {rules.elem(rules.num()-1)->write();}
   }
@@ -925,12 +925,12 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
     calcDeicticRefs(*r_abs, drefs, inNegatedLiteralsOnly);
     if (inNegatedLiteralsOnly.findValue(true) >= 0) {HALT("disallow negated free DRs");}
     setMinus(args, drefs);
-    MT::Array< uintA > combos_args;
+    mlr::Array< uintA > combos_args;
     TL::allPermutations(combos_args, constants, args.N, true, true);
     FOR1D(combos_args, c1) {
       uintA dref_constants = constants;
       setMinus(dref_constants, combos_args(c1));
-      MT::Array< uintA > combos_drefs;
+      mlr::Array< uintA > combos_drefs;
       TL::allPermutations(combos_drefs, dref_constants, drefs.N, true, true);
       FOR1D(combos_drefs, c2) {
         Substitution sub;
@@ -973,7 +973,7 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
       PRINT(drefs_pos);
       PRINT(constants);
     }
-    MT::Array< uintA > combos_args;
+    mlr::Array< uintA > combos_args;
     TL::allPermutations(combos_args, constants, args.N, false, true);
     if (drefs_pos.N > 0) {
       changingDR = drefs_pos(0);
@@ -1021,7 +1021,7 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
       
       uintA dref_constants = constants;
       setMinus(dref_constants, combos_args(c1));
-      MT::Array< uintA > combos_drefs;
+      mlr::Array< uintA > combos_drefs;
       TL::allPermutations(combos_drefs, dref_constants, drefs_pos.N, true, true);
       if (DEBUG>0) PRINT(combos_drefs);
       Rule* r_last = NULL;
@@ -1130,7 +1130,7 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
   LitL nonchanging_lits;
   FOR1D(nonchanging_symbols, i) {
     Symbol* s = nonchanging_symbols(i);
-    MT::Array< uintA > combos;
+    mlr::Array< uintA > combos;
     TL::allPermutations(combos, constants, s->arity, true, true);
     FOR1D(combos, k) {
       if (s->range_type == Symbol::binary) {
@@ -1241,7 +1241,7 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
       cout<<endl;
     }
     
-    MT::Array< uintA > combos_args;
+    mlr::Array< uintA > combos_args;
 //     TL::allPermutations(combos_args, constants, args.N, true, true);
     TL::allPermutations(combos_args, constants, args.N, false, true);
 
@@ -1272,7 +1272,7 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
       
       uintA dref_constants = constants;
       setMinus(dref_constants, combos_args(c1)); // Assumption: DRef different from arguments -- but not necessarily in rule-learning!
-      MT::Array< uintA > combos_drefs;
+      mlr::Array< uintA > combos_drefs;
       TL::allPermutations(combos_drefs, dref_constants, drefs_pos.N, true, true);
       if (DEBUG>2) {cout<<"------- News action args -------"<<endl; PRINT(combos_args);  PRINT(combos_drefs);}
       valid_action_args = true;
@@ -1486,7 +1486,7 @@ void RuleSet::groundFunctionVars(const RuleSet& rules, RuleSet& rules_expanded) 
           }
           //now ground the outcomes
           FOR1D(rule->outcomes, x) {
-            MT::Array<Literal*> newOutcome;
+            mlr::Array<Literal*> newOutcome;
             FOR1D(rule->outcomes(x), y) {
               if (rule->outcomes(x)(y)->s == rule->context(i)->s && rule->outcomes(x)(y)->args == rule->context(i)->args && rule->outcomes(x)(y)->comparison_type == Literal::comparison_offset) {
                 double finalValue = bound + rule->outcomes(x)(y)->value;

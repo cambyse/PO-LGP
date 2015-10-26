@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <signal.h>
 #include <MT/ors.h>
@@ -37,7 +37,7 @@ struct SimpleTrack{
 	arr x,P;//x,p |tt
 
 	void Init(){
-		MT::getParameter(Smooth,"Smooth");
+		mlr::getParameter(Smooth,"Smooth");
 		R1 = arr(6,6);R1.setDiag(0.02);
 		for(uint i = 0; i < 3; i++){
 			R1(i,i+3) = 0.01;//smaller value for better pos
@@ -191,8 +191,8 @@ struct ReceedingHorizon:public StepThread{
 		/*obj->cont=true;  sys->swift->initActivations(*sys->ors);*/
 		TaskVariable *V;
 		double midPrec,endPrec;
-		MT::getParameter(midPrec,"reachPlanMidPrec");
-		MT::getParameter(endPrec,"reachPlanEndPrec");
+		mlr::getParameter(midPrec,"reachPlanMidPrec");
+		mlr::getParameter(endPrec,"reachPlanEndPrec");
 		arr xtarget;
 		xtarget.setCarray(obj->X.p.v,3);
 		V=listGetByName(sys->vars,"posNew");
@@ -200,9 +200,9 @@ struct ReceedingHorizon:public StepThread{
 		V->y_target = xtarget;
 		V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
 
-		V=listGetByName(sys->vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
-		V=listGetByName(sys->vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
-		V=listGetByName(sys->vars,"qlinear");    V->v=0.;  V->v_target=0.;  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,MT::getParameter<double>("reachPlanEndVelPrec"),MT::getParameter<double>("reachPlanEndVelPrec"));
+		V=listGetByName(sys->vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,mlr::getParameter<double>("reachPlanColPrec"),0.);
+		V=listGetByName(sys->vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,mlr::getParameter<double>("reachPlanLimPrec"),0.);
+		V=listGetByName(sys->vars,"qlinear");    V->v=0.;  V->v_target=0.;  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,mlr::getParameter<double>("reachPlanEndVelPrec"),mlr::getParameter<double>("reachPlanEndVelPrec"));
 	}
 
 };
@@ -252,7 +252,7 @@ ors::Vector RHV::CameraLocation(const arr & p){
 void RHV::init(RobotProcessGroup *robot){
 	cout << "init TV_q = "<<TV_q->y << endl;
 	cout << "init TV_x->x="<<TV_eff->y << endl;
-	MT::IOraw = true;
+	mlr::IOraw = true;
 	started_track = false;
 
 	arr p2;
@@ -308,7 +308,7 @@ void RHV::initTaskVariables(ControllerModule *ctrl){
 }
 
 void RHV::findObstacle(RobotProcessGroup *robot){
-	double time = MT::realTime();
+	double time = mlr::realTime();
 	if(visStep != robot->evis.steps && robot->evis.hsvCenters.N){//should manuallz remove 0 observations vision.min = 0
 		visStep = robot->evis.steps;
 		arr vision1(4),vision2(4);
@@ -371,7 +371,7 @@ void RHV::updateTaskVariables(ControllerModule *ctrl){
 			cout <<"bwdMsg#"<<recho.bwdMsg_count <<flush;
 			recho.bwdMsg_count++;
 		}else{
-			MT_MSG("no bwd message!");
+			MLR_MSG("no bwd message!");
 		}
 	}
 	else {
@@ -388,8 +388,8 @@ void RHV::updateTaskVariables(ControllerModule *ctrl){
 
 
 int main(int argc,char** argv){
-	MT::IOraw = true;
-	MT::initCmdLine(argc,argv);
+	mlr::IOraw = true;
+	mlr::initCmdLine(argc,argv);
 	signal(SIGINT,RobotProcessGroup::signalStopCallback);
 	RobotProcessGroup robot;
 	RHV demo;
@@ -406,7 +406,7 @@ int main(int argc,char** argv){
 	demo.future = robot.gui.ors->getBodyByName("obstacleF");
 	demo.init(&robot);
 
-	arr atarget; MT::getParameter(atarget,"target");
+	arr atarget; mlr::getParameter(atarget,"target");
 	demo.target = robot.gui.ors->getBodyByName("target");
 	demo.target->X.p =  ors::Vector(atarget(0),atarget(1),atarget(2));
 	robot.ctrl.ors.getBodyByName("target")->X.p = demo.target->X.p ;//planenr thread uses this actually, not GL body !!!

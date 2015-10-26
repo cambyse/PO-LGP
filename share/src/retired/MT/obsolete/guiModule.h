@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_guiModule_h
-#define MT_guiModule_h
+#ifndef MLR_guiModule_h
+#define MLR_guiModule_h
 
 #include <Core/array.h>
 #include <System/biros.h>
@@ -44,7 +44,7 @@ struct GuiModule:public Process {
   //arr q_trajectory, q_external; // a trajectory to display
   //bool dispTrajectory;
   //int dispSteps;
-  MT::Array<arr> linesToDisplay;
+  mlr::Array<arr> linesToDisplay;
   
   //OUTPUT (none)
   RWLock processLock;
@@ -67,7 +67,7 @@ struct GuiModule:public Process {
 };
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "guiModule.cpp"
 #endif
 

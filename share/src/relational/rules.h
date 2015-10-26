@@ -46,7 +46,7 @@ struct Rule {
   Literal* action;
   LitL context;
   // Important convenience for "outcomes" and "probs": the last outcome is the noise outcome.
-  MT::Array< LitL > outcomes;
+  mlr::Array< LitL > outcomes;
   doubleA probs;
   double noise_changes; // PRADA's noise outcome heuristic: average number of state properties that have changed in case of the noise outcome
   arr outcome_rewards; // optional
@@ -104,7 +104,7 @@ struct Rule {
  ************************************************/
 
 class RuleSet {
-  MT::Array< Rule* > ra;
+  mlr::Array< Rule* > ra;
   
   public:
     RuleSet();
@@ -189,7 +189,7 @@ class Substitution {
  ************************************************/
 
 class SubstitutionSet {
-  MT::Array< Substitution* > sa;
+  mlr::Array< Substitution* > sa;
 
 public:
   SubstitutionSet();

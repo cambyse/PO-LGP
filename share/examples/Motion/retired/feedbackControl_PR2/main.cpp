@@ -129,8 +129,8 @@ void executeTrajectoryWholeBody(String scene){
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  arr Rgoal = ARRAY(P.world.getBodyByName("RgoalRef")->X.pos);
-  arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
+  arr Rgoal = conv_vec2arr(P.world.getBodyByName("RgoalRef")->X.pos);
+  arr Lgoal = conv_vec2arr(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -211,8 +211,8 @@ void executeTrajectoryWholeBody(String scene){
   arr dirR = {0.,0.,-1.};
   arr dirL = {0.,0.,0.};
 
-  MObject goalMO_R(&world, MT::String("Rgoal"), MObject::GOAL , 0.0005, dirL);
-  MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
+  MObject goalMO_R(&world, mlr::String("Rgoal"), MObject::GOAL , 0.0005, dirL);
+  MObject goalMO_L(&world, mlr::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
   CtrlTask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
@@ -272,7 +272,7 @@ void executeTrajectoryWholeBody(String scene){
   while (((world.getShapeByName("endeffR")->X.pos - goalMO_R.position).length() > goalAccuracy) && t < maxDuration && sum(ct_bk)<50.) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
-      MT::timerStart(true);
+      mlr::timerStart(true);
       // Get current task state
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL"));
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL"));
@@ -307,7 +307,7 @@ void executeTrajectoryWholeBody(String scene){
       des_dir = yNext;
       world.watch(false, STRING(t));
 #endif
-      ct_bk.append(MT::timerRead());
+      ct_bk.append(mlr::timerRead());
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
@@ -369,7 +369,7 @@ void executeTrajectoryRightArm(String scene){
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr Rgoal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
@@ -436,7 +436,7 @@ void executeTrajectoryRightArm(String scene){
   arr dirR = {0.,0.,-1.};
   arr dirL = {0.,0.,0.};
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
+  MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dirL);
 
   FeedbackMotionControl MP(world, false);
   CtrlTask *taskPosR, *taskVecR, *qitself;
@@ -491,7 +491,7 @@ void executeTrajectoryRightArm(String scene){
   while (((world.getShapeByName("endeffR")->X.pos - goalMO.position).length() > goalAccuracy) && t < maxDuration*2. && sum(ct_bk)<50.) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
-      MT::timerStart(true);
+      mlr::timerStart(true);
       // Get current task state
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
@@ -520,7 +520,7 @@ void executeTrajectoryRightArm(String scene){
       des_dir = yNext;
       world.watch(false, STRING(t));
 #endif
-      ct_bk.append(MT::timerRead());
+      ct_bk.append(mlr::timerRead());
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
@@ -559,22 +559,22 @@ void executeTrajectoryRightArm(String scene){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //-------------// Init Evaluation Parameters //-------------//
   // distance between robot and endeffector when movement is stopped
-  goalAccuracy = MT::getParameter<double>("goalAccuracy");
+  goalAccuracy = mlr::getParameter<double>("goalAccuracy");
   // folder name of evaluation result
-  evalName = MT::getParameter<String>("evalName");
+  evalName = mlr::getParameter<String>("evalName");
   //--- scene name describing robot and environment
   // the scene names is assembled by sceneName[1-numScenes]
-  sceneName = MT::getParameter<String>("sceneName");
-  numScenes = MT::getParameter<int>("numScenes");
+  sceneName = mlr::getParameter<String>("sceneName");
+  numScenes = mlr::getParameter<int>("numScenes");
   // time after which motion is stopped
-  maxDuration = MT::getParameter<double>("maxDuration");
+  maxDuration = mlr::getParameter<double>("maxDuration");
   // flag if goal should move
-  moveGoal = MT::getParameter<int>("moveGoal");
+  moveGoal = mlr::getParameter<int>("moveGoal");
   // flag if obs should move
-  moveObs = MT::getParameter<int>("moveObstacle");
+  moveObs = mlr::getParameter<int>("moveObstacle");
 
 
   // Whole Body

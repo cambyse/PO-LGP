@@ -33,9 +33,9 @@ int minimum(arr Heights)
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   uint T = 200; //time horizon
   uint numSamples = 100;
 
@@ -59,7 +59,7 @@ int main(int argc,char** argv){
   Root->Dual() = dual;
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
 
 
@@ -104,7 +104,7 @@ int main(int argc,char** argv){
 
 
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
 

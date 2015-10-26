@@ -1,5 +1,5 @@
-#ifndef MT_hardware_h
-#define MT_hardware_h
+#ifndef MLR_hardware_h
+#define MLR_hardware_h
 
 #include <System/biros.h>
 
@@ -82,7 +82,7 @@ struct SchunkSkin:public Process {
 };
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "schunk.cpp"
 #endif
 

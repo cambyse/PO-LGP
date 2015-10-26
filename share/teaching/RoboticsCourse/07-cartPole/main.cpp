@@ -13,7 +13,7 @@ struct CartPoleState{
   CartPoleState(){
     x=0.;
     x1=0.;
-    th=.2; //slighly non-upright //MT_PI; //haning down
+    th=.2; //slighly non-upright //MLR_PI; //haning down
     th1=0.;
 
     //init constants
@@ -54,7 +54,7 @@ struct CartPoleState{
 };
 
 void glDrawCartPole(void *classP){
-#ifdef MT_GL //FIXME: this should really use our GL abstraction, should it not?
+#ifdef MLR_GL //FIXME: this should really use our GL abstraction, should it not?
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
   ors::Transformation f;

@@ -9,7 +9,7 @@ void TEST(CollisionTiming){
 
   arr q0,q;
   G.getJointState(q0);
-  MT::timerStart();
+  mlr::timerStart();
   uint t;
   for(t=0;t<1000;t++){
     if(!(t%1)){ q = q0;  rndGauss(q,.1,true); }
@@ -19,7 +19,7 @@ void TEST(CollisionTiming){
 //    G.watch(false);
 //    G.watch(true);
   }
-  double time = MT::timerRead();
+  double time = mlr::timerRead();
   cout <<t <<" collision queries: sec=" <<time <<endl;
   CHECK(time>0.01 && time<1.,"strange time for collision checking!");
 }

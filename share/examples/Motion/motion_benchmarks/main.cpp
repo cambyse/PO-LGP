@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
@@ -318,7 +318,7 @@ void eight_BM(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   circle_BM();
 //  star_BM();

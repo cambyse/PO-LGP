@@ -47,8 +47,8 @@ void TEST(Usps){
   
   makeFeatures(Phi,X,X);
   //cout <<Phi <<endl;
-  logisticRegression2Class(beta, Phi, y, MT::getParameter<double>("ridge",1e-10));
-  //logisticRegressionMultiClass(beta, Phi, y, MT::getParameter<double>("ridge",1e-10));
+  logisticRegression2Class(beta, Phi, y, mlr::getParameter<double>("ridge",1e-10));
+  //logisticRegressionMultiClass(beta, Phi, y, mlr::getParameter<double>("ridge",1e-10));
 
   cout <<beta <<endl;
   
@@ -68,7 +68,7 @@ void TEST(Usps){
 
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testUsps();
   

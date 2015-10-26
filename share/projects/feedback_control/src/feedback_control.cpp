@@ -90,7 +90,7 @@ public:
 
   void init_ors(int argc, char** argv)
   {
-    MT::initCmdLine(argc,argv);
+    mlr::initCmdLine(argc,argv);
 
     init(G, gl, "../git/mlr/share/examples/Motion/pfc/model.kvg");
     makeConvexHulls(G.shapes);
@@ -105,7 +105,7 @@ public:
     c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                                {0.,0.,0.}, 1e3,
@@ -161,7 +161,7 @@ public:
       xRef = ~cat(~xRef,~xRefVec);
     }
 
-    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
+    goalMO = new MObject(&G, mlr::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
 
     x0 = xRef[0]; // TODO: READ FROM SENSORS
     cout << x0 << endl;

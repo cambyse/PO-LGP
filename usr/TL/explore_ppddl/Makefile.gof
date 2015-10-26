@@ -6,7 +6,7 @@ OPTIM = debug
 
 TOBIAS = 1
 
-CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
+CXXFLAGS += -fPIC -DMLR_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 # CXXFLAGS += -DENFORCED_SILENCE
 
 include $(BASE)/gofMake/generic.mk

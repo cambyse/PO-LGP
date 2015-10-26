@@ -4,7 +4,7 @@
 #include <Gui/opengl.h>
 
 void TEST(OrsPhysx) {
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   OpenGL glPh; 
 
   glPh.add(glStandardScene, NULL);
@@ -34,7 +34,7 @@ void TEST(OrsPhysx) {
 }
 
 int MAIN(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testOrsPhysx();
 
   return 0;

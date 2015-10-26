@@ -27,14 +27,14 @@ struct PCL_ModuleSystem:System{
   ACCESS(pcl::PointCloud<PointT>::Ptr, pcl_cloud)
 
   PCL_ModuleSystem(){
-#ifdef MT_ROS
-    if(MT::getParameter<bool>("useRos", true)){
+#ifdef MLR_ROS
+    if(mlr::getParameter<bool>("useRos", true)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
     }else{
 #endif
       addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
-#ifdef MT_ROS
+#ifdef MLR_ROS
     }
 #endif
 

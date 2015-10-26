@@ -45,9 +45,9 @@ struct Drawing{
     cairo_select_font_face(cr, "Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(cr, 13);
     cairo_move_to(cr, -10, Y((yl+yh)/2.));
-    cairo_rotate(cr, -.5*MT_PI);
+    cairo_rotate(cr, -.5*MLR_PI);
     text_center(STRING(yl<<':'<<yh));
-    cairo_rotate(cr, .5*MT_PI);
+    cairo_rotate(cr, .5*MLR_PI);
 
     cairo_move_to(cr, X((xl+xh)/2.), 10);
     text_center(STRING(xl<<':'<<xh));

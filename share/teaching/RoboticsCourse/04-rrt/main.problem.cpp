@@ -73,7 +73,7 @@ void RTTplan(){
   plotModule.colors=false;
   
   for(uint i=0;i<10000;i++){
-    rndUniform(q,-MT_2PI,MT_2PI,false);
+    rndUniform(q,-MLR_2PI,MLR_2PI,false);
     rrt.getProposalTowards(q);
     S.setJointAngles(q,false);
 

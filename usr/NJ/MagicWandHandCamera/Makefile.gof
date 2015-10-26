@@ -1,7 +1,7 @@
 BASE = ../../../share
 
 ##OPTIM = fast
-CXXFLAGS += -DMT_NO_GLOBALMEM
+CXXFLAGS += -DMLR_NO_GLOBALMEM
 
 OBJS = main.o $(BASE)/src/MT/vision_cuda.o
 

@@ -33,7 +33,7 @@ void testLinReg(const char *datafile=NULL) {
   y_grid = Phi*beta;
 
   //-- gnuplot
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   if(X.d1==1){
     FILE("z.model") <<catCol(X_grid, y_grid);
     gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
@@ -68,7 +68,7 @@ void test2Class() {
   y_grid.reshape(51,51);
   p_grid.reshape(51,51);
   
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.train") <<catCol(X, y);
   FILE("z.model") <<p_grid;
   gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
@@ -93,7 +93,7 @@ void TEST(MultiClass){
     p_pred[i]() /= sum(p_pred[i]);
     label(i) = y[i].maxIndex();
   }
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.train") <<catCol(X, label, y, p_pred);
   
   arr X_grid,p_grid;
@@ -166,7 +166,7 @@ void exercise1() {
   y_grid = Phi*beta;
 
   //save and plot
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.train") <<catCol(X, y);
   if(X.d1==1) {
     FILE("z.model") <<catCol(X_grid, y_grid);
@@ -216,12 +216,12 @@ void exercise2() {
 //===========================================================================
 
 int main(int argc, char *argv[]) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   
   system("cat USAGE");
   rnd.clockSeed();
 
-  switch(MT::getParameter<uint>("mode",1)) {
+  switch(mlr::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;
     case 2:  test2Class();  break;
     case 3:  testMultiClass();  break;

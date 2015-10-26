@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_DAI
+#ifdef MLR_DAI
 #include "infer.h"
 
 #define DAI_WITH_BP

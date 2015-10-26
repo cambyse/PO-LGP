@@ -11,7 +11,7 @@ RobotManipulationSimulator sim;
 // Init routine
 void initSimulator(const char* configurationFile, bool takeMovie) {
   sim.loadConfiguration(configurationFile);
-#ifdef MT_FREEGLUT
+#ifdef MLR_FREEGLUT
   orsDrawProxies = false;
   orsDrawJoints = false;
 #endif
@@ -31,7 +31,7 @@ void test_simple() {
   
   // -------------------------------------
   // Simulator ORS-configuration file
-  MT::String sim_file("situation_simple.ors");
+  mlr::String sim_file("situation_simple.ors");
   
   // -------------------------------------
   // Start simulator
@@ -118,7 +118,7 @@ void test_box() {
   
   // -------------------------------------
   // Simulator ORS-configuration file
-  MT::String sim_file("situation_box.ors");
+  mlr::String sim_file("situation_box.ors");
   
   // -------------------------------------
   // Start simulator

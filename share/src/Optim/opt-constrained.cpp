@@ -37,7 +37,7 @@ UnconstrainedProblemMix::UnconstrainedProblemMix(const ConstrainedProblemMix& P,
     return this->lagrangian(dL, HL, x);
   } );
 
-  double muInit = MT::getParameter("opt/optConstrained/muInit",1.);
+  double muInit = mlr::getParameter("opt/optConstrained/muInit",1.);
   //switch on penalty terms
   nu=muInit;
   switch(method){
@@ -71,11 +71,11 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
   double L=0.; //L value
   for(uint i=0;i<phi_x.N;i++){
     if(            tt_x(i)==fTT                    ) L += phi_x(i);                // direct cost term
-    if(            tt_x(i)==sumOfSqrTT             ) L += MT::sqr(phi_x(i));       // sumOfSqr term
+    if(            tt_x(i)==sumOfSqrTT             ) L += mlr::sqr(phi_x(i));       // sumOfSqr term
     if(muLB     && tt_x(i)==ineqTT                 ){ if(phi_x(i)>0.) return NAN;  L -= muLB * ::log(-phi_x(i)); } //log barrier, check feasibility
-    if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) L += mu * MT::sqr(phi_x(i));  //g-penalty
+    if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) L += mu * mlr::sqr(phi_x(i));  //g-penalty
     if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) L += lambda(i) * phi_x(i);    //g-lagrange terms
-    if(nu       && tt_x(i)==eqTT                   ) L += nu * MT::sqr(phi_x(i));  //h-penalty
+    if(nu       && tt_x(i)==eqTT                   ) L += nu * mlr::sqr(phi_x(i));  //h-penalty
     if(lambda.N && tt_x(i)==eqTT                   ) L += lambda(i) * phi_x(i);    //h-lagrange terms
   }
 
@@ -99,7 +99,7 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
     for(uint i=0;i<phi_x.N;i++){
 //      if(            tt_x(i)==fTT                    ) NIY;       // direct cost term
       if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/MT::sqr(phi_x(i)));  //log barrier, check feasibility
+      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
       if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
       if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu;   //h-penalty
     }
@@ -117,7 +117,7 @@ double UnconstrainedProblemMix::get_costs(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==fTT) S += phi_x(i);
-    if(tt_x(i)==sumOfSqrTT) S += MT::sqr(phi_x(i));
+    if(tt_x(i)==sumOfSqrTT) S += mlr::sqr(phi_x(i));
   }
   return S;
 }

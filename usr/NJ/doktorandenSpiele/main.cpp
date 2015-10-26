@@ -1,4 +1,4 @@
-// #define MT_IMPLEMENTATION
+// #define MLR_IMPLEMENTATION
 
 #include <MT/robot.h>
 #include <signal.h>
@@ -52,7 +52,7 @@ void MyTask::updateTaskVariables(RobotController *ctrl) {
 // 	TV_col->y_prec=1e-2;
 	
   TV_eff->active=true;
-	MT::IOraw = true;
+	mlr::IOraw = true;
 
 	ors::Vector e;
 	e.set(TV_eff->y.p);
@@ -258,7 +258,7 @@ int main(int argc,char** argv){
   
   
   
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotController::signalStopCallback);
   RobotController robot;
 	

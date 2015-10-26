@@ -1,5 +1,5 @@
-#ifndef MT_motionPlannerModule_h
-#define MT_motionPlannerModule_h
+#ifndef MLR_motionPlannerModule_h
+#define MLR_motionPlannerModule_h
 
 #include <System/biros.h>
 #include "robot_variables.h"
@@ -23,7 +23,7 @@ struct ReceedingHorizonProcess:public Process {
   void close();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "motionPlannerModule.cpp"
 #endif
 

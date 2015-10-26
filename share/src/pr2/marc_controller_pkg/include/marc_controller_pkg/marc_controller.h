@@ -29,7 +29,7 @@ private:
   double gamma;
 
   //matching joint indices
-  MT::Array<pr2_mechanism_model::JointState*> ROS_joints;
+  mlr::Array<pr2_mechanism_model::JointState*> ROS_joints;
   ors::Joint *j_worldTranslationRotation;
 
   //subscriber and publishers

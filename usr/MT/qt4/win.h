@@ -1,5 +1,5 @@
-#ifndef MT_gui_h
-#define MT_gui_h
+#ifndef MLR_gui_h
+#define MLR_gui_h
 
 #include "win_ui.h"
 #include <QtGui/QFileDialog>

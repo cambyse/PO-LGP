@@ -5,7 +5,7 @@
 #include <float.h>
 
 
-using namespace MT;
+using namespace mlr;
 
 namespace mdp {
 
@@ -34,7 +34,7 @@ RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr 
 
 
     //alpha = .005; // for vanilla gradient alpha is [0.001;0.01] ;; Increase the number of trajectories also increase the performance and stability.
-    MT::useLapack=true;
+    mlr::useLapack=true;
     Algorithm = 1; //default using natural policy gradient (functional policy)
     dim_A = 1; //this is default, and set again in main.cpp
     currIteration = 0;
@@ -638,9 +638,9 @@ arr RKHSPol::runPG()
     // cout <<"action:  "<< mean<<endl;
 
     for(int i=0; i<dim_A; i++){
-        action(i) = mean(i) + DEVS(i)*MT::rnd.gauss();
-        //action(i) = MT::MIN(action(i),1.);
-        //action(i) = MT::MAX(action(i),-1.0);
+        action(i) = mean(i) + DEVS(i)*mlr::rnd.gauss();
+        //action(i) = mlr::MIN(action(i),1.);
+        //action(i) = mlr::MAX(action(i),-1.0);
     }
     FIRST_TIME = 1;
     if(!FIRST_TIME)

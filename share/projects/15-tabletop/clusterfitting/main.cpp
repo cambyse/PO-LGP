@@ -2,7 +2,6 @@
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/PointStamped.h>
-#include <Core/array-vector.h>
 #include <Perception/plane.h>
 #include <Perception/object_detector.h>
 #include <tf/transform_listener.h>
@@ -47,7 +46,7 @@ struct Fitting{
     ros::Publisher pub;
     double threshold;
 
-    MT::Array<std::tuple<int, arr, arr> > trackedClusters;
+    mlr::Array<std::tuple<int, arr, arr> > trackedClusters;
 
     Fitting():threshold(.1){
         nh = new ros::NodeHandle;
@@ -295,7 +294,7 @@ void doit(){
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   cout<<"fitting cluster "<<endl;
   doit();
   return 0;

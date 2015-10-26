@@ -47,7 +47,7 @@ RRTPlannerTest::RRTPlannerTest() {
   start = G.getJointState();
   std::cout << "q = " << start << std::endl;
 
-  target = ARRAY(G.getBodyByName("target")->X.pos);
+  target = conv_vec2arr(G.getBodyByName("target")->X.pos);
   std::cout << "target = " << target << std::endl;
 
   //OpenGL gl;

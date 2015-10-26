@@ -11,10 +11,10 @@
 
 class sDataReader {
 public:
-  MT::Array<int> classes;
-  MT::Array<MT::Array<double> > data;
+  mlr::Array<int> classes;
+  mlr::Array<mlr::Array<double> > data;
 
-  std::map<int, MT::Array<double> > objectData;
+  std::map<int, mlr::Array<double> > objectData;
   std::map<std::string, int> classMapping;
 
 };
@@ -107,10 +107,10 @@ int DataReader::readDataFile(const std::string& dataFile, const std::string& rel
   return 0;
 }
 
-MT::Array<int>& DataReader::getClasses() const {
+mlr::Array<int>& DataReader::getClasses() const {
   return s->classes; 
 }
 
-MT::Array<MT::Array<double> >& DataReader::getData() const {
+mlr::Array<mlr::Array<double> >& DataReader::getData() const {
   return s->data;  
 }

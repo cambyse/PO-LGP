@@ -34,7 +34,7 @@ void MyTask::updateTaskVariables(ControllerProcess *ctrl){
 void basicLoop(){
   MyTask task;
 
-  bool openArm = MT::Parameter<bool>("openArm",false);
+  bool openArm = mlr::Parameter<bool>("openArm",false);
 
   //Variables
   q_currentReferenceVar q;
@@ -73,7 +73,7 @@ void basicLoop(){
 
   //wait for stop
   for(uint t=0;t<10000 && !schunkShutdown;t++){ //catches the ^C key
-    MT::wait(.1);
+    mlr::wait(.1);
     if(gamepad.state(0)==16 || gamepad.state(0)==32) break;
   }
   
@@ -88,7 +88,7 @@ void basicLoop(){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,schunkEmergencyShutdown);
 
   basicLoop();

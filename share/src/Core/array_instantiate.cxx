@@ -20,98 +20,98 @@
 
 // this requires T to be defined!!!
 
-template struct MT::Array<T>;
+template struct mlr::Array<T>;
 
-template MT::Array<T> MT::operator~(const Array<T>& y);
-template MT::Array<T> MT::operator-(const Array<T>& y, const Array<T>& z);
+template mlr::Array<T> mlr::operator~(const Array<T>& y);
+template mlr::Array<T> mlr::operator-(const Array<T>& y, const Array<T>& z);
 #ifndef NOFLOAT
-template MT::Array<T> MT::operator*(const Array<T>& y, const Array<T>& z);
+template mlr::Array<T> mlr::operator*(const Array<T>& y, const Array<T>& z);
 #endif
-template MT::Array<T> MT::operator^(const Array<T>& y, const Array<T>& z);
-template MT::Array<T> MT::operator%(const Array<T>& y, const Array<T>& z);
-template MT::Array<T> MT::operator*(T, const Array<T>& z);
-template MT::Array<T> MT::operator*(const Array<T>& z, T);
-template MT::Array<T> MT::operator-(const Array<T>& z);
-template MT::Array<T> MT::operator-(T, const Array<T>& z);
-template MT::Array<T> MT::operator-(const Array<T>& z, T);
-template MT::Array<T> MT::operator+(const Array<T>& y, const Array<T>& z);
-template MT::Array<T> MT::operator+(T, const Array<T>& z);
-template MT::Array<T>& MT::operator+=(Array<T>& y, T);
-template MT::Array<T>& MT::operator+=(Array<T>& y, const Array<T>& z);
-template MT::Array<T>& MT::operator-=(Array<T>& y, T);
-template MT::Array<T>& MT::operator-=(Array<T>& y, const Array<T>& z);
-template MT::Array<T>& MT::operator*=(Array<T>& y, T);
-template MT::Array<T>& MT::operator/=(Array<T>& y, T);
-template bool MT::operator==(const Array<T>& v, const Array<T>& w);
-template bool MT::operator==(const Array<T>& v, const T *w);
-template std::istream& MT::operator>>(std::istream& is, Array<T>& x);
-template std::ostream& MT::operator<<(std::ostream& os, const Array<T>& x);
+template mlr::Array<T> mlr::operator^(const Array<T>& y, const Array<T>& z);
+template mlr::Array<T> mlr::operator%(const Array<T>& y, const Array<T>& z);
+template mlr::Array<T> mlr::operator*(T, const Array<T>& z);
+template mlr::Array<T> mlr::operator*(const Array<T>& z, T);
+template mlr::Array<T> mlr::operator-(const Array<T>& z);
+template mlr::Array<T> mlr::operator-(T, const Array<T>& z);
+template mlr::Array<T> mlr::operator-(const Array<T>& z, T);
+template mlr::Array<T> mlr::operator+(const Array<T>& y, const Array<T>& z);
+template mlr::Array<T> mlr::operator+(T, const Array<T>& z);
+template mlr::Array<T>& mlr::operator+=(Array<T>& y, T);
+template mlr::Array<T>& mlr::operator+=(Array<T>& y, const Array<T>& z);
+template mlr::Array<T>& mlr::operator-=(Array<T>& y, T);
+template mlr::Array<T>& mlr::operator-=(Array<T>& y, const Array<T>& z);
+template mlr::Array<T>& mlr::operator*=(Array<T>& y, T);
+template mlr::Array<T>& mlr::operator/=(Array<T>& y, T);
+template bool mlr::operator==(const Array<T>& v, const Array<T>& w);
+template bool mlr::operator==(const Array<T>& v, const T *w);
+template std::istream& mlr::operator>>(std::istream& is, Array<T>& x);
+template std::ostream& mlr::operator<<(std::ostream& os, const Array<T>& x);
 
 //BinaryOperation
-template void transpose(MT::Array<T>& x, const MT::Array<T>& y);
-template void inverse2d(MT::Array<T>& invA, const MT::Array<T>& A);
+template void transpose(mlr::Array<T>& x, const mlr::Array<T>& y);
+template void inverse2d(mlr::Array<T>& invA, const mlr::Array<T>& A);
 
-template T absMax(const MT::Array<T>& v);
-template T absMin(const MT::Array<T>& v);
-template T entropy(const MT::Array<T>& v);
-template T normalizeDist(MT::Array<T>& v);
-template void makeConditional(MT::Array<T>& P);
-template void checkNormalization(MT::Array<T>& v, double tol);
-template void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d);
-template void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d, uint e);
-template void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, uint d);
-template void checkNan(MT::Array<T> const&);
+template T absMax(const mlr::Array<T>& v);
+template T absMin(const mlr::Array<T>& v);
+template T entropy(const mlr::Array<T>& v);
+template T normalizeDist(mlr::Array<T>& v);
+template void makeConditional(mlr::Array<T>& P);
+template void checkNormalization(mlr::Array<T>& v, double tol);
+template void eliminate(mlr::Array<T>& x, const mlr::Array<T>& y, uint d);
+template void eliminate(mlr::Array<T>& x, const mlr::Array<T>& y, uint d, uint e);
+template void eliminatePartial(mlr::Array<T>& x, const mlr::Array<T>& y, uint d);
+template void checkNan(mlr::Array<T> const&);
 
-template T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w);
-template T maxDiff(const MT::Array<T>& v, const MT::Array<T>& w, uint *im);
-template T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T tol);
-//template T sqrDistance(const MT::Array<T>& v, const MT::Array<T>& w, const MT::Array<bool>& mask);
-template T sqrDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
-template T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w);
-template T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
+template T sqrDistance(const mlr::Array<T>& v, const mlr::Array<T>& w);
+template T maxDiff(const mlr::Array<T>& v, const mlr::Array<T>& w, uint *im);
+template T maxRelDiff(const mlr::Array<T>& v, const mlr::Array<T>& w, T tol);
+//template T sqrDistance(const mlr::Array<T>& v, const mlr::Array<T>& w, const mlr::Array<bool>& mask);
+template T sqrDistance(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w);
+template T euclideanDistance(const mlr::Array<T>& v, const mlr::Array<T>& w);
+template T metricDistance(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w);
 
-template T sum(const MT::Array<T>& v);
-template T scalar(const MT::Array<T>& v);
-template MT::Array<T> sum(const MT::Array<T>& v, uint d);
-template T sumOfAbs(const MT::Array<T>& v);
-template T sumOfSqr(const MT::Array<T>& v);
-template T length(const MT::Array<T>& v);
+template T sum(const mlr::Array<T>& v);
+template T scalar(const mlr::Array<T>& v);
+template mlr::Array<T> sum(const mlr::Array<T>& v, uint d);
+template T sumOfAbs(const mlr::Array<T>& v);
+template T sumOfSqr(const mlr::Array<T>& v);
+template T length(const mlr::Array<T>& v);
 
-template T var(const MT::Array<T>& v);
-template T trace(const MT::Array<T>& v);
+template T var(const mlr::Array<T>& v);
+template T trace(const mlr::Array<T>& v);
 
-template MT::Array<T> log(const MT::Array<T>& v);
-template MT::Array<T> exp(const MT::Array<T>& v);
-template MT::Array<T> atan(const MT::Array<T>& v);
-template MT::Array<T> pow(const MT::Array<T>& v,T);
+template mlr::Array<T> log(const mlr::Array<T>& v);
+template mlr::Array<T> exp(const mlr::Array<T>& v);
+template mlr::Array<T> atan(const mlr::Array<T>& v);
+template mlr::Array<T> pow(const mlr::Array<T>& v,T);
 
-template T minDiag(const MT::Array<T>& v);
+template T minDiag(const mlr::Array<T>& v);
 
-template T product(const MT::Array<T>& v);
+template T product(const mlr::Array<T>& v);
 #ifndef NOFLOAT
-template void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
+template void innerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z);
 #endif
-template void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
-template T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w);
-template T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
+template void outerProduct(mlr::Array<T>& x, const mlr::Array<T>& y, const mlr::Array<T>& z);
+template T scalarProduct(const mlr::Array<T>& v, const mlr::Array<T>& w);
+template T scalarProduct(const mlr::Array<T>& g, const mlr::Array<T>& v, const mlr::Array<T>& w);
 
-template MT::Array<T> catCol(const MT::Array<MT::Array<T>* >& X);
+template mlr::Array<T> catCol(const mlr::Array<mlr::Array<T>* >& X);
 
 
-template void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum);
-template void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid);
-template void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const MT::Array<uint> &Yid);
-template void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const MT::Array<uint> &Yid);
-template void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x, const MT::Array<uint> &xd, const MT::Array<uint> &ids);
-template void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, const MT::Array<uint> &Yid);
-template void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y, const MT::Array<uint> &d, const MT::Array<uint> &ids);
+template void tensorEquation(mlr::Array<T> &X, const mlr::Array<T> &A, const uintA &pickA, const mlr::Array<T> &B, const uintA &pickB, uint sum);
+template void tensorPermutation(mlr::Array<T> &Y, const mlr::Array<T> &X, const uintA &Yid);
+template void tensorMarginal(mlr::Array<T> &Y, const mlr::Array<T> &X, const mlr::Array<uint> &Yid);
+template void tensorMaxMarginal(mlr::Array<T> &Y, const mlr::Array<T> &X, const mlr::Array<uint> &Yid);
+template void tensorMarginal_old(mlr::Array<T> &y, const mlr::Array<T> &x, const mlr::Array<uint> &xd, const mlr::Array<uint> &ids);
+template void tensorMultiply(mlr::Array<T> &X, const mlr::Array<T> &Y, const mlr::Array<uint> &Yid);
+template void tensorMultiply_old(mlr::Array<T> &x, const mlr::Array<T> &y, const mlr::Array<uint> &d, const mlr::Array<uint> &ids);
 
-template void rndInteger(MT::Array<T>& a, int low, int high, bool add);
-template void rndUniform(MT::Array<T>& a, double low, double high, bool add);
-template void rndGauss(MT::Array<T>& a, double stdDev, bool add);
-//template void rndGauss(MT::Array<T>& a, bool add);
-//template MT::Array<T>& rndGauss(double stdDev, uint dim);
-template uint softMax(const MT::Array<T>& a, MT::Array<double>& soft, double beta);
+template void rndInteger(mlr::Array<T>& a, int low, int high, bool add);
+template void rndUniform(mlr::Array<T>& a, double low, double high, bool add);
+template void rndGauss(mlr::Array<T>& a, double stdDev, bool add);
+//template void rndGauss(mlr::Array<T>& a, bool add);
+//template mlr::Array<T>& rndGauss(double stdDev, uint dim);
+template uint softMax(const mlr::Array<T>& a, mlr::Array<double>& soft, double beta);
 
 
 #undef T

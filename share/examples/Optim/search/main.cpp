@@ -6,13 +6,13 @@
 void TEST(CMA){
   ScalarFunction f=ChoiceFunction();
   SearchCMA cma;
-  uint n = MT::getParameter<uint>("dim", 2);
+  uint n = mlr::getParameter<uint>("dim", 2);
   arr start(n);
   start=10.; start(0)=1.;
   cma.init(n, -1, -1, start, .1); //,10,30);
   arr samples, values;
 
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   for(uint t=0;t<500;t++){
     cma.step(samples, values);
     for(uint i=0;i<samples.d0;i++) values(i) = f(NoArr, NoArr, samples[i]);

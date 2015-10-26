@@ -122,7 +122,7 @@ namespace RobotManipulationSymbols {
   void getBoxes(uintA& ids, const SymbolicState& s);
   uint getContainingBox(uint obj_id, const SymbolicState& s);
   uint getContainedObject(uint box_id, const SymbolicState& s);
-  void getHomieGangs(MT::Array< uintA >& homieGangs, const SymbolicState& s);
+  void getHomieGangs(mlr::Array< uintA >& homieGangs, const SymbolicState& s);
   void getOutObjects(uintA& outs, const SymbolicState& s);
   
   // Reward functions

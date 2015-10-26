@@ -25,7 +25,7 @@
 
 void testConstraint(const ConstrainedProblemMix& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
 
-  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod");
+  ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod");
 
   UnconstrainedProblemMix UCP(p, method);
 
@@ -62,9 +62,9 @@ void testConstraint(const ConstrainedProblemMix& p, uint dim_x, arr& x_start=NoA
 
     if(x.N==2){
       displayFunction(UCP);
-      MT::wait();
+      mlr::wait();
       gnuplot("load 'plt'", false, true);
-      MT::wait();
+      mlr::wait();
     }
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));

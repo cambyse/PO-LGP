@@ -25,7 +25,7 @@ std::pair<arr,arr> generateRandomData(uint n=10, double sig=.03){
       b2 = rnd.uni(-2.,2.);
     }
   };
-  MT::Array<RndPlane> planes(n);
+  mlr::Array<RndPlane> planes(n);
   arr X = grid({-1.,-1.}, {1.,1.}, {height,width});
   arr Y(X.d0);
   for(uint i=0;i<Y.N;i++){
@@ -88,7 +88,7 @@ struct Segment{
 };
 stdOutPipe(Segment)
 \
-typedef MT::Array<Segment*> SegmentL;
+typedef mlr::Array<Segment*> SegmentL;
 
 double delta_E_fuse(Segment& a, Segment& b){
   arr cX = a.X + b.X;
@@ -209,7 +209,7 @@ void planes(){
       FILE("z.model") <<img.reshape(Y.d0,Y.d1);
       FILE("z.seg") <<seg.reshape(Y.d0,Y.d1);
       gnuplot("splot 'z.model' matrix w l lw 2, 'z.data' matrix w l", false, true);
-      MT::wait();
+      mlr::wait();
     }
 
 //    , 'z.data' matrix us ($1/15-1):($2/15-1):3 w l, 'z.model' matrix us ($1/15-1):($2/15-1):3 w l
@@ -266,8 +266,8 @@ void planes(){
       plotFunction(x.reshape(x.N));
       plot(false);
     }
-    MT::wait(1.5);
-//    MT::wait();
+    mlr::wait(1.5);
+//    mlr::wait();
 
     for(uint i=0;i<cells.N;i++) if(!((i+k)%3)) cells.elem(i).step_decide(k);
 //    for(uint i=0;i<cells.N;i++) cells.elem(i).step_decide(k);

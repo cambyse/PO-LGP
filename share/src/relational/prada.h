@@ -67,7 +67,7 @@ class PRADA_Planner : public NID_Planner {
     // samples "num_samples" plans and returns best
     void plan1_wrapper(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs);
     bool plan1(LitL& best_plan, double& bestValue, uint num_samples);
-    MT::Array< LitL > good_old_plans;
+    mlr::Array< LitL > good_old_plans;
     
     // dynamic Bayesian network used for inference
     PRADA_DBN* dbn;
@@ -165,7 +165,7 @@ class A_PRADA : public PRADA_Planner {
  ************************************************/
 
 class LiteralRV;
-typedef MT::Array< LiteralRV* > RVL;
+typedef mlr::Array< LiteralRV* > RVL;
 
 class PRADA_DBN {
   public:
@@ -225,8 +225,8 @@ class PRADA_DBN {
   
   // Helping structures
   // Impacts only on primitives
-  MT::Array< arr > impacts_V; // on vars as a whole;  2 dim: (1) var, (2) arr for rule x value
-  MT::Array< arr > impacts_val; // on single values;  2 dim: (1) var, (2) arr for rule
+  mlr::Array< arr > impacts_V; // on vars as a whole;  2 dim: (1) var, (2) arr for rule x value
+  mlr::Array< arr > impacts_val; // on single values;  2 dim: (1) var, (2) arr for rule
   // dim_1 actions,  dim_2 arguments,  dim_3 rules
   uintA action2rules;
   uintA action2rules_num; // 2 dim; how many rules per constellation

@@ -20,7 +20,7 @@ struct MySystem:System {
 
 // =================================================================================================
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   bool useRos = true;
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
     // world.calc_fwdPropagateShapeFrames();
 
     world.gl().update(STRING("frame " << i), false, false, false);
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
 
   engine().close(system);

@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <MT/robot.h>
 #include <MT/robotActionInterface.h>
@@ -7,7 +7,7 @@
 #include <signal.h>
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
@@ -23,11 +23,11 @@ int main(int argc,char** argv){
   R.getProcessGroup()->ctrl.task->controlMode = gamepadCM;
   for(;!R.getProcessGroup()->signalStop;){
     //R.step();
-    MT::wait(.01);
+    mlr::wait(.01);
 
     tracker.readAccess(NULL);
     if(tracker.center.N){ 
-      MT::IOraw=true;
+      mlr::IOraw=true;
       fil <<" LEDcenters= ";      tracker.center.write(fil, " ", " ", "  ");
       fil <<" q= "; R.getProcessGroup()->ctrl.q_reference.write(fil, " ", " ", "  ");
       fil <<endl;

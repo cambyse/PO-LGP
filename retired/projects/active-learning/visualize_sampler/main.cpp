@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
 
   srand(time(NULL));
 
-  MT::Array<arr> sample;
+  mlr::Array<arr> sample;
   std::ofstream os("bw-samples");
   //ofstream on("on-samples.data");
   //ofstream noton("noton-samples.data");

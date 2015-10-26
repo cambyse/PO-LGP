@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 #undef COUNT
 #include <opencv2/opencv.hpp>
 #undef MIN
@@ -27,7 +27,7 @@
 #include "vision.h"
 #include "vision_cuda.h"
 #include <Infer/BinaryBP.h>
-#ifdef MT_NILS
+#ifdef MLR_NILS
 #  include <NP/transformations.h>
 #endif
 
@@ -51,7 +51,7 @@ float student(float x, float nu){
   return pow(1.f+x/nu, -(nu+1.f)/2.f);
 }
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 
 CvMatDonor::CvMatDonor(){ i=0; mat=new CvMat[10]; }
 CvMat* CvMatDonor::get(){ i++; if(i>=10) i=0; return &mat[i]; }
@@ -244,7 +244,7 @@ void getMaskedStats(floatA& mean, floatA& sdv, byteA& img, floatA& mask){
     p = mask(x); //ratio_to_p(mask(x));
     for(uint i=0; i<3; i++){
       mean(i) += p*float(img(x, i));
-      sdv(i) += p*MT::sqr(float(img(x, i)));
+      sdv(i) += p*mlr::sqr(float(img(x, i)));
     }
     w    += p;
   }
@@ -288,8 +288,8 @@ void rgb2hsv(floatA& hsv, floatA& rgb){
   hsv.resizeAs(rgb);
   for(i=0; i<N; i++){
     r=rgb(i, 0);  g=rgb(i, 1);  b=rgb(i, 2);
-    v  =MT::MAX(MT::MAX(r, g), b);
-    min=MT::MIN(MT::MIN(r, g), b);
+    v  =mlr::MAX(mlr::MAX(r, g), b);
+    min=mlr::MIN(mlr::MIN(r, g), b);
     CHECK(v<=1.f && min>=0.f, "require [0, 1] floats");
     if(v>0) s=(v-min)/v; else s=0.f;
     if(v==min)    h = 0.;
@@ -339,7 +339,7 @@ void gnuplotHistogram(floatA &data, float min, float max, uint bins){
   ofstream z("z.hist");
   for(i=0; i<bins; i++){ z <<min+(max-min)*i/(bins-1) <<' '; for(k=0; k<K; k++) z <<hist(k, i) <<' '; z <<endl; }
   z.close();
-  MT::String cmd("plot 'z.hist' us 1:2");
+  mlr::String cmd("plot 'z.hist' us 1:2");
   for(k=1; k<K; k++) cmd <<", 'z.hist' us 1:" <<k+2;
   cout <<"plotting " <<cmd <<endl;
   gnuplot(cmd);
@@ -349,7 +349,7 @@ void gnuplotHistogram(floatA &data, float min, float max, uint bins){
 }
 
 float hsv_diff(const floatA& a, const floatA& b, const floatA& tol){
-  float h = sin((a(0)-b(0))*MT_PI)/MT_PI/tol(0);
+  float h = sin((a(0)-b(0))*MLR_PI)/MLR_PI/tol(0);
   float s = (a(1)-b(1))/tol(1);
   float v = (a(2)-b(2))/tol(2);
   return h*h+s*s+v*v;
@@ -373,7 +373,7 @@ void getHsvEvidences(floatA &phi, floatA &hsv, const floatA& hsvTarget, const fl
   }
 }
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSdv, uint range){
   diff.resize(img0.d0, img0.d1);
   diff.setZero();
@@ -427,7 +427,7 @@ void imagePointPair2WorldPoint(arr& worldPoint, const arr& left, const arr& righ
   image_points.reshape(1, 2);
   arr disparity(1);
   disparity(0) = left(0)-right(0);
-#ifdef MT_NILS
+#ifdef MLR_NILS
   vision::image2world(worldPoint, camera_calibration, image_points, disparity);
 #else
   NICO
@@ -767,13 +767,13 @@ void compute_hueMap(byteA& hue, const floatA& alphaV){
   arr mean;
   compute_meanV(mean, alphaV);
   //cout <<mean.sub(0, 500, 0, -1) <<endl;
-  //MT::wait();
+  //mlr::wait();
   hue.resize(X, 3);
-  MT::Color col;
+  mlr::Color col;
   uint x, h;
   float s;
   for(x=0; x<X; x++){
-    h=(uint)((MT::phi(mean(x, 0), mean(x, 1))+MT_PI)*180./MT_PI);
+    h=(uint)((mlr::phi(mean(x, 0), mean(x, 1))+MLR_PI)*180./MLR_PI);
     s = length(mean[x]) * 100; if(s>255) s=255;
     hsv2rgb(hue[x](), ARRAY<int>(h, (byte)s, 255));
   }
@@ -789,7 +789,7 @@ void compute_hueMap(byteA& hue, const floatA& alphaV){
 
 
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 void smooth(floatA& theta, uint size){
   ENABLE_CVMAT
   floatA tmp=theta;

@@ -3,10 +3,10 @@
 #include "vision.h"
 #include "guiModule.h"
 #include "soc_inverseKinematics.h"
-#ifdef MT_SCHUNK
+#ifdef MLR_SCHUNK
 #  include <lwa/Device/Device.h>
 #endif
-#ifdef MT_NILS
+#ifdef MLR_NILS
 #  include <NP_2Drec/common.h>
 #  include <NP_2Drec/vision_module.h>
 #  include <NP/camera.h>
@@ -42,7 +42,7 @@ void q_hand_home(arr &q){
 //
 
 ControllerProcess::ControllerProcess():Process("ControllerProcess"), timer("RobController"){
-  maxJointStep = MT::Parameter<double>("maxJointStep", .01);
+  maxJointStep = mlr::Parameter<double>("maxJointStep", .01);
   q_referenceVar=NULL;
   proxiesVar=NULL;
   skinPressureVar=NULL;
@@ -57,9 +57,9 @@ ControllerProcess::ControllerProcess():Process("ControllerProcess"), timer("RobC
 void ControllerProcess::open(){
 
   //-- ors
-  if(MT::checkParameter<MT::String>("orsFile")){
-    MT::String sfile;
-    MT::getParameter<MT::String>(sfile, "orsFile");
+  if(mlr::checkParameter<mlr::String>("orsFile")){
+    mlr::String sfile;
+    mlr::getParameter<mlr::String>(sfile, "orsFile");
     ors <<FILE(sfile);
   } else ors <<FILE(STRING(getenv("MLR") <<"/configurations/schunk_clean.ors"));
   
@@ -158,11 +158,11 @@ void ControllerProcess::step(){
   //SAFTY CHECK: too large steps?
   double step=euclideanDistance(q_reference, q_old);
   if(step>maxJointStep){
-    MT_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
+    MLR_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
     q_reference=q_old + (q_reference-q_old)*maxJointStep/step;
     v_reference *= .5*maxJointStep/step;
     step=euclideanDistance(q_reference, q_old);
-    MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
+    MLR_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
     //v_reference.setZero(); SD: making too large step warnig  use max allowed step
   }
 #if 0
@@ -177,13 +177,13 @@ void ControllerProcess::step(){
     q_referenceVar->q_reference=q_reference;
     q_referenceVar->v_reference=v_reference;
     q_referenceVar->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   if(proxiesVar){
     proxiesVar->writeAccess(this);
     listCopy(proxiesVar->proxies, ors.proxies);
     proxiesVar->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   timer.cycleDone();
 }
@@ -209,23 +209,23 @@ ControllerProcess::change_task(TaskAbstraction *_task){
 RobotProcessGroup::RobotProcessGroup(){
   //history=1000;
   //horizon=20;
-  openArm=MT::Parameter<bool>("openArm", false);
-  openHand=MT::Parameter<bool>("openHand", false);
-  openSkin=MT::Parameter<bool>("openSkin", false);
-  openGamepad=MT::Parameter<bool>("openGamepad", true);
-  openLaser=MT::Parameter<bool>("openLaser", false);
-  openBumble=MT::Parameter<bool>("openBumble", false);
-  openEarlyVision=MT::Parameter<bool>("openEarlyVision", false);
-  openGui=MT::Parameter<bool>("openGui", true);
-  openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", true);
+  openArm=mlr::Parameter<bool>("openArm", false);
+  openHand=mlr::Parameter<bool>("openHand", false);
+  openSkin=mlr::Parameter<bool>("openSkin", false);
+  openGamepad=mlr::Parameter<bool>("openGamepad", true);
+  openLaser=mlr::Parameter<bool>("openLaser", false);
+  openBumble=mlr::Parameter<bool>("openBumble", false);
+  openEarlyVision=mlr::Parameter<bool>("openEarlyVision", false);
+  openGui=mlr::Parameter<bool>("openGui", true);
+  openThreadInfoWin=mlr::Parameter<bool>("openThreadInfoWin", true);
 }
 
 RobotProcessGroup::~RobotProcessGroup(){
 }
 
 void RobotProcessGroup::open(){
-  //setRRscheduling(MT::getParameter<int>("masterNice")); //requires SUDO
-  //if(!setNice(MT::getParameter<int>("masterNice", -19)) && openHand) HALT("opening Schunk hand only with SUDO (for nice...)");
+  //setRRscheduling(mlr::getParameter<int>("masterNice")); //requires SUDO
+  //if(!setNice(mlr::getParameter<int>("masterNice", -19)) && openHand) HALT("opening Schunk hand only with SUDO (for nice...)");
   
   //-- controller
   if(!openArm) ctrl.forceColLimTVs=false;
@@ -265,7 +265,7 @@ void RobotProcessGroup::open(){
   
   if(openBumble){
     bumble.output = &currentCameraImages;
-    bumble.threadOpen(MT::getParameter<int>("bumbleThreadNice", 0));
+    bumble.threadOpen(mlr::getParameter<int>("bumbleThreadNice", 0));
     bumble.threadLoop(); // -> start in loop mode!
   }
   
@@ -273,28 +273,28 @@ void RobotProcessGroup::open(){
     evis.input = &currentCameraImages;
 		std::cout << evisOutput.hsvThetaL << std::endl;
 		evis.output = &evisOutput;
-    evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
+    evis.threadOpen(mlr::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }
   
   if(openHand){
     hand.var=&q_currentReference;
     q_currentReference.readHandFromReal=true;
-    hand.threadOpen(MT::getParameter<int>("handThreadNice", -5));
+    hand.threadOpen(mlr::getParameter<int>("handThreadNice", -5));
     hand.threadLoop();
   }
   
   if(openArm){
     arm.var = &q_currentReference;
-#if defined MT_NO_THREADS & defined MT_SCHUNK
+#if defined MLR_NO_THREADS & defined MLR_SCHUNK
     HALT("don't open the arm without threads!");
 #endif
-    arm.threadOpen(MT::getParameter<int>("armThreadNice", -10));
+    arm.threadOpen(mlr::getParameter<int>("armThreadNice", -10));
     arm.waitForIdle();
-#ifdef MT_SCHUNK
+#ifdef MLR_SCHUNK
     uint m;  float f;
     for(m=3; m<=9; m++){ arm.pDev->getPos(m, &f); ctrl.q_reference(motorIndex(m-3))=(double)f; } //IMPORTANT: READ IN THE CURRENT ARM POSTURE
-    MT_MSG("TODO: at this point, check whether the q_currentReference has the correct q_real -> and copy to ctrl.q_reference (this also read in the hand, right?)");
+    MLR_MSG("TODO: at this point, check whether the q_currentReference has the correct q_real -> and copy to ctrl.q_reference (this also read in the hand, right?)");
 #endif
     ctrl.v_reference.setZero();
     ctrl.sys.setqv(ctrl.q_reference, ctrl.v_reference);
@@ -302,13 +302,13 @@ void RobotProcessGroup::open(){
   
   if(openSkin){
     skin.var = &skinPressureVar;
-    skin.threadOpen(MT::getParameter<int>("skinThreadNice", -5));
+    skin.threadOpen(mlr::getParameter<int>("skinThreadNice", -5));
     skin.threadLoop();
   }
   
   if(openLaser){
     //laserfile.open("z.laser");
-    urg.threadOpen(MT::getParameter<int>("laserThreadNice", 0));
+    urg.threadOpen(mlr::getParameter<int>("laserThreadNice", 0));
   }
   
   if(openThreadInfoWin){
@@ -346,18 +346,18 @@ TaskAbstraction::TaskAbstraction(){
   plan_count=0.;
   gamepadVar = NULL;
   planVar= NULL;
-  gamepadRate = MT::Parameter<double>("gamepadRate", .1);
+  gamepadRate = mlr::Parameter<double>("gamepadRate", .1);
   //-- planned trajectory
-  if(MT::getParameter<bool>("loadPlanned", false)){
+  if(mlr::getParameter<bool>("loadPlanned", false)){
     ifstream fil;
-    MT::open(fil, "z.plan");
+    mlr::open(fil, "z.plan");
     plan_v.readTagged(fil, "v");
     plan_Vinv.readTagged(fil, "Vinv");
     plan_b.readTagged(fil, "b");
     fil.close();
   }
-  plan_speed = MT::getParameter<double>("plan_speed", 1.);
-  plan_scale = MT::getParameter<double>("plan_scale", 0.);
+  plan_speed = mlr::getParameter<double>("plan_speed", 1.);
+  plan_scale = mlr::getParameter<double>("plan_scale", 0.);
   
 }
 
@@ -405,10 +405,10 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TVall.append({TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3});
   ctrl->sys.setTaskVariables(TVall);
   
-  TV_x_yprec  = MT::Parameter<double>("TV_x_yprec", 1e3);
-  TV_x_vprec  = MT::Parameter<double>("TV_x_vprec", 1e0);
-  TV_rot_vprec= MT::Parameter<double>("TV_rot_vprec", 1e-1);
-  TV_q_vprec  = MT::Parameter<double>("TV_q_vprec", 1e-1);
+  TV_x_yprec  = mlr::Parameter<double>("TV_x_yprec", 1e3);
+  TV_x_vprec  = mlr::Parameter<double>("TV_x_vprec", 1e0);
+  TV_rot_vprec= mlr::Parameter<double>("TV_rot_vprec", 1e-1);
+  TV_q_vprec  = mlr::Parameter<double>("TV_q_vprec", 1e-1);
   
 #ifndef VELC
   TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=TV_x_yprec;   TV_eff->v_prec=0;
@@ -416,10 +416,10 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
 #endif
   TV_rot->active=true;  TV_rot->targetType=directTT;  TV_rot->y_prec=0;     TV_rot->v_prec=TV_rot_vprec;
-  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;
-  TV_lim->active=true;  TV_lim->targetType=directTT;  TV_lim->y_prec=MT::Parameter<double>("TV_lim_yprec", 1e3); TV_lim->v_prec=0;
+  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=mlr::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;
+  TV_lim->active=true;  TV_lim->targetType=directTT;  TV_lim->y_prec=mlr::Parameter<double>("TV_lim_yprec", 1e3); TV_lim->v_prec=0;
   TV_q  ->active=true;  TV_q->targetType=directTT;    TV_q  ->y_prec=0;     TV_q->v_prec=TV_q_vprec;
-  TV_skin->active=true; TV_skin->targetType=directTT; TV_skin->y_prec=MT::Parameter<double>("TV_skin_yprec", 1e3); TV_skin->v_prec=0;
+  TV_skin->active=true; TV_skin->targetType=directTT; TV_skin->y_prec=mlr::Parameter<double>("TV_skin_yprec", 1e3); TV_skin->v_prec=0;
   
   TV_z1->active=false;
   TV_z2->active=false;
@@ -618,9 +618,9 @@ Gamepad::updateTaskGoals(ControllerProcess *ctrl){
       TV_eff ->active=true;
       TV_eff->y_target = TV_eff->y;
       TV_eff->y_prec=0.;  TV_eff->v_prec=TV_x_vprec;
-      TV_eff->v_target(0) = -gamepadRate*MT::sign(gamepadState(3))*(.25*(exp(MT::sqr(gamepadState(3))/10000.)-1.));
-      TV_eff->v_target(1) = +gamepadRate*MT::sign(gamepadState(6))*(.25*(exp(MT::sqr(gamepadState(6))/10000.)-1.));
-      TV_eff->v_target(2) = -gamepadRate*MT::sign(gamepadState(2))*(.25*(exp(MT::sqr(gamepadState(2))/10000.)-1.));
+      TV_eff->v_target(0) = -gamepadRate*mlr::sign(gamepadState(3))*(.25*(exp(mlr::sqr(gamepadState(3))/10000.)-1.));
+      TV_eff->v_target(1) = +gamepadRate*mlr::sign(gamepadState(6))*(.25*(exp(mlr::sqr(gamepadState(6))/10000.)-1.));
+      TV_eff->v_target(2) = -gamepadRate*mlr::sign(gamepadState(2))*(.25*(exp(mlr::sqr(gamepadState(2))/10000.)-1.));
       break;
     }
     case 4: { //(3) controlling the rotation rate
@@ -628,9 +628,9 @@ Gamepad::updateTaskGoals(ControllerProcess *ctrl){
       TV_rot->active=true;
       TV_eff->y_prec=TV_x_yprec;  TV_eff->v_prec=0.;
       TV_rot->y_prec=0.; TV_rot->v_prec=TV_rot_vprec;
-      TV_rot->v_target(0) = -3.*gamepadRate*MT::sign(gamepadState(3))*(.25*(exp(MT::sqr(gamepadState(3))/10000.)-1.));
-      TV_rot->v_target(1) = +3.*gamepadRate*MT::sign(gamepadState(6))*(.25*(exp(MT::sqr(gamepadState(6))/10000.)-1.));
-      TV_rot->v_target(2) = -3.*gamepadRate*MT::sign(gamepadState(1))*(.25*(exp(MT::sqr(gamepadState(1))/10000.)-1.));
+      TV_rot->v_target(0) = -3.*gamepadRate*mlr::sign(gamepadState(3))*(.25*(exp(mlr::sqr(gamepadState(3))/10000.)-1.));
+      TV_rot->v_target(1) = +3.*gamepadRate*mlr::sign(gamepadState(6))*(.25*(exp(mlr::sqr(gamepadState(6))/10000.)-1.));
+      TV_rot->v_target(2) = -3.*gamepadRate*mlr::sign(gamepadState(1))*(.25*(exp(mlr::sqr(gamepadState(1))/10000.)-1.));
       break;
     }
     /*
@@ -678,14 +678,14 @@ void RobotProcessGroup::signalStopCallback(int s){
   signalStop=true;
 }
 
-#ifndef MT_NILS
+#ifndef MLR_NILS
 // empty
 void LEDtracker::step(){}
 #else
 void LEDtracker::step(){
     CvMatDonor cvMatDonor;
     
-    if(!var){ MT_MSG("Variable pointer not set"); return; }
+    if(!var){ MLR_MSG("Variable pointer not set"); return; }
     var->output.readAccess(this);
     rgbL = var->output.rgbL;
     rgbR = var->output.rgbR;
@@ -717,5 +717,5 @@ void LEDtracker::step(){
     cvRectangle(CVMAT(theta), cvPoint(cen(0)-1, cen(1)-1), cvPoint(cen(0)+1, cen(1)+1), cvScalar(0.));
     cvShow(theta, "2");
 }
-#endif // MT_NILS
+#endif // MLR_NILS
 

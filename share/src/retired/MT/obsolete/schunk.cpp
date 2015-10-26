@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
-#ifdef MT_SCHUNK
+#ifdef MLR_SCHUNK
 
 #include "schunk.h"
 
@@ -33,19 +33,19 @@
 
 //--- emergency shutdown (call signal)
 struct shutdownFct { void *classP; void (*call)(void*); };
-static MT::Array<shutdownFct> shutdownFunctions; ///< list of shutdown functions
+static mlr::Array<shutdownFct> shutdownFunctions; ///< list of shutdown functions
 static void addShutdown(void *classP, void (*call)(void*)){ shutdownFunctions.memMove=true; shutdownFct f; f.classP=classP; f.call=call; shutdownFunctions.append(f); }
 bool schunkShutdown=false;
 void schunkEmergencyShutdown(int){
-  MT_MSG("initiating smooth shutdown...");
+  MLR_MSG("initiating smooth shutdown...");
   schunkShutdown=true;
   for(uint i=shutdownFunctions.N; i--;){ shutdownFunctions(i).call(shutdownFunctions(i).classP); }
-  MT_MSG("...done");
+  MLR_MSG("...done");
 }
 
-void shutdownLWA(void* p){ MT_MSG("...");  SchunkArmModule *lwa=(SchunkArmModule*)p;  lwa->close(); }
-void shutdownSDH(void* p){ MT_MSG("...");  SchunkHandModule *sdh=(SchunkHandModule*)p;  sdh->stop();  sdh->close(); }
-void shutdownDSA(void* p){ MT_MSG("...");  SchunkSkinModule *dsa=(SchunkSkinModule*)p;  dsa->close(); }
+void shutdownLWA(void* p){ MLR_MSG("...");  SchunkArmModule *lwa=(SchunkArmModule*)p;  lwa->close(); }
+void shutdownSDH(void* p){ MLR_MSG("...");  SchunkHandModule *sdh=(SchunkHandModule*)p;  sdh->stop();  sdh->close(); }
+void shutdownDSA(void* p){ MLR_MSG("...");  SchunkSkinModule *dsa=(SchunkSkinModule*)p;  dsa->close(); }
 
 
 SchunkArmModule::SchunkArmModule(q_currentReferenceVar *_var):Process("SchunkArmProcess"){
@@ -56,10 +56,10 @@ SchunkArmModule::SchunkArmModule(q_currentReferenceVar *_var):Process("SchunkArm
 
 void SchunkArmModule::open(){
   //get parameters
-  stepHorizon=MT::Parameter<float>("schunkStepHorizon", 50);
-  maxStep=MT::Parameter<float>("schunkMaxStep", .03);
-  sendMotion=MT::Parameter<bool>("schunkSendArmMotion", true);
-  readPositions=MT::Parameter<bool>("schunkReadArmPositions", false);
+  stepHorizon=mlr::Parameter<float>("schunkStepHorizon", 50);
+  maxStep=mlr::Parameter<float>("schunkMaxStep", .03);
+  sendMotion=mlr::Parameter<bool>("schunkSendArmMotion", true);
+  readPositions=mlr::Parameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- SchunkArmModule init .." <<std::flush;
   addShutdown(this, shutdownLWA);
@@ -76,9 +76,9 @@ void SchunkArmModule::open(){
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|1);
   //MY DEFAULT 64 2 4
-  for(m=3; m<=9; m++) pDev->setC0(m, MT::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
-  for(m=3; m<=9; m++) pDev->setDamp(m, MT::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
-  for(m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
+  for(m=3; m<=9; m++) pDev->setC0(m, mlr::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
+  for(m=3; m<=9; m++) pDev->setDamp(m, mlr::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
+  for(m=3; m<=9; m++) pDev->setA0(m, mlr::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
   for(m=3; m<=9; m++) pDev->recalcPIDParams(m);
   for(m=3; m<=9; m++) pDev->setMaxVel(m, .1);
   for(m=3; m<=9; m++) pDev->setMaxAcc(m, .1);
@@ -95,7 +95,7 @@ void SchunkArmModule::open(){
     motorIndex = var->armMotorIndices;
     for(uint m=0; m<7; m++) var->q_real(motorIndex(m)) = (float)q_real(m);
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   isOpen=true;
   cout <<" done" <<endl;
@@ -208,7 +208,7 @@ void SchunkArmModule::step(){
     if(!motorIndex.N) motorIndex = var->handMotorIndices;
     for(m=0; m<7; m++) q_reference(m) = (float)var->q_reference(motorIndex(m));
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   double delta= maxDiff(q_real, q_reference);
 #if 0
@@ -218,7 +218,7 @@ void SchunkArmModule::step(){
   logfil <<delta <<endl;
 #endif
   if(delta>maxStep){
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
+    MLR_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
   } else if(isOpen && sendMotion){
 #if 1 //don't read real positions from robot
     for(m=0; m<7; m++){ pDev->moveStep(m+3, q_reference(m), stepHorizon); }
@@ -232,7 +232,7 @@ void SchunkArmModule::step(){
     }
 #endif
   }else{
-    MT::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
   }
   
 #if 0
@@ -240,7 +240,7 @@ void SchunkArmModule::step(){
     var->writeAccess(this);
     for(m=0; m<7; m++) var->q_real(motorIndex(m)) = (float)q_real(m);
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
 #endif
 }
 
@@ -273,7 +273,7 @@ SchunkHandModule::SchunkHandModule():Process("SchunkHandProcess"){
 
 void SchunkHandModule::open(){
   //read parameters
-  sendMotion=MT::Parameter<bool>("schunkSendHandMotion", true);
+  sendMotion=mlr::Parameter<bool>("schunkSendHandMotion", true);
   
   cout <<" -- SchunkHandModule init .." <<std::flush;
   addShutdown(this, shutdownSDH);
@@ -314,7 +314,7 @@ void SchunkHandModule::open(){
     motorIndex = var->handMotorIndices;
     for(uint m=0; m<7; m++) var->q_real(motorIndex(m)) = q_real(m);
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   isOpen=true;
   cout <<" done" <<endl;
@@ -359,7 +359,7 @@ void SchunkHandModule::setVelocities(const arr& v, double a){
   CHECK(a>0., "always assume positive acceleration");
   uint i;
   std::vector<double> v_reference = hand->GetAxisReferenceVelocity(fingers);
-  std::vector<double> vel(7);  for(i=0; i<7; i++) vel[i]=v(i)/MT_PI*180.;
+  std::vector<double> vel(7);  for(i=0; i<7; i++) vel[i]=v(i)/MLR_PI*180.;
   std::vector<double> acc(7);  for(i=0; i<7; i++) acc[i]=a;
   try {
     hand->SetAxisTargetAcceleration(fingers, acc);
@@ -371,7 +371,7 @@ void SchunkHandModule::setVelocities(const arr& v, double a){
     cerr <<"\ncaught unknown exception, giving up\n";
   }
 #else
-  for(uint i=0; i<7; i++) setVelocity(i, v(i)/MT_PI*180., a);
+  for(uint i=0; i<7; i++) setVelocity(i, v(i)/MLR_PI*180., a);
 #endif
 }
 
@@ -384,7 +384,7 @@ void SchunkHandModule::setZeroVelocities(double a){
 void SchunkHandModule::getPos(arr &q){
   std::vector<double> handq = hand->GetAxisActualAngle(fingers);
   q.resize(7);
-  for(uint i=0; i<7; i++) q(i) = handq[i]/180.*MT_PI;
+  for(uint i=0; i<7; i++) q(i) = handq[i]/180.*MLR_PI;
 }
 
 void SchunkHandModule::step(){
@@ -394,20 +394,20 @@ void SchunkHandModule::step(){
     if(!v_reference.N) v_reference.resize(7);
     for(uint m=0; m<7; m++) v_reference(m) = var->v_reference(motorIndex(m));
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
   
   if(isOpen && sendMotion){
     setVelocities(v_reference, 360.);
     getPos(q_real);
   }else{
-    MT::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
   }
   
   if(var){
     var->writeAccess(this);
     for(uint m=0; m<7; m++) var->q_real(motorIndex(m)) = q_real(m);
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
 }
 
 
@@ -505,7 +505,7 @@ void SchunkSkinModule::getFrame(uint16A& x){
       f = ts->UpdateFrame().texel;
     } catch (SDH::cSDHLibraryException* e){
       //HALT("schunk exception: " <<e->what());
-      MT_MSG("* * * schunk exception: " <<e->what());
+      MLR_MSG("* * * schunk exception: " <<e->what());
       delete e;
       return;
     }
@@ -556,7 +556,7 @@ void SchunkSkinModule::step(){
     var->writeAccess(this);
     var->y_real = y_tmp;
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
 }
 
 
@@ -572,7 +572,7 @@ void testPerformance(SchunkArmModule &schunk, int iMod){
   int iRetVal = 0;
   
   cout <<"\n Performing 1000 getPos & moveStep..." <<endl;
-  double time=MT::realTime();
+  double time=mlr::realTime();
   uint i;
   iRetVal = schunk.pDev->getPos(iMod, &fPos);
   if(iRetVal != 0) printf("Error fetching pos: %d\n", iRetVal);
@@ -586,7 +586,7 @@ void testPerformance(SchunkArmModule &schunk, int iMod){
 //       iRetVal = schunk.pDev->moveStepExtended(iMod, fPos, 100., &uiState, &uiDio, &fPos2 );
 //       if( iRetVal != 0 ) printf( "Error move step: %d\n", iRetVal );
   }
-  cout <<"-> state+pos time = " <<(MT::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
+  cout <<"-> state+pos time = " <<(mlr::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
 }
 
 void testCube(SchunkArmModule &schunk, int iMod){
@@ -663,7 +663,7 @@ void testCube(SchunkArmModule &schunk, int iMod){
 }
 
 
-#else //ndef MT_SCHUNK
+#else //ndef MLR_SCHUNK
 #include "schunk.h"
 bool schunkShutdown=false;
 SchunkArmModule::SchunkArmModule(q_currentReferenceVar *_var):Process("SchunkArmProcess"){}

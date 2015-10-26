@@ -18,9 +18,9 @@
     02110-1301 USA
 */
 
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
-#ifdef MT_QT
+#ifdef MLR_QT
 #  include"gui.h"
 #endif
 

@@ -121,10 +121,10 @@ void plan(){
   p.x=p1.x=.0;
   //double dx,dv;
   for(t=0;t<100000;t++){
-    p.a=MT::phaseAccel(p.x,p.v,p1.x,p1.v,1.);
+    p.a=mlr::phaseAccel(p.x,p.v,p1.x,p1.v,1.);
     p.step();
-    //MT::phaseTangent(p.x,p.v,p1.x,p1.v,dx,dv);
-    std::cout <<MT::phaseDist(p.x,p.v,p1.x,p1.v)/MT_PI*180. <<std::endl;
+    //mlr::phaseTangent(p.x,p.v,p1.x,p1.v,dx,dv);
+    std::cout <<mlr::phaseDist(p.x,p.v,p1.x,p1.v)/MLR_PI*180. <<std::endl;
     //std::cout <<p.x <<' ' <<p.v <<' ' <<std::endl;
     gl.watch();
     if(fabs(p.x-p1.x)+fabs(p.v-p1.v)<.1){
@@ -138,7 +138,7 @@ void TEST(Exp){
   doubleA X,Y;
   X.setGrid(1,-1.,1.,10*1280);
   Y.resize(X.N);
-  for(uint i=0;i<X.N;i++) Y(i)=MT::approxExp(X(i,0));
+  for(uint i=0;i<X.N;i++) Y(i)=mlr::approxExp(X(i,0));
   plotFunction(X,Y);
   plot();
 }
@@ -151,16 +151,16 @@ void TEST(CheckGradient){
   rndUniform(F,0.,1.,false);
   arr x(3);
   rndUniform(x,0.,1.,false);
-  MT::checkGradient(f, NULL, x, 1e-5);
+  mlr::checkGradient(f, NULL, x, 1e-5);
 }
 
 
 void TEST(Filter){
   uint i,T=1000;
   arr x(T),y,z(T);
-  for(i=0;i<T;i++) x(i) = sin(MT_2PI*i*(1./(1.+.01*i)));
-  MT::bandpassFilter(y,x,10,50);
-  MT::bandpassEnergy(z,x,10,50);
+  for(i=0;i<T;i++) x(i) = sin(MLR_2PI*i*(1./(1.+.01*i)));
+  mlr::bandpassFilter(y,x,10,50);
+  mlr::bandpassEnergy(z,x,10,50);
   plotFunction(x);
   plotFunction(y);
   plotFunction(z);
@@ -199,7 +199,7 @@ void TEST(RK){
   v[0]=0.;
 
   for(t=1;t<T;t++){
-    MT::rk4dd(x[t](),v[t](),x[t-1],v[t-1],testRK_ddf,dt);
+    mlr::rk4dd(x[t](),v[t](),x[t-1],v[t-1],testRK_ddf,dt);
   }
   plotFunction(x);
   plotFunction(v);
@@ -225,7 +225,7 @@ void TEST(RKswitch){
   s[0]=1.;
 
   for(t=1;t<T;t++){
-    MT::rk4dd_switch(x[t](),v[t](),s[t](),x[t-1],v[t-1],s[t-1],
+    mlr::rk4dd_switch(x[t](),v[t](),s[t](),x[t-1],v[t-1],s[t-1],
       testRKswitch_ddf,testRKswitch_sf,dt,1e-4);
     //cout <<t <<": stepsize " <<dt <<endl;
     dt=.01;
@@ -250,7 +250,7 @@ void TEST(LUdecomposition){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   rnd.seed(1);
   
   testMonSolve();

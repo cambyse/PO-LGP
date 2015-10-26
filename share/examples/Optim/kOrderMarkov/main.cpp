@@ -69,7 +69,7 @@ void TEST(KOrderMarkov) {
 }
   
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   testKOrderMarkov();
 
   return 0;

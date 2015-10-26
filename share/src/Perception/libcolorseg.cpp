@@ -19,7 +19,7 @@
 
 #include "libcolorseg.h"
 
-#ifdef MT_extern_libcolorseg
+#ifdef MLR_extern_libcolorseg
 
 // Felzenszwalb's files
 #include <extern/libcolorseg/image.h>
@@ -346,7 +346,7 @@ void patch_color_statistics(arr& stats, const uintA& patches, const byteA& image
 
 void colorize_patches(byteA& coloration, const uintA& patches, const arr& stats){NIY};
 
-typedef MT::Array<uintA> MultiSegmentations;
+typedef mlr::Array<uintA> MultiSegmentations;
 void get_multiple_color_segmentations(MultiSegmentations& segmentations,
 				      const byteA& image,  
 				      const arr& sigma,

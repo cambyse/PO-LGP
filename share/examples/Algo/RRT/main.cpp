@@ -31,7 +31,7 @@ void TEST(RRT) {
   plotModule.colors=false;
   //plotGnuplot();
 
-  MT::timerStart();
+  mlr::timerStart();
   for(uint i=0;i<10000;i++){
     //draw random configuration
     if(rnd.uni()<beta) q = q_goal;
@@ -66,14 +66,14 @@ void TEST(RRT) {
 
       //output
       if(i<20 || !(i%100)){
-        MT::String str;
+        mlr::String str;
         str
 	  <<"i=" <<i
 	  <<"  fwd-tree#=" <<ann[0].X.d0
 	  <<"  bwd-tree#=" <<ann[1].X.d0
 	  <<endl;
 	plot(false,str); //update the plot
-	//MT::wait(.01);
+	//mlr::wait(.01);
       }
     }
   }

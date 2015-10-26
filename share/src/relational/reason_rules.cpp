@@ -327,7 +327,7 @@ bool reason::calcSubstitutions_context(SubstitutionSet& subs, const SymbolicStat
   }
   CHECK_EQ(subs.num(),0, "Already subs given!");
   CHECK_EQ(rule->action->args.N,actionSub->num(), "Incomplete actionSub.");
-  if (!state.derived_lits_are_calculated) {MT_MSG("Derived symbols have not been derived in state!");}
+  if (!state.derived_lits_are_calculated) {MLR_MSG("Derived symbols have not been derived in state!");}
   uintA actionSub_outs;
   actionSub->getOuts(actionSub_outs);
   //  The deep question of QUANTIFICATION with NEGATED FREE DEICTIC VARS
@@ -445,7 +445,7 @@ bool reason::calcSubstitutions_rule(SubstitutionSet& subs, const SymbolicState& 
     /*cout<<"Rule:"<<endl;*/rule->write(cout);
     cout<<"SymbolicState: "<<state<<endl;
   }
-  MT::Array< uintA > list_actionArguments;
+  mlr::Array< uintA > list_actionArguments;
   TL::allPermutations(list_actionArguments, reason::getConstants(), rule->action->s->arity, true, true);
   uint i;
   FOR1D(list_actionArguments, i) {

@@ -27,8 +27,8 @@ MCTS::PARAMS::PARAMS()
 
 MCTS::MCTS(std::shared_ptr<AbstractEnvironment> world, const PARAMS& params)
 :   World(world),
-    Params(params),
-    TreeDepth(0)
+    TreeDepth(0),
+    Params(params)
 {
     /*/
     VNODE::NumChildren = Simulator.GetNumActions();
@@ -149,7 +149,8 @@ void MCTS::UCTSearch()
 
         TreeDepth = 0;
         PeakTreeDepth = 0;
-        double totalReward = SimulateV(Root);        
+        double totalReward = SimulateV(Root);
+		if(0) cout <<   totalReward <<endl;      
     }
 
 }
@@ -236,7 +237,7 @@ int MCTS::GreedyUCB(VNODE* vnode, bool ucb) const
     int N = vnode->Value.GetCount();
     double logN = log(N + 1);
 
-    for (int action = 0; action < Actions.size(); action++)
+    for (uint action = 0; action < Actions.size(); action++)
     {
         double q;
         int n;
@@ -271,7 +272,7 @@ double MCTS::Rollout()
     int numSteps;
     for (numSteps = 0; numSteps + TreeDepth < Params.MaxDepth && !terminal; ++numSteps)
     {
-        int observation;
+        //int observation;
         double reward;
 
         int action = Random(Actions.size());

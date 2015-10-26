@@ -7,14 +7,14 @@ Grammar
 
     0 $accept: pomdp_file $end
 
-    1 $@1: %empty
+    1 $@1: /* empty */
 
-    2 $@2: %empty
+    2 $@2: /* empty */
 
     3 pomdp_file: preamble $@1 start_state $@2 param_list
 
     4 preamble: preamble param_type
-    5         | %empty
+    5         | /* empty */
 
     6 param_type: discount_param
     7           | value_param
@@ -29,46 +29,46 @@ Grammar
    13 value_tail: REWARDTOK
    14           | COSTTOK
 
-   15 $@3: %empty
+   15 $@3: /* empty */
 
    16 state_param: STATETOK COLONTOK $@3 state_tail
 
    17 state_tail: INTTOK
    18           | ident_list
 
-   19 $@4: %empty
+   19 $@4: /* empty */
 
    20 action_param: ACTIONTOK COLONTOK $@4 action_tail
 
    21 action_tail: INTTOK
    22            | ident_list
 
-   23 $@5: %empty
+   23 $@5: /* empty */
 
    24 obs_param: OBSTOK COLONTOK $@5 obs_param_tail
 
    25 obs_param_tail: INTTOK
    26               | ident_list
 
-   27 $@6: %empty
+   27 $@6: /* empty */
 
    28 start_state: STARTTOK COLONTOK $@6 u_matrix
    29            | STARTTOK COLONTOK STRINGTOK
 
-   30 $@7: %empty
+   30 $@7: /* empty */
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 start_state_list
 
-   32 $@8: %empty
+   32 $@8: /* empty */
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 start_state_list
-   34            | %empty
+   34            | /* empty */
 
    35 start_state_list: start_state_list state
    36                 | state
 
    37 param_list: param_list param_spec
-   38           | %empty
+   38           | /* empty */
 
    39 param_spec: trans_prob_spec
    40           | obs_prob_spec
@@ -76,47 +76,47 @@ Grammar
 
    42 trans_prob_spec: TTOK COLONTOK trans_spec_tail
 
-   43 $@9: %empty
+   43 $@9: /* empty */
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 prob
 
-   45 $@10: %empty
+   45 $@10: /* empty */
 
    46 trans_spec_tail: action COLONTOK state $@10 u_matrix
 
-   47 $@11: %empty
+   47 $@11: /* empty */
 
    48 trans_spec_tail: action $@11 ui_matrix
 
    49 obs_prob_spec: OTOK COLONTOK obs_spec_tail
 
-   50 $@12: %empty
+   50 $@12: /* empty */
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 prob
 
-   52 $@13: %empty
+   52 $@13: /* empty */
 
    53 obs_spec_tail: action COLONTOK state $@13 u_matrix
 
-   54 $@14: %empty
+   54 $@14: /* empty */
 
    55 obs_spec_tail: action $@14 u_matrix
 
    56 reward_spec: RTOK COLONTOK reward_spec_tail
 
-   57 $@15: %empty
+   57 $@15: /* empty */
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 number
 
-   59 $@16: %empty
+   59 $@16: /* empty */
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 num_matrix
 
-   61 $@17: %empty
+   61 $@17: /* empty */
 
    62 reward_spec_tail: action COLONTOK state $@17 num_matrix
 
-   63 $@18: %empty
+   63 $@18: /* empty */
 
    64 reward_spec_tail: action $@18 num_matrix
 
@@ -157,7 +157,7 @@ Grammar
 
    90 optional_sign: PLUSTOK
    91              | MINUSTOK
-   92              | %empty
+   92              | /* empty */
 
 
 Terminals, with rules where they appear
@@ -299,7 +299,7 @@ optional_sign (78)
     on left: 90 91 92, on right: 88 89
 
 
-State 0
+state 0
 
     0 $accept: . pomdp_file $end
 
@@ -309,14 +309,14 @@ State 0
     preamble    go to state 2
 
 
-State 1
+state 1
 
     0 $accept: pomdp_file . $end
 
     $end  shift, and go to state 3
 
 
-State 2
+state 2
 
     3 pomdp_file: preamble . $@1 start_state $@2 param_list
     4 preamble: preamble . param_type
@@ -338,49 +338,49 @@ State 2
     obs_param       go to state 15
 
 
-State 3
+state 3
 
     0 $accept: pomdp_file $end .
 
     $default  accept
 
 
-State 4
+state 4
 
    11 discount_param: DISCOUNTTOK . COLONTOK number
 
     COLONTOK  shift, and go to state 16
 
 
-State 5
+state 5
 
    12 value_param: VALUESTOK . COLONTOK value_tail
 
     COLONTOK  shift, and go to state 17
 
 
-State 6
+state 6
 
    16 state_param: STATETOK . COLONTOK $@3 state_tail
 
     COLONTOK  shift, and go to state 18
 
 
-State 7
+state 7
 
    20 action_param: ACTIONTOK . COLONTOK $@4 action_tail
 
     COLONTOK  shift, and go to state 19
 
 
-State 8
+state 8
 
    24 obs_param: OBSTOK . COLONTOK $@5 obs_param_tail
 
     COLONTOK  shift, and go to state 20
 
 
-State 9
+state 9
 
     3 pomdp_file: preamble $@1 . start_state $@2 param_list
 
@@ -391,49 +391,49 @@ State 9
     start_state  go to state 22
 
 
-State 10
+state 10
 
     4 preamble: preamble param_type .
 
     $default  reduce using rule 4 (preamble)
 
 
-State 11
+state 11
 
     6 param_type: discount_param .
 
     $default  reduce using rule 6 (param_type)
 
 
-State 12
+state 12
 
     7 param_type: value_param .
 
     $default  reduce using rule 7 (param_type)
 
 
-State 13
+state 13
 
     8 param_type: state_param .
 
     $default  reduce using rule 8 (param_type)
 
 
-State 14
+state 14
 
     9 param_type: action_param .
 
     $default  reduce using rule 9 (param_type)
 
 
-State 15
+state 15
 
    10 param_type: obs_param .
 
     $default  reduce using rule 10 (param_type)
 
 
-State 16
+state 16
 
    11 discount_param: DISCOUNTTOK COLONTOK . number
 
@@ -446,7 +446,7 @@ State 16
     optional_sign  go to state 26
 
 
-State 17
+state 17
 
    12 value_param: VALUESTOK COLONTOK . value_tail
 
@@ -456,7 +456,7 @@ State 17
     value_tail  go to state 29
 
 
-State 18
+state 18
 
    16 state_param: STATETOK COLONTOK . $@3 state_tail
 
@@ -465,7 +465,7 @@ State 18
     $@3  go to state 30
 
 
-State 19
+state 19
 
    20 action_param: ACTIONTOK COLONTOK . $@4 action_tail
 
@@ -474,7 +474,7 @@ State 19
     $@4  go to state 31
 
 
-State 20
+state 20
 
    24 obs_param: OBSTOK COLONTOK . $@5 obs_param_tail
 
@@ -483,7 +483,7 @@ State 20
     $@5  go to state 32
 
 
-State 21
+state 21
 
    28 start_state: STARTTOK . COLONTOK $@6 u_matrix
    29            | STARTTOK . COLONTOK STRINGTOK
@@ -495,7 +495,7 @@ State 21
     EXCLUDETOK  shift, and go to state 35
 
 
-State 22
+state 22
 
     3 pomdp_file: preamble $@1 start_state . $@2 param_list
 
@@ -504,28 +504,28 @@ State 22
     $@2  go to state 36
 
 
-State 23
+state 23
 
    91 optional_sign: MINUSTOK .
 
     $default  reduce using rule 91 (optional_sign)
 
 
-State 24
+state 24
 
    90 optional_sign: PLUSTOK .
 
     $default  reduce using rule 90 (optional_sign)
 
 
-State 25
+state 25
 
    11 discount_param: DISCOUNTTOK COLONTOK number .
 
     $default  reduce using rule 11 (discount_param)
 
 
-State 26
+state 26
 
    88 number: optional_sign . INTTOK
    89       | optional_sign . FLOATTOK
@@ -534,28 +534,28 @@ State 26
     FLOATTOK  shift, and go to state 38
 
 
-State 27
+state 27
 
    13 value_tail: REWARDTOK .
 
     $default  reduce using rule 13 (value_tail)
 
 
-State 28
+state 28
 
    14 value_tail: COSTTOK .
 
     $default  reduce using rule 14 (value_tail)
 
 
-State 29
+state 29
 
    12 value_param: VALUESTOK COLONTOK value_tail .
 
     $default  reduce using rule 12 (value_param)
 
 
-State 30
+state 30
 
    16 state_param: STATETOK COLONTOK $@3 . state_tail
 
@@ -566,7 +566,7 @@ State 30
     ident_list  go to state 42
 
 
-State 31
+state 31
 
    20 action_param: ACTIONTOK COLONTOK $@4 . action_tail
 
@@ -577,7 +577,7 @@ State 31
     ident_list   go to state 45
 
 
-State 32
+state 32
 
    24 obs_param: OBSTOK COLONTOK $@5 . obs_param_tail
 
@@ -588,7 +588,7 @@ State 32
     ident_list      go to state 48
 
 
-State 33
+state 33
 
    28 start_state: STARTTOK COLONTOK . $@6 u_matrix
    29            | STARTTOK COLONTOK . STRINGTOK
@@ -600,21 +600,21 @@ State 33
     $@6  go to state 50
 
 
-State 34
+state 34
 
    31 start_state: STARTTOK INCLUDETOK . COLONTOK $@7 start_state_list
 
     COLONTOK  shift, and go to state 51
 
 
-State 35
+state 35
 
    33 start_state: STARTTOK EXCLUDETOK . COLONTOK $@8 start_state_list
 
     COLONTOK  shift, and go to state 52
 
 
-State 36
+state 36
 
     3 pomdp_file: preamble $@1 start_state $@2 . param_list
 
@@ -623,42 +623,42 @@ State 36
     param_list  go to state 53
 
 
-State 37
+state 37
 
    88 number: optional_sign INTTOK .
 
     $default  reduce using rule 88 (number)
 
 
-State 38
+state 38
 
    89 number: optional_sign FLOATTOK .
 
     $default  reduce using rule 89 (number)
 
 
-State 39
+state 39
 
    17 state_tail: INTTOK .
 
     $default  reduce using rule 17 (state_tail)
 
 
-State 40
+state 40
 
    85 ident_list: STRINGTOK .
 
     $default  reduce using rule 85 (ident_list)
 
 
-State 41
+state 41
 
    16 state_param: STATETOK COLONTOK $@3 state_tail .
 
     $default  reduce using rule 16 (state_param)
 
 
-State 42
+state 42
 
    18 state_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
@@ -668,21 +668,21 @@ State 42
     $default  reduce using rule 18 (state_tail)
 
 
-State 43
+state 43
 
    21 action_tail: INTTOK .
 
     $default  reduce using rule 21 (action_tail)
 
 
-State 44
+state 44
 
    20 action_param: ACTIONTOK COLONTOK $@4 action_tail .
 
     $default  reduce using rule 20 (action_param)
 
 
-State 45
+state 45
 
    22 action_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
@@ -692,21 +692,21 @@ State 45
     $default  reduce using rule 22 (action_tail)
 
 
-State 46
+state 46
 
    25 obs_param_tail: INTTOK .
 
     $default  reduce using rule 25 (obs_param_tail)
 
 
-State 47
+state 47
 
    24 obs_param: OBSTOK COLONTOK $@5 obs_param_tail .
 
     $default  reduce using rule 24 (obs_param)
 
 
-State 48
+state 48
 
    26 obs_param_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
@@ -716,14 +716,14 @@ State 48
     $default  reduce using rule 26 (obs_param_tail)
 
 
-State 49
+state 49
 
    29 start_state: STARTTOK COLONTOK STRINGTOK .
 
     $default  reduce using rule 29 (start_state)
 
 
-State 50
+state 50
 
    28 start_state: STARTTOK COLONTOK $@6 . u_matrix
 
@@ -737,7 +737,7 @@ State 50
     prob         go to state 61
 
 
-State 51
+state 51
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK . $@7 start_state_list
 
@@ -746,7 +746,7 @@ State 51
     $@7  go to state 62
 
 
-State 52
+state 52
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK . $@8 start_state_list
 
@@ -755,7 +755,7 @@ State 52
     $@8  go to state 63
 
 
-State 53
+state 53
 
     3 pomdp_file: preamble $@1 start_state $@2 param_list .
    37 param_list: param_list . param_spec
@@ -772,49 +772,49 @@ State 53
     reward_spec      go to state 70
 
 
-State 54
+state 54
 
    84 ident_list: ident_list STRINGTOK .
 
     $default  reduce using rule 84 (ident_list)
 
 
-State 55
+state 55
 
    86 prob: INTTOK .
 
     $default  reduce using rule 86 (prob)
 
 
-State 56
+state 56
 
    87 prob: FLOATTOK .
 
     $default  reduce using rule 87 (prob)
 
 
-State 57
+state 57
 
    68 u_matrix: UNIFORMTOK .
 
     $default  reduce using rule 68 (u_matrix)
 
 
-State 58
+state 58
 
    69 u_matrix: RESETTOK .
 
     $default  reduce using rule 69 (u_matrix)
 
 
-State 59
+state 59
 
    28 start_state: STARTTOK COLONTOK $@6 u_matrix .
 
     $default  reduce using rule 28 (start_state)
 
 
-State 60
+state 60
 
    70 u_matrix: prob_matrix .
    71 prob_matrix: prob_matrix . prob
@@ -827,14 +827,14 @@ State 60
     prob  go to state 71
 
 
-State 61
+state 61
 
    72 prob_matrix: prob .
 
     $default  reduce using rule 72 (prob_matrix)
 
 
-State 62
+state 62
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 . start_state_list
 
@@ -846,7 +846,7 @@ State 62
     state             go to state 76
 
 
-State 63
+state 63
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 . start_state_list
 
@@ -858,84 +858,84 @@ State 63
     state             go to state 76
 
 
-State 64
+state 64
 
    42 trans_prob_spec: TTOK . COLONTOK trans_spec_tail
 
     COLONTOK  shift, and go to state 78
 
 
-State 65
+state 65
 
    49 obs_prob_spec: OTOK . COLONTOK obs_spec_tail
 
     COLONTOK  shift, and go to state 79
 
 
-State 66
+state 66
 
    56 reward_spec: RTOK . COLONTOK reward_spec_tail
 
     COLONTOK  shift, and go to state 80
 
 
-State 67
+state 67
 
    37 param_list: param_list param_spec .
 
     $default  reduce using rule 37 (param_list)
 
 
-State 68
+state 68
 
    39 param_spec: trans_prob_spec .
 
     $default  reduce using rule 39 (param_spec)
 
 
-State 69
+state 69
 
    40 param_spec: obs_prob_spec .
 
     $default  reduce using rule 40 (param_spec)
 
 
-State 70
+state 70
 
    41 param_spec: reward_spec .
 
     $default  reduce using rule 41 (param_spec)
 
 
-State 71
+state 71
 
    71 prob_matrix: prob_matrix prob .
 
     $default  reduce using rule 71 (prob_matrix)
 
 
-State 72
+state 72
 
    75 state: INTTOK .
 
     $default  reduce using rule 75 (state)
 
 
-State 73
+state 73
 
    76 state: STRINGTOK .
 
     $default  reduce using rule 76 (state)
 
 
-State 74
+state 74
 
    77 state: ASTERICKTOK .
 
     $default  reduce using rule 77 (state)
 
 
-State 75
+state 75
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 start_state_list .
    35 start_state_list: start_state_list . state
@@ -949,14 +949,14 @@ State 75
     state  go to state 81
 
 
-State 76
+state 76
 
    36 start_state_list: state .
 
     $default  reduce using rule 36 (start_state_list)
 
 
-State 77
+state 77
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 start_state_list .
    35 start_state_list: start_state_list . state
@@ -970,7 +970,7 @@ State 77
     state  go to state 81
 
 
-State 78
+state 78
 
    42 trans_prob_spec: TTOK COLONTOK . trans_spec_tail
 
@@ -982,7 +982,7 @@ State 78
     action           go to state 86
 
 
-State 79
+state 79
 
    49 obs_prob_spec: OTOK COLONTOK . obs_spec_tail
 
@@ -994,7 +994,7 @@ State 79
     action         go to state 88
 
 
-State 80
+state 80
 
    56 reward_spec: RTOK COLONTOK . reward_spec_tail
 
@@ -1006,42 +1006,42 @@ State 80
     action            go to state 90
 
 
-State 81
+state 81
 
    35 start_state_list: start_state_list state .
 
     $default  reduce using rule 35 (start_state_list)
 
 
-State 82
+state 82
 
    78 action: INTTOK .
 
     $default  reduce using rule 78 (action)
 
 
-State 83
+state 83
 
    79 action: STRINGTOK .
 
     $default  reduce using rule 79 (action)
 
 
-State 84
+state 84
 
    80 action: ASTERICKTOK .
 
     $default  reduce using rule 80 (action)
 
 
-State 85
+state 85
 
    42 trans_prob_spec: TTOK COLONTOK trans_spec_tail .
 
     $default  reduce using rule 42 (trans_prob_spec)
 
 
-State 86
+state 86
 
    44 trans_spec_tail: action . COLONTOK state COLONTOK state $@9 prob
    46                | action . COLONTOK state $@10 u_matrix
@@ -1054,14 +1054,14 @@ State 86
     $@11  go to state 92
 
 
-State 87
+state 87
 
    49 obs_prob_spec: OTOK COLONTOK obs_spec_tail .
 
     $default  reduce using rule 49 (obs_prob_spec)
 
 
-State 88
+state 88
 
    51 obs_spec_tail: action . COLONTOK state COLONTOK obs $@12 prob
    53              | action . COLONTOK state $@13 u_matrix
@@ -1074,14 +1074,14 @@ State 88
     $@14  go to state 94
 
 
-State 89
+state 89
 
    56 reward_spec: RTOK COLONTOK reward_spec_tail .
 
     $default  reduce using rule 56 (reward_spec)
 
 
-State 90
+state 90
 
    58 reward_spec_tail: action . COLONTOK state COLONTOK state COLONTOK obs $@15 number
    60                 | action . COLONTOK state COLONTOK state $@16 num_matrix
@@ -1095,7 +1095,7 @@ State 90
     $@18  go to state 96
 
 
-State 91
+state 91
 
    44 trans_spec_tail: action COLONTOK . state COLONTOK state $@9 prob
    46                | action COLONTOK . state $@10 u_matrix
@@ -1107,7 +1107,7 @@ State 91
     state  go to state 97
 
 
-State 92
+state 92
 
    48 trans_spec_tail: action $@11 . ui_matrix
 
@@ -1121,7 +1121,7 @@ State 92
     prob         go to state 61
 
 
-State 93
+state 93
 
    51 obs_spec_tail: action COLONTOK . state COLONTOK obs $@12 prob
    53              | action COLONTOK . state $@13 u_matrix
@@ -1133,7 +1133,7 @@ State 93
     state  go to state 102
 
 
-State 94
+state 94
 
    55 obs_spec_tail: action $@14 . u_matrix
 
@@ -1147,7 +1147,7 @@ State 94
     prob         go to state 61
 
 
-State 95
+state 95
 
    58 reward_spec_tail: action COLONTOK . state COLONTOK state COLONTOK obs $@15 number
    60                 | action COLONTOK . state COLONTOK state $@16 num_matrix
@@ -1160,7 +1160,7 @@ State 95
     state  go to state 104
 
 
-State 96
+state 96
 
    64 reward_spec_tail: action $@18 . num_matrix
 
@@ -1174,7 +1174,7 @@ State 96
     optional_sign  go to state 26
 
 
-State 97
+state 97
 
    44 trans_spec_tail: action COLONTOK state . COLONTOK state $@9 prob
    46                | action COLONTOK state . $@10 u_matrix
@@ -1186,28 +1186,28 @@ State 97
     $@10  go to state 108
 
 
-State 98
+state 98
 
    65 ui_matrix: UNIFORMTOK .
 
     $default  reduce using rule 65 (ui_matrix)
 
 
-State 99
+state 99
 
    66 ui_matrix: IDENTITYTOK .
 
     $default  reduce using rule 66 (ui_matrix)
 
 
-State 100
+state 100
 
    48 trans_spec_tail: action $@11 ui_matrix .
 
     $default  reduce using rule 48 (trans_spec_tail)
 
 
-State 101
+state 101
 
    67 ui_matrix: prob_matrix .
    71 prob_matrix: prob_matrix . prob
@@ -1220,7 +1220,7 @@ State 101
     prob  go to state 71
 
 
-State 102
+state 102
 
    51 obs_spec_tail: action COLONTOK state . COLONTOK obs $@12 prob
    53              | action COLONTOK state . $@13 u_matrix
@@ -1232,14 +1232,14 @@ State 102
     $@13  go to state 110
 
 
-State 103
+state 103
 
    55 obs_spec_tail: action $@14 u_matrix .
 
     $default  reduce using rule 55 (obs_spec_tail)
 
 
-State 104
+state 104
 
    58 reward_spec_tail: action COLONTOK state . COLONTOK state COLONTOK obs $@15 number
    60                 | action COLONTOK state . COLONTOK state $@16 num_matrix
@@ -1252,7 +1252,7 @@ State 104
     $@17  go to state 112
 
 
-State 105
+state 105
 
    64 reward_spec_tail: action $@18 num_matrix .
    73 num_matrix: num_matrix . number
@@ -1268,14 +1268,14 @@ State 105
     optional_sign  go to state 26
 
 
-State 106
+state 106
 
    74 num_matrix: number .
 
     $default  reduce using rule 74 (num_matrix)
 
 
-State 107
+state 107
 
    44 trans_spec_tail: action COLONTOK state COLONTOK . state $@9 prob
 
@@ -1286,7 +1286,7 @@ State 107
     state  go to state 114
 
 
-State 108
+state 108
 
    46 trans_spec_tail: action COLONTOK state $@10 . u_matrix
 
@@ -1300,7 +1300,7 @@ State 108
     prob         go to state 61
 
 
-State 109
+state 109
 
    51 obs_spec_tail: action COLONTOK state COLONTOK . obs $@12 prob
 
@@ -1311,7 +1311,7 @@ State 109
     obs  go to state 119
 
 
-State 110
+state 110
 
    53 obs_spec_tail: action COLONTOK state $@13 . u_matrix
 
@@ -1325,7 +1325,7 @@ State 110
     prob         go to state 61
 
 
-State 111
+state 111
 
    58 reward_spec_tail: action COLONTOK state COLONTOK . state COLONTOK obs $@15 number
    60                 | action COLONTOK state COLONTOK . state $@16 num_matrix
@@ -1337,7 +1337,7 @@ State 111
     state  go to state 121
 
 
-State 112
+state 112
 
    62 reward_spec_tail: action COLONTOK state $@17 . num_matrix
 
@@ -1351,14 +1351,14 @@ State 112
     optional_sign  go to state 26
 
 
-State 113
+state 113
 
    73 num_matrix: num_matrix number .
 
     $default  reduce using rule 73 (num_matrix)
 
 
-State 114
+state 114
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state . $@9 prob
 
@@ -1367,35 +1367,35 @@ State 114
     $@9  go to state 123
 
 
-State 115
+state 115
 
    46 trans_spec_tail: action COLONTOK state $@10 u_matrix .
 
     $default  reduce using rule 46 (trans_spec_tail)
 
 
-State 116
+state 116
 
    81 obs: INTTOK .
 
     $default  reduce using rule 81 (obs)
 
 
-State 117
+state 117
 
    82 obs: STRINGTOK .
 
     $default  reduce using rule 82 (obs)
 
 
-State 118
+state 118
 
    83 obs: ASTERICKTOK .
 
     $default  reduce using rule 83 (obs)
 
 
-State 119
+state 119
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs . $@12 prob
 
@@ -1404,14 +1404,14 @@ State 119
     $@12  go to state 124
 
 
-State 120
+state 120
 
    53 obs_spec_tail: action COLONTOK state $@13 u_matrix .
 
     $default  reduce using rule 53 (obs_spec_tail)
 
 
-State 121
+state 121
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state . COLONTOK obs $@15 number
    60                 | action COLONTOK state COLONTOK state . $@16 num_matrix
@@ -1423,7 +1423,7 @@ State 121
     $@16  go to state 126
 
 
-State 122
+state 122
 
    62 reward_spec_tail: action COLONTOK state $@17 num_matrix .
    73 num_matrix: num_matrix . number
@@ -1439,7 +1439,7 @@ State 122
     optional_sign  go to state 26
 
 
-State 123
+state 123
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 . prob
 
@@ -1449,7 +1449,7 @@ State 123
     prob  go to state 127
 
 
-State 124
+state 124
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 . prob
 
@@ -1459,7 +1459,7 @@ State 124
     prob  go to state 128
 
 
-State 125
+state 125
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK . obs $@15 number
 
@@ -1470,7 +1470,7 @@ State 125
     obs  go to state 129
 
 
-State 126
+state 126
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 . num_matrix
 
@@ -1484,21 +1484,21 @@ State 126
     optional_sign  go to state 26
 
 
-State 127
+state 127
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 prob .
 
     $default  reduce using rule 44 (trans_spec_tail)
 
 
-State 128
+state 128
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 prob .
 
     $default  reduce using rule 51 (obs_spec_tail)
 
 
-State 129
+state 129
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs . $@15 number
 
@@ -1507,7 +1507,7 @@ State 129
     $@15  go to state 131
 
 
-State 130
+state 130
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 num_matrix .
    73 num_matrix: num_matrix . number
@@ -1523,7 +1523,7 @@ State 130
     optional_sign  go to state 26
 
 
-State 131
+state 131
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 . number
 
@@ -1536,7 +1536,7 @@ State 131
     optional_sign  go to state 26
 
 
-State 132
+state 132
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 number .
 

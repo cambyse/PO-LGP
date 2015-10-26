@@ -9,7 +9,7 @@
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //===========================================================================
   //
@@ -17,7 +17,7 @@ int main(int argc,char **argv){
   
   // load the ors file
   ors::KinematicWorld ors;
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("iCub.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("iCub.ors")));
   // start the collision computation engine
   SwiftInterface swift;
   swift.init(ors,.1);               //.1 is the threshold for distance consideration
@@ -31,7 +31,7 @@ int main(int argc,char **argv){
   // init the SocAbstraction (tying together the simulator, the collision engine, and the display)
   uint T=200;
   soc::SocSystem_Ors soc;
-  soc.initBasics(&ors,&swift,&gl,T,3.,MT::getParameter<bool>("dynamic",false),NULL);
+  soc.initBasics(&ors,&swift,&gl,T,3.,mlr::getParameter<bool>("dynamic",false),NULL);
   soc.os=&std::cout;
 
   //===========================================================================

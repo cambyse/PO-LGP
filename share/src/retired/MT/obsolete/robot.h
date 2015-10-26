@@ -1,5 +1,5 @@
-#ifndef MT_robot_h
-#define MT_robot_h
+#ifndef MLR_robot_h
+#define MLR_robot_h
 
 #include <Gui/opengl.h>
 
@@ -182,7 +182,7 @@ _BasicRobotTask(Reach)
 _BasicRobotTask(FollowTrajectory)
 _BasicRobotTask(Gamepad)
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "robot.cpp"
 #endif
 

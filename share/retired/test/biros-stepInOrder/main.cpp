@@ -86,7 +86,7 @@ struct AdderP : public Process {
   void step() {
     int tmp = result.get_x(this) + in1.get_x(this) + in2.get_x(this);
     // math is hard...so wait
-    // MT::wait(.7);
+    // mlr::wait(.7);
     cout << "result is " << tmp << endl;
     result.set_x(tmp , this);
   }

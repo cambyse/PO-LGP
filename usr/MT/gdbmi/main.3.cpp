@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout <<"0" <<std::endl;
 
-    MT::wait(1.);
+    mlr::wait(1.);
     close (saved_stderr);
   }
 

@@ -25,8 +25,8 @@
  * @{
  */
 
-#ifndef MT_soc_exampleProblems_h
-#define MT_soc_exampleProblems_h
+#ifndef MLR_soc_exampleProblems_h
+#define MLR_soc_exampleProblems_h
 
 #include "socNew.h"
 
@@ -61,7 +61,7 @@ struct ControlledSystem_PointMass: ControlledSystem{
   virtual void getTaskCosts(arr& phi, arr& phiJ, uint t);
 
   virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false);
-  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t);
+  virtual void getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t);
 };
 
 

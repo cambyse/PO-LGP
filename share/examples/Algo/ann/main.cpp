@@ -11,20 +11,20 @@ void TEST(ANN) {
 
   rndUniform(X,0.,1.,false);
 
-  MT::IOraw=true;
+  mlr::IOraw=true;
 
-  MT::timerStart();
+  mlr::timerStart();
   ann.setX(X);
   rndUniform(x,0.,1.,false); //x=.5;
   ann.getkNN(dists,idx,x,10,.0, true);
   Y.resize(idx.N,x.N);
   for(uint i=0;i<Y.d0;i++) Y[i] = X[idx(i)];
-  std::cout <<"build time (#" <<ann.X.N <<") = " <<MT::timerRead() <<"sec" <<std::endl;
+  std::cout <<"build time (#" <<ann.X.N <<") = " <<mlr::timerRead() <<"sec" <<std::endl;
   write(LIST<arr>(X),"z.data");
   write(LIST<arr>(x.reshape(1,x.N)),"z.query");
   write(LIST<arr>(Y),"z.neighbors");
   gnuplot("set size square; plot 'z.data' w p,'z.query' w p,'z.neighbors' w p");
-  MT::wait();
+  mlr::wait();
 }
 
 void TEST(ANNIncremental) {
@@ -41,7 +41,7 @@ void TEST(ANNIncremental) {
     ann.append(x);
     if(i>10){
       ann.getkNN(Q,q,10,.0, true);
-      //MT::wait();
+      //mlr::wait();
     }
   }
 }

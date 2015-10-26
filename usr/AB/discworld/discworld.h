@@ -19,8 +19,8 @@ class DiscWorld {
 
     bool mode;
     int N, T, G;
-    MT::Array<ors::Vector> bodies;
-    MT::Array<ors::Vector> goals;
+    mlr::Array<ors::Vector> bodies;
+    mlr::Array<ors::Vector> goals;
     StringL names;
 
     KeyFramer kf;

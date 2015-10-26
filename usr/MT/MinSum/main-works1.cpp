@@ -24,11 +24,11 @@ struct MinSumGaussNewton{
   double tolerance;
 
   uintA Msgs; //edges
-  MT::Array<uintA> del; //in-neighbors
-  MT::Array<Message> mu;
+  mlr::Array<uintA> del; //in-neighbors
+  mlr::Array<Message> mu;
 
-  MT::Array<Fi>  fi;
-  MT::Array<Fij> fij;
+  mlr::Array<Fi>  fi;
+  mlr::Array<Fij> fij;
 
   virtual double phi(uint i,const arr& x_i) = 0;
   virtual double psi(uint i,uint j,const arr& x_i,const arr& x_j) = 0;
@@ -215,8 +215,8 @@ void test(){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-  MT::verboseLevel=1;
+  mlr::initCmdLine(argc,argv);
+  mlr::verboseLevel=1;
   
   test();
 

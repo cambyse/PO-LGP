@@ -7,7 +7,6 @@
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <Core/array-vector.h>
 #include <Algo/spline.h>
 
 
@@ -18,7 +17,7 @@ struct MySystem:System{
       ACCESS(CtrlMsg, ctrl_obs)
       ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
       MySystem(){
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
@@ -39,13 +38,13 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
-  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+  q(qIndex+2) = mlr::sign(rotvec(2)) * angle;
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
-  bool useRos = MT::getParameter<bool>("useRos", false);
-  bool fixBase = MT::getParameter<bool>("fixBase", false);
+  mlr::initCmdLine(argc, argv);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
+  bool fixBase = mlr::getParameter<bool>("fixBase", false);
 
   MySystem S;
   engine().open(S);
@@ -115,20 +114,20 @@ int main(int argc, char** argv){
   world.setJointState(q,qdot);
   world_pr2.setJointState(q,qdot);
 
-  double duration = MT::getParameter<double>("duration");
+  double duration = mlr::getParameter<double>("duration");
   double tau = duration/x.d0;
   arr xd;
   getVel(xd,x,tau);
 
-  MT::Spline xs(x.d0,x);
-  MT::Spline xds(x.d0,xd);
+  mlr::Spline xs(x.d0,x);
+  mlr::Spline xds(x.d0,xd);
   CtrlMsg refs;
   arr zero_qdot(qdot.N);
   zero_qdot.setZero();
   arr q_real;
   double s = 0.;
   double t = 0.;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   while(t<2*duration){
     refs.fL = zeros(6);
     refs.KiFT.clear();
@@ -167,7 +166,7 @@ int main(int argc, char** argv){
     world_pr2.setJointState(q_real);
     world.gl().update();
 
-    t = t + MT::timerRead(true);
+    t = t + mlr::timerRead(true);
   }
 
   cout << q_real(trans->qIndex+0) << " | " << target(trans->qIndex+0) << endl;

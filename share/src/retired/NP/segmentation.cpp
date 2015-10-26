@@ -6,7 +6,7 @@
 #include "opencv_helper.h"
 
 template <class S>
-inline void ucm_display(const char* name, const MT::Array<S>& p, uint wait=10)
+inline void ucm_display(const char* name, const mlr::Array<S>& p, uint wait=10)
 {
   byteA p_temp;
   np::array2array(p_temp, p);
@@ -18,7 +18,7 @@ namespace np {
 void seg_build(PatchList &patches, const uintA& map)
 {
   uintA intensities;
-  MT::Array<uintA> lists;
+  mlr::Array<uintA> lists;
 
   // object map: determine regions and contours
   pixel_intensities(intensities, map, (uint) 0);
@@ -73,7 +73,7 @@ np::SegmentationGroundtruth::SegmentationGroundtruth(const byteA& img_obj, const
 
 template <class S> void np::SegmentationGroundtruth::overlap
 (
- MT::Array<S>& o,
+ mlr::Array<S>& o,
  const uintA& region,
  OverlapType t,
  bool classwise
@@ -119,5 +119,5 @@ template <class S> void np::SegmentationGroundtruth::overlap
       break;
   }
 };
-template void np::SegmentationGroundtruth::overlap(MT::Array<float>&, const uintA&, np::OverlapType, bool);
-template void np::SegmentationGroundtruth::overlap(MT::Array<double>&, const uintA&, np::OverlapType, bool);
+template void np::SegmentationGroundtruth::overlap(mlr::Array<float>&, const uintA&, np::OverlapType, bool);
+template void np::SegmentationGroundtruth::overlap(mlr::Array<double>&, const uintA&, np::OverlapType, bool);

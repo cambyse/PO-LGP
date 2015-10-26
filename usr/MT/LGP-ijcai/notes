@@ -1,4 +1,15 @@
+Sequence: touch A with eff; release A on B
 
+1)
+* constraints: (touch eff A)
+* after-switch: (glue eff A)
+2)
+* constraints: (touch A B) (support B A) (upright A)
+* after-logic: (touch eff A)!
+* after-switch: (glue eff A)! (transXYPhi B A)
+
+
+================================================================================
 
 What relational state do we want to represent?
 

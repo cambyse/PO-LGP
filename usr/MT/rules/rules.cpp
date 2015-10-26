@@ -14,10 +14,10 @@ void StateVariable::write(std::ostream& os) const {
 }
 
 void StateVariable::read(istream& is) {
-  MT::String::readStopSymbols = " []<>\n\r";
-  MT::String::readEatStopSymbol = 0;
+  mlr::String::readStopSymbols = " []<>\n\r";
+  mlr::String::readEatStopSymbol = 0;
   is >>name;
-  char c=MT::peerNextChar(is);
+  char c=mlr::peerNextChar(is);
   if (c=='[') {
     is >>valueNames;
     dim=valueNames.N;
@@ -49,14 +49,14 @@ void Rule::write(std::ostream& os) const {
 }
 
 void Rule::read(std::istream& is) {
-  MT::String::readStopSymbols = " []<>\n\r";
-  MT::String::readEatStopSymbol = 0;
+  mlr::String::readStopSymbols = " []<>\n\r";
+  mlr::String::readEatStopSymbol = 0;
   uint i;
   char c;
-  MT::String varName;
+  mlr::String varName;
   StateVariable *s;
   for (i=0;; i++) {
-    c=MT::peerNextChar(is," \r\t");
+    c=mlr::peerNextChar(is," \r\t");
     if (c=='\n') break;
     if (c=='-') {
       is.get(c);

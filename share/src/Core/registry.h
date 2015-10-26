@@ -22,8 +22,8 @@
 /// @addtogroup group_Core
 /// @{
 
-#ifndef MT_registry_h
-#define MT_registry_h
+#ifndef MLR_registry_h
+#define MLR_registry_h
 
 #include "array.h"
 #include "graph.h"
@@ -33,7 +33,7 @@
 // global registry of anything using a singleton Graph
 //
 
-Graph& registry();
+extern Singleton<Graph> registry;
 void initRegistry(int argc, char *argv[]);
 
 //macros to be used in *.cpp files
@@ -45,7 +45,7 @@ void initRegistry(int argc, char *argv[]);
 
 #define REGISTER_ITEM2(T, key1, key2, value, ownsValue) \
   RUN_ON_INIT_BEGIN(key1##_##key2) \
-  new Node_typed<T>(registry(), {MT::String(#key1), MT::String(#key2)}, NodeL(), value, ownsValue); \
+  new Node_typed<T>(registry(), {mlr::String(#key1), mlr::String(#key2)}, NodeL(), value, ownsValue); \
   RUN_ON_INIT_END(key1##_##key2)
 
 
@@ -55,7 +55,7 @@ void initRegistry(int argc, char *argv[]);
 //
 
 struct Type:RootType {
-  MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
+  mlr::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual const std::type_info& typeId() const {NIY}
   virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
   virtual void* newInstance() const {NIY}
@@ -74,7 +74,7 @@ stdPipes(Type);
 
 inline bool operator!=(Type& t1, Type& t2){ return t1.typeId()!= t2.typeId(); }
 
-typedef MT::Array<Type*> TypeInfoL;
+typedef mlr::Array<Type*> TypeInfoL;
 
 
 //===========================================================================
@@ -86,7 +86,7 @@ typedef MT::Array<Type*> TypeInfoL;
 inline Node *reg_findType(const char* key) {
   NodeL types = registry().getDerivedNodes<Type>();
   for(Node *ti: types) {
-    if(MT::String(ti->getValue<Type>()->typeId().name())==key) return ti;
+    if(mlr::String(ti->getValue<Type>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
   }
   return NULL;

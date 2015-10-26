@@ -21,7 +21,7 @@
 #include "data.h"
 
 void Data::loadSpecific(bool test){
-  tag=MT::getParameter<MT::String>("dataSet");
+  tag=mlr::getParameter<mlr::String>("dataSet");
   if(tag=="usps"){  loadUSPS("usps-bin.arr", false);  return;  }
   if(tag=="yeast"){
     if(!test) loadSvmMultiLabelData("multilabel/yeast_train.svm", true);
@@ -41,26 +41,26 @@ void Data::loadToyData(const char *filename, uint labels){
   uint s=XY.d1-labels;
   X = XY.sub(0, -1, 0, s-1);
   Y = XY.sub(0, -1, s, -1);
-  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
+  cout <<MLR_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
   ifstream is;
-  if(inSharePath) MT::open(is, STRING("/home/mtoussai/share/data/" <<filename));
-  else            MT::open(is, filename);
+  if(inSharePath) mlr::open(is, STRING("/home/mtoussai/share/data/" <<filename));
+  else            mlr::open(is, filename);
   uint l, max=0, idx;
   double f;
   arr features;
   uintA labels;
-  MT::Array<uintA> L; //multi label outputs
+  mlr::Array<uintA> L; //multi label outputs
   uint i;
   for(i=0;; i++){
     features.clear();
     labels.clear();
     is >>l; labels.append(l); if(l>max) max=l;
     if(!is.good()){  is.clear();  break;  }
-    while(MT::peerNextChar(is, "")==','){        is >>PARSE(", ") >>l; labels.append(l); if(l>max) max=l; }
-    while(MT::peerNextChar(is, " \t\r")!='\n'){  is >>idx >>PARSE(":") >>f; features.append(f);      }
+    while(mlr::peerNextChar(is, "")==','){        is >>PARSE(", ") >>l; labels.append(l); if(l>max) max=l; }
+    while(mlr::peerNextChar(is, " \t\r")!='\n'){  is >>idx >>PARSE(":") >>f; features.append(f);      }
     L.append(labels);
     X.append(features);
     X.reshape(i+1, features.N);
@@ -70,7 +70,7 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
   Y.resize(X.d0, max+1); Y.setZero();
   uint j;
   for(i=0; i<X.d0; i++) for(j=0; j<L(i).N; j++)  Y(i, L(i)(j))=1.;
-  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
+  cout <<MLR_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 #if 0
@@ -104,7 +104,7 @@ void Data::loadUSPS(const char *filename, bool inSharePath){
   for(i=0; i<Y.d0; i++) for(j=0; j<dY; j++)  Y(i, j, j)=1.;
   X.reshape(data.d0*dY, dX);
   Y.reshape(data.d0*dY, dY);
-  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
+  cout <<MLR_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 void Data::displayInput(uint i, uint height){
@@ -126,8 +126,8 @@ void Data::reduce(uint dx, uint dy){
 }
 
 void Data::splitTest(Data &test){
-  int Ntrain= MT::getParameter<int>("Ntrain", -1);
-  int Ntest = MT::getParameter<int>("Ntest" , -1);
+  int Ntrain= mlr::getParameter<int>("Ntrain", -1);
+  int Ntest = mlr::getParameter<int>("Ntest" , -1);
   if(Ntrain==-1 && Ntest==-1) return;
   test.X = X.sub(Ntrain, Ntrain+Ntest-1, 0, -1);
   test.Y = Y.sub(Ntrain, Ntrain+Ntest-1, 0, -1);

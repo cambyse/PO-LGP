@@ -4,7 +4,7 @@
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Motion/motion.h>
 
 
@@ -51,11 +51,11 @@ void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint ve
 }
 
 
-void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Array<Scene> &testScenes, MT::Array<CostWeight> &weights)
+void MotionFactory::createScenes(uint sID,mlr::Array<Scene> &trainScenes, mlr::Array<Scene> &testScenes, mlr::Array<CostWeight> &weights)
 {
-  vis = MT::getParameter<uint>("visDemo");
-  nS = MT::getParameter<uint>("numScenes");
-  optConstraintsParam = MT::getParameter<bool>("optConstraintsParam");
+  vis = mlr::getParameter<uint>("visDemo");
+  nS = mlr::getParameter<uint>("numScenes");
+  optConstraintsParam = mlr::getParameter<bool>("optConstraintsParam");
 
   // create training scenes
   for (uint i = 0; i < nS; i++) {
@@ -113,7 +113,7 @@ void MotionFactory::createScenes(uint sID,MT::Array<Scene> &trainScenes, MT::Arr
 }
 
 
-void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene0(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -146,7 +146,7 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
 
   // task costs
   t =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(s.MP->T,s.MP->T,ARRAY(tar->X.pos),param(pC));
+  t->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
   pC++;
 
@@ -213,7 +213,7 @@ void MotionFactory::createScene0(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("model.kvg");
 
   cout << "Joints: " << endl;
@@ -230,7 +230,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
 
   cout << "###########################################################" << endl;
   /// load demonstrations data
-  MT::String demoPath = MT::getParameter<MT::String>("demoPath");
+  mlr::String demoPath = mlr::getParameter<mlr::String>("demoPath");
   cout << "Demo: " << demoPath << endl;
   // load joint trajectory
   arr xDem; xDem << FILE(STRING(demoPath<<"_joints").p);
@@ -243,7 +243,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
   // set door position
   arr marker0; marker0 << FILE(STRING(demoPath<<"_marker0").p);
   arr markerQuat0; markerQuat0 << FILE(STRING(demoPath<<"_markerQuat0").p);
-  arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(s.world->getBodyByName("torso_lift_link")->X.pos);
 
   cout << marker0 << endl;
   cout << markerQuat0 << endl;
@@ -313,7 +313,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
   /// tasks
   // first contact with door
   t = s.MP->addTask("posC", new DefaultTaskMap(posTMT, *s.world, "endeffL",NoVector));
-  t->setCostSpecs(C, C, ARRAY(s.world->getShapeByName("handle")->X.pos), param(pC));
+  t->setCostSpecs(C, C, conv_vec2arr(s.world->getShapeByName("handle")->X.pos), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,3));
   pC++;
 
@@ -395,7 +395,7 @@ void MotionFactory::createScenePR2(Scene &s, MT::Array<CostWeight> &weights, uin
 }
 
 /*
-void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -428,7 +428,7 @@ void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint 
   // task costs
   TaskCost *c;
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::Gaussian,1,ARR(s.MP->T,0.5),s.MP->T,3));
   weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC)),true);
   c->prec = w;
@@ -478,7 +478,7 @@ void MotionFactory::createScene1(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -516,7 +516,7 @@ void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint 
   // task costs
 //  TaskCost *c;
 //  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
+//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
 //  weights.append(CostWeight(CostWeight::Gaussian,2,ARR(1.),s.MP->T,3,ARR(1e0,1e3)));
 //  weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC),param(pC+1)),true);
 //  c->prec = w;
@@ -525,7 +525,7 @@ void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint 
 
   TaskCost *c;
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::RBF,20,ARR(20,70.,s.MP->T,0.05),s.MP->T,3,ARR(1e0,1e2)));
   weights.last().compWeights(w,NoArr,NoArr,param.subRange(pC,pC+19),true);
   c->prec = w;
@@ -578,7 +578,7 @@ void MotionFactory::createScene2(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint i)
+void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
@@ -612,8 +612,8 @@ void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint 
   // task costs
   TaskCost *c;
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
-//  c->setCostSpecs(s.MP->T,s.MP->T,ARRAY(tar->X.pos),param(pC));
+  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
+//  c->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   c->prec.subRange(param(pC+1),param(pC+1)+3)=param(pC);
   weights.append(CostWeight(CostWeight::Gaussian,3,ARR(0),s.MP->T,3));
   pC=pC+3;
@@ -652,7 +652,7 @@ void MotionFactory::createScene3(Scene &s, MT::Array<CostWeight> &weights, uint 
   s.paramRef = param;
 }
 
-void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint i)
+void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
@@ -671,7 +671,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
   FILE("data/push2m2_t") >> tDem;
   FILE("data/push2m2_contact_idx") >> contactIdxDem;
 
-  arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(s.world->getBodyByName("torso_lift_link")->X.pos);
   ors::Quaternion refFrameQuat = s.world->getBodyByName("torso_lift_link")->X.rot;
 
   // compute mean orientation of object
@@ -832,7 +832,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
   arr x(T+1,n); x.setZero();arr lambdaTrain(2*T+1); lambdaTrain.setZero();
   x = repmat(~s.MP->x0,T+1,1);
 //    x = xDem;
-  if (i==1 && !MT::getParameter<bool>("evalOnly")) {
+  if (i==1 && !mlr::getParameter<bool>("evalOnly")) {
 
     optConstrained(x, lambdaTrain, Convert(MPF), OPT(verbose=0,stopTolerance=1e-3));//, allowOverstep=true));
 //    optConstrained(x, lambdaTrain, Convert(MPF), OPT(verbose=0,stopTolerance=1e-4,  allowOverstep=true));
@@ -870,7 +870,7 @@ void MotionFactory::createScene4(Scene &s, MT::Array<CostWeight> &weights, uint 
 
 
 
-void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint i) {
+void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   s.world = new ors::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
@@ -902,13 +902,13 @@ void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint 
   // task costs
   TaskCost *c;
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  c->setCostSpecs(s.MP->T,s.MP->T,ARRAY(tar->X.pos),param(pC));
+  c->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
   pC++;
 
 //  c =s.MP->addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARRAY(tar->X.pos),0.);
-  //  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, ARRAY(tar->X.pos), param(N));
+//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
+  //  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, conv_vec2arr(tar->X.pos), param(N));
 //  c->prec(s.MP->T*0.5) = param(N);
 
   s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
@@ -960,7 +960,7 @@ void MotionFactory::createScene5(Scene &s, MT::Array<CostWeight> &weights, uint 
 // quaternion test
 arr marker0; marker0 << FILE(STRING(demoPath<<"_marker0").p);
 arr markerQuat0; markerQuat0 << FILE(STRING(demoPath<<"_markerQuat0").p);
-arr refFrame = ARRAY(s.world->getBodyByName("torso_lift_link")->X.pos);
+arr refFrame = conv_vec2arr(s.world->getBodyByName("torso_lift_link")->X.pos);
 
 
 ors::Quaternion torso_rot = s.world->getBodyByName("torso_lift_link")->X.rot;

@@ -159,7 +159,7 @@ void TEST(ColorBasedShapeTracking){
 
     //checkGradient(problem,params,1.);
 
-    MT::timerStart();
+    mlr::timerStart();
     double cost;
     optOptions opt;
     opt.maxStep=5.;
@@ -168,7 +168,7 @@ void TEST(ColorBasedShapeTracking){
     opt.stopTolerance = 1.e-1;
     opt.stopEvals = 100;
     optRprop(params, problem, opt);
-    cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
+    cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<mlr::timerRead() <<endl;
 
     problem.fs(NoArr, params);
     byteA img; copy(img,10.f*problem.distImage);

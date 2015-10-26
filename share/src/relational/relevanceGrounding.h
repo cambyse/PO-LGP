@@ -64,7 +64,7 @@ void initPlanParams(PRADA::Reward* reward, PRADA::RuleSet& rules, uint no_runs, 
 
 
 
-void setObjectInfos(const MT::Array< ObjectInfo* >& oinfos);
+void setObjectInfos(const mlr::Array< ObjectInfo* >& oinfos);
 
 
 };

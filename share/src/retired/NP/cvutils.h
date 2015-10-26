@@ -15,12 +15,12 @@
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 /** @file cvutils.h
-    @brief Routines to ease use of MT::Array with OpenCV */
+    @brief Routines to ease use of mlr::Array with OpenCV */
 
 #ifndef _NP_CVUTILS_H
 #define _NP_CVUTILS_H
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 
 #include <typeinfo>
 #include <opencv/cv.h>
@@ -39,10 +39,10 @@ void load_image(byteA& img, const char* filename, int is_color = -1);
 void convert(byteA& out, byteA& in, int mode);
 
 template<class T>
-void draw_circles(byteA& image, MT::Array<T>& centers, MT::Array<T>& rad);
+void draw_circles(byteA& image, mlr::Array<T>& centers, mlr::Array<T>& rad);
 
 template<class T>
-void map_cvmat2mtarray(CvMat& cvmat, MT::Array<T>& mtarray)
+void map_cvmat2mtarray(CvMat& cvmat, mlr::Array<T>& mtarray)
 {
   if (mtarray.nd > 3)
     msg_error(HERE, "number of dimensions of input must be <= 3");

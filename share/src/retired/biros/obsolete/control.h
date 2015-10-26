@@ -3,9 +3,9 @@
 struct Variable;
 struct Process;
 struct Parameter;
-typedef MT::Array<Variable*> VariableL;
-typedef MT::Array<Process*> ProcessL;
-typedef MT::Array<Parameter*> ParameterL;
+typedef mlr::Array<Variable*> VariableL;
+typedef mlr::Array<Process*> ProcessL;
+typedef mlr::Array<Parameter*> ParameterL;
 
 namespace b{
   //-- basic control of processes

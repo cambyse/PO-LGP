@@ -1,7 +1,7 @@
-#ifndef MT_monitor_h
-#define MT_monitor_h
+#ifndef MLR_monitor_h
+#define MLR_monitor_h
 
-#ifdef MT_QT
+#ifdef MLR_QT
 #  include "gui.h"
 #  include "gui_ui.h"
 #endif
@@ -11,7 +11,7 @@
 struct RobotController ;
 
 struct Monitor:public StepThread{
-#ifdef MT_QT
+#ifdef MLR_QT
   QApplication *app;
 #endif
   bool useOpengl,logData,plotData;
@@ -20,7 +20,7 @@ struct Monitor:public StepThread{
   RobotController  *ctrl;
   bool isOpen;
   
-#ifdef MT_QT
+#ifdef MLR_QT
  NEVER DO THIS()() forcing compiler error!
   Ui_SchunkMonitor *ui;
 #endif
@@ -32,7 +32,7 @@ struct Monitor:public StepThread{
   void close();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef MLR_IMPLEMENTATION
 #  include "monitor.cpp"
 #endif
 

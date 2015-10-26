@@ -18,23 +18,23 @@ template<class S> class Evaluator {
     virtual double evaluate(S& sample) = 0;
 };
 
-class BlocksWorldSampler : public Sampler<MT::Array<arr> > {
+class BlocksWorldSampler : public Sampler<mlr::Array<arr> > {
   public: 
-    virtual void sample(MT::Array<arr>& sample);
+    virtual void sample(mlr::Array<arr>& sample);
 };
 
-class TraySampler : public Sampler<MT::Array<arr> > {
+class TraySampler : public Sampler<mlr::Array<arr> > {
   public:
-    virtual void sample(MT::Array<arr>& sample);
+    virtual void sample(mlr::Array<arr>& sample);
 };
 
-class OutOfReachSampler : public Sampler<MT::Array<arr> > {
+class OutOfReachSampler : public Sampler<mlr::Array<arr> > {
   public:
-    virtual void sample(MT::Array<arr>& sample);
+    virtual void sample(mlr::Array<arr>& sample);
 };
-class UprightSampler : public Sampler<MT::Array<arr> > {
+class UprightSampler : public Sampler<mlr::Array<arr> > {
   public:
-    virtual void sample(MT::Array<arr>& sample);
+    virtual void sample(mlr::Array<arr>& sample);
 };
 
 template<class Data> void rejectionSampling(Data& sample, Sampler<Data>* s, Evaluator<Data>* e, const uint nSamples = 10000) {

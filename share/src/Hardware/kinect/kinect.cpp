@@ -21,7 +21,7 @@ struct sKinectThread{
 
 sKinectThread* single=NULL;
 
-KinectThread::KinectThread(ModuleL& system):Module("KinectThread", system, loopFull), verbose(0){
+KinectThread::KinectThread():Module("KinectThread", 0.), verbose(0){
   s = new sKinectThread;
   s->kin = this;
   s->depth_buffer.resize(480,640);
@@ -37,12 +37,12 @@ KinectThread::~KinectThread(){
 
 
 void sKinectThread::depth_cb(freenect_device* dev, void* v_depth, uint32_t timestamp){
-  single->kin->kinect_depth.set(MT::clockTime()) = single->depth_buffer;
+  single->kin->kinect_depth.set(mlr::clockTime()) = single->depth_buffer;
 }
 
 
 void sKinectThread::rgb_cb(freenect_device* dev, void* v_rgb, uint32_t timestamp){
-  single->kin->kinect_rgb.set(MT::clockTime()) = single->rgb_buffer;
+  single->kin->kinect_rgb.set(mlr::clockTime()) = single->rgb_buffer;
 }
 
 

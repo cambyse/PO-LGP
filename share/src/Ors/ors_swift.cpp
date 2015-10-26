@@ -33,9 +33,9 @@
 #include "ors_swift.h"
 #include <Algo/ann.h>
 
-#ifdef MT_extern_SWIFT
+#ifdef MLR_extern_SWIFT
 
-#ifdef MT_SINGLE
+#ifdef MLR_SINGLE
 #  define SWIFT_USE_FLOAT
 #endif
 
@@ -72,10 +72,10 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
       case ors::meshST: {
         //check if there is a specific swiftfile!
-        MT::String *filename;
-        filename=s->ats.getValue<MT::String>("swiftfile");
+        mlr::String *filename;
+        filename=s->ats.getValue<mlr::String>("swiftfile");
         if(!filename)
-          filename=s->body->ats.getValue<MT::String>("swiftfile");
+          filename=s->body->ats.getValue<mlr::String>("swiftfile");
         if(filename) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");
@@ -181,11 +181,11 @@ void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint pare
   //deactivate along edges...
   for_list(ors::Joint, e, world.joints) {
     //cout <<"deactivating edge pair"; listWriteNames({e->from, e->to}, cout); cout <<endl;
-    deactivate(MT::Array<ors::Body*>({ e->from, e->to }));
+    deactivate(mlr::Array<ors::Body*>({ e->from, e->to }));
   }
   //deactivate along trees...
   for_list(ors::Body,  b,  world.bodies) {
-    MT::Array<ors::Body*> group, children;
+    mlr::Array<ors::Body*> group, children;
     group.append(b);
     for(uint l=0; l<parentLevelsToDeactivate; l++) {
       //listWriteNames(group, cout);
@@ -202,14 +202,14 @@ void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint pare
   }
 }
 
-void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {
+void SwiftInterface::deactivate(const mlr::Array<ors::Body*>& bodies) {
   //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
-  MT::Array<ors::Shape*> shapes;
+  mlr::Array<ors::Shape*> shapes;
   for_list(ors::Body, b, bodies) shapes.setAppend(b->shapes);
   deactivate(shapes);
 }
 
-void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {
+void SwiftInterface::deactivate(const mlr::Array<ors::Shape*>& shapes) {
   //cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
   for_list(ors::Shape, s1, shapes){
     for_list(ors::Shape, s2, shapes) {
@@ -327,8 +327,8 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
       k++;
     }
 
-    double ab_radius = MT::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
-    if(proxy->cenD>ab_radius) MT_MSG("shit");
+    double ab_radius = mlr::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
+    if(proxy->cenD>ab_radius) MLR_MSG("shit");
   }
   CHECK_EQ(k , (int)world.proxies.N, "");
   
@@ -345,7 +345,7 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
       ors::Transformation rel;
       rel.setDifference(global_ANN_shape->X, s->X);
       rel.rot.getMatrix(R.p);
-      t = ARRAY(rel.pos);
+      t = conv_vec2arr(rel.pos);
       
       //check for each vertex
       for(i=0; i<s->mesh.V.d0; i++) {
@@ -399,8 +399,8 @@ void SwiftInterface::swiftQueryExactDistance() {
   void SwiftInterface::reinitShape(const ors::Shape *s) {}
 //  void close();
   void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
-  void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {}
-  void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
+  void SwiftInterface::deactivate(const mlr::Array<ors::Shape*>& shapes) {}
+  void SwiftInterface::deactivate(const mlr::Array<ors::Body*>& bodies) {}
   void SwiftInterface::initActivations(const KinematicWorld &world, uint parentLevelsToDeactivate=3) {}
   void SwiftInterface::swiftQueryExactDistance() {}
 #endif

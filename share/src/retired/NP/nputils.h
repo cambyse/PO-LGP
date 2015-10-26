@@ -34,7 +34,7 @@
 #define TOSTRING(x) STRINGIFY(x)
 #define HERE __FILE__ ":" TOSTRING(__LINE__)
 
-typedef MT::Array<std::string> stringA;
+typedef mlr::Array<std::string> stringA;
 
 const double cpi = 3.1415926535897932384626433832795;
 
@@ -100,7 +100,7 @@ void array2array(T& output, const S& input)
 };
 
 template <class T>
-void load_array(MT::Array<T>& array, const char* filename, const char* tag)
+void load_array(mlr::Array<T>& array, const char* filename, const char* tag)
 {
   std::ifstream is;
   is.open(filename);
@@ -141,9 +141,9 @@ void datetime
 double atod(const char* c);
 
 template<class T>
-void permute_rows(MT::Array<T>& matrix, uintA& permutation)
+void permute_rows(mlr::Array<T>& matrix, uintA& permutation)
 {
-  MT::Array<T> matrix_temp = matrix;
+  mlr::Array<T> matrix_temp = matrix;
   if (permutation.N == 0)
   {
     permutation.resize(matrix.d0);
@@ -171,7 +171,7 @@ public:
       markers_.append(low+i*step);
     markers_.p[markers_.N-1]=high;
   };
-  void bin(MT::Array<T>& bins, const MT::Array<S>& values) const
+  void bin(mlr::Array<T>& bins, const mlr::Array<S>& values) const
   {
     uint bin_idx=0;
     bins.resize(num_bins_);
@@ -219,7 +219,7 @@ public:
 protected:
   S low_, high_;
   uint num_bins_;
-  MT::Array<S> markers_;
+  mlr::Array<S> markers_;
 };
 
 } // namespace np

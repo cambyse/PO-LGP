@@ -42,7 +42,7 @@ struct MySystem:System{
   ACCESS(arr, wrenchR)
   MySystem(){
     //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
@@ -63,7 +63,7 @@ void switchToNormal(void*){
 
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  MT::Array<MT::String> active_joints,const double tableW, const double tableL, ors::KinematicWorld& world,ors::KinematicWorld& world_plan, int num, const arr target, int type,const arr &center){
+void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String> active_joints,const double tableW, const double tableL, ors::KinematicWorld& world,ors::KinematicWorld& world_plan, int num, const arr target, int type,const arr &center){
 
     ofstream data(STRING("data-"<<num<<".dat"));
     FeedbackMotionControl MP(world, true); // true means using swift
@@ -150,7 +150,7 @@ void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  MT::Array<MT::String> a
   bool replanning = false;
 
   for(uint t=0;t<x.d0-150 ;t++){
-      MT::wait(.3);
+      mlr::wait(.3);
       MP.setState(q, qdot);
       // world.gl().add(switchToNormal);    
 
@@ -256,7 +256,7 @@ void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  MT::Array<MT::String> a
 
     ////////////////////////////////////////////////////////////////////////////////
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -278,7 +278,7 @@ int main(int argc, char** argv)
 {
 
 
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   ors::KinematicWorld world("model.kvg");
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +292,7 @@ int main(int argc, char** argv)
   world_plan.getJointState(qP,qPdot);
 
   /// set list of active joints for remapping between world_pr2 and world_plan
-  MT::Array<MT::String> active_joints;
+  mlr::Array<mlr::String> active_joints;
   for (uint i = 0;i<world_plan.joints.d0;i++) {
     if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
       active_joints.append(world_plan.joints(i)->name);
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
   z = table->X.pos.z;
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
 
   for(uint i=0;i<10;i++){
@@ -331,7 +331,7 @@ int main(int argc, char** argv)
 
 
 
-      bool useRos = MT::getParameter<bool>("useRos", false);
+      bool useRos = mlr::getParameter<bool>("useRos", false);
       if(useRos){
         //-- wait for first q observation!
         cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -376,7 +376,7 @@ int main(int argc, char** argv)
       //END OF INIT: reading first pose, then set to world_plan
       ////////////////////////////////////////////////////////////////////////////////////////
 
-      MT::wait(3.);
+      mlr::wait(3.);
 
 
 

@@ -8,7 +8,7 @@ class Oracle;
 template<class S> class FeatureGenerator;
 
 struct ActiveLearningProblem {
-  Sampler<MT::Array<arr> >* sampler;
+  Sampler<mlr::Array<arr> >* sampler;
   Oracle* oracle;
   FeatureGenerator<arr >* generator;
 };

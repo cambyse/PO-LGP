@@ -10,7 +10,7 @@ struct MDP{
 
 void loadMdpFile(MDP& mdp, const char* filename){
   ifstream fil;
-  MT::open(fil,filename);
+  mlr::open(fil,filename);
 
   mdp.Psas.readTagged(fil,"Psas");
   cout<<"read Psas"<<endl;
@@ -49,7 +49,7 @@ int main(int argc, char **argv){
   
   rnd.seed(1000);
   
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //display
   OpenGL gl;
@@ -237,7 +237,7 @@ int main(int argc, char **argv){
       img.elem(state_new) = 128;
       img.elem(7)=img.elem(4) = 0;
       gl.watchImage(img,false,10);
-      MT::wait(.1);
+      mlr::wait(.1);
     }
   }
   

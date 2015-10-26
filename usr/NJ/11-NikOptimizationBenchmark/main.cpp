@@ -4,7 +4,7 @@
  *  Created on: Feb 22, 2011
  *      Author: nikolay
  */
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <MT/soc.h>
 #include <MT/util.h>
@@ -40,9 +40,9 @@ void problem2(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   init();
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 1:  problem1();  break;
   case 2:  problem2();  break;

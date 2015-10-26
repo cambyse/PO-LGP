@@ -352,9 +352,9 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
    if(!vars.N) return NodeL(1u,0u);
 
    //-- collect domains for each variable by checking (marginally) for potentially matching facts
-   MT::Array<NodeL> domainOf(vars.N);
-   MT::Array<bool > domainIsConstrained(vars.N);
-   MT::Array<NodeL> domainsForThisRel(vars.N);
+   mlr::Array<NodeL> domainOf(vars.N);
+   mlr::Array<bool > domainIsConstrained(vars.N);
+   mlr::Array<NodeL> domainsForThisRel(vars.N);
    if(vars.N) domainIsConstrained = false;
    for(Node *rel:relations) if(nFreeVars(rel->index)>0){ //first go through all (non-negated) relations...
      if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal (not negated boolean)
@@ -479,10 +479,11 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
  }
 
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
+bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
-  Graph& state = KB.getNode("STATE")->graph();
+  CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
+//  Graph& state = KB.getNode("STATE")->graph();
 
   for(;;){
     DEBUG(KB.checkConsistency();)

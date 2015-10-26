@@ -133,7 +133,7 @@ void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   ors::Body *body_j = j<0?NULL: G.shapes(j)->body;
   ors::Vector pi = body_i ? body_i->X * vec_i : vec_i;
   ors::Vector pj = body_j ? body_j->X * vec_j : vec_j;
-  y = ARRAY(pi-pj);
+  y = conv_vec2arr(pi-pj);
   if(&J) {
     arr Ji, Jj;
     G.kinematicsPos(NoArr, Ji, body_i, vec_i);

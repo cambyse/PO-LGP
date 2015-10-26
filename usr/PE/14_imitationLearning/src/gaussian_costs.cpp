@@ -4,7 +4,7 @@
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 
 void GaussianCosts::f(const arr& x, arr& y) {

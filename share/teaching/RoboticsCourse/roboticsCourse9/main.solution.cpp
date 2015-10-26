@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 
   //namedWindow("Image View");
 
-  MT::timerStart();
+  mlr::timerStart();
   Mat img,last;
   uint t;
   for(t=0;;t++){
@@ -64,6 +64,6 @@ int main(int argc, char** argv){
 
     if((waitKey(2)&0xff)==27)  break;
   }
-  cout <<"fps=" <<(double)t/MT::timerRead() <<endl;
+  cout <<"fps=" <<(double)t/mlr::timerRead() <<endl;
   return 0;
 }

@@ -22,7 +22,7 @@ int main() {
     motor->readEncoder1(encoder1);
     motor->readEncoder2(encoder2);
 
-    double time=MT::realTime();
+    double time=mlr::realTime();
     fil <<time <<' ' <<vel <<' ' <<acc <<' ' <<encoder1 <<' ' <<encoder2 <<endl;
 
     if(time>10.) break;

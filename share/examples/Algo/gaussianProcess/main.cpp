@@ -1,4 +1,4 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 
 #include <Core/array.h>
 #include <Gui/plot.h>
@@ -88,9 +88,9 @@ void TEST(RandomFunctions) {
 }
 
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  if(MT::checkCmdLineTag("test")) pltPause=false;
+  if(mlr::checkCmdLineTag("test")) pltPause=false;
 
   testGP();
   

@@ -60,5 +60,5 @@ void BrachiationSystem::getTaskCosts(arr& phi, arr& phiJ, uint t){
 void BrachiationSystem::displayCurrentState(const char* title, bool pause, bool reportOnTasks){
 }
 
-void BrachiationSystem::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t){
+void BrachiationSystem::getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t){
 }

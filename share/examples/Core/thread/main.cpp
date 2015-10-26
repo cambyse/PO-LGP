@@ -13,7 +13,7 @@ struct MyThread: Thread{
   void close(){}
   void step(){
     x.set(this)++;
-    COUT <<MT::realTime() <<"sec Thread " <<n <<" is counting:" <<x.get() <<endl;
+    COUT <<mlr::realTime() <<"sec Thread " <<n <<" is counting:" <<x.get() <<endl;
   }
 };
 
@@ -24,7 +24,7 @@ void TEST(Thread){
   t1.threadLoopWithBeat(.5);
   t2.listenTo(x); //whenever t1 modifies x, t2 is stepped
   
-  MT::wait(3.);
+  mlr::wait(3.);
 
   t1.threadClose();
   t2.threadClose();
@@ -61,7 +61,7 @@ void TEST(Throut){
   for(int i = 0; i < nThreads; i++)
     tp[i]->threadLoopWithBeat(.01);
 
-  MT::wait(1.);
+  mlr::wait(1.);
 
   for(int i = 0; i < nThreads; i++)
     tp[i]->threadClose();
@@ -69,7 +69,7 @@ void TEST(Throut){
   for(int i = 0; i < nThreads; i++)
     delete tp[i];
 
-  MT::wait(1.);
+  mlr::wait(1.);
 
   // tout usage examples
   char i = 'i';
@@ -103,7 +103,7 @@ void TEST(Throut){
 //===========================================================================
 
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testThread();
 //  testVariable();
 //  testThrout();

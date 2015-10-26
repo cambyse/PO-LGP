@@ -16,8 +16,8 @@ struct GraspISFTask:public TaskAbstraction{
   void plot_append_data(ControllerProcess*);
   void plot_all();
 
-  MT::Array<ors::Shape*> tipsN;
-  MT::Array<ors::Shape*> fingsN;
+  mlr::Array<ors::Shape*> tipsN;
+  mlr::Array<ors::Shape*> fingsN;
   arr  skins;
   ors::Shape *palm; // palm center wrt wrist body
 
@@ -63,7 +63,7 @@ struct GraspISFTask:public TaskAbstraction{
 
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "graspISF.cpp"
 #endif
 

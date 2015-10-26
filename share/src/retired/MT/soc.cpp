@@ -346,7 +346,7 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
 
   if(!checkJacobian(f, xt, 1e-6)){
     cout <<"Task dimension infos:";
-    MT::Array<const char*> names;
+    mlr::Array<const char*> names;
     uintA dims;
     getTaskInfo(names, dims, t);
     cout <<names <<dims <<endl;
@@ -356,7 +356,7 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
   checkGrad = checkGrad_old;
 }
 
-void soc::SocSystemAbstraction::getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t){
+void soc::SocSystemAbstraction::getTaskInfo(mlr::Array<const char*>& names, uintA& dims, uint t){
   uint i, m=nTasks();
   listDelete(names);
   dims.clear();
@@ -535,7 +535,7 @@ double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int whichTask, bool
       }
     }
   if(verbose){
-    cout <<MT_HERE <<" total=" <<C;
+    cout <<MLR_HERE <<" total=" <<C;
     for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout <<" \t" <<taskName(i) <<'=' <<taskCi(i);
     cout <<endl;
   }
@@ -594,7 +594,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
   }
   if(plot){
     std::ofstream fil;
-    MT::open(fil, "z.trana");
+    mlr::open(fil, "z.trana");
     for(t=0; t<T; t++){
       fil
       <<"time " <<t
@@ -641,7 +641,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
     cout <<" tasks: " <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
-    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
+    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MLR_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
 
     taskCsum+=c2;
     if(t<T){
@@ -793,7 +793,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
 #endif
   if(plot){
     std::ofstream fil;
-    MT::open(fil, "z.trana");
+    mlr::open(fil, "z.trana");
     for(t=0; t<=T; t++){
       fil <<"time " <<t*tau
       <<"  ctrlC " <<ctrlC(t)
@@ -804,7 +804,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
       fil <<"  q "; q[t].writeRaw(fil);
       fil <<endl;
     }
-    MT::String cmd;
+    mlr::String cmd;
     cmd <<"set style data linespoints\n";
     cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
     if(!dynamic){

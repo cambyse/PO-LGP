@@ -20,7 +20,7 @@ Build_mesh_process::step(){
   /* TODO: To lock or not to lock, that's the question
    */ 
 
-   MT_MSG("Building mesh...");
+   MLR_MSG("Building mesh...");
    obj->writeAccess(this); 
    obj->o->buildMesh();
    obj->deAccess(this);
@@ -48,7 +48,7 @@ Build_mesh_process::step(){
    * free(copy);
    */
 
-  MT::wait(.01);
+  mlr::wait(.01);
 }
 
 void Build_mesh_process::close(){}

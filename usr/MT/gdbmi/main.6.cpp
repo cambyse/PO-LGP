@@ -81,7 +81,7 @@ struct GDB:public Process{
   void step(){
     sendCommand("-thread-select 1\n");
     sendCommand("-exec-interrupt\n");
-    MT::wait(1.);
+    mlr::wait(1.);
     sendCommand("-stack-list-frames\n");
     sendCommand("-stack-select-frame 2\n");
     sendCommand("-var-create varList * globalVariables\n");
@@ -101,7 +101,7 @@ struct GDB:public Process{
 
   void close(){
     sendCommand("interrupt\n detatch");
-    //MT::wait();
+    //mlr::wait();
   }
   
   void info(){
@@ -135,15 +135,15 @@ int main(int argc, char *argv[]){
   return 0;
   //gdb.threadOpen();
   
-  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  //for(uint t=0;t<10;t++){  mlr::wait(.1);    cout <<t <<endl;  }
   //gdb.threadStep();
-  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  //for(uint t=0;t<10;t++){  mlr::wait(.1);    cout <<t <<endl;  }
 
   //gdb.threadClose();
 
   cout <<"still here :-) " <<endl;
   
-  MT::wait(100.);
+  mlr::wait(100.);
   
   return 0;
 }

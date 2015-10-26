@@ -95,7 +95,7 @@ void PRADA_Planner::setNumberOfSamples(uint num_samples) {
 
 
 void PRADA_Planner::setReward(Reward* reward) {
-//   MT_MSG("Automatic conversion of reward!");
+//   MLR_MSG("Automatic conversion of reward!");
   this->reward = reward;
   LiteralReward* pg = dynamic_cast<LiteralReward*>(reward);
   if (pg!= NULL) {
@@ -153,7 +153,7 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
 
 void PRADA_Planner::setNoiseSoftener(double noise_softener) {
   if (noise_softener > 1.0 || noise_softener < 0.) {
-    MT_MSG("noise_softener has to be in [0,1]");
+    MLR_MSG("noise_softener has to be in [0,1]");
   }
   else
     this->noise_softener = noise_softener;
@@ -182,7 +182,7 @@ void my_handmade_plan(LitL& plan) {
   Literal::get(plan, "grab(69) puton(67) grab(66) puton(69)");
 #if 0
   uint i;
-  Predicate* p_MOVE = logicObjectManager::getPredicate(MT::String("move"));
+  Predicate* p_MOVE = logicObjectManager::getPredicate(mlr::String("move"));
   uintA args(3);
   FOR1D(reason::getConstants(), i) {
     if (i < 2) continue;
@@ -203,7 +203,7 @@ void my_handmade_plan(LitL& plan) {
 //   char* geiler_plan = "pick-up(15 13) put-on-block(15 17) pick-up(13 14) put-on-block(13 16) pick-up(15 17) put-on-block(15 13)";
 //   logicObjectManager::getLiterals(plan, geiler_plan);
 //   cout<<endl<<endl<<endl<<"USING HAND-MADE PLAN!!"<<endl<<endl<<endl;
-//   MT_MSG("USING HAND-MADE PLAN!");
+//   MLR_MSG("USING HAND-MADE PLAN!");
 }
 
 
@@ -339,11 +339,11 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
   action_choices.setUni(0);
 
   uint s;
-  MT::Array< LitL > plans;
+  mlr::Array< LitL > plans;
   arr reward_values;
   arr action_values;
   arr values;
-//   MT::Array< arr > reward_probs(num_samples);
+//   mlr::Array< arr > reward_probs(num_samples);
   
   any_sensible_action = false;
   bool good_old_plan__is_good = false;
@@ -456,7 +456,7 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
       }
       else if (good_old_plans.N > 0  &&  values(s) > do_nothing_reward + threshold_reward  &&  s>200  &&  good_old_plan__is_good) {
 //       else if (good_old_plans.N > 0  &&  values(s) > do_nothing_reward + threshold_reward  &&  s>500  &&  good_old_plan__is_good) {
-// MT_MSG("STACK version!");
+// MLR_MSG("STACK version!");
         if (DEBUG>0) {cout<<"Great good old plan (s="<<s<<")!"<<endl;}
         break;
       }
@@ -525,7 +525,7 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
       }
       if (number == 0)
         continue;
-      MT::String name;  name << *ground_actions(i);
+      mlr::String name;  name << *ground_actions(i);
       printf("%-14s",(char*)name);
       for(t=0;t<action_choices.d0;t++) printf("%5u", action_choices(t,i));
       cout<<endl;
@@ -540,7 +540,7 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
   }
   // (2)  Choose action with maximal normalized sum
   else {
-    MT::Array< arr > action_values__all(ground_actions.N);
+    mlr::Array< arr > action_values__all(ground_actions.N);
     FOR1D(plans, s) {
       if (plans(s)(0) != NULL)
         action_values__all(ground_actions.findValue(plans(s)(0))).append(values(s));
@@ -572,7 +572,7 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
     
     if (DEBUG>0) {
       FOR1D(ground_actions, a) {
-        MT::String name;  name << *ground_actions(a);
+        mlr::String name;  name << *ground_actions(a);
         printf("%-14s",(char*)name);
         cout << "  " << action_values(a) <<  "  "<<action_values__all(a).N;
         cout<<action_values__all(a)<<endl;
@@ -1423,7 +1423,7 @@ void A_PRADA::plan_full(LitL& best_plan, double& best_value, const SymbolicState
     if (DEBUG>1) {cout<<"plan_short__local (value="<<last_value<<"): "<<plan_short__local<<endl;}
     if (plan_short__local.N > 0 
       && reason::calc_uniqueCoveringRule_groundRules_groundAction(this->ground_rules, s, plan_short__local(0)) == 0) {
-      MT_MSG("stupid action which we can't use");
+      MLR_MSG("stupid action which we can't use");
       if (DEBUG>1) {cout<<"stupid action which we can't use"<<endl;}
     }
     else if (plan_short__local.N > 0 
@@ -1867,7 +1867,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
   }
   uint p_id, p_id2;  
   // (1) calc P_t+1(v_i|r, a_t, s)
-  MT::Array< arr* > p_P_v__r_val;  // dim 1: variable;  dim 2: arr for rule x value
+  mlr::Array< arr* > p_P_v__r_val;  // dim 1: variable;  dim 2: arr for rule x value
   FOR1D(vars_state__prim, v) {
     LiteralRV* var = vars_state__prim(v);
     arr* p_local_P_r_val = new arr(ground_rules.num(), var->dim);
@@ -2007,7 +2007,7 @@ void PRADA_DBN::setState(const LitL& lits, uint t) {
     LiteralRV* rv = RVefficiency__atom2var(lits(v));
     if (rv == NULL) {
       if (DEBUG>0) {cout<<"no random variable --> omitted"<<endl;}
-//       MT_MSG("Omitting setting state lit "<<*lits(v)<<" in DBN^(t=0).");
+//       MLR_MSG("Omitting setting state lit "<<*lits(v)<<" in DBN^(t=0).");
       continue;
     }
     if (rv->type == LiteralRV::simple) {
@@ -2070,7 +2070,7 @@ double PRADA_DBN::log_probability(uint t, const SymbolicState& state) const {
     CHECK(val_idx>=0, "value not found");
     prob_variable = var->P(t, val_idx);
     if (DEBUG>1) {
-      MT::String name;  name << var->lit;
+      mlr::String name;  name << var->lit;
       printf("%-14s",(char*)name);
       cout << "  has prob=" << prob_variable << "   log-prob=" << log(prob_variable);
     }
@@ -2168,7 +2168,7 @@ void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DB
   uintA freeVars;
   s->getFreeVars(freeVars);
   uint i;
-  MT::Array< uintA > combos_args__conjunction_lit;
+  mlr::Array< uintA > combos_args__conjunction_lit;
   TL::allPermutations(combos_args__conjunction_lit, constants, s->arity, true, true);
   uint c1, c2;
   double prob;  
@@ -2180,7 +2180,7 @@ void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DB
     // P(p) = 1 - PRODUCT[over free-var combos c](1 - P(basePTs[sub=c]))
     // Intuition: Predicate true if not all base-pred combinations are false.
     if (!s->free_vars_all_quantified) {
-      MT::Array< uintA > combos_freevars___base_lits;
+      mlr::Array< uintA > combos_freevars___base_lits;
       uintA constants_freevars = constants;
       setMinus(constants_freevars, combos_args__conjunction_lit(c1));
       TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
@@ -2236,7 +2236,7 @@ void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DB
         // base literals WITH additional variables
         uintA constants_freevars = constants;
         setMinus(constants_freevars, combos_args__conjunction_lit(c1));
-        MT::Array< uintA > combos_freevars___base_lits;
+        mlr::Array< uintA > combos_freevars___base_lits;
         TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
         Substitution sub2;
         sub2 = sub;
@@ -2301,10 +2301,10 @@ void calcDerived_tcp_dfs(arr& probs, const uintA& remaining_constants, const arr
 }
 
 
-MT::Array< TransClosureSymbol* > __auxiliary_transclosure__symbols;
-MT::Array< LitL > __auxiliary_transclosure__baseLits;
-MT::Array< LitL > __auxiliary_transclosure__transclosureLits;
-MT::Array< RVL > __auxiliary_transclosure__transclosureVars;
+mlr::Array< TransClosureSymbol* > __auxiliary_transclosure__symbols;
+mlr::Array< LitL > __auxiliary_transclosure__baseLits;
+mlr::Array< LitL > __auxiliary_transclosure__transclosureLits;
+mlr::Array< RVL > __auxiliary_transclosure__transclosureVars;
 
 void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
@@ -2420,7 +2420,7 @@ void calcDerived1(CountSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn
     PRINT(t);
   }
   uint i, c, c2;
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   TL::allPermutations(combos, constants, s->arity, true, true);
   uintA args_base(s->base_literal->s->arity);
   double expect;
@@ -2441,7 +2441,7 @@ void calcDerived1(CountSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn
     }
     uintA local_constants = constants;
     setMinus(local_constants, combos(c));
-    MT::Array< uintA > inner_combos;
+    mlr::Array< uintA > inner_combos;
     TL::allPermutations(inner_combos, local_constants, freeVars.N, true, true);
     // (1) Expectation
     if (var->type == LiteralRV::expectation) {
@@ -2491,7 +2491,7 @@ void calcDerived1(SumFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn
   if (DEBUG>0) {var->write();}
   CHECK_EQ(var->type , LiteralRV::expectation, "only defined for expectation random vars");
   uint c;
-  MT::Array< uintA > combos;
+  mlr::Array< uintA > combos;
   TL::allPermutations(combos, constants, s->base_symbol->arity, true, true);
   double sum=0.;
   FOR1D(combos, c) {
@@ -2549,7 +2549,7 @@ void calcDerived1(DifferenceFunction* s, uint t, const uintA& constants, PRADA_D
   uintA freeVars;
   s->getFreeVars(freeVars);
   uint i;
-  MT::Array< uintA > combos_args__conjunction_lit;
+  mlr::Array< uintA > combos_args__conjunction_lit;
   TL::allPermutations(combos_args__conjunction_lit, constants, s->arity, true, true);
   uint c1, c2;
   double prob;  
@@ -2560,7 +2560,7 @@ void calcDerived1(DifferenceFunction* s, uint t, const uintA& constants, PRADA_D
     // Free Vars EXISTENTIAL
     // P(p) = 1 - PRODUCT[over free-var combos c](1 - P(basePTs[sub=c]))
     // Intuition: Predicate true if not all base-pred combinations are false.
-    MT::Array< uintA > combos_freevars___base_lits;
+    mlr::Array< uintA > combos_freevars___base_lits;
     uintA constants_freevars = constants;
     setMinus(constants_freevars, combos_args__conjunction_lit(c1));
     TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
@@ -3133,12 +3133,12 @@ void PRADA_DBN::RVefficiency__init(const SymL& symbols) {
 LiteralRV* PRADA_DBN::RVefficiency__atom2var(Literal* lit) const {
   int s_idx = RVefficiency__symbols.findValue(lit->s);
   if (s_idx<0) {
-    MT_MSG("Symbol '"<<lit->s->name<<"' for lit="<<*lit<<" not in RVefficiency.");
+    MLR_MSG("Symbol '"<<lit->s->name<<"' for lit="<<*lit<<" not in RVefficiency.");
     return NULL;
   }
   LiteralRV* rv = RVefficiency__LRV_A__structured(s_idx, getIndex__PRADA_DBN(lit->args));
   if (rv == NULL) {
-//     MT_MSG("RV_Manager::l2v -- No LiteralRV for "<<*lit<<" with calculated s_idx="<<s_idx);
+//     MLR_MSG("RV_Manager::l2v -- No LiteralRV for "<<*lit<<" with calculated s_idx="<<s_idx);
     // Some methods expect that NULL is returned in that case.
   }
   return rv;

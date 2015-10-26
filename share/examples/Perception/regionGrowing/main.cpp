@@ -18,33 +18,39 @@ void test(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
   arr pts;
   arr cols;
-  MLR::depthData2pointCloud(pts, kinect_depth);
+  arr costs;
+  depthData2pointCloud(pts, kinect_depth);
   cols.resizeAs(pts);
+  costs = pts.col(2).reshape(pts.d0);
+  for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
+  costs *= costs;
+  costs /= sum(costs);
 
   DataNeighbored D(pts);
   D.setGridNeighborhood(kinect_depth.d0, kinect_depth.d1);
+  D.setCosts(costs);
 //  D.removeNonOk();
 
   ModelEnsemble M;
 
-
   OpenGL gl;
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&M);
-  gl.camera.setPosition(0., 0., -10.);
-  gl.camera.focus(0., 0., 1.);
-  gl.camera.focalLength = 580./480.;
+  gl.camera.setKinect();
+  gl.camera.setPosition(0., 0., -1.);
+  gl.watch();
 
 
-  for(uint l=0;l<100;l++){
+  for(uint l=0;l<20;l++){
     bool succ=M.addNewRegionGrowingModel(D);
     if(succ){
-      M.models.last()->colorPixelsWithWeights(cols);
+      //M.models.last()->colorPixelsWithWeights(cols);
 
       M.reoptimizeModels(D);
-      M.reestimateVert();
+//      M.reestimateVert();
       M.report();
       gl.update();
+//      gl.watch();
     }
   }
   M.report();

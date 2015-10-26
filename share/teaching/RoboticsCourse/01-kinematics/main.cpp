@@ -61,7 +61,7 @@ void reach_problem(){
   arr q,W;
   uint n = S.getJointDimension();
   S.getJointAngles(q);
-  double w = MT::getParameter("w",1e-4);
+  double w = mlr::getParameter("w",1e-4);
   W.setDiag(w,n);  //W is equal the Id_n matrix times scalar w
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
@@ -93,7 +93,7 @@ void reach_sol(){
   arr q,W;
   uint n = S.getJointDimension();
   S.getJointAngles(q);
-  double w = MT::getParameter("w",1e-4);
+  double w = mlr::getParameter("w",1e-4);
   W.setDiag(w,n);  //W is equal the Id_n matrix times scalar w
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
@@ -224,9 +224,9 @@ void multiTask(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",2)){
+  switch(mlr::getParameter<int>("mode",2)){
   case 0:  simpleArrayOperations();  break;
   case 1:  openingSimulator();  break;
   case 2:  reach_problem();  break;

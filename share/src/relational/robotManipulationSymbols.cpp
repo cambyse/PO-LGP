@@ -97,27 +97,27 @@ void RobotManipulationSymbols::initSymbols() {
 
 
 Symbol* RobotManipulationSymbols::getSymbol_action_grab() {
-  return Symbol::get(MT::String("grab"), 1, Symbol::action);
+  return Symbol::get(mlr::String("grab"), 1, Symbol::action);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_action_puton() {
-  return Symbol::get(MT::String("puton"), 1, Symbol::action);
+  return Symbol::get(mlr::String("puton"), 1, Symbol::action);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_action_lift() {
-  return Symbol::get(MT::String("lift"), 2, Symbol::action);
+  return Symbol::get(mlr::String("lift"), 2, Symbol::action);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_action_place() {
-  return Symbol::get(MT::String("place"), 2, Symbol::action);
+  return Symbol::get(mlr::String("place"), 2, Symbol::action);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_action_openBox() {
-  return Symbol::get(MT::String("openBox"), 1, Symbol::action);
+  return Symbol::get(mlr::String("openBox"), 1, Symbol::action);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_action_closeBox() {
-  return Symbol::get(MT::String("closeBox"), 1, Symbol::action);
+  return Symbol::get(mlr::String("closeBox"), 1, Symbol::action);
 }
 
 
@@ -130,52 +130,52 @@ Symbol* RobotManipulationSymbols::getSymbol_action_closeBox() {
 
 
 Symbol* RobotManipulationSymbols::getSymbol_on() {
-  return Symbol::get(MT::String("on"), 2);
+  return Symbol::get(mlr::String("on"), 2);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_table() {
-  return Symbol::get(MT::String("table"), 1);
+  return Symbol::get(mlr::String("table"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_block() {
-  return Symbol::get(MT::String("block"), 1);
+  return Symbol::get(mlr::String("block"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_box() {
-  return Symbol::get(MT::String("box"), 1);
+  return Symbol::get(mlr::String("box"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_ball() {
-  return Symbol::get(MT::String("ball"), 1);
+  return Symbol::get(mlr::String("ball"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_inhand() {
-  return Symbol::get(MT::String("inhand"), 1);
+  return Symbol::get(mlr::String("inhand"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_upright() {
-  return Symbol::get(MT::String("upright"), 1);
+  return Symbol::get(mlr::String("upright"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_out() {
-  return Symbol::get(MT::String("out"), 1);
+  return Symbol::get(mlr::String("out"), 1);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_homies() {
-  return Symbol::get(MT::String("homies"), 2);
+  return Symbol::get(mlr::String("homies"), 2);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_contains() {
-  return Symbol::get(MT::String("contains"), 2);
+  return Symbol::get(mlr::String("contains"), 2);
 }
 
 Symbol* RobotManipulationSymbols::getSymbol_closed() {
-  return Symbol::get(MT::String("closed"), 1);
+  return Symbol::get(mlr::String("closed"), 1);
 }
 
 
 Symbol* RobotManipulationSymbols::getFunction_size() {
-  return Symbol::get(MT::String("size"), 1, Symbol::primitive, Symbol::integers);
+  return Symbol::get(mlr::String("size"), 1, Symbol::primitive, Symbol::integers);
 }
 
 
@@ -192,12 +192,12 @@ Symbol* RobotManipulationSymbols::getFunction_size() {
 ConjunctionSymbol* RobotManipulationSymbols::getSymbol_clear() {
   uintA args;  args.append(1);  args.append(0);
   LitL base_literals;  base_literals.append(Literal::get(getSymbol_on(), args, 0.));
-  return ConjunctionSymbol::get(MT::String("clear"), 1, base_literals, true);
+  return ConjunctionSymbol::get(mlr::String("clear"), 1, base_literals, true);
 }
 
 
 TransClosureSymbol* RobotManipulationSymbols::getSymbol_above() {
-  return TransClosureSymbol::get(MT::String("above"), 2, getSymbol_on());
+  return TransClosureSymbol::get(mlr::String("above"), 2, getSymbol_on());
 }
 
 
@@ -208,7 +208,7 @@ ConjunctionSymbol* RobotManipulationSymbols::getSymbol_aboveNotable() {
   base_literals.append(Literal::get(getSymbol_above(), args, 1.));
   args.clear();  args.append(1);
   base_literals.append(Literal::get(getSymbol_table(), args, 0.));
-  return ConjunctionSymbol::get(MT::String("aboveNotable"), 2, base_literals, true);
+  return ConjunctionSymbol::get(mlr::String("aboveNotable"), 2, base_literals, true);
 }
 
 
@@ -311,7 +311,7 @@ ConjunctionSymbol* RobotManipulationSymbols::getSymbol_inorder() {
 ConjunctionSymbol* RobotManipulationSymbols::getSymbol_inhandNil() {
   uintA args;  args.append(0);
   LitL base_literals;  base_literals.append(Literal::get(getSymbol_inhand(), args, 0.));
-  return ConjunctionSymbol::get(MT::String("inhandNil"), 0, base_literals, true);
+  return ConjunctionSymbol::get(mlr::String("inhandNil"), 0, base_literals, true);
 }
 
 
@@ -341,7 +341,7 @@ ConjunctionSymbol* RobotManipulationSymbols::getSymbol_onBox() {
 CountSymbol* RobotManipulationSymbols::getSymbol_height() {
   uintA args;  args.append(0);  args.append(1);
   Literal* base_literal = Literal::get(getSymbol_aboveNotable(), args, 1);
-  return CountSymbol::get(MT::String("height"), 1, base_literal);
+  return CountSymbol::get(mlr::String("height"), 1, base_literal);
 }
 
 
@@ -359,7 +359,7 @@ AverageFunction* RobotManipulationSymbols::getFunction_avgheight() {
 
 
 SumFunction* RobotManipulationSymbols::getFunction_sumheight() {
-  return SumFunction::get(MT::String("sum_height"), 0, getSymbol_height());
+  return SumFunction::get(mlr::String("sum_height"), 0, getSymbol_height());
 }
 
 
@@ -397,7 +397,7 @@ CountSymbol* RobotManipulationSymbols::getFunction_countInorder() {
   ************************************************/
 
 Reward* RobotManipulationSymbols::RewardLibrary::on(uint o1, uint o2) {
-  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
   uintA sa2(2);
   sa2(0)=o1;
   sa2(1)=o2;
@@ -407,7 +407,7 @@ Reward* RobotManipulationSymbols::RewardLibrary::on(uint o1, uint o2) {
 
 
 Reward* RobotManipulationSymbols::RewardLibrary::inhand(uint o1) {
-  Symbol* p_INHAND = Symbol::get(MT::String("inhand"));
+  Symbol* p_INHAND = Symbol::get(mlr::String("inhand"));
   uintA sa1(1);
   sa1(0)=o1;
   Literal* pt = Literal::get(p_INHAND, sa1, 1.);
@@ -417,21 +417,21 @@ Reward* RobotManipulationSymbols::RewardLibrary::inhand(uint o1) {
 Reward* RobotManipulationSymbols::RewardLibrary::cleanup(RobotManipulationSimulator *sim) {
   uintA empty;
   //SymL symbols2add;
-  //if (!Symbol::get(MT::String("above"))) {
+  //if (!Symbol::get(mlr::String("above"))) {
     //TransClosureSymbol* p_ABOVE1 = getSymbol_above();
-    //p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    //p_ABOVE1->base_symbol = Symbol::get(mlr::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
     //symbols2add.append(p_ABOVE1);
   //}
-  //if (!Symbol::get(MT::String("aboveNotable"))) {
+  //if (!Symbol::get(mlr::String("aboveNotable"))) {
     //symbols2add.append(getSymbol_aboveNotable());
   //}
-  //if (!Symbol::get(MT::String("height"))) {
+  //if (!Symbol::get(mlr::String("height"))) {
     //symbols2add.append(getSymbol_height());
   //}
-  //if (!Symbol::get(MT::String("sum_height"))) {
+  //if (!Symbol::get(mlr::String("sum_height"))) {
     //symbols2add.append(getFunction_sumheight());
   //}
-  Literal* fa = Literal::get(Symbol::get(MT::String("sumcleaned")), empty, 1.);
+  Literal* fa = Literal::get(Symbol::get(mlr::String("sumcleaned")), empty, 1.);
   Reward* reward = new MaximizeReward(fa);
   return reward;
 }
@@ -440,28 +440,28 @@ Reward* RobotManipulationSymbols::RewardLibrary::stack() {
 //   ATTENTION:  Stack defined by sum (not max) over heights
   uintA empty;
   SymL symbols2add;
-  if (!Symbol::get(MT::String("above"))) {
+  if (!Symbol::get(mlr::String("above"))) {
     TransClosureSymbol* p_ABOVE1 = getSymbol_above();
-    p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    p_ABOVE1->base_symbol = Symbol::get(mlr::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
     symbols2add.append(p_ABOVE1);
   }
-  if (!Symbol::get(MT::String("aboveNotable"))) {
+  if (!Symbol::get(mlr::String("aboveNotable"))) {
     symbols2add.append(getSymbol_aboveNotable());
   }
-  if (!Symbol::get(MT::String("height"))) {
+  if (!Symbol::get(mlr::String("height"))) {
     symbols2add.append(getSymbol_height());
   }
-  if (!Symbol::get(MT::String("sum_height"))) {
+  if (!Symbol::get(mlr::String("sum_height"))) {
     symbols2add.append(getFunction_sumheight());
   }
-  Literal* fa = Literal::get(Symbol::get(MT::String("sum_height")), empty, 1.);
+  Literal* fa = Literal::get(Symbol::get(mlr::String("sum_height")), empty, 1.);
   Reward* reward = new MaximizeReward(fa);
   return reward;
 }
 
 
 Reward* RobotManipulationSymbols::RewardLibrary::tower(uintA& objs) {
-  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
   LitL pts;
   uint i;
   uintA sa2(2);
@@ -480,24 +480,24 @@ Reward* RobotManipulationSymbols::RewardLibrary::tower(uintA& objs) {
 
 Reward* RobotManipulationSymbols::RewardLibrary::clearance() {
   SymL symbols2add;
-  if (!Symbol::get(MT::String("above"))) {
+  if (!Symbol::get(mlr::String("above"))) {
     TransClosureSymbol* p_ABOVE1 = getSymbol_above();
-    p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    p_ABOVE1->base_symbol = Symbol::get(mlr::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
     symbols2add.append(p_ABOVE1);
   }
-  if (!Symbol::get(MT::String("dirtyGuyBelow"))) {
+  if (!Symbol::get(mlr::String("dirtyGuyBelow"))) {
     symbols2add.append(getSymbol_dirtyGuyBelow());
   }
-  if (!Symbol::get(MT::String("differentTower"))) {
+  if (!Symbol::get(mlr::String("differentTower"))) {
     symbols2add.append(getSymbol_diffTower());
   }
-  if (!Symbol::get(MT::String("withoutHomies"))) {
+  if (!Symbol::get(mlr::String("withoutHomies"))) {
     symbols2add.append(getSymbol_withoutHomies());
   }
-  if (!Symbol::get(MT::String("inorder"))) {
+  if (!Symbol::get(mlr::String("inorder"))) {
     symbols2add.append(getSymbol_inorder());
   }
-  if (!Symbol::get(MT::String("count_inorder"))) {
+  if (!Symbol::get(mlr::String("count_inorder"))) {
     symbols2add.append(getFunction_countInorder());
   }
   uintA empty;
@@ -516,49 +516,49 @@ Reward* RobotManipulationSymbols::RewardLibrary::clearance() {
   ************************************************/
 
 bool RobotManipulationSymbols::isBlock(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("block")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("block")), TUP(id), 1.0));
 }
 
 
 bool RobotManipulationSymbols::isOut(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("out")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("out")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isInhand(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("inhand")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("inhand")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isTable(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("table")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("table")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isBall(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("ball")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("ball")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isBox(uint id, const SymbolicState& state) {
-  if (Symbol::get(MT::String("box")) == NULL)
+  if (Symbol::get(mlr::String("box")) == NULL)
     return false;
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("box")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("box")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isClosed(uint id, const SymbolicState& state) {
-  return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("closed")), TUP(id), 1.0));
+  return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("closed")), TUP(id), 1.0));
 }
 
 bool RobotManipulationSymbols::isInorderGang(const uintA gang, const SymbolicState& state) {
   CHECK(gang.N > 0, "");
-  if (Symbol::get(MT::String("inorder")) == NULL) {
+  if (Symbol::get(mlr::String("inorder")) == NULL) {
     NIY;
   }
   else {
-    return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("inorder")), uintA(gang(0)), 1.0));
+    return reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("inorder")), uintA(gang(0)), 1.0));
   }
 }
 
 
 uint RobotManipulationSymbols::getBelow(uint id, const SymbolicState& state) {
-  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_ON) {
@@ -570,7 +570,7 @@ uint RobotManipulationSymbols::getBelow(uint id, const SymbolicState& state) {
 }
 
 uint RobotManipulationSymbols::getAbove(uint id, const SymbolicState& state) {
-  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_ON) {
@@ -582,15 +582,15 @@ uint RobotManipulationSymbols::getAbove(uint id, const SymbolicState& state) {
 }
 
 void RobotManipulationSymbols::getBelowObjects(uintA& ids, uint id_top, const SymbolicState& state) {
-  SymbolicState::getRelatedConstants(ids, id_top, true, *Symbol::get(MT::String("above")), state);
+  SymbolicState::getRelatedConstants(ids, id_top, true, *Symbol::get(mlr::String("above")), state);
 }
 
 void RobotManipulationSymbols::getAboveObjects(uintA& ids, uint id_top, const SymbolicState& state) {
-  SymbolicState::getRelatedConstants(ids, id_top, false, *Symbol::get(MT::String("above")), state);
+  SymbolicState::getRelatedConstants(ids, id_top, false, *Symbol::get(mlr::String("above")), state);
 }
 
 uint RobotManipulationSymbols::getInhand(const SymbolicState& state) {
-  Symbol* p_INHAND = Symbol::get(MT::String("inhand"));
+  Symbol* p_INHAND = Symbol::get(mlr::String("inhand"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_INHAND) {
@@ -602,7 +602,7 @@ uint RobotManipulationSymbols::getInhand(const SymbolicState& state) {
 
 void RobotManipulationSymbols::getBoxes(uintA& ids, const SymbolicState& state) {
   ids.clear();
-  Symbol* p_BOX = Symbol::get(MT::String("box"));
+  Symbol* p_BOX = Symbol::get(mlr::String("box"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_BOX) {
@@ -613,7 +613,7 @@ void RobotManipulationSymbols::getBoxes(uintA& ids, const SymbolicState& state) 
 
 
 uint RobotManipulationSymbols::getContainingBox(uint obj_id, const SymbolicState& state) {
-  Symbol* p_CONTAINS = Symbol::get(MT::String("contains"));
+  Symbol* p_CONTAINS = Symbol::get(mlr::String("contains"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_CONTAINS) {
@@ -626,7 +626,7 @@ uint RobotManipulationSymbols::getContainingBox(uint obj_id, const SymbolicState
 
 
 uint RobotManipulationSymbols::getContainedObject(uint box_id, const SymbolicState& state) {
-  Symbol* p_CONTAINS = Symbol::get(MT::String("contains"));
+  Symbol* p_CONTAINS = Symbol::get(mlr::String("contains"));
   uint i;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == p_CONTAINS) {
@@ -638,16 +638,16 @@ uint RobotManipulationSymbols::getContainedObject(uint box_id, const SymbolicSta
 }
 
 
-void RobotManipulationSymbols::getHomieGangs(MT::Array< uintA >& homieGangs, const SymbolicState& state) {
+void RobotManipulationSymbols::getHomieGangs(mlr::Array< uintA >& homieGangs, const SymbolicState& state) {
   homieGangs.clear();
-  Symbol* p_HOMIES = Symbol::get(MT::String("homies"));
+  Symbol* p_HOMIES = Symbol::get(mlr::String("homies"));
   if (p_HOMIES == NULL)
     return;
   uint i, k;
   boolA constants_covered(reason::getConstants().N);
   constants_covered.setUni(false);
   FOR1D(reason::getConstants(), i) {
-    if (reason::holds(state.lits, Literal::get(Symbol::get(MT::String("table")), uintA(reason::getConstants()(i)), 1.0)))
+    if (reason::holds(state.lits, Literal::get(Symbol::get(mlr::String("table")), uintA(reason::getConstants()(i)), 1.0)))
       continue;
     if (constants_covered(i))
       continue;
@@ -710,11 +710,11 @@ void RobotManipulationSymbols::calcPiles(const SymbolicState& state, uintA& pile
     }
   }
   // calc piles (unsorted)
-  MT::Array< uintA > piles_unsorted;
+  mlr::Array< uintA > piles_unsorted;
   bool inserted;
   FOR1D(state.lits, i) {
     // on(A,B)
-    if (state.lits(i)->s == Symbol::get(MT::String("on"))) {
+    if (state.lits(i)->s == Symbol::get(mlr::String("on"))) {
       inserted = false;
       uint A_2_top;
       FOR1D(piles_unsorted, A_2_top) {
@@ -745,7 +745,7 @@ void RobotManipulationSymbols::calcPiles(const SymbolicState& state, uintA& pile
             }
             if (A_2_top == piles_unsorted.N) {
               cerr<<endl<<endl<<endl<<endl;
-              MT_MSG("ERROR! A_2_top was not found. Sorting piles will fail.");
+              MLR_MSG("ERROR! A_2_top was not found. Sorting piles will fail.");
               PRINT2(A_2_top, cerr);
               PRINT2(piles_unsorted.N, cerr);
               PRINT2(piles_unsorted, cerr);
@@ -772,7 +772,7 @@ void RobotManipulationSymbols::calcPiles(const SymbolicState& state, uintA& pile
     }
   }
   
-  MT::Array< uintA > piles_unsorted2;
+  mlr::Array< uintA > piles_unsorted2;
   FOR1D(piles_unsorted, i) {
     if (piles_unsorted(i).N > 0) {
       piles_unsorted2.append(piles_unsorted(i));
@@ -849,7 +849,7 @@ void RobotManipulationSymbols::calcPiles(const SymbolicState& state, uintA& pile
       PRINT(piles);
       PRINT(args_state);
       PRINT(next_pile_id);
-      MT_MSG("resorting failed");
+      MLR_MSG("resorting failed");
       cerr<<endl<<endl<<endl<<endl;
       if (DEBUG>0) {cout<<" RobotManipulationSymbols::calcPiles [END]"<<endl;}
       return;
@@ -894,9 +894,9 @@ bool RobotManipulationSymbols::has_maximum_stack_value(const SymbolicState& stat
   if (DEBUG>0) {cout<<"RobotManipulationSymbols::has_maximum_stack_value [START]"<<endl;}
   if (DEBUG>0) {cout<<"STATE:   ";  state.write();  cout<<endl;}
   
-  Symbol* p_BLOCK = Symbol::get(MT::String("block"));
-  Symbol* p_BALL = Symbol::get(MT::String("ball"));
-  Symbol* p_BOX = Symbol::get(MT::String("box"));
+  Symbol* p_BLOCK = Symbol::get(mlr::String("block"));
+  Symbol* p_BALL = Symbol::get(mlr::String("ball"));
+  Symbol* p_BOX = Symbol::get(mlr::String("box"));
   
   uintA blocks, balls, boxes;
   SymbolicState::getArguments(blocks, state, *p_BLOCK);
@@ -930,7 +930,7 @@ bool RobotManipulationSymbols::has_maximum_stack_value(const SymbolicState& stat
     else break;
   }
   
-  Symbol* f_SUM_HEIGHT = Symbol::get(MT::String("sum_height"));
+  Symbol* f_SUM_HEIGHT = Symbol::get(mlr::String("sum_height"));
   double real_stack_value = SymbolicState::getValue(f_SUM_HEIGHT, state);
   
   if (DEBUG>0) {PRINT(maximum_stack_value);  PRINT(real_stack_value);}
@@ -1004,7 +1004,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__stack(const uintA
   // -----------------------------------------------------------------------------
   // (2) Fill towers with objects
   
-  MT::Array< uintA > towers;
+  mlr::Array< uintA > towers;
   if (!leave_existing_towers) {
     if (DEBUG>0) {cout<<"Dumb sampling"<<endl;}
     for (i=0; (i+1)*target_height <= objs.N; i++) {
@@ -1129,7 +1129,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__stack(const uintA
     FOR1D(towers(i), k) {
       if (k==0)
         continue;
-      lits.append(Literal::get(Symbol::get(MT::String("on")), TUP(towers(i)(k), towers(i)(k-1)), 1.));
+      lits.append(Literal::get(Symbol::get(mlr::String("on")), TUP(towers(i)(k), towers(i)(k-1)), 1.));
     }
   }
   
@@ -1149,7 +1149,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
   //-----------------------------------------------------------------------------
   // (1) Determine classes to be ordered
   
-  MT::Array< uintA > gangs;
+  mlr::Array< uintA > gangs;
   getHomieGangs(gangs, current_state);
 
   // Determine gangs (= gangs of homies)
@@ -1165,7 +1165,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
     if (!isInorderGang(gangs(i), current_state))
       gang_ids.append(i);
   }
-  MT::Array< uintA > subsets;
+  mlr::Array< uintA > subsets;
   TL::allSubsets(subsets, gang_ids, false, false);
   
   arr sample_weights(subsets.N);
@@ -1188,7 +1188,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
   //-----------------------------------------------------------------------------
   // (2) Stack them together
   
-  MT::Array< uintA > towers;
+  mlr::Array< uintA > towers;
   FOR1D(combo, i) {
     uintA tower;
     uintA& local_gang = gangs(combo(i));
@@ -1241,7 +1241,7 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
     FOR1D(towers(i), k) {
       if (k==0)
         continue;
-      lits.append(Literal::get(Symbol::get(MT::String("on")), TUP(towers(i)(k), towers(i)(k-1)), 1.));
+      lits.append(Literal::get(Symbol::get(mlr::String("on")), TUP(towers(i)(k), towers(i)(k-1)), 1.));
     }
   }
   
@@ -1309,7 +1309,7 @@ void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostrea
   
   // Out objects
   uintA out_objects;
-  SymbolicState::getArguments(out_objects, state, *Symbol::get(MT::String("out")));
+  SymbolicState::getArguments(out_objects, state, *Symbol::get(mlr::String("out")));
   if (out_objects.N>0) {
     out<<"--"<<endl;
     out<<"OUT:  ";
@@ -1322,7 +1322,7 @@ void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostrea
     out<<endl;
   }
     
-  MT::Array< uintA > homieGangs;
+  mlr::Array< uintA > homieGangs;
   getHomieGangs(homieGangs, state);
   if (homieGangs.N > 0   &&   homieGangs(0).N > 1) {
     out<<"--"<<endl;

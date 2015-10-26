@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
@@ -12,7 +12,7 @@ void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
   G.watch(true);
 
@@ -67,7 +67,7 @@ void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 //  G.watch(true);
 
@@ -106,7 +106,7 @@ void TEST(PickAndPlace){
 
   Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -136,7 +136,7 @@ void TEST(PickAndPlace){
   MP.x0 = x[MP.T-1];
 
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
@@ -159,7 +159,7 @@ void TEST(PickAndPlace){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //  testGraspHeuristic();
   testPickAndPlace();
