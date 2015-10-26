@@ -26,7 +26,7 @@ enum { ValueIteration, PrioritizedSweeping, PolicyIteration, EM, POMDP_EM, POMDP
 
 struct globalParameters{
   int mode;
-  MT::String problem;
+  mlr::String problem;
   double gamma;
   uint method;
   uint d0,d1,seed;
@@ -56,7 +56,7 @@ void loadProblem(mdp::MDP& mdp,const char* problem){
     mdp::readImageMaze(mdp,problem);
     //tunnelRaxToPx(mdp.Pxax,mdp.Rax,mdp.Px);
     mdp::tunnelRaxTo(mdp.Pxax,mdp.Rax,-1);
-    mdp::addActionNoise(mdp.Pxax,MT::getParameter<double>("mazeNoise"));
+    mdp::addActionNoise(mdp.Pxax,mlr::getParameter<double>("mazeNoise"));
     mdp::showMaze();
     mdp.gamma=PARAMS.gamma;
     mdp::createNeighorList(mdp);
@@ -85,7 +85,7 @@ void run_pomdpEM_lev2(const mdp::MDP& mdp,bool hierarchy=false){
   }
 
   //prepare output file
-  MT::String filename;
+  mlr::String filename;
   filename <<"data/OUT";
   if(!hierarchy) filename<<"2"; else filename<<"H";
   filename<<"n";
@@ -95,7 +95,7 @@ void run_pomdpEM_lev2(const mdp::MDP& mdp,bool hierarchy=false){
   
   //iterate EM
   double Like=0.;
-  double tic=MT::cpuTime();
+  double tic=mlr::cpuTime();
   if(PARAMS.forceLevel1 || d1==1){ //use specialized flat controller optimization
     mdp::FSC_lev1 fsc1;
     collapse2levelFSC(fsc1,fsc);
@@ -106,16 +106,16 @@ void run_pomdpEM_lev2(const mdp::MDP& mdp,bool hierarchy=false){
 			PARAMS.mstepType,PARAMS.mstepRate,PARAMS.mstepNoise,
 			false,
 			NULL,NULL,NULL);
-      out <<k <<' ' <<MT::timerRead(false,tic) <<' ' <<Like <<endl;
+      out <<k <<' ' <<mlr::timerRead(false,tic) <<' ' <<Like <<endl;
     }
   }else{
     for(uint k=0;k<PARAMS.iterations;k++){
       cout <<k <<' ';
       Like=pomdpEM_lev2(mdp,fsc,PARAMS.estepHorizon,PARAMS.estepStructured,PARAMS.mstepType,false);
-      out <<k <<' ' <<MT::timerRead(false,tic) <<' ' <<Like <<endl;
+      out <<k <<' ' <<mlr::timerRead(false,tic) <<' ' <<Like <<endl;
     }
   }
-  cout <<"\n\ntotal time = " <<MT::timerRead(false,tic) <<endl;
+  cout <<"\n\ntotal time = " <<mlr::timerRead(false,tic) <<endl;
 }
 
 void testSolvers(uint method,const mdp::MDP& mdp){
@@ -185,31 +185,31 @@ void testSolvers(uint method,const mdp::MDP& mdp){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  if(!MT::checkParameter<uint>("mode")){
+  if(!mlr::checkParameter<uint>("mode")){
     char buf[256];
     ifstream is;
-    MT::open(is,"README");
+    mlr::open(is,"README");
     while(is.good()){ is.getline(buf,256); cout <<buf <<endl; }
     return 1;
   }
 
-  MT::getParameter(PARAMS.mode,"mode",0);
-  MT::getParameter(PARAMS.seed,"seed",(uint)0);
-  MT::getParameter(PARAMS.method,"method",(uint)3);
-  MT::getParameter(PARAMS.d0,"d0",(uint)0);
-  MT::getParameter(PARAMS.d1,"d1",(uint)0);
-  MT::getParameter(PARAMS.problem,"problem",MT::String("15x20holes.ppm"));
-  MT::getParameter(PARAMS.iterations,"iterations",(uint)200);
-  MT::getParameter(PARAMS.estepHorizon,"estepHorizon",(uint)100);
-  MT::getParameter(PARAMS.estepStructured,"estepStructured",true);
-  MT::getParameter(PARAMS.estepIncremental,"estepIncremental",false);
-  MT::getParameter((int&)PARAMS.mstepType,"mstepType",0);
-  MT::getParameter(PARAMS.mstepRate,"mstepRate",.3);
-  MT::getParameter(PARAMS.mstepNoise,"mstepNoise",1e-5);
-  MT::getParameter(PARAMS.forceLevel1,"forceLevel1",false);
-  MT::getParameter(PARAMS.gamma,"gamma",.999);
+  mlr::getParameter(PARAMS.mode,"mode",0);
+  mlr::getParameter(PARAMS.seed,"seed",(uint)0);
+  mlr::getParameter(PARAMS.method,"method",(uint)3);
+  mlr::getParameter(PARAMS.d0,"d0",(uint)0);
+  mlr::getParameter(PARAMS.d1,"d1",(uint)0);
+  mlr::getParameter(PARAMS.problem,"problem",mlr::String("15x20holes.ppm"));
+  mlr::getParameter(PARAMS.iterations,"iterations",(uint)200);
+  mlr::getParameter(PARAMS.estepHorizon,"estepHorizon",(uint)100);
+  mlr::getParameter(PARAMS.estepStructured,"estepStructured",true);
+  mlr::getParameter(PARAMS.estepIncremental,"estepIncremental",false);
+  mlr::getParameter((int&)PARAMS.mstepType,"mstepType",0);
+  mlr::getParameter(PARAMS.mstepRate,"mstepRate",.3);
+  mlr::getParameter(PARAMS.mstepNoise,"mstepNoise",1e-5);
+  mlr::getParameter(PARAMS.forceLevel1,"forceLevel1",false);
+  mlr::getParameter(PARAMS.gamma,"gamma",.999);
   rnd.seed(PARAMS.seed);
   
   cout <<std::setprecision(5);

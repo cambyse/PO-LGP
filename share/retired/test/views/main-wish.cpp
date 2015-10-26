@@ -1,7 +1,7 @@
 #include <Gui/opengl.h>
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   
   arr X = randn(5,3);
 
@@ -30,7 +30,7 @@ int main(int argc,char** argv){
     //with the update frequency of the gtkProcess()
     X += .1*randn(5,3);
     gl.displayGrey(X, false, 10);
-    MT::wait(.1);
+    mlr::wait(.1);
   }
 
   return 0;

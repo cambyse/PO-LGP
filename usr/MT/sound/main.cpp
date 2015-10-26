@@ -7,13 +7,13 @@ uintA DUR = {0u,2,4,5,7,9,11};
 
 void basic(SineSound& S, Audio& audio){
   S.addNote(440., .1, .0);
-  MT::wait(3.);
+  mlr::wait(3.);
 }
 
 void complex(SineSound& S, Audio& audio){
   uint mode=0;
   for(uint k=0;k<200;k++){
-    MT::wait(.1);
+    mlr::wait(.1);
     switch(mode){
       case 0:  S.addNote(880.*pow(2.,double(rnd.uni(0,36))/12.));  break;
       case 1:{

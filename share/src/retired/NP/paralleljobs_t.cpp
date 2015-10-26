@@ -22,7 +22,7 @@
 #include "nputils.h"
 
 template<class S>
-np::ParallelJobs<S>::ParallelJobs(const MT::Array<S*>& jobs) : current_index(0),
+np::ParallelJobs<S>::ParallelJobs(const mlr::Array<S*>& jobs) : current_index(0),
 num_running_threads(0)
 {
   jobs_ = jobs;

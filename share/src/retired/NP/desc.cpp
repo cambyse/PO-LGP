@@ -64,9 +64,9 @@ void np::ucm_shapedesc
   seg::ucm_tree_levels(tree_levels, tree);
   num_tree_levels = tree_levels.N;
 
-  MT::Array<intA> contours(num_patches);   // contours of each patch in the tree
-  MT::Array<intA> contours2D(num_patches);    // same as above but 2D img coord.
-  MT::Array<intA> patchmap_pyramid(num_tree_levels);   // patchmap at each level
+  mlr::Array<intA> contours(num_patches);   // contours of each patch in the tree
+  mlr::Array<intA> contours2D(num_patches);    // same as above but 2D img coord.
+  mlr::Array<intA> patchmap_pyramid(num_tree_levels);   // patchmap at each level
 
   if (num_coef == 0)
     num_coef = 20;
@@ -726,7 +726,7 @@ int np::quantization
  const floatA& scales
 )
 {
-#if defined MT_ANN | defined NP_ANN
+#if defined MLR_ANN | defined NP_ANN
   intA nn;
   ANN codebook_tree;
   doubleA codebook_t;
@@ -745,7 +745,7 @@ int np::quantization
   doubleA row;
   for (uint fei = 0; fei < desc.d0; fei++)
   {
-#if defined MT_ANN | defined NP_ANN
+#if defined MLR_ANN | defined NP_ANN
     array2array(row, desc[fei]);
     codebook_tree.getNN(row, 1, nn);
 #else
@@ -757,7 +757,7 @@ int np::quantization
     xysc(fei, 0) = grid(fei,0);                     // x
     xysc(fei, 1) = grid(fei,1);                     // y
     xysc(fei, 2) = scales(fei);                     // scale
-#if defined MT_ANN | defined NP_ANN
+#if defined MLR_ANN | defined NP_ANN
     xysc(fei, 3) = nn(0);
 #else
     xysc(fei, 3) = dist.minIndex();                 // nearest neighbor: index

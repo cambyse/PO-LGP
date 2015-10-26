@@ -20,8 +20,8 @@ The constraint is always as in exercise 3\n";
 
 void testGradDescent(const ScalarFunction& F){
   displayFunction(ChoiceFunction());
-  MT::wait();
-  uint d=MT::getParameter<uint>("dim", 2);
+  mlr::wait();
+  uint d=mlr::getParameter<uint>("dim", 2);
   arr x(d),x0;
   rnd.clockSeed();
   for(uint k=0;k<3;k++){
@@ -34,19 +34,19 @@ void testGradDescent(const ScalarFunction& F){
     optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-    MT::wait();
+    mlr::wait();
 
     x=x0;
     optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-    MT::wait();
+    mlr::wait();
 
     x=x0;
     optNewton(x, F, OPT(verbose=3, dampingDec=.7, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -78,7 +78,7 @@ void testGradDescent(const ScalarFunction& F){
 
 //     double f = phi(0); //costs
 //     if(muLB)     for(uint i=1;i<phi.N;i++) f -= muLB * ::log(-phi(i));  //log barrier
-//     if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * MT::sqr(phi(i));  //penalty
+//     if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * mlr::sqr(phi(i));  //penalty
 //     if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) f += lambda(i) * phi(i);  //augments
 
 //     if(&g){
@@ -93,7 +93,7 @@ void testGradDescent(const ScalarFunction& F){
 //       ///TODO: Here we assume the hessian of phi(0) and all phi(i) ZERO!!! Only the J^T J terms are considered (as in Gauss-Newton type)
 //       H.resize(x.N,x.N);
 //       H.setZero();
-//       if(muLB)     for(uint i=1;i<phi.N;i++) H += (muLB/MT::sqr(phi(i)))*(J[i]^J[i]);  //log barrier
+//       if(muLB)     for(uint i=1;i<phi.N;i++) H += (muLB/mlr::sqr(phi(i)))*(J[i]^J[i]);  //log barrier
 //       if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) H += (mu*2.)*(J[i]^J[i]);  //penalty
 //       if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) H += 0.; //augments
 //       H.reshape(x.N,x.N);
@@ -124,7 +124,7 @@ void testGradDescent(const ScalarFunction& F){
 
 void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint iters=10){
 
-  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
+  ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("method");
 
   UnconstrainedProblemMix F(f, method);
 
@@ -136,7 +136,7 @@ void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint ite
   default: NIY;
   }
 
-  uint d=MT::getParameter<uint>("dim", 2);
+  uint d=mlr::getParameter<uint>("dim", 2);
   arr x(d);
   if(&x_start) x=x_start;
   else{
@@ -157,9 +157,9 @@ void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint ite
     optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
     displayFunction(F);
-    MT::wait();
+    mlr::wait();
     gnuplot("load 'plt'", false, true);
-    MT::wait();
+    mlr::wait();
 
     //upate unconstraint problem parameters
     switch(method){
@@ -247,7 +247,7 @@ void testGaussNewton(VectorFunction& F){
     optNewton(x, Convert(F), OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -255,20 +255,20 @@ void testGaussNewton(VectorFunction& F){
 //==============================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   cout <<USE <<endl;
 
   enum TestType { unconstrained=1, constrained, phaseOne, gaussNewton };
 
-  switch((TestType)MT::getParameter<int>("exercise")){
+  switch((TestType)mlr::getParameter<int>("exercise")){
   case unconstrained:  testGradDescent(ChoiceFunction());  break;
   case constrained:    testConstraint(ChoiceConstraintFunction());  break;
   case phaseOne:       testPhaseOne(ChoiceConstraintFunction());  break;
   case gaussNewton: {
     SinusesFunction F;
     displayFunction(Convert(F));
-    MT::wait();
+    mlr::wait();
     testGaussNewton(F);
   }
   }

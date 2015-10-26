@@ -60,7 +60,7 @@ public slots:
     sol.fscFile      = ui.fscFile->text().toAscii();
     sol.seed = ui.seed->value();
     sol.fscType = (mdp::FscType)ui.fscType->currentIndex();
-    MT::String(ui.levels->text().toAscii()) >> sol.levels;
+    mlr::String(ui.levels->text().toAscii()) >> sol.levels;
     sol.mstepType = (mdp::MstepType)ui.mstepType->currentIndex();
     sol.mstepRate = ui.mstepRate->value();
     sol.mstepNoise = ui.mstepNoise->value();

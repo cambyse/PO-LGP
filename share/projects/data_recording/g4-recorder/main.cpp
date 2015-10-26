@@ -32,7 +32,7 @@ void threadedRun(){
 
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   threadedRun();
   return 0;

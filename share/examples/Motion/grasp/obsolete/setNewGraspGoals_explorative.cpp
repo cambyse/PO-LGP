@@ -6,12 +6,12 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    mlr::getParameter(midPrec, "reachPlanMidPrec");
+    mlr::getParameter(endPrec, "reachPlanEndPrec");
+    mlr::getParameter(palmPrec, "reachPlanPalmPrec");
+    mlr::getParameter(colPrec, "reachPlanColPrec");
+    mlr::getParameter(limPrec, "reachPlanLimPrec");
+    mlr::getParameter(endVelPrec, "reachPlanEndVelPrec");
   }
   
   //set the time horizon
@@ -28,7 +28,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   //-- create a grasp object for the ors shape
   GraspObject *graspobj;
   switch(obj->type){
-      //graspobj = new GraspObject_InfCylinder(ARRAY(obj->X.pos), ARR(0,0,1), .04, 1.);
+      //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0,0,1), .04, 1.);
     case ors::cylinderST:  graspobj = new GraspObject_Cylinder1(obj);  break;
     case ors::boxST:  graspobj = new GraspObject_Box(obj);  break;
     default: NIY;
@@ -95,13 +95,13 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   if(phase==0) return;
   
   //finger tips
-  MT::Array<ors::Shape*> tipsN;
+  mlr::Array<ors::Shape*> tipsN;
   tipsN.append(sys.ors->getShapeByName("tipNormal1"));
   tipsN.append(sys.ors->getShapeByName("tipNormal2"));
   tipsN.append(sys.ors->getShapeByName("tipNormal3"));
 
   //CLEAN away
-  MT::Array<ors::Shape*> hooksN;
+  mlr::Array<ors::Shape*> hooksN;
   hooksN.append(sys.ors->getShapeByName("tipHook1"));
   hooksN.append(sys.ors->getShapeByName("tipHook2"));
   hooksN.append(sys.ors->getShapeByName("tipHook3"));
@@ -149,8 +149,8 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->y_prec=colPrec;  V->setInterpolatedTargetsConstPrecisions(T);
   //V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setInterpolatedTargetsConstPrecisions(T);
   V=listFindByName(sys.vars, "qitself");
-  V->y_prec=MT::getParameter<double>("reachPlanHomeComfort");
-  V->v_prec=MT::getParameter<double>("reachPlanEndVelPrec");
+  V->y_prec=mlr::getParameter<double>("reachPlanHomeComfort");
+  V->v_prec=mlr::getParameter<double>("reachPlanEndVelPrec");
   //V->y_target = ARR(0,0,0,0,0,0,0);
   //V->y_target.append(ARR(0,-.8,.6,-.8,.6,-.8,.6));
   V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, V->y_prec, V->y_prec, midPrec, V->v_prec);

@@ -5,7 +5,7 @@ BASE = ../../../share
 #CPATH	:= $(HOME)/tmp/gvd/include:$(CPATH)
 #LPATH	:= $(HOME)/tmp/gvd/lib:$(LPATH)
 
-#CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
+#CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES
 
 #LIBS += -lgraph -lgvc
 

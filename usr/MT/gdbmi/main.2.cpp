@@ -81,7 +81,7 @@ struct GDB:public Process{
   void step(){
     sendCommand("-thread-select 1\n");
     sendCommand("-exec-interrupt\n");
-    MT::wait(1.);
+    mlr::wait(1.);
     sendCommand("-stack-list-frames\n");
     sendCommand("-stack-select-frame 2\n");
     sendCommand("-var-create varList * globalVariables\n");
@@ -101,7 +101,7 @@ struct GDB:public Process{
 
   void close(){
     //fil <<"interrupt\n detatch" <<endl;
-    //MT::wait();
+    //mlr::wait();
   }
   
   void info(){
@@ -131,9 +131,9 @@ int main(int argc, char *argv[]){
   cout <<"PID = " << gdb.pid <<endl;
   gdb.threadOpen();
   
-  for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  for(uint t=0;t<10;t++){  mlr::wait(.1);    cout <<t <<endl;  }
   gdb.threadStep();
-  for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  for(uint t=0;t<10;t++){  mlr::wait(.1);    cout <<t <<endl;  }
 
   gdb.threadClose();
 

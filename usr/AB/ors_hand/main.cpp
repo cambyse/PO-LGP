@@ -200,9 +200,9 @@ void TEST(Hand){
                 // visualize model orthogonal points
                 bMorthoP->X.pos=y+yR;
                 // eval cost function contribution (distance between orthogonals)
-                Phi.append((y+yR-ARRAY(bSorthoP->X.pos))/(LOSS_ORTHO_POSITION));
+                Phi.append((y+yR-conv_vec2arr(bSorthoP->X.pos))/(LOSS_ORTHO_POSITION));
                 PhiJ.append((J+JR)/(LOSS_ORTHO_POSITION));
-                PhiV[2].append((y+yR-ARRAY(bSorthoP->X.pos))/(LOSS_ORTHO_POSITION));
+                PhiV[2].append((y+yR-conv_vec2arr(bSorthoP->X.pos))/(LOSS_ORTHO_POSITION));
 #endif
 
 #ifdef LOSS_ORTHO_ALIGN_ANY
@@ -226,7 +226,7 @@ void TEST(Hand){
                 b=.05*sortho;
                 a*=20;
                 b*=20;
-                Jtmp=-(~ARRAY(b)*JR/sqrt(1-(a*b)*(a*b)));
+                Jtmp=-(~conv_vec2arr(b)*JR/sqrt(1-(a*b)*(a*b)));
                 Phi.append(acos(a*b)/(LOSS_ORTHO_ALIGN_TYPE1));
                 PhiJ.append(Jtmp/(LOSS_ORTHO_ALIGN_TYPE1));
                 PhiV[3].append(acos(a*b)/(LOSS_ORTHO_ALIGN_TYPE1));
@@ -238,7 +238,7 @@ void TEST(Hand){
                 b=.05*sortho;
                 a*=20;
                 b*=20;
-                Jtmp=-(~ARRAY(b)*JR);
+                Jtmp=-(~conv_vec2arr(b)*JR);
                 Phi.append((1-a*b)/(LOSS_ORTHO_ALIGN_TYPE2));
                 PhiJ.append(Jtmp/(LOSS_ORTHO_ALIGN_TYPE2));
                 PhiV[4].append((1-a*b)/(LOSS_ORTHO_ALIGN_TYPE2));
@@ -320,7 +320,7 @@ void TEST(Hand){
         double ty=.025;
         double tz=.485;
 
-        Y[findex]=ARRAY(
+        Y[findex]=conv_vec2arr(
                 ors::Vector(sx*p.x,sy*p.y,sz*p.z)+
                 ors::Vector(tx,ty,tz)
                 );

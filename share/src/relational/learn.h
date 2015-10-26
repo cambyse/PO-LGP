@@ -109,23 +109,23 @@ struct RuleSetContainer {
   const StateTransitionL* p_experiences;
   
   // redundant memories
-  MT::Array< uintA > nonDefaultRules_per_experience;  // only non-default rules!
-  MT::Array< uintA > experiences_per_rule;
+  mlr::Array< uintA > nonDefaultRules_per_experience;  // only non-default rules!
+  mlr::Array< uintA > experiences_per_rule;
   
-  MT::Array< MT::Array < uintA > > experiences_per_ruleOutcome;
+  mlr::Array< mlr::Array < uintA > > experiences_per_ruleOutcome;
   
   RuleSetContainer(const StateTransitionL* _p_experiences);
   RuleSetContainer(); // use init() later when using this constructor
   
   void init(const StateTransitionL* _p_experiences);
-  void append(Rule* rule, uintA& experiences_of_this_rule, MT::Array< uintA >& experiences_per_outcome_of_this_rule);
+  void append(Rule* rule, uintA& experiences_of_this_rule, mlr::Array< uintA >& experiences_per_outcome_of_this_rule);
   void remove(uint id);
   void clear();
   void recomputeDefaultRule();
   void sort();
   
-  void getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const;
-  void getPartitionsForAction(MT::Array< uintA >& partititions, Literal* action) const;
+  void getResponsibilities(arr& responsibilities, mlr::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const;
+  void getPartitionsForAction(mlr::Array< uintA >& partititions, Literal* action) const;
   
   void write(ostream& out = std::cout, bool only_action = false, bool additional_experience_info = true) const;
   void write(const char* filename, bool only_action = false, bool additional_experience_info = true) const;
@@ -150,11 +150,11 @@ namespace learn {
   
   // *** Outcome learning ***
   // Main method which is safe to call from outside (namely from the SearchOperators).
-  void learn_outcomes(Rule* rule, MT::Array< uintA >& coveredExperiences_per_outcome, const StateTransitionL& covered_experiences, const uintA& covered_experiences_ids);
+  void learn_outcomes(Rule* rule, mlr::Array< uintA >& coveredExperiences_per_outcome, const StateTransitionL& covered_experiences, const uintA& covered_experiences_ids);
   
   // *** Parameter learning ***
   // (outcome probabilities)  (For efficiency, it's interwoven with "learn_outcomes" in the implementation details.)
-  double learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs);
+  double learn_parameters(const mlr::Array< LitL >& outcomes, doubleA& probs);
   // Penalties for adapting gradients to learn sound probability distribution
   // - pen_sum: probs sum to 1
   void setProbabilitiesLearningPenalty_sum(double pen_sum);
@@ -229,7 +229,7 @@ class SearchOperator {
   
 protected:
 
-  MT::String name;
+  mlr::String name;
   bool approximative;
         
   // takes the rulelist rules2add and integrates it into existing ruleset
@@ -249,7 +249,7 @@ public:
   virtual void reset() = 0;
   // central method which is called by the RuleLearner
   virtual void createRuleSets(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, 
-                  MT::Array< RuleSetContainer >& sets_of_new_rules);
+                  mlr::Array< RuleSetContainer >& sets_of_new_rules);
   const char* getName();
   bool isApproximator() {return approximative;}
   virtual void reset_total_approximator() {}
@@ -311,7 +311,7 @@ class DropRules : public SearchOperator {
   public:
     DropRules();
     void createRuleSets(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, 
-              MT::Array< RuleSetContainer >& sets_of_new_rules);
+              mlr::Array< RuleSetContainer >& sets_of_new_rules);
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);   
     void reset();
 };
@@ -430,14 +430,14 @@ class SplitOnEqualities : public SearchOperator {
   SymL usedFunctions;
 
   //cached used function values accross all experiences
-  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+  std::map<relational::Symbol*, mlr::Array<double> > *usedFVs;
   
   public:
       SplitOnEqualities();
       void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
       void reset();
 
-      void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
+      void setUsedFunctionValues(std::map<relational::Symbol*, mlr::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 class SplitOnInequalities : public SearchOperator {
@@ -449,14 +449,14 @@ class SplitOnInequalities : public SearchOperator {
   SymL usedFunctions;
 
   //cached used function values accross all experiences
-  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+  std::map<relational::Symbol*, mlr::Array<double> > *usedFVs;
   
   public:
       SplitOnInequalities();
       void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
       void reset();
 
-      void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
+      void setUsedFunctionValues(std::map<relational::Symbol*, mlr::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 // changes ranges of all comp preds
@@ -467,14 +467,14 @@ class ChangeRange : public SearchOperator {
   arr possibleValues;
 
   //cached used function values accross all experiences
-  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+  std::map<relational::Symbol*, mlr::Array<double> > *usedFVs;
 
   public:
     ChangeRange();
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
     void reset();
 
-    void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
+    void setUsedFunctionValues(std::map<relational::Symbol*, mlr::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 
@@ -488,14 +488,14 @@ class MakeInterval : public SearchOperator {
   arr possibleValues;
 
   //cached used function values accross all experiences
-  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+  std::map<relational::Symbol*, mlr::Array<double> > *usedFVs;
 
   public:
     MakeInterval();
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
     void reset();
 
-    void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
+    void setUsedFunctionValues(std::map<relational::Symbol*, mlr::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 
@@ -516,12 +516,12 @@ class CompareFunctionValues : public SearchOperator {
   uint nextComparisonType;
   uint nextTermCombination;
   
-  MT::Array<uintA> termCombos;
+  mlr::Array<uintA> termCombos;
   SymL usedFunctions;
   
-  MT::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
+  mlr::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
   
-  MT::Array< Literal::ComparisonType > comparisonTypes;
+  mlr::Array< Literal::ComparisonType > comparisonTypes;
 
   public:
     CompareFunctionValues();
@@ -546,11 +546,11 @@ class SplitOnCompareFunctionValues : public SearchOperator {
   uint nextRule;
   uint nextFunction;
   uint nextTermCombination;
-  MT::Array< Literal::ComparisonType > comparisonTypes;
-  MT::Array<uintA> termCombos;
+  mlr::Array< Literal::ComparisonType > comparisonTypes;
+  mlr::Array<uintA> termCombos;
   SymL usedFunctions;
   
-  MT::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
+  mlr::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
 
   public:
     SplitOnCompareFunctionValues();

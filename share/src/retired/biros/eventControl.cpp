@@ -11,7 +11,7 @@
 #include <System/biros.h>
 #include <System/biros_internal.h>
 
-#ifdef MT_GTK
+#ifdef MLR_GTK
 
 #include <gtk/gtk.h>
 #include <Gui/gtk.h>
@@ -51,7 +51,7 @@ void EventControlView::gtkNew(GtkWidget *container){
 }
 
 void EventControlView::gtkUpdate(){
-  MT::String str;
+  mlr::String str;
   engine().acc->writeEventList(str, false, 10);
   gtkLock();
   GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (gtk_builder_get_object(s->builder, "pastEvents")));
@@ -90,7 +90,7 @@ extern "C" G_MODULE_EXPORT void eventControl_next(GtkWidget* caller){
 }
 
 
-#else //MT_GTK
+#else //MLR_GTK
 EventControlView::EventControlView(GtkWidget* container){ NICO }
 EventControlView::~EventControlView(){ NICO }
 void EventControlView::gtkNew(GtkWidget *container){ NICO }

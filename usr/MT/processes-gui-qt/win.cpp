@@ -1,4 +1,4 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 #include <biros/biros_internal.h>
 #include <QtGui/QTreeWidget>
 
@@ -15,7 +15,7 @@ void addVariablesToTree(QTreeWidget *tree){
     tree->addTopLevelItem( var );
     for_list(Type,  vi,  v->fields){
 
-      MT::String value;
+      mlr::String value;
       vi->write_value(value);
       QStringList list;
       list.append(vi->name);

@@ -153,7 +153,7 @@ void circle(bool FIRE=false){
 
   RobotArm *arm=NULL;
   if(FIRE){
-    ros::init(MT::argc, MT::argv, "robot_driver");
+    ros::init(mlr::argc, mlr::argv, "robot_driver");
     arm = new RobotArm;
     if(!ros::ok()) cout <<"INIT not ok" <<endl;
   }
@@ -192,7 +192,7 @@ void circle(bool FIRE=false){
       while (!arm->getState().isDone() && ros::ok()) {
         usleep(50000);
       }
-//      MT::wait(5.);
+//      mlr::wait(5.);
       break;
     }
   }
@@ -205,7 +205,7 @@ void circle(bool FIRE=false){
 
 void base(){
   // Init the ROS node
-  ros::init(MT::argc, MT::argv, "robot_driver");
+  ros::init(mlr::argc, mlr::argv, "robot_driver");
 
   RobotArm arm;
   // Start the trajectory

@@ -42,8 +42,8 @@ soc::SocSystem_Toy::SocSystem_Toy(){
   s->v0=0.;
 
   s->W.setId(1);
-  static MT::Parameter<double> hc("Hcost");
-  static MT::Parameter<double> qn("Qnoise");
+  static mlr::Parameter<double> hc("Hcost");
+  static mlr::Parameter<double> qn("Qnoise");
   s->H.setDiag(hc, 1);
   s->Q.setDiag(qn, 2);
   s->Q.setZero();
@@ -138,14 +138,14 @@ void soc::SocSystem_Toy::getTargetV(arr& v_i, uint i, uint t){
 }
 
 void soc::SocSystem_Toy::getPrecision(double& prec, uint i, uint t){
-  static MT::Parameter<double> ep("endPrec");
+  static mlr::Parameter<double> ep("endPrec");
   if(t==s->T-1) prec=ep;
   else prec=0.;
   //prec=0.;
 }
 
 void soc::SocSystem_Toy::getPrecisionV(double& prec, uint i, uint t){
-  static MT::Parameter<double> ep("endPrec");
+  static mlr::Parameter<double> ep("endPrec");
   if(t==s->T-1) prec=ep;
   else prec=0.;
   //prec=0.;
@@ -159,7 +159,7 @@ void soc::SocSystem_Toy::getPrecisionV(double& prec, uint i, uint t){
 //
 
 void toyDrawEnv(void *p){
-#ifdef MT_GL
+#ifdef MLR_GL
   soc::sSocSystem_Toy *s = (soc::sSocSystem_Toy*)p;
   glStandardLight(NULL);
   glDrawAxes(1.);
@@ -181,7 +181,7 @@ void soc::createDynamicProblem(SocSystem_Toy &soci,
                           const char *ors_file,
                           double trajectory_time,
                           uint trajectory_steps){
-  MT_MSG("*** TOY problem");
+  MLR_MSG("*** TOY problem");
   soci.s->T=trajectory_steps;
   soci.s->tau=trajectory_time/trajectory_steps;
 }

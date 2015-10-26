@@ -54,7 +54,7 @@ void TEST(BSpline){
   arr X(K,2); //spline points
   rndUniform(X,-1,1,false);
 
-  MT::Spline S(T, X, 2);
+  mlr::Spline S(T, X, 2);
 
   cout <<"times = " <<S.times <<endl;
 
@@ -128,7 +128,7 @@ void TEST(Path){
   arr X(11,1);
   rndUniform(X,-1,1,false);
 
-  MT::Path P(X);
+  mlr::Path P(X);
   cout <<"times = " <<P.times
       <<"\npoints= " <<P.points <<endl;
 
@@ -149,7 +149,7 @@ void TEST(Path){
 //  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
 
   //-- write spline
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.points") <<X;
 
   ofstream fil("z.test");
@@ -163,7 +163,7 @@ void TEST(Path){
 }
 
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   testBSpline();
 //  testPath();

@@ -109,7 +109,7 @@ void executeTrajectory(String scene, ControlType cType){
   MotionProblem P(world);
   P.loadTransitionParameters();
 
-  arr goal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr goal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -170,7 +170,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   arr dir;
   if (moveGoal){
-    dir = ARRAY(world.getBodyByName("dir")->X.pos);
+    dir = conv_vec2arr(world.getBodyByName("dir")->X.pos);
     cout << dir << endl;
   } else {
     dir = {1.,0.,0.};
@@ -178,12 +178,12 @@ void executeTrajectory(String scene, ControlType cType){
 
   std::vector<MObject*> mobstacles;
   if (moveObs) {
-    arr obsdir = ARRAY(world.getBodyByName("obsdir")->X.pos);
-    mobstacles.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.0005, obsdir));
+    arr obsdir = conv_vec2arr(world.getBodyByName("obsdir")->X.pos);
+    mobstacles.push_back(new MObject(&world, mlr::String("obstacle"), MObject::OBSTACLE , 0.0005, obsdir));
   }
 
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dir);
+  MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dir);
 
   FeedbackMotionControl MP(world, false);
   CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
@@ -246,7 +246,7 @@ void executeTrajectory(String scene, ControlType cType){
   while (((world.getBodyByName("endeff")->X.pos - goalMO.position).length() > goalAccuracy) && t < maxDuration && sum(ct_bk)<50.) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
-      MT::timerStart(true);
+      mlr::timerStart(true);
       // Get current task state
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff"));
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff"));
@@ -297,7 +297,7 @@ void executeTrajectory(String scene, ControlType cType){
         world.watch(false, STRING(t));
 #endif
       }
-      ct_bk.append(MT::timerRead());
+      ct_bk.append(mlr::timerRead());
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
@@ -346,22 +346,22 @@ void executeTrajectory(String scene, ControlType cType){
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //-------------// Init Evaluation Parameters //-------------//
   // distance between robot and endeffector when movement is stopped
-  goalAccuracy = MT::getParameter<double>("goalAccuracy");
+  goalAccuracy = mlr::getParameter<double>("goalAccuracy");
   // folder name of evaluation result
-  evalName = MT::getParameter<String>("evalName");
+  evalName = mlr::getParameter<String>("evalName");
   //--- scene name describing robot and environment
   // the scene names is assembled by sceneName[1-numScenes]
-  sceneName = MT::getParameter<String>("sceneName");
-  numScenes = MT::getParameter<int>("numScenes");
+  sceneName = mlr::getParameter<String>("sceneName");
+  numScenes = mlr::getParameter<int>("numScenes");
   // time after which motion is stopped
-  maxDuration = MT::getParameter<double>("maxDuration");
+  maxDuration = mlr::getParameter<double>("maxDuration");
   // flag if goal should move
-  moveGoal = MT::getParameter<int>("moveGoal");
+  moveGoal = mlr::getParameter<int>("moveGoal");
   // flag if obs should move
-  moveObs = MT::getParameter<int>("moveObstacle");
+  moveObs = mlr::getParameter<int>("moveObstacle");
 
   //-------------// Run Evaluation with all methods for each scene //-------------//
   int sceneIter = 1;

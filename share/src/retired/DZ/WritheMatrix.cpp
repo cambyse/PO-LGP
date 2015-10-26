@@ -26,7 +26,7 @@ arr cwcp(const arr& J, const ors::Vector& v){
   z.resizeAs(Jt);
   for(uint i=0;i<z.d0;i++){
     temp.set(Jt[i].p);
-    z[i] = ARRAY(temp ^ v);
+    z[i] = conv_vec2arr(temp ^ v);
   }
   z = ~z;
   return z;
@@ -37,7 +37,7 @@ arr Jr(ors::Vector& r1,ors::Vector& r2,ors::Vector& r3, uint d1, uint d2, uint d
 double B,D;
 arr A_prime, B_prime, C_prime, D_prime,A,C;
 uint n=Jab.d2;
-A = ARRAY(r1^r2); B=(r1^r2).length(); C=ARRAY(r2^r3); D=(r2^r3).length();
+A = conv_vec2arr(r1^r2); B=(r1^r2).length(); C=conv_vec2arr(r2^r3); D=(r2^r3).length();
 /// TRICK
 B*=(1.0+1e-10); D*=(1.0+1e-10);/// trick against greater then 1.0 values
 

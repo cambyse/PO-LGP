@@ -83,7 +83,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   }
   
   // SIZE
-  if (Symbol::get(MT::String("size")) != NULL) {
+  if (Symbol::get(mlr::String("size")) != NULL) {
     double length;
     FOR1D(all_objs, i) {
       length = sim->getSize(all_objs(i))[0];
@@ -92,7 +92,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   }
   
   // HOMIES
-  if (Symbol::get(MT::String("homies")) != NULL) {
+  if (Symbol::get(mlr::String("homies")) != NULL) {
     uint k;
     FOR1D(all_objs, i) {
       for (k=i+1; k<all_objs.N; k++) {
@@ -125,7 +125,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   }
   
   // UPRIGHT
-  if (Symbol::get(MT::String("upright")) != NULL) {
+  if (Symbol::get(mlr::String("upright")) != NULL) {
     FOR1D(all_objs, i) {
       if (sim->isUpright(all_objs(i)))
         state->lits.append(Literal::get(Symbol::get("upright"), TUP(all_objs(i)), 1.));
@@ -253,16 +253,16 @@ void RobotManipulationInterface::getTypes(relational::ArgumentTypeL& objects_typ
   uint i;
   relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
   FOR1D(types, i) {
-    if (types(i)->name == MT::String("block")) {
+    if (types(i)->name == mlr::String("block")) {
       type_block = types(i);
     }
-    else if (types(i)->name == MT::String("ball")) {
+    else if (types(i)->name == mlr::String("ball")) {
       type_ball = types(i);
     }
-    else if (types(i)->name == MT::String("table")) {
+    else if (types(i)->name == mlr::String("table")) {
       type_table = types(i);
     }
-    else if (types(i)->name == MT::String("box")) {
+    else if (types(i)->name == mlr::String("box")) {
       type_box = types(i);
     }
   }
@@ -382,16 +382,16 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
   }
   uint no_non_out_blocks = reason::getConstants().N-1-num_out_blocks;
   if (no_non_out_blocks <= 1) {
-    MT_MSG("Too few objects left for sensible acting!");
+    MLR_MSG("Too few objects left for sensible acting!");
     return NULL;
   }
 
-  Symbol* p_GRAB = Symbol::get(MT::String("grab"));
-  Symbol* p_PUTON = Symbol::get(MT::String("puton"));
-  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
-  Symbol* p_PLACE = Symbol::get(MT::String("place"));
-  Symbol* p_ON = Symbol::get(MT::String("on"));
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
+  Symbol* p_GRAB = Symbol::get(mlr::String("grab"));
+  Symbol* p_PUTON = Symbol::get(mlr::String("puton"));
+  Symbol* p_LIFT = Symbol::get(mlr::String("lift"));
+  Symbol* p_PLACE = Symbol::get(mlr::String("place"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
+  Symbol* p_OUT = Symbol::get(mlr::String("out"));
   
   // determine action
   double randNum;
@@ -597,10 +597,10 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   // --------------------------------------------
   //  GENERAL STATE INFORMATION
   
-  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
-  Symbol* p_PLACE = Symbol::get(MT::String("place"));
-  Symbol* p_ON = Symbol::get(MT::String("on"));
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
+  Symbol* p_LIFT = Symbol::get(mlr::String("lift"));
+  Symbol* p_PLACE = Symbol::get(mlr::String("place"));
+  Symbol* p_ON = Symbol::get(mlr::String("on"));
+  Symbol* p_OUT = Symbol::get(mlr::String("out"));
   
   uint i;
   // determine inhand object
@@ -615,7 +615,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   }
   uint num_non_out_objects = reason::getConstants().N-1-num_out_objects;
   if (num_non_out_objects <= 1) {
-    MT_MSG("Too few objects left for sensible acting!");
+    MLR_MSG("Too few objects left for sensible acting!");
     return NULL;
   }
   
@@ -664,7 +664,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   
   // [start] TODO
   if (rnd.uni() < 0.25) { // Do something with box
-    Symbol* p_BOX = Symbol::get(MT::String("box"));
+    Symbol* p_BOX = Symbol::get(mlr::String("box"));
     uintA boxes;
     FOR1D(state.lits, i) {
       if (state.lits(i)->s == p_BOX)
@@ -703,15 +703,15 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
       args(0) = box;
       if (sensible_action) {
         if (RobotManipulationSymbols::isClosed(args(0), state))
-          p_action = Symbol::get(MT::String("openBox"));
+          p_action = Symbol::get(mlr::String("openBox"));
         else
-          p_action = Symbol::get(MT::String("closeBox"));
+          p_action = Symbol::get(mlr::String("closeBox"));
       }
       else {
         if (RobotManipulationSymbols::isClosed(args(0), state))
-          p_action = Symbol::get(MT::String("closeBox"));
+          p_action = Symbol::get(mlr::String("closeBox"));
         else
-          p_action = Symbol::get(MT::String("openBox"));
+          p_action = Symbol::get(mlr::String("openBox"));
       }
     }
     return Literal::get(p_action, args, 1.); 

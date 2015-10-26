@@ -37,7 +37,7 @@
  */
 struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) in task spaces
   TaskMap& map;
-  MT::String name;
+  mlr::String name;
   bool active;
   double prec;
 
@@ -55,12 +55,13 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetSignOnNegScalarProduct;
+  bool makeTargetModulo2PI;
 
   /// @{ @name The actual state when LAST getDesiredAcceleration was called
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false){}
+CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
@@ -79,7 +80,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
 struct ConstraintForceTask{
   TaskMap& map;
-  MT::String name;
+  mlr::String name;
   bool active;
 
   double desiredForce;
@@ -96,8 +97,8 @@ struct ConstraintForceTask{
  * FeedbackMotionControl contains all individual motions/CtrlTasks.
  */
 struct FeedbackMotionControl : MotionProblem {
-  MT::Array<CtrlTask*> tasks;
-  MT::Array<ConstraintForceTask*> forceTasks;
+  mlr::Array<CtrlTask*> tasks;
+  mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qitselfPD;
   arr H_rate_diag;
 

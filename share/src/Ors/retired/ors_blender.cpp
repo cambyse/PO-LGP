@@ -40,8 +40,8 @@ struct VertGroup {
   uintA verts;
 };
 
-//template class MT::Array<VertGroup>;
-//template class MT::Array<String>;
+//template class mlr::Array<VertGroup>;
+//template class mlr::Array<String>;
 
 void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl) {
   ifstream is(filename, std::ios::binary);
@@ -49,9 +49,9 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   
   arr vertices, normals, frames, tailsHeads;
   uintA faces;
-  MT::Array<VertGroup> G;
+  mlr::Array<VertGroup> G;
   uintA graph;
-  MT::Array<MT::String> names;
+  mlr::Array<mlr::String> names;
   
   String tag, name;
   char c;
@@ -134,7 +134,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   for(i=0; i<frames.d0; i++) {
     n=new ors::Body(bl);
     s=new ors::Shape(bl, *n); //always create a shape for a body...
-    MT::skip(is);
+    mlr::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[i].sub(0, 2, 0, 2).p);
@@ -185,7 +185,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   bl.orderAsIndexed();
   bl.indexAllAsOrdered();
   */
-  MT_MSG("warning - structure is not sorted!");
+  MLR_MSG("warning - structure is not sorted!");
   
   String::readEatStopSymbol = false;
 }

@@ -8,8 +8,8 @@
 struct tactile_arr_t {
   enum type {LINK=0, TIP=1};
   ors::Body *b;
-  MT::Array<ors::Transformation> tr;
-  MT::Array<ors::Shape *>  sh_s,sh_n; 
+  mlr::Array<ors::Transformation> tr;
+  mlr::Array<ors::Shape *>  sh_s,sh_n; 
   uintA mapp;
   byteA map;
   type t;
@@ -38,7 +38,7 @@ struct  fing_skin_t {
 };
 
 struct grobi_skin_t {
-  MT::Array<fing_skin_t> fingers;
+  mlr::Array<fing_skin_t> fingers;
   fing_skin_t *th, *f2, *f3;
   
   grobi_skin_t(ors::KinematicWorld &);
@@ -46,7 +46,7 @@ struct grobi_skin_t {
   void update_shapes();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #include "skin.cpp"
 #endif
 

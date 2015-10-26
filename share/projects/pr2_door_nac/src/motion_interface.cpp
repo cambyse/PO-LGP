@@ -50,12 +50,12 @@ void Motion_Interface::setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWit
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
-  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+  q(qIndex+2) = mlr::sign(rotvec(2)) * angle;
 }
 
 void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 {
-  MT::wait(2.);
+  mlr::wait(2.);
 
   double dt = T/X.d0;
   Xref = X;
@@ -64,8 +64,8 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
   write(LIST<arr>(Xdot),"Xdot");
   write(LIST<arr>(X),"X");
 
-  MT::Spline XS(X.d0,X);
-  MT::Spline XdotS(Xdot.d0,Xdot);
+  mlr::Spline XS(X.d0,X);
+  mlr::Spline XdotS(Xdot.d0,Xdot);
 
   if (recordData) {Tact.clear(); Xdes.clear(); Xact.clear(); FLact.clear(); Uact.clear(); Mact.clear(); }
 
@@ -75,7 +75,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
   arr q_real;
   q_real = S.ctrl_obs.get()->q;
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   CtrlMsg refs;
   double t = 0.;
   double t_last = -dt;
@@ -118,7 +118,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
     refs.intLimitRatio = 0.8;
     S.ctrl_ref.set() = refs;
 
-    t = t + MT::timerRead(true);
+    t = t + mlr::timerRead(true);
 
     if (t-t_last >= dt){
       t_last = t;
@@ -132,7 +132,7 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 
         markers = S.ar_pose_marker.get();
         syncMarkers(*world, markers);
-        Mact.append(~ARRAY(world->getBodyByName("marker4")->X.pos));
+        Mact.append(~conv_vec2arr(world->getBodyByName("marker4")->X.pos));
       }
     }
   }
@@ -170,7 +170,7 @@ void Motion_Interface::gotoPosition(arr x)
 
 void Motion_Interface::recordDemonstration(arr &X,double T)
 {
-  MT::wait(5.);
+  mlr::wait(5.);
 
   /// send zero gains
   CtrlMsg refs;
@@ -199,7 +199,7 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
 
 
 
-  MT::wait(3.);
+  mlr::wait(3.);
   cout << "//////////////////////////////////////////////////////////////////" << endl;
   cout << "START RECORDING" << endl;
   cout << "//////////////////////////////////////////////////////////////////" << endl;
@@ -207,13 +207,13 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
 
   /// record demonstrations
   double t = 0.;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   while(t<T) {
     arr q = S.ctrl_obs.get()->q;
     if (useBase) {setOdom(q, trans->qIndex, S.pr2_odom.get());}
     X.append(~q);
-    MT::wait(0.1);
-    t = t + MT::timerRead(true);
+    mlr::wait(0.1);
+    t = t + mlr::timerRead(true);
   }
   cout << "//////////////////////////////////////////////////////////////////" << endl;
   cout << "STOP RECORDING" << endl;
@@ -270,7 +270,7 @@ void Motion_Interface::stopMotion(bool sendZeroGains)
 }
 
 /// save last run
-void Motion_Interface::logging(MT::String folder, uint id) {
+void Motion_Interface::logging(mlr::String folder, uint id) {
   write(LIST<arr>(Xref),STRING(folder<<"X"<<id<<".dat"));
   write(LIST<arr>(Xref),STRING(folder<<"X.dat"));
 

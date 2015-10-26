@@ -37,19 +37,21 @@
 
 struct Access;
 struct Module;
-typedef MT::Array<Access*> AccessL;
-typedef MT::Array<Module*> ModuleL;
+typedef mlr::Array<Access*> AccessL;
+typedef mlr::Array<Module*> ModuleL;
+extern Singleton<ConditionVariable> shutdown;
 
 //===========================================================================
 
-extern Singleton<Graph> moduleSystem;
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
-void openModules(Graph&);
-void stepModules(Graph&);
-void closeModules(Graph&);
-void threadOpenModules(Graph&, bool waitForOpened);
-void threadCloseModules(Graph&);
+void openModules();
+void stepModules();
+void closeModules();
+void threadOpenModules(bool waitForOpened);
+void threadCloseModules();
+void threadCancelModules();
+void modulesReportCycleTimes();
 
 //===========================================================================
 //
@@ -61,15 +63,13 @@ void threadCloseModules(Graph&);
     necessary */
 
 struct Module : Thread{
-  Node *reg;
-  double beat;
 
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-  Module(const char* _name=NULL, double beat=0.):Thread(_name), reg(NULL), beat(beat){
-    reg = new Node_typed<Module>(moduleSystem(), {"Module", _name}, {}, this, false);
+  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
+    new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
   }
   virtual ~Module(){}
 
@@ -87,9 +87,6 @@ struct Module : Thread{
   /** use this to close drivers/devices/files; this is called within
       the thread */
   virtual void close(){}
-  virtual bool test(){ return true; } ///< define a unit test
-
-  void createVariables();
 };
 
 
@@ -102,7 +99,7 @@ struct Module : Thread{
     is the base class of Access_typed */
 
 struct Access{
-  MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
+  mlr::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
   RevisionedAccessGatedClass *var;   ///< which variable does it access
@@ -125,22 +122,39 @@ template<class T>
 struct Access_typed:Access{
   Variable<T> *v;
 
+//  Access_typed(const Access_typed<T>& acc) = delete;
+
+  Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
+    : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
+    Node *vnode = registry().getNode("Variable", name);
+    v = acc.v;
+    var = acc.var;
+    CHECK(vnode && &vnode->V<Variable<T> >()==v,"something's wrong")
+    if(module){
+      Node *m = getModuleNode(module);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      if(moduleListens) module->listenTo(*var);
+    }else{
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
+    }
+  }
+
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = moduleSystem().getNode(name);
+    Node *vnode = registry().getNode("Variable", name);
     if(!vnode){
       v = new Variable<T>(name);
-      vnode = new Node_typed<Variable<T> >(moduleSystem(), {"Variable", name}, {}, v, true);
+      vnode = new Node_typed<Variable<T> >(registry(), {"Variable", name}, {}, v, true);
     }else{
       v = &vnode->V<Variable<T> >();
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){
       Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {m,vnode}, this, false);
-      if(moduleListens) var->listeners.setAppend(module);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      if(moduleListens) module->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T> >(moduleSystem(), {"Access", name}, {vnode}, this, false);
+      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
     }
   }
 
@@ -170,7 +184,7 @@ struct Access_typed:Access{
 
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
-  __##name##__Access():Access_typed<type>(#name){} \
+  __##name##__Access():Access_typed<type>(NULL, #name){} \
 } name;
 
 #else
@@ -193,7 +207,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(name) \
-  new Node_typed<Type>(registry(), {MT::String("Decl_Module"), MT::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
+  new Node_typed<Type>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
   RUN_ON_INIT_END(name)
 
 
@@ -223,6 +237,58 @@ inline void operator>>(istream&, Module&){ NIY }
 inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
-inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:MT::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
+inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:mlr::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
+
+
+//===========================================================================
+//
+// generic recorder module
+//
+
+template <class T>
+struct Recorder : Module{
+  Access_typed<T> access;
+  T buffer;
+  ofstream fil;
+
+  Recorder(const char* var_name):Module(STRING("Recorder_"<<var_name)), access(this, var_name, true){}
+
+  void open(){
+    mlr::open(fil, STRING("z." <<access.name <<'.' <<mlr::getNowString() <<".dat"));
+  }
+  void step(){
+    uint rev = access.readAccess();
+    buffer = access();
+    double time = access.var->revisionTime();
+    access.deAccess();
+    mlr::String tag;
+    tag.resize(30, false);
+    sprintf(tag.p, "%6i %13.6f", rev, time);
+    fil <<tag <<' ' <<buffer <<endl;
+  }
+  void close(){
+    fil.close();
+  }
+};
+
+
+//===========================================================================
+//
+// file replayer
+//
+
+template<class T>
+struct FileReplay : Module{
+  Access_typed<T> access;
+  T x;
+  FileReplay(const char* file_name, const char* var_name, double beatIntervalSec)
+    : Module(STRING("FileReplay_"<<var_name), beatIntervalSec),
+      access(this, var_name, false) {
+    x <<FILE(file_name);
+  }
+  void open(){}
+  void step(){ access.set() = x; }
+  void close(){}
+};
 
 #endif

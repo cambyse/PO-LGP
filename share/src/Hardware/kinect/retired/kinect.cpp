@@ -2,7 +2,7 @@
 #include <libfreenect.hpp>
 #include <Core/util.h>
 
-void lib_hardware_kinect(){ MT_MSG("loading"); }
+void lib_hardware_kinect(){ MLR_MSG("loading"); }
 
 REGISTER_MODULE(KinectPoller)
 
@@ -53,14 +53,14 @@ namespace MLR {
     void DepthCallback(void *depth, uint32_t ) {
       uint16A depth_buf((uint16_t*)depth, depth_size);
       depth_buf.reshape(image_height, image_width);
-      double timestamp = MT::clockTime();// - .12;
+      double timestamp = mlr::clockTime();// - .12;
       if(depth_cb != nullptr)
         depth_cb(depth_buf, timestamp);
     }
     void VideoCallback(void *rgb, uint32_t ) {
       byteA video_buf((byte*)rgb, depth_size*3);
       video_buf.reshape(image_height, image_width, 3);
-      double timestamp = MT::clockTime(); // - .12;
+      double timestamp = mlr::clockTime(); // - .12;
       if(video_cb != nullptr)
         video_cb(video_buf, timestamp);
     }
@@ -98,13 +98,13 @@ struct sKinectPoller : Freenect::FreenectDevice {
   void DepthCallback(void *depth, uint32_t timestamp) {
     memmove(module->kinect_depth.set()->p, depth, 2*image_width*image_height);
     // use receive time, and subtract processing and communication delay of 120ms (experimentally determined)
-    module->kinect_depth.dataTime() = MT::clockTime() - .12;
+    module->kinect_depth.dataTime() = mlr::clockTime() - .12;
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
     memmove(module->kinect_rgb.set()->p, rgb, 3*image_width*image_height);
     // see above
-    module->kinect_rgb.dataTime() = MT::clockTime() - .12;
+    module->kinect_rgb.dataTime() = mlr::clockTime() - .12;
   }
 };
 

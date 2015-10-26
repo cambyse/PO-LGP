@@ -4,7 +4,7 @@ OPTIM = fast
 
 OBJS = main.o $(BASE)/src/MT/vision_cuda.o
 
-CXXFLAGS += -DMT_NO_GLOBALMEM
+CXXFLAGS += -DMLR_NO_GLOBALMEM
 
 LAPACK = 1
 OPENCV = 1

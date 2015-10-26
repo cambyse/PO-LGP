@@ -85,7 +85,7 @@ struct SimpleTrack{
 	arr x,P;//x,p |tt
 
 	void Init(){
-		MT::getParameter(Smooth,"Smooth");
+		mlr::getParameter(Smooth,"Smooth");
 		R1 = arr(6,6);R1.setDiag(0.02);
 		for(uint i = 0; i < 3; i++){
 			R1(i,i+3) = 0.008;//smaller value for better pos
@@ -192,7 +192,7 @@ struct AverageTrack{
 
 
 	void Init(){
-		MT::getParameter(Smooth,"Smooth");
+		mlr::getParameter(Smooth,"Smooth");
 		VSamples = arr(Smooth,4);//store here vision, average in  vision space
 		VSamples.setZero();
 	}

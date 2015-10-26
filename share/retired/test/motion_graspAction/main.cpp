@@ -3,7 +3,7 @@
 #include <biros/biros_views.h>
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   // variables
   GeometricState geometricState;

@@ -127,16 +127,16 @@ class ConceptLearner {
     double rl_weight_c2;
     uint rl_so_choice_type;
     
-    MT::Array< TL::Trial* > data;
-    MT::Array<PredicateInventor*> p_inventors;
-    MT::Array<FunctionInventor*> f_inventors;
+    mlr::Array< TL::Trial* > data;
+    mlr::Array<PredicateInventor*> p_inventors;
+    mlr::Array<FunctionInventor*> f_inventors;
     
     uint noConcepts(TL::RuleSet& rs, FuncL& usedDerivedFunctions, PredL& usedDerivedPredicates);
     
     public:
         ConceptLearner(double rl_alpha_PEN, double rl_p_min, uint rl_param_opt_type, double rl_weight_c1, double rl_weight_c2, uint rl_so_choice_type);
     
-        void addData(MT::Array< TL::Trial* >& data);
+        void addData(mlr::Array< TL::Trial* >& data);
     
         double learnLanguage(PredL& actions, PredL& predicates_prim, PredL& predicates_comp, FuncL& functions_prim, PredL& predicates_out, FuncL& functions_out, TL::RuleSet& rs);
     

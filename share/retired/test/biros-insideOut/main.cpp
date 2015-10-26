@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
 
   for(uint t=0; t<1000; t++){
-    MT::wait(.1);
+    mlr::wait(.1);
     Int.set_x(t, NULL);
   }
   

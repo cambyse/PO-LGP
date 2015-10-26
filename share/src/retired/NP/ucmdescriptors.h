@@ -19,7 +19,7 @@ namespace np {
  *  @return cf. parameter d
  */
 template <class S>
-void ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef=20);
+void ucm_descriptors_efd(mlr::Array<S>& d, const UcmTree& tree, uint num_coef=20);
 
 /** @brief HSV volor descriptors for patches in an UCM tree
  *
@@ -39,7 +39,7 @@ void ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef=20)
 template <class S>
 void ucm_descriptors_hsv
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
  unsigned char h=10, unsigned char s=10, unsigned char v=10
@@ -65,7 +65,7 @@ void ucm_descriptors_hsv
 template <class S>
 void ucm_descriptors_gabor
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
  uint num_scales=4,
@@ -102,10 +102,10 @@ void ucm_descriptors_gabor
 template <class S>
 void ucm_descriptors_surf
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
- const MT::Array<S>& codebook,
+ const mlr::Array<S>& codebook,
  uint aperture=1,
  uint num_scales=4,
  uint surf_scale=2

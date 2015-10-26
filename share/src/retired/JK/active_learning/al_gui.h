@@ -8,7 +8,7 @@ class sGui;
 class GuiDataV : public Variable {
   public:
     GuiDataV() : Variable("Gui Data Variable"), sample(NULL) {} ;
-    MT::Array<arr>* sample;
+    mlr::Array<arr>* sample;
 };
 
 class Gui : public Process {

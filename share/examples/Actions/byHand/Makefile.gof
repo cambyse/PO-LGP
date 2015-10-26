@@ -1,6 +1,6 @@
 BASE = ../../..
 
 ROS = 1
-DEPEND = Actions Core System Ors pr2 Motion Hardware_gamepad FOL Gui
+DEPEND = Actions Core Ors pr2 Motion Hardware_gamepad FOL Gui
 
 include $(BASE)/gofMake/generic.mk

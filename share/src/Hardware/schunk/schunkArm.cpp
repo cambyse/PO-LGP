@@ -18,7 +18,7 @@
 
 #include "schunk.h"
 
-#ifdef MT_SCHUNK //NOTE THIS COMPILER FLAG!
+#ifdef MLR_SCHUNK //NOTE THIS COMPILER FLAG!
 
 #define NTCAN_CLEAN_NAMESPACE
 #define __EXPORTED_HEADERS__
@@ -33,10 +33,10 @@ SchunkArm::SchunkArm():Module("SchunkArm"), pDev(NULL), isOpen(false) {
 
 void SchunkArm::open() {
   //get parameters
-  stepHorizon=MT::getParameter<float>("schunkStepHorizon", 50);
-  maxStep=MT::getParameter<float>("schunkMaxStep", .03);
-  sendMotion=MT::getParameter<bool>("schunkSendArmMotion", true);
-  readPositions=MT::getParameter<bool>("schunkReadArmPositions", false);
+  stepHorizon=mlr::getParameter<float>("schunkStepHorizon", 50);
+  maxStep=mlr::getParameter<float>("schunkMaxStep", .03);
+  sendMotion=mlr::getParameter<bool>("schunkSendArmMotion", true);
+  readPositions=mlr::getParameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- SchunkArm init .." <<std::flush;
   addShutdown(this, shutdownLWA);
@@ -53,9 +53,9 @@ void SchunkArm::open() {
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|1);
   //MY DEFAULT 64 4 3
-  for (m=3; m<=9; m++) pDev->setC0(m, MT::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
-  for (m=3; m<=9; m++) pDev->setDamp(m, MT::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
-  for (m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
+  for (m=3; m<=9; m++) pDev->setC0(m, mlr::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
+  for (m=3; m<=9; m++) pDev->setDamp(m, mlr::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
+  for (m=3; m<=9; m++) pDev->setA0(m, mlr::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
   for (m=3; m<=9; m++) pDev->recalcPIDParams(m);
   for (m=3; m<=9; m++) pDev->setMaxVel(m, .1);
   for (m=3; m<=9; m++) pDev->setMaxAcc(m, .1);
@@ -189,7 +189,7 @@ void SchunkArm::step() {
   logfil <<delta <<endl;
 #endif
   if (delta>maxStep) {
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
+    MLR_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
   } else if (isOpen && sendMotion) {
 #if 1 //don't read real positions from robot
     for (m=0; m<7; m++) { pDev->moveStep(m+3, q_ref(m), stepHorizon); }
@@ -203,7 +203,7 @@ void SchunkArm::step() {
     }
 #endif
   } else {
-    MT::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
   }
   
   q_real.set() = q_rea;
@@ -240,7 +240,7 @@ void testPerformance(SchunkArm &schunk, int iMod) {
   int iRetVal = 0;
   
   cout <<"\n Performing 1000 getPos & moveStep..." <<endl;
-  double time=MT::realTime();
+  double time=mlr::realTime();
   uint i;
   iRetVal = schunk.pDev->getPos(iMod, &fPos);
   if (iRetVal != 0) printf("Error fetching pos: %d\n", iRetVal);
@@ -254,7 +254,7 @@ void testPerformance(SchunkArm &schunk, int iMod) {
 //       iRetVal = schunk.pDev->moveStepExtended(iMod, fPos, 100., &uiState, &uiDio, &fPos2 );
 //       if( iRetVal != 0 ) printf( "Error move step: %d\n", iRetVal );
   }
-  cout <<"-> state+pos time = " <<(MT::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
+  cout <<"-> state+pos time = " <<(mlr::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
 }
 
 void testCube(SchunkArm &schunk, int iMod) {
@@ -331,7 +331,7 @@ void testCube(SchunkArm &schunk, int iMod) {
 }
 
 
-#else //ndef MT_SCHUNK
+#else //ndef MLR_SCHUNK
 
 void SchunkArm::open() {}
 void SchunkArm::close() {}

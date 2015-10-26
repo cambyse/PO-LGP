@@ -233,13 +233,13 @@ void coreExperiment(){
     for(s=0;s<200;s++){
       ors::KinematicWorld world_sol(world);
       Graph symbols_sol(symbols);
-      MT::timerRead(true);
+      mlr::timerRead(true);
       runMonteCarlo(symbols_sol);
-      MCTS_time += MT::timerRead(true);
+      MCTS_time += mlr::timerRead(true);
       createEndState(world_sol, symbols_sol);
       double fx = endStateOptim(world_sol, symbols_sol);
       double rx = reward(world_sol, symbols_sol);
-      lev1_time += MT::timerRead(true);
+      lev1_time += mlr::timerRead(true);
       cout <<"fx=" <<fx <<endl;
       cout <<"reward=" <<rx <<endl;
       if(rx-fx > f_best){
@@ -264,9 +264,9 @@ void coreExperiment(){
     gl.update();
 //    gl.watch();
 
-    MT::timerRead(true);
+    mlr::timerRead(true);
     double f_path = optimSwitchConfigurations(world, world_best, symbols_best, 20);
-    lev2_time = MT::timerRead(true);
+    lev2_time = mlr::timerRead(true);
     cout <<"f_path=" <<f_path <<endl;
 
     fil <<k <<' ' <<nObjects <<' ' <<MCTS_time/s <<' ' <<lev1_time/s <<' ' <<f_best <<' ' <<lev2_time <<endl;
@@ -276,9 +276,9 @@ void coreExperiment(){
 
 //===========================================================================
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 //  rnd.clockSeed();
-  rnd.seed(MT::getParameter<int>("seed",0));
+  rnd.seed(mlr::getParameter<int>("seed",0));
 
   coreExperiment();
 //  generateRandomProblems();

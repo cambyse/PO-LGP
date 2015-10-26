@@ -25,9 +25,9 @@ void TEST(EasyPR2){
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
   cout <<"configuration space dim=" <<G.q.N <<endl;
-  double rand = MT::getParameter<double>("KOMO/moveTo/randomizeInitialPose", .0);
+  double rand = mlr::getParameter<double>("KOMO/moveTo/randomizeInitialPose", .0);
   if(rand){
-    rnd.seed(MT::getParameter<uint>("rndSeed", 0));
+    rnd.seed(mlr::getParameter<uint>("rndSeed", 0));
     rndGauss(G.q,rand,true);
     G.setJointState(G.q);
   }
@@ -70,7 +70,7 @@ void TEST(EasyAlign2){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //  testEasy();
 //  testEasyAlign();

@@ -1,16 +1,17 @@
 #include <Motion/feedbackControl.h>
-#include <Actions/taskCtrlActivities.h>
+#include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
+#include <Actions/RelationalMachineModule.h>
 
 // ============================================================================
 
-struct MyTask : TaskCtrlActivity {
-  virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world);
-  virtual void step2(double dt){}
+struct MyTask : ControlActivity {
+  virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world);
+  virtual void stepControl(double dt){}
   virtual bool isConv();
 };
 
-void MyTask::configure2(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void MyTask::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new DefaultTaskMap(specs, world);
   task = new CtrlTask(name, *map, specs);
   stopTolerance=1e-2; //TODO: overwrite from specs
@@ -25,60 +26,62 @@ bool MyTask::isConv(){
 // ============================================================================
 
 void script1(ActionSwigInterface& S){
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffL base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  S.setFact("(Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
   S.setFact("(HomingActivity)");
   S.waitForCondition("(conv HomingActivity)");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
+  S.waitForCondition("(conv Control wheels)");
 }
 
 // ============================================================================
 
 
 void script2(ActionSwigInterface& S){
-  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "wheels"}, { NO(type, MT::String("wheels")), NO(target, ARR(0, .3, .2)), NO(PD, ARR(.5, .9, .5, 10.))});
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  newActivity<FollowReferenceActivity>(*S.getRM().get()->state, {"Control", "wheels"}, { NO(target, ARR(0, .3, .2)), NO(PD, ARR(.5, .9, .5, 10.))});
+  S.setFact("(MyTask pos endeffR base_footprint){ type=pos, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(MyTask pos endeffL base_footprint){ type=pos, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv MyTask pos endeffL base_footprint)");
+  S.setFact("(MyTask pos endeffL base_footprint)!, (MyTask pos endeffR base_footprint)!, (conv MyTask pos endeffL base_footprint)!, (conv MyTask pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  S.setFact("(Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.setFact("(MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-  S.waitForCondition("(conv MyTask endeffL)");
-  S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
+  S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
   S.setFact("(HomingActivity)");
   S.waitForCondition("(conv HomingActivity)");
-  S.waitForCondition("(conv FollowReferenceActivity wheels)");
+  S.waitForCondition("(conv Control wheels)");
 }
 
 // ============================================================================
@@ -95,6 +98,7 @@ int main(int argc, char** argv) {
   ActionSwigInterface S;
 
   S.createNewSymbol("wheels");
+  S.createNewSymbol("pos");
 
 //  script1(S);
 //  script2(S);

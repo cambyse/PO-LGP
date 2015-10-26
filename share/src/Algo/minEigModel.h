@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Algo/eigenValues.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include "dataNeighbored.h"
 
 struct MinEigModel{
@@ -40,6 +40,7 @@ struct MinEigModel{
   void expand(uint steps=1); ///< add all neighbors of the fringe
   void reweightWithError(uintA& pts, double margin=0.01);
   void computeConvexHull();
+  double coveredData(bool novelDataOnly=true);
   void calcDensity();
   void colorPixelsWithWeights(arr& cols);
   void glDraw();

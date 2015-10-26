@@ -27,7 +27,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
+                          conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   MotionProblemFunction MF(P);
@@ -48,7 +48,7 @@ arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
+                          conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
@@ -107,13 +107,13 @@ void moveHand(){
 
 int main(int argc, char** argv){
 
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //testMarcs();
   //testLudos();
 
 
   OpenGL gl;
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x = getKindOfSimpleTrajectory(G);
   arr x2 = reverseTrajectory(x);
@@ -213,9 +213,9 @@ int main(int argc, char** argv){
 
     /*
     // tic.waitForTic();
-    cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
+    cout <<"tic " <<t <<" time:" <<mlr::realTime() <<endl;
     joint_client.moveTo(desired_joint_positions, desired_joint_velocities, desired_joint_accelerations, 0.095, true); // false);
-    //cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
+    //cout <<"tic " <<t <<" time:" <<mlr::realTime() <<endl;
     */
     // joint_client.moveTo(desired_joint_positions, 0.1);
   }

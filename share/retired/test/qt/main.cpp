@@ -6,7 +6,7 @@ using namespace std;
 
 #if 0
 void glDraw(void*){
-#ifdef MT_GL
+#ifdef MLR_GL
   glStandardLight(NULL);
   glColor(1.,0.,0.);
   glFrontFace(GL_CW);

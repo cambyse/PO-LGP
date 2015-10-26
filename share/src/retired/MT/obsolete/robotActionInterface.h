@@ -1,5 +1,5 @@
-#ifndef MT_robotActionInterface_h
-#define MT_robotActionInterface_h
+#ifndef MLR_robotActionInterface_h
+#define MLR_robotActionInterface_h
 
 #include <Ors/ors.h>
 #include "perceptionModule.h"
@@ -41,7 +41,7 @@ struct RobotActionInterface {
   TaskAbstraction* getTask();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "robotActionInterface.cpp"
 #endif
 

@@ -41,7 +41,7 @@ void TEST(ModuleVision) {
   if(engine().mode==Engine::serial){
     for(uint i=0;i<100;i++){ engine().step(S); }
   }else{
-    MT::wait(60.);
+    mlr::wait(60.);
   }
 
   engine().close(S);
@@ -65,18 +65,20 @@ void TEST(ModuleVision2) {
   ImageViewer iv4("diffImage");
   ImageViewer iv5("canny");
 
+  cout <<registry() <<endl;
 
-  cout <<moduleSystem() <<endl;
-
-  threadOpenModules(moduleSystem(), true);
-  MT::wait(60.);
-  threadCloseModules(moduleSystem());
+  threadOpenModules(true);
+  for(uint i=0;i<30;i++){
+    mlr::wait(1.);
+    modulesReportCycleTimes();
+  }
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testModuleVision2();
 

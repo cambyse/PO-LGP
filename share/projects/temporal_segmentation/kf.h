@@ -31,7 +31,7 @@ stdOutPipe(KFScore)
 struct ROCCurve {
     arr thresholds;
     uintA ind;
-    MT::Array<KFScore> scores;
+    mlr::Array<KFScore> scores;
 
     void append(double thresh, const KFScore &score);
     double area();

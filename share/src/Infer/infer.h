@@ -21,8 +21,8 @@
 under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
 see the `util.h' file for a full copyright statement  */
 
-#ifndef MT_inference_h
-#define MT_inference_h
+#ifndef MLR_inference_h
+#define MLR_inference_h
 
 #include <Core/array.h>
 #include <Core/util.h>
@@ -50,9 +50,9 @@ struct Factor;
 struct MessagePair;
 
 //simple ``list'' types
-typedef MT::Array<Variable*> VariableList;
-typedef MT::Array<Factor*>   FactorList;
-typedef MT::Array<MessagePair*> MessagePairList;
+typedef mlr::Array<Variable*> VariableList;
+typedef mlr::Array<Factor*>   FactorList;
+typedef mlr::Array<MessagePair*> MessagePairList;
 
 enum SpecialFactorType { NONE=0, AND, OR, WTA };
 
@@ -67,7 +67,7 @@ struct Variable {
   uint dim;         ///< cardinality
   
   // auxilliary & connectivity
-  MT::String name;  ///< up to you...
+  mlr::String name;  ///< up to you...
   infer::FactorList factors;    ///< each variable knows all factors it is part of
   MessagePairList messages;  ///< each variable knows all the messages it directly connects to
   Graph ats; //any convenience information (e.g. for dot);
@@ -96,7 +96,7 @@ struct Factor {
   double logP;  ///< the log-scaling of the table, such that true_factor = exp(logP) * P
   
   // auxilliary & connectivity
-  MT::String name;
+  mlr::String name;
   SpecialFactorType specialType;
   VariableList variables;
   FactorList factors;
@@ -211,7 +211,7 @@ struct LoopyBP {
   void clear();
   void initBipartite(const VariableList& vars, const FactorList& facs);
   void initPairwise(const VariableList& vars, const FactorList& facs);
-  void getVarBeliefs(MT::Array<Factor>& beliefs, bool normalized=true);
+  void getVarBeliefs(mlr::Array<Factor>& beliefs, bool normalized=true);
   void getVarBelief(Factor& belief, Variable *v, bool normalized=true);
   void step();
   void step_meanfield();
@@ -219,7 +219,7 @@ struct LoopyBP {
   //void loopyBP_bipartite(const VariableList& vars, const FactorList& facs);
 };
 void connectThemUp(VariableList& V, FactorList& F);
-void getVariableBeliefs(MT::Array<arr>& post, const VariableList& vars);
+void getVariableBeliefs(mlr::Array<arr>& post, const VariableList& vars);
 
 //-- pipes
 //inline ostream& operator<<(ostream& os, const iSpace& s)      { s.write(os); return os; }
@@ -260,11 +260,11 @@ struct TreeNode {
   uint dim;
   arr P;
 };
-typedef MT::Array<TreeNode> Tree;
+typedef mlr::Array<TreeNode> Tree;
 
 void write(Tree& tree);
-void treeInference(MT::Array<arr>& posteriors, const Tree& tree);
-void treeInference(MT::Array<arr>& posteriors, const Tree& forest, uintA& roots);
+void treeInference(mlr::Array<arr>& posteriors, const Tree& tree);
+void treeInference(mlr::Array<arr>& posteriors, const Tree& forest, uintA& roots);
 void randomTree(Tree& tree, uint N, uint K, uint roots=1);
 std::ostream& operator<<(std::ostream& os, const TreeNode& t);
 
@@ -284,7 +284,7 @@ struct FactorGraph {
   
   ~FactorGraph(){ deleteAll(); }
   FactorGraph& operator=(const FactorGraph& M){
-    MT_MSG("das kopiert nur die pointer, erzeugt keinen neuen Factor graphen!");
+    MLR_MSG("das kopiert nur die pointer, erzeugt keinen neuen Factor graphen!");
     B_c=M.B_c;
     B_v=M.B_v;
     messages=M.messages;
@@ -453,7 +453,7 @@ void uniformCertainNodes(infer::FactorGraph& G, intA seq, uint T, uint Mod);
 void check_exactlyOneConditional(infer::VariableList& vars, infer::FactorList& facs);
 void check_atLeastOneConditional(infer::VariableList& vars, infer::FactorList& facs);
 
-void write(const MT::Array< infer::Variable* > vars, ostream& os = cout);
+void write(const mlr::Array< infer::Variable* > vars, ostream& os = cout);
 
 //[mt] only checks the registries - not the factors
 void checkMessagePairConsistency(infer::MessagePairList msg_pairs);
@@ -508,7 +508,7 @@ be used in case of loopy BP (for efficiency reasons) */
 // coda
 //
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "infer.cpp"
 #endif
 

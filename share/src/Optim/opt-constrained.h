@@ -117,7 +117,7 @@ inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblemMix& P, s
   P(phi_x, NoArr, tt_x, x);
   double Ef=0., Eh=0., Eg=0.;
   for(uint i=0;i<phi_x.N;i++){
-    if(tt_x(i)==sumOfSqrTT) Ef += MT::sqr(phi_x(i));
+    if(tt_x(i)==sumOfSqrTT) Ef += mlr::sqr(phi_x(i));
     if(tt_x(i)==ineqTT && phi_x(i)>0.) Eg += phi_x(i);
     if(tt_x(i)==eqTT) Eh += fabs(phi_x(i));
   }

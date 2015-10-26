@@ -2,7 +2,7 @@
 #include "pomdp.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <vector>
 
 
@@ -40,7 +40,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 2e5);
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos), 2e5);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,conv_vec2arr(target->X.pos), 2e5);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   vel->map.order=1;
@@ -191,7 +191,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     world.setJointState(x[0]);
 
     for(uint t=0;t<x.d0 + 100;t++){
-        //MT::wait(.1);
+        //mlr::wait(.1);
 
 
       MC.setState(q, qdot);
@@ -305,7 +305,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
       //    vid->addFrame(world.gl().captureImage);
 
       //write data
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
           <<table->X.pos.z <<' '
          <<endeff->X.pos.z <<' '
@@ -316,7 +316,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     }
     data.close();
 
-    FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+    FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
   }
 
 

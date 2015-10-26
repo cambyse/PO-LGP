@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <signal.h>
 #include <MT/ors.h>
@@ -28,7 +28,7 @@ struct MyDemo:public TaskAbstraction {
 void MyDemo::init(RobotProcessGroup *robotProcesses){
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
-  MT::IOraw = true;
+  mlr::IOraw = true;
   //if(robotProcesses->gui){
   robotProcesses->gui.gl->camera.setPosition(3.5,-8.,2.8);  // position of camera
   robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);  // rotate the frame to focus the point (x,y,z)
@@ -69,7 +69,7 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
 
 
 void MyDemo::followTrajectory(RobotProcessGroup *robotProcesses){
-  MT::String s6 = String("caliData");
+  mlr::String s6 = String("caliData");
   ofstream f6(s6);
   PerceptionModule perc;
   perc.threadOpen();
@@ -102,8 +102,8 @@ void MyDemo::followTrajectory(RobotProcessGroup *robotProcesses){
         vision(i) = perc.objects(0)->shapePointsR(0,i-2);
       perc.lock.unlock();
 
-      MT::IOraw=true;
-      f6 <<  vision << " " << robotProcesses->ctrl.q_reference << " " <<   robotProcesses->ctrl.ors.getShapeByName("tennisBall")->X.pos << ' ' <<robotProcesses->stepCounter <<' ' <<MT::realTime() <<endl;
+      mlr::IOraw=true;
+      f6 <<  vision << " " << robotProcesses->ctrl.q_reference << " " <<   robotProcesses->ctrl.ors.getShapeByName("tennisBall")->X.pos << ' ' <<robotProcesses->stepCounter <<' ' <<mlr::realTime() <<endl;
     }
     if(robotProcesses->gamepad.state(0)==16 || robotProcesses->gamepad.state(0)==32) break;
     if (q_index == q.d0-2) {
@@ -118,20 +118,20 @@ void MyDemo::followTrajectory(RobotProcessGroup *robotProcesses){
 
 void MyDemo::loadPlainTrajectory(const char* filename){
   ifstream fil;
-  MT::open(fil,filename);
+  mlr::open(fil,filename);
   q.read(fil);cout << "Q dimensions " << q.d0 << " " << q.d1 << endl;
   q = q.sub(0,q.d0-1,0,6);//only arm path now
   fil.close();
   q_index = 0;
   q_ind2 = 0;
-  MT::getParameter(mult,"mult");
+  mlr::getParameter(mult,"mult");
   //mult = 4; //8;//9
 }
 
 
 int main(int argc,char** argv){
-  MT::IOraw = true;
-  MT::initCmdLine(argc,argv);
+  mlr::IOraw = true;
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MyDemo demo;

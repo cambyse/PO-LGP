@@ -58,7 +58,7 @@ void TEST(Simulator){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //reach();
   testSimulator();

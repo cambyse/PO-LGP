@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 #include <map>
@@ -7,7 +9,7 @@ typedef std::vector<int> intV;
 typedef std::vector<std::string> stringV;
 typedef std::map<std::string, std::string> dict;
 using std::string;
-
+template<class T> struct Access_typed;
 
 struct ActionSwigInterface{
   struct SwigSystem *S;
@@ -17,16 +19,21 @@ struct ActionSwigInterface{
 
   void Cancel();
 
-  //-- robot data access
+  void setVerbose(bool verbose);
+  void setFixBase(bool base);
 
+  //-- robot data access
   stringV getShapeList();
   stringV getBodyList();
   stringV getJointList();
+  double getQDim();
   doubleV getQ();
+  doubleV getV();
   doubleV getForceTorqueMeasurement();
   dict getBodyByName (string bodyName);
   dict getShapeByName (string shapeName);
   dict getJointByName (string jointName);
+  int getQIndex(string jointName);
 
   //-- symbolic state access
   stringV getSymbols();
@@ -46,6 +53,7 @@ struct ActionSwigInterface{
   void waitForCondition(const char* query);
 
   int  waitForOrCondition(const std::vector<stringV> literals);
+  void waitForAllCondition(const stringV queries);
   void waitForQuitSymbol();
 
   //-- methods to define new symbols
@@ -54,8 +62,10 @@ struct ActionSwigInterface{
   //-- methods to define tasks/actions
   int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());
 
+  //class pr2System* pr2_system; //MT: why??
 
-  struct Graph& getState();
+
+  Access_typed<struct RelationalMachine>& getRM();
 
   //-- testing...
   void execScript(const char* filename);

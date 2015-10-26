@@ -1,8 +1,7 @@
-#include <Core/array-vector.h>
 #include "fol_mcts_world.h"
 #include "fol.h"
 
-#define DEBUG(x)
+#define DEBUG(x) x
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
@@ -23,14 +22,16 @@ void FOL_World::Decision::write(ostream& os) const{
 }
 
 FOL_World::FOL_World()
-    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0),
-      lastStepDuration(0.), lastStepProbability(1.) {}
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {}
 
 FOL_World::FOL_World(istream& is)
-    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0),
-      lastStepDuration(0.), lastStepProbability(1.) {
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {
   init(is);
 }
 
@@ -39,7 +40,7 @@ void FOL_World::init(istream& is){
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
 
-  MT_MSG("TODO: add action sequence to the representation");
+  MLR_MSG("TODO: add action sequence to the representation");
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
@@ -50,6 +51,7 @@ void FOL_World::init(istream& is){
 
   Graph *params = KB.getValue<Graph>("FOL_World");
   if(params){
+    hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
     stepCost = params->get<double>("stepCost", stepCost);
     timeCost = params->get<double>("timeCost", timeCost);
@@ -62,7 +64,7 @@ void FOL_World::init(istream& is){
     cout <<"*** reward fct=" <<*rewardFct <<endl;
     cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
-  MT::open(fil, "z.FOL_World");
+  mlr::open(fil, "z.FOL_World");
 
   start_T_step=0;
   start_T_real=0.;
@@ -77,6 +79,14 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   T_step++;
   reward -= stepCost;
 
+  //-- store the old state; make a new state that is child of the old
+  if(generateStateTree){
+    Node *new_state = new Node_typed<Graph>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph(), true);
+    new_state->graph().copy(*state, &KB);
+    state = &new_state->graph();
+    DEBUG(KB.checkConsistency());
+  }
+
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
 
@@ -84,12 +94,21 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
 
+  //-- remove the old decision-fact, if exists
+#if 1
+  if(lastDecisionInState) delete lastDecisionInState;
+#else
+  for(uint i=state->N;i--;){
+    Node *n=state->elem(i);
+    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+  }
+#endif
+
   //-- add the decision as a fact
-  Node *decision = NULL;
   if(!d->waitDecision){
     NodeL decisionTuple = {d->rule};
     decisionTuple.append(d->substitution);
-    decision = createNewFact(*state, decisionTuple);
+    lastDecisionInState = createNewFact(*state, decisionTuple);
   }
 
   //-- check for rewards
@@ -131,6 +150,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- apply effects of decision
   if(d->waitDecision){
+    CHECK(hasWait,"");
+
     //-- find minimal wait time
     double w=1e10;
     for(Node *i:*state){
@@ -182,7 +203,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- generic world transitioning
   int decisionObservation = 0;
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
+  forwardChaining_FOL(KB, *state, NULL, NoGraph, verbose-3, &decisionObservation);
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -191,7 +212,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 
   //-- delete decision fact again
-  if(decision) delete decision;
+  //if(decision) delete decision;
 
   if(deadEnd) reward -= deadEndCost;
 
@@ -212,8 +233,10 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
-  MT::Array<Handle> decisions; //tuples of rule and substitution
-  decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  mlr::Array<Handle> decisions; //tuples of rule and substitution
+  if(hasWait){
+    decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  }
   for(Node* rule:decisionRules){
 //    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     NodeL subs = getRuleSubstitutions2(*state, rule, verbose-3 );
@@ -225,7 +248,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
 //  Ndecisions=decisions.N;
-  return VECTOR(decisions);
+  return conv_arr2stdvec(decisions);
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
@@ -289,7 +312,7 @@ void FOL_World::reset_state(){
   FILE("z.after") <<KB;
 
   //-- forward chain rules
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3); //, &decisionObservation);
+  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, NoGraph, verbose-3); //, &decisionObservation);
 
   //-- check for terminal
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -334,8 +357,17 @@ void FOL_World::write_state(ostream& os){
   state->write(os," ","{}");
 }
 
-void FOL_World::set_state(MT::String& s){
+void FOL_World::set_state(mlr::String& s){
   state->clear();
   s >>"{";
   state->read(s);
+}
+
+Graph*FOL_World::getState(){
+  return state;
+}
+
+void FOL_World::setState(Graph *s){
+  state = s;
+  CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
 }

@@ -21,8 +21,8 @@
 /** @file aico.h
     @brief Approximate Inference Control */
 
-#ifndef MT_aico_h
-#define MT_aico_h
+#ifndef MLR_aico_h
+#define MLR_aico_h
 
 #include "socNew.h"
 
@@ -71,7 +71,7 @@ void AICO_multiScaleSolver(ControlledSystem& sys,
 // implementations
 //
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "aico.cpp"
 #endif
 

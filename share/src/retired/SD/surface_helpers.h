@@ -119,7 +119,7 @@ void get_observs_vrtx(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
 void get_observs_ray(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "surface_helpers.cpp"
 #endif
 

@@ -7,11 +7,11 @@ _RacerBalancingBenchmark::_RacerBalancingBenchmark():T(0), display(false), noise
 
 double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
   //initialize
-  if(!T) T = MT::getParameter<uint>("Racer/BalancingBenchmark/T", 500);
+  if(!T) T = mlr::getParameter<uint>("Racer/BalancingBenchmark/T", 500);
   if(noise<0.){
-    noise = MT::getParameter<double>("Racer/BalancingBenchmark/noise", .1);
-    theta0 = MT::getParameter<double>("Racer/BalancingBenchmark/theta0", .2);
-    fixRandomSeed = MT::getParameter<bool>("Racer/BalancingBenchmark/fixRandomSeed", true);
+    noise = mlr::getParameter<double>("Racer/BalancingBenchmark/noise", .1);
+    theta0 = mlr::getParameter<double>("Racer/BalancingBenchmark/theta0", .2);
+    fixRandomSeed = mlr::getParameter<bool>("Racer/BalancingBenchmark/fixRandomSeed", true);
   }
 
   if(&g) NIY;
@@ -67,19 +67,19 @@ double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
 
     //-- costs
     //deviation from (x,th)=(0,0)
-    //    costs += .1*MT::sqr(y(3)) + 1.*MT::sqr(y(2)); // + 1.*sumOfSqr(w);
-    costs += 1.*MT::sqr(R.q(0)) + 10.*MT::sqr(R.q(1)); // + 1.*sumOfSqr(w);
+    //    costs += .1*mlr::sqr(y(3)) + 1.*mlr::sqr(y(2)); // + 1.*sumOfSqr(w);
+    costs += 1.*mlr::sqr(R.q(0)) + 10.*mlr::sqr(R.q(1)); // + 1.*sumOfSqr(w);
 
     //control costs
-    costs += .1 * MT::sqr(u);
+    costs += .1 * mlr::sqr(u);
 
     //big extra cost for crashing
-    if(fabs(R.q(1))>30./180.*MT_PI){ //greater 30 degrees
+    if(fabs(R.q(1))>30./180.*MLR_PI){ //greater 30 degrees
       costs += 1.*(T-t);
       return costs;
     }
 
-    //    MT::arrayBrackets="  ";
+    //    mlr::arrayBrackets="  ";
     //    data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' ' <<u_acc <<' '
     //        <<R.q <<R.q_dot <<R.q_ddot
     //       <<~R.B * R.q <<' ' <<~R.B * R.q_dot <<' ' <<~R.B * R.q_ddot <<' '

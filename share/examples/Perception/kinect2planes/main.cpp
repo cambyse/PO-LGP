@@ -1,25 +1,23 @@
-#include <Perception/surfels.h>
-#include <Perception/kinect2pointCloud.h>
 #include <Gui/opengl.h>
-#include <Core/module.h>
-#include <System/engine.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>
-#include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Algo/dataNeighbored.h>
 #include <Perception/modelEnsemble.h>
+#include <pr2/roscom.h>
 
 void glDrawAxes(void*);
+
+//===========================================================================
 
 struct PointCloud2DataNeighbored:Module{
   Access_typed<arr> kinect_points;
   Access_typed<DataNeighbored> data;
 
-  PointCloud2DataNeighbored(ModuleL& S)
-    : Module("PointCloud2DataNeighbored", S, listenFirst),
-      kinect_points("kinect_points"),
-      data("data"){}
+  PointCloud2DataNeighbored()
+    : Module("PointCloud2DataNeighbored", -1.),
+      kinect_points(this, "kinect_points", true),
+      data(this, "data"){}
 
   void open(){}
   void close(){}
@@ -27,10 +25,17 @@ struct PointCloud2DataNeighbored:Module{
     data.writeAccess();
     data->setData(kinect_points.get());
     data->setGridNeighborhood(480, 640);
+    arr costs = data->X.col(2).reshape(data->X.d0);
+    for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
+    costs *= costs;
+    costs /= sum(costs);
+    data->setCosts(costs);
 //    data->removeNonOk();
     data.deAccess();
   }
 };
+
+//===========================================================================
 
 struct PlaneFitter:Module{
   Access_typed<DataNeighbored> data;
@@ -41,21 +46,17 @@ struct PlaneFitter:Module{
   arr pts;
   arr cols;
 
-  PlaneFitter(ModuleL& S)
-    : Module("PlaneFitter", S, listenFirst),
-      data("data"),
-      kinect_points("kinect_points"),
-      kinect_pointColors("kinect_pointColors"),
+  PlaneFitter()
+    : Module("PlaneFitter", -1.),
+      data(this, "data", true),
+      kinect_points(this, "kinect_points"),
+      kinect_pointColors(this, "kinect_pointColors"),
       gl("planefitter",640,480){}
 
   void open(){
-    gl.addDrawer(&M);
     gl.add(glDrawPointCloud, &pts);
-    gl.camera.setPosition(0., 0., 0.);
-    gl.camera.focus(0., 0., 1.);
-    gl.camera.setZRange(.1, 10.);
-    gl.camera.heightAbs=gl.camera.heightAngle=0.;
-    gl.camera.focalLength = 580./480.;
+    gl.addDrawer(&M);
+    gl.camera.setKinect();
   }
 
   void close(){}
@@ -64,42 +65,61 @@ struct PlaneFitter:Module{
     cols = kinect_pointColors.get();
     M.addNewRegionGrowingModel(data.set());
 //    M.models.last()->colorPixelsWithWeights(cols);
-//    M.reoptimizeModels(data.set());
+    M.reoptimizeModels(data.set());
 //    M.reestimateVert();
-//    M.report();
+    M.report();
     gl.update();
     cout <<"#models=" <<M.models.N <<endl;
   }
 
 };
 
-void TEST(Kinect2Planes){
-  System S;
-  KinectThread kin(S);
-  S.addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-  S.addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-  S.addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-  PointCloud2DataNeighbored pts2data(S);
-  PlaneFitter planeFitter(S);
+//===========================================================================
 
-  S.run();
+void TEST(Kinect2Planes){
+  ACCESSname(byteA, kinect_rgb);
+  ACCESSname(uint16A, kinect_depth);
+  ACCESSname(ors::Transformation, kinect_frame)
+
+  if(mlr::getParameter<bool>("useRos", true)){
+    new RosCom_Spinner();
+    new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+    new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
+  }else{
+    if(mlr::getParameter<bool>("useFile", false)){
+      new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
+    }else{
+      new KinectThread;
+    }
+  }
+
+  ImageViewer iv("kinect_rgb");
+  Kinect2PointCloud k2pcl;
+  PointCloudViewer pclv;
+  PointCloud2DataNeighbored pts2data;
+  PlaneFitter planeFitter;
+
+
+  threadOpenModules(true);
 
 #if 1
-  for(uint t=0;t<300;t++){
-//    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
-    if(engine().shutdown.getValue()>0) break;
-    pts2data.data.var->waitForNextRevision();
+  for(uint t=0;t<100;t++){
+    if(shutdown().getValue()>0) break;
+    pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
   }
 #else
-  MT::wait(3.);
+  mlr::wait(3.);
 #endif
 
-  S.close();
+  threadCloseModules();
+  modulesReportCycleTimes();
+  cout <<"bye bye" <<endl;
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
+  rosCheckInit("pr2_sensors");
 
   testKinect2Planes();
 

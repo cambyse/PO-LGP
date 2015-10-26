@@ -44,7 +44,7 @@ void TEST(StereoCapture){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testStereoCapture();
 

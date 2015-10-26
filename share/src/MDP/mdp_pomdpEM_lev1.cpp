@@ -44,7 +44,7 @@ double mdp::pomdpEM_lev1(
 //   cout <<"mstepNoise=" <<mstepNoise <<endl;
 //   cout <<"adaptP0=" <<adaptP0 <<endl;
 
-  MT::timerStart();
+  mlr::timerStart();
   
   CHECK(mdp.Px.nd==1 && mdp.Pxax.nd==3 &&
         mdp.Pyxa.nd==3 && mdp.Rax.nd==2 &&
@@ -61,7 +61,7 @@ double mdp::pomdpEM_lev1(
 #if rescaleRewards
   double Rmin=mdp_Rax.min(), Rmax=mdp_Rax.max();
   if(rescaleRewards || (mstepType!=MstepNoisyMax && Rmin<0.)){
-    //if(!rescaleRewards) MT_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
+    //if(!rescaleRewards) MLR_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
     for(uint i=0; i<mdp_Rax.N; i++) mdp_Rax.elem(i) = (mdp_Rax.elem(i)-Rmin)/(Rmax-Rmin);
   }else{
     Rmin=0.; Rmax=1.;
@@ -164,7 +164,7 @@ double mdp::pomdpEM_lev1(
     for(uint i=0; i<temporary.N; i++) delete temporary(i);
   }
   
-  if(os)(*os) <<"E: " <<MT::timerRead(true) <<"sec, M: " <<std::flush;
+  if(os)(*os) <<"E: " <<mlr::timerRead(true) <<"sec, M: " <<std::flush;
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
@@ -241,7 +241,7 @@ double mdp::pomdpEM_lev1(
   
   //----- rest is cosmetics
   //report
-  if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
+  if(os)(*os) <<mlr::timerRead() <<"sec, " <<std::flush;
   if(os)
     (*os) <<" P(r=1)=" <<PR
     <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)

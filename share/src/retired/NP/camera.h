@@ -62,7 +62,7 @@ struct CameraModule:public Process{
 
 namespace np {
 // struct DistFov;
-// typedef MT::Array<DistFov*> DistFovList;
+// typedef mlr::Array<DistFov*> DistFovList;
 struct DistPoly
 {
   doubleA           KL, KR, dL, dR, R, T, E, F;
@@ -70,7 +70,7 @@ struct DistPoly
   floatA            mapxL, mapyL;
   floatA            mapxR, mapyR;
 };
-// typedef MT::Array<DistPoly*> DistPolyList;
+// typedef mlr::Array<DistPoly*> DistPolyList;
 
 enum CamId
 {

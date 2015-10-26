@@ -17,18 +17,18 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_MEX
+#ifdef MLR_MEX
 
 #include "mexmagic.h"
 
-MT::String mout;
+mlr::String mout;
 bool mexVerbose=false;
 
 int _nlhs, _nrhs;
 mxArray **_plhs;
 const mxArray **_prhs;
 
-void mexFlushHandler(MT::String& string){
+void mexFlushHandler(mlr::String& string){
   mexPrintf(string.p); string.clear();
 }
 

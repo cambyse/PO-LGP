@@ -30,7 +30,7 @@ struct Pr2GamepadController:Module{
     j2t = new Gamepad2Tasks(*MP);
 
 
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       //-- wait for first q observation!
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       for(;;){
@@ -50,8 +50,8 @@ struct Pr2GamepadController:Module{
     zero_qdot.resize(qdot.N).setZero();
   }
   void step(){
-    arr gamepadState = this->gamepadState.get();
-    j2t->updateTasks(gamepadState);
+    arr gamepad = this->gamepadState.get();
+    j2t->updateTasks(gamepad);
 
     //compute control
     arr a = MP->operationalSpaceControl();

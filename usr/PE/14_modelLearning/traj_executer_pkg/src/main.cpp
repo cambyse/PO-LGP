@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
 
   /// Init ors
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   ors::KinematicWorld world;
   world.init(STRING("scene"));
   makeConvexHulls(world.shapes);
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
   /// Get init position from robot
   tree_controller_pkg::GetJointState getInitJointStateSrv;
   getInitJointStateClient.call(getInitJointStateSrv);
-  arr q0 = ARRAY(getInitJointStateSrv.response.q);
+  arr q0 = conv_stdvec2arr(getInitJointStateSrv.response.q);
 
   ros::ServiceClient setCommandClient = nh.serviceClient<tree_controller_pkg::SetCommand>("/tree_rt_controller/set_command",true);
   tree_controller_pkg::SetCommand setCommandSrv;
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
   //  double qLowerLimit[7] = {-2.2854, -0.5236, -3.9, -1.7, _q0(4)-M_PI, -2. ,_q0(6)-M_PI};
   //  double qUpperLimit[7] = {0.714602, 0.6,     0.8,   0., _q0(4)+M_PI,  0., _q0(6)+M_PI};
 //
-  uint type = MT::getParameter<uint>("type");
+  uint type = mlr::getParameter<uint>("type");
   switch (type){
     case 0:
 
@@ -88,9 +88,9 @@ int main(int argc, char** argv)
   getAcc(xdd,x,dt);
 
   /// create spline
-  MT::Spline s(x.d0,x);
-  MT::Spline sd(xd.d0,xd);
-  MT::Spline sdd(xdd.d0,xdd);
+  mlr::Spline s(x.d0,x);
+  mlr::Spline sd(xd.d0,xd);
+  mlr::Spline sdd(xdd.d0,xdd);
 
   double dur = (x.d0-1)*dt;
   cout <<"Duration: " << dur << endl;
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
   /// Start trajectory execution
   cout << "Start Trajectory [Enter]" << endl;
-  MT::wait();
+  mlr::wait();
 
   /// Start Logging
   ros::ServiceClient startLoggingClient = nh.serviceClient<tree_controller_pkg::StopLogging>("/tree_rt_controller/start_logging");
@@ -117,9 +117,9 @@ int main(int argc, char** argv)
 
     gp->predict(state,u);
 
-    setCommandSrv.request.q = VECTOR(q0);
-    setCommandSrv.request.qd = VECTOR(q0*0.);
-    setCommandSrv.request.uGP = VECTOR(u);
+    setCommandSrv.request.q = conv_arr2stdvec(q0);
+    setCommandSrv.request.qd = conv_arr2stdvec(q0*0.);
+    setCommandSrv.request.uGP = conv_arr2stdvec(u);
     setCommandClient.call(setCommandSrv);
     loop_rate.sleep();
   }
@@ -134,12 +134,12 @@ int main(int argc, char** argv)
 
   tree_controller_pkg::GetJointState getJointStateSrv;
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   double t = 0.;
   while ( t < dur ) {
     // get actual joint state
     getInitJointStateClient.call(getJointStateSrv);
-    q_act = ARRAY(getJointStateSrv.response.q);
+    q_act = conv_stdvec2arr(getJointStateSrv.response.q);
     world.setJointState(q_act);
     world.kinematicsPos(y_act,NoArr,world.getBodyByName("endeffR"));
     traj_act.append(~y_act);
@@ -159,17 +159,17 @@ int main(int argc, char** argv)
     state.append(qd);
     state.append(qdd);
 
-    double pt = MT::timerRead(false);
+    double pt = mlr::timerRead(false);
     gp->predict(state,u);
-    pt = MT::timerRead(false) - pt;
+    pt = mlr::timerRead(false) - pt;
     pred_time.append(pt);
 
-    setCommandSrv.request.q = VECTOR(q);
-    setCommandSrv.request.qd = VECTOR(qd);
-    setCommandSrv.request.uGP = VECTOR(u);
+    setCommandSrv.request.q = conv_arr2stdvec(q);
+    setCommandSrv.request.qd = conv_arr2stdvec(qd);
+    setCommandSrv.request.uGP = conv_arr2stdvec(u);
     setCommandClient.call(setCommandSrv);
 
-    double timeDiff = MT::timerRead(true);
+    double timeDiff = mlr::timerRead(true);
     t = t + timeDiff;
 //    cout << t << endl;
   }

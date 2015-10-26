@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_hypergraph_h
-#define MT_hypergraph_h
+#ifndef MLR_hypergraph_h
+#define MLR_hypergraph_h
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -29,11 +29,11 @@ struct Element;
 //list of elements:
 // actually this is the whole `HyperGraph' data structure
 // the class below only adds convenience stuff
-typedef MT::Array<Element*> ElementL;
+typedef mlr::Array<Element*> ElementL;
 
 struct Element {
   uint index;              ///< index of this element
-  MT::String type, name;   ///< type & name
+  mlr::String type, name;   ///< type & name
   ElementL parents;        ///< this element has a set of parents (e.g., an edge has two parents)
   ElementL parentOf[maxDegree]; ///< this elememt is the parent of ... in a certain 'slot'
 
@@ -66,7 +66,7 @@ inline void sortByDotOrder(ElementL& G){
   uint i;
   for_list(Type, e, G){
     order = anyListGet<double>(e->ats, "dot_order", 1);
-    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
+    if(!order){ MLR_MSG("doesn't have dot_order attribute"); return; }
     perm(i) = (uint)*order;
   }
   G.permuteInv(perm);
@@ -75,7 +75,7 @@ inline void sortByDotOrder(ElementL& G){
 
 inline void writeDot(ElementL& G){
   ofstream fil;
-  MT::open(fil, "z.dot");
+  mlr::open(fil, "z.dot");
   fil <<"graph G{" <<endl;
   fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
   fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
@@ -102,7 +102,7 @@ inline void writeDot(ElementL& G){
   fil.close();
 }
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "hypergraph.cpp"
 #endif
 

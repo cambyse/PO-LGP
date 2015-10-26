@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <signal.h>
 #include <MT/ors.h>
@@ -30,7 +30,7 @@ void MyDemo::init(RobotProcessGroup *_master){
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
 
-  MT::IOraw = true;
+  mlr::IOraw = true;
   started_track = false;
 
   arr p2;
@@ -90,7 +90,7 @@ void MyDemo::initTaskVariables(ControllerModule *ctrl){
 }
 
 void MyDemo::findTarget(){
-  double time = MT::realTime();
+  double time = mlr::realTime();
   if(visStep != robotProcesses->evis.timer.steps &&perc->objects.N > 0 && perc->objects(0)->visionCenter.N == 4){//should manuallz remove 0 observations vision.min = 0
     visStep = robotProcesses->evis.timer.steps;
     arr vision1 =  perc->objects(0)->visionCenter;
@@ -174,8 +174,8 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
 int main(int argc,char** argv){
   //sudo chmod a+rw /dev/raw1394
   //sudo chmod a+rw /dev/video1394/0
-  MT::IOraw = true;
-  MT::initCmdLine(argc,argv);
+  mlr::IOraw = true;
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MyDemo demo;

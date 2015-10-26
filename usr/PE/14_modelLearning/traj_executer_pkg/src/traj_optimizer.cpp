@@ -140,7 +140,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
       traj.append(catCol(traj(traj.d0-1,0)+0.*l1,traj(traj.d0-1,1)-sqrt(2.)*l1/2.,traj(traj.d0-1,2)+sqrt(2.)*l1/2.));
       traj.append(traj[traj.d0-1]);
 
-      MP.tau = MT::getParameter<double>("duration") / double(MP.T);
+      MP.tau = mlr::getParameter<double>("duration") / double(MP.T);
 
       break;
     }
@@ -181,7 +181,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
 //      traj.append(traj);
 
       MP.T = traj.d0-1;
-      MP.tau = MT::getParameter<double>("duration") / double(MP.T);
+      MP.tau = mlr::getParameter<double>("duration") / double(MP.T);
       break;
     }
     case BM_TYPE::CIRCLE:

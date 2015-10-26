@@ -51,15 +51,15 @@ void TEST(Motors){
   engine().open(S);
 
   S.controls.set() = ARR(5.,5.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(128.,128.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(128.,128.,1.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,1.);
-  MT::wait(3);
+  mlr::wait(3);
 
   engine().close(S);
 
@@ -83,10 +83,10 @@ void TEST(Balance){
 
   cout <<S <<endl;
 
-  double zeroTh=MT::getParameter<double>("zeroTh", 0.);
-  double k_th=MT::getParameter<double>("k_th", 0.);
-  double k_thDot=MT::getParameter<double>("k_thDot", 0.);
-  double k_acc=MT::getParameter<double>("k_acc", 0.);
+  double zeroTh=mlr::getParameter<double>("zeroTh", 0.);
+  double k_th=mlr::getParameter<double>("k_th", 0.);
+  double k_thDot=mlr::getParameter<double>("k_thDot", 0.);
+  double k_acc=mlr::getParameter<double>("k_acc", 0.);
 
   //    engine().enableAccessLog();
   engine().open(S);
@@ -103,7 +103,7 @@ void TEST(Balance){
 
     motor_vel += k_acc*u;
 //    cout <<"\r state = " <<x <<std::flush;
-//    cout <<"enc= " <<enc/MT_2PI <<std::endl;
+//    cout <<"enc= " <<enc/MLR_2PI <<std::endl;
 
     S.controls.set() = ARR(motor_vel, motor_vel, 10.);
 
@@ -117,7 +117,7 @@ void TEST(Balance){
 }
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
 //  testIMU();
 //  testMotors();

@@ -13,7 +13,7 @@ void test_rrt(long num) {
 
   arr goal = {1., 1.001, 1};
 
-  MT::Rnd r;
+  mlr::Rnd r;
 
   for(long i=0; i<num; ++i) {
     arr next;

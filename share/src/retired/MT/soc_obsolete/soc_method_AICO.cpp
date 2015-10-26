@@ -377,7 +377,7 @@ soc::AICO* soc::AICO_solver(SocSystemAbstraction& sys,
                       uint display){
   soc::AICO *aico=new soc::AICO;
   aico->init(sys, convergenceRate, repeatThreshold, recomputeTaskThreshold, display, 0);
-  aico->damping = MT::getParameter<double>("aicoDamping");
+  aico->damping = mlr::getParameter<double>("aicoDamping");
   if(q.N) aico->initMessagesWithReferenceQ(q);
   //aico->damping = 1e-0;
   for(uint k=0;k<100;k++){
@@ -404,7 +404,7 @@ void soc::AICO_multiScaleSolver(SocSystemAbstraction& sys,
                                 double convergenceRate, double repeatThreshold, double recomputeTaskThreshold,
                                 uint display,
                                 uint scalePowers){
-  MT::Array<soc::AICO> aicos(scalePowers);
+  mlr::Array<soc::AICO> aicos(scalePowers);
   for(uint i=0;i<aicos.N;i++){
     sys.scalePower=i;
     sys.stepScale=i;
@@ -491,7 +491,7 @@ double soc::AICO::stepKinematic(){
     //-- perhaps display the initialization
     if(q.N){
       if(sys->os){//type initial value
-        *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<-1 <<" time " <<MT::timerRead(false) <<" diff -1";
+        *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<-1 <<" time " <<mlr::timerRead(false) <<" diff -1";
         sys->analyzeTrajectory(q, display>0);
       }
       if(sys->gl){
@@ -671,12 +671,12 @@ double soc::AICO::stepKinematic(){
   if(q_old.N==q.N) diff=maxDiff(q_old, q);
   
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
 #ifdef NIKOLAY
-    *sys->os <<std::setw(3) <<sweep <<"  " <<MT::timerRead(false);
+    *sys->os <<std::setw(3) <<sweep <<"  " <<mlr::timerRead(false);
 #else
-    *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
+    *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" diff " <<diff;
 #endif
    cost = sys->analyzeTrajectory(q, display>0);
   }
@@ -684,7 +684,7 @@ double soc::AICO::stepKinematic(){
   if(display){
     sys->displayTrajectory(q, NULL, display, STRING("AICO_kinematic - sweep " <<sweep)); //&Binv
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }
@@ -697,7 +697,7 @@ void soc::AICO::initMessagesWithReferenceQ(arr& qref){
   b=qhat;
   v=qhat;  for(uint t=0;t<=T;t++){ Vinv[t].setDiag(1e6);  }
   if(sys->os){
-    *sys->os <<"AICOInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
+    *sys->os <<"AICOInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -724,7 +724,7 @@ void soc::AICO::initMessagesFromScaleParent(AICO *A){
   }
   if(sys->dynamic)  getPositionTrajectory(q, b);  else  q=b;
   if(sys->os){
-    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
+    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -838,7 +838,7 @@ double soc::AICO::stepDynamic(){
   arr Dinv;
   Dinv.setDiag(damping, dampingReference.d1);
                
-  //MT::timerStart();
+  //mlr::timerStart();
   uint repeatCount=0;
 
   for(t=1, dt=1;t>0;){ //start at t=1 going forward...
@@ -948,15 +948,15 @@ double soc::AICO::stepDynamic(){
   }
   
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
-    *sys->os <<"AICOd(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
+    *sys->os <<"AICOd(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" diff " <<diff;
     sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO_dynamic - iteration " <<sweep));
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }
@@ -1116,16 +1116,16 @@ double soc::AICO::stepGaussNewton(){
   }    
   
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
-    *sys->os <<"AICOgn(" <<T <<", " <<damping <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
+    *sys->os <<"AICOgn(" <<T <<", " <<damping <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     sys->analyzeTrajectory(q, display>0);
     //sys->costChecks(b);
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO_GaussNewton - iteration " <<sweep));
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }
@@ -1133,7 +1133,7 @@ double soc::AICO::stepGaussNewton(){
 
 double soc::AICO::stepMinSum(){
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -1221,15 +1221,15 @@ double soc::AICO::stepMinSum(){
   if(q_old.N==q.N) diff=maxDiff(q_old, q);
   
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO_GaussNewton - iteration " <<sweep));
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }

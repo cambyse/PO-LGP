@@ -29,7 +29,7 @@ struct MySystem:System {
 
 // =================================================================================================
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   MySystem system;
   engine().open(system);

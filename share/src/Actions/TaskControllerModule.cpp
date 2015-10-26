@@ -1,15 +1,13 @@
 #include "TaskControllerModule.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 #  include <pr2/roscom.h>
 #endif
-
-TaskControllerModule *globalTaskControllerModule=NULL;
-TaskControllerModule *taskControllerModule(){
-  return globalTaskControllerModule;
-}
 
 TaskControllerModule::TaskControllerModule()
     : Module("TaskControllerModule", .01)
@@ -19,8 +17,6 @@ TaskControllerModule::TaskControllerModule()
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-//  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
-  globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -35,11 +31,11 @@ void TaskControllerModule::open(){
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-//  MT::open(fil,"z.TaskControllerModule");
+//  mlr::open(fil,"z.TaskControllerModule");
 
 #if 1
   modelWorld.writeAccess();
@@ -49,7 +45,7 @@ void TaskControllerModule::open(){
   modelWorld.deAccess();
 #endif
 
-  useRos = MT::getParameter<bool>("useRos",false);
+  useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
 }
 
@@ -66,23 +62,29 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
+#ifdef MT_ROS
     pr2_odom.waitForRevisionGreaterThan(0);
+#endif
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-
-#if 0
-    conv_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
-#else
-    q_real.subRange(trans->qIndex, trans->qIndex+3) = pr2_odom.get();
-#endif
+      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
-        syncModelStateWithRos = false;
+      syncModelStateWithRos = false;
+      
+      //supresses  c++ output
+
+       //streambuf *backup; 
+       //ofstream muell; 
+      //muell.open ("/dev/null"); 
+      //backup = cout.rdbuf();     // Konsolenpuffer merken 
+      //ostream konsole(backup);   // Neuen stream an Konsole binden 
+      //cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){
@@ -90,6 +92,7 @@ void TaskControllerModule::step(){
       }
     }
   }
+
   if(syncModelStateWithRos){
     cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
     cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
@@ -99,7 +102,6 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
@@ -121,9 +123,9 @@ void TaskControllerModule::step(){
       realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
+//      mlr::arrayBrackets="  ";
 //      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
-//      MT::arrayBrackets="[]";
+//      mlr::arrayBrackets="[]";
     }
   }
 
@@ -159,12 +161,13 @@ void TaskControllerModule::step(){
   refs.gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.);
+  refs.Ki = ARR(0.2);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
+  refs.intLimitRatio = ARR(0.7);
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {

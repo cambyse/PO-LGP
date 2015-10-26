@@ -35,12 +35,12 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->feedbackController.H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
+  s->feedbackController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
   s->feedbackController.qitselfPD.y_ref = s->q;
   s->feedbackController.qitselfPD.setGains(.0,10.);
 
   { // read machine.fol
-    MT::FileToken fil("machine.fol");
+    mlr::FileToken fil("machine.fol");
     if(fil.exists()){
       KB.writeAccess();
       fil >> KB();
@@ -68,9 +68,9 @@ void ActionMachine::open(){
   }
   KB.deAccess();
 
-  MT::open(fil,"z.actionMachine");
+  mlr::open(fil,"z.actionMachine");
 
-  bool useRos = MT::getParameter<bool>("useRos",false);
+  bool useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos){
     initStateFromRos=true;
   }
@@ -152,9 +152,9 @@ void ActionMachine::step(){
       world->kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, world->getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       fil <<t <<' ' <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
-      MT::arrayBrackets="[]";
+      mlr::arrayBrackets="[]";
     }
   }
 
@@ -218,11 +218,11 @@ void ActionMachine::close(){
 
 void ActionMachine::parseTaskDescription(Graph& td){
   Node *t = td.isNodeOfParentGraph;
-  MT::String type=td["type"]->V<MT::String>();
+  mlr::String type=td["type"]->V<mlr::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
   }else if(type=="forceCtrl"){
-    new PushForce(*this, td["ref1"]->V<MT::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+    new PushForce(*this, td["ref1"]->V<mlr::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
   }else{
     DefaultTaskMap *map = new DefaultTaskMap(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
@@ -328,7 +328,7 @@ void ActionMachine::waitForQuitSymbol() {
     KB.readAccess();
     Node* quitSymbol = KB().getNode("quit");
     if(!quitSymbol){
-      MT_MSG("WARNING: no quit symbol!");
+      MLR_MSG("WARNING: no quit symbol!");
       return;
     }
     for(Node *f:quitSymbol->parentOf){

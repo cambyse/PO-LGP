@@ -40,12 +40,12 @@ void Element::write(std::ostream& os) const {
 
 void Element::read(std::istream& is, ElementL& list){
   uint i, j;
-  MT::String link;
+  mlr::String link;
   Element *e, *e2;
   type.read(is, " \t\n\r", " \t\n\r({", false);
   name.read(is, " \t\n\r", " \t\n\r({", false);
-  if(MT::peerNextChar(is) =='('){
-    MT::parse(is, "(");
+  if(mlr::peerNextChar(is) =='('){
+    mlr::parse(is, "(");
     for(j=0;; j++){
       link.read(is, " , ", " , )", false);
       if(!link.N) break;
@@ -55,9 +55,9 @@ void Element::read(std::istream& is, ElementL& list){
 //        linkIds.append(e->index);
         e->parentOf[j].append(this);
       }else{//this element is not known!!
-        HALT("line:" <<MT::lineCount <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
+        HALT("line:" <<mlr::lineCount <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
         //check if this is a derived element (notationally: new_name = old_name+'one_char')
-        MT::String sublink;
+        mlr::String sublink;
         sublink.set(link.p, link.N-1);
         for_list(Type,  e,  list) if(e->name==sublink) break;
         if(i<list.N){//sucessfully found
@@ -76,12 +76,12 @@ void Element::read(std::istream& is, ElementL& list){
         }
       }
     }
-    MT::parse(is, ")");
+    mlr::parse(is, ")");
   }
-  if(MT::peerNextChar(is) =='{'){
-    MT::parse(is, "{");
+  if(mlr::peerNextChar(is) =='{'){
+    mlr::parse(is, "{");
     anyListRead(ats, is);
-    MT::parse(is, "}");
+    mlr::parse(is, "}");
   }
 }
 
@@ -148,16 +148,16 @@ void HyperGraph::read(std::istream &is){
   char c;
   Element *e;
   for(;;){
-    c=MT::peerNextChar(is);
+    c=mlr::peerNextChar(is);
     if(!is.good()){ is.clear(); break; }
     if(c=='}') break;
-    if(c=='#'){ MT::skipLine(is); continue; }
+    if(c=='#'){ mlr::skipLine(is); continue; }
     e=new Element;
     e->read(is, *this);
     e->index=N;
     append(e);
     if(!is.good()){
-      MT_MSG("reading failed at " <<e->index <<"th element");
+      MLR_MSG("reading failed at " <<e->index <<"th element");
       break;
     }
   }

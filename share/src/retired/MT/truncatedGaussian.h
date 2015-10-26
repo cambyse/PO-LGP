@@ -18,8 +18,8 @@
 
 
 
-#ifndef MT_truncatedGaussian_h
-#define MT_truncatedGaussian_h
+#ifndef MLR_truncatedGaussian_h
+#define MLR_truncatedGaussian_h
 
 #include <Core/array.h>
 
@@ -27,7 +27,7 @@ void TruncatedStandardGaussian(double& mean, double& var, double z);
 void TruncateGaussian(arr& a, arr& A, const arr& c, double d);
 void TruncateGaussianBySampling(arr& a, arr& A, const arr& c, const arr& coff, uint N, arr *data=NULL);
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "truncatedGaussian.cpp"
 #endif
 

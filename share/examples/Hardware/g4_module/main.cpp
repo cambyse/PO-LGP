@@ -8,7 +8,7 @@ void miniTest(){
 
   for(uint i=0;i<100;i++){
     g4.step();
-    MT::wait(.001, false);
+    mlr::wait(.001, false);
   }
 
   g4.close();
@@ -29,7 +29,7 @@ void serialRun(){
   S.openAll();
   for(uint i=0;i<100;i++){
     S.stepAll();
-    MT::wait(.01, false);
+    mlr::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
   S.closeAll();

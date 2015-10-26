@@ -3,12 +3,11 @@
 #include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <Core/array-vector.h>
 #include <System/engine.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Gui/mesh.h>
+#include <Geo/mesh.h>
 #include <Actions/swig.h>
 #include <tf/transform_listener.h>
 #include <Motion/taskMaps.h>
@@ -16,14 +15,14 @@
 #include <Motion/feedbackControl.h>
 
 
-struct GazeTask : TaskCtrlActivity {
+struct GazeTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
     map = new DefaultTaskMap(gazeAtTMT, world, "endeffHead", ors::Vector(0.,0.,-1.), "testObject");
     task = new CtrlTask(name, *map, specs);
   }
 };
 
-struct GraspTask : TaskCtrlActivity {
+struct GraspTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
     map = new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "testObject");
     task = new CtrlTask(name, *map, specs);
@@ -49,7 +48,7 @@ int main(int argc, char** argv){
   S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
   S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
 #else
-  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "endeffHead", "testObject"}, { NO(type, MT::String("gazeAt")), NO(PD, ARR(.5, .9, .5, 10.))});
+  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "endeffHead", "testObject"}, { NO(type, mlr::String("gazeAt")), NO(PD, ARR(.5, .9, .5, 10.))});
   S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
   S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
 #endif

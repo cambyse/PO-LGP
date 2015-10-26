@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_calibration_h
-#define MT_calibration_h
+#ifndef MLR_calibration_h
+#define MLR_calibration_h
 
 #include <Core/array.h>
 
@@ -31,7 +31,7 @@ void stereoTriangulation(arr& X, const arr& xL, const arr& xR, const arr& PL, co
 void stereoTriangulation_nonhom(arr& X_3d, const arr& x_4d, const arr&PL, const arr& PR);
 void stereoTriangulation_nonhom(arr& X, const arr& x);
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "calibration.cpp"
 #endif
 

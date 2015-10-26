@@ -18,7 +18,7 @@ struct Patch
   uintA contour;
   uint  class_idx;
 };
-typedef MT::Array<Patch*> PatchList;
+typedef mlr::Array<Patch*> PatchList;
 
 class SegmentationGroundtruth
 {
@@ -27,7 +27,7 @@ public:
   SegmentationGroundtruth(const byteA& img_obj, const byteA& img_cls, uint num_cls);
 
   template <class S>
-  void overlap(MT::Array<S>& o, const uintA& region, OverlapType t, bool classwise=true);
+  void overlap(mlr::Array<S>& o, const uintA& region, OverlapType t, bool classwise=true);
 
   uint                        num_cls_;       // number of classes in general
                                               //   problem, e.g. VOC has 20

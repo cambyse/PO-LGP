@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_specialTaskVariables_h
-#define MT_specialTaskVariables_h
+#ifndef MLR_specialTaskVariables_h
+#define MLR_specialTaskVariables_h
 
 #include <Ors/ors.h>
 #include "socNew.h"
@@ -29,7 +29,7 @@
 // types
 //
 
-typedef MT::Array<ors::Shape*> ShapeList;
+typedef mlr::Array<ors::Shape*> ShapeList;
 
 //===========================================================================
 //
@@ -43,7 +43,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
 void setHomingGoals(OrsSystem& sys, uint T, const char* objShape, const char* belowToShape);
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #include "specialTaskVariables.cpp"
 #endif
 

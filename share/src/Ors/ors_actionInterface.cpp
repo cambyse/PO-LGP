@@ -68,7 +68,7 @@ void drawOrsActionInterfaceEnv(void*) {
 
 void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) {
     C->ode().exportStateToOde();
     C->ode().step(.01);
@@ -80,7 +80,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInter
   if(swift) {
     swift->step(*C);
   } else {
-#ifdef MT_ODE
+#ifdef MLR_ODE
     C->ode().importProxiesFromOde();
 #endif
   }
@@ -112,7 +112,7 @@ ActionInterface::~ActionInterface() {
 void ActionInterface::shutdownAll() {
   if(C) delete C;          C=0;
   if(gl) delete gl;        gl=0;
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) delete ode;      ode=0;
 #endif
   if(swift) delete swift;  swift=0;
@@ -121,7 +121,7 @@ void ActionInterface::shutdownAll() {
 void ActionInterface::loadConfiguration(const char* ors_filename) {
 
 //  char *path, *name, cwd[200];
-//  MT::decomposeFilename(path, name, ors_filename);
+//  mlr::decomposeFilename(path, name, ors_filename);
 //  getcwd(cwd, 200);
 //  chdir(path);
   
@@ -183,7 +183,7 @@ void ActionInterface::watch() {
 void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
                                double ode_coll_cfm, double ode_friction) {
   CHECK(C, "load a configuration first");
-#ifdef MT_ODE
+#ifdef MLR_ODE
   C->ode();
   
   // SIMULATOR PARAMETER
@@ -318,7 +318,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   arr q, dq;
   C->getJointState(q);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
@@ -335,7 +335,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   
   // (4) move upwards (to avoid collisions)
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     x.y_target(2) = 1.2;
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
@@ -452,7 +452,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   
   double z_target;
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
+    x.y_target = conv_vec2arr(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl
@@ -475,7 +475,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   //phase 3: down
   double* obj_shape = getShape(obj_index);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
+    x.y_target = conv_vec2arr(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl

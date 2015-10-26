@@ -15,8 +15,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#ifndef MT_soc_h
-#define MT_soc_h
+#ifndef MLR_soc_h
+#define MLR_soc_h
 
 /**
  * @file
@@ -118,7 +118,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual void getDynamics(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, arr& Q, uint t);
   virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
-  void getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t);
+  void getTaskInfo(mlr::Array<const char*>& names, uintA& dims, uint t);
 
   //old cost computation routines -- still very useful for reference and checking
   double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
@@ -167,7 +167,7 @@ void straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid);
 //
 // implementations
 //
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "soc.cpp"
 #endif
 

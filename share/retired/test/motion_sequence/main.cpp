@@ -5,7 +5,7 @@
 #include "behaviors.h"
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   
   // variables
   GeometricState geometricState;
@@ -32,7 +32,7 @@ int main(int argc,char** argv){
     pickOrPlaceObject(MotionPrimitive::place, "thing1", "thing2");
   }
 
-  MT::wait(1300);
+  mlr::wait(1300);
   ctrl->threadClose();
 
   cout <<"bye bye" <<endl;

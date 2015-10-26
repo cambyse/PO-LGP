@@ -38,7 +38,7 @@ void SimpleFeatureGenerator::makeFeatures(arr &Z, const arr& X) {
 }
 
 void UprightFeatureGenerator::makeFeatures(arr& Z, const arr& X) {
-  double sinus = sin((double) X(0,0)*MT_PI/180.) ;
+  double sinus = sin((double) X(0,0)*MLR_PI/180.) ;
   Z.append(sinus);
   Z.reshape(1,1);
 }

@@ -8,9 +8,9 @@
 
 struct GPControl {
 
-  MT::Array<arr> lambdas;
-  MT::Array<arr> x_subsets;
-  MT::Array<arr> alphas;
+  mlr::Array<arr> lambdas;
+  mlr::Array<arr> x_subsets;
+  mlr::Array<arr> alphas;
 
   uint n;
 

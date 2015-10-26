@@ -54,7 +54,7 @@ uintA _get_shape_indices(ors::Body* b) {
   return idx;
 }
 
-MT::Array<const char*> pr2_left_get_bodynames() {
+mlr::Array<const char*> pr2_left_get_bodynames() {
   return { 
     "base_footprint",
     "torso_lift_link",
@@ -72,7 +72,7 @@ MT::Array<const char*> pr2_left_get_bodynames() {
   };
 }
 
-MT::Array<const char*> pr2_full_get_bodynames() {
+mlr::Array<const char*> pr2_full_get_bodynames() {
   return { 
     "base_footprint",
     "fl_caster_rotation_link",
@@ -117,8 +117,41 @@ MT::Array<const char*> pr2_full_get_bodynames() {
     
 }
 
+mlr::Array<const char*> pr2_get_joints() {
+  return {    
+    "worldTranslationRotation",
+      "torso_lift_joint",
+      "head_pan_joint",
+      "laser_tilt_mount_joint",
+      "r_shoulder_pan_joint",
+      "l_shoulder_pan_joint",
+      "head_tilt_joint",
+      "r_shoulder_lift_joint",
+      "l_shoulder_lift_joint",
+      "r_upper_arm_roll_joint",
+      "l_upper_arm_roll_joint",
+      "r_elbow_flex_joint",
+      "l_elbow_flex_joint",
+      "r_forearm_roll_joint",
+      "l_forearm_roll_joint",
+      "r_wrist_flex_joint",
+      "l_wrist_flex_joint",
+      "r_wrist_roll_joint",
+      "l_wrist_roll_joint",
+      "r_gripper_l_finger_joint",
+      "r_gripper_r_finger_joint",
+      "l_gripper_l_finger_joint",
+      "l_gripper_r_finger_joint",
+      "r_gripper_l_finger_tip_joint",
+      "r_gripper_r_finger_tip_joint",
+      "l_gripper_l_finger_tip_joint",
+      "l_gripper_r_finger_tip_joint",
+      "r_gripper_joint",
+      "l_gripper_joint"};
+}
+
 uintA pr2_get_shapes(const ors::KinematicWorld &G) {
-  MT::Array<const char*> bodynames = pr2_left_get_bodynames();
+  mlr::Array<const char*> bodynames = pr2_left_get_bodynames();
   uintA shape_idx;
   for (const char* bodyname: bodynames) {
     shape_idx.append(_get_shape_indices(G.getBodyByName(bodyname)));

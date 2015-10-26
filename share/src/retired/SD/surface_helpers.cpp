@@ -312,7 +312,7 @@ ISF_common_volume(PotentialField *ot,PotentialField *oe, int impl){
     ot->getEnclRect(mins,maxs);
     if (mins!=maxs) {
       mins -= (maxs-mins)*.2; maxs += (maxs-mins)*.17;
-      step = MT::getParameter<double>("gp_size")/16;
+      step = mlr::getParameter<double>("gp_size")/16;
       switch(impl){
         case 1: s=ISF_common_volume(ot,oe,mins,maxs,step); break;
         case 2: s=ISF_common_volume_rec(ot, oe,mins,maxs,step); break;

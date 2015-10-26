@@ -48,12 +48,12 @@ static bool useTextures=false;
 
 void initTextures(void){
   useTextures=true;
-  MT::String texture1, texture2, texture3;
-  MT::getParameter(texture1, MT::String("texture_wall_back"), MT::String(""));
-  MT::getParameter(texture2, MT::String("texture_wall_left"), MT::String(""));
+  mlr::String texture1, texture2, texture3;
+  mlr::getParameter(texture1, mlr::String("texture_wall_back"), mlr::String(""));
+  mlr::getParameter(texture2, mlr::String("texture_wall_left"), mlr::String(""));
 	PRINT(texture1);
 	PRINT(texture2);
-//  MT::getParameter(texture3, MT::String("texture_ground"), MT::String(""));
+//  mlr::getParameter(texture3, mlr::String("texture_ground"), mlr::String(""));
   read_ppm(texImg1,texture1);  texture_name__wall_back=glImageTexture(texImg1);
   read_ppm(texImg2,texture2);  texture_name__wall_left=glImageTexture(texImg2);
 //  read_ppm(texImg3,texture3);  texName3=glImageTexture(texImg3);
@@ -95,7 +95,7 @@ void initSimulator(const char* configurationFile, bool takeMovie = false) {
 
 
 
-void interpret_color(MT::String& name, double* color) {
+void interpret_color(mlr::String& name, double* color) {
   double red[3];  red[0]=1.0;  red[1]=0.0;   red[2]=0.0;
   double green[3];  green[0]=0.2;  green[1]=1.0;   green[2]=0.0;
   double orange[3];  orange[0]=1.0;  orange[1]=0.5;   orange[2]=0.0;
@@ -175,29 +175,29 @@ void interpret_color(MT::String& name, double* color) {
 void showMovie(const char* filename) {
   
   bool watch;
-  MT::getParameter(watch, "watch");
+  mlr::getParameter(watch, "watch");
   PRINT(watch);
   
  
   uint secs_wait;
-  MT::getParameter(secs_wait, "secs_wait");
+  mlr::getParameter(secs_wait, "secs_wait");
   PRINT(secs_wait);
   
-  MT::String file_ors;
-  MT::getParameter(file_ors, "file_ors");
+  mlr::String file_ors;
+  mlr::getParameter(file_ors, "file_ors");
   PRINT(file_ors);
   
   
-  MT::String file_reward;
-  MT::getParameter(file_reward, "file_reward");
+  mlr::String file_reward;
+  mlr::getParameter(file_reward, "file_reward");
   PRINT(file_reward);
   
-  MT::String languageFile_name;
-  MT::getParameter(languageFile_name, "file_language");
+  mlr::String languageFile_name;
+  mlr::getParameter(languageFile_name, "file_language");
   PRINT(languageFile_name);
   
   bool take_movie;
-  MT::getParameter(take_movie, "movie", false);
+  mlr::getParameter(take_movie, "movie", false);
   if (take_movie) cout<<"We gonna take a movie of that!"<<endl;
   
   
@@ -211,7 +211,7 @@ void showMovie(const char* filename) {
   // -------------------------------------
   // INIT SIMULATOR
   // -------------------------------------
-  MT::String start_config_path;
+  mlr::String start_config_path;
   start_config_path = file_ors;
   initSimulator(start_config_path, take_movie);
   uintA objects;
@@ -238,15 +238,15 @@ void showMovie(const char* filename) {
   // MESSAGES
   // -------------------------------------
 
-  MT::Array< MT::String > messages;
-//   messages.append(MT::String("Direct explore\ngrab(66) (yellow)"));
-//   messages.append(MT::String("Direct explore\nputon(67) (red)"));
-//   messages.append(MT::String("Exploit\ngrab(65) (green)"));
-//   messages.append(MT::String("Exploit\nputon(66) (yellow)"));
-//   messages.append(MT::String("Exploit\ngrab(65) (green)"));
-//   messages.append(MT::String("Exploit\nputon(67) (red)"));
-//   messages.append(MT::String("Exploit\ngrab(66) (yellow)"));
-//   messages.append(MT::String("Exploit\nputon(65) (green)"));
+  mlr::Array< mlr::String > messages;
+//   messages.append(mlr::String("Direct explore\ngrab(66) (yellow)"));
+//   messages.append(mlr::String("Direct explore\nputon(67) (red)"));
+//   messages.append(mlr::String("Exploit\ngrab(65) (green)"));
+//   messages.append(mlr::String("Exploit\nputon(66) (yellow)"));
+//   messages.append(mlr::String("Exploit\ngrab(65) (green)"));
+//   messages.append(mlr::String("Exploit\nputon(67) (red)"));
+//   messages.append(mlr::String("Exploit\ngrab(66) (yellow)"));
+//   messages.append(mlr::String("Exploit\nputon(65) (green)"));
 
   
   // -------------------------------------
@@ -262,14 +262,14 @@ void showMovie(const char* filename) {
   ifstream in(filename);
   PRINT(filename);
   AtomL actions;
-  while (MT::skip(in) != -1) {
-    MT::String line;
+  while (mlr::skip(in) != -1) {
+    mlr::String line;
     in >> line;
     actions.append(TL::logicObjectManager::getAtom(line));
   }
   cout<<"MOVIE will show:  "<<actions<<endl;
   
-  #ifdef MT_FREEGLUT
+  #ifdef MLR_FREEGLUT
   if (watch) {
     cerr<<"Wait..."<<flush;
     sim.watch();
@@ -283,7 +283,7 @@ void showMovie(const char* filename) {
       TL::RobotManipulationDomain::performAction(actions(i), &sim, 10, messages(i));
     else
       TL::RobotManipulationDomain::performAction(actions(i), &sim, 10);
-    #ifdef MT_FREEGLUT
+    #ifdef MLR_FREEGLUT
     if (watch) {
             cerr<<"Wait..."<<flush;
             sim.watch();
@@ -327,13 +327,13 @@ void experiment_exploration() {
   // READ CONFIG
   // -------------------------------------
   uint randSeed;
-  MT::getParameter(randSeed, "randSeed");
+  mlr::getParameter(randSeed, "randSeed");
   rnd.seed(randSeed);
   PRINT_(randSeed);
 
  
   uint representation_uint;
-  MT::getParameter(representation_uint, "representation");
+  mlr::getParameter(representation_uint, "representation");
   PRINT_(representation_uint);
   TL::RuleExplorer::RepresentationType representation;
   switch(representation_uint) {
@@ -346,17 +346,17 @@ void experiment_exploration() {
   
   
   uint behavior_type;
-  MT::getParameter(behavior_type, "behavior_type");
+  mlr::getParameter(behavior_type, "behavior_type");
   PRINT_(behavior_type);
   
   bool use_known_state_partial;
-  MT::getParameter(use_known_state_partial, "use_known_state_partial");
+  mlr::getParameter(use_known_state_partial, "use_known_state_partial");
   PRINT_(use_known_state_partial);
   
   
   TL::RuleExplorer::DensityEstimationType density_estimation_type;
   uint uint__density_estimation_type;
-  MT::getParameter(uint__density_estimation_type, "density_estimation_type");
+  mlr::getParameter(uint__density_estimation_type, "density_estimation_type");
   if (uint__density_estimation_type == 0)
     density_estimation_type = TL::RuleExplorer::density_simple;
   else if (uint__density_estimation_type == 1)
@@ -367,48 +367,48 @@ void experiment_exploration() {
  
   
   uint PRADA_horizon;
-  MT::getParameter(PRADA_horizon, "PRADA_horizon");
+  mlr::getParameter(PRADA_horizon, "PRADA_horizon");
   PRINT_(PRADA_horizon);
   
   uint PRADA_num_samples;
-  MT::getParameter(PRADA_num_samples, "PRADA_num_samples");
+  mlr::getParameter(PRADA_num_samples, "PRADA_num_samples");
   PRINT_(PRADA_num_samples);
   
   double PRADA_noise_softener;
-  MT::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
+  mlr::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
   PRINT_(PRADA_noise_softener);
   
   double PRADA_threshold_reward_achieved;
-  MT::getParameter(PRADA_threshold_reward_achieved, "PRADA_threshold_reward_achieved");
+  mlr::getParameter(PRADA_threshold_reward_achieved, "PRADA_threshold_reward_achieved");
   PRINT_(PRADA_threshold_reward_achieved);
   
   double discountFactor;
-  MT::getParameter(discountFactor, "discountFactor");
+  mlr::getParameter(discountFactor, "discountFactor");
   PRINT_(discountFactor);
   
     
   double rule_learning__alpha_coeff__abstract;
-  MT::getParameter(rule_learning__alpha_coeff__abstract, "abstract__complexity_penalty_coeff");
+  mlr::getParameter(rule_learning__alpha_coeff__abstract, "abstract__complexity_penalty_coeff");
   PRINT_(rule_learning__alpha_coeff__abstract);
   
   double abstract__p_lower_bound__noise_outcome;
-  MT::getParameter(abstract__p_lower_bound__noise_outcome, "abstract__p_lower_bound__noise_outcome");
+  mlr::getParameter(abstract__p_lower_bound__noise_outcome, "abstract__p_lower_bound__noise_outcome");
   PRINT_(abstract__p_lower_bound__noise_outcome);
   
   double abstract__p_lower_bound__noise_outcome_in_default_rule;
-  MT::getParameter(abstract__p_lower_bound__noise_outcome_in_default_rule, "abstract__p_lower_bound__noise_outcome_in_default_rule");
+  mlr::getParameter(abstract__p_lower_bound__noise_outcome_in_default_rule, "abstract__p_lower_bound__noise_outcome_in_default_rule");
   PRINT_(abstract__p_lower_bound__noise_outcome_in_default_rule);
   
   double rule_learning__alpha_coeff__factored;
-  MT::getParameter(rule_learning__alpha_coeff__factored, "factored__complexity_penalty_coeff");
+  mlr::getParameter(rule_learning__alpha_coeff__factored, "factored__complexity_penalty_coeff");
   PRINT_(rule_learning__alpha_coeff__factored);
   
   double factored__p_lower_bound__noise_outcome;
-  MT::getParameter(factored__p_lower_bound__noise_outcome, "factored__p_lower_bound__noise_outcome");
+  mlr::getParameter(factored__p_lower_bound__noise_outcome, "factored__p_lower_bound__noise_outcome");
   PRINT_(factored__p_lower_bound__noise_outcome);
   
   double factored__p_lower_bound__noise_outcome_in_default_rule;
-  MT::getParameter(factored__p_lower_bound__noise_outcome_in_default_rule, "factored__p_lower_bound__noise_outcome_in_default_rule");
+  mlr::getParameter(factored__p_lower_bound__noise_outcome_in_default_rule, "factored__p_lower_bound__noise_outcome_in_default_rule");
   PRINT_(factored__p_lower_bound__noise_outcome_in_default_rule);
 
   double rule_learning__alpha_coeff, p_lower_bound__noise_outcome, p_lower_bound__noise_outcome_in_default_rule;
@@ -435,63 +435,63 @@ void experiment_exploration() {
   
   
   bool watch;
-  MT::getParameter(watch, "watch");
+  mlr::getParameter(watch, "watch");
   PRINT_(watch);
   
   uint num_trials;
-  MT::getParameter(num_trials, "num_trials");
+  mlr::getParameter(num_trials, "num_trials");
   PRINT_(num_trials);
   
   int experience_id;
-  MT::getParameter(experience_id, "experience_id");
+  mlr::getParameter(experience_id, "experience_id");
   PRINT_(experience_id);
   
   uint num_rounds;
-  MT::getParameter(num_rounds, "num_rounds");
+  mlr::getParameter(num_rounds, "num_rounds");
   PRINT_(num_rounds);
   
   uint max_actions;
-  MT::getParameter(max_actions, "max_actions");
+  mlr::getParameter(max_actions, "max_actions");
   PRINT_(max_actions);
   
   uint secs_wait;
-  MT::getParameter(secs_wait, "secs_wait");
+  mlr::getParameter(secs_wait, "secs_wait");
   PRINT_(secs_wait);
   
-  MT::String languageFile_name;
-  MT::getParameter(languageFile_name, "file_language");
+  mlr::String languageFile_name;
+  mlr::getParameter(languageFile_name, "file_language");
   PRINT_(languageFile_name);
   
-  MT::String filename_results;
-  MT::getParameter(filename_results, "file_results");
+  mlr::String filename_results;
+  mlr::getParameter(filename_results, "file_results");
   PRINT_(filename_results);
   
    
     
   bool take_movie;
-  MT::getParameter(take_movie, "movie", false);
+  mlr::getParameter(take_movie, "movie", false);
   if (take_movie) cout<<"We gonna take a movie of that!"<<endl;
   
   bool fixed_contexts;
-  MT::getParameter(fixed_contexts, "fixed_contexts", false);
+  mlr::getParameter(fixed_contexts, "fixed_contexts", false);
   PRINT(fixed_contexts);
   
   
   
   
   bool do_rounds_with_same_file;
-  MT::getParameter(do_rounds_with_same_file, "do_rounds_with_same_file");
+  mlr::getParameter(do_rounds_with_same_file, "do_rounds_with_same_file");
   PRINT_(do_rounds_with_same_file);
   
-  MT::String file_ors;
-  MT::String file_reward;
+  mlr::String file_ors;
+  mlr::String file_reward;
   
-  MT::Array< MT::String > files_ors;
-  MT::String file_ors_1, file_ors_2, file_ors_3, file_ors_4, file_ors_5,
+  mlr::Array< mlr::String > files_ors;
+  mlr::String file_ors_1, file_ors_2, file_ors_3, file_ors_4, file_ors_5,
              file_ors_6, file_ors_7, file_ors_8, file_ors_9, file_ors_10;
 
-  MT::Array< MT::String > files_reward;
-  MT::String file_reward_1, file_reward_2, file_reward_3, file_reward_4, file_reward_5,
+  mlr::Array< mlr::String > files_reward;
+  mlr::String file_reward_1, file_reward_2, file_reward_3, file_reward_4, file_reward_5,
              file_reward_6, file_reward_7, file_reward_8, file_reward_9, file_reward_10;
              
   arr p_lower_bound__noise_outcomeA;
@@ -506,91 +506,91 @@ void experiment_exploration() {
          
   
   if (do_rounds_with_same_file) {
-    MT::getParameter(file_ors, "file_ors");
+    mlr::getParameter(file_ors, "file_ors");
     PRINT_(file_ors);
   
-    MT::getParameter(file_reward, "file_reward");
+    mlr::getParameter(file_reward, "file_reward");
     PRINT_(file_reward);
   }
   else {
-    MT::getParameter(file_ors_1, "file_ors_1");
+    mlr::getParameter(file_ors_1, "file_ors_1");
     PRINT_(file_ors_1);
     files_ors.append(file_ors_1);
   
-    MT::getParameter(file_ors_2, "file_ors_2");
+    mlr::getParameter(file_ors_2, "file_ors_2");
     PRINT_(file_ors_2);
     files_ors.append(file_ors_2);
   
-    MT::getParameter(file_ors_3, "file_ors_3");
+    mlr::getParameter(file_ors_3, "file_ors_3");
     PRINT_(file_ors_3);
     files_ors.append(file_ors_3);
   
-    MT::getParameter(file_ors_4, "file_ors_4");
+    mlr::getParameter(file_ors_4, "file_ors_4");
     PRINT_(file_ors_4);
     files_ors.append(file_ors_4);
   
-    MT::getParameter(file_ors_5, "file_ors_5");
+    mlr::getParameter(file_ors_5, "file_ors_5");
     PRINT_(file_ors_5);
     files_ors.append(file_ors_5);
   
-    MT::getParameter(file_ors_6, "file_ors_6");
+    mlr::getParameter(file_ors_6, "file_ors_6");
     PRINT_(file_ors_6);
     files_ors.append(file_ors_6);
   
-    MT::getParameter(file_ors_7, "file_ors_7");
+    mlr::getParameter(file_ors_7, "file_ors_7");
     PRINT_(file_ors_7);
     files_ors.append(file_ors_7);
   
-    MT::getParameter(file_ors_8, "file_ors_8");
+    mlr::getParameter(file_ors_8, "file_ors_8");
     PRINT_(file_ors_8);
     files_ors.append(file_ors_8);
   
-    MT::getParameter(file_ors_9, "file_ors_9");
+    mlr::getParameter(file_ors_9, "file_ors_9");
     PRINT_(file_ors_9);
     files_ors.append(file_ors_9);
   
-    MT::getParameter(file_ors_10, "file_ors_10");
+    mlr::getParameter(file_ors_10, "file_ors_10");
     PRINT_(file_ors_10);
     files_ors.append(file_ors_10);
     
     
-    MT::getParameter(file_reward_1, "file_reward_1");
+    mlr::getParameter(file_reward_1, "file_reward_1");
     PRINT_(file_reward_1);
     files_reward.append(file_reward_1);
   
-    MT::getParameter(file_reward_2, "file_reward_2");
+    mlr::getParameter(file_reward_2, "file_reward_2");
     PRINT_(file_reward_2);
     files_reward.append(file_reward_2);
   
-    MT::getParameter(file_reward_3, "file_reward_3");
+    mlr::getParameter(file_reward_3, "file_reward_3");
     PRINT_(file_reward_3);
     files_reward.append(file_reward_3);
   
-    MT::getParameter(file_reward_4, "file_reward_4");
+    mlr::getParameter(file_reward_4, "file_reward_4");
     PRINT_(file_reward_4);
     files_reward.append(file_reward_4);
   
-    MT::getParameter(file_reward_5, "file_reward_5");
+    mlr::getParameter(file_reward_5, "file_reward_5");
     PRINT_(file_reward_5);
     files_reward.append(file_reward_5);
    
-    MT::getParameter(file_reward_6, "file_reward_6");
+    mlr::getParameter(file_reward_6, "file_reward_6");
     PRINT_(file_reward_6);
     files_reward.append(file_reward_6);
   
-    MT::getParameter(file_reward_7, "file_reward_7");
+    mlr::getParameter(file_reward_7, "file_reward_7");
     PRINT_(file_reward_7);
     files_reward.append(file_reward_7);
   
-    MT::getParameter(file_reward_8, "file_reward_8");
+    mlr::getParameter(file_reward_8, "file_reward_8");
     PRINT_(file_reward_8);
     files_reward.append(file_reward_8);
   
-    MT::getParameter(file_reward_9, "file_reward_9");
+    mlr::getParameter(file_reward_9, "file_reward_9");
     PRINT_(file_reward_9);
     files_reward.append(file_reward_9);
     
-    MT::getParameter(file_reward_10, "file_reward_10");
+    mlr::getParameter(file_reward_10, "file_reward_10");
     PRINT_(file_reward_10);
     files_reward.append(file_reward_10);
   
@@ -601,76 +601,76 @@ void experiment_exploration() {
       HALT("files_reward.N < num_rounds");
     
     
-    MT::getParameter(p_lower_bound__noise_outcome_1, "p_lower_bound__noise_outcome_1");
+    mlr::getParameter(p_lower_bound__noise_outcome_1, "p_lower_bound__noise_outcome_1");
     PRINT_(p_lower_bound__noise_outcome_1);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_1);
     
-    MT::getParameter(p_lower_bound__noise_outcome_2, "p_lower_bound__noise_outcome_2");
+    mlr::getParameter(p_lower_bound__noise_outcome_2, "p_lower_bound__noise_outcome_2");
     PRINT_(p_lower_bound__noise_outcome_2);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_2);
     
-    MT::getParameter(p_lower_bound__noise_outcome_3, "p_lower_bound__noise_outcome_3");
+    mlr::getParameter(p_lower_bound__noise_outcome_3, "p_lower_bound__noise_outcome_3");
     PRINT_(p_lower_bound__noise_outcome_3);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_3);
     
-    MT::getParameter(p_lower_bound__noise_outcome_4, "p_lower_bound__noise_outcome_4");
+    mlr::getParameter(p_lower_bound__noise_outcome_4, "p_lower_bound__noise_outcome_4");
     PRINT_(p_lower_bound__noise_outcome_4);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_4);
     
-    MT::getParameter(p_lower_bound__noise_outcome_5, "p_lower_bound__noise_outcome_5");
+    mlr::getParameter(p_lower_bound__noise_outcome_5, "p_lower_bound__noise_outcome_5");
     PRINT_(p_lower_bound__noise_outcome_5);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_5);
     
-    MT::getParameter(p_lower_bound__noise_outcome_6, "p_lower_bound__noise_outcome_6");
+    mlr::getParameter(p_lower_bound__noise_outcome_6, "p_lower_bound__noise_outcome_6");
     PRINT_(p_lower_bound__noise_outcome_6);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_6);
     
-    MT::getParameter(p_lower_bound__noise_outcome_7, "p_lower_bound__noise_outcome_7");
+    mlr::getParameter(p_lower_bound__noise_outcome_7, "p_lower_bound__noise_outcome_7");
     PRINT_(p_lower_bound__noise_outcome_7);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_7);
     
-    MT::getParameter(p_lower_bound__noise_outcome_8, "p_lower_bound__noise_outcome_8");
+    mlr::getParameter(p_lower_bound__noise_outcome_8, "p_lower_bound__noise_outcome_8");
     PRINT_(p_lower_bound__noise_outcome_8);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_8);
     
-    MT::getParameter(p_lower_bound__noise_outcome_9, "p_lower_bound__noise_outcome_9");
+    mlr::getParameter(p_lower_bound__noise_outcome_9, "p_lower_bound__noise_outcome_9");
     PRINT_(p_lower_bound__noise_outcome_9);
     p_lower_bound__noise_outcomeA.append(p_lower_bound__noise_outcome_9);
     
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_1, "p_lower_bound__noise_outcome_in_default_rule_1");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_1, "p_lower_bound__noise_outcome_in_default_rule_1");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_1);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_1);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_2, "p_lower_bound__noise_outcome_in_default_rule_2");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_2, "p_lower_bound__noise_outcome_in_default_rule_2");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_2);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_2);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_3, "p_lower_bound__noise_outcome_in_default_rule_3");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_3, "p_lower_bound__noise_outcome_in_default_rule_3");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_3);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_3);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_4, "p_lower_bound__noise_outcome_in_default_rule_4");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_4, "p_lower_bound__noise_outcome_in_default_rule_4");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_4);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_4);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_5, "p_lower_bound__noise_outcome_in_default_rule_5");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_5, "p_lower_bound__noise_outcome_in_default_rule_5");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_5);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_5);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_6, "p_lower_bound__noise_outcome_in_default_rule_6");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_6, "p_lower_bound__noise_outcome_in_default_rule_6");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_6);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_6);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_7, "p_lower_bound__noise_outcome_in_default_rule_7");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_7, "p_lower_bound__noise_outcome_in_default_rule_7");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_7);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_7);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_8, "p_lower_bound__noise_outcome_in_default_rule_8");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_8, "p_lower_bound__noise_outcome_in_default_rule_8");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_8);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_8);
     
-    MT::getParameter(p_lower_bound__noise_outcome_in_default_rule_9, "p_lower_bound__noise_outcome_in_default_rule_9");
+    mlr::getParameter(p_lower_bound__noise_outcome_in_default_rule_9, "p_lower_bound__noise_outcome_in_default_rule_9");
     PRINT_(p_lower_bound__noise_outcome_in_default_rule_9);
     p_lower_bound__noise_outcome_in_default_ruleA.append(p_lower_bound__noise_outcome_in_default_rule_9);
   }
@@ -697,7 +697,7 @@ void experiment_exploration() {
   
   
   bool STACK_EXPERIMENT = false;
-  if (TL::logicObjectManager::getFunction(MT::String("sum_height")) != NULL) {
+  if (TL::logicObjectManager::getFunction(mlr::String("sum_height")) != NULL) {
     STACK_EXPERIMENT = true;
   }
   
@@ -742,7 +742,7 @@ void experiment_exploration() {
     else
       NIY;
     if (experience_id >= 0) {
-      MT::String data_file;
+      mlr::String data_file;
       data_file << "experiences_" << experience_id << ".dat";
       cout<<"Reading experience file " << data_file << endl;
       ifstream in(data_file);
@@ -806,10 +806,10 @@ void experiment_exploration() {
         double* shape = sim.getSize(objects(i));
         sizes.append(shape[0]);
       }
-      MT::Array< MT::String > color_names;
+      mlr::Array< mlr::String > color_names;
       FOR1D(objects, i) {
         double* color = sim.getColor(objects(i));
-        MT::String color_name;
+        mlr::String color_name;
         interpret_color(color_name, color);
         color_names.append(color_name);
       }
@@ -841,7 +841,7 @@ void experiment_exploration() {
       if (lr != NULL) {
         TL::Literal* lr_better = NULL;
         // ON-Reward
-        if (lr->lit->atom->pred->id == TL::logicObjectManager::getPredicate(MT::String("on"))->id) {
+        if (lr->lit->atom->pred->id == TL::logicObjectManager::getPredicate(mlr::String("on"))->id) {
           if (balls.findValue(lr->lit->atom->args(1)) >= 0) {
             uintA better_args(2);
             better_args(0) = lr->lit->atom->args(0);
@@ -864,7 +864,7 @@ void experiment_exploration() {
             uintA args;
             TL::logicReasoning::calcTerms(llr->lits, args);
             for (i=0; i<llr->lits.N && !changed; i++) {
-              if (llr->lits(i)->atom->pred->id == TL::logicObjectManager::getPredicate(MT::String("on"))->id) {
+              if (llr->lits(i)->atom->pred->id == TL::logicObjectManager::getPredicate(mlr::String("on"))->id) {
                 if (balls.findValue(llr->lits(i)->atom->args(1)) >= 0) { // auf nem Ball
                   uint better_arg_1;
                   do {
@@ -902,15 +902,15 @@ void experiment_exploration() {
       
       
       bool BOX_CLEARANCE_EXPERIMENT = false;
-      if (TL::logicObjectManager::getFunction(MT::String("count_boxCleared")) != NULL  &&  reward->reward_type == TL::Reward::reward_maximize_function
+      if (TL::logicObjectManager::getFunction(mlr::String("count_boxCleared")) != NULL  &&  reward->reward_type == TL::Reward::reward_maximize_function
         &&  ((TL::MaximizeFunctionReward*) reward)->fa->f->name == "count_boxCleared"  ) {
         BOX_CLEARANCE_EXPERIMENT = true;
         max_actions = 100;
-        MT_MSG("SETTING max_actions = 100 FOR BOX_CLEARANCE_EXPERIMENT");
+        MLR_MSG("SETTING max_actions = 100 FOR BOX_CLEARANCE_EXPERIMENT");
       }
       
       // display objects and reward in GL [START]
-      MT::String message_reward;
+      mlr::String message_reward;
       message_reward<<"OBJECTS:"<<endl;
       FOR1D(objects, i) {
         message_reward<<objects(i)<<"  " <<objects_types(i)->name<<"   "<<color_names(i)<<endl;
@@ -980,10 +980,10 @@ void experiment_exploration() {
         // ++++++++++ Learn new rules ++++++++++
         if (t_state>0) {
 //           double t_start, t_finish;
-          t_start = MT::cpuTime();
+          t_start = mlr::cpuTime();
           cerr<<"Learning new rules..."<<endl;
           explorer->updateRules(false);  // potentially don't relearn!!
-          t_finish = MT::cpuTime();
+          t_finish = mlr::cpuTime();
           cout<<"Rule learning took " << (t_finish - t_start) << "s"<<endl;
           cerr<<"Rule learning took " << (t_finish - t_start) << "s"<<endl;
           if (explorer->is_major_experience.last()) {
@@ -1009,7 +1009,7 @@ void experiment_exploration() {
             cerr << " ---> No unique covering rule and thus default rule has to be used."<<endl;
           }
           // (2) Display in GL
-          MT::String message;
+          mlr::String message;
           message << "ACTION #" << (t_state-1) << ":    " << explorer->message << endl << endl;
           uint msg_time = 30;
           if (explorer->is_major_experience.last()) {
@@ -1041,7 +1041,7 @@ void experiment_exploration() {
           break;
         }
         else if (!reward->possible(*current_state)) {
-          MT_MSG("OH MY GOD!!!  Reward no more possible.");
+          MLR_MSG("OH MY GOD!!!  Reward no more possible.");
           cerr<<"OH MY GOD!!!  Reward no more possible."<<endl;
           cout<<"OH MY GOD!!!  Reward no more possible."<<endl;
           failed = true;
@@ -1077,7 +1077,7 @@ void experiment_exploration() {
         }
         
         if (t_state%1 == 0) {
-  //         MT::String data_file_name;
+  //         mlr::String data_file_name;
   //         data_file_name << "experiences_"<<a<<".dat";
   //         ofstream data_file(data_file_name);
   //         trial.write(data_file);
@@ -1125,10 +1125,10 @@ void experiment_exploration() {
         // -------------------------------
         // +++++++++ THE DECISION ++++++++++
         
-        t_start = MT::cpuTime();
+        t_start = mlr::cpuTime();
         cerr<<"Decision making..."<<endl;
         action = explorer->decideAction(*current_state, (TL::NID_Planner*) &planner, behavior_type, use_known_state_partial);
-        t_finish = MT::cpuTime();
+        t_finish = mlr::cpuTime();
         cout<<"Decision making took " << (t_finish - t_start) << "s"<<endl;
                                        
         executed_actions.append(action);
@@ -1175,17 +1175,17 @@ void experiment_exploration() {
         cout<<endl;  cerr<<endl;
         if (watch) {
           cerr<<"Wait..."<<flush;
-          #ifdef MT_FREEGLUT
+          #ifdef MLR_FREEGLUT
           sim.watch();
           #else
           std::cin.get();
           #endif
         }
         
-        MT::String message_prefix;
+        mlr::String message_prefix;
         message_prefix << "ACTION #" << t_state << ":    " << explorer->message << endl << endl;
         // Display old rule that predicts action [START]
-        MT::String message_old_rule;
+        mlr::String message_old_rule;
         message_old_rule << message_prefix << "Current rule for prediction:"<<endl <<endl;
         cout << "Current rule for prediction:"<<endl;
         TL::Rule* old_covering_rule = NULL;
@@ -1212,11 +1212,11 @@ void experiment_exploration() {
         // -------------------------------
         //  Executing the action
         cerr<<"Execute action... ";
-        t_start = MT::cpuTime();
+        t_start = mlr::cpuTime();
 //         explorer->message << "     (" << a << ")";
         TL::RobotManipulationDomain::performAction(action, &sim, 0, message_old_rule);
         sim.simulate(secs_wait, message_old_rule);
-        t_finish = MT::cpuTime();
+        t_finish = mlr::cpuTime();
         cerr<<"Action execution took " << (t_finish - t_start) << "s."<<endl;
         
         trial.actions.append(action);
@@ -1311,7 +1311,7 @@ void experiment_exploration() {
     delete explorer;
   }
   
-  sim.simulate(200, MT::String(""));
+  sim.simulate(200, mlr::String(""));
   
   fprintf(f_results, "# mean(num_actions)   =  %5.2f\n", ((1.0 * sum(num_actions)) / num_actions.N));
   fprintf(f_results, "# mean(num_successes) =  %5.2f\n", ((1.0 * sum(num_successes)) / num_successes.N));
@@ -1332,13 +1332,13 @@ void experiment_exploration() {
 
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   cout.precision(3);
   cerr.precision(3);
-  MT::String config_file("config");
-//   MT::String config_file("config_exp4");
+  mlr::String config_file("config");
+//   mlr::String config_file("config_exp4");
   cout << "Config-file: " << config_file << endl;
-  MT::openConfigFile(config_file);
+  mlr::openConfigFile(config_file);
   
 // 	showMovie("film_aktionen.dat");
 //   showMovie("film_aktionen_ICML_exp3.dat");

@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_TONY
+#ifdef MLR_TONY
 
 #include <tony_mdp/mdp.h>
 #include <Core/array.h>

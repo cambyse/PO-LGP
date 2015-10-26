@@ -28,17 +28,21 @@ void MinEigModel::setWeightsToZero(){
 }
 
 void MinEigModel::addStatistics(const uintA& points, bool minus){
+  arr wXi, wXiXi;
   for(uint i:points){
     double w=weights(i);
     if(!w) continue;
+    const arr& Xi=data.X[i];
+    wXi=Xi;  wXi*=w;
+    outerProduct(wXiXi, wXi, Xi);
     if(!minus){
       stat_n += w;
-      stat_x += w*data.X[i];
-      stat_xx += w*(data.X[i]^data.X[i]);
+      stat_x += wXi;
+      stat_xx += wXiXi;
     }else{
       stat_n -= w;
-      stat_x -= w*data.X[i];
-      stat_xx -= w*(data.X[i]^data.X[i]);
+      stat_x -= wXi;
+      stat_xx -= wXiXi;
     }
   }
 }
@@ -68,9 +72,12 @@ void MinEigModel::expand(uint steps){
 void MinEigModel::reweightWithError(uintA& pts, double margin){
   addStatistics(pts, true);
   if(margin<0.) margin = ::sqrt(eig.lambda_lo);
+  arr Xi;
   for(uint j=pts.N;j--;){
     uint i=pts(j);
-    double coeff = -.1 * MT::sqr(scalarProduct(data.X[i]-mean, eig.x_lo)/margin);
+    Xi = data.X[i];
+    Xi -= mean;
+    double coeff = -.1 * mlr::sqr(scalarProduct(Xi, eig.x_lo)/margin);
     weights(i) = ::exp(coeff);
     if(coeff<-5. || weights(i)<.1){
       pts.remove(j);
@@ -87,9 +94,19 @@ void MinEigModel::computeConvexHull(){
   convexHull.makeConvexHull();
 }
 
+double MinEigModel::coveredData(bool novelDataOnly){
+  double coveredData=0.;
+  if(!novelDataOnly)
+    for(uint i:pts) coveredData += weights(i)*data.costs(i);
+  else
+    for(uint i:pts) coveredData += weights(i)*data.costs(i)*(1.-data.weights(i));
+  return coveredData;
+}
+
 void MinEigModel::calcDensity(){
   computeConvexHull();
-  density = stat_n * MT::sqr(mean(2)) / convexHull.getArea();
+//  density = stat_n * mlr::sqr(mean(2)) / convexHull.getArea();
+  density = coveredData() / convexHull.getArea();
 }
 
 void MinEigModel::glDraw(){
@@ -119,7 +136,7 @@ void MinEigModel::report(ostream& os, bool mini){
     os <<"  #pts=" <<pts.N <<" #fringe=" <<fringe.N <<endl;
     os <<"  STATS: n=" <<stat_n <<" <x>=" <<stat_x/stat_n /*<<" <xx>=" <<stat_xx/stat_n*/ <<endl;
     os <<"  EIG: lambda_lo=" <<eig.lambda_lo <<" x_lo=" <<eig.x_lo <<endl;
-    os <<"  QUALITY: density=" <<density <<" area=" <<convexHull.getArea() <<endl;
+    os <<"  QUALITY: density=" <<density <<" coveredData=" <<coveredData() <<" area=" <<convexHull.getArea() <<endl;
   }
 }
 

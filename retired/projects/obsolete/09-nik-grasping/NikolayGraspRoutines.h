@@ -49,9 +49,9 @@ void PlanGrasp(OrsSocImplementation & soci){
     //BayesianKinematicMotionPlanning(soci,q,30,.7,.001,1);
   soc::AICO aico;
  
-  double eps=MT::getParameter<double>("eps");
-  double rate=MT::getParameter<double>("rate");
-  uint K=MT::getParameter<uint>("K");
+  double eps=mlr::getParameter<double>("eps");
+  double rate=mlr::getParameter<double>("rate");
+  uint K=mlr::getParameter<uint>("K");
   
   for(uint k=0;k<K;k++){
     //col->setPrecisionTrajectoryConstant(T,k*colPrec);
@@ -81,10 +81,10 @@ void SetRelTarget(OrsSocImplementation & soci){
   ControlVariable *p3  = soci.s->vars(4);
       
   double midPrec,endPrec,balPrec,colPrec;
-  MT::getParameter(midPrec,"midPrec");
-  MT::getParameter(endPrec,"endPrec");
-  MT::getParameter(balPrec,"balPrec");
-  MT::getParameter(colPrec,"colPrec");
+  mlr::getParameter(midPrec,"midPrec");
+  mlr::getParameter(endPrec,"endPrec");
+  mlr::getParameter(balPrec,"balPrec");
+  mlr::getParameter(colPrec,"colPrec");
    
   p1->x_target = target;
   p2->x_target = target;
@@ -92,7 +92,7 @@ void SetRelTarget(OrsSocImplementation & soci){
   CV_x->x_target = target;
   
   CV_x->setInterpolatedTargetTrajectory(T);
-  CV_x->setPrecisionTrajectoryFinal(T,midPrec,MT::getParameter<double>("palmPrec"));
+  CV_x->setPrecisionTrajectoryFinal(T,midPrec,mlr::getParameter<double>("palmPrec"));
   CV_x->setPrecisionVTrajectoryConstant(T,0.);
 
   p1->setInterpolatedTargetTrajectory(T);
@@ -114,7 +114,7 @@ void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterf
   uint T=300;
   arr W;
   W <<"[.1 .1 .2 .2 1 1 5    1 1 1 1 1 1 1 1 1]";
-  if(!MT::getParameter<bool>("dynamic")){
+  if(!mlr::getParameter<bool>("dynamic")){
     soci.initKinematic(&ors,&swift,&gl,T,&W);
   }else{
     soci.initPseudoDynamic(&ors,&swift,&gl,2.,T,&W);
@@ -170,17 +170,17 @@ void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterf
 
   //set precisions
   double midPrec,endPrec;
-  MT::getParameter(midPrec,"reachPlanMidPrec");
-  MT::getParameter(endPrec,"reachPlanEndPrec");
-  CV_x  ->setInterpolatedTargetsEndPrecisions(T,midPrec,MT::getParameter<double>("reachPlanPalmPrec"),0.,0.);
+  mlr::getParameter(midPrec,"reachPlanMidPrec");
+  mlr::getParameter(endPrec,"reachPlanEndPrec");
+  CV_x  ->setInterpolatedTargetsEndPrecisions(T,midPrec,mlr::getParameter<double>("reachPlanPalmPrec"),0.,0.);
   CV_up ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
   CV_f1 ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
   CV_f2 ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
   CV_f3 ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
   CV_z1 ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
   CV_z2 ->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
-  CV_col->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
-  CV_lim->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
+  CV_col->setInterpolatedTargetsConstPrecisions(T,mlr::getParameter<double>("reachPlanColPrec"),0.);
+  CV_lim->setInterpolatedTargetsConstPrecisions(T,mlr::getParameter<double>("reachPlanLimPrec"),0.);
 
   //for(int i = soci.s->vars.N-2; i < soci.s->vars.N-1; i++)
   //  for(int t = 0; t < T; t++)
@@ -198,11 +198,11 @@ void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterf
 }
 
 void PlanGraspM( ors::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
-  uint nTry=MT::getParameter<uint>("nTry");
-  uint nStartTry=MT::getParameter<uint>("nStartTry");
-  double eps=MT::getParameter<double>("reachPlanEps");
-  double rate=MT::getParameter<double>("reachPlanRate");
-  uint K=MT::getParameter<uint>("reachPlanK");
+  uint nTry=mlr::getParameter<uint>("nTry");
+  uint nStartTry=mlr::getParameter<uint>("nStartTry");
+  double eps=mlr::getParameter<double>("reachPlanEps");
+  double rate=mlr::getParameter<double>("reachPlanRate");
+  uint K=mlr::getParameter<uint>("reachPlanK");
   ofstream f1(String("graspcost.txt") + nShape);
   ors::Body * target =  ors.getName("target");
   ors::Vector orig = target->X.p;

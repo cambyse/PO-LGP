@@ -23,7 +23,7 @@ std::pair<arr,arr> generateRandomData(uint n=10, double sig=.03){
       b2 = rnd.uni(-2.,2.);
     }
   };
-  MT::Array<RndPlane> planes(n);
+  mlr::Array<RndPlane> planes(n);
   arr X = grid({-1.,-1.}, {1.,1.}, {height,width});
   arr Y(X.d0);
   for(uint i=0;i<Y.N;i++){
@@ -43,8 +43,8 @@ std::pair<arr,arr> generateRandomData(uint n=10, double sig=.03){
 }
 
 struct Cell;
-typedef MT::Array<Cell> CellA;
-typedef MT::Array<Cell*> CellL;
+typedef mlr::Array<Cell> CellA;
+typedef mlr::Array<Cell*> CellL;
 
 struct Cell{
   uint id;
@@ -83,8 +83,8 @@ struct Cell{
     for(Cell *n:neighbors) if(n){
       if(n->s!=s) cuts++;
     }
-//    return MT::sqr(scalarProduct(s->beta,phi));// + lambda*cuts;
-    return MT::sqr(f() - phi.last());// + lambda*cuts;
+//    return mlr::sqr(scalarProduct(s->beta,phi));// + lambda*cuts;
+    return mlr::sqr(f() - phi.last());// + lambda*cuts;
   }
   double f(){
     if(!s->beta.N) return 0.;
@@ -112,8 +112,8 @@ struct Cell{
     }
 
     double deltaE=0.;
-    deltaE += MT::sqr(scalarProduct(phi-s_new->s->X_mean/s_new->s->X_n, s_new->s->beta)); //adding the cell to the new segment
-    deltaE -= MT::sqr(scalarProduct(phi-this ->s->X_mean/this ->s->X_n, this ->s->beta)); //removing the cell from the old segment
+    deltaE += mlr::sqr(scalarProduct(phi-s_new->s->X_mean/s_new->s->X_n, s_new->s->beta)); //adding the cell to the new segment
+    deltaE -= mlr::sqr(scalarProduct(phi-this ->s->X_mean/this ->s->X_n, this ->s->beta)); //removing the cell from the old segment
     deltaE += lambda * (cuts_new - cuts_old);
     return deltaE;
   }
@@ -247,8 +247,8 @@ void planes(){
       plotFunction(x.reshape(x.N));
       plot(false);
     }
-    MT::wait(1.5);
-//    MT::wait();
+    mlr::wait(1.5);
+//    mlr::wait();
 
     for(uint i=0;i<cells.N;i++) if(!((i+k)%3)) cells.elem(i).step_decide(k);
 //    for(uint i=0;i<cells.N;i++) cells.elem(i).step_decide(k);

@@ -1,7 +1,6 @@
 #include <Core/util.h>
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <Core/array-vector.h>
 
 #include <set>
 #include <list>
@@ -133,7 +132,7 @@ struct Tracker{
             new_marker.scale.y = .001;
             new_marker.id = cluster_it->id;
             new_marker.lifetime = ros::Duration(0.5);
-            new_marker.header.stamp = ros::Time::now();
+            new_marker.header.stamp = ros::Time(0.);
             new_marker.header.frame_id = cluster_it->frame_id;
 
             new_marker.color.a = 1.0; // Don't forget to set the alpha!
@@ -155,7 +154,7 @@ struct Tracker{
 
 
 void doit(){
-    ros::init(MT::argc, MT::argv, "cluster_tracker", ros::init_options::NoSigintHandler);
+    ros::init(mlr::argc, mlr::argv, "cluster_tracker", ros::init_options::NoSigintHandler);
 
     Tracker tracker;
 
@@ -169,7 +168,7 @@ void doit(){
 
 
 int main(int argc, char** argv){
-    MT::initCmdLine(argc, argv);
+    mlr::initCmdLine(argc, argv);
     doit();
     return 0;
 }

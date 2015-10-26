@@ -20,8 +20,8 @@
  * @ingroup group_soc
  */
 
-#ifndef MT_soc_inverseKinematics_h
-#define MT_soc_inverseKinematics_h
+#ifndef MLR_soc_inverseKinematics_h
+#define MLR_soc_inverseKinematics_h
 
 #include "soc.h"
 

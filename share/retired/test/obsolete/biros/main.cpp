@@ -1,6 +1,6 @@
 #include <System/biros.h>
 #include <Core/util.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 
 //===========================================================================
 //
@@ -23,7 +23,7 @@ struct TestThread:public Process{
 
   void open (){ cout <<name <<" is opening,  x=" <<x <<endl; }
   void close(){ cout <<name <<" is closing,  x=" <<x <<endl; }
-  void step (){ if(sec) MT::wait(sec); x++; cout <<name <<" has stepped, x=" <<x <<endl; }
+  void step (){ if(sec) mlr::wait(sec); x++; cout <<name <<" has stepped, x=" <<x <<endl; }
 };
 
 
@@ -58,7 +58,7 @@ void TEST(Loop){
   D.threadClose();
   E.threadClose();
 
-  MT::wait();
+  mlr::wait();
 
 //   win.threadClose();
 }
@@ -111,7 +111,7 @@ void TEST(Listening){
   a3.listenTo(LIST<Variable>(i2));
   
   // run for 20 sec and close everything
-  MT::wait(20.);
+  mlr::wait(20.);
   
   a1.threadClose();
   a2.threadClose();
@@ -155,9 +155,9 @@ struct Maxxer:public Process{
 };
 
 void TEST(MultiAccess){
-  uint n=MT::getParameter<uint>("n",100);
-  MT::Array<ExampleVar> vars(n);
-  MT::Array<Maxxer> procs(2*n);
+  uint n=mlr::getParameter<uint>("n",100);
+  mlr::Array<ExampleVar> vars(n);
+  mlr::Array<Maxxer> procs(2*n);
   //Fl::lock();
   // ThreadInfoWin win;
   // win.threadLoopWithBeat(.1);
@@ -168,7 +168,7 @@ void TEST(MultiAccess){
   }
 
   for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.001,.01));
-  MT::wait(1.);
+  mlr::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
@@ -182,9 +182,9 @@ void TEST(MultiAccess){
 //
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  uint mode = MT::getParameter("mode",1);
+  uint mode = mlr::getParameter("mode",1);
   switch(mode){
   case 0: testLoop(); break;
   case 1: testListening(); break;

@@ -22,10 +22,10 @@ struct sGaussianProcessAL {
   sGaussianProcessAL() {};
 };
 
-class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
+class GaussianProcessEvaluator : public Evaluator<mlr::Array<arr> > {
   public:
     GaussianProcess& gp ;
-    double evaluate(MT::Array<arr>& sample);
+    double evaluate(mlr::Array<arr>& sample);
     GaussianProcessEvaluator(GaussianProcess& gp, const ActiveLearningProblem& prb): gp(gp), problem(prb) {};
     const ActiveLearningProblem problem;
 };
@@ -56,7 +56,7 @@ class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
   //}
 double cummulativeApproxVariance(const ActiveLearningProblem &problem, GaussianProcess& gp) {
   double cum_sig = 0;
-  MT::Array<arr> sample;
+  mlr::Array<arr> sample;
   std::ifstream samples("samples.data");
   for(int i=0; i<100; ++i) {
     samples >> sample;
@@ -72,11 +72,11 @@ double cummulativeApproxVariance(const ActiveLearningProblem &problem, GaussianP
 }
 
 
-double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
-  if (MT::getParameter<bool>("random_al", false)) {
+double GaussianProcessEvaluator::evaluate(mlr::Array<arr>& sample) {
+  if (mlr::getParameter<bool>("random_al", false)) {
     return rand();
   }
-  else if (MT::getParameter<bool>("cummulative", false)) {
+  else if (mlr::getParameter<bool>("cummulative", false)) {
     arr d, f;
     flatten(d, sample);
     problem.generator->makeFeatures(f, d);
@@ -129,7 +129,7 @@ GaussianProcessAL::GaussianProcessAL(ActiveLearningProblem& prob) :
   s->gp.setGaussKernelGP(s->p, 0);
 }
 
-void GaussianProcessAL::setTrainingsData(const MT::Array<arr>& data, const intA& classes) {
+void GaussianProcessAL::setTrainingsData(const mlr::Array<arr>& data, const intA& classes) {
   arr d, f;
   flatten(d, data);
   problem.generator->makeFeatures(f, d);
@@ -139,7 +139,7 @@ void GaussianProcessAL::setTrainingsData(const MT::Array<arr>& data, const intA&
   s->gp.recompute();
 }
 
-void GaussianProcessAL::addData(const MT::Array<arr>& data, const int class_) {
+void GaussianProcessAL::addData(const mlr::Array<arr>& data, const int class_) {
   arr d, f;
   flatten(d, data);
   problem.generator->makeFeatures(f, d);
@@ -160,7 +160,7 @@ void GaussianProcessAL::addData(const MT::Array<arr>& data, const int class_) {
 
 }
 
-int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
+int GaussianProcessAL::nextSample(mlr::Array<arr>& sample) const {
   rejectionSampling(sample, problem.sampler, new GaussianProcessEvaluator(s->gp, problem), 10000);
 	//arr d, f;
 	//flatten(d, sample);
@@ -179,7 +179,7 @@ int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
   return 1;
 }
 
-int GaussianProcessAL::classify(const MT::Array<arr>& data, const int set) const {
+int GaussianProcessAL::classify(const mlr::Array<arr>& data, const int set) const {
   double y, _unused;
   arr d, f;
   flatten(d, data);

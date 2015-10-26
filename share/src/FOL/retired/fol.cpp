@@ -26,7 +26,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
   }
 
   //-- initialize potential domains for each variable
-  MT::Array<NodeL> domainOf(vars.N);
+  mlr::Array<NodeL> domainOf(vars.N);
 //  constants.sort(NodeComp);
   for(Node *v:vars) domainOf(v->index) = domain;
 

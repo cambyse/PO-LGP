@@ -17,14 +17,14 @@
     -----------------------------------------------------------------  */
 
 
-#ifdef MT_CUDA
+#ifdef MLR_CUDA
 
 #include <stdio.h>
 #include <cuda.h>
 #include <assert.h>
 #include "vision_cuda.h"
 
-#define MT_PI 3.14159265358979323846
+#define MLR_PI 3.14159265358979323846
 
 #if CUDART_VERSION < 2020
 //#error "This CUDART version does not support mapped memory!\n"
@@ -58,7 +58,7 @@ __device__ void rgb2hsv(byte *hsv, byte *rgb){
 
 __device__ float hsvDiff(byte *hsv, float *hsvTargets){
   float dd=0.f, d;
-  //d = sin( (hsvTargets[0]-hsv[0])/255.f*MT_PI )/MT_PI*255.f/hsvTargets[3];  dd+=d*d;
+  //d = sin( (hsvTargets[0]-hsv[0])/255.f*MLR_PI )/MLR_PI*255.f/hsvTargets[3];  dd+=d*d;
   d = hsvTargets[0]-hsv[0];
   if(d<-128.f) d+=255.f;  if(d>128.f) d-=255.f; //measure hue distance circularly
   d /= hsvTargets[3];  dd+=d*d;
@@ -180,7 +180,7 @@ void earlyVision(CudaWorkspace WS, int N, int threads_per_block){
   cuda_error("cudaThreadSynchronize");
 }
 
-#else ///def MT_CUDA
+#else ///def MLR_CUDA
 /* This is an empty file.
 
    In case CUDA=1 is not set in Makefile, the linker will still want

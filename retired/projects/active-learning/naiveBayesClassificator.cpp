@@ -12,30 +12,30 @@
 #include <MT/gauss.h>
 class sNaiveBayesClassificator {
 public:
-  MT::Array<arr> features; 
+  mlr::Array<arr> features; 
   intA classes;
 
   uint8_t numOfClasses;
 
-  MT::Array<arr> means;
-  MT::Array<arr> variances;
+  mlr::Array<arr> means;
+  mlr::Array<arr> variances;
 
   double getPrior(const int feature, const arr& value, const int givenClass);
   double getClassProbability(const int _class);
 
   void computeMeansAndVariances(const int givenClass, const int feature);
 
-  void getProbabilities(arr& probabilities, const MT::Array<arr>& features);
+  void getProbabilities(arr& probabilities, const mlr::Array<arr>& features);
 
-  void rejectionSampling(MT::Array<arr>& sample, double& p, const int class1, const int class2);
+  void rejectionSampling(mlr::Array<arr>& sample, double& p, const int class1, const int class2);
   void gradientDescentSampling(arr& nextSample, double& p, const int class1, const int class2, const int feature) const;
 
   void findBestStartPoint(arr& startPoint, const int feature, const int class1, const int class2, const arr& pos1, const arr& pos2, double eps) const;
 
-  Sampler<MT::Array<arr> >* sampler;
+  Sampler<mlr::Array<arr> >* sampler;
 };
 
-NaiveBayesClassificator::NaiveBayesClassificator(Sampler<MT::Array<arr> >* sampler) {
+NaiveBayesClassificator::NaiveBayesClassificator(Sampler<mlr::Array<arr> >* sampler) {
   s = new sNaiveBayesClassificator;  
   s->sampler = sampler;
 }
@@ -44,15 +44,15 @@ NaiveBayesClassificator::~NaiveBayesClassificator() {
   delete s;  
 }
 
-int NaiveBayesClassificator::classify(const MT::Array<arr>& features, int set) const {
+int NaiveBayesClassificator::classify(const mlr::Array<arr>& features, int set) const {
   CHECK_EQ(features.d1 ,  s->features.d1, "Feature vector is of different size than trainings data.");
-  MT::Array<arr> _features = features[set];
+  mlr::Array<arr> _features = features[set];
   arr probabilities;
   s->getProbabilities(probabilities, _features);
   return probabilities.maxIndex();
 }
 
-void sNaiveBayesClassificator::getProbabilities(arr& probabilities, const MT::Array<arr>& feature) {
+void sNaiveBayesClassificator::getProbabilities(arr& probabilities, const mlr::Array<arr>& feature) {
   probabilities.resize(numOfClasses);
   for (uint8_t i = 0; i < numOfClasses; ++i) {
     probabilities(i) = 1; // normally this should be the class probability, but 
@@ -68,7 +68,7 @@ void sNaiveBayesClassificator::getProbabilities(arr& probabilities, const MT::Ar
   probabilities = probabilities * (1./(sum(probabilities)));
 }
 
-void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, const intA& classes) {
+void NaiveBayesClassificator::setTrainingsData(const mlr::Array<arr >& features, const intA& classes) {
   s->features = features;
   s->classes = classes;
 
@@ -87,7 +87,7 @@ void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, 
   }
 }
 
-void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int class_) {
+void NaiveBayesClassificator::addData(const mlr::Array<arr>& data, const int class_) {
   CHECK_EQ(data.d1 ,  s->features.d1, "The new feature vector does not match the number of features for data in this classificator");
   int d1 = s->features.d1;
   s->features.append(data);
@@ -109,14 +109,14 @@ double sNaiveBayesClassificator::getPrior(const int feature, const arr& value, c
 }
 
 void sNaiveBayesClassificator::computeMeansAndVariances(const int givenClass, const int feature) {
-  MT::Array<arr> featuresInClass;
+  mlr::Array<arr> featuresInClass;
   for (uint8_t d = 0; d < features.d0; ++d) {
     if (classes(d) == givenClass) {
       featuresInClass.append(features(d, feature));
     }
   }
 
-  MT::Array<double> mean;
+  mlr::Array<double> mean;
   mean.resizeAs(featuresInClass(0)); 
   for (uint i=0; i<featuresInClass.d0; ++i) mean += featuresInClass(i); 
   mean = mean * (1./featuresInClass.N);
@@ -170,13 +170,13 @@ void sNaiveBayesClassificator::findBestStartPoint(arr& startPoint, const int fea
   }
 }
  
-void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, double& p, const int class1, const int class2) {
+void sNaiveBayesClassificator::rejectionSampling(mlr::Array<arr>& nextSample, double& p, const int class1, const int class2) {
 
-  MT::Array<arr> testSample;
+  mlr::Array<arr> testSample;
   double eps = 0.001;
   double maxdens = 0;
 
-  MT::rnd.clockSeed();
+  mlr::rnd.clockSeed();
   for (uint i = 0; i < 10000; ++i) {
     sampler->sample(testSample);
     testSample.reshape(testSample.N);
@@ -261,15 +261,15 @@ void sNaiveBayesClassificator::gradientDescentSampling(arr& nextSample, double& 
   p = oldp;
 }
 
-int NaiveBayesClassificator::nextSample(MT::Array<arr> &sample) const {
+int NaiveBayesClassificator::nextSample(mlr::Array<arr> &sample) const {
   //for (uint f = 0; f < s->features.d1; ++f) {
     double pmax = 0;
-    MT::Array<arr> max;
+    mlr::Array<arr> max;
 
     for (uint c1 = 0; c1 < s->numOfClasses; ++c1) {
       for (uint c2 = 0; c2 < s->numOfClasses; ++c2) {
         if (c1 == c2) continue;
-        MT::Array<arr> next;
+        mlr::Array<arr> next;
         double p;
         //s->nextSample(next, p, c1, c2, f);
         s->rejectionSampling(next, p, c1, c2);

@@ -123,7 +123,7 @@ public slots:
 
   /*
     void gnuplot(){
-    MT::String cmd;
+    mlr::String cmd;
     cmd <<"plot '" <<sol.outfilename <<"' us 1:3";
     cout <<"gnuplot command: " <<cmd <<endl;
     ::gnuplot(cmd.p());

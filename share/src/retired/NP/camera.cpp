@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 #undef COUNT
 #include <opencv/highgui.h>
 #include <opencv/cv.h>
@@ -31,7 +31,7 @@
 
 
 struct sCameraModule{
-#ifdef MT_BUMBLE
+#ifdef MLR_BUMBLE
   np::Bumblebee2 *cam;
 #else
   void *cam;
@@ -39,7 +39,7 @@ struct sCameraModule{
 };
 
 
-#ifdef MT_BUMBLE
+#ifdef MLR_BUMBLE
 CameraModule::CameraModule():Process("BumblebeeProcess"){
   s = new sCameraModule;
 };
@@ -47,7 +47,7 @@ CameraModule::CameraModule():Process("BumblebeeProcess"){
 void CameraModule::open(){
   s->cam = new np::Bumblebee2();
   ifstream fil;
-  MT::open(fil,"../../configurations/camera.cfg");
+  mlr::open(fil,"../../configurations/camera.cfg");
   calib.read(fil);
   step();
 };
@@ -62,7 +62,7 @@ void CameraModule::step(){
     output->rgbR=tmpR;
     output->deAccess(this);
   }else{
-    MT_MSG("Warning: camera writes into /dev/null");
+    MLR_MSG("Warning: camera writes into /dev/null");
   }
 };
 
@@ -73,9 +73,9 @@ void CameraModule::close(){
 };
 #else
 CameraModule::CameraModule():Process("BumblebeeProcess"){}
-void CameraModule::open(){ MT_MSG("Warning: opening dummy Camera class"); }
+void CameraModule::open(){ MLR_MSG("Warning: opening dummy Camera class"); }
 void CameraModule::step(){ }
-void CameraModule::close(){ MT_MSG("Warning: closing dummy Camera class"); }
+void CameraModule::close(){ MLR_MSG("Warning: closing dummy Camera class"); }
 #endif
 
 //void np::create_distortion_maps_fov(
@@ -199,7 +199,7 @@ void CalibrationParameters::write(std::ostream& os) const{
 }
 
 void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
   CvMatDonor cvMatDonor;
   if(!map1L.N){
     map1L.resize(imgL.d0,imgL.d1);
@@ -223,7 +223,7 @@ void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
 }
 
 void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
   CvMatDonor cvMatDonor;
   cvPerspectiveTransform(CVMAT(stereo), CVMAT(world), CVMAT(Q));
 #else

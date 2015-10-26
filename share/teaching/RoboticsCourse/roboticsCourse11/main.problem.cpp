@@ -28,7 +28,7 @@ void generateData(){
   X.write(fil," ","\n"," \n");
   fil.close();
   gnuplot("plot 'data' us 0:1");
-  MT::wait();
+  mlr::wait();
 }
 
 int main(int argc, char** argv){

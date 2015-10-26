@@ -17,7 +17,7 @@
  *
  *  See ../../examples/pr2/generic_ros_sync/main.cpp for more.
  */
-#ifdef MT_ROS
+#ifdef MLR_ROS
 
 #define ROSSUB(topic_name, msg_type, var_name) \
   struct ROSSUB_##var_name : Module { \

@@ -17,4 +17,11 @@ void conv_PclCloud_ArrCloud(arr& kinect_points,
                             arr& kinect_pointColors,
                             const pcl::PointCloud<PointT>::Ptr& pcl_cloud);
 
+
+void clipGraphData(DataNeighbored& data,boolean-function);
+void maskImage
+void getPlaneAttachedClusters
+-> DataGraph
+
+
 #endif

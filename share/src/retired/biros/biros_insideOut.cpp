@@ -1,7 +1,7 @@
 #include <System/biros.h>
 #include <System/engine.h>
 
-#ifdef MT_GTK
+#ifdef MLR_GTK
 /**
  * @file
  * @ingroup group_biros
@@ -111,7 +111,7 @@ void sInsideOut::open(){
   ifstream is("ino.cfg");
   /*
 if(is.good()){
-    MT::String name,type, fld;
+    mlr::String name,type, fld;
     uint _b;
     ViewRegistration *vi;
     Variable *v;
@@ -197,7 +197,7 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
   iog->update(true);
   cout <<"GUI: save" <<endl;
   ofstream os;
-  MT::open(os,"ino.cfg");
+  mlr::open(os,"ino.cfg");
   for(uint b=0;b<VIEWBOXES;b++) if(iog->view[b]){
     View *v=iog->view[b];
     os <<b <<' ' <<v->reg->keys(1);
@@ -273,7 +273,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 //      if(false && vis.N>1){ //multiple choices -> open menu
 //	ViewRegistration *vi;  uint i;
 //	StringL choices;
-//	for_list(Type,  vi,  vis) choices.append(new MT::String(vi->userType));
+//	for_list(Type,  vi,  vis) choices.append(new mlr::String(vi->userType));
 //	choice = gtkPopupMenuChoice(choices);
 //	listDelete(choices);
 //      }
@@ -301,7 +301,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 //      if(false && vis.N>1){ //multiple choices -> menu
 //	ViewRegistration *vi;  uint i;
 //	StringL choices;
-//	for_list(Type,  vi,  vis) choices.append(new MT::String(vi->userType));
+//	for_list(Type,  vi,  vis) choices.append(new mlr::String(vi->userType));
 //	choice = gtkPopupMenuChoice(choices);
 //	listDelete(choices);
 //      }
@@ -319,7 +319,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 
 GtkTreeIter appendToStore(GtkTreeStore *store, Node *it, uint id, GtkTreeIter* par){
   GtkTreeIter tit;
-  MT::String info;
+  mlr::String info;
   SystemDescription::ModuleEntry *m = it->value<SystemDescription::ModuleEntry>();
   if(!m) return tit;
   Process *p = m->mod->proc;
@@ -331,7 +331,7 @@ GtkTreeIter appendToStore(GtkTreeStore *store, Node *it, uint id, GtkTreeIter* p
 
 GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, uint id, GtkTreeIter* par){
   GtkTreeIter it;
-  MT::String info;
+  mlr::String info;
   writeInfo(info.clear(), *v, true);
   gtk_tree_store_append(store, &it, par);
   gtk_tree_store_set(store, &it, 0, id, 1, 'V', 2, v->name.p, 3, info.p, -1);
@@ -339,8 +339,8 @@ GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, uint id, GtkTreeIter
 }
 
 void setBoxView(View *v, GtkBuilder *builder, uint box){
-  if(!v){ MT_MSG("setting box view failed"); return; }
-  MT::String label;
+  if(!v){ MLR_MSG("setting box view failed"); return; }
+  mlr::String label;
   label <<" [" <<v->reg->keys(1) <<']';
   GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<box)));
   gtk_label_set_text(l, label.p);
@@ -367,7 +367,7 @@ notes:
 
  */
 
-#else //MT_GTK
+#else //MLR_GTK
 
 InsideOut::InsideOut(GtkWidget* container):View(){ NICO }
 InsideOut::~InsideOut(){}

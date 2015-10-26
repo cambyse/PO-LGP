@@ -65,7 +65,7 @@ void drawEnv(void*){
 
 void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift){
   C->setJointState(q);
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode){
     ode->exportStateToOde(*C);
     ode->step(.01);
@@ -77,7 +77,7 @@ void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *
   if(swift){
     swift->computeProxies(*C);
   }else{
-#ifdef MT_ODE
+#ifdef MLR_ODE
     if(ode) ode->importProxiesFromOde(*C);
 #endif
   }
@@ -109,7 +109,7 @@ ActionInterface::~ActionInterface(){
 void ActionInterface::shutdownAll(){
   if(C) delete C;          C=0;
   if(gl) delete gl;        gl=0;
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) delete ode;      ode=0;
 #endif
   if(swift) delete swift;  swift=0;
@@ -118,7 +118,7 @@ void ActionInterface::shutdownAll(){
 void ActionInterface::loadConfiguration(const char* ors_filename){
   
   char *path,*name,cwd[200];
-  MT::decomposeFilename(path,name,ors_filename);
+  mlr::decomposeFilename(path,name,ors_filename);
   getcwd(cwd,200);
   chdir(path);
 
@@ -179,13 +179,13 @@ void ActionInterface::watch(){
 
 void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp, double ode_coll_cfm, double ode_friction) {
   CHECK(C,"load a configuration first");
-#ifdef MT_ODE
+#ifdef MLR_ODE
   if(ode) delete ode;
   ode = new OdeModule;
 #endif
 
   // SIMULATOR PARAMETER
-#ifdef MT_ODE
+#ifdef MLR_ODE
   ode->coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
   ode->coll_ERP = ode_coll_erp;   //usually .2!! stiffness (time-scale of contact reaction) umso groesser, desto mehr Fehlerkorrektur; muss zwischen 0.1 und 0.5 sein (ungefaehr)
   ode->coll_CFM = ode_coll_cfm;  //softness // umso groesser, desto breiter, desto weicher, desto weniger Fehlerkorrektur; zwischen 10e-10 und 10e5

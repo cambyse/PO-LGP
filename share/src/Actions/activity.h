@@ -3,6 +3,7 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 
+//===========================================================================
 
 struct Activity {
   StringA symbols;     ///< the symbols that an abstract fact representing this activity should have
@@ -24,14 +25,11 @@ stdOutPipe(Activity)
 
 //===========================================================================
 
-typedef MT::Array<Activity*> ActivityL;
-
-/// global registry of activity classes/types (implementations)
-extern Singleton<Graph> activityRegistry;
+typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Node_typed<Type>(activityRegistry(), {key}, {}, new Type_typed<T,void>, true);
+  new Node_typed<Type>(registry(), {"Activity", key}, {}, new Type_typed<T,void>, true);
 }
 
 /// create/launch a new activity based on the fact
@@ -46,11 +44,12 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
 
   //-- add refs to specs for other symbols
   for(uint i=1;i<symbols.N;i++){
-    new Node_typed<MT::String>(act->params, {STRING("ref"<<i)}, {}, new MT::String(symbols(i)), true);
+    CHECK(!act->params[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
+    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i-1)}, {}, new mlr::String(symbols(i)), true);
   }
 
   act->createFactRepresentative(relationalState);
-  moduleSystem().getValue<Variable<ActivityL> >("A") -> set()->append(act);
+  registry().getValue<Variable<ActivityL> >("A") -> set()->append(act);
 }
 
 //===========================================================================
@@ -60,7 +59,6 @@ struct ActivitySpinnerModule : Module{
 
   ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
 
-  /// @name module implementations
   void open(){}
   void step(){
     A.readAccess();
@@ -70,3 +68,4 @@ struct ActivitySpinnerModule : Module{
   }
   void close(){}
 };
+

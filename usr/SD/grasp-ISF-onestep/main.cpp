@@ -16,7 +16,7 @@ void
 createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   createStandardRobotTaskVariables(sys);
   
-  MT::Array<ors::Shape*> tipsN, fingN;
+  mlr::Array<ors::Shape*> tipsN, fingN;
   ors::Shape *palm; // palm center wrt wrist body
 
   /* ------- Task Vars -------- */
@@ -48,7 +48,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
       *sys.ors, tipsN, *graspobj);
   /* position of the palm center marker */
-  MT::Array<ors::Shape*> palmL; palmL.append(palm);
+  mlr::Array<ors::Shape*> palmL; palmL.append(palm);
   TV_palm = new PotentialValuesTaskVariable("palm pos",
       *sys.ors, palmL, *graspobj);
   TV_palmAlignField = new PotentialFieldAlignTaskVariable("palm ori",
@@ -80,7 +80,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
 
 }
 
-#define SD_PAR_R(n)  MT::getParameter<double>((n));
+#define SD_PAR_R(n)  mlr::getParameter<double>((n));
 
 void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   sys.setx0ToCurrent();
@@ -181,18 +181,18 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 GraspObject_GP *
 random_obj(){
 
-  double gp_size=MT::Parameter<double>("gp_size");
+  double gp_size=mlr::Parameter<double>("gp_size");
   arr pts, grads, mins, maxs, c;
   uint i;      
 
-  c=MT::Parameter<arr>("center");
+  c=mlr::Parameter<arr>("center");
 
   /* GP for random object generation and for learning */
   GraspObject_GP *ot = new GraspObject_GP( c, gp_size);
   GraspObject_GP *oe = new GraspObject_GP( c, gp_size);
 
   /* generate object using sampling from GP */
-  rnd.seed(MT::Parameter<uint>("rnd_srfc_seed"));
+  rnd.seed(mlr::Parameter<uint>("rnd_srfc_seed"));
   randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 5);
   ot->isf_gp.gp.recompute();
   /* too expensive: ot->buildMesh();
@@ -212,7 +212,7 @@ random_obj(){
 
   SD_DBG("saving estimated object to file...");
   std::ofstream f_gp;
-  MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+  mlr::open(f_gp,mlr::getParameter<mlr::String>("gp_file"));
   oe->isf_gp.write(f_gp);
   f_gp.close();
   oe->buildMesh();
@@ -275,24 +275,24 @@ void problem4(){
   soc::SocSystem_Ors sys;
   OpenGL gl;
   GraspObject *o;
-  arr c=MT::Parameter<arr>("center");
-  double gp_size=MT::Parameter<double>("gp_size");
-  switch (MT::getParameter<uint>("shape")){
+  arr c=mlr::Parameter<arr>("center");
+  double gp_size=mlr::Parameter<double>("gp_size");
+  switch (mlr::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
     case 3: o = random_obj(); break;
     case 4: o = new GraspObject_GP(c,gp_size);
             std::ifstream f_gp;
-            MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+            mlr::open(f_gp,mlr::getParameter<mlr::String>("gp_file"));
             ((GraspObject_GP*)o)->isf_gp.read(f_gp);
             f_gp.close();
             ((GraspObject_GP*)o)->isf_gp.gp.recompute();
             o->m.readFile("a.tri");
             break;
   }
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  double t=MT::getParameter<double>("reachPlanTrajectoryTime");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
+  double t=mlr::getParameter<double>("reachPlanTrajectoryTime");
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
   if (!o->m.V.N)  o->buildMesh();
   gl.add(glDrawMeshObject, o);
@@ -320,10 +320,10 @@ void problem5(){
   ors::KinematicWorld ors;
   OpenGL gl;
   GraspObject *o;
-  arr c=MT::Parameter<arr>("center");
-  arr tr=MT::Parameter<arr>("translation");
-  double gp_size=MT::Parameter<double>("gp_size");
-  switch (MT::getParameter<uint>("shape")){
+  arr c=mlr::Parameter<arr>("center");
+  arr tr=mlr::Parameter<arr>("translation");
+  double gp_size=mlr::Parameter<double>("gp_size");
+  switch (mlr::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
@@ -331,7 +331,7 @@ void problem5(){
     case 3: o = random_obj(); break;
     case 4: o = new GraspObject_GP(c,gp_size);
             std::ifstream f_gp;
-            MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+            mlr::open(f_gp,mlr::getParameter<mlr::String>("gp_file"));
             ((GraspObject_GP*)o)->isf_gp.read(f_gp);
             f_gp.close();
             ((GraspObject_GP*)o)->isf_gp.translate_gp_input(tr);
@@ -340,17 +340,17 @@ void problem5(){
             o->m.translate(tr(0),tr(1),tr(2));
             break;
   }
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  double t=MT::getParameter<double>("optTimeMin"); 
-  double t_min=MT::getParameter<double>("optTimeMin"); 
-  double alpha=MT::getParameter<double>("alpha");
-  double BinvFactor=MT::getParameter<double>("BinvFactor");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
+  double t=mlr::getParameter<double>("optTimeMin"); 
+  double t_min=mlr::getParameter<double>("optTimeMin"); 
+  double alpha=mlr::getParameter<double>("alpha");
+  double BinvFactor=mlr::getParameter<double>("BinvFactor");
   double tm;
   arr q0, b,b0,B, Binv, r,R;
   arr zero14(14);zero14.setZero();
 
   if (!o->m.V.N)  o->buildMesh();
-  ors.init(MT::getParameter<MT::String>("orsFile"));
+  ors.init(mlr::getParameter<mlr::String>("orsFile"));
   ors::Shape *pc = new ors::Shape(ors, ors.getBodyByName("OBJECTS"));
   pc->mesh = o->m; /* add point cloud to ors */
   pc->type = ors::pointCloudST; 
@@ -372,10 +372,10 @@ void problem5(){
   GetOptimalDynamicTime(tm,b,B,sys,alpha,0.04); 
   */
 
-  double task_eps = MT::getParameter<double>("oneStep_tascCost_eps");
+  double task_eps = mlr::getParameter<double>("oneStep_tascCost_eps");
 
 /* try 3 diferent approach vectors (ortogonal to) */
-  MT::Array<char*> ax; ax.append("<d(90 0 0 1)>"); ax.append("<d(90 1 0 0)>"); ax.append("<d(90 0 1 0)>"); 
+  mlr::Array<char*> ax; ax.append("<d(90 0 0 1)>"); ax.append("<d(90 1 0 0)>"); ax.append("<d(90 0 1 0)>"); 
   double task_cost, best_task_cost = 1e100;
   arr best_b0 = NULL;
   for(uint i=0; i<3; ++i){ 
@@ -396,11 +396,11 @@ void problem5(){
     b.subRange(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
     sys.setx(b);
     sys.gl->watch("Belief after 1st phase, with open fings");
-    MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
+    MLR_MSG( "Post belief1 :" << b); //MLR_MSG( "time:" << tm);
 
     activateVars_2step(sys);
     OneStepDynamicFull(b,B,guenter, sys, t,alpha,task_eps,1e-3,true,false); 
-    MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
+    MLR_MSG( "Post belief2 :" << b); //MLR_MSG( "time:" << tm);
 
     /* see bwdMsg */
     b0.setCarray(b.p,14);
@@ -409,7 +409,7 @@ void problem5(){
 
 
     task_cost = sys.taskCost(NULL, T, -1, 0);
-    MT_MSG( "task_cost:" << task_cost);
+    MLR_MSG( "task_cost:" << task_cost);
     if ( task_cost <  best_task_cost ){
       best_task_cost = task_cost;
       best_b0 = b0;
@@ -434,7 +434,7 @@ void problem5(){
   solver.bwdMsg_v = cat(best_b0,zero14);
   inverse(Binv,B);
   solver.bwdMsg_Vinv.setDiag(BinvFactor,28); //=BinvFactor*Binv;
-  MT_MSG("Vinv="<<solver.bwdMsg_Vinv);
+  MLR_MSG("Vinv="<<solver.bwdMsg_Vinv);
   //solver.iterate_to_convergence(); //roll out cycle
   for(uint k=0;k<solver.max_iterations;k++){
     double d=solver.step();
@@ -444,16 +444,16 @@ void problem5(){
     solver.bwdMsg_Vinv.setDiag(BinvFactor,28);
   }
   sys2.getTaskCosts(R,r,solver.q[T],T);
-  MT_MSG( "last q:"<< solver.q[T]);
+  MLR_MSG( "last q:"<< solver.q[T]);
 
 }
 
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 4:  problem4();  break;
   case 5:  problem5();  break;

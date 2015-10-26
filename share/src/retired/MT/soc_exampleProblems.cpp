@@ -25,7 +25,7 @@
 #include <Gui/plot.h>
 
 ControlledSystem_PointMass::ControlledSystem_PointMass(){
-  T = MT::getParameter<uint>("T",10);
+  T = mlr::getParameter<uint>("T",10);
   tau = 1./get_T();
   x0 = ARR(1., 1.);
   x_target = ARR(0., 1.);
@@ -69,14 +69,14 @@ void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
 
 
 void ControlledSystem_PointMass::displayCurrentState(const char* title, bool pause, bool reportOnTasks){
-  cout <<"gnuplot " <<MT_HERE <<title <<endl;
+  cout <<"gnuplot " <<MLR_HERE <<title <<endl;
   plotGnuplot();
   plotClear();
   plotPoint(x);
   plot(pause);
 }
 
-void ControlledSystem_PointMass::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t){
+void ControlledSystem_PointMass::getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t){
   dims.resize(2); dims=1;
   names.resize(2);
   names(0)="position_cost";

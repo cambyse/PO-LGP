@@ -151,7 +151,7 @@ public:
 
 void base(){
   RobotArm *arm=NULL;
-  ros::init(MT::argc, MT::argv, "robot_driver");
+  ros::init(mlr::argc, mlr::argv, "robot_driver");
   arm = new RobotArm;
   if(!ros::ok()) cout <<"INIT not ok" <<endl;
 
@@ -171,7 +171,7 @@ void circle(bool FIRE=false){
 
   RobotArm *arm=NULL;
   if(FIRE){
-    ros::init(MT::argc, MT::argv, "robot_driver");
+    ros::init(mlr::argc, mlr::argv, "robot_driver");
     arm = new RobotArm;
     if(!ros::ok()) cout <<"INIT not ok" <<endl;
   }
@@ -209,7 +209,7 @@ void circle(bool FIRE=false){
       while (!arm->getState().isDone() && ros::ok()) {
         usleep(50000);
       }
-      MT::wait(5.);
+      mlr::wait(5.);
     }
   }
   gl.watch();
@@ -220,7 +220,7 @@ void circle(bool FIRE=false){
 }
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //circle(true);
   base();

@@ -84,7 +84,7 @@ void TestControl(){
     K.stepPredict(eye(4)+R.tau*A, R.tau*(a+B*ARR(u)),  diag(ARR(1e-6, 1e-6, 1., 1.)));
     K.stepObserve(y, C, c, W);
 
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' ' <<u_acc <<' '
         <<R.q <<R.q_dot <<R.q_ddot
        <<~R.B * R.q <<' ' <<~R.B * R.q_dot <<' ' <<~R.B * R.q_ddot <<' '
@@ -119,7 +119,7 @@ void FollowSignal(){
     R.gl().text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
     R.gl().update();
 
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' ' <<u_acc <<' '
         <<R.q <<R.q_dot <<R.q_ddot
        <<~R.B * R.q <<' ' <<~R.B * R.q_dot <<' ' <<~R.B * R.q_ddot <<' '
@@ -152,11 +152,11 @@ void FollowIMU(){
 
   imu.resizeCopy(4, imu.d1);
   imu = ~imu;
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   imu >>FILE("02-imu.dat");
   ~(~times) >>FILE("02-times.dat");
 
-  R.q(1)=MT_PI/2.;
+  R.q(1)=MLR_PI/2.;
 
   Kalman K;
   K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
@@ -179,7 +179,7 @@ void FollowIMU(){
     R.gl().text.clear() <<t <<' ' <<times(t) <<" ; " <<R.q(0) << " ; " <<R.q(1);
     if(!(t%10)) R.gl().update();
 
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
 
     data <<t <<' ' <<times(t) <<' '
         <<K_old <<' ' <<sin(K_old(1)) <<' ' <<cos(K_old(1)) <<' '

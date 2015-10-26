@@ -1,6 +1,6 @@
 #include "specificViews.h"
 
-#ifdef MT_GTK
+#ifdef MLR_GTK
 
 #include <Gui/gtk.h>
 #include <Ors/ors.h>
@@ -99,7 +99,7 @@ void OrsView::glDraw() {
   orsCopy.glDraw();
 }
 
-#else //MT_GTK
+#else //MLR_GTK
 void OrsView::glInit() { NICO }
 void OrsView::glDraw() { NICO }
 #endif

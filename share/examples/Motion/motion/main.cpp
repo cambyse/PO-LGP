@@ -9,7 +9,7 @@
 //===========================================================================
 
 void TEST(PR2reach){
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
   G.getShapeByName("target")->cont=false;
@@ -46,7 +46,7 @@ void TEST(PR2reach){
 
   //-- optimize
   for(uint k=0;k<5;k++){
-    MT::timerStart();
+    mlr::timerStart();
     ors::KinematicWorld::setJointStateCount=0;
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
@@ -55,7 +55,7 @@ void TEST(PR2reach){
 //    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
 #endif
 
-    cout <<"** optimization time=" <<MT::timerRead()
+    cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
     MP.costReport();
     write(LIST<arr>(x),"z.output");
@@ -111,13 +111,13 @@ void TEST(Basics){
 
   //-- optimize
   for(uint k=0;k<5;k++){
-    MT::timerStart();
+    mlr::timerStart();
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, damping=.1));
 #else
     optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
-    cout <<"** optimization time=" <<MT::timerRead() <<endl;
+    cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();
 //    checkJacobian(Convert(MF), x, 1e-5);
     write(LIST<arr>(x),"z.output");
@@ -130,7 +130,7 @@ void TEST(Basics){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testPR2reach();
 //  testBasics();

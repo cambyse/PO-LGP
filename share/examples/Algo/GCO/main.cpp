@@ -1,7 +1,7 @@
 #include <extern/GCO/GCoptimization.h>
 #include <Core/array.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <GL/gl.h>
 
 const double scale=10000.;
@@ -47,7 +47,7 @@ struct MinEigModel{
   }
 
   double cost(const arr& phi){
-    return MT::sqr(scalarProduct(beta, phi-mu/n));
+    return mlr::sqr(scalarProduct(beta, phi-mu/n));
   }
 
   double f(const arr& phi){
@@ -60,9 +60,9 @@ struct MinEigModel{
   }
 };
 
-struct ModelDrawer:OpenGL::GLDrawer{
-  MT::Array<MinEigModel>& M;
-  ModelDrawer(MT::Array<MinEigModel>& M):M(M){}
+struct ModelDrawer:GLDrawer{
+  mlr::Array<MinEigModel>& M;
+  ModelDrawer(mlr::Array<MinEigModel>& M):M(M){}
   void glDraw(OpenGL &){
     uint c=0;
     for(MinEigModel &m:M) if(m.beta.N==3){
@@ -110,18 +110,15 @@ void displayData(){
 //  for(uint i=0;i<phi.d0;i++) phi(i,0) = pts(i,2); //depth only
 
   //-- models
-  MT::Array<MinEigModel> M(num_labels);
+  mlr::Array<MinEigModel> M(num_labels);
 
   ModelDrawer D(M);
   OpenGL gl;
 //  gl.add(glDrawAxes);
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&D);
-  gl.camera.setPosition(0., 0., -10.);
-  gl.camera.focus(0., 0., 1.);
-//  gl.camera.setZRange(.1, 10.);
-//  gl.camera.heightAbs=gl.camera.heightAngle=0.;
-  gl.camera.focalLength = 580./480.;
+  gl.camera.setKinect();
+  gl.camera.setPosition(0., 0., -1.);
 
 
   for(uint k=0;k<10;k++){

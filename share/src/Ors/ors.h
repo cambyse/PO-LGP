@@ -17,14 +17,14 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_ors_h
-#define MT_ors_h
+#ifndef MLR_ors_h
+#define MLR_ors_h
 
 #include <Core/util.h>
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Core/geo.h>
-#include <Gui/mesh.h>
+#include <Geo/geo.h>
+#include <Geo/mesh.h>
 
 /// @file
 /// @ingroup group_ors
@@ -42,7 +42,7 @@ struct OdeInterface;
 namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST };
+enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST, ssBoxST };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
@@ -57,12 +57,12 @@ struct KinematicSwitch;
 
 //===========================================================================
 
-typedef MT::Array<ors::Joint*> JointL;
-typedef MT::Array<ors::Shape*> ShapeL;
-typedef MT::Array<ors::Body*>  BodyL;
-typedef MT::Array<ors::Proxy*> ProxyL;
-typedef MT::Array<ors::KinematicSwitch*> KinematicSwitchL;
-typedef MT::Array<ors::KinematicWorld*> WorldL;
+typedef mlr::Array<ors::Joint*> JointL;
+typedef mlr::Array<ors::Shape*> ShapeL;
+typedef mlr::Array<ors::Body*>  BodyL;
+typedef mlr::Array<ors::Proxy*> ProxyL;
+typedef mlr::Array<ors::KinematicSwitch*> KinematicSwitchL;
+typedef mlr::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
 
@@ -78,7 +78,7 @@ struct Body {
   uint index;          ///< unique identifier TODO:do we really need index??
   JointL inLinks, outLinks;       ///< lists of in and out joints
   
-  MT::String name;     ///< name
+  mlr::String name;     ///< name
   Transformation X;    ///< body's absolute pose
   Graph ats;   ///< list of any-type attributes
   
@@ -118,7 +118,7 @@ struct Joint {
 
   JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
-  MT::String name;      ///< name
+  mlr::String name;      ///< name
   JointType type;       ///< joint type
   Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;     ///< transformation within the joint (usually dynamic)
@@ -154,7 +154,7 @@ struct Shape {
   uint index;
   Body *body;
   
-  MT::String name;     ///< name
+  mlr::String name;     ///< name
   Transformation X;
   Transformation rel;  ///< relative translation/rotation of the bodies geometry
   ShapeType type;
@@ -193,7 +193,7 @@ struct Proxy {
 //===========================================================================
 
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
-struct KinematicWorld {
+struct KinematicWorld : GLDrawer{
   struct sKinematicWorld *s;
 
   /// @name data fields
@@ -243,13 +243,14 @@ struct KinematicWorld {
   void makeLinkTree();            ///< modify transformations so that B's become identity
   void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); }
   void glueBodies(Body *a, Body *b);
-  void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
-  void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
+  void meldFixedJoints(int verbose=0);         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
+  void removeUselessBodies(int verbose=0);     ///< prune non-articulated bodies; they become shapes of other bodies
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_Q_from_q(bool calcVels=false, int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(bool calcVels=false, int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
+  arr calc_q_from_Q(Joint* j, bool calcVels=false);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
@@ -258,13 +259,13 @@ struct KinematicWorld {
 
   /// @name get state
   uint getJointStateDimension(int agent=-1) const;
-  void getJointState(arr &_q, arr& _qdot=NoArr) const;
-  arr getJointState() const;
+  void getJointState(arr &_q, arr& _qdot=NoArr, int agent=-1) const;
+  arr getJointState(int agent=-1) const;
   arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   arr getLimits() const;
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false, int agent=-1);
   void setAgent(uint agent, bool calcVels=false);
 
   /// @name kinematics
@@ -319,6 +320,8 @@ struct KinematicWorld {
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
+  void glAnimate();
+  void glGetMasks(byteA& indexRgb, byteA& depth);
   void stepSwift();
   void stepPhysx(double tau);
   void stepOde(double tau);
@@ -327,7 +330,7 @@ struct KinematicWorld {
   /// @name I/O
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void glDraw();
+  void glDraw(struct OpenGL&);
 
   void reportProxies(std::ostream *os=&std::cout, double belowMargin=-1.);
   void writePlyFile(const char* filename) const; //TODO: move outside
@@ -383,10 +386,10 @@ namespace ors {
 void glDrawGraph(void *classP);
 }
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
-uintA shapesToShapeIndices(const MT::Array<ors::Shape*>& shapes);
+uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const ShapeL& shapes);
+uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -412,7 +415,7 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors, orsDrawIndexColors;
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
@@ -455,7 +458,7 @@ struct Link {
   }
 };
 
-typedef MT::Array<ors::Link> LinkTree;
+typedef mlr::Array<ors::Link> LinkTree;
 
 void equationOfMotion(arr& M, arr& F, const LinkTree& tree,  const arr& qd);
 void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
@@ -479,8 +482,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
 
 /// @} // END of group ors_interfaces
 //===========================================================================
-#endif //MT_ORS_ONLY_BASICS
+#endif //MLR_ORS_ONLY_BASICS
 
 /// @}
 
-#endif //MT_ors_h
+#endif //MLR_ors_h

@@ -23,7 +23,7 @@ const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_b
 
 using namespace FlyCapture2;
 using namespace MLR;
-using namespace MT;
+using namespace mlr;
 using namespace std;
 
 SET_LOG(flycap, LogLevel::INFO)

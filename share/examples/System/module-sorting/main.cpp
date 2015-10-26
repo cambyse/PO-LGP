@@ -48,13 +48,13 @@ void TEST(ModuleSorter){
   //new InsideOut();                 //create an explicit view
 
 
-  for(uint i=0;i<N;i++) S.getVar<int>(i)->set() = MT::rnd(100);
+  for(uint i=0;i<N;i++) S.getVar<int>(i)->set() = mlr::rnd(100);
 
   for(uint k=0;k<20;k++){
     if(engine().shutdown.getValue()) break;
     for(uint i=0;i<N;i++) cout <<S.getVar<int>(i)->get() <<' ';  cout <<endl;
     engine().step(S);
-    MT::wait(.1);
+    mlr::wait(.1);
   }
 
   engine().close(S);
@@ -69,22 +69,22 @@ void TEST(ModuleSorter){
 void TEST(ModuleSorter2){
   uint N=20;
 
-  MT::Array<PairSorter*> ps;
+  mlr::Array<PairSorter*> ps;
 
   for(uint i=0;i<N-1;i++)
     ps.append(new PairSorter(STRING("int"<<i), STRING("int"<<i+1)) );
 
   cout <<moduleSystem() <<endl;
 
-  for(uint i=0;i<N-1;i++) ps(i)->a.set() = MT::rnd(100);
-  ps.last()->b.set() = MT::rnd(100);
+  for(uint i=0;i<N-1;i++) ps(i)->a.set() = mlr::rnd(100);
+  ps.last()->b.set() = mlr::rnd(100);
 
   openModules(moduleSystem());
 
   for(uint k=0;k<20;k++){
     for(uint i=0;i<N-1;i++) cout <<ps(i)->a.get() <<' ';  cout <<endl;
     stepModules(moduleSystem());
-    MT::wait(.1);
+    mlr::wait(.1);
   }
 
   closeModules(moduleSystem());

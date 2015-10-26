@@ -58,10 +58,10 @@ int main(int argc, char **argv) {
     g.c = z;
     f.add_measurement(z);
     f.threadStep();
-    MT::wait(0.1);
+    mlr::wait(0.1);
     p.readAccess(NULL);
     arr mean = sum(p.particles, 0)*(1./p.particles.d0);
-    MT::IOraw=true;
+    mlr::IOraw=true;
     p.particles >>FILE("z.pltX");
     p.deAccess(NULL);
     mean >>FILE("sum");
@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
     z >>FILE("z");
     //gnuplot("plot 'pos' us 2:3 with points, 'z' us 2:3 with points, 'sum' us 2:3 with points");
     gnuplot("plot 'z.pltX' us 1:2 with points lc rgb '#AAAAAA', 'pos' us 2:3 with points, 'z' us 2:3 with points, 'sum' us 2:3 with points");
-    MT::IOraw=false;
-    MT::wait(0.01);
+    mlr::IOraw=false;
+    mlr::wait(0.01);
   }
   f.threadClose();
 }

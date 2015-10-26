@@ -13,9 +13,9 @@ arr prN;
 arr w1,w2,w3;
 arr lastCenter;//for object positons in train data create
 int bDynamical;
-MT::String sDiscriminant;
+mlr::String sDiscriminant;
 
-MT::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
+mlr::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
 	ors::Shape * s1 = g->getShapeByName("tipNormal1");
 	ors::Shape * s2 = g->getShapeByName("tipNormal2");
 	ors::Shape * s3 = g->getShapeByName("tipNormal3");
@@ -24,7 +24,7 @@ MT::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
 	ors::Shape * s6 = g->getShapeByName("fingNormal3");
 	ors::Shape * o1 = g->getBodyByName("o1")->shapes(0);
 	ors::Shape * palm = g->getShapeByName("palmCenter");
-	MT::Array<ors::Shape*> landmarks(8);
+	mlr::Array<ors::Shape*> landmarks(8);
 	landmarks(1) = s1;landmarks(2) = s2;landmarks(3) = s3;
 	landmarks(4) = s4;landmarks(5) = s5;landmarks(6) = s6;
 	landmarks(0) = o1;
@@ -61,7 +61,7 @@ arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::KinematicWorld * G){
 	return J;
 }
 
-arr GetRawFeaturesJ(const MT::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G,arr & grad){
+arr GetRawFeaturesJ(const mlr::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G,arr & grad){
 	uint br = 0;
 	uint M = 4;
 	arr ans(landmarks.N*(landmarks.N-1)*M);
@@ -99,7 +99,7 @@ arr GetRawFeaturesJ(const MT::Array<ors::Shape*> & landmarks,ors::KinematicWorld
 	return ans;
 }
 
-arr GetRawFeatures(const MT::Array<ors::Shape*> & landmarks){
+arr GetRawFeatures(const mlr::Array<ors::Shape*> & landmarks){
 	uint br = 0;
 	uint M = 4;
 	arr ans(landmarks.N*(landmarks.N-1)*M);
@@ -120,7 +120,7 @@ arr GetRawFeatures(const MT::Array<ors::Shape*> & landmarks){
 	return ans;
 }
 
-arr GetFeaturesDyn(const MT::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,ors::KinematicWorld * G,arr & grad){
+arr GetFeaturesDyn(const mlr::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,ors::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	uint nOffset = raw.N + q.N;
@@ -152,7 +152,7 @@ arr GetFeaturesDyn(const MT::Array<ors::Shape*> & landmarks,const arr & q, const
 	return TD;
 }
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G,arr & grad){
+arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	arr TD(raw.N + q.N);
@@ -176,7 +176,7 @@ arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::Kin
 	return TD-0.5;
 }
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G){
+arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G){
 	arr temp;
 	return GetFeatures(landmarks,q,G,temp);
 }
@@ -260,7 +260,7 @@ double DLPml(const arr & feat, const arr & lastF, arr & grad){
 }
 
 void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJoint){
-	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " noise creation " << endl;
 	uint noi = 60;
 	ofstream f("noise.txt",ofstream::app);
@@ -317,7 +317,7 @@ void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJo
 			if (false){
 				robot.gui.gl->text.clear()<< i << endl;
 				//robot.gui.q_reference = noise;
-				MT::wait(0.1);
+				mlr::wait(0.1);
 				robot.gui.threadStep();
 			}
 		}
@@ -327,10 +327,10 @@ void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJo
 
 //move by collision free sampling
 void SampleTrajectory(RobotProcessGroup & robot){
-	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
-	int nSa = MT::getParameter<int>("iterations");
-	uint T = MT::getParameter<int>("T");
+	int nSa = mlr::getParameter<int>("iterations");
+	uint T = mlr::getParameter<int>("T");
 	arr lastJoint = robot.ctrl.q_reference;
 	arr lastFeature,bestF;
 	lastFeature = GetRawFeatures(landmarks);//GetRawFeatures(landmarks);
@@ -387,7 +387,7 @@ void SampleTrajectory(RobotProcessGroup & robot){
 	//now loop undendlessly
 	for(uint c = 0; c < 10; c++)
 		for(uint t = 0; t < T; t++){
-			MT::wait(0.15);
+			mlr::wait(0.15);
 			robot.ctrl.q_reference = best[t];
 			robot.gui.gl->text.clear()<< t<< endl;
 			robot.step();
@@ -395,10 +395,10 @@ void SampleTrajectory(RobotProcessGroup & robot){
 }
 
 void GradTrajectory(RobotProcessGroup & robot){
-	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
-	int nSa = MT::getParameter<int>("iterations");
-	uint T = MT::getParameter<int>("T");
+	int nSa = mlr::getParameter<int>("iterations");
+	uint T = mlr::getParameter<int>("T");
 	arr lastJoint = robot.ctrl.q_reference;
 	arr lastFeature,bestF;
 	if(bDynamical == 1)
@@ -446,7 +446,7 @@ void GradTrajectory(RobotProcessGroup & robot){
 	//now loop undendlessly
 	for(uint c = 0; c < 0; c++)
 		for(uint t = 0; t < T; t++){
-			MT::wait(0.15);
+			mlr::wait(0.15);
 			robot.ctrl.q_reference = best[t];
 			robot.gui.gl->text.clear()<< t<< endl;
 			robot.step();
@@ -456,7 +456,7 @@ void GradTrajectory(RobotProcessGroup & robot){
 
 namespace NJCH {
 
-MT::Array<ors::Shape*> landmarks;
+mlr::Array<ors::Shape*> landmarks;
 ors::KinematicWorld * G;
 
 void f(arr &y,const arr &x,void*){
@@ -566,7 +566,7 @@ checkGradient(void (*f)(arr&, const arr&,void*),
 	arr JJt;transpose(JJt,JJ);JJ = JJt;
 	real md=maxDiff(J,JJ,&i);
 	if(md>tolerance){
-		MT_MSG("checkGradient -- FAILURE -- \nmax diff=" <<md);
+		MLR_MSG("checkGradient -- FAILURE -- \nmax diff=" <<md);
 		cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
 		arr diff = JJ- J;
 		for(i = 0; i < JJ.d0; i++)
