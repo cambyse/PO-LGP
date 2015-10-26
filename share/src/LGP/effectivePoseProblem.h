@@ -12,7 +12,7 @@ struct EffectivePoseProblem:ConstrainedProblemMix{
   const Graph& symbolicState_after;
   arr x0;
   int verbose;
-  EffectivePoseProblem(ors::KinematicWorld& effKinematics_beforeitial,
+  EffectivePoseProblem(ors::KinematicWorld& effKinematics_before,
                        const Graph& KB, const Graph& symbolicState_before, const Graph& symbolicState_after,
                        int verbose);
   void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x);

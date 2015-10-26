@@ -1693,6 +1693,10 @@ void ors::KinematicWorld::watch(bool pause, const char* txt){
   else gl().update(txt);
 }
 
+void ors::KinematicWorld::glAnimate(){
+  animateConfiguration(*this, NULL);
+}
+
 void ors::KinematicWorld::glGetMasks(byteA& indexRgb, byteA& depth){
   gl().clear();
   gl().addDrawer(this);

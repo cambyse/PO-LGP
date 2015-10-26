@@ -21,26 +21,11 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
     return this -> phi(phi, J, tt, x);
   } );
 
-//  cout <<"x0=" <<x0 <<endl;
-
-  //create the effective kinematicsx
-  //  Node *actionSequence = symbolicState["actionSequence"];
-
-  Node *supportSymbol  = KB["Gsupport"];
-  for(Node *s:supportSymbol->parentOf) if(&s->container==&symbolicState_after){
-    //-- create a joint between the object and the target
-    ors::Shape *base = effKinematics.getShapeByName(s->parents(1)->keys.last());
-    ors::Shape *object= effKinematics.getShapeByName(s->parents(2)->keys.last());
-
-    if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-      ors::Joint *j = new ors::Joint(effKinematics, base->body, object->body);
-      j->type = ors::JT_transXYPhi;
-      j->A.addRelativeTranslation(0, 0, .5*base->size[2]);
-      j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
-      j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
-      j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
-    }
-  }
+//  Node *glueSymbol  = KB["glued"];
+//  for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
+//    //-- create a joint between the object and the target
+//    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+//    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
   Node *glueSymbol  = KB["glued"];
   for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
@@ -48,15 +33,32 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
     ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
     ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
+    //TODO: this may generate multiple joints! CHECK IF IT EXISTS ALREADY
     ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
     j->type = ors::JT_free;
     j->Q.setDifference(ref1->body->X, ref2->body->X);
   }
 
-  effKinematics.getJointState(x0);
+  Node *supportSymbol  = KB["Gsupport"];
+  for(Node *s:supportSymbol->parentOf) if(&s->container==&symbolicState_after){
+    //-- create a joint between the object and the target
+    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(2)->keys.last());
+
+    if(!ref2->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
+      ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
+      j->type = ors::JT_transXYPhi;
+      j->A.addRelativeTranslation(0, 0, .5*ref1->size[2]);
+      j->B.addRelativeTranslation(0, 0, .5*ref2->size[2]);
+      j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
+      j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
+    }
+  }
+
 
   effKinematics.topSort();
   effKinematics.checkConsistency();
+  effKinematics.getJointState(x0);
 }
 
 void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){

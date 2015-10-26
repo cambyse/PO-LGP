@@ -78,7 +78,7 @@ void newMethod(){
 //  ManipulationTree_Node *node = &root;
   ManipulationTree_NodeL fringe={&root};
 
-  for(uint k=0;k<2;k++){
+  for(uint k=0;k<3;k++){
     ManipulationTree_NodeL newFringe;
     for(ManipulationTree_Node *node:fringe){
       cout <<"EXPANDING:\n" <<*node;
@@ -92,6 +92,7 @@ void newMethod(){
 
         //      cout <<n->effKinematics <<endl;
         display=n->effKinematics;
+        display.glAnimate();
         display.gl().watch("child pose");
 
         //      PathProblem pathProblem(towers.world_root, n->effKinematics, n->fol.KB, 20, 0);

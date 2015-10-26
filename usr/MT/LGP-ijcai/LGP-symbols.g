@@ -1,3 +1,7 @@
+FOL_World{
+  hasWait=false
+}
+
 Terminate
 QUIT
 
@@ -22,19 +26,25 @@ table2
 #b
 
 START_STATE{
-  (Object table1) (Board table1)
-  (Object table2) (Board table2)
+  (Board table1)
+  (Board table2)
 # (Object a) (Cylin a)
 # (Object a) (Cylin b)
-  (Object eff) (articulated eff)
+  (articulated eff) (free eff)
 }
 
 REWARD{}
 
 DecisionRule Glue {
      X, Y
-     { (articulated X) (Object Y) (articulated Y)! }
-     { (touch X Y) (articulated Y) (glued X Y) }
+     { (articulated X) (Object Y) (free X) }
+     { (touch X Y) (articulated Y) (glued X Y) (free X)! (free Y) }
+}
+
+DecisionRule Release {
+     X, Z
+     { (articulated X) (free X) (Object X) (Board Z) }
+     { (articulated X)! (touch X Z) (Gsupport X Z) }
 }
 
 #noDecisionRule TouchObject {
