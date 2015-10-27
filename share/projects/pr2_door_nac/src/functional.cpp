@@ -9,9 +9,9 @@ using namespace mlr;
 
 namespace mdp {
 
-RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
+RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
     : Horizon(horizon),
-      NumEps(numEps), Xdemo(Xdemo), FLdemo(FLdemo), Mdemo(Mdemo), paramLim(paramLim), useRos(useRos),
+      NumEps(numEps), Xdemo(Xdemo), FLdemo(FLdemo), Mdemo(Mdemo), paramLim(paramLim), useRos(useRos), duration(duration),
       NumCentre(numCentre),
       Kernel_Type(kernel_Type),
       NumIterations(numIterations)
@@ -28,9 +28,9 @@ RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo,
     task->computeConstraintTime(FLdemo,Xdemo);
 
     /// visualize demonstration
-    //world.gl().resize(800,800);
-    //task->updateVisualization(world,Xdemo);
-    //displayTrajectory(Xdemo,-1,world,"demonstration");
+    world_.gl().resize(800,800);
+    task->updateVisualization(world_,Xdemo);
+    displayTrajectory(Xdemo,-1,world_,"demonstration");
 
 
     //alpha = .005; // for vanilla gradient alpha is [0.001;0.01] ;; Increase the number of trajectories also increase the performance and stability.
@@ -40,6 +40,9 @@ RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, arr Xdemo,arr FLdemo,
     currIteration = 0;
 
     RBFVariance = 0.00001;//0.0001; for Toy// 1)RBFVariance = 0.0001;()for Toy
+
+
+    FIRST_TIME = 0;
 
 }
 void RKHSPol::loadOldFuncPolicy()
@@ -132,13 +135,25 @@ arr RKHSPol::runPG()
        // Sparsification(temppp,nxtFuncPolicy);
        // nxtFuncPolicy = temppp;
 
-        double step_size =  lineSearch(nxtFuncPolicy);
-        //now the functional gradient is: average*nxtFuncPolicy
+        double step_size = (double) 0.005;///(iteration+1);
+
+
+
+        //step_size = lineSearch(nxtFuncPolicy);
+        //I'm using NORMALIZED Gradient,
         if(step_size !=0.){
+            //now the functional gradient is: average*nxtFuncPolicy
             for(int k=FuncPolicy.d0; k<nxtFuncPolicy.d0; k++){
-                for(int ind=0; ind < dim_A; ind++)
-                    nxtFuncPolicy[k](ind) *= step_size;
-                FuncPolicy.append(nxtFuncPolicy[k]());
+                double sum = 0.0;
+                for(int ind=0; ind<dim_A; ind++){
+                    sum += nxtFuncPolicy[k](ind)*nxtFuncPolicy[k](ind);// *= step_size;
+                }
+
+                for(int ind=0; ind<dim_A; ind++){
+                    nxtFuncPolicy[k](ind) *= step_size/sqrt(sum);
+                }
+
+                FuncPolicy.append(nxtFuncPolicy[k]);
             }
         }
 
@@ -177,8 +192,8 @@ arr RKHSPol::runPG()
         FuncPolicy.clear();
         FuncPolicy.resize(2,dim_A + dim_S);
         FuncPolicy.setZero();
-        FuncPolicy[0](0) = newMean(0) + 0.03; // see the way we compute the bias (just fix the diff)
-        FuncPolicy[0](1) = newMean(1) + 0.06;
+        FuncPolicy[0](0) = newMean(0) + prior1; // see the way we compute the bias (just fix the diff)
+        FuncPolicy[0](1) = newMean(1) + prior2;
         FuncPolicy[0](2) = StartingState(0);
         //cout<< FuncPolicy <<endl;
         //////////////////////////////////////////////////
@@ -256,17 +271,24 @@ arr RKHSPol::runPG()
         double average = (double) total/NumEps;
 
 
-        double step_size = 0;
+        double step_size = .005;///pow(iteration+1,1/2.);//(double) 0.003 /sqrt(iteration+1);
+        //double step_size = 0.002/(iteration+1);
 
 
-        step_size = lineSearch(nxtFuncPolicy);
-
+        //step_size = lineSearch(nxtFuncPolicy);
+        //I'm using NORMALIZED Gradient,
         if(step_size !=0.){
             //now the functional gradient is: average*nxtFuncPolicy
             for(int k=FuncPolicy.d0; k<nxtFuncPolicy.d0; k++){
+                double sum = 0.0;
                 for(int ind=0; ind<dim_A; ind++){
-                    nxtFuncPolicy[k](ind) *= step_size;
+                    sum += nxtFuncPolicy[k](ind)*nxtFuncPolicy[k](ind);// *= step_size;
                 }
+
+                for(int ind=0; ind<dim_A; ind++){
+                    nxtFuncPolicy[k](ind) *= step_size/sqrt(sum);
+                }
+
                 FuncPolicy.append(nxtFuncPolicy[k]);
             }
 
@@ -294,10 +316,15 @@ arr RKHSPol::runPG()
         FuncPolicy.clear();
         FuncPolicy.resize(2,dim_A + dim_S);
         FuncPolicy.setZero();
-        FuncPolicy[0](0) = newMean(0) + 0.03; // see the way we compute the bias (just fix the diff)
-        FuncPolicy[0](1) = newMean(1) + 0.06;
+        if(useRos){
+            FuncPolicy[0](0) = newMean(0) + prior1; // see the way we compute the bias (just fix the diff)
+            FuncPolicy[0](1) = newMean(1) + prior2;
+        }else{
+            FuncPolicy[0](0) = newMean(0) + prior1; // see the way we compute the bias (just fix the diff)
+            FuncPolicy[0](1) = newMean(1) + prior2;
+        }
         FuncPolicy[0](2) = StartingState(0);
-        //cout<< FuncPolicy <<endl;
+        cout<< FuncPolicy <<endl;
         //////////////////////////////////////////////////
 
 
@@ -322,17 +349,19 @@ arr RKHSPol::runPG()
  {
 
 
+
      double best_alpha = 0.0;
      double best_value = -10000000.0;
 
      uint numEval = 12;
-     uint numEpisodes = 3;
+     uint numEpisodes = 2;
      arr TempGradient;
 
      arr states,  actions,  rewards;
      //uint numEpisodes = 20;
 
-     for(int grid=0;grid<numEval;grid +=1){
+     for(int grid=1;grid<numEval;grid +=3){
+         cout<<"[[[GRID]]]" << grid<<" -----------"<<endl;
          //each is evaluated over NumEps
          double alpha_new = 0.000;
 
@@ -359,7 +388,7 @@ arr RKHSPol::runPG()
              double Reward = rollout(TempGradient, states, actions, rewards);
              Total_R += Reward;
          }
-         //cout<< Total_R/numEpisodes<<"  ";
+         cout<< Total_R/numEpisodes<<"  ";
          if((double)Total_R/numEpisodes > best_value){
              best_value = (double) Total_R/numEpisodes;
              best_alpha = alpha_new;
@@ -535,18 +564,25 @@ arr RKHSPol::runPG()
 
      bool result = task->transformTrajectory(Xn,action,Xdemo);
 
+
+
+
+
+
+
      task->updateVisualization(*world,Xn);
      world->watch();
 
      arr forces;
-     bool success = 1;
-     if(result && useRos){
+     bool success = 0;
+
+     if(useRos){
          mi->gotoPosition(Xn[0]);
-         mi->executeTrajectory(Xn,15.,true);
+         mi->executeTrajectory(Xn,duration,true);
          forces = mi->FLact;
          arr Xreverse = Xn;
          Xreverse.reverseRows();
-         mi->executeTrajectory(Xreverse,15.);
+         mi->executeTrajectory(Xreverse,duration);
          success = task->success(mi->Mact,Mdemo);
      }
 
@@ -554,20 +590,34 @@ arr RKHSPol::runPG()
      /// currently consist of one term that measures squared acceleration
      /// and another term that measures how close the current trajectory is to the demonstration
 
+     double RR = 0;
+     double part_task  = 1000.;
+     double part_force = 10.;
+     double terminal;
 
-    // if (result && success) {
-    if (result) {
+     if (success) {
+    //if (result) {
         arr Xdd;
-       getAcc(Xdd,Xn,1.);
-       //double part1 = sumOfAbs(forces)/forces.N;
-       double part2 = (sumOfAbs(Xn-Xdemo)/Xn.d0);
-       //cout<< "force: "<<part1<<" ; task "<<part2<<endl;
-       //reward = exp(-part1 - 10.*part2);//exp(-0.5*sumOfAbs(Xdd)) +
-       reward = exp(-2*part2*part2);//exp(-0.5*sumOfAbs(Xdd)) +
+        getAcc(Xdd,Xn,1.);
+        part_force = sumOfAbs(forces)/forces.N;
+        part_task =  (sumOfAbs(Xn-Xdemo)/Xn.d0);
+        cout<< part_task <<" part_force "<<part_force<<endl;
+        RR = 100.*part_task + 1.*part_force;
+        reward = exp(-RR/100.);
      }else{
-       reward = 0.;
+         arr Xdd;
+         getAcc(Xdd,Xn,1.);
+         part_force = sumOfAbs(forces)/forces.N;
+         part_task =  (sumOfAbs(Xn-Xdemo)/Xn.d0);
+         cout<< part_task <<" part_force "<<part_force<<endl;
+         RR = 100.*part_task + 1.*part_force;
+         reward = exp(-RR/100. - 2.);
      }
-     //cout<< "reward " <<reward <<endl;
+
+
+
+
+     cout<< "reward " <<reward <<endl;
 
 
      return true;
@@ -580,16 +630,23 @@ arr RKHSPol::runPG()
     arr mean;
     arr DEVS(2);
     DEVS(0) = 0.0001;
-    DEVS(1) = 0.001;
+    DEVS(1) = 0.0001;
 
 
     evaluate(state,ht,mean);
-    //cout<< mean<<endl;
+
+    // cout <<"action:  "<< mean<<endl;
+
     for(int i=0; i<dim_A; i++){
         action(i) = mean(i) + DEVS(i)*mlr::rnd.gauss();
         //action(i) = mlr::MIN(action(i),1.);
         //action(i) = mlr::MAX(action(i),-1.0);
     }
+    FIRST_TIME = 1;
+    if(!FIRST_TIME)
+        action = ARR(0,0);
+
+   // cout <<"action:  "<< action<<endl;
 
 
  }
@@ -611,8 +668,10 @@ arr RKHSPol::runPG()
 
     hs = (~sum)[0];
 
-    hs(0) = hs(0) - 0.03;
-    hs(1) = hs(1) - 0.06;
+    if(1){
+        hs(0) = hs(0) - prior1;
+        hs(1) = hs(1) - prior2;
+    }
  }
 
  double RKHSPol::kernelFunc(const arr state1, const arr state2)
