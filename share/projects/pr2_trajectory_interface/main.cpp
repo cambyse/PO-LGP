@@ -1,16 +1,14 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <pr2/rosalvar.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <Core/array-vector.h>
 #include <pr2/trajectoryInterface.h>
 
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
@@ -55,7 +53,7 @@ void TEST(RecordReplay) {
 }
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testTrajectoryInterface();
 //  testRecordReplay();
   return 0;
