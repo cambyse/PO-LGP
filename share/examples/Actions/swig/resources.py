@@ -18,8 +18,8 @@ import swig
 interface = swig.ActionSwigInterface()
 
 # new convenient symbols
-for symb in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels", "vecDiff", "vec"]:
-    interface.createNewSymbol(symb)
+#for symb in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels", "vecDiff", "vec"]:
+#    interface.createNewSymbol(symb)
 
 # don't abort the swig interface on Ctr-C
 # the signal must be geristered after the swig interface was initialized
