@@ -59,6 +59,33 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   if((it=specs["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
 }
 
+DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
+  :type(noTMT), i(-1), j(-1){
+  CHECK(specs->parents.N>1,"");
+//  mlr::String& tt=specs->parents(0)->keys.last();
+  mlr::String& Type=specs->parents(1)->keys.last();
+  const char *ref1=NULL, *ref2=NULL;
+  if(specs->parents.N>2) ref1=specs->parents(2)->keys.last().p;
+  if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
+       if(Type=="pos") type=posTMT;
+  else if(Type=="vec") type=vecTMT;
+  else if(Type=="quat") type=quatTMT;
+  else if(Type=="posDiff") type=posDiffTMT;
+  else if(Type=="vecDiff") type=vecDiffTMT;
+  else if(Type=="quatDiff") type=quatDiffTMT;
+  else if(Type=="vecAlign") type=vecAlignTMT;
+  else if(Type=="gazeAt") type=gazeAtTMT;
+  else HALT("unknown type " <<Type);
+  if(ref1){ ors::Shape *s=G.getShapeByName(ref1); CHECK(s,"shape name '" <<ref1 <<"' does not exist"); i=s->index; }
+  if(ref2){ ors::Shape *s=G.getShapeByName(ref2); CHECK(s,"shape name '" <<ref2 <<"' does not exist"); j=s->index; }
+  if(specs->getValueType()==typeid(Graph)){
+    const Graph* params=specs->getValue<Graph>();
+    Node *it;
+    if((it=params->getNode("vec1"))) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
+    if((it=params->getNode("vec2"))) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+  }
+}
+
 
 void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(t>=0 && referenceIds.N){

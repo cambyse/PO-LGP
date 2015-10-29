@@ -71,7 +71,7 @@ void newMethod(){
 
 //  cout <<towers.fol_root.KB <<endl;
   display=towers.world_root;
-  display.gl().watch("root");
+  display.gl().update("root");
 
   ManipulationTree_Node root(towers);
 
@@ -86,9 +86,13 @@ void newMethod(){
       //    for(ManipulationTree_Node *n:node->children) n->expand();
       for(ManipulationTree_Node *n:node->children){
         FILE("z.fol").getOs() <<n->fol.KB <<endl <<n->folState->isNodeOfParentGraph->keys.last();
+#if 1
+        n->solvePoseProblem();
+#else
         EffectivePoseProblem effectivePoseProblem(n->effKinematics, n->fol.KB, *node->folState, *n->folState, 0);
         n->effPoseCost = effectivePoseProblem.optimize(n->effPose);
 //        cout <<"n->effPoseCost=" <<n->effPoseCost <<" : " <<n->effPose <<endl;
+#endif
 
         //      cout <<n->effKinematics <<endl;
         display=n->effKinematics;

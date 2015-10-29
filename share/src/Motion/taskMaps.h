@@ -24,6 +24,7 @@
 
 /// creates a task map based on specs
 TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world);
+TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world);
 
 //===========================================================================
 
@@ -66,7 +67,8 @@ struct DefaultTaskMap:TaskMap {
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
 
-  DefaultTaskMap(const Graph& parameters, const ors::KinematicWorld& G);
+  DefaultTaskMap(const Graph &parameters, const ors::KinematicWorld& G);
+  DefaultTaskMap(const Node *parameters, const ors::KinematicWorld& G);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
@@ -152,6 +154,7 @@ struct TaskMap_GJK:TaskMap{
   bool exact;
 
   TaskMap_GJK(const ors::Shape *s1, const ors::Shape *s2, bool exact);
+  TaskMap_GJK(const ors::KinematicWorld& W, const char* s1, const char* s2, bool exact);
   TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact);
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& W, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }

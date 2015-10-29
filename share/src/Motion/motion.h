@@ -76,6 +76,8 @@ struct Task {
 };
 
 
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T);
+
 //===========================================================================
 //
 // a motion problem description
@@ -90,7 +92,7 @@ struct MotionProblem {
   //******* the following three sections are parameters that define the problem
 
   //-- task cost descriptions
-  mlr::Array<Task*> taskCosts;
+  mlr::Array<Task*> tasks;
 
   //-- kinematic switches along the motion
   mlr::Array<ors::KinematicSwitch*> switches;
@@ -122,12 +124,13 @@ struct MotionProblem {
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
+  void parseTasks(Graph& specs);
   Task* addTask(const char* name, TaskMap *map);
   //TODO: the following are deprecated; use Task::setCostSpecs instead
-  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
-  void setInterpolatingCosts(Task *c,
-                             TaskCostInterpolationType inType,
-                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
+//  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
+//  void setInterpolatingCosts(Task *c,
+//                             TaskCostInterpolationType inType,
+//                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
   bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian

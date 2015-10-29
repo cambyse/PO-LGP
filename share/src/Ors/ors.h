@@ -339,11 +339,13 @@ struct KinematicWorld : GLDrawer{
 //===========================================================================
 
 struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid, addRigidRel };
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
   OperatorSymbol symbol;
+  JointType jointType;
   uint timeOfApplication;
   uint fromId, toId;
   KinematicSwitch();
+  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
 };
 

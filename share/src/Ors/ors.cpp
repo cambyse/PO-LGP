@@ -2412,19 +2412,20 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
 
 //===========================================================================
 
-ors::KinematicSwitch::KinematicSwitch():
-  symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
+ors::KinematicSwitch::KinematicSwitch()
+  : symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
 void ors::KinematicSwitch::apply(KinematicWorld& G){
   Shape *from=G.shapes(fromId), *to=G.shapes(toId);
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from->body, to->body);
+//    if(!j) j = G.getJointByBodies(to->body, from->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
     delete j;
     return;
   }
-  if(symbol==addRigid){
+  if(symbol==addJointZero){
 //    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from->body, to->body);
 
@@ -2434,19 +2435,24 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     //A.pos *= 0.;
    // B.pos *= 0.;
    // j->A.setDifference(A, B);
-    j->type=JT_fixed;
+    j->type=jointType;
     j->A = from->rel;
     j->B = -to->rel;
 //    j->agent=1;
     G.isLinkTree=false;
     return;
   }
-  if(symbol==addRigidRel){
+  if(symbol==addJointAtFrom){
     Joint *j = new Joint(G, from->body, to->body);
-    j->type=JT_fixed;
+    j->type=jointType;
+    j->B.setDifference(from->body->X, to->body->X);
+    G.isLinkTree=false;
+    return;
+  }
+  if(symbol==addJointAtTo){
+    Joint *j = new Joint(G, from->body, to->body);
+    j->type=jointType;
     j->A.setDifference(from->body->X, to->body->X);
-//    j->A = from->rel * (to->body->X/from->body->X);
-//    j->B = -to->rel;
     G.isLinkTree=false;
     return;
   }
