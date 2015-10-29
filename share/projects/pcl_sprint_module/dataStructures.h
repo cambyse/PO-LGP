@@ -2,7 +2,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
 
@@ -32,7 +32,7 @@ struct PclCloudView:Primitive{
 };
 
 struct DisplayPrimitives{
-  MT::Array<Primitive*> P;
+  mlr::Array<Primitive*> P;
   ors::KinematicWorld G;
 
   void glDraw(){

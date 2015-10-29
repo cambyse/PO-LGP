@@ -78,13 +78,13 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   MP.setState(MP.x0, MP.v0);;
   
   //load parameters only once!
-  double positionPrec = MT::getParameter<double>("graspPlanPositionPrec");
-  double oppositionPrec = MT::getParameter<double>("graspPlanOppositionPrec");
-  double alignmentPrec = MT::getParameter<double>("graspPlanAlignmentPrec");
-  double fingerDistPrec = MT::getParameter<double>("graspPlanFingerDistPrec");
-  double colPrec = MT::getParameter<double>("graspPlanColPrec");
-  double limPrec = MT::getParameter<double>("graspPlanLimPrec");
-  double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
+  double positionPrec = mlr::getParameter<double>("graspPlanPositionPrec");
+  double oppositionPrec = mlr::getParameter<double>("graspPlanOppositionPrec");
+  double alignmentPrec = mlr::getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = mlr::getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = mlr::getParameter<double>("graspPlanColPrec");
+  double limPrec = mlr::getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = mlr::getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
   CHECK_EQ(T,MP.T, "");
@@ -102,7 +102,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   ors::Vector ivec,jvec;
 
   //general target
-  target = ARRAY(target_shape->X.pos);
+  target = conv_vec2arr(target_shape->X.pos);
   //xtarget(2) += .02; //grasp it 2cm above center
   
   //-- graspCenter -> predefined point (xtarget)
@@ -181,7 +181,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, oppositionPrec);
 
   
-  //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
+  //MLR_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
   
   //-- limits
   arr limits;
@@ -202,12 +202,12 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   MP.setState(MP.x0, MP.v0);;
 
   //load parameters only once!
-  double positionPrec = MT::getParameter<double>("graspPlanPositionPrec");
-  double alignmentPrec = MT::getParameter<double>("graspPlanAlignmentPrec");
-  double fingerDistPrec = MT::getParameter<double>("graspPlanFingerDistPrec");
-  double colPrec = MT::getParameter<double>("graspPlanColPrec");
-  double limPrec = MT::getParameter<double>("graspPlanLimPrec");
-  double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
+  double positionPrec = mlr::getParameter<double>("graspPlanPositionPrec");
+  double alignmentPrec = mlr::getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = mlr::getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = mlr::getParameter<double>("graspPlanColPrec");
+  double limPrec = mlr::getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = mlr::getParameter<double>("graspPlanZeroQPrec");
 
   //set the time horizon
   CHECK_EQ(T,MP.T, "");
@@ -225,7 +225,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   ors::Vector ivec,jvec;
 
   //general target
-  target = ARRAY(target_shape->X.pos);
+  target = conv_vec2arr(target_shape->X.pos);
 
   //-- graspCenter -> predefined point (xtarget)
   Task *c;
@@ -303,7 +303,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   return;
 
-  //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
+  //MLR_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
 
   //-- limits
   arr limits;
@@ -323,14 +323,14 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   MP.setState(MP.x0, MP.v0);;
   
-  double midPrec          = MT::getParameter<double>("placeMidPrec");
-  double alignmentPrec    = MT::getParameter<double>("placeAlignmentPrec");
-  double limPrec          = MT::getParameter<double>("placePlanLimPrec");
-  double colPrec          = MT::getParameter<double>("placePlanColPrec");
-  double zeroQPrec        = MT::getParameter<double>("placePlanZeroQPrec");
-  double positionPrec     = MT::getParameter<double>("placePositionPrec");
-  double upDownVelocity   = MT::getParameter<double>("placeUpDownVelocity");
-  double upDownVelocityPrec = MT::getParameter<double>("placeUpDownVelocityPrec");
+  double midPrec          = mlr::getParameter<double>("placeMidPrec");
+  double alignmentPrec    = mlr::getParameter<double>("placeAlignmentPrec");
+  double limPrec          = mlr::getParameter<double>("placePlanLimPrec");
+  double colPrec          = mlr::getParameter<double>("placePlanColPrec");
+  double zeroQPrec        = mlr::getParameter<double>("placePlanZeroQPrec");
+  double positionPrec     = mlr::getParameter<double>("placePositionPrec");
+  double upDownVelocity   = mlr::getParameter<double>("placeUpDownVelocity");
+  double upDownVelocityPrec = mlr::getParameter<double>("placeUpDownVelocityPrec");
 
   
   //set the time horizon
@@ -357,7 +357,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   //general target
   arr xtarget;
   if(onto) {
-    xtarget = ARRAY(onto->X.pos);
+    xtarget = conv_vec2arr(onto->X.pos);
     xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   }
   else {
@@ -438,10 +438,10 @@ void setHomingGoals(MotionProblem& M, uint T){
   
   //general target
   double midPrec, endPrec, limPrec, colPrec;
-  MT::getParameter(midPrec, "homingPlanMidPrec");
-  MT::getParameter(endPrec, "homingPlanEndPrec");
-  MT::getParameter(limPrec, "homingPlanLimPrec");
-  MT::getParameter(colPrec, "homingPlanColPrec");
+  mlr::getParameter(midPrec, "homingPlanMidPrec");
+  mlr::getParameter(endPrec, "homingPlanEndPrec");
+  mlr::getParameter(limPrec, "homingPlanLimPrec");
+  mlr::getParameter(colPrec, "homingPlanColPrec");
 
   
   //-- limits

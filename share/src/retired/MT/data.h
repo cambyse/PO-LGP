@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_data_h
-#define MT_data_h
+#ifndef MLR_data_h
+#define MLR_data_h
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -26,7 +26,7 @@
 struct Data {
   arr X, Y, Z;
   arr Xtest, Ytest;
-  MT::String tag;
+  mlr::String tag;
   
   uint N()    const { return X.d0; }
   uint Xdim() const { return X.d1; }
@@ -68,7 +68,7 @@ struct Data {
   void splitTest(Data &test);
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "data.cpp"
 #endif
 

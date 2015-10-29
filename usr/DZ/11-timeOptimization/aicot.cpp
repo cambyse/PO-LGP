@@ -3,7 +3,7 @@
 
 void AICOT::init(soc::SocSystemAbstraction& sys_){
   AICO::init(sys_);
-  tauCostRate = MT::Parameter<double>("Tcost",2e7);
+  tauCostRate = mlr::Parameter<double>("Tcost",2e7);
 
   int K  = sys->nTime();
   int n  = 2*sys->qDim();//xDim

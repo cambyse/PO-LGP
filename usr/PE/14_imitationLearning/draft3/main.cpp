@@ -16,12 +16,12 @@
 struct ImitationLearningAlgorithm{
   SearchCMA cma;
   arr samples,values;
-  MT::Array<Demonstration> demos;
+  mlr::Array<Demonstration> demos;
   InnerCostFunction* icf;
   OuterCostFunction* ocf;
   double costs;
 
-  ImitationLearningAlgorithm(MT::Array<Demonstration> _demos, InnerCostFunction* _icf, OuterCostFunction* _ocf,
+  ImitationLearningAlgorithm(mlr::Array<Demonstration> _demos, InnerCostFunction* _icf, OuterCostFunction* _ocf,
                              int _cmaD, int _cmaMu, int _cmaLambda, double _cmaLo, double _cmaHi) {
     demos = _demos;
     icf = _icf;
@@ -61,10 +61,10 @@ struct ImitationLearningAlgorithm{
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// load/create demonstration data
-  MT::Array<Demonstration> demos;
+  mlr::Array<Demonstration> demos;
   createToyDemonstrations1(demos);
 
   /// define an inner cost function (for TrajOpt)

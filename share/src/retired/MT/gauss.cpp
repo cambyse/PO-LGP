@@ -128,10 +128,10 @@ void Gaussian::setConditional(const arr& f, const arr& F, const arr& Q){
 
 double Gaussian::evaluate(const arr& pos) const {
 	if (useC) {
-		return ((1./sqrt(determinant(2*MT_PI*C)))*exp(-.5*(~(pos-c))*inverse(C)*(pos-c)))(0);
+		return ((1./sqrt(determinant(2*MLR_PI*C)))*exp(-.5*(~(pos-c))*inverse(C)*(pos-c)))(0);
 	}
 	else {
-		return (exp(-.5*~u*inverse(U)*u)/sqrt((determinant(2*MT_PI*inverse(U))))*exp(-.5*~pos*U*pos+~pos*u))(0);
+		return (exp(-.5*~u*inverse(U)*u)/sqrt((determinant(2*MLR_PI*inverse(U))))*exp(-.5*~pos*U*pos+~pos*u))(0);
 	}
 }
 
@@ -147,7 +147,7 @@ void Gaussian::gradient(arr& grad, const arr& pos) const {
 }
 
 void Gaussian::write(std::ostream& os) const {
-  if(!okU) MT_MSG("warning: Gaussian not in U form!");
+  if(!okU) MLR_MSG("warning: Gaussian not in U form!");
   makeU();
   //os <<"uU=" <<u <<U;
   if(trace(U)<1e-10) os <<"{<uniform Gaussian>}";
@@ -355,7 +355,7 @@ void division(Gaussian& x, const Gaussian& a, const Gaussian& b, double *logNorm
 }
 
 void forward(Gaussian& y, const Gaussian& x, arr& f, arr& F, arr& Q){
-  //MT_MSG("needs U implementation");
+  //MLR_MSG("needs U implementation");
   x.makeC();
   y.c = F*x.c + f;
   y.C = F*x.C*~F + Q;
@@ -363,7 +363,7 @@ void forward(Gaussian& y, const Gaussian& x, arr& f, arr& F, arr& Q){
 }
 
 void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double updateStep){
-  //MT_MSG("needs U implementation");
+  //MLR_MSG("needs U implementation");
   CHECK(y.c.N==f.N && y.c.N==F.d0 && y.c.N==Q.d0, "linBwd: output dimension does not match lin fwd fct");
   y.makeC();
   arr Finv=inverse(F);
@@ -424,7 +424,7 @@ void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f){
   
   //standard samples
   b.makeC();
-  MT::Array<arr> X(2*n+1);
+  mlr::Array<arr> X(2*n+1);
   arr U, V, d(n);
   svd(U, V, a.C);
   X(2*n)=a.c;
@@ -741,8 +741,8 @@ double KLD(const Gaussian &a, const Gaussian &b){
 
 void write(GaussianA& x, const char* name){
   ofstream os;
-  MT::open(os, name);
-  MT::IOraw=true;
+  mlr::open(os, name);
+  mlr::IOraw=true;
   for(uint i=0; i<x.N; i++){
     x(i).makeC();
     os <<x(i).c <<" \t ";
@@ -793,9 +793,9 @@ double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linea
   for(k=0; k<30; k++){
     pi_old=pi;
     //REFIT
-    MT::Array<GaussianL> group(m);
-    MT::Array<arr> groupP(m);
-    MT::Array<uintA> groupI(m);
+    mlr::Array<GaussianL> group(m);
+    mlr::Array<arr> groupP(m);
+    mlr::Array<uintA> groupI(m);
     for(j=0; j<m; j++){ group(j).clear(); groupP(j).clear(); groupI(j).clear(); }
     for(i=0; i<n; i++){ j=pi(i); group(j).append(&f(i)); groupP(j).append(P(i)); groupI(j).append(i); }
     //cout <<groupI <<endl;

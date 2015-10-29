@@ -11,6 +11,7 @@
 
 #include <lemon/list_graph.h>
 
+#include <util/softmax.h>
 #include <util/util.h>
 #include <util/return_tuple.h>
 #include <util/pretty_printer.h>
@@ -104,25 +105,36 @@ TEST(Util, LogAddExp) {
     test_log_add_exp(0,0);
 }
 
-TEST(Util, SoftMax) {
-    // extreme value / over flow
+TEST(Util, SoftMaxLowTemperatureLimit) {
+    DEBUG_OUT(1,"Testing extreme values / over flow");
+    vector<double> values({-1e100,-1e10,-10,0,10,1e10,1e100});
+    vector<double> expect_probs({0,0,0,0,0,0,1});
     {
-        DEBUG_OUT(1,"Testing extreme values / over flow");
-        vector<double> values({-1000,-100,-10,0,10,100,1000});
-        vector<double> expect_probs({0,0,0,0,0,0,1});
-        vector<double> probs = util::soft_max(values,1e-10);
-        DEBUG_OUT(1,"    T=1e-10");
+        // low but finite temperature
+        vector<double> probs = util::soft_max(values,double(1e-300));
+        DEBUG_OUT(1,"    T=1e-100");
         for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
             EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
             DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
         }
     }
-
-    // high temperature limit
     {
-        DEBUG_OUT(1,"High temperature limit");
-        vector<double> values({-1000,-100,0,100,1000});
-        vector<double> expect_probs({.2,.2,.2,.2,.2});
+        // zero-temperature
+        vector<double> probs = util::soft_max(values,0);
+        DEBUG_OUT(1,"    T=0");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+    }
+}
+
+TEST(Util, SoftMaxHighTemperatureLimit) {
+    DEBUG_OUT(1,"High temperature limit");
+    vector<double> values({-1000,-100,0,100,1000});
+    vector<double> expect_probs({.2,.2,.2,.2,.2});
+    {
+        // high but finite temperature
         vector<double> probs = util::soft_max(values,1e10);
         DEBUG_OUT(1,"    T=1e10");
         for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
@@ -130,62 +142,82 @@ TEST(Util, SoftMax) {
             DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
         }
     }
-
-    // equal values
     {
-        DEBUG_OUT(1,"Testing equally distributed values");
-        vector<double> probs;
-        vector<double> expect_probs({.2,.2,.2,.2,.2});
-
-        {
-            DEBUG_OUT(1,"    {1,1,1,1,1}");
-            vector<double> values({1,1,1,1,1});
-            probs = util::soft_max(values,1e-10);
-            DEBUG_OUT(1,"    T=1e-10");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
-            probs = util::soft_max(values,1);
-            DEBUG_OUT(1,"    T=1");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
+        // infinite temperature
+        vector<double> probs = util::soft_max(values,std::numeric_limits<double>::infinity());
+        DEBUG_OUT(1,"    T=" << std::numeric_limits<double>::infinity());
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
         }
+    }
+}
 
-        {
-            DEBUG_OUT(1,"    {0,0,0,0,0}");
-            vector<double> values({0,0,0,0,0});
-            probs = util::soft_max(values,1e-10);
-            DEBUG_OUT(1,"    T=1e-10");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
-            probs = util::soft_max(values,1);
-            DEBUG_OUT(1,"    T=1");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
+TEST(Util, SoftMaxExactValues) {
+    DEBUG_OUT(1,"Exact values");
+    vector<double> values({-1,0,1});
+    vector<double> expect_probs({0.18632372322584759, 0.30719588571849843, 0.50648039105565412});
+    vector<double> probs = util::soft_max(values,2);
+    DEBUG_OUT(1,"    T=2");
+    for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+        EXPECT_NEAR(expect_probs[idx],probs[idx],1e-15);
+        DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+    }
+}
+
+TEST(Util, SoftMaxEqualValues) {
+    DEBUG_OUT(1,"Testing equally distributed values");
+    vector<double> probs;
+    vector<double> expect_probs({.2,.2,.2,.2,.2});
+
+    {
+        DEBUG_OUT(1,"    {1,1,1,1,1}");
+        vector<double> values({1,1,1,1,1});
+        probs = util::soft_max(values,1e-10);
+        DEBUG_OUT(1,"    T=1e-10");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
         }
+        probs = util::soft_max(values,1);
+        DEBUG_OUT(1,"    T=1");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+    }
 
-        {
-            DEBUG_OUT(1,"    {-1,-1,-1,-1,-1}");
-            vector<double> values({-1,-1,-1,-1,-1});
-            probs = util::soft_max(values,1e-10);
-            DEBUG_OUT(1,"    T=1e-10");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
-            probs = util::soft_max(values,1);
-            DEBUG_OUT(1,"    T=1");
-            for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
-                EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
-                DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
-            }
+    {
+        DEBUG_OUT(1,"    {0,0,0,0,0}");
+        vector<double> values({0,0,0,0,0});
+        probs = util::soft_max(values,1e-10);
+        DEBUG_OUT(1,"    T=1e-10");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+        probs = util::soft_max(values,1);
+        DEBUG_OUT(1,"    T=1");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+    }
+
+    {
+        DEBUG_OUT(1,"    {-1,-1,-1,-1,-1}");
+        vector<double> values({-1,-1,-1,-1,-1});
+        probs = util::soft_max(values,1e-10);
+        DEBUG_OUT(1,"    T=1e-10");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
+        }
+        probs = util::soft_max(values,1);
+        DEBUG_OUT(1,"    T=1");
+        for(int idx=0; idx<(int)expect_probs.size(); ++idx) {
+            EXPECT_NEAR(expect_probs[idx],probs[idx],1e-6);
+            DEBUG_OUT(1,"(" << idx << ") : " << values[idx] << " --> " << probs[idx]);
         }
     }
 }
@@ -1316,7 +1348,7 @@ TEST(Util, GraphToPdf) {
     }
 
     // plot the graph
-    util::graph_to_pdf("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
+    util::plot_graph("graph.pdf", graph, "shape=square", &node_map, "style=dashed", &arc_map);
 
     //! [graph_to_pdf example]
 

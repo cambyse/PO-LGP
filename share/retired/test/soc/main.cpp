@@ -11,15 +11,15 @@ const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hrate 1e-0";
 void testRobotSystem(bool testFeedbackControl=false){
   OpenGL gl;
   
-  double D=MT::getParameter<double>("time_duration",4.);
-  uint T=MT::getParameter<uint>("time_steps",200);
+  double D=mlr::getParameter<double>("time_duration",4.);
+  uint T=mlr::getParameter<uint>("time_steps",200);
   OrsSystem sys;
-  sys.initBasics(NULL, NULL, &gl, T, D, MT::getParameter<bool>("dynamic",false), NULL);
+  sys.initBasics(NULL, NULL, &gl, T, D, mlr::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
-  pos->y_target = ARRAY(sys.getOrs().getBodyByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(sys.getOrs().getBodyByName("target")->X.pos);
   
   TaskVariable *col = new DefaultTaskVariable("collision", sys.getOrs(), collTVT,0,0,0,0,ARR(.15));
   col->y_prec=1e-0;
@@ -114,7 +114,7 @@ void testRobotSystem(bool testFeedbackControl=false){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   cout <<USAGE <<endl;
 
   testRobotSystem();

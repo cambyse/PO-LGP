@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <ios>
 #include <relational/learn.h>
 #include <relational/prada.h>
@@ -27,7 +27,7 @@ void learn_rules() {
   // ... same, only for noisy default rule
   double prob_state_given_NoisyOutcome__in_noisyDefaultRule = 1e-9;
   // Log-file
-  MT::String logfile("rulelearn.log");
+  mlr::String logfile("rulelearn.log");
         
  
   
@@ -86,10 +86,10 @@ void learn_rules() {
 #define PLAN_TYPE__A_PRADA 2
 
 void test_plan() {
-  MT::String config_file;
-  MT::getParameter(config_file, MT::String("confFile"), MT::String("config"));
+  mlr::String config_file;
+  mlr::getParameter(config_file, mlr::String("confFile"), mlr::String("config"));
   cout << "Config-file: " << config_file << endl;
-  MT::openConfigFile(config_file);
+  mlr::openConfigFile(config_file);
   
   cout<<"********************************"<<endl;
   cout<<" libPRADA plan demo"<<endl;
@@ -107,49 +107,49 @@ void test_plan() {
   cout<<endl<<"READ CONFIG:"<<endl;
   
   uint randSeed;
-  MT::getParameter(randSeed, "randSeed");
+  mlr::getParameter(randSeed, "randSeed");
   rnd.seed(randSeed);
   PRINT(randSeed);
   
   uint plan_type;
-  MT::getParameter(plan_type, "plan_type");
+  mlr::getParameter(plan_type, "plan_type");
   PRINT(plan_type);
   
   double discountFactor;
-  MT::getParameter(discountFactor, "discountFactor");
+  mlr::getParameter(discountFactor, "discountFactor");
   PRINT(discountFactor);
         
   
   uint PRADA_horizon;
-  MT::getParameter(PRADA_horizon, "PRADA_horizon");
+  mlr::getParameter(PRADA_horizon, "PRADA_horizon");
   PRINT(PRADA_horizon);
   
   uint PRADA_num_samples;
-  MT::getParameter(PRADA_num_samples, "PRADA_num_samples");
+  mlr::getParameter(PRADA_num_samples, "PRADA_num_samples");
   PRINT(PRADA_num_samples);
   
   double PRADA_noise_softener;
-  MT::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
+  mlr::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
   PRINT(PRADA_noise_softener);
     
   uint horizon = PRADA_horizon;
   PRINT(horizon);
   
     
-  MT::String rulesFile_name;
-  MT::getParameter(rulesFile_name, "file_rules");
+  mlr::String rulesFile_name;
+  mlr::getParameter(rulesFile_name, "file_rules");
   PRINT(rulesFile_name);
   
-  MT::String stateFile_name;
-  MT::getParameter(stateFile_name, "file_state");
+  mlr::String stateFile_name;
+  mlr::getParameter(stateFile_name, "file_state");
   PRINT(stateFile_name);
   
-  MT::String rewardFile_name;
-  MT::getParameter(rewardFile_name, "file_reward");
+  mlr::String rewardFile_name;
+  mlr::getParameter(rewardFile_name, "file_reward");
   PRINT(rewardFile_name);
   
-  MT::String symbolsFile_name;
-  MT::getParameter(symbolsFile_name, "file_symbols");
+  mlr::String symbolsFile_name;
+  mlr::getParameter(symbolsFile_name, "file_symbols");
   PRINT(symbolsFile_name);
   
 
@@ -185,14 +185,14 @@ void test_plan() {
   //   TYPES
   // -------------------------------------
 
-  relational::ArgumentType *scale = relational::ArgumentType::get(MT::String("scale"));
-  relational::ArgumentType *abstractConcept = relational::ArgumentType::get(MT::String("abstractConcept"));
-  relational::ArgumentType *physical_free = relational::ArgumentType::get(MT::String("physical_free"));
-  relational::ArgumentType *physical_fixed = relational::ArgumentType::get(MT::String("physical_fixed"));
+  relational::ArgumentType *scale = relational::ArgumentType::get(mlr::String("scale"));
+  relational::ArgumentType *abstractConcept = relational::ArgumentType::get(mlr::String("abstractConcept"));
+  relational::ArgumentType *physical_free = relational::ArgumentType::get(mlr::String("physical_free"));
+  relational::ArgumentType *physical_fixed = relational::ArgumentType::get(mlr::String("physical_fixed"));
   relational::ArgumentTypeL physicalTypes;
   physicalTypes.append(physical_free);
   physicalTypes.append(physical_fixed);
-  relational::ArgumentType *physical = relational::DisjunctionArgumentType::get(MT::String("physical"), physicalTypes);
+  relational::ArgumentType *physical = relational::DisjunctionArgumentType::get(mlr::String("physical"), physicalTypes);
 
   relational::Symbol *grab = relational::Symbol::get("grab");
   relational::Symbol *puton = relational::Symbol::get("puton");
@@ -228,7 +228,7 @@ void test_plan() {
   relational::Reward* reward = NULL;
   // Conjunction of literal list reward and maximize reward
   relational::LitL rewardConds;
-  relational::Literal::get(rewardConds, MT::String("scaleBalance(71)=4"));
+  relational::Literal::get(rewardConds, mlr::String("scaleBalance(71)=4"));
 
   relational::MaximizeReward *maxReward = new relational::MaximizeReward(relational::Literal::get("numAbove(74)=1"));
   maxReward->offset = 0;

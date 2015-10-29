@@ -16,7 +16,7 @@ arr generateRandomData(uint n=20, double sig=.03){
       b0-= rnd.uni()*b1;
     }
   };
-  MT::Array<RndPlane> planes(n);
+  mlr::Array<RndPlane> planes(n);
   arr Y(width+1);
   for(uint i=0;i<Y.N;i++){
     double x=(double)i/(Y.N-1);
@@ -35,8 +35,8 @@ arr generateRandomData(uint n=20, double sig=.03){
 }
 
 struct Cell;
-typedef MT::Array<Cell> CellA;
-typedef MT::Array<Cell*> CellL;
+typedef mlr::Array<Cell> CellA;
+typedef mlr::Array<Cell*> CellL;
 
 arr xx, xy, g_xx, g_xy;
 
@@ -260,7 +260,7 @@ void planes(){
 
   for(uint k=0;k<15;k++){
 //    for(Cell &c:cells) c.report();
-    //  MT::wait();
+    //  mlr::wait();
 //    for(Cell &c:cells) c.step_collectCumulates();
 //    for(Cell &c:cells) c.step_propagateBeta();
 
@@ -275,7 +275,7 @@ void planes(){
     plotFunction(data);
     plotFunction(x);
     plot(false);
-    MT::wait();
+    mlr::wait();
 
     g_xx.setZero();  g_xy.setZero();
     for(Cell &c:cells) c.reaccumulate_grads();
@@ -284,7 +284,7 @@ void planes(){
     //    for(Cell &c:cells) c.report();
 //    for(Cell &c:cells) c.step_collectCumulates();
   }
-  //  MT::wait();
+  //  mlr::wait();
 
 
 }

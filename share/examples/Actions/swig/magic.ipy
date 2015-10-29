@@ -1,0 +1,35 @@
+%load_ext autoreload
+%autoreload 2
+from actions import *
+from controllers import *
+import threading 
+
+
+s = []
+b = []
+j = []
+
+def update():
+	global s,b,j
+	s,b,j = update_a()
+
+class PerpetualTimer(threading._Timer): 
+	def __init__(self, interval, function, name=None, daemon=False, args=(), kwargs={}): 
+		super(PerpetualTimer, self).__init__(interval, function, args, kwargs) 
+		self.setName(name) 
+		self.setDaemon(daemon) 
+
+	def run(self): 
+			while True: 
+				self.finished.wait(self.interval) 
+				if self.finished.isSet(): 
+					return 
+				self.function(*self.args, **self.kwargs) 
+
+	def stop(self, timeout=None): 
+			self.cancel() 
+			self.join(timeout) 
+
+
+timer = PerpetualTimer(3, update, daemon=True) 
+timer.start() 

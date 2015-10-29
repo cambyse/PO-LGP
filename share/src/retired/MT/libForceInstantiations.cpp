@@ -18,9 +18,9 @@
 
 
 
-//#define MT_IMPLEMENTATION
-#ifndef MT_IMPLEMENT_TEMPLATES
-#  define MT_IMPLEMENT_TEMPLATES
+//#define MLR_IMPLEMENTATION
+#ifndef MLR_IMPLEMENT_TEMPLATES
+#  define MLR_IMPLEMENT_TEMPLATES
 #endif
 
 //the above two flags cause the following headers to
@@ -30,41 +30,41 @@
 
 //explicit template instantiations
 //-- from util.h
-template void MT::getParameter(double&, const char*);
-template float MT::getParameter<float>(const char*);
-template void MT::getParameter(uint&, const char*);
-template int MT::getParameter<int>(const char*);
-template void MT::getParameter(int&, const char*);
-template void MT::getParameter(int&, const char*, const int&);
-template void MT::getParameter(bool&, const char*, const bool&);
-template int  MT::getParameter(const char*, const int&);
-template uint MT::getParameter(const char*, const uint&);
-template bool MT::getParameter(const char*, const bool&);
-template double MT::getParameter(const char*, const double&);
-template long MT::getParameter(const char*);
-template MT::String MT::getParameter(const char*);
-template MT::String MT::getParameter(const char*, const MT::String&);
-template bool MT::checkParameter<uint>(const char*);
+template void mlr::getParameter(double&, const char*);
+template float mlr::getParameter<float>(const char*);
+template void mlr::getParameter(uint&, const char*);
+template int mlr::getParameter<int>(const char*);
+template void mlr::getParameter(int&, const char*);
+template void mlr::getParameter(int&, const char*, const int&);
+template void mlr::getParameter(bool&, const char*, const bool&);
+template int  mlr::getParameter(const char*, const int&);
+template uint mlr::getParameter(const char*, const uint&);
+template bool mlr::getParameter(const char*, const bool&);
+template double mlr::getParameter(const char*, const double&);
+template long mlr::getParameter(const char*);
+template mlr::String mlr::getParameter(const char*);
+template mlr::String mlr::getParameter(const char*, const mlr::String&);
+template bool mlr::checkParameter<uint>(const char*);
 
-template void MT::Parameter<MT::String>::initialize();
-template void MT::Parameter<bool>::initialize();
-template void MT::Parameter<double>::initialize();
-template void MT::Parameter<int>::initialize();
+template void mlr::Parameter<mlr::String>::initialize();
+template void mlr::Parameter<bool>::initialize();
+template void mlr::Parameter<double>::initialize();
+template void mlr::Parameter<int>::initialize();
 
-template std::map<std::string,int> MT::ParameterMap<int>::m;
-template std::map<std::string,double> MT::ParameterMap<double>::m;
-template std::map<std::string,unsigned int> MT::ParameterMap<unsigned int>::m;
-template std::map<std::string,float> MT::ParameterMap<float>::m;
-template std::map<std::string,bool> MT::ParameterMap<bool>::m;
-template std::map<std::string,long> MT::ParameterMap<long>::m;
-template std::map<std::string,MT::String> MT::ParameterMap<MT::String>::m;
-template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
+template std::map<std::string,int> mlr::ParameterMap<int>::m;
+template std::map<std::string,double> mlr::ParameterMap<double>::m;
+template std::map<std::string,unsigned int> mlr::ParameterMap<unsigned int>::m;
+template std::map<std::string,float> mlr::ParameterMap<float>::m;
+template std::map<std::string,bool> mlr::ParameterMap<bool>::m;
+template std::map<std::string,long> mlr::ParameterMap<long>::m;
+template std::map<std::string,mlr::String> mlr::ParameterMap<mlr::String>::m;
+template std::map<std::string,std::string> mlr::ParameterMap<std::string>::m;
 
 //-- from array.h
 //full classes
-//template class MT::Array<uint>;
-//template class MT::Array<int>;
-//template class MT::Array<MT::Array<uint> >;
+//template class mlr::Array<uint>;
+//template class mlr::Array<int>;
+//template class mlr::Array<mlr::Array<uint> >;
 //full classes & numerical routines
 #define T double
 #  include <Core/array_instantiate.cxx>
@@ -91,21 +91,21 @@ template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
 #undef NOFLOAT
 
 //-- from ors.h
-//template MT::Array<ors::Transformation*>::Array();
-//template MT::Array<ors::Transformation*>::~Array();
+//template mlr::Array<ors::Transformation*>::Array();
+//template mlr::Array<ors::Transformation*>::~Array();
 
-template MT::Array<MT::String>::Array();
-template MT::Array<MT::String>::~Array();
+template mlr::Array<mlr::String>::Array();
+template mlr::Array<mlr::String>::~Array();
 
-template MT::Array<arr*>::Array();
-template MT::Array<arr*>::Array(uint);
-template MT::Array<arr*>::~Array();
+template mlr::Array<arr*>::Array();
+template mlr::Array<arr*>::Array(uint);
+template mlr::Array<arr*>::~Array();
 
-template MT::Array<MT::Array<uint> >::~Array();
+template mlr::Array<mlr::Array<uint> >::~Array();
 
-template MT::Array<char const*>::Array();
-template MT::Array<char const*>::Array(uint);
-template MT::Array<char const*>::~Array();
+template mlr::Array<char const*>::Array();
+template mlr::Array<char const*>::Array(uint);
+template mlr::Array<char const*>::~Array();
 
-//template MT::Array<glUI::Button>::Array();
-//template MT::Array<glUI::Button>::~Array();
+//template mlr::Array<glUI::Button>::Array();
+//template mlr::Array<glUI::Button>::~Array();

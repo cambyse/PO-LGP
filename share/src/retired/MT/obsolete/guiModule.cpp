@@ -40,8 +40,8 @@ void GuiModule::createOrsClones(ors::KinematicWorld *_ors){
 }
 
 void GuiModule::open(){
-// #ifdef MT_QT
-//   app = new QApplication(MT::argc, MT::argv);
+// #ifdef MLR_QT
+//   app = new QApplication(mlr::argc, mlr::argv);
 //   app->processEvents();
   
 //   ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
@@ -52,7 +52,7 @@ void GuiModule::open(){
   ors.calcNodeFramesFromEdges();
   */
   
-#ifdef MT_QT
+#ifdef MLR_QT
   //gl = new OpenGL(ui->glparent, "hallo", 401, 401, 0, 0);
 #else
   gl = new OpenGL("GuiModule", 2*512, 2*384);
@@ -87,7 +87,7 @@ void GuiModule::open(){
 }
 
 void GuiModule::step(){
-  MT::Array<Object> objects;
+  mlr::Array<Object> objects;
   arr q_reference;  // joint state of current robot
   arr q_trajectory; // a trajectory to display
   
@@ -97,13 +97,13 @@ void GuiModule::step(){
     q_referenceVar->readAccess(this);
     q_reference = q_referenceVar->q_reference;
     q_referenceVar->deAccess(this);
-  }//else MT_MSG("Variable pointer q_referenceVar not set");
+  }//else MLR_MSG("Variable pointer q_referenceVar not set");
   
   if(proxiesVar){
     proxiesVar->readAccess(this);
     listCopy(ors->proxies, proxiesVar->proxies);
     proxiesVar->deAccess(this);
-  }//else MT_MSG("Variable pointer proxiesVar not set");
+  }//else MLR_MSG("Variable pointer proxiesVar not set");
   
   if(perceptionOutputVar && ors){
     perceptionOutputVar->readAccess(this);
@@ -112,7 +112,7 @@ void GuiModule::step(){
     perceptionOutputVar->deAccess(this);
     realizeObjectsInOrs(*ors, objects);
     copyBodyInfos(*ors2, *ors);
-  }//else  MT_MSG("Variable pointer perceptionOutputVar or ors not set");
+  }//else  MLR_MSG("Variable pointer perceptionOutputVar or ors not set");
   if(planVar){
     planVar->readAccess(this);
     q_trajectory = planVar->q;
@@ -122,7 +122,7 @@ void GuiModule::step(){
     cameraVar->readAccess(this);
     img[1] = cameraVar->rgbL;
     cameraVar->deAccess(this);
-  }// Nikolay change: display spammed else MT_MSG("Variable pointer cameraVar not set");
+  }// Nikolay change: display spammed else MLR_MSG("Variable pointer cameraVar not set");
   
   //if(img[0].N) gl->img=&img[0];
   for(uint i=0; i<6; i++) if(img[i].N) gl->views(i).img=&img[i];
@@ -181,7 +181,7 @@ void GuiModule::step(){
     'z.plotData' us 1:8 notitle");
   }*/
   
-#ifdef MT_QT
+#ifdef MLR_QT
 //   if(ctrl->stepCounter){
 //     ui->time            ->setText(FORMAT(ctrl->lastTime));
 //     ui->cycleTime       ->setText(FORMATPM(ctrl->cycleTime));
@@ -244,7 +244,7 @@ void GuiModule::step(){
 void GuiModule::close(){
   delete gl;
   gl = NULL;
-#ifdef MT_QT
+#ifdef MLR_QT
 //   delete app;
 //   app = NULL;
 //   //TOTO!!ui = &(new Gui())->ui; //;Ui_SchunkMonitor();

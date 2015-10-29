@@ -43,7 +43,7 @@ struct MySystem:System{
   ACCESS(arr, wrenchR)
   MySystem(){
     addModule<JoystickInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
@@ -76,7 +76,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
 
-  bool useRos = MT::getParameter<bool>("useRos", false);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -160,7 +160,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   bool updated_edge = false;
   bool branching = false;
   for(uint t=0;t<x.d0 + 100;t++){
-      MT::wait(.1);
+      mlr::wait(.1);
 
       //cout<<"endeff->X.pos"<<endeff->X.pos <<endl;
 
@@ -316,7 +316,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -339,7 +339,7 @@ data.close();
 int main(int argc, char** argv)
 {
 
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
   uint total = numSamples_height*numSamples_pos + numSamples_height; //each height we generate one pseudo-sample (that will help to find the best observation)
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   arr y0;
   double dual;
   //arr x0 = world.getJointState();
@@ -428,7 +428,7 @@ int main(int argc, char** argv)
   write_to_graphviz(fsc);
 
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
   //TESTING: Online POMDP planning

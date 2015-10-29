@@ -1,5 +1,5 @@
 ifneq ($(SYS),Linux)
-CXXFLAGS+= -DMT_$(SYS)
+CXXFLAGS+= -DMLR_$(SYS)
 endif
 
 ifeq ($(SYS),Linux)

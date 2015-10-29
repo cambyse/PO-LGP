@@ -29,9 +29,9 @@ void shutdown(int) {
 }
 
 void init_grounded_symbol(AL_GroundedSymbol& gs) {
-  srand(MT::getParameter<int>("seed", time(NULL)));
-  bool gaussproc = MT::getParameter<bool>("gauss", true);
-  int n_steps = MT::getParameter<int>("steps", 20);
+  srand(mlr::getParameter<int>("seed", time(NULL)));
+  bool gaussproc = mlr::getParameter<bool>("gauss", true);
+  int n_steps = mlr::getParameter<int>("steps", 20);
 
   ActiveLearningProblem problem;
 	//problem.sampler   = new BlocksWorldSampler;
@@ -68,15 +68,15 @@ void init_grounded_symbol(AL_GroundedSymbol& gs) {
 }
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
 
-  double seed = MT::getParameter<double>("seed", time(NULL));
+  double seed = mlr::getParameter<double>("seed", time(NULL));
 	srand(seed);
   
   RobotManipulationSimulator sim;
   sim.shutdownAll();
-  sim.loadConfiguration(MT::getParameter<MT::String>("orsFile"));
+  sim.loadConfiguration(mlr::getParameter<mlr::String>("orsFile"));
   sim.startOde();
   sim.startSwift();
   sim.simulate(150);
@@ -86,10 +86,10 @@ int main(int argc, char** argv) {
   //  SET UP GROUNDED SYMBOL
   //  -----------------------------------
 
-  MT::String relation("inside");
+  mlr::String relation("inside");
   AL_GroundedSymbol gs(relation, 2, false);
   init_grounded_symbol(gs);
-  MT::Array<relational::GroundedSymbol*> sgs;
+  mlr::Array<relational::GroundedSymbol*> sgs;
   sgs.append(&gs);
   relational::LitL lits;
   relational::calculateSymbols(lits, sgs, sim.C);
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
   //  SET UP LOGIC
   // -------------------------------------
  
-  MT::String symbolsFile_name("symbols.dat");
+  mlr::String symbolsFile_name("symbols.dat");
 	cout<<endl<<endl;
 	cout<<"SYMBOLS:"<<endl;
 	cout<<"Reading symbols from file \""<<symbolsFile_name<<"\"..."<<flush;
@@ -134,13 +134,13 @@ int main(int argc, char** argv) {
   //RMSim::RobotManipulationInterface::generateSimulationSequence_realistic(os, sim, 10, 19);
   std::ofstream os("transition.dat");
   os << *s <<std::endl;
-  relational::Symbol* p_GRAB = relational::Symbol::get(MT::String("grab"));
-  relational::Symbol* p_PUTON = relational::Symbol::get(MT::String("puton"));
+  relational::Symbol* p_GRAB = relational::Symbol::get(mlr::String("grab"));
+  relational::Symbol* p_PUTON = relational::Symbol::get(mlr::String("puton"));
 
   relational::Symbol *ac;
   uintA args;
   args.resize(1);
-  for(int iter = 0; iter < MT::getParameter<int>("actions", 50); ++iter) {
+  for(int iter = 0; iter < mlr::getParameter<int>("actions", 50); ++iter) {
 
     relational::StateTransition *trans = new relational::StateTransition;
     trans->pre = *s;

@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
@@ -36,19 +36,19 @@ void TEST(PickAndPlace){
 
   cout <<"z-init=" <<MP.z0 <<endl;
 
-  ors::GraphOperator *op1 = new ors::GraphOperator();
-  op1->symbol = ors::GraphOperator::addRigid;
+  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
+  op1->symbol = ors::KinematicSwitch::addRigid;
   op1->timeOfApplication = MP.T/2;
   op1->fromId = G.getBodyByName("graspRef")->index;
   op1->toId = G.getBodyByName("obj1")->index;
-  G.operators.append(op1);
+  MP.switches.append(op1);
 
-  ors::GraphOperator *op2 = new ors::GraphOperator();
-  op2->symbol = ors::GraphOperator::deleteJoint;
+  ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
+  op2->symbol = ors::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = MP.T/2;
   op2->fromId = G.getBodyByName("table")->index;
   op2->toId = G.getBodyByName("obj1")->index;
-  G.operators.append(op2);
+  MP.switches.append(op2);
 
   //-- setup new motion problem
   ors::Shape *grasp = G.getShapeByName("graspRef");
@@ -113,7 +113,7 @@ void TEST(PickAndPlace){
   //-- optimize
   for(uint k=0;k<1;k++){
 //    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , aulaMuInc=1.2, damping=1., allowOverstep=true));
+    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , aulaMuInc=1.2, damping=1., allowOverstep=true));
   }
   MP.costReport();
 
@@ -123,14 +123,14 @@ void TEST(PickAndPlace){
   for(;;)
     displayTrajectory(x, 1, G, "planned trajectory", -100., MF.dim_z());
 
-  MT::wait();
+  mlr::wait();
 
 }
 
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testPickAndPlace();
 

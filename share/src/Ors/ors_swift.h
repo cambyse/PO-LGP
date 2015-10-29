@@ -47,8 +47,8 @@ struct SwiftInterface {
   void reinitShape(const ors::Shape *s);
 //  void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
-  void deactivate(const MT::Array<ors::Shape*>& shapes);
-  void deactivate(const MT::Array<ors::Body*>& bodies);
+  void deactivate(const mlr::Array<ors::Shape*>& shapes);
+  void deactivate(const mlr::Array<ors::Body*>& bodies);
   void initActivations(const ors::KinematicWorld& world, uint parentLevelsToDeactivate=3);
   void swiftQueryExactDistance();
 };

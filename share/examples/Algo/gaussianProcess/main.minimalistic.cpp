@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <Core/array.h>
 #include <Gui/plot.h>
@@ -132,7 +132,7 @@ void randomFunctions(){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testGP();
   randomFunctions();

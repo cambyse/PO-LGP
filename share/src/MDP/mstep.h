@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_mstep_h
-#define MT_mstep_h
+#ifndef MLR_mstep_h
+#define MLR_mstep_h
 
 #include <Core/array.h>
 
@@ -31,7 +31,7 @@ void noisyMaxMstep(arr& param, const arr& post, uint left, double rate, double n
 void noisyMaxMstep2(arr& param, const arr& likelihood, uint left, double noise=0);
 void mstep_11rule(arr& param, const arr& post, uint left, double rate, double noise=0);
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "mstep.cpp"
 #endif
 

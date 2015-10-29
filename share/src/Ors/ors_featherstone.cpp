@@ -30,7 +30,7 @@
  */
 
 
-#if 1 //def MT_FEATHERSTONE
+#if 1 //def MLR_FEATHERSTONE
 
 #include "ors.h"
 
@@ -294,7 +294,7 @@ void ors::Link::updateFeatherstones() {
   _f(3)=fo.x;  _f(4)=fo.y;  _f(5)=fo.z;
 }
 
-void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   tree.resize(C.bodies.N);
   
   uint i, iq;
@@ -347,7 +347,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   for(i=0; i<tree.N; i++) tree(i).setFeatherstones();
 }
 
-void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void updateGraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   CHECK_EQ(tree.N,C.bodies.N, "");
   
   uint i;
@@ -573,7 +573,7 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
   }
   
   uint i, N=robot.N(), d_i, n;
-  MT::Array<arr> S(N), qd_i(N), qdd_i(N), tau_i(N);
+  mlr::Array<arr> S(N), qd_i(N), qdd_i(N), tau_i(N);
   arr Xup(N, 6, 6), v(N, 6), f(N, 6), a(N, 6);
   arr Q;
   
@@ -669,7 +669,7 @@ void Featherstone::fwdDynamics_old(arr& qdd,
   
   int par;
   uint i, N=robot.N(), d_i, n;
-  MT::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N), I_h(N), h_I_h(N), inv_h_I_h(N), tau__h_fA(N);
+  mlr::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N), I_h(N), h_I_h(N), inv_h_I_h(N), tau__h_fA(N);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), f(N, 6), IA(N, 6, 6), fA(N, 6), a(N, 6);
   arr vJ, Ia, fa;
   arr Q;
@@ -754,7 +754,7 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
                              const arr& tau) {
   int par;
   uint i, N=tree.N, d_i, n;
-  MT::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N), I_h(N), h_I_h(N), u(N);
+  mlr::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N), I_h(N), h_I_h(N), u(N);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IA(N, 6, 6), fA(N, 6), a(N, 6);
   qdd.resizeAs(tau);
   
@@ -894,7 +894,7 @@ void ors::invDynamics(arr& tau,
                       const arr& qdd) {
   int par;
   uint i, N=tree.N, d_i, n;
-  MT::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N);
+  mlr::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N);
   arr Xup(N, 6, 6), v(N, 6), fJ(N, 6), a(N, 6);
   tau.resizeAs(qdd);
   
@@ -1044,7 +1044,7 @@ void ors::fwdDynamics_MF(arr& qdd,
   qdd = Minv * (tau + F);
 }
 
-#else ///MT_FEATHERSTONE
+#else ///MLR_FEATHERSTONE
 void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
 void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
 void Featherstone::equationOfMotion(arr& H, arr& C,

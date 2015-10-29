@@ -54,13 +54,13 @@ double mdp::pomdpEM_lev2(
   arr mdp_Rax = mdp.Rax;
   double Rmin=mdp_Rax.min(), Rmax=mdp_Rax.max();
   if(rescaleRewards || (!maxMstep && Rmin<0.)){
-    //if(!rescaleRewards) MT_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
+    //if(!rescaleRewards) MLR_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
     for(uint i=0; i<mdp_Rax.N; i++) mdp_Rax.elem(i) = (mdp_Rax.elem(i)-Rmin)/(Rmax-Rmin);
   }else{
     Rmin=0.; Rmax=1.;
   }
   
-  MT::timerStart();
+  mlr::timerStart();
   
   //----- define the factor model
   infer::Variable x(dx , "state(t)");
@@ -132,7 +132,7 @@ double mdp::pomdpEM_lev2(
     for(uint i=0; i<newed.N; i++) delete newed(i);
   }
   
-  if(os)(*os) <<"E: " <<MT::timerRead(true) <<"sec, M: " <<std::flush;
+  if(os)(*os) <<"E: " <<mlr::timerRead(true) <<"sec, M: " <<std::flush;
   
   //----- M-STEP
   //consider the 2nd term (alpha*P_(x'|x)*beta)
@@ -184,7 +184,7 @@ double mdp::pomdpEM_lev2(
   
   //----- rest is cosmetics
   //report
-  if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
+  if(os)(*os) <<mlr::timerRead() <<"sec, " <<std::flush;
   if(os)(*os) <<" P(r=1)=" <<PR
     <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)
     <<", Exp(R)=" <<(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma)

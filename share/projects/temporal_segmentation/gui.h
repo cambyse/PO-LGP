@@ -25,4 +25,4 @@ struct FGP {
 };
 // }}}
 
-#include "gui_t.h"
+#include "gui.tpp"

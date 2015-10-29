@@ -7,20 +7,20 @@ Percept_ISF_process::Percept_ISF_process():Process("percept ISF"){
   graspobj=NULL;
   perc_out=NULL;
   /* perception vs cmd line */
-  obj_comes_from = MT::getParameter<uint>("obj_comes_from");
+  obj_comes_from = mlr::getParameter<uint>("obj_comes_from");
   /* shape params */
-  shape = MT::getParameter<uint>("shape");
-  shapeprior = MT::getParameter<uint>("shapeprior",0);
-  center = MT::getParameter<arr>("center");
-  radius = MT::getParameter<double>("radius");
-  sigma = MT::getParameter<double>("sigma");
-  height = MT::getParameter<double>("height");
-  zorientation  = MT::getParameter<arr>("orientation");
+  shape = mlr::getParameter<uint>("shape");
+  shapeprior = mlr::getParameter<uint>("shapeprior",0);
+  center = mlr::getParameter<arr>("center");
+  radius = mlr::getParameter<double>("radius");
+  sigma = mlr::getParameter<double>("sigma");
+  height = mlr::getParameter<double>("height");
+  zorientation  = mlr::getParameter<arr>("orientation");
   /* plot  params */
-  plotObservs = MT::getParameter<uint>("plotObservs", 1);
-  observs = MT::getParameter<uint>("observs", 1);
+  plotObservs = mlr::getParameter<uint>("plotObservs", 1);
+  observs = mlr::getParameter<uint>("observs", 1);
   /* random */
-  seed = MT::getParameter<uint>("seed", 1);
+  seed = mlr::getParameter<uint>("seed", 1);
 
 };
 
@@ -32,7 +32,7 @@ Percept_ISF_process::get_percept_obj(GraspObject **obj) {/*get object once*/
   double h,r;
   arr ce;
 
-  MT::Array<Object> *percobjs=&perc_out->objects;
+  mlr::Array<Object> *percobjs=&perc_out->objects;
   bool found=false;
   while(!found){
     perc_out->readAccess(this);
@@ -97,7 +97,7 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject **obj, GraspObject **prior){
             *obj = new GraspObject_GP();
             o = (GraspObject_GP*)*obj;
             if (!prior) HALT("Provide meaningful -shapeprior!");
-            MT::rnd.seed(seed);
+            mlr::rnd.seed(seed);
             get_observs_gradwalk(pts, grads, *prior,
                 ARR(-2,-2,0), ARR(2,0,2),
                 observs);
@@ -123,9 +123,9 @@ Percept_ISF_process::get_grasp_obj(GraspObject **obj, GraspObject **prior){
     case 0: get_percept_obj(obj); break;
     case 1: get_cmd_line_obj(obj, prior); break;
     default:  
-            MT_MSG("provide meaningful obj_comes_from");
-            MT_MSG("0: vision (camera running), or");
-            MT_MSG("1: cmd line (-center '[.0 -.9 .99 ]' -shape 0 -height .25  -sigma 10 -radius .04) ");
+            MLR_MSG("provide meaningful obj_comes_from");
+            MLR_MSG("0: vision (camera running), or");
+            MLR_MSG("1: cmd line (-center '[.0 -.9 .99 ]' -shape 0 -height .25  -sigma 10 -radius .04) ");
             HALT("need object to grasp");
   }
 
@@ -144,7 +144,7 @@ void Percept_ISF_process::step(){
   graspobj->prior=prior;
   graspobj->deAccess(this);
 
-  MT::wait(.01);
+  mlr::wait(.01);
 }
 
 void Percept_ISF_process::close(){

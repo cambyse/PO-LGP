@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 #include <map>
@@ -7,26 +9,31 @@ typedef std::vector<int> intV;
 typedef std::vector<std::string> stringV;
 typedef std::map<std::string, std::string> dict;
 using std::string;
-
+template<class T> struct Access_typed;
 
 struct ActionSwigInterface{
   struct SwigSystem *S;
 
-  ActionSwigInterface(); //instantiates the ActionMachineSystem, runs it
+  ActionSwigInterface();
   ~ActionSwigInterface();
 
   void Cancel();
 
-  //-- robot data access
+  void setVerbose(bool verbose);
+  void setFixBase(bool base);
 
+  //-- robot data access
   stringV getShapeList();
   stringV getBodyList();
   stringV getJointList();
+  double getQDim();
   doubleV getQ();
+  doubleV getV();
   doubleV getForceTorqueMeasurement();
   dict getBodyByName (string bodyName);
   dict getShapeByName (string shapeName);
   dict getJointByName (string jointName);
+  int getQIndex(string jointName);
 
   //-- symbolic state access
   stringV getSymbols();
@@ -45,14 +52,9 @@ struct ActionSwigInterface{
   void waitForCondition(const stringV& literals);
   void waitForCondition(const char* query);
 
-//  void startActivity(intV literal, const dict& parameters=dict());
-//  void waitForCondition(intV literal);
   int  waitForOrCondition(const std::vector<stringV> literals);
+  void waitForAllCondition(const stringV queries);
   void waitForQuitSymbol();
-
-//  void activateAction(string symbolName); //"(reachAt A)"
-//  void waitForCondition(string condition); //"(reachAt A converged)"
-//  int waitForConditions(string condition1, string condition2);
 
   //-- methods to define new symbols
   int createNewSymbol(string symbolName);
@@ -60,23 +62,11 @@ struct ActionSwigInterface{
   //-- methods to define tasks/actions
   int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());
 
-//  int defineNewTaskSpaceControlAction(
-//      string symbolName,
-//      //task map
-//      string taskMapType,
-//      string shape_ref1, doubleV vec_ref1,
-//      string shape_ref2="baseReferenceNotWorld", doubleV vec_ref2,
-//      //controller parameters
-//      const doubleV yref, const doubleV vref,
-//      double refTrajectoryDurationInSeconds=-1., //trajectory reference
-//      double decayTime=.5, double dampingRatio=.9, double maxVel=.2, double maxAcc=10.,
-//      //fusion parameters
-//      double relativePrec=100.,
-//      //indicator parameters
-//      double convergenceIndicatorTolerance=1e-2,
-//      double timeoutIndicator=-1.
-//                              );
+  //class pr2System* pr2_system; //MT: why??
 
-//  defineNewTaskSpaceForceControlAction();
 
+  Access_typed<struct RelationalMachine>& getRM();
+
+  //-- testing...
+  void execScript(const char* filename);
 };

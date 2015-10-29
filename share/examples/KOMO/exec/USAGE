@@ -1,0 +1,17 @@
+
+*** WELCOME to the KOMO executable ***
+
+(KOMO = k-order Markov Constrained Motion Optimization)
+(see http://arxiv.org/abs/1407.0414 )
+
+This is executable reads the specs of a motion or pose optimization
+problem from a file, and writes the results into files. The generated
+files contain cost information, and the final pose.  The syntax all
+files is our graph-file syntax. Use:
+
+./x.exe <specsfile> <output-refix>
+
+by default:
+<specsfile> = specs.g
+<output-refix> = z
+

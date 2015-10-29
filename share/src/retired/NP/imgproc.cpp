@@ -362,7 +362,7 @@ namespace np {
  *  @see mkbinary(), cclabel()
  */
 template <class S>
-void np::ctrace(MT::Array<S>& contour, const MT::Array<S>& binimg, int s, bool internal)
+void np::ctrace(mlr::Array<S>& contour, const mlr::Array<S>& binimg, int s, bool internal)
 {
   int t, t_old, t_cur;
   int sn, tn, tn_old, tn_cur;
@@ -416,10 +416,10 @@ void np::ctrace(MT::Array<S>& contour, const MT::Array<S>& binimg, int s, bool i
   // one of them
 //   contour.remove(contour.N-1);
 };
-template void np::ctrace(MT::Array<int>& contour, const MT::Array<int>& binimg, int s, bool internal);
-template void np::ctrace(MT::Array<uint>& contour, const MT::Array<uint>& binimg, int s, bool internal);
-template void np::ctrace(MT::Array<float>& contour, const MT::Array<float>& binimg, int s, bool internal);
-template void np::ctrace(MT::Array<double>& contour, const MT::Array<double>& binimg, int s, bool internal);
+template void np::ctrace(mlr::Array<int>& contour, const mlr::Array<int>& binimg, int s, bool internal);
+template void np::ctrace(mlr::Array<uint>& contour, const mlr::Array<uint>& binimg, int s, bool internal);
+template void np::ctrace(mlr::Array<float>& contour, const mlr::Array<float>& binimg, int s, bool internal);
+template void np::ctrace(mlr::Array<double>& contour, const mlr::Array<double>& binimg, int s, bool internal);
 
 
 /** @brief Generate an array of points on a regular grid
@@ -436,7 +436,7 @@ template void np::ctrace(MT::Array<double>& contour, const MT::Array<double>& bi
 template<class S>
 void np::regular_grid
 (
- MT::Array<S>& points,
+ mlr::Array<S>& points,
  S width,
  S height,
  S step,
@@ -461,10 +461,10 @@ void np::regular_grid
       pi++;
     }
 }
-template void np::regular_grid(MT::Array<int>&, int, int, int, bool);
-template void np::regular_grid(MT::Array<uint>&, uint, uint, uint, bool);
-template void np::regular_grid(MT::Array<float>&, float, float, float, bool);
-template void np::regular_grid(MT::Array<double>&, double, double, double, bool);
+template void np::regular_grid(mlr::Array<int>&, int, int, int, bool);
+template void np::regular_grid(mlr::Array<uint>&, uint, uint, uint, bool);
+template void np::regular_grid(mlr::Array<float>&, float, float, float, bool);
+template void np::regular_grid(mlr::Array<double>&, double, double, double, bool);
 
 /** @brief Distortion displacement maps
  *

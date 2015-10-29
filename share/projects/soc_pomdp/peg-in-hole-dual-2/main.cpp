@@ -20,9 +20,9 @@ extern double stickyWeight;
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   //initial prior: position 2e2; collision (0.04; 0.5e1)
   //world.setJointState(ARR(-0.130734, 0.200912, -0.0176154, -0.541507, -0.743056, -0.415109, -0.0146599 ));
@@ -36,7 +36,7 @@ int main(int argc,char **argv){
   uint total = numSamples_height*numSamples_pos + numSamples_height; //each height we generate one pseudo-sample (that will help to find the best observation)
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   arr y0;
   double dual;
   arr x0 = world.getJointState();
@@ -128,7 +128,7 @@ int main(int argc,char **argv){
   write_to_graphviz(fsc);
 
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
 

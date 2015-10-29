@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_MotionPlanner_h
-#define MT_MotionPlanner_h
+#ifndef MLR_MotionPlanner_h
+#define MLR_MotionPlanner_h
 
 #include "motion.h"
 

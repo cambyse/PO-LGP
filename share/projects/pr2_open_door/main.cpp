@@ -4,7 +4,6 @@
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
-#include <Core/array-vector.h>
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
@@ -15,7 +14,7 @@ struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, marker_pose);
   MySystem(){
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ARMarkerSync>(NULL, Module::loopWithBeat, 1.);
@@ -54,7 +53,7 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   /// tasks
   // first contact with door
   t =MP.addTask("posC", new DefaultTaskMap(posTMT, world, "endeffL",NoVector));
-  t->setCostSpecs(C, C, ARRAY(world.getShapeByName("handle")->X.pos), param(pC));
+  t->setCostSpecs(C, C, conv_vec2arr(world.getShapeByName("handle")->X.pos), param(pC));
   pC++;
 
   t =MP.addTask("vecC", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
@@ -93,7 +92,7 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
   arr lambda(T+1,1); lambda.setZero();
   x = repmat(~MP.x0,T+1,1);
-  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
+  optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
 
   displayTrajectory(x,MP.T,MP.world,"world");
   displayTrajectory(x,MP.T,MP.world,"world");
@@ -110,7 +109,7 @@ void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   arr wallMarkerPos = wallMarker.subRange(0,2);
   ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRange(3,6));
 
-  arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
   ors::Quaternion door_rot = ors::Quaternion(0,1,0,0);//doorMarkerQuat;//ors::Quaternion(markerQuat0[1]);
   ors::Quaternion trans = world.getBodyByName("torso_lift_link")->X.rot;
@@ -143,7 +142,7 @@ void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   world.calc_fwdPropagateShapeFrames();
 }
 
-void transPlanPR2(MT::Array<MT::String> &active_joints, ors::KinematicWorld &w_plan, ors::KinematicWorld &w_pr2, const arr &q_plan, arr &q_pr2) {
+void transPlanPR2(mlr::Array<mlr::String> &active_joints, ors::KinematicWorld &w_plan, ors::KinematicWorld &w_pr2, const arr &q_plan, arr &q_pr2) {
   for (uint i = 0; i<active_joints.d0;i++){
     uint planIdx = w_plan.getJointByName(active_joints(i))->qIndex;
     uint pr2Idx = w_pr2.getJointByName(active_joints(i))->qIndex;
@@ -151,7 +150,7 @@ void transPlanPR2(MT::Array<MT::String> &active_joints, ors::KinematicWorld &w_p
   }
 }
 
-void transPR2Plan(MT::Array<MT::String> &act_joints, ors::KinematicWorld &w_pr2, ors::KinematicWorld &w_plan, const arr &q_pr2, arr &q_plan) {
+void transPR2Plan(mlr::Array<mlr::String> &act_joints, ors::KinematicWorld &w_pr2, ors::KinematicWorld &w_plan, const arr &q_pr2, arr &q_plan) {
   for (uint i = 0; i<act_joints.d0;i++){
     uint pr2Idx = w_pr2.getJointByName(act_joints(i))->qIndex;
     uint planIdx = w_plan.getJointByName(act_joints(i))->qIndex;
@@ -166,7 +165,7 @@ void run(){
   ors::KinematicWorld world_pr2("model.kvg");
 
   // set list of active joints for remapping between pr2 and plan KinematicWorlds
-  MT::Array<MT::String> active_joints;
+  mlr::Array<mlr::String> active_joints;
   for (uint i = 0;i<world_plan.joints.d0;i++) {
     if (world_plan.joints(i)->type != 10 && world_plan.joints(i)->name!="frame_door") {
       active_joints.append(world_plan.joints(i)->name);
@@ -182,7 +181,7 @@ void run(){
   world_plan.getJointState(qP,qPdot);
 
   /// read initial robot position and marker position
-  bool useRos = MT::getParameter<bool>("useRos", false);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -238,7 +237,7 @@ void run(){
 
   /// plan trajectory
   arr x,xd;
-  double duration = MT::getParameter<double>("duration");
+  double duration = mlr::getParameter<double>("duration");
   planTrajectory(x,world_plan);
   double tau = duration/x.d0;
   getVel(xd,x,tau);
@@ -255,8 +254,8 @@ void run(){
 
   cout << xPR2 << endl;
   cout << xdPR2 << endl;
-  MT::Spline xs(x.d0,xPR2);
-  MT::Spline xds(x.d0,xdPR2);
+  mlr::Spline xs(x.d0,xPR2);
+  mlr::Spline xds(x.d0,xdPR2);
 
   /// execute trajectory on robot
   cout <<"** GO!" <<endl;
@@ -265,7 +264,7 @@ void run(){
   world_plan.watch(true);
   double s = 0.;
   double t = 0.;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   while(s<1.){
     //compute control
     cout <<"t: "<< t <<endl;
@@ -290,7 +289,7 @@ void run(){
     S.ctrl_ref.set() = refs;
     S.step();
 
-    t = t + MT::timerRead(true);
+    t = t + mlr::timerRead(true);
   }
 
   engine().close(S);
@@ -298,7 +297,7 @@ void run(){
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   run();
   return 0;
 }

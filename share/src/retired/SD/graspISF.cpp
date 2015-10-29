@@ -7,19 +7,19 @@
 void
 configure_GraspISF(GraspISFTask* t){
 
-  t->tv_palm_prec_m =             MT::getParameter<double>("grasp_tv_palm_prec_m", 1e3);
-  t->tv_palm_trgt_m =             MT::getParameter<double>("grasp_tv_palm_trgt_m", .05);
-  t->tv_oppose_prec =             MT::getParameter<double>("grasp_tv_oppose_prec", 1e1);
-  t->tv_zeroLevel_prec_m =        MT::getParameter<double>("grasp_tv_zeroLevel_prec_m", 4e2);
-  t->tv_fingAlign_prec_m =        MT::getParameter<double>("grasp_tv_fingAlign_prec_m", 1e3);
-  t->tv_fingAlign_sin_m =         MT::getParameter<double>("grasp_tv_fingAlign_sin_m", 3.1415);
-  t->tv_tipAlign_prec_m =         MT::getParameter<double>("grasp_tv_tipAlign_prec_m", 1e3);
-  t->tv_q_v_prec =                MT::getParameter<double>("grasp_tv_q_v_prec", 2e-1);
-  t->tv_q_y_prec =                MT::getParameter<double>("grasp_tv_q_y_prec", 1e-1);
+  t->tv_palm_prec_m =             mlr::getParameter<double>("grasp_tv_palm_prec_m", 1e3);
+  t->tv_palm_trgt_m =             mlr::getParameter<double>("grasp_tv_palm_trgt_m", .05);
+  t->tv_oppose_prec =             mlr::getParameter<double>("grasp_tv_oppose_prec", 1e1);
+  t->tv_zeroLevel_prec_m =        mlr::getParameter<double>("grasp_tv_zeroLevel_prec_m", 4e2);
+  t->tv_fingAlign_prec_m =        mlr::getParameter<double>("grasp_tv_fingAlign_prec_m", 1e3);
+  t->tv_fingAlign_sin_m =         mlr::getParameter<double>("grasp_tv_fingAlign_sin_m", 3.1415);
+  t->tv_tipAlign_prec_m =         mlr::getParameter<double>("grasp_tv_tipAlign_prec_m", 1e3);
+  t->tv_q_v_prec =                mlr::getParameter<double>("grasp_tv_q_v_prec", 2e-1);
+  t->tv_q_y_prec =                mlr::getParameter<double>("grasp_tv_q_y_prec", 1e-1);
 
-  t->tv_skin_trgt =               MT::getParameter<double>("grasp_tv_skin_trgt", .02);
-  t->tv_skin_fake =               MT::getParameter<double>("grasp_tv_skin_fake", .01);
-  t->tv_skin_prec_thr_zeroLevel = MT::getParameter<double>("grasp_tv_skin_prec_thr_zeroLevel", .5);
+  t->tv_skin_trgt =               mlr::getParameter<double>("grasp_tv_skin_trgt", .02);
+  t->tv_skin_fake =               mlr::getParameter<double>("grasp_tv_skin_fake", .01);
+  t->tv_skin_prec_thr_zeroLevel = mlr::getParameter<double>("grasp_tv_skin_prec_thr_zeroLevel", .5);
 }
 
 GraspISFTask::GraspISFTask(){
@@ -60,7 +60,7 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   skins.append((double)ctrl->ors.getBodyByName("tip3")->index);
   skins.append((double)ctrl->ors.getBodyByName("tip1")->index);
   skins.append((double)ctrl->ors.getBodyByName("tip2")->index);
-  skin_prec = MT::Parameter<double>("TV_skin_yprec");
+  skin_prec = mlr::Parameter<double>("TV_skin_yprec");
 
   // finger tip endeffector
   fingsN.append(ctrl->ors.getShapeByName("fingNormal1"));
@@ -192,7 +192,7 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   TV_fingAlign->y_target = ARR(-1.,-1.,-1.);
   //TV_fingAlign->y_prec = tv_fingAlign_prec_m * (phi_fing>0.?phi_fing:0.); //care only if palm is away from surface;
   //TV_fingAlign->y_prec = SD_MAX(5e3 * sin(phi_fing*3.), 0); //care in the middle
-  //TV_fingAlign->y_prec = SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*MT_PI), 0); //care in the middle
+  //TV_fingAlign->y_prec = SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*MLR_PI), 0); //care in the middle
   TV_fingAlign->y_prec =
     SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*tv_fingAlign_sin_m), 0); //care in the middle
   //TV_fingAlign->y_prec = SD_MAX(tv_fingAlign_prec_m  * sin(phi_fing*2.5), 0); //care in the middle

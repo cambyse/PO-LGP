@@ -36,7 +36,7 @@
  *  @see ctrace(), cclabel()
  */
 template <class S>
-void np::efd_contour(MT::Array<S>& efd, const uintA& contour, uint coef)
+void np::efd_contour(mlr::Array<S>& efd, const uintA& contour, uint coef)
 {
   if (contour.N == 0)
     msg_error(HERE, "contour is empty");
@@ -50,7 +50,7 @@ void np::efd_contour(MT::Array<S>& efd, const uintA& contour, uint coef)
     coef = (m/2 > 0 ? m/2 : 1);
 
   // 1. compute Fourier coefficients
-  MT::Array<S> ax(coef), bx(coef), ay(coef), by(coef);
+  mlr::Array<S> ax(coef), bx(coef), ay(coef), by(coef);
   ax = 0; bx = 0; ay = 0; by = 0;
   S t = 2*cpi/m;
   S h1, h2;                                                      // helpers
@@ -85,5 +85,5 @@ void np::efd_contour(MT::Array<S>& efd, const uintA& contour, uint coef)
   }
 }
 
-template void np::efd_contour(MT::Array<float>& efd, const uintA& contour, uint coef);
-template void np::efd_contour(MT::Array<double>& efd, const uintA& contour, uint coef);
+template void np::efd_contour(mlr::Array<float>& efd, const uintA& contour, uint coef);
+template void np::efd_contour(mlr::Array<double>& efd, const uintA& contour, uint coef);

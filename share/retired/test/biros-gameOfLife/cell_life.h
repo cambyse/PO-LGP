@@ -7,7 +7,7 @@
 
 struct CellLife : Module {
   Access_typed<Cell> own;
-  MT::Array<Access_typed<Cell> > neighbours;
+  mlr::Array<Access_typed<Cell> > neighbours;
 
  CellLife() : Module("Cell Life Process"){ neighbors.resize(4); }
   

@@ -228,9 +228,9 @@ void Gamepad_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWo
     case 0: { //(NIL) motion rate control
       eff->active=true;
       eff->y_target = eff->y;
-      eff->v_target(0) = -gamepadRate*MT::sign(gamepads(3))*(.25*(exp(MT::sqr(gamepads(3))/10000.)-1.));
-      eff->v_target(1) = +gamepadRate*MT::sign(gamepads(6))*(.25*(exp(MT::sqr(gamepads(6))/10000.)-1.));
-      eff->v_target(2) = -gamepadRate*MT::sign(gamepads(2))*(.25*(exp(MT::sqr(gamepads(2))/10000.)-1.));
+      eff->v_target(0) = -gamepadRate*mlr::sign(gamepads(3))*(.25*(exp(mlr::sqr(gamepads(3))/10000.)-1.));
+      eff->v_target(1) = +gamepadRate*mlr::sign(gamepads(6))*(.25*(exp(mlr::sqr(gamepads(6))/10000.)-1.));
+      eff->v_target(2) = -gamepadRate*mlr::sign(gamepads(2))*(.25*(exp(mlr::sqr(gamepads(2))/10000.)-1.));
       break;
     }
     case 1: { //(1) homing
@@ -250,9 +250,9 @@ void Gamepad_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWo
       eff->active=true;
       eff->v_target = 0.;      eff->v_prec = 1e5;
       rot->active=true;
-      rot->v_target(0) = -3.*gamepadRate*MT::sign(gamepads(3))*(.25*(exp(MT::sqr(gamepads(3))/10000.)-1.));
-      rot->v_target(1) = +3.*gamepadRate*MT::sign(gamepads(6))*(.25*(exp(MT::sqr(gamepads(6))/10000.)-1.));
-      rot->v_target(2) = -3.*gamepadRate*MT::sign(gamepads(1))*(.25*(exp(MT::sqr(gamepads(1))/10000.)-1.));
+      rot->v_target(0) = -3.*gamepadRate*mlr::sign(gamepads(3))*(.25*(exp(mlr::sqr(gamepads(3))/10000.)-1.));
+      rot->v_target(1) = +3.*gamepadRate*mlr::sign(gamepads(6))*(.25*(exp(mlr::sqr(gamepads(6))/10000.)-1.));
+      rot->v_target(2) = -3.*gamepadRate*mlr::sign(gamepads(1))*(.25*(exp(mlr::sqr(gamepads(1))/10000.)-1.));
       break;
     }
     case 8: { //(4) motion rate without rotation

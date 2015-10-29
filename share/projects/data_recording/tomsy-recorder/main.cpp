@@ -29,7 +29,7 @@ private:
 	unsigned int sequence_num;
 
 public:
-	TimeTagFile(const MT::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
+	TimeTagFile(const mlr::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
 
 	}
 	void add_stamp(double timestamp) {
@@ -114,7 +114,7 @@ private:
 	const bool& terminated;
 	bool ready;
 	int id;
-	MT::String name;
+	mlr::String name;
 	UEyeInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
@@ -122,7 +122,7 @@ private:
 	double start_time;
 
 public:
-	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
+	GrabAndSave(int camID, const char* name, const mlr::String& created, const bool& terminated) :
 		terminated(terminated), ready(false), id(camID), name(name), cam(id), enc(STRING("z." << name << "." << created << ".264")),
 		times(enc.name()), start_time(ULONG_MAX) {
 	}
@@ -151,7 +151,7 @@ public:
 
 class RecordingSystem {
 private:
-	MT::String created;
+	mlr::String created;
 	GrabAndSave cam1, cam2, cam3;
 	VideoEncoder_x264_simple kinect_video, kinect_depth;
 	TimeTagFile kinect_video_times, kinect_depth_times;
@@ -190,7 +190,7 @@ protected:
 #pragma omp section
 			while(!terminated && !ready) {
 				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
-					start_time = MT::clockTime();
+					start_time = mlr::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
@@ -216,7 +216,7 @@ protected:
 
 public:
 	RecordingSystem(int id1, int id2, int id3) :
-		created(MT::getNowString()), cam1(id1, "ueye1", created, terminated),
+		created(mlr::getNowString()), cam1(id1, "ueye1", created, terminated),
 		cam2(id2, "ueye2", created, terminated), cam3(id3, "ueye3", created, terminated),
 		kinect_video(STRING("z.kinect_rgb." << created <<".264")),
 		kinect_depth(STRING("z.kinect_depthRgb." << created <<".264")),
@@ -266,9 +266,9 @@ int main(int argc,char **argv){
 	//test_openmp();
 
 	try {
-		RecordingSystem s(MT::getParameter<int>("POLLER_1_camID"),
-			MT::getParameter<int>("POLLER_3_camID"),
-			MT::getParameter<int>("POLLER_4_camID"));
+		RecordingSystem s(mlr::getParameter<int>("POLLER_1_camID"),
+			mlr::getParameter<int>("POLLER_3_camID"),
+			mlr::getParameter<int>("POLLER_4_camID"));
 		s.run();
 	} catch(const UEyeException& ex) {
 		cerr << ex.what() << endl;

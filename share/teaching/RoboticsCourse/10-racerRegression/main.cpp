@@ -27,7 +27,7 @@ void linReg() {
 
 
 int main(int argc, char *argv[]) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   system("cat USAGE");
 
   linReg();

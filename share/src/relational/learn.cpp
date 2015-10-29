@@ -49,14 +49,14 @@ uintA so_successfulUsageHistory;
 uintA so_UsageHistory;
 arr scores;
 
-MT::Array< SearchOperator* > __searchOperators;
+mlr::Array< SearchOperator* > __searchOperators;
 // choosing the next operator
 uint __so_choice_type = RULE_LEARNER__OP_CHOICE__RANDOM;
 // int __so_current;
 arr __so_priorWeights;
 
 //caches values for a symbol that occur accross all experiences
-std::map<relational::Symbol*, MT::Array<double> > __usedFunctionValues;
+std::map<relational::Symbol*, mlr::Array<double> > __usedFunctionValues;
 
 }
 
@@ -297,7 +297,7 @@ __init_search_operators();
   if (DEBUG > 2) {cout << "Experiences:" << endl << experiences << endl;}
   // log writing
   std::ofstream log;
-  MT::open(log, logfile);
+  mlr::open(log, logfile);
   log<<"# Search Operators:"<<endl;
   FOR1D(__searchOperators, i) {
     log<<"# "<<i<<" "<<__searchOperators(i)->getName()<<endl;
@@ -306,7 +306,7 @@ __init_search_operators();
   log << "# round  op  bestscore  #newRulesets  improvement"<<endl;
   
   uint MAX_STEPS = 10000;
-//   MT_MSG("RuleLearner: MAX_STEPS = "<<MAX_STEPS);
+//   MLR_MSG("RuleLearner: MAX_STEPS = "<<MAX_STEPS);
   boolA op_applicable;
   op_applicable.resize(__searchOperators.d0);
   op_applicable.setUni(true);
@@ -329,7 +329,7 @@ __init_search_operators();
     if (DEBUG > 1) {if(so_useAgain) cout<<"Using op again."<<endl; else cout<<"Using fresh operator."<<endl;}
     so_UsageHistory.append(op);
     num_so_applied(op)++;
-    MT::Array< RuleSetContainer > set_of__rulesC_new;
+    mlr::Array< RuleSetContainer > set_of__rulesC_new;
     __searchOperators(op)->createRuleSets(rulesC, experiences, set_of__rulesC_new);
     if (set_of__rulesC_new.N == 0) {
       op_applicable(op) = false;
@@ -400,7 +400,7 @@ __init_search_operators();
       else {cout << "No better rule-set was found (although I did my very best)." << endl;}
       if (round%10==0) {
         uintA covered_experiences_num;
-        MT::Array< uintA > covered_experiences;
+        mlr::Array< uintA > covered_experiences;
         arr responsibilities;
         rulesC.getResponsibilities(responsibilities, covered_experiences, covered_experiences_num);
         cout<<"Responsibilities after round "<<round<<":"<<endl;
@@ -429,7 +429,7 @@ __init_search_operators();
   
   // LOGFILE WRITING [start]
   std::ofstream log_info;
-  MT::String logfile_info;
+  mlr::String logfile_info;
   logfile_info << logfile << ".info";
   open(log_info, logfile_info);
   
@@ -443,7 +443,7 @@ __init_search_operators();
   log_info<<endl;
   // responsibilities
   uintA covered_experiences_num;
-  MT::Array< uintA > covered_experiences;
+  mlr::Array< uintA > covered_experiences;
   arr responsibilities;
   rulesC.getResponsibilities(responsibilities, covered_experiences, covered_experiences_num);
   uint num_experiences_explained_as_noise = 0;
@@ -559,7 +559,7 @@ double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, dou
         rule->write(cout);
       }
       uint o;
-      MT::Array< uintA >& exs_per_out = rulesC.experiences_per_ruleOutcome(covering_rules(0));
+      mlr::Array< uintA >& exs_per_out = rulesC.experiences_per_ruleOutcome(covering_rules(0));
       if (DEBUG>2) {PRINT(exs_per_out);}
       exLik = 0.0;
       FOR1D(exs_per_out, o) {
@@ -647,7 +647,7 @@ void RuleSetContainer::init(const StateTransitionL* _p_experiences) {
 }
 
 
-void RuleSetContainer::append(Rule* rule, uintA& experiences_of_this_rule, MT::Array< uintA >& experiences_per_outcome_of_this_rule) {
+void RuleSetContainer::append(Rule* rule, uintA& experiences_of_this_rule, mlr::Array< uintA >& experiences_per_outcome_of_this_rule) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleSetContainer::append [START]"<<endl;}
   if (DEBUG>0) {rule->write(cout);  PRINT(experiences_of_this_rule);  PRINT(experiences_per_outcome_of_this_rule);}
@@ -673,7 +673,7 @@ void RuleSetContainer::append(Rule* rule, uintA& experiences_of_this_rule, MT::A
     uintA empty;
     experiences_per_rule.append(empty);
     // (4 - B) update experiences_per_ruleOutcome
-    MT::Array< uintA > empty_outcome;
+    mlr::Array< uintA > empty_outcome;
     experiences_per_ruleOutcome.append(empty_outcome);
   }
   if (DEBUG>0) {PRINT(nonDefaultRules_per_experience);  PRINT(experiences_per_rule);  PRINT(experiences_per_ruleOutcome);}
@@ -700,8 +700,8 @@ void RuleSetContainer::remove(uint id) {
     }
   }
   // (3) experiences_per_rule  and  experiences_per_ruleOutcome
-  MT::Array< uintA > experiences_per_rule__new(rules.num()); // rules have already new size
-  MT::Array< MT::Array < uintA > > experiences_per_ruleOutcome__new(rules.num());
+  mlr::Array< uintA > experiences_per_rule__new(rules.num()); // rules have already new size
+  mlr::Array< mlr::Array < uintA > > experiences_per_ruleOutcome__new(rules.num());
   FOR1D_(rules, i) {
     if (i<id) {
       experiences_per_rule__new(i) = experiences_per_rule(i);
@@ -749,12 +749,12 @@ void RuleSetContainer::recomputeDefaultRule() {
   if (experiences_per_rule.N == 0) {
     uintA empty;
     experiences_per_rule.append(empty);
-    MT::Array< uintA > empty_outcome(2);
+    mlr::Array< uintA > empty_outcome(2);
     experiences_per_ruleOutcome.append(empty_outcome);
   }
   experiences_per_rule(0).clear();
   experiences_per_ruleOutcome(0).clear();
-  MT::Array< uintA > empty_outcome(2);
+  mlr::Array< uintA > empty_outcome(2);
   experiences_per_ruleOutcome(0) = empty_outcome;
   // experiences_per_rule
   uint i;
@@ -793,9 +793,9 @@ void RuleSetContainer::sort() {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"sort [START]"<<endl;}
   RuleSet new__rules;
-  MT::Array< uintA > new__nonDefaultRules_per_experience;
-  MT::Array< uintA > new__experiences_per_rule;
-  MT::Array< MT::Array < uintA > > new__experiences_per_ruleOutcome;
+  mlr::Array< uintA > new__nonDefaultRules_per_experience;
+  mlr::Array< uintA > new__experiences_per_rule;
+  mlr::Array< mlr::Array < uintA > > new__experiences_per_ruleOutcome;
   
   SymL sym_actions;
   uint i, k;
@@ -847,7 +847,7 @@ void RuleSetContainer::sort() {
 
 
 // takes into account that 2 or more non-default rules may cover an experience
-void RuleSetContainer::getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
+void RuleSetContainer::getResponsibilities(arr& responsibilities, mlr::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
   responsibilities.clear();
   covered_experiences.clear();
   covered_experiences_num.clear();
@@ -872,7 +872,7 @@ void RuleSetContainer::getResponsibilities(arr& responsibilities, MT::Array< uin
 }
 
 
-void RuleSetContainer::getPartitionsForAction(MT::Array< uintA >& partitions, Literal* action) const {
+void RuleSetContainer::getPartitionsForAction(mlr::Array< uintA >& partitions, Literal* action) const {
   partitions.clear();
   uint i;
   FOR1D_(rules, i) {
@@ -884,7 +884,7 @@ void RuleSetContainer::getPartitionsForAction(MT::Array< uintA >& partitions, Li
 
 
 // only for visualisation...
-void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool with_action, ostream& os) {
+void rule_write_hack(Rule* rule, mlr::Array< uintA >& outcome_tripletts, bool with_action, ostream& os) {
   CHECK(outcome_tripletts.N = rule->outcomes.N, "wrong size");
 //  os << "r" << endl;
   uint i, k;
@@ -930,8 +930,8 @@ void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool wit
     else os << ((uint) 100 * (outcome_tripletts(i).N * 1.0 / total_num_experiences));
     os << "%)" << endl;
   }
-  if (Rule::isDefaultRule(rule) &&  outcome_tripletts(0).N > 0) {os<<"ACHTUNG!!! Noise rule used to model!!"<<endl;  MT_MSG("ACHTUNG!!! Noise rule used to model!!");}
-//   if (outcome_tripletts(rule->outcomes.N-1).N > 0) {os<<"ACHTUNG!!! Using noise-outcome!"<<endl;  MT_MSG("ACHTUNG!!! Using noise-outcome!");}
+  if (Rule::isDefaultRule(rule) &&  outcome_tripletts(0).N > 0) {os<<"ACHTUNG!!! Noise rule used to model!!"<<endl;  MLR_MSG("ACHTUNG!!! Noise rule used to model!!");}
+//   if (outcome_tripletts(rule->outcomes.N-1).N > 0) {os<<"ACHTUNG!!! Using noise-outcome!"<<endl;  MLR_MSG("ACHTUNG!!! Using noise-outcome!");}
 }
 
 
@@ -1263,7 +1263,7 @@ void learn_outcomes__calcSubsumption(boolA& subsumes, const boolA& coverage) {
 
 
 
-void __calcCoverage_outcomes(boolA& coverage, const MT::Array< LitL >& potential_outcomes, const StateTransitionL& covered_experiences, const Rule* rule) {
+void __calcCoverage_outcomes(boolA& coverage, const mlr::Array< LitL >& potential_outcomes, const StateTransitionL& covered_experiences, const Rule* rule) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "calcOutcomesCoverage [START]" << endl;
   Rule rule_full;
@@ -1292,7 +1292,7 @@ void __calcCoverage_outcomes(boolA& coverage, const MT::Array< LitL >& potential
 
 
 // remove outcomes that (i) do not cover any experience and (ii) have zero-probability  and (iii) sets coverage for cost function
-void __get_trimmed_outcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const StateTransitionL& coveredExperiences, const Rule& rule) {
+void __get_trimmed_outcomes(mlr::Array< LitL >& outcomes, arr& probs, boolA& coverage, const StateTransitionL& coveredExperiences, const Rule& rule) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"get_trimmed_outcomes [START]"<<endl;
   uint i;
@@ -1306,7 +1306,7 @@ void __get_trimmed_outcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& cove
   learn::CostFunction::setOutcomesCoverage(coverage);
   if (DEBUG>3) {PRINT(coverage);}
   removed = false;
-  MT::Array< LitL > o_help;
+  mlr::Array< LitL > o_help;
   FOR1D(outcomes, i) {
     atleastone = sum(coverage.sub(i,i,0,coverage.d1-1));
     if (i < outcomes.N-1  &&  !atleastone) { // only for non-noise outcomes
@@ -1360,7 +1360,7 @@ void __get_trimmed_outcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& cove
 // outcomes need to be deleted. --> method produceTrimmedOutcomes(...), see above
 //
 // TODO cope with comparisons (a la Zettlemoyer et al., 2004)
-void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_outcome, const StateTransitionL& coveredExperiences, const uintA& covered_experiences_ids) {
+void learn::learn_outcomes(Rule* r, mlr::Array< uintA >& coveredExperiences_per_outcome, const StateTransitionL& coveredExperiences, const uintA& covered_experiences_ids) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
   
@@ -1376,14 +1376,14 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   __pen_sum__final = __pen_sum__base * coveredExperiences.N;
   __pen_pos__final = __pen_pos__base * coveredExperiences.N;
 
-  MT::Array<Literal*> varComparisons;
+  mlr::Array<Literal*> varComparisons;
   FOR1D(r->context, i) {
     if (r->context(i)->comparison_type == Literal::comparison_variable)
       varComparisons.append(r->context(i));
   }
     
   // (1) Determine basic outcomes = changes from pre to post = for each covered experience a separate outcome
-  MT::Array< LitL > outcomes_basic;
+  mlr::Array< LitL > outcomes_basic;
   FOR1D(coveredExperiences, i) {
     if (DEBUG>4) {cout<<"====== Using ex "<<i<<":"<<endl; coveredExperiences(i)->write(cout);}
     SubstitutionSet subs;
@@ -1488,7 +1488,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
         prune(k) = true;
     }
   }
-  MT::Array< LitL > outcomes;
+  mlr::Array< LitL > outcomes;
   FOR1D(outcomes_basic, i) {
     if (!prune(i)) {
       outcomes.append(outcomes_basic(i));
@@ -1533,7 +1533,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   bool change = false;
   boolA subsumes;
   arr probs_new;
-  MT::Array< LitL > outcomes_new;
+  mlr::Array< LitL > outcomes_new;
   boolA coverage_new;
   do {
     change = false;
@@ -1760,9 +1760,9 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   
   
   // sort for probabilities
-  MT::Array< LitL > sorted__outcomes(r->outcomes.N);
+  mlr::Array< LitL > sorted__outcomes(r->outcomes.N);
   arr sorted__probs(r->outcomes.N);
-  MT::Array< uintA > sorted__coveredExperiences_per_outcome(r->outcomes.N);
+  mlr::Array< uintA > sorted__coveredExperiences_per_outcome(r->outcomes.N);
   uintA sorted_indices;
   TL::sort_desc_keys(sorted_indices, probs);
   uint current_i = 0;
@@ -1829,7 +1829,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
 
 
 // Return value needs to be MINIMIZEd.
-double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs) { 
+double learn::learn_parameters(const mlr::Array< LitL >& outcomes, doubleA& probs) { 
   uint DEBUG = 0;
   
   if (DEBUG > 0) {
@@ -1882,7 +1882,7 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   //void (*df)(arr&,const arr&);
   //df = CostFunction::calc_grad;
   
-//  MT::checkGradient(f, df, probs, 0.05);
+//  mlr::checkGradient(f, df, probs, 0.05);
   
   arr gradients;
   cost = CostFunction::calc(probs);
@@ -1920,7 +1920,7 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
     i++;
     if (i>MAX_STEPS) {
       std::cerr <<endl<<endl<<endl<< "probs = " << probs << endl;
-      MT_MSG("WARNING!!! Cannot learn rule probabilities! (No convergence.)");
+      MLR_MSG("WARNING!!! Cannot learn rule probabilities! (No convergence.)");
     }
   }
 
@@ -1934,15 +1934,15 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   double negativstProb = 1.0;
   FOR1D(probs, i) {
     if (probs(i) < -EPSILON__PROB_NEG2) {
-      MT::String warning;
+      mlr::String warning;
       warning << "Param. optimization failed - Significant negative probability: " << probs(i);
       HALT(warning)
     }
     if (probs(i) < -EPSILON__PROB_NEG1) {
-      MT::String warning;
+      mlr::String warning;
       warning << "Param. optimization awkward - Significant negative probability: " << probs(i);
       __pen_pos__base *= 1.3;
-      MT_MSG(warning)
+      MLR_MSG(warning)
     }
     if (probs(i) < 0  &&  probs(i) < negativstProb)
       negativstProb = probs(i);
@@ -1958,14 +1958,14 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   double EPSILON__PROB_SUM1 = 0.15;
   double EPSILON__PROB_SUM2 = 0.25;
   if (fabs(probSum - 1) > EPSILON__PROB_SUM2) {
-    MT::String warning;
+    mlr::String warning;
     warning << "Param. optimization failed - sum clearly different from 1: " << probSum << " found=" << (probs*probSum) << " rescaled=" << probs;
     HALT(warning);
   }
   if (fabs(probSum - 1) > EPSILON__PROB_SUM1) {
-    MT::String warning;
+    mlr::String warning;
     warning << "Param. optimization awkward - sum clearly different from 1: " << probSum << " found=" << (probs*probSum) << " rescaled=" << probs;
-    MT_MSG(warning);
+    MLR_MSG(warning);
     __pen_sum__base *= 1.3;
   }
   

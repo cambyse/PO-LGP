@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <MT/schunk.h>
 #include <MT/guiModule.h>
@@ -23,7 +23,7 @@ fakesense(grobi_skin_t &gs){
   uintA itht,ithl,if3t,if3l,if2t,if2l;
   uint i,j;
 
-  MT::openConfigFile();
+  mlr::openConfigFile();
 
   getFromCfgFile(itht,"th-tip");
   getFromCfgFile(ithl,"th-link");
@@ -89,7 +89,7 @@ main(int argc,char** argv){
   GuiModule gui;
   ors::KinematicWorld ors;
 
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,usrbreak_callback);
   
   ors <<FILE("schunk.ors");
@@ -101,7 +101,7 @@ main(int argc,char** argv){
   gui.open();
 
   // loop 
-  if (MT::getParameter<int>("openSkin"))
+  if (mlr::getParameter<int>("openSkin"))
     test_hardware_skin(gui, gs);
   else 
     test_fake_skin(gui, gs);

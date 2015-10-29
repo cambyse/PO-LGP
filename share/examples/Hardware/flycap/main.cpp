@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 		flycap.startStreaming();
 	
 		double start;
-		start = MT::clockTime();
+		start = mlr::clockTime();
 		unsigned int count = 0;
 		while(true) {
 			double timestamp;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 				++count;
 			}
 			if((count % 100) == 0) {
-				double now = MT::clockTime();
+				double now = mlr::clockTime();
 				double per_frame = ((now - start) / 100.0);
 				clog << "Frame time: " << per_frame << " -- fps: " << (1.0/per_frame) << endl;
 				start = now;

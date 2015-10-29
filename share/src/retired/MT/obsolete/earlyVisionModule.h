@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_earlyVisionModule_h
-#define MT_earlyVisionModule_h
+#ifndef MLR_earlyVisionModule_h
+#define MLR_earlyVisionModule_h
 
 #include "vision.h"
 #include "robot_variables.h"
@@ -53,8 +53,8 @@ struct EarlyVisionModule:public Process {
     input=NULL;
     downScale=0;
     do_hsvBP=do_patching=do_flow=do_motion=false;
-    display = MT::getParameter<bool>("evisDisplay", true);
-    thetaSmoothing = MT::getParameter<uint>("evisThetaSmoothing", 7);
+    display = mlr::getParameter<bool>("evisDisplay", true);
+    thetaSmoothing = mlr::getParameter<uint>("evisThetaSmoothing", 7);
     //do_hsvBP=do_patching=true;
     //set constants
   }
@@ -64,7 +64,7 @@ struct EarlyVisionModule:public Process {
   void close();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "earlyVisionModule.cpp"
 #endif
 

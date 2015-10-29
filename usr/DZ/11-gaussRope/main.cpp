@@ -104,8 +104,8 @@ void sine_trajectory(const arr& q,arr& sine_q,const uint _N)
 
 int problem4(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));//e.g._test
-  bool usebwd=MT::getParameter<double>("usebwd") ;
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));//e.g._test
+  bool usebwd=mlr::getParameter<double>("usebwd") ;
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
@@ -146,7 +146,7 @@ int problem4(){
   for (int tp=0;tp< 10;tp++)  wr->y_target(tp,0) =   wr->y(tp,0);
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,0.);  
 
-  MT::Array<TaskVariable*> Tlist;        
+  mlr::Array<TaskVariable*> Tlist;        
       
   //!col 
        TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
@@ -190,7 +190,7 @@ int problem4(){
   
  soc.gl->watch();   
   //! One step method for writhe
-   MT::Array<TaskVariable*> Alist;        
+   mlr::Array<TaskVariable*> Alist;        
   wr->y_target = wr->y; 
   
   int ind = get_index(wr->y);
@@ -287,7 +287,7 @@ wr->userUpdate();
 
 int problem41(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
@@ -342,7 +342,7 @@ int problem41(){
   reach->y_target = xtarget;   
   reach->setInterpolatedTargetsEndPrecisions(T, 1e1, 1e1, 0., 0.);
   //!
-    MT::Array<TaskVariable*> Tlist;        
+    mlr::Array<TaskVariable*> Tlist;        
    Tlist.append(wr);
     Tlist.append(col); Tlist.append(reach);
   soc.setTaskVariables(Tlist);   
@@ -377,7 +377,7 @@ soc.gl->watch();
 
 int problem42(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
@@ -411,7 +411,7 @@ int problem42(){
   //wr->y.reshape(wrsize,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
   wr->y_target =zeros(1,1); //zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   zeros(1,1); 
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
-  MT::Array<TaskVariable*> Tlist;        
+  mlr::Array<TaskVariable*> Tlist;        
   
   //!col 
        TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
@@ -465,7 +465,7 @@ soc.gl->watch();
 
 int problem43(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
@@ -499,7 +499,7 @@ int problem43(){
  // wr->y.reshape(1,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
   wr->y_target =zeros(1,wrsize);//wr->y;//zeros(10,10);//yy;   zeros(1,1); 
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
-  MT::Array<TaskVariable*> Tlist;        
+  mlr::Array<TaskVariable*> Tlist;        
   
   //!col
  /*      TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
@@ -534,7 +534,7 @@ soc.gl->watch();
 
 int problem5(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
@@ -572,7 +572,7 @@ int problem5(){
 double eps=1e1; //5e-3;  
  
 wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
-  MT::Array<TaskVariable*> Tlist;      
+  mlr::Array<TaskVariable*> Tlist;      
    
   TaskVariable *qit    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   arr q0; soc.getq0(q0); //q0(wrsize-1)=-0.7; 
@@ -643,7 +643,7 @@ Tlist.append(reach);
 
 int problem6(){      
   ors::KinematicWorld ors;  
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);    
   OpenGL gl;  
@@ -703,7 +703,7 @@ int problem6(){
   reach->y_target = xtarget;    
   reach->setInterpolatedTargetsEndPrecisions(T, 1e1, 1e1, 0., 0.);
   //!
-    MT::Array<TaskVariable*> Tlist;       
+    mlr::Array<TaskVariable*> Tlist;       
   Tlist.append(wr);
     Tlist.append(col); Tlist.append(reach);
   soc.setTaskVariables(Tlist);    
@@ -740,9 +740,9 @@ soc.gl->watch();
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv); 
+  mlr::initCmdLine(argc,argv); 
  
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 4:  problem4();  break;
   case 41:  problem41();  break;

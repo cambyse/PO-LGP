@@ -9,14 +9,14 @@
 //
 //  GroundedSymbol
 
-relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_symbols) { 
+relational::GroundedSymbol::GroundedSymbol(mlr::String& _name, uint _arity, bool build_derived_symbols) { 
   this->symbol = Symbol::get(this->name = _name, this->arity = _arity);
   
   if (build_derived_symbols) {
     NIY;
 #if 0
     if (this->symbol->d == 2) {
-      MT::String derived_name;
+      mlr::String derived_name;
       derived_name << "not_" << this->symbol->name << "_related_to_second";
       if (PRADA::logicObjectManager::getPredicate(derived_name) == NULL) {
         // add 
@@ -25,7 +25,7 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
         p_NOT_P_RELATED_TO_SECOND->d = 1;
         p_NOT_P_RELATED_TO_SECOND->name = derived_name;
         p_NOT_P_RELATED_TO_SECOND->id = PRADA::logicObjectManager::getLowestFreeConceptID(11);
-        p_NOT_P_RELATED_TO_SECOND->basePreds.append(PRADA::logicObjectManager::getPredicate(MT::String("b1")));
+        p_NOT_P_RELATED_TO_SECOND->basePreds.append(PRADA::logicObjectManager::getPredicate(mlr::String("b1")));
         p_NOT_P_RELATED_TO_SECOND->basePreds_positive.append(false);
         p_NOT_P_RELATED_TO_SECOND->basePreds_mapVars2conjunction.resize(2);
         p_NOT_P_RELATED_TO_SECOND->basePreds_mapVars2conjunction(0) = 0;
@@ -37,7 +37,7 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
         p_NOT_P_RELATED_TO_FIRST->d = 1;
         p_NOT_P_RELATED_TO_FIRST->name << "not_" << this->symbol->name << "_related_to_first";
         p_NOT_P_RELATED_TO_FIRST->id = PRADA::logicObjectManager::getLowestFreeConceptID(11) + 1;
-        p_NOT_P_RELATED_TO_FIRST->basePreds.append(PRADA::logicObjectManager::getPredicate(MT::String("b1")));
+        p_NOT_P_RELATED_TO_FIRST->basePreds.append(PRADA::logicObjectManager::getPredicate(mlr::String("b1")));
         p_NOT_P_RELATED_TO_FIRST->basePreds_positive.append(false);
         p_NOT_P_RELATED_TO_FIRST->basePreds_mapVars2conjunction.resize(2);
         p_NOT_P_RELATED_TO_FIRST->basePreds_mapVars2conjunction(0) = 1;
@@ -58,7 +58,7 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
 
 
 
-void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
+void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objects_ids, const mlr::Array< arr > & objects_data) const {
   uint DEBUG = 0;
   // HACK
 //   if (arity == 1) DEBUG = 2;
@@ -80,7 +80,7 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
     }
   }
   else if (arity == 2) {
-    MT::Array< uintA > lists;
+    mlr::Array< uintA > lists;
     uintA objs_numbers;
     FOR1D(objects_ids, i) {objs_numbers.append(i);}
     TL::allPermutations(lists, objs_numbers, arity, false, true);
@@ -109,7 +109,7 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
 
 
 
-void relational::GroundedSymbol::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, const ContinuousState& cont_state) {
+void relational::GroundedSymbol::calculateSymbols(LitL& lits, const mlr::Array<relational::GroundedSymbol*>& sgs, const ContinuousState& cont_state) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
   if (DEBUG>0) {PRINT(cont_state.object_ids);  PRINT(cont_state.data);}
@@ -128,7 +128,7 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const MT::Array<re
 }
 
 
-void relational::calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e) {
+void relational::calculateSymbols(const mlr::Array<GroundedSymbol*>& sgs, FullExperience& e) {
   NIY;
 #if 0
   uint DEBUG = 0;
@@ -142,9 +142,9 @@ void relational::calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExp
   e.experience_symbolic.calcChanges();
   if (DEBUG>1) {PRINT(e.action_args);}
   if (e.action_type == 0)
-    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(MT::String("grab")), e.action_args);
+    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(mlr::String("grab")), e.action_args);
   else if (e.action_type == 1)
-    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(MT::String("puton")), e.action_args);
+    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(mlr::String("puton")), e.action_args);
   else NIY;
   if (DEBUG>0) {e.experience_symbolic.write();}
   if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
@@ -157,14 +157,14 @@ void relational::GroundedSymbol::write() const {
 }
 
 
-void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, GroundedSymbol::GroundingType grounding_type) {
+void relational::read(mlr::Array<GroundedSymbol*>& sgs, const char* prefix, GroundedSymbol::GroundingType grounding_type) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"GroundedSymbol::read [START]"<<endl;}
   if (DEBUG>0) {PRINT(prefix);  PRINT(grounding_type);}
   
-  MT::Array< MT::String > pn_names;
-  pn_names.append(MT::String("u1"));  //pn_names.append(MT::String("u2"));
-  pn_names.append(MT::String("b1"));  //pn_names.append(MT::String("b2"));
+  mlr::Array< mlr::String > pn_names;
+  pn_names.append(mlr::String("u1"));  //pn_names.append(mlr::String("u2"));
+  pn_names.append(mlr::String("b1"));  //pn_names.append(mlr::String("b2"));
   
   uint i;
   FOR1D(pn_names, i) {
@@ -176,7 +176,7 @@ void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, Groun
       arity = 1;
     if (grounding_type == relational::GroundedSymbol::NN) {
       sg = new NN_Grounding(pn_names(i), arity, true);
-      MT::String file_w1a, file_w1b, file_w2a, file_w2b;
+      mlr::String file_w1a, file_w1b, file_w2a, file_w2b;
       file_w1a<<prefix<<pn_names(i)<<"w1a.txt";
       file_w1b<<prefix<<pn_names(i)<<"w1b.txt";
       file_w2a<<prefix<<pn_names(i)<<"w2a.txt";
@@ -185,7 +185,7 @@ void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, Groun
     }
     else if (grounding_type == relational::GroundedSymbol::RBF) {
       sg = new RBF_Grounding(pn_names(i), arity, true);
-      MT::String file_w_c, file_w_sigma;
+      mlr::String file_w_c, file_w_sigma;
       file_w_c<<prefix<<pn_names(i)<<"w1a.txt";
       file_w_sigma<<prefix<<pn_names(i)<<"w1b.txt";
       ((RBF_Grounding*) sg)->read(file_w_c, file_w_sigma);
@@ -216,7 +216,7 @@ void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, Groun
 // NN_Grounding
 
 
-relational::NN_Grounding::NN_Grounding(MT::String& name, uint arity, bool build_derived_symbols) : 
+relational::NN_Grounding::NN_Grounding(mlr::String& name, uint arity, bool build_derived_symbols) : 
 GroundedSymbol(name, arity, build_derived_symbols) {
   this->type = NN;
 }
@@ -292,7 +292,7 @@ void relational::NN_Grounding::write() const {
 //  RBF_Grounding
 
 
-relational::RBF_Grounding::RBF_Grounding(MT::String& name, uint arity, bool build_derived_symbols) : 
+relational::RBF_Grounding::RBF_Grounding(mlr::String& name, uint arity, bool build_derived_symbols) : 
 GroundedSymbol(name, arity, build_derived_symbols) {
   this->type = RBF;
 }
@@ -367,7 +367,7 @@ void relational::getFeatureVector(arr& f, const ors::KinematicWorld& C, uint obj
 }
 
 
-void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::KinematicWorld& C, const uintA& objs) {
+void relational::getFeatureVectors(mlr::Array< arr >& fs, const ors::KinematicWorld& C, const uintA& objs) {
   fs.clear();
   uint i;
   FOR1D(objs, i) {
@@ -378,7 +378,7 @@ void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::KinematicWor
 }
 
 
-void relational::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, ors::KinematicWorld* C) {
+void relational::calculateSymbols(LitL& lits, const mlr::Array<relational::GroundedSymbol*>& sgs, ors::KinematicWorld* C) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"GroundedSymbol::calculateSymbols [START]"<<endl;}
   
@@ -416,12 +416,12 @@ void relational::calculateSymbols(LitL& lits, const MT::Array<relational::Ground
 
 void relational::ContinuousState::read(istream& in) {
   uint DEBUG = 0;
-  MT::skip(in);
+  mlr::skip(in);
   in >> object_ids;
   if (DEBUG>0) {PRINT(object_ids);}
   uint i;
   FOR1D(object_ids, i) {
-    MT::skip(in);
+    mlr::skip(in);
     arr o_data;
     in >> o_data;
     data.append(o_data);
@@ -448,7 +448,7 @@ bool relational::ContinuousState::operator!=(const ContinuousState& other) const
 }
 
 relational::ContinuousState* relational::getContinuousState(const ors::KinematicWorld& C, const uintA& objects) {
-  MT::Array< arr > objects_data;
+  mlr::Array< arr > objects_data;
   relational::getFeatureVectors(objects_data, C, objects);
   relational::ContinuousState* cont_state = new relational::ContinuousState;
   cont_state->object_ids = objects;
@@ -493,7 +493,7 @@ void relational::FullExperience::write_continuous(ostream& out) const {
   out<<"}"<<endl;
 }
 
-void relational::FullExperience::write_continuous(MT::Array<FullExperience* > exps, ostream& out) {
+void relational::FullExperience::write_continuous(mlr::Array<FullExperience* > exps, ostream& out) {
   uint i;
   FOR1D(exps, i) {
     exps(i)->write_continuous(out);
@@ -505,7 +505,7 @@ void relational::FullExperience::write_symbolic(ostream& out) const {
   experience_symbolic.write(out);
 }
   
-void relational::FullExperience::write_symbolic(MT::Array<FullExperience* > exps, ostream& out) {
+void relational::FullExperience::write_symbolic(mlr::Array<FullExperience* > exps, ostream& out) {
   uint i;
   FOR1D(exps, i) {
     out<<"["<<i<<"] ("<<(i+1)<<")"<<endl;
@@ -518,7 +518,7 @@ void relational::FullExperience::write_symbolic(MT::Array<FullExperience* > exps
 // state: 20
 // 5 Objekte, 5. Objekt ist die Roboterhand
 // (1-3): x,y,z-Koords
-void relational::FullExperience::read_continuous_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name) {
+void relational::FullExperience::read_continuous_nikolayFormat(mlr::Array< FullExperience* >& experiences, const char* file_name) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"read_nikolayFormat [START]"<<endl;}
   if (DEBUG>0) {PRINT(file_name);}
@@ -530,9 +530,9 @@ void relational::FullExperience::read_continuous_nikolayFormat(MT::Array< FullEx
   for (o=0; o<OBJ_NUM; o++) {
     object_ids.append(o+61);
   }
-  while (MT::skip(in) != -1) {
+  while (mlr::skip(in) != -1) {
     FullExperience* fex = new FullExperience;
-    MT::String line;
+    mlr::String line;
     in >> line;
     if (DEBUG>0) PRINT(line);
     fex->state_continuous_pre.object_ids = object_ids;
@@ -579,29 +579,29 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
   CHECK(in.is_open(), "Input stream ain't open!");
   relational::FullExperience* e = new relational::FullExperience;
   
-  MT::skip(in);
-  //MT::skipLine(in);  // "{"
-  if (DEBUG>0) {PRINT(MT::peerNextChar(in));}
+  mlr::skip(in);
+  //mlr::skipLine(in);  // "{"
+  if (DEBUG>0) {PRINT(mlr::peerNextChar(in));}
   
-  MT::String line;
+  mlr::String line;
   // action_type__uint
-  MT::skip(in);  line.read(in, NULL, "\n");
+  mlr::skip(in);  line.read(in, NULL, "\n");
   uint action_type__uint;
-  MT::skip(in);  line >> action_type__uint;
+  mlr::skip(in);  line >> action_type__uint;
   e->action_type = ActionType(action_type__uint);
   if (DEBUG>0) {PRINT(action_type__uint);  PRINT(e->action_type);}
   // action_args
-  MT::skip(in);  line.read(in, NULL, "\n");
+  mlr::skip(in);  line.read(in, NULL, "\n");
   line >> e->action_args;
   // reward
-  MT::skip(in);  line.read(in, NULL, "\n");
+  mlr::skip(in);  line.read(in, NULL, "\n");
   line >> e->reward;
   // pre
   e->state_continuous_pre.read(in);
   // post
   e->state_continuous_post.read(in);
-  MT::skip(in);
-  //MT::skipLine(in);  // "}"
+  mlr::skip(in);
+  //mlr::skipLine(in);  // "}"
   
   if (DEBUG>0) {e->write_continuous(cout);}
   if (DEBUG>0) {cout<<"read_continuous [END]"<<endl;}
@@ -609,7 +609,7 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
 }
 
 
-void relational::FullExperience::read_continuous(MT::Array< relational::FullExperience* >& experiences, const char* filename) {
+void relational::FullExperience::read_continuous(mlr::Array< relational::FullExperience* >& experiences, const char* filename) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"read_continuous list [START]"<<endl;}
   if (DEBUG>0) {PRINT(filename);}
@@ -621,7 +621,7 @@ void relational::FullExperience::read_continuous(MT::Array< relational::FullExpe
     HALT("");
   } 
   // read other rules
-  while (MT::skip(in) != -1) {
+  while (mlr::skip(in) != -1) {
     experiences.append(read_continuous(in));
     if (DEBUG>0) {experiences.last()->write_continuous(cout);}
   }
@@ -629,7 +629,7 @@ void relational::FullExperience::read_continuous(MT::Array< relational::FullExpe
 }
 
 
-void relational::FullExperience::sanityCheck(MT::Array< FullExperience* >& experiences) {
+void relational::FullExperience::sanityCheck(mlr::Array< FullExperience* >& experiences) {
   uint i;
   FOR1D(experiences, i) {
     if (i==0) continue;

@@ -3,7 +3,7 @@
 #include <FOL/relationalMachine.h>
 #include <Core/thread.h>
 
-inline std_msgs::String MSG(const MT::String& str){
+inline std_msgs::String MSG(const mlr::String& str){
   std_msgs::String msg;
   if(str.N) msg.data = str.p;
   return msg;
@@ -29,7 +29,7 @@ struct RelationalMachineNode{
     pub_symbols   = nh.advertise<std_msgs::String>("RelationalSymbols", 10, true);
     sub_newEffect = nh.subscribe("RelationalEffect", 1, &RelationalMachineNode::cb_newEffect, this);
 
-    MT::wait(.1);
+    mlr::wait(.1);
     publishSymbols();
     publishKnowledge();
     publishState();
@@ -50,7 +50,7 @@ struct RelationalMachineNode{
 
   void publishSymbols(){
     RM_lock.readLock();
-    MT::String str;
+    mlr::String str;
     str <<RM.getSymbols();
     pub_symbols.publish(MSG(str));
     RM_lock.unlock();
@@ -58,7 +58,7 @@ struct RelationalMachineNode{
 
   void publishCommand(){
     RM_lock.readLock();
-    MT::String str;
+    mlr::String str;
     RM.tmp->write(str," ");
     pub_command.publish(MSG(str));
     RM_lock.unlock();
@@ -80,7 +80,7 @@ struct RelationalMachineNode{
 //===========================================================================
 
 void RelationalMachineNode::cb_newEffect(const std_msgs::String::ConstPtr& msg){
-  MT::String effect = msg->data.c_str();
+  mlr::String effect = msg->data.c_str();
   if(!effect.N) return;
   RM_lock.writeLock();
   RM.applyEffect(effect);

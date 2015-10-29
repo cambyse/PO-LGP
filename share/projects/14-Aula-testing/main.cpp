@@ -2,7 +2,7 @@
 #include <Optim/benchmarks.h>
 
 void TEST(ForManyLPs){
-  ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod",augmentedLag);
+  ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod",augmentedLag);
   ofstream fil(STRING("z.all."<<MethodName[constrainedMethod]));
 
   rnd.seed(2);
@@ -18,7 +18,7 @@ void TEST(ForManyLPs){
       ChoiceConstraintFunction F;
       F.n = s;
 
-      uint evals = optConstrained(x, NoArr, F, OPT(verbose=0));
+      uint evals = optConstrainedMix(x, NoArr, F, OPT(verbose=0));
       fil <<"size=" <<s <<" evals=" <<evals <<' ';
       evaluateConstrainedProblem(x, F, fil);
     }
@@ -28,7 +28,7 @@ void TEST(ForManyLPs){
 //==============================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testForManyLPs();
 

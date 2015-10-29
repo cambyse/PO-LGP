@@ -8,7 +8,7 @@ void miniTest(){
 
   for(uint i=0;i<100;i++){
     g4.step();
-    MT::wait(.001, false);
+    mlr::wait(.001, false);
   }
 
   g4.close();
@@ -26,13 +26,13 @@ struct G4System:System{
 void serialRun(){
   G4System S;
 
-  S.open();
+  S.openAll();
   for(uint i=0;i<100;i++){
-    S.step();
-    MT::wait(.01, false);
+    S.stepAll();
+    mlr::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
-  S.close();
+  S.closeAll();
 }
 
 

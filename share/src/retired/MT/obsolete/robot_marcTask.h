@@ -1,5 +1,5 @@
-#ifndef MT_robot_marc_h
-#define MT_robot_marc_h
+#ifndef MLR_robot_marc_h
+#define MLR_robot_marc_h
 
 #include "robot.h"
 
@@ -40,8 +40,8 @@ struct MarcsRobotTask:public RobotProcessGroup, public TaskAbstraction { //one c
   void closeHand(const char* objShape, const char* belowShape);
   void openHand(const char* objShape);
   
-  void reactivateCollisions(const MT::Array<const char*>& shapes);
-  void reactivateCollisions(const MT::Array<ors::Shape*>& shapes);
+  void reactivateCollisions(const mlr::Array<const char*>& shapes);
+  void reactivateCollisions(const mlr::Array<ors::Shape*>& shapes);
   void loadTrajectory(const char* filename="z.plan");
   void loadPlainTrajectory(const char* filename="z.plan");
   
@@ -58,7 +58,7 @@ struct MarcsRobotTask:public RobotProcessGroup, public TaskAbstraction { //one c
   void positionObjectRandomlyInSimulation();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "robot_marcTask.cpp"
 #endif
 

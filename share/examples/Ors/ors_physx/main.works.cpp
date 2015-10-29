@@ -29,7 +29,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
 
 PxScene* gScene = NULL;
 PxReal myTimestep = 1.0f/60.0f;
-MT::Array<PxRigidActor*> boxes;
+mlr::Array<PxRigidActor*> boxes;
 
 
 //for mouse dragging

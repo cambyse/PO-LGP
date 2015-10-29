@@ -48,7 +48,7 @@ void ImitateTask::initTaskVariables(ControllerModule *ctrl){
 ImitateTaskVariable::ImitateTaskVariable(const char* _name, ors::KinematicWorld& _ors){
 	landmarks = GetLandmarks(&_ors);
 	nCounter = 1;//change time for dynamic case
-	nIterations = MT::getParameter<int>("iterations");
+	nIterations = mlr::getParameter<int>("iterations");
 
 	set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 

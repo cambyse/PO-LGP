@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <curses.h>
 #include <signal.h>
@@ -33,7 +33,7 @@ int main(int argc,char** argv){
   curses.open();
   mvwprintw(curses.win,0,0,"*** MONITOR ***");
   curses.step();
-  MT::wait(2.);
+  mlr::wait(2.);
   curses.close();
   return 0;
 }

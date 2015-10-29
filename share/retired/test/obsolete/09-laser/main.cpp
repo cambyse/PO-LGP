@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #define NIKOLAY
 
@@ -36,7 +36,7 @@ OpenGL gl;
   // gl.watch();
  }
  
- void showResults(const MT::Array<arr>& laserpoints){
+ void showResults(const mlr::Array<arr>& laserpoints){
    plotData.lines.clear();
    arr po(10,2);po.setZero();//to show origin
    //showPoints(po);
@@ -52,8 +52,8 @@ OpenGL gl;
  
  
  
- MT::Array<arr> Transform3D( MT::Array<arr> scan){
-   MT::Array<arr> out3d;
+ mlr::Array<arr> Transform3D( mlr::Array<arr> scan){
+   mlr::Array<arr> out3d;
    
    ors::Vector z(1,0,0);
    
@@ -82,7 +82,7 @@ OpenGL gl;
    for(int i = 0; i < 100; i++){
      arr line;
      ur.scanLine(line);
-     MT::Array<arr> temp;
+     mlr::Array<arr> temp;
      temp.append(line);
      showResults(temp);
    }

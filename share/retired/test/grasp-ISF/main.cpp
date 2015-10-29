@@ -95,7 +95,7 @@ plot_belief_slices(GraspObject_GP &obj){
 
 int
 main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
@@ -128,7 +128,7 @@ main(int argc,char** argv){
   buildmesh.threadLoop();
 
   /* wait until perceive got obj. TODO: condition correct?*/
-  while(!graspobj.o) MT::wait(.01); 
+  while(!graspobj.o) mlr::wait(.01); 
   task.graspobj = graspobj.o;
 
   /* change task to grasping */
@@ -164,7 +164,7 @@ main(int argc,char** argv){
     get_skin_state(robot);
 
     //robot.step();
-    MT_MSG("Note: robot does not have a step routine anymore - are you properly looping? add a MT::wait(.01) or so");
+    MLR_MSG("Note: robot does not have a step routine anymore - are you properly looping? add a mlr::wait(.01) or so");
 
     if(get_gamepad_state(robot)==16 || get_gamepad_state(robot)==32) break;
   }

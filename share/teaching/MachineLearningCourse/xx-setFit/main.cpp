@@ -32,9 +32,9 @@ void TEST(SetFit){
 
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   
-  switch(MT::getParameter<uint>("mode",1)){
+  switch(mlr::getParameter<uint>("mode",1)){
     case 1:  testSetFit();  break;
   }
   

@@ -1,0 +1,7 @@
+BASE = ../../../share
+
+LIBS += -lpthread
+GL = 1
+DEPEND = Core Geo Gui
+
+include $(BASE)/gofMake/generic.mk

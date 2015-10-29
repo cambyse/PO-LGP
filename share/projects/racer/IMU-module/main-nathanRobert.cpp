@@ -94,13 +94,13 @@ void testMotors(){
   engine().open(S);
 
   S.controls.set() = ARR(128.,128.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(128.,128.,1.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,1.);
-  MT::wait(3);
+  mlr::wait(3);
 
   engine().close(S);
 

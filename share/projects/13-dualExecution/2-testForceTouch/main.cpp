@@ -15,7 +15,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
       P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
+                          conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
@@ -91,9 +91,9 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, dual;
   getTrajectory(x, y, dual, world);

@@ -1,5 +1,0 @@
-BASE = ../../../share
-
-DEPEND = Core MCTS Gui
-
-include $(BASE)/gofMake/generic.mk

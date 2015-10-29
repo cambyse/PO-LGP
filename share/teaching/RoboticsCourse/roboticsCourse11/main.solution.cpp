@@ -28,7 +28,7 @@ void generateData(){
   X.write(fil," ","\n"," \n");
   fil.close();
 
-  //gnuplot("plot 'data' us 0:1");  MT::wait();
+  //gnuplot("plot 'data' us 0:1");  mlr::wait();
 }
 
 
@@ -72,7 +72,7 @@ void kalmanFilter(){
   Xfilter.write(fil2," ","\n"," \n");
   fil2.close();
   gnuplot("plot 'dataFilter' us 0:1,'data' us 0:1,'dataReal' us 0:1");
-  MT::wait();
+  mlr::wait();
 }
 
 int main(int argc, char** argv){

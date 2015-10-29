@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <MT/robot.h>
 #include <signal.h>
@@ -22,7 +22,7 @@ struct MyDemo:public TaskAbstraction {
 
 void MyDemo::initTaskVariables(){
   eff = new TaskVariable("endeffector",ors, posTVT,"m9","<t(0 0 -.24)>",0,0,0);
-  eff->prec = MT::Parameter<double>("TV_x_prec");
+  eff->prec = mlr::Parameter<double>("TV_x_prec");
   eff->active=true;    eff->targetType=directTT;
   sys.setTaskVariables(TUPLE(eff)); //that's important
 }*/
@@ -34,7 +34,7 @@ void MyDemo::init(RobotProcessGroup *robot){
 	cout << "init TV_q = "<<TV_q->y << endl;
 	cout << "init TV_x->x="<<TV_eff->y << endl;
 	
-	MT::IOraw = true;
+	mlr::IOraw = true;
 	
 	robot->gui.gl->camera.setPosition(3.5,-8.,2.8);  // position of camera
         robot->gui.gl->camera.focus(0., -0.5, 1.);  // rotate the frame to focus the point (x,y,z)
@@ -95,7 +95,7 @@ void MyDemo::followTrajectory(RobotProcessGroup *robot){
 
 void MyDemo::loadPlainTrajectory(const char* filename){
   ifstream fil;
-  MT::open(fil,filename);
+  mlr::open(fil,filename);
 	q.read(fil);
   fil.close();
 	q_index = 0;
@@ -103,7 +103,7 @@ void MyDemo::loadPlainTrajectory(const char* filename){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robot;
 

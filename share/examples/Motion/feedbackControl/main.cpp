@@ -81,7 +81,7 @@ void checkAnalytics(){
   MP.setState(q, qdot);
 
   ofstream fil("z.approach");
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   double tau=0.01;
   for(uint i=0;i<100;i++){
     MP.setState(q, qdot);
@@ -104,13 +104,13 @@ void checkAnalytics(){
 // ============================================================================
 int main(int argc,char **argv)
 {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //   test_reach();
 //   checkAnalytics();
 //   test_quatTMT();
-  // test_reach();
-   test_qSingleTMT();
+  test_reach();
+  test_qSingleTMT();
 
   return 0;
 }

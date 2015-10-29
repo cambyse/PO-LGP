@@ -1,63 +1,51 @@
 #include "TaskControllerModule.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
 
-TaskControllerModule *globalTaskControllerModule=NULL;
-TaskControllerModule *taskControllerModule(){
-  return globalTaskControllerModule;
-}
+#ifdef MLR_ROS
+#  include <pr2/roscom.h>
+#endif
 
 TaskControllerModule::TaskControllerModule()
-    : Module("TaskControllerModule")
+    : Module("TaskControllerModule", .01)
     , realWorld("model.kvg")
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>());
-  modelWorld.set() = realWorld;
-  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
-  globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){
-  delete feedbackController;
 }
 
 void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
-#ifdef MT_ROS
-void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
-  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
-
-  double angle;
-  ors::Vector rotvec;
-  quat.getRad(angle, rotvec);
-  q(qIndex+0) = pos(0);
-  q(qIndex+1) = pos(1);
-  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
-}
-#endif
-
 void TaskControllerModule::open(){
+  modelWorld.set() = realWorld;
+  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
+
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-  MT::open(fil,"z.TaskControllerModule");
+//  mlr::open(fil,"z.TaskControllerModule");
 
+#if 1
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
   modelWorld().gl().add(ors::glDrawGraph, &realWorld);
   modelWorld().gl().add(changeColor2);
   modelWorld.deAccess();
+#endif
 
-  useRos = MT::getParameter<bool>("useRos",false);
+  useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
 }
 
@@ -74,20 +62,29 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
+#ifdef MT_ROS
     pr2_odom.waitForRevisionGreaterThan(0);
+#endif
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-#ifdef MT_ROS
-      setOdom(q_real, trans->qIndex, pr2_odom.get());
-#endif
+      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
-        syncModelStateWithRos = false;
+      syncModelStateWithRos = false;
+      
+      //supresses  c++ output
+
+       //streambuf *backup; 
+       //ofstream muell; 
+      //muell.open ("/dev/null"); 
+      //backup = cout.rdbuf();     // Konsolenpuffer merken 
+      //ostream konsole(backup);   // Neuen stream an Konsole binden 
+      //cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){
@@ -95,6 +92,7 @@ void TaskControllerModule::step(){
       }
     }
   }
+
   if(syncModelStateWithRos){
     cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
     cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
@@ -104,13 +102,14 @@ void TaskControllerModule::step(){
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
+#if 1
     modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+#endif
   }
 
   //-- code to output force signals
@@ -120,13 +119,13 @@ void TaskControllerModule::step(){
     arr uobs =  ctrl_obs.get()->u_bias;
     if(fLobs.N && uobs.N){
       arr Jft, J;
-      realWorld.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-      realWorld.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,realWorld.getShapeByName("l_ft_sensor"));
+      realWorld.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
+      realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
-      fil <<t <<' ' <<zeros(3) <<' ' << Jft*fLobs << " " << J*uobs << endl;
-//      MT::arrayBrackets="[]";
+//      mlr::arrayBrackets="  ";
+//      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
+//      mlr::arrayBrackets="[]";
     }
   }
 
@@ -162,12 +161,13 @@ void TaskControllerModule::step(){
   refs.gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.);
+  refs.Ki = ARR(0.2);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
+  refs.intLimitRatio = ARR(0.7);
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {
@@ -175,7 +175,6 @@ void TaskControllerModule::step(){
     refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
     refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
   }
-
 
   //-- compute the force feedback control coefficients
   uint count=0;
@@ -196,5 +195,6 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-  fil.close();
+//  fil.close();
+  delete feedbackController;
 }

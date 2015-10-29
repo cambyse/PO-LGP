@@ -64,14 +64,6 @@ Convert::operator VectorFunction() {
   return vf;
 }
 
-Convert::operator ConstrainedProblem() {
-  if(!cp) {
-    if(kom) cp = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
-  }
-  if(!cp) HALT("");
-  return cp;
-}
-
 Convert::operator ConstrainedProblemMix() {
   if(!cpm) {
     if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblemMix(*kom);
@@ -592,16 +584,10 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
 #endif
 }
 
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
-  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
-    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
-  };
-}
-
 
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-  MT::Array<TermType>::memMove=true;
+  mlr::Array<TermType>::memMove=true;
 RUN_ON_INIT_END()
 

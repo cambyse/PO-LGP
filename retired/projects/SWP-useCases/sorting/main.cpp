@@ -2,7 +2,7 @@
 #include <MT/util.h>
 
 struct RandomNumber:public Variable{
-  MT::Rnd rnd;
+  mlr::Rnd rnd;
   uint getRnd(uint modulo){ writeAccess(NULL); uint i=rnd(modulo); deAccess(NULL); return i; }
   void seed(uint s){ rnd.seed(s); }
   RandomNumber():Variable("RandomNumber"){}
@@ -16,7 +16,7 @@ struct Integer:public Variable{
 };
 
 struct PairSorter:public Process{
-  MT::Array<Integer*> vars;
+  mlr::Array<Integer*> vars;
   RandomNumber *rnd;
 
   PairSorter():Process("PairSorter"){};
@@ -45,9 +45,9 @@ int main(int argc, char **argv){
   uint nP=10;
   uint nR=10;
 
-  MT::Array<Integer> ints(nV);
-  MT::Array<RandomNumber> rnds(nR);
-  MT::Array<PairSorter> sorts(nP);
+  mlr::Array<Integer> ints(nV);
+  mlr::Array<RandomNumber> rnds(nR);
+  mlr::Array<PairSorter> sorts(nP);
 
   //initialize stuff
   ProcessL P;
@@ -61,7 +61,7 @@ int main(int argc, char **argv){
 
   //run
   loop(P);
-  MT::wait(.01);
+  mlr::wait(.01);
   close(P);
 
   for(uint i=0;i<ints.N;i++) cout <<ints(i).get_x(NULL) <<' ';

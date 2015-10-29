@@ -34,7 +34,7 @@ struct IOC_DemoCost {
   }
 
   double eval(arr& df, arr& Hf, const arr& x) {
-    //    MT::timerStart(true);
+    //    mlr::timerStart(true);
     // compute w vector
     arr w;
 
@@ -99,7 +99,7 @@ struct IOC_DemoCost {
       }
     }
 
-    //    cout << "4: "  << MT::timerRead(true) << endl;
+    //    cout << "4: "  << mlr::timerRead(true) << endl;
     return y;
   }
 };
@@ -120,12 +120,12 @@ struct IOC:ConstrainedProblem {
   uint n;
   uint T;
 
-  MT::Array<Demonstration*> &demos;
+  mlr::Array<Demonstration*> &demos;
 
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+1;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
+  IOC(mlr::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
     T = demos(0)->MP.T;
 
@@ -196,7 +196,7 @@ struct IOC:ConstrainedProblem {
 
 
 void simpleMotion(){
-  MT::Array<Demonstration*> demos;
+  mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
   ors::KinematicWorld world("scene");
@@ -205,7 +205,7 @@ void simpleMotion(){
   MotionProblem MP(world);
   MP.useSwift = false;
   MP.loadTransitionParameters();
-  arr refGoal = ARRAY(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 25);
@@ -254,7 +254,7 @@ void simpleMotion(){
   MP2.useSwift = false;
   MP2.loadTransitionParameters();
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.2,0.);
-  arr refGoal2 = ARRAY(MP2.world.getBodyByName("goal")->X.pos);
+  arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
   c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 20);
@@ -298,7 +298,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   simpleMotion();
 
   return 0;

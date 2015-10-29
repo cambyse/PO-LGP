@@ -61,7 +61,7 @@ void threadedRun() {
       gl.update();
     }
   }
-  cout <<"fps = " << t/MT::timerRead() <<endl;
+  cout <<"fps = " << t/mlr::timerRead() <<endl;
   */
 
   engine().close(S);
@@ -69,7 +69,7 @@ void threadedRun() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   threadedRun();
   return 0;

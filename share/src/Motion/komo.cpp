@@ -1,7 +1,139 @@
 #include "komo.h"
 #include "motion.h"
+#include <iomanip>
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
+#include <Gui/opengl.h>
+
+//===========================================================================
+
+KOMO::KOMO(const Graph& specs){
+  init(specs);
+  reset();
+  CHECK(x.N,"");
+}
+
+void KOMO::init(const Graph& specs){
+  Graph &glob = specs.get<Graph>("KOMO");
+  mlr::FileToken model = glob.get<mlr::FileToken>("model");
+  uint timeSteps=glob.get<double>("T");
+  double duration=glob.get<double>("duration");
+  uint phases=glob.get<double>("phases", 1);
+  uint k_order=glob.get<double>("k_order", 2);
+
+  world.read(model);
+  world.meldFixedJoints();
+  world.removeUselessBodies();
+  makeConvexHulls(world.shapes);
+  if(glob["activateAllContacts"]){
+    for(ors::Shape *s:world.shapes) s->cont=true;
+    //    LOG(0) <<"Shape without contact: '" <<s->name <<"'";
+  }
+  world.swift().initActivations(world);
+  FILE("z.komo.model") <<world;
+
+  MP = new MotionProblem(world);
+  if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
+  MP->k_order=k_order;
+
+
+  NodeL tasks = specs.getNodes("Task");
+  for(Node *t:tasks){
+    Graph &T = t->graph();
+    TaskMap *map = newTaskMap( T["map"]->graph(), world);
+    Task *task = MP->addTask(t->keys.last(), map);
+    map->order = T.V<double>("order", 0);
+    mlr::String type = T.V<mlr::String>("type", STRING("sumOfSqr"));
+    if(type=="sumOfSqr") map->type=sumOfSqrTT;
+    else if(type=="inequal") map->type=ineqTT;
+    else if(type=="equal") map->type=eqTT;
+    else HALT("Task type must be sumOfSqr|ineq|eq");
+    arr time = T.V<arr>("time",{0.,1.});
+    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.V<arr>("target", {0.}), T.V<double>("scale", {100.}));
+  }
+
+  NodeL switches = specs.getNodes("KinematicSwitch");
+  for(Node *s:switches){
+    Graph &S = s->graph();
+    ors::KinematicSwitch *sw= new ors::KinematicSwitch();
+    mlr::String type = S.get<mlr::String>("type");
+    if(type=="addRigid") sw->symbol = ors::KinematicSwitch::addRigid;
+    else if(type=="addRigidRel") sw->symbol = ors::KinematicSwitch::addRigidRel;
+    else if(type=="deleteJoint") sw->symbol = ors::KinematicSwitch::deleteJoint;
+    else HALT("unknown type: "<< type);
+    sw->timeOfApplication = S.get<double>("timeOfApplication")*timeSteps+1;
+    sw->fromId = world.getShapeByName(S.get<mlr::String>("from"))->index;
+    sw->toId = world.getShapeByName(S.get<mlr::String>("to"))->index;
+    MP->switches.append(sw);
+  }
+
+  if(MP->T || MP->k_order){
+    MPF = new MotionProblemFunction(*MP);
+  }else{
+    LOG(0) <<"InvKin mode";
+    TaskMap *map = new TaskMap_qItself();
+    Task *task = MP->addTask("transition", map);
+    map->order = 0;
+    map->type=sumOfSqrTT;
+    task->setCostSpecs(0, 0, MP->x0, 1./(MP->tau*MP->tau));
+  }
+
+}
+
+void KOMO::reset(){
+  if(MP->T || MP->k_order){
+    x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
+  }else{
+    x=MP->x0;
+  }
+  rndGauss(x,.01,true); //don't initialize at a singular config
+}
+
+void KOMO::step(){
+  NIY;
+}
+
+void KOMO::run(){
+  ors::KinematicWorld::setJointStateCount=0;
+  if(MP->T || MP->k_order){
+    optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2));
+  }else{
+    optConstrainedMix(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+  }
+  cout <<"** optimization time=" <<mlr::timerRead()
+      <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+  //    checkJacobian(Convert(MF), x, 1e-5);
+  MP->costReport(false);
+}
+
+Graph KOMO::getReport(){
+  return MP->getReport();
+}
+
+void KOMO::checkGradients(){
+  if(MP->T || MP->k_order){
+    checkJacobianCP(Convert(*MPF), x, 1e-4);
+  }else{
+    checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
+  }
+}
+
+void KOMO::displayTrajectory(bool wait){
+  if(MP->T || MP->k_order){
+    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+  //  orsDrawProxies=true;
+  // for(uint t=0;t<x.d0;t++){
+  //   MP->setState(x[t]);
+  //   MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
+  // }
+  }else{
+    MP->setState(x);
+    MP->world.gl().watch("KOMO InvKin mode");
+  }
+  // if(wait) MP->world.gl().watch();
+}
+
+//===========================================================================
 
 void setTasks(MotionProblem& MP,
               ors::Shape &endeff,
@@ -29,19 +161,19 @@ arr moveTo(ors::KinematicWorld& world,
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize
-  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
   ors::KinematicWorld::setJointStateCount=0;
   for(uint k=0;k<iterate;k++){
-    MT::timerStart();
+    mlr::timerStart();
     if(colPrec<0){
       optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
     }
-    cout <<"** optimization time=" <<MT::timerRead()
+    cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-//    checkJacobian(Convert(MF), x, 1e-5);
+    //    checkJacobian(Convert(MF), x, 1e-5);
     MP.costReport();
   }
 
@@ -57,11 +189,11 @@ void setTasks(MotionProblem& MP,
               double duration){
 
   //-- parameters
-  double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
-  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
-  double margin = MT::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
-  double zeroVelPrec = MT::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
-  double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
+  double posPrec = mlr::getParameter<double>("KOMO/moveTo/precision", 1e3);
+  double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  double margin = mlr::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
+  double zeroVelPrec = mlr::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
+  double alignPrec = mlr::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
 
   //-- set up the MotionProblem
   target.cont=false; //turn off contact penalization with the target
@@ -110,4 +242,5 @@ void setTasks(MotionProblem& MP,
   }
 }
 
+//===========================================================================
 

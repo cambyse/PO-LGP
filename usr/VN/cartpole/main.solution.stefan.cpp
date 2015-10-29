@@ -20,7 +20,7 @@ void glDrawCartPole(void *classP);
 // ============================================================================
 //Normalizes any number to an arbitrary range
 //by assuming the range wraps around when going below min or above max
-double normalise( const double value, const double start=-MT_PI, const double end=MT_PI) {
+double normalise( const double value, const double start=-MLR_PI, const double end=MLR_PI) {
   const double width = end - start;
   const double offsetValue = value - start ;   // value relative to 0
   return (offsetValue - (floor(offsetValue / width) * width)) + start;
@@ -50,7 +50,7 @@ struct CartPoleState {
       : x(0.)
       , xdot(0.)
       // , theta(.3)
-      , theta(MT_PI/3.)
+      , theta(MLR_PI/3.)
       , thetadot(0.)
       , noise(newNoise)
       , tau(1./60.)

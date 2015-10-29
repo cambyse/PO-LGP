@@ -1,0 +1,15 @@
+MT:: ors:: -> mlr::
+#def MT_* -> MLR_*
+
+Core (merg registry)
+Optim
+FOL
+Kin
+Geo (incl swift)
+Control
+
+Gui
+
+ConstrainedProblemMix -> nomix
+
+cont: by default true; nocont flag

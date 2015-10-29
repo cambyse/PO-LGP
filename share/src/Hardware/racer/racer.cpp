@@ -1,6 +1,6 @@
 #include "racer.h"
 #include <Algo/algos.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Gui/opengl.h>
 
 //void drawEnv(void*);
@@ -8,7 +8,7 @@
 Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   q.resize(2).setZero();
   q_dot.resize(2).setZero();
-  q(1) = .01; //1MT_PI/2; //slighly non-upright //MT_PI; //haning down
+  q(1) = .01; //1MT_PI/2; //slighly non-upright //MLR_PI; //haning down
 
   //init constants
   tau = 0.01;
@@ -17,19 +17,19 @@ Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   lC = 0.49; //height of IMU
   mA = 0.05; //mass of wheel
   mB = 1.5;  //mass of pendulum
-  IA = mA*MT::sqr(.9*r); //the mass averages at .9*r from the center
-  IB = mB*MT::sqr(.8*l); //0.3705
+  IA = mA*mlr::sqr(.9*r); //the mass averages at .9*r from the center
+  IB = mB*mlr::sqr(.8*l); //0.3705
   g = 9.81;
   noise_dynamics = 0.;
 
   c1 = 1./9.6; //9.81;
-  c2 = MT::getParameter<double>("IMU_tilt",0.16);
+  c2 = mlr::getParameter<double>("IMU_tilt",0.16);
   c3 = 1.;
-  c4 = MT::getParameter<double>("IMU_gyroOff",0.0417273);
+  c4 = mlr::getParameter<double>("IMU_gyroOff",0.0417273);
   c5 = 1.;
 
-  noise_accel = MT::getParameter<double>("IMU_accelNoise",1.);
-  noise_gyro = MT::getParameter<double>("IMU_gyroNoise",.1);
+  noise_accel = mlr::getParameter<double>("IMU_accelNoise",1.);
+  noise_gyro = mlr::getParameter<double>("IMU_gyroNoise",.1);
   noise_enc = 1.; //e-3;
 }
 
@@ -219,7 +219,7 @@ OpenGL& Racer::gl(){
 }
 
 void Racer::glDraw(){
-#ifdef MT_GL
+#ifdef MLR_GL
   double GLmatrix[16];
   ors::Transformation f;
   f.setZero();

@@ -10,7 +10,7 @@ class GuiDataV;
 class TrainingsDataV: public Variable {
   public:
     TrainingsDataV();
-    MT::Array<arr> data;
+    mlr::Array<arr> data;
     intA classes;
 };
 

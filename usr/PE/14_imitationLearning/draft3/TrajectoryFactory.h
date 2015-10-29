@@ -11,7 +11,7 @@
 /** Create Demonstration Data for Testing
  */
 /// Varying goal position along z axis
-void createToyDemonstrations1(MT::Array<Demonstration> &demos);
+void createToyDemonstrations1(mlr::Array<Demonstration> &demos);
 
 
 #endif // TRAJECTORYFACTORY_H

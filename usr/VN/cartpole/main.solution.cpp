@@ -13,7 +13,7 @@ struct CartPoleState{
   CartPoleState(){
     x=0.;
     x1=0.;
-    th=.2; //slighly non-upright //MT_PI; //haning down
+    th=.2; //slighly non-upright //MLR_PI; //haning down
     th1=0.;
 
     //init constants

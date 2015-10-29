@@ -23,7 +23,7 @@ class ams_model {
     virtual ~ams_model() {};
 };
 
-typedef MT::Array<ams_model*> model_list_t;
+typedef mlr::Array<ams_model*> model_list_t;
 
 /**
  * This is the literal translation of the formulas in [1]. All integrals are

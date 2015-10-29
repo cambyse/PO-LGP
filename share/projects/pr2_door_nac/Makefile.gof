@@ -1,0 +1,8 @@
+BASE = ../..
+
+OBJS = main.o src/task_door.o src/traj_factory.o src/plotUtil.o src/functional.o src/motion_interface.o
+DEPEND = Core Ors Gui Algo Motion Optim System pr2
+PTHREAD = 0
+PHYSX = 0
+QHULL = 1
+include $(BASE)/gofMake/generic.mk

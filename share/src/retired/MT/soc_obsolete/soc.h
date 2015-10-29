@@ -17,8 +17,8 @@
 /** @file soc.h
     @brief Stochastic Optimal Control library */
 
-#ifndef MT_soc_h
-#define MT_soc_h
+#ifndef MLR_soc_h
+#define MLR_soc_h
 
 #include <Core/array.h>
 #include <Core/util.h>
@@ -28,7 +28,7 @@ class OpenGL;
 struct SwiftInterface;
 namespace ors{ struct Graph; }
 struct TaskVariable;
-typedef MT::Array<TaskVariable*> TaskVariableList;
+typedef mlr::Array<TaskVariable*> TaskVariableList;
 extern uint countMsg, countSetq;
 
 
@@ -147,7 +147,7 @@ struct SocSolver{
   enum SocSolverType{ AICO=0, AICO_ms, LQG_straightInit, LQG_IKinit, LQG_ms, gradient, SQPopt };
   int method, scalePowers, iterations, gradientMethod, splinePoints, splineDegree, display, seed;
   double convergenceRate, repeatThreshold, recomputeTaskThreshold, tolerance;
-  MT::String filename;
+  mlr::String filename;
   std::ostream *os;
   arr q, b, v, Vinv;
 
@@ -287,7 +287,7 @@ struct AICO{
 
   //messages (OUTPUT)
   arr s, Sinv, v, Vinv, r, R;          ///< fwd, bwd, and task messages
-  MT::Array<arr> phiBar, JBar;     ///< all task cost terms
+  mlr::Array<arr> phiBar, JBar;     ///< all task cost terms
   arr Psi;                        ///< all transition cost terms
   arr b, Binv;                     ///< beliefs
   arr q, qhat;                     ///< trajectory (MAP), and point of linearization
@@ -435,7 +435,7 @@ void createDynamicProblem(SocSystem_Toy &soci,
 struct SocSystem_Ors: public virtual SocSystemAbstraction{
   ors::KinematicWorld *ors;
   SwiftInterface *swift;
-  MT::Array<TaskVariable*> vars;
+  mlr::Array<TaskVariable*> vars;
   struct sSocSystem_Ors *s;
 
   SocSystem_Ors();
@@ -554,7 +554,7 @@ struct SocSystem_Toy: public virtual SocSystemAbstraction{
 // implementations
 //
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "soc.cpp"
 #  include "soc_method_AICO.cpp"
 #  include "soc_method_LQG.cpp"

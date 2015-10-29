@@ -38,8 +38,8 @@ double TANH(double x){
 #define ATANH atanh
 #undef EXP
 double RATIO(double a, double b){
-  double c=(1.-MT::sqr(TANH(a)));
-  double d=(1.-MT::sqr(TANH(b)));
+  double c=(1.-mlr::sqr(TANH(a)));
+  double d=(1.-mlr::sqr(TANH(b)));
   //if(fabs(d)<1e-5) cout <<"low quotient! 1/x, x=" <<d;
   return c/d;
 }
@@ -280,8 +280,8 @@ void BinaryBPNet::setPairBeliefDeltas(){
   zeroDeltas(edges.N);
   for(edge *e: edges){ //pair
     double tanh_b = TANH(e->mf) * TANH(e->mb) / e->tanhJ;
-    //e->from->delT(i) = (e->tanhJ * (1.-MT::sqr(TANH(collect(e->from, e)))) * TANH(collect(e->to, e))) / (1.-MT::sqr(tanh_b));
-    //e->to  ->delT(i) = (e->tanhJ * TANH(collect(e->from, e)) * (1.-MT::sqr(TANH(collect(e->to, e))))) / (1.-MT::sqr(tanh_b));
+    //e->from->delT(i) = (e->tanhJ * (1.-mlr::sqr(TANH(collect(e->from, e)))) * TANH(collect(e->to, e))) / (1.-mlr::sqr(tanh_b));
+    //e->to  ->delT(i) = (e->tanhJ * TANH(collect(e->from, e)) * (1.-mlr::sqr(TANH(collect(e->to, e))))) / (1.-mlr::sqr(tanh_b));
     e->delJ(i)       = - tanh_b / e->tanhJ * RATIO(e->J, tanh_b);
     //e->delJ(i)       = tanh_b / e->tanhJ * RATIO(e->J, tanh_b);
     e->delf(i)       = TANH(e->mb) / e->tanhJ * RATIO(e->mf, tanh_b);
@@ -630,8 +630,8 @@ void BinaryBPNet::getPerturbationGradJ(arr &g){
   arr dFdm;
   for(edge *e: edges){
     g[i]() = 0.;
-    g(i, e->ito)   += (1.-MT::sqr(TANH(e->from->b-e->mb))) * RATIO(e->J, e->mf) * (e->to  ->G-e->Gb)(e->ito);
-    g(i, e->ifrom) += (1.-MT::sqr(TANH(e->to  ->b-e->mf))) * RATIO(e->J, e->mb) * (e->from->G-e->Gf)(e->ifrom);
+    g(i, e->ito)   += (1.-mlr::sqr(TANH(e->from->b-e->mb))) * RATIO(e->J, e->mf) * (e->to  ->G-e->Gb)(e->ito);
+    g(i, e->ifrom) += (1.-mlr::sqr(TANH(e->to  ->b-e->mf))) * RATIO(e->J, e->mb) * (e->from->G-e->Gf)(e->ifrom);
   }
 #else
   HALT("this feature requires GradTypeArr compile flag");

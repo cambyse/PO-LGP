@@ -81,10 +81,10 @@ double soc::LQG::stepKinematic(){
   if(!sweep){
     if(sys->os){
 #ifdef NIKOLAY
-      *sys->os <<std::setw(3) <<-1 <<" " <<MT::timerRead(false);
+      *sys->os <<std::setw(3) <<-1 <<" " <<mlr::timerRead(false);
       sys->totalCost(NULL, q, false);
 #else
-      *sys->os <<"LQG " <<std::setw(3) <<-1 <<"  time " <<MT::timerRead(false);
+      *sys->os <<"LQG " <<std::setw(3) <<-1 <<"  time " <<mlr::timerRead(false);
       sys->analyzeTrajectory(q, display>0);
       //sys->computeTotalCost(q);
 #endif
@@ -134,16 +134,16 @@ double soc::LQG::stepKinematic(){
   if(q_old.N==q.N) diff=maxDiff(q_old, q);
 
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
-    *sys->os <<"LQGk(" <<sys->scalePower <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
+    *sys->os <<"LQGk(" <<sys->scalePower <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" diff " <<diff;
    cost= sys->analyzeTrajectory(q, display>0);
     //sys->computeTotalCost(q);
   }
   if(display){
     sys->displayTrajectory(q, NULL, display, STRING("LQG optimization -- iteration "));
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }
@@ -272,14 +272,14 @@ double soc::LQG::stepGeneral(){
   }    
 
   //display or evaluate
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->os){
-    *sys->os <<"LQGd(" <<sys->scalePower <<", " <<convergenceRate <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
+    *sys->os <<"LQGd(" <<sys->scalePower <<", " <<convergenceRate <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" diff " <<diff;
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("LQG optimization -- iteration "));
   }
-  MT::timerResume();
+  mlr::timerResume();
 
   return diff;
 }

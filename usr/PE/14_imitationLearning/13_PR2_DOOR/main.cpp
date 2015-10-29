@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
@@ -12,8 +12,7 @@
 void run() {
 
   /// load parameter
-  bool visTest = MT::getParameter<uint>("visTest");
-  uint verbose = MT::getParameter<uint>("verbose");
+  uint verbose = mlr::getParameter<uint>("verbose");
   uint optRandSeed = MT::getParameter<uint>("optRandSeed");
   uint optParam0Variant = MT::getParameter<uint>("optParam0Variant");
   double optCostScale = MT::getParameter<double>("optCostScale");
@@ -24,11 +23,11 @@ void run() {
 
   /// create some motion scenes
   MotionFactory* mf = new MotionFactory();
-  MT::Array<Scene > trainScenes;
-  MT::Array<Scene > testScenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene > trainScenes;
+  mlr::Array<Scene > testScenes;
+  mlr::Array<CostWeight> weights;
   mf->costScale=optCostScale;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
+  mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 
   /// create ikmo problem
   arr param;
@@ -64,7 +63,7 @@ void run() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run();
   return 0;
 }

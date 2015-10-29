@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 #include <Core/util.h>
 #include <MT/threads.h>
 //#include <MT/serial.h>
@@ -13,7 +13,7 @@ void initWheels(){
   cout <<"serial port open? " <<SerialPortIsOpen() <<endl;
   cout <<"Port to wheels opened? " <<r <<endl;
   cout <<"initializing driver ..." <<std::flush;
-  MT::wait(2.);
+  mlr::wait(2.);
   PutSerialChar(170);
   cout <<"done" <<endl;
   wheelsInitialized = true;
@@ -41,7 +41,7 @@ void writeMem(int i=-1){
   bool stop=false;
   if(i==-1){ mvprintw(0,0,"*** MONITOR ***"); i=0; }
   else stop=true;
-  mvprintw(0,20,"time=%.3f",MT::realTime());
+  mvprintw(0,20,"time=%.3f",mlr::realTime());
   for(;i<nBlocks;i++){
     BlockDescription& b=blockDescription[i];
     mvprintw(1+i,0,b.name);
@@ -109,7 +109,7 @@ void TEST(Client){
     shm->wheels[0]=i;
     shm->changed[wheelsB]=true;
     sendSignal();
-    MT::wait();
+    mlr::wait();
   }
 
   closeRobotSharedMemory();

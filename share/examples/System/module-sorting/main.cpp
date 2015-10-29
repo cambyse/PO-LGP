@@ -3,10 +3,22 @@
 #include <Gui/graphview.h>
 //#include <biros/biros_views.h>
 
-BEGIN_MODULE(PairSorter)
-ACCESS(int, a)
-ACCESS(int, b)
-END_MODULE()
+
+struct PairSorter:Module{
+  Access_typed<int> a;
+  Access_typed<int> b;
+//  ACCESS(int, a)
+//  ACCESS(int, b)
+  PairSorter(const char *a_name, const char* b_name)
+    : Module(STRING("S_"<<a_name<<"_"<<b_name)),
+      a(this, a_name),
+      b(this, b_name){}
+  PairSorter():Module("S"), a(this, "a"), b(this, "b"){}
+  void open(){}
+  void close(){}
+  void step();
+};
+
 
 REGISTER_MODULE(PairSorter)
 
@@ -36,13 +48,13 @@ void TEST(ModuleSorter){
   //new InsideOut();                 //create an explicit view
 
 
-  for(uint i=0;i<N;i++) S.getVar<int>(i)->set() = MT::rnd(100);
+  for(uint i=0;i<N;i++) S.getVar<int>(i)->set() = mlr::rnd(100);
 
   for(uint k=0;k<20;k++){
     if(engine().shutdown.getValue()) break;
     for(uint i=0;i<N;i++) cout <<S.getVar<int>(i)->get() <<' ';  cout <<endl;
     engine().step(S);
-    MT::wait(.1);
+    mlr::wait(.1);
   }
 
   engine().close(S);
@@ -54,15 +66,40 @@ void TEST(ModuleSorter){
 
 //==============================================================================
 
+void TEST(ModuleSorter2){
+  uint N=20;
+
+  mlr::Array<PairSorter*> ps;
+
+  for(uint i=0;i<N-1;i++)
+    ps.append(new PairSorter(STRING("int"<<i), STRING("int"<<i+1)) );
+
+  cout <<moduleSystem() <<endl;
+
+  for(uint i=0;i<N-1;i++) ps(i)->a.set() = mlr::rnd(100);
+  ps.last()->b.set() = mlr::rnd(100);
+
+  openModules(moduleSystem());
+
+  for(uint k=0;k<20;k++){
+    for(uint i=0;i<N-1;i++) cout <<ps(i)->a.get() <<' ';  cout <<endl;
+    stepModules(moduleSystem());
+    mlr::wait(.1);
+  }
+
+  closeModules(moduleSystem());
+}
+
+//==============================================================================
+
 int MAIN(int argc, char **argv) {
-  testModuleSorter();
+//  testModuleSorter();
+  testModuleSorter2();
   return 0;
 }
 
 //==============================================================================
 
-void PairSorter::open(){}
-void PairSorter::close(){}
 
 void PairSorter::step(){
   int xa = a.get();

@@ -31,8 +31,8 @@ void setup_collision(DiscWorld &dw) {
 }
 
 int main(int argc, char** argv) {
-  MT::rnd.clockSeed();
-  //MT::rnd.seed(0);
+  mlr::rnd.clockSeed();
+  //mlr::rnd.seed(0);
 
   DiscWorld dw;
   dw.setSpeed(.03);

@@ -23,7 +23,7 @@ int main(int argc,char **argv){
   //gui.ui.glview->gl->add(glDraw,NULL);
 
   gui.exec();
-  //MT::wait(10.);
+  //mlr::wait(10.);
 
   return 0;
 }

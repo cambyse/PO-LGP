@@ -8,11 +8,11 @@ using namespace std;
 
 void load_data(arr& X,const char* filename){
   ifstream is;
-  MT::open(is,filename);
-  MT::Array<MT::String> strs;
-  if(!MT::contains("0123456789.-+",MT::peerNextChar(is))){
+  mlr::open(is,filename);
+  mlr::Array<mlr::String> strs;
+  if(!mlr::contains("0123456789.-+",mlr::peerNextChar(is))){
     //read line of strings
-    MT::String str;
+    mlr::String str;
     for(;;){
       str.read(is," \"\t\r"," \"\t\r\n",false);
       if(!str.N) break;
@@ -37,7 +37,7 @@ void load_data(arr& X,const char* filename){
   }
 
   //-- whiten the data
-  if(MT::getParameter<bool>("whitenData",0)){
+  if(mlr::getParameter<bool>("whitenData",0)){
     for(uint i=0;i<X.d0;i++) for(uint j=0;j<X.d1;j++){
       X(i,j) /= sqrt(var(j,j));
     }
@@ -77,8 +77,8 @@ void exercise(){
   arr X,Phi,y,beta;
   arr zScores;
   load_data(X,"autonomous.txt");
-  prepare_features(Phi,y,X, MT::getParameter<uint>("k",2), MT::getParameter<uint>("D",5));
-  ridgeRegression(beta, Phi, y, MT::getParameter<double>("ridge",1e-10), NULL, &zScores);
+  prepare_features(Phi,y,X, mlr::getParameter<uint>("k",2), mlr::getParameter<uint>("D",5));
+  ridgeRegression(beta, Phi, y, mlr::getParameter<double>("ridge",1e-10), NULL, &zScores);
   cout <<"estimated beta = "<< beta <<endl;
   cout <<"z-scores= " <<zScores <<endl;
 
@@ -100,14 +100,14 @@ void exercise(){
     }
   } CV;
   
-  //CV.crossValidate(Phi, y, MT::getParameter<double>("ridge",1e-10), 10, MT::getParameter<bool>("permute",false), &mean, &svd, &train);
-  CV.crossValidate(Phi, y, MT::getParameter<arr>("ridges"), 10, MT::getParameter<bool>("permute",false));
+  //CV.crossValidate(Phi, y, mlr::getParameter<double>("ridge",1e-10), 10, mlr::getParameter<bool>("permute",false), &mean, &svd, &train);
+  CV.crossValidate(Phi, y, mlr::getParameter<arr>("ridges"), 10, mlr::getParameter<bool>("permute",false));
 }
 
 
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   exercise();
   

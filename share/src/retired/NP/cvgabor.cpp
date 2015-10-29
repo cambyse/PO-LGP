@@ -28,7 +28,7 @@
 template <class S>
 void np::gabor_wavelet
 (
- MT::Array<MT::Array<S> >& output,
+ mlr::Array<mlr::Array<S> >& output,
  const byteA& gray_image,
  int num_orientations,
  int num_scales,
@@ -66,7 +66,7 @@ void np::gabor_wavelet
    {
       for (int scale = 0; scale < num_scales; scale++)
       {
-        MT::Array<S> &cur = output.p[counter];
+        mlr::Array<S> &cur = output.p[counter];
         cur.resize(height, width);
 
          // apply the current filter
@@ -91,8 +91,8 @@ void np::gabor_wavelet
    cvReleaseImage(&ipl_response);
    cvReleaseImage(&ipl_input);
 }
-template void np::gabor_wavelet(MT::Array<MT::Array<double> >&, const byteA&,int,int,double,double,int);
-template void np::gabor_wavelet(MT::Array<MT::Array<float> >&, const byteA&,int,int,float,float,int);
+template void np::gabor_wavelet(mlr::Array<mlr::Array<double> >&, const byteA&,int,int,double,double,int);
+template void np::gabor_wavelet(mlr::Array<mlr::Array<float> >&, const byteA&,int,int,float,float,int);
 
 
 

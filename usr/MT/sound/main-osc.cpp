@@ -33,7 +33,7 @@ struct SineSound{
   ~SineSound(){}
 
   void add(double freq, double xi=10, double amp=.1){
-    double omega = MT_2PI*freq;
+    double omega = MLR_2PI*freq;
     double Kp = omega*omega + xi*xi;
     double Kd = 2.*xi;
     x.append( ARR(amp,0.) );
@@ -129,12 +129,12 @@ int main(void){
   err = Pa_StartStream( stream );
   if( err != paNoError ) goto error;
 
-  MT::wait(.1);
+  mlr::wait(.1);
 
   S.add(440);
 //  S.reset();
 //  err = Pa_StartStream( stream );
-  MT::wait(10.);
+  mlr::wait(10.);
 
   err = Pa_StopStream( stream );
   if( err != paNoError ) goto error;

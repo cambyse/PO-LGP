@@ -11,7 +11,7 @@ Mutex i2cmutex;
 
 static const double counts_per_motorTurn = 360.;
 static const double motorTurn_per_wheelTurn = 30.;
-static const double rad_per_count = MT_2PI/(counts_per_motorTurn);
+static const double rad_per_count = MLR_2PI/(counts_per_motorTurn);
 
 //===========================================================================
 //
@@ -29,9 +29,9 @@ void IMU_Poller::open(){
   i2cmutex.lock();
   if(s->imu->open()) std::cout << "Open connection successfully" << std::endl;
   i2cmutex.unlock();
-  MT::open(s->fil, "nogit-data/IMU_Poller.dat");
+  mlr::open(s->fil, "nogit-data/IMU_Poller.dat");
   s->fil <<"time acc0 acc1 acc2 gyro0 gyro1 gyro2" <<endl;
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 }
 
 void IMU_Poller::close(){
@@ -44,7 +44,7 @@ void IMU_Poller::close(){
 }
 
 void IMU_Poller::step(){
-  double time=MT::realTime();
+  double time=mlr::realTime();
   i2cmutex.lock();
   s->imu->step();
   i2cmutex.unlock();
@@ -84,13 +84,13 @@ void Motors::open(){
   s->motor->readVoltage(volts);
   std::cout <<"VOLTAGE = " <<double(volts)/10 <<'V' <<endl;
   i2cmutex.unlock();
-  MT::open(s->fil, "nogit-data/Motors.dat");
+  mlr::open(s->fil, "nogit-data/Motors.dat");
   s->fil <<"time enc0 enc1 vel0 vel1 acc dtime denc0 denc1" <<endl;
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 }
 
 void Motors::step(){
-  double time=MT::realTime();
+  double time=mlr::realTime();
   arr u = controls.get();
   if(!u.N) return;
   CHECK_EQ(u.N,3," need u=(vel1, vel2, acc)");
@@ -145,12 +145,12 @@ struct sKalmanFilter{
 
 void KalmanFilter::open(){
   s = new sKalmanFilter;
-//  s->R.q(1)=MT_PI/2.;
+//  s->R.q(1)=MLR_PI/2.;
   s->K.initialize(cat(s->R.q, s->R.q_dot),1.*eye(4));
   s->time=0.;
-  MT::open(s->fil, "nogit-data/KalmanFilter.dat");
+  mlr::open(s->fil, "nogit-data/KalmanFilter.dat");
   s->fil <<"time x th x_dot th_dot y0_pred y1_pred y2_pred y3_pred y0_true y1_true y2_true y3_true" <<endl;
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 }
 
 void KalmanFilter::step(){

@@ -22,7 +22,7 @@
 #  include <Gui/opengl.h>
 #  include <Gui/plot.h>
 
-//#ifdef MT_GL
+//#ifdef MLR_GL
 
 OpenGL *globalGL=NULL;
 
@@ -84,10 +84,10 @@ void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool w
   plot(wait);
 }
 
-// #else //MT_GL
+// #else //MLR_GL
 
 // #include <Core/util.h>
-// void mdp::showMaze(){ MT_MSG("display only implemented when compiling with some GL"); }
+// void mdp::showMaze(){ MLR_MSG("display only implemented when compiling with some GL"); }
 // void mdp::showAB(const arr& alpha, const arr& beta){}
 // void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}
 // void mdp::glDisplayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){}

@@ -39,9 +39,9 @@ struct IOC_DemoCost {
     cout << _MP.world.getBodyByName("box")->X.pos << endl;
     cout << g << endl;
 
-    MT::timerStart();
+    mlr::timerStart();
     // reduce Jg to only active part (lambda !=0)
-    MT::Array<uint> idx;
+    mlr::Array<uint> idx;
     lambda0.findValues(idx,0.);
     lambda0.removeAllValues(0.);
     Jg = unpack(JgP);
@@ -71,7 +71,7 @@ struct IOC_DemoCost {
     J = unpack(JP); J.special = arr::noneST;
     dPHI_J_Jt_dPHI = (PHI*~PHI)%unpack(J_JtP);
 //    dPHI_J_Jt_dPHI = diag(PHI)*unpack(J_JtP)*diag(PHI);
-    cout << MT::timerRead(true) << endl;
+    cout << mlr::timerRead(true) << endl;
 
 
 //    arr Jgt_JgJgtI_JgP = ~JgP*inverse_SymPosDef(Jg_Jgt)*JgP;
@@ -80,7 +80,7 @@ struct IOC_DemoCost {
 //    dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - (diag(PHI)*J*Jgt_JgJgtI_Jg*~J*diag(PHI));
     dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(J*Jgt_JgJgtI_Jg*~J));
 //    dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - ( (PHI*~PHI)%(JP*Jgt_JgJgtI_JgP*~JP));
-    cout << MT::timerRead(true) << endl;
+    cout << mlr::timerRead(true) << endl;
 
     dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
 
@@ -175,7 +175,7 @@ struct Demonstration {
 };
 
 struct IOC:ConstrainedProblem {
-  MT::Array<Demonstration*> &demos;
+  mlr::Array<Demonstration*> &demos;
   arr xOpt;
   uint numParam;
   uint numLambda;
@@ -186,7 +186,7 @@ struct IOC:ConstrainedProblem {
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+numLambda+1;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
+  IOC(mlr::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
     T = demos(0)->MP.T;
 
@@ -287,7 +287,7 @@ struct IOC:ConstrainedProblem {
 
 
 void simpleMotion(){
-  MT::Array<Demonstration*> demos;
+  mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1 with object movement
   ors::KinematicWorld world("scene");
@@ -311,8 +311,8 @@ void simpleMotion(){
   MotionProblem MP(world,false);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
-  arr refGoal2 = ARRAY(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
+  arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
+  arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
   cout << refGoal1 << refGoal2 << endl;
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
@@ -351,7 +351,7 @@ void simpleMotion(){
     world.kinematicsVec(tmp,NoArr,world.getBodyByName("endeff"));
     xVecTraj.append(~tmp);
     world.physx().step(MP.tau);
-    boxTraj.append(~ARRAY(world.getBodyByName("box")->X.pos));
+    boxTraj.append(~conv_vec2arr(world.getBodyByName("box")->X.pos));
     //    world.gl().update();
     lambdaTraj.append(~ARR(boxTraj(t,1)>1e-5));
     //    world.watch(false);
@@ -457,7 +457,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   simpleMotion();
 
   return 0;

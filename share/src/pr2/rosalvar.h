@@ -4,13 +4,13 @@
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 
-#ifdef MT_ROS_INDIGO
+#ifdef MLR_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
   using namespace ar_track_alvar_msgs;
 #endif
-#if MT_ROS_GROOVY
+#if MLR_ROS_GROOVY
   #include <ar_track_alvar/AlvarMarkers.h>
   using namespace ar_track_alvar;
 #endif
@@ -18,7 +18,7 @@
 
 //===========================================================================
 /// Generic subscriber to the AR maker alvar
-ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
+//ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
 
 
 //===========================================================================
@@ -48,7 +48,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
 #else
 
 class AlvarMarker{};
-typedef MT::Array<AlvarMarker> AlvarMarkers;
+typedef mlr::Array<AlvarMarker> AlvarMarkers;
 
 void setBody(ors::Body& body, const AlvarMarker& marker);
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);

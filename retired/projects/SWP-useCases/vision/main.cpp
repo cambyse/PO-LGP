@@ -2,7 +2,7 @@
 #include "processes.h"
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   ThreadInfoWin win;
   win.threadLoopWithBeat(.1);
   
@@ -58,7 +58,7 @@ int main(int argc,char **argv) {
   P.append(LIST<Process>(camView, grayView, diffView, motionView, cannyView, patchView, surfView, houghView));
   
   loopWithBeat(P,.01);
-  MT::wait(2.);
+  mlr::wait(2.);
   close(P);
   
   return 0;

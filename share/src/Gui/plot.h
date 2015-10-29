@@ -17,21 +17,21 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_plot_h
-#define MT_plot_h
+#ifndef MLR_plot_h
+#define MLR_plot_h
 #include <Core/util.h>
 
 //===========================================================================
 
 struct OpenGL;
 struct Gaussian;
-namespace MT {  template<class T> struct Array;  }
+namespace mlr {  template<class T> struct Array;  }
 
 typedef unsigned int uint;
-typedef MT::Array<double> arr;
-typedef MT::Array<uint> uintA;
-typedef MT::Array<Gaussian> GaussianA;
-typedef MT::Array<Gaussian*> GaussianL;
+typedef mlr::Array<double> arr;
+typedef mlr::Array<uint> uintA;
+typedef mlr::Array<Gaussian> GaussianA;
+typedef mlr::Array<Gaussian*> GaussianL;
 
 //===========================================================================
 

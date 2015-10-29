@@ -12,7 +12,7 @@ namespace PRADA {
 bool USING_IPPC_DOMAIN();
 
 // {
-//   return logicObjectManager::getPredicate(MT::String("table")) == NULL;
+//   return logicObjectManager::getPredicate(mlr::String("table")) == NULL;
 // }
 
 
@@ -25,7 +25,7 @@ bool USING_IPPC_DOMAIN();
 // --------------------------------------------------------------------
 
 
-RuleLearner_FixedContexts::RuleLearner_FixedContexts(Atom* action, const MT::Array< LitL >& contexts, double alpha, double p_min, double p_min_noisyDefaultRule) :
+RuleLearner_FixedContexts::RuleLearner_FixedContexts(Atom* action, const mlr::Array< LitL >& contexts, double alpha, double p_min, double p_min_noisyDefaultRule) :
       RuleLearner(alpha, p_min, p_min_noisyDefaultRule) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleLearner_FixedContexts [START]"<<endl;}
@@ -119,7 +119,7 @@ void RuleLearner_FixedContexts::learn_rules(RuleSetContainer& rulesC, SymbolicEx
     Rule* rule = new Rule;
     rule->context = contexts(i);
     rule->action = action;
-    MT::Array< uintA > coveredExperiences_per_outcome;
+    mlr::Array< uintA > coveredExperiences_per_outcome;
     double pen_sum = 20.;
     double pen_pos = 20.;
     if (experiences_per_context(i).N > 0) {
@@ -180,7 +180,7 @@ AbstractRuleExplorer_FixedContexts::AbstractRuleExplorer_FixedContexts(const Rul
   // lerner ersetzen
   FOR1D(modeledActions, i) {
     if (DEBUG>0) {cout<<"Modeled Action #"<<i<<":  "<<*modeledActions(i)<<endl;}
-    MT::Array< LitL > contexts;
+    mlr::Array< LitL > contexts;
     FOR1D_(fixed_partial_rules, k) {
       if (fixed_partial_rules.elem(k)->action == modeledActions(i))
         contexts.append(fixed_partial_rules.elem(k)->context);
@@ -236,7 +236,7 @@ bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const SymbolicState& stat
 //  Reward for Unknown Contexts
 // ------------------------------------
 
-double evaluate_prada_reward__specific_contexts(const MT::Array< LitL >& ground_contexts, const NID_DBN& net, uint t, uint depth, uint verbosity = 0) {
+double evaluate_prada_reward__specific_contexts(const mlr::Array< LitL >& ground_contexts, const NID_DBN& net, uint t, uint depth, uint verbosity = 0) {
   uint DEBUG = 0;
   if (DEBUG<verbosity)
     DEBUG = verbosity;
@@ -277,11 +277,11 @@ class PRADA_Reward__Specific_Contexts : public PRADA_Reward {
   
   protected:
     uint depth;
-    MT::Array< LitL > ground_contexts;
+    mlr::Array< LitL > ground_contexts;
     
   public :
     
-    PRADA_Reward__Specific_Contexts(MT::Array< LitL > _ground_contexts, uint _depth) {
+    PRADA_Reward__Specific_Contexts(mlr::Array< LitL > _ground_contexts, uint _depth) {
       ground_contexts = _ground_contexts;
       depth = _depth;
     }
@@ -316,7 +316,7 @@ class PRADA_Reward__Rmax__Specific_Contexts : public PRADA_Reward__Specific_Cont
   
   public :
     
-    PRADA_Reward__Rmax__Specific_Contexts(Reward* exploit_reward, MT::Array< LitL > _ground_contexts, uint _depth)
+    PRADA_Reward__Rmax__Specific_Contexts(Reward* exploit_reward, mlr::Array< LitL > _ground_contexts, uint _depth)
             : PRADA_Reward__Specific_Contexts(_ground_contexts, _depth) {
       exploit_PRADA_reward = PRADA_Planner::create_PRADA_Reward(exploit_reward);
     }
@@ -373,7 +373,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
 //   if (DEBUG>0) {
 //     cout<<"Action:   known?    rule   confidence"<<endl;
 //     FOR1D(possibleGroundActions, i) {
-//       MT::String name;
+//       mlr::String name;
 //       possibleGroundActions(i)->name(name);
 //       printf("%-12s",(char*)name);
 //       if (action__is_known(i)) printf("  +");
@@ -386,7 +386,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
   
   
   // (3) Decide action
-  t_start = MT::cpuTime();
+  t_start = mlr::cpuTime();
   Atom* action = NULL;
   // only use confident rules
   planner->setGroundRules(confident_ground_rules);
@@ -455,7 +455,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
   RuleSet non_confident_ground_rules;
   ruleReasoning::ground(non_confident_ground_rules, non_confident_rules, logicObjectManager::constants);
   LitL grounded_unknown_context_literals;
-  MT::Array< LitL > grounded_unknown_contexts;
+  mlr::Array< LitL > grounded_unknown_contexts;
   FOR1D_(non_confident_ground_rules, i) {
     grounded_unknown_contexts.append(non_confident_ground_rules.elem(i)->context);
     grounded_unknown_context_literals.setAppend(non_confident_ground_rules.elem(i)->context);
@@ -542,7 +542,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
       AtomL exploit_plan;
       if (USING_IPPC_DOMAIN()) {
         // Special heuristic for IPPC domains [START]
-        MT_MSG("special heuristic for EXPLOITING");
+        MLR_MSG("special heuristic for EXPLOITING");
         // check whether we have tried to exploit in this state already while the state has not changed since
         uint q;
         bool have_exploited_already = false;
@@ -561,9 +561,9 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
         cout<<"SymbolicState was the same onwards from state q+1 = "<<(q+1)<<endl;
         PRINT(have_exploited_already);
         if (have_exploited_already  &&  !is_major_experience.last()) {
-          MT_MSG("HOPELESS EXPLOITING: (i) current state equals previous state and (ii) no major insight from last action");
+          MLR_MSG("HOPELESS EXPLOITING: (i) current state equals previous state and (ii) no major insight from last action");
           cout<<"HOPELESS EXPLOITING: (i) current state equals previous state and (ii) no major insight from last action"<<endl;
-          MT_MSG("in relational case:  makes no sense to exploit if not for all actions a manipulating rule");
+          MLR_MSG("in relational case:  makes no sense to exploit if not for all actions a manipulating rule");
           action = NULL;
         }
         else {
@@ -668,7 +668,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
         if (!fixedContext__current_state_is_known) {cout<<"*** STATE IS UNKNOWN *** "<<endl;  cerr<<"*** STATE IS UNKNOWN *** "<<endl;}
         cout << "*** DIRECT EXPLORE ACTION. ***"<<endl;   cerr<<"*** DIRECT EXPLORE ACTION. ***"<<endl;
       }
-      if (unknown_actions.N == 0) {MT_MSG("++++++ NO UNKNOWN ACTIONS!!!!! +++++++");  cout<<"++++++ NO UNKNOWN ACTIONS!!!!! +++++++"<<endl;}
+      if (unknown_actions.N == 0) {MLR_MSG("++++++ NO UNKNOWN ACTIONS!!!!! +++++++");  cout<<"++++++ NO UNKNOWN ACTIONS!!!!! +++++++"<<endl;}
       double min_conf = 1000.;
       uint min_conf_id = 100000;
       FOR1D(actions_with_effect__ids, i) {
@@ -738,7 +738,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
   }
   else
     NIY;
-  t_finish = MT::cpuTime();
+  t_finish = mlr::cpuTime();
   if (DEBUG>0) {
     cout<<"Action decision took " << (t_finish - t_start) << "s"<<endl;
     cerr<<"Action decision took " << (t_finish - t_start) << "s"<<endl;

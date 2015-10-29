@@ -38,7 +38,7 @@ void generateTrueSamples(arr& n, arr& p, arr& fn, arr& fp, const ActiveLearner *
   fn.clear();
   fp.clear();
   int j=0, k=0, l=0, m=0;
-  MT::Array<arr> sample;
+  mlr::Array<arr> sample;
   std::ifstream is("bw-samples");
   //for (double x=-1.; x<1.; x+=0.05) {
   //for (double y=-1.; y<1.; y+=0.05) {
@@ -47,7 +47,7 @@ void generateTrueSamples(arr& n, arr& p, arr& fn, arr& fp, const ActiveLearner *
     is >> sample;
 
       
-     //MT::Array<arr> sample;
+     //mlr::Array<arr> sample;
      //sample.append(ARR(0.,0.,0.));
      //sample.append(ARR(0));
      //sample.append(ARR(x,y,z));
@@ -89,7 +89,7 @@ void shutdown(int) {
 int main(int argc, char** argv) {
   srand(time(NULL));
   ClassifyData d;
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
 
   ActiveLearningProblem problem;
@@ -117,12 +117,12 @@ int main(int argc, char** argv) {
 
    arr n, p, fn, fp;
 
-   MT::Array<arr> sample;
+   mlr::Array<arr> sample;
 
    const char* rd = "";
-   if(MT::getParameter<bool>("random_al", false)) rd = "rand-";
+   if(mlr::getParameter<bool>("random_al", false)) rd = "rand-";
 
-   for (int i=0; i<MT::getParameter<int>("steps", 20); ++i) {
+   for (int i=0; i<mlr::getParameter<int>("steps", 20); ++i) {
      std::stringstream pname, nname, fpname, fnname;
      pname << "true-" << rd << i << ".data";
      nname << "false-" << rd << i << ".data";

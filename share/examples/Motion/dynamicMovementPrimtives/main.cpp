@@ -59,13 +59,13 @@ void scenario2() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARR(0.,0.,0.), 1e-3);
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARR(0.,0.,0.), 1e3,
-                          ARR(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
@@ -141,13 +141,13 @@ void scenario3() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARR(0.,0.,0.), 1e-3);
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARR(0.,0.,0.), 1e3,
-                          ARR(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
@@ -263,19 +263,19 @@ void scenario4() {
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
-                          ARR(0.,0.,0.), 1e-3);
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                          {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARR(0.,0.,0.), 1e3,
-                          ARR(0.,0.,0.), 0.);
+                             {0.,0.,0.}, 1e3,
+                             {0.,0.,0.}, 0.);
 
   if (useOrientation) {
     c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARR(1.,0.,0.), 1e3,
-                            ARR(0.,0.,0.), 1e-3);
+                            {1.,0.,0.}, 1e3,
+                            {0.,0.,0.}, 1e-3);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -488,13 +488,13 @@ void scenario5(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
-  switch(MT::getParameter<int>("mode",4)){
+  mlr::initCmdLine(argc, argv);
+  switch(mlr::getParameter<int>("mode",4)){
   case 1:  scenario1();  break;
   case 2:  scenario2();  break;
   case 3:  scenario3();  break;
   case 4:  scenario4();  break;
-    case 5:  scenario5();  break;
+  case 5:  scenario5();  break;
   }
   return 0;
 }

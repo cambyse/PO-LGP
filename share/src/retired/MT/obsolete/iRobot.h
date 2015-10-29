@@ -1,5 +1,5 @@
-#ifndef MT_robot_h
-#define MT_robot_h
+#ifndef MLR_robot_h
+#define MLR_robot_h
 
 //#undef _FORTIFY_SOURCE
 //#include <cstdlib>
@@ -143,7 +143,7 @@ struct RobotProcessGroup{
 };
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "robot.cpp"
 #endif
 

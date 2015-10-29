@@ -20,7 +20,7 @@ struct ImitateTask:public TaskAbstraction{
 };
 
 struct ImitateTaskVariable:public TaskVariable{
-	MT::Array<ors::Shape*> landmarks;
+	mlr::Array<ors::Shape*> landmarks;
 	arr lastFeature,lastJoint;
 	virtual void userUpdate();
 	ImitateTaskVariable(const char* _name, ors::KinematicWorld& _ors);
@@ -32,7 +32,7 @@ struct ImitateTaskVariable:public TaskVariable{
 void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
 	soc::SocSystem_Ors sys;
 
-	uint T=MT::getParameter<uint>("T");
+	uint T=mlr::getParameter<uint>("T");
 	sys.initBasics(ors,NULL,NULL,T,6.,true,NULL);//3rd is gl, disabled
 	sys.os = &cout;
 	//sys.dynamic = true;//needed to have velocity targets
@@ -75,7 +75,7 @@ void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObj
 	aico.cost = sys.analyzeTrajectory(aico.q,1);
 	f << aico.cost << endl;
 
-	int iter =MT::getParameter<int>("iterations");
+	int iter =mlr::getParameter<int>("iterations");
 	for(int i = 0; i < iter-1; i++){
 		cout << "starting iter " << i << " out of " << iter << " cost " << aico.cost << endl;
 		//if(sys.dynamic)
@@ -97,7 +97,7 @@ void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObj
 	gl.camera.focus(.0,0,0);
 	for(uint c = 0; c < 10; c++){
 		for(uint t = 0; t < T; t++){
-			MT::wait(0.05);
+			mlr::wait(0.05);
 			sys.ors->setJointState(best[t]);
 			sys.ors->calcBodyFramesFromJoints();		//	robot.gui.step();
 			gl.update();

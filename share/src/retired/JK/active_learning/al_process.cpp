@@ -23,7 +23,7 @@ void ActiveLearningP::open() {
 
 void ActiveLearningP::step() {
   std::ofstream os("gp.data", std::ios_base::app);
-  MT::Array<arr> sample;
+  mlr::Array<arr> sample;
   al->writeAccess(this);
   if (al->classificator->nextSample(sample)) {
     int _class = al->classificator->problem.oracle->classify(sample); 
@@ -34,11 +34,11 @@ void ActiveLearningP::step() {
   else {
     std::cout << "Nothing interesting" << std::endl;  
   }
-  test(MT::getParameter<uint>("numTests", 5000), al->classificator, al->problem, MT::getParameter<MT::String>("dataFile", MT::String("classification.data")));
+  test(mlr::getParameter<uint>("numTests", 5000), al->classificator, al->problem, mlr::getParameter<mlr::String>("dataFile", mlr::String("classification.data")));
   al->deAccess(this);
   if(guiData) {
     guiData->writeAccess(this);
-    guiData->sample = new MT::Array<arr>(sample);
+    guiData->sample = new mlr::Array<arr>(sample);
     guiData->deAccess(this);
   }
 }

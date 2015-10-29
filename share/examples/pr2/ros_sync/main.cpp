@@ -17,7 +17,7 @@ struct MySystem:System {
 
 // =================================================================================================
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   MySystem system;
   engine().open(system);
@@ -30,7 +30,7 @@ int main(int argc, char** argv){
   for (int i = 0; true; i++) {
     syncJointStateWitROS(world, system.ctrl_obs, useRos);
     world.gl().update(STRING("frame " << i), false, false, false);
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
 
   engine().close(system);

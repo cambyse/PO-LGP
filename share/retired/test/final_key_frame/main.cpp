@@ -13,7 +13,7 @@ void problem1(){
   //setup the system
   OrsSystem sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);
   
   //setup the task
@@ -38,9 +38,9 @@ void problem1(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 1:  problem1();  break;
   default: NIY;

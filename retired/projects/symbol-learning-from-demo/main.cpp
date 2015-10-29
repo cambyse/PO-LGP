@@ -10,7 +10,7 @@ RobotManipulationSimulator sim;
 void initSimulator(const char* configurationFile, bool takeMovie) {
   sim.shutdownAll();
   sim.loadConfiguration(configurationFile);
-#ifdef MT_FREEGLUT
+#ifdef MLR_FREEGLUT
   orsDrawProxies = false;
   orsDrawJoints = false;
 #endif
@@ -23,7 +23,7 @@ void initSimulator(const char* configurationFile, bool takeMovie) {
 
 
 struct PredicateNetwork {
-  MT::String name;
+  mlr::String name;
   TL::Predicate* p;
   uint arity;;
   arr w1a;
@@ -48,7 +48,7 @@ void test(int argc,char** argv) {
   
   // ==================================================================
   // Read in Nikolay's network [START]
-  MT::Array< PredicateNetwork* > pns;
+  mlr::Array< PredicateNetwork* > pns;
   
 #if 0
   // Unary predicate 1
@@ -157,7 +157,7 @@ void test(int argc,char** argv) {
   
 
   // Set up simulator
-  MT::String sim_file("data_grounding_project/situationNik.ors");
+  mlr::String sim_file("data_grounding_project/situationNik.ors");
   initSimulator(sim_file, false);
   sim.simulate(50);
   
@@ -198,8 +198,8 @@ void test(int argc,char** argv) {
   
   
   // Action predicates
-  TL::Predicate* p_grab = TL::logicObjectManager::getPredicate(MT::String("grab"));
-  TL::Predicate* p_puton = TL::logicObjectManager::getPredicate(MT::String("puton"));
+  TL::Predicate* p_grab = TL::logicObjectManager::getPredicate(mlr::String("grab"));
+  TL::Predicate* p_puton = TL::logicObjectManager::getPredicate(mlr::String("puton"));
   
   // Perform
   for (t=0; t<10; t++) {
@@ -211,7 +211,7 @@ void test(int argc,char** argv) {
     // ========================================================
     // Calculate Nikolay's predicates [START]
     
-    MT::Array< arr > x_objs;
+    mlr::Array< arr > x_objs;
     FOR1D(objs, i) {
       double* position_array = sim.getPosition(objs(i));
       arr position(3);
@@ -225,7 +225,7 @@ void test(int argc,char** argv) {
     
     LitL true_new_literals;
     FOR1D(pns, l) {
-      MT::Array< uintA > lists;
+      mlr::Array< uintA > lists;
       uintA objs_indices;  FOR1D(objs, k) {objs_indices.append(k);}
       TL::allPossibleLists(lists, objs_indices, pns(l)->arity, true, true);
 //       PRINT(lists);
@@ -445,10 +445,10 @@ void experiment() {
   uint s, t, i;
   
   // Set up simulator
-  MT::String sim_file("situation.ors");
+  mlr::String sim_file("situation.ors");
   
-  MT::String file_ors;
-  MT::getParameter(file_ors, "file_ors");
+  mlr::String file_ors;
+  mlr::getParameter(file_ors, "file_ors");
   
   initSimulator(file_ors, false);
 //   sim.simulate(50);
@@ -467,9 +467,9 @@ void experiment() {
   cout<<"Table-ID="<<sim.getTableID()<<endl;
   cout<<"Hand-ID="<<sim.getHandID()<<endl;
   
-  MT::Array< String > objs_colors;
+  mlr::Array< String > objs_colors;
   FOR1D(objs, i) {
-    MT::String color = sim.getColorString(objs(i));
+    mlr::String color = sim.getColorString(objs(i));
     objs_colors.append(color);
     cout<<objs(i)<<" "<<color<<endl;
   }
@@ -511,9 +511,9 @@ void experiment() {
   
   // Action predicates
   TL::Predicate* p_grab =
-    TL::logicObjectManager::getPredicate(MT::String("grab"));
+    TL::logicObjectManager::getPredicate(mlr::String("grab"));
   TL::Predicate* p_puton =
-    TL::logicObjectManager::getPredicate(MT::String("puton"));
+    TL::logicObjectManager::getPredicate(mlr::String("puton"));
 
   
   ofstream out_inputs("symbol_inputs.dat");
@@ -537,7 +537,7 @@ void experiment() {
     
 //     sim.simulate(1);
     
-    MT::Array< arr > new_positions;
+    mlr::Array< arr > new_positions;
     FOR1D(objects_on_table, i) {
       cout<<"moving base object "<<objects_on_table(i)<<endl;
       
@@ -579,7 +579,7 @@ void experiment() {
       out_images<<"# Full relational representation"<<endl;
       out_images<<*state<<endl;
       
-//       MT::String foto_file("foto");
+//       mlr::String foto_file("foto");
 //       foto_file <<t<<".bmp";
 //       sim.takeFoto(foto_file);
       
@@ -620,9 +620,9 @@ void interact() {
 
 int main(int argc, char** argv){
   rnd.seed(123);
-  MT::String config_file("config");
+  mlr::String config_file("config");
   cout << "Config-file: " << config_file << endl;
-  MT::openConfigFile(config_file);
+  mlr::openConfigFile(config_file);
   
 //   test(argc, argv);
   experiment();

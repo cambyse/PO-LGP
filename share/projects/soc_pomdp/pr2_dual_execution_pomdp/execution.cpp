@@ -28,7 +28,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   x = P.getInitialization();
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos), 1e3);
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,conv_vec2arr(target->X.pos), 1e3);
 
 
 
@@ -272,7 +272,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -283,6 +283,6 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 

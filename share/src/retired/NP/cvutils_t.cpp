@@ -2,7 +2,7 @@
 #include "cvutils.h"
 
 template<class T>
-void np::draw_circles(byteA& image, MT::Array<T>& centers, MT::Array<T>& rad)
+void np::draw_circles(byteA& image, mlr::Array<T>& centers, mlr::Array<T>& rad)
 {
   CvMat image_cv = cvMat(image.d0, image.d1, CV_8UC3, image.p);
   for (uint i = 0; i < centers.d0; i++)

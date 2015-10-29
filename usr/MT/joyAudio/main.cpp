@@ -24,19 +24,19 @@ void play(){
   SineSound S;
   Audio audio;
 
-  createVariables(MT::Array<Module*>({&gamepad}));
+  createVariables(mlr::Array<Module*>({&gamepad}));
 
   gamepad.open();
   audio.open(S);
   S.addNote(880.,.2,0);
   for(uint k=0;;k++){
-    MT::wait(.001);
+    mlr::wait(.001);
     gamepad.step();
     arr s = gamepad.gamepadState.get();
     double freq=s(4);
     S.changeFreq(0, 880.*pow(2, s(4)));
     S.notes(0,1)=.001 + .2*(s(3)+1.);
-    if(MT::realTime()>10.) break;
+    if(mlr::realTime()>10.) break;
   }
 
   gamepad.close();

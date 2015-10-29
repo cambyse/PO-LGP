@@ -28,81 +28,31 @@ extern const char* MethodName[];
 // UnconstrainedProblem
 //
 // we define an unconstraint optimization problem from a constrained one
-// that can include penalties, log barriers, and augmented lagrangian terms
+// that can include lagrange terms, penalties, log barriers, and augmented lagrangian terms
 //
-
-struct UnconstrainedProblem{
-  /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
-      concatenated to one vector:
-      phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  const ConstrainedProblem& P;
-
-  //-- parameters of the unconstrained meta function F
-  double muLB;       ///< log barrier weight
-  double mu;         ///< squared penalty weight for inequalities g
-  double nu;         ///< squared penalty weight for equalities h
-  arr lambda;        ///< lagrange multipliers for inequalities g
-  arr kappa;         ///< lagrange multiplier for equalities h
-
-  //-- buffers to avoid recomputing gradients
-  arr x; ///< point where P was last evaluated
-  double f_x; ///< scalar value f(x)
-  arr df_x, Hf_x, g_x, Jg_x, h_x, Jh_x; ///< everything else at x
-
-  UnconstrainedProblem(const ConstrainedProblem &P):P(P), muLB(0.), mu(0.), nu(0.) {
-    Lag = [this](arr& dL, arr& HL, const arr& x) -> double {
-      return this->lagrangian(dL, HL, x);
-    };
-  }
-
-  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
-
-  ScalarFunction Lag; ///< the unconstrained problem, typically the (augmented) Lagrangian with given lambda, mu, etc
-
-//  operator const ScalarFunction&(){ return Lag; }
-
-  void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
-  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
-  bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
-};
 
 struct UnconstrainedProblemMix:ScalarFunction{
   /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
       concatenated to one vector:
       phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  const ConstrainedProblemMix& P;
+  ConstrainedProblemMix P;
 
-  //-- parameters of the unconstrained meta function F
+  //-- parameters of the unconstrained scalar function
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight for inequalities g
   double nu;         ///< squared penalty weight for equalities h
   arr lambda;        ///< lagrange multipliers for inequalities g and equalities h
 
   //-- buffers to avoid recomputing gradients
-  arr x; ///< point where P was last evaluated
+  arr x;          ///< point where P was last evaluated
   arr phi_x, J_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblemMix(const ConstrainedProblemMix &P,ConstrainedMethodType method):P(P), muLB(0.), mu(0.), nu(0.) {
-    ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
-      return this->lagrangian(dL, HL, x);
-    } );
+  UnconstrainedProblemMix(const ConstrainedProblemMix &P, ConstrainedMethodType method, arr& lambdaInit=NoArr);
 
-    double muInit = MT::getParameter("opt/optConstrained/muInit",1.);
-    //switch on penalty terms
-    nu=muInit;
-    switch(method){
-      case squaredPenalty: mu=muInit;  break;
-      case augmentedLag:   mu=muInit;  break;
-      case anyTimeAula:    mu=muInit;  break;
-      case logBarrier:     muLB=.1;  break;
-      case noMethod: HALT("need to set method before");  break;
-    }
-  }
+  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained scalar function F
 
-  double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
-
-  double get_sumOfSquares(); ///< info on the terms from last call
+  double get_costs();            ///< info on the terms from last call
   double get_sumOfGviolations(); ///< info on the terms from last call
   double get_sumOfHviolations(); ///< info on the terms from last call
 
@@ -120,16 +70,16 @@ struct UnconstrainedProblemMix:ScalarFunction{
 //
 
 struct PhaseOneProblem{
-  const ConstrainedProblem &f_orig;
-  ConstrainedProblem f_phaseOne;
+  const ConstrainedProblemMix &f_orig;
+  ConstrainedProblemMix f_phaseOne;
 
-  PhaseOneProblem(const ConstrainedProblem &f_orig):f_orig(f_orig) {
-    f_phaseOne = [this](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
-      return this->phase_one(df, Hf, g, Jg, x);
+  PhaseOneProblem(const ConstrainedProblemMix &f_orig):f_orig(f_orig) {
+    f_phaseOne = [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
+      return this->phase_one(phi, J, tt, x);
     };
   }
-  operator const ConstrainedProblem&(){ return f_phaseOne; }
-  double phase_one(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
+  operator const ConstrainedProblemMix&(){ return f_phaseOne; }
+  void phase_one(arr& phi, arr& J, TermTypeA& tt, const arr& x);
 };
 
 
@@ -138,7 +88,6 @@ struct PhaseOneProblem{
 // Solvers
 //
 
-uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
 uint optConstrainedMix(arr& x, arr &dual, const ConstrainedProblemMix& P, OptOptions opt=NOOPT);
 
 struct OptConstrained{
@@ -162,10 +111,17 @@ struct OptConstrained{
 // evaluating
 //
 
-inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
-  arr g,h;
-  double f = P(NoArr, NoArr, g, NoArr, h, NoArr, x);
-  os <<"f=" <<f <<" sum([g>0]g)="<<sum(elemWiseMax(g,zeros(g.N,1))) <<" sum(|h|)=" <<sumOfAbs(h) <<endl;
+inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblemMix& P, std::ostream& os){
+  arr phi_x;
+  TermTypeA tt_x;
+  P(phi_x, NoArr, tt_x, x);
+  double Ef=0., Eh=0., Eg=0.;
+  for(uint i=0;i<phi_x.N;i++){
+    if(tt_x(i)==sumOfSqrTT) Ef += mlr::sqr(phi_x(i));
+    if(tt_x(i)==ineqTT && phi_x(i)>0.) Eg += phi_x(i);
+    if(tt_x(i)==eqTT) Eh += fabs(phi_x(i));
+  }
+  os <<"f=" <<Ef <<" sum([g>0]g)="<<Eg <<" sum(|h|)=" <<Eh <<endl;
 }
 
 

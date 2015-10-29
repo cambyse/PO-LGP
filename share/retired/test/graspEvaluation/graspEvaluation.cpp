@@ -64,8 +64,8 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
     }
     if(p->d<distanceThreshold){
       cout <<"contact " <<i <<" d=" <<p->d <<" contact=" <<contact <<" normal=" <<normal <<endl;
-      contactPoints.append(ARRAY(contact));
-      contactNormals.append(ARRAY(normal));
+      contactPoints.append(conv_vec2arr(contact));
+      contactNormals.append(conv_vec2arr(normal));
     }
   }
   contactPoints.reshape(contactPoints.N/3,3);
@@ -98,7 +98,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   //collect all bodies of the hand along the tree
   ors::Body *palm = all.getBodyByName(palmBodyName);
   ors::Shape *obj = all.getShapeByName(objShapeName);
-  MT::Array<ors::Body*> handBodies;
+  mlr::Array<ors::Body*> handBodies;
   handBodies.append(palm);
   for_list(Type, b, handBodies) for_list(Type, l, b->outLinks) handBodies.append(l->to);
   cout <<"hand bodies:";  listWrite(handBodies, cout);
@@ -115,7 +115,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   s_new->rel.setZero();
   
   //copy hand
-  MT::Array<ors::Body*> bodyMap(all.bodies.N);
+  mlr::Array<ors::Body*> bodyMap(all.bodies.N);
   for_list(Type, b, handBodies){
     bodyMap(b->index) = new ors::Body(grasp, b);
     bodyMap(b->index)->type = ors::kinematicBT;
@@ -173,5 +173,5 @@ void GraspEvaluation::simulateInPhysX(){
   }
 }
 
-#include <Core/array_t.h>
-template MT::Array<ors::Body*>::Array(uint);
+#include <Core/array.tpp>
+template mlr::Array<ors::Body*>::Array(uint);

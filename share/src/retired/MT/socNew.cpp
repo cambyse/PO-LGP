@@ -93,7 +93,7 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
   }
   if(plot){
     std::ofstream fil;
-    MT::open(fil, "z.trana");
+    mlr::open(fil, "z.trana");
     for(t=0; t<=T; t++){
       fil <<"time_step " <<t
       <<"  ctrlCrate " <<ctrlC(t)*T
@@ -105,7 +105,7 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
       fil <<"  x "; x[t].writeRaw(fil);
       fil <<endl;
     }
-    MT::String cmd;
+    mlr::String cmd;
     cmd <<"set style data linespoints\n";
     cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
     /*    if(!dynamic){

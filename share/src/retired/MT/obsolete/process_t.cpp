@@ -6,7 +6,7 @@ template<class T> Link<T>::Link(Process *_p){
 }
 
 template<class T> bool Link<T>::needsUpdate(){
-  MT_MSG("does this need a lock???");
+  MLR_MSG("does this need a lock???");
   return last_revision != var->revision;
 }
 

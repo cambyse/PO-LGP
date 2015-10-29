@@ -1,0 +1,7 @@
+BASE = ../../..
+
+ROS = 1
+
+DEPEND = Core Perception Geo Gui Hardware_kinect Algo pr2
+
+include $(BASE)/gofMake/generic.mk
