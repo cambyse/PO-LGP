@@ -54,8 +54,8 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
 
 void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
-  Pgain=pgain;
-  Dgain=dgain;
+  this->Pgain=pgain;
+  this->Dgain=dgain;
   if(!prec) prec=100.;
 }
 
@@ -63,8 +63,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  Pgain = MT::sqr(1./lambda);
-  Dgain = 2.*dampingRatio/lambda;
+  this->Pgain = MT::sqr(1./lambda);
+  this->Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
 
@@ -77,11 +77,17 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
     y_ref = -y_ref;
   //compute diffs
   arr y_diff(y);
-  if(y_ref.N==1) y_diff -= y_ref.scalar();
-  if(y_ref.N==y_diff.N) y_diff -= y_ref;
+  if(y_ref.N==1) {
+    y_diff -= y_ref.scalar();
+  }else if(y_ref.N==y_diff.N) {
+    y_diff -= y_ref;
+  }
   arr ydot_diff(ydot);
-  if(v_ref.N==1) ydot_diff -= v_ref.scalar();
-  if(v_ref.N==ydot_diff.N) ydot_diff -= v_ref;
+  if(v_ref.N==1) {
+    ydot_diff -= v_ref.scalar();
+  }else if(v_ref.N==ydot_diff.N) {
+    ydot_diff -= v_ref;
+  }
 
   arr a = - Pgain*y_diff - Dgain*ydot_diff;
   //check limits

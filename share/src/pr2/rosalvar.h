@@ -1,24 +1,38 @@
 #pragma once
+
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
+#ifdef MT_ROS
+
 #ifdef MT_ROS_INDIGO
-#include <ar_track_alvar_msgs/AlvarMarkers.h>
-using namespace ar_track_alvar_msgs;
-#elif MT_ROS_GROOVY
-#include <ar_track_alvar/AlvarMarkers.h>
-using namespace ar_track_alvar;
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  using namespace ar_track_alvar_msgs;
+#endif
+#if MT_ROS_GROOVY
+  #include <ar_track_alvar/AlvarMarkers.h>
+  using namespace ar_track_alvar;
 #endif
 
 
-
 //===========================================================================
-/// Sync the AR maker alvar
+/// Generic subscriber to the AR maker alvar
 ROSSUB("/ar_pose_marker", AlvarMarkers, ar_pose_marker)
 
 
-// =================================================================================================
+//===========================================================================
+// using ors::KinematicWorld;  // this is necessary to make the macro work.
+
+// /// Simple syncing of the ors world "modelWorld" with ar_pose_marker
+// BEGIN_ROSMODULE("/ar_pose_marker", AlvarMarkers, markers)
+//   ACCESS(KinematicWorld, modelWorld)
+// END_ROSMODULE()
+
+
+//===========================================================================
+// Helper functions
+
 /**
  * Set the transformation of the body to the transformation of the alvar maker.
  */
@@ -30,3 +44,13 @@ void setBody(ors::Body& body, const AlvarMarker& marker);
  * Note: this never deletes old markers.
  */
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+
+#else
+
+class AlvarMarker{};
+typedef MT::Array<AlvarMarker> AlvarMarkers;
+
+void setBody(ors::Body& body, const AlvarMarker& marker);
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+
+#endif

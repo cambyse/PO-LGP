@@ -37,7 +37,7 @@ Now compile `src/pr2/`
 cd ~/git/mlr/share/src/pr2/marc_controller_pkg/
 make -f Makefile.gof  # create the c++ header from the msg
 cd ..
-make -f # actually compile roscom etc
+make # actually compile roscom etc
 ```
 
 [MT: usually the C++ headers from msg should be checked in]

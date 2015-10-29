@@ -53,7 +53,6 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
 
-
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
   if(d->waitDecision){
@@ -69,7 +68,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
-      if(Ndecisions==1) deadEnd=true;
+      reward -= 10.;
+//      if(Ndecisions==1) deadEnd=true;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
@@ -125,6 +125,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- check for terminal
   successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+  deadEnd = (T_step>100);
 
   if(deadEnd) reward -= 100.;
   if(successEnd) reward += 100.;
@@ -154,7 +155,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"-- # possible decisions: " <<decisions.N <<endl;
   if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
-  Ndecisions=decisions.N;
+//  Ndecisions=decisions.N;
   return VECTOR(decisions);
 }
 
@@ -182,7 +183,11 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  start_state = state;
+#if 0
+  delete start_state->isNodeOfParentGraph;
+  start_state = new Graph();
+#endif
+  start_state->copy(*state, &KB);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   KB.checkConsistency();
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
@@ -198,18 +203,15 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  Ndecisions=0;
-#if 1
+//  Ndecisions=0;
+#if 0
   KB.checkConsistency();
-  if(state){
-//    state->clear();
-    delete state->isNodeOfParentGraph;
-  }
+  if(state) delete state->isNodeOfParentGraph;
   state = new Graph();
-  state->operator =(*start_state);
-#else
-  state = start_state;
 #endif
+  if(!state) state = new Graph();
+  state->copy(*start_state, &KB);
+  KB.checkConsistency();
   state->isNodeOfParentGraph->keys(0)="STATE";
   //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 
@@ -219,6 +221,9 @@ void FOL_World::reset_state(){
 
   KB.checkConsistency();
   FILE("z.after") <<KB;
+
+  //-- check for terminal
+  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
 
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
@@ -238,6 +243,11 @@ bool FOL_World::get_info(InfoTag tag) const{
     case hasMaxReward: return true;
     case hasMinReward: return true;
     case isMarkov: return true;
+    case writeState:{
+      cout <<"INFO: deadEnd=" <<deadEnd <<" successEnd=" <<successEnd <<" T_step=" <<T_step <<" T_real=" <<T_real <<" R_total=" <<R_total <<" state=" <<endl;
+      state->write(cout," ","{}");
+      return true;
+    }
     default: HALT("unknown tag" <<tag);
   }
 }
@@ -248,4 +258,8 @@ double FOL_World::get_info_value(InfoTag tag) const{
     case getMinReward: return 0.;
     default: HALT("unknown tag" <<tag);
   }
+}
+
+void FOL_World::write_current_state(ostream& os){
+    state->write(os," ","{}");
 }

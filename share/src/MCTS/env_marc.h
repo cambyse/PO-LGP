@@ -53,7 +53,7 @@ struct MCTS_Environment {
     /// Reset the environment's state to the start state
     virtual void reset_state() = 0;
 
-    enum InfoTag{ hasTerminal, isDeterministic, hasMaxReward, getMaxReward, hasMinReward, getMinReward, isMarkov };
+    enum InfoTag{ hasTerminal, isDeterministic, hasMaxReward, getMaxReward, hasMinReward, getMinReward, isMarkov, writeState };
     virtual bool get_info(InfoTag tag) const = 0;
     virtual double get_info_value(InfoTag tag) const = 0;
 };
@@ -91,6 +91,7 @@ public:
     };
 
     //----members----//
+public:
     std::shared_ptr<MCTS_Environment> env_marc;
 
     //----methods----//
@@ -148,3 +149,5 @@ public:
         return env_marc->get_info(MCTS_Environment::InfoTag::isMarkov);
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const MCTS_Environment::SAO& x){ x.write(os); return os; }

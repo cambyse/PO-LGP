@@ -7,7 +7,7 @@ float64[] J_ft_inv
 float64[] Kp
 float64[] Kd
 float64[] Ki
-float64[] Kint
+float64[] KiFT
 float64 velLimitRatio
 float64 effLimitRatio
 float64 intLimitRatio

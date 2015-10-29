@@ -1,5 +1,16 @@
 #include "rosalvar.h"
 
+#ifdef MT_ROS
+
+// ============================================================================
+// void ROSMODULE_markers::step() {
+//   modelWorld.writeAccess();
+//   AlvarMarkers markers_ = markers.get();
+//   syncMarkers(modelWorld.set()(), markers_);
+//   modelWorld.deAccess();
+// }
+
+// ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
@@ -10,28 +21,39 @@ void setBody(ors::Body& body, const AlvarMarker& marker) {
   body.X.rot.z = marker.pose.pose.orientation.z;
 }
 
+
 void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
+  bool createdNewMarkers = false;
+
   // transform: torso_lift_link is the reference frame_id
-  ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
+  ors::Vector refFrame = world.getBodyByName("torso_lift_link")->X.pos;
 
   for (AlvarMarker& marker : markers.markers) {
     MT::String marker_name = STRING("marker" << marker.id);
+
     ors::Body *body = world.getBodyByName(marker_name);
     if (not body) {
+      createdNewMarkers = true;
       cout << marker_name << " does not exist yet; adding it..." << endl;
-      cout << marker << endl;
       body = new ors::Body(world);
       body->name = marker_name;
       ors::Shape *shape = new ors::Shape(world, *body);
-      shape->type = ors::boxST;
-      shape->size[0] = .1; shape->size[1] = .1; shape->size[2] = .03; shape->size[3] = .1;
+      shape->name = marker_name;
+      shape->type = ors::markerST;
+      shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
     setBody(*body, marker);
     // transform: torso_lift_link is the reference frame_id
+    body->X.pos += refFrame;  // TODO is this the proper way to do it?
+    world.getShapeByName(marker_name)->X = body->X;
 
-    ors::Transformation T;
-    T.setZero();
-    T.addRelativeRotationDeg(90.,0.,1.,0.);
-    body->X = refFrame*T*body->X;
+  }
+
+  if (createdNewMarkers) {
+    world.swiftDelete();
   }
 }
+#else
+void setBody(ors::Body& body, const AlvarMarker& marker) {}
+void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {}
+#endif

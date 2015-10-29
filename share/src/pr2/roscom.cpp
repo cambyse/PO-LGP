@@ -6,19 +6,13 @@
 #include <ros_msg/JointState.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
+#include <std_msgs/String.h>
+
 
 //===========================================================================
+// HELPERS
 void rosCheckInit(){
-// TODO make static variables to singleton
-  static Mutex mutex;
-  static bool inited = false;
-
-  mutex.lock();
-  if(!inited) {
-    ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
-    inited = true;
-  }
-  mutex.unlock();
+  ros::init(MT::argc, MT::argv, "pr2_module", ros::init_options::NoSigintHandler);
 }
 
 bool rosOk(){
@@ -46,6 +40,7 @@ struct sRosCom_ControllerSync{
   RosCom_ControllerSync *base;
   ros::NodeHandle nh;
   ros::Subscriber sub_jointState;
+//  ros::Subscriber sub_odom;
   ros::Publisher pub_jointReference;
 
   void joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
@@ -53,6 +48,11 @@ struct sRosCom_ControllerSync{
     CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
     base->ctrl_obs.set() = m;
   }
+//  void odom_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
+//    //  cout <<"** joinstState_callback" <<endl;
+//    CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), ARRAY(msg->u_bias), ARRAY(msg->J_ft_inv), msg->velLimitRatio, msg->effLimitRatio, msg->gamma);
+//    base->ctrl_obs.set() = m;
+//  }
 };
 
 void RosCom_ControllerSync::open(){
@@ -60,6 +60,7 @@ void RosCom_ControllerSync::open(){
   s = new sRosCom_ControllerSync;
   s->base=this;
   s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom_ControllerSync::joinstState_callback, s);
+//  s->sub_odom = s->nh.subscribe("/robot_pose_ekf/odom_combined", 1, &sRosCom_ControllerSync::joinstState_callback, s);
   s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
   //  s->sub_jointState = s->nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
   //  s->pub_jointReference = s->nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
@@ -76,7 +77,7 @@ void RosCom_ControllerSync::step(){
   jointRef.Kp = VECTOR(m.Kp);
   jointRef.Kd = VECTOR(m.Kd);
   jointRef.Ki = VECTOR(m.Ki);
-  jointRef.Kint = VECTOR(m.Kint);
+  jointRef.KiFT = VECTOR(m.KiFT);
   jointRef.J_ft_inv = VECTOR(m.J_ft_inv);
   jointRef.velLimitRatio = m.velLimitRatio;
   jointRef.effLimitRatio = m.effLimitRatio;
@@ -263,6 +264,34 @@ void RosCom_ForceSensorSync::step(){
 void RosCom_ForceSensorSync::close(){
   s->nh.shutdown();
 }
+
+//===========================================================================
+// RosCom_SoftHandSync
+struct sRosCom_SoftHandSync{
+  RosCom_SoftHandSync *base;
+  ros::NodeHandle nh;
+  ros::Publisher pub_shReference;
+};
+
+void RosCom_SoftHandSync::open(){
+  rosCheckInit();
+  s = new sRosCom_SoftHandSync;
+  s->base=this;
+  s->pub_shReference = s->nh.advertise<std_msgs::String>("/softhand/grasp_ref", 1);
+}
+
+void RosCom_SoftHandSync::step(){
+  SoftHandMsg shm = sh_ref.get();
+  std_msgs::String refs;
+  refs.data = shm.soft_hand_cmd.p;
+  s->pub_shReference.publish(refs);
+}
+
+void RosCom_SoftHandSync::close(){
+  s->nh.shutdown();
+  delete s;
+}
+
 
 //===========================================================================
 #else // MT_ROS no defined

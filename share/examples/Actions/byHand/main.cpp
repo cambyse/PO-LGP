@@ -31,21 +31,21 @@ int main(int argc, char** argv) {
 
   S.createNewSymbol("wheels"); //-> wird automatisiert
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[.2, 0, .3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");
   S.waitForCondition("(conv MyTask endeffL)");
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[-.2, 0, -.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv FollowReferenceActivity wheels)");
   S.waitForCondition("(conv MyTask endeffL)");
   S.setFact("(MyTask endeffL)!, (MyTask endeffR)!, (conv MyTask endeffL)!, (conv MyTask endeffR)!, (FollowReferenceActivity wheels)!, (conv FollowReferenceActivity wheels)!");
 
-  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[.2, 0, .3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffR){ type=pos, ref1=endeffR, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(MyTask endeffL){ type=pos, ref1=endeffL, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv MyTask endeffL)");

@@ -23,14 +23,22 @@ void rosCheckInit();
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
   arr q, qdot, fL, fR, u_bias, J_ft_inv;
-  arr Kp, Kd, Ki, Kint;
+  arr Kp, Kd, Ki, KiFT;
   double velLimitRatio, effLimitRatio, intLimitRatio, gamma;
-  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), Kint(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(1.){}
+  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), KiFT(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(0.1){}
   CtrlMsg(const arr& q, const arr& qdot,
           const arr& fL, const arr& fR,
           const arr& u_bias, const arr& J_ft_inv,
           double velLimitRatio, double effLimitRatio, double gamma)
     :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
+};
+
+//-- a basic message type for communication with the soft hand controller
+struct SoftHandMsg{
+  MT::String soft_hand_cmd;
+  SoftHandMsg(){}
+  SoftHandMsg(const MT::String soft_hand_cmd)
+    :soft_hand_cmd(soft_hand_cmd){}
 };
 //inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 //inline void operator>>(istream& os, CtrlMsg& m){  }
@@ -121,3 +129,7 @@ BEGIN_MODULE(RosCom_ForceSensorSync)
 END_MODULE()
 
 //===========================================================================
+/// This module syncs the soft hand
+BEGIN_MODULE(RosCom_SoftHandSync)
+  ACCESS(SoftHandMsg, sh_ref)
+END_MODULE()

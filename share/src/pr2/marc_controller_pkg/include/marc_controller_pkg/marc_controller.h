@@ -20,14 +20,12 @@ private:
   arr q_ref, qdot_ref;
   arr Kp, Kd, Ki;
   arr u_bias;
+  arr int_error;
   double velLimitRatio, effLimitRatio, intLimitRatio;
-
-  // integral controller
-  arr Kint, int_error;
 
   //force related things
   arr fL_obs, fR_obs, fL_ref, fR_ref;
-  arr err, J_ft_inv;
+  arr KiFT, err, J_ft_inv;
   double gamma;
 
   //matching joint indices
@@ -51,6 +49,7 @@ private:
 
   // internal: counter for sparse messages
   uint msgBlock;
+  uint iterationsSinceLastMsg;
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh);
