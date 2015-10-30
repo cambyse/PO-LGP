@@ -87,7 +87,7 @@ void KOMO::init(const Graph& specs){
   }
 #endif
 
-#if 1
+#if 0
   reset();
   arr y,J;
   TermTypeA tt;

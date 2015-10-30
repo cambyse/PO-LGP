@@ -407,9 +407,11 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
 
   //memorize for report
   if(!phiMatrix.N) phiMatrix.resize(T+1);
-  if(!ttMatrix.N) ttMatrix.resize(T+1);
   phiMatrix(t) = phi;
-  if(&tt) ttMatrix(t) = tt;
+  if(&tt){
+    if(!ttMatrix.N) ttMatrix.resize(T+1);
+    ttMatrix(t) = tt;
+  }
 
   return ineqHold;
 }
@@ -501,53 +503,16 @@ void MotionProblem::costReport(bool gnuplt) {
   arr taskG(tasks.N); taskG.setZero();
   for(uint t=0; t<=T; t++){
     uint m=0;
-    if(ttMatrix.N){
-      for(uint i=0; i<tasks.N; i++) {
-        Task *c = tasks(i);
-        uint d=c->dim_phi(world, t);
-        for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
-        if(d){
-          if(c->map.type==sumOfSqrTT){
-            taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
-            plotData(t,i) = a;
-          }
-          if(c->map.type==ineqTT){
-            double gpos=0.,gall=0.;
-            for(uint j=0;j<d;j++){
-              double g=phiMatrix(t)(m+j);
-              if(g>0.) gpos+=g;
-              gall += g;
-            }
-            taskG(i) += gpos;
-            plotData(t,i) = gall;
-          }
-          if(c->map.type==eqTT){
-            double gpos=0.,gall=0.;
-            for(uint j=0;j<d;j++){
-              double h=phiMatrix(t)(m+j);
-              gpos+=fabs(h);
-              gall += h;
-            }
-            taskG(i) += gpos;
-            plotData(t,i) = gall;
-          }
-          m += d;
-        }
-      }
-    }else{
-      for(uint i=0; i<tasks.N; i++) {
-        Task *c = tasks(i);
-        uint d=c->dim_phi(world, t);
-        if(d && c->map.type==sumOfSqrTT){
+    for(uint i=0; i<tasks.N; i++) {
+      Task *c = tasks(i);
+      uint d=c->dim_phi(world, t);
+      if(ttMatrix.N) for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
+      if(d){
+        if(c->map.type==sumOfSqrTT){
           taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
           plotData(t,i) = a;
-          m += d;
         }
-      }
-      for(uint i=0; i<tasks.N; i++) {
-        Task *c = tasks(i);
-        uint d=c->dim_phi(world, t);
-        if(d && c->map.type==ineqTT){
+        if(c->map.type==ineqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double g=phiMatrix(t)(m+j);
@@ -556,13 +521,8 @@ void MotionProblem::costReport(bool gnuplt) {
           }
           taskG(i) += gpos;
           plotData(t,i) = gall;
-          m += d;
         }
-      }
-      for(uint i=0; i<tasks.N; i++) {
-        Task *c = tasks(i);
-        uint d=c->dim_phi(world, t);
-        if(d && c->map.type==eqTT){
+        if(c->map.type==eqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double h=phiMatrix(t)(m+j);
@@ -571,13 +531,14 @@ void MotionProblem::costReport(bool gnuplt) {
           }
           taskG(i) += gpos;
           plotData(t,i) = gall;
-          m += d;
         }
+        m += d;
       }
     }
     CHECK_EQ(m , phiMatrix(t).N, "");
   }
 
+  //-- generate output
   cout <<" * task costs:" <<endl;
   double totalC=0., totalG=0.;
   for(uint i=0; i<tasks.N; i++) {

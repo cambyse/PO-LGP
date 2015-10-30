@@ -6,10 +6,9 @@
 #include <Hardware/gamepad/gamepad.h>
 
 #include <Core/util.h>
-#include <System/engine.h>
 
 // ============================================================================
-struct MySystem : System{
+struct MySystem {
   ACCESS(bool, quitSignal)
   ACCESS(RelationalMachine, RM)
   ACCESS(mlr::String, effects)
@@ -29,7 +28,7 @@ struct MySystem : System{
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
 //      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
     }
-    connect();
+    //    connect();
     createSymbolsForShapes(RM.set(), modelWorld.get());
   }
 };
