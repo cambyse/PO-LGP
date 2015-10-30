@@ -78,7 +78,8 @@ void Task::setCostSpecs(uint fromTime,
 //===========================================================================
 
 TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
-  CHECK(specs->parents.N>1,"");
+  if(specs->parents.N<2) return NULL;
+
   //-- get tags
   mlr::String& tt=specs->parents(0)->keys.last();
   mlr::String& type=specs->parents(1)->keys.last();
@@ -89,7 +90,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   //-- check the term type
   TermType termType;
   if(tt=="MinSumOfSqr") termType=sumOfSqrTT;
-  else if(tt=="LowerEqZero") termType=ineqTT;
+  else if(tt=="LowerEqualZero") termType=ineqTT;
   else if(tt=="EqualZero") termType=eqTT;
   else return NULL;
 
@@ -134,7 +135,7 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
     arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {0.}), params->V<double>("scale", {100.}));
+    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {0.}), params->V<double>("scale", {1.}));
   }else{
     task->setCostSpecs(0, T, {0.}, {1.});
   }
@@ -144,6 +145,8 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
 //===========================================================================
 
 ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint T){
+  if(specs->parents.N<2) return NULL;
+
   //-- get tags
   mlr::String& tt=specs->parents(0)->keys.last();
   mlr::String& type=specs->parents(1)->keys.last();
@@ -156,7 +159,8 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
   //-- create switch
   ors::KinematicSwitch *sw= new ors::KinematicSwitch();
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
-  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
+//  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
+  else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
   else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
@@ -237,7 +241,7 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m){
   return t;
 }
 
-void MotionProblem::parseTasks(Graph& specs){
+void MotionProblem::parseTasks(const Graph& specs){
   //-- parse tasks
   for(Node *n:specs){
     Task *task = newTask(n, world, T);
@@ -441,8 +445,17 @@ void MotionProblem::activateAllTaskCosts(bool active) {
   for(Task *c: tasks) c->active=active;
 }
 
-void MotionProblem::featureReport() {
-  cout <<"*** MotionProblem -- FeatureReport (time name order type [dim])" <<endl;
+void MotionProblem::reportFull() {
+  cout <<"*** MotionProblem -- FeatureReport " <<endl;
+
+  cout <<"  useSwift=" <<useSwift <<endl;
+  cout <<"  T=" <<T <<endl;
+  cout <<"  tau=" <<tau <<endl;
+  cout <<"  k_order=" <<k_order <<endl;
+  cout <<"  x0=" <<x0 <<endl;
+  cout <<"  v0=" <<v0 <<endl;
+  cout <<"  prefix=" <<prefix <<endl;
+  cout <<"  TASKS (time idx name order type):" <<endl;
 
   //-- collect all task costs and constraints
   for(uint t=0; t<=T; t++){
@@ -450,24 +463,27 @@ void MotionProblem::featureReport() {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       uint d=c->dim_phi(world, t);
-      if(ttMatrix.N){ //detailed: for every time step
-        for(uint i=0;i<d;i++){
-        cout <<"  " <<t
+      for(uint i=0;i<d;i++){
+        cout <<"  " <<t <<' ' <<i
             <<' ' <<std::setw(10) <<c->name
            <<' ' <<c->map.order <<' ' <<c->map.type
-          <<' ' <<ttMatrix(t)(m+i)
-         <<' ' <<phiMatrix(t)(m+i) <<endl;
+          <<' ' <<(c->target.nd==2?c->target(t,i):(c->target.N>1?c->target(i):c->target.scalar())) <<' ' <<c->prec(t);
+        if(ttMatrix.N){
+          cout <<' ' <<ttMatrix(t)(m+i)
+              <<' ' <<phiMatrix(t)(m+i);
         }
-      }else{
-        cout <<"  " <<t
-            <<' ' <<std::setw(10) <<c->name
-           <<' ' <<c->map.order <<' ' <<c->map.type
-          <<" [" <<d <<"]" <<endl;
+        cout <<endl;
       }
       m += d;
     }
     if(phiMatrix.N) CHECK_EQ(m , phiMatrix(t).N, "");
   }
+
+  cout <<"  SWITCHES: " <<switches.N <<endl;
+  for(ors::KinematicSwitch *sw:switches){
+    cout <<*sw <<endl;
+  }
+
 }
 
 void MotionProblem::costReport(bool gnuplt) {
@@ -666,7 +682,7 @@ arr MotionProblem::getInitialization(){
 
 void MotionProblem::inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x){
   CHECK(!T,"");
-  CHECK(!k_order,"");
+//  CHECK(!k_order,"");
 //  CHECK(!switches.N,"");
 
   setState(x);

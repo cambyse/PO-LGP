@@ -124,7 +124,7 @@ struct MotionProblem {
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
-  void parseTasks(Graph& specs);
+  void parseTasks(const Graph& specs);
   Task* addTask(const char* name, TaskMap *map);
   //TODO: the following are deprecated; use Task::setCostSpecs instead
 //  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
@@ -138,7 +138,7 @@ struct MotionProblem {
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
-  void featureReport();
+  void reportFull();
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
