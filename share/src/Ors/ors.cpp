@@ -1796,14 +1796,15 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
+  Graph G(is);
+  G.checkConsistency();
+  init(G);
+//  cout <<"***KVG:\n" <<G <<endl;
+}
+void ors::KinematicWorld::init(const Graph& G) {
   clear();
 
-  Graph *G = new Graph();
-  G->read(is);
-  G->checkConsistency();
-//  cout <<"***KVG:\n" <<G <<endl;
-  
-  NodeL bs = G->getNodes("body");
+  NodeL bs = G.getNodes("body");
   for(Node *  it:  bs) {
     CHECK_EQ(it->keys(0),"body","");
     CHECK(it->getValueType()==typeid(Graph), "bodies must have value Graph");
@@ -1814,7 +1815,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     b->parseAts();
   }
 
-  NodeL ss = G->getNodes("shape");
+  NodeL ss = G.getNodes("shape");
   for(Node *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
@@ -1834,7 +1835,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
   
   uint nCoupledJoints=0;
-  NodeL js = G->getNodes("joint");
+  NodeL js = G.getNodes("joint");
   for(Node *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");
@@ -1865,7 +1866,6 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
 
   //-- clean up the graph
-  delete G;
   checkConsistency();
   topSort();
   //makeLinkTree();
@@ -2412,19 +2412,20 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
 
 //===========================================================================
 
-ors::KinematicSwitch::KinematicSwitch():
-  symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
+ors::KinematicSwitch::KinematicSwitch()
+  : symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
 void ors::KinematicSwitch::apply(KinematicWorld& G){
   Shape *from=G.shapes(fromId), *to=G.shapes(toId);
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from->body, to->body);
+//    if(!j) j = G.getJointByBodies(to->body, from->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
     delete j;
     return;
   }
-  if(symbol==addRigid){
+  if(symbol==addJointZero){
 //    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from->body, to->body);
 
@@ -2434,25 +2435,37 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     //A.pos *= 0.;
    // B.pos *= 0.;
    // j->A.setDifference(A, B);
-    j->type=JT_fixed;
+    j->type=jointType;
     j->A = from->rel;
     j->B = -to->rel;
 //    j->agent=1;
     G.isLinkTree=false;
     return;
   }
-  if(symbol==addRigidRel){
+  if(symbol==addJointAtFrom){
     Joint *j = new Joint(G, from->body, to->body);
-    j->type=JT_fixed;
+    j->type=jointType;
+    j->B.setDifference(from->body->X, to->body->X);
+    G.isLinkTree=false;
+    return;
+  }
+  if(symbol==addJointAtTo){
+    Joint *j = new Joint(G, from->body, to->body);
+    j->type=jointType;
     j->A.setDifference(from->body->X, to->body->X);
-//    j->A = from->rel * (to->body->X/from->body->X);
-//    j->B = -to->rel;
     G.isLinkTree=false;
     return;
   }
   HALT("shouldn't be here!");
 }
 
+void ors::KinematicSwitch::write(std::ostream& os) const{
+  os <<"  symbol=" <<symbol <<endl;
+  os <<"  jointType=" <<jointType <<endl;
+  os <<"  timeOfApplication=" <<timeOfApplication <<endl;
+  os <<"  fromId=" <<fromId <<endl;
+  os <<"  toId=" <<toId <<endl;
+}
 
 //===========================================================================
 //

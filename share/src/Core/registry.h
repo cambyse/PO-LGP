@@ -72,7 +72,8 @@ struct Type:RootType {
 };
 stdPipes(Type);
 
-inline bool operator!=(Type& t1, Type& t2){ return t1.typeId()!= t2.typeId(); }
+inline bool operator!=(Type& t1, Type& t2){ return t1.typeId() != t2.typeId(); }
+inline bool operator==(Type& t1, Type& t2){ return t1.typeId() == t2.typeId(); }
 
 typedef mlr::Array<Type*> TypeInfoL;
 
