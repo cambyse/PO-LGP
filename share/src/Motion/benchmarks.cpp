@@ -24,7 +24,7 @@ PR2EndPoseProblem::PR2EndPoseProblem()
 
   setTasks(s.MP, *s.world.getShapeByName("endeff"), *s.world.getShapeByName("target"), 0, 1, 0, 5.);
 
-  ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(s.MPF) );
+  ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(s.MPF) );
 }
 
 arr PR2EndPoseProblem::getInitialization(){

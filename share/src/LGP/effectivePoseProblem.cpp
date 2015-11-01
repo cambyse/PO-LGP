@@ -16,9 +16,9 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
   CHECK(symbolicState_before.isNodeOfParentGraph && &symbolicState_before.isNodeOfParentGraph->container==&KB,"");
   CHECK(symbolicState_after.isNodeOfParentGraph && &symbolicState_after.isNodeOfParentGraph->container==&KB,"");
 
-  ConstrainedProblemMix::operator=(
-        [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-    return this -> phi(phi, J, tt, x);
+  ConstrainedProblem::operator=(
+        [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    return this -> phi(phi, J, H, tt, x);
   } );
 
 //  Node *glueSymbol  = KB["glued"];

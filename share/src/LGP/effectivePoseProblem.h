@@ -5,7 +5,7 @@
 
 //===========================================================================
 
-struct EffectivePoseProblem:ConstrainedProblemMix{
+struct EffectivePoseProblem:ConstrainedProblem{
   ors::KinematicWorld& effKinematics;
   const Graph& KB;
   const Graph& symbolicState_before;

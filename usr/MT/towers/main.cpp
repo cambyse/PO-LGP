@@ -7,16 +7,16 @@
 #include <Motion/taskMaps.h>
 
 
-struct TowerProgram:ConstrainedProblemMix{
+struct TowerProgram:ConstrainedProblem{
   ors::KinematicWorld& world;
   Graph& logicState;
   arr x0;
   int verbose;
   TowerProgram(ors::KinematicWorld& world, Graph& symbolicState, const arr& x0, int verbose)
     : world(world), logicState(symbolicState), x0(x0), verbose(verbose){
-    ConstrainedProblemMix::operator=(
-          [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-      return this -> phi(phi, J, tt, x);
+    ConstrainedProblem::operator=(
+          [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+      return this -> phi(phi, J, H, tt, x);
     }
     );
   }

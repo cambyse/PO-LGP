@@ -150,11 +150,11 @@ struct MotionProblem {
   arr getInitialization();
 
   //-- inverse Kinematics
-  void inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x);
+  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
 
-  ConstrainedProblemMix InvKinProblem(){
-    return [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-      this->inverseKinematics(phi, J, tt, x);
+  ConstrainedProblem InvKinProblem(){
+    return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+      this->inverseKinematics(phi, J, H, tt, x);
     };
   }
 };

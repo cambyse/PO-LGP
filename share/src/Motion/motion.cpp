@@ -641,13 +641,14 @@ arr MotionProblem::getInitialization(){
   return replicate(x0, T+1);
 }
 
-void MotionProblem::inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x){
+void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x){
   CHECK(!T,"");
 //  CHECK(!k_order,"");
 //  CHECK(!switches.N,"");
 
   setState(x);
   getPhi(y, J, tt, 0, {&world}, tau);
+  H.clear();
 //  double h=1./sqrt(tau);
 //  y.append(h*(x-x0));
 //  if(&J) J.append(h*eye(x.N));
@@ -786,8 +787,8 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
 
 MotionProblem_EndPoseFunction::MotionProblem_EndPoseFunction(MotionProblem& _MP)
   : MP(_MP){
-//  ConstrainedProblemMix::operator=( [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-//    this->Phi(phi, J, tt, x);
+//  ConstrainedProblem::operator=( [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+//    this->Phi(phi, J, H, tt, x);
 //  } );
 }
 

@@ -21,7 +21,7 @@ struct LogicGeometricProgram{
   virtual bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols) = 0;
   virtual double psi(const ors::KinematicWorld& world, const Graph& symbols) = 0;
   virtual MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols) = 0;
-  virtual ConstrainedProblemMix& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols) = 0;
+  virtual ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols) = 0;
 };
 
 //===========================================================================
@@ -42,7 +42,7 @@ struct TowerProblem_new:LogicGeometricProgram{
   bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
   double psi(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
   MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  ConstrainedProblemMix& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
 };
 
 //===========================================================================

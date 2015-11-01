@@ -23,11 +23,11 @@
 // test standard constrained optimizers
 //
 
-void testConstraint(const ConstrainedProblemMix& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
+void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
 
   ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod");
 
-  UnconstrainedProblemMix UCP(p, method);
+  UnconstrainedProblem UCP(p, method);
 
   //-- choose constrained method
   switch(method){
