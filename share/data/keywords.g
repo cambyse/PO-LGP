@@ -7,6 +7,7 @@ LowerEqualZero
 pos
 posDiff
 vecAlign
+quatDiff
 qItself
 collisionIneq
 
@@ -14,6 +15,7 @@ collisionIneq
 MakeJoint
 delete
 rigid
+rigidZero
 free
 transXYPhi
 

@@ -271,7 +271,7 @@ const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", 
 
 
 
-uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
+uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
 

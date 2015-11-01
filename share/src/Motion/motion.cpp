@@ -135,9 +135,9 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
     arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {0.}), params->V<double>("scale", {1.}));
+    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
   }else{
-    task->setCostSpecs(0, T, {0.}, {1.});
+    task->setCostSpecs(0, T, {}, 1.);
   }
   return task;
 }
@@ -161,6 +161,7 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
 //  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
   else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
+  else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
   else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
@@ -358,48 +359,21 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   if(&J) J.clear();
   arr y, Jy;
   bool ineqHold=true;
-  if(&tt){ //append all terms in mixed fashion
-    for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
-      //linear transform (target shift)
-      if(true){ //c->map.type==sumOfSqrTT){
-        if(c->target.N==1) y -= c->target(0);
-        else if(c->target.nd==1) y -= c->target;
-        else if(c->target.nd==2) y -= c->target[t];
-        y *= sqrt(c->prec(t));
-        if(&J) Jy *= sqrt(c->prec(t));
-      }
-      phi.append(y);
-      for(uint i=0;i<y.N;i++) tt.append(c->map.type);
-      if(&J) J.append(Jy);
-      if(c->map.type==ineqTT && max(y)>0.) ineqHold=false;
-    }
-  }else{ //append tasks sorted in blocks for costs, ineq, eq
-    //-- append task costs
-    for(Task *c: tasks) if(c->map.type==sumOfSqrTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
-      if(c->target.N==1) y -= c->target(0);
+  for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
+    c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
+    if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
+    //linear transform (target shift)
+    if(true){
+      if(c->target.N==1) y -= c->target.elem(0);
       else if(c->target.nd==1) y -= c->target;
-      else y -= c->target[t];
-      phi.append(sqrt(c->prec(t))*y);
-      if(&J) J.append(sqrt(c->prec(t))*Jy);
+      else if(c->target.nd==2) y -= c->target[t];
+      y *= sqrt(c->prec(t));
+      if(&J) Jy *= sqrt(c->prec(t));
     }
-    //-- append ineq constraints
-    for(Task *c: tasks) if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      phi.append(c->prec(t)*y);
-      if(&J) J.append(c->prec(t)*Jy);
-      if(max(y)>0.) ineqHold=false;
-    }
-    //-- append eq constraints
-    for(Task *c: tasks) if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t)){
-      c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
-      phi.append(c->prec(t)*y);
-      if(&J) J.append(c->prec(t)*Jy);
-      if(fabs(max(y))>1e-10) ineqHold=false;
-    }
+    phi.append(y);
+    if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->map.type);
+    if(&J) J.append(Jy);
+    if(c->map.type==ineqTT && max(y)>0.) ineqHold=false;
   }
   if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
 
@@ -468,8 +442,12 @@ void MotionProblem::reportFull() {
       for(uint i=0;i<d;i++){
         cout <<"  " <<t <<' ' <<i
             <<' ' <<std::setw(10) <<c->name
-           <<' ' <<c->map.order <<' ' <<c->map.type
-          <<' ' <<(c->target.nd==2?c->target(t,i):(c->target.N>1?c->target(i):c->target.scalar())) <<' ' <<c->prec(t);
+           <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+        if(c->target.N==1) cout <<c->target.elem(0);
+        else if(c->target.nd==1) cout <<c->target(i);
+        else if(c->target.nd==2) cout <<c->target(t,i);
+        else cout <<"00";
+        cout <<' ' <<c->prec(t);
         if(ttMatrix.N){
           cout <<' ' <<ttMatrix(t)(m+i)
               <<' ' <<phiMatrix(t)(m+i);

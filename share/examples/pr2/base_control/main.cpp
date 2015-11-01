@@ -103,7 +103,7 @@ int main(int argc, char** argv){
   task->setCostSpecs(MP.T-5, MP.T, target, 1e3);
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
-  optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2.));
+  optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2.));
   MP.costReport();
   displayTrajectory(x, 1, world, "planned trajectory");
 

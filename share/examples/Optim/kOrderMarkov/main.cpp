@@ -56,7 +56,7 @@ void TEST(KOrderMarkov) {
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
   if(P.isConstrained()){
-    optConstrainedMix(x, NoArr, Convert(P) );
+    optConstrained(x, NoArr, Convert(P) );
   }else{
     Convert sf(P);
     OptNewton opt(x, sf);

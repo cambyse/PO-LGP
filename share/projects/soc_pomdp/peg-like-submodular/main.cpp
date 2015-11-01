@@ -92,9 +92,9 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   /*/
   for(uint k=0;k<5;k++){
 
-    //optConstrainedMix(x, P.dualMatrix, ConstrainedP);
+    //optConstrained(x, P.dualMatrix, ConstrainedP);
 
-    optConstrainedMix(x,  NoArr, ConstrainedP, OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
+    optConstrained(x,  NoArr, ConstrainedP, OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
     //cout<<P.dualMatrix <<endl;
 
     P.costReport(false);
@@ -105,7 +105,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 /*/
 
 
-  optConstrainedMix(x,  P.dualMatrix, ConstrainedP, OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
+  optConstrained(x,  P.dualMatrix, ConstrainedP, OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-3));
 
   if(&y){
     y.resize(x.d0, pos->map.dim_phi(world));

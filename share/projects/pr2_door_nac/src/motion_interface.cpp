@@ -163,7 +163,7 @@ void Motion_Interface::gotoPosition(arr x)
   arr X = MP.getInitialization();
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrainedMix(X, NoArr, Convert(MPF), o);
+  optConstrained(X, NoArr, Convert(MPF), o);
 
   executeTrajectory(X,MP.T*MP.tau);
 }

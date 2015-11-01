@@ -26,7 +26,7 @@ void KOMO::init(const Graph& specs){
   }else{
     world.init(specs);
   }
-  world.meldFixedJoints();
+//  world.meldFixedJoints();
   world.removeUselessBodies();
   makeConvexHulls(world.shapes);
   if(glob["activateAllContacts"]){
@@ -113,9 +113,9 @@ void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
   cout <<x;
   if(MP->T){
-    optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2));
+    optConstrained(x, dual, Convert(*MPF), OPT(verbose=2));
   }else{
-    optConstrainedMix(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+    optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
   cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
@@ -183,7 +183,7 @@ arr moveTo(ors::KinematicWorld& world,
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
