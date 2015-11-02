@@ -10,6 +10,8 @@ vecAlign
 quatDiff
 qItself
 collisionIneq
+collisionPairs
+collisionExceptPairs
 
 #joint types
 MakeJoint

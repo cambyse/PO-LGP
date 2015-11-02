@@ -102,11 +102,27 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
     map = new CollisionConstraint( (params?params->V<double>("margin", 0.1):0.1) );
+  }else if(type=="collisionPairs"){
+    uintA shapes;
+    for(uint i=2;i<specs->parents.N;i++){
+      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
+      CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
+      shapes.append(s->index);
+    }
+    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+  }else if(type=="collisionExceptPairs"){
+    uintA shapes;
+    for(uint i=2;i<specs->parents.N;i++){
+      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
+      CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
+      shapes.append(s->index);
+    }
+    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
     map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric());
+    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);

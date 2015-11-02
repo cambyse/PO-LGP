@@ -151,8 +151,8 @@ void komoVersion(){
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
-  testPickAndPlace();
-//  komoVersion();
+//  testPickAndPlace();
+  komoVersion();
 
   return 0;
 }
