@@ -40,6 +40,12 @@ symbole_conv = []
 s = []
 b = []
 j = []
+id = 0
+
+def getId():
+    global id
+    id = id + 1
+    return id
 
 def setFixBase(base = True):
     """
@@ -62,9 +68,7 @@ def signal_handler(signal, frame):
     print('ABORT!')
     global symbole
     global symbole_conv
-
     for symb in reversed(symbole):
-        print("#############################################" +symb)
         interface.stopFact(symb)
         x = symbole.pop()
 
@@ -112,6 +116,7 @@ def _run(facts):
     symbols_conv = [conv_symbol(symbol) for symbol in symbols]
 
     for fact in facts:
+        print(str(fact))
         interface.setFact(str(fact))
 
     interface.waitForAllCondition(symbols_conv)
@@ -240,9 +245,7 @@ class Activity(object):
         self.max_acc = 10
         self.tolerance = .02
         self._name = ""
-        self.id = Activity.id
-        Activity.id += 1
-        interface.createNewSymbol(str(self.id))
+    
 
     @property
     def name(self):
@@ -274,7 +277,7 @@ class AllActivity(Activity):
     An activity that converts given parameters to a fact (string) and excecutes it.
     """
     
-    def __init__(self, ref1=None, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False):
+    def __init__(self, ref1=None, ref2=None, vec1=None, vec2=None, target=None, type="pos", moduloTwoPi=False, id=None):
         """
         :param ref1: The endeffector shape to move.
             A joint in case of "qItself"
@@ -313,18 +316,21 @@ class AllActivity(Activity):
         self.type = type
         self.target = target
         self.moduloTwoPi = moduloTwoPi
-        #if self.ref1 + "," not in interface.getSymbols():
-        #    interface.createNewSymbol(self.ref1)
+        self.id = id
+        if self.id:
+            interface.createNewSymbol(str(self.id))
+        if self.ref1 and self.ref1 + "," not in interface.getSymbols():
+            interface.createNewSymbol(self.ref1)
 
     def __str__(self):
-        return ("(FollowReferenceActivity {ref}{type}{name}{id})"
-                "{{ type={type} {ref1} {ref2} {target} {vec1} {vec2} tol={tol} PD={gains} {moduloTwoPi} }}"
-                .format(name=self.name + " " if self.name else "",
-                        type=self.type + " ", 
-                        ref=self.ref1 + " " if self.ref1 else "", 
-                        id=self.id,
-                        ref1="ref1=" + self.ref1 if self.ref1 else "",
-                        ref2="ref2=" + self.ref2 if self.ref2 else "",
+        return ("(Control {type}{ref1}{ref2}{id})"
+                "{{ {target} {vec1} {vec2} tol={tol} PD={gains} {moduloTwoPi} }}"
+                .format(type=self.type + " ", 
+                        ref1=self.ref1 + " " if self.ref1 else "",
+                        ref2=self.ref2 + " " if self.ref2 else "",
+                        id=self.id if self.id else "",
+                        #ref1="ref1=" + self.ref1 if self.ref1 else "",
+                        #ref2="ref2=" + self.ref2 if self.ref2 else "",
                         target="target=" + str(self.target) if self.target else "",
                         vec1="vec1=" + str(self.vec1) if self.vec1 else "",
                         vec2="vec2="+ str(self.vec2) if self.vec2 else "",
@@ -351,15 +357,10 @@ class PosActivity(AllActivity):
         self.q = q
         self.relative = relative
         self.q.append(1)
-      
-
-
-
-
-        
-
+        self.ref2 = "base_footprint"
+       
     def __str__(self):
-        endeff = sel.fref1 if self.relative else "endeffBase"
+        endeff = self.ref1 if self.relative else "endeffBase"
         self.q = np.dot(quaternion_matrix(pos_str2arr(shapes(endeff)["Q"]).tolist()), self.q) 
         self.target = np.add(pos_str2arr(shapes(self.ref1)["pos"]).tolist(), dehomogenize(self.q)).tolist()
   
@@ -378,7 +379,7 @@ class VecActivity(AllActivity):
         :return:
         """
         assert_in(ref1, shapes())
-        super (VecActivity, self).__init__(ref1=ref1, vec1=vec1, target=target, type="vec")
+        super (VecActivity, self).__init__(ref1=ref1, ref2="base_footprint", vec1=vec1, target=target, type="vec")
         
     def __str__(self):
         return super(VecActivity, self).__str__()
@@ -392,14 +393,14 @@ class VecDiffActivity(AllActivity):
         :param ref1: The shape to align.
         :param ref2: The shape to align to.
         :param vec1: The normalized axis of ref1 to align. Default: [1,0,0]
-        :param vec2: the normalized axis of ref2 to align to. Defauly [-1,0,0]
+        :param vec2: the normalized axis of ref2 to align to. Default [-1,0,0]
         :param pos: The target position in world coordinates.
         :return:
         """
         assert_in(ref1, shapes())
         assert_in(ref2, shapes())
         super(VecDiffActivity, self).__init__(ref1=ref1, 
-            ref2=ref2, vec1=vec1, vec2=vec2, type="vecDiff")
+            ref2=ref2, vec1=vec1, vec2=vec2, type="vecDiff", id=getId())
         
 
     def __str__(self):
@@ -787,107 +788,6 @@ def turn_wrist(angle, side=None):
 # High Level Behaviors
 
 
-def ding(marker):
-    return [{"with":[align_gripper_with_marker(marker), LookAt(marker)],
-            "plan":[reach(marker, offset=[0.1,0,0]),open_gripper(), reach(marker, offset=[-0.05,0,0.05]), close_gripper()]}]
-
-def ding2(marker):
-    return[{"with":LookAt(marker),
-            "plan":[reach(marker,offset=[0.1,0,0]),open_gripper()]}]
-
-def door(shape):
-    return [{"with":(),
-        "plan":[homing(),MoveBaseToShape(shape),align_gripper_vertical(SIDE.LEFT),{
-            "with": [LookAt(shape), align_gripper_vertical(SIDE.LEFT)],
-            "plan": [AllActivity("endeffL",shape,target=[-0.15,-0.35,0.20]),
-                    open_gripper(SIDE.LEFT),
-                    AllActivity("endeffL",shape,target=[-0.15,-0.35,0.10]),
-                    close_gripper(SIDE.LEFT),
-                    ]},
-            AllActivity("endeffL",shape,target=[-0.25,-0.25,0.20]),
-            AllActivity("endeffL",shape,target=[-0.25,-0.25,0.20]),]
-
-             }]
-
-
-def grab_marker(shape, side=None):
-    endeff = side2endeff(side)
-
-    return [{"with": gaze_at(shape),
-             "plan": [(open_gripper(side),
-                       reach(shape, offset=[-0.05, 0.05, 0.1], with_=endeff),
-                       align_gripper_with_plane([1, 0, 0], [0, -1, 0],
-                                                side=side)
-                       ),
-                      reach(shape, offset=[-0.05, 0.05, -0.1], with_=endeff),
-                      close_gripper(side)
-                      ]
-             }
-            ]
-def in_front(shape, side=None):
-    endeff = side2endeff(side)
-
-    return [{"with": [gaze_at(shape), 
-                GazeAtActivity(endeff, shape, [1, 0, 0]), 
-                #VecDiffActivity(endeff, shape, [0, 1, 0], [0,-1,0])
-                ],
-             "plan": reach(shape, offset=[0, 0, .1], with_=endeff)
-            }]
-
-def turn_marker(shape, degree, pre_grasp_offset=None, grasp_offset=None,
-                plane=None, side=None):
-    if pre_grasp_offset is None:
-        pre_grasp_offset = [0, 0, 0]
-    if grasp_offset is None:
-        grasp_offset = [0, 0, 0]
-    if plane is None:
-        plane = ([1, 0, 0], [0, -1, 0])
-
-    endeff = side2endeff(side)
-
-    return [{"with": gaze_at(endeff),
-             "plan": [(open_gripper(side),
-                       reach(shape, with_=endeff, offset=pre_grasp_offset),
-                       align_gripper_with_plane(*plane, side=side)),
-                      reach(shape, endeff, offset=grasp_offset),
-                      close_gripper(side),
-                      turn_wrist(degree, side),
-                      open_gripper(side)]
-             }]
-
-
-
-
-def move_shape(shape, distance, axis, pre_grasp_offset=None, grasp_offset=None,
-               plane=None, side=None):
-    if pre_grasp_offset is None:
-        pre_grasp_offset = [0, 0, 0]
-    if grasp_offset is None:
-        grasp_offset = [0, 0, 0]
-    if plane is None:
-        plane = ([1, 0, 0], [0, -1, 0])
-
-    endeff = side2endeff(side)
-
-    return [align_gripper_with_plane(*plane, side=side),
-            {"with": [align_gripper_with_plane(*plane, side=side),
-                      gaze_at(endeff)],
-             "plan": [(open_gripper(side),
-                       reach(shape, offset=pre_grasp_offset, with_=endeff)),
-                      reach(shape, offset=grasp_offset, with_=endeff),
-                      close_gripper(side),
-                      MoveAlongAxisActivity(endeff, axis, distance),
-                      open_gripper()]
-             }]
-
-
-def move_shape_along_joint(shape, distance, joint, pre_grasp_offset=None,
-                           grasp_offset=None, plane=None, side=None):
-    axis = pos_str2arr(interface.getJointByName(joint)["axis"])
-    print("Axis: {}".format(axis))
-    return move_shape(shape, distance, axis, pre_grasp_offset, grasp_offset,
-                      plane=plane, side=side)
-
 
 def grabMarker(shape):
     return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
@@ -900,12 +800,6 @@ def throwToBin():
     return [{"with": [lookAtShape("marker3")],
             "plan": [moveGripperToShape("marker3", offset=[-0.2,0,0.2]),openGripper()]
             }]
-
-def doSth():
-    return [{"with": [lookAtShape("marker3")],
-            "plan": [moveRobot([-.4,0,0]),moveGripperToPos([.0,-.3,.4]),openGripper(),closeGripper(),openGripper(),closeGripper(),moveRobot([+.4,0,0])]
-            }]
-
 
 
 
