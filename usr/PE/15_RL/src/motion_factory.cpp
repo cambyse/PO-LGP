@@ -31,7 +31,7 @@ void MotionFactory::execMotion(Scene &s, arr &x, arr &lambda, arr &_x0, uint vis
     OptOptions o; o.verbose=_verbose; o.stopTolerance=mlr::getParameter<double>("MP/stopTolerance"); o.stopIters=100; o.aulaMuInc=1.1; o.maxStep=1.;
 
     optConstrainedMix(xx, ll, Convert(MPF), o);
-    s.MP->costReport(true);
+    s.MP->costReport(false);
     writeDemoToFile(name,xx,ll);
   }
 
@@ -180,7 +180,7 @@ void MotionFactory::loadScenarioTestRbf(Scenario &scenario) {
   paramTest.append(paramDemo.subRange(0,1));
   paramTest.append(ones(N_RBF));
   scenario.weights.last() = CostWeight(CostWeight::RBF,N_RBF,ARR(N_RBF,0,s.MP->T,.3),s.MP->T,3,ARR(1e-3,1e3));
-  scenario.scenes.last().MP->taskCosts.last()->prec = ones(s.MP->T+1);
+  scenario.scenes.last().MP->tasks.last()->prec = ones(s.MP->T+1);
   scenario.paramGT = paramTest;
 }
 
@@ -222,13 +222,13 @@ void MotionFactory::loadScenarioTestFeatSelect(Scenario &scenario) {
       t->active=false;
     }
   }
-  s.MP->taskCosts(8*4)->active=true;
+  s.MP->tasks(8*4)->active=true;
   param(8*4)=1e2;
-  s.MP->taskCosts(1)->active=true;
+  s.MP->tasks(1)->active=true;
   param(1)=1e2;
-  s.MP->taskCosts(8+4)->active=true;
+  s.MP->tasks(8+4)->active=true;
   param(8+4)=1e2;
-  s.MP->taskCosts(2*8+5)->active=true;
+  s.MP->tasks(2*8+5)->active=true;
   param(2*8+5)=1e2;
 
   param = param/sum(param)*scenario.costScale;

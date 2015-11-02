@@ -28,42 +28,52 @@ struct InverseMotionProblem:ConstrainedProblem {
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param, arr param0);
 
-  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
+  virtual void fc(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) {
+    arr df,Hf,g,Jg,h,Jh;
     double costs = 0.;
 
     /// compute weight vector
     arr w;
     compWeights(w,(dwC.N>0)?NoArr:dwC,(HwC.N>0)?NoArr:HwC,x);
 
-    if (&df) { df.resize(nP);df.setZero();}
-    if (&Hf) { Hf.resize(nP,nP);Hf.setZero();}
+    if (&J) { df.resize(nP);df.setZero();}
+    if (&H) { Hf.resize(nP,nP);Hf.setZero();}
 
     /// Set global constraints
-    if (&g) {
-      g.clear();
-      compParamConstraints(g,Jg,x);
-    }
+    compParamConstraints(g,(&J)?Jg:NoArr,x);
 
     /// iterate over demonstrations
     for (uint i=0;i<scenario.scenes.d0;i++) {
       arr dfi,Hfi,gi,Jgi;
-      costs += scenario.scenes(i).compCosts(dfi, Hfi, &g?gi:NoArr, &Jg?Jgi:NoArr, w, dwC, HwC);
-      if (&df) {
+      costs += scenario.scenes(i).compCosts( (&J)?dfi:NoArr, (&H)?Hfi:NoArr, gi, (&J)?Jgi:NoArr, w, dwC, HwC);
+      if (&J) {
         df += dfi;
       }
-      if (&Hf) {
+      if (&H) {
         Hf += Hfi;
       }
       /// Set constraints for each demonstration
-      if (&g) {
-        g.append(gi);
-      }
-      if (&Jg && Jgi.N>0) {
+      g.append(gi);
+      if (&J && Jgi.N>0) {
         Jg.append(Jgi);
       }
     }
-    return costs;
+
+    if(&phi) { phi.clear(); }
+    if(&J) { J.clear(); }
+    if(&H) { H.clear(); }
+    if(&tt) { tt.clear(); }
+
+    phi.append(ARR(costs)); if(&J) J.append(~df); if(&H) H.append(Hf);
+    phi.append(g); if(&J) J.append(Jg);
+    phi.append(h); if(&J) J.append(Jh);
+    if(&tt) {
+      tt.append(fTT);
+      for (uint i=0;i<g.d0;i++) { tt.append(ineqTT); }
+      for (uint i=0;i<h.d0;i++) { tt.append(eqTT); }
+    }
   }
+
 
 };
 

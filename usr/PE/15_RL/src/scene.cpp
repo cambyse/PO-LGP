@@ -5,12 +5,12 @@ void Scene::initCosts(bool _optNonlinearParam){
 
   // precompute some terms
   MotionProblemFunction MPF(*MP);
-  ConstrainedProblemMix v = Convert(MPF);
+  ConstrainedProblem v = Convert(MPF);
 
   arr PHI_T, J_T; // total PHI and J
   arr lambdaRef;
   TermTypeA tt;
-  v(PHI_T,J_T,tt,xDem);
+  v(PHI_T,J_T,NoArr,tt,xDem);
 
   // split up PHI_T and J_T into costs and constraints
   if (!optConstraintsParam) {

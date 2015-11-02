@@ -7,6 +7,7 @@
 #include "../src/inverse_motion.h"
 
 void testBasics() {
+
   MotionFactory* mf = new MotionFactory();
   Scenario scenario;
   scenario.costScale = 1e2;

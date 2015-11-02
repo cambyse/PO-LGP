@@ -64,7 +64,7 @@ void drawLine(ors::KinematicWorld &world, arr &q,arr &x, const char *name ,uint 
   if (upper==0) upper = q.d0;
   for (uint i=lower;i<upper;i++) {
     world.setJointState(q[i]);
-    x.append(~ARR(world.getShapeByName(name)->X.pos) );
+    x.append(~conv_vec2arr(world.getShapeByName(name)->X.pos) );
   }
   drawLine(world,x,color);
 }
@@ -73,7 +73,7 @@ void drawPoints(ors::KinematicWorld &world, arr q,arr &x, const char *name ,uint
   x.clear();
   for (uint i=0;i<q.d0;i++) {
     world.setJointState(q[i]);
-    x.append(~ARR(world.getShapeByName(name)->X.pos) );
+    x.append(~conv_vec2arr(world.getShapeByName(name)->X.pos) );
   }
   drawPoints(world,x,color);
 }

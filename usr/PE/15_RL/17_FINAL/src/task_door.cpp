@@ -74,7 +74,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
     handle->X.pos = (C1demo[t]+C2demo[t])/2.;
     handle->X.rot = ec1->X.rot;
-    double d = length(ARR(ec1->X.pos-ec2->X.pos));
+    double d = length(conv_vec2arr(ec1->X.pos-ec2->X.pos));
     double h = handle->shapes(0)->size[2];
     double w = ec1->rel.pos(0)*2.;
 
@@ -87,8 +87,8 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     world->getShapeByName("cp1")->rel.pos.y = -trans - x(0) + x(1);
     world->getShapeByName("cp2")->rel.pos.y = trans +  x(1);
 
-    CP1.append(~ARR(world->getShapeByName("cp1")->X.pos));
-    CP2.append(~ARR(world->getShapeByName("cp2")->X.pos));
+    CP1.append(~conv_vec2arr(world->getShapeByName("cp1")->X.pos));
+    CP2.append(~conv_vec2arr(world->getShapeByName("cp2")->X.pos));
 
     world->gl().update(STRING(t));
   }

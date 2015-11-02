@@ -5,16 +5,16 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
+#include <Optim/search.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <System/engine.h>
 #include <Motion/pr2_heuristics.h>
+#include <pr2/trajectoryInterface.h>
+
 #include "../../src/plotUtil.h"
-#include "../../src/phase_optimization.h"
 #include "../../src/traj_factory.h"
-#include "../src/motion_interface.h"
 #include "../src/task_manager.h"
-#include <Optim/search.h>
+
 
 struct CMA_RL {
   uint nParam;
@@ -96,9 +96,9 @@ int main(int argc,char **argv){
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
-  Motion_Interface *mi;
+  TrajectoryInterface *mi;
   DoorTask *task = new DoorTask(world);
-  if (useRos) mi = new Motion_Interface(world);
+  if (useRos) mi = new TrajectoryInterface(world);
 
   arr Xdemo,FLdemo,Mdemo;
   Xdemo << FILE(STRING(folder<<"/phaseX.dat"));
@@ -129,7 +129,7 @@ int main(int argc,char **argv){
     task->transformTrajectory(Xn,param,Xdemo);
     if (useRos) {
       mi->gotoPosition(x0); mi->executeTrajectory(Xn,duration,true);
-      y = task->reward(mi->FLact);
+      y = task->reward(mi->logFLact);
       ys = 1.;
       Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);
     } else {
@@ -175,8 +175,8 @@ int main(int argc,char **argv){
         /// execute trajectory on robot
         mi->executeTrajectory(Xn,duration,true);
         /// evaluate cost functions
-        if (result) result = task->success(mi->Mact, Mdemo);
-        y = task->reward(mi->FLact);
+        if (result) result = task->success(mi->logMact, Mdemo);
+        y = task->reward(mi->logFLact);
         ys = (result) ?(1.):(-1.);
 
       } else {
@@ -206,6 +206,6 @@ int main(int argc,char **argv){
     }
   }
 
-  mi->~Motion_Interface();
+  mi->~TrajectoryInterface();
   return 0;
 }

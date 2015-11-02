@@ -6,11 +6,9 @@
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <System/engine.h>
-#include "../../src/phase_optimization.h"
+#include <pr2/trajectoryInterface.h>
 #include "../../src/traj_factory.h"
 #include "../src/mb_strategy.h"
-#include "../src/motion_interface.h"
 #include "../src/task_manager.h"
 #include "../../src/plotUtil.h"
 
@@ -31,8 +29,8 @@ int main(int argc,char **argv){
   }
 
 
-  Motion_Interface *mi;
-  if (useRos) mi = new Motion_Interface(world);
+  TrajectoryInterface *mi;
+  if (useRos) mi = new TrajectoryInterface(world);
   world.gl().resize(800,800);
   arr Xreverse;
   uint count;
@@ -59,11 +57,9 @@ int main(int argc,char **argv){
     mi->gotoPosition(Xdemo[0]);
     mi->executeTrajectory(Xdemo,duration,true);
 
-
-
-    Xdemo = mi->Xact;
-    Fdemo = mi->FLact;
-    Mdemo = mi->Mact;
+    Xdemo = mi->logXact;
+    Fdemo = mi->logFLact;
+    Mdemo = mi->logMact;
 
     write(LIST<arr>(Xdemo),STRING(folder<<"/Xdemo.dat"));
     write(LIST<arr>(Fdemo),STRING(folder<<"/Fdemo.dat"));
@@ -112,7 +108,7 @@ int main(int argc,char **argv){
     /// evaluate cost function
     bool result;
     if (useRos) {
-      result = task->success(mi->Mact, Mdemo);
+      result = task->success(mi->logMact, Mdemo);
       cout << "result: " << result << endl;
 
       /// logging
@@ -120,7 +116,7 @@ int main(int argc,char **argv){
         X = Xn;
         mi->logging(STRING(folder<<"/mb"),count);
         if (useRos) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
-      } else { mi->stopMotion(); }
+      } else { mi->pauseMotion(); }
     }else{
       write(LIST<arr>(X),STRING(folder<<"/mbX.dat"));
       write(LIST<arr>(X),STRING(folder<<"/mbX"<<count<<".dat"));

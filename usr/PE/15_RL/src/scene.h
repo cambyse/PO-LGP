@@ -38,18 +38,18 @@ struct Scenario {
     arr paramNorm = param;
     for (uint i = 0; i<scenes.d0;i++){
       uint pc = 0;
-      for (uint c=0;c<scenes(i).MP->taskCosts.N;c++) {
-        if (scenes(i).MP->taskCosts(c)->map.type == sumOfSqrTT) {
+      for (uint c=0;c<scenes(i).MP->tasks.N;c++) {
+        if (scenes(i).MP->tasks(c)->map.type == sumOfSqrTT) {
           arr w;
           weights(c).compWeights(w,NoArr,NoArr,paramNorm.subRange(pc,pc+weights(c).numParam - 1),true);
           if (reset) w = 1.;
           if (weights(c).type==CostWeight::Block){
-            scenes(i).MP->taskCosts(c)->prec.resize(weights(c).fixedParam(1)+1).setZero();
-            scenes(i).MP->taskCosts(c)->prec.subRange(weights(c).fixedParam(0),weights(c).fixedParam(1)) = w;
+            scenes(i).MP->tasks(c)->prec.resize(weights(c).fixedParam(1)+1).setZero();
+            scenes(i).MP->tasks(c)->prec.subRange(weights(c).fixedParam(0),weights(c).fixedParam(1)) = w;
           }else if (weights(c).type==CostWeight::RBF) {
-            scenes(i).MP->taskCosts(c)->prec = w;
+            scenes(i).MP->tasks(c)->prec = w;
           } else {
-            scenes(i).MP->taskCosts(c)->prec = w;
+            scenes(i).MP->tasks(c)->prec = w;
           }
 
 //          mlr::String name("plots/p");
@@ -59,16 +59,16 @@ struct Scenario {
 //          write(LIST<arr>(paramNorm.subRange(pc,pc+weights(c).numParam - 1)),name);
 //          name << "fixed";
 //          write(LIST<arr>(weights(c).fixedParam),name);
-//          cout << scenes(i).MP->taskCosts(c)->prec << endl;
+//          cout << scenes(i).MP->tasks(c)->prec << endl;
           pc += weights(c).numParam;
 
           // make sure all weights are above some threshold
-          for (uint k=0;k<scenes(i).MP->taskCosts(c)->prec.d0;k++){
-            if (scenes(i).MP->taskCosts(c)->prec(k) < 1e-3 && c>0) {
-              scenes(i).MP->taskCosts(c)->prec(k) = 0.;
+          for (uint k=0;k<scenes(i).MP->tasks(c)->prec.d0;k++){
+            if (scenes(i).MP->tasks(c)->prec(k) < 1e-3 && c>0) {
+              scenes(i).MP->tasks(c)->prec(k) = 0.;
             }
           }
-//          cout << scenes(i).MP->taskCosts(c)->name << " : " << scenes(i).MP->taskCosts(c)->prec << endl;
+//          cout << scenes(i).MP->tasks(c)->name << " : " << scenes(i).MP->tasks(c)->prec << endl;
         }
       }
     }

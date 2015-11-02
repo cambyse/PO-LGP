@@ -26,7 +26,6 @@ struct TaskManager
 };
 
 struct DoorTask:TaskManager {
-
   DoorTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = DOOR;}
   void addConstraints(MotionProblem *MP, const arr &X);
   void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);

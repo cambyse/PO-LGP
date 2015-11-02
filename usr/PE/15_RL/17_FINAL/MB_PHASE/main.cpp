@@ -6,16 +6,16 @@
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <System/engine.h>
+#include <Motion/phase_optimization.h>
+#include <pr2/trajectoryInterface.h>
+
 #include "../../src/plotUtil.h"
-#include "../../src/phase_optimization.h"
 #include "../../src/traj_factory.h"
-#include "../src/mb_strategy.h"
-#include "../src/motion_interface.h"
 #include "../src/task_manager.h"
 
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
+  cout << mlr::getParameter<double>("duration") << endl;
   bool useRos = mlr::getParameter<bool>("useRos");
   bool visualize = mlr::getParameter<bool>("visualize");
   double duration = mlr::getParameter<double>("duration");
@@ -30,8 +30,8 @@ int main(int argc,char **argv){
     task = new GraspTask(world);
   }
 
-  Motion_Interface *mi;
-  if (useRos) mi = new Motion_Interface(world);
+  TrajectoryInterface *mi;
+  if (useRos) mi = new TrajectoryInterface(world);
 
   arr Xdemo,Mdemo,FLdemo;
   Xdemo << FILE(STRING(folder<<"/mbX.dat"));
@@ -53,7 +53,7 @@ int main(int argc,char **argv){
     uint k = 2;
     PhaseOptimization P(X,k,1);
     arr sOpt = P.getInitialization();
-    optConstrained(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=1e-4));
+    optConstrainedMix(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=1e-4));
     arr Xres;
     P.getSolution(Xres,sOpt);
     arr Xn = Xres;
@@ -72,7 +72,7 @@ int main(int argc,char **argv){
 
     /// evaluate cost function
     bool result;
-    result = task->success(mi->Mact, Mdemo);
+    result = task->success(mi->logMact, Mdemo);
     cout << "result: " << result << endl;
 
     /// logging
