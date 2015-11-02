@@ -3,7 +3,7 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 
-struct CoveringSpheresProblem:ConstrainedProblemMix {
+struct CoveringSpheresProblem:ConstrainedProblem {
   const arr& x;
   double p, alpha;
   uint s;

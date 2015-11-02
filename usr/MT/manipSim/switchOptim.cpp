@@ -6,7 +6,7 @@
 
 //===========================================================================
 
-struct SwitchConfigurationProgram:ConstrainedProblemMix{
+struct SwitchConfigurationProgram:ConstrainedProblem{
   ors::KinematicWorld world;
   Graph& symbolicState;
   uint microSteps;
@@ -20,7 +20,7 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
                              uint microSteps,
                              int verbose)
     : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
-    ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
+    ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(MPF) );
 
     double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
     double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);

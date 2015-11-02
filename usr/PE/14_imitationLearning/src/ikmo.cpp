@@ -215,7 +215,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 
   // precompute some terms
   MotionProblemFunction MPF(*MP);
-  ConstrainedProblemMix v = Convert(MPF);
+  ConstrainedProblem v = Convert(MPF);
 
   arr PHI_T, J_T; // total PHI and J
   TermTypeA tt;

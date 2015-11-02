@@ -2,7 +2,7 @@
 
 #include <Optim/optimization.h>
 
-struct PR2EndPoseProblem : ConstrainedProblemMix{
+struct PR2EndPoseProblem : ConstrainedProblem{
   struct sPR2EndPoseProblem& s;
 
   PR2EndPoseProblem();

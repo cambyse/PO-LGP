@@ -21,10 +21,18 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
   return map;
 }
 
+
 TaskMap_GJK::TaskMap_GJK(const ors::Shape* s1, const ors::Shape* s2, bool exact) : exact(exact){
   CHECK(s1 && s2,"");
   i = s1->index;
   j = s2->index;
+}
+
+TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const char* s1, const char* s2, bool exact) : exact(exact){
+  CHECK(s1 && s2,"");
+  ors::Shape *s;
+  s=W.getShapeByName(s1); CHECK(s,"shape name '" <<s1 <<"' does not exist"); i=s->index;
+  s=W.getShapeByName(s2); CHECK(s,"shape name '" <<s2 <<"' does not exist"); j=s->index;
 }
 
 TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact) : exact(exact){

@@ -44,6 +44,7 @@ void FOL_World::init(istream& is){
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
+  worldRules = KB.getNodes("Rule");
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
@@ -62,6 +63,7 @@ void FOL_World::init(istream& is){
     cout <<"****************** FOL_World: creation info:" <<endl;
     cout <<"*** start_state=" <<*start_state <<endl;
     cout <<"*** reward fct=" <<*rewardFct <<endl;
+    cout <<"*** worldRules = "; listWrite(worldRules, cout); cout <<endl;
     cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
   mlr::open(fil, "z.FOL_World");
@@ -95,7 +97,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
 
   //-- remove the old decision-fact, if exists
-#if 1
+#if 0
   if(lastDecisionInState) delete lastDecisionInState;
 #else
   for(uint i=state->N;i--;){
@@ -203,7 +205,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- generic world transitioning
   int decisionObservation = 0;
-  forwardChaining_FOL(KB, *state, NULL, NoGraph, verbose-3, &decisionObservation);
+  forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &decisionObservation);
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);

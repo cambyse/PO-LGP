@@ -16,9 +16,9 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
   CHECK(symbolicState_before.isNodeOfParentGraph && &symbolicState_before.isNodeOfParentGraph->container==&KB,"");
   CHECK(symbolicState_after.isNodeOfParentGraph && &symbolicState_after.isNodeOfParentGraph->container==&KB,"");
 
-  ConstrainedProblemMix::operator=(
-        [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-    return this -> phi(phi, J, tt, x);
+  ConstrainedProblem::operator=(
+        [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    return this -> phi(phi, J, H, tt, x);
   } );
 
 //  Node *glueSymbol  = KB["glued"];
@@ -78,7 +78,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
   if(&phiJ) phiJ.append(prec*eye(x.N));
   if(&tt) tt.append(sumOfSqrTT, x.N);
 
-  //-- support symbols -> constraints of being inside!
+  //-- touch symbols -> constraints of being inside!
   Node *touch=symbolicState_after["touch"];
   for(Node *constraint:touch->parentOf) if(&constraint->container==&symbolicState_after){
     ors::Shape *s1=effKinematics.getShapeByName(constraint->parents(1)->keys(0));
@@ -268,7 +268,7 @@ double EffectivePoseProblem::optimize(arr& x){
   rndGauss(x, .1, true);
 
 //  checkJacobianCP(*this, x, 1e-4);
-  OptConstrained opt(x, NoArr, *this, OPT(verbose=0));
+  OptConstrained opt(x, NoArr, *this, OPT(verbose=2));
   opt.run();
   //  checkJacobianCP(f, x, 1e-4);
   effKinematics.setJointState(x);

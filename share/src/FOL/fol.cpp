@@ -1,6 +1,6 @@
 #include "fol.h"
 
-#define DEBUG(x)
+#define DEBUG(x) x
 
 /// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
 NodeL getLiteralsOfScope(Graph& KB){
@@ -484,13 +484,16 @@ bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, i
 //  NodeL constants = KB.getNodes("Constant");
   CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
 //  Graph& state = KB.getNode("STATE")->graph();
+  return forwardChaining_FOL(state, rules, query, changes, verbose, decisionObservation);
+}
+
+bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes, int verbose, int *decisionObservation){
 
   for(;;){
-    DEBUG(KB.checkConsistency();)
+    DEBUG(state.isNodeOfParentGraph->container.checkConsistency();)
     bool newFacts=false;
     for(Node *rule:rules){
       if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
-//      NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
       NodeL subs = getRuleSubstitutions2(state, rule, verbose);
       for(uint s=0;s<subs.d0;s++){
         Node *effect = rule->graph().last();

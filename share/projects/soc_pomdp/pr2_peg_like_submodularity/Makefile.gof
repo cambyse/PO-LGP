@@ -1,7 +1,7 @@
 BASE = ../../..
 
 PLIB = 1
-DEPEND = Algo Core Gui Ors Motion Optim System pr2
+DEPEND = Algo Core Gui Ors Motion Optim pr2
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

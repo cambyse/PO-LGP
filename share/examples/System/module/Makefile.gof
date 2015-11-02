@@ -1,7 +1,7 @@
 BASE = ../../..
 
 GTK = 1
-DEPEND = Core Gui System
+DEPEND = Core Gui
 
 OBJS = main.o ComputeSum_Module.o
 

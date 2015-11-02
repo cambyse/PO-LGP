@@ -89,6 +89,7 @@ struct Module : Thread{
   virtual void close(){}
 };
 
+inline bool operator==(const Module&,const Module&){ return false; }
 
 //===========================================================================
 //
@@ -165,6 +166,8 @@ struct Access_typed:Access{
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
   typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
 };
+
+inline bool operator==(const Access&,const Access&){ return false; }
 
 //===========================================================================
 //

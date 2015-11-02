@@ -218,7 +218,8 @@ struct KinematicWorld : GLDrawer{
   
   /// @name initializations
   void init(const char* filename);
-  
+  void init(const Graph& G);
+
   /// @name access
   Body *getBodyByName(const char* name) const;
   Shape *getShapeByName(const char* name) const;
@@ -339,16 +340,19 @@ struct KinematicWorld : GLDrawer{
 //===========================================================================
 
 struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid, addRigidRel };
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
   OperatorSymbol symbol;
+  JointType jointType;
   uint timeOfApplication;
   uint fromId, toId;
   KinematicSwitch();
+  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
+  void write(std::ostream& os) const;
 };
-
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace
+stdOutPipe(ors::KinematicSwitch)
 
 //===========================================================================
 //

@@ -4,6 +4,6 @@ ROS = 1
 PLIB = 1
 GL = 1
 
-DEPEND = Motion Core Perception System Gui Ors pr2 Actions
+DEPEND = Motion Core Perception Gui Ors pr2 Actions
 
 include $(BASE)/gofMake/generic.mk
