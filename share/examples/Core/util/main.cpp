@@ -85,9 +85,9 @@ int MAIN(int argc,char** argv){
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
   
-  testString();
+//  testString();
   testParameter();
-  testTimer();
+//  testTimer();
 //  testLogging();
 //  testException();
 
