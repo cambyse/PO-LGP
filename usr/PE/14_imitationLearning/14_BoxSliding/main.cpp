@@ -13,23 +13,23 @@
 void run() {
 
   /// load parameter
-  bool visTest = MT::getParameter<uint>("visTest");
-  uint verbose = MT::getParameter<uint>("verbose");
-  uint optRandSeed = MT::getParameter<uint>("optRandSeed");
-  uint optParam0Variant = MT::getParameter<uint>("optParam0Variant");
-  double optCostScale = MT::getParameter<double>("optCostScale");
-  double optTermCond = MT::getParameter<double>("optTermCond");
+  bool visTest = mlr::getParameter<uint>("visTest");
+  uint verbose = mlr::getParameter<uint>("verbose");
+  uint optRandSeed = mlr::getParameter<uint>("optRandSeed");
+  uint optParam0Variant = mlr::getParameter<uint>("optParam0Variant");
+  double optCostScale = mlr::getParameter<double>("optCostScale");
+  double optTermCond = mlr::getParameter<double>("optTermCond");
 
   cout << "optRandSeed: " << optRandSeed << endl;
   rnd.seed(optRandSeed);
 
   /// create some motion scenes
   MotionFactory* mf = new MotionFactory();
-  MT::Array<Scene > trainScenes;
-  MT::Array<Scene > testScenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene > trainScenes;
+  mlr::Array<Scene > testScenes;
+  mlr::Array<CostWeight> weights;
   mf->costScale=1e1;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
+  mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 
   /// create ikmo problem
   arr param;
@@ -51,7 +51,7 @@ void run() {
 
   arr param0=param;
   cout << "Parameter initialization: " << param << endl;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   cout << "ikmo start" << endl;
   IKMO ikmo(trainScenes,weights,param.d0,mf->costScale);
   cout << "ikmo initializied" << endl;
@@ -60,7 +60,7 @@ void run() {
 
   optConstrained(param,NoArr,ikmo,OPT(verbose=verbose,stopTolerance=1e-4,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=anyTimeAula, stopIters=1000,dampingInc=1.));
 //  optConstrained(param,NoArr,ikmo,OPT(verbose=verbose,stopTolerance=1e-9,aulaMuInc=1,stopEvals=1000,stopIters=1000,dampingInc=1., constrainedMethod=augmentedLag,minStep=-1,maxStep=-1));
-  cout << "TIME: " << MT::timerRead() << endl;
+  cout << "TIME: " << mlr::timerRead() << endl;
 
   cout << param << endl;
   ikmo.costReport(param,param0);
@@ -82,7 +82,7 @@ void run() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run();
   return 0;
 }

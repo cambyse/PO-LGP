@@ -13,7 +13,7 @@ void learnParam() {
   MotionFactory* mf = new MotionFactory();
   Scenario scenario;
   scenario.costScale = 1e3;
-  mf->loadScenarioParamEval(scenario,MT::getParameter<uint>("IMP/evalType"));
+  mf->loadScenarioParamEval(scenario,mlr::getParameter<uint>("IMP/evalType"));
 
   InverseMotionProblem IMP(scenario);
 
@@ -26,7 +26,7 @@ void learnParam() {
 
 
   OptOptions o;
-  o.stopTolerance = MT::getParameter<double>("IMP/stopTolerance"); o.constrainedMethod=augmentedLag; o.verbose=1; o.aulaMuInc=2;
+  o.stopTolerance = mlr::getParameter<double>("IMP/stopTolerance"); o.constrainedMethod=augmentedLag; o.verbose=1; o.aulaMuInc=2;
   optConstrained(param,NoArr,IMP,o);
   IMP.costReport(param,param0);
 
@@ -35,7 +35,7 @@ void learnParam() {
   param = param/sqrt(sum(param%param)/exp(6));
   scenario.setParam(param);
 
-  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,MT::getParameter<uint>("IMP/visTest"),0);
+  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,mlr::getParameter<uint>("IMP/visTest"),0);
 }
 
 void runParam() {
@@ -55,7 +55,7 @@ void runParam() {
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   learnParam();
 //  runParam();
   return 0;

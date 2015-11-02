@@ -31,7 +31,7 @@ MB_strategy::MB_strategy(arr &xDemo_,ors::KinematicWorld &world_,TaskManager &tm
 void MB_strategy::evaluate(arr &X)
 {
   arr tmp = X;
-  OptOptions o; o.maxStep = MT::getParameter<double>("MB_maxStep");
+  OptOptions o; o.maxStep = mlr::getParameter<double>("MB_maxStep");
   o.stopTolerance = 1e-5; o.constrainedMethod=anyTimeAula; o.verbose=1;
   ConstrainedProblemMix CPM = Convert(*MPF);
   UnconstrainedProblemMix UPM(CPM, o.constrainedMethod);

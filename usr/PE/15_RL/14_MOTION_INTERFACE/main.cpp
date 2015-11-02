@@ -102,8 +102,8 @@ void transformTrajectory(ors::KinematicWorld &world, const arr &X, arr &XT) {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-  bool useRos = MT::getParameter<bool>("useRos");
+  mlr::initCmdLine(argc,argv);
+  bool useRos = mlr::getParameter<bool>("useRos");
 
 
   TaskManager *tm = new DonutTask();

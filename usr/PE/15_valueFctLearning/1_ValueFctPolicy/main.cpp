@@ -25,7 +25,7 @@ void run() {
   arr W = eye(3);
   arr C = eye(4)*2.;
   arr w;
-  w = ARRAY(world.getBodyByName("target")->X.pos);
+  w = ARR(world.getBodyByName("target")->X.pos);
   w=-2.*w;
   cout<< "x0 :" <<x0 << endl;
   cout <<"y0: "<< y0 << endl;
@@ -53,7 +53,7 @@ void run() {
     cout << "distance to goal: " <<y << endl;
     world.setJointState(x);
     world.gl().update();
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
 
 
@@ -77,7 +77,7 @@ void run2() {
   arr W = eye(3);
 
   arr w;
-  w = ARRAY(world.getBodyByName("target")->X.pos);
+  w = ARR(world.getBodyByName("target")->X.pos);
   w=-w;
   cout<< "x0 :" <<x0 << endl;
   cout <<"y0: "<< y0 << endl;
@@ -105,7 +105,7 @@ void run2() {
     cout << "y: " <<y << endl;
     world.setJointState(x);
     world.gl().update();
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
 
 
@@ -116,7 +116,7 @@ void run2() {
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run(); // value fct downhill with regularization
 //  run2(); // value fct downhill with fixed stepsize
   return 0;

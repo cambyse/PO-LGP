@@ -37,7 +37,7 @@ arr safety(arr x) {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   arr X,S,mu;
 
   arr z = ARR(3.1);z.flatten();
@@ -56,7 +56,7 @@ int main(int argc,char **argv){
 
   checkGradient(gph, z, 1e-5);
   cout <<gph.fs(NoArr,NoArr,z) << endl;
-  MT::wait();
+  mlr::wait();
   optGradDescent(z,gph,OPT(verbose=2,stopTolerance=1e-3));
   cout << z << endl;
 

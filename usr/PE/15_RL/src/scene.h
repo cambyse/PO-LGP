@@ -29,8 +29,8 @@ struct Scene {
 };
 
 struct Scenario {
-  MT::Array<Scene > scenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene > scenes;
+  mlr::Array<CostWeight> weights;
   arr paramGT; // ground truth parameters
   double costScale;
 
@@ -52,7 +52,7 @@ struct Scenario {
             scenes(i).MP->taskCosts(c)->prec = w;
           }
 
-//          MT::String name("plots/p");
+//          mlr::String name("plots/p");
 //          name << c;
 //          FILE(name) <<weights(c).type;
 //          name << "param";

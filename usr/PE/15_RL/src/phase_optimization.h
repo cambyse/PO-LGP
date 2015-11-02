@@ -10,7 +10,7 @@ struct PhaseOptimization:KOrderMarkovFunction {
   uint kX;  // used for transition costs of trajectory [1,2,3]
   double w; // weight of transition costs of phase
   uint T;
-  MT::Spline* p;
+  mlr::Spline* p;
 
   PhaseOptimization(arr &X, uint _kX, double _w=1.);
 

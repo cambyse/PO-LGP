@@ -3,7 +3,6 @@
 #include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Perception/videoEncoder.h>
 #include <iomanip>
 
 
@@ -96,7 +95,7 @@ void TEST(GradCheck) {
 
 
 // std::ofstream fil;
-//   MT::open(fil, filename);
+//   mlr::open(fil, filename);
 // fil.precision(30);
 //   catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
 // fil.close();
@@ -205,7 +204,7 @@ void TEST(MatlabGP) {
   engOutputBuffer(ep, buffer, BUFSIZE);
 
   engEvalString(ep, "testMC");
-  MT::wait(10.);
+  mlr::wait(10.);
 
   printf("%s", buffer);
 }

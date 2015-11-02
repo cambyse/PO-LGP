@@ -8,7 +8,7 @@
 #include "../src/plotUtil.h"
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// create reference motion
   ors::KinematicWorld world("test.ors");
@@ -26,9 +26,9 @@ int main(int argc,char **argv){
   t->map.order=1;
   t->setCostSpecs(0, MPref.T, ARR(0.), 1e-1);
   t =MPref.addTask("pos1", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MPref.T*.5,MPref.T*.5,ARRAY(target2->X.pos),1e2);
+  t->setCostSpecs(MPref.T*.5,MPref.T*.5,ARR(target2->X.pos),1e2);
   t =MPref.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MPref.T-3,MPref.T,ARRAY(target->X.pos),1e2);
+  t->setCostSpecs(MPref.T-3,MPref.T,ARR(target->X.pos),1e2);
   MotionProblemFunction MPFref(MPref);
   arr Xref(MPref.T+1,q.N); Xref.setZero();
   optConstrainedMix(Xref, NoArr, Convert(MPFref), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -119,7 +119,7 @@ int main(int argc,char **argv){
 
   arr Y = zeros(D,2);
   uint k = 1;
-  MT::Spline S(T,Y,k);
+  mlr::Spline S(T,Y,k);
   arr A = S.basis;
 
   double w = 1e3;
@@ -131,7 +131,7 @@ int main(int argc,char **argv){
   AA[AA.d0-1] = AA[AA.d0-1]*sqrt(w);
 
   arr beta = inverse(~AA*AA)*~AA*XX;
-  MT::Spline S2(100,beta,k);
+  mlr::Spline S2(100,beta,k);
   arr path = S2.eval();
 
   arr Xres;

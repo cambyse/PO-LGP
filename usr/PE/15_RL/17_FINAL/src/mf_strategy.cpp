@@ -1,6 +1,6 @@
 #include "mf_strategy.h"
 
-MF_strategy::MF_strategy(uint nParam_,arr &paramLim_,MT::String taskName):nParam(nParam_),paramLim(paramLim_)
+MF_strategy::MF_strategy(uint nParam_,arr &paramLim_,mlr::String taskName):nParam(nParam_),paramLim(paramLim_)
 {
   if (!(ep = engOpen(""))) {
     fprintf(stderr, "\nCan't start MATLAB engine\n");
@@ -63,7 +63,7 @@ void MF_strategy::evaluate(arr &x_exp)
   printf("%s", buffer);
 }
 
-void MF_strategy::load(MT::String folder)
+void MF_strategy::load(mlr::String folder)
 {
   X << FILE(STRING(folder<<"X.dat"));
   Y << FILE(STRING(folder<<"Y.dat"));
@@ -71,7 +71,7 @@ void MF_strategy::load(MT::String folder)
 }
 
 
-void MF_strategy::save(MT::String folder)
+void MF_strategy::save(mlr::String folder)
 {
   write(LIST<arr>(X),STRING(folder<<"X.dat"));
   write(LIST<arr>(Y),STRING(folder<<"Y.dat"));

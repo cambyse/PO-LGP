@@ -36,7 +36,7 @@ void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
 void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
   constraintTime = zeros(F.d0); constraintTime.flatten();
   for (uint t=0;t<F.d0;t++){
-    if(fabs(F(t,5))> MT::getParameter<double>("contact_threshold")) {
+    if(fabs(F(t,5))> mlr::getParameter<double>("contact_threshold")) {
 //      constraintTime(t) = 1.;
       constraintTime.subRange(t-5,t) = 1.;
     }
@@ -74,7 +74,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
     handle->X.pos = (C1demo[t]+C2demo[t])/2.;
     handle->X.rot = ec1->X.rot;
-    double d = length(ARRAY(ec1->X.pos-ec2->X.pos));
+    double d = length(ARR(ec1->X.pos-ec2->X.pos));
     double h = handle->shapes(0)->size[2];
     double w = ec1->rel.pos(0)*2.;
 
@@ -87,8 +87,8 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     world->getShapeByName("cp1")->rel.pos.y = -trans - x(0) + x(1);
     world->getShapeByName("cp2")->rel.pos.y = trans +  x(1);
 
-    CP1.append(~ARRAY(world->getShapeByName("cp1")->X.pos));
-    CP2.append(~ARRAY(world->getShapeByName("cp2")->X.pos));
+    CP1.append(~ARR(world->getShapeByName("cp1")->X.pos));
+    CP2.append(~ARR(world->getShapeByName("cp2")->X.pos));
 
     world->gl().update(STRING(t));
   }
@@ -112,7 +112,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
   MotionProblem MP(*world,false);
   MP.T = Xdemo.d0-1;
-  MP.tau = MT::getParameter<double>("duration")/MP.T;
+  MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];
 
   //--tasks

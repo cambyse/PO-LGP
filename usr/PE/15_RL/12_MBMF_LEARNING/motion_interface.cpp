@@ -34,11 +34,11 @@ void Motion_Interface::executeTrajectory(arr &X, double duration) {
   arr Xdot;
   getVel(Xdot,X,duration/X.d0);
 
-  MT::Spline XS(X.d0,X);
-  MT::Spline XdotS(Xdot.d0,Xdot);
+  mlr::Spline XS(X.d0,X);
+  mlr::Spline XdotS(Xdot.d0,Xdot);
 
   Xdes.clear(); Xact.clear(); FLact.clear(); Tact.clear();
-  MT::timerStart(true);
+  mlr::timerStart(true);
   CtrlMsg refs;
   double t = 0.;
   double dt = duration/X.d0;
@@ -63,7 +63,7 @@ void Motion_Interface::executeTrajectory(arr &X, double duration) {
     refs.intLimitRatio = 1.0;
     S.ctrl_ref.set() = refs;
 
-    t = t + MT::timerRead(true);
+    t = t + mlr::timerRead(true);
 
     if (t-t_last >= dt){
       t_last = t;
@@ -126,15 +126,15 @@ void Motion_Interface::recordDemonstration(arr &X,double duration)
   refs.intLimitRatio = .1;
   S.ctrl_ref.set() = refs;
 
-  MT::wait(5.);
+  mlr::wait(5.);
 
   /// record demonstrations
   double t = 0.;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   while(t<duration) {
     X.append(~S.ctrl_obs.get()->q);
-    MT::wait(0.1);
-    t = t + MT::timerRead(true);
+    mlr::wait(0.1);
+    t = t + mlr::timerRead(true);
   }
 
   /// reset gains

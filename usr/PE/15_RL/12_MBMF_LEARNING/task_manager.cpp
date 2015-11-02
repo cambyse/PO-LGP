@@ -18,11 +18,11 @@ void DonutTask::createSynthethicDemonstration(arr &X, ors::KinematicWorld &world
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
 
   t =MP.addTask("posC", new DefaultTaskMap(posTMT,MP.world,"endeff"));
-  arr target = ARRAY(MP.world.getBodyByName("target0")->X.pos);
+  arr target = ARR(MP.world.getBodyByName("target0")->X.pos);
   t->setCostSpecs(constraintTime(0),constraintTime(1), target, 1e2);
 
   t =MP.addTask("posT", new DefaultTaskMap(posTMT,world_,"endeff"));
-  t->setCostSpecs(MP.T,MP.T, ARRAY(world_.getBodyByName("target1")->X.pos), 1e2);
+  t->setCostSpecs(MP.T,MP.T, ARR(world_.getBodyByName("target1")->X.pos), 1e2);
 
   MotionProblemFunction MPF(MP);
   X = MP.getInitialization();
@@ -74,7 +74,7 @@ void DonutTask::addConstraintTaskMaps(MotionProblem &MP, arr param)
 {
   Task *t;
   t =MP.addTask("posC", new DefaultTaskMap(posTMT,MP.world,"endeff"));
-  arr target = ARRAY(MP.world.getBodyByName("target0")->X.pos) + ARR(0.,0.,param(0));
+  arr target = ARR(MP.world.getBodyByName("target0")->X.pos) + ARR(0.,0.,param(0));
   t->setCostSpecs(constraintTime(0),constraintTime(1), target, 1e2);
 }
 
@@ -190,7 +190,7 @@ void DoorTask::addConstraintTaskMaps(MotionProblem &MP, arr param)
 
   arr zC1 = vC1;
   arr zC2 = vC2;
-  arr offset = ARRAY(param(0),0.,0.);
+  arr offset = ARR(param(0),0.,0.);
   arr prec = Cdemo*1e3;
   for (uint t=0;t<Xdemo.d0;t++) {
     MP.world.setJointState(Xdemo[t]);

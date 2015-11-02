@@ -295,7 +295,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     optConstraintsParam = true;
     Jg = unpack(JgP); Jg.special = arr::noneST;
     // reduce Jg to only active part (lambda !=0)
-//    MT::Array<uint> idx;
+//    mlr::Array<uint> idx;
 //    lambdaDem.findValues(idx,0.);
 //    lambdaDem.removeAllValues(0.);
 //    Jg = unpack(JgP);
@@ -315,11 +315,11 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 //    }
 
 //    Jg = Jgr;
-//    MT::timerStart(true);
+//    mlr::timerStart(true);
 //    cout << "timer start: " << endl;
 //    Jg_JgtP = comp_A_At(JgP);
 //    Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
-//    cout << "Jg_Jgt: " << MT::timerRead(true) << endl;
+//    cout << "Jg_Jgt: " << mlr::timerRead(true) << endl;
 
 ////    cout << Jg_Jgt << endl;
 ////    cout << Jg << endl;
@@ -332,7 +332,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 ////    lapack_inverseSymPosDef();
 
 //    Jgt_JgJgtI_Jg = ~Jg*Jg_Jgt_I*Jg;
-//    cout << "Jg_Jgt_I: " << MT::timerRead(true) << endl;
+//    cout << "Jg_Jgt_I: " << mlr::timerRead(true) << endl;
 
 ////    arr tmp = repmat(~PHI,Jx.d0,1);
 ////    arr JgJgtI_Jg_J_dPHI2 = Jg_Jgt_I*Jg*~Jx;
@@ -342,13 +342,13 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 ////    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*tmp;
 ////    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI*diag(PHI);
 ////    JgJgtI_Jg_J_dPHI = JgJgtI_Jg_J_dPHI%repmat(~PHI,JgJgtI_Jg_J_dPHI.d0,1);
-////    cout << "JgJgtI_Jg_J_dPHI: " << MT::timerRead(true) << endl;
+////    cout << "JgJgtI_Jg_J_dPHI: " << mlr::timerRead(true) << endl;
 
 ////    JgJgtI_Jg_J_dPHI = Jg_Jgt_I*Jg*~Jx*diag(PHI);
 ////    cout <<sum(JgJgtI_Jg_J_dPHI2-JgJgtI_Jg_J_dPHI) << endl;
 ////    J_Jgt = Jx*~Jg;
 //    J_Jgt = ~tmp;
-//    cout << "J_Jgt: " << MT::timerRead(true) << endl;
+//    cout << "J_Jgt: " << mlr::timerRead(true) << endl;
   }
 
 }
@@ -405,7 +405,7 @@ double Scene::compCosts(arr &df, arr &Hf, arr &g, arr &Jg, const arr &w, const a
 }
 
 
-IKMO::IKMO(MT::Array<Scene> &_scenes, MT::Array<CostWeight> &_weights,uint _nP,double _costScale):
+IKMO::IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP,double _costScale):
   scenes(_scenes),
   weights(_weights),
   nP(_nP),
@@ -419,10 +419,10 @@ IKMO::IKMO(MT::Array<Scene> &_scenes, MT::Array<CostWeight> &_weights,uint _nP,d
   nT = scenes(0).MP->T;
 
   /// optimization parameter
-  optLearnTransParam = MT::getParameter<bool>("optLearnTransParam");
-  optNormParam = MT::getParameter<bool>("optNormParam");
-  optNonlinearParam = MT::getParameter<bool>("optNonlinearParam");
-  optConstraintsParam = MT::getParameter<bool>("optConstraintsParam");
+  optLearnTransParam = mlr::getParameter<bool>("optLearnTransParam");
+  optNormParam = mlr::getParameter<bool>("optNormParam");
+  optNonlinearParam = mlr::getParameter<bool>("optNonlinearParam");
+  optConstraintsParam = mlr::getParameter<bool>("optConstraintsParam");
 
   /// precompute matrices for permutation of PHI
   uintA cost_counts;

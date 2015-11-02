@@ -48,7 +48,7 @@ struct ValueFctLearning {
     }
 
 //    world = new ors::KinematicWorld("scene0");
-//    arr w = ARRAY(world->getBodyByName("target")->X.pos);
+//    arr w = ARR(world->getBodyByName("target")->X.pos);
 //    param.append(w);
 
     param.append(ones(nFeat));
@@ -123,7 +123,7 @@ struct ValueFctLearning {
   double compReward(const arr &x,uint t) {
     // distance to final position
     world->setJointState(x);
-    arr d = ARRAY(world->getBodyByName("target")->X.pos - world->getShapeByName("endeff")->X.pos);
+    arr d = ARR(world->getBodyByName("target")->X.pos - world->getShapeByName("endeff")->X.pos);
     double dist = length(d);
 
     double reward=0.;
@@ -299,7 +299,7 @@ void run() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run();
   return 0;
 }

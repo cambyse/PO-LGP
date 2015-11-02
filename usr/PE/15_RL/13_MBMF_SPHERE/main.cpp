@@ -12,7 +12,7 @@
 #include "../src/plotUtil.h"
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   TaskManager *tm = new DonutTask();
   ors::KinematicWorld world("donut.ors");
   arr Xdemo;
@@ -20,7 +20,7 @@ int main(int argc,char **argv){
   //  displayTrajectory(Xdemo,-1,world,"Xdemo");
   arr X=Xdemo;
   arr A;
-  MT::timerStart(true);
+  mlr::timerStart(true);
   arr P1,P2; drawPoints(world,Xdemo,P1,"endeff",1);
   MF_strategy *mfs = new MF_strategy(1,*tm);
 
@@ -46,8 +46,8 @@ int main(int argc,char **argv){
     drawPoints(world,X,P1,"endeff",0);
     displayTrajectory(X,-1,world,"X");
 
-    MT::wait(2.);
+    mlr::wait(2.);
   }
-  cout << MT::timerRead(true) << endl;
+  cout << mlr::timerRead(true) << endl;
   return 0;
 }

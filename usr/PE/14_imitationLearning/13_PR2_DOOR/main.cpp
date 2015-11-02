@@ -13,10 +13,10 @@ void run() {
 
   /// load parameter
   uint verbose = mlr::getParameter<uint>("verbose");
-  uint optRandSeed = MT::getParameter<uint>("optRandSeed");
-  uint optParam0Variant = MT::getParameter<uint>("optParam0Variant");
-  double optCostScale = MT::getParameter<double>("optCostScale");
-  double optTermCond = MT::getParameter<double>("optTermCond");
+  uint optRandSeed = mlr::getParameter<uint>("optRandSeed");
+  uint optParam0Variant = mlr::getParameter<uint>("optParam0Variant");
+  double optCostScale = mlr::getParameter<double>("optCostScale");
+  double optTermCond = mlr::getParameter<double>("optTermCond");
 
   cout << "optRandSeed: " << optRandSeed << endl;
   rnd.seed(optRandSeed);

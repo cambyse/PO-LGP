@@ -20,7 +20,7 @@ struct MySystem:System{
   ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
   MySystem(){
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
       addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
@@ -47,7 +47,7 @@ struct Motion_Interface
   void gotoPosition(arr x);
   void recordDemonstration(arr &X, double T);
   void stopMotion(bool sendZeroGains = false);
-  void logging(MT::String folder, uint id);
+  void logging(mlr::String folder, uint id);
 
   void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);
 };

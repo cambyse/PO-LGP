@@ -31,7 +31,7 @@ void learnParam() {
 
 
   OptOptions o;
-  o.stopTolerance = MT::getParameter<double>("IMP/stopTolerance"); o.constrainedMethod=augmentedLag; o.verbose=1; o.aulaMuInc=2;
+  o.stopTolerance = mlr::getParameter<double>("IMP/stopTolerance"); o.constrainedMethod=augmentedLag; o.verbose=1; o.aulaMuInc=2;
   optConstrained(param,NoArr,IMP,o);
   IMP.costReport(param,param0);
 
@@ -44,7 +44,7 @@ void learnParam() {
     mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,1,1);
   }
 
-  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,MT::getParameter<uint>("IMP/visTest"),1);
+  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,mlr::getParameter<uint>("IMP/visTest"),1);
 }
 
 void runParam() {
@@ -64,7 +64,7 @@ void runParam() {
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   learnParam();
 //  runParam();
   return 0;

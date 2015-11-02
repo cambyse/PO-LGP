@@ -43,7 +43,7 @@ arr acquisitionFun(const arr &F,const arr &F_grid,const arr &F_std,const arr &P_
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   arr X,S,F;
   X.resize(1,1);
   X(0,0) = ARR(0.);

@@ -18,7 +18,7 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
   MP.tau = 0.02;
   MP.x0 = q;
 
-  tp = floor(ARRAY(0.30*MP.T,0.50*MP.T,0.7*MP.T,1.*MP.T));
+  tp = floor(ARR(0.30*MP.T,0.50*MP.T,0.7*MP.T,1.*MP.T));
 
   //--tasks
   Task *t;
@@ -28,7 +28,7 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
 
 
   t =MP.addTask("pre_pos", new DefaultTaskMap(posTMT,world,"endeffL"));
-  t->setCostSpecs(tp(0),tp(0), ARRAY(world.getBodyByName("handle")->X.pos - ors::Vector(0.1,0,0.)), 1e2);
+  t->setCostSpecs(tp(0),tp(0), ARR(world.getBodyByName("handle")->X.pos - ors::Vector(0.1,0,0.)), 1e2);
   t =MP.addTask("pre_vec", new DefaultTaskMap(vecAlignTMT,world,"endeffL",ors::Vector(0.,1.,0.),__null,ors::Vector(0.,0.,-1.)));
   t->setCostSpecs(tp(0),tp(0), ARR(1.), 1e2);
   t =MP.addTask("handle_pos", new TaskMap_qItself(world.getJointByName("door_handle")->qIndex,world.getJointStateDimension()));
@@ -54,7 +54,7 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
   OptOptions o; o.maxStep = 1.;
   o.stopTolerance = 1e-4; o.constrainedMethod=anyTimeAula; o.verbose=1; o.aulaMuInc=1.1;
 
-  if (MT::getParameter<bool>("loadDemoFromFile")){
+  if (mlr::getParameter<bool>("loadDemoFromFile")){
     X << FILE("data/X.dat");
   }else{
     optConstrainedMix(X, NoArr, Convert(MPF), o);
@@ -66,7 +66,7 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   arr tp;
   ors::KinematicWorld world("robot_door.ors");

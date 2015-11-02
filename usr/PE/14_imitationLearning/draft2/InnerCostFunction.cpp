@@ -22,7 +22,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
     taskCosts(0)->prec.resize(T+1).setZero();
     taskCosts(0)->prec(T) = param(0);
     taskCosts(0)->target.resize(T+1,3).setZero();
-    taskCosts(0)->target[T]() = conv_vec2arr(world.getBodyByName("goalRef")->X.pos);
+    taskCosts(0)->target[T]() = ARR(world.getBodyByName("goalRef")->X.pos);
     // vec right hand task
     taskCosts(1)->prec.resize(T+1).setZero();
     taskCosts(1)->prec(T) = param(1);

@@ -6,13 +6,13 @@
 
 struct MBMFL
 {
-  MT::String name;
-  MT::Array<arr> data_traj;  // collected trajectories
+  mlr::String name;
+  mlr::Array<arr> data_traj;  // collected trajectories
   arr data_param; // collected parametrizations
   arr data_result;           // collected results
   arr data_cost;
 
-  MBMFL(MT::String name_);
+  MBMFL(mlr::String name_);
 
   void saveMBMFL();
   void loadMBMFL();

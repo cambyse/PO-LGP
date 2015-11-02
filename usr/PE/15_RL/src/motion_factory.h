@@ -6,7 +6,7 @@
 #include "../src/scene.h"
 
 struct MotionFactory {
-  void execMotion(Scene &s, arr &x=NoArr, arr &lambda=NoArr, arr &_x0=NoArr, uint vis=0, uint verbose=0,MT::String name=MT::String());
+  void execMotion(Scene &s, arr &x=NoArr, arr &lambda=NoArr, arr &_x0=NoArr, uint vis=0, uint verbose=0,mlr::String name=mlr::String());
   void loadScenarioTest(Scenario &scenario, bool useConstraints=false);
   void loadScenarioTestRbf(Scenario &scenario);
   void loadScenarioTestFeatSelect(Scenario &scenario);

@@ -2,9 +2,9 @@
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+
+
 #include <Motion/feedbackControl.h>
 #include <vector>
 #include <future>
@@ -272,7 +272,7 @@ void simpleMotion(){
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
 
-  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = ARR(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e4);
@@ -312,7 +312,7 @@ void simpleMotion(){
 
   MP2.makeContactsAttractive=false;
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.,0.1);
-  arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
+  arr refGoal2 = ARR(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
   c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);

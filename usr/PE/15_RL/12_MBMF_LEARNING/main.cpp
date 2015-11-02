@@ -17,15 +17,15 @@
 #include "task_manager.h"
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
+  mlr::initCmdLine(argc,argv);
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
 
   /// -----------------------------------------------------------
   /// initialization --------------------------------------------
   /// -----------------------------------------------------------
-  MT::String sceneName = MT::getParameter<MT::String>("sceneName");
+  mlr::String sceneName = mlr::getParameter<mlr::String>("sceneName");
   cout <<"Task: "<< sceneName << endl;
   ors::KinematicWorld world(STRING(sceneName<<".ors"));
 
@@ -42,7 +42,7 @@ int main(int argc,char **argv){
   /// load demonstration ----------------------------------------
   /// -----------------------------------------------------------
   arr Xdemo;
-  if (MT::getParameter<bool>("loadDemoFromFile"))
+  if (mlr::getParameter<bool>("loadDemoFromFile"))
   { //-- load demo from file
     Xdemo << FILE(STRING("data/"<<sceneName<<"Xdemo"));
   }
@@ -81,7 +81,7 @@ int main(int argc,char **argv){
   /// -----------------------------------------------------------
   MBMFL *mbmfl = new MBMFL(sceneName); // TODO: delete MBMFL
 
-  if (MT::getParameter<bool>("loadMBMFL")) {mbmfl->loadMBMFL();}
+  if (mlr::getParameter<bool>("loadMBMFL")) {mbmfl->loadMBMFL();}
   enum LEARNING_MODE {MODEL_BASED_STEP=0,MODEL_BASED_PHASE=1,MODEL_FREE=2};
   LEARNING_MODE learning_mode = /*MODEL_FREE;//*/MODEL_BASED_STEP;
 

@@ -2,8 +2,8 @@
 #define GP_CONTROL_h
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+
 #include <Core/array.h>
 
 struct GPControl {

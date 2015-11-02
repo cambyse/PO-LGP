@@ -24,7 +24,7 @@ struct CMA_RL {
   double muStd;
   arr samples,values;
 
-  CMA_RL(uint nParam_, arr &paramLim_, MT::String taskName) {
+  CMA_RL(uint nParam_, arr &paramLim_, mlr::String taskName) {
     nParam = nParam_;
     paramLim = paramLim_;
     muStd = 0.05;
@@ -58,7 +58,7 @@ struct CMA_RL {
     samples.clear();values.clear();
   }
 
-  void load(MT::String folder){
+  void load(mlr::String folder){
     X << FILE(STRING(folder<<"X.dat"));
     Y << FILE(STRING(folder<<"Y.dat"));
     YS << FILE(STRING(folder<<"YS.dat"));
@@ -72,7 +72,7 @@ struct CMA_RL {
     cma.init(nParam,-1,-1,mean,stdv);
   }
 
-  void save(MT::String folder){
+  void save(mlr::String folder){
     write(LIST<arr>(X),STRING(folder<<"X.dat"));
     write(LIST<arr>(Y),STRING(folder<<"Y.dat"));
     write(LIST<arr>(YS),STRING(folder<<"YS.dat"));
@@ -87,13 +87,13 @@ struct CMA_RL {
 };
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
-  MT::String folder = MT::getParameter<MT::String>("folder");
-  MT::String taskName = MT::getParameter<MT::String>("taskName");
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
+  mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
   Motion_Interface *mi;
@@ -123,7 +123,7 @@ int main(int argc,char **argv){
   double y, ys;
 
   uint count;
-  if (MT::getParameter<bool>("MF_restartLearning")) {
+  if (mlr::getParameter<bool>("MF_restartLearning")) {
     param = ARR(0.0,0.); param.flatten();
 
     task->transformTrajectory(Xn,param,Xdemo);

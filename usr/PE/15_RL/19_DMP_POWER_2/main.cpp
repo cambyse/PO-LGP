@@ -246,7 +246,7 @@ void evaluate(arr &Xn){
   }
 }
 
-void load(MT::String folder) {
+void load(mlr::String folder) {
   Q << FILE(STRING(folder<<"Q.dat"));
   Return << FILE(STRING(folder<<"Return.dat")); Return.flatten();
   s_Return << FILE(STRING(folder<<"s_Return.dat"));
@@ -255,7 +255,7 @@ void load(MT::String folder) {
   current_param << FILE(STRING(folder<<"current_param.dat"));
 }
 
-void save(MT::String folder,uint count){
+void save(mlr::String folder,uint count){
   write(LIST<arr>(Q),STRING(folder<<"Q.dat"));
   write(LIST<arr>(Return),STRING(folder<<"Return.dat"));
   write(LIST<arr>(s_Return),STRING(folder<<"s_Return.dat"));
@@ -269,11 +269,11 @@ void save(MT::String folder,uint count){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
-  MT::String folder = MT::getParameter<MT::String>("folder");
+  mlr::initCmdLine(argc,argv);
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
 
   ors::KinematicWorld world(STRING("model.kvg"));
   DoorTask *task = new DoorTask(world);
@@ -285,7 +285,7 @@ int main(int argc,char **argv){
 
   /// ----- load demonstration ---------------------------
   arr Xdemo,Fdemo,Mdemo;
-  if (MT::getParameter<bool>("loadDemoFromFile")) {
+  if (mlr::getParameter<bool>("loadDemoFromFile")) {
     Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
     Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
@@ -327,7 +327,7 @@ int main(int argc,char **argv){
   world.watch(true);
 
   arr costs = sum(fabs(Fdemo),1); costs.flatten();
-  if (MT::getParameter<bool>("MF_restartLearning")) {
+  if (mlr::getParameter<bool>("MF_restartLearning")) {
    if (useRos) {
      mi->gotoPosition(x0);
      mi->executeTrajectory(Xn,duration,true);

@@ -3,13 +3,13 @@
 
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Motion/taskMaps.h>
+
+
+
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>
-#include <Motion/taskMap_proxy.h>
+
 #include <Gui/plot.h>
 #include "../src/gaussian_costs.h"
 #include "../src/rbf_costs.h"

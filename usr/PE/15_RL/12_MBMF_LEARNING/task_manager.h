@@ -13,7 +13,7 @@ struct TaskManager
   uint T;
   double tau;
   ors::KinematicWorld *world;
-  MT::String name;
+  mlr::String name;
   arr constraintTime;
   uint gridSize;
   arr Xdemo;

@@ -12,21 +12,21 @@
 
 void run() {
   rnd.seed(2);
-  bool visTest = MT::getParameter<uint>("visTest");
-  uint verbose = MT::getParameter<uint>("verbose");
+  bool visTest = mlr::getParameter<uint>("visTest");
+  uint verbose = mlr::getParameter<uint>("verbose");
 
   /// create some motion scenes
   MotionFactory* mf = new MotionFactory();
-  MT::Array<Scene > trainScenes;
-  MT::Array<Scene > testScenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene > trainScenes;
+  mlr::Array<Scene > testScenes;
+  mlr::Array<CostWeight> weights;
   mf->costScale=1e2;
-  mf->createScenes(MT::getParameter<uint>("scene"),trainScenes,testScenes,weights);
+  mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,weights);
 //  return;
 
   /// create ikmo problem
 //  arr param = trainScenes(0).paramRef;
-  arr param = ARRAY(1e-2,1e4,1e4,23.);
+  arr param = ARR(1e-2,1e4,1e4,23.);
 
 //  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.flatten();
 //  arr param = ones(trainScenes(0).paramRef.d0,1); param.flatten();
@@ -63,7 +63,7 @@ void run() {
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   run();
   return 0;
 }

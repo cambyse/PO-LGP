@@ -15,12 +15,12 @@
 #include "../../src/plotUtil.h"
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
-  MT::String folder = MT::getParameter<MT::String>("folder");
-  MT::String taskName = MT::getParameter<MT::String>("taskName");
+  mlr::initCmdLine(argc,argv);
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
+  mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
   TaskManager *task;
@@ -39,7 +39,7 @@ int main(int argc,char **argv){
 
   /// ----- load demonstration ---------------------------
   arr Xdemo,Fdemo,Mdemo;
-  if (MT::getParameter<bool>("loadDemoFromFile")) {
+  if (mlr::getParameter<bool>("loadDemoFromFile")) {
     Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
     Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));

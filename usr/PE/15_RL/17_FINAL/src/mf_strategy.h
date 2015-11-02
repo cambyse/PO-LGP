@@ -20,13 +20,13 @@ struct MF_strategy
   char buffer[BUFSIZE+1];
 
   double mu;
-  MF_strategy(uint nParam_, arr &paramLim_, MT::String taskName);
+  MF_strategy(uint nParam_, arr &paramLim_, mlr::String taskName);
   ~MF_strategy();
   void addDatapoint(arr x,arr y, arr ys);
   void evaluate(arr &x_exp);
 
-  void save(MT::String folder);
-  void load(MT::String folder);
+  void save(mlr::String folder);
+  void load(mlr::String folder);
 };
 
 #endif // MF_STRATEGY_H

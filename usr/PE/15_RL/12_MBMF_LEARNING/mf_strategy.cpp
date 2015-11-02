@@ -13,7 +13,7 @@ MF_strategy::MF_strategy(double paramDim,TaskManager &tm)
 void MF_strategy::recomputeCosts(TaskManager &tm, arr &X) {
   /// comp X_grid and F_grid
   String n; n<< "data/"<<tm.name<<"/";
-  if (MT::getParameter<bool>("loadGridFromFile")){
+  if (mlr::getParameter<bool>("loadGridFromFile")){
     F_grid = FILE(STRING(n<<"F_grid"));
     F_grid.flatten();
   } else {
@@ -43,7 +43,7 @@ void MF_strategy::evaluate(arr &Xnext, double &Rnext, arr &data_param, arr &data
   plotGnuplot();
   plotFunctionPrecision(X_grid, P_grid, p_hi, p_lo);
   plot(true);
-  MT::wait(2.);
+  mlr::wait(2.);
 
   plotClear();
   plotGnuplot();

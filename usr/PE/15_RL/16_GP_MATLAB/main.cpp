@@ -18,7 +18,7 @@ double reward(double x) {
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   arr paramLim;
   paramLim.append(~ARR(-6.,3.));
   MF_strategy *mfs = new MF_strategy(1,paramLim);
@@ -34,7 +34,7 @@ int main(int argc,char **argv){
     y = reward(x);
     ys = safety(x);
     cout << x <<" "<<y<<" "<<ys << endl;
-    MT::wait(5.);
+    mlr::wait(5.);
   }
 
   mfs->~MF_strategy();
@@ -59,7 +59,7 @@ int main(int argc,char **argv){
 
   checkGradient(gph, z, 1e-5);
   cout <<gph.fs(NoArr,NoArr,z) << endl;
-  MT::wait();
+  mlr::wait();
   optGradDescent(z,gph,OPT(verbose=2,stopTolerance=1e-3));
   cout << z << endl;
 

@@ -16,12 +16,12 @@ void testBasics() {
   arr param0 = IMP.initParam(InverseMotionProblem::RAND);
   arr param = param0;
 
-  checkAllGradients(IMP,param0,1e-2);
-  optConstrained(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-5,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
+  checkJacobianCP(IMP,param0,1e-2);
+  optConstrainedMix(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-5,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
   IMP.costReport(param,param0);
 
   scenario.setParam(param);
-//  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,MT::getParameter<uint>("IMP/visTest"),0);
+//  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,mlr::getParameter<uint>("IMP/visTest"),0);
   for (uint i =0;i<scenario.scenes.d0;i++){
     mf->execMotion(scenario.scenes(i),NoArr,NoArr,NoArr,1,0);
   }
@@ -37,9 +37,9 @@ void testRbf() {
   arr param0 = IMP.initParam(InverseMotionProblem::RAND);
   arr param = param0;
 
-  checkAllGradients(IMP,param0,1e-2);
+  checkJacobianCP(IMP,param0,1e-2);
 
-  optConstrained(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-5,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
+  optConstrainedMix(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-5,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
   IMP.costReport(param,param0);
 
   scenario.setParam(param);
@@ -58,13 +58,13 @@ void testFeatureSelection() {
   arr param0 = IMP.initParam(InverseMotionProblem::RAND);
   arr param = param0;
 
-  checkAllGradients(IMP,param0,1e-2);
+  checkJacobianCP(IMP,param0,1e-2);
 
-  optConstrained(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-7,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
+  optConstrainedMix(param,NoArr,IMP,OPT(verbose=0,stopTolerance=1e-7,stepInc=2,aulaMuInc=1,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
   IMP.costReport(param,param0);
 
   scenario.setParam(param);
-  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,MT::getParameter<uint>("IMP/visTest"),0);
+  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,mlr::getParameter<uint>("IMP/visTest"),0);
 }
 
 void testDemonstrations() {
@@ -77,23 +77,23 @@ void testDemonstrations() {
   arr param0 = IMP.initParam(InverseMotionProblem::RAND);
   arr param = param0;
 
-  checkAllGradients(IMP,param0,1e-2);
+  checkJacobianCP(IMP,param0,1e-2);
 
   OptOptions o;
   o.stopTolerance = 1e-6; o.constrainedMethod=anyTimeAula; o.verbose=1; o.aulaMuInc=1.01;
-  optConstrained(param,NoArr,IMP,o);
+  optConstrainedMix(param,NoArr,IMP,o);
   IMP.costReport(param,param0);
 
   scenario.setParam(param);
-  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,MT::getParameter<uint>("IMP/visTest"),0);
+  mf->execMotion(scenario.scenes(0),NoArr,NoArr,NoArr,mlr::getParameter<uint>("IMP/visTest"),0);
 }
 
 int main(int argc,char **argv){
   rnd.seed(3);
-  MT::initCmdLine(argc,argv);
-//  TEST(Basics);
+  mlr::initCmdLine(argc,argv);
+  TEST(Basics);
 //  TEST(Rbf);
 //  TEST(FeatureSelection);
-  TEST(Demonstrations);
+//  TEST(Demonstrations);
   return 0;
 }

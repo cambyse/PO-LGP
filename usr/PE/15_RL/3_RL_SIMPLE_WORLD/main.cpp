@@ -30,7 +30,7 @@ void testPathIMP() {
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target1->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target1->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr x(MP.T+1,q.N); x.setZero();
   optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -45,9 +45,9 @@ void testPathIMP() {
   }
 
   /// transform traj
-  MT::Path P(y,2);
+  mlr::Path P(y,2);
   world.gl().add(drawGreenPoints,&(P.points));
-  MT::Path P2(y,2);
+  mlr::Path P2(y,2);
   arr expl = ARR(0.,0.,0.1);
   P2.transform_CurrentFixed_EndBecomes(y[y.d0-1]+expl,0.);
   world.gl().add(drawGreenPoints,&(P2.points));
@@ -76,19 +76,19 @@ void testPathIMP() {
   s.xDem = x2;
   s.x0 = x[0];
 
-  arr param = ARRAY(1e-2,1e2,0.);
+  arr param = ARR(1e-2,1e2,0.);
   param = param/sum(param)*scenario.costScale;
   t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
   t->map.order=2;
-  t->target = ARRAY(0.);
+  t->target = ARR(0.);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
   scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension()));
 
   t =s.MP->addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  t->target = ARRAY(target2->X.pos);
+  t->target = ARR(target2->X.pos);
   scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T-3,s.MP->T),1,3));
   t =s.MP->addTask("pos1", new DefaultTaskMap(posTMT, grasp->index) );
-  t->target = ARRAY(target1->X.pos);
+  t->target = ARR(target1->X.pos);
   scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T-3,s.MP->T),1,3));
 
   scenario.scenes.append(s);
@@ -138,7 +138,7 @@ void testPathBBO() {
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target1->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target1->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr x(MP.T+1,q.N); x.setZero();
   optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -153,9 +153,9 @@ void testPathBBO() {
   }
 
   /// transform traj
-  MT::Path P(y,2);
+  mlr::Path P(y,2);
   world.gl().add(drawGreenPoints,&(P.points));
-  MT::Path P2(y,2);
+  mlr::Path P2(y,2);
   arr expl = ARR(0.,0.,0.1);
   P2.transform_CurrentFixed_EndBecomes(y[y.d0-1]+expl,0.);
 
@@ -217,7 +217,7 @@ void testSplineExploration() {
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target1->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target1->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr x(MP.T+1,q.N); x.setZero();
   optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -235,7 +235,7 @@ void testSplineExploration() {
 //  world.gl().add(drawGreenPoints,&(y));
 
 //  arr ys = y.sub(0,-1,linspace(0,y.d0-1,y.d0-1/2));
-  MT::Spline S(y.d0,y,1);
+  mlr::Spline S(y.d0,y,1);
   arr m = linspace(0,1,20); m.flatten();
   arr z;
   for (uint i=0;i<m.d0;i++) {
@@ -243,13 +243,13 @@ void testSplineExploration() {
   }
   cout << m << endl;
 
-  MT::Spline S2(z.d0,z,2);
+  mlr::Spline S2(z.d0,z,2);
   arr e = S2.eval();
   arr n = linspace(0,1,50);n.flatten();
 
   /// add exploration
-  MT::Spline S3(z.d0,z,2);
-  S3.points[3] = S3.points[3] + ARRAY(0.01,0.01,0.01);
+  mlr::Spline S3(z.d0,z,2);
+  S3.points[3] = S3.points[3] + ARR(0.01,0.01,0.01);
 
   arr l2,l3;
   for (uint i=0;i<n.d0;i++) {
@@ -273,8 +273,8 @@ double reward(const arr &x, ors::KinematicWorld &world) {
   world.setJointState(x[x.d0-1]);
 
   // distance to goal
-  arr y = ARRAY(world.getShapeByName("endeff")->X.pos);
-  arr g = ARRAY(world.getBodyByName("target1")->X.pos);
+  arr y = ARR(world.getShapeByName("endeff")->X.pos);
+  arr g = ARR(world.getBodyByName("target1")->X.pos);
   r += sum(fabs(y-g));
 
   // length of motion
@@ -303,9 +303,9 @@ void TEST(SimpleWorld) {
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos1", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target1->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target1->X.pos),1e2);
   t =MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T*.5-3,MP.T*.5,ARRAY(target2->X.pos),1e1);
+  t->setCostSpecs(MP.T*.5-3,MP.T*.5,ARR(target2->X.pos),1e1);
   MotionProblemFunction MPF(MP);
   arr x(MP.T+1,q.N); x.setZero();
   optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -325,7 +325,7 @@ void TEST(SimpleWorld) {
   cout << "reward xNew: " << reward(xNew,world) << endl;
 
   arr y_trans;
-  tf.transform(y,ARRAY(0.01,0.01,0.01),y_trans,0.5,.04);
+  tf.transform(y,ARR(0.01,0.01,0.01),y_trans,0.5,.04);
   world.gl().add(drawRedLine,&(y_trans));
   world.gl().add(drawBlueLine,&(y));
 
@@ -375,26 +375,26 @@ void TEST(SimpleWorld) {
 
 int main(int argc,char **argv){
   rnd.seed(3);
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   TEST(SimpleWorld);
   return 0;
 }
 
 
 // subsampled splines
-//MT::Spline S(y.d0,y,1);
+//mlr::Spline S(y.d0,y,1);
 //arr m = linspace(0,1,10); m.flatten();
 //arr z;
 //for (uint i=0;i<m.d0;i++) {
 //  z.append(~S.eval(m(i)));
 //}
 
-//MT::Spline S2(z.d0,z,2);
+//mlr::Spline S2(z.d0,z,2);
 //arr n = linspace(0,1,50);n.flatten();
 
 ///// add exploration
-//MT::Spline S3(z.d0,z,2);
-//S3.points[3] = S3.points[3] + ARRAY(0.01,0.01,0.01);
+//mlr::Spline S3(z.d0,z,2);
+//S3.points[3] = S3.points[3] + ARR(0.01,0.01,0.01);
 
 //arr l2,l3;
 //for (uint i=0;i<n.d0;i++) {

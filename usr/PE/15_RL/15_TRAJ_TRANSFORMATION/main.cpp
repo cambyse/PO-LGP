@@ -17,8 +17,8 @@
 #include <System/engine.h>
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
-  bool useRos = MT::getParameter<bool>("useRos");
+  mlr::initCmdLine(argc,argv);
+  bool useRos = mlr::getParameter<bool>("useRos");
   ors::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
   arr X;
@@ -49,14 +49,14 @@ int main(int argc,char **argv){
 
 //    arr R;
 //    R = ec1->X.rot.getArr();
-//    R[0] =  ARRAY(ec1->X.rot.getX());
-//    R[1] =  ARRAY(ec1->X.rot.getY());
-//    R[2] =  ARRAY(ec1->X.rot.getZ());
+//    R[0] =  ARR(ec1->X.rot.getX());
+//    R[1] =  ARR(ec1->X.rot.getY());
+//    R[2] =  ARR(ec1->X.rot.getZ());
 //    R=~R;
 //    handle->X.rot.setMatrix(R.p);
 
     handle->X.rot = ec1->X.rot;
-    double d = length(ARRAY(ec1->X.pos-ec2->X.pos));
+    double d = length(ARR(ec1->X.pos-ec2->X.pos));
     double h = .029;
     double w = sqrt(d*d-h*h);
     double alpha = acos(w/d)*180./M_PI;

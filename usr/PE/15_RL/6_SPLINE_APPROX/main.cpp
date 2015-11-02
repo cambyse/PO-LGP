@@ -7,7 +7,7 @@
 #include <Motion/taskMaps.h>
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// create reference motion
   ors::KinematicWorld world("test.ors");
@@ -25,27 +25,27 @@ int main(int argc,char **argv){
   t->map.order=1;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos1", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T*.5,MP.T*.5,ARRAY(target->X.pos),1e2);
+  t->setCostSpecs(MP.T*.5,MP.T*.5,ARR(target->X.pos),1e2);
   t =MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target2->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target2->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr X(MP.T+1,q.N); X.setZero();
   optConstrainedMix(X, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 
-//  X = ~ARRAY(0.,0.);
-//  X.append(ARRAY(0.5,1.0));
-//  X.append(ARRAY(1.2,2.));
-//  X.append(ARRAY(2., 0.5));
-//  X.append(ARRAY(3.,0.8));
-//  X.append(ARRAY(4.,1.8));
-//  X.append(ARRAY(7.,2.));
+//  X = ~ARR(0.,0.);
+//  X.append(ARR(0.5,1.0));
+//  X.append(ARR(1.2,2.));
+//  X.append(ARR(2., 0.5));
+//  X.append(ARR(3.,0.8));
+//  X.append(ARR(4.,1.8));
+//  X.append(ARR(7.,2.));
 
   uint T = X.d0-1;
   uint D = 10;
 
   arr Y = zeros(D,2);
   uint k = 1;
-  MT::Spline S(T,Y,k);
+  mlr::Spline S(T,Y,k);
   arr A = S.basis;
 
   double w = 1e3;
@@ -57,7 +57,7 @@ int main(int argc,char **argv){
   AA[AA.d0-1] = AA[AA.d0-1]*sqrt(w);
 
   arr beta = inverse(~AA*AA)*~AA*XX;
-  MT::Spline S2(100,beta,k);
+  mlr::Spline S2(100,beta,k);
   arr path = S2.eval();
 
   arr Xres;

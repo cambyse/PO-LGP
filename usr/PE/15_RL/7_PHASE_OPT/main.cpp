@@ -8,7 +8,7 @@
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// create reference motion
   ors::KinematicWorld world("test.ors");
@@ -25,7 +25,7 @@ int main(int argc,char **argv){
   t->map.order=1;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
-  t->setCostSpecs(MP.T-3,MP.T,ARRAY(target->X.pos),1e2);
+  t->setCostSpecs(MP.T-3,MP.T,ARR(target->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr X(MP.T+1,q.N); X.setZero();
   optConstrainedMix(X, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
@@ -39,7 +39,8 @@ int main(int argc,char **argv){
   uint k = 3;
   PhaseOptimization P(X,k,1);
   arr sOpt = P.getInitialization();
-  checkAllGradients(Convert(P), sOpt, 1e-3);
+  checkGradient(Convert(P), sOpt, 1e-3);
+//  checkAllGradients(
   optConstrained(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=1e-4));
   arr Xres;
   P.getSolution(Xres,sOpt);

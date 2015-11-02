@@ -19,13 +19,13 @@
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
-  MT::String folder = MT::getParameter<MT::String>("folder");
-  MT::String taskName = MT::getParameter<MT::String>("taskName");
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
+  mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
   ors::KinematicWorld world(STRING("../model.kvg"));
   Motion_Interface *mi;
@@ -54,7 +54,7 @@ int main(int argc,char **argv){
   double y, ys;
 
   uint count;
-  if (MT::getParameter<bool>("MF_restartLearning")) {
+  if (mlr::getParameter<bool>("MF_restartLearning")) {
     x = ARR(0.0,0.); x.flatten();
 
     task->transformTrajectory(Xn,x,Xdemo);

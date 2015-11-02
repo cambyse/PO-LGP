@@ -2,9 +2,9 @@
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+
+
 #include <Motion/feedbackControl.h>
 #include <vector>
 #include <future>
@@ -273,8 +273,8 @@ void simpleMotion(){
   MotionProblem MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
-  arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
+  arr refGoal1 = ARR(MP.world.getBodyByName("goal1")->X.pos);
+  arr refGoal2 = ARR(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);

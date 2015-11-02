@@ -1,6 +1,6 @@
 #include "mbmfl.h"
 
-MBMFL::MBMFL(MT::String name_):name(name_)
+MBMFL::MBMFL(mlr::String name_):name(name_)
 {
 }
 

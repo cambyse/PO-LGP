@@ -9,7 +9,7 @@
 #include "../src/phase_optimization.h"
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// create reference motion
   ors::KinematicWorld world("test.ors");
@@ -21,15 +21,15 @@ int main(int argc,char **argv){
   MPref.tau = 0.01;
   ors::Shape *grasp = world.getShapeByName("endeff");
   Task *t;
-  arr timepoints = ARRAY(20.,30.,40.,50.);
+  arr timepoints = ARR(20.,30.,40.,50.);
   t = MPref.addTask("tra", new TransitionTaskMap(world));
   t->map.order=1;
   t->setCostSpecs(0, MPref.T, ARR(0.), 1e-1);
 
   for (uint i=0;i<timepoints.d0;i++) {
-      MT::String str; str << "target" <<i;
+      mlr::String str; str << "target" <<i;
       t =MPref.addTask(str, new DefaultTaskMap(posTMT, grasp->index) );
-      t->setCostSpecs(timepoints(i),timepoints(i),ARRAY(world.getBodyByName(str)->X.pos),1e3);
+      t->setCostSpecs(timepoints(i),timepoints(i),ARR(world.getBodyByName(str)->X.pos),1e3);
   }
 
 
@@ -219,7 +219,7 @@ int main(int argc,char **argv){
 
   arr Y = zeros(D,2);
   uint k = 1;
-  MT::Spline S(T,Y,k);
+  mlr::Spline S(T,Y,k);
   arr A = S.basis;
 
   double w = 1e3;
@@ -231,7 +231,7 @@ int main(int argc,char **argv){
   AA[AA.d0-1] = AA[AA.d0-1]*sqrt(w);
 
   arr beta = inverse(~AA*AA)*~AA*XX;
-  MT::Spline S2(100,beta,k);
+  mlr::Spline S2(100,beta,k);
   arr path = S2.eval();
 
   arr Xres;

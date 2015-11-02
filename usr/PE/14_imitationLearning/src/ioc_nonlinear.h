@@ -5,9 +5,9 @@
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
+#include <Motion/taskMaps.h>
+
+
 #include <Motion/feedbackControl.h>
 #include <vector>
 #include <future>

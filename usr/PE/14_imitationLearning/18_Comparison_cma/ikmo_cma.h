@@ -74,8 +74,8 @@ struct Scene {
 };
 
 struct IKMO:ConstrainedProblem {
-  MT::Array<Scene> scenes;
-  MT::Array<CostWeight> weights;
+  mlr::Array<Scene> scenes;
+  mlr::Array<CostWeight> weights;
   uint nX,nT,nP; // number of joints,timesteps,parameters
   uintA phi_perm;
   uint numLambda;
@@ -90,7 +90,7 @@ struct IKMO:ConstrainedProblem {
   /// constant matrices for the linear weight function
   arr dwC,HwC;
 
-  IKMO(MT::Array<Scene> &_scenes, MT::Array<CostWeight> &_weights,uint _nP,double _costScale);
+  IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP,double _costScale);
 
   /// set the cost parameter of the motion problem
   void setParam(MotionProblem &MP,const arr &param);
