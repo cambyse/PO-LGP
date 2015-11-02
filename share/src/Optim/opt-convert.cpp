@@ -227,7 +227,9 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
     if(dim_z) Jzaux->computeColPatches(false);
   }
 
-  H.clear();
+  if(&H) {
+    H.clear();
+  }
 }
 
 ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f){
