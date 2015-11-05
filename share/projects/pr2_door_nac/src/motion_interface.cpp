@@ -7,7 +7,7 @@ Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
 {
   world = new ors::KinematicWorld(world_);
   world->q = world_.q;
-  engine().open(S);
+  threadOpenModules(true);
 
   useBase = false;
   useTorso = false;

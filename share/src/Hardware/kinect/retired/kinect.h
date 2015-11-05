@@ -7,21 +7,21 @@
 #define Kinect_image_width 640
 #define Kinect_image_height 480
 
-struct KinectPoller : Module {
-  struct sKinectPoller *s;
+struct KinectThread : Module {
+  struct sKinectThread *s;
 
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
 
-  KinectPoller();
-  virtual ~KinectPoller();
+  KinectThread();
+  virtual ~KinectThread();
 
   void open();
   void step();
   void close();
 };
 
-namespace MLR {
+namespace mlr {
   /// convert raw image data into depth and color arrays like in a pointcloud
   void images2pointcloud(byteA& rgb, uint16A& depth, arr& pts, arr& cols);
 

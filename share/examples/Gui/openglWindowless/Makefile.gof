@@ -1,4 +1,4 @@
-BASE = ../../../share
+BASE = ../../..
 
 LIBS += -lpthread
 GL = 1

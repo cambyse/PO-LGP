@@ -138,12 +138,12 @@ void scenario1() {
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position_vel", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
@@ -192,12 +192,12 @@ void scenario2() {
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
@@ -292,13 +292,13 @@ void scenario3() {
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
+  c->setCostSpecs(P.T, P.T, goalRef, 1e4);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.,0.,0.}, 1e4);
+  c->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
   c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   c->map.order=1;
   P.setInterpolatingCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);

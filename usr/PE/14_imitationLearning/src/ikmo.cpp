@@ -539,16 +539,16 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
 
 void IKMO::setParam(MotionProblem &MP, const arr &param)
 {
-  for (uint c=0;c<MP.taskCosts.N;c++) {
-    if (MP.taskCosts(c)->map.type == sumOfSqrTT) {
+  for (uint c=0;c<MP.tasks.N;c++) {
+    if (MP.tasks(c)->map.type == sumOfSqrTT) {
       arr w;
       weights(c).compWeights(w,NoArr,NoArr,param.subRange(c,c+weights(c).numParam - 1),true);
       if (weights(c).type==CostWeight::Dirac){
-        MP.taskCosts(c)->prec(weights(c).fixedParam(0)) = fabs(w(0));
+        MP.tasks(c)->prec(weights(c).fixedParam(0)) = fabs(w(0));
       }else {
-        MP.taskCosts(c)->prec = fabs(w);
+        MP.tasks(c)->prec = fabs(w);
       }
-//      cout << MP.taskCosts(c)->prec << endl;
+//      cout << MP.tasks(c)->prec << endl;
     }
   }
 }

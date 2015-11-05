@@ -10,7 +10,7 @@ void gripper() {
   auto& m = *activity.machine;
 
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   auto target = m.s->world.getShapeByName("mymarker")->X;
   cout << target << endl;
@@ -19,7 +19,7 @@ void gripper() {
   activity.machine->waitForActionCompletion(open_left);
   activity.machine->waitForActionCompletion(open_right);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //==============================================================================
@@ -29,7 +29,7 @@ void grap_the_marker() {
   auto& m = *activity.machine;
 
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   Action* open_right = new OpenGripper(m, Side::RIGHT);
   // m.waitForActionCompletion(open_right);
@@ -49,14 +49,14 @@ void grap_the_marker() {
 
   m.waitForActionCompletion(open_right);
   m.waitForActionCompletion(pose_to);
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //==============================================================================
 void TEST(Dance) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   for(int i = 0; i < 2; ++i) {
     Action* a_right = new MoveEffTo(*activity.machine, "endeffR", {.6, -.5, 1.2});
@@ -70,7 +70,7 @@ void TEST(Dance) {
     activity.machine->waitForActionCompletion(a_right2);
   }
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
@@ -78,7 +78,7 @@ void TEST(Dance) {
 void TEST(FollowTrajectory) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   // first construct the trajectory
   arr q = interpolate_trajectory({.6, -.5, 1.2}, {.6, .6, 1.2}, 100);
@@ -92,14 +92,14 @@ void TEST(FollowTrajectory) {
   cout <<"I'm here...waiting" <<endl;
   mlr::wait(7.);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void TEST(Push) {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   Action *a, *b;
 
@@ -142,14 +142,14 @@ void TEST(Push) {
 //  activity.machine->waitForActionCompletion(push);
 
   mlr::wait(1.);
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void idle() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   Action* right = new MoveEffTo(*activity.machine, "endeffR", {.95, -.2, .9});
   Action* left = new MoveEffTo(*activity.machine, "endeffL", {.95, .2, .9});
@@ -161,27 +161,27 @@ void idle() {
   // activity.machine->waitForActionCompletion(align_right);
   // activity.machine->waitForActionCompletion(align_left);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void test_collision() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
   new MoveEffTo(*activity.machine, "endeffR", {.8, .1, .9});
   new MoveEffTo(*activity.machine, "endeffL", {.8, -.1, .9});
   activity.machine->waitForActionCompletion();
   cout << "actions done" << endl;
   mlr::wait(5);
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void idle2() {
   ActionSystem activity;
   new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   auto t = new OrientationQuat(*activity.machine, "endeffR", {1., 1., 0., 0.});
   activity.machine->waitForActionCompletion(t);
@@ -198,14 +198,14 @@ void idle2() {
   // new AlignEffTo(*activity.machine, "endeffR", {1, 0, 0.}, {1, 0, 0});
   // activity.machine->waitForActionCompletion();
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void test_record() {
   ActionSystem activity;
   Action *core = new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   Action *t = new Relax(*activity.machine, "relax");
   core->active = false;
@@ -234,14 +234,14 @@ void test_record() {
   write(LIST<arr>(trajX),"trajX.data");
   write(LIST<arr>(trajQ),"trajQ.data");
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 //===========================================================================
 void test_replay() {
   ActionSystem activity;
   Action *core = new CoreTasks(*activity.machine);
-  engine().open(activity);
+  threadOpenModules(true);
 
   arr trajX;
   trajX << FILE("trajX.data");
@@ -260,7 +260,7 @@ void test_replay() {
   cout <<"Execute trajectory" <<endl;
   mlr::wait(10.);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 

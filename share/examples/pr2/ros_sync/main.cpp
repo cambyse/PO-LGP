@@ -1,16 +1,16 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
 
 // =================================================================================================
-struct MySystem:System {
+struct MySystem {
   ACCESS(CtrlMsg, ctrl_obs)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-    connect();
+    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+    addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+    //connect();
   }
 };
 
@@ -20,7 +20,7 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
   MySystem system;
-  engine().open(system);
+  threadOpenModules(true);
 
   ors::KinematicWorld world("model.kvg");
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv){
     mlr::wait(0.01);
   }
 
-  engine().close(system);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
   return 0;
 }

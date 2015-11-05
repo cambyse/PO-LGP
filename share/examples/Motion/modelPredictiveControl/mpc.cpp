@@ -24,7 +24,7 @@ x(_x)
 void MPC::replan(arr &_goal, arr &_q) {
   P.T = P.T - 1;
 
-  P.taskCosts.clear();
+  P.tasks.clear();
 
   x_bk.append(~_q);
 

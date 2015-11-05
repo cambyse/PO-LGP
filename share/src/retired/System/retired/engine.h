@@ -106,7 +106,7 @@ struct System:ModuleL{
   /** instantiate all the necessary variables for the list of modules, i.e.,
    *  check all accesses they have, match their names and types, create
    *  the necessary variables, and link the accesses to them  */
-  void connect();
+  void //connect();
 
   // [sort of private] check if Variable with variable_name and acc.type exists; if not, create one; then connect
   RevisionedAccessGatedClass* connect(Access& acc, const char *variable_name);
@@ -141,7 +141,7 @@ struct Engine{
   void close(System& S=NoSystem);
   void cancel(System& S=NoSystem);
 
-  void waitForShutdownSignal(){ shutdown.waitForValueGreaterThan(0); }
+  void waitForShutdownSignal(){ shutdown().waitForValueGreaterThan(0); }
 
   /// @name event control
   void enableAccessLog();

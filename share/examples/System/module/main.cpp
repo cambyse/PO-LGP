@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/graphview.h>
 #include <Core/module.h>
 
@@ -31,7 +31,7 @@ void way1(){
 
 //  Module *m = S.addModule<ComputeSum> ("funnyName");
   Module *m = S.addModule("ComputeSum", "funnyName");
-  S.connect(); //this will create the respective variables!
+  //S.connect(); //this will create the respective variables!
   cout <<S <<endl;
 
   Access_typed<arr> x = S.getConnectedAccess<arr>("x");
@@ -68,12 +68,12 @@ void way1(){
 // direct execution - way2
 //
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(arr, x);
   ACCESS(double, s);
   MySystem():System("hallo"){
     addModule<ComputeSum> ("funnyName");
-    connect(); //this will create the respective variables!
+    //connect(); //this will create the respective variables!
   }
 };
 
@@ -105,7 +105,7 @@ void TEST(SystemConnect) {
 
   cout <<S <<endl;
 
-  S.connect();
+  //S.connect();
   cout <<S <<endl;
 
   engine().test(S);

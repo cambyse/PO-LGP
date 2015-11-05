@@ -26,7 +26,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
@@ -47,7 +47,7 @@ arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
   Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 

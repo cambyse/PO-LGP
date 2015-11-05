@@ -7,7 +7,7 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
   world = new ors::KinematicWorld(world_);
   world->q = world_.q;
 
-  threadOpenModules(true); //engine().open(S);
+  threadOpenModules(true); //threadOpenModules(true);
 
   useRos = mlr::getParameter<bool>("useRos");
   fixBase = mlr::getParameter<bool>("fixBase",true);

@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/joystick/joystick.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -32,20 +32,20 @@
 ///////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module::loopWithBeat, .01);
+    addModule<JoystickInterface>(NULL, /*Module::loopWithBeat,*/ .01);
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -57,7 +57,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
  // ors::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
@@ -295,7 +295,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 }
 data.close();
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 
 

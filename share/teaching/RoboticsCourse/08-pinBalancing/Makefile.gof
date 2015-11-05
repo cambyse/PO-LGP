@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Ors Core Gui extern_SWIFT
+DEPEND = Geo Ors Core Gui extern_SWIFT
 
 GL = 1
 

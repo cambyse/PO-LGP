@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/graphview.h>
 #include <Perception/perception.h>
 
@@ -8,15 +8,15 @@ void TEST(ModuleVision) {
   System S;
   S.addModule<OpencvCamera>(NULL, Module::loopFull);
   S.addModule<Patcher>(NULL, {"rgb", "patches"});
-  S.addModule<ImageViewer>(NULL, {"rgb"});
+  new ImageViewer("rgb");
   S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
-  S.connect();
+  //S.connect();
 
   cout <<S <<endl;
 
-  engine().open(S);
-  engine().waitForShutdownSignal();
-  engine().close(S);
+  threadOpenModules(true);
+  shutdown().waitForValueGreaterThan(0);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }

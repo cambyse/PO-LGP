@@ -17,8 +17,8 @@ struct MySystem {
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
 #else
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
 #endif
     }
     //connect();
@@ -37,7 +37,7 @@ struct TrajectoryInterface {
   arr logXdes,logXact,logFLact,logTact,logUact,logMact;
 
   TrajectoryInterface(ors::KinematicWorld &world_);
-  ~TrajectoryInterface(){ threadCloseModules(); } //engine().close(S); }
+  ~TrajectoryInterface(){ threadCloseModules(); } //threadCloseModules(); }
 
   /// execute trajectory X in T seconds
   void executeTrajectory(arr &X, double T, bool recordData = false);

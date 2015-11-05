@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/array.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
 #include <Hardware/gamepad/gamepad.h>
@@ -71,24 +71,24 @@ struct ActionMachine : Module {
 
 //===========================================================================
 
-struct ActionSystem : System{
+struct ActionSystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   ActionMachine *machine;
   ActionSystem() : machine(NULL) {
-    machine = addModule<ActionMachine>(NULL, Module::loopWithBeat, .01);
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
+    machine = addModule<ActionMachine>(NULL, /*Module::loopWithBeat,*/ .01);
+    new GamepadInterface;
 
     if(mlr::getParameter<bool>("useRos", false)) {
       cout << "USING ROS" <<endl;
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
 #ifdef MLR_ROS
-      addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.1);
+      addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.1);
 #endif
-      // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-    connect();
+    //connect();
   }
 };

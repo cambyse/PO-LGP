@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -12,19 +12,19 @@
 #include <pr2/rosmacro.h>
 
 
-struct MySystem:System{
+struct MySystem{
     ACCESS(SoftHandMsg,sh_ref)
   MySystem(){
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
     addModule<RosCom_SoftHandSync>(NULL, Module::loopWithBeat,.1);
-    connect();
+    //connect();
   }
 };
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
 
   SoftHandMsg grasp("medium wrap");
   SoftHandMsg deflate("deflate");

@@ -4,13 +4,13 @@
 
 void lib_hardware_kinect(){ MLR_MSG("loading"); }
 
-REGISTER_MODULE(KinectPoller)
+REGISTER_MODULE(KinectThread)
 
 const unsigned int image_width = 640; //kinect resolution
 const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
 
-namespace MLR {
+namespace mlr {
   Freenect::Freenect receiver_freenect;
 
   class sKinectCallbackReceiver : public Freenect::FreenectDevice {
@@ -89,10 +89,10 @@ namespace MLR {
 // C++ interface to kinect: overloading callbacks that directly access the variables
 //
 
-struct sKinectPoller : Freenect::FreenectDevice {
-  KinectPoller *module;
+struct sKinectThread : Freenect::FreenectDevice {
+  KinectThread *module;
 
-  sKinectPoller(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
+  sKinectThread(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
   }
 
   void DepthCallback(void *depth, uint32_t timestamp) {
@@ -116,19 +116,19 @@ struct sKinectPoller : Freenect::FreenectDevice {
 
 Freenect::Freenect *freenect = NULL;
 
-KinectPoller::KinectPoller() : Module("KinectPoller"), s(NULL){
+KinectThread::KinectThread() : Module("KinectThread"), s(NULL){
 }
 
-KinectPoller::~KinectPoller() {
+KinectThread::~KinectThread() {
 }
 
-void KinectPoller::open() {
-  cout <<"KinectPoller opening..." <<endl;
+void KinectThread::open() {
+  cout <<"KinectThread opening..." <<endl;
   kinect_rgb.set()->resize(image_height, image_width, 3);
   kinect_depth.set()->resize(image_height, image_width);
 
   if(!freenect) freenect = new Freenect::Freenect;
-  s = &(freenect->createDevice<sKinectPoller>(0));
+  s = &(freenect->createDevice<sKinectThread>(0));
   s->module = this;
 
   s->startVideo();
@@ -136,11 +136,11 @@ void KinectPoller::open() {
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration
 }
 
-void KinectPoller::step() {
+void KinectThread::step() {
   //s->updateState(); //actually I think this step routine is redundant because the callback access the variable and fire its revision
 }
 
-void KinectPoller::close() {
+void KinectThread::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);

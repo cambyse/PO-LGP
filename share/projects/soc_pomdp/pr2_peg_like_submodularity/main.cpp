@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 //#include <Hardware/joystick/joystick.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   //ACCESS(arr, joystickState);
@@ -47,7 +47,7 @@ struct MySystem:System{
       addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
       addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 
   for(uint i=0;i<10;i++){
       MySystem S;
-      engine().open(S);
+      threadOpenModules(true);
       //makeConvexHulls(world.shapes);
 
       world >>FILE("z.ors");
@@ -526,7 +526,7 @@ int main(int argc, char** argv)
       cout<<"DONE: " <<endl;
 
 
-       engine().close(S);
+       threadCloseModules();
 
     }
 

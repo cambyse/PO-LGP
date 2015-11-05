@@ -1,19 +1,19 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/rosalvar.h>
 
 // =================================================================================================
-struct MySystem:System {
+struct MySystem {
   // Access Variables
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(AlvarMarkers, ar_pose_marker)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-    addModule<ROSSUB_ar_pose_marker>(NULL, Module::listenFirst);
-    connect();
+    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+    addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+    addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
+    //connect();
   }
 };
 
@@ -26,7 +26,7 @@ int main(int argc, char** argv){
 
   ors::KinematicWorld world("model.kvg");
   MySystem system;
-  engine().open(system);
+  threadOpenModules(true);
 
   initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
   for (int i = 0; true; i++) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv){
     mlr::wait(0.01);
   }
 
-  engine().close(system);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
   return 0;
 }

@@ -1,5 +1,5 @@
 #include <Hardware/G4/G4.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 
 void miniTest(){
   G4Poller g4;
@@ -18,8 +18,8 @@ void miniTest(){
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Poller", "G4Poller", Module::loopWithBeat, .001);
-    connect();
+    addModule("G4Poller", "G4Poller", /*Module::loopWithBeat,*/ .001);
+    //connect();
   }
 };
 
@@ -39,12 +39,12 @@ void serialRun(){
 void threadedRun(){
   G4System S;
 
-  engine().open(S);
+  threadOpenModules(true);
   for(uint i=0;i<10;i++){
     S.currentPoses.var->waitForNextRevision();
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
-  engine().close(S);
+  threadCloseModules();
 }
 
 int main(int argc, char **argv) {
