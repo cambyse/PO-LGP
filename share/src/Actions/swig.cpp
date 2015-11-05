@@ -99,14 +99,14 @@ struct SwigSystem {
 
   SwigSystem(): _log("SwigSystem"){
 
-//    addModule<PerceptionObjects2Ors>(NULL, Module::listenFirst);
+//    addModule<PerceptionObjects2Ors>(NULL /*,Module::listenFirst*/ );
 
     if(mlr::getParameter<bool>("useRos",false)){
       rosCheckInit("SwigSystem");
       new RosCom_Spinner();
-      //addModule<ROSSUB_ar_pose_marker>(NULL, Module::loopWithBeat, 0.05);
-      //addModule<ROSSUB_perceptionObjects>(NULL, Module::loopWithBeat, 0.02);
-      // addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
+      //addModule<ROSSUB_perceptionObjects>(NULL, /*Module::loopWithBeat,*/ 0.02);
+      // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
 
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);

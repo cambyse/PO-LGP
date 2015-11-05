@@ -64,13 +64,13 @@ void circle_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-  //  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e4);
+  //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
   c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
   c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -168,13 +168,13 @@ void star_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
   c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -273,13 +273,13 @@ void eight_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
   c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)

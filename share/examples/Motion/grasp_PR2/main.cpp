@@ -101,19 +101,19 @@ void TEST(PickAndPlace){
 
   //-- setup new motion problem
   MP.prefix.clear();
-  listDelete(MP.taskCosts);
+  listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
   Task *c;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
+  c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
   c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
+  c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory
   for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
@@ -132,18 +132,18 @@ void TEST(PickAndPlace){
 
   //-- setup new motion problem
   MP.prefix.clear();
-  listDelete(MP.taskCosts);
+  listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
+  c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
   c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
+  c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory
   for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;

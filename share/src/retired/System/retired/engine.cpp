@@ -256,7 +256,7 @@ void System::connect(){
 }
 
 void System::run(bool waitForOpened){
-  connect();
+  //connect();
 
   signal(SIGINT, signalhandler);
 
@@ -325,7 +325,7 @@ Engine::~Engine(){
 void Engine::open(System& S, bool waitForOpened){
   system = &S;
 
-  S.connect();
+  //S.connect();
 
   signal(SIGINT, signalhandler);
 

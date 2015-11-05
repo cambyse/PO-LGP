@@ -88,7 +88,7 @@ void displayData(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
   arr pts;
   arr cols;
-  MLR::depthData2pointCloud(pts, kinect_depth);
+  mlr::depthData2pointCloud(pts, kinect_depth);
   cols.resizeAs(pts);
 
   int width=kinect_depth.d1;

@@ -22,29 +22,29 @@ void TEST(ModuleVision) {
 //  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
 //  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, {"features"});
 
-  //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module::listenFirst);
-  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"}, Module::listenFirst);
+  //  S.addModule("VideoEncoder", NULL, {"rgb"} /*,Module::listenFirst*/ );
+  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"} /*,Module::listenFirst*/ );
 
-  S.connect();
+  //S.connect();
 
   cout <<S <<endl;
 
-  engine().enableAccessLog();
-//  engine().mode=Engine::serial;
-  engine().mode=Engine::threaded;
+  //engine().enableAccessLog();
+//  //engine().mode=Engine::serial;
+  //engine().mode=Engine::threaded;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   Graph g = S.graph();
 //  GraphView gv(g); gv.update();
 
-  if(engine().mode==Engine::serial){
+  if(//engine().mode==Engine::serial){
     for(uint i=0;i<100;i++){ engine().step(S); }
   }else{
     mlr::wait(60.);
   }
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }

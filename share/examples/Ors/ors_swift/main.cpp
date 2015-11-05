@@ -1,6 +1,7 @@
 #include <Ors/ors.h>
 #include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
+#include <Geo/qhull.h>
 
 void drawInit(void*){
   glStandardLight(NULL);

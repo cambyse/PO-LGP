@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Motion Core Ors Gui Optim Algo
+DEPEND = Motion Core Geo Ors Gui Optim Algo
 GL = 1
 LIBS += -lGL
 include $(BASE)/gofMake/generic.mk

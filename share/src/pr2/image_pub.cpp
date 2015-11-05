@@ -26,7 +26,7 @@ using namespace camera_info_manager;
 #include <sstream>
 #include <time.h>
 
-namespace MLR {
+namespace mlr {
 
   struct sImagePublisher {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT

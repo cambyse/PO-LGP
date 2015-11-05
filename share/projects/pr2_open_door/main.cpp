@@ -1,6 +1,6 @@
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -9,17 +9,17 @@
 #include <Motion/taskMaps.h>
 #include <Algo/spline.h>
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, marker_pose);
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ARMarkerSync>(NULL, Module::loopWithBeat, 1.);
+      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      addModule<RosCom_ARMarkerSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -160,7 +160,7 @@ void transPR2Plan(mlr::Array<mlr::String> &act_joints, ors::KinematicWorld &w_pr
 
 void run(){
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
   ors::KinematicWorld world_plan("model_reduced.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
 
@@ -292,7 +292,7 @@ void run(){
     t = t + mlr::timerRead(true);
   }
 
-  engine().close(S);
+  threadCloseModules();
 }
 
 

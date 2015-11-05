@@ -1,5 +1,5 @@
 #include <Core/module.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/graphview.h>
 //#include <biros/biros_views.h>
 
@@ -27,9 +27,9 @@ REGISTER_MODULE(PairSorter)
 void TEST(ModuleSorter){
   uint N=20;
 
-  engine().enableAccessLog();
-  //engine().mode=Engine::serial;
-  engine().mode=Engine::threaded;
+  //engine().enableAccessLog();
+  ////engine().mode=Engine::serial;
+  //engine().mode=Engine::threaded;
 
   cout <<registry() <<endl <<"----------------------------" <<endl;
   System S;
@@ -38,12 +38,12 @@ void TEST(ModuleSorter){
   for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {i-1, i});
 #else
   for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {STRING("int"<<i-1),STRING("int"<<i)});
-  S.connect();
+  //S.connect();
 #endif
 
   cout <<S <<endl;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   //new InsideOut();                 //create an explicit view
 
@@ -51,13 +51,13 @@ void TEST(ModuleSorter){
   for(uint i=0;i<N;i++) S.getVar<int>(i)->set() = mlr::rnd(100);
 
   for(uint k=0;k<20;k++){
-    if(engine().shutdown.getValue()) break;
+    if(shutdown().getValue()) break;
     for(uint i=0;i<N;i++) cout <<S.getVar<int>(i)->get() <<' ';  cout <<endl;
     engine().step(S);
     mlr::wait(.1);
   }
 
-  engine().close(S);
+  threadCloseModules();
 
   Graph g = S.graph();
   GraphView gv(g);

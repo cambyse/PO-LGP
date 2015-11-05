@@ -5,7 +5,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-namespace MLR { namespace PCL {
+namespace mlr { namespace PCL {
 typedef void (cb_pcl_rgba) (const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr&);
 
 struct sFromROS;
