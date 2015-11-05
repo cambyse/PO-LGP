@@ -20,8 +20,11 @@ To use the gof (good old-fashioned) Makefiles,
 
 	cd share; bin/createMakefileLinks.sh
 
-In 'share/gofMake/config.mk' you can change the compile settings (un)set
-dependencies.
+Also,
+
+	cd share/gofMake; cp config.mk.default config.mk
+	
+and edit the latter to change the compile settings, e.g., (un)set dependencies.
 
 
 

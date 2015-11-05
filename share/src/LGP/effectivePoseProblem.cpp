@@ -61,13 +61,14 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
   effKinematics.getJointState(x0);
 }
 
-void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
+void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x){
   effKinematics.setJointState(x);
   if(verbose>1) effKinematics.gl().timedupdate(.1);
   if(verbose>2) effKinematics.gl().watch();
 
   phi.clear();
   if(&phiJ) phiJ.clear();
+  if(&H) H.clear();
   if(&tt) tt.clear();
 
   arr y,J;
