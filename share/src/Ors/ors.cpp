@@ -475,7 +475,7 @@ uint ors::Joint::qDim() {
   if(type==JT_universal) return 2;
   if(type==JT_quatBall) return 4;
   if(type==JT_free) return 7;
-  if(type==JT_glue || type==JT_fixed) return 0;
+  if(type==JT_glue || type==JT_fixed || type==JT_none) return 0;
   HALT("shouldn't be here");
   return 0;
 }
@@ -769,32 +769,35 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
   graphTopsort(bodies, joints);
 }
 
+void ors::KinematicWorld::analyzeJointStateDimensions() {
+  uint maxagent=0;
+  for(Joint *j: joints) if(j->agent>maxagent) maxagent=j->agent;
+  qdim.resize(maxagent+1);
+  qdim.setZero();
+  for(Joint *j: joints) {
+    //CHECK(j->type!=JT_none,"joint type is uninitialized");
+    if(!j->mimic){
+      j->qIndex = qdim(j->agent);
+      qdim(j->agent) += j->qDim();
+    }else{
+      CHECK_EQ(j->agent, j->mimic->agent, "");
+      j->qIndex = j->mimic->qIndex;
+    }
+  }
+}
+
 /** @brief returns the joint (actuator) dimensionality */
 uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   if(agent==-1) agent=q_agent;
   CHECK(agent!=INT_MAX,"");
-  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(INT_MAX);
-  if(qdim(agent)==INT_MAX){
-    uint qd=0;
-    for(Joint *j: joints) if(j->agent==(uint)agent){
-      CHECK(j->type!=JT_none,"joint type is uninitialized");
-      if(!j->mimic){
-        j->qIndex = qd;
-        qd += j->qDim();
-      }else{
-        j->qIndex = j->mimic->qIndex;
-      }
-    }
-    ((KinematicWorld*)this)->qdim(agent) = qd; //hack to work around const declaration
-  }
+  CHECK((uint)agent<qdim.N,"don't have that agent (analyzeJointStateDimensions before?)");
   return qdim(agent);
 }
 
 void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
-  if(!qdim.N || q.N!=getJointStateDimension(agent)){
-    getJointStateDimension(agent);
-    ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
-  }
+  if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
+  if(q.N!=getJointStateDimension(agent)) ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
+
   _q=q;
   if(&_qdot){
     _qdot=qdot;
@@ -803,10 +806,9 @@ void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
 }
 
 arr ors::KinematicWorld::getJointState(int agent) const {
-  if(!qdim.N || q.N!=getJointStateDimension(agent)){
-    getJointStateDimension(agent);
-    ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
-  }
+  if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
+  if(q.N!=getJointStateDimension(agent)) ((KinematicWorld*)this)->calc_q_from_Q(false, agent);
+
   return q;
 }
 
@@ -1866,11 +1868,12 @@ void ors::KinematicWorld::init(const Graph& G) {
   }
 
   //-- clean up the graph
+  analyzeJointStateDimensions();
   checkConsistency();
   topSort();
   //makeLinkTree();
   calc_missingAB_from_BodyAndJointFrames();
-  getJointStateDimension();
+  analyzeJointStateDimensions();
   calc_q_from_Q();
   calc_fwdPropagateFrames();
 }
@@ -2330,22 +2333,32 @@ void ors::KinematicWorld::removeUselessBodies(int verbose) {
   //-- clear all previous index related things
   qdim.clear();
   proxies.clear();
+  analyzeJointStateDimensions();
   calc_q_from_Q();
 }
 
 bool ors::KinematicWorld::checkConsistency(){
   if(qdim.N){
     uint N=getJointStateDimension();
-    CHECK_EQ(N, q.N, "");
-//    CHECK_EQ(N, qdot.N, "");
-    uint n=0;
+    CHECK_EQ(N, qdim(q_agent), "");
+    if(q.N) CHECK_EQ(N, q.N, "");
+    if(qdot.N) CHECK_EQ(N, qdot.N, "");
+
+    uintA myqdim(qdim.N);
+    myqdim.setZero();
     for(Joint *j: joints){
-      if(j->mimic) continue; //don't count dependent joints
-      CHECK_EQ(j->qIndex,n,"joint indexing is inconsistent");
-      n += j->qDim();
+      CHECK(j->agent<qdim.N, "");
+
+      if(j->mimic){
+        CHECK_EQ(j->qIndex, j->mimic->qIndex, "");
+      }else{
+        CHECK_EQ(j->qIndex, myqdim(j->agent), "joint indexing is inconsistent");
+        myqdim(j->agent) += j->qDim();
+      }
     }
-    CHECK_EQ(n,N,"");
+    CHECK_EQ(myqdim, qdim, "qdim is wrong");
   }
+
   for(Body *b: bodies){
     CHECK(&b->world, "");
     CHECK(&b->world==this,"");
@@ -2401,6 +2414,7 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
   }
   qdim.clear();
   proxies.clear();
+  analyzeJointStateDimensions();
   calc_q_from_Q();
   checkConsistency();
   //-- remove fixed joints and reindex
