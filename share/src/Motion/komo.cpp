@@ -26,13 +26,18 @@ void KOMO::init(const Graph& specs){
   }else{
     world.init(specs);
   }
-//  world.meldFixedJoints();
-  world.removeUselessBodies();
-  makeConvexHulls(world.shapes);
-  if(glob["activateAllContacts"]){
-    for(ors::Shape *s:world.shapes) s->cont=true;
-    //    LOG(0) <<"Shape without contact: '" <<s->name <<"'";
+
+  if(glob["meldFixedJoints"]){
+    world.meldFixedJoints();
+    world.removeUselessBodies();
   }
+
+  if(glob["makeConvexHulls"])
+    makeConvexHulls(world.shapes);
+
+  if(glob["activateAllContacts"])
+    for(ors::Shape *s:world.shapes) s->cont=true;
+
   world.swift().initActivations(world);
   FILE("z.komo.model") <<world;
 
