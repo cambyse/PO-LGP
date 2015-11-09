@@ -27,9 +27,9 @@ struct MySystem{
 
   MySystem(){
     if(mlr::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-      addModule<RosCom_KinectSync>(NULL, /*Module::loopWithBeat,*/ 1.);
-//      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      new RosCom_Spinner();
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth);
     }
 //    addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
     new ImageViewer("kinect_rgb");
@@ -46,7 +46,7 @@ void TEST(Sensors){
 
   DisplayPrimitives primitives;
   OpenGL gl;
-  gl.camera = kinectCam;
+  gl.camera.setKinect();
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
   ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
@@ -62,7 +62,7 @@ void TEST(Sensors){
 
   S.kinect_rgb.var->waitForRevisionGreaterThan(10);
 
-  Metronome tic("bla", .05);
+  Metronome tic(.05);
 
   for(uint t=0;;t++){
 //    if(t>10 && stopButtons(gamepadState)) shutdown.incrementValue();

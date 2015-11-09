@@ -76,6 +76,9 @@ Node* getVariable(const char* name){
 //  return NULL;
 }
 
+RevisionedAccessGatedClassL getVariables(){
+  return registry().getTypedValues<RevisionedAccessGatedClass>();
+}
 
 void threadOpenModules(bool waitForOpened){
   signal(SIGINT, signalhandler);

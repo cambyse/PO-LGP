@@ -15,7 +15,7 @@
 struct MySystem{
     ACCESS(SoftHandMsg,sh_ref)
   MySystem(){
-    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+    new RosCom_Spinner();
     addModule<RosCom_SoftHandSync>(NULL, Module::loopWithBeat,.1);
     //connect();
   }

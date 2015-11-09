@@ -10,8 +10,9 @@ struct MySystem {
   ACCESS(AlvarMarkers, ar_pose_marker)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-    addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+    new RosCom_Spinner();
+    new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+    new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
     addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
     //connect();
   }

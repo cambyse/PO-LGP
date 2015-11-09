@@ -19,8 +19,9 @@ struct MySystem{
       MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
       addModule<ROSSUB_pr2_odom>(NULL, /*Module::loopWithBeat,*/ 0.02);
-      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
     }
     //connect();
   }

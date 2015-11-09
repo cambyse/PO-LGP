@@ -19,7 +19,7 @@ struct MySystem {
   ACCESS(std_msgs::String, hello_world)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .01);
+    new RosCom_Spinner();
     //  - add the Module to your system
     addModule<ROSSUB_hello_world>(NULL, /*Module::listenFirst,*/ .1);
     //connect();

@@ -13,7 +13,6 @@
 
 void way0(){
   ComputeSum C;
-  System dummy; dummy.append(&C); dummy.connect();  //createVariables(LIST<Module>(C));
   C.x.set() = ARR(1., 2., 3.);
   C.open();
   C.step();
@@ -27,15 +26,13 @@ void way0(){
 //
 
 void way1(){
-  System S;
 
 //  Module *m = S.addModule<ComputeSum> ("funnyName");
-  Module *m = S.addModule("ComputeSum", "funnyName");
+  Module *m = new ComputeSum;
   //S.connect(); //this will create the respective variables!
-  cout <<S <<endl;
 
-  Access_typed<arr> x = S.getConnectedAccess<arr>("x");
-  Access_typed<double> s = S.getConnectedAccess<double>("s");
+  Access_typed<arr> x(NULL, "x");
+  Access_typed<double> s(NULL, "s");
 
 #if 0
   ComputeSum C;
@@ -69,23 +66,22 @@ void way1(){
 //
 
 struct MySystem{
-  ACCESS(arr, x);
-  ACCESS(double, s);
-  MySystem():System("hallo"){
-    addModule<ComputeSum> ("funnyName");
+  ACCESSname(arr, x);
+  ACCESSname(double, s);
+  MySystem(){
+    new ComputeSum();
     //connect(); //this will create the respective variables!
   }
 };
 
 void way2(){
   MySystem S;
-  cout <<S <<endl;
 
   S.x.set() = {1., 2., 3.};
 
-  S.openAll();
-  S.stepAll();
-  S.closeAll();
+  openModules();
+  stepModules();
+  closeModules();
 
   cout <<"result = " <<S.s.get() <<endl;
 };
@@ -100,19 +96,11 @@ void TEST(SystemConnect) {
 
   cout <<registry() <<endl;
 
-  System S;
-  S.addModule("ComputeSum", "funnyName");
-
-  cout <<S <<endl;
-
-  //S.connect();
-  cout <<S <<endl;
-
-  engine().test(S);
+  ComputeSum CS;
 
   cout <<registry() <<endl;
-  Graph g = S.graph();
-  GraphView gv(g);
+
+  GraphView gv(registry());
   gv.watch();
 }
 

@@ -29,8 +29,9 @@ struct PCL_ModuleSystem:System{
   PCL_ModuleSystem(){
 #ifdef MLR_ROS
     if(mlr::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-      addModule<RosCom_KinectSync>(NULL, /*Module::loopWithBeat,*/ 1.);
+      new RosCom_Spinner();
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
     }else{
 #endif
       new KinectThread; //this is callback driven...

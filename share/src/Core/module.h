@@ -45,6 +45,7 @@ extern Singleton<ConditionVariable> shutdown;
 
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
+RevisionedAccessGatedClassL getVariables();
 void openModules();
 void stepModules();
 void closeModules();
