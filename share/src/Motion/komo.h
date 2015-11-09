@@ -23,12 +23,14 @@
 //===========================================================================
 
 struct KOMO{
+  Graph specs;
   ors::KinematicWorld world;
   struct MotionProblem *MP;
   struct MotionProblemFunction *MPF;
   arr x, dual;
 
   KOMO(const Graph& specs);
+  KOMO(const char* model_file, uint T, double duration);
   void init(const Graph& specs);
   void reset();
   void step();

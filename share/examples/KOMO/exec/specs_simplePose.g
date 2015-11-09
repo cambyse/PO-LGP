@@ -5,7 +5,7 @@ KOMO{
   T = 0
   k_order = 0
   duration = 100
-  activateAllContacts
+  meldFixedJoints, makeConvexHulls, activateAllContacts
 }
 
 (EqualZero posDiff endeff target)

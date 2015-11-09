@@ -157,6 +157,10 @@ struct MotionProblem {
       this->inverseKinematics(phi, J, H, tt, x);
     };
   }
+
+//  KOrderMarkovFunction PathProblem(){
+//    NIY;
+//  }
 };
 
 
@@ -169,7 +173,9 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
   WorldL configurations;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P) { mlr::Array<ors::KinematicWorld*>::memMove=true; };
+  MotionProblemFunction(MotionProblem& _P):MP(_P) {}
+
+  void setupConfigurations();
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);

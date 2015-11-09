@@ -95,13 +95,13 @@ void TEST(PickAndPlace){
     obj, G.getShapeByName("endeff"),
     obj, G.getShapeByName("table")
   };
-  t = MP.addTask("collisionConstraints", new ProxyConstraint(allExceptPairsPTMT, shapesToShapeIndices(shaps), .05));
+  t = MP.addTask("_LowerEqualZero_collisionExceptPairs_obj1_graspRef_obj1_endeff_obj1_table", new ProxyConstraint(allExceptPairsPTMT, shapesToShapeIndices(shaps), .05));
   t->setCostSpecs(0, MP.T, {}, 1.);
 
   shaps = {
     obj, G.getShapeByName("table")
   };
-  t = MP.addTask("collisionConstraints2", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), .05));
+  t = MP.addTask("_LowerEqualZero_collisionPairs_obj1_table", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), .05));
   t->setCostSpecs(MP.T/2+10, MP.T, {}, 1.);
 
 //  arr y;

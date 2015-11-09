@@ -13,6 +13,10 @@ KOMO::KOMO(const Graph& specs){
   CHECK(x.N,"");
 }
 
+KOMO::KOMO(const char* model_file, uint T, double duration){
+  specs <<FILE(model_file);
+}
+
 void KOMO::init(const Graph& specs){
   Graph &glob = specs.get<Graph>("KOMO");
   uint timeSteps=glob.get<double>("T");

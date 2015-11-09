@@ -670,6 +670,27 @@ arr MotionProblemFunction::get_postfix() {
 }
 
 
+void MotionProblemFunction::setupConfigurations(){
+  //IMPORTANT: The configurations need to include the k prefix configurations!
+  //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
+  uint T=get_T(), k=get_k();
+  if(configurations.N!=k+T+1){
+    listDelete(configurations);
+    configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
+    for(uint t=1;t<=k+T;t++){
+      configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
+      CHECK(configurations(t)==configurations.last(), "");
+      //apply potential graph switches
+      for(ors::KinematicSwitch *sw:MP.switches){
+        if(sw->timeOfApplication==t-k){
+          sw->apply(*configurations(t));
+//          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
+        }
+      }
+    }
+  }
+}
+
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar) {
   uint T=get_T(), n=dim_x()+dim_z(), k=get_k();
 
@@ -678,11 +699,24 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
+#define NEWCODE
+#ifdef NEWCODE
+  setupConfigurations();
+  //set states
+  for(uint i=0;i<=k;i++){
+    if(x_bar[i]!=configurations(t+i)->q){
+//    if(configurations(t+i)->q.N!=x_bar.d1 || maxDiff(x_bar[i],configurations(t+i)->q)>1e-6){
+      configurations(t+i)->setJointState(x_bar[i]);
+      if(MP.useSwift) configurations(t+i)->stepSwift();
+    }
+  }
+#else // old way: have only k+1 configurations and 'move' them on the fly
   //-- manage configurations and set x_bar states
   if(configurations.N!=k+1 || (MP.switches.N && t==0)){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
+#if 0
   //find matches
   if(!MP.switches.N){ //this efficiency gain only works without switches yet...
     uintA match(k+1); match=UINT_MAX;
@@ -699,6 +733,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
     for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
     configurations.permute(match);
   }
+#endif
   //apply potential graph switches
   for(ors::KinematicSwitch *sw:MP.switches){
     for(uint i=0;i<=k;i++){
@@ -715,11 +750,16 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
       if(MP.useSwift) configurations(i)->stepSwift();
     }
   }
+#endif
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
   TermTypeA _tt;
+#ifdef NEWCODE
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, configurations.subRange(t,t+k), MP.tau);
+#else
   MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, configurations, MP.tau);
+#endif
   phi.append(_phi);
   if(&tt) tt.append(_tt);
   if(&J)  J.append(_J);
@@ -817,3 +857,6 @@ void getAcc(arr& a, const arr& q, double tau){
   a[T] = a[T-1]/2.;
 }
 
+RUN_ON_INIT_BEGIN(motion)
+mlr::Array<ors::KinematicWorld*>::memMove=true;
+RUN_ON_INIT_END(motion)

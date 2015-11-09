@@ -790,6 +790,7 @@ void ors::KinematicWorld::analyzeJointStateDimensions() {
 uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   if(agent==-1) agent=q_agent;
   CHECK(agent!=INT_MAX,"");
+  if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
   CHECK((uint)agent<qdim.N,"don't have that agent (analyzeJointStateDimensions before?)");
   return qdim(agent);
 }
