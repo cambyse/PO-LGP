@@ -13,11 +13,9 @@ KOMO::KOMO(const Graph& specs){
   CHECK(x.N,"");
 }
 
-KOMO::KOMO(const char* model_file, uint T, double duration){
-  specs <<FILE(model_file);
-}
+void KOMO::init(const Graph& _specs){
+  specs = _specs;
 
-void KOMO::init(const Graph& specs){
   Graph &glob = specs.get<Graph>("KOMO");
   uint timeSteps=glob.get<double>("T");
   double duration=glob.get<double>("duration");
@@ -103,6 +101,11 @@ void KOMO::init(const Graph& specs){
   MP->inverseKinematics(y,J,tt,x);
   MP->reportFull();
 #endif
+}
+
+void KOMO::setFact(const char* fact){
+  specs.readNode(STRING(fact));
+  MP->parseTask(specs.last());
 }
 
 void KOMO::reset(){

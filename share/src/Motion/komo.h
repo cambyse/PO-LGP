@@ -30,8 +30,8 @@ struct KOMO{
   arr x, dual;
 
   KOMO(const Graph& specs);
-  KOMO(const char* model_file, uint T, double duration);
   void init(const Graph& specs);
+  void setFact(const char* fact);
   void reset();
   void step();
   void run();

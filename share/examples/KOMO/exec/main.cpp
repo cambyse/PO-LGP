@@ -14,6 +14,7 @@ void TEST(Executable){
 
   Graph specs(specsfile);
   KOMO komo(specs);
+  komo.MP->reportFull();
 
   int repeats=specs.get<double>("repeats", -1.);
   for(int r=0;repeats<0. || r<repeats; r++){
@@ -32,7 +33,6 @@ void TEST(Executable){
     }
     FILE(STRING(outprefix<<".pose.g")) <<"ChDir = '../../../data/pr2_model/'\n\n" <<pose;
 
-    komo.MP->costReport(true); //show cost plot
     komo.displayTrajectory();  //play trajectory
   }
 }
@@ -40,8 +40,15 @@ void TEST(Executable){
 //===========================================================================
 
 void TEST(cInterface){
+  KOMO komo(Graph("specs2.g"));
+//  cout <<komo.specs <<endl;
 
+  komo.setFact("(EqualZero posDiff endeff target)");
+  komo.setFact("(LowerEqualZero collisionIneq){ margin=0.05 scale=.1 }");
 
+  komo.MP->reportFull();
+  komo.run(); //reoptimize
+  komo.displayTrajectory();  //play trajectory
 }
 
 //===========================================================================
@@ -52,6 +59,7 @@ int main(int argc,char** argv){
   cout <<mlr::String(FILE("USAGE"));
 
   testExecutable();
+//  testcInterface();
 
   return 0;
 }

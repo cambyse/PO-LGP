@@ -124,6 +124,7 @@ struct MotionProblem {
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
+  bool parseTask(const Node *n);
   void parseTasks(const Graph& specs);
   Task* addTask(const char* name, TaskMap *map);
   //TODO: the following are deprecated; use Task::setCostSpecs instead

@@ -258,7 +258,28 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m){
   return t;
 }
 
+bool MotionProblem::parseTask(const Node *n){
+  //-- tasks?
+  Task *task = newTask(n, world, T);
+  if(task){
+    if(n->keys.N) task->name=n->keys.last(); else{
+      for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
+    }
+    tasks.append(task);
+    return true;
+  }
+  //-- switches?
+  ors::KinematicSwitch *sw = newSwitch(n, world, T);
+  if(sw){
+    switches.append(sw);
+    return true;
+  }
+}
+
 void MotionProblem::parseTasks(const Graph& specs){
+#if 1
+  for(Node *n:specs) parseTask(n);
+#else
   //-- parse tasks
   for(Node *n:specs){
     Task *task = newTask(n, world, T);
@@ -274,6 +295,7 @@ void MotionProblem::parseTasks(const Graph& specs){
     if(!sw) continue;
     switches.append(sw);
   }
+#endif
   //-- add TransitionTask for InvKinematics
   if(!T){
     TaskMap *map = new TaskMap_qItself();
