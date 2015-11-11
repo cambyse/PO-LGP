@@ -42,7 +42,7 @@ struct OdeInterface;
 namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST };
+enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, sscST, ssBoxST };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
@@ -212,13 +212,14 @@ struct KinematicWorld : GLDrawer{
   KinematicWorld();
   KinematicWorld(const ors::KinematicWorld& other);
   KinematicWorld(const char* filename);
-  ~KinematicWorld();
+  virtual ~KinematicWorld();
   void operator=(const ors::KinematicWorld& G){ copy(G); }
   void copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy=false);
   
   /// @name initializations
   void init(const char* filename);
-  
+  void init(const Graph& G);
+
   /// @name access
   Body *getBodyByName(const char* name) const;
   Shape *getShapeByName(const char* name) const;
@@ -241,7 +242,7 @@ struct KinematicWorld : GLDrawer{
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); }
+  void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); analyzeJointStateDimensions(); }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints(int verbose=0);         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies(int verbose=0);     ///< prune non-articulated bodies; they become shapes of other bodies
@@ -256,6 +257,8 @@ struct KinematicWorld : GLDrawer{
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
+  void analyzeJointStateDimensions(); ///< sort of private: count the joint dimensionalities and assign j->q_index
+
 
   /// @name get state
   uint getJointStateDimension(int agent=-1) const;
@@ -320,6 +323,7 @@ struct KinematicWorld : GLDrawer{
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
+  void glAnimate();
   void glGetMasks(byteA& indexRgb, byteA& depth);
   void stepSwift();
   void stepPhysx(double tau);
@@ -338,16 +342,19 @@ struct KinematicWorld : GLDrawer{
 //===========================================================================
 
 struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid, addRigidRel };
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
   OperatorSymbol symbol;
+  JointType jointType;
   uint timeOfApplication;
   uint fromId, toId;
   KinematicSwitch();
+  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
+  void write(std::ostream& os) const;
 };
-
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace
+stdOutPipe(ors::KinematicSwitch)
 
 //===========================================================================
 //

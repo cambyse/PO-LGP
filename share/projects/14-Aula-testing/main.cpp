@@ -18,7 +18,7 @@ void TEST(ForManyLPs){
       ChoiceConstraintFunction F;
       F.n = s;
 
-      uint evals = optConstrainedMix(x, NoArr, F, OPT(verbose=0));
+      uint evals = optConstrained(x, NoArr, F, OPT(verbose=0));
       fil <<"size=" <<s <<" evals=" <<evals <<' ';
       evaluateConstrainedProblem(x, F, fil);
     }

@@ -23,6 +23,7 @@
 //===========================================================================
 
 struct KOMO{
+  Graph specs;
   ors::KinematicWorld world;
   struct MotionProblem *MP;
   struct MotionProblemFunction *MPF;
@@ -30,6 +31,7 @@ struct KOMO{
 
   KOMO(const Graph& specs);
   void init(const Graph& specs);
+  void setFact(const char* fact);
   void reset();
   void step();
   void run();

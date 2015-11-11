@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Ors Core Algo Motion
+DEPEND = Geo Ors Core Algo Motion
 LIBS += -lgtest
 
 include $(BASE)/gofMake/generic.mk

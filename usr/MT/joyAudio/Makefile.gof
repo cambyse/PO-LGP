@@ -1,5 +1,5 @@
 BASE = ../../../share
 
-DEPEND = Core System Hardware Media
+DEPEND = Core Hardware Media
 
 include $(BASE)/gofMake/generic.mk

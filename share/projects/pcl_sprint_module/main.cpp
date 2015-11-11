@@ -31,10 +31,10 @@ void TEST(KinectModules) {
   //  CloudView *cv = new CloudView(S.pcl_cloud.get());
   //  primitives.P.append(cv);
 
-  engine().open(S);
+  threadOpenModules(true);
 
   for(;;){
-    if(engine().shutdown.getValue()>0) break;
+    if(shutdown().getValue()>0) break;
     S.kinect_points.var->waitForNextRevision();
 
     cloud = S.pcl_cloud.get();
@@ -127,7 +127,7 @@ void TEST(KinectModules) {
     //    gl.update();
   }
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 

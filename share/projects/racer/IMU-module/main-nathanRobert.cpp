@@ -1,23 +1,23 @@
 #include <Core/util.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 
 #include "modules.h"
 
 void testIMU(){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData)
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
-      connect();
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
+      //connect();
     }
   } S;
 
   cout <<S <<endl;
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
 
 
   for(;;){
@@ -25,24 +25,24 @@ void testIMU(){
     if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    engine().shutdown.waitForSignal();
+  //    shutdown().waitForValueGreaterThan(0);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 void findBalancePoint(){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
       addModule<Motors>("Motors", Module::loopFull);
-      connect();
+      //connect();
     }
     double get_time() {
       return imuData.get()->(0);
@@ -51,8 +51,8 @@ void findBalancePoint(){
 
   cout <<S <<endl;
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
 
 
   double start_time = -1;
@@ -73,25 +73,25 @@ void findBalancePoint(){
     //if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    engine().shutdown.waitForSignal();
+  //    shutdown().waitForValueGreaterThan(0);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 void testMotors(){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, controls)
     MySystem(){
       addModule<Motors>("Motors", Module::loopFull);
-      connect();
+      //connect();
     }
   } S;
 
   cout <<S <<endl;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   S.controls.set() = ARR(128.,128.,10.);
   mlr::wait(3);
@@ -102,7 +102,7 @@ void testMotors(){
   S.controls.set() = ARR(0.,0.,1.);
   mlr::wait(3);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
@@ -126,16 +126,16 @@ protected:
 };
 
 void testBalance(){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
       addModule<Motors>("Motors", Module::loopFull);
-      connect();
+      //connect();
     }
     double get_time() {
       return imuData.get()->(0);
@@ -144,8 +144,8 @@ void testBalance(){
 
   cout <<S <<endl;
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
 
   double integral_angular_deviation = 0.;
 
@@ -187,9 +187,9 @@ void testBalance(){
     //if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    engine().shutdown.waitForSignal();
+  //    shutdown().waitForValueGreaterThan(0);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 

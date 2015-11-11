@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -45,14 +45,14 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
+  pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, height)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1e4);
+  cons->setCostSpecs(0, P.T, {0.}, 1e4);
 
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint());
-  P.setInterpolatingCosts(collision, MotionProblem::constant, {0.}, 1.);
+  collision->setCostSpecs(0, P.T, {0.}, 1.);
 
 
 
@@ -347,20 +347,21 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 ///////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, gamepadState);
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
+    new GamepadInterface;
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+      addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -374,7 +375,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
  // ors::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
@@ -556,7 +557,7 @@ FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv
 
 
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 
 

@@ -5,14 +5,17 @@
 
 //===========================================================================
 
-struct EffectivePoseProblem:ConstrainedProblemMix{
+struct EffectivePoseProblem:ConstrainedProblem{
   ors::KinematicWorld& effKinematics;
-  const Graph& symbolicState;
+  const Graph& KB;
+  const Graph& symbolicState_before;
+  const Graph& symbolicState_after;
+  arr x0;
   int verbose;
-  EffectivePoseProblem(ors::KinematicWorld& effKinematics_initial,
-                       const Graph& symbolics,
+  EffectivePoseProblem(ors::KinematicWorld& effKinematics_before,
+                       const Graph& KB, const Graph& symbolicState_before, const Graph& symbolicState_after,
                        int verbose);
-  void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x);
+  void phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x);
 
   double optimize(arr& x);
 };

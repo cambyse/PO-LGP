@@ -122,11 +122,11 @@ void testGradDescent(const ScalarFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint iters=10){
+void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
 
   ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("method");
 
-  UnconstrainedProblemMix F(f, method);
+  UnconstrainedProblem F(f, method);
 
   //switch on penalty terms
   switch(method){
@@ -216,7 +216,7 @@ void testConstraint(const ConstrainedProblemMix& f, arr& x_start=NoArr, uint ite
 // test the phase one optimization
 //
 
-void testPhaseOne(const ConstrainedProblemMix& f){
+void testPhaseOne(const ConstrainedProblem& f){
   PhaseOneProblem metaF(f);
 
   arr x;

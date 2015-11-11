@@ -4,7 +4,7 @@
 #include <GL/glut.h>
 
 //implement a drawer
-struct MyDrawer:OpenGL::GLDrawer{
+struct MyDrawer:GLDrawer{
   void glDraw(OpenGL&){
     glStandardLight(NULL);
     glColor(1,0,0);

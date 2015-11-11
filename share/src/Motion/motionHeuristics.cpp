@@ -32,7 +32,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   uint T = MP.T;
   //double duration = sys.getTau() * T;
   
-  listDelete(MP.taskCosts());
+  listDelete(MP.tasks());
   
   uint side=0;
   
@@ -42,7 +42,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
       cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
-      listDelete(MP.taskCosts());
+      listDelete(MP.tasks());
       if (verbose>=2) {
         displayState(x, MP.world, STRING("posture estimate phase 0 side " <<side));
       }
@@ -54,7 +54,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   } else {
     setGraspGoals_PR2(MP, T, shapeId, side, 0);
     keyframeOptimizer(x, MP, false, verbose);
-    listDelete(MP.taskCosts());
+    listDelete(MP.tasks());
     if (verbose>=2) {
       displayState(x, MP.world, "posture estimate phase 0");
     }
@@ -74,6 +74,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   if (verbose>=1) displayState(x, MP.world, "posture estimate phase 2");
 }
 
+#if 0 //setInterpolatingCosts is need refactoring...
 void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, uint phase) {
   MP.setState(MP.x0, MP.v0);;
   
@@ -213,7 +214,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   CHECK_EQ(T,MP.T, "");
 
   //delete all previous variables
-  MP.taskCosts.clear();
+  MP.tasks.clear();
 
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
@@ -285,7 +286,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   c = MP.addTask("otherCollisions",
                  new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, colPrec);
+  c->setCostSpecs(0, MP.T, NoArr, colPrec);
 //  arr initial;
   c->map.phi(initial, NoArr, MP.world);
   if(initial(0)>0.) { //we are in collision/proximity -> depart slowly
@@ -315,6 +316,11 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
 }
+#else
+void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint phase) {
+  NIY
+}
+#endif
 
 void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 

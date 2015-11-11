@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Hardware_G4 Core System Perception
+DEPEND = Hardware_G4 Core Perception
 
 include $(BASE)/gofMake/generic.mk

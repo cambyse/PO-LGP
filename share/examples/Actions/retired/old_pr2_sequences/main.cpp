@@ -9,12 +9,12 @@
 //===========================================================================
 void TEST(Push) {
   ActionSystem activity;
-  engine().open(activity);
+  threadOpenModules(true);
   
   new CoreTasks(*activity.machine);
 
   activity.machine->waitForQuitSymbol();
-  engine().close(activity);
+  threadCloseModules();
 }
 
 // ============================================================================

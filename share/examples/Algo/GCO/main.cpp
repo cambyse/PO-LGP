@@ -60,7 +60,7 @@ struct MinEigModel{
   }
 };
 
-struct ModelDrawer:OpenGL::GLDrawer{
+struct ModelDrawer:GLDrawer{
   mlr::Array<MinEigModel>& M;
   ModelDrawer(mlr::Array<MinEigModel>& M):M(M){}
   void glDraw(OpenGL &){
@@ -88,7 +88,7 @@ void displayData(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
   arr pts;
   arr cols;
-  MLR::depthData2pointCloud(pts, kinect_depth);
+  mlr::depthData2pointCloud(pts, kinect_depth);
   cols.resizeAs(pts);
 
   int width=kinect_depth.d1;
@@ -118,7 +118,7 @@ void displayData(){
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&D);
   gl.camera.setKinect();
-  gl.camera.setPosition(0., 0., -10.);
+  gl.camera.setPosition(0., 0., -1.);
 
 
   for(uint k=0;k<10;k++){

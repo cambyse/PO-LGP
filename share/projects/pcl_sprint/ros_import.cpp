@@ -5,7 +5,7 @@
 #include <boost/bind.hpp>
 #include <pcl/ros/conversions.h>
 
-namespace MLR { namespace PCL {
+namespace mlr { namespace PCL {
     struct sFromROS {
         ros::NodeHandle n;
         ros::Subscriber pc_sub;

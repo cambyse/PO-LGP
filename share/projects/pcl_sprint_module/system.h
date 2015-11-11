@@ -1,6 +1,6 @@
 #pragma once
 
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -29,22 +29,23 @@ struct PCL_ModuleSystem:System{
   PCL_ModuleSystem(){
 #ifdef MLR_ROS
     if(mlr::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
+      new RosCom_Spinner();
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
     }else{
 #endif
-      addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
+      new KinectThread; //this is callback driven...
 #ifdef MLR_ROS
     }
 #endif
 
-    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//      addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-//      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-    addModule<ArrCloud2PclCloud>(NULL, Module::listenFirst);
-    connect();
+    new ImageViewer("kinect_rgb");
+//      addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+//      new ImageViewer("kinect_depthRgb");
+    new Kinect2PointCloud;
+    new PointCloudViewer("kinect_points", "kinect_pointColors");
+    addModule<ArrCloud2PclCloud>(NULL /*,Module::listenFirst*/ );
+    //connect();
   }
 };
 

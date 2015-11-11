@@ -96,9 +96,10 @@ void TowerProblem_new::setRandom(){
   fol_root.KB.checkConsistency();
   Node *CYLIN = fol_root.KB["Cylin"];
   Node *BOARD = fol_root.KB["Board"];
-  Graph& state = fol_root.KB["STATE"]->graph();
+  Node *OBJECT = fol_root.KB["Object"];
+  Graph& state = *fol_root.state;
 
-  uint n = 3; //10+rnd(20);
+  uint n = 2; //10+rnd(20);
   double x=-1.6, y=-1.;
   for(uint i=0;i<n;i++){
     //add an object to the geometry
@@ -108,19 +109,22 @@ void TowerProblem_new::setRandom(){
     b->X.addRelativeTranslation(x,y,.62);
     //randomize type and size
     if(rnd.uni()<.6){
-      s->type = ors::cylinderST;
+      s->type = ors::ssBoxST;
       s->size[0]=s->size[1]=0.;
       s->size[2]=.2;
       s->size[3]=.05;
       s->name <<"cyl_" <<i;
     }else{
-      s->type = ors::boxST;
+      s->type = ors::ssBoxST;
       s->size[0]=.1 + .3*rnd.uni();
       s->size[1]=.1 + .6*rnd.uni();
       s->size[2]=.02;
-      s->size[3]=0.;
+      s->size[3]=.01;
       s->name <<"boa_" <<i;
     }
+    s->sscCore.setBox();
+    s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
+    s->mesh.setSSC(s->sscCore, s->size[3]);
     b->name = s->name;
     //position on grid
     b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
@@ -128,13 +132,14 @@ void TowerProblem_new::setRandom(){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Node *o = fol_root.KB.append<bool>({"Object", s->name}, {}, new bool(true), true);
-    if(s->type==ors::cylinderST){
+    Node *o = fol_root.KB.append<bool>({s->name}, {}, new bool(true), true);
+    //add predicates
+    state.append<bool>({}, {OBJECT, o}, new bool(true), true);
+    if(!s->size[0]){
       state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
     }else{
       state.append<bool>({}, {BOARD, o}, new bool(true), true);
     }
-//    state.append<double>({}, {DEPTH, o}, new double(0.), true);
   }
 
   fol_root.KB.checkConsistency();

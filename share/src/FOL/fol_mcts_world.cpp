@@ -22,14 +22,14 @@ void FOL_World::Decision::write(ostream& os) const{
 }
 
 FOL_World::FOL_World()
-    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0),
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
       generateStateTree(false),
       lastStepDuration(0.), lastStepProbability(1.), count(0) {}
 
 FOL_World::FOL_World(istream& is)
-    : gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), tmp(NULL), verbose(0), verbFil(0),
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
       generateStateTree(false),
       lastStepDuration(0.), lastStepProbability(1.), count(0) {
   init(is);
@@ -44,6 +44,7 @@ void FOL_World::init(istream& is){
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");
+  worldRules = KB.getNodes("Rule");
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
@@ -51,6 +52,7 @@ void FOL_World::init(istream& is){
 
   Graph *params = KB.getValue<Graph>("FOL_World");
   if(params){
+    hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
     stepCost = params->get<double>("stepCost", stepCost);
     timeCost = params->get<double>("timeCost", timeCost);
@@ -61,6 +63,7 @@ void FOL_World::init(istream& is){
     cout <<"****************** FOL_World: creation info:" <<endl;
     cout <<"*** start_state=" <<*start_state <<endl;
     cout <<"*** reward fct=" <<*rewardFct <<endl;
+    cout <<"*** worldRules = "; listWrite(worldRules, cout); cout <<endl;
     cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
   mlr::open(fil, "z.FOL_World");
@@ -93,12 +96,21 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
 
+  //-- remove the old decision-fact, if exists
+#if 0
+  if(lastDecisionInState) delete lastDecisionInState;
+#else
+  for(uint i=state->N;i--;){
+    Node *n=state->elem(i);
+    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+  }
+#endif
+
   //-- add the decision as a fact
-  Node *decision = NULL;
   if(!d->waitDecision){
     NodeL decisionTuple = {d->rule};
     decisionTuple.append(d->substitution);
-    decision = createNewFact(*state, decisionTuple);
+    lastDecisionInState = createNewFact(*state, decisionTuple);
   }
 
   //-- check for rewards
@@ -140,6 +152,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- apply effects of decision
   if(d->waitDecision){
+    CHECK(hasWait,"");
+
     //-- find minimal wait time
     double w=1e10;
     for(Node *i:*state){
@@ -191,7 +205,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- generic world transitioning
   int decisionObservation = 0;
-  forwardChaining_FOL(KB, *state, NULL, NoGraph, verbose-3, &decisionObservation);
+  forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &decisionObservation);
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -200,7 +214,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 
   //-- delete decision fact again
-  if(decision) delete decision;
+  //if(decision) delete decision;
 
   if(deadEnd) reward -= deadEndCost;
 
@@ -222,7 +236,9 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
   mlr::Array<Handle> decisions; //tuples of rule and substitution
-  decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  if(hasWait){
+    decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  }
   for(Node* rule:decisionRules){
 //    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     NodeL subs = getRuleSubstitutions2(*state, rule, verbose-3 );

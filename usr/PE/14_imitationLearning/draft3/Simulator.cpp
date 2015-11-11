@@ -8,7 +8,7 @@ Demonstration* execRun(Demonstration *demo, InnerCostFunction *icf) {
   MP.loadTransitionParameters();
   MP.setState(demo->q0,demo->q0*0.);
 
-  MP.taskCosts = (*icf).taskCosts;
+  MP.tasks = (*icf).tasks;
   MP.x0 = demo->q0;
 
   MotionProblemFunction F(MP);

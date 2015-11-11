@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
@@ -14,15 +14,15 @@ ROSSUB("/hello_world", std_msgs::String, hello_world);
 
 
 // =================================================================================================
-struct MySystem:System {
+struct MySystem {
   //  - add the ACCESS variable to your system
   ACCESS(std_msgs::String, hello_world)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .01);
+    new RosCom_Spinner();
     //  - add the Module to your system
-    addModule<ROSSUB_hello_world>(NULL, Module::listenFirst, .1);
-    connect();
+    addModule<ROSSUB_hello_world>(NULL, /*Module::listenFirst,*/ .1);
+    //connect();
   }
 };
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
   MySystem system;
-  engine().open(system);
+  threadOpenModules(true);
   cout << "Engine open " << endl;
 
   for (int i = 0; true; i++) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv){
     cout << "step[" << i << "]: "<< d.data << endl;
   }
 
-  engine().close(system);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
   return 0;
 }

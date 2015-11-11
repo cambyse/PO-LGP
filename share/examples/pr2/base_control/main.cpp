@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -12,17 +12,18 @@
 
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref)
       ACCESS(CtrlMsg, ctrl_obs)
       ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
       MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      addModule<ROSSUB_pr2_odom>(NULL, /*Module::loopWithBeat,*/ 0.02);
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -47,7 +48,7 @@ int main(int argc, char** argv){
   bool fixBase = mlr::getParameter<bool>("fixBase", false);
 
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
 
   ors::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
@@ -103,7 +104,7 @@ int main(int argc, char** argv){
   task->setCostSpecs(MP.T-5, MP.T, target, 1e3);
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
-  optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2.));
+  optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2.));
   MP.costReport();
   displayTrajectory(x, 1, world, "planned trajectory");
 
@@ -172,7 +173,7 @@ int main(int argc, char** argv){
   cout << q_real(trans->qIndex+0) << " | " << target(trans->qIndex+0) << endl;
   cout << q_real(trans->qIndex+1) << " | " << target(trans->qIndex+1) << endl;
   cout << q_real(trans->qIndex+2) << " | " << target(trans->qIndex+2) << endl;
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
   return 0;

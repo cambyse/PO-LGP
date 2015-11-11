@@ -10,7 +10,7 @@ void testActionMachine()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
   // auto a1 = activity.machine->add(
   //     new MoveEffTo("endeffR", ARR(.6, -.5, 1.2)));
@@ -40,14 +40,14 @@ void testActionMachine()
     // auto a4 = activity.machine->add(new PushForce("endeffR", ors::Vector(15, 0, 0), ARR(2, 0, 0)))
     // activity.machine->waitForActionCompletion(a4);
   // }
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void do_the_dance()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
   for (int i = 0; i < 5; ++i) {
     GroundedAction* a_right = activity.machine->add(new MoveEffTo("endeffR", {.6, -.5, 1.2}));
@@ -61,14 +61,14 @@ void do_the_dance()
     activity.machine->waitForActionCompletion(a_right2);
   }
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void test_push()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
   GroundedAction* a_right = activity.machine->add(new MoveEffTo("endeffR", {.6, -.3, 1}));
   activity.machine->waitForActionCompletion(a_right);
@@ -77,14 +77,14 @@ void test_push()
   GroundedAction* push = activity.machine->add(new PushForce("endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/));
   activity.machine->waitForActionCompletion(push);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void idle()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
   GroundedAction* right = activity.machine->add(new MoveEffTo("endeffR", {.95, -.2, .9}));
   GroundedAction* left = activity.machine->add(new MoveEffTo("endeffL", {.95, .2, .9}));
@@ -96,27 +96,27 @@ void idle()
   // activity.machine->waitForActionCompletion(align_right);
   // activity.machine->waitForActionCompletion(align_left);
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void test_collision()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
   activity.machine->add(new MoveEffTo("endeffR", {.8, .1, .9}));
   activity.machine->add(new MoveEffTo("endeffL", {.8, -.1, .9}));
   activity.machine->waitForActionCompletion();
   cout << "actions done" << endl;
   mlr::wait(5);
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void idle2()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
   auto t = activity.machine->add(new OrientationQuat("endeffR", {1, 1, 0, 0}));
   activity.machine->waitForActionCompletion(t);
@@ -132,14 +132,14 @@ void idle2()
   // activity.machine->add(new AlignEffTo("endeffR", {1, 0, 0.}, {1, 0, 0}));
   // activity.machine->waitForActionCompletion();
 
-  engine().close(activity);
+  threadCloseModules();
 }
 
 void set_q()
 {
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
-  engine().open(activity);
+  threadOpenModules(true);
 
 //   for (auto joint : activity.machine->s->world.joints)
 //     cout << joint->qIndex << " " << joint->name << endl;
@@ -150,7 +150,7 @@ void set_q()
 
   activity.machine->waitForActionCompletion();
   cout << "DONE" << endl;
-  engine().close(activity);
+  threadCloseModules();
 }
 
 // ============================================================================
@@ -188,12 +188,12 @@ public:
     pub_moving = n.advertise<std_msgs::String>("/moving", 1000);
 
     activity.machine->add(new CoreTasks());
-    engine().open(activity);
+    threadOpenModules(true);
   }
 
   virtual ~IcraExperiment()
   {
-    engine().close(activity);
+    threadCloseModules();
   }
 
   void run()

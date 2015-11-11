@@ -39,7 +39,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
 
   //-- optimize
   mlr::timerStart();
-  optConstrainedMix(x, dual, Convert(MF));
+  optConstrained(x, dual, Convert(MF));
   cout <<"** optimization time = " <<mlr::timerRead() <<endl;
   MP.dualMatrix = dual;
   MP.costReport();

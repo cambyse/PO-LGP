@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 //#include <Gui/opengl.h>
 #include <signal.h>
 #include <thread>
@@ -15,7 +15,7 @@
 #include <Perception/videoEncoder.h>
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/ueyecamera/ueyecamera.h>
-using namespace MLR;
+using namespace mlr;
 using namespace std;
 using namespace std::placeholders;
 
@@ -40,43 +40,43 @@ public:
 	}
 };
 
-struct TomsyRecorderSystem:System{
+struct TomsyRecorderSystem{
     ACCESS(byteA, ueye_rgb_1)
     ACCESS(byteA, ueye_rgb_3)
     ACCESS(byteA, ueye_rgb_4)
 
     TomsyRecorderSystem(){
-        addModule("KinectPoller", NULL, Module::loopWithBeat, .01); //this is callback driven...
-        addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-        addModule("ImageViewer", "ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-        addModule("ImageViewer", "ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-        //      addModule("Kinect2PointCloud", NULL, Module::loopWithBeat, .2);
-        //      addModule("PointCloudViewer", NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+        addModule("KinectThread", NULL, /*Module::loopWithBeat,*/ .01); //this is callback driven...
+        addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+        addModule("ImageViewer", "ImageViewer_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
+        addModule("ImageViewer", "ImageViewer_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
+        //      addModule("Kinect2PointCloud", NULL, /*Module::loopWithBeat,*/ .2);
+        //      addModule("PointCloudViewer", NULL, {"kinect_points", "kinect_pointColors"} /*,Module::listenFirst*/ );
 
-        VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
+        VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
         m_enc->set_rgb(true);
         m_enc->set_fps(30);
-        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
+        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
         m_denc->set_fps(30);
 
         addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module::loopFull);
-        VideoEncoderX264 *enc1 = addModule<VideoEncoderX264>("ENCODER_1", {"ueye_rgb_1"}, Module::listenFirst);
+        VideoEncoderX264 *enc1 = addModule<VideoEncoderX264>("ENCODER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
         enc1->set_fps(60);
-        addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
 
         addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module::loopFull);
-        VideoEncoderX264 *enc3 = addModule<VideoEncoderX264>("ENCODER_3", {"ueye_rgb_3"}, Module::listenFirst);
+        VideoEncoderX264 *enc3 = addModule<VideoEncoderX264>("ENCODER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
         enc3->set_fps(60);
-        addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
 
         addModule("UEyePoller", "POLLER_4", {"ueye_rgb_4"}, Module::loopFull);
-        VideoEncoderX264 *enc4 = addModule<VideoEncoderX264>("ENCODER_4", {"ueye_rgb_4"}, Module::listenFirst);
+        VideoEncoderX264 *enc4 = addModule<VideoEncoderX264>("ENCODER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
         enc4->set_fps(60);
-        addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
 
         addModule("AudioReader", "MIKE_1", Module::loopFull);
-        addModule("AudioWriter", "WAV_1", Module::listenFirst);
-        connect();
+        addModule("AudioWriter", "WAV_1" /*,Module::listenFirst*/ );
+        //connect();
     }
 };
 
@@ -89,12 +89,12 @@ void threadedRun() {
 
     //  cout <<S <<endl;
 
-    engine().enableAccessLog();
-    engine().open(S);
+    //engine().enableAccessLog();
+    threadOpenModules(true);
 
-    engine().shutdown.waitForSignal();
+    shutdown().waitForValueGreaterThan(0);
 
-    engine().close(S);
+    threadCloseModules();
     cout <<"bye bye" <<endl;
 }
 
@@ -208,7 +208,7 @@ protected:
 	}
 	void kinect_depth_cb(const uint16A& depth, double timestamp) {
 		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
-			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
+			mlr::pack_kindepth2rgb(depth, kinect_depth_repack);
 			kinect_depth.addFrame(kinect_depth_repack);
 			kinect_depth_times.add_stamp(timestamp);
 		}

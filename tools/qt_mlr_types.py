@@ -4,7 +4,7 @@ python
 
 import math
 
-def qdump__MLR__String(d, value):
+def qdump__mlr__String(d, value):
     p = value["p"]
     N = value["N"]
     s = "'"
@@ -40,7 +40,7 @@ def qdump__LIST(d, value):
 #            d.putSubItem("p", p)
 
 
-def qdump__MLR__Array(d, value):
+def qdump__mlr__Array(d, value):
     p = value["p"]
     N = value["N"]
     nd = value["nd"]

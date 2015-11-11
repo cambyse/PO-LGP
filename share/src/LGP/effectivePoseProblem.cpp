@@ -1,56 +1,101 @@
 #include "effectivePoseProblem.h"
 #include <Gui/opengl.h>
+#include <Motion/taskMaps.h>
 
 //===========================================================================
 
-EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_initial,
-                                           const Graph& symbolics,
+EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_before,
+                                           const Graph& KB, const Graph& symbolicState_before, const Graph& symbolicState_after,
                                            int verbose)
-  : effKinematics(effKinematics_initial), symbolicState(symbolics), verbose(verbose){
+  : effKinematics(effKinematics_before),
+    KB(KB),
+    symbolicState_before(symbolicState_before),
+    symbolicState_after(symbolicState_after),
+    verbose(verbose){
 
-  ConstrainedProblemMix::operator=(
-        [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-    return this -> phi(phi, J, tt, x);
+  CHECK(symbolicState_before.isNodeOfParentGraph && &symbolicState_before.isNodeOfParentGraph->container==&KB,"");
+  CHECK(symbolicState_after.isNodeOfParentGraph && &symbolicState_after.isNodeOfParentGraph->container==&KB,"");
+
+  ConstrainedProblem::operator=(
+        [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    return this -> phi(phi, J, H, tt, x);
   } );
 
-  //create the effective kinematicsx
-  //  Node *actionSequence = symbolicState["actionSequence"];
-  Node *supportSymbol  = symbolics["supports"];
-  Graph& state = symbolics["STATE"]->graph();
+//  Node *glueSymbol  = KB["glued"];
+//  for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
+//    //-- create a joint between the object and the target
+//    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+//    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
-  for(Node *s:supportSymbol->parentOf) if(&s->container==&state){
+  Node *glueSymbol  = KB["glued"];
+  for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
     //-- create a joint between the object and the target
-    ors::Shape *base = effKinematics.getShapeByName(s->parents(1)->keys.last());
-    ors::Shape *object= effKinematics.getShapeByName(s->parents(2)->keys.last());
+    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
-    if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-      ors::Joint *j = new ors::Joint(effKinematics, base->body, object->body);
+    //TODO: this may generate multiple joints! CHECK IF IT EXISTS ALREADY
+    ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
+    j->type = ors::JT_free;
+    j->Q.setDifference(ref1->body->X, ref2->body->X);
+  }
+
+  Node *supportSymbol  = KB["Gsupport"];
+  for(Node *s:supportSymbol->parentOf) if(&s->container==&symbolicState_after){
+    //-- create a joint between the object and the target
+    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(2)->keys.last());
+
+    if(!ref2->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
+      ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
       j->type = ors::JT_transXYPhi;
-      j->A.addRelativeTranslation(0, 0, .5*base->size[2]);
-      j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
+      j->A.addRelativeTranslation(0, 0, .5*ref1->size[2]);
+      j->B.addRelativeTranslation(0, 0, .5*ref2->size[2]);
       j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
       j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
     }
   }
 
+
   effKinematics.topSort();
   effKinematics.checkConsistency();
+  effKinematics.getJointState(x0);
 }
 
-void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
+void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x){
   effKinematics.setJointState(x);
   if(verbose>1) effKinematics.gl().timedupdate(.1);
   if(verbose>2) effKinematics.gl().watch();
-  double prec=0.;
 
   phi.clear();
   if(&phiJ) phiJ.clear();
+  if(&H) H.clear();
   if(&tt) tt.clear();
 
+  arr y,J;
+
+  //-- regularization
+  double prec=1e+0;
+  phi.append(prec*(x-x0));
+  if(&phiJ) phiJ.append(prec*eye(x.N));
+  if(&tt) tt.append(sumOfSqrTT, x.N);
+
+  //-- touch symbols -> constraints of being inside!
+  Node *touch=symbolicState_after["touch"];
+  for(Node *constraint:touch->parentOf) if(&constraint->container==&symbolicState_after){
+    ors::Shape *s1=effKinematics.getShapeByName(constraint->parents(1)->keys(0));
+    ors::Shape *s2=effKinematics.getShapeByName(constraint->parents(2)->keys(0));
+
+    TaskMap_GJK gjk(s1, s2, true);
+
+    gjk.phi(y, (&phiJ?J:NoArr), effKinematics);
+    phi.append(y);
+    if(&phiJ) phiJ.append(J);
+    if(&tt) tt.append(eqTT, y.N);
+  }
+
   //-- support symbols -> constraints of being inside!
-  Node *support=symbolicState["supports"];
-  Graph& state =symbolicState["STATE"]->graph();
-  for(Node *constraint:support->parentOf) if(&constraint->container==&state){
+  Node *support=symbolicState_after["Gsupport"];
+  for(Node *constraint:support->parentOf) if(&constraint->container==&symbolicState_after){
     ors::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
     ors::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys.last());
     if(b2->shapes(0)->type==ors::cylinderST){
@@ -89,7 +134,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x)
   }
 
   //-- supporters below object -> maximize their distances to center
-  NodeL objs=symbolicState.getNodes("Object");
+  NodeL objs=symbolicState_after.getNodes("Object");
   for(Node *obj:objs){
     NodeL supporters;
     for(Node *constraint:obj->parentOf){
@@ -223,8 +268,8 @@ double EffectivePoseProblem::optimize(arr& x){
   x = effKinematics.getJointState();
   rndGauss(x, .1, true);
 
-  //  checkJacobianCP(f, x, 1e-4);
-  OptConstrained opt(x, NoArr, *this, OPT(verbose=0));
+//  checkJacobianCP(*this, x, 1e-4);
+  OptConstrained opt(x, NoArr, *this, OPT(verbose=2));
   opt.run();
   //  checkJacobianCP(f, x, 1e-4);
   effKinematics.setJointState(x);

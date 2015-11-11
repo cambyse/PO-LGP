@@ -31,7 +31,7 @@ double I_lambda_x(uint i, arr& lambda, arr& g){
 
 //==============================================================================
 
-UnconstrainedProblemMix::UnconstrainedProblemMix(const ConstrainedProblemMix& P, ConstrainedMethodType method, arr& lambdaInit)
+UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, ConstrainedMethodType method, arr& lambdaInit)
   : P(P), muLB(0.), mu(0.), nu(0.) {
   ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
     return this->lagrangian(dL, HL, x);
@@ -51,11 +51,11 @@ UnconstrainedProblemMix::UnconstrainedProblemMix(const ConstrainedProblemMix& P,
   if(&lambdaInit) lambda = lambdaInit;
 }
 
-double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
+double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
-    P(phi_x, J_x, tt_x, x);
+    P(phi_x, J_x, H_x, tt_x, x);
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
   }
   CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
@@ -94,10 +94,11 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
     dL.reshape(x.N);
   }
 
-  if(&HL){ //L hessian
+  if(&HL){ //L hessian: Most terms are of the form   "J^T  diag(coeffs)  J"
     arr coeff=zeros(phi_x.N);
+    int fterm=-1;
     for(uint i=0;i<phi_x.N;i++){
-//      if(            tt_x(i)==fTT                    ) NIY;       // direct cost term
+      if(            tt_x(i)==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
       if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
       if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
       if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
@@ -107,13 +108,17 @@ double UnconstrainedProblemMix::lagrangian(arr& dL, arr& HL, const arr& _x){
     for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff(i));
     HL = comp_At_A(tmp); //Gauss-Newton type!
 
+    if(fterm!=-1){ //For f-terms, the Hessian must be given explicitly, and is not \propto J^T J
+      HL += H_x;
+    }
+
     if(!HL.special) HL.reshape(x.N,x.N);
   }
 
   return L;
 }
 
-double UnconstrainedProblemMix::get_costs(){
+double UnconstrainedProblem::get_costs(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==fTT) S += phi_x(i);
@@ -122,7 +127,7 @@ double UnconstrainedProblemMix::get_costs(){
   return S;
 }
 
-double UnconstrainedProblemMix::get_sumOfGviolations(){
+double UnconstrainedProblem::get_sumOfGviolations(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==ineqTT && phi_x(i)>0.) S += phi_x(i);
@@ -130,7 +135,7 @@ double UnconstrainedProblemMix::get_sumOfGviolations(){
   return S;
 }
 
-double UnconstrainedProblemMix::get_sumOfHviolations(){
+double UnconstrainedProblem::get_sumOfHviolations(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==eqTT) S += fabs(phi_x(i));
@@ -138,7 +143,7 @@ double UnconstrainedProblemMix::get_sumOfHviolations(){
   return S;
 }
 
-void UnconstrainedProblemMix::aulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr &dL_x, arr &HL_x){
+void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr &dL_x, arr &HL_x){
   if(!lambda.N) lambda=zeros(phi_x.N);
 
   //-- lambda update
@@ -168,7 +173,7 @@ void UnconstrainedProblemMix::aulaUpdate(double lambdaStepsize, double muInc, do
   }
 }
 
-void UnconstrainedProblemMix::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
+void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N) lambda=zeros(phi_x.N);
 
   //-- lambda update
@@ -237,7 +242,7 @@ void UnconstrainedProblemMix::anyTimeAulaUpdate(double lambdaStepsize, double mu
 //
 
 
-void PhaseOneProblem::phase_one(arr& meta_phi, arr& meta_J, TermTypeA& tt, const arr& x){
+void PhaseOneProblem::phase_one(arr& meta_phi, arr& meta_J, arr& meta_H, TermTypeA& tt, const arr& x){
   NIY;
   arr g, Jg;
 //  f_orig(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
@@ -266,11 +271,11 @@ const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", 
 
 
 
-uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOptions opt){
+uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
 
-  UnconstrainedProblemMix UCP(P, opt.constrainedMethod, dual);
+  UnconstrainedProblem UCP(P, opt.constrainedMethod, dual);
 
   //uint stopTolInc;
 
@@ -347,7 +352,7 @@ uint optConstrainedMix(arr& x, arr& dual, const ConstrainedProblemMix& P, OptOpt
 
 //==============================================================================
 
-OptConstrained::OptConstrained(arr& x, arr &dual, const ConstrainedProblemMix& P, OptOptions opt)
+OptConstrained::OptConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt)
   : UCP(P, opt.constrainedMethod), newton(x, UCP, opt), dual(dual), opt(opt), its(0){
 
   fil.open(STRING("z."<<MethodName[opt.constrainedMethod]));

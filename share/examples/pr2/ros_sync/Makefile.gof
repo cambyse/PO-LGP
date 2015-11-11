@@ -4,6 +4,6 @@ BASE = ../../..
 OBJS = main.o
 PLIB = 1
 ROS = 1
-DEPEND = Core System Ors Gui pr2
+DEPEND = Core Ors Gui pr2
 
 include $(BASE)/gofMake/generic.mk

@@ -1,38 +1,89 @@
+FOL_World{
+  hasWait=false
+}
+
+EqualZero
+MinSumOfSqr
+vecDiff, vec,
+transXYPhi
+MakeJoint
+GJK
+delete
+
+
 Terminate
 QUIT
 
 #symbols
 Object
 Gsupport
+articulated
 loaded
 free
-hand
+#hand
 touch
+eff
+glued
 
 Board
 Cylin
 
 #objects
 table1
-a
-b
+#table2
+#a
+#b
 
 START_STATE{
-  (Object table1)
-  (Object a)
-  (Object b)
   (Board table1)
-  (Cylin a)  
-  (Cylin b)  
-  (free hand)
+#  (Board table2)
+# (Object a) (Cylin a)
+# (Object a) (Cylin b)
+  (articulated eff) (free eff)
 }
 
 REWARD{}
 
-DecisionRule TouchObject {
-     X
-     { (free hand) (Object X) }
-     { (free hand)! (touch X) }
+DecisionRule Glue {
+     X, Y
+     { (articulated X) (Object Y) (free X) }
+     { (touch X Y) (articulated Y) (glued X Y) (free X)! (free Y) }
+}
+
+DecisionRule Release {
+     X, Z
+     { (articulated X) (free X) (Object X) (Board Z) }
+     { (articulated X)! (touch X Z) }
+}
+
+EffectiveKinematicsRule {
+     X, Y
+     { (Glue X Y) }
+     { (MakeJoint free X Y) }
+}
+
+EffectiveKinematicsRule {
+     X, Y
+     { (Release X Y) }
+     { (MakeJoint delete X) (MakeJoint transXYPhi Y X) (MinSumOfSqr vec X){ vec1=[0 0 1] target=[0 0 1] scale=100} }
+}
+
+EffectiveKinematicsRule {
+     X, Y
+     { (touch X Y) }
+     { (EqualZero GJK X Y) }
+}
+
+#noDecisionRule TouchObject {
+#     X
+#     { (free hand) (Object X) }
+#     { (free hand)! (touch eff X) (articulated X) }
+#}
+
+noDecisionRule Touch2 {
+     X, Y
+     { (articulated X) (Object Y) (touch X Y)! }
+     { (touch X Y) (articulated Y) }
 }
 
 noDecisionRule CylinOnBoard {

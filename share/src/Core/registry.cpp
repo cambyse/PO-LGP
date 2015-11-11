@@ -26,8 +26,6 @@
 
 Singleton<Graph> registry;
 
-extern Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, mlr::String prefixedKey);
-
 void initRegistry(int argc, char* argv[]){
   int n;
   for(n=1; n<argc; n++){
@@ -36,7 +34,7 @@ void initRegistry(int argc, char* argv[]){
       if(n+1<argc && argv[n+1][0]!='-'){
         mlr::String value;
         value <<'=' <<argv[n+1];
-        readNode(registry(), value, false, false, key);
+        registry().readNode(value, false, false, key);
 //        new Node_typed<mlr::String>(registry(), {key}, {}, new mlr::String(argv[n+1]), true);
         n++;
       }else{

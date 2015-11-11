@@ -41,10 +41,10 @@ int pr2System::getDof() const {
     //const_cast<pr2System*>(this)->ctrl_obs.waitForNextRevision();
     if(frame_id == "l_wrist_ft_sensor" or 
        frame_id == "ee") {
-      //return(mt2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fL));
+      //return(conv_arr2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fL));
     }
     else if(frame_id == "r_wrist_ft_sensor") {
-      //return(mt2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fR));  
+      //return(conv_arr2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fR));  
     }
     else {
       HALT(frame_id << " is not a valid FT sensor frame.");
@@ -56,5 +56,5 @@ int pr2System::getDof() const {
   //ors::Transformation frame = const_cast<pr2System*>(this)->modelWorld.get()->getBodyByName(frame_id.c_str())->X;
   //ors::Transformation base = const_cast<pr2System*>(this)->modelWorld.get()->getBodyByName("base_link")->X;
   //ors::Transformation relative = frame/base;
-  //return mt2eigen(relative.getAffineMatrix());
+  //return conv_arr2eigen(relative.getAffineMatrix());
 }

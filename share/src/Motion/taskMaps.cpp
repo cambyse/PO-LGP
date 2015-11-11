@@ -21,10 +21,18 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
   return map;
 }
 
+
 TaskMap_GJK::TaskMap_GJK(const ors::Shape* s1, const ors::Shape* s2, bool exact) : exact(exact){
   CHECK(s1 && s2,"");
   i = s1->index;
   j = s2->index;
+}
+
+TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const char* s1, const char* s2, bool exact) : exact(exact){
+  CHECK(s1 && s2,"");
+  ors::Shape *s;
+  s=W.getShapeByName(s1); CHECK(s,"shape name '" <<s1 <<"' does not exist"); i=s->index;
+  s=W.getShapeByName(s2); CHECK(s,"shape name '" <<s2 <<"' does not exist"); j=s->index;
 }
 
 TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact) : exact(exact){
@@ -39,7 +47,8 @@ void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){
   ors::Shape *s1 = i<0?NULL: W.shapes(i);
   ors::Shape *s2 = j<0?NULL: W.shapes(j);
   CHECK(s1 && s2,"");
-  CHECK(s1->type==ors::sscST && s2->type==ors::sscST,"");
+  CHECK(s1->sscCore.V.N,"");
+  CHECK(s2->sscCore.V.N,"");
   ors::Vector p1, p2, e1, e2;
   GJK_point_type pt1, pt2;
 

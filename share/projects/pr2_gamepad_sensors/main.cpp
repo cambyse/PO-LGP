@@ -54,7 +54,7 @@ struct MySystem {
 //    new ImageViewer("rgb_rightEye");
     new Kinect2PointCloud();
     new PointCloudViewer();
-//    addModule<Pr2GamepadController>(NULL, Module::loopWithBeat, .01);
+//    addModule<Pr2GamepadController>(NULL, /*Module::loopWithBeat,*/ .01);
     cout <<"SYSTEM=" <<registry() <<endl;
 
   }

@@ -33,12 +33,12 @@ void test(){
 
   ModelEnsemble M;
 
-
   OpenGL gl;
   gl.add(glDrawPointCloud, &pts);
   gl.addDrawer(&M);
   gl.camera.setKinect();
-  gl.camera.setPosition(0., 0., -10.);
+  gl.camera.setPosition(0., 0., -1.);
+  gl.watch();
 
 
   for(uint l=0;l<20;l++){

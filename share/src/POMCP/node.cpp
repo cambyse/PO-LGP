@@ -55,7 +55,7 @@ void QNODE::DisplayPolicy(HISTORY& history, int maxDepth, ostream& ostr) const
 
 int QNODE::findIndex(AbstractEnvironment::observation_handle_t &temp) const
 {
-    for(int i=0; i<Observations.size();i++)
+    for(uint i=0; i<Observations.size();i++)
     {
         if(temp==Observations[i])
             return i;
@@ -66,7 +66,7 @@ int QNODE::findIndex(AbstractEnvironment::observation_handle_t &temp) const
 
 int QNODE::findIndex(AbstractEnvironment::observation_handle_t &temp)
 {
-    for(int i=0; i<Observations.size();i++)
+    for(uint i=0; i<Observations.size();i++)
     {
         if(temp==Observations[i])
             return i;

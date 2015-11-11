@@ -89,8 +89,12 @@ struct Node_typed : Node {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
     CHECK(itt->value,"can't assign to nothing");
-    if(value) delete value;
-    value = new T(*itt->value);
+    if(typeid(T)==typeid(Graph)){
+      graph().copy(it->graph(), NULL);
+    }else{
+      if(value) delete value;
+      value = new T(*itt->value);
+    }
   }
 
   virtual void takeoverValue(Node *it) {
@@ -110,7 +114,8 @@ struct Node_typed : Node {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 #endif
-    return memcmp(itt->value, value, sizeof(T))==0;
+//    return memcmp(itt->value, value, sizeof(T))==0;
+    return *itt->value == *value;
 #ifdef MLR_CLANG
 #  pragma clang diagnostic pop
 #endif

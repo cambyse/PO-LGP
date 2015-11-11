@@ -45,6 +45,7 @@ extern Singleton<ConditionVariable> shutdown;
 
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
+RevisionedAccessGatedClassL getVariables();
 void openModules();
 void stepModules();
 void closeModules();
@@ -89,6 +90,7 @@ struct Module : Thread{
   virtual void close(){}
 };
 
+inline bool operator==(const Module&,const Module&){ return false; }
 
 //===========================================================================
 //
@@ -166,12 +168,29 @@ struct Access_typed:Access{
   typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
 };
 
+inline bool operator==(const Access&,const Access&){ return false; }
+
 //===========================================================================
 //
-// dealing with the globally registrated (in moduleSystem) modules
+// old method
 //
 
+template<class T> T* addModule(const char *name, double beat){
+  T *m = new T(name, beat);
+  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
+  return m;
+}
 
+template<class T> T* addModule(){
+  T *m = new T;
+  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
+  return m;
+}
+
+template<class T> T* addModule(const char *name, const StringA& accessConnectRules, double beat=0.){
+  NIY;
+  return new T;
+}
 
 
 //===========================================================================

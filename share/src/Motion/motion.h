@@ -76,6 +76,8 @@ struct Task {
 };
 
 
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T);
+
 //===========================================================================
 //
 // a motion problem description
@@ -90,7 +92,7 @@ struct MotionProblem {
   //******* the following three sections are parameters that define the problem
 
   //-- task cost descriptions
-  mlr::Array<Task*> taskCosts;
+  mlr::Array<Task*> tasks;
 
   //-- kinematic switches along the motion
   mlr::Array<ors::KinematicSwitch*> switches;
@@ -122,12 +124,14 @@ struct MotionProblem {
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
+  bool parseTask(const Node *n);
+  void parseTasks(const Graph& specs);
   Task* addTask(const char* name, TaskMap *map);
   //TODO: the following are deprecated; use Task::setCostSpecs instead
-  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
-  void setInterpolatingCosts(Task *c,
-                             TaskCostInterpolationType inType,
-                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
+//  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
+//  void setInterpolatingCosts(Task *c,
+//                             TaskCostInterpolationType inType,
+//                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
   bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
@@ -135,7 +139,7 @@ struct MotionProblem {
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
-  void featureReport();
+  void reportFull();
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
@@ -147,13 +151,17 @@ struct MotionProblem {
   arr getInitialization();
 
   //-- inverse Kinematics
-  void inverseKinematics(arr& y, arr& J, TermTypeA& tt, const arr& x);
+  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
 
-  ConstrainedProblemMix InvKinProblem(){
-    return [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-      this->inverseKinematics(phi, J, tt, x);
+  ConstrainedProblem InvKinProblem(){
+    return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+      this->inverseKinematics(phi, J, H, tt, x);
     };
   }
+
+//  KOrderMarkovFunction PathProblem(){
+//    NIY;
+//  }
 };
 
 
@@ -166,7 +174,9 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
   WorldL configurations;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P) { mlr::Array<ors::KinematicWorld*>::memMove=true; };
+  MotionProblemFunction(MotionProblem& _P):MP(_P) {}
+
+  void setupConfigurations();
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);

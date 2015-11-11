@@ -188,7 +188,7 @@ void MotionFactory::createScene0(Scene &s, mlr::Array<CostWeight> &weights, uint
     displayTrajectory(x,s.MP->T,s.MP->world,"t");
   }
 
-//  ConstrainedProblemMix v = Convert(MPF);
+//  ConstrainedProblem v = Convert(MPF);
 //  arr PHI,JP;
 //  TermTypeA tt;
 //  v(PHI,JP,tt,x);

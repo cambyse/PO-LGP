@@ -1,5 +1,5 @@
 #include <Motion/feedbackControl.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
@@ -17,7 +17,7 @@
 inline std::ostream& operator<<(std::ostream& os, const timespec& t){ os <<t.tv_sec <<'.' <<std::setw(0) <<std::setfill('0') <<t.tv_nsec; return os; }
 
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(byteA, kinect_rgb)
   ACCESS(uint16A, kinect_depth)
   ACCESS(arr, kinect_points)
@@ -27,16 +27,16 @@ struct MySystem:System{
 
   MySystem(){
     if(mlr::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
-//      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
+      new RosCom_Spinner();
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth);
     }
-//    addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-    connect();
+//    addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+    new ImageViewer("kinect_rgb");
+//    new ImageViewer("kinect_depthRgb");
+    new Kinect2PointCloud;
+    new PointCloudViewer("kinect_points", "kinect_pointColors");
+    //connect();
   }
 };
 
@@ -46,7 +46,7 @@ void TEST(Sensors){
 
   DisplayPrimitives primitives;
   OpenGL gl;
-  gl.camera = kinectCam;
+  gl.camera.setKinect();
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
   ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
@@ -56,17 +56,17 @@ void TEST(Sensors){
   primitives.P.append(new ArrCloudView(S.kinect_points_world, S.kinect_pointColors));
   gl.lock.unlock();
 
-  engine().open(S);
+  threadOpenModules(true);
 
   tf::TransformListener listener;
 
   S.kinect_rgb.var->waitForRevisionGreaterThan(10);
 
-  Metronome tic("bla", .05);
+  Metronome tic(.05);
 
   for(uint t=0;;t++){
-//    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
-    if(engine().shutdown.getValue()>0) break;
+//    if(t>10 && stopButtons(gamepadState)) shutdown.incrementValue();
+    if(shutdown().getValue()>0) break;
     S.kinect_rgb.var->waitForNextRevision();
 //    tic.waitForTic();
 
@@ -99,7 +99,7 @@ void TEST(Sensors){
     if(!(t%1)) gl.update();
   }
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 

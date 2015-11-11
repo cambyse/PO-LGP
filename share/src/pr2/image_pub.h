@@ -15,7 +15,7 @@ namespace mlr {
 template<class T> struct Array;
 }
 
-namespace MLR {
+namespace mlr {
 	struct sImagePublisher;
 
 	class ImagePublisher {
