@@ -40,6 +40,15 @@ struct FollowReferenceActivity : ControlActivity {
 
 //===========================================================================
 
+//struct PushForce : ControlActivity {
+//  arr forceVec;
+//  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double timeOut=-1.);
+//  virtual void step(ActionMachine& M);
+//  virtual bool finishedSuccess(ActionMachine& M);
+//};
+
+//===========================================================================
+
 struct HomingActivity : ControlActivity {
   ors::Joint *wheeljoint;
 

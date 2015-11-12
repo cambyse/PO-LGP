@@ -110,9 +110,9 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
 void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
   //-- get necessary Jacobians
   DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(&map);
-  CHECK(m,"this only works for the default position/ori task map");
-  CHECK(m->type==posTMT,"this only works for the default position/ori task map");
-  CHECK(m->i>=0,"this only works for the default position/ori task map");
+  CHECK(m,"this only works for the default position task map");
+  CHECK(m->type==posTMT,"this only works for the default positioni task map");
+  CHECK(m->i>=0,"this only works for the default position task map");
   ors::Body *body = world.shapes(m->i)->body;
   ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
   ors::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");

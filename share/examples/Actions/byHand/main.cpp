@@ -2,6 +2,7 @@
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
+#include <Actions/TaskControllerModule.h>
 
 // ============================================================================
 
@@ -92,17 +93,66 @@ void script3(ActionSwigInterface& S){
 
 // ============================================================================
 
+void forceControl(ActionSwigInterface& S){
+//  gazeAtHand (FollowReferenceActivity){ type="gazeAt", PD=[.5 .9 .1 10.], prec=1. }
+//  alignHand (FollowReferenceActivity){ type="vec", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
+//  positionHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
+//  lowerHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
+//  controlForce (FollowReferenceActivity){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
+//  homing (HomingActivity){ type="homing" }
+
+  S.setFixBase(true);
+
+  S.setFact("(Control gazeAt endeffHead endeffL){ PD=[.5 .9 .1 10.], prec=1. }");
+  S.setFact("(Control vec endeffL){ vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }");
+  S.setFact("(Control pos endeffL){ target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }");
+  S.waitForCondition("(conv Control vec endeffL), (conv Control pos endeffL)");
+
+  S.setFact("(Control pos endeffL)!, (conv Control pos endeffL)!");
+  S.setFact("(Control pos endeffL){ target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }"); //lowering hand
+  S.waitForCondition("(conv Control pos endeffL)");
+
+  //-- direct access to the task controller -- a bit awkward, but generic
+  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
+  taskController->verbose = true;
+
+  // directly generate a push task
+  TaskMap *map = new DefaultTaskMap(posTMT, taskController->modelWorld.get(), "endeffForceL");
+  CtrlTask *task = new CtrlTask("Push", map, 1., .8, 1., 1.);
+  task->f_ref = ARR(0, 0, -7);
+  task->f_Igain = .003;
+  taskController->ctrlTasks.set()->append(task);
+
+  mlr::wait(2.);
+
+  taskController->ctrlTasks.set()->removeValue(task);
+  delete task;
+  delete map;
+
+  //-- back to high-level interface
+  taskController->verbose = false;
+  S.setFact("(Control pos endeffL)!, (Control gazeAt endeffHead endeffL)!, (Control vec endeffL)!, (HomingActivity)");
+  S.waitForCondition("(conv HomingActivity)");
+}
+
+// ============================================================================
+
 int main(int argc, char** argv) {
   registerActivity<MyTask>("MyTask");
 
   ActionSwigInterface S;
 
+  S.setFixBase(true);
+
   S.createNewSymbol("wheels");
   S.createNewSymbol("pos");
+  S.createNewSymbol("vec");
+  S.createNewSymbol("gazeAt");
 
 //  script1(S);
 //  script2(S);
-  script3(S);
+//  script3(S);
+  forceControl(S);
 
   return 0;
 }

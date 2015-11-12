@@ -274,6 +274,7 @@ bool MotionProblem::parseTask(const Node *n){
     switches.append(sw);
     return true;
   }
+  return false;
 }
 
 void MotionProblem::parseTasks(const Graph& specs){

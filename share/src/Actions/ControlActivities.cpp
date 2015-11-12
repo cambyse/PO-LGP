@@ -97,7 +97,32 @@ bool FollowReferenceActivity::isConv(){
           or (stuck and stuck_count > 6000));
 }
 
+// ============================================================================
+
+//PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
+//    : Action(actionMachine, "controlForce") {
+//  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+//  CtrlTask *task = new CtrlTask(
+//                     STRING("MoveEffTo_" << effName),
+//                     m,
+//                     1., .8, 1., 1.);
+//  if(_timeOut>0.) timeOut=_timeOut;
+//  task->f_ref = forceVec;
+//  task->f_Igain = .003;
+//  tasks.append(task);
+//}
+
+//void PushForce::step(ActionMachine& M){
+//  int i=1;
+//  i++;
+//}
+
+//bool PushForce::finishedSuccess(ActionMachine& M) {
+//  return false;
+//}
+
 //===========================================================================
+
 void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);

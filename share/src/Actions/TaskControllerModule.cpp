@@ -62,9 +62,7 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos){
     ctrl_obs.waitForNextRevision();
-#ifdef MT_ROS
     pr2_odom.waitForRevisionGreaterThan(0);
-#endif
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
@@ -75,7 +73,7 @@ void TaskControllerModule::step(){
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
-      syncModelStateWithRos = false;
+        syncModelStateWithRos = false;
       
       //supresses  c++ output
 
