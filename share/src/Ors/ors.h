@@ -324,7 +324,7 @@ struct KinematicWorld : GLDrawer{
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
   void glAnimate();
-  void glGetMasks(byteA& indexRgb, byteA& depth);
+  void glGetMasks(int w=-1, int h=-1, bool rgbIndices=true);
   void stepSwift();
   void stepPhysx(double tau);
   void stepOde(double tau);

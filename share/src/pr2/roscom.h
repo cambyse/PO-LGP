@@ -274,15 +274,12 @@ void initialSyncJointStateWithROS(ors::KinematicWorld& world, Access_typed<CtrlM
 void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
 
 //===========================================================================
-/// Sync the FT sensor
-//BEGIN_MODULE(RosCom_ForceSensorSync)
-//  ACCESS(arr, wrenchL)
-//  ACCESS(arr, wrenchR)
-//END_MODULE()
 
-//===========================================================================
-/// This module syncs the soft hand
-//BEGIN_MODULE(RosCom_SoftHandSync)
-//  ACCESS(SoftHandMsg, sh_ref)
-//END_MODULE()
-
+struct PerceptionObjects2Ors : Module{
+  ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
+  ACCESSnew(ors::KinematicWorld, modelWorld)
+  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){}
+  void open(){}
+  void step();
+  void close(){}
+};

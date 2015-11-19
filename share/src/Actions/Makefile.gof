@@ -4,7 +4,7 @@ OUTPUT := $(BASE)/lib/$(NAME).so _swig.so
 
 ROS = 1
 
-DEPEND = pr2 Motion Ors Core FOL Hardware Hardware_gamepad Gui
+DEPEND = pr2 Motion Ors Core FOL Hardware Perception Hardware_gamepad Gui
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

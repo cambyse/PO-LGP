@@ -7,67 +7,10 @@
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
 #include <pr2/rosalvar.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <pr2/roscom.h>
 #include <Gui/opengl.h>
 #include <csignal>
-
-void openGlLock();
-void openGlUnlock();
-
-struct OrsViewer:Module{
-  ACCESSlisten(ors::KinematicWorld, modelWorld)
-
-  ors::KinematicWorld copy;
-
-  OrsViewer():Module("OrsViewer") {
-  }
-  void open(){
-    LOG(-1) <<"HERE"<< endl;
-  }
-  void step(){
-    openGlLock();
-    copy = modelWorld.get();
-    openGlUnlock();
-    copy.gl().update(NULL, false, false, true);//watch(false);
-    mlr::wait(.03);
-  }
-  void close(){}
-};
-
-struct PerceptionObjects2Ors : Module{
-  ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
-  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){
-  }
-  void open(){}
-  void step(){
-    perceptionObjects.readAccess();
-    modelWorld.readAccess();
-
-    for(visualization_msgs::Marker& marker : perceptionObjects().markers){
-      mlr::String name;
-      name <<"obj" <<marker.id;
-      ors::Shape *s = modelWorld->getShapeByName(name);
-      if(!s){
-        s = new ors::Shape(modelWorld(), NoBody);
-        if(marker.type==marker.CYLINDER){
-          s->type = ors::cylinderST;
-          s->size[3] = .5*(marker.scale.x+marker.scale.y);
-          s->size[2] = marker.scale.z;
-        }else if(marker.type==marker.POINTS){
-          s->type = ors::meshST;
-          s->mesh.V = conv_points2arr(marker.points);
-          s->mesh.C = conv_colors2arr(marker.colors);
-        }else NIY;
-      }
-    }
-
-    perceptionObjects.deAccess();
-    modelWorld.deAccess();
-  }
-  void close(){}
-};
+#include <Perception/perception.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -86,20 +29,24 @@ struct SwigSystem {
   ACCESSname(CtrlMsg, ctrl_ref)
   ACCESSname(CtrlMsg, ctrl_obs)
 
-  ACCESSname(int, stopWaiting);
-  ACCESSname(int, waiters);
+  ACCESSname(int, stopWaiting)
+  ACCESSname(int, waiters)
+
+  ACCESSname(byteA, modelCameraView)
+  ACCESSname(byteA, modelDepthView)
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-//  OrsViewer orsviewer;
+  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
+  PerceptionObjects2Ors percObjs;
+  ImageViewer camview;
 
   Log _log;
 
-  SwigSystem(): _log("SwigSystem"){
-
-//    addModule<PerceptionObjects2Ors>(NULL /*,Module::listenFirst*/ );
+  SwigSystem()
+    : camview("modelDepthView"), _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       rosCheckInit("SwigSystem");
@@ -184,6 +131,8 @@ ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
 
 ActionSwigInterface::~ActionSwigInterface(){
   threadCloseModules();
+  delete S;
+  S=NULL;
 }
 
 void ActionSwigInterface::setVerbose(bool verbose) {

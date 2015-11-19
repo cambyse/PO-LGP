@@ -1700,22 +1700,26 @@ void ors::KinematicWorld::glAnimate(){
   animateConfiguration(*this, NULL);
 }
 
-void ors::KinematicWorld::glGetMasks(byteA& indexRgb, byteA& depth){
+void ors::KinematicWorld::glGetMasks(int w, int h, bool rgbIndices){
   gl().clear();
   gl().addDrawer(this);
-  gl().setClearColors(0,0,0,0);
-  orsDrawIndexColors = true;
-  orsDrawMarkers = orsDrawJoints = false;
-  gl().renderInBack(true, true);
-  indexRgb = gl().captureImage;
-  depth = gl().captureDepth;
+  if(rgbIndices){
+    gl().setClearColors(0,0,0,0);
+    orsDrawIndexColors = true;
+    orsDrawMarkers = orsDrawJoints = orsDrawProxies = false;
+  }
+  gl().renderInBack(true, true, w, h);
+//  indexRgb = gl().captureImage;
+//  depth = gl().captureDepth;
 
   gl().clear();
   gl().add(glStandardScene, 0);
   gl().addDrawer(this);
-  gl().setClearColors(1,1,1,0);
-  orsDrawIndexColors = false;
-  orsDrawMarkers = orsDrawJoints = true;
+  if(rgbIndices){
+    gl().setClearColors(1,1,1,0);
+    orsDrawIndexColors = false;
+    orsDrawMarkers = orsDrawJoints = orsDrawProxies = true;
+  }
 }
 
 void ors::KinematicWorld::stepSwift(){
