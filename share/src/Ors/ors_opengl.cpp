@@ -468,6 +468,7 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
     }
   }
   C.setJointState(x0);
+  C.gl().update("", false, false, true);
 }
 
 

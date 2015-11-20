@@ -6,9 +6,11 @@ LowerEqualZero
 #TaskMap types
 pos
 posDiff
+vec
 vecAlign
 quatDiff
 qItself
+GJK
 collisionIneq
 collisionPairs
 collisionExceptPairs

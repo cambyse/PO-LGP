@@ -187,12 +187,16 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
     CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
     ors::Body *b = world.shapes(sw->fromId)->body;
     if(b->inLinks.N==1){
-      CHECK_EQ(b->outLinks.N, 0, "");
+//      CHECK_EQ(b->outLinks.N, 0, "");
       sw->toId = sw->fromId;
       sw->fromId = b->inLinks(0)->from->shapes.first()->index;
     }else if(b->outLinks.N==1){
       CHECK_EQ(b->inLinks.N, 0, "");
       sw->toId = b->outLinks(0)->from->shapes.first()->index;
+    }else if(b->inLinks.N==0 && b->outLinks.N==0){
+      MLR_MSG("No link to delete for shape '" <<ref1 <<"'");
+      delete sw;
+      return NULL;
     }else HALT("that's ambiguous");
   }else{
     sw->toId = world.getShapeByName(ref2)->index;
@@ -470,7 +474,7 @@ void MotionProblem::reportFull() {
   cout <<"  x0=" <<x0 <<endl;
   cout <<"  v0=" <<v0 <<endl;
   cout <<"  prefix=" <<prefix <<endl;
-  cout <<"  TASKS (time idx name order type):" <<endl;
+  cout <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
 
   //-- collect all task costs and constraints
   for(uint t=0; t<=T; t++){

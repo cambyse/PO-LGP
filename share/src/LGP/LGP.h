@@ -30,7 +30,7 @@ struct TowerProblem_new:LogicGeometricProgram{
   uint nObjects;
 
   TowerProblem_new(){
-    world_root.init("world_base.kvg");
+    world_root.init("LGP-world.g");
     fol_root.init(FILE("LGP-symbols.g"));
     nObjects = world_root.bodies.N;
     setRandom();
