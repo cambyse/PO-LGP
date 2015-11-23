@@ -245,7 +245,7 @@ void glDrawText(const char* txt, float x, float y, float z) {
         else font=GLUT_BITMAP_HELVETICA_12;
         break;
       default:{
-        glutBitmapCharacter(font, *txt);
+//        glutBitmapCharacter(font, *txt);
       }
     }
     txt++;
@@ -1041,9 +1041,10 @@ void OpenGL::clear() {
   keyCalls.clear();
 }
 
-void OpenGL::Draw(int w, int h, ors::Camera *cam) {
+void OpenGL::Draw(int w, int h, ors::Camera *cam, bool ignoreLock) {
 #ifdef MLR_GL
   openglAccess().lock();
+  if(!ignoreLock) lock.readLock(); //now accessing user data
 
   //clear bufferer
   GLint viewport[4] = {0, 0, w, h};
@@ -1071,7 +1072,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   //select mode?
   GLint mode;
   glGetIntegerv(GL_RENDER_MODE, &mode);
-  
+
   //projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -1131,9 +1132,6 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   //std color: black:
   glColor(.3, .3, .5);
   
-  lock.readLock(); //now accessing user data
-  //cout <<"LOCK draw" <<endl;
-
   //draw central view
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -1189,7 +1187,6 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   }
   
   //cout <<"UNLOCK draw" <<endl;
-  lock.unlock(); //now de-accessing user data
 
   if(captureImg){
     captureImage.resize(h, w, 3);
@@ -1208,7 +1205,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   if(s!=1) MLR_MSG("OpenGL name stack has not depth 1 (pushs>pops) in DRAW mode:" <<s);
   //CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
   
-  //this->s->endGlContext();
+  if(!ignoreLock) lock.unlock(); //now de-accessing user data
   openglAccess().unlock();
 #endif
 }
@@ -1690,18 +1687,20 @@ void OpenGL::Motion(int _x, int _y) {
 //
 
 struct XBackgroundContext{
+#ifdef MLR_GL
   typedef Bool (*glXMakeContextCurrentARBProc)(Display*, GLXDrawable, GLXDrawable, GLXContext);
   typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-  glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-  glXMakeContextCurrentARBProc glXMakeContextCurrentARB = 0;
+  glXCreateContextAttribsARBProc glXCreateContextAttribsARB;
+  glXMakeContextCurrentARBProc glXMakeContextCurrentARB;
   Display* dpy;
   int fbcount;
   GLXFBConfig* fbc;
   GLXContext ctx;
   GLXPbuffer pbuf;
 
-  XBackgroundContext(){
+  XBackgroundContext()
+    : glXCreateContextAttribsARB(0), glXMakeContextCurrentARB(0){
     static int visual_attribs[] = { None };
     int context_attribs[] = { GLX_CONTEXT_MAJOR_VERSION_ARB, 3, GLX_CONTEXT_MINOR_VERSION_ARB, 0, None };
 
@@ -1752,11 +1751,13 @@ struct XBackgroundContext{
       }
     }
   }
+#endif
 };
 
 Singleton<XBackgroundContext> xBackgroundContext;
 
 void OpenGL::renderInBack(bool _captureImg, bool _captureDep, int w, int h){
+#ifdef MLR_GL
   if(w<0) w=width;
   if(h<0) h=height;
 
@@ -1843,7 +1844,7 @@ void OpenGL::renderInBack(bool _captureImg, bool _captureDep, int w, int h){
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
 
   //-- draw!
-  Draw(w, h);
+  Draw(w, h, NULL, true);
   glFlush();
 
   //-- read
@@ -1864,6 +1865,7 @@ void OpenGL::renderInBack(bool _captureImg, bool _captureDep, int w, int h){
 
   isUpdating.setValue(0);
 //  s->endGlContext();
+#endif
 }
 
 //===========================================================================

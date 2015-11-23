@@ -11,6 +11,7 @@
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
+#include <Perception/kinect2pointCloud.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -32,6 +33,12 @@ struct SwigSystem {
   ACCESSname(int, stopWaiting)
   ACCESSname(int, waiters)
 
+  ACCESSname(byteA, kinect_rgb)
+  ACCESSname(uint16A, kinect_depth)
+  ACCESSname(ors::Transformation, kinect_frame)
+
+  ACCESSname(arr, wrenchL)
+
   ACCESSname(byteA, modelCameraView)
   ACCESSname(byteA, modelDepthView)
 
@@ -40,8 +47,12 @@ struct SwigSystem {
   OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
+
+
   PerceptionObjects2Ors percObjs;
   ImageViewer camview;
+  Kinect2PointCloud k2pcl;
+  PointCloudViewer pclv;
 
   Log _log;
 
@@ -60,6 +71,11 @@ struct SwigSystem {
       new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
+
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
+
+      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
     }
 
     // make the base movable by default
