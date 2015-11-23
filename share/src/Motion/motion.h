@@ -76,7 +76,7 @@ struct Task {
 };
 
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T);
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
 
 //===========================================================================
 //
@@ -124,8 +124,8 @@ struct MotionProblem {
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
-  bool parseTask(const Node *n);
-  void parseTasks(const Graph& specs);
+  bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);
+  void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);
   Task* addTask(const char* name, TaskMap *map);
   //TODO: the following are deprecated; use Task::setCostSpecs instead
 //  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
@@ -139,7 +139,7 @@ struct MotionProblem {
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_h(const ors::KinematicWorld& G, uint t);
   StringA getPhiNames(const ors::KinematicWorld& G, uint t);
-  void reportFull();
+  void reportFull(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
@@ -177,7 +177,8 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblemFunction(MotionProblem& _P):MP(_P) {}
 
   void setupConfigurations();
-  
+  void displayTrajectory(int steps, const char *tag, double delay=0.);
+
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process

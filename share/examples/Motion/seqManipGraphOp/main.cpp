@@ -133,7 +133,7 @@ void TEST(PickAndPlace){
 //===========================================================================
 
 void komoVersion(){
-  Graph specs("specs.g");
+  Graph specs("specsLgp.g");
   KOMO komo(specs);
   komo.MP->x0 += .3;
   komo.MP->reportFull();

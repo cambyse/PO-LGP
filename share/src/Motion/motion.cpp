@@ -141,7 +141,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
 
 //===========================================================================
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
   //-- try to crate a map
   TaskMap *map = newTaskMap(specs, world);
   if(!map) return NULL;
@@ -151,16 +151,16 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
     arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
   }else{
-    task->setCostSpecs(0, T, {}, 1.);
+    task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }
   return task;
 }
 
 //===========================================================================
 
-ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint T){
+ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0){
   if(specs->parents.N<2) return NULL;
 
   //-- get tags
@@ -201,10 +201,10 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
   }else{
     sw->toId = world.getShapeByName(ref2)->index;
   }
-  sw->timeOfApplication=T+1;
+  sw->timeOfApplication=Tinterval+1;
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
-    sw->timeOfApplication = params->V<double>("timeOfApplication",1.)*T+1;
+    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
   }
   return sw;
 }
@@ -262,9 +262,10 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m){
   return t;
 }
 
-bool MotionProblem::parseTask(const Node *n){
+bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
+  if(Tinterval==-1) Tinterval=T;
   //-- tasks?
-  Task *task = newTask(n, world, T);
+  Task *task = newTask(n, world, Tinterval, Tzero);
   if(task){
     if(n->keys.N) task->name=n->keys.last(); else{
       for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
@@ -273,7 +274,7 @@ bool MotionProblem::parseTask(const Node *n){
     return true;
   }
   //-- switches?
-  ors::KinematicSwitch *sw = newSwitch(n, world, T);
+  ors::KinematicSwitch *sw = newSwitch(n, world, Tinterval, Tzero);
   if(sw){
     switches.append(sw);
     return true;
@@ -281,9 +282,9 @@ bool MotionProblem::parseTask(const Node *n){
   return false;
 }
 
-void MotionProblem::parseTasks(const Graph& specs){
+void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
 #if 1
-  for(Node *n:specs) parseTask(n);
+  for(Node *n:specs) parseTask(n, Tinterval, Tzero);
 #else
   //-- parse tasks
   for(Node *n:specs){
@@ -464,7 +465,7 @@ void MotionProblem::activateAllTaskCosts(bool active) {
   for(Task *c: tasks) c->active=active;
 }
 
-void MotionProblem::reportFull() {
+void MotionProblem::reportFull(bool brief) {
   cout <<"*** MotionProblem -- FeatureReport " <<endl;
 
   cout <<"  useSwift=" <<useSwift <<endl;
@@ -482,20 +483,35 @@ void MotionProblem::reportFull() {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       uint d=c->dim_phi(world, t);
-      for(uint i=0;i<d;i++){
-        cout <<"  " <<t <<' ' <<i
-            <<' ' <<std::setw(10) <<c->name
-           <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
-        if(c->target.N==1) cout <<c->target.elem(0);
-        else if(c->target.nd==1) cout <<c->target(i);
-        else if(c->target.nd==2) cout <<c->target(t,i);
-        else cout <<"00";
-        cout <<' ' <<c->prec(t);
-        if(ttMatrix.N){
-          cout <<' ' <<ttMatrix(t)(m+i)
-              <<' ' <<phiMatrix(t)(m+i);
+      if(brief){
+        if(d){
+          cout <<"  " <<t <<' ' <<d
+              <<' ' <<std::setw(10) <<c->name
+             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+          cout <<"xx";
+          cout <<' ' <<c->prec(t);
+          if(ttMatrix.N){
+            cout <<' ' <<ttMatrix(t).elem(m)
+                <<' ' <<sumOfSqr(phiMatrix(t).subRange(m,m+d-1));
+          }
+          cout <<endl;
         }
-        cout <<endl;
+      }else{
+        for(uint i=0;i<d;i++){
+          cout <<"  " <<t <<' ' <<i
+              <<' ' <<std::setw(10) <<c->name
+             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+          if(c->target.N==1) cout <<c->target.elem(0);
+          else if(c->target.nd==1) cout <<c->target(i);
+          else if(c->target.nd==2) cout <<c->target(t,i);
+          else cout <<"00";
+          cout <<' ' <<c->prec(t);
+          if(ttMatrix.N){
+            cout <<' ' <<ttMatrix(t)(m+i)
+                <<' ' <<phiMatrix(t)(m+i);
+          }
+          cout <<endl;
+        }
       }
       m += d;
     }
@@ -716,6 +732,29 @@ void MotionProblemFunction::setupConfigurations(){
       }
     }
   }
+}
+
+void MotionProblemFunction::displayTrajectory(int steps, const char* tag, double delay){
+  OpenGL gl;
+
+  uint num, T=MP.T;
+  if(steps==1 || steps==-1) num=T; else num=steps;
+  for(uint k=0; k<=(uint)num; k++) {
+    uint t = (T?(k*T/num):0);
+
+    gl.clear();
+    gl.add(glStandardScene, 0);
+    gl.addDrawer(configurations(t));
+    if(delay<0.){
+      if(delay<-10.) FILE("z.graph") <<*configurations(t);
+      gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    }else{
+      gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      if(delay) mlr::wait(delay);
+    }
+  }
+  if(steps==1)
+    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar) {

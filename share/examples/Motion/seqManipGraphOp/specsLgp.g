@@ -1,5 +1,5 @@
 Include = '../../../data/keywords.g'
-Include = 'model.kvg'
+Include = '../../../../usr/MT/LGP-player/LGP-world.g'
 
 KOMO{
   T = 100
@@ -12,7 +12,7 @@ KOMO{
 
 #kinematic switches
 (MakeJoint rigidZero graspRef obj1){ time=.49 }
-(MakeJoint delete table obj1){ time=.49 }
+(MakeJoint delete table2 obj1){ time=.49 }
 
 #reach:
 (MinSumOfSqr posDiff graspRef obj1){ time=[0.49 0.5] scale=1e3 }
@@ -32,3 +32,16 @@ KOMO{
 
 #(LowerEqualZero collisionExceptPairs obj1 graspRef obj1 endeff obj1 table){ margin=.05 }
 #(LowerEqualZero collisionPairs obj1 table){ time=[.6 1] margin=.05 }
+cout <<"PATH PROBLEM:" <<*pathProblemSpecs <<endl;
+
+(EqualZero GJK eff cyl_1) { time=[ 1 1 ]  scale=100 }
+(MakeJoint delete cyl_1) { time=1 }
+(MakeJoint rigid eff cyl_1) { time=1 }
+PATH PROBLEM: (s=2
+(Release eff cyl_1 table1),
+(MinSumOfSqr qItself) { time=[ 0.1 1 ]  order=2 }
+(EqualZero GJK cyl_1 table1) { time=[ 1 1 ]  target=[ 0 0 0.05 ]  scale=100 }
+(MinSumOfSqr posDiff cyl_1 table1) { time=[ 1 1 ]  target=[ 0 0 0.5 ]  scale=10 }
+(MinSumOfSqr vec cyl_1) { time=[ 1 1 ]  vec1=[ 0 0 1 ]  target=[ 0 0 1 ]  scale=100 }
+(MakeJoint delete eff cyl_1) { time=1 }
+(MakeJoint rigid table1 cyl_1) { time=1 }

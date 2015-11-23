@@ -15,7 +15,7 @@ void LGPplayer(){
 
 //  cout <<towers.fol_root.KB <<endl;
   display=towers.world_root;
-  display.gl().update("root");
+  towers.world_root.gl().update("root");
 
   ManipulationTree_Node root(towers);
 
@@ -40,16 +40,24 @@ void LGPplayer(){
     cout <<"------------------------" <<endl;
 
     char cmd='1';
-    std::cin >>cmd;
+//    std::cin >>cmd;
     cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
     if(!terminal && cmd>='0' && cmd<='9'){
       node = node->children(int(cmd-'0'));
       cout <<"choosing decision " <<*node->decision <<endl;
+      cout <<"------------------------" <<endl;
       node->solvePoseProblem();
       display=node->effKinematics;
-      display.glAnimate();
-//      display.gl().watch("child pose");
+      display.watch();
+//      display.glAnimate();
+      cout <<"------------------------" <<endl;
+      node->solvePathProblem(20);
+//      node->pathProblem.displayTrajectory(1, "KOMO planned trajectory", -0.01);
+//      ::displayTrajectory(node->path, 1, towers.world_root, node->pathProblem.switches, "KOMO planned trajectory", -0.01);
+
+      cout <<"------------------------" <<endl;
+    //      display.gl().watch("child pose");
 
     }else switch(cmd){
       case 'q': go=false; break;

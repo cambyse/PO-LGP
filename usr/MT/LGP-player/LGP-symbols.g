@@ -69,6 +69,29 @@ EffectiveKinematicsRule {
      }
 }
 
+PathProblemRule {
+  Hand, Obj
+  { (Pick Hand Obj) }
+  { (MinSumOfSqr qItself){ time=[0 1] order=2 Hmetric=1e-1 } #transitions
+    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch
+#    (MinSumOfSqr qItself){ order=1 time=[0.95 1] scale=1e1 } #slow down
+    (MakeJoint delete Obj){ time=1 }
+    (MakeJoint rigidZero Hand Obj){ time=1 }
+  }
+}
+
+PathProblemRule {
+  Hand, Obj, Onto
+  { (Release Hand Obj Onto) }
+  { (MinSumOfSqr qItself){ time=[0 1] order=2 Hmetric=1e-1 } #transitions
+#    (EqualZero GJK Obj Onto){ time=[1 1] target=[0 0 .05] scale=100 } #touch
+    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .5] scale=1000 } #1/2 metre above the thing
+    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
+#    (MakeJoint delete Hand Obj){ time=1 }
+#    (MakeJoint rigid Onto Obj){ time=1 }
+  }
+}
+
 #EffectiveKinematicsRule {
 #     X, Y
 #     { (touch X Y) }
