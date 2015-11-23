@@ -276,9 +276,12 @@ void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctr
 //===========================================================================
 
 struct PerceptionObjects2Ors : Module{
-  ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
-  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){}
+  Access_typed<visualization_msgs::MarkerArray> perceptionObjects;
+  Access_typed<ors::KinematicWorld> modelWorld;
+  PerceptionObjects2Ors()
+    : Module("PerceptionObjects2Ors"),
+    perceptionObjects(this, "perceptionObjects", true),
+    modelWorld(this, "modelWorld"){}
   void open(){}
   void step();
   void close(){}

@@ -126,6 +126,7 @@ struct Access_typed:Access{
 
 //  Access_typed(const Access_typed<T>& acc) = delete;
 
+  /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
   Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
     : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = registry().getNode("Variable", name);
@@ -141,6 +142,7 @@ struct Access_typed:Access{
     }
   }
 
+  /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = registry().getNode("Variable", name);
