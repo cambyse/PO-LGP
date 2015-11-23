@@ -1,5 +1,5 @@
 //#include <System/engine.h>
-#include <Hardware/gamepad.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <Media/audio.h>
 
 //void threadedRun() {
@@ -23,8 +23,6 @@ void play(){
   GamepadInterface gamepad;
   SineSound S;
   Audio audio;
-
-  createVariables(mlr::Array<Module*>({&gamepad}));
 
   gamepad.open();
   audio.open(S);
