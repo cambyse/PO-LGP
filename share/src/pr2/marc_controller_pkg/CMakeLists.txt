@@ -6,7 +6,7 @@ rosbuild_init()
 if(DEFINED ENV{MLR_PATH})
   set(MLR_PATH $ENV{MLR_PATH})
 else()
-  set(MLR_PATH ~/git/mlr-staff)
+  set(MLR_PATH ~/git/mlr)
   message("WARNING: $MLR_PATH is not set. I assume ${MLR_PATH} to be your path.")
 endif()
 
