@@ -24,8 +24,8 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   endeffR = MP.addPDTask("endeffR", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"));
   endeffL = MP.addPDTask("endeffL", .5, .8, new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"));
   base = MP.addPDTask("endeffBase", .2, .8, new TaskMap_qItself(MP.world, "worldTranslationRotation"));
-  torso = MP.addPDTask("endeffBase", .2, .8, new DefaultTaskMap(posTMT, MP.world, "endeffBase"));
-  head = MP.addPDTask("endeffHead", .5, 1., new DefaultTaskMap(gazeAtTMT, MP.world, "endeffHead", Vector_x, "base_footprint"));
+  torso = MP.addPDTask("torso_lift_link", .2, .8, new DefaultTaskMap(posTMT, MP.world, "torso_lift_link_0"));
+  head = MP.addPDTask("endeffHead", .5, 1., new DefaultTaskMap(gazeAtTMT, MP.world, "endeffHead", Vector_z, "base_footprint"));
   limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
   coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));

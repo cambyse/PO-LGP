@@ -127,17 +127,13 @@ struct SubscriberConv {
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConvNoHeader {
   Access_typed<var_type>& access;
-  ros::NodeHandle *nh;
+  ros::NodeHandle nh;
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
-    nh = new ros::NodeHandle;
-    sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+    sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
   }
-  ~SubscriberConvNoHeader(){
-    nh->shutdown();
-    delete nh;
-  }
+  ~SubscriberConvNoHeader(){}
   void callback(const typename msg_type::ConstPtr& msg) {
     access.set() = conv(*msg);
   }
@@ -170,7 +166,7 @@ struct PublisherConv : Module{
     pub.publish(conv(access.get()));
   }
   void close(){
-    nh->shutdown();
+    // nh->shutdown(); //why does this throw an error???
     delete nh;
   }
 };

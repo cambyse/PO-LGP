@@ -27,6 +27,8 @@ bool MyTask::isConv(){
 // ============================================================================
 
 void script1(ActionSwigInterface& S){
+  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }");
+
   S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
@@ -34,26 +36,26 @@ void script1(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL base_footprint)");
   S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  if(false){
-    S.setFact("(Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
-    S.setFact("(Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
-    S.setFact("(Control pos endeffL base_footprint){ target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
-    S.waitForCondition("(conv Control wheels)");
-    S.waitForCondition("(conv Control pos endeffR base_footprint)");
-    S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
+  S.setFact("(Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-    S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
-    S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
-    S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
-    S.waitForCondition("(conv Control wheels)");
-    S.waitForCondition("(conv Control pos endeffR base_footprint)");
-    S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
+  S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
+  S.waitForCondition("(conv Control wheels)");
+  S.waitForCondition("(conv Control pos endeffR base_footprint)");
+  S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-    S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
-    S.setFact("(HomingActivity)");
-    S.waitForCondition("(conv HomingActivity)");
-    S.waitForCondition("(conv Control wheels)");
-  }
+  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0)!");
+
+  S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
+  S.setFact("(HomingActivity)");
+  S.waitForCondition("(conv HomingActivity)");
+  S.waitForCondition("(conv Control wheels)");
 }
 
 // ============================================================================
@@ -99,28 +101,22 @@ void script3(ActionSwigInterface& S){
 // ============================================================================
 
 void forceControl(ActionSwigInterface& S){
-//  gazeAtHand (FollowReferenceActivity){ type="gazeAt", PD=[.5 .9 .1 10.], prec=1. }
-//  alignHand (FollowReferenceActivity){ type="vec", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
-//  positionHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
-//  lowerHand (FollowReferenceActivity){ type="pos", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
-//  controlForce (FollowReferenceActivity){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
-//  homing (HomingActivity){ type="homing" }
-
   S.setFixBase(true);
 
   S.setFact("(Control gazeAt endeffHead endeffL){ PD=[.5 .9 .1 10.], prec=1. }");
   S.setFact("(Control vec endeffL){ vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }");
-  S.setFact("(Control pos endeffL){ target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }");
+  S.setFact("(Control pos endeffL){ target=[.8, .3, .9], PD=[.5, .9, .1, 10.] }");
   S.waitForCondition("(conv Control vec endeffL), (conv Control pos endeffL)");
 
   S.setFact("(Control pos endeffL)!, (conv Control pos endeffL)!");
-  S.setFact("(Control pos endeffL){ target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }"); //lowering hand
+  S.setFact("(Control pos endeffL){ target=[.8, .3, .8], PD=[.5, .9, .1, 10.] }"); //lowering hand
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
   TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
   taskController->verbose = true;
 
+#if 0
   // directly generate a push task
   TaskMap *map = new DefaultTaskMap(posTMT, taskController->modelWorld.get(), "endeffForceL");
   CtrlTask *task = new CtrlTask("Push", map, 1., .8, 1., 1.);
@@ -128,14 +124,21 @@ void forceControl(ActionSwigInterface& S){
   task->f_Igain = .003;
   taskController->ctrlTasks.set()->append(task);
 
+  cout <<"NOW!" <<endl;
   mlr::wait(2.);
+  cout <<"DONE!" <<endl;
 
   taskController->ctrlTasks.set()->removeValue(task);
   delete task;
   delete map;
+#endif
 
   //-- back to high-level interface
   taskController->verbose = false;
+  S.setFact("(Control pos endeffL)!, (conv Control pos endeffL)!");
+  S.setFact("(Control pos endeffL){ target=[.8, .3, .9], PD=[.5, .9, .1, 10.] }"); //lifting hand
+  S.waitForCondition("(conv Control vec endeffL), (conv Control pos endeffL)");
+
   S.setFact("(Control pos endeffL)!, (Control gazeAt endeffHead endeffL)!, (Control vec endeffL)!, (HomingActivity)");
   S.waitForCondition("(conv HomingActivity)");
 }
@@ -165,13 +168,14 @@ int main(int argc, char** argv) {
   S.createNewSymbol("gazeAt");
 
 //  script1(S);
-  script2(S);
+//  script2(S);
 //  script3(S);
-//  forceControl(S);
+  forceControl(S);
 
   threadCloseModules();
   registry().clear();
 
+  cout <<"bye bye" <<endl;
   return 0;
 }
 
