@@ -15,4 +15,3 @@ default:
         -I "std_msgs:$(ROSDIR)/share/std_msgs/msg" \
         -I "geometry_msgs:$(ROSDIR)/share/geometry_msgs/msg" \
         -o $(OUTPUTDIR)
-	make -f Makefile
