@@ -15,6 +15,7 @@ PDExecutor::PDExecutor()
       effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
       effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
 {
+
   // fmc setup
   world.getJointState(q, qdot);
   fmc.H_rate_diag = pr2_reasonable_W(world);
@@ -39,14 +40,14 @@ PDExecutor::PDExecutor()
 
   if(MT::getParameter<bool>("usePositionR", false)) {
 
-    effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
-    effPosR->y_ref = {0.8, -.5, 1.};
+     effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
+     effPosR->y_ref = {0.8, -.5, 1.};
     //effPosR->maxVel = 0.004;
   }
 
   if(MT::getParameter<bool>("usePositionL", false)) {
-    effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
-    effPosL->y_ref = {0.8, .5, 1.};
+     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
+     effPosL->y_ref = {0.8, .5, 1.};
   }
   if(MT::getParameter<bool>("fc", false)) {
     fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
@@ -71,7 +72,7 @@ PDExecutor::PDExecutor()
   }
 
   if(MT::getParameter<bool>("useOrientationR", false)) {
-    effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
+     effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
@@ -96,6 +97,7 @@ PDExecutor::PDExecutor()
 
 void PDExecutor::visualizeSensors()
 {
+
   floatA rh = poses_rh.get();
   if(rh.N) {
     world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
@@ -106,10 +108,12 @@ void PDExecutor::visualizeSensors()
     world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
     world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
   }
+
 }
 
 
 void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
+
   ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
   ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
 
@@ -120,12 +124,14 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
   q(qIndex+1) = pos(1);
   q(qIndex+2) = MT::sign(rotvec(2)) * angle;
 //  cout<<q<<endl;
+
 }
 
 
 
 void PDExecutor::step()
 {
+
     //cout<<"\x1B[2J\x1B[H";
     if (useros && !inited)
     {
@@ -338,6 +344,7 @@ void PDExecutor::step()
         ref.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
         ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
    }
+
     if(useros)
     {
         uint count=0;
@@ -380,6 +387,7 @@ void PDExecutor::step()
 
 void PDExecutor::sendRosCtrlMsg()
 {
+
   CtrlMsg ref;
   ref.q = q;
   arr qdotzero;
@@ -398,10 +406,12 @@ void PDExecutor::sendRosCtrlMsg()
   ctrl_ref.set() = ref;
  //  roscom->publishJointReference();
 //#endif
+
 }
 
 void PDExecutor::initRos()
 {
+
 //#ifdef WITH_ROS
   // if (roscom == nullptr)
   //   return;
@@ -432,16 +442,22 @@ void PDExecutor::initRos()
   worldreal.setJointState(q,qdot);
   cout << "DONE" << endl;
 //#endif
+
+
 }
+
 
 void PDExecutor::open()
 {
+
   useros = MT::getParameter<bool>("useRos", false);
   error = zeros(3);
+
 }
 
 void PDExecutor::close()
 {
+
     CtrlMsg ref;
     ref.q = q;
     arr qdotzero;
@@ -458,4 +474,5 @@ void PDExecutor::close()
     ref.gamma = 0.;
     ref.J_ft_inv.clear();
     //ctrl_ref.set() = ref;
+
 }

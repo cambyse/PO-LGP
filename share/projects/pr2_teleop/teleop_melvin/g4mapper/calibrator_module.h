@@ -68,11 +68,6 @@ struct G4HutoRoMap:Module
     double lpp;
     bool shoulderinit = true;
    // void doshouldercalc();
-    void doinit(floatA a,int button);
-    void gripperinit(floatA a);
-    void getshoulderpos(floatA a);
-    void getARMradius(floatA a);
-    void getUnitPos(floatA a);
 /////////////////////////////////////////////
     
 
@@ -113,9 +108,7 @@ struct G4HutoRoMap:Module
     float q_rh_andrea, q_lh_andrea;
 
 /////////////////////////////////////////////    
-  */  
-    void patterndriving(floatA tempData);
-    void initdriving(floatA tempData, int button);
+  */
     bool  btnpressed = true;
     floatA turnL;
     floatA turnR;
