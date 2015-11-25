@@ -339,6 +339,8 @@ endif
 
 ifeq ($(PORTAUDIO),1)
 CXXFLAGS  += -DMLR_PORTAUDIO
+LPATHS += $(HOME)/opt/portaudio/lib/.libs
+CPATHS += $(HOME)/opt/portaudio/include
 LIBS += -lportaudio
 endif
 

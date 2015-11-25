@@ -45,7 +45,7 @@ void TEST(ModuleSorter){
   for(uint i=0;i<N;i++) vars(i)->set() = mlr::rnd(100);
 
   for(uint k=0;k<20;k++){
-    if(shutdown().getValue()) break;
+    if(moduleShutdown().getValue()) break;
     for(uint i=0;i<N;i++) cout <<vars(i)->get() <<' ';  cout <<endl;
     stepModules();
     mlr::wait(.1);

@@ -39,7 +39,7 @@ struct Access;
 struct Module;
 typedef mlr::Array<Access*> AccessL;
 typedef mlr::Array<Module*> ModuleL;
-extern Singleton<ConditionVariable> shutdown;
+extern Singleton<ConditionVariable> moduleShutdown;
 
 //===========================================================================
 

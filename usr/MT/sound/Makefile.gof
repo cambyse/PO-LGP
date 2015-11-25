@@ -1,6 +1,0 @@
-BASE = ../../../share
-
-PORTAUDIO = 1
-DEPEND = Core Media
-
-include $(BASE)/gofMake/generic.mk

@@ -1,6 +1,3 @@
-#ifdef MLR_PORTAUDIO
-
-#include <portaudio.h>
 #include "audio.h"
 
 SineSound::SineSound(float _sampleRate):sampleRate(_sampleRate){
@@ -43,9 +40,10 @@ float SineSound::get(){
 
 //===========================================================================
 
-struct sAudio{
-  PaStream *stream;
-};
+#ifdef MLR_PORTAUDIO
+
+#include <portaudio.h>
+
 
 void err(PaError e){
   if(!e) return;
@@ -72,16 +70,9 @@ static int PortAudioCallback( const void *inputBuffer, void *outputBuffer,
   return paContinue;
 }
 
-Audio::Audio():s(NULL){
-  s = new sAudio;
-}
 
-Audio::~Audio(){
-  delete s;
-  s=NULL;
-}
 
-void Audio::open(SineSound& S){
+Audio::Audio(SineSound& S){
   err( Pa_Initialize() );
 
   PaStreamParameters outputParameters;
@@ -93,21 +84,21 @@ void Audio::open(SineSound& S){
   outputParameters.hostApiSpecificStreamInfo = NULL;
 
   err( Pa_OpenStream(
-         &s->stream,
+         &stream,
          NULL, /* no input */
          &outputParameters,
-         SAMPLE_RATE,
+         S.sampleRate,
          64, //frames per buffer
          0,
          PortAudioCallback,
          &S ) );
 
-  err( Pa_StartStream( s->stream ) );
+  err( Pa_StartStream( stream ) );
 }
 
-void Audio::close(){
-  err( Pa_StopStream( s->stream ) );
-  err( Pa_CloseStream( s->stream ) );
+Audio::~Audio(){
+  err( Pa_StopStream( stream ) );
+  err( Pa_CloseStream( stream ) );
   err( Pa_Terminate() );
 }
 

@@ -74,8 +74,8 @@ void TEST(Projections){
 
   for(uint t=0;;t++){
     arr gamepadState = S.gamepadState.get();
-    if(t>10 && stopButtons(gamepadState)) shutdown.incrementValue();
-    if(shutdown().getValue()>0) break;
+    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
+    if(moduleShutdown().getValue()>0) break;
     S.gamepadState.var->waitForNextRevision();
 
     // joint state

@@ -2,14 +2,13 @@
 
 #include <Core/array.h>
 
-#define SAMPLE_RATE 16000
 
 struct SineSound{
   float sampleRate;
   floatA notes; //four entries per note: (sin-buffer-step-size, amplitude, time, decay)
   floatA SIN;
 
-  SineSound(float _sampleRate=SAMPLE_RATE);
+  SineSound(float _sampleRate=16000);
 
   void addNote(float freq, float a=.1, float decay=0.0007);
   void changeFreq(uint i,float freq);
@@ -21,11 +20,7 @@ struct SineSound{
 //===========================================================================
 
 struct Audio{
-  struct sAudio *s;
-
-  Audio();
+  void *stream;
+  Audio(SineSound& S);
   ~Audio();
-
-  void open(SineSound& S);
-  void close();
 };

@@ -21,13 +21,13 @@
 
 #include "module.h"
 
-Singleton<ConditionVariable> shutdown;
+Singleton<ConditionVariable> moduleShutdown;
 
 void signalhandler(int s){
-  int calls = shutdown().incrementValue();
+  int calls = moduleShutdown().incrementValue();
   cerr <<"\n*** System received signal " <<s <<" -- count=" <<calls;
   if(calls==1){
-    LOG(0) <<" -- waiting for main loop to break on shutdown().getValue()" <<endl;
+    LOG(0) <<" -- waiting for main loop to break on moduleShutdown().getValue()" <<endl;
   }
   if(calls==2){
     LOG(0) <<" -- smoothly closing modules directly" <<endl;
@@ -40,7 +40,7 @@ void signalhandler(int s){
     LOG(0) <<" -- DONE" <<endl;
   }
   if(calls>3){
-    LOG(3) <<" ** shutdown failed - hard exit!" <<endl;
+    LOG(3) <<" ** moduleShutdown failed - hard exit!" <<endl;
     exit(1);
   }
 }

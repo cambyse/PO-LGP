@@ -24,7 +24,7 @@ void threadedRun(){
 
   threadOpenModules(true);
 
-  shutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForValueGreaterThan(0);
 
   cout << "bye bye" << endl;
   threadCloseModules();

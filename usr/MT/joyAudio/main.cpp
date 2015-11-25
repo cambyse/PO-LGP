@@ -13,7 +13,7 @@
 
 //  threadOpenModules(true);
 
-//  shutdown().waitForValueGreaterThan(0);
+//  moduleShutdown().waitForValueGreaterThan(0);
 
 //  threadCloseModules();
 //  cout <<"bye bye" <<endl;
