@@ -2500,6 +2500,29 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
   return fc;
 }
 
+void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  arr q = to.getJointState();
+  uint T = qfrom.d0;
+  qto = repmat(~q,T,1);
+
+  intA match(qfrom.d1);
+  match = -1;
+  for(ors::Joint* jfrom:from.joints){
+    ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) if(match(i)!=-1){
+    for(uint t=0;t<T;t++){
+      qto(t, match(i)) = qfrom(t,i);
+    }
+  }
+}
+
 
 //===========================================================================
 //-- template instantiations
@@ -2514,3 +2537,6 @@ template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
 template mlr::Array<ors::Joint*>::Array();
 #endif
 /** @} */
+
+
+
