@@ -62,7 +62,7 @@ void script1(ActionSwigInterface& S){
 
 
 void script2(ActionSwigInterface& S){
-  newActivity<FollowReferenceActivity>(*S.getRM().get()->state, {"Control", "wheels"}, { NO(target, ARR(0, .3, .2)), NO(PD, ARR(.5, .9, .5, 10.))});
+  newActivity<FollowReferenceActivity>(*S.getRM().get()->state, {"Control", "wheels"}, { Nod("target", ARR(0, .3, .2)), Nod("PD", ARR(.5, .9, .5, 10.))});
   S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }");
   mlr::wait(5.);
   S.setFact("(MyTask pos endeffR base_footprint){ type=pos, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
