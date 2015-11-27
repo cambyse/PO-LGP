@@ -1,15 +1,15 @@
 #include "SensorActivities.h"
-#include "TaskControllerModule.h"
-#include "pr2/roscom.h"
-
+#include <pr2/TaskControllerModule.h>
+#include <pr2/roscom.h>
 
 // ============================================================================
+
 void SensorActivity::configure() {
   configureSensor(params);
   _isTriggered = false;
 }
 
-void SensorActivity::step(double dt) {
+void SensorActivity::activitySpinnerStep(double dt) {
   activityTime += dt;
 
   stepSensor();

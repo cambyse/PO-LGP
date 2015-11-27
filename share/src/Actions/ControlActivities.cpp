@@ -1,5 +1,5 @@
 #include <Motion/feedbackControl.h>
-#include "TaskControllerModule.h"
+#include <pr2/TaskControllerModule.h>
 #include "SensorActivities.h"
 #include "ControlActivities.h"
 
@@ -17,7 +17,7 @@ ControlActivity::~ControlActivity(){
   delete map;
 }
 
-void ControlActivity::step(double dt){
+void ControlActivity::activitySpinnerStep(double dt){
   activityTime += dt;
 
   stepControl(dt);

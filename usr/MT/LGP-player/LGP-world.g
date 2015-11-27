@@ -25,7 +25,7 @@ joint (base2 arm1) { type=11 A=<T d(-50 1 0 0) d(-160 0 1 0)>  }
 joint (arm1 arm2) { A=<T t(0 0 .15) d(90 0 0 1) d(-10 1 0 0)> B=<T t(0 0 .15) > }
 joint (arm2 eff) { A=<T t(0 0 .15) d(90 0 0 1)  d(-10 1 0 0)> B=<T t(0 0 .15) > }
 
-body graspRef { type=5 size=[.1 0 0 0] }
+body graspRef { type=9 size=[0. 0. .0 .02] color=[1 0 0] }
 joint graspJoint(eff graspRef){ A=<T t(0 0 .35)  d(-180 0 0 1) d(160 0 1 0) d(50 1 0 0) > type=11 }
 
 body obj1 { size=[.1 .1 .2 0] type=0 contact }

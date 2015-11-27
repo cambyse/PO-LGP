@@ -2,7 +2,7 @@
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
-#include <Actions/TaskControllerModule.h>
+#include <pr2/TaskControllerModule.h>
 
 // ============================================================================
 
@@ -29,12 +29,16 @@ bool MyTask::isConv(){
 void script1(ActionSwigInterface& S){
   S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }");
 
+  S.setFact("(PlayFunnySound)");
+
   S.setFact("(Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.setFact("(Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}");
   S.waitForCondition("(conv Control wheels)");
   S.waitForCondition("(conv Control pos endeffL base_footprint)");
   S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
+
+  S.setFact("(PlayFunnySound)!");
 
   S.setFact("(Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}");
   S.setFact("(Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}");
@@ -169,8 +173,8 @@ int main(int argc, char** argv) {
 
 //  script1(S);
 //  script2(S);
-//  script3(S);
-  forceControl(S);
+  script3(S);
+//  forceControl(S);
 
   threadCloseModules();
   registry().clear();

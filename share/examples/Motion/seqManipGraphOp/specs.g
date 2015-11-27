@@ -23,8 +23,8 @@ KOMO{
 (MinSumOfSqr pos obj1){ order=1 scale=1e1 time=[0.53 0.55] target=[0 0 .5] }
 
 #place:
-(MinSumOfSqr posDiff obj1 target){ time=[1 1] scale=1e3 }
 (MinSumOfSqr qItself){ order=1 time=[1 1] scale=1e1 }
+(MinSumOfSqr posDiff obj1 target){ time=[1 1] scale=1e3 }
 (MinSumOfSqr quatDiff obj1 target){ time=[1 1] target=[1 0 0 0] scale=1e3 }
 
 #rigid grasp:

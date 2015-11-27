@@ -25,7 +25,7 @@ int main() {
   if (!music.openFromStream(str))
     return -1; // error
   music.play();
-  str.S.addNote(440., .1, .0);
+  str.S.addFreq(440., .1, .0);
   mlr::wait(3.);
 #else
     const unsigned SAMPLES = 44100;

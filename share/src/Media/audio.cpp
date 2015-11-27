@@ -1,30 +1,43 @@
 #include "audio.h"
 
+Singleton<Sound> sound;
+
 SineSound::SineSound(float _sampleRate):sampleRate(_sampleRate){
   SIN.resize(1024);
   for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MLR_2PI*i)/SIN.N);
 }
 
-void SineSound::addNote(float freq, float a, float decay){
+void SineSound::addNote(int noteRelToC, float a, float decay){
+  addFreq(440.*pow(2.,double(noteRelToC)/12.), a, decay);
+}
+
+void SineSound::addFreq(float freq, float a, float decay){
   floatA note = { float(SIN.N*freq/sampleRate), a, 0., decay };
+  mutex.lock();
   notes.append( note );
   notes.reshape(notes.N/4, 4);
+  mutex.unlock();
 }
 
 void SineSound::changeFreq(uint i,float freq){
+  mutex.lock();
   notes(i,0) = float(SIN.N*freq/sampleRate);
+  mutex.unlock();
 }
 
 void SineSound::reset(){ notes.clear(); }
 
 void SineSound::clean(){
+  mutex.lock();
   for(uint i=notes.d0;i--;){
     if(notes(i,1)<1e-4) notes.delRows(i);
   }
+  mutex.unlock();
 }
 
 float SineSound::get(){
   double x=0.;
+  mutex.lock();
   for(uint i=0;i<notes.d0; i++){
     float &a=notes(i, 1);
     float &t=notes(i, 2);
@@ -35,6 +48,7 @@ float SineSound::get(){
     if(a>0.05) a *= 1.-10.*decay;
     else a *= 1.-decay;
   }
+  mutex.unlock();
   return x;
 }
 
@@ -56,7 +70,7 @@ static int PortAudioCallback( const void *inputBuffer, void *outputBuffer,
                             const PaStreamCallbackTimeInfo* timeInfo,
                             PaStreamCallbackFlags statusFlags,
                             void *userData ){
-  SineSound &s = *((SineSound*)userData);
+  SineSound &S = *((SineSound*)userData);
   float *out = (float*)outputBuffer;
   unsigned long i;
 
@@ -64,8 +78,8 @@ static int PortAudioCallback( const void *inputBuffer, void *outputBuffer,
   (void) statusFlags;
   (void) inputBuffer;
 
-  s.clean();
-  for( i=0; i<framesPerBuffer; i++ ) *out++ = s.get();
+  S.clean();
+  for( i=0; i<framesPerBuffer; i++ ) *out++ = S.get();
 
   return paContinue;
 }

@@ -147,9 +147,9 @@ void KOMO::checkGradients(){
   }
 }
 
-void KOMO::displayTrajectory(bool wait){
+void KOMO::displayTrajectory(double delay){
   if(MP->T){
-    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
   //  orsDrawProxies=true;
   // for(uint t=0;t<x.d0;t++){
   //   MP->setState(x[t]);

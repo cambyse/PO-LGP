@@ -201,7 +201,7 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
   }else{
     sw->toId = world.getShapeByName(ref2)->index;
   }
-  sw->timeOfApplication=Tinterval+1;
+  sw->timeOfApplication = Tzero + Tinterval + 1;
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
     sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
@@ -264,7 +264,7 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m){
 
 bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
   if(Tinterval==-1) Tinterval=T;
-  //-- tasks?
+  //-- task?
   Task *task = newTask(n, world, Tinterval, Tzero);
   if(task){
     if(n->keys.N) task->name=n->keys.last(); else{
@@ -273,7 +273,7 @@ bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
     tasks.append(task);
     return true;
   }
-  //-- switches?
+  //-- switch?
   ors::KinematicSwitch *sw = newSwitch(n, world, Tinterval, Tzero);
   if(sw){
     switches.append(sw);
@@ -283,25 +283,8 @@ bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
 }
 
 void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
-#if 1
   for(Node *n:specs) parseTask(n, Tinterval, Tzero);
-#else
-  //-- parse tasks
-  for(Node *n:specs){
-    Task *task = newTask(n, world, T);
-    if(!task) continue;
-    if(n->keys.N) task->name=n->keys.last(); else{
-      for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
-    }
-    tasks.append(task);
-  }
-  //-- parse switches
-  for(Node *n:specs){
-    ors::KinematicSwitch *sw = newSwitch(n, world, T);
-    if(!sw) continue;
-    switches.append(sw);
-  }
-#endif
+
   //-- add TransitionTask for InvKinematics
   if(!T){
     TaskMap *map = new TaskMap_qItself();

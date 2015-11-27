@@ -39,6 +39,11 @@ void LGPplayer(){
     }
     cout <<"------------------------" <<endl;
 
+    if(!c){
+      cout <<"NO CHOICES!" <<endl;
+      break;
+    }
+
     char cmd='1';
 //    std::cin >>cmd;
     cout <<"COMMAND: '" <<cmd <<"'" <<endl;

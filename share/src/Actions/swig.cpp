@@ -2,9 +2,9 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include "TaskControllerModule.h"
+#include <pr2/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
-#include "RelationalMachineModule.h"
+#include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <pr2/rosalvar.h>
 #include <pr2/roscom.h>

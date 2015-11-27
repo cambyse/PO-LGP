@@ -21,7 +21,7 @@ void TEST(OrsEditor) {
 
   ors::KinematicWorld G(file);
 
-  G.setAgent(99);
+  //G.setAgent(99);
 
   G.checkConsistency();
   G >>FILE("z.ors");
