@@ -13,12 +13,13 @@ void basic(SineSound& S){
 
 void complex(SineSound& S){
   uint mode=1;
-  for(uint k=0;k<220;k++){
+  for(uint k=0;k<210;k++){
     mlr::wait(.1);
     switch(mode){
       case 0:  S.addNote(12 + rnd.uni(0,36));  break;
       case 1:{
         double range = 31. - 30.*fabs((double(k)-100.))/100.;
+	if(range<0.) range=0.;
         S.addNote(12 + floor(rnd(0,range)-range/2.));
       }break;
       case 2:
