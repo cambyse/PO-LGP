@@ -95,8 +95,8 @@ PathProblemRule {
 #    (MinSumOfSqr qItself){ order=1 time=[0.9 1] scale=1e1 } #slow down
     (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
     (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
-#    (MakeJoint delete Hand Obj){ time=1 }
-#    (MakeJoint rigid Onto Obj){ time=1 }
+    (MakeJoint delete Hand Obj){ time=1 }
+    (MakeJoint rigid Onto Obj){ time=1 }
   }
 }
 

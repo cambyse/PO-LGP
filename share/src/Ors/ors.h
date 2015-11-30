@@ -350,6 +350,7 @@ struct KinematicSwitch{
   KinematicSwitch();
   KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
+  void temporallyAlign(const KinematicWorld& Gprevious,KinematicWorld& G);
   void write(std::ostream& os) const;
 };
 /// @} // END of group ors_basic_data_structures

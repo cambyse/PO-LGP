@@ -127,7 +127,6 @@ void TEST(PickAndPlace){
     displayTrajectory(x, 1, G, MP.switches, "planned trajectory", .1);
 
   mlr::wait();
-
 }
 
 //===========================================================================

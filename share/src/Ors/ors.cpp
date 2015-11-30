@@ -2459,6 +2459,7 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     j->B = -to->rel;
 //    j->agent=1;
     G.isLinkTree=false;
+    G.calc_fwdPropagateFrames();
     return;
   }
   if(symbol==addJointAtFrom){
@@ -2476,6 +2477,23 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     return;
   }
   HALT("shouldn't be here!");
+}
+
+void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious, ors::KinematicWorld& G){
+  if(symbol==addJointAtFrom){
+    Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
+    if(!j || j->type!=jointType) return;
+    j->B.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+    G.calc_fwdPropagateFrames();
+    return;
+  }
+  if(symbol==addJointAtTo){
+    Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
+    if(!j || j->type!=jointType) return;
+    j->A.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+    G.calc_fwdPropagateFrames();
+    return;
+  }
 }
 
 void ors::KinematicSwitch::write(std::ostream& os) const{
