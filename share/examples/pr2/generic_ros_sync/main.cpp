@@ -5,40 +5,26 @@
 #include <pr2/rosmacro.h>
 #include <std_msgs/String.h>
 
-//===========================================================================
-ROSSUB("/hello_world", std_msgs::String, hello_world);
-// This create ROSSUB_hello_world module
-// Then:
-//  - add the Module to your system
-//  - add the ACCESS variable to your system
-
-
-// =================================================================================================
-struct MySystem {
-  //  - add the ACCESS variable to your system
-  ACCESS(std_msgs::String, hello_world)
-
-  MySystem() {
-    new RosCom_Spinner();
-    //  - add the Module to your system
-    addModule<ROSSUB_hello_world>(NULL, /*Module::listenFirst,*/ .1);
-    //connect();
-  }
-};
 
 
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  MySystem system;
+  rosCheckInit("nodeName");
+
+  ACCESSname(std_msgs::String, hello_world)
+  RosCom_Spinner spinner;
+  //addModule<ROSSUB_hello_world>(NULL, /*Module::listenFirst,*/ .1);
+  Subscriber<std_msgs::String> sub("/hello_world", hello_world);
+
   threadOpenModules(true);
   cout << "Engine open " << endl;
 
   for (int i = 0; true; i++) {
     // print the data on the /hello_world topic
-    system.hello_world.waitForNextRevision();
-    std_msgs::String d = system.hello_world.get();
+    hello_world.waitForNextRevision();
+    std_msgs::String d = hello_world.get();
     cout << "step[" << i << "]: "<< d.data << endl;
   }
 

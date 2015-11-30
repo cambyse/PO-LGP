@@ -106,6 +106,5 @@ void TEST(Sensors){
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   testSensors();
-
   return 0;
 }
