@@ -26,6 +26,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   base = MP.addPDTask("endeffBase", .2, .8, new TaskMap_qItself(MP.world, "worldTranslationRotation"));
   torso = MP.addPDTask("torso_lift_link", .2, .8, new DefaultTaskMap(posTMT, MP.world, "torso_lift_link_0"));
   head = MP.addPDTask("endeffHead", .5, 1., new DefaultTaskMap(gazeAtTMT, MP.world, "endeffHead", Vector_z, "base_footprint"));
+  headAxes = MP.addPDTask("endeffHead", .5, 1., new TaskMap_qItself(MP.world, "head_pan_joint", "head_tilt_joint"));
   limits = MP.addPDTask("limits", .2, .8, new TaskMap_qLimits());
   coll = MP.addPDTask("collisions", .2, .8, new ProxyTaskMap(allPTMT, {0u}, .1));
   gripperL = MP.addPDTask("gripperL", 2., .8, new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()));
@@ -72,8 +73,8 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       switch(sel){
         case right:  pdt=endeffR;  cout <<"effR control" <<endl;  break;
         case left:   pdt=endeffL;  cout <<"effL control" <<endl;  break;
-        case up:     pdt=torso;  cout <<"torso control" <<endl;  break;
-//        case up:     cout <<"head control disabled" <<endl;  break;
+//        case up:     pdt=torso;  cout <<"torso control" <<endl;  break;
+        case up:     pdt=headAxes; cout <<"head control" <<endl;  break;
         case down:   pdt=base;  cout <<"base control" <<endl;  break;
         case none:   pdt=NULL;  break;
         case downRot: break;
@@ -91,9 +92,12 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         vel = MP.world.getShapeByName("endeffBase") -> X.rot * vel;
       }
 //      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
-      pdt->y_ref = pdt->y + 0.01*conv_vec2arr(vel);
-      pdt->v_ref = conv_vec2arr(vel); //setZero();
-      MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
+      arr ve;
+      ve = conv_vec2arr(vel);
+      if(sel==up) ve = ARR(ve(1), -ve(0));
+      pdt->y_ref = pdt->y + 0.01*ve;
+      pdt->v_ref = ve; //setZero();
+      if(sel!=up)  MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
       //-- left right: gaze control
       if(sel==left || sel==right){

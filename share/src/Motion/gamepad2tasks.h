@@ -20,7 +20,7 @@
 
 struct Gamepad2Tasks{
   FeedbackMotionControl& MP;
-  CtrlTask *endeffR, *endeffL, *base, *torso, *head, *limits, *coll,  *gripperL, *gripperR;
+  CtrlTask *endeffR, *endeffL, *base, *torso, *head, *headAxes, *limits, *coll,  *gripperL, *gripperR;
   Gamepad2Tasks(FeedbackMotionControl& _MP);
   bool updateTasks(arr& gamepadState);
 };
