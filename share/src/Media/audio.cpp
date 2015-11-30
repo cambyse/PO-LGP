@@ -19,9 +19,15 @@ void SineSound::addFreq(float freq, float a, float decay){
   mutex.unlock();
 }
 
-void SineSound::changeFreq(uint i,float freq){
+void SineSound::changeFreq(uint i, float freq){
   mutex.lock();
   notes(i,0) = float(SIN.N*freq/sampleRate);
+  mutex.unlock();
+}
+
+void SineSound::changeAmp(uint i, float amp){
+  mutex.lock();
+  notes(i,1) = amp;
   mutex.unlock();
 }
 

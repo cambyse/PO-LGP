@@ -14,7 +14,8 @@ struct SineSound{
 
   void addNote(int noteRelToC, float a=.1, float decay=0.0007);
   void addFreq(float freq, float a=.1, float decay=0.0007);
-  void changeFreq(uint i,float freq);
+  void changeFreq(uint i, float freq);
+  void changeAmp(uint i, float amp);
   void reset();
   void clean();
   float get();

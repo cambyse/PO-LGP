@@ -8,14 +8,20 @@ int main(int argc, char** argv){
 
   rosCheckInit("playForceSound");
 
-  ACCESSname(CtrlMsg, ctrl_obs)
+  ACCESSname(arr, Fl);
+  ACCESSname(arr, Fr);
   RosCom_Spinner spinner;
-  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub_ctrl_obs("/marc_rt_controller/jointState", ctrl_obs);
+  SubscriberConvNoHeader<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr> subL("/ft_sensor/l_ft_compensated", Fl);
+  SubscriberConvNoHeader<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr> subR("/ft_sensor/r_ft_compensated", Fr);
   PlayForceSoundActivity fs;
 
   threadOpenModules(true);
 
-  mlr::wait(3.);
+//  for(uint i=0;i<1000;i++){
+//    cout <<Fl.get()() <<endl;
+//    mlr::wait(.03);
+//  }
+  mlr::wait(30.);
 
   threadCloseModules();
   cout <<"bye bye" <<endl;
