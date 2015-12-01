@@ -11,7 +11,7 @@ using namespace std;
 
 TaskControllerModule::TaskControllerModule()
     : Module("TaskControllerModule", .01)
-    , realWorld("model.kvg")
+    , realWorld("../../../data/pr2_model/pr2_model.ors")
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
@@ -33,7 +33,7 @@ void TaskControllerModule::open(){
 
   feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
-  feedbackController->qitselfPD.setGains(.0,10.);
+  feedbackController->qitselfPD.setGains(0., 10.);
 
 //  mlr::open(fil,"z.TaskControllerModule");
 
@@ -48,6 +48,7 @@ void TaskControllerModule::open(){
   useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
 }
+
 
 void TaskControllerModule::step(){
   static uint t=0;
@@ -73,27 +74,15 @@ void TaskControllerModule::step(){
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
+        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
+        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
         syncModelStateWithRos = false;
-      
-      //supresses  c++ output
-
-       //streambuf *backup; 
-       //ofstream muell; 
-      //muell.open ("/dev/null"); 
-      //backup = cout.rdbuf();     // Konsolenpuffer merken 
-      //ostream konsole(backup);   // Neuen stream an Konsole binden 
-      //cout.rdbuf(muell.rdbuf()); // cout auf Muell umleiten 
       }
     }else{
       if(t>20){
-        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+        HALT("sync'ing real PR2 with simulated failed")
       }
     }
-  }
-
-  if(syncModelStateWithRos){
-    cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
-    cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
   }
 
   //-- sync the model world with the AlvarMarkers
@@ -106,12 +95,12 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
   //-- code to output force signals
-  if(true){
+  if(false){
     ors::Shape *ftL_shape = realWorld.getShapeByName("endeffForceL");
     arr fLobs = ctrl_obs.get()->fL;
     arr uobs =  ctrl_obs.get()->u_bias;
@@ -127,7 +116,7 @@ void TaskControllerModule::step(){
     }
   }
 
-  //-- copy the task to the local controller
+  //-- copy the tasks to the local controller
   ctrlTasks.readAccess();
   modelWorld.writeAccess();
   feedbackController->tasks = ctrlTasks();

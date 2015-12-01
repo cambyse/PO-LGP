@@ -70,7 +70,7 @@ struct Module : Thread{
       which accesses it needs. The default constructure should really
       do nothing */
   Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
-    new Node_typed<Module>(registry(), {"Thread", name}, {}, this, false);
+    new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
   }
   virtual ~Module(){}
 
