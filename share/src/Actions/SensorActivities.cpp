@@ -1,5 +1,5 @@
 #include "SensorActivities.h"
-#include <pr2/TaskControllerModule.h>
+#include <Actions/TaskControllerModule.h>
 #include <pr2/roscom.h>
 
 // ============================================================================

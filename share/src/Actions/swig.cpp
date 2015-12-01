@@ -2,7 +2,7 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <pr2/TaskControllerModule.h>
+#include <Actions/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
