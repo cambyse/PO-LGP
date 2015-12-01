@@ -181,12 +181,12 @@ template<class T> const T *Node::getValue() const {
   return typed->value;
 }
 
-template<class T> NodeInitializer::NodeInitializer(const char* key, const T& x){
+template<class T> Nod::Nod(const char* key, const T& x){
   it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));
 }
 
-template<class T> NodeInitializer::NodeInitializer(const char* key, const StringA& parents, const T& x)
+template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   : parents(parents){
   it = new Node_typed<T>(G, new T(x), true);
   it->keys.append(STRING(key));

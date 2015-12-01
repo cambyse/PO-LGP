@@ -1,4 +1,5 @@
 #include "RelationalMachineModule.h"
+#include <iomanip>
 
 struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;

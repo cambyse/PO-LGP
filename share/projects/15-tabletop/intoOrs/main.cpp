@@ -21,7 +21,9 @@ struct OrsViewer:Module{
     LOG(-1) <<"HERE"<< endl;
   }
   void step(){
+    copy.gl().blockDrawing.lock();
     copy = modelWorld.get();
+    copy.gl().blockDrawing.unlock();
     copy.watch(false);
   }
   void close(){}

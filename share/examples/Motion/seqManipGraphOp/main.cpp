@@ -127,7 +127,6 @@ void TEST(PickAndPlace){
     displayTrajectory(x, 1, G, MP.switches, "planned trajectory", .1);
 
   mlr::wait();
-
 }
 
 //===========================================================================
@@ -136,13 +135,14 @@ void komoVersion(){
   Graph specs("specs.g");
   KOMO komo(specs);
   komo.MP->x0 += .3;
-  komo.MP->reportFull();
+  komo.MP->reportFull(true);
   komo.x = replicate(komo.MP->x0, komo.MP->T+1);
   rndGauss(komo.x,.01,true); //don't initialize at a singular config
   optNewton(komo.x, Convert(*komo.MPF), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
 //  komo.run();
   komo.MP->costReport(true);
-  komo.displayTrajectory();
+  for(;;)
+    komo.displayTrajectory(-1);
 }
 
 //===========================================================================

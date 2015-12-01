@@ -65,8 +65,8 @@ void TEST(Sensors){
   Metronome tic(.05);
 
   for(uint t=0;;t++){
-//    if(t>10 && stopButtons(gamepadState)) shutdown.incrementValue();
-    if(shutdown().getValue()>0) break;
+//    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
+    if(moduleShutdown().getValue()>0) break;
     S.kinect_rgb.var->waitForNextRevision();
 //    tic.waitForTic();
 
@@ -106,6 +106,5 @@ void TEST(Sensors){
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   testSensors();
-
   return 0;
 }

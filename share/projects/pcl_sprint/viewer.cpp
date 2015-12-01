@@ -150,7 +150,7 @@ int main(int argn, char ** args) {
         threadOpenModules(true);
         // define get method
         get_input_cloud = [&](){
-            if(shutdown().getValue()>0) {
+            if(moduleShutdown().getValue()>0) {
                 cout << "Error: no input method defined" << endl;
                 input_cloud->clear();
             } else {

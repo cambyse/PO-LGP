@@ -11,8 +11,8 @@ KOMO{
 (MinSumOfSqr qItself){ order=2 time=[0 1] Hmetric=1e-1 }
 
 #kinematic switches
-(MakeJoint rigidZero graspRef obj1){ timeOfApplication=.49 }
-(MakeJoint delete table obj1){ timeOfApplication=.49 }
+(MakeJoint rigidZero graspRef obj1){ time=.49 }
+(MakeJoint delete table obj1){ time=.49 }
 
 #reach:
 (MinSumOfSqr posDiff graspRef obj1){ time=[0.49 0.5] scale=1e3 }
@@ -23,8 +23,8 @@ KOMO{
 (MinSumOfSqr pos obj1){ order=1 scale=1e1 time=[0.53 0.55] target=[0 0 .5] }
 
 #place:
-(MinSumOfSqr posDiff obj1 target){ time=[1 1] scale=1e3 }
 (MinSumOfSqr qItself){ order=1 time=[1 1] scale=1e1 }
+(MinSumOfSqr posDiff obj1 target){ time=[1 1] scale=1e3 }
 (MinSumOfSqr quatDiff obj1 target){ time=[1 1] target=[1 0 0 0] scale=1e3 }
 
 #rigid grasp:

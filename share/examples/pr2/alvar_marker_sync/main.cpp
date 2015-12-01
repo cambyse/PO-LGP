@@ -6,14 +6,17 @@
 // =================================================================================================
 struct MySystem {
   // Access Variables
-  ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(AlvarMarkers, ar_pose_marker)
+  ACCESSname(CtrlMsg, ctrl_obs)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(AlvarMarkers, ar_pose_markers)
 
   MySystem() {
     new RosCom_Spinner();
     new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
     new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-    addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
+    //addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+
     //connect();
   }
 };
@@ -23,6 +26,7 @@ struct MySystem {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
+  rosCheckInit("nodeName");
   bool useRos = true;
 
   ors::KinematicWorld world("model.kvg");
@@ -33,7 +37,7 @@ int main(int argc, char** argv){
   for (int i = 0; true; i++) {
     syncJointStateWitROS(world, system.ctrl_obs, useRos);
 
-    AlvarMarkers markers = system.ar_pose_marker.get();
+    AlvarMarkers markers = system.ar_pose_markers.get();
     syncMarkers(world, markers);
 
     // world.calc_fwdPropagateFrames();

@@ -141,7 +141,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
 
 //===========================================================================
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
   //-- try to crate a map
   TaskMap *map = newTaskMap(specs, world);
   if(!map) return NULL;
@@ -151,16 +151,16 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint T){
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
     arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*T, time(1)*T, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
   }else{
-    task->setCostSpecs(0, T, {}, 1.);
+    task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }
   return task;
 }
 
 //===========================================================================
 
-ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint T){
+ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0){
   if(specs->parents.N<2) return NULL;
 
   //-- get tags
@@ -187,20 +187,24 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
     CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
     ors::Body *b = world.shapes(sw->fromId)->body;
     if(b->inLinks.N==1){
-      CHECK_EQ(b->outLinks.N, 0, "");
+//      CHECK_EQ(b->outLinks.N, 0, "");
       sw->toId = sw->fromId;
       sw->fromId = b->inLinks(0)->from->shapes.first()->index;
     }else if(b->outLinks.N==1){
       CHECK_EQ(b->inLinks.N, 0, "");
       sw->toId = b->outLinks(0)->from->shapes.first()->index;
+    }else if(b->inLinks.N==0 && b->outLinks.N==0){
+      MLR_MSG("No link to delete for shape '" <<ref1 <<"'");
+      delete sw;
+      return NULL;
     }else HALT("that's ambiguous");
   }else{
     sw->toId = world.getShapeByName(ref2)->index;
   }
-  sw->timeOfApplication=T+1;
+  sw->timeOfApplication = Tzero + Tinterval + 1;
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
-    sw->timeOfApplication = params->V<double>("timeOfApplication",1.)*T+1;
+    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
   }
   return sw;
 }
@@ -258,9 +262,10 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m){
   return t;
 }
 
-bool MotionProblem::parseTask(const Node *n){
-  //-- tasks?
-  Task *task = newTask(n, world, T);
+bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
+  if(Tinterval==-1) Tinterval=T;
+  //-- task?
+  Task *task = newTask(n, world, Tinterval, Tzero);
   if(task){
     if(n->keys.N) task->name=n->keys.last(); else{
       for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
@@ -268,34 +273,18 @@ bool MotionProblem::parseTask(const Node *n){
     tasks.append(task);
     return true;
   }
-  //-- switches?
-  ors::KinematicSwitch *sw = newSwitch(n, world, T);
+  //-- switch?
+  ors::KinematicSwitch *sw = newSwitch(n, world, Tinterval, Tzero);
   if(sw){
     switches.append(sw);
     return true;
   }
+  return false;
 }
 
-void MotionProblem::parseTasks(const Graph& specs){
-#if 1
-  for(Node *n:specs) parseTask(n);
-#else
-  //-- parse tasks
-  for(Node *n:specs){
-    Task *task = newTask(n, world, T);
-    if(!task) continue;
-    if(n->keys.N) task->name=n->keys.last(); else{
-      for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
-    }
-    tasks.append(task);
-  }
-  //-- parse switches
-  for(Node *n:specs){
-    ors::KinematicSwitch *sw = newSwitch(n, world, T);
-    if(!sw) continue;
-    switches.append(sw);
-  }
-#endif
+void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
+  for(Node *n:specs) parseTask(n, Tinterval, Tzero);
+
   //-- add TransitionTask for InvKinematics
   if(!T){
     TaskMap *map = new TaskMap_qItself();
@@ -391,6 +380,55 @@ uint MotionProblem::dim_h(const ors::KinematicWorld &G, uint t) {
   return m;
 }
 
+void MotionProblem::setupConfigurations(){
+  //IMPORTANT: The configurations need to include the k prefix configurations!
+  //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
+  if(configurations.N!=k_order+T+1){
+    listDelete(configurations);
+    configurations.append(new ors::KinematicWorld())->copy(world, true);
+    for(uint t=1;t<=k_order+T;t++){
+      configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
+      CHECK(configurations(t)==configurations.last(), "");
+      //apply potential graph switches
+      for(ors::KinematicSwitch *sw:switches){
+        if(sw->timeOfApplication==t-k_order){
+          sw->apply(*configurations(t));
+//          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
+        }
+      }
+    }
+  }
+}
+
+void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
+  for(ors::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
+    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order));
+  }
+}
+
+void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
+  OpenGL gl;
+
+  uint num;
+  if(steps==1 || steps==-1) num=T; else num=steps;
+  for(uint k=0; k<=(uint)num; k++) {
+    uint t = (T?(k*T/num):0);
+
+    gl.clear();
+    gl.add(glStandardScene, 0);
+    gl.addDrawer(configurations(t+k_order));
+    if(delay<0.){
+      if(delay<-10.) FILE("z.graph") <<*configurations(t+k_order);
+      gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    }else{
+      gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      if(delay) mlr::wait(delay);
+    }
+  }
+  if(steps==1)
+    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
+}
+
 bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL &G, double tau) {
   phi.clear();
   if(&tt) tt.clear();
@@ -459,7 +497,7 @@ void MotionProblem::activateAllTaskCosts(bool active) {
   for(Task *c: tasks) c->active=active;
 }
 
-void MotionProblem::reportFull() {
+void MotionProblem::reportFull(bool brief) {
   cout <<"*** MotionProblem -- FeatureReport " <<endl;
 
   cout <<"  useSwift=" <<useSwift <<endl;
@@ -469,7 +507,7 @@ void MotionProblem::reportFull() {
   cout <<"  x0=" <<x0 <<endl;
   cout <<"  v0=" <<v0 <<endl;
   cout <<"  prefix=" <<prefix <<endl;
-  cout <<"  TASKS (time idx name order type):" <<endl;
+  cout <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
 
   //-- collect all task costs and constraints
   for(uint t=0; t<=T; t++){
@@ -477,20 +515,35 @@ void MotionProblem::reportFull() {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       uint d=c->dim_phi(world, t);
-      for(uint i=0;i<d;i++){
-        cout <<"  " <<t <<' ' <<i
-            <<' ' <<std::setw(10) <<c->name
-           <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
-        if(c->target.N==1) cout <<c->target.elem(0);
-        else if(c->target.nd==1) cout <<c->target(i);
-        else if(c->target.nd==2) cout <<c->target(t,i);
-        else cout <<"00";
-        cout <<' ' <<c->prec(t);
-        if(ttMatrix.N){
-          cout <<' ' <<ttMatrix(t)(m+i)
-              <<' ' <<phiMatrix(t)(m+i);
+      if(brief){
+        if(d){
+          cout <<"  " <<t <<' ' <<d
+              <<' ' <<std::setw(10) <<c->name
+             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+          cout <<"xx";
+          cout <<' ' <<c->prec(t);
+          if(ttMatrix.N){
+            cout <<' ' <<ttMatrix(t).elem(m)
+                <<' ' <<sumOfSqr(phiMatrix(t).subRange(m,m+d-1));
+          }
+          cout <<endl;
         }
-        cout <<endl;
+      }else{
+        for(uint i=0;i<d;i++){
+          cout <<"  " <<t <<' ' <<i
+              <<' ' <<std::setw(10) <<c->name
+             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+          if(c->target.N==1) cout <<c->target.elem(0);
+          else if(c->target.nd==1) cout <<c->target(i);
+          else if(c->target.nd==2) cout <<c->target(t,i);
+          else cout <<"00";
+          cout <<' ' <<c->prec(t);
+          if(ttMatrix.N){
+            cout <<' ' <<ttMatrix(t)(m+i)
+                <<' ' <<phiMatrix(t)(m+i);
+          }
+          cout <<endl;
+        }
       }
       m += d;
     }
@@ -691,28 +744,6 @@ arr MotionProblemFunction::get_postfix() {
   return MP.postfix;
 }
 
-
-void MotionProblemFunction::setupConfigurations(){
-  //IMPORTANT: The configurations need to include the k prefix configurations!
-  //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
-  uint T=get_T(), k=get_k();
-  if(configurations.N!=k+T+1){
-    listDelete(configurations);
-    configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
-    for(uint t=1;t<=k+T;t++){
-      configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
-      CHECK(configurations(t)==configurations.last(), "");
-      //apply potential graph switches
-      for(ors::KinematicSwitch *sw:MP.switches){
-        if(sw->timeOfApplication==t-k){
-          sw->apply(*configurations(t));
-//          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
-        }
-      }
-    }
-  }
-}
-
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar) {
   uint T=get_T(), n=dim_x()+dim_z(), k=get_k();
 
@@ -723,14 +754,16 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
 
 #define NEWCODE
 #ifdef NEWCODE
-  setupConfigurations();
+  MP.setupConfigurations();
+
   //set states
   for(uint i=0;i<=k;i++){
-    if(x_bar[i]!=configurations(t+i)->q){
+    if(x_bar[i]!=MP.configurations(t+i)->q){
 //    if(configurations(t+i)->q.N!=x_bar.d1 || maxDiff(x_bar[i],configurations(t+i)->q)>1e-6){
-      configurations(t+i)->setJointState(x_bar[i]);
-      if(MP.useSwift) configurations(t+i)->stepSwift();
+      MP.configurations(t+i)->setJointState(x_bar[i]);
+      if(MP.useSwift) MP.configurations(t+i)->stepSwift();
     }
+    if(t+i>=k) MP.temporallyAlignKinematicSwitchesInConfiguration(t+i-k);
   }
 #else // old way: have only k+1 configurations and 'move' them on the fly
   //-- manage configurations and set x_bar states
@@ -778,9 +811,9 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   arr _phi, _J;
   TermTypeA _tt;
 #ifdef NEWCODE
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, configurations.subRange(t,t+k), MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRange(t,t+k), MP.tau);
 #else
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, configurations, MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations, MP.tau);
 #endif
   phi.append(_phi);
   if(&tt) tt.append(_tt);
@@ -798,7 +831,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
 }
 
 StringA MotionProblemFunction::getPhiNames(uint t){
-  return MP.getPhiNames(*configurations.last(), t);
+  return MP.getPhiNames(*MP.configurations.last(), t);
 }
 
 //===========================================================================

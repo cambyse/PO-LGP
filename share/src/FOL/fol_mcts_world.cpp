@@ -14,9 +14,9 @@ void FOL_World::Decision::write(ostream& os) const{
       os <<r.elem(i)->keys.last() <<'/' <<substitution.elem(i)->keys.last() <<' ';
     }
 #else
-    os <<rule->keys.last() <<"( ";
-    for(uint i=0;i<substitution.N;i++){ if(i) os <<", ";  os <<substitution.elem(i)->keys.last(); }
-    os <<" )";
+    os <<'(' <<rule->keys.last();
+    for(uint i=0;i<substitution.N;i++){ os <<' ' <<substitution.elem(i)->keys.last(); }
+    os <<')' <<flush;
 #endif
   }
 }
@@ -39,8 +39,6 @@ void FOL_World::init(istream& is){
   KB.read(is);
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
-
-  MLR_MSG("TODO: add action sequence to the representation");
 
   start_state = &KB.get<Graph>("START_STATE");
   rewardFct = &KB.get<Graph>("REWARD");

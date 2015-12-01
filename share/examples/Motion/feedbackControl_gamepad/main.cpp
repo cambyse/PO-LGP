@@ -41,7 +41,7 @@ void TEST(Simulator){
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");
     bool shutdw = j2t.updateTasks(gamepad);
-    if(shutdw) shutdown().incrementValue();
+    if(shutdw) moduleShutdown().incrementValue();
 
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
@@ -50,7 +50,7 @@ void TEST(Simulator){
     }
     S.q_ref.set() = q;
     S.qdot_ref.set() = qdot;
-    if(shutdown().getValue()) break; //waitForSignal();
+    if(moduleShutdown().getValue()) break; //waitForSignal();
   }
 
   threadCloseModules();

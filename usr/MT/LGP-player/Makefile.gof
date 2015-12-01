@@ -1,5 +1,5 @@
 BASE = ../../../share
 
-DEPEND = Core Media
+DEPEND =  FOL LGP Motion Core Geo Ors Gui Optim MCTS
 
 include $(BASE)/gofMake/generic.mk

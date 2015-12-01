@@ -25,7 +25,7 @@ Activity* newActivity(Node *fact){
   Node *activityParams=fact;
   while(activityParams->getValueType()!=typeid(Graph) && activityParams->parents.N) activityParams=activityParams->parents(0);
 
-  //-- all other symbols in the literal ard added to the params
+  //-- all other symbols in the literal are added to the params
   if(activityParams->getValueType()==typeid(Graph)) for(uint i=1;i<fact->parents.N;i++){
     CHECK(!activityParams->graph()[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
     new Node_typed<mlr::String>(activityParams->graph(), {STRING("ref"<<i-1)}, {}, new mlr::String(fact->parents(i)->keys.last()), true);
