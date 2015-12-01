@@ -40,6 +40,7 @@ symbole_conv = []
 s = []
 b = []
 j = []
+S = []
 id = 0
 
 def getId():
@@ -102,7 +103,12 @@ def  update_a():
     _tmp = list(joints())
     Joints = namedtuple("Joints", " ".join(_tmp))
     j = Joints(*_tmp)
-    return [s,b,j]
+
+    _tmp = list(interface.getSymbols())
+    Symbols = namedtuple("Symbols", " ".join(_tmp))
+    S = Symbols(*_tmp)
+
+    return [S,s,b,j]
 
 ###############################################################################
 # execution actions
@@ -219,6 +225,16 @@ def remove_facts():
     symbols = [strip_specs(str(fact)) for fact in facts]
     for symb in symbols:
         interface.stopFact(symb)
+
+def set(lit, param):
+    factstring = (str(lit) + str(param).replace(":","=")).replace("\'","")
+    print(factstring)
+    interface.setFact(factstring)
+
+def unset(lit):
+    factstring = (str(lit) + "!").replace("\'","")
+    print(factstring)
+    interface.setFact(factstring)
 
 
 ###############################################################################

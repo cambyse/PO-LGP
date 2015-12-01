@@ -14,7 +14,7 @@ template<class T> struct Access_typed;
 struct ActionSwigInterface{
   struct SwigSystem *S;
 
-  ActionSwigInterface();
+  ActionSwigInterface(bool setSignalHandler=true);
   ~ActionSwigInterface();
 
   void Cancel();
