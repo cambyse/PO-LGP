@@ -410,6 +410,8 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
                                double mu=.5,     //friction coefficient
                                double discountTorques=1.);  //friction coefficient
 
+void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+
 //===========================================================================
 // routines using external interfaces.
 //===========================================================================
