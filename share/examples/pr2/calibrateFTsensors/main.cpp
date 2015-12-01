@@ -40,18 +40,53 @@
 
 // =================================================================================================
 
+struct RecordFTs : Module{
+  Access_typed<arr> wrenchL;
+  ofstream fil;
+
+  RecordFTs() : Module("RecordeFTs"), wrenchL(this, "wrenchL", true){
+  }
+
+  void open(){ mlr::open(fil, "z.wrenchL"); }
+  void close(){ fil.close(); }
+
+  void step(){
+    fil <<wrenchL.get()() <<endl;
+  }
+
+};
+
+// =================================================================================================
+
 int main(int argc, char** argv) {
   ActionSwigInterface S;
+//  S.setVerbose(true);
 
-  ACCESSname(RelationalMachine, RM)
+  RecordFTs recorder;
 
-      cout <<RM.get()->KB <<endl;
-
-//  cout <<S.getSymbols() <<endl;
   S.setFact("(Control vec endeffR){ vec1=[1 0 0] target=[0 0 1] }");
   S.setFact("(Control vec endeffL){ vec1=[1 0 0] target=[0 0 1] }");
-  S.waitForCondition("(conv Control vecDiff endeffR)");
+  S.waitForCondition("(conv Control vec endeffR) (conv Control vec endeffL)");
+  S.setFact("(Control vec endeffR)! (Control vec endeffL)! (conv Control vec endeffR)! (conv Control vec endeffL)!");
+  mlr::wait(1.);
 
+  S.setFact("(Control vec endeffR){ vec1=[1 0 0] target=[1 0 0] }");
+  S.setFact("(Control vec endeffL){ vec1=[1 0 0] target=[1 0 0] }");
+  S.waitForCondition("(conv Control vec endeffR) (conv Control vec endeffL)");
+  S.setFact("(Control vec endeffR)! (Control vec endeffL)! (conv Control vec endeffR)! (conv Control vec endeffL)!");
+  mlr::wait(1.);
+
+//  S.setFact("(Control vec endeffR){ vec1=[1 0 0] target=[0 0 -1] }");
+//  S.setFact("(Control vec endeffL){ vec1=[1 0 0] target=[0 0 -1] }");
+//  S.waitForCondition("(conv Control vec endeffR)");
+//  S.setFact("(Control vec endeffR)! (Control vec endeffL)! (conv Control vec endeffR)! (conv Control vec endeffL)!");
+//  mlr::wait(1.);
+
+//  S.setFact("(Control vec endeffR){ vec1=[1 0 0] target=[1 0 0] }");
+//  S.setFact("(Control vec endeffL){ vec1=[1 0 0] target=[1 0 0] }");
+//  S.waitForCondition("(conv Control vec endeffR)");
+//  S.setFact("(Control vec endeffR)! (Control vec endeffL)! (conv Control vec endeffR)! (conv Control vec endeffL)!");
+//  mlr::wait(1.);
 
   threadCloseModules();
   registry().clear();

@@ -165,6 +165,8 @@ int main(int argc, char** argv) {
   registerActivity<MyTask>("MyTask");
 
   ActionSwigInterface S;
+  ACCESSname(RelationalMachine, RM)
+  cout <<RM.get()->KB <<endl;
 
   S.createNewSymbol("wheels");
   S.createNewSymbol("pos");

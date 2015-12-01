@@ -48,6 +48,7 @@ void TEST(Gamepad){
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
+  MP.tasks = j2t.getTasks();
 
   if(useRos){
     //-- wait for first q observation!
@@ -99,7 +100,7 @@ void TEST(Gamepad){
     gamepadState.var->waitForNextRevision();
     arr gamepad = gamepadState.get();
     bool gamepad_shutdown = j2t.updateTasks(gamepad);
-    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();
+//    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 
 
     //get joint state

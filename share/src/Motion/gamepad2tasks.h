@@ -22,6 +22,7 @@ struct Gamepad2Tasks{
   FeedbackMotionControl& MP;
   CtrlTask *endeffR, *endeffL, *base, *torso, *head, *headAxes, *limits, *coll,  *gripperL, *gripperR;
   Gamepad2Tasks(FeedbackMotionControl& _MP);
+  mlr::Array<CtrlTask*> getTasks();
   bool updateTasks(arr& gamepadState);
 };
 
