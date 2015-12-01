@@ -9,6 +9,8 @@ void Activity::associateToExistingFact(Node* fact){
   configure();
 }
 
+//===========================================================================
+
 void Activity::createFactRepresentative(Graph& state){
   CHECK(symbols.N>0,"need symbols to create a Fact that represents this activity");
   if(!params.N) MLR_MSG("Are you sure to create a fact without params?");
@@ -45,6 +47,7 @@ Activity* newActivity(Node *fact){
 }
 
 //===========================================================================
+
 RUN_ON_INIT_BEGIN(Activity)
 ActivityL::memMove=true;
 RUN_ON_INIT_END(Activity)

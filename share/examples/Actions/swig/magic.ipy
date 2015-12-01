@@ -8,10 +8,11 @@ import threading
 s = []
 b = []
 j = []
+S = []
 
 def update():
-	global s,b,j
-	s,b,j = update_a()
+	global S,s,b,j
+	S,s,b,j = update_a()
 
 class PerpetualTimer(threading._Timer): 
 	def __init__(self, interval, function, name=None, daemon=False, args=(), kwargs={}): 

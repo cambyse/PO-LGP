@@ -31,6 +31,7 @@ RelationalMachineModule::~RelationalMachineModule(){
 
 void RelationalMachineModule::open(){
   RM.writeAccess();
+  RM().KB <<FILE(STRING(getenv("HOME")<<"/git/mlr/share/data/keywords.g"));
   RM().init("machine.fol");
   RM().state->callbacks.append(new RM_EditCallback(*this));
   RM.deAccess();

@@ -44,7 +44,7 @@ struct SwigSystem {
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-  OrsViewer orsviewer;
+//  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
@@ -60,6 +60,7 @@ struct SwigSystem {
     : camview("modelDepthView"), _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
+      cout <<"*** USING ROS" <<endl;
       rosCheckInit("SwigSystem");
       new RosCom_Spinner();
       //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
@@ -78,7 +79,7 @@ struct SwigSystem {
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
     }
 
-    // make the base movable by default
+    // make the base movable
     fixBase.set() = mlr::getParameter<bool>("fixBase", false);
 
     stopWaiting.set() = 0;
@@ -86,7 +87,7 @@ struct SwigSystem {
 
     _g_swig = this; //MT: what is _g_swig??
 
-    cout <<"SYSTEM=" <<registry() <<endl;
+    //cout <<"SYSTEM=" <<registry() <<endl;
   }
 };
 
@@ -117,12 +118,12 @@ mlr::String lits2str(const stringV& literals, const dict& parameters=dict()){
 // ============================================================================
 // ActionSwigInterface
 
-ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
+ActionSwigInterface::ActionSwigInterface(bool setSignalHandler): S(new SwigSystem){
   S->tcm.verbose=false;
 
   signal(SIGINT, signal_catch); //overwrite signal handler
 
-  threadOpenModules(true);
+  threadOpenModules(true, setSignalHandler);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
@@ -431,7 +432,7 @@ stringV ActionSwigInterface::getSymbols() {
   for (auto* i:S->RM.get()->KB){
     tmp.str(""),
     tmp.clear();
-    tmp << *i;//->keys(0);
+    tmp <<i->keys.last(); // *i;//->keys(0);
     V.push_back(tmp.str());
   }
   return V;

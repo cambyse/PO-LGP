@@ -1,9 +1,11 @@
 #include "relationalMachine.h"
 
-RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
+RelationalMachine::RelationalMachine()
+  : state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
 }
 
-RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
+RelationalMachine::RelationalMachine(const char* filename)
+  : state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
   init(filename);
 }
 

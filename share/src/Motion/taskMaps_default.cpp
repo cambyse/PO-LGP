@@ -146,6 +146,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(type==vecTMT){
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
 //    ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
+    if(vec_i.isZero) MLR_MSG("attached vector is zero -- can't control that");
     if(body_j==NULL) { //simple, no j reference
       G.kinematicsVec(y, J, body_i, vec_i);
       return;
@@ -166,8 +167,11 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
     G.kinematicsVec(y, J, body_i, vec_i);
     if(!body_j){ //relative to world
+      if(vec_i.isZero) MLR_MSG("attached vector is zero -- can't control that");
       y -= conv_vec2arr(vec_j);
     }else{
+      if(vec_i.isZero) MLR_MSG("attached vector1 is zero -- can't control that");
+      if(vec_j.isZero) MLR_MSG("attached vector2 is zero -- can't control that");
       arr y2, J2;
       G.kinematicsVec(y2, J2, body_j, vec_j);
       y -= y2;
