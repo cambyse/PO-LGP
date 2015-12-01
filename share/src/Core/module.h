@@ -49,7 +49,7 @@ RevisionedAccessGatedClassL getVariables();
 void openModules();
 void stepModules();
 void closeModules();
-void threadOpenModules(bool waitForOpened);
+void threadOpenModules(bool waitForOpened, bool setSignalHandler=true);
 void threadCloseModules();
 void threadCancelModules();
 void modulesReportCycleTimes();

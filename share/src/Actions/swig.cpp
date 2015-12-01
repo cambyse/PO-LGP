@@ -117,12 +117,12 @@ mlr::String lits2str(const stringV& literals, const dict& parameters=dict()){
 // ============================================================================
 // ActionSwigInterface
 
-ActionSwigInterface::ActionSwigInterface(): S(new SwigSystem){
+ActionSwigInterface::ActionSwigInterface(bool setSignalHandler): S(new SwigSystem){
   S->tcm.verbose=false;
 
   signal(SIGINT, signal_catch); //overwrite signal handler
 
-  threadOpenModules(true);
+  threadOpenModules(true, setSignalHandler);
 
   createNewSymbol("conv");
   createNewSymbol("contact");
@@ -431,7 +431,7 @@ stringV ActionSwigInterface::getSymbols() {
   for (auto* i:S->RM.get()->KB){
     tmp.str(""),
     tmp.clear();
-    tmp << *i;//->keys(0);
+    tmp <<i->keys.last(); // *i;//->keys(0);
     V.push_back(tmp.str());
   }
   return V;

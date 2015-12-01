@@ -80,8 +80,8 @@ RevisionedAccessGatedClassL getVariables(){
   return registry().getTypedValues<RevisionedAccessGatedClass>();
 }
 
-void threadOpenModules(bool waitForOpened){
-  signal(SIGINT, signalhandler);
+void threadOpenModules(bool waitForOpened, bool setSignalHandler){
+  if(setSignalHandler) signal(SIGINT, signalhandler);
   NodeL mods = registry().getTypedNodes<Module>();
   for(Node *m: mods) m->V<Module>().threadOpen();
   if(waitForOpened) for(Node *m: mods) m->V<Module>().waitForOpened();
