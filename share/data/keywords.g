@@ -7,6 +7,7 @@ LowerEqualZero
 pos
 posDiff
 vec
+vecDiff
 vecAlign
 quatDiff
 qItself

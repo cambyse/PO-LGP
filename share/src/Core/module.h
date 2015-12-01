@@ -64,29 +64,12 @@ void modulesReportCycleTimes();
     necessary */
 
 struct Module : Thread{
-
-  /** DON'T open drivers/devices/files or so here in the constructor,
-      but in open(). Sometimes a module might be created only to see
-      which accesses it needs. The default constructure should really
-      do nothing */
   Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
     new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
   }
   virtual ~Module(){}
-
-  /** The most important method of all of this: step does the actual
-      computation of the module. Modules should be state less. Access
-      the variables by calling the x.get(), x.set() or
-      x.[read|write|de]Access(), where ACCESS(TYPE, x) was
-      declared. */
   virtual void step(){ HALT("you should not run a virtual module"); }
-
-  /** use this to open drivers/devices/files and initialize
-      parameters; this is called within the thread */
   virtual void open(){}
-
-  /** use this to close drivers/devices/files; this is called within
-      the thread */
   virtual void close(){}
 };
 

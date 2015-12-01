@@ -2,17 +2,25 @@
 #include <pr2/TaskControllerModule.h>
 #include <Motion/gamepad2tasks.h>
 
+//===========================================================================
+
 GamepadControlActivity::GamepadControlActivity()
   : Module("GamepadControlActivity", 0.01), taskController(NULL), g2t(NULL){
   taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
   CHECK(taskController,"that didn't work");
 }
 
+//===========================================================================
+
 GamepadControlActivity::~GamepadControlActivity(){
 }
 
+//===========================================================================
+
 void GamepadControlActivity::open(){
 }
+
+//===========================================================================
 
 void GamepadControlActivity::step(){
   if(!g2t){
@@ -26,7 +34,15 @@ void GamepadControlActivity::step(){
   if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }
 
+//===========================================================================
+
 void GamepadControlActivity::close(){
   delete g2t;
   g2t=NULL;
 }
+
+//===========================================================================
+
+RUN_ON_INIT_BEGIN(gamepadControl)
+registerActivity<GamepadControlActivity>("GamepadControlActivity");
+RUN_ON_INIT_END(gamepadControl)
