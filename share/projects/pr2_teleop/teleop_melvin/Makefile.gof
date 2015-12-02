@@ -9,4 +9,5 @@ DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception
 ROS = 1
 # CXXFLAGS = -DWITH_ROS
 DEPEND += pr2 Actions
+
 include $(BASE)/gofMake/generic.mk
