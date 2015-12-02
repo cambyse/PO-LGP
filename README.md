@@ -11,10 +11,21 @@ Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
 ## Install on Ubuntu
 Install the mlr system by executing:
 
-  ./install/INSTALL
+	./install/INSTALL_ALL_UBUNTU_PACKAGES.sh
 
-In "share/make-config" you can change the compile settings (un)set
-dependencies.
+The 'install/INSTALL' script does some more local installation of
+packages. But this is usually not necessary!
+
+To use the gof (good old-fashioned) Makefiles,
+
+	cd share; bin/createMakefileLinks.sh
+
+Also,
+
+	cd share/gofMake; cp config.mk.default config.mk
+	
+and edit the latter to change the compile settings, e.g., (un)set dependencies.
+
 
 
 ## Install on Arch

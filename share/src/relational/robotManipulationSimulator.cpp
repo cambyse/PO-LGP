@@ -99,7 +99,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, const char* text) {
     C->gl().text <<text <<endl;
     C->gl().update();
   }
-#ifdef MT_video
+#ifdef MLR_video
   if(video) {
     video_step++;
     if(true) {
@@ -227,7 +227,7 @@ void RobotManipulationSimulator::startSwift() {
 
 
 void RobotManipulationSimulator::startVideo(const char* filename) {
-#ifdef MT_video
+#ifdef MLR_video
   if(video) delete video;
   video= new videoInterface;
   video->open(gl().width(),gl().height(), filename);
@@ -257,7 +257,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message) {
   getJointState(q);
   bool change = true;
   for(; t--;) {
-    MT::String send_string;
+    mlr::String send_string;
     if(msg_string.N == 0) {
       if(t%20==0)
         change = !change;
@@ -446,7 +446,7 @@ double* RobotManipulationSimulator::getColor(uint id) {
 }
 
 
-MT::String RobotManipulationSimulator::getColorString(uint obj) {
+mlr::String RobotManipulationSimulator::getColorString(uint obj) {
   double red[3];  red[0]=1.0;  red[1]=0.0;   red[2]=0.0;
   double green[3];  green[0]=0.2;  green[1]=1.0;   green[2]=0.0;
   double orange[3];  orange[0]=1.0;  orange[1]=0.5;   orange[2]=0.0;
@@ -464,7 +464,7 @@ MT::String RobotManipulationSimulator::getColorString(uint obj) {
   uint i;
   
   double* color = getColor(obj);
-  MT::String name;
+  mlr::String name;
   
   for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], red[i])) break;
@@ -591,8 +591,8 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   double angle_z = acos(maxz);
   if(angle_z < 0.0001)
     angle_z = 0.;
-//   if (angle_z>MT_PI/4) {
-//     PRINT(MT_PI/4);
+//   if (angle_z>MLR_PI/4) {
+//     PRINT(MLR_PI/4);
 //     PRINT((rot*Vector_x).z);
 //     PRINT((rot*Vector_y).z);
 //     PRINT((rot*Vector_z).z);
@@ -607,7 +607,7 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
 //     PRINT(acos((rot*(-Vector_z)).z));
 //     watch();
 //   }
-//   CHECK((angle_z<=MT_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
+//   CHECK((angle_z<=MLR_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
   orientation(0) = angle_z;
   
   ors::Vector upvec_x; double maxx=-2;
@@ -620,7 +620,7 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   double angle_xy = atan((rot*upvec_x).y / maxx);
   if(angle_xy < 0.0001)
     angle_xy = 0.;
-//   CHECK((angle_xy<=MT_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
+//   CHECK((angle_xy<=MLR_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
   orientation(1) = angle_xy;
 }
 
@@ -988,14 +988,14 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   getObjectsOn(list, obj_grabbed);
   bool object_is_clear = list.N == 0;
   
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "grab "<<obj_grabbed;
   }
   
 #ifdef NEW_FEEDBACK_CONTROL
   uint t;
-  arr pos = ARRAY(obj->X.pos);
+  arr pos = conv_vec2arr(obj->X.pos);
   uint fingIdx = getBodyByName("fing1c")->index;
 
   FeedbackMotionControl MP(*this, false);
@@ -1008,7 +1008,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if(id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0; t<10; t++) {
-      MT::String send_msg;
+      mlr::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
       controlledStep(this, MP, msg_string);
       // TODO passt das? Ueberall state durch "active" ersetzt
@@ -1076,9 +1076,9 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if(id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0; t<10; t++) {
-      x.y_target = ARRAY(obj->X.pos);
+      x.y_target = conv_vec2arr(obj->X.pos);
       if(isTable) {x.y_target(2) = neutralHeight-0.1;}
-      MT::String send_msg;
+      mlr::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
       controlledStep(q,W,this,local_TVs,send_msg);
       // TODO passt das? Ueberall state durch "active" ersetzt
@@ -1093,9 +1093,9 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (2) move towards new object
   getJointState(q);
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
     if(isTable) {x.y_target(2) = neutralHeight-0.1;}
-    MT::String send_msg;
+    mlr::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,this,local_TVs,send_msg);
     if(useOpengl) gl().update();
@@ -1120,11 +1120,11 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   }
   
   for(t=0; t<Tabort; t++) {
-    x.y_target = ARRAY(obj->X.pos);
+    x.y_target = conv_vec2arr(obj->X.pos);
 //     if (x.y_target(2) < neutralHeight)       // ALTE LOESUNG -- TOBIAS
 //       x.y_target(2) += SMALL_HEIGHT_STEP;    // ALTE LOESUNG -- TOBIAS
     x.y_target(2) = 1.2;
-    MT::String send_msg;
+    mlr::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,this,local_TVs,send_msg);
     if(useOpengl) gl().update();
@@ -1165,7 +1165,7 @@ void RobotManipulationSimulator::grab(const char* obj, const char* message) {
 
 
 void RobotManipulationSimulator::grabHere(const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "grabHere: ";
   }
@@ -1202,14 +1202,14 @@ void RobotManipulationSimulator::grabHere(const char* message) {
 ************************************************/
 
 void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "puton " << obj_below;
   }
   
   arr I(q0.N,q0.N); I.setId();
   bool obj_is_inhand = strlen(obj_dropped) > 0;
-  MT::String obj_dropped1;
+  mlr::String obj_dropped1;
   if(obj_is_inhand) obj_dropped1 = obj_dropped; else obj_dropped1 = "fing1c";
     
   uint obj_dropped1_index=getBodyByName(obj_dropped1)->index;
@@ -1366,7 +1366,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   for(t=0; t<Tabort; t++) {
     if(o.y_target(2) < neutralHeight)
       o.y_target(2) += 0.05;
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,this,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
@@ -1382,7 +1382,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   // WHERE TO GO ABOVE
   o.y_target(2) = highestPosition(o.y_target(0), o.y_target(1), 0.06, obj_dropped1_index) + .2;
   for(t=0; t<Tabort; t++) {
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,this,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
@@ -1417,7 +1417,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
         o.y_target(2) -= 0.01;
     }
     // WHERE TO GO ABOVE
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,this,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
@@ -1482,7 +1482,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     while(true) {
       tries++;
       if(tries>20000) {
-        MT_MSG("Can't find empty position on table, throw it whereever!");
+        MLR_MSG("Can't find empty position on table, throw it whereever!");
         break;
       }
       x_noise = std_dev_noise * rnd.gauss();
@@ -1554,7 +1554,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 ************************************************/
 
 void RobotManipulationSimulator::relaxPosition(const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "Relax position";
   }
@@ -1594,7 +1594,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   
   uint t;
   for(t=0; t<Tabort; t++) {
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,this,local_TVs,send_string);
@@ -1615,7 +1615,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
 
 
 void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) msg_string << "move to position "<< pos;
   
 #ifdef NEW_FEEDBACK_CONTROL
@@ -1643,7 +1643,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   getJointState(q);
   for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(pos.p,3);
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string;
     controlledStep(q,W,this,TVs,send_string);
     if((obj->X.pos - pos).length() < epsilon) break;
@@ -1666,7 +1666,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 ************************************************/
 
 void RobotManipulationSimulator::openBox(uint id, const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "openBox "<<id;
   }
@@ -1674,7 +1674,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   // move manipulator towards box
   ors::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1688,7 +1688,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(obj->X.pos.p(), 3);
     x.y_target.p[2] += 0.15;
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,this,TVs,send_string);
@@ -1708,7 +1708,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
 }
 
 void RobotManipulationSimulator::closeBox(uint id, const char* message) {
-  MT::String msg_string(message);
+  mlr::String msg_string(message);
   if(msg_string.N == 0) {
     msg_string << "closeBox "<<id;
   }
@@ -1716,7 +1716,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   // move manipulator towards box
   ors::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1730,7 +1730,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(obj->X.pos.p(),3);
     x.y_target.p[2] += 0.15;
-    MT::String send_string;
+    mlr::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,this,TVs,send_string);
@@ -1783,13 +1783,13 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 namespace relational {
 
 void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks) {
-  MT::Array<arr> pos;
+  mlr::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
   generateOrsFromSample(ors, pos);
 }
 
 
-void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sample) {
+void generateOrsFromSample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample) {
   //for (int i = ors.bodies.N - 1; i >= 0; --i) {
   //if (ors.bodies(i)->name.p[0] == 'o') {
   //ors.bodies.remove(i);
@@ -1798,7 +1798,7 @@ void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sampl
   for(uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body(ors);
     createCylinder(ors, *body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
-    MT::String name;
+    mlr::String name;
     name << "o7" << i;
     cout << name << endl;
     body->name = name;
@@ -1806,7 +1806,7 @@ void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sampl
 }
 
 
-void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
+void generateBlocksSample(mlr::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for(uint i = 0; i < numOfBlocks; ++i) {
     arr center3d = ARR(0.2, -.8) + randn(2,1) * 0.1;

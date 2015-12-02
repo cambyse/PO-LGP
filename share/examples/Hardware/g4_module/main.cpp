@@ -1,4 +1,3 @@
-#include <System/engine.h>
 #include <Hardware/G4/G4.h>
 #include <Hardware/G4/module_G4Display.h>
 
@@ -9,7 +8,7 @@ void miniTest(){
 
   for(uint i=0;i<100;i++){
     g4.step();
-    MT::wait(.001, false);
+    mlr::wait(.001, false);
   }
 
   g4.close();
@@ -25,7 +24,7 @@ struct G4System:System{
     // display.mid().load("./g4mapping.kvg");
     // display.kw().init("./world.ors");
 
-    connect();
+    //connect();
   }
 };
 
@@ -35,7 +34,7 @@ void serialRun(){
   S.openAll();
   for(uint i=0;i<100;i){
     S.stepAll();
-    MT::wait(.01, false);
+    mlr::wait(.01, false);
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
   S.closeAll();
@@ -45,12 +44,12 @@ void serialRun(){
 void threadedRun(){
   G4System S;
 
-  engine().open(S);
+  threadOpenModules(true);
   for(uint i=0;i<10;i++){
     S.currentPoses.var->waitForNextRevision();
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
-  engine().close(S);
+  threadCloseModules();
 }
 
 int main(int argc, char **argv) {

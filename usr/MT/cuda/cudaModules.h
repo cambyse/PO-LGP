@@ -43,6 +43,6 @@ void CudaInterface::free(arr& X){
 }
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "cudaModules.cpp"
 #endif

@@ -22,32 +22,32 @@
 void BinaryBPNetModel::initLayered(Data *_data){
   data=_data;
   
-  layers = MT::getParameter<uintA>("layers");
+  layers = mlr::getParameter<uintA>("layers");
   if(!layers(0)) layers(0)=data->Xdim();
   if(!layers.last()) layers.last()=data->Ydim();
   if(layers(0)!=data->Xdim() || layers(layers.N-1)!=data->Ydim()){
-    MT_MSG("considering only part of the input/output!");
+    MLR_MSG("considering only part of the input/output!");
     data->reduce(layers(0), layers(layers.N-1));
   }
-  bool lateral=MT::getParameter<bool>("lateralConnections");
+  bool lateral=mlr::getParameter<bool>("lateralConnections");
   graphLayered(net.nodes, net.edges, layers, lateral);
   
   net.randomizeWeightsUniform(.1, .1, false);
-  ITER = MT::getParameter<uint>("ITER");
-  regJ = MT::getParameter<double>("regJ");
-  regT = MT::getParameter<double>("regT");
+  ITER = mlr::getParameter<uint>("ITER");
+  regJ = mlr::getParameter<double>("regJ");
+  regT = mlr::getParameter<double>("regT");
 }
 
 void BinaryBPNetModel::randomInit(){
-  uint N=MT::getParameter<uint>("N");
-  uint D=MT::getParameter<uint>("D");
+  uint N=mlr::getParameter<uint>("N");
+  uint D=mlr::getParameter<uint>("D");
   if(D==0) graphRandomUndirected(net.nodes, net.edges, N, -1.); //unconnected!
   if(D==1) graphRandomLinear(net.nodes, net.edges, N);     //just a chain!
   //graphRandomTree(net.nodes, net.edges, N, 1);
   if(D>1)  graphRandomFixedDegree(net.nodes, net.edges, N, D);
-  net.randomizeWeightsUniform(1., 1., MT::getParameter<bool>("positive"));
+  net.randomizeWeightsUniform(1., 1., mlr::getParameter<bool>("positive"));
   //net.report(cout);
-  ITER   = MT::getParameter<uint>("ITER");
+  ITER   = mlr::getParameter<uint>("ITER");
 }
 
 void BinaryBPNetModel::beliefs(arr& b, const arr& w){
@@ -166,10 +166,10 @@ double BinaryBPNetModel::loss(arr& output, const arr& target, const arr& input, 
     
     //compute regularization deltas
     delta.resize(net.nodes.N);
-    for_list(Type,  n,  net.nodes) delta(i) = regT*MT::sign(n->theta); //diff
+    for_list(Type,  n,  net.nodes) delta(i) = regT*mlr::sign(n->theta); //diff
     net.addThetaDeltas(delta);
     delta.resize(net.edges.N);
-    for_list(Type,  e,  net.edges) delta(i) = regJ*MT::sign(e->J);
+    for_list(Type,  e,  net.edges) delta(i) = regJ*mlr::sign(e->J);
     net.addJDeltas(delta);
     
     for(i=0; i<ITER; i++) net.stepGradBP();

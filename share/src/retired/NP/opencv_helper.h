@@ -32,14 +32,14 @@ inline void cvPolyLine(byteA& img, const doubleA& pts, int is_closed=0, CvScalar
   CvMat cvimg = cvMat(img.d0,img.d1,CV_8UC3,img.p);
   int num_pts = pts.d0;
   int num_curves=1;
-  MT::Array<CvPoint> cv_pts;
+  mlr::Array<CvPoint> cv_pts;
   for (int j=0; j<num_pts;j++)
     cv_pts.append(cvPoint((int)pts(j,0),(int)pts(j,1))); //
   CvPoint* curveArr[1]={cv_pts.p};
   cvPolyLine(&cvimg,curveArr,&num_pts,num_curves,is_closed,color,thickness);
 };
 
-inline void cvPolyLine(byteA& img, const MT::Array<doubleA>& lines, int is_closed=0, CvScalar color=cvScalar(0,255,255), int thickness=1)
+inline void cvPolyLine(byteA& img, const mlr::Array<doubleA>& lines, int is_closed=0, CvScalar color=cvScalar(0,255,255), int thickness=1)
 {
   if (lines.N==0)
     return;
@@ -100,9 +100,9 @@ inline void cvFindCornerSubPix(byteA& img, CvPoint2D32f* corners, int count, CvS
 
 inline double cvStereoCalibrate
  (
-  MT::Array<CvPoint3D32f> &objectPoints,
-  MT::Array<CvPoint2D32f> &imagePoints1,
-  MT::Array<CvPoint2D32f> &imagePoints2,
+  mlr::Array<CvPoint3D32f> &objectPoints,
+  mlr::Array<CvPoint2D32f> &imagePoints1,
+  mlr::Array<CvPoint2D32f> &imagePoints2,
   intA& pointCounts,
   doubleA &cameraMatrix1,
   doubleA &distCoeffs1,
@@ -410,7 +410,7 @@ public:
 };
 
 template <class S, class T>
-inline void cvExtractSURF(MT::Array<S>& de, const MT::Array<T>& kp, const byteA& image, np::SURF& surf, uint scale=2)
+inline void cvExtractSURF(mlr::Array<S>& de, const mlr::Array<T>& kp, const byteA& image, np::SURF& surf, uint scale=2)
 {
   uint num_kp=kp.d0;
 //   uint scale=1;                               // NOTE segfaults if 0 (in cvsurf.cpp:cvExtractSURF())

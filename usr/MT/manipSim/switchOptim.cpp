@@ -6,11 +6,11 @@
 
 //===========================================================================
 
-struct SwitchConfigurationProgram:ConstrainedProblemMix{
+struct SwitchConfigurationProgram:ConstrainedProblem{
   ors::KinematicWorld world;
   Graph& symbolicState;
-  int verbose;
   uint microSteps;
+  int verbose;
 
   MotionProblem MP;
   MotionProblemFunction MPF;
@@ -20,11 +20,11 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
                              uint microSteps,
                              int verbose)
     : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
-    ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
+    ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(MPF) );
 
-    double posPrec = MT::getParameter<double>("LGP/precision", 1e3);
-    double colPrec = MT::getParameter<double>("LGP/collisionPrecision", -1e0);
-    double margin = MT::getParameter<double>("LGP/collisionMargin", .05);
+    double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
+    double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);
+    double margin = mlr::getParameter<double>("LGP/collisionMargin", .05);
 
     //get the actions!
     Node *actionSequence=symbolicState["actionSequence"];
@@ -76,12 +76,12 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
         m->referenceIds(tPick(i),0) = endeff_index;
         m->referenceIds(tPick(i),1) = idObject(i);
         t->prec(tPick(i))=posPrec;
-        //      t->target[tPick(i)]=ARRAY( world_initial.shapes(idObject(i))->X.pos );
+        //      t->target[tPick(i)]=conv_vec2arr( world_initial.shapes(idObject(i))->X.pos );
 
         //place
         m->referenceIds(tPlace(i),0) = idObject(i);
         t->prec(tPlace(i))=posPrec;
-        t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.pos );
+        t->target[tPlace(i)]=conv_vec2arr( world_final.shapes(idObject(i))->X.pos );
       }
 
       //pick & place quaternion
@@ -94,12 +94,12 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
         m->referenceIds(tPick(i),0) = endeff_index;
         m->referenceIds(tPick(i),1) = idObject(i);
         t->prec(tPick(i))=posPrec;
-        //      t->target[tPlace(i)]=ARRAY( world_initial.shapes(idObject(i))->X.rot );
+        //      t->target[tPlace(i)]=conv_quat2arr( world_initial.shapes(idObject(i))->X.rot );
 
         //place
         m->referenceIds(tPlace(i),0) = idObject(i);
         t->prec(tPlace(i))=posPrec;
-        t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.rot );
+        t->target[tPlace(i)]=conv_quat2arr( world_final.shapes(idObject(i))->X.rot );
       }
 
       // zero position velocity
@@ -179,23 +179,23 @@ struct SwitchConfigurationProgram:ConstrainedProblemMix{
       }
     }
 
-    //-- graph operators
+    //-- graph switches
     for(uint i=0;i<actions.N;i++){
       //pick at time 2*i+1
-      ors::GraphOperator *op_pick = new ors::GraphOperator();
-      op_pick->symbol = ors::GraphOperator::addRigid;
+      ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
+      op_pick->symbol = ors::KinematicSwitch::addRigid;
       op_pick->timeOfApplication = tPick(i)+1;
-      op_pick->fromId = world.shapes(endeff_index)->body->index;
-      op_pick->toId = world.shapes(idObject(i))->body->index;
-      world.operators.append(op_pick);
+      op_pick->fromId = world.shapes(endeff_index)->index;
+      op_pick->toId = world.shapes(idObject(i))->index;
+      MP.switches.append(op_pick);
 
       //place at time 2*i+2
-      ors::GraphOperator *op_place = new ors::GraphOperator();
-      op_place->symbol = ors::GraphOperator::deleteJoint;
+      ors::KinematicSwitch *op_place = new ors::KinematicSwitch();
+      op_place->symbol = ors::KinematicSwitch::deleteJoint;
       op_place->timeOfApplication = tPlace(i)+1;
-      op_place->fromId = world.shapes(endeff_index)->body->index;
-      op_place->toId = world.shapes(idObject(i))->body->index;
-      world.operators.append(op_place);
+      op_place->fromId = world.shapes(endeff_index)->index;
+      op_place->toId = world.shapes(idObject(i))->index;
+      MP.switches.append(op_place);
     }
 
 /*
@@ -224,8 +224,8 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
   OptConstrained opt(x, NoArr, f, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
   opt.run();
   f.MP.costReport();
-  displayTrajectory(x, 1, f.MP.world, "planned configs", .02);
-  return opt.UCP.get_sumOfSquares();
+  for(;;) displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);
+  return opt.UCP.get_costs();
 }
 
 //===========================================================================

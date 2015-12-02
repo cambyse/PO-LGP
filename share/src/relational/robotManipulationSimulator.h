@@ -75,7 +75,7 @@ struct RobotManipulationSimulator : ors::KinematicWorld {
   int getOrsType(uint id); // this is the ORS type
   double* getSize(uint id);     ///< when using symmetric objects, take getSize(id)[0]
   double* getColor(uint id);    ///< returns 3-dim array with RGB values
-  MT::String getColorString(uint obj); 
+  mlr::String getColorString(uint obj); 
   
   
   
@@ -186,9 +186,9 @@ struct RobotManipulationSimulator : ors::KinematicWorld {
 
 namespace relational {
 void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks);
-void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sample);
-//void generateOrsFromTraySample(ors::KinematicWorld& ors, const MT::Array<arr>& sample);
-void generateBlocksSample(MT::Array<arr>& sample, uint numOfBlocks);
+void generateOrsFromSample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample);
+//void generateOrsFromTraySample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample);
+void generateBlocksSample(mlr::Array<arr>& sample, uint numOfBlocks);
 void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size);
 void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color);
 }

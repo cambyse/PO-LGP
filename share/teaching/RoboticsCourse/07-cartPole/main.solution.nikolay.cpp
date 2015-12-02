@@ -13,7 +13,7 @@ struct CartPoleState{
 	CartPoleState(){
 		x=0.;
 		v=0.;
-		theta=.2; //slighly non-upright //MT_PI; //haning down
+		theta=.2; //slighly non-upright //MLR_PI; //haning down
 		omega=0.;
 		//init constants
 		tau = 1/60.0; //with 1/1000 is better
@@ -44,10 +44,10 @@ struct CartPoleState{
 		omega += tau*the2;
 
 		//keep angles in range....
-		if (theta > MT_PI)
-			theta -= 2*MT_PI;
-		if (theta <= -MT_PI)
-			theta += 2*MT_PI;
+		if (theta > MLR_PI)
+			theta -= 2*MLR_PI;
+		if (theta <= -MLR_PI)
+			theta += 2*MLR_PI;
 
 		if(dynamicsNoise){
 			x += dynamicsNoise*rnd.gauss();

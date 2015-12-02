@@ -21,7 +21,7 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
 }
 
 void TEST(Stickiness){
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   bool hardConstraint=true;
 
@@ -285,7 +285,7 @@ void TEST(qItselfConstraint){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 //  testStickiness();
   testEqualityConstraints();
 //  testClosedKinematicChain();

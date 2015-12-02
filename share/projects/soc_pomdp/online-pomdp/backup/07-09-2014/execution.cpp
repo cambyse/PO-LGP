@@ -35,18 +35,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
+  //pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
   //MODIFY the target location relatively to the height +0.12 = 0.1 + 0.02 (0.02 is table width).
   world.getBodyByName("target")->X.pos.z = height + 0.12;
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 1e3);
+  pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
 
 
   // ARR(0,0,-1,.7): ax + by + cz + d: where n=(0,0,-1) is its normal vector; d = 0.7
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1, height+0.02)));
-    P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
+    cons->setCostSpecs(0, P.T, {0.}, 1.);
 
     if(stickyness){
         stickyWeight = 2.;
@@ -109,7 +109,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   ors::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
   MC.qitselfPD.active=false;
@@ -138,7 +138,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   arr y = ally[0];
   arr dual = alldual[0];
 
-  MT::Array<bool> particles;
+  mlr::Array<bool> particles;
   particles.resize(allx.d0);
   uint eligible_counts = allx.d0;
   uint index = 0, prev=index;
@@ -225,7 +225,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -236,6 +236,6 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 

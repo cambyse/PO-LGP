@@ -1,12 +1,8 @@
 #pragma once
 
-#include <MCTS/env_marc.h>
-//#include <FOL/fol.h>
+#include <MCTS/environment.h>
 #include <Core/array.h>
-
-struct Node;
-struct Graph;
-typedef MT::Array<Node*> NodeL;
+#include <Core/graph.h>
 
 struct FOL_World:MCTS_Environment{
   struct Decision:SAO{
@@ -42,24 +38,37 @@ struct FOL_World:MCTS_Environment{
   };
   struct State:SAO {};
 
-  uint T_step; ///< discrete "time": decision steps so far
-  double T_real;///< real time so far;
+  uint T_step, start_T_step; ///< discrete "time": decision steps so far
+  double T_real, start_T_real;///< real time so far;
   double R_total;
-//  uint Ndecisions;
+
+  //-- parameters
+  bool hasWait;
+  double gamma, stepCost, timeCost, deadEndCost;
+
   bool deadEnd, successEnd;
-  Graph& KB;     ///< current knowledge base
+  Graph KB;     ///< current knowledge base
   Graph *start_state; ///< the start-state within the KB (is a subgraph item of KB)
   Graph *state; ///< the dynamic/fluent state within the KB (is a subgraph item of KB, created within the constructor)
-  NodeL decisionRules;  ///< rules withing the KB (each is a subgraph item of the KB)
-  NodeL constants;///< constants withing the KB (each is an item of the KB)
+  NodeL worldRules;     ///< rules within the KB (each is a subgraph item of the KB)
+  NodeL decisionRules;  ///< rules within the KB (each is a subgraph item of the KB)
+  Node *lastDecisionInState; ///< the literal that represents the last decision in the state
+  Graph *rewardFct; ///< the reward function within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
-  Graph *terminal; //TODO: replace
-  Node *Terminate_keyword;
+  Node *Terminate_keyword, *Quit_keyword, *Quit_literal;
   int verbose;
+  int verbFil;
   ofstream fil;
+  bool generateStateTree;
 
-  FOL_World(const char* KB_file);
+  double lastStepDuration;
+  double lastStepProbability;
+  long count;
+
+  FOL_World();
+  FOL_World(istream& fil);
   virtual ~FOL_World();
+  void init(istream& fil);
 
   virtual std::pair<Handle, double> transition(const Handle& action);
   virtual const std::vector<Handle> get_actions();
@@ -70,5 +79,10 @@ struct FOL_World:MCTS_Environment{
 
   virtual bool get_info(InfoTag tag) const;
   virtual double get_info_value(InfoTag tag) const;
-  virtual void write_current_state(ostream&);
+  void write_state(ostream&);
+  void set_state(mlr::String&);
+
+  //-- internal access
+  Graph* getState();
+  void setState(Graph*);
 };

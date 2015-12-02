@@ -1,5 +1,5 @@
-#define MT_IMPLEMENTATION
-//#define MT_NO_THREADS
+#define MLR_IMPLEMENTATION
+//#define MLR_NO_THREADS
 
 #include <MT/robot.h>
 #include <signal.h>
@@ -13,7 +13,7 @@
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   RobotProcessGroup robotProcesses;

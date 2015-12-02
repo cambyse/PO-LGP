@@ -5,6 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <lemon/dfs.h>
+#include <lemon/adaptors.h>
+
+#include <sstream>
 
 #include <map>
 #include <deque>
@@ -20,6 +23,8 @@
 #include "graph_util.h"
 
 #include <MCTS_Environment/AbstractEnvironment.h>
+#include <MCTS_Environment/TemplateEnvironment.h>
+#include <MCTS_Environment/IntegerEnvironment.h>
 
 #include "Environment/GamblingHall.h"
 #include "ComputationalGraph.h"
@@ -28,6 +33,7 @@
 #include "TreeSearch/TreePolicy.h"
 #include "TreeSearch/ValueHeuristic.h"
 #include "TreeSearch/BackupMethod.h"
+#include "TreeSearch/PriorModels.h"
 #include "TreeSearch/ActiveTreeSearch.h"
 
 #define DEBUG_LEVEL 0
@@ -482,7 +488,7 @@ make_graph_for_graph_propagation_tests(lemon::ListDigraph & graph,
         }
     }
 
-    //util::graph_to_pdf("graph.pdf", graph, "", &node_property_map);
+    util::plot_graph("graph.pdf", graph, "", &node_property_map);
 
     return graph_propagation;
 }
@@ -582,6 +588,50 @@ TEST(GraphPropagation, Diffusion) {
     EXPECT_GT(counter, 20);
 }
 
+TEST(GraphPropagation, SmallLoops) {
+
+    // construct graph with many small (and larger) loops and see if all nodes
+    // get processed
+
+    typedef lemon::ListDigraph graph_t;
+    graph_t graph;
+    auto old_n1 = graph.addNode();
+    auto old_n2 = graph.addNode();
+    graph.addArc(old_n1,old_n2);
+    graph.addArc(old_n2,old_n1);
+    for(int i=0; i<10; ++i) {
+        auto n1 = graph.addNode();
+        auto n2 = graph.addNode();
+        graph.addArc(n1,old_n1);
+        graph.addArc(old_n2,n2);
+        old_n1 = n1;
+        old_n2 = n2;
+        graph.addArc(n1,n2);
+        graph.addArc(n2,n1);
+    }
+    util::plot_graph("graph.pdf", graph, "", nullptr, "", nullptr, "", true, "neato");
+
+    std::set<graph_t::Node> processed_nodes;
+    auto graph_propagation = graph_util::GraphPropagationFactory(graph);
+    graph_propagation.
+        add_source(old_n1).
+        add_source(old_n2).
+        allow_incomplete_updates(true).
+        init();
+    for(auto next_node=graph_propagation.next();
+        next_node!=lemon::INVALID;
+        next_node=graph_propagation.next()) {
+        DEBUG_OUT(1,"processing node " << graph.id(next_node));
+        processed_nodes.insert(next_node);
+    }
+
+    for(NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        auto was_processed = processed_nodes.find(node)!=processed_nodes.end();
+        EXPECT_TRUE(was_processed) <<
+            "node " << graph.id(node) << " should be processed";
+    }
+}
+
 TEST(GraphPropagation, ProcessingOrder) {
     graph_t graph;
     Node center = graph.addNode();
@@ -605,60 +655,23 @@ TEST(GraphPropagation, ProcessingOrder) {
     EXPECT_EQ(node_chain,"1 2 3 4 5 6 7 8 9 10 11 ") << "node_chain='" << node_chain << "'";
 }
 
-class TestEnvironment: public AbstractEnvironment {
-    //----typedefs/classes----//
-public:
-    struct TestAction: public Action {
-        TestAction(int action): action(action) {}
-        virtual bool operator==(const Action & other) const override {
-            auto a = dynamic_cast<const TestAction *>(&other);
-            return a!=nullptr && a->action==action;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(action);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << action;
-        }
-        int action;
-    };
-    struct TestObservation: public Observation {
-        TestObservation(int observation): observation(observation) {}
-        virtual bool operator==(const Observation & other) const override {
-            auto o = dynamic_cast<const TestObservation *>(&other);
-            return o!=nullptr && o->observation==observation;
-
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(observation);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << observation;
-        }
-        int observation;
-    };
-    //----members----//
-    int state = 0;
-    int default_state = 0;
-    //----methods----//
+class TestEnvironment: public IntegerEnvironment {
 public:
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        auto test_action = std::dynamic_pointer_cast<const TestAction>(action_handle);
+        auto test_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         EXPECT_NE(test_action,nullptr);
         int action = test_action->action;
         if(action==0 || state==1) {
-            return observation_reward_pair_t(observation_handle_t(new TestObservation(state)), 0);
+            return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), 0);
         } else {
             state = (state+1)%2;
-            return observation_reward_pair_t(observation_handle_t(new TestObservation(state)), 1);
+            return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), 1);
         }
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new TestAction(0)),
-                    action_handle_t(new TestAction(1))});
+        return action_container_t({action_handle_t(new IntegerAction(0)),
+                    action_handle_t(new IntegerAction(1))});
     }
-    virtual void make_current_state_default() override {default_state = state;}
-    virtual void reset_state() override {state = default_state;}
     virtual bool has_terminal_state() const override {return false;}
     virtual bool is_terminal_state() const override {return false;}
     virtual bool is_deterministic() const override {return true;}
@@ -666,7 +679,7 @@ public:
     virtual reward_t max_reward() const override {return 1;}
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
-    virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override {out << "TestEnvironment";}
 };
 
 class MockSearchTree: public SearchTree {
@@ -758,6 +771,7 @@ public:
         }
     }
     virtual action_handle_t recommend_action() const override {return action_handle_t();}
+    virtual void write(std::ostream & out) const override {out<<"MockSearchTree()";}
 };
 
 TEST(SearchTree, NodeFinder_FullDAG_Overflow) {
@@ -853,7 +867,7 @@ TEST(SearchTree, NodeFinder) {
         search_tree->next();
         EXPECT_EQ(nodes_1,lemon::countNodes(mock_search_tree->get_graph()));
         EXPECT_EQ(arcs_1,lemon::countArcs(mock_search_tree->get_graph()));
-        // search_tree->toPdf("graph.pdf");
+        // search_tree->plot_graph("graph.pdf");
         // getchar();
 
         // perform transition
@@ -865,70 +879,33 @@ TEST(SearchTree, NodeFinder) {
         environment->make_current_state_default();
 
         // prune tree
-        search_tree->prune(action, observation);
+        search_tree->update(action, observation);
 
         // build tree anew
         search_tree->next();
         EXPECT_EQ(nodes_2,lemon::countNodes(mock_search_tree->get_graph()));
         EXPECT_EQ(arcs_2,lemon::countArcs(mock_search_tree->get_graph()));
-        // search_tree->toPdf("graph.pdf");
+        // search_tree->plot_graph("graph.pdf");
         // getchar();
     }
 }
 
-class DepthEnvironment: public AbstractEnvironment {
-public:
-    struct DepthAction: public Action {
-        DepthAction(int action): action(action) {}
-        virtual ~DepthAction() = default;
-        virtual bool operator==(const Action & other) const override {
-            auto depth_action = dynamic_cast<const DepthAction*>(&other);
-            return depth_action!=nullptr && depth_action->action==action;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(action);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << action;
-        }
-        int action;
-    };
-    struct DepthObservation: public Observation {
-        DepthObservation(int observation): observation(observation) {}
-        virtual ~DepthObservation() = default;
-        virtual bool operator==(const Observation & other) const override {
-            auto depth_observation = dynamic_cast<const DepthObservation*>(&other);
-            return depth_observation!=nullptr && depth_observation->observation==observation;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(observation);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << observation;
-        }
-        int observation;
-    };
+class DepthEnvironment: public IntegerEnvironment {
 public:
     DepthEnvironment(int reward_depth): reward_depth(reward_depth){}
     virtual ~DepthEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        auto depth_action = std::dynamic_pointer_cast<const DepthAction>(action_handle);
+        auto depth_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         EXPECT_NE(nullptr,depth_action);
         ++state;
         if(state>reward_depth) state = reward_depth;
         DEBUG_OUT(1,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new DepthObservation(state)),
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)),
                                          state>=reward_depth?1:0);
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new DepthAction(-1)),
-                    action_handle_t(new DepthAction(1))});
-    }
-    virtual void make_current_state_default() override {
-        default_state = state;
-    }
-    virtual void reset_state() override {
-        state = default_state;
+        return action_container_t({action_handle_t(new IntegerAction(-1)),
+                    action_handle_t(new IntegerAction(1))});
     }
     virtual bool has_terminal_state() const override {return false;}
     virtual bool is_terminal_state() const override {return false;}
@@ -937,11 +914,9 @@ public:
     virtual reward_t max_reward() const override {return 1;}
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
-    virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override {out << "DepthEnvironment";}
 private:
     int reward_depth;
-    int state = 0;
-    int default_state = 0;
 };
 
 TEST(MonteCarloTreeSearch, PlainTree) {
@@ -955,9 +930,12 @@ TEST(MonteCarloTreeSearch, PlainTree) {
                                     1,
                                     std::shared_ptr<NodeFinder>(new PlainTree()),
                                     std::shared_ptr<TreePolicy>(new UCB1()),
-                                    std::shared_ptr<ValueHeuristic>(new Rollout()),
+                                    std::shared_ptr<ValueHeuristic>(new RolloutStatistics()),
                                     std::shared_ptr<BackupMethod>(new MonteCarlo()),
-                                    MonteCarloTreeSearch::BACKUP_TRACE);
+                                    MonteCarloTreeSearch::BACKUP_TYPE::TRACE);
+        // this is important since it otherwise screws up the counts and the
+        // tree will not be built uniform
+        search.rollout_storage = MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE;
         // do as many iterations as would be necessary to build a tree with
         // uniform depth
         int iterations = pow(2,depth+1)-2;
@@ -1000,65 +978,28 @@ TEST(MonteCarloTreeSearch, PlainTree) {
             EXPECT_LT(2*depth,max_dist);
         } else EXPECT_TRUE(false) << "Unhandled depth value";
         // visual output
-        // search.toPdf("graph.pdf");
+        // search.plot_graph("graph.pdf");
         // getchar();
     }
 }
 
-class LineEnvironment: public AbstractEnvironment {
-public:
-    struct LineAction: public Action {
-        LineAction(int action): action(action) {}
-        virtual ~LineAction() = default;
-        virtual bool operator==(const Action & other) const override {
-            auto line_action = dynamic_cast<const LineAction*>(&other);
-            return line_action!=nullptr && line_action->action==action;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(action);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << action;
-        }
-        int action;
-    };
-    struct LineObservation: public Observation {
-        LineObservation(int observation): observation(observation) {}
-        virtual ~LineObservation() = default;
-        virtual bool operator==(const Observation & other) const override {
-            auto line_observation = dynamic_cast<const LineObservation*>(&other);
-            return line_observation!=nullptr && line_observation->observation==observation;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(observation);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << observation;
-        }
-        int observation;
-    };
+class LineEnvironment: public IntegerEnvironment {
 public:
     LineEnvironment(int line_width): line_width(line_width) {}
     virtual ~LineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        auto line_action = std::dynamic_pointer_cast<const LineAction>(action_handle);
+        auto line_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         state += line_action->action;
         if(state>line_width) state = line_width;
         if(-state>line_width) state = -line_width;
         DEBUG_OUT(1,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new LineObservation(state)), state);
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), state);
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new LineAction(-1)),
-                    action_handle_t(new LineAction(0)),
-                    action_handle_t(new LineAction(1))});
-    }
-    virtual void make_current_state_default() override {
-        default_state = state;
-    }
-    virtual void reset_state() override {
-        state = default_state;
+        return action_container_t({action_handle_t(new IntegerAction(-1)),
+                    action_handle_t(new IntegerAction(0)),
+                    action_handle_t(new IntegerAction(1))});
     }
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return state==line_width;}
@@ -1067,11 +1008,9 @@ public:
     virtual reward_t max_reward() const override {return 0;}
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
-    virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override {out << "LineEnvironment";}
 private:
     int line_width;
-    int state = 0;
-    int default_state = 0;
 };
 
 TEST(MonteCarloTreeSearch, NodeFinder) {
@@ -1092,14 +1031,17 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
                                     1,
                                     node_finder,
                                     std::shared_ptr<TreePolicy>(new UCB1(1e10)),
-                                    std::shared_ptr<ValueHeuristic>(new Rollout()),
+                                    std::shared_ptr<ValueHeuristic>(new RolloutStatistics()),
                                     std::shared_ptr<BackupMethod>(new MonteCarlo()),
-                                    MonteCarloTreeSearch::BACKUP_TRACE);
+                                    MonteCarloTreeSearch::BACKUP_TYPE::TRACE);
+        search.rollout_storage = MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE;
         // do as many iterations as would be necessary to build a tree with
         // uniform depth
         int iterations = (pow(3,depth+1)-1)/2 - 1;
         for(int i=0; i<iterations; ++i) {
             search.next();
+            // search.plot_graph("graph.pdf");
+            // getchar();
         }
         // compute some stuff to perform checks
         typedef MonteCarloTreeSearch::graph_t graph_t;
@@ -1130,7 +1072,7 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
         node_counts.push_back(lemon::countNodes(graph));
         arc_counts.push_back(lemon::countArcs(graph));
         // visual output
-        // search.toPdf("graph.pdf");
+        // search.plot_graph("graph.pdf");
         // getchar();
     }
     // some checks
@@ -1165,43 +1107,12 @@ TEST(MonteCarloTreeSearch, NodeFinder) {
     }
 }
 
-class FiniteLineEnvironment: public AbstractEnvironment {
-public:
-    struct FiniteLineAction: public Action {
-        FiniteLineAction(int action): action(action) {}
-        virtual ~FiniteLineAction() = default;
-        virtual bool operator==(const Action & other) const override {
-            auto line_action = dynamic_cast<const FiniteLineAction*>(&other);
-            return line_action!=nullptr && line_action->action==action;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(action);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << action;
-        }
-        int action;
-    };
-    struct FiniteLineObservation: public Observation {
-        FiniteLineObservation(int observation): observation(observation) {}
-        virtual ~FiniteLineObservation() = default;
-        virtual bool operator==(const Observation & other) const override {
-            auto line_observation = dynamic_cast<const FiniteLineObservation*>(&other);
-            return line_observation!=nullptr && line_observation->observation==observation;
-        }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(observation);
-        }
-        virtual void write(std::ostream & out) const override {
-            out << observation;
-        }
-        int observation;
-    };
+class FiniteLineEnvironment: public IntegerEnvironment {
 public:
     FiniteLineEnvironment(int line_width): line_width(line_width) {}
     virtual ~FiniteLineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        auto line_action = std::dynamic_pointer_cast<const FiniteLineAction>(action_handle);
+        auto line_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         //state += (line_action->action>0?1:0);
         state += line_action->action;
@@ -1209,18 +1120,12 @@ public:
         if(state<0) state = 0;
         reward_t reward = state==line_width?1:0;
         DEBUG_OUT(1,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new FiniteLineObservation(state)), reward);
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new FiniteLineAction(-1)),
-                    action_handle_t(new FiniteLineAction(0)),
-                    action_handle_t(new FiniteLineAction(1))});
-    }
-    virtual void make_current_state_default() override {
-        default_state = state;
-    }
-    virtual void reset_state() override {
-        state = default_state;
+        return action_container_t({action_handle_t(new IntegerAction(-1)),
+                    action_handle_t(new IntegerAction(0)),
+                    action_handle_t(new IntegerAction(1))});
     }
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return state==line_width;}
@@ -1229,41 +1134,43 @@ public:
     virtual reward_t max_reward() const override {return 1;}
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
-    virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override {out << "FiniteLineEnvironment";}
 private:
     int line_width;
-    int state = 0;
-    int default_state = 0;
 };
 
-TEST(MonteCarloTreeSearch, Backup) {
+TEST(MonteCarloTreeSearch, BackupType) {
     using namespace node_finder;
     using namespace tree_policy;
     using namespace value_heuristic;
     using namespace backup_method;
     for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
-                // {std::shared_ptr<NodeFinder>(new PlainTree()),12},
-                // {std::shared_ptr<NodeFinder>(new ObservationTree()),11},
-                {std::shared_ptr<NodeFinder>(new FullDAG()),8},
-                {std::shared_ptr<NodeFinder>(new FullGraph()),5}
+                {std::shared_ptr<NodeFinder>(new PlainTree()),12},
+                {std::shared_ptr<NodeFinder>(new ObservationTree()),11},
+                {std::shared_ptr<NodeFinder>(new FullDAG()),100},
+                {std::shared_ptr<NodeFinder>(new FullGraph()),100}
             }}) {
         for(auto backup_type : {
-                MonteCarloTreeSearch::BACKUP_TRACE,
-                    MonteCarloTreeSearch::BACKUP_PROPAGATE
+                MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                    MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
                     }) {
             RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
             auto environment = std::shared_ptr<AbstractEnvironment>(new FiniteLineEnvironment(2));
             MonteCarloTreeSearch search(environment,
-                                        1,
+                                        0.5,
                                         node_finder,
                                         std::shared_ptr<TreePolicy>(new UCB1(1e10)),
-                                        std::shared_ptr<ValueHeuristic>(new Rollout(0)),
-                                        std::shared_ptr<BackupMethod>(new Bellman()),
+                                        std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0)),
+                                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
                                         backup_type);
-            for(int i=0; i<iterations; ++i) {
-                search.next();
+            IF_DEBUG(1) {
+                cout << "Testing" << endl;
+                cout << "    " << typeid(*node_finder).name() << endl;
+                cout << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+            } else {
+                cout << "." << std::flush;
             }
-            // some tests
+            // for the tests
             typedef MonteCarloTreeSearch::graph_t graph_t;
             typedef MonteCarloTreeSearch::node_t node_t;
             typedef MonteCarloTreeSearch::node_it_t node_it_t;
@@ -1275,72 +1182,1185 @@ TEST(MonteCarloTreeSearch, Backup) {
             auto & info = search.get_node_info_map();
             auto & mcts_info = search.get_mcts_node_info_map();
             int non_matching_action_values = 0;
-            for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
-                int local_non_matching_action_values = 0;
-                if(info[node].type==MonteCarloTreeSearch::ACTION_NODE) continue;
-                double value = -1;
-                for(in_arc_it_t arc(graph,node); arc!=lemon::INVALID; ++arc) {
-                    if(value==-1) {
-                        value = mcts_info[graph.source(arc)].get_value();
-                    } else {
-                        if(value!=mcts_info[graph.source(arc)].get_value()) {
-                            ++local_non_matching_action_values;
+
+            // iterate and sum up non-matching action value in each step
+            for(int i=0; i<iterations; ++i) {
+                search.next();
+                // find non-matching action values
+                DEBUG_OUT(2,"Iteration " << i);
+                for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+                    int local_non_matching_action_values = 0;
+                    if(info[node].type==MonteCarloTreeSearch::ACTION_NODE) continue;
+                    double value = -1;
+                    for(in_arc_it_t arc(graph,node); arc!=lemon::INVALID; ++arc) {
+                        if(value==-1) {
+                            value = mcts_info[graph.source(arc)].value;
+                        } else {
+                            if(value!=mcts_info[graph.source(arc)].value) {
+                                ++local_non_matching_action_values;
+                            }
                         }
                     }
+                    IF_DEBUG(2) {
+                        if(local_non_matching_action_values>0) {
+                            DEBUG_OUT(2,"        " << local_non_matching_action_values <<
+                                      " non-matching action values for node " << graph.id(node));
+                            // search.plot_graph("graph.pdf");
+                            // getchar();
+                        }
+                    }
+                    non_matching_action_values += local_non_matching_action_values;
                 }
-                DEBUG_OUT(1,local_non_matching_action_values << " non-matching action values for node "
-                          << graph.id(node));
-                non_matching_action_values += local_non_matching_action_values;
+                DEBUG_OUT(2,"    sum of non-matching action-values " << non_matching_action_values);
+                // search.plot_graph("graph.pdf");
+                // getchar();
             }
-            if(backup_type==MonteCarloTreeSearch::BACKUP_TRACE) {
-                EXPECT_GT(non_matching_action_values,0);
-            } else if(backup_type==MonteCarloTreeSearch::BACKUP_PROPAGATE) {
+
+            // check number of non-matching action values
+            if(backup_type==MonteCarloTreeSearch::BACKUP_TYPE::TRACE) {
+                if(typeid(*node_finder)==typeid(PlainTree)) {
+                    EXPECT_EQ(non_matching_action_values,0);
+                } else {
+                    EXPECT_GT(non_matching_action_values,0);
+                }
+            } else if(backup_type==MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE) {
                 EXPECT_EQ(non_matching_action_values,0);
-            } else EXPECT_TRUE(false) << "This line should not be reached";
+                 } else EXPECT_TRUE(false) << "This line should not be reached";
             // visual output
-            // search.toPdf("graph.pdf");
+            // search.plot_graph("graph.pdf");
             // getchar();
         }
     }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
 }
 
-class StochasticFiniteLineEnvironment: public AbstractEnvironment {
+class SimpleTestEnvironment: public IntegerEnvironment {
 public:
-    struct StochasticFiniteLineAction: public Action {
-        StochasticFiniteLineAction(int action): action(action) {}
-        virtual ~StochasticFiniteLineAction() = default;
-        virtual bool operator==(const Action & other) const override {
-            auto line_action = dynamic_cast<const StochasticFiniteLineAction*>(&other);
-            return line_action!=nullptr && line_action->action==action;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto x = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(x,nullptr);
+        reward_t reward;
+        switch(state) {
+        case 0:
+            reward = 0;
+            if(drand48()<0.1*x->action) {
+                state = 2;
+            } else {
+                state = 1;
+            }
+            break;
+        case 1:
+            reward = 0;
+            state = 3;
+            break;
+        case 2:
+            reward = 1;
+            state = 3;
+            break;
+        case 3:
+            reward = 0;
+            state = 4;
+            break;
+        default:
+            EXPECT_TRUE(false) << "This line should never be reached";
         }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(action);
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        if(state==0) {
+            return action_container_t({
+                        action_handle_t(new IntegerAction(0)),
+                            //action_handle_t(new IntegerAction(1)),
+                        action_handle_t(new IntegerAction(2)),
+                            //action_handle_t(new IntegerAction(3)),
+                        action_handle_t(new IntegerAction(4)),
+                            //action_handle_t(new IntegerAction(5)),
+                        action_handle_t(new IntegerAction(6)),
+                            //action_handle_t(new IntegerAction(7)),
+                        action_handle_t(new IntegerAction(8)),
+                            //action_handle_t(new IntegerAction(9)),
+                        action_handle_t(new IntegerAction(10)
+                            )});
+        } else {
+            return action_container_t({action_handle_t(new IntegerAction(0))});
         }
-        virtual void write(std::ostream & out) const override {
-            out << action;
+    }
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==4;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual void write(std::ostream & out) const override {out << "SimpleTestEnvironment";}
+};
+
+TEST(MonteCarloTreeSearch, Backup2) {
+    // initializde environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    using namespace prior_models;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(1e10))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,1)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(1))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                                MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        auto environment = std::shared_ptr<AbstractEnvironment>(new SimpleTestEnvironment());
+                        double discount = 0.5;
+                        MonteCarloTreeSearch search(environment,
+                                                    discount,
+                                                    node_finder,
+                                                    tree_policy,
+                                                    value_heuristic,
+                                                    backup_method,
+                                                    backup_type);
+                        search.rollout_storage = MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED;
+                        IF_DEBUG(1) {
+                            cout << "Testing" << endl;
+                            cout << "    " << typeid(*node_finder).name() << endl;
+                            cout << "    " << typeid(*tree_policy).name() << endl;
+                            cout << "    " << typeid(*value_heuristic).name() << endl;
+                            cout << "    " << typeid(*backup_method).name() << endl;
+                            cout << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                        } else {
+                            cout << "." << std::flush;
+                        }
+                        // do rollouts
+                        int rollout_n = 1000;
+                        repeat(rollout_n) {
+                            search.next();
+                            // search.plot_graph("graph.pdf");
+                            // getchar();
+                        }
+                        // check action values
+                        for(auto action_value : search.get_action_values()) {
+                            RETURN_TUPLE(MonteCarloTreeSearch::action_handle_t, action,
+                                         double, empirical_value) = action_value;
+                            auto simple_action = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerAction>(action);
+                            EXPECT_NE(simple_action, nullptr);
+                            double analytical_value = 0.1*simple_action->action*discount;
+                            EXPECT_NEAR(analytical_value, empirical_value, 0.1) <<
+                                "This is a statistical test with a small chance of false alarms -- recheck";
+                        }
+                        // check rollout counts
+                        typedef MonteCarloTreeSearch::graph_t graph_t;
+                        typedef MonteCarloTreeSearch::node_t node_t;
+                        typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                        typedef MonteCarloTreeSearch::arc_t arc_t;
+                        typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                        typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                        typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                        const graph_t & graph = search.get_graph();
+                        auto & node_info_map = search.get_node_info_map();
+                        auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                        int rollout_counts_1 = 0;
+                        int rollout_counts_2 = 0;
+                        for(node_it_t node(graph); node!=INVALID; ++node) {
+                            // ignore root node
+                            if(in_arc_it_t(graph,node)==INVALID) continue;
+                            // ignore action nodes
+                            if(node_info_map[node].type==SearchTree::ACTION_NODE) continue;
+                            // all observation nodes at the same depth
+                            // (i.e. with observation 3 or 1/2) should in sum
+                            // contain all rollouts ever made (checked below,
+                            // here we compute the sum)
+                            auto observation = node_info_map[node].observation;
+                            auto simple_observation = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerObservation>(observation);
+                            EXPECT_NE(simple_observation,nullptr);
+                            if(simple_observation->observation==1 || simple_observation->observation==2) {
+                                rollout_counts_1 += mcts_node_info_map[node].rollout_counts;
+                            } else if(simple_observation->observation==3) {
+                                rollout_counts_2 += mcts_node_info_map[node].rollout_counts;
+                            }
+                        }
+                        EXPECT_EQ(rollout_counts_1,rollout_n);
+                        EXPECT_EQ(rollout_counts_2,rollout_n);
+                        // plot graph before pruning
+                        // search.plot_graph("graph.pdf");
+                        // do first step
+                        environment->reset_state();
+                        {
+                            auto action = search.recommend_action();
+                            auto simple_action = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerAction>(action);
+                            EXPECT_NE(simple_action, nullptr);
+                            EXPECT_EQ(simple_action->action,10);
+                            RETURN_TUPLE(observation_handle_t, observation,
+                                         reward_t, reward) = environment->transition(action);
+                            auto simple_observation = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerObservation>(observation);
+                            EXPECT_NE(simple_observation, nullptr);
+                            EXPECT_EQ(simple_observation->observation,2);
+                            EXPECT_EQ(reward,0);
+                            search.update(action,observation);
+                        }
+                        // do second step
+                        {
+                            auto action = search.recommend_action();
+                            auto simple_action = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerAction>(action);
+                            EXPECT_NE(simple_action, nullptr);
+                            EXPECT_EQ(simple_action->action,0);
+                            RETURN_TUPLE(observation_handle_t, observation,
+                                         reward_t, reward) = environment->transition(action);
+                            auto simple_observation = std::dynamic_pointer_cast<const SimpleTestEnvironment::IntegerObservation>(observation);
+                            EXPECT_NE(simple_observation, nullptr);
+                            EXPECT_EQ(simple_observation->observation,3);
+                            EXPECT_EQ(reward,1);
+                            search.update(action,observation);
+                        }
+                        // getchar();
+                    }
+                }
+            }
         }
-        int action;
-    };
-    struct StochasticFiniteLineObservation: public Observation {
-        StochasticFiniteLineObservation(int observation): observation(observation) {}
-        virtual ~StochasticFiniteLineObservation() = default;
-        virtual bool operator==(const Observation & other) const override {
-            auto line_observation = dynamic_cast<const StochasticFiniteLineObservation*>(&other);
-            return line_observation!=nullptr && line_observation->observation==observation;
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+class SplitEnvironment: public IntegerEnvironment {
+public:
+    SplitEnvironment() {state = -5; default_state = -5;}
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto x = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(x,nullptr);
+        reward_t reward = 0;
+        if(state==0 && x->action==1) {
+            if(rand()%3==0) {
+                state = 10;
+            } else {
+                state = 1;
+            }
+        } else if(state==0 && x->action==-1) {
+            if(rand()%3==0) {
+                state = 1;
+            } else {
+                state = 10;
+            }
+        } else if(state==5 || state==50) {
+            state = 100;
+        } else if(state<10) {
+            reward = -0.1;
+            state += 1;
+        } else if(state<100) {
+            reward = +0.1;
+            state += 10;
+        } else {
+            state += 1;
         }
-        virtual size_t get_hash() const override {
-            return std::hash<int>()(observation);
+        if(is_terminal_state()) {
+            reward = 1;
         }
-        virtual void write(std::ostream & out) const override {
-            out << observation;
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        if(state==0) {
+            return action_container_t({
+                    action_handle_t(new IntegerAction(+1)),
+                        action_handle_t(new IntegerAction(-1)
+                            )});
+        } else {
+            return action_container_t({action_handle_t(new IntegerAction(0))});
         }
-        int observation;
-    };
+    }
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==105;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual void write(std::ostream & out) const override {out << "SplitEnvironment";}
+};
+
+TEST(MonteCarloTreeSearch, RolloutTransfer) {
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    using namespace prior_models;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1(1e10)),
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(1e10))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(.1))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,.1)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(.1))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                                MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        auto environment = std::shared_ptr<AbstractEnvironment>(new SplitEnvironment());
+                        double discount = 0.9;
+                        MonteCarloTreeSearch search(environment,
+                                                    discount,
+                                                    node_finder,
+                                                    tree_policy,
+                                                    value_heuristic,
+                                                    backup_method,
+                                                    backup_type);
+                        search.rollout_storage = MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED;
+                        IF_DEBUG(1) {
+                            cout << "Testing" << endl;
+                            cout << "    " << typeid(*node_finder).name() << endl;
+                            cout << "    " << typeid(*tree_policy).name() << endl;
+                            cout << "    " << typeid(*value_heuristic).name() << endl;
+                            cout << "    " << typeid(*backup_method).name() << endl;
+                            cout << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                        } else {
+                            cout << "." << std::flush;
+                        }
+                        // do rollouts
+                        int rollout_n = 500;
+                        repeat(rollout_n) {
+                            search.next();
+                            // search.plot_graph("graph.pdf");
+                            // getchar();
+                        }
+                        // check rollout counts
+                        typedef MonteCarloTreeSearch::graph_t graph_t;
+                        typedef MonteCarloTreeSearch::node_t node_t;
+                        typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                        typedef MonteCarloTreeSearch::arc_t arc_t;
+                        typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                        typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                        typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                        const graph_t & graph = search.get_graph();
+                        auto & node_info_map = search.get_node_info_map();
+                        auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                        std::map<int,int> rollout_counts;
+                        for(node_it_t node(graph); node!=INVALID; ++node) {
+                            // ignore root node
+                            if(in_arc_it_t(graph,node)==INVALID) continue;
+                            // ignore action nodes (check together with observation node)
+                            if(node_info_map[node].type==SearchTree::ACTION_NODE) continue;
+                            // check observation value
+                            auto observation = node_info_map[node].observation;
+                            auto split_observation = std::dynamic_pointer_cast<const SplitEnvironment::IntegerObservation>(observation);
+                            EXPECT_NE(split_observation,nullptr);
+                            // convert observations from "small" branch to
+                            // those of "large" branch
+                            int obs = split_observation->observation;
+                            if(obs<10) obs *= 10;
+                            rollout_counts[obs] += mcts_node_info_map[node].rollout_counts;
+                        }
+                        for(auto counts : rollout_counts) {
+                            EXPECT_EQ(counts.second,rollout_n);
+                        }
+                        // search.plot_graph("graph.pdf");
+                        // getchar();
+                    }
+                }
+            }
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+class LoopyEnvironment: public IntegerEnvironment {
+public:
+    LoopyEnvironment(int loop_size): loop_size(loop_size) {}
+    virtual ~LoopyEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto loopy_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(nullptr,loopy_action);
+        if(abs(state)==loop_size) {
+            state = -(loop_size-1);
+        } else {
+            if(loopy_action->action==-1) {
+                state = -state;
+            } else if(loopy_action->action==1) {
+                state += 1;
+            } else EXPECT_TRUE(false) << "This line should never be reached.";
+        }
+        reward_t reward = state==loop_size?1:-0.1;
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        return action_container_t({action_handle_t(new IntegerAction(-1)),
+                    action_handle_t(new IntegerAction(1))});
+    }
+    virtual bool has_terminal_state() const override {return false;}
+    virtual bool is_terminal_state() const override {return false;}
+    virtual bool is_deterministic() const override {return true;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual void write(std::ostream & out) const override {out << "LoopyEnvironment";}
+private:
+    int loop_size;
+};
+
+TEST(MonteCarloTreeSearch, LoopyPropagation) {
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(auto finder_iterations : vector<pair<std::shared_ptr<NodeFinder>, int>>{{
+                {std::shared_ptr<NodeFinder>(new PlainTree()),1000},
+                {std::shared_ptr<NodeFinder>(new ObservationTree()),1000},
+                {std::shared_ptr<NodeFinder>(new FullDAG()),100},
+                {std::shared_ptr<NodeFinder>(new FullGraph()),1000}
+            }}) {
+        for(auto backup_type : {
+                MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                    MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                    }) {
+            RETURN_TUPLE(std::shared_ptr<NodeFinder>, node_finder, int, iterations) = finder_iterations;
+            auto environment = std::shared_ptr<AbstractEnvironment>(new LoopyEnvironment(4));
+            MonteCarloTreeSearch search(environment,
+                                        0.5,
+                                        node_finder,
+                                        std::shared_ptr<TreePolicy>(new UCB1(2)),
+                                        std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0)),
+                                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
+                                        backup_type);
+            IF_DEBUG(1) {
+                cout << "Testing" << endl;
+                cout << "    " << typeid(*node_finder).name() << endl;
+                cout << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+            } else {
+                cout << "." << std::flush;
+            }
+            // for the tests
+            typedef MonteCarloTreeSearch::graph_t graph_t;
+            typedef MonteCarloTreeSearch::node_t node_t;
+            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+            typedef MonteCarloTreeSearch::arc_t arc_t;
+            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+            const graph_t & graph = search.get_graph();
+            auto & info = search.get_node_info_map();
+            auto & mcts_info = search.get_mcts_node_info_map();
+
+            // iterate and sum up non-matching action value in each step
+            int non_matching_action_values = 0;
+            for(int i=0; i<iterations; ++i) {
+                search.next();
+                // find non-matching action values
+                DEBUG_OUT(2,"Iteration " << i);
+                for(node_it_t node(graph); node!=lemon::INVALID; ++node) {
+                    DEBUG_OUT(3,"    checking node " << graph.id(node));
+                    int local_non_matching_action_values = 0;
+                    if(info[node].type==MonteCarloTreeSearch::ACTION_NODE) continue;
+                    double value = -1;
+                    for(in_arc_it_t arc(graph,node); arc!=lemon::INVALID; ++arc) {
+                        if(value==-1) {
+                            value = mcts_info[graph.source(arc)].value;
+                            DEBUG_OUT(3,"        use value " << value << " from node " <<
+                                      graph.id(graph.source(arc)) << " as reference");
+                        } else {
+                            if(fabs(value-mcts_info[graph.source(arc)].value)>1e-5) {
+                                DEBUG_OUT(3,"        value " << value << " from node " <<
+                                          graph.id(graph.source(arc)) << " does not match");
+                                ++local_non_matching_action_values;
+                            } else {
+                                DEBUG_OUT(3,"        value " << mcts_info[graph.source(arc)].value <<
+                                          " from node " << graph.id(graph.source(arc)) << " matches");
+                            }
+                        }
+                    }
+                    IF_DEBUG(2) {
+                        if(local_non_matching_action_values>0) {
+                            DEBUG_OUT(2,"        " << local_non_matching_action_values <<
+                                      " non-matching action values for node " << graph.id(node));
+                        }
+                    }
+                    non_matching_action_values += local_non_matching_action_values;
+                }
+                DEBUG_OUT(2,"    sum of non-matching action-values " << non_matching_action_values);
+                // visual output
+                // if(typeid(*node_finder).name()==typeid(FullGraph).name()) {
+                //     search.plot_graph("graph.pdf","neato");
+                // } else {
+                //     search.plot_graph("graph.pdf","dot");
+                // }
+                // getchar();
+            }
+
+            // check number of non-matching action values
+            if(backup_type==MonteCarloTreeSearch::BACKUP_TYPE::TRACE) {
+                if(typeid(*node_finder)==typeid(PlainTree)) {
+                    EXPECT_EQ(non_matching_action_values,0);
+                } else {
+                    EXPECT_GT(non_matching_action_values,0);
+                }
+            } else if(backup_type==MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE) {
+                EXPECT_EQ(non_matching_action_values,0);
+            } else EXPECT_TRUE(false) << "This line should not be reached";
+            // visual output
+            // if(typeid(*node_finder).name()==typeid(FullGraph).name()) {
+            //     search.plot_graph("graph.pdf","neato");
+            // } else {
+            //     search.plot_graph("graph.pdf","dot");
+            // }
+            // getchar();
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+class MinimalCompleteEnvironment: public IntegerEnvironment {
+public:
+    MinimalCompleteEnvironment() = default;
+    virtual ~MinimalCompleteEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(nullptr,action);
+        reward_t reward = 0;
+        int old_state = state;
+        if(state==0) {
+            state = 1;
+        } else if(state==1) {
+            if(action->action==0) {
+                if(rand()%3==0) state = 1;
+                else state = 2;
+            } else if(action->action==1) {
+                if(rand()%3==0) state = 2;
+                else state = 3;
+            } else EXPECT_TRUE(false);
+        } else if(state==2) {
+            state = 4;
+            if(action->action==0) {
+                if(rand()%3==0) reward = 1;
+                else reward = 0;
+            } else if(action->action==1) {
+                if(rand()%3==0) reward = 0;
+                else reward = 1;
+            } else EXPECT_TRUE(false);
+        } else if(state==3) {
+            state = 4;
+            if(action->action==0) {
+                if(rand()%3==0) reward = 0;
+                else reward = 1;
+            } else if(action->action==1) {
+                reward = 1;
+            } else EXPECT_TRUE(false);
+        } else EXPECT_TRUE(false);
+        DEBUG_OUT(1,"Transition: (" << old_state << ") " << action->action << " --> " << state << " (" << reward << ")" << (is_terminal_state()?" terminal!":""));
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        if(state==0) {
+            return action_container_t({action_handle_t(new IntegerAction(0))});
+        } else {
+            return action_container_t({action_handle_t(new IntegerAction(0)),
+                        action_handle_t(new IntegerAction(1))});
+        }
+    }
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state==4;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual void write(std::ostream & out) const override {out << "MinimalCompleteEnvironment";}
+};
+
+TEST(MonteCarloTreeSearch, MinimalCompleteEnvironment) {
+    // This test compares the values computed via MCTS to the analytical values.
+    // We have to make a trade-off between running time and reliability.
+    // Examples: 10000 rollouts with a tolerance of 0.15 in the value (pretty
+    // reliable but slow), or 5000 rollouts with a tolerance of 0.2 in the value
+    // (acceptable compromise in both respects for catching the worst bugs).
+    int rollout_n = 5000;
+    double tolerance = 0.2;
+
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1()),
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(20))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(1))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,1)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(1))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                            MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        for(auto rollout_storage : {
+                                MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL
+                                    }) {
+                            std::stringstream case_string;
+                            case_string << "Testing" << endl;
+                            case_string << "    " << typeid(*node_finder).name() << endl;
+                            case_string << "    " << typeid(*tree_policy).name() << endl;
+                            case_string << "    " << typeid(*value_heuristic).name() << endl;
+                            case_string << "    " << typeid(*backup_method).name() << endl;
+                            case_string << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                            case_string << "    " << typeid(rollout_storage).name() << ": " << (int)rollout_storage << endl;
+                            IF_DEBUG(1) {
+                                cout << case_string.str();
+                            } else {
+                                cout << "." << std::flush;
+                            }
+                            // things that don't work together
+                            if(typeid(*tree_policy)==typeid(Uniform) && typeid(*backup_method)==typeid(MonteCarlo)) {
+                                DEBUG_OUT(1,"    Skipping");
+                                continue;
+                            }
+                            // setup everything
+                            auto environment = std::shared_ptr<AbstractEnvironment>(new MinimalCompleteEnvironment());
+                            double discount = 0.5;
+                            MonteCarloTreeSearch search(environment,
+                                                        discount,
+                                                        node_finder,
+                                                        tree_policy,
+                                                        value_heuristic,
+                                                        backup_method,
+                                                        backup_type);
+                            search.rollout_storage = rollout_storage;
+                            search.data_backups(false);
+                            // do rollouts
+                            repeat(rollout_n) {
+                                search.next();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
+                            }
+                            // checks
+                            typedef MonteCarloTreeSearch::graph_t graph_t;
+                            typedef MonteCarloTreeSearch::node_t node_t;
+                            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                            typedef MonteCarloTreeSearch::arc_t arc_t;
+                            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                            const graph_t & graph = search.get_graph();
+                            auto & node_info_map = search.get_node_info_map();
+                            auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                            // root node
+                            node_t root_node = INVALID;
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(in_arc_it_t(graph,node)==INVALID) {
+                                    root_node = node;
+                                    break;
+                                }
+                            }
+                            EXPECT_NE(root_node,INVALID) << case_string.str();
+                            // state 1
+                            node_t state_1 = graph.target(out_arc_it_t(graph,graph.target(out_arc_it_t(graph,root_node))));
+                            EXPECT_EQ(*(node_info_map[state_1].observation),MinimalCompleteEnvironment::IntegerObservation(1)) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[state_1].value,0.44,tolerance) << case_string.str();
+                            node_t action_0_from_state_1 = INVALID;
+                            node_t action_1_from_state_1 = INVALID;
+                            for(out_arc_it_t arc(graph,state_1); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_1 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_1 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_1,INVALID) << case_string.str();
+                            EXPECT_NE(action_1_from_state_1,INVALID) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_1].value,0.3,tolerance) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_1].value,0.44,tolerance) << case_string.str();
+                            // state 2, state 3
+                            node_t state_2 = INVALID;
+                            node_t state_3 = INVALID;
+                            for(out_arc_it_t arc(graph,action_1_from_state_1); arc!=INVALID; ++arc) {
+                                node_t state_node = graph.target(arc);
+                                if(*(node_info_map[state_node].observation)==MinimalCompleteEnvironment::IntegerObservation(2)) {
+                                    state_2 = state_node;
+                                } else if(*(node_info_map[state_node].observation)==MinimalCompleteEnvironment::IntegerObservation(3)) {
+                                    state_3 = state_node;
+                                }
+                            }
+                            EXPECT_NE(state_2,INVALID) << case_string.str();
+                            EXPECT_NE(state_3,INVALID) << case_string.str();
+                            EXPECT_EQ(*(node_info_map[state_2].observation),MinimalCompleteEnvironment::IntegerObservation(2)) << case_string.str();
+                            EXPECT_EQ(*(node_info_map[state_3].observation),MinimalCompleteEnvironment::IntegerObservation(3)) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[state_2].value,0.67,tolerance) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[state_3].value,1,tolerance) << case_string.str();
+                            node_t action_0_from_state_2 = INVALID;
+                            node_t action_1_from_state_2 = INVALID;
+                            for(out_arc_it_t arc(graph,state_2); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_2 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_2 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_2,INVALID) << case_string.str();
+                            EXPECT_NE(action_1_from_state_2,INVALID) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_2].value,0.33,tolerance) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_2].value,0.67,tolerance) << case_string.str();
+                            node_t action_0_from_state_3 = INVALID;
+                            node_t action_1_from_state_3 = INVALID;
+                            for(out_arc_it_t arc(graph,state_3); arc!=INVALID; ++arc) {
+                                node_t action_node = graph.target(arc);
+                                if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(0)) {
+                                    action_0_from_state_3 = action_node;
+                                } else if(*(node_info_map[action_node].action)==MinimalCompleteEnvironment::IntegerAction(1)) {
+                                    action_1_from_state_3 = action_node;
+                                }
+                            }
+                            EXPECT_NE(action_0_from_state_3,INVALID) << case_string.str();
+                            EXPECT_NE(action_1_from_state_3,INVALID) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_0_from_state_3].value,0.67,tolerance) << case_string.str();
+                            EXPECT_NEAR(mcts_node_info_map[action_1_from_state_3].value,1,tolerance) << case_string.str();
+                            // search.plot_graph("graph.pdf");
+                            // getchar();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+/** This environment is designed to check variance updates. The transition and
+ * reward tables are as follows
+ *
+ * \f[
+ \begin{align}
+  \begin{array}{c|cc|c|c|}
+    \text{state (from)} & 0 & & 1 & 2 \\
+    \hline
+    \text{action} & 0 & 1 & 2 & 3 \\
+    \hline\hline
+    1 & 1 & 0 & 0 & 0 \\
+    2 & 0 & 1 & 0 & 0 \\
+    3 & 0 & 0 & 0.5 & 0 \\
+    4 & 0 & 0 & 0.5 & 0 \\
+    5 & 0 & 0 & 0 & 0.5 \\
+    6 & 0 & 0 & 0 & 0.5 \\
+    \hline
+  \end{array}
+  \qquad
+  \begin{array}{c|c|c|c|c|}
+    \text{reached state} & 3 & 4 & 5 & 6 \\
+    \hline\hline
+    0 & 0 & 0 & 0.5 & 0.5 \\
+    \frac{1}{10} & 1 & 0 & 0 & 0 \\
+    \frac{9}{10} & 0 & 1 & 0 & 0 \\
+    1 & 0 & 0 & 0.5 & 0.5 \\
+    \hline
+  \end{array}
+\end{align}
+ * \f]
+ * */
+class MinimalVarianceCheckEnvironment: public IntegerEnvironment {
+public:
+    int last_terminal_state_from_1 = 0;
+    int last_terminal_state_from_2 = 0;
+    int last_reward_in_state_5 = 0;
+    int last_reward_in_state_6 = 0;
+    MinimalVarianceCheckEnvironment() = default;
+    virtual ~MinimalVarianceCheckEnvironment() = default;
+    virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
+        auto action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
+        EXPECT_NE(nullptr,action);
+        EXPECT_TRUE(state==0 || state==1 || state==2);
+        reward_t reward = 0;
+        switch(state) {
+        case 0:
+            EXPECT_TRUE(action->action==0 || action->action==1);
+            if(action->action==0) {
+                state = 1;
+            } else {
+                state = 2;
+            }
+            break;
+        case 1:
+            EXPECT_EQ(action->action,2);
+            if(last_terminal_state_from_1==3) {
+                state = 4;
+                reward = 9./10;
+            } else {
+                state = 3;
+                reward = 1./10;
+            }
+            last_terminal_state_from_1 = state;
+            break;
+        case 2:
+            EXPECT_EQ(action->action,3);
+            if(last_terminal_state_from_2==5) {
+                state = 6;
+                if(last_reward_in_state_6==0) reward = 1;
+                else reward = 0;
+                last_reward_in_state_6 = reward;
+            } else {
+                state = 5;
+                if(last_reward_in_state_5==0) reward = 1;
+                else reward = 0;
+                last_reward_in_state_5 = reward;
+            }
+            last_terminal_state_from_2 = state;
+            break;
+        default:
+            EXPECT_TRUE(false) << "This line should never be reached";
+        }
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
+    }
+    virtual action_container_t get_actions() override {
+        switch(state) {
+        case 0:
+            return action_container_t({action_handle_t(new IntegerAction(0)),
+                        action_handle_t(new IntegerAction(1))});
+        case 1:
+            return action_container_t({action_handle_t(new IntegerAction(2))});
+        case 2:
+            return action_container_t({action_handle_t(new IntegerAction(3))});
+        default:
+            return action_container_t({});
+        }
+    }
+    virtual bool has_terminal_state() const override {return true;}
+    virtual bool is_terminal_state() const override {return state>2;}
+    virtual bool is_deterministic() const override {return false;}
+    virtual bool has_max_reward() const override {return true;}
+    virtual reward_t max_reward() const override {return 1;}
+    virtual bool has_min_reward() const override {return true;}
+    virtual reward_t min_reward() const override {return 0;}
+    virtual void write(std::ostream & out) const override {out << "MinimalVarianceCheckEnvironment";}
+};
+
+TEST(MonteCarloTreeSearch, VarianceBackups) {
+    // This test compares analytical variance value to those computed via MCTS
+    int rollout_n = 8*100;
+    double tolerance = 1e-10;
+
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    auto bellman_backup_policy = std::shared_ptr<TreePolicy>(new Uniform());
+    for(auto backup_method : {
+            std::shared_ptr<BackupMethod>(new Bellman(bellman_backup_policy,0)),
+                std::shared_ptr<BackupMethod>(new MonteCarlo(0))
+                }) {
+        auto node_finder = std::shared_ptr<NodeFinder>(new PlainTree());
+        auto tree_policy = std::shared_ptr<TreePolicy>(new UCB1(1e10));
+        auto value_heuristic = std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0));
+        auto backup_type = MonteCarloTreeSearch::BACKUP_TYPE::TRACE;
+        auto rollout_storage = MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED; // NONE/CONDENSED/FULL
+        std::stringstream case_string;
+        case_string << "Testing" << endl;
+        case_string << "    " << typeid(*node_finder).name() << endl;
+        case_string << "    " << typeid(*tree_policy).name() << endl;
+        case_string << "    " << typeid(*value_heuristic).name() << endl;
+        case_string << "    " << typeid(*backup_method).name() << endl;
+        case_string << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+        case_string << "    " << typeid(rollout_storage).name() << ": " << (int)rollout_storage << endl;
+        IF_DEBUG(1) {
+            cout << case_string.str();
+        } else {
+            cout << "." << std::flush;
+        }
+        // setup everything
+        auto environment = std::shared_ptr<AbstractEnvironment>(new MinimalVarianceCheckEnvironment());
+        double discount = 1;
+        MonteCarloTreeSearch search(environment,
+                                    discount,
+                                    node_finder,
+                                    tree_policy,
+                                    value_heuristic,
+                                    backup_method,
+                                    backup_type);
+        search.rollout_storage = rollout_storage;
+        search.data_backups(false);
+        // for the checks
+        typedef MonteCarloTreeSearch::graph_t graph_t;
+        typedef MonteCarloTreeSearch::node_t node_t;
+        typedef MonteCarloTreeSearch::node_it_t node_it_t;
+        typedef MonteCarloTreeSearch::arc_t arc_t;
+        typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+        typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+        typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+        const graph_t & graph = search.get_graph();
+        auto & node_info_map = search.get_node_info_map();
+        auto & mcts_node_info_map = search.get_mcts_node_info_map();
+        // do rollouts
+        for(int rollout_count=1; rollout_count<=rollout_n; ++rollout_count) {
+            search.next();
+            if(rollout_count>=6 && rollout_count%8==0) {
+                //search.plot_graph("graph.pdf");
+                int n = rollout_count/8;
+                bool is_bellman = typeid(*backup_method)==typeid(Bellman);
+                for(node_it_t node(graph); node!=INVALID; ++node) {
+                    if(node_info_map[node].type==MonteCarloTreeSearch::ACTION_NODE) {
+                        auto action = std::dynamic_pointer_cast<const MinimalVarianceCheckEnvironment::IntegerAction>(node_info_map[node].action);
+                        EXPECT_NE(action,nullptr);
+                        switch(action->action) {
+                        case 0:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            break;
+                        case 1:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            break;
+                        case 2:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            break;
+                        case 3:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for action " << action->action << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for action " << action->action << " does not match";
+                            break;
+                        default:
+                            EXPECT_TRUE(false) << "This line should never be reached";
+                            break;
+                        }
+                    } else if(node_info_map[node].type==MonteCarloTreeSearch::OBSERVATION_NODE) {
+                        auto observation = std::dynamic_pointer_cast<const MinimalVarianceCheckEnvironment::IntegerObservation>(node_info_map[node].observation);
+                        int state;
+                        if(observation==nullptr) {
+                            state = 0;
+                        } else {
+                            state = observation->observation;
+                        }
+                        switch(state) {
+                        case 0:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(82.*n+9.)/(400*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,41./(200*(8*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            break;
+                        case 1:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n+1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,4./(25*(4*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            break;
+                        case 2:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0.5,tolerance) << "Value for state " << state << " does not match";
+                            if(is_bellman) EXPECT_NEAR(mcts_node_info_map[node].value_variance,(2.*n+1.)/(4*(8*n*n-2*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            else EXPECT_NEAR(mcts_node_info_map[node].value_variance,1./(4*(4*n-1)),tolerance) << "Variance for state " << state << " does not match";
+                            break;
+                        case 3:
+                        case 4:
+                        case 5:
+                        case 6:
+                            EXPECT_NEAR(mcts_node_info_map[node].value,0,tolerance) << "Value for state " << state << " does not match";
+                            EXPECT_NEAR(mcts_node_info_map[node].value_variance,0,tolerance) << "Variance for state " << state << " does not match";
+                            break;
+                        default:
+                            EXPECT_TRUE(false) << "This line should never be reached";
+                            break;
+                        }
+                    } else EXPECT_TRUE(false) << "This line should never be reached";
+                }
+                //getchar();
+            }
+        }
+        // search.plot_graph("graph.pdf");
+        // getchar();
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+
+#if 0
+// This test is supposed to check the variance computed via data backups versus
+// "normal" backup. This test fails! But this may be due to the quantities being
+// computed differently. I don't know whether a direct comparison can be made.
+TEST(MonteCarloTreeSearch, DataBackup) {
+    // initialize environment and search tree
+    using namespace node_finder;
+    using namespace tree_policy;
+    using namespace value_heuristic;
+    using namespace backup_method;
+    for(auto node_finder : {
+            std::shared_ptr<NodeFinder>(new PlainTree()),
+                std::shared_ptr<NodeFinder>(new ObservationTree()),
+                std::shared_ptr<NodeFinder>(new FullDAG()),
+                std::shared_ptr<NodeFinder>(new FullGraph())
+                }) {
+        for(auto tree_policy: {
+                std::shared_ptr<TreePolicy>(new Uniform()),
+                    std::shared_ptr<TreePolicy>(new UCB1()),
+                    std::shared_ptr<TreePolicy>(new UCB_Variance(20))
+                    }) {
+            for(auto value_heuristic : {std::shared_ptr<ValueHeuristic>(new RolloutStatistics(0))}) {
+                for(auto backup_method : {
+                        std::shared_ptr<BackupMethod>(new Bellman(nullptr,0)),
+                            std::shared_ptr<BackupMethod>(new MonteCarlo(0))
+                            }) {
+                    for(auto backup_type : {
+                            MonteCarloTreeSearch::BACKUP_TYPE::TRACE,
+                            MonteCarloTreeSearch::BACKUP_TYPE::PROPAGATE
+                                }) {
+                        for(auto rollout_storage : {
+                                //MonteCarloTreeSearch::ROLLOUT_STORAGE::NONE,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::CONDENSED,
+                                    MonteCarloTreeSearch::ROLLOUT_STORAGE::FULL
+                                    }) {
+                            std::stringstream case_string;
+                            case_string << "Testing" << endl;
+                            case_string << "    " << typeid(*node_finder).name() << endl;
+                            case_string << "    " << typeid(*tree_policy).name() << endl;
+                            case_string << "    " << typeid(*value_heuristic).name() << endl;
+                            case_string << "    " << typeid(*backup_method).name() << endl;
+                            case_string << "    " << typeid(backup_type).name() << ": " << (int)backup_type << endl;
+                            case_string << "    " << typeid(rollout_storage).name() << ": " << (int)rollout_storage << endl;
+                            IF_DEBUG(1) {
+                                cout << case_string.str();
+                            } else {
+                                cout << "." << std::flush;
+                            }
+                            // things that don't work together
+                            // if(typeid(*tree_policy)==typeid(Uniform) && typeid(*backup_method)==typeid(MonteCarlo)) {
+                            //     DEBUG_OUT(1,"    Skipping");
+                            //     continue;
+                            // }
+                            // setup everything
+                            auto environment = std::shared_ptr<AbstractEnvironment>(new MinimalCompleteEnvironment());
+                            double discount = 0.5;
+                            MonteCarloTreeSearch search(environment,
+                                                        discount,
+                                                        node_finder,
+                                                        tree_policy,
+                                                        value_heuristic,
+                                                        backup_method,
+                                                        backup_type);
+                            search.rollout_storage = rollout_storage;
+                            search.data_backups(true);
+                            // do rollouts
+                            int rollout_n = 100;
+                            repeat(rollout_n) {
+                                search.next();
+                                // search.plot_graph("graph.pdf");
+                                // getchar();
+                            }
+                            //--------//
+                            // checks //
+                            //--------//
+                            typedef MonteCarloTreeSearch::graph_t graph_t;
+                            typedef MonteCarloTreeSearch::node_t node_t;
+                            typedef MonteCarloTreeSearch::node_it_t node_it_t;
+                            typedef MonteCarloTreeSearch::arc_t arc_t;
+                            typedef MonteCarloTreeSearch::arc_it_t arc_it_t;
+                            typedef MonteCarloTreeSearch::in_arc_it_t in_arc_it_t;
+                            typedef MonteCarloTreeSearch::out_arc_it_t out_arc_it_t;
+                            const graph_t & graph = search.get_graph();
+                            auto & node_info_map = search.get_node_info_map();
+                            auto & mcts_node_info_map = search.get_mcts_node_info_map();
+                            // find nodes with fully expanded sub-trees by
+                            // "reverse flooding" from not-fully-expanded nodes
+                            typedef lemon::ReverseDigraph<const graph_t> const_graph_t;
+                            const_graph_t reverse_graph = lemon::reverseDigraph(graph);
+                            graph_t::NodeMap<bool> reached(graph);
+                            auto flooding = graph_util::GraphFlooding<const_graph_t,graph_t>(reverse_graph,reached);
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(mcts_node_info_map[node].rollout_counts<2 || // for valid variance
+                                   mcts_node_info_map[node].rollout_counts!=(int)mcts_node_info_map[node].rollout_set.size()) {
+                                    flooding.add_source(node);
+                                    DEBUG_OUT(2,"    node " << graph.id(node) << " not fully expanded");
+                                }
+                            }
+                            flooding.flood();
+                            // now check nodes that were not reached, i.e., that
+                            // have fully expanded subtrees
+                            for(node_it_t node(graph); node!=INVALID; ++node) {
+                                if(reached[node]) continue;
+                                DEBUG_OUT(2,"    checking node " << graph.id(node));
+                                auto & rollout_set = mcts_node_info_map[node].rollout_set;
+                                double mean_return = 0;
+                                double mean_return_square = 0;
+                                double counts = 0;
+                                double weight_sum = 0;
+                                for(auto & rollout_item : rollout_set) {
+                                    mean_return += rollout_item->weight * rollout_item->discounted_return;
+                                    mean_return_square += rollout_item->weight * pow(rollout_item->discounted_return,2);
+                                    weight_sum += rollout_item->weight;
+                                    ++counts;
+                                }
+                                double return_variance = (counts/(counts-1))*(mean_return_square-pow(mean_return,2));
+                                double value_variance = return_variance/counts;
+
+                                DEBUG_WARNING("mean return: " << mean_return);
+                                DEBUG_WARNING("mean return square: " << mean_return_square);
+                                DEBUG_WARNING("counts: " << counts);
+                                DEBUG_WARNING("return variance: " << return_variance);
+                                DEBUG_WARNING("value variance: " << value_variance);
+                                DEBUG_WARNING("value variance [node]: " << mcts_node_info_map[node].value_variance);
+                                DEBUG_WARNING("value [node]: " << mcts_node_info_map[node].value);
+
+                                DEBUG_EXPECT_APPROX(weight_sum,1);
+                                DEBUG_EXPECT_APPROX(mean_return,mcts_node_info_map[node].value);
+                                DEBUG_EXPECT_APPROX(value_variance,mcts_node_info_map[node].value_variance);
+
+                                if(fabs(mean_return-mcts_node_info_map[node].value)>1e-10 ||
+                                   fabs(value_variance-mcts_node_info_map[node].value_variance)>1e-10) {
+                                    for(auto & rollout_item : rollout_set) {
+                                        cout << *rollout_item << endl;
+                                    }
+                                }
+                            }
+
+                            search.plot_graph("graph.pdf");
+                            getchar();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    IF_DEBUG(1) {/* do nothing*/}
+    else cout << endl;
+}
+#endif
+
+class StochasticFiniteLineEnvironment: public IntegerEnvironment {
 public:
     StochasticFiniteLineEnvironment(int line_width): line_width(line_width) {}
     virtual ~StochasticFiniteLineEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override {
-        auto line_action = std::dynamic_pointer_cast<const StochasticFiniteLineAction>(action_handle);
+        auto line_action = std::dynamic_pointer_cast<const IntegerAction>(action_handle);
         EXPECT_NE(nullptr,line_action);
         //state += (line_action->action>0?1:0);
         if(rand()%2==0) {
@@ -1351,18 +2371,12 @@ public:
         if(state<0) state = 0;
         reward_t reward = state==line_width?1:0;
         DEBUG_OUT(1,"Transition to " << state);
-        return observation_reward_pair_t(observation_handle_t(new StochasticFiniteLineObservation(state)), reward);
+        return observation_reward_pair_t(observation_handle_t(new IntegerObservation(state)), reward);
     }
     virtual action_container_t get_actions() override {
-        return action_container_t({action_handle_t(new StochasticFiniteLineAction(-1)),
-                    action_handle_t(new StochasticFiniteLineAction(0)),
-                    action_handle_t(new StochasticFiniteLineAction(1))});
-    }
-    virtual void make_current_state_default() override {
-        default_state = state;
-    }
-    virtual void reset_state() override {
-        state = default_state;
+        return action_container_t({action_handle_t(new IntegerAction(-1)),
+                    action_handle_t(new IntegerAction(0)),
+                    action_handle_t(new IntegerAction(1))});
     }
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return state==line_width;}
@@ -1371,11 +2385,9 @@ public:
     virtual reward_t max_reward() const override {return 1;}
     virtual bool has_min_reward() const override {return true;}
     virtual reward_t min_reward() const override {return 0;}
-    virtual bool is_markov() const override {return true;}
+    virtual void write(std::ostream & out) const override {out << "StochasticFiniteLineEnvironment";}
 private:
     int line_width;
-    int state = 0;
-    int default_state = 0;
 };
 
 /**
@@ -1398,7 +2410,7 @@ public:
     const graph_t & get_c_graph() const {return c_graph;}
     const ComputationalConstGraph & get_computer() const {return computer;}
     virtual void update_c_node_connections(node_t action_node) override {
-        DEBUG_EXPECT(0,node_info_map[action_node].type==ACTION_NODE);
+        DEBUG_EXPECT(node_info_map[action_node].type==ACTION_NODE);
 
         for(node_t c_node : {
                 variable_info_map[action_node].pi,
@@ -1631,7 +2643,6 @@ TEST(ActiveTreeSearch, SimpleValueCheck) {
     }
 }
 
-#if 1
 TEST(ActiveTreeSearch, Test) {
     auto environment = std::shared_ptr<AbstractEnvironment>(new StochasticFiniteLineEnvironment(2));
     ActiveTreeSearch search(environment,
@@ -1645,4 +2656,71 @@ TEST(ActiveTreeSearch, Test) {
     }
     //search.toPdf("graph.pdf");
 }
-#endif
+
+TEST(PriorModels, PriorCounts) {
+    // remove bias
+    {
+        prior_models::PriorCounts prior_counts(1,1,2,0,1,2,true);
+        EXPECT_EQ(0.5,prior_models::PriorCounts::compute_mean(1,2,0,1,2));
+        EXPECT_EQ(0.5,prior_counts.mean);
+        EXPECT_EQ(0.25*4./3.,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2,true));
+        EXPECT_EQ(0.25*4./3.,prior_counts.variance);
+        EXPECT_EQ(0.25*4./3./(2+2),prior_counts.variance_of_mean);
+    }
+    // don't remove bias
+    {
+        prior_models::PriorCounts prior_counts(1,1,2,0,1,2,false);
+        EXPECT_EQ(0.5,prior_models::PriorCounts::compute_mean(1,2,0,1,2));
+        EXPECT_EQ(0.5,prior_counts.mean);
+        EXPECT_EQ(0.25,prior_models::PriorCounts::compute_variance(0.5,1,2,0,1,2,false));
+        EXPECT_EQ(0.25,prior_counts.variance);
+        EXPECT_EQ(0.25/4,prior_counts.variance_of_mean);
+    }
+}
+
+TEST(PriorModels, Dirichlet) {
+    // uniform counts
+    {
+        double n = 10;
+        prior_models::Dirichlet dirichlet(vector<double>(n,1));
+        double norm = n*n*(n+1);
+        for(int idx_1=0; idx_1<n; ++idx_1) {
+            EXPECT_EQ(dirichlet.mean[idx_1],1/n);
+            for(int idx_2=0; idx_2<n; ++idx_2) {
+                if(idx_1==idx_2) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],(n-1)/norm);
+                } else {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-1/(norm));
+                }
+            }
+        }
+    }
+    // strongly non-uniform counts
+    {
+        double n = 10;
+        double high = 100;
+        double counts = n-1+high;
+        vector<double> count_vec(n,1);
+        count_vec[0] = high;
+        prior_models::Dirichlet dirichlet(count_vec);
+        double norm = (counts)*(counts)*(counts+1);
+        for(int idx_1=0; idx_1<n; ++idx_1) {
+            if(idx_1==0) {
+                EXPECT_EQ(dirichlet.mean[idx_1],high/counts);
+            } else {
+                EXPECT_EQ(dirichlet.mean[idx_1],1/counts);
+            }
+            for(int idx_2=0; idx_2<n; ++idx_2) {
+                if(idx_1==0 && idx_2==0) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],high*(counts-high)/norm);
+                } else if(idx_1==0 || idx_2==0) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-high/norm);
+                } else if(idx_1==idx_2) {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],(counts-1)/norm);
+                } else {
+                    EXPECT_EQ(dirichlet.covariance[idx_1][idx_2],-1/norm);
+                }
+            }
+        }
+    }
+}

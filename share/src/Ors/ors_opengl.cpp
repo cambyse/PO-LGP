@@ -28,17 +28,18 @@
 
 
 #include "ors.h"
+#include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=false, orsDrawMarkers=true, orsDrawColors=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
 
-#ifdef MT_GL
+#ifdef MLR_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
 
@@ -49,7 +50,7 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
 /**
  * @brief Bind ors to OpenGL.
@@ -61,33 +62,34 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
   gl.add(glStandardScene, 0);
   gl.add(ors::glDrawGraph, &graph);
-  gl.setClearColors(1., 1., 1., 1.);
+//  gl.setClearColors(1., 1., 1., 1.);
 
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
-    *(gl.camera.X) = glCamera->X;
+    gl.camera.X = glCamera->X;
     gl.resize(500,500);
   } else {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
-
   }
   gl.update();
 }
 #endif
 
-#ifndef MT_ORS_ONLY_BASICS
+#ifndef MLR_ORS_ONLY_BASICS
 
 /// static GL routine to draw a ors::KinematicWorld
 void ors::glDrawGraph(void *classP) {
-  ((ors::KinematicWorld*)classP)->glDraw();
+  ((ors::KinematicWorld*)classP)->glDraw(NoOpenGL);
 }
 
 void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
-  if(orsDrawColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
+  if(orsDrawColors && !orsDrawIndexColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
+  if(orsDrawIndexColors) glColor3b((s->index>>16)&0xff, (s->index>>8)&0xff, s->index&0xff);
+
 
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
@@ -103,7 +105,7 @@ void glDrawShape(ors::Shape *s) {
   }
   if(orsDrawShapes) {
     switch(s->type) {
-      case ors::noneST: break;
+      case ors::noneST: LOG(-1) <<"Shape '" <<s->name <<"' has no joint type";  break;
       case ors::boxST:
         if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
         else glDrawBox(s->size[0], s->size[1], s->size[2]);
@@ -121,6 +123,7 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::SSBoxST:
+        HALT("deprecated??");
         if(orsDrawMeshes){
           if(!s->mesh.V.N) s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
           s->mesh.glDraw();
@@ -133,6 +136,19 @@ void glDrawShape(ors::Shape *s) {
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
+        s->mesh.glDraw();
+        break;
+      case ors::sscST:
+        CHECK(s->sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
+        if(!s->mesh.V.N) s->mesh.setSSC(s->sscCore, s->size[3]);
+        s->mesh.glDraw();
+        break;
+      case ors::ssBoxST:
+        if(!s->mesh.V.N || !s->sscCore.V.N){
+          s->sscCore.setBox();
+          s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
+          s->mesh.setSSC(s->sscCore, s->size[3]);
+        }
         s->mesh.glDraw();
         break;
       case ors::pointCloudST:
@@ -160,7 +176,7 @@ void glDrawShape(ors::Shape *s) {
 }
 
 /// GL routine to draw a ors::KinematicWorld
-void ors::KinematicWorld::glDraw() {
+void ors::KinematicWorld::glDraw(OpenGL&) {
   uint i=0;
   ors::Transformation f;
   double GLmatrix[16];
@@ -224,8 +240,10 @@ void ors::KinematicWorld::glDraw() {
   //proxies
   if(orsDrawProxies) for(Proxy *proxy: proxies) {
     glLoadIdentity();
-    if(!proxy->colorCode) glColor(.75,.75,.75);
-    else glColor(proxy->colorCode);
+    if(!proxy->colorCode){
+      if(proxy->d>0.) glColor(.75,.75,.75);
+      else glColor(.75,.5,.5);
+    }else glColor(proxy->colorCode);
     glBegin(GL_LINES);
     glVertex3dv(proxy->posA.p());
     glVertex3dv(proxy->posB.p());
@@ -253,14 +271,13 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const char *tag, double delay, uint dim_z, bool copyG) {
+void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
   if(!steps) return;
-//  G.gl().update();
   for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
     s->mesh.computeNormals();
   }
   ors::KinematicWorld *Gcopy;
-  if(G.operators.N) copyG=true;
+  if(switches.N) copyG=true;
   if(!copyG) Gcopy=&G;
   else{
     Gcopy = new ors::KinematicWorld;
@@ -278,11 +295,11 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const c
   uint num, T=x.d0-1;
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(uint k=0; k<=(uint)num; k++) {
-    uint t = k*T/num;
-    if(G.operators.N){
-      for(ors::GraphOperator *op: G.operators)
-        if(op->timeOfApplication==t)
-          op->apply(*Gcopy);
+    uint t = (T?(k*T/num):0);
+    if(switches.N){
+      for(ors::KinematicSwitch *sw: switches)
+        if(sw->timeOfApplication==t)
+          sw->apply(*Gcopy);
     }
     if(dim_z) Gcopy->setJointState(cat(x[t], z));
     else Gcopy->setJointState(x[t]);
@@ -291,7 +308,7 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const c
       Gcopy->gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     }else{
       Gcopy->gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
-      if(delay) MT::wait(delay);
+      if(delay) mlr::wait(delay);
     }
   }
   if(steps==1)
@@ -444,13 +461,14 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
     for(t=0; t<20; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       if(ino && ino->pollForModification()) return;
-      x(i)=x0(i) + .5*sin(MT_2PI*t/20);
+      x(i)=x0(i) + .5*sin(MLR_2PI*t/20);
       C.setJointState(x);
       C.gl().update(STRING("joint = " <<i), false, false, true);
-      MT::wait(0.01);
+      mlr::wait(0.01);
     }
   }
   C.setJointState(x0);
+  C.gl().update("", false, false, true);
 }
 
 
@@ -535,21 +553,21 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
       case '7':  ors.writePlyFile("z.ply");  break;
-      case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-      case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-      case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-      case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-      case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
-      case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
+      case 'j':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
+      case 'k':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
+      case 'i':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
+      case ',':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
+      case 'l':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(.1, .0, 0);  break;
+      case 'h':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(.1, 0, 0);  break;
       case 'a':  gl.camera.focus(
-          (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-           ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
-          + *gl.camera.foc);
+          (gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
+           ^ gl.camera.X.rot*ors::Vector(1, 0, 0)) * .001
+          + gl.camera.foc);
         break;
-      case 's':  gl.camera.X->pos +=
+      case 's':  gl.camera.X.pos +=
           (
-            gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-            ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
+            gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
+            ^(gl.camera.X.rot * ors::Vector(1., 0, 0))
           ) * .01;
         break;
       case 'q' :
@@ -571,12 +589,12 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
-      MT::lineCount=1;
+      mlr::lineCount=1;
       C.gl().lock.writeLock();
       C <<FILE(filename);
       C.gl().lock.unlock();
     } catch(const char* msg) {
-      cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
+      cout <<"line " <<mlr::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       C.gl().watch();
       continue;
     }
@@ -590,14 +608,14 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 #else
     C.gl().watch();
 #endif
-if(!MT::getInteractivity()){
+if(!mlr::getInteractivity()){
     exit=true;
 }
   }
 }
 
 
-#if 0 //MT_ODE
+#if 0 //MLR_ODE
 void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
   C.gl().watch();
   uint t, T=200;
@@ -619,10 +637,10 @@ void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
 #endif
 #endif
 
-#else ///MT_GL
-#ifndef MT_ORS_ONLY_BASICS
+#else ///MLR_GL
+#ifndef MLR_ORS_ONLY_BASICS
 void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
-void ors::KinematicWorld::glDraw() { NICO }
+void ors::KinematicWorld::glDraw(OpenGL&) { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
 void editConfiguration(const char* orsfile, ors::KinematicWorld& C) { NICO }
 void animateConfiguration(ors::KinematicWorld& C, Inotify*) { NICO }

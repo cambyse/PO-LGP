@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_vision_h
-#define MT_vision_h
+#ifndef MLR_vision_h
+#define MLR_vision_h
 
 #include <Core/array.h>
 //#include "threads.h"
@@ -97,7 +97,7 @@ void compute_mu_VV(floatA& mu_VV, const floatA& alphaV);
 
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "vision.cpp"
 #endif
 

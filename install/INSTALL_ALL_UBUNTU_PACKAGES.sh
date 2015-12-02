@@ -45,14 +45,16 @@ tk8.5-dev \
 libfreenect-dev \
 libavcodec-extra-54 \
 libqt4-dev-bin \
-libusb-dev
+libusb-dev \
+libusb-1.0-0-dev \
 libavcodec-extra-53 \
 libavdevice-dev \
 libavfilter-dev \
-libx264-dev
+libx264-dev \
+portaudio19-dev
 
 # install google test
 cd /usr/src/gtest
 sudo cmake .
 sudo make
-sudo ln -s -f /usr/src/gtest/libgtest.a /home/lib/lib/
+#sudo ln -s -f /usr/src/gtest/libgtest.a /home/lib/lib/

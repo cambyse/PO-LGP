@@ -39,9 +39,9 @@ namespace relational {
 class Literal;
 struct SymbolicState;
 struct StateTransition;
-typedef MT::Array< Literal* > LitL;
-typedef MT::Array< SymbolicState* > SymbolicStateL;
-typedef MT::Array< StateTransition* > StateTransitionL;
+typedef mlr::Array< Literal* > LitL;
+typedef mlr::Array< SymbolicState* > SymbolicStateL;
+typedef mlr::Array< StateTransition* > StateTransitionL;
 
 
 
@@ -65,7 +65,7 @@ class Literal {
     static Literal* get(Symbol* s, const uintA& args, double value, ComparisonType comparison_type = comparison_equal);
     static Literal* getVarComparison(Symbol* s, const uintA& args);
     static Literal* get(const char* text);
-    static void get(MT::Array< Literal* >& lits, const char* text);
+    static void get(mlr::Array< Literal* >& lits, const char* text);
     bool operator==(Literal& lit) const;
     bool operator!=(Literal& lit) const;
     virtual void write(ostream& os = cout, bool withTypes = false) const;
@@ -96,7 +96,7 @@ class Literal {
     static bool negativeBinaryLiteralsLast(const LitL& lits);
 };
 void write(const LitL& lits, ostream& os = cout);
-void write(const MT::Array< LitL >& list_of_lits_list, ostream& os = cout);
+void write(const mlr::Array< LitL >& list_of_lits_list, ostream& os = cout);
 
 
 
@@ -111,14 +111,14 @@ void write(const MT::Array< LitL >& list_of_lits_list, ostream& os = cout);
 struct SymbolicState {
   // -----------------------------------
   // Essential data-fields
-  MT::Array<Literal*> lits;
+  mlr::Array<Literal*> lits;
   uintA state_constants; // not necessarily set
   bool derived_lits_are_calculated; // Have literals derived symbols been calculated?
   
   // -----------------------------------
   // Convenience methods
   SymbolicState();
-  SymbolicState(const MT::Array<Literal*>& lits);
+  SymbolicState(const mlr::Array<Literal*>& lits);
   ~SymbolicState();
   bool operator==(const SymbolicState& lit) const;
   bool operator!=(const SymbolicState& lit) const;
@@ -151,7 +151,7 @@ struct StateTransition {
   SymbolicState pre, post;
   Literal* action;
   double reward;
-  MT::Array< Literal* > changes;
+  mlr::Array< Literal* > changes;
   uintA changedConstants;
   
   // -----------------------------------

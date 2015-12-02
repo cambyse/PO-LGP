@@ -202,7 +202,7 @@ void MinSumGaussNewton::init(){
     else         mu(m).hatm=0.; //psi(j, i, x[j], x[i]);
   }
   
-  MT::open(fil, "z.MinSum");
+  mlr::open(fil, "z.MinSum");
 }
 
 double MinSumGaussNewton::updateNode(uint i){
@@ -269,8 +269,8 @@ void MinSumGaussNewton::step(uint steps){
   uint N=x.d0;
   uint i;
   arr x_old;
-  MT::Array<Mu>  mu_old;
-  MT::Array<Fij> fij_old;
+  mlr::Array<Mu>  mu_old;
+  mlr::Array<Fij> fij_old;
   double cost,cost_old;
   
   dampingReference=x;
@@ -319,8 +319,8 @@ void MinSumGaussNewton::step(uint steps){
   }
 }
 
-#include <Core/array_t.h>
-template MT::Array<Fij>::Array();
-template MT::Array<Fij>::~Array();
-template MT::Array<Mu>::Array();
-template MT::Array<Mu>::~Array();
+#include <Core/array.tpp>
+template mlr::Array<Fij>::Array();
+template mlr::Array<Fij>::~Array();
+template mlr::Array<Mu>::Array();
+template mlr::Array<Mu>::~Array();

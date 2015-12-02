@@ -1,17 +1,17 @@
 #include "taskMaps.h"
 
 TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
-  velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
-  accCoeff = MT::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
+  velCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
+  accCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
 
   //transition cost metric
   arr H_diag;
-  if(MT::checkParameter<arr>("Hdiag")) {
-    H_diag = MT::getParameter<arr>("Hdiag");
+  if(mlr::checkParameter<arr>("Hdiag")) {
+    H_diag = mlr::getParameter<arr>("Hdiag");
   } else {
     H_diag = G.naturalQmetric();
   }
-  H_rate_diag = MT::getParameter<double>("Hrate")*H_diag;
+  H_rate_diag = mlr::getParameter<double>("Hrate")*H_diag;
   H_rate_diag = 1.;
 }
 

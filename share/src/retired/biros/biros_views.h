@@ -7,8 +7,8 @@
  * @ingroup group_biros
  * @{
  */
-#ifndef MT_biros_views_h
-#define MT_biros_views_h
+#ifndef MLR_biros_views_h
+#define MLR_biros_views_h
 
 #include <System/biros.h>
 #include <views/views.h>

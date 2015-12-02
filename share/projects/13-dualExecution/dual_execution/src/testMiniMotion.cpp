@@ -94,9 +94,9 @@ void moveHand(){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, ori, dual;
   getTrajectory(x, y, ori, dual, world);
@@ -120,7 +120,7 @@ int main(int argc,char** argv){
     ors::Quaternion q;
     q.set(&ori(t,0));
     q = rotZ*q;
-    ori[t]() = ARRAY(q);
+    ori[t]() = conv_quat2arr(q);
   }
 
   cout <<"initial cfg: " <<"q=" <<x[0] <<endl <<"y=" <<y[0] <<endl;

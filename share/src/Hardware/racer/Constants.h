@@ -1,13 +1,13 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#ifndef MT_2PI
-#  define MT_2PI 6.283195307179587
+#ifndef MLR_2PI
+#  define MLR_2PI 6.283195307179587
 #endif
 
 static const double EMG30_count_per_motorTurn = 360.;
 static const double EMG30_motorTurn_per_wheelTurn = 30.;
-static const double EMG30_rad_per_count = MT_2PI/(EMG30_count_per_motorTurn*EMG30_motorTurn_per_wheelTurn);
+static const double EMG30_rad_per_count = MLR_2PI/(EMG30_count_per_motorTurn*EMG30_motorTurn_per_wheelTurn);
 static const double Wheel_radius = .05;
 static const double MD25_encAcc_per_accLevel = 1./0.025;
 

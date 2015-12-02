@@ -49,12 +49,12 @@ struct SecKinPlanner:public StepThread{
     nSteps = 0;
     nInit = _nInit;
     Clusters <<FILE("ClustQ4.txt");
-    MT::getParameter(midPrec,"reachPlanMidPrec");
-    MT::getParameter(endPrec,"reachPlanEndPrec");//load here to avoid tthread problems with CFG file
+    mlr::getParameter(midPrec,"reachPlanMidPrec");
+    mlr::getParameter(endPrec,"reachPlanEndPrec");//load here to avoid tthread problems with CFG file
 
-    MT::getParameter(limPrec,"reachPlanLimPrec");
-    MT::getParameter(colPrec,"reachPlanColPrec");
-    MT::getParameter(protoPrec,"reachPlanProtoPrec");
+    mlr::getParameter(limPrec,"reachPlanLimPrec");
+    mlr::getParameter(colPrec,"reachPlanColPrec");
+    mlr::getParameter(protoPrec,"reachPlanProtoPrec");
 
     //T = 100;//100
     nMod = nmod;
@@ -230,7 +230,7 @@ struct ThreadPlanner:public StepThread{
 
   uint nBest;//best sub planner
 
-  MT::Array<SecKinPlanner*> helpers;
+  mlr::Array<SecKinPlanner*> helpers;
   double lastCost,diffCost;//judge planners progress and whether costs worsening
  // bool bStop;
 
@@ -310,7 +310,7 @@ struct ThreadPlanner:public StepThread{
           bReady = false;
           break;
         }
-      MT::wait(0.0003);
+      mlr::wait(0.0003);
      // if(bStop){
      //   bStop = false;
      //   return;

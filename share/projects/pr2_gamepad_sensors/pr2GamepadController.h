@@ -1,4 +1,5 @@
 #pragma once
+#include <Core/array.h>
 
 struct Pr2GamepadController:Module{
   ACCESS(CtrlMsg, ctrl_ref)
@@ -29,7 +30,7 @@ struct Pr2GamepadController:Module{
     j2t = new Gamepad2Tasks(*MP);
 
 
-    if(MT::getParameter<bool>("useRos", false)){
+    if(mlr::getParameter<bool>("useRos", false)){
       //-- wait for first q observation!
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       for(;;){
@@ -49,8 +50,8 @@ struct Pr2GamepadController:Module{
     zero_qdot.resize(qdot.N).setZero();
   }
   void step(){
-    arr gamepadState = gamepadState.get();
-    j2t->updateTasks(gamepadState);
+    arr gamepad = this->gamepadState.get();
+    j2t->updateTasks(gamepad);
 
     //compute control
     arr a = MP->operationalSpaceControl();
@@ -63,10 +64,10 @@ struct Pr2GamepadController:Module{
 
     //-- force task
     uint mode = 0;
-    if(gamepadState.N) mode = uint(gamepadState(0));
+    if(gamepad.N) mode = uint(gamepad(0));
     if(mode==2){
       arr y_fL, J_fL;
-      MP->world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+      MP->world.kinematicsPos(y_fL, J_fL, ftL_shape->body, ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
       J_fL = J_fL.sub(0,1,0,-1);
@@ -83,6 +84,7 @@ struct Pr2GamepadController:Module{
     }
 
     refs.Kd = ARR(1.);
+    refs.Ki = ARR(0.);
     refs.q=q;
     refs.qdot=zero_qdot;
     if(trans && trans->qDim()==3){

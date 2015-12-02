@@ -9,7 +9,7 @@
 #include <omp.h>
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   omp_set_num_threads(10);
 
@@ -29,6 +29,6 @@ int main(int argc, char **argv) {
   new OrsView(geo.fields(0), NULL); //example for creating views directly from code 
   b::openInsideOut();
 
-  MT::wait();
+  mlr::wait();
 
 }

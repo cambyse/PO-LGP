@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Ors Gui Core
+DEPEND = Geo Ors Gui Core
 
 include $(BASE)/gofMake/generic.mk
 

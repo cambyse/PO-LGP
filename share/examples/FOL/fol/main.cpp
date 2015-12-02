@@ -1,5 +1,5 @@
 #include <FOL/fol.h>
-#include <Gui/graphview.h>
+//#include <Gui/graphview.h>
 
 //===========================================================================
 
@@ -54,12 +54,13 @@ void testFolFwdChaining(){
   cout <<"INIT STATE = " <<state <<endl;
 
   Node *query=G["Query"]->graph()(0);
-  forwardChaining_FOL(G, query);
+  forwardChaining_FOL(G, state, query);
 //  cout <<"FINAL STATE = " <<state <<endl;
 }
 
 //===========================================================================
 
+#if 0
 void testFolDisplay(){
   Graph G;
   FILE("fol.kvg") >>G;
@@ -68,6 +69,7 @@ void testFolDisplay(){
   view.watch();
 
 }
+#endif
 
 //===========================================================================
 
@@ -75,7 +77,7 @@ void testFolSubstitution(){
   Graph KB;
 
 //  FILE("boxes.kvg") >>G;
-  FILE("substTest.kvg") >>KB;
+  FILE("substTest.g") >>KB;
 
   NodeL rules = KB.getNodes("Rule");
   NodeL constants = KB.getNodes("Constant");
@@ -84,7 +86,7 @@ void testFolSubstitution(){
   for(Node* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
     cout <<  "Substitutions:" <<endl;
-    NodeL subs = getRuleSubstitutions(state, rule, constants, true);
+    NodeL subs = getRuleSubstitutions2(state, rule, 2);
     cout <<"BEFORE state="; state.write(cout, " "); cout <<endl;
     for(uint s=0;s<subs.d0;s++){
       Node *effect = rule->graph().last();
@@ -97,11 +99,22 @@ void testFolSubstitution(){
 
 //===========================================================================
 
+void testFolFunction(){
+  Graph KB(FILE("functionTest.g"));
+
+  Graph& state = KB.getNode("STATE")->graph();
+  Graph& func = KB.getNode("func")->graph();
+
+  cout <<"f=" <<evaluateFunction(func, state, 3) <<endl;
+}
+
+//===========================================================================
+
 void testMonteCarlo(){
   Graph Gorig;
   FILE("boxes.kvg") >>Gorig;
-  MT::rnd.seed(3);
-  uint verbose=3;
+  mlr::rnd.seed(3);
+  int verbose=2;
 
   for(uint k=0;k<10;k++){
     Graph KB = Gorig;
@@ -109,7 +122,6 @@ void testMonteCarlo(){
     Node *Terminate_keyword = KB["Terminate"];
     Graph& state = KB.getNode("STATE")->graph();
     NodeL rules = KB.getNodes("Rule");
-    NodeL constants = KB.getNodes("Constant");
     Graph& terminal = KB.getNode("terminal")->graph();
 
     for(uint h=0;h<100;h++){
@@ -118,11 +130,12 @@ void testMonteCarlo(){
       if(verbose>2){ cout <<"*** state = "; state.write(cout, " "); cout <<endl; }
 
       bool forceWait=false, decideWait=false;
-      if(MT::rnd.uni()<.8){ //normal rule decision
+      if(mlr::rnd.uni()<.8){ //normal rule decision
         //-- get all possible decisions
-        MT::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
+        mlr::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
-          NodeL subs = getRuleSubstitutions(state, rule, constants, (verbose>4) );
+          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
+//          NodeL subs = getRuleSubstitutions2(state, rule, verbose-2 );
           for(uint s=0;s<subs.d0;s++){
             decisions.append(std::pair<Node*, NodeL>(rule, subs[s]));
           }
@@ -137,7 +150,7 @@ void testMonteCarlo(){
           forceWait=true;
         }else{
           //-- pick a random decision
-          uint deci = MT::rnd(decisions.N);
+          uint deci = mlr::rnd(decisions.N);
           std::pair<Node*, NodeL>& d = decisions(deci);
           if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 
@@ -206,11 +219,12 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
-//  testFolLoadFile();
-//  testPolFwdChaining();
-//  testFolFwdChaining();
+  testFolLoadFile();
+  testPolFwdChaining();
+  testFolFwdChaining();
 //  testFolDisplay();
   testFolSubstitution();
+  testFolFunction();
 //  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 }

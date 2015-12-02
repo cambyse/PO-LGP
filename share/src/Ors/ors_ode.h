@@ -59,11 +59,11 @@ struct OdeInterface {
   double coll_ERP, coll_CFM, coll_bounce, friction; //collision parameter
   bool noGravity, noContactJoints;
 
-  MT::Array<dxBody*> bodies;
-  MT::Array<dxGeom*> geoms;
-  MT::Array<dxJoint*> joints;
-  MT::Array<dxJoint*> motors;
-  MT::Array<dContactGeom*> conts;
+  mlr::Array<dxBody*> bodies;
+  mlr::Array<dxGeom*> geoms;
+  mlr::Array<dxJoint*> joints;
+  mlr::Array<dxJoint*> motors;
+  mlr::Array<dContactGeom*> conts;
 
   OdeInterface(ors::KinematicWorld &_C);
   ~OdeInterface();

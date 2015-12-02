@@ -95,7 +95,7 @@ void MotionController::step() {
     hardwareReference->v_reference.setZero();
     hardwareReference->motionPrimitiveRelativeTime = 0.;
     hardwareReference->deAccess(this);
-    //MT_MSG("no motion primitive set -> controller stays put");
+    //MLR_MSG("no motion primitive set -> controller stays put");
     return;
   }
 
@@ -158,16 +158,16 @@ void MotionController::step() {
     }
     
     //-- now test for collision
-    //MT_MSG("TODO");
+    //MLR_MSG("TODO");
     
 
     //-- test for large step
     double step=euclideanDistance(q_reference, q_old);
     if (step>s->maxJointStep) {
-      MT_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
+      MLR_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
       q_reference = q_old + (q_reference-q_old)*s->maxJointStep/step;
       step=euclideanDistance(q_reference, q_old);
-      MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
+      MLR_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
     }
 
     //-- compute v_reference
@@ -192,7 +192,7 @@ void MotionController::step() {
     bool fixFingers = motionPrimitive->get_fixFingers(this);
     
     //pull for possible changes in the geometric state
-    //MT_MSG("TODO");
+    //MLR_MSG("TODO");
     
     //update the controllers own internal ors state - pulling from MotionReference
     hardwareReference->readAccess(this);
@@ -257,11 +257,11 @@ void MotionController::step() {
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);
     if (step>s->maxJointStep) {
-      MT_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
+      MLR_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
       q_reference=q_old + (q_reference-q_old)*s->maxJointStep/step;
       v_reference *= .5*s->maxJointStep/step;
       step=euclideanDistance(q_reference, q_old);
-      MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
+      MLR_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
       //v_reference.setZero(); SD: making too large step warnig  use max allowed step
     }
     hardwareReference->set_q_reference(q_reference, this);
@@ -271,7 +271,7 @@ void MotionController::step() {
     s->geo.var->writeAccess(this);
     s->geo.var->ors = s->geo().ors;
     s->geo.var->deAccess(this);
-    //MT_MSG("TODO");
+    //MLR_MSG("TODO");
     /* Eigentlich spielt controller iM eine double role: als
        q_reference berechnen, und die kinematic/proxies/taskvariables
        mit ors berechnen -> 2 Prozesse?
@@ -280,7 +280,7 @@ void MotionController::step() {
       proxiesVar->writeAccess(this);
       listCopy(proxiesVar->proxies, ors.proxies);
       proxiesVar->deAccess(this);
-      } else MT_MSG("Variable pointer not set");*/
+      } else MLR_MSG("Variable pointer not set");*/
   }
 
 }

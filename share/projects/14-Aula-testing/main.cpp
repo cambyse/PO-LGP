@@ -2,7 +2,7 @@
 #include <Optim/benchmarks.h>
 
 void TEST(ForManyLPs){
-  ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)MT::getParameter<int>("opt/constrainedMethod",augmentedLag);
+  ConstrainedMethodType constrainedMethod = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod",augmentedLag);
   ofstream fil(STRING("z.all."<<MethodName[constrainedMethod]));
 
   rnd.seed(2);
@@ -28,7 +28,7 @@ void TEST(ForManyLPs){
 //==============================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testForManyLPs();
 

@@ -1,0 +1,9 @@
+BASE = ../../..
+
+
+OBJS = main.o
+PLIB = 1
+ROS = 1
+DEPEND = Core Motion Ors Gui pr2 Optim Algo
+
+include $(BASE)/gofMake/generic.mk

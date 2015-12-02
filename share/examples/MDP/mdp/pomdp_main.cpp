@@ -1,5 +1,5 @@
-#ifdef MT_MSVC
-#  define MT_IMPLEMENTATION
+#ifdef MLR_MSVC
+#  define MLR_IMPLEMENTATION
 #endif
 #include <vector>
 #include <iostream>
@@ -17,7 +17,7 @@ void glDisplayGrey   (const arr &x,uint d0,uint d1,bool wait,uint win){ HALT("on
 void glDisplayRedBlue(const arr &x,uint d0,uint d1,bool wait,uint win){ HALT("only with opengl"); }
 
 struct globalParameters{
-  MT::String problem;
+  mlr::String problem;
   uint d0,d1,seed;
   uint Tcut,EMiters;
   uint valueCheckInterval;
@@ -399,17 +399,17 @@ void go_lev1(const char *problem){
   ofstream out(STRING("data/OUT1-"<<PARAMS.d0<<"-"<<PARAMS.d1<<"-"<<PARAMS.problem<<"-"<<PARAMS.Tcut<<"-"<<PARAMS.seed));
      
   //iterate EM
-  double tic=MT::cpuTime();
+  double tic=mlr::cpuTime();
   double Like,Val=0.;
   for(uint k=0;k<PARAMS.EMiters;k++){
     cout <<k <<' ';
     Like=EMstep_lev1_align (mdp,fsc,false,PARAMS.Tcut);
     if(PARAMS.valueCheckInterval && !((k+1)%PARAMS.valueCheckInterval)) Val=EvalPolicy(V0x, mdp, fsc);
-    out <<k <<' ' <<MT::getTimer(0,tic) <<' ' <<Like <<' ' <<Val <<endl;
+    out <<k <<' ' <<mlr::getTimer(0,tic) <<' ' <<Like <<' ' <<Val <<endl;
     // Uncomment to get AMPL-compatible output
     if(PARAMS.SetAMPLPolicy) SetAMPLPolicy(fsc.P0y0, fsc.Pa0);
   }
-  cout <<"\n\ntotal time = " <<MT::getTimer(0,tic) <<endl;
+  cout <<"\n\ntotal time = " <<mlr::getTimer(0,tic) <<endl;
 }
 
 
@@ -476,7 +476,7 @@ void go_lev2(const char *problem,bool hierarchy=false){
   FSC_lev1 fsc1;
   
   //prepare output file
-  MT::String filename;
+  mlr::String filename;
   filename <<"data/OUT";
   if(!hierarchy) filename<<"2"; else filename<<"H";
   if(!PARAMS.EscapeLocalMin) filename<<"n"; else filename<<"e";
@@ -485,28 +485,28 @@ void go_lev2(const char *problem,bool hierarchy=false){
   ofstream out(filename);
   
   //iterate EM
-  double tic=MT::cpuTime();
+  double tic=mlr::cpuTime();
   double ticEval;
   double Like,Val=0.;
   std::list<double> LikeHistory;
   for(uint k=0;k<PARAMS.EMiters;k++){
     cout <<k <<' ';
     Like=EMstep_lev2_align_struct2(mdp,fsc,PARAMS.Tcut,false,PARAMS.maxMstep,PARAMS.adaptP0);
-    ticEval=MT::cpuTime();
+    ticEval=mlr::cpuTime();
     if(PARAMS.valueCheckInterval && !((k+1)%PARAMS.valueCheckInterval)){
       collapse2levelFSC(fsc1,fsc);
       Val=EvalPolicy(V_01_x, mdp, fsc1);
     }
 
-    tic+=MT::cpuTime()-ticEval;
+    tic+=mlr::cpuTime()-ticEval;
     //if(PARAMS.SetAMPLPolicy) SetAMPLPolicy(fsc.P_01_y_01_, fsc.Pa01_);
-    out <<k <<' ' <<MT::getTimer(0,tic) <<' ' <<Like <<' ' <<Val <<endl;
+    out <<k <<' ' <<mlr::getTimer(0,tic) <<' ' <<Like <<' ' <<Val <<endl;
 
     if(PARAMS.EscapeLocalMin) // detect when reaching a local optima
       detectLocalOpt(Like, LikeHistory, fsc, exits, V_01_x, hierarchy);
 
   }
-  cout <<"\n\ntotal time = " <<MT::getTimer(0,tic) <<endl;
+  cout <<"\n\ntotal time = " <<mlr::getTimer(0,tic) <<endl;
   if(PARAMS.EscapeLocalMin) {
 	if(hierarchy) {
 		cout << "Final number of nodes: d0=" << fsc.P0.d0 
@@ -535,20 +535,20 @@ void go_lev2(const char *problem,bool hierarchy=false){
     
 int main(int argc,char** argv){
  
-  MT::init(argc,argv);
-  MT::getParameter(PARAMS.seed,"seed",(uint)0);
-  MT::getParameter(PARAMS.d0,"d0");
-  MT::getParameter(PARAMS.d1,"d1",(uint)0);
-  MT::getParameter(PARAMS.valueCheckInterval,"valueCheckInterval",(uint)100);
-  MT::getParameter(PARAMS.problem,"problem");
-  MT::getParameter(PARAMS.Tcut,"Tcut",(uint)100);
-  MT::getParameter(PARAMS.EMiters,"EMiters",(uint)200);
-  MT::getParameter(PARAMS.OutputFSC,"OutputFSC",(uint)0);
-  MT::getParameter(PARAMS.FixPolicy,"FixPolicy",(uint)0);
-  MT::getParameter(PARAMS.EscapeLocalMin,"EscapeLocalMin",(uint)0);  
-  MT::getParameter(PARAMS.SetAMPLPolicy,"SetAMPLPolicy",(uint)0);
-  MT::getParameter(PARAMS.maxMstep,"maxMstep",true);
-  MT::getParameter(PARAMS.adaptP0,"adaptP0",false);
+  mlr::init(argc,argv);
+  mlr::getParameter(PARAMS.seed,"seed",(uint)0);
+  mlr::getParameter(PARAMS.d0,"d0");
+  mlr::getParameter(PARAMS.d1,"d1",(uint)0);
+  mlr::getParameter(PARAMS.valueCheckInterval,"valueCheckInterval",(uint)100);
+  mlr::getParameter(PARAMS.problem,"problem");
+  mlr::getParameter(PARAMS.Tcut,"Tcut",(uint)100);
+  mlr::getParameter(PARAMS.EMiters,"EMiters",(uint)200);
+  mlr::getParameter(PARAMS.OutputFSC,"OutputFSC",(uint)0);
+  mlr::getParameter(PARAMS.FixPolicy,"FixPolicy",(uint)0);
+  mlr::getParameter(PARAMS.EscapeLocalMin,"EscapeLocalMin",(uint)0);  
+  mlr::getParameter(PARAMS.SetAMPLPolicy,"SetAMPLPolicy",(uint)0);
+  mlr::getParameter(PARAMS.maxMstep,"maxMstep",true);
+  mlr::getParameter(PARAMS.adaptP0,"adaptP0",false);
   rnd.seed(PARAMS.seed);
 
   cout <<std::setprecision(5);

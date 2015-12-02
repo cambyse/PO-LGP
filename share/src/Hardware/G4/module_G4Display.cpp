@@ -30,7 +30,7 @@ void G4Display::open(){
   if(s->mid)
     s->sensors = s->mid->sensors().N;
   else {
-    uint nhubs = MT::getParameter<uint>("g4_numHubs");
+    uint nhubs = mlr::getParameter<uint>("g4_numHubs");
     s->sensors = 3 * nhubs;
   }
 

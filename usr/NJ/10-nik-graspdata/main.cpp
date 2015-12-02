@@ -1,5 +1,5 @@
-#define MT_IMPLEMENTATION
-#define MT_GL
+#define MLR_IMPLEMENTATION
+#define MLR_GL
 
 #include <MT/robot.h>
 #include <signal.h>
@@ -34,9 +34,9 @@ PotentialField *
 obj_pot_field(){
 
 	GraspObject *obj;
-	switch (MT::getParameter<uint>("obj_comes_from")) {
+	switch (mlr::getParameter<uint>("obj_comes_from")) {
 	case 0 : // vision
-		switch (MT::getParameter<uint>("shape")) {
+		switch (mlr::getParameter<uint>("shape")) {
 		case 2 :
 			obj = new GraspObject_Cylinder1();
 			break;
@@ -52,7 +52,7 @@ obj_pot_field(){
 
 			/* create the correct prior (only in case of GraspObject_GP_analytical_prior) */
 			GraspObject *prior;
-			switch (MT::getParameter<uint>("shapeprior", 0)) {
+			switch (mlr::getParameter<uint>("shapeprior", 0)) {
 			case 3 :
 				prior = new GraspObject_InfCylinder();
 				break;
@@ -68,7 +68,7 @@ obj_pot_field(){
 
 
 			/* create the right object type */
-			switch (MT::getParameter<uint>("shape", 0)) {
+			switch (mlr::getParameter<uint>("shape", 0)) {
 			case 1 :
 				obj = new GraspObject_InfCylinder();
 				break;
@@ -122,7 +122,7 @@ get_skin_state(GraspISFTask& task, RobotProcessGroup& robot ){
 }
 
 void InitLoadedData(int nMode){
-	bDynamical = MT::getParameter<int>("bDyn");
+	bDynamical = mlr::getParameter<int>("bDyn");
 	if(nMode == 0) return;
 	if (nMode == 0 && false){//pos has to exist BUGGED, ignore
 		lastCenter = arr(3);
@@ -148,22 +148,22 @@ void InitLoadedData(int nMode){
 		}
 		return;
 	}
-	sDiscriminant = MT::getParameter<MT::String>("sDiscriminant");
+	sDiscriminant = mlr::getParameter<mlr::String>("sDiscriminant");
 	if (nMode == 5){//batch
 		arr temp;
-		temp <<FILE(sDiscriminant + MT::String("/validate.txt"));
-		int nTest = MT::getParameter<int>("nTest");
+		temp <<FILE(sDiscriminant + mlr::String("/validate.txt"));
+		int nTest = mlr::getParameter<int>("nTest");
 		int ns = floor(temp.d0/nTest) +1 ;//careful, divide number of test data situations
-		sDiscriminant = sDiscriminant + MT::String("/allW") + ns;
+		sDiscriminant = sDiscriminant + mlr::String("/allW") + ns;
 	}
 	if(meaN.N == 0){//load arrays
-		meaN <<FILE(sDiscriminant + MT::String("/mean.txt"));
-		prN <<FILE(sDiscriminant + MT::String("/pr.txt"));
+		meaN <<FILE(sDiscriminant + mlr::String("/mean.txt"));
+		prN <<FILE(sDiscriminant + mlr::String("/pr.txt"));
 	}
 	if(w1.N == 0 && bDynamical < 2){
-		w1 <<FILE(sDiscriminant + MT::String("/w1.txt"));
-		w2 <<FILE(sDiscriminant + MT::String("/w2.txt"));
-		w3 <<FILE(sDiscriminant + MT::String("/w3.txt"));
+		w1 <<FILE(sDiscriminant + mlr::String("/w1.txt"));
+		w2 <<FILE(sDiscriminant + mlr::String("/w2.txt"));
+		w3 <<FILE(sDiscriminant + mlr::String("/w3.txt"));
 		//now scale w2 in a meaningful range, does not change discriminants
 		double nSum = 0;
 		for(uint i = 0; i < w2.d0; i++)
@@ -177,15 +177,15 @@ void InitLoadedData(int nMode){
 	}
 
 	if(w1.N == 0 && bDynamical == 2){//lin regression in task sapce
-		w1 <<FILE(sDiscriminant + MT::String("/linW.txt"));
+		w1 <<FILE(sDiscriminant + mlr::String("/linW.txt"));
 
 	}
 
 	if(w1.N == 0 && bDynamical == 3){//x and u task spaces regressions
-		//w1 <<FILE(sDiscriminant + MT::String("/linW.txt"));
+		//w1 <<FILE(sDiscriminant + mlr::String("/linW.txt"));
 
-		w1 <<FILE(sDiscriminant + MT::String("/w1.txt"));
-		w2 <<FILE(sDiscriminant + MT::String("/w2.txt"));
+		w1 <<FILE(sDiscriminant + mlr::String("/w1.txt"));
+		w2 <<FILE(sDiscriminant + mlr::String("/w2.txt"));
 
 	}
 }
@@ -236,7 +236,7 @@ double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const ar
 	if(!( C > 0 && C < 1000))
 		cout << " HACKKK " << endl << C << endl << "HACKK" << endl;
 	if(nMode == 5 || nMode == 2 || nMode == 0){
-		ofstream f(MT::getParameter<MT::String>("sDiscriminant") + MT::String("/validate.txt"),ofstream::app);
+		ofstream f(mlr::getParameter<mlr::String>("sDiscriminant") + mlr::String("/validate.txt"),ofstream::app);
 		f << C << " " << cJ << endl;//		cout << cJ ;
 	}
 	return C;
@@ -262,10 +262,10 @@ arr GetEndPath(const arr & joints, ors::KinematicWorld * ors){
 }
 
 int main(int argc,char** argv){
-	MT::initCmdLine(argc,argv);
-	int nMode = MT::getParameter<int>("Nmode");//0 is heuristic + noise, 1 is random sampling, 2 is gradient move, 7 is gradient check, 3 is planniong,5 is batch validate
+	mlr::initCmdLine(argc,argv);
+	int nMode = mlr::getParameter<int>("Nmode");//0 is heuristic + noise, 1 is random sampling, 2 is gradient move, 7 is gradient check, 3 is planniong,5 is batch validate
 	InitLoadedData(nMode);
-	arr c = MT::getParameter<arr>("center");lastCenter = c;
+	arr c = mlr::getParameter<arr>("center");lastCenter = c;
 
 	signal(SIGINT,RobotProcessGroup::signalStopCallback);
 	GraspISFTask task;
@@ -302,14 +302,14 @@ int main(int argc,char** argv){
 		o1->type = 3;//mesh
 		o1->mesh.clear();
 		o1->mesh = ((GraspObject*)task.graspobj)->m;
-		arr z = MT::getParameter<arr>("orientation");
+		arr z = mlr::getParameter<arr>("orientation");
 		ors::Vector ax;robot.ctrl.ors.getBodyByName("o1")->X.rot.getZ(ax);
 		rot.setDiff(ax,ors::Vector(z(0),z(1),z(2)));
 		robot.ctrl.ors.getBodyByName("o1")->X.rot= robot.ctrl.ors.getBodyByName("o1")->X.rot*rot;
 	}
 	else{//make corect type
 		o1->type = 1;//sphere
-		o1->size[3] = MT::getParameter<double>("radius");
+		o1->size[3] = mlr::getParameter<double>("radius");
 		o1->mesh.clear();
 	}
 	if(robot.openGui){
@@ -325,7 +325,7 @@ int main(int argc,char** argv){
 		//	cout << "axis X" << ax << endl;
 	}
 
-	MT::IOraw = true;
+	mlr::IOraw = true;
 	if (nMode  == 1){
 		SampleTrajectory(robot);
 		return 0;
@@ -344,7 +344,7 @@ int main(int argc,char** argv){
 	}
 	ofstream f("joints.txt");
 	uint nSteps = 400;
-	if(nMode == 2 || nMode == 5 || nMode == 0)nSteps = MT::getParameter<int>("T");
+	if(nMode == 2 || nMode == 5 || nMode == 0)nSteps = mlr::getParameter<int>("T");
 	arr joints(nSteps,robot.ctrl.ors.getJointStateDimension());
 	arr qOrig;robot.ctrl.ors.getJointState(qOrig);
 	for(uint i = 0;i < nSteps && !robot.signalStop;i++){ //catches the ^C key
@@ -371,7 +371,7 @@ int main(int argc,char** argv){
 		while(true){
 			//
 			cout << " wait " << endl;
-			MT::wait(0.1);
+			mlr::wait(0.1);
 		}
 	}
 	robot.ctrl.ors.reportProxies();

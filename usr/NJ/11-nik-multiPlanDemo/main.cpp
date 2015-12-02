@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 //#define NIKOLAY
 
 #include <signal.h>
@@ -52,7 +52,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
   robotProcesses=_master;
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
-  MT::IOraw = true;
+  mlr::IOraw = true;
   started_track = false;
   bFirstSense = false;
   Pl = perc->Pl/ perc->Pl(2,3);Pr = perc->Pr/perc->Pr(2,3);
@@ -78,12 +78,12 @@ void MultiPlan::init(RobotProcessGroup *_master){
   }
   Kal.Init();
 
-  MT::getParameter(nMod,"mod");
-  MT::getParameter(colPrec,"TV_col_yprec");
-  MT::getParameter(TVariance,"TVariance");
-  MT::getParameter(FracPlan,"FracPlan");
-  MT::getParameter(PrecPlan,"PrecPlan");
-  MT::getParameter(vPrecPlan,"vPrecPlan");
+  mlr::getParameter(nMod,"mod");
+  mlr::getParameter(colPrec,"TV_col_yprec");
+  mlr::getParameter(TVariance,"TVariance");
+  mlr::getParameter(FracPlan,"FracPlan");
+  mlr::getParameter(PrecPlan,"PrecPlan");
+  mlr::getParameter(vPrecPlan,"vPrecPlan");
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
@@ -93,13 +93,13 @@ void MultiPlan::initTaskVariables(ControllerModule *ctrl){
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it
   TaskAbstraction::initTaskVariables(ctrl);
   double margin;
-  MT::getParameter(margin,"swiftMargin");
-  MT::getParameter(goodCost,"goodCost");
+  mlr::getParameter(margin,"swiftMargin");
+  mlr::getParameter(goodCost,"goodCost");
   TV_col->params=ARR(margin); //change the margin for the collision variable
 }
 
 bool MultiPlan::findTarget(){
-  double time = MT::realTime();
+  double time = mlr::realTime();
   bool bGoodVision = false;//&& perc->output.objects(0).found
   if(perc->output.objects.N > 0 && perc->output.objects(0).center3d.N>0){//should manuallz remove 0 observations vision.min = 0
     arr cent = perc->output.objects(0).center3d;
@@ -308,8 +308,8 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
 }
 
 int main(int argc,char** argv){
-  MT::IOraw = true;
-  MT::initCmdLine(argc,argv);
+  mlr::IOraw = true;
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MultiPlan demo;
@@ -333,7 +333,7 @@ int main(int argc,char** argv){
   evis.threadLoop();
   perc.threadLoop();
 //  while(true)
- //   MT::wait(0.1);
+ //   mlr::wait(0.1);
 
   //perc.threadOpen();
   globalGL = robotProcesses.gui.gl;
@@ -349,7 +349,7 @@ int main(int argc,char** argv){
       copyBodyInfos(*robotProcesses.gui.ors2,robotProcesses.ctrl.ors);
     }
   }
-  arr atarget; MT::getParameter(atarget,"target");
+  arr atarget; mlr::getParameter(atarget,"target");
   ors::Vector itarget =  ors::Vector(atarget(0),atarget(1),atarget(2));
   robotProcesses.ctrl.ors.getBodyByName("target")->X.pos = itarget;//planner thread uses this actually, not GL body !!!
   robotProcesses.ctrl.ors.calcBodyFramesFromJoints();///stupid bugg, otherwise target has other values.... yess now fixed
@@ -358,7 +358,7 @@ int main(int argc,char** argv){
     robotProcesses.gui.ors2->getBodyByName("target")->X.pos = robotProcesses.ctrl.ors.getBodyByName("target")->X.pos;//even worse design - 2 guis with their ors graphs
   }
   demo.target = robotProcesses.ctrl.ors.getBodyByName("target");
-  demo.recho.init(robotProcesses.ctrl.sys,&demo,"ST1",1,MT::getParameter<int>("Tplan"));//after objects on correct place !!
+  demo.recho.init(robotProcesses.ctrl.sys,&demo,"ST1",1,mlr::getParameter<int>("Tplan"));//after objects on correct place !!
   demo.recho.threadOpen();
   demo.recho.UpdateExtState(demo.target);//critical, otherwise inited badly !!!
   dispcounter = 0;

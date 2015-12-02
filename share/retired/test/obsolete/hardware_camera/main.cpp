@@ -11,15 +11,15 @@ int main(int argc, char** argv){
   OpenGL gl;
 
   byteA frame, right_frame;
-  double time=MT::realTime();
+  double time=mlr::realTime();
   uint i;
   for(i=0;i<100;i++){
-    //MT::wait(.5);
+    //mlr::wait(.5);
     camera->step();
     gl.img=&imgL.img;
     gl.update();
   }
-  cout <<"fps=" <<i/(MT::realTime()-time) <<endl;
+  cout <<"fps=" <<i/(mlr::realTime()-time) <<endl;
 
   write_ppm(imgL.img,"z.left.ppm");
   write_ppm(imgR.img,"z.right.ppm");

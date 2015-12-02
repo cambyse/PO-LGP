@@ -44,7 +44,7 @@ int main (const int argc, char ** argv){
   optGaussNewton(x, P, OPT5(verbose=2, stopIters=100, useAdaptiveDamping=100., maxStep=100., stopTolerance=1e-4 ));
   write(x,"z.Y");
   analyzeTrajectory(sys, x, true, &cout);
-  MT::wait();
+  mlr::wait();
   
   return 0;
 }

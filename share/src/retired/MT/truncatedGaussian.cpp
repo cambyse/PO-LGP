@@ -25,7 +25,7 @@
    and variances of the remaining probability mass when everything
    left of z is cut off */
 void TruncatedStandardGaussian(double& mean, double& var, double z){
-  double norm = ::sqrt(MT_PI/2.) * (1.-::erf(z/::sqrt(2.)));
+  double norm = ::sqrt(MLR_PI/2.) * (1.-::erf(z/::sqrt(2.)));
   //cout <<"truncating with z=" <<z <<" (norm=" <<norm <<")" <<endl;
   if(norm<1e-2) cout <<"likelihood of that truncation is very low:" <<norm <<endl;
   mean = ::exp(-z*z/2.)/norm;

@@ -3,7 +3,7 @@
 
 #include <Core/array.h>
 
-typedef MT::Array<uintA>      PixelArray;
+typedef mlr::Array<uintA>      PixelArray;
 
 namespace np {
 struct UcmNode
@@ -18,16 +18,16 @@ struct UcmNode
   int                         parent_idx;     // node index of parent node
   uintA                       children_ids;   // node indices of children nodes
 //   UcmNode*                    parent;         // pointer to parent node
-//   MT::Array<UcmNode*>         children;       // pointers to children nodes
+//   mlr::Array<UcmNode*>         children;       // pointers to children nodes
 };
-typedef MT::Array<UcmNode*>   UcmNodeList;
+typedef mlr::Array<UcmNode*>   UcmNodeList;
 
 struct UcmPyramidLevel {
   uintA                       map;            // map with segments
   uint                        strength;       // min. edge strength in map
   uintA                       nodes_ids;      // indices of nodes at cur. level
 };
-typedef MT::Array<UcmPyramidLevel*> UcmPyramid;
+typedef mlr::Array<UcmPyramidLevel*> UcmPyramid;
 
 class UcmTree {
 public:

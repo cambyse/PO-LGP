@@ -11,7 +11,7 @@
 namespace PRADA {
   
 bool USING_IPPC_DOMAIN() {
-  return logicObjectManager::getPredicate(MT::String("table")) == NULL;
+  return logicObjectManager::getPredicate(mlr::String("table")) == NULL;
 }
 
 
@@ -145,7 +145,7 @@ void RuleExplorer::calcExploreWeights(arr& explore_weights, Atom* taboo_action) 
     PRINT(tabooed__direct_explore__actions);
     PRINT(fixedActions);
     cout<<"setting min_weight didn't work:  min_weight="<<min_weight<<endl;
-    MT_MSG("setting min_weight didn't work:  min_weight="<<min_weight);
+    MLR_MSG("setting min_weight didn't work:  min_weight="<<min_weight);
     explore_weights.setUni(min_weight);
   }
   FOR1D(possibleGroundActions, i) {
@@ -162,7 +162,7 @@ void RuleExplorer::calcExploreWeights(arr& explore_weights, Atom* taboo_action) 
     cout<<endl;
     uint i;
     FOR1D(possibleGroundActions, i) {
-      MT::String name;   possibleGroundActions(i)->name(name);  printf("%-12s",(char*)name);
+      mlr::String name;   possibleGroundActions(i)->name(name);  printf("%-12s",(char*)name);
       if (action__is_known(i)) printf("  +");
       else printf("   ");
       printf("  %2i", actions__covering_rules(i));
@@ -261,7 +261,7 @@ void RuleExplorer::updateActionAndStateMeasures() {
   if (DEBUG>0) {
     cout<<"ACTION MEASURES:  rule   |   conf   |   dissim-local"<<endl;
     FOR1D(possibleGroundActions, i) {
-      MT::String name;
+      mlr::String name;
       possibleGroundActions(i)->name(name);
       printf("%-12s",(char*)name);
       printf("  %2i", actions__covering_rules(i));
@@ -577,7 +577,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
 //   if (DEBUG>0) {
 //     cout<<"Action:   known?    rule   confidence"<<endl;
 //     FOR1D(possibleGroundActions, i) {
-//       MT::String name;
+//       mlr::String name;
 //       possibleGroundActions(i)->name(name);
 //       printf("%-12s",(char*)name);
 //       if (action__is_known(i)) printf("  +");
@@ -589,7 +589,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
 //   }
   
   // (3) Decide action
-  t_start = MT::cpuTime();
+  t_start = mlr::cpuTime();
   Atom* action = NULL;
   // only use confident rules
   planner->setGroundRules(confident_ground_rules);
@@ -649,7 +649,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
       bool IPPC__dont_try_planning = false;
       if (USING_IPPC_DOMAIN()) {
         // Special heuristic for IPPC domains [START]
-        MT_MSG("special heuristic for EXPLOITING");
+        MLR_MSG("special heuristic for EXPLOITING");
         if (DEBUG>0) {cout<<"special heuristic for EXPLOITING"<<endl;}
         // check whether we have tried to exploit in this state already while the state has not changed since
         uint q;
@@ -660,7 +660,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
         }
         cout<<"SymbolicState was the same onwards from state q+1 = "<<(q+1)<<"  (now is "<<visited_pre_states.N<<")"<<endl;
         if (visited_pre_states.N - (q+1) >= 1 &&  !is_major_experience.last()) {
-          MT_MSG("HOPELESS EXPLOITING: (i) current state equals previous states and (ii) no major insight from last action");
+          MLR_MSG("HOPELESS EXPLOITING: (i) current state equals previous states and (ii) no major insight from last action");
           cout<<"HOPELESS EXPLOITING: (i) current state equals previous states and (ii) no major insight from last action"<<endl;
           IPPC__dont_try_planning = true;
           action = NULL;
@@ -798,7 +798,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
   }
   else
     NIY;
-  t_finish = MT::cpuTime();
+  t_finish = mlr::cpuTime();
   if (DEBUG>0) {
     cout<<"Action decision took " << (t_finish - t_start) << "s"<<endl;
     cerr<<"Action decision took " << (t_finish - t_start) << "s"<<endl;
@@ -935,7 +935,7 @@ AbstractRuleExplorer::AbstractRuleExplorer(double complexity_penalty_coeff,
     FOR1D_(fixed_rules_for_fixed_actions, i) {
       if (fixed_rules_for_fixed_actions.elem(i)->action == fixedActions(k)) {
         uintA empty1;
-        MT::Array< uintA > empty2; // HACK spaeter removen
+        mlr::Array< uintA > empty2; // HACK spaeter removen
         FOR1D(fixed_rules_for_fixed_actions.elem(i)->outcomes, l) {
           empty2.append(empty1);
         }
@@ -980,7 +980,7 @@ uint AbstractRuleExplorer::action_to_learner_id(Atom* action) {
 }
 
 
-void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool with_action, ostream& os);
+void rule_write_hack(Rule* rule, mlr::Array< uintA >& outcome_tripletts, bool with_action, ostream& os);
 
 void AbstractRuleExplorer::updateRules(bool always_re_learning) {
   uint DEBUG = 1;
@@ -1042,7 +1042,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
           }
           // Check whether new experience is similar enough to old experiences
           // collect other graphs
-          MT::Array< RelationalStateGraph* > other_graphs;
+          mlr::Array< RelationalStateGraph* > other_graphs;
           AtomL other_actions;
           uint q;
           FOR1D(rulesC.experiences_per_rule(rule_idx), q) {
@@ -1095,7 +1095,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
       if (DEBUG>0) {cout<<"Learning for "<<*modeledActions(i)<<endl;  cerr<<"Learning for "<<*modeledActions(i)<<endl;}
       
       // (i) save old example coverage statistics
-      MT::Array< uintA > old_experience_partitions;
+      mlr::Array< uintA > old_experience_partitions;
       rulesC.getPartitionsForAction(old_experience_partitions, modeledActions(i));
       if (DEBUG>1) {
         cout<<"Old partitions (" << old_experience_partitions.N << "):"<<endl;
@@ -1187,7 +1187,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
           experiences_per_rule__converted.append(experiences_per_modeledAction(i)(rulesC_for_action.experiences_per_rule(k)(l)));
         }
         
-        MT::Array < uintA > experiences_per_ruleOutcome__converted;
+        mlr::Array < uintA > experiences_per_ruleOutcome__converted;
         experiences_per_ruleOutcome__converted.resize(rulesC_for_action.experiences_per_ruleOutcome(k).N);
         uint o;
         FOR1D(experiences_per_ruleOutcome__converted, o) {
@@ -1216,7 +1216,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
       
       // (v) investigate whether major experience
       // (v-1) compare new partitions
-      MT::Array< uintA > new_experience_partitions;
+      mlr::Array< uintA > new_experience_partitions;
       rulesC.getPartitionsForAction(new_experience_partitions, modeledActions(i));
       if (DEBUG>1) {
         cout<<"New partitions (" << new_experience_partitions.N << "):"<<endl;
@@ -1442,7 +1442,7 @@ double AbstractRuleExplorer::calcRuleConfidence(uint rule_id) {
   if (!density_estimation_type == density_entropy)
     return getNumberOfCoveredExperiences(rule_id);
   uint i;
-  MT::Array<RelationalStateGraph*> filtered_graphs;
+  mlr::Array<RelationalStateGraph*> filtered_graphs;
   AtomL filtered_actions;
   FOR1D(rulesC.experiences_per_rule(rule_id), i) {
     uint experience_id = rulesC.experiences_per_rule(rule_id)(i);
@@ -1555,7 +1555,7 @@ void AbstractRuleExplorer::updateActionAndStateMeasures() {
           continue;
         }
         // Collect related graphs
-        MT::Array< RelationalStateGraph* > other_graphs;
+        mlr::Array< RelationalStateGraph* > other_graphs;
         AtomL other_actions;
         FOR1D(rulesC.experiences_per_rule(rule_id), i) {
           uint experience_id = rulesC.experiences_per_rule(rule_id)(i);
@@ -1566,8 +1566,8 @@ void AbstractRuleExplorer::updateActionAndStateMeasures() {
         // new graph
         RelationalStateGraph* graph_k__filtered = RelationalStateGraph::createSubgraph(*possibleGroundActions(k), graph__current_state,
                                                       *rulesC.rules.elem(rule_id), ENTROPY_RELATED_OBJECTS_DEPTH);
-//         if (possibleGroundActions(k)->pred->name == MT::String("grab")) {
-// //         if (possibleGroundActions(k) == le->getPI(MT::String("grab(70)"))) {
+//         if (possibleGroundActions(k)->pred->name == mlr::String("grab")) {
+// //         if (possibleGroundActions(k) == le->getPI(mlr::String("grab(70)"))) {
 //           cout<<endl<<endl<<endl<<endl;
 //           cout<<*possibleGroundActions(k)<<endl;
 //           cout<<"GRAPH:"<<endl;
@@ -1586,7 +1586,7 @@ void AbstractRuleExplorer::updateActionAndStateMeasures() {
   if (DEBUG>0) {
     cout<<"ACTION MEASURES:  rule   |  #E    |  conf   |   dissim-local   |    all-rules"<<endl;
     FOR1D(possibleGroundActions, i) {
-      MT::String name;
+      mlr::String name;
       possibleGroundActions(i)->name(name);
       printf("%-12s",(char*)name);
       printf("  %2i", actions__covering_rules(i));
@@ -1648,7 +1648,7 @@ FactoredRuleExplorer::FactoredRuleExplorer(double complexity_penalty_coeff,
     FOR1D_(fixed_rules_for_fixed_actions, i) {
       if (fixed_rules_for_fixed_actions.elem(i)->action == fixedActions(k)) {
         uintA empty1;
-        MT::Array< uintA > empty2; // HACK spaeter removen
+        mlr::Array< uintA > empty2; // HACK spaeter removen
         FOR1D(fixed_rules_for_fixed_actions.elem(i)->outcomes, l) {
           empty2.append(empty1);
         }
@@ -1755,7 +1755,7 @@ void FactoredRuleExplorer::reset() {
 //   // doNothing rule
 //   if (used_doNothing_action ) {
 //     uintA fake__experiences_of_this_rule;
-//     MT::Array< uintA >  fake__experiences_per_outcome_of_this_rule;
+//     mlr::Array< uintA >  fake__experiences_per_outcome_of_this_rule;
 //     fake__experiences_per_outcome_of_this_rule.resize(2);
 //     rulesC.append(ruleReasoning::getDoNothingRule(), fake__experiences_of_this_rule, fake__experiences_per_outcome_of_this_rule);
 //   }
@@ -1796,7 +1796,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
         HALT("");
       
 //       // (i) save old example coverage statistics
-//       MT::Array< uintA > old_experience_partitions;
+//       mlr::Array< uintA > old_experience_partitions;
 //       rulesC.getPartitionsForAction(old_experience_partitions, possibleGroundActions(i));
 //       if (DEBUG>1) {
 //         cout<<"Old partitions (" << old_experience_partitions.N << "):"<<endl;
@@ -1858,7 +1858,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
           experiences_per_rule__converted.append(experiences_per_modeledAction(i)(rulesC_for_action.experiences_per_rule(k)(l)));
         }
         
-        MT::Array < uintA > experiences_per_ruleOutcome__converted;
+        mlr::Array < uintA > experiences_per_ruleOutcome__converted;
         experiences_per_ruleOutcome__converted.resize(rulesC_for_action.experiences_per_ruleOutcome(k).N);
         uint o;
         FOR1D(experiences_per_ruleOutcome__converted, o) {
@@ -1884,7 +1884,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
       
 //       // (v) investigate whether major experience
 //       // compare new partitions
-//       MT::Array< uintA > new_experience_partitions;
+//       mlr::Array< uintA > new_experience_partitions;
 //       rulesC.getPartitionsForAction(new_experience_partitions, abstract_actions(i));
 //       if (DEBUG>1) {
 //         cout<<"New partitions (" << new_experience_partitions.N << "):"<<endl;
@@ -2361,7 +2361,7 @@ void FlatExplorer::addObservation(SymbolicState* state_pre, Atom* action, Symbol
     // New outcome
     if (i==existing_rule->outcomes.N) {
       if (DEBUG>0) {cout<<"Indeed a new outcome!"<<endl;}
-      MT::Array< LitL > new_outcomes(existing_rule->outcomes.N+1);
+      mlr::Array< LitL > new_outcomes(existing_rule->outcomes.N+1);
       arr new_probs(existing_rule->outcomes.N+1);
       uint k;
       for(k=0; k<existing_rule->outcomes.N-1; k++) {
@@ -2495,7 +2495,7 @@ RelationalStateGraph::RelationalStateGraph(const SymbolicState& _state) : state(
   
   FOR1D(state.lits_prim, i) {
     // ignore homies
-    if (state.lits_prim(i)->atom->pred->name == MT::String("homies")) continue;
+    if (state.lits_prim(i)->atom->pred->name == mlr::String("homies")) continue;
     if (state.lits_prim(i)->atom->args.N == 0) {
       lits_zeroary.append(state.lits_prim(i));
     }
@@ -2602,7 +2602,7 @@ void RelationalStateGraph::getDirectNeighbors(uintA& neighbors, uint obj) const 
   neighbors.clear();
   int i;
   int id = constants.findValue(obj);
-  if (id < 0) MT_MSG("obj="<<obj<<" not found in constants="<<constants);
+  if (id < 0) MLR_MSG("obj="<<obj<<" not found in constants="<<constants);
   if (id >= 0) {
     FOR1D(constants, i) {
       if (i == id)
@@ -2661,14 +2661,14 @@ double RelationalStateGraph::distance(const RelationalStateGraph& g1, const Atom
   SymbolicState hack_g1_state = g1.state;
   hack_g1_state.lits_prim.memMove = true;
   FOR1D_DOWN(hack_g1_state.lits_prim, i) {
-    if (hack_g1_state.lits_prim(i)->atom->pred->name == MT::String("homies"))
+    if (hack_g1_state.lits_prim(i)->atom->pred->name == mlr::String("homies"))
       hack_g1_state.lits_prim.remove(i);
   }
   
   SymbolicState hack_g2_state = g2.state;
   hack_g2_state.lits_prim.memMove = true;
   FOR1D_DOWN(hack_g2_state.lits_prim, i) {
-    if (hack_g2_state.lits_prim(i)->atom->pred->name == MT::String("homies"))
+    if (hack_g2_state.lits_prim(i)->atom->pred->name == mlr::String("homies"))
       hack_g2_state.lits_prim.remove(i);
   }
   uint min_differing_attributes = logicReasoning::unifyAsMuchAsPossible(subs, hack_g1_state, hack_g2_state, init_sub);
@@ -2689,7 +2689,7 @@ double RelationalStateGraph::distance(const RelationalStateGraph& g1, const Atom
 }
 
 
-double RelationalStateGraph::entropy(const AtomL& actions, const MT::Array< RelationalStateGraph* >& graphs) {
+double RelationalStateGraph::entropy(const AtomL& actions, const mlr::Array< RelationalStateGraph* >& graphs) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RelationalStateGraph::entropy [START]"<<endl;}
   if (DEBUG>0) {PRINT(graphs.N); PRINT(actions); }
@@ -2701,7 +2701,7 @@ double RelationalStateGraph::entropy(const AtomL& actions, const MT::Array< Rela
     if (DEBUG>1) {cout<<"+++ i="<<i<<endl;}
     double min_distance_to_others = 1.0;
     // comparison to previous states
-    MT::Array< RelationalStateGraph* > other_graphs;
+    mlr::Array< RelationalStateGraph* > other_graphs;
     AtomL other_actions;
     if (i > 0) {
       for (k=i-1; k>=0; k--) {
@@ -2744,7 +2744,7 @@ RelationalStateGraph* RelationalStateGraph::createSubgraph(const Atom& action, c
 
 
 double RelationalStateGraph::getMinDistance(const RelationalStateGraph& graph, const Atom& action,
-                                                   const MT::Array< RelationalStateGraph* > other_graphs, const AtomL& other_actions) {
+                                                   const mlr::Array< RelationalStateGraph* > other_graphs, const AtomL& other_actions) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RelationalStateGraph::getMinDistance [START]"<<endl;}
   if (DEBUG>0) {cout<<"Action:  "<<action<<endl;}

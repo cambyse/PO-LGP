@@ -1,12 +1,12 @@
 #include "gamepad.h"
 
-#ifdef MT_PLIB
+#ifdef MLR_PLIB
 
 #include <plib/js.h>
 #undef min
 #undef max
 
-GamepadInterface::GamepadInterface():Module("GamepadInterface"){}
+GamepadInterface::GamepadInterface():Module("GamepadInterface", .01){}
 
 void GamepadInterface::open(){
   jsInit();
@@ -43,12 +43,16 @@ void GamepadInterface::step(){
   gamepadState().resize(n+1);
   gamepadState()(0)=B;
   for(uint i=0; i<n; i++) gamepadState()(i+1)=(double)A(i)/(1<<15);
+  if(step_count>20 && stopButtons(gamepadState())){
+    LOG(1) <<"*** STOP button pressed";
+    moduleShutdown().incrementValue();
+  }
   gamepadState.deAccess();
 }
 
 #else //dummy implementations
 GamepadInterface::GamepadInterface():Module("GamepadInterfaceINACTIVE"){}
-void GamepadInterface::open(){ gamepadState.set()->resize(10); gamepadState.set()->setZero(); MT_MSG("WARNING: dummy gamepad implementation"); }
+void GamepadInterface::open(){ gamepadState.set()->resize(10); gamepadState.set()->setZero(); MLR_MSG("WARNING: dummy gamepad implementation"); }
 void GamepadInterface::step(){ }
 void GamepadInterface::close(){ }
 #endif

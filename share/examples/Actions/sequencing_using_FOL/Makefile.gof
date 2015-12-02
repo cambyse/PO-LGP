@@ -1,0 +1,6 @@
+BASE = ../../..
+
+ROS = 1
+DEPEND = Actions Core Geo Ors pr2 Motion Hardware_gamepad FOL
+
+include $(BASE)/gofMake/generic.mk

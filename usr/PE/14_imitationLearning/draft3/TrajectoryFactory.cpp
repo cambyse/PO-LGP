@@ -3,7 +3,7 @@
 #include <Motion/taskMaps.h>
 
 
-void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
+void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
   uint trajIter;
   for (trajIter=0;trajIter<5;trajIter++) {
 
@@ -14,12 +14,12 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     makeConvexHulls(world.shapes);
     MotionProblem MP(world);
     MP.loadTransitionParameters();
-    arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
+    arr refGoal = conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
+    c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
     c->map.order=1;

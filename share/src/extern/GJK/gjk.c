@@ -180,7 +180,7 @@ static void reset_simplex( int subset, struct simplex_point * simplex);
 
 static void compute_subterms( struct simplex_point * s);
 static void compute_point( REAL pt[DIM], int len,
-                   REAL (* vertices)[DIM], REAL lambdas[]);
+		   REAL (* vertices)[DIM], REAL *lambdas);
 static void add_simplex_vertex( struct simplex_point * s, int pos,
 				Object obj1, VertexID v1, Transform t1,
 				Object obj2, VertexID v2, Transform t2);
@@ -314,7 +314,7 @@ REAL gjk_distance(
 //   for(i=0; i<obj1->numpoints; i++) printf("obj1 v%i x=%g y=%g z=%g\n", i, obj1->vertices[i][0], obj1->vertices[i][1], obj1->vertices[i][2]);
 //   for(i=0; i<obj2->numpoints; i++) printf("obj2 v%i x=%g y=%g z=%g\n", i, obj2->vertices[i][0], obj2->vertices[i][1], obj2->vertices[i][2]);
 
-   assert( NumVertices( obj1)>0 && NumVertices( obj2)>0 );
+   assert( NumVertices(obj1)>0 && NumVertices(obj2)>0 );
 
    use_default = first_iteration = 1;
 #ifdef CONSTRUCT_TABLES
@@ -333,8 +333,8 @@ REAL gjk_distance(
    if ( wpt2==0 )
        wpt2 = local_witness2;
 
-   fdisp = IdentityTransform( tr1) ?         displacementv : local_fdisp;
-   rdisp = IdentityTransform( tr2) ? reverse_displacementv : local_rdisp;
+   fdisp = IdentityTransform(tr1) ?         displacementv : local_fdisp;
+   rdisp = IdentityTransform(tr2) ? reverse_displacementv : local_rdisp;
 
    if ( simplex==0 ) {
       use_seed = 0;
@@ -853,7 +853,7 @@ support_hill_climbing(
    array of the lambda values.
    */
 static void compute_point( REAL pt[DIM], int len, REAL (* vertices)[DIM],
-                           REAL lambdas[]) {
+                           REAL *lambdas) {
    int d, i;
 
    overd( d) {

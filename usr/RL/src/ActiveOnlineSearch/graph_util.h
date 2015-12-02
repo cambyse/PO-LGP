@@ -30,14 +30,14 @@ namespace graph_util {
         const graph_t & graph;
     };
 
-    template<class graph_t>
+    template<class graph_t, class map_graph_t = graph_t>
         class GraphFlooding {
     public:
         typedef typename graph_t::Node node_t;
         typedef typename graph_t::NodeIt node_it_t;
         typedef typename graph_t::OutArcIt out_arc_it_t;
         template<class T>
-            using node_map_t = typename graph_t::template NodeMap<T>;
+            using node_map_t = typename map_graph_t::template NodeMap<T>;
 
         const graph_t & graph;
         node_map_t<bool> & reached;
@@ -84,43 +84,44 @@ namespace graph_util {
     /**
      * Class for propagating information through a graph. See
      * GraphPropagationExample.cpp for an example. */
-    template<class graph_t>
+    template<class GRAPH_1, class GRAPH_2 = GRAPH_1>
         class GraphPropagation {
         //----typedefs/classes----//
     public:
-        typedef typename graph_t::Node node_t;
-        typedef typename graph_t::NodeIt node_it_t;
-        typedef typename graph_t::Arc arc_t;
-        typedef typename graph_t::ArcIt arc_it_t;
-        typedef typename graph_t::OutArcIt out_arc_it_t;
-        typedef typename graph_t::InArcIt in_arc_it_t;
+        typedef typename GRAPH_1::Node node_t;
+        typedef typename GRAPH_1::NodeIt node_it_t;
+        typedef typename GRAPH_1::Arc arc_t;
+        typedef typename GRAPH_1::ArcIt arc_it_t;
+        typedef typename GRAPH_1::OutArcIt out_arc_it_t;
+        typedef typename GRAPH_1::InArcIt in_arc_it_t;
         template<class T>
-            using node_map_t = typename graph_t::template NodeMap<T>;
+            using node_map_t = typename GRAPH_2::template NodeMap<T>;
         typedef std::function<bool(node_t)> check_change_function_t;
-        typedef std::unordered_set<node_t,NodeHashFunction<graph_t>> node_set_t;
+        typedef std::unordered_set<node_t,NodeHashFunction<GRAPH_1>> node_set_t;
 
         //----members----//
     private:
-        const graph_t & graph;
+        const GRAPH_1 & graph;
         node_set_t source_nodes;
         node_set_t unprocessed_nodes_set;
         std::deque<node_t> unprocessed_nodes_queue;
-        bool local_reachable_map         = false;
-        bool local_processed_map         = false;
+        bool local_reachable_map                        = false;
+        bool local_processed_map                        = false;
         node_map_t<bool> * reachable_map                = nullptr;
         check_change_function_t * check_change_function = nullptr;
         node_map_t<bool> * processed_map                = nullptr;
-        node_t next_node = lemon::INVALID;
+        node_t next_node                                = lemon::INVALID;
+        bool _allow_incomplete_updates                  = false;
 
         //----methods----//
     public:
 
         GraphPropagation() = delete;
 
-        GraphPropagation(const graph_t & graph):
+        GraphPropagation(const GRAPH_1 & graph):
             graph(graph),
-            source_nodes({},0,NodeHashFunction<graph_t>(graph)),
-            unprocessed_nodes_set({},0,NodeHashFunction<graph_t>(graph))
+            source_nodes({},0,NodeHashFunction<GRAPH_1>(graph)),
+            unprocessed_nodes_set({},0,NodeHashFunction<GRAPH_1>(graph))
         {}
 
         virtual ~GraphPropagation() {
@@ -151,7 +152,7 @@ namespace graph_util {
                 DEBUG_OUT(3,"Mark node " << graph.id(node) << " as unprocessed");
                 (*processed_map)[node] = false;
             }
-            // init set of unprocessed nodes and mark source nodes as processed
+            // init set of unprocessed nodes
             {
                 // clear (in case it's not empty e.g. from previous runs)
                 unprocessed_nodes_set.clear();
@@ -173,6 +174,15 @@ namespace graph_util {
             }
             // next node is invalid initially
             next_node = lemon::INVALID;
+            return *this;
+        }
+
+        /**
+         * Whether to allow updates of nodes with unprocessed inputs. This is
+         * important in loopy graphs. Incomplete updates will only be made if no
+         * complete updates are possible. */
+        GraphPropagation & allow_incomplete_updates(bool val) {
+            _allow_incomplete_updates = val;
             return *this;
         }
 
@@ -252,7 +262,11 @@ namespace graph_util {
                 for(node_t node : unprocessed_nodes_set) DEBUG_OUT(2,"        " << graph.id(node));
             }
             next_node = lemon::INVALID;
+            node_t first_in_queue = unprocessed_nodes_queue.front();
+            int iteration_counter = 0;
             while(!unprocessed_nodes_queue.empty()) {
+                // increment counter
+                ++iteration_counter;
                 // assign new next node
                 next_node = unprocessed_nodes_queue.front();
                 unprocessed_nodes_queue.pop_front();
@@ -261,15 +275,15 @@ namespace graph_util {
                 bool inputs_available = true;
                 DEBUG_OUT(2,"    checking inputs...");
                 for(in_arc_it_t arc(graph,next_node); arc!=lemon::INVALID; ++arc) {
-                    node_t source_node = graph.source(arc);
-                    DEBUG_OUT(3,"    node " << graph.id(source_node) << " is " <<
-                              (is_reachable(source_node)?"reachable":"not reachable") << " and " <<
-                              (was_processed(source_node)?"was processed":"was not processed") );
-                    if(is_reachable(source_node) && !was_processed(source_node)) {
-                        DEBUG_OUT(3,"    node " << graph.id(source_node) << "is not available");
+                    node_t input_node = graph.source(arc);
+                    DEBUG_OUT(3,"    node " << graph.id(input_node) << " is " <<
+                              (is_reachable(input_node)?"reachable":"not reachable") << " and " <<
+                              (was_processed(input_node)?"was processed":"was not processed") );
+                    if(is_reachable(input_node) && !was_processed(input_node)) {
+                        DEBUG_OUT(3,"    node " << graph.id(input_node) << "is not available");
                         inputs_available = false;
                         break;
-                    } else DEBUG_OUT(3,"    node " << graph.id(source_node) << " is available");
+                    } else DEBUG_OUT(3,"    node " << graph.id(input_node) << " is available");
                 }
                 // break or continue?
                 if(inputs_available) {
@@ -277,7 +291,20 @@ namespace graph_util {
                     break;
                 } else {
                     DEBUG_OUT(2,"        missing inputs for node " << graph.id(next_node));
-                    next_node = lemon::INVALID;
+                    if(next_node==first_in_queue && iteration_counter>1) {
+                        if(_allow_incomplete_updates) {
+                            DEBUG_OUT(2,"        choosing node (incomplete) " << graph.id(next_node));
+                            break;
+                        } else {
+                            DEBUG_WARNING("Premature interruption because no updates are possible (consider allowing incomplete updates)");
+                            next_node = lemon::INVALID;
+                            break;
+                        }
+                    } else {
+                        unprocessed_nodes_queue.push_back(next_node);
+                        unprocessed_nodes_set.insert(next_node);
+                        next_node = lemon::INVALID;
+                    }
                     continue;
                 }
             }
@@ -287,8 +314,8 @@ namespace graph_util {
     private:
 
         /**
-         * Performs a depth-first search to determine all nodes reachable from
-         * the source nodes. This function is called by init(). */
+         * Floods the graph to determine all nodes that are reachable from the
+         * source nodes. This function is called by init(). */
         GraphPropagation & find_reachable_nodes() {
             DEBUG_OUT(1,"Find reachable nodes by flooding...");
             auto flood = graph_flooding(graph,*reachable_map);
@@ -307,8 +334,8 @@ namespace graph_util {
     };
 
     template<class graph_t>
-        GraphPropagation<graph_t> GraphPropagationFactory(const graph_t & graph) {
-        return GraphPropagation<graph_t>(graph);
+        GraphPropagation<graph_t,graph_t> GraphPropagationFactory(const graph_t & graph) {
+        return GraphPropagation<graph_t,graph_t>(graph);
     }
 
 } //end namespace graph_util

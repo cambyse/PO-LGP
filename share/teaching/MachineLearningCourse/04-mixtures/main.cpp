@@ -53,7 +53,7 @@ double NN(const arr& a,const arr& b,const arr& C){
   arr Cinv;
   inverse_SymPosDef(Cinv,C);
   double d = (~(a-b)*Cinv*(a-b)).scalar();
-  double norm = ::sqrt(lapack_determinantSymPosDef((1./MT_2PI)*Cinv));
+  double norm = ::sqrt(lapack_determinantSymPosDef((1./MLR_2PI)*Cinv));
   return norm*::exp(-.5*d);
 }
 
@@ -140,13 +140,13 @@ void exercise2(){
 
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
-  MT::arrayBrackets="  ";
+  mlr::initCmdLine(argc,argv);
+  mlr::arrayBrackets="  ";
 
   //generateArtificialGauss();
   //generateArtificialMixData();
   //exercise1();
-  //MT::wait();
+  //mlr::wait();
   exercise2();
   
   return 0;

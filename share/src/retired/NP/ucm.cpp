@@ -7,7 +7,7 @@
 
 #if 0
 template <class S>
-inline void ucm_display(const char* name, const MT::Array<S>& p, uint wait=10)
+inline void ucm_display(const char* name, const mlr::Array<S>& p, uint wait=10)
 {
   byteA p_temp;
   np::array2array(p_temp, p);
@@ -16,9 +16,9 @@ inline void ucm_display(const char* name, const MT::Array<S>& p, uint wait=10)
 };
 
 template <class S>
-inline void ucm_display_patch(const char* name, const MT::Array<S>& p, S index, uint wait=10)
+inline void ucm_display_patch(const char* name, const mlr::Array<S>& p, S index, uint wait=10)
 {
-  MT::Array<S> p_temp(p.d0, p.d1);
+  mlr::Array<S> p_temp(p.d0, p.d1);
   for (uint i=0; i<p_temp.N; i++)
     if (p.p[i] == index)
       p_temp.p[i] = 255;
@@ -43,7 +43,7 @@ inline void ucm_assign_merger(intA& mergers, byteA& is_merged, uint a, uint b)
   is_merged(a)=1;
 };
 
-void ucm_find_mergers(MT::Array<uintA>& mergers, const uintA& ucm2_cc, const PixelArray& edge_pixels)
+void ucm_find_mergers(mlr::Array<uintA>& mergers, const uintA& ucm2_cc, const PixelArray& edge_pixels)
 {
   uint x=0,y=0;
   uint n=0,s=0,w=0,e=0,z=0;
@@ -173,7 +173,7 @@ template <class S>
 void ucm_pixel_list
 (
  PixelArray& pixel_list,
- const MT::Array<S>& map,
+ const mlr::Array<S>& map,
  const uintA& pixel_values
 )
 {
@@ -203,7 +203,7 @@ void ucm_pixel_list
 };
 
 template <class S>
-inline void ucm_ucm2toucm(MT::Array<S>& ucm, const MT::Array<S>& ucm2)
+inline void ucm_ucm2toucm(mlr::Array<S>& ucm, const mlr::Array<S>& ucm2)
 {
   uint width = ucm2.d1/2, height = ucm2.d0/2;
   if (width != ucm.d1 || height != ucm.d0)
@@ -241,7 +241,7 @@ inline void ucm_relabel(uintA& p, uint start=1)
 };
 
 template <class S>
-inline void ucm_replace_values(MT::Array<S> &map, const uintA& pixels, S value)
+inline void ucm_replace_values(mlr::Array<S> &map, const uintA& pixels, S value)
 {
   uint num_pixels = pixels.N;
   for (uint i=0; i<num_pixels; i++)
@@ -348,7 +348,7 @@ void np::UcmTree::build_leaf_level()
 void np::UcmTree::build_level(uint index)
 {
   // find patches which will be merged ...
-  MT::Array<uintA> mergers;
+  mlr::Array<uintA> mergers;
   ucm_find_mergers(mergers, ucm2_cc_, edge_pixels_.sub(index,index));
   if (mergers.N == 0)
     msg_error(HERE, "no edges found");

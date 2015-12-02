@@ -3,7 +3,7 @@
 
 using namespace std;
 using namespace std::placeholders;
-using namespace MLR;
+using namespace mlr;
 
 int main(int argc, char* argv[])
 {

@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_robot_processes_h
-#define MT_robot_processes_h
+#ifndef MLR_robot_processes_h
+#define MLR_robot_processes_h
 
 struct CameraModule;
 

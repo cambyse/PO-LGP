@@ -1,7 +1,7 @@
 BASE = ../../..
 
 GL = 1
-DEPEND = Core Gui Perception System Hardware_kinect Hardware_ueyecamera
+DEPEND = Core Gui Perception Hardware_kinect Hardware_ueyecamera
 
 CLEAN = z.*
 

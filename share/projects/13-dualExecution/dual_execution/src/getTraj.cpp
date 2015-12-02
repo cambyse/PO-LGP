@@ -16,8 +16,8 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
   Task *pos =
       P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
+  pos->setCostSpecs(P.T, P.T,
+                          conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
@@ -49,7 +49,7 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
       m->phi(y[t](), NoArr, world);
-      ori[t]() = ARRAY(s_SL_endeff->X.rot);
+      ori[t]() = conv_quat2arr(s_SL_endeff->X.rot);
     }
     delete m;
   }

@@ -23,9 +23,9 @@
 // helpers
 //
 
-static MT::Array<StepThread*> globalThreads;
-static MT::Array<Metronome *> globalMetronomes;
-static MT::Array<CycleTimer*> globalCycleTimers;
+static mlr::Array<StepThread*> globalThreads;
+static mlr::Array<Metronome *> globalMetronomes;
+static mlr::Array<CycleTimer*> globalCycleTimers;
 
 void reportNice(){
   pid_t tid = syscall(SYS_gettid);
@@ -37,7 +37,7 @@ bool setNice(int nice){
   pid_t tid = syscall(SYS_gettid);
   //int old_nice = getpriority(PRIO_PROCESS, tid);
   int ret = setpriority(PRIO_PROCESS, tid, nice);
-  if(ret) MT_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
+  if(ret) MLR_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
   //std::cout <<"tid=" <<tid <<" old nice=" <<old_nice <<" wanted nice=" <<nice <<std::flush;
   //nice = getpriority(PRIO_PROCESS, tid);
   //std::cout <<" new nice=" <<nice <<std::endl;
@@ -47,7 +47,7 @@ bool setNice(int nice){
 
 void setRRscheduling(int priority){
   pid_t tid = syscall(SYS_gettid);
-  MT_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
+  MLR_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
   sched_param sp; sp.sched_priority=priority;
   int rc = sched_setscheduler(tid, SCHED_RR, &sp);
   if(rc) switch(errno){
@@ -55,7 +55,7 @@ void setRRscheduling(int priority){
       HALT("The process whose ID is" <<tid <<"could not be found.");
       break;
     case EPERM:
-      MT_MSG("ERROR: Not enough privileges! Priority unchanged! Run with sudo to use this feature!");
+      MLR_MSG("ERROR: Not enough privileges! Priority unchanged! Run with sudo to use this feature!");
       break;
     case EINVAL:
     default: HALT(errno <<strerror(errno));
@@ -64,7 +64,7 @@ void setRRscheduling(int priority){
   rc=sched_rr_get_interval(tid, &interval);
   std::cout <<"RR scheduling interval = " <<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
   CHECK(!rc, "sched_rr_get_interval failed:" <<errno <<strerror(errno));
-  MT_MSG("Scheduling policy changed: new sched="
+  MLR_MSG("Scheduling policy changed: new sched="
 		  <<sched_getscheduler(tid) <<" new priority=" <<priority);
 }
 
@@ -238,8 +238,8 @@ void Metronome::waitForTic(){
     //wait for target time
     int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
     if(rc){
-      if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal") }
-      else{ MT_MSG("clock_nanosleep() failed " <<rc); }
+      if(rc==0){ MLR_MSG("clock_nanosleep() interrupted by signal") }
+      else{ MLR_MSG("clock_nanosleep() failed " <<rc); }
     }
   //}
   
@@ -311,7 +311,7 @@ StepThread::~StepThread(){
 }
 
 void StepThread::threadOpen(int priority){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   CHECK_EQ(threadCondition.state,tsCLOSE, "never open while not closed!");
   threadCondition.setState(tsOPEN);
   threadPriority = priority;
@@ -336,7 +336,7 @@ void StepThread::threadOpen(int priority){
 }
 
 void StepThread::threadClose(){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   if(!thread && threadCondition.state==tsCLOSE) return;
   int rc;
   if(threadCondition.state<=tsLOOPING) threadLoopStop();
@@ -351,7 +351,7 @@ void StepThread::threadClose(){
 }
 
 void StepThread::threadStep(bool wait){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   if(wait) threadWait();
   CHECK_EQ(threadCondition.state,tsIDLE, "never step while thread is busy!");
   threadCondition.setState(1);
@@ -361,11 +361,11 @@ void StepThread::threadStep(bool wait){
 }
 
 void StepThread::threadStepOrSkip(uint maxSkips){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   if(threadCondition.state!=tsIDLE){
     skips++;
     //if(skips>maxSkips) HALT("skips>maxSkips: " <<skips<<'<' <<maxSkips);
-    if(maxSkips && skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips=" <<skips);
+    if(maxSkips && skips>=maxSkips) MLR_MSG("WARNING: skips>=maxSkips=" <<skips);
     return;
   }
   skips=0;
@@ -376,7 +376,7 @@ void StepThread::threadStepOrSkip(uint maxSkips){
 }
 
 void StepThread::threadSteps(uint steps){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   CHECK_EQ(threadCondition.state,tsIDLE, "never step while thread is busy!");
   threadCondition.setState(steps);
 #else
@@ -385,13 +385,13 @@ void StepThread::threadSteps(uint steps){
 }
 
 void StepThread::threadWait(){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   threadCondition.waitForStateEq(tsIDLE);
 #endif
 }
 
 bool StepThread::threadIsReady(){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   if(threadCondition.state==tsIDLE) return true;
   return false;
 #else
@@ -400,7 +400,7 @@ bool StepThread::threadIsReady(){
 }
 
 void StepThread::threadLoop(){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   if(threadCondition.state==tsCLOSE) threadOpen();
   CHECK_EQ(threadCondition.state,tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsLOOPING);
@@ -410,7 +410,7 @@ void StepThread::threadLoop(){
 }
 
 void StepThread::threadLoopWithBeat(double sec){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   metronome=new Metronome("threadTiccer", 1000.*sec);
   if(threadCondition.state==tsCLOSE) threadOpen();
   CHECK_EQ(threadCondition.state,tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
@@ -421,7 +421,7 @@ void StepThread::threadLoopWithBeat(double sec){
 }
 
 void StepThread::threadLoopSyncWithDone(StepThread& thread){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   thread.broadCastDone=true;
   syncCondition = &thread.threadCondition;
   if(threadCondition.state==tsCLOSE) threadOpen();
@@ -433,7 +433,7 @@ void StepThread::threadLoopSyncWithDone(StepThread& thread){
 }
 
 void StepThread::threadLoopStop(){
-#ifndef MT_NO_THREADS
+#ifndef MLR_NO_THREADS
   CHECK(threadCondition.state<=tsLOOPING, "called stop loop although not looping!");
   int state=threadCondition.state;
   threadCondition.setState(tsIDLE);
@@ -497,7 +497,7 @@ struct ThreadInfoWin:public StepThread, Fl_Window{
   ~ThreadInfoWin(){  }
   
   void open(){
-    //MT::open(log, "LOG.threads");
+    //mlr::open(log, "LOG.threads");
     show();
     Fl::check();
     isOpen=true;
@@ -595,7 +595,7 @@ ThreadInfoWin::~ThreadInfoWin(){
 }
 
 void ThreadInfoWin::open(){
-  //MT::open(s->log, "LOG.threads");
+  //mlr::open(s->log, "LOG.threads");
   s->display = XOpenDisplay(NULL);
   if(!s->display) HALT("Cannot open display");
   s->window = XCreateSimpleWindow(s->display, DefaultRootWindow(s->display),
@@ -690,7 +690,7 @@ void ThreadInfoWin::open(){
     cbreak();
     noecho();
   }
-  MT::String txt;
+  mlr::String txt;
   threadReportAll(txt);
   mvprintw(0, 0, txt.p);
   refresh();
@@ -703,10 +703,10 @@ void ThreadInfoWin::open(){
 
 
 #if 0
-MT::SHM global_shm;
+mlr::SHM global_shm;
 uint pidIndex;
 
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 void func(int x){
   //printf("received signal!\n");
 }
@@ -720,7 +720,7 @@ void sendSignal(){
   int r;
   for(i=0;i<maxClients;i++) if(shm->pids[i]!=-1 && shm->pids[i]!=getpid()){
     r=kill(shm->pids[i], SIGUSR1);
-    if(r) MT_MSG("warning: couldn't send signal to pid " <<shm->pids[i]);
+    if(r) MLR_MSG("warning: couldn't send signal to pid " <<shm->pids[i]);
   }
 }
 #else
@@ -811,7 +811,7 @@ void openRobotSharedMemory(){
     HALT("exceeded max number of clients " <<maxClients);
   pidIndex=i;
 
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
   shm->pids[pidIndex]=getpid();
 #else
   shm->pids[pidIndex]=GetCurrentProcessId();

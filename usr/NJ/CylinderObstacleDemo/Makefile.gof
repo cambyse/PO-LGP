@@ -18,7 +18,7 @@ SWIFT = 1
 SCHUNK = 1
 PLIB = 1  #for the Gamepad
 
-CXXFLAGS += -DMT_NO_GLOBALMEM
+CXXFLAGS += -DMLR_NO_GLOBALMEM
 
 include $(BASE)/gofMake/generic.mk
 

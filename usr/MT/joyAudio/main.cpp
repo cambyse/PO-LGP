@@ -1,21 +1,21 @@
-#include <System/engine.h>
-#include <Hardware/gamepad.h>
+//#include <System/engine.h>
+#include <Hardware/gamepad/gamepad.h>
 #include <Media/audio.h>
 
 //void threadedRun() {
-//  struct MySystem:System{
+//  struct MySystem{
 //    ACCESS(arr, gamepadState);
 //    MySystem(){
-//      addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
+//      new GamepadInterface;
 //      connect();
 //    }
 //  } S;
 
-//  engine().open(S);
+//  threadOpenModules(true);
 
-//  engine().shutdown.waitForSignal();
+//  moduleShutdown().waitForValueGreaterThan(0);
 
-//  engine().close(S);
+//  threadCloseModules();
 //  cout <<"bye bye" <<endl;
 //}
 
@@ -24,19 +24,17 @@ void play(){
   SineSound S;
   Audio audio;
 
-  createVariables(MT::Array<Module*>({&gamepad}));
-
   gamepad.open();
   audio.open(S);
   S.addNote(880.,.2,0);
   for(uint k=0;;k++){
-    MT::wait(.001);
+    mlr::wait(.001);
     gamepad.step();
     arr s = gamepad.gamepadState.get();
     double freq=s(4);
     S.changeFreq(0, 880.*pow(2, s(4)));
     S.notes(0,1)=.001 + .2*(s(3)+1.);
-    if(MT::realTime()>10.) break;
+    if(mlr::realTime()>10.) break;
   }
 
   gamepad.close();

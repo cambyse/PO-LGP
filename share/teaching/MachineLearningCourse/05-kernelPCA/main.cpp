@@ -9,21 +9,21 @@ using namespace std;
 
 
 void generateSpiralData(){
-  uint n=MT::getParameter<uint>("n",100);
-  double Phi=MT::getParameter<double>("Phi",1.);
+  uint n=mlr::getParameter<uint>("n",100);
+  double Phi=mlr::getParameter<double>("Phi",1.);
   arr X,y;
   X.resize(2*n,2);
   y.resize(2*n);
   for(uint i=0;i<n;i++){
-    double phi= Phi*MT_2PI*i/n;
+    double phi= Phi*MLR_2PI*i/n;
     double r = 1.+1.*i/n;
     X[0+i] = ARR(r*cos(phi),r*sin(phi));       y(0+i)=0;
     X[n+i] = ARR(-r*cos(phi),-r*sin(phi));     y(n+i)=1;
   }
-  rndGauss(X,MT::getParameter<double>("sigma",.004),true);
+  rndGauss(X,mlr::getParameter<double>("sigma",.004),true);
   write(LIST<arr>(X,y),"spiral.dat");
   gnuplot("plot [-2:2][-2:2] 'spiral.dat' us 1:2:3 with points pt 2 lc variable",NULL,true);
-  //MT::wait();
+  //mlr::wait();
 }
 
 void laplacianEmbedding(arr& Z,const arr& W){
@@ -90,8 +90,8 @@ void TEST(Embedding){
   uint n=X.d0;
 
   //generate kNN graph
-  uint k=MT::getParameter<uint>("k",7);
-  double c=MT::getParameter<double>("c",.05);
+  uint k=mlr::getParameter<uint>("k",7);
+  double c=mlr::getParameter<double>("c",.05);
   arr W(n,n);
   W = 0.;
   ANN ann;
@@ -117,7 +117,7 @@ void TEST(Embedding){
 
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //generateSpiralData();
   testEmbedding();

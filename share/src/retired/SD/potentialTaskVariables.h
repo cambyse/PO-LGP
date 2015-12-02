@@ -5,7 +5,7 @@
 
 struct PotentialField;
 struct GraspObject_GP;
-typedef MT::Array<ors::Shape*> ShapeList;
+typedef mlr::Array<ors::Shape*> ShapeList;
 
 /* for n shapes describes the n-dim vector of values of a potential */
 struct PotentialValuesTaskVariable:public DefaultTaskVariable{
@@ -35,7 +35,7 @@ struct GPVarianceTaskVariable:public DefaultTaskVariable{
   virtual void userUpdate(const ors::KinematicWorld& ors);
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #include "potentialTaskVariables.cpp"
 #endif
 

@@ -12,8 +12,16 @@
 #include <GL/glut.h>  // Also includes gl.h and glu.h.
 #include <GL/glext.h>
 
-#include "vec3.h"
-#include "glInfo.h"
+struct Vec3{
+  float x,y,z;
+  Vec3():x(0), y(0), z(0){}
+  Vec3(float x,float y,float z):x(x), y(y), z(z){}
+};
+inline Vec3 operator+(const Vec3& a, const Vec3& b){ return Vec3(a.x+b.x, a.y+b.y, a.z+b.z); }
+inline Vec3& operator+=(Vec3& a, const Vec3& b){ a.x+=b.x; a.y+=b.y; a.z+=b.z; return a; }
+
+//#include "vec3.h"
+//#include "glInfo.h"
 
 using namespace std;
 
@@ -30,7 +38,7 @@ using namespace std;
 
     // If true : outputs to stdout only.
 
-        bool offscreen = false;
+        bool offscreen = true;
 
 int maxNFrames = -1; //number of frames to calculate on offscreen rendering.
                      //After that number, stop.
@@ -75,26 +83,25 @@ class Drawable
         virtual void draw() = 0;
 };
 
-template <class T=float>
 class Sphere : public Drawable {
 
     public:
 
-        Vec3<T> pos;
-        Vec3<T> speed;
+        Vec3 pos;
+        Vec3 speed;
         GLfloat color[3];
 
-        T rad;
+        float rad;
         int slices;
         int stacks;
 
         Sphere()
         :
-            pos(Vec3<>()),
+            pos(Vec3()),
             rad(1.0),
             slices(50),
             stacks(50),
-            speed(Vec3<>())
+            speed(Vec3())
         {
             color[0] = 1.0;
             color[1] = 1.0;
@@ -102,12 +109,12 @@ class Sphere : public Drawable {
         }
 
         Sphere(
-            Vec3<> pos,
-            T rad = 1.0,
+            Vec3 pos,
+            float rad = 1.0,
             int slices = 50,
             int stacks = 50,
             const GLfloat* color = white,
-            Vec3<> speed = Vec3<>()
+            Vec3 speed = Vec3()
         ) :
             pos(pos),
             rad(rad),
@@ -142,16 +149,15 @@ class Sphere : public Drawable {
 };
 
 //view parameter
-template <class T=float>
 class Camera
 {
     public:
 
         Camera()
         :
-            pos(Vec3<T>(0.0, 0.0, 0.0)),
-            dir(Vec3<T>(1.0, 0.0, 0.0)),
-            up(Vec3<T>(0.0, 1.0, 0.0f)),
+            pos(Vec3(0.0, 0.0, 0.0)),
+            dir(Vec3(1.0, 0.0, 0.0)),
+            up(Vec3(0.0, 1.0, 0.0f)),
             frustrumNear(1.0),
             frustrumFar(100.0),
             frustrumL(1.0),
@@ -162,12 +168,12 @@ class Camera
         }
 
         Camera(
-            Vec3<T> pos, //position of the camera
-            Vec3<T> dir, //direction of viewing
-            Vec3<T> up = Vec3<T>(0.0, 1.0, 0.0f),
-            T frustrumNear = 1.0,
-            T frustrumFar = 100.0,
-            T frustrumL = 1.0,
+            Vec3 pos, //position of the camera
+            Vec3 dir, //direction of viewing
+            Vec3 up = Vec3(0.0, 1.0, 0.0f),
+            float frustrumNear = 1.0,
+            float frustrumFar = 100.0,
+            float frustrumL = 1.0,
             GLint resX = 700,
             GLint resY = 700,
             GLint format = GL_RGB
@@ -184,7 +190,7 @@ class Camera
         {
         }
 
-        Vec3<T> getLookat(){ return pos+dir; }
+        Vec3 getLookat(){ return pos+dir; }
 
         //gets number of components for the already given format
         int getNComponents() {
@@ -204,9 +210,9 @@ class Camera
             }
         }
 
-        Vec3<T> pos;
-        Vec3<T> dir;
-        Vec3<T> up;
+        Vec3 pos;
+        Vec3 dir;
+        Vec3 up;
 
         GLfloat frustrumNear;
         GLfloat frustrumFar;
@@ -236,7 +242,7 @@ class Camera
 
 //camera
     //create a camera
-    Camera<> camera;
+    Camera camera;
     GLubyte* pixels; //stores the pixels from the rendering
     GLuint fboId;
     GLuint texId;
@@ -251,7 +257,7 @@ class Camera
 
 enum nDrawables { nDrawables=2, nSpheres=2 };
     Drawable* drawables[nDrawables];
-    Sphere<> spheres[nSpheres];
+    Sphere spheres[nSpheres];
 
 //physical viewer param
     float fast_forward = 1.f;
@@ -264,8 +270,8 @@ enum nDrawables { nDrawables=2, nSpheres=2 };
     //don't wait for input
     GLfloat speedMax = 2.f;      //trsnalation speed
     GLfloat rotSpeedMax = 0.0f;  //rotation speed in rad/
-    Vec3<> speed;  //translation speed in rad/
-    Vec3<> rotSpeed;  //rotation speed in rad/s. right hand rule
+    Vec3 speed;  //translation speed in rad/
+    Vec3 rotSpeed;  //rotation speed in rad/s. right hand rule
 
 //stuff set only once at beginning
 void init(int argc, char** argv) {
@@ -510,10 +516,10 @@ void init(int argc, char** argv) {
             glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess); //specular exponent
 
     //camera
-        camera = Camera<>(
-            Vec3<>(0.0, 0.0, -2.0),
-            Vec3<>(0.0, 0.0,  1.0),
-            Vec3<>(0.0, 1.0,  0.0),
+        camera = Camera(
+            Vec3(0.0, 0.0, -2.0),
+            Vec3(0.0, 0.0,  1.0),
+            Vec3(0.0, 1.0,  0.0),
             1.0,
             100.0,
             1.0,
@@ -526,8 +532,8 @@ void init(int argc, char** argv) {
         //to store output pixel
 
     //create drawable objects to model initial scene
-        spheres[0] = Sphere<>(Vec3<>(0.0, 0.0, 0.0), 1.0, 50, 50, red);
-        spheres[1] = Sphere<>(Vec3<>(0.0, 0.0, 0.0), 1.0, 50, 50, blue);
+        spheres[0] = Sphere(Vec3(0.0, 0.0, 0.0), 1.0, 50, 50, red);
+        spheres[1] = Sphere(Vec3(0.0, 0.0, 0.0), 1.0, 50, 50, blue);
         int total = 0;
         for (int i = total; i < nSpheres; i++) {
             drawables[i] = &spheres[i];
@@ -540,7 +546,7 @@ void init(int argc, char** argv) {
 void idle(void) {
     //cout << "idle" << endl;
 
-    Vec3<> dx, newpos;
+    Vec3 dx, newpos;
     float dt;
     int t;
 
@@ -561,8 +567,8 @@ void idle(void) {
     //speed nonstop movement method
         //camera.dir.rotY(rotSpeed*dt);
         //newpos = camera.pos + speed*dt;
-        //camera.pos -= Vec3<>(0.005, 0.0, 0.0);
-        spheres[0].pos += Vec3<>(0.005, 0.0, 0.0);
+        //camera.pos -= Vec3(0.005, 0.0, 0.0);
+        spheres[0].pos += Vec3(0.005, 0.0, 0.0);
 
     nFrames++;
     if (offscreen && nFrames == maxNFrames) {
@@ -574,7 +580,7 @@ void idle(void) {
 void display()
 {
 
-    //cout << "display" << endl;
+  cout << "display" << endl;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //clears given buffers to clear value
@@ -585,7 +591,7 @@ void display()
 
     glLoadIdentity(); // reset everything before starting
 
-    Vec3<> lookat = camera.getLookat();
+    Vec3 lookat = camera.getLookat();
 
     gluLookAt(
         camera.pos.x,
@@ -1034,8 +1040,8 @@ int main(int argc, char** argv) {
             atexit(exitCB);
 
     //Get and print OpenGL info. This class was define by us, not OpenGL standard.
-    glInfo glInfo;
-    glInfo.getInfo();
+    //glInfo glInfo;
+    //glInfo.getInfo();
     //glInfo.printSelf();
 
     //#MainLoop

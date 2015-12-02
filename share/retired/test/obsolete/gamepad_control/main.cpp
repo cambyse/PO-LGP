@@ -3,7 +3,7 @@
 #include <signal.h>
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   RobotActionInterface R;

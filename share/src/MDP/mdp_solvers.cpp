@@ -203,7 +203,7 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
   arr mdp_Rax = mdp.Rax;
   double Rmin=mdp_Rax.min(), Rmax=mdp_Rax.max();
   if(rescaleRewards || (mstepType!=MstepNoisyMax && Rmin<0.)){
-    if(!rescaleRewards) MT_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
+    if(!rescaleRewards) MLR_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
     for(uint i=0; i<mdp_Rax.N; i++) mdp_Rax.elem(i) = (mdp_Rax.elem(i)-Rmin)/(Rmax-Rmin);
   }else{
     Rmin=0.; Rmax=1.;
@@ -340,10 +340,10 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
     os <<t <<' ' <<L(t+t-1) <<' ' <<L(t+t) <<std::endl;
     //Z-file: alpha-norm beta-norm time Z(t) beta_START(t) alpha_GOAL(t) Z(t)-alternative
   }
-  cout <<"E: " <<MT::timerRead() <<"sec, M: " <<std::flush;
+  cout <<"E: " <<mlr::timerRead() <<"sec, M: " <<std::flush;
   
   /*if(Pvisited && Pvisited->N==X){
-    for(x=0;x<X;x++) hat_beta(x) = MT::DIV(hat_beta(x), Px_norm(x));
+    for(x=0;x<X;x++) hat_beta(x) = mlr::DIV(hat_beta(x), Px_norm(x));
   }*/
   
   hatBeta=hat_beta * ::exp(hat_betaLog);
@@ -375,7 +375,7 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
   LIKE = L;
   
   //report
-  cout <<MT::timerRead() <<"sec, " <<std::flush;
+  cout <<mlr::timerRead() <<"sec, " <<std::flush;
   double Ltot=0., PtNorm=0., Texp=0.;
   arr PtL(2*Tmax);
   for(t=0; t<2*Tmax; t++){ PtL(t)=Pt(t)*L(t); Ltot+=PtL(t); Texp+=t*PtL(t); PtNorm+=Pt(t); }

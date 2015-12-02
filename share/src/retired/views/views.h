@@ -60,7 +60,7 @@ View* newViewBase(T* object, Node *vi, GtkWidget *container){
   if(!vi){
     NodeL vis=getViews(typeid(T).name());
     if(!vis.N){
-      MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
+      MLR_MSG("No View for sysType '" << typeid(T).name() <<"' found");
       return NULL;
     }
     vi = vis.last();

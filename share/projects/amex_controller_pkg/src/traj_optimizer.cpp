@@ -12,15 +12,15 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   MP.loadTransitionParameters();
 
   // reference goal of right endeffector
-  arr refGoal = _goal; //ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
+  arr refGoal = _goal; //conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
 
   // reference frame for planning and execution
-  arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
   //-- create tasks for optimization problem
   Task *c;
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
+  c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
 
 //  c = MP.addTask("qLimits", new TaskMap_qLimits());
 //  MP.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0,{0.},1e0);

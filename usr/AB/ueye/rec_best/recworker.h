@@ -12,7 +12,7 @@ class RecWorker: public QObject {
   Q_OBJECT
 
   private:
-    MT::Array<char *> frames, timestamps;
+    mlr::Array<char *> frames, timestamps;
     int nframes, pframes;
 
     QMutex frameMutex, quitMutex;

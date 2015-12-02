@@ -53,7 +53,7 @@ bool newFrame;
 // Y := world coordinates
 // X := kinect coordinates
 // A := transformation matrix
-MT::Array<double> Y, X, A, kinectPt, orsPt;
+mlr::Array<double> Y, X, A, kinectPt, orsPt;
 
 <<<<<<< HEAD
 int extractMarker(arr& point, pcl::PointCloud<PointT>::Ptr &marked, pcl::PointCloud<PointT>::Ptr cloud) {
@@ -221,7 +221,7 @@ void extractMode();
 
 int main(int argc, char **argv) {
 
-  //MT::initCmdLine(argc,argv);
+  //mlr::initCmdLine(argc,argv);
 
 <<<<<<< HEAD
   if(birosInfo().getParameter<int>("mode", NULL) == 1) {
@@ -387,7 +387,7 @@ void extractMode() {
     }
     objectClusters.deAccess(NULL);
     
-    MT::wait(0.5);
+    mlr::wait(0.5);
 
     geometricState.writeAccess(NULL);
     geometricState.ors.calcBodyFramesFromJoints();
@@ -459,7 +459,7 @@ void extractMode() {
     //geometricState.writeAccess(NULL);
     //geometricState.ors.calcBodyFramesFromJoints();
     ////std::cout << geometricState.ors.bodies(1)->inLinks(0)->Q << std::endl;
-    ////MT::String shape("tipPoint");
+    ////mlr::String shape("tipPoint");
     ////shape << finger + 1;
     ////std::cout << shape  << std::endl;
     //double* orsPos = geometricState.ors.getShapeByName("marker")->X.pos.p;

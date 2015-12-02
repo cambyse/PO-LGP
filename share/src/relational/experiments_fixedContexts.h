@@ -16,12 +16,12 @@ class RuleLearner_FixedContexts : public RuleLearner {
 
 public:
   Atom* action;
-  MT::Array< LitL > contexts;
-  MT::Array< SymbolicExperienceL > experiences_per_context;
-  MT::Array< uintA > experienceIds_per_context;  // redundant auxiliary container
+  mlr::Array< LitL > contexts;
+  mlr::Array< SymbolicExperienceL > experiences_per_context;
+  mlr::Array< uintA > experienceIds_per_context;  // redundant auxiliary container
   
   public:
-    RuleLearner_FixedContexts(Atom* action, const MT::Array< LitL >& contexts, double alpha_PEN, double p_min, double p_min_noisyDefaultRule);
+    RuleLearner_FixedContexts(Atom* action, const mlr::Array< LitL >& contexts, double alpha_PEN, double p_min, double p_min_noisyDefaultRule);
      
     void learn_rules(RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile = DEFAULT_LOGFILE); 
     void learn_rules(RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile = DEFAULT_LOGFILE); 

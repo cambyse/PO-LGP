@@ -6,7 +6,7 @@ int main(int, const char**) {
   ofstream os("samples.data");
   Traysampler;
   InsideOracle o;
-	MT::Array<arr> sample;
+	mlr::Array<arr> sample;
   for (int i=0; i<1000; ++i) {
     do {
       sampler.sample(sample);

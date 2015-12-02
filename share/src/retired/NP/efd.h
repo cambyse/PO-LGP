@@ -36,6 +36,6 @@ namespace np {
  *  @see ctrace(), cclabel()
  */
 template <class S>
-void efd_contour(MT::Array<S>& efd, const uintA& contour, uint coef);
+void efd_contour(mlr::Array<S>& efd, const uintA& contour, uint coef);
 
 }; // namespace np

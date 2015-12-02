@@ -6,9 +6,9 @@ G4Recorder::G4Recorder(): Module("G4Recorder") {
 }
 
 void G4Recorder::open() {
-  String fname = STRING("z." << poses.name << '.' << MT::getNowString() << ".dat");
-  MT::open(datafile, fname);
-  MT::open(tstampfile, STRING(fname << ".times"));
+  String fname = STRING("z." << poses.name << '.' << mlr::getNowString() << ".dat");
+  mlr::open(datafile, fname);
+  mlr::open(tstampfile, STRING(fname << ".times"));
 }
 
 void G4Recorder::close() {

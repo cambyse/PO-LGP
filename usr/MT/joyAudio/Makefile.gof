@@ -1,5 +1,5 @@
 BASE = ../../../share
 
-DEPEND = Core System Hardware Media
+DEPEND = Core Hardware_gamepad Media
 
 include $(BASE)/gofMake/generic.mk

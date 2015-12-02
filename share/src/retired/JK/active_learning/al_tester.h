@@ -5,7 +5,7 @@
 
 class ActiveLearner;
 
-double test(const uint numTests, const ActiveLearner* al, const ActiveLearningProblem* problem, const MT::String filename);
+double test(const uint numTests, const ActiveLearner* al, const ActiveLearningProblem* problem, const mlr::String filename);
 
 
 #endif

@@ -65,16 +65,8 @@ Convert::operator VectorFunction() {
 }
 
 Convert::operator ConstrainedProblem() {
-  if(!cp) {
-    if(kom) cp = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
-  }
-  if(!cp) HALT("");
-  return cp;
-}
-
-Convert::operator ConstrainedProblemMix() {
   if(!cpm) {
-    if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblemMix(*kom);
+    if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
   }
   if(!cpm) HALT("");
   return cpm;
@@ -119,7 +111,7 @@ ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f) {
   };
 }
 
-void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, arr& phi, arr& J, TermTypeA& tt, const arr& _x) {
+void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& _x) {
   //probing dimensionality
   uint T=f.get_T();
   uint k=f.get_k();
@@ -234,11 +226,15 @@ void conv_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f, ar
     Jaux->computeColPatches(true);
     if(dim_z) Jzaux->computeColPatches(false);
   }
+
+  if(&H) {
+    H.clear();
+  }
 }
 
-ConstrainedProblemMix convert_KOrderMarkovFunction_ConstrainedProblemMix(KOrderMarkovFunction& f){
-  return [&f](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-    conv_KOrderMarkovFunction_ConstrainedProblemMix(f, phi, J, tt, x);
+ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f){
+  return [&f](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    conv_KOrderMarkovFunction_ConstrainedProblem(f, phi, J, H, tt, x);
   };
 }
 
@@ -592,16 +588,10 @@ double conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction &f, arr
 #endif
 }
 
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f) {
-  return [&f](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double {
-    return conv_KOrderMarkovFunction_ConstrainedProblem(f, df, Hf, g, Jg, h, Jh, x);
-  };
-}
-
 
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-  MT::Array<TermType>::memMove=true;
+  mlr::Array<TermType>::memMove=true;
 RUN_ON_INIT_END()
 

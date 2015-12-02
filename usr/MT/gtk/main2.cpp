@@ -94,11 +94,11 @@ int main (int argc, char *argv[])
     TestThread A("A"),B("B");
 
     /*for(uint t=0;t<100;t++){
-      MT::wait(.1);
+      mlr::wait(.1);
       A.step();
       B.step();
       }*/
-    MT::wait(5.);
+    mlr::wait(5.);
 
     A.threadClose();
     B.threadClose();

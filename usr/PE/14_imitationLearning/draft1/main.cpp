@@ -19,12 +19,12 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     makeConvexHulls(world.shapes);
     MotionProblem MP(world);
     MP.loadTransitionParameters();
-    arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
+    arr refGoal = conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
+    c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
     c->map.order=1;
@@ -72,9 +72,9 @@ arr execRun(arr param, arr q0, arr refGoal) {
   world.getBodyByName("goalRef")->X.pos = refGoal;
   Task *c;
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, param(0));
+  c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
   c = MP.addTask("vel_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(0.,1.,0.), param(1));
+  c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
   c = MP.addTask("final_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
   c->map.order=1;
@@ -104,7 +104,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   std::vector<arr> demos;
   arr q0;
@@ -120,12 +120,12 @@ int main(int argc,char **argv) {
     /// run cma
     cma.step(samples, values);
 //    cout << exp(samples) << endl;
-    MT::timerStart(true);
+    mlr::timerStart(true);
     for(uint i=0;i<samples.d0;i++) {
       /// simulate parameters for each scenario
       costs = 0.;
       std::vector<std::future<arr>> runs;
-      double t_d = MT::timerRead();
+      double t_d = mlr::timerRead();
       uint j = 0;
       while (j < demos.size()) {
         yRef1 = demos.at(j);
@@ -141,7 +141,7 @@ int main(int argc,char **argv) {
       }
       values(i) = costs/demos.size();
     }
-    cout <<"Time: "<< MT::timerPause() << endl;
+    cout <<"Time: "<< mlr::timerPause() << endl;
     cout <<"Min Value: " << values.min() << endl;
   }
   arr optParam = samples[values.minIndex()];

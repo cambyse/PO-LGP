@@ -6,11 +6,11 @@
 #include <JK/utils/sampler.h>
 #include <JK/utils/featureGenerator.h>
 
-class LogisticRegressionEvaluator : public Evaluator<MT::Array<arr> > {
+class LogisticRegressionEvaluator : public Evaluator<mlr::Array<arr> > {
     sLogisticRegression* p;
   public:
     LogisticRegressionEvaluator(sLogisticRegression* p, const ActiveLearningProblem& prb) : p(p), problem(prb) {};
-    double evaluate(MT::Array<arr>& sample);
+    double evaluate(mlr::Array<arr>& sample);
     const ActiveLearningProblem problem;
 };
 
@@ -39,7 +39,7 @@ void createClassMatrix(arr& matrix, const intA& classes, const uint nClasses) {
   
 }
 
-double LogisticRegressionEvaluator::evaluate(MT::Array<arr>& sample) {
+double LogisticRegressionEvaluator::evaluate(mlr::Array<arr>& sample) {
   arr Phi, x;
   flatten(x, sample);
   problem.generator->makeFeatures(Phi, x);
@@ -50,9 +50,9 @@ double LogisticRegressionEvaluator::evaluate(MT::Array<arr>& sample) {
 
 LogisticRegression::LogisticRegression(ActiveLearningProblem& prob) : s(new sLogisticRegression) {
   this->problem = prob;
-  s->ridge = MT::getParameter<double>("ridge",1e-10);
-  s->rbfConst = MT::getParameter<int>("rbfConst", 0);
-  s->sigma = MT::getParameter<double>("sigma", 0.1);
+  s->ridge = mlr::getParameter<double>("ridge",1e-10);
+  s->rbfConst = mlr::getParameter<int>("rbfConst", 0);
+  s->sigma = mlr::getParameter<double>("sigma", 0.1);
 }
 
 //void sLogisticRegression::makeFeatures(arr& Z, const arr& X, const arr& Xtrain ) {
@@ -87,7 +87,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
   int invtime = 0;
   for(uint k=0; k<100; k++){
     f = X*beta;
-    for(uint i=0; i<f.N; i++) MT::clip(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
+    for(uint i=0; i<f.N; i++) mlr::clip(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
     p = exp(f);
     logLike=0.;
     for(uint i=0; i<n; i++){
@@ -135,7 +135,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
 }
 
 
-void LogisticRegression::setTrainingsData(const MT::Array<arr>& data, const intA& classes) {
+void LogisticRegression::setTrainingsData(const mlr::Array<arr>& data, const intA& classes) {
   arr X, x, Phi, matrix;
   
   flatten(x, data);
@@ -147,7 +147,7 @@ void LogisticRegression::setTrainingsData(const MT::Array<arr>& data, const intA
   problem.generator->makeFeatures(Phi,x);
   s->logisticRegressionMultiClass(s->beta, Phi, matrix, s->ridge);
 }
-void LogisticRegression::addData(const MT::Array<arr>& data, const int class_) {
+void LogisticRegression::addData(const mlr::Array<arr>& data, const int class_) {
   arr x;
   flatten(x, data);
   s->data.append(x);
@@ -160,11 +160,11 @@ void LogisticRegression::addData(const MT::Array<arr>& data, const int class_) {
   s->logisticRegressionMultiClass(s->beta, Phi, s->classes, s->ridge);
   
 }
-int LogisticRegression::nextSample(MT::Array<arr>& sample) const {
-  rejectionSampling<MT::Array<arr> >(sample, problem.sampler, new LogisticRegressionEvaluator(s, problem), 100);
+int LogisticRegression::nextSample(mlr::Array<arr>& sample) const {
+  rejectionSampling<mlr::Array<arr> >(sample, problem.sampler, new LogisticRegressionEvaluator(s, problem), 100);
   return sample.N;
 }
-int LogisticRegression::classify(const MT::Array<arr>& data, const int set) const {
+int LogisticRegression::classify(const mlr::Array<arr>& data, const int set) const {
   arr Phi, x;
   flatten(x, data);
   problem.generator->makeFeatures(Phi, x);

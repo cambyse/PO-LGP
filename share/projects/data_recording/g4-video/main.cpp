@@ -29,7 +29,7 @@ void display(G4Data &g4d) {
   arr quat = g4d.query("quat");
 
   String videoname;
-  MT::getParameter(videoname, "video");
+  mlr::getParameter(videoname, "video");
   VideoEncoder_x264_simple video(videoname, 120, 0, true);
 
   OpenGL gl;
@@ -53,15 +53,15 @@ void display(G4Data &g4d) {
 }
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   G4Data g4d;
 
   // load data
-  MT::String meta, poses;
+  mlr::String meta, poses;
   // TODO remmeber that you changed the g4data load function.. now meta and poses files have specific names
-  MT::getParameter(meta, "meta");
-  MT::getParameter(poses, "poses");
+  mlr::getParameter(meta, "meta");
+  mlr::getParameter(poses, "poses");
   g4d.load("./", true);
 
   display(g4d);

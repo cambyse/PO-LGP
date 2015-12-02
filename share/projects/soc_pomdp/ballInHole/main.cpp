@@ -149,23 +149,23 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   //-- setup the motion problem
   Task *pos = P.addTask("position",
                             new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  pos->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1,.7)));
-  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1.);
+  cons->setCostSpecs(0, P.T, {0.}, 1.);
 
   //-- convert
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
 
   //-- optimize
-  MT::timerStart();
+  mlr::timerStart();
   optConstrained(x, dual, Convert(MF));
-  cout <<"** optimization time = " <<MT::timerRead() <<endl;
+  cout <<"** optimization time = " <<mlr::timerRead() <<endl;
   P.dualMatrix = dual;
   P.costReport(false);
 
@@ -201,7 +201,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   ors::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world,false);
   //MC.nullSpacePD.active=false;
@@ -237,7 +237,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 
   cout<< allx.nd << "  "<<ally.nd << "  "<<alldual.nd<<endl;
 
-  MT::Array<bool> particles;
+  mlr::Array<bool> particles;
   particles.resize(allx.d0);
   uint eligible_counts = allx.d0;
   uint index = 0, prev=index;
@@ -324,7 +324,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -335,7 +335,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 
 /////////////////////////////////////////////////
@@ -345,15 +345,15 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 /// \return
 ///
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   //peg_in_a_hole();
   //ball_in_a_hole(); 
 
   //ors::KinematicWorld world("pegInAHole.ors");
-  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
 
   uint T = 200;
 
@@ -395,7 +395,7 @@ int main(int argc,char **argv){
        allDual[i]() = dual;
    }
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
   cout<<allDual[0]<<endl;
 

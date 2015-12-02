@@ -34,7 +34,7 @@ void createWorld(ors::KinematicWorld &G){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   ors::KinematicWorld G;
   createWorld(G);
@@ -65,7 +65,7 @@ int main(int argc,char** argv){
   }else{
     c = MP.addTask("collision",
                    new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
-    MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
+    c->setCostSpecs(0, MP.T, {0.}, 1e-0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -103,10 +103,10 @@ int main(int argc,char** argv){
     }
   }else{
     for(uint k=0;k<5;k++){
-      MT::timerStart();
+      mlr::timerStart();
       optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrict=(!k?15:5), damping=.1));
 
-      cout <<"** optimization time=" <<MT::timerRead() <<endl;
+      cout <<"** optimization time=" <<mlr::timerRead() <<endl;
       //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
       MP.costReport();
       checkJacobian(Convert(MF), x, 1e-5);

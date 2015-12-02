@@ -4,15 +4,15 @@
 
 //===========================================================================
 
-struct EndStateProgram:ConstrainedProblemMix{
+struct EndStateProgram:ConstrainedProblem{
   ors::KinematicWorld& world;
   Graph& symbolicState;
   int verbose;
   EndStateProgram(ors::KinematicWorld& world, Graph& symbolicState, int verbose)
     : world(world), symbolicState(symbolicState), verbose(verbose){
-    ConstrainedProblemMix::operator=(
-      [this](arr& phi, arr& J, TermTypeA& tt, const arr& x) -> void {
-        return this -> phi(phi, J, tt, x);
+    ConstrainedProblem::operator=(
+      [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+        return this -> phi(phi, J, H, tt, x);
       }
     );
   }
@@ -153,7 +153,7 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
   opt.run();
   checkJacobianCP(f, x, 1e-4);
   world.setJointState(x);
-  return opt.UCP.get_sumOfSquares();
+  return opt.UCP.get_costs();
 }
 
 //===========================================================================

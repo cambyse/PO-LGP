@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <Core/array.h>
 #include <Ors/ors.h>
@@ -8,8 +8,8 @@
 void displayLaserFile(const char *filename){
   uint t,j;
   ifstream is;
-  MT::open(is,filename);
-MT::IOraw = true;
+  mlr::open(is,filename);
+mlr::IOraw = true;
 	ofstream os3("frame3d");
   
   ors::Transformation f;
@@ -31,7 +31,7 @@ MT::IOraw = true;
     os3 << f.pos << " " << x << " " << y << " " << z  << " " << line.d0 << endl; os3.flush();
   }
   cout <<"loaded " <<pointCloud.d0 <<" points" <<endl;
-  MT::IOraw = true;
+  mlr::IOraw = true;
   pointCloud >>FILE("data3d");
   OpenGL gl;
   gl.add(glDrawPlot,&plotModule);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
   if (argc == 1)
     displayLaserFile("../../../robot/test/actions/z.laser");
   else
-    displayLaserFile(MT::String(argv[1]));		
+    displayLaserFile(mlr::String(argv[1]));		
   return 0;
 }
 

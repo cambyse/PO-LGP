@@ -79,7 +79,7 @@ public:
 
   void init_ors(int argc, char** argv)
   {
-    MT::initCmdLine(argc,argv);
+    mlr::initCmdLine(argc,argv);
 
     init(G, gl, "../git/mlr/share/examples/Motion/pfc/model.kvg");
     makeConvexHulls(G.shapes);
@@ -93,8 +93,8 @@ public:
     Task *c;
     c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
-    P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+    c->setCostSpecs(P.T, P.T,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                                {0.,0.,0.}, 1e3,
@@ -102,14 +102,14 @@ public:
 
     if (useOrientation) {
       c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
-      P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+      c->setCostSpecs(P.T, P.T,
                               {0.,0.,-1.}, 1e4,
                               {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
       c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-      P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
+      c->setCostSpecs(0, P.T, {0.}, 1e0);
     }
 
     //-- set start position for optimizer

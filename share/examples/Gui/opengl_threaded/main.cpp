@@ -4,20 +4,23 @@
 void draw1(void*){
   glStandardLight(NULL);
   glColor3f(1,0,0);
+  //glDrawBox(1.,1.,1.);
   glutSolidTeapot(1.);
 }
 
 struct Proc:public Thread{
   OpenGL *gl;
-  Proc(const char* name):Thread(name){};
+  Proc(const char* name):Thread(name, 0.01){};
   void open(){
     gl = new OpenGL(name);
     gl->add(draw1);
+    gl->update();
   }
   void close(){
     delete gl;
   }
   void step(){
+    HALT("you're never here, because theyr' not looped?")
     gl->update();
   }
 };
@@ -26,12 +29,12 @@ void TEST(ThreadedOpenGL) {
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
   gl1.threadOpen();
   gl2.threadOpen();
-  MT::wait(2.);
+  mlr::wait(2.);
   gl1.threadClose();
   gl2.threadClose();
 
   Proc *gli;
-  MT::Array<MT::String> names;
+  mlr::Array<mlr::String> names;
   ThreadL procs;
   for (int i=0; i<20; ++i){
     names.append(STRING("many_"<<i));
@@ -39,12 +42,12 @@ void TEST(ThreadedOpenGL) {
     gli->threadOpen();
     procs.append(gli);
   }
-  MT::wait(5.);
+  mlr::wait(5.);
   close(procs);
 }
 
 int MAIN(int argc, char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   testThreadedOpenGL();
 

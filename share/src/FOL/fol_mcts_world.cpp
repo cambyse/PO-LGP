@@ -1,6 +1,7 @@
-#include <Core/array-vector.h>
 #include "fol_mcts_world.h"
 #include "fol.h"
+
+#define DEBUG(x) x
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
@@ -13,49 +14,144 @@ void FOL_World::Decision::write(ostream& os) const{
       os <<r.elem(i)->keys.last() <<'/' <<substitution.elem(i)->keys.last() <<' ';
     }
 #else
-    os <<rule->keys.last() <<"( ";
-    for(uint i=0;i<substitution.N;i++){ if(i) os <<", ";  os <<substitution.elem(i)->keys.last(); }
-    os <<" )";
+    os <<'(' <<rule->keys.last();
+    for(uint i=0;i<substitution.N;i++){ os <<' ' <<substitution.elem(i)->keys.last(); }
+    os <<')' <<flush;
 #endif
   }
 }
 
-FOL_World::FOL_World(const char* KB_file):KB(*new Graph(KB_file)), state(NULL), tmp(NULL), verbose(4){
-  FILE("z.init") <<KB;
+FOL_World::FOL_World()
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {}
+
+FOL_World::FOL_World(istream& is)
+    : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
+      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
+      generateStateTree(false),
+      lastStepDuration(0.), lastStepProbability(1.), count(0) {
+  init(is);
+}
+
+void FOL_World::init(istream& is){
+  KB.read(is);
+  FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
-  start_state = &KB["START_STATE"]->graph();
-  terminal = &KB["terminal"]->graph(); //TODO: replace by QUIT state predicate!
+
+  start_state = &KB.get<Graph>("START_STATE");
+  rewardFct = &KB.get<Graph>("REWARD");
+  worldRules = KB.getNodes("Rule");
   decisionRules = KB.getNodes("DecisionRule");
-  constants = KB.getNodes("Constant");
-  Terminate_keyword = KB["Terminate"];
+  Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
+  Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
+  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, new bool(true), true);
+
+  Graph *params = KB.getValue<Graph>("FOL_World");
+  if(params){
+    hasWait = params->get<bool>("hasWait", hasWait);
+    gamma = params->get<double>("gamma", gamma);
+    stepCost = params->get<double>("stepCost", stepCost);
+    timeCost = params->get<double>("timeCost", timeCost);
+    deadEndCost = params->get<double>("deadEndCost", deadEndCost);
+  }
 
   if(verbose>1){
     cout <<"****************** FOL_World: creation info:" <<endl;
     cout <<"*** start_state=" <<*start_state <<endl;
-    cout <<"*** terminal query=" <<*terminal <<endl;
-    cout <<"*** constants = "; listWrite(constants, cout); cout <<endl;
+    cout <<"*** reward fct=" <<*rewardFct <<endl;
+    cout <<"*** worldRules = "; listWrite(worldRules, cout); cout <<endl;
     cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
   }
-  MT::open(fil, "z.FOL_World");
+  mlr::open(fil, "z.FOL_World");
 
+  start_T_step=0;
+  start_T_real=0.;
   reset_state();
 }
 
 FOL_World::~FOL_World(){
-  delete &KB; //the reference new'ed in the constructor
 }
 
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
   double reward=0.;
   T_step++;
-  reward -= 0.1; //cost per step
+  reward -= stepCost;
+
+  //-- store the old state; make a new state that is child of the old
+  if(generateStateTree){
+    Node *new_state = new Node_typed<Graph>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph(), true);
+    new_state->graph().copy(*state, &KB);
+    state = &new_state->graph();
+    DEBUG(KB.checkConsistency());
+  }
 
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
 
+  //-- get the decision
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
+
+  //-- remove the old decision-fact, if exists
+#if 0
+  if(lastDecisionInState) delete lastDecisionInState;
+#else
+  for(uint i=state->N;i--;){
+    Node *n=state->elem(i);
+    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+  }
+#endif
+
+  //-- add the decision as a fact
+  if(!d->waitDecision){
+    NodeL decisionTuple = {d->rule};
+    decisionTuple.append(d->substitution);
+    lastDecisionInState = createNewFact(*state, decisionTuple);
+  }
+
+  //-- check for rewards
+  if(rewardFct){
+    reward += evaluateFunction(*rewardFct, *state, verbose-3);
+
+#if 0
+  double rValue=0.;
+  if(rewardFct) for(Node *rTerm:*rewardFct){
+    if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
+    else{
+      CHECK(rTerm->getValueType()==typeid(Graph),"");
+      Graph& rCase=rTerm->graph();
+#if 0
+      if(rCase.N==1){
+        CHECK(rCase(0)->getValueType()==typeid(Graph),"");
+        if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
+      }
+      if(rCase.N>=2){
+        CHECK(rCase.last(-2)->getValueType()==typeid(Graph),"");
+        CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
+        if(rCase.last(-1)->parents(0)==d->rule){
+          if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
+        }
+      }
+#else
+      NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
+      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
+        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
+      }else{
+        if(subs.d0) reward += rValue;
+      }
+#endif
+    }
+#endif
+  }else{
+    if(successEnd) reward += 100.;
+  }
+
+  //-- apply effects of decision
   if(d->waitDecision){
+    CHECK(hasWait,"");
+
     //-- find minimal wait time
     double w=1e10;
     for(Node *i:*state){
@@ -68,12 +164,13 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
-      reward -= 10.;
-//      if(Ndecisions==1) deadEnd=true;
+      reward -= 10.*timeCost;
+      lastStepDuration=10.;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
-      reward -= w; //cost per real time
+      reward -= w*timeCost; //cost per real time
+      lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->getValueType()==typeid(double)){
@@ -85,31 +182,17 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
       //-- for all these activities call the terminate operator
       for(Node *act:terminatingActivities){
-#if 0
-        Node *predicate = act->parents(0);
-        Node *rule = KB.getChild(Terminate_keyword, predicate);
-        if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
-        Node *effect = rule->graph().last();
-        NodeL vars = getSymbolsOfScope(rule->graph());
-        NodeL subs(vars.N); subs.setZero();
-        CHECK(vars.N==act->parents.N-1,"");
-        for(uint i=0;i<vars.N;i++) subs(i) = act->parents(i+1);
-
-        if(verbose>2) cout <<"*** terminating activity '" <<*act <<"' with rule '" <<*rule <<endl;
-        if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(subs, cout); cout <<endl; }
-        applyEffectLiterals(*state, effect->graph(), subs, &rule->graph());
-#else
         NodeL symbols;
         symbols.append(Terminate_keyword);
         symbols.append(act->parents);
         createNewFact(*state, symbols);
-#endif
       }
     }
-  }else{
+  }else{ //normal decision
     //first check if probabilistic
     Node *effect = d->rule->graph().last();
     if(effect->getValueType()==typeid(arr)){
+      HALT("probs in decision rules not properly implemented (observation id is not...)");
       arr p = effect->V<arr>();
       uint r = sampleMultinomial(p);
       effect = d->rule->graph().elem(-1-p.N+r);
@@ -118,25 +201,31 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
   }
 
-#if 1 //generic world transitioning
+  //-- generic world transitioning
   int decisionObservation = 0;
-  forwardChaining_FOL(KB, NULL, NoGraph, verbose-3, &decisionObservation);
-#endif
+  forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &decisionObservation);
 
-  //-- check for terminal
-  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+  //-- check for QUIT
+//  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+  successEnd = getEqualFactInKB(*state, Quit_literal);
   deadEnd = (T_step>100);
 
-  if(deadEnd) reward -= 100.;
-  if(successEnd) reward += 100.;
+
+  //-- delete decision fact again
+  //if(decision) delete decision;
+
+  if(deadEnd) reward -= deadEndCost;
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
-  fil <<"--\n  T_step=" <<T_step;
-  fil <<"\n  decision="; d->write(fil);
-  fil <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}");
-  fil <<"\n  reward=" <<reward <<endl;
+  if(verbFil){
+      fil <<"--\n  T_step=" <<T_step;
+      fil <<"\n  decision="; d->write(fil);
+      fil <<"\n  T_real=" <<T_real;
+      fil <<"\n  observation=" <<decisionObservation;
+      fil <<"\n  reward=" <<reward;
+      fil <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
+  }
 
-  //reward=0.;
   R_total += reward;
 
   return {Handle(new Observation(decisionObservation)), reward};
@@ -144,10 +233,13 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"****************** FOL_World: Computing possible decisions" <<flush;
-  MT::Array<Handle> decisions; //tuples of rule and substitution
-  decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  mlr::Array<Handle> decisions; //tuples of rule and substitution
+  if(hasWait){
+    decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
+  }
   for(Node* rule:decisionRules){
-    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+//    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
+    NodeL subs = getRuleSubstitutions2(*state, rule, verbose-3 );
     for(uint s=0;s<subs.d0;s++){
         decisions.append(Handle(new Decision(false, rule, subs[s], decisions.N))); //a grounded rule decision (abstract rule with substution)
     }
@@ -156,85 +248,85 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
 //  Ndecisions=decisions.N;
-  return VECTOR(decisions);
+  return conv_arr2stdvec(decisions);
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
-    return Handle(new State());
+  return Handle(new State());
 }
 
 bool FOL_World::is_terminal_state() const{
   if(deadEnd){
     if(verbose>0) cout <<"************* FOL_World: DEAD END STATE (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
-    (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
-    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    if(verbFil) {
+        (*((ofstream*)&fil)) <<"--\n  DEAD END STATE";
+        (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    }
     return true;
   }
   //-- test the terminal state
   if(successEnd){
     if(verbose>0) cout <<"************* FOL_World: SUCCESS STATE FOUND (T_steps=" <<T_step <<", T_real="<<T_real <<") ************" <<endl;
     if(verbose>1){ cout <<"*** FINAL STATE = "; state->write(cout, " "); cout <<endl; }
-    (*((ofstream*)&fil)) <<"--\n  SUCCESS STATE";
-    (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    if(verbFil) {
+        (*((ofstream*)&fil)) <<"--\n  SUCCESS STATE";
+        (*((ofstream*)&fil)) <<"\n  total reward=" <<R_total <<endl;
+    }
     return true;
   }
   return false;
 }
 
 void FOL_World::make_current_state_default() {
-#if 0
-  delete start_state->isNodeOfParentGraph;
-  start_state = new Graph();
-#endif
   start_state->copy(*state, &KB);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
-  KB.checkConsistency();
+  start_T_step = T_step;
+  start_T_real = T_real;
+  DEBUG(KB.checkConsistency();)
   if(verbose>1) cout <<"****************** FOL_World: reassign start state" <<endl;
   if(verbose>1){ cout <<"*** start_state = "; start_state->write(cout, " "); cout <<endl; }
-  fil <<"*** reassign start state ***" <<endl;
-  fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl;
+  if(verbFil) {
+      fil <<"*** reassign start state ***" <<endl;
+      fil <<"  start_state="; start_state->write(fil," ","{}"); fil <<endl;
+  }
 }
 
 void FOL_World::reset_state(){
   FILE("z.before") <<KB;
-  T_step=0;
-  T_real=0.;
+  T_step=start_T_step;
+  T_real=start_T_real;
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-//  Ndecisions=0;
-#if 0
-  KB.checkConsistency();
-  if(state) delete state->isNodeOfParentGraph;
-  state = new Graph();
-#endif
   if(!state) state = new Graph();
   state->copy(*start_state, &KB);
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   state->isNodeOfParentGraph->keys(0)="STATE";
-  //  new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(start_state), true);
 
   if(tmp) delete tmp->isNodeOfParentGraph;
   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
   tmp   = &KB["TMP"]->graph();
 
-  KB.checkConsistency();
+  DEBUG(KB.checkConsistency();)
   FILE("z.after") <<KB;
 
+  //-- forward chain rules
+  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, NoGraph, verbose-3); //, &decisionObservation);
+
   //-- check for terminal
-  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+//  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+  successEnd = getEqualFactInKB(*state, Quit_literal);
 
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
   if(verbose>1){ cout <<"*** state = "; state->write(cout, " "); cout <<endl; }
 
-  fil <<"*** reset ***" <<endl;
-  fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
+  if(verbFil){
+      fil <<"*** reset ***" <<endl;
+      fil <<"  T_step=" <<T_step <<"\n  T_real=" <<T_real <<endl;
+      fil <<"  state="; state->write(fil," ","{}"); fil <<endl;
+  }
 }
-
-// void FOL_World::write_current_state(ostream& os){
-//   state->write(os," ","{}");
-// }
 
 bool FOL_World::get_info(InfoTag tag) const{
   switch(tag){
@@ -254,12 +346,28 @@ bool FOL_World::get_info(InfoTag tag) const{
 
 double FOL_World::get_info_value(InfoTag tag) const{
   switch(tag){
-    case getMaxReward: return 1.;
-    case getMinReward: return 0.;
+    case getGamma: return gamma;
+    case getMaxReward: return 100.;
+    case getMinReward: return -deadEndCost;
     default: HALT("unknown tag" <<tag);
   }
 }
 
-void FOL_World::write_current_state(ostream& os){
-    state->write(os," ","{}");
+void FOL_World::write_state(ostream& os){
+  state->write(os," ","{}");
+}
+
+void FOL_World::set_state(mlr::String& s){
+  state->clear();
+  s >>"{";
+  state->read(s);
+}
+
+Graph*FOL_World::getState(){
+  return state;
+}
+
+void FOL_World::setState(Graph *s){
+  state = s;
+  CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
 }

@@ -54,7 +54,7 @@ void TEST(CoveringSphere){
 
   cout <<"point = " <<x <<endl;
   cout <<"cr_init=" <<cr <<endl;
-  checkAllGradients(F, cr, 1e-4);
+  checkJacobianCP(F, cr, 1e-4);
   optConstrained(cr, NoArr, F);
   cout <<"cr_opt=" <<cr <<endl;
 }
@@ -62,7 +62,7 @@ void TEST(CoveringSphere){
 //==============================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   ChoiceConstraintFunction F;
 //  RandomLPFunction F;

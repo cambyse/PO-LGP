@@ -54,7 +54,7 @@ public:
 
   void init_ors(int argc, char** argv)
   {
-    MT::initCmdLine(argc,argv);
+    mlr::initCmdLine(argc,argv);
 
     init(G, gl, "/home/peter/git/mlr/share/examples/Motion/pfc/model.kvg");
     makeConvexHulls(G.shapes);
@@ -68,14 +68,14 @@ public:
     Task *c;
     c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
                                {0.,0.,0.}, 1e3,
                                {0.,0.,0.}, 0.);
 
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+                            conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {
@@ -125,7 +125,7 @@ public:
       xRef = ~cat(~xRef,~xRefVec);
     }
 
-    goalMO = new MObject(&G, MT::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
+    goalMO = new MObject(&G, mlr::String("goal"), MObject::GOAL , 0.00, {0.,1.,0.});
     x0 = xRef[0];
 
     pfc = new Pfc(G, xRef,T,x0, *goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);

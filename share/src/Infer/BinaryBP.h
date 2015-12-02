@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_BinaryBP_h
-#define MT_BinaryBP_h
+#ifndef MLR_BinaryBP_h
+#define MLR_BinaryBP_h
 
 #include <math.h>
 #include <Core/array.h>
@@ -59,8 +59,8 @@ struct BinaryPairFG { //minimalistic representation of a binary pair-wise FG
 struct BinaryBPNet {
   struct node;
   struct edge;
-  MT::Array<node*> nodes;
-  MT::Array<edge*> edges;
+  mlr::Array<node*> nodes;
+  mlr::Array<edge*> edges;
   uint steps;
   bool firstGrad;
   
@@ -126,7 +126,7 @@ struct BinaryBPNet {
 
 struct BinaryBPNet::node {
   //uint id;
-  MT::Array<edge*> edges;
+  mlr::Array<edge*> edges;
   double theta;
   double b, b_old[HIST];
   bool conditioned;
@@ -159,7 +159,7 @@ struct BinaryBPGrid {
   void discount(float gamma=.8);
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "BinaryBP.cpp"
 #endif
 

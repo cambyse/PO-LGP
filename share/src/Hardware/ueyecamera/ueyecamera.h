@@ -6,7 +6,7 @@
 
 struct sUEyeInterface;
 
-namespace MLR {
+namespace mlr {
 class UEyeInterface {
 private:
 	struct sUEyeInterface *s;

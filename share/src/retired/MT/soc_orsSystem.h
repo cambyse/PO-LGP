@@ -15,8 +15,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#ifndef MT_socSystem_ors_h
-#define MT_socSystem_ors_h
+#ifndef MLR_socSystem_ors_h
+#define MLR_socSystem_ors_h
 /**
  * @file
  * @ingroup group_soc
@@ -58,7 +58,7 @@ struct OrsSystem: ControlledSystem {
   uint get_qDim();
   ors::KinematicWorld& getOrs();
   SwiftInterface& getSwift();
-  MT::Array<TaskVariable*>& vars();
+  mlr::Array<TaskVariable*>& vars();
 
   /// @name implementations of virtual methods
   uint get_T();
@@ -75,7 +75,7 @@ struct OrsSystem: ControlledSystem {
   void getControlCosts(arr& H, arr& Hinv, uint t);
   void getTaskCosts(arr& phi, arr& phiJ, uint t);
   void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false);
-  void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t);
+  void getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t);
 };
 
 /** @} */

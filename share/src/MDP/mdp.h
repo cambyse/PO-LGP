@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_mdp_help_h
-#define MT_mdp_help_h
+#ifndef MLR_mdp_help_h
+#define MLR_mdp_help_h
 
 #include <Core/array.h>
 
@@ -31,8 +31,8 @@ namespace infer {
 struct Variable;
 struct Factor;
 
-typedef MT::Array<Variable*> VariableList;
-typedef MT::Array<Factor*>   FactorList;
+typedef mlr::Array<Variable*> VariableList;
+typedef mlr::Array<Factor*>   FactorList;
 }
 
 
@@ -50,7 +50,7 @@ struct MDP {
   arr Pyxa;  ///< observation probs
   arr Rax;   ///< reward expectation as a function of (action, x_before)
   double gamma; ///< discounting factor
-  MT::Array<uintA> neighbors; ///< state neighbor lists (for sparse worlds)
+  mlr::Array<uintA> neighbors; ///< state neighbor lists (for sparse worlds)
 };
 
 /// struct to store a generic structured MDP or POMDP
@@ -285,7 +285,7 @@ void getMaxPxxMap(uintA& PxxMap, const arr& Pxax, const arr& pi);
 
 //===========================================================================
 //
-// display routines (when compiled with MT_FREEGLUT)
+// display routines (when compiled with MLR_FREEGLUT)
 //
 
 void showMaze();
@@ -302,7 +302,7 @@ void glDisplayRedBlue(const arr& x, uint d0, uint d1, bool wait, uint win);
 
 }//end of namespace mdp
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "mdp.cpp"
 #  include "mdp_solvers.cpp"
 #  include "mdp_opengl.cpp"

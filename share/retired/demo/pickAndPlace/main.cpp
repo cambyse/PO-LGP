@@ -4,7 +4,7 @@
 #include <hardware/kinect.h>
 #include <hardware/hardware.h>
 
-#ifdef PCL
+#ifdef MLR_PCL
 #include <pcl/visualization/pcl_visualizer.h>
 #endif
 
@@ -26,7 +26,7 @@ SET_LOG(main, DEBUG);
 #include "behaviors.h"
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   //ThreadInfoWin win;
   //win.threadLoopWithBeat(.1);
   
@@ -56,7 +56,7 @@ int main(int argc,char** argv){
   ProcessL Perception = newPointcloudProcesses(1);
   Perception(0)->threadOpen();
  
-  while(objectClusters.get_point_clouds(NULL).N == 0) MT::wait(0.1);
+  while(objectClusters.get_point_clouds(NULL).N == 0) mlr::wait(0.1);
 
 
 
@@ -114,7 +114,7 @@ int main(int argc,char** argv){
   }
 
   for(uint l=0; l<100; ++l) {
-    MT::wait(1.);
+    mlr::wait(1.);
     //viewer.updatePointCloud(kinectData3d.get_point_cloud(NULL), "cluster");
     plist = objectClusters.get_point_clouds(NULL);
     for(int i = 0; i < plist.N; ++i) {
@@ -160,7 +160,7 @@ int main(int argc,char** argv){
   }
 #endif
 
-  MT::wait(1300);
+  mlr::wait(1300);
   //cam.threadClose();
   ctrl->threadClose();
   close(hardware);

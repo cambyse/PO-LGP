@@ -20,9 +20,9 @@
 
 //graph representations
 uintA E; //Nx2 array of edge tuples
-MT::Array<uintA> del; //array of in-neighbors lists
+mlr::Array<uintA> del; //array of in-neighbors lists
 
-void EdgesToNeighbors(MT::Array<uintA>& del, uint N, const uintA& E){
+void EdgesToNeighbors(mlr::Array<uintA>& del, uint N, const uintA& E){
   uint i;
   del.resize(N);
   for(i=0; i<E.d0; i++) del(E(i, 1)).append(i);

@@ -1,4 +1,4 @@
-#ifdef PCL
+#ifdef MLR_PCL
 
 #include <hardware/kinect.h>
 #include <perception/pointcloud.h>

@@ -75,7 +75,7 @@ void MarcsRobotTask::watchTrajectory(){
   gui.gl->drawers.popLast();
 }
 
-#ifdef MT_NILS
+#ifdef MLR_NILS
 vision::ObjectList objects_db;
 bool is_loaded = false;
 void loadObjects(){
@@ -217,7 +217,7 @@ void MarcsRobotTask::planGraspTrajectory(const char* objShape){
   if(gui.gl) planSys->gl=gui.gl;
   
   arr q;
-  MT::timerStart();
+  mlr::timerStart();
   soc::SocSolver solver;
   solver.init();
   solver.go(*planSys);
@@ -301,7 +301,7 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape, const char* below
   if(gui.gl) gui.gl->add(ors::glDrawGraph, planSys->ors);
   if(gui.gl) planSys->gl=gui.gl;
   
-  MT::timerStart();
+  mlr::timerStart();
   soc::SocSolver solver;
   solver.init();
   solver.go(*planSys);
@@ -323,7 +323,7 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape, const char* below
 
 void MarcsRobotTask::loadTrajectory(const char* filename){
   ifstream fil;
-  MT::open(fil, filename);
+  mlr::open(fil, filename);
   plan_v.readTagged(fil, "v");
   plan_Vinv.readTagged(fil, "Vinv");
   plan_b.readTagged(fil, "b");
@@ -332,15 +332,15 @@ void MarcsRobotTask::loadTrajectory(const char* filename){
 
 void MarcsRobotTask::loadPlainTrajectory(const char* filename){
   ifstream fil;
-  MT::open(fil, filename);
+  mlr::open(fil, filename);
   arr q, qStretch;
   q.readTagged(fil, "q");
   fil.close();
-  soc::interpolateTrajectory(qStretch, q, MT::getParameter<double>("loadPlainTrajectoryStretch"));
+  soc::interpolateTrajectory(qStretch, q, mlr::getParameter<double>("loadPlainTrajectoryStretch"));
   q=qStretch;
   soc::getPhaseTrajectory(plan_v, q, .01/plan_speed);
   plan_Vinv.resize(q.d0, 2*q.d1, 2*q.d1);
-  double prec = MT::getParameter<double>("loadPlainTrajectoryPrec");
+  double prec = mlr::getParameter<double>("loadPlainTrajectoryPrec");
   for(uint t=0; t<q.d0; t++){
     plan_Vinv[t].setDiag(prec);
     for(uint i=q.d1; i<2*q.d1; i++) plan_Vinv[t](i, i)=0.;
@@ -368,7 +368,7 @@ void MarcsRobotTask::waitGamepadClean(){
   for(; !signalStop;){
     gamepad.step();
     if(gamepad.state(0)==0) break;
-    MT::wait(.001);
+    mlr::wait(.001);
   }
 }
 
@@ -460,7 +460,7 @@ void MarcsRobotTask::openHand(const char* objShape){
   for(uint t=0; t<50; t++) NIY; //(); //reiterate stepping to get out of collision...
 }
 
-void MarcsRobotTask::reactivateCollisions(const MT::Array<const char*>& shapes){
+void MarcsRobotTask::reactivateCollisions(const mlr::Array<const char*>& shapes){
   if(signalStop) return;
   const char *s;
   uint i;
@@ -468,7 +468,7 @@ void MarcsRobotTask::reactivateCollisions(const MT::Array<const char*>& shapes){
   ctrl.swift.initActivations(ctrl.ors);
 }
 
-void MarcsRobotTask::reactivateCollisions(const MT::Array<ors::Shape*>& shapes){
+void MarcsRobotTask::reactivateCollisions(const mlr::Array<ors::Shape*>& shapes){
   if(signalStop) return;
   ors::Shape *s;
   uint i;
@@ -476,7 +476,7 @@ void MarcsRobotTask::reactivateCollisions(const MT::Array<ors::Shape*>& shapes){
   ctrl.swift.initActivations(ctrl.ors);
 }
 
-/*void MarcsRobotTask::deactivateInterCollisions(const MT::Array<const char*>& shapes){
+/*void MarcsRobotTask::deactivateInterCollisions(const mlr::Array<const char*>& shapes){
   ors::BodyList L;
   for_list(Type,  s,  shapes) L->setAppend(ors.getShapeByName(s)->body);
   swift.deactivate(L);

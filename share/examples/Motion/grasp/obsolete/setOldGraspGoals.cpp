@@ -6,12 +6,12 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    mlr::getParameter(midPrec, "reachPlanMidPrec");
+    mlr::getParameter(endPrec, "reachPlanEndPrec");
+    mlr::getParameter(palmPrec, "reachPlanPalmPrec");
+    mlr::getParameter(colPrec, "reachPlanColPrec");
+    mlr::getParameter(limPrec, "reachPlanLimPrec");
+    mlr::getParameter(endVelPrec, "reachPlanEndVelPrec");
   }
   
   //set the time horizon
@@ -111,5 +111,5 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   sys.vars.append(V);
   //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, colPrec, 0.);
   //V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, limPrec, 0.);
-  V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, MT::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, mlr::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, mlr::getParameter<double>("reachPlanEndVelPrec"));
 }

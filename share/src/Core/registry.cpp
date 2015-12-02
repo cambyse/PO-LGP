@@ -24,39 +24,27 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<Graph> SingleRegistry;
-
-Graph& registry(){ return SingleRegistry(); }
-
-namespace MT {
-extern std::ifstream cfgFile;
-extern bool cfgFileOpen;
-extern Mutex cfgFileMutex;
-}
-
-extern Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, MT::String prefixedKey);
+Singleton<Graph> registry;
 
 void initRegistry(int argc, char* argv[]){
-
   int n;
   for(n=1; n<argc; n++){
     if(argv[n][0]=='-'){
-      MT::String key(argv[n]+1);
+      mlr::String key(argv[n]+1);
       if(n+1<argc && argv[n+1][0]!='-'){
-        MT::String value;
+        mlr::String value;
         value <<'=' <<argv[n+1];
-        readNode(registry(), value, false, false, key);
-//        new Node_typed<MT::String>(registry(), {key}, {}, new MT::String(argv[n+1]), true);
+        registry().readNode(value, false, false, key);
+//        new Node_typed<mlr::String>(registry(), {key}, {}, new mlr::String(argv[n+1]), true);
         n++;
       }else{
         new Node_typed<bool>(registry(), {key}, {}, new bool(true), true);
       }
     }else{
-      MT_MSG("non-parsed cmd line argument:" <<argv[n]);
+      MLR_MSG("non-parsed cmd line argument:" <<argv[n]);
     }
   }
 
-  MT::openConfigFile();
-  MT::cfgFile >>registry();
-
+  mlr::openConfigFile();
+  globalThings().cfgFile >>registry();
 }

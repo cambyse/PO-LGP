@@ -18,6 +18,27 @@
 
 #pragma once
 #include <Ors/ors.h>
+#include <Optim/optimization.h>
+
+//===========================================================================
+
+struct KOMO{
+  Graph specs;
+  ors::KinematicWorld world;
+  struct MotionProblem *MP;
+  struct MotionProblemFunction *MPF;
+  arr x, dual;
+
+  KOMO(const Graph& specs);
+  void init(const Graph& specs);
+  void setFact(const char* fact);
+  void reset();
+  void step();
+  void run();
+  Graph getReport();
+  void checkGradients();
+  void displayTrajectory(double delay=0.01);
+};
 
 //===========================================================================
 

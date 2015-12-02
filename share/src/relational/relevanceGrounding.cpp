@@ -38,7 +38,7 @@ plan_params PLAN_PARAMS;
 
 uint _tableID;
 
-MT::Array< ObjectInfo* > object_infos;
+mlr::Array< ObjectInfo* > object_infos;
 
 
 /*
@@ -95,7 +95,7 @@ void determineNecessaryObjects(uintA& necessaryObjects, Goal* goal, uintA& objec
   }
   
   // (3) Inhand
-  TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(MT::String("inhand"));
+  TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(mlr::String("inhand"));
   FOR1D(s.pt_prim, i) {
     if (s.pt_prim(i)->pred == p_INHAND) {
       necessaryObjects.append(s.pt_prim(i)->slotAssignments(0));
@@ -191,7 +191,7 @@ void createRelevanceDistribution_random_classwise(RelevanceDistribution& relDist
   // only use clear objects!
   bool isClear;
   FOR1D(objects, i) {
-    isClear = PLAN_PARAMS.le->holds(objects(i), MT::String("clear"), s);
+    isClear = PLAN_PARAMS.le->holds(objects(i), mlr::String("clear"), s);
     if (!isClear) {
       relDist.weights(relDist.obj2id[objects(i)]) = SAMPLE_WEIGHT__LOW;
     }
@@ -238,7 +238,7 @@ void createRelevanceDistribution_learned(RelevanceDistribution& relDist, const T
         break;
       }
     }
-    height = (uint) PLAN_PARAMS.le->getValue(objects(i), MT::String("height"), s);
+    height = (uint) PLAN_PARAMS.le->getValue(objects(i), mlr::String("height"), s);
     
     value = -6.53;
     
@@ -331,14 +331,14 @@ void createRelevanceDistribution_bigBlocks(RelevanceDistribution& relDist, const
   TL::logic_world_interface::bw::calcPiles(s, piles, _tableID);
   
   uint i;
-  TL::Predicate* p_CLEAR = PLAN_PARAMS.le->getPredicate(MT::String("clear"));
+  TL::Predicate* p_CLEAR = PLAN_PARAMS.le->getPredicate(mlr::String("clear"));
   uint obj, size, height;
   FOR1D(s.pt_derived, i) {
     if (s.pt_derived(i)->pred == p_CLEAR) {
       obj = s.pt_derived(i)->slotAssignments(0);
       if (TL::logic_world_interface::bw::isBlock(obj, s, PLAN_PARAMS.le)) {
-        size = (uint) PLAN_PARAMS.le->getValue(obj, MT::String("size"), s);
-        height = (uint) PLAN_PARAMS.le->getValue(obj, MT::String("height"), s);
+        size = (uint) PLAN_PARAMS.le->getValue(obj, mlr::String("size"), s);
+        height = (uint) PLAN_PARAMS.le->getValue(obj, mlr::String("height"), s);
         if (size == SMALL)
           relDist.weights(relDist.obj2id[obj]) = 0.01 * pow(10., height*2);
         else if (size == BIG) {
@@ -398,7 +398,7 @@ void RelevanceGrounding::initPlanParams(LogicEngine* le, RewardType rewardType, 
 }
 
 
-void RelevanceGrounding::setObjectInfos(const MT::Array< ObjectInfo* >& oinfos) {
+void RelevanceGrounding::setObjectInfos(const mlr::Array< ObjectInfo* >& oinfos) {
   object_infos = oinfos;
 }
 
@@ -510,7 +510,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
     
     // (2) determine RELEVANT objects
     // Goal: pick an UNORDERED guy whose gang is almost ordered (and none of his homies is out)
-    TL::Predicate* p_INORDER = PLAN_PARAMS.le->getPredicate(MT::String("inorder"));
+    TL::Predicate* p_INORDER = PLAN_PARAMS.le->getPredicate(mlr::String("inorder"));
     // ordered objects
     uintA objs_inorder;
     FOR1D(s.pt_derived, i) {
@@ -529,7 +529,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
     uintA objs_un_X;
     FOR1D(objs_un, i) {
       uintA gang;
-      LogicEngine::getRelatedObjects(gang, objs_un(i), true, *PLAN_PARAMS.le->getPredicate(MT::String("homies")), s);
+      LogicEngine::getRelatedObjects(gang, objs_un(i), true, *PLAN_PARAMS.le->getPredicate(mlr::String("homies")), s);
       gang.append(objs_un(i));
       FOR1D(gang, k) {
         if (TL::logic_world_interface::bw::isOut(gang(k), s, PLAN_PARAMS.le))
@@ -541,7 +541,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
       }
     }
     // inhand
-    TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(MT::String("inhand"));
+    TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(mlr::String("inhand"));
     uint inhand = TL::UINT_NIL;
     FOR1D(s.pt_prim, i) {
       if (s.pt_prim(i)->pred == p_INHAND) {
@@ -567,7 +567,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
             continue;
           }
           uintA gang;
-          LogicEngine::getRelatedObjects(gang, objs_un_X(i), true, *PLAN_PARAMS.le->getPredicate(MT::String("homies")), s);
+          LogicEngine::getRelatedObjects(gang, objs_un_X(i), true, *PLAN_PARAMS.le->getPredicate(mlr::String("homies")), s);
           gang.append(objs_un_X(i));
           // calc singles of class (objects that are alone in a tower)
           uint singles = 0;
@@ -588,7 +588,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
     }
     else {
       obj_boss = PLAN_PARAMS.le->constants.last();
-      MT_MSG("no more unordered objects with all class members on table!!!")
+      MLR_MSG("no more unordered objects with all class members on table!!!")
     }
     if (DEBUG>1) {PRINT(obj_boss);}
     // build relevance distribution according to boss
@@ -596,7 +596,7 @@ void sampleObjects_clearance(uintA& sampledObjects, const TL::State& s, Goal* go
     objs_emphasized.append(obj_boss);
     if (DEBUG>1) {PRINT(obj_boss);}
     // give high weight to its homies
-    TL::Predicate* p_HOMIES = PLAN_PARAMS.le->getPredicate(MT::String("homies"));
+    TL::Predicate* p_HOMIES = PLAN_PARAMS.le->getPredicate(mlr::String("homies"));
     FOR1D(s.pt_prim, i) {
       if (s.pt_prim(i)->pred == p_HOMIES) {
         if (s.pt_prim(i)->slotAssignments(0) == obj_boss) {
@@ -693,7 +693,7 @@ void RelevanceGrounding::plan_in_single_subnet(PredIA& plan, double& value, cons
   if (DEBUG>0) {cout<<endl<<"RelevanceGrounding::plan_in_single_subnet [START]"<<endl;}
   
   double T_start, T_end;
-  T_start = MT::cpuTime();
+  T_start = mlr::cpuTime();
   
   TL::State s_small;
   PLAN_PARAMS.le->filterState(s_small, s, objects);
@@ -706,17 +706,17 @@ void RelevanceGrounding::plan_in_single_subnet(PredIA& plan, double& value, cons
 //   TL::State s_copy = s;
   sampler.init(objects, PLAN_PARAMS.rules, PLAN_PARAMS.T, &s_small);
   
-  T_end = MT::cpuTime();
+  T_end = mlr::cpuTime();
   if (DEBUG>0) {
     cerr<<endl<<"Time subnet initing: "<<(T_end - T_start)<<"s."<<endl;
     cout<<"Time subnet initing: "<<(T_end - T_start)<<"s."<<endl;
   }
-  T_start = MT::cpuTime();
+  T_start = mlr::cpuTime();
   
   sampler.generatePlan(plan, value, goal, s_small,
             PLAN_PARAMS.no_runs, PLAN_PARAMS.discount, PLAN_PARAMS.T);
   
-  T_end = MT::cpuTime();
+  T_end = mlr::cpuTime();
   if (DEBUG>0) {
     cerr<<endl<<"Time subnet plan generation: "<<(T_end - T_start)<<"s."<<endl;
     cout<<"Time subnet plan generation: "<<(T_end - T_start)<<"s."<<endl;
@@ -789,9 +789,9 @@ void findNearestNeighbors(uintA& neighbors_nearest, const uintA& houseowners, co
 void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, Goal* goal, uint subnets_num, uint verification_num, RelevanceGrounding::RelevanceType relevanceType, uint subnets_size, uint verification_size) {
   uint DEBUG = 3;
   
-  MT::Array< PredIA > plans(subnets_num);
+  mlr::Array< PredIA > plans(subnets_num);
   arr values_reduced(subnets_num);
-  MT::Array< uintA > objects_reduced(subnets_num);
+  mlr::Array< uintA > objects_reduced(subnets_num);
   
   if (subnets_size > PLAN_PARAMS.le->constants.N)
     subnets_size = PLAN_PARAMS.le->constants.N;
@@ -799,7 +799,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
   uint i, k, l;
   
   double t_start_subnets, t_end_subnets, t_end_verinet;
-  t_start_subnets = MT::cpuTime();
+  t_start_subnets = mlr::cpuTime();
   
   // create subnets_num
   for (i=0; i<subnets_num; i++) {
@@ -818,7 +818,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
     values_reduced(i) = value2;
   }
   
-  t_end_subnets = MT::cpuTime();
+  t_end_subnets = mlr::cpuTime();
   if (DEBUG>0) {
     cerr<<endl<<"Time for subnet planning: "<<(t_end_subnets - t_start_subnets)<<"s."<<endl;
     cout<<"Time for subnet planning: "<<(t_end_subnets - t_start_subnets)<<"s."<<endl;
@@ -862,7 +862,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
   // VERIFICATION
   arr values_ver(subnets_num); // indiziert nach partial models!
   values_ver.setUni(-10e10);
-  MT::Array< uintA > objects_ver(subnets_num); // indiziert nach partial models
+  mlr::Array< uintA > objects_ver(subnets_num); // indiziert nach partial models
 
 // #define LOGGING_FOR_LEARNING
 #ifdef LOGGING_FOR_LEARNING
@@ -937,7 +937,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
 
     }
     
-    t_end_verinet = MT::cpuTime();
+    t_end_verinet = mlr::cpuTime();
     if (DEBUG>0) {
       cerr<<endl<<"Time for verification: "<<(t_end_verinet - t_end_subnets)<<"s."<<endl;
       cout<<"Time for verification: "<<(t_end_verinet - t_end_subnets)<<"s."<<endl;
@@ -957,7 +957,7 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
   
 
 #ifdef LOGGING_FOR_LEARNING
-  TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(MT::String("inhand"));
+  TL::Predicate* p_INHAND = PLAN_PARAMS.le->getPredicate(mlr::String("inhand"));
   bool object_inhand = false;
   FOR1D(s.pt_prim, i) {
     if (s.pt_prim(i)->pred == p_INHAND) {
@@ -1030,8 +1030,8 @@ void plan_in_different_subnets(PredIA& plan, double& value, const TL::State& s, 
             break;
         }
         CHECK(q<object_infos.N, "object has information attached: "<<objects_reduced(i)(k));
-        height = (uint) PLAN_PARAMS.le->getValue(objects_reduced(i)(k), MT::String("height"), s_ver);
-        isClear = PLAN_PARAMS.le->holds(objects_reduced(i)(k), MT::String("clear"), s_ver);
+        height = (uint) PLAN_PARAMS.le->getValue(objects_reduced(i)(k), mlr::String("height"), s_ver);
+        isClear = PLAN_PARAMS.le->holds(objects_reduced(i)(k), mlr::String("clear"), s_ver);
         log_file
 //                 <<object_infos(q)->id<<","
                 <<object_infos(q)->type

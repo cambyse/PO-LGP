@@ -106,7 +106,7 @@ void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   ors::Vector vec_i = G.shapes(i)->rel.pos;
 
   arr y_eff, J_eff;
-  G.kinematicsPos(y_eff, (&J?J_eff:NoArr), body_i, &vec_i);
+  G.kinematicsPos(y_eff, (&J?J_eff:NoArr), body_i, vec_i);
 
   y_eff.append(1.); //homogeneous coordinates
   if(&J) J_eff.append(zeros(1,J_eff.d1));
@@ -133,12 +133,12 @@ void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   ors::Body *body_j = j<0?NULL: G.shapes(j)->body;
   ors::Vector pi = body_i ? body_i->X * vec_i : vec_i;
   ors::Vector pj = body_j ? body_j->X * vec_j : vec_j;
-  y = ARRAY(pi-pj);
+  y = conv_vec2arr(pi-pj);
   if(&J) {
     arr Ji, Jj;
-    G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
+    G.kinematicsPos(NoArr, Ji, body_i, vec_i);
     if(body_j){
-      G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
+      G.kinematicsPos(NoArr, Jj, body_j, vec_j);
       J = Ji - Jj;
     }else{
       J = Ji;
@@ -182,7 +182,7 @@ void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
 
   // compute body j orientation
   arr y_j,J_j,J_bar_j;
-  G(G.N-1)->kinematicsVec(y_j,(&J?J_bar_j:NoArr),G(G.N-1)->shapes(j)->body,&jvec);
+  G(G.N-1)->kinematicsVec(y_j, (&J?J_bar_j:NoArr), G(G.N-1)->shapes(j)->body, jvec);
 
   if(&J){
     J_j = zeros(G.N, y_j.N, J_bar_j.d1);
@@ -198,7 +198,7 @@ void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
   J_bar.resize(k+1);
 
   for(uint c=0;c<=k;c++) {
-    G(G.N-1-c)->kinematicsPos(y_bar(c),(&J?J_bar(c):NoArr),G(G.N-1-c)->shapes(i)->body,&ivec);
+    G(G.N-1-c)->kinematicsPos(y_bar(c), (&J?J_bar(c):NoArr), G(G.N-1-c)->shapes(i)->body, ivec);
   }
 
   arr dy_i, dJ_i;

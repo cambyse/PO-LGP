@@ -275,12 +275,12 @@ void UEyeCamera::camExit() {
 void UEyeCamera::startRec() {
   recMutex.lock();
   if(!recflag) {
-    MT::String nowStr;
-    MT::getNowString(nowStr);
+    mlr::String nowStr;
+    mlr::getNowString(nowStr);
 
     for(int c = 0; c < nUsedCams; c++) {
-      MT::String nameStr(STRING("z." << nowStr << "." << name(c) << ".avi"));
-      MT::String timeStr(STRING("z." << nowStr << ".Times" << name(c) << ".dat"));
+      mlr::String nameStr(STRING("z." << nowStr << "." << name(c) << ".avi"));
+      mlr::String timeStr(STRING("z." << nowStr << ".Times" << name(c) << ".dat"));
 
       recworker[c] = new RecWorker(nameStr, timeStr, width, height, fps);
       recthread[c] = new QThread();

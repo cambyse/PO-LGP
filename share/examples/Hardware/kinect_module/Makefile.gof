@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Core System Hardware_kinect Perception Gui Ors
+DEPEND = Core Hardware_kinect Gui Perception
 
 include $(BASE)/gofMake/generic.mk

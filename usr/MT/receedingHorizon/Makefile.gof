@@ -1,7 +1,7 @@
 #BASE = /home/mtoussai/code
 BASE = ../../../share
 
-#CXXFLAGS += -DMT_NO_THREADS
+#CXXFLAGS += -DMLR_NO_THREADS
 
 CPATH := $(CPATH):$(shell pwd)/../../../share/src
 LPATH := $(LPATH):$(shell pwd)/../../../share/src/NP

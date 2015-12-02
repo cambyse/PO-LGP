@@ -2,6 +2,6 @@ BASE = ../../../share
 
 GTK = 1
 
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
+CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES
 
 include $(BASE)/gofMake/generic.mk

@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 //#include <Gui/opengl.h>
 #include <signal.h>
 #include <thread>
@@ -18,7 +18,7 @@
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/flycap/flycap.h>
 
-using namespace MLR;
+using namespace mlr;
 using namespace std;
 using namespace std::placeholders;
 
@@ -28,7 +28,7 @@ private:
 	unsigned int sequence_num;
 
 public:
-	TimeTagFile(const MT::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
+	TimeTagFile(const mlr::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
 
 	}
 	void add_stamp(double timestamp) {
@@ -53,16 +53,16 @@ private:
 	ImagePublisher pub;
 
 protected:
-	MT::String name;
+	mlr::String name;
 	const bool& terminated;
 	bool ready;
 	//byteA buffer;
 	OpenGL gl;
 
 public:
-	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
-		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
+	VideoSave(const char* name, const mlr::String& created, const bool& terminated) :
+		enc(STRING("z." << name << "." << created << ".264"), 60, 0, mlr::PIXEL_FORMAT_RGB8),
+		times(enc.name()), start_time(ULONG_MAX), pub(name, name, mlr::PIXEL_FORMAT_RGB8),
 		name(name), terminated(terminated), ready(false), gl(name) {
 	}
 
@@ -94,9 +94,9 @@ private:
 	FlycapInterface cam;
 
 public:
-	FlycapGrabAndSave(int id, const char* name, const MT::String& created, const bool& terminated) :
+	FlycapGrabAndSave(int id, const char* name, const mlr::String& created, const bool& terminated) :
 		VideoSave(name, created, terminated),
-		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8) {
+		cam(id, mlr::PIXEL_FORMAT_RAW8, mlr::PIXEL_FORMAT_RGB8) {
 	}
 	virtual ~FlycapGrabAndSave() {
 
@@ -124,19 +124,19 @@ int main(int argc,char **argv){
 
 	init_image_publishers(argc, argv, "third_hand_recorder");
 
-	int id1 = MT::getParameter<int>("camID1"),
-			id2 =  MT::getParameter<int>("camID2"),
-			id3 = MT::getParameter<int>("camID3"),
-			id4 = MT::getParameter<int>("camID4");
-	MT::String created(MT::getNowString());
+	int id1 = mlr::getParameter<int>("camID1"),
+			id2 =  mlr::getParameter<int>("camID2"),
+			id3 = mlr::getParameter<int>("camID3"),
+			id4 = mlr::getParameter<int>("camID4");
+	mlr::String created(mlr::getNowString());
 	FlycapGrabAndSave cam1(id1, STRING("pg_cam_" << id1).p, created, terminated);
-	cam1.setActiveTime(MT::clockTime());
+	cam1.setActiveTime(mlr::clockTime());
 	FlycapGrabAndSave cam2(id2, STRING("pg_cam_" << id2).p, created, terminated);
-	cam2.setActiveTime(MT::clockTime());
+	cam2.setActiveTime(mlr::clockTime());
 	FlycapGrabAndSave cam3(id3, STRING("pg_cam_" << id3).p, created, terminated);
-	cam3.setActiveTime(MT::clockTime());
+	cam3.setActiveTime(mlr::clockTime());
 	FlycapGrabAndSave cam4(id4, STRING("pg_cam_" << id4).p, created, terminated);
-	cam4.setActiveTime(MT::clockTime());
+	cam4.setActiveTime(mlr::clockTime());
 
 	std::thread runner1(std::bind(&run, &cam1));
 	std::thread runner2(std::bind(&run, &cam2));

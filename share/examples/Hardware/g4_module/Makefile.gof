@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Hardware_G4 Core System Mocap Perception
+DEPEND = Hardware_G4 Core Mocap Perception
 
 include $(BASE)/gofMake/generic.mk

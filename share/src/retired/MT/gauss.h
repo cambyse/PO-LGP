@@ -21,8 +21,8 @@
     under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
     see the `util.h' file for a full copyright statement  */
 
-#ifndef MT_gauss_h
-#define MT_gauss_h
+#ifndef MLR_gauss_h
+#define MLR_gauss_h
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -134,8 +134,8 @@ struct Gaussian {
 stdPipes(Gaussian);
 inPipe(Gaussian);
 
-typedef MT::Array<Gaussian> GaussianA;
-typedef MT::Array<Gaussian*> GaussianL;
+typedef mlr::Array<Gaussian> GaussianA;
+typedef mlr::Array<Gaussian*> GaussianL;
 
 /// estimate a gaussian from a table of data points \ingroup infer1
 void estimate(Gaussian &g, const arr& X);
@@ -226,7 +226,7 @@ void write(const GaussianA& x, const char* name);
 
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "gauss.cpp"
 #endif
 

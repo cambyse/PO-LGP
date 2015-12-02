@@ -14,7 +14,7 @@ struct ExampleVar:Variable {
 
 
 int main(int argc,char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   cout <<registry() <<endl;
 
@@ -64,10 +64,10 @@ int main(int argc,char** argv) {
     //while looping, the view should autonomously update its content,
     //with the update frequency of the gtkProcess()
     X += .1*randn(5,3);
-    MT::wait(.1);
+    mlr::wait(.1);
   }
 
-  MT::wait();
+  mlr::wait();
   
   return 0;
 }

@@ -78,22 +78,22 @@ class RuleSetContainer_ground {
   const SymbolicExperienceL* p_examples;  // TODO den hier noch const machen
   
   // redundant memories
-  MT::Array< uintA > nonDefaultRules_per_experience;  // only non-default rules!
-  MT::Array< uintA > experiences_per_rule;
+  mlr::Array< uintA > nonDefaultRules_per_experience;  // only non-default rules!
+  mlr::Array< uintA > experiences_per_rule;
   
-  MT::Array< MT::Array < uintA > > experiences_per_ruleOutcome;
+  mlr::Array< mlr::Array < uintA > > experiences_per_ruleOutcome;
   
   RuleSetContainer_ground(const SymbolicExperienceL* _p_examples);
   RuleSetContainer_ground(); // sollte nicht verwendet werden
   
   void init(const SymbolicExperienceL* _p_examples);
-  void append(Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule);
+  void append(Rule* rule, uintA& examples_of_this_rule, mlr::Array< uintA >& examples_per_outcome_of_this_rule);
   void remove(uint id);
   void clear();
   void recomputeDefaultRule();
   void sort();
   
-  void getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_examples, uintA& covered_examples_num) const;
+  void getResponsibilities(arr& responsibilities, mlr::Array< uintA >& covered_examples, uintA& covered_examples_num) const;
   
   void writeNice(ostream& out = std::cout, bool only_action = false) const;
   void write_experiencesWithRules(ostream& os = std::cout) const;
@@ -143,19 +143,19 @@ class SearchOperator_ground {
   protected:
     double alpha_PEN;
     double p_min;
-    MT::String name;
+    mlr::String name;
     bool approximative;
 	
     // Outcomes
-    void calcCoverage_outcomes(const MT::Array< LitL >& outcomes, const SymbolicExperienceL& examples, const Rule* rule, boolA& coverage);
+    void calcCoverage_outcomes(const mlr::Array< LitL >& outcomes, const SymbolicExperienceL& examples, const Rule* rule, boolA& coverage);
     void calcSubsumption(boolA& subsumes, const boolA& coverage);
     // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-    void produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule);
-		void induceOutcomes(Rule* rule, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& covered_examples, const uintA& covered_examples_ids);
+    void produceTrimmedOutcomes(mlr::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule);
+		void induceOutcomes(Rule* rule, mlr::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& covered_examples, const uintA& covered_examples_ids);
 		
         // Parameter learning
-		double learnParameters_constrainedCostfunction(const MT::Array< LitL >& outcomes, doubleA& probs);
-		double learnParameters(const MT::Array< LitL >& outcomes, doubleA& probs);
+		double learnParameters_constrainedCostfunction(const mlr::Array< LitL >& outcomes, doubleA& probs);
+		double learnParameters(const mlr::Array< LitL >& outcomes, doubleA& probs);
         
     // takes the rulelist rules2add and integrates it into existing ruleset
     void integrateNewRules(const RuleSetContainer_ground& rulesC_old, const RuleSetContainer_ground& rules_2add,
@@ -179,7 +179,7 @@ class SearchOperator_ground {
 
     // central method which is called by the RuleLearner
     virtual void createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-                    MT::Array< RuleSetContainer_ground >& sets_of_new_rules);
+                    mlr::Array< RuleSetContainer_ground >& sets_of_new_rules);
     
     const char* getName();
     bool isApproximator() {return approximative;}
@@ -282,7 +282,7 @@ class DropRules_ground : public SearchOperator_ground {
     }
     
     void createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-              MT::Array< RuleSetContainer_ground >& sets_of_new_rules);
+              mlr::Array< RuleSetContainer_ground >& sets_of_new_rules);
     
     // the following two rules are empty
     void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);   
@@ -452,10 +452,10 @@ class CompareFunctionValues : public SearchOperator_ground {
     uint nextTermCombination;
     
     uintA comparisonTypes;
-    MT::Array<uintA> termCombos;
+    mlr::Array<uintA> termCombos;
     FuncL usedFunctions;
     
-    MT::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
+    mlr::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
 
     public:
         CompareFunctionValues(double alpha, double p_min, uint PARAM_OPT_TYPE) : SearchOperator_ground(alpha, p_min, PARAM_OPT_TYPE) {
@@ -494,10 +494,10 @@ class SplitOnCompareFunctionValues : public SearchOperator_ground {
     uint nextFunction;
     uint nextTermCombination;
     uintA comparisonTypes;
-    MT::Array<uintA> termCombos;
+    mlr::Array<uintA> termCombos;
     FuncL usedFunctions;
     
-    MT::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
+    mlr::Array<uintA> coveredExIDsPerComparisonType; // only for debugging
 
     public:
       SplitOnCompareFunctionValues(double alpha, double p_min, uint PARAM_OPT_TYPE) : SearchOperator_ground(alpha, p_min, PARAM_OPT_TYPE) {
@@ -530,7 +530,7 @@ class SplitOnCompareFunctionValues : public SearchOperator_ground {
 
 class RuleLearner_ground {
 
-  MT::Array< SearchOperator_ground* > searchOperators;
+  mlr::Array< SearchOperator_ground* > searchOperators;
   double alpha_PEN;
   double p_min;
   double p_min_noisyDefaultRule;

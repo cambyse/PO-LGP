@@ -6,7 +6,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 #include <Core/util.h>
 
 #define WINDOW_WIDTH 600
@@ -290,7 +290,7 @@ static void print_font_demo (void) {
 
   create_window ();
   while (!quit) {
-    //MT::wait();
+    //mlr::wait();
     eventloop ();
   }
   close_window ();

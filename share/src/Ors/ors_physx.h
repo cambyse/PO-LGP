@@ -20,8 +20,8 @@
 /// @file
 /// @ingroup group_ors
 
-#ifndef MT_ors_physx_h
-#define MT_ors_physx_h
+#ifndef MLR_ors_physx_h
+#define MLR_ors_physx_h
 #include "ors.h"
 
 namespace physx {

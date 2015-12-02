@@ -4,7 +4,7 @@ python
 
 import math
 
-def qdump__MT__String(d, value):
+def qdump__mlr__String(d, value):
     p = value["p"]
     N = value["N"]
     s = "'"
@@ -37,10 +37,10 @@ def qdump__LIST(d, value):
                 s = "(%i)" %i
                 d.putSubItem(s, (p+i).dereference().dereference())
                 i = i+1
-            d.putSubItem("p", p)
+#            d.putSubItem("p", p)
 
 
-def qdump__MT__Array(d, value):
+def qdump__mlr__Array(d, value):
     p = value["p"]
     N = value["N"]
     nd = value["nd"]
@@ -78,10 +78,12 @@ def qdump__MT__Array(d, value):
             d.putSubItem("special", value["special"])
             d.putSubItem("aux", value["aux"])
             
-def qdump__Item_typed(d, value):
+def qdump__Node_typed(d, value):
     keys_N = value["keys"]["N"]
     keys_p = value["keys"]["p"]
-    s = "'"
+    pars_N = value["parents"]["N"]
+    pars_p = value["parents"]["p"]
+    s = ""
     i = 0
     while(i<keys_N):
         string = (keys_p+i).dereference()
@@ -94,7 +96,23 @@ def qdump__Item_typed(d, value):
         i = i+1
         if(i<keys_N):
             s += " "
-    s += "'"
+    s += "("
+    i = 0
+    while(i<pars_N):
+        par = (pars_p+i).dereference()
+        parkeys_N = par["keys"]["N"]
+        parkeys_p = par["keys"]["p"]
+        string = (parkeys_p+parkeys_N-1).dereference()
+        string_N = string["N"]
+        string_p = string["p"]
+        j = 0
+        while(j<string_N):
+            s += "%c" % int((string_p+j).dereference())
+            j = j+1
+        i = i+1
+        if(i<pars_N):
+            s += " "
+    s += ")"
     d.putValue(s)
     d.putNumChild(4)
     if d.isExpanded():
@@ -106,7 +124,7 @@ def qdump__Item_typed(d, value):
             d.putSubItem("container", value["container"])
             d.putSubItem("keys", value["keys"])
 
-def qdump__ItemL(d, value):
+def qdump__NodeL(d, value):
     qdump__LIST(d,value)
 
 def qdump__Graph(d, value):
@@ -125,8 +143,8 @@ def qdump__Graph(d, value):
                 s = "(%i)" %i
                 d.putSubItem(s, (p+i).dereference().dereference())
                 i = i+1
-            d.putSubItem("p", p)
-            d.putSubItem("isItemOfParentKvg", value["isItemOfParentKvg"])
+            d.putSubItem("isNodeOfParentGraph", value["isNodeOfParentGraph"])
+#            d.putSubItem("p", p)
 
 def qdump__BodyL(d, value):
     qdump__LIST(d,value)

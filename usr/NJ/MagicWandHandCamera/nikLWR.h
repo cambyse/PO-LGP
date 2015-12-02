@@ -332,7 +332,7 @@ void SortedIndexesbacked(const arr & X, arr& inds, arr & gram){
              
              if(bExpand) nPow = 1;//when we predict coordinates, easier to expand in 2nd order and not use high order polynoms dot product
              else
-               MT::getParameter(nPow,"nPow",0);// nPow = 1;//when we tune joint offset stochastic search work with high order polynoms dot product, npow = 3 for simulation             
+               mlr::getParameter(nPow,"nPow",0);// nPow = 1;//when we tune joint offset stochastic search work with high order polynoms dot product, npow = 3 for simulation             
                
              for(uint i = 0; i < y.d1; i++){
                double abserr= 0.0;
@@ -574,7 +574,7 @@ void SortedIndexesbacked(const arr & X, arr& inds, arr & gram){
              cout << "error smoothed " ;
              AbsNorm(xtest-sm);
              cout << "prfit: " << prfit/xtest.d0 << " forwer: " << forwer/(xtest.d0*nLoc);
-             std::ofstream fil1;    MT::open(fil1,"kd/xtest");             
+             std::ofstream fil1;    mlr::open(fil1,"kd/xtest");             
              arr plotdata(xtest.d0,10);
              for(uint i = 0; i < plotdata.d0; i++){
                plotdata(i,0) = i;
@@ -592,7 +592,7 @@ void SortedIndexesbacked(const arr & X, arr& inds, arr & gram){
             
              if(false){
                std::ofstream fil;
-               MT::open(fil,"z.trana");
+               mlr::open(fil,"z.trana");
                fil << plotdata;
                gnuplot("plot 'z.trana' us 1:2 title  ' xre ', 'z.trana' us 1:3 title 'yre','z.trana' us 1:4 title 'zre'             ,'z.trana' us 1:5 title 'xpr','z.trana' us 1:6 title 'ypr','z.trana' us 1:7 title 'zpr'             ,'z.trana' us 1:8 title 'xsm','z.trana' us 1:9 title 'ysm','z.trana' us 1:9 title 'zsm' ");
              }

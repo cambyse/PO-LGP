@@ -46,7 +46,7 @@ fflush(stdout);
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   //ThreadInfoWin win;
   //win.threadLoopWithBeat(.1);
   
@@ -120,7 +120,7 @@ int main(int argc,char** argv){
   getGraspMotionParameters();
   printGraspMotionParameters();
 
-  MT::wait(1.);
+  mlr::wait(1.);
 
   double threshold = 0.0000001;
   double step = 0.1;

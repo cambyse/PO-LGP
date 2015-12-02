@@ -47,10 +47,10 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0, arr &x) {
   c->map.order=1;
 
   c = MP.addTask("position_right_hand", new DefaultTaskMap(qItselfTMT,world));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, _goal, 1e5);
+  c->setCostSpecs(MP.T, MP.T, _goal, 1e5);
 
   //  c = MP.addTask("limits", new DefaultTaskMap(qLimitsTMT,world));
-  //  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e5);
+  //  c->setCostSpecs(0, MP.T, ARR(0.), 1e5);
   //  c->map.order=1;
 
 
@@ -140,7 +140,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
       traj.append(catCol(traj(traj.d0-1,0)+0.*l1,traj(traj.d0-1,1)-sqrt(2.)*l1/2.,traj(traj.d0-1,2)+sqrt(2.)*l1/2.));
       traj.append(traj[traj.d0-1]);
 
-      MP.tau = MT::getParameter<double>("duration") / double(MP.T);
+      MP.tau = mlr::getParameter<double>("duration") / double(MP.T);
 
       break;
     }
@@ -181,7 +181,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
 //      traj.append(traj);
 
       MP.T = traj.d0-1;
-      MP.tau = MT::getParameter<double>("duration") / double(MP.T);
+      MP.tau = mlr::getParameter<double>("duration") / double(MP.T);
       break;
     }
     case BM_TYPE::CIRCLE:
@@ -200,12 +200,12 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
   }
 
   c = MP.addTask("pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e4);
+  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->target = traj; // set traj
   c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
 
   world.gl().add(drawActTraj,&(traj));

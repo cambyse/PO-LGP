@@ -1,7 +1,7 @@
 #if 0
 struct Simulator{
   static bool checkValid(doubleA& s){
-    static Parameter<MT::Array<int> > maze("maze");
+    static Parameter<mlr::Array<int> > maze("maze");
     double x=.5+.5*s(0),y=.5+.5*s(1);
     return !maze()((int)(x*maze().d0),(int)(y*maze().d1));
   }

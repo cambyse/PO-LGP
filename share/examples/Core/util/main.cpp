@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <math.h>
+#include <iomanip>
 
 void TEST(String){
   //-- basic IO
@@ -11,7 +12,7 @@ void TEST(String){
   CHECK_EQ(t1,t2,"");
 
   //-- parsing from a string
-  MT::String tmp;
+  mlr::String tmp;
   double a,b;
   s="a=1.2, b=3.4, blabla";
   cout <<s <<'|' <<endl;
@@ -34,35 +35,39 @@ void TEST(String){
 }
 
 void TEST(Parameter){
-  String p1 = MT::getParameter<String>("par", String("default1"));
+  String p1 = mlr::getParameter<String>("par", String("default1"));
   CHECK_EQ(p1,"default1","");
 
-  String p2 = MT::getParameter<String>("h", String("def2"));
+  String p2 = mlr::getParameter<String>("h", String("def2"));
   CHECK_EQ(p2,"def2","");
 
   cout <<p1 <<endl <<p2 <<endl;
 }
 
 void TEST(Timer){
-  MT::timerStart();
+  for(uint t=0;t<10;t++)
+    cout <<"now=" <<mlr::date() <<" clockTime=" <<std::setprecision(14) <<mlr::clockTime() <<endl;
+
+  mlr::timerStart();
   for(uint i=0;i<4;i++){
     cout <<"i=" <<i <<flush;
     for(uint j=0;j<100000;j++){ j+=10; j-=10; } //do something stupid
-    MT::wait(.5);
-    cout <<" cpu timer reads " <<MT::timerRead(false) <<"sec" <<endl;
-    if(i==1){ MT::timerPause(); cout <<"timer paused" <<endl; }
-    if(i==2){ MT::timerResume(); cout <<"timer resumed" <<endl; }
+    mlr::wait(.5);
+    cout <<" cpu timer reads " <<mlr::timerRead(false) <<"sec" <<endl;
+    if(i==1){ mlr::timerPause(); cout <<"timer paused" <<endl; }
+    if(i==2){ mlr::timerResume(); cout <<"timer resumed" <<endl; }
   }
-  double cpuTime=MT::timerRead();
-  double realTime=MT::realTime();
+  double cpuTime=mlr::timerRead();
+  double realTime=mlr::realTime();
   CHECK_ZERO(realTime-2., .5, "wait failed");
   CHECK(cpuTime>=0. && cpuTime<1.,"no cpu time measured");
 }
 
 void TEST(Logging){
+  Log _log("Test");
   LOG(-1) <<"HALLO";
   LOG(-3) <<"bye";
-//  MT::log() <<"bla" <<endl;
+//  mlr::log() <<"bla" <<endl;
 }
 
 void TEST(Exception){
@@ -74,17 +79,17 @@ void TEST(Exception){
 }
 
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   uint double_size=sizeof(double);
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
   
 //  testString();
-//  testParameter();
+  testParameter();
 //  testTimer();
 //  testLogging();
-  testException();
+//  testException();
 
   return 0;
 }

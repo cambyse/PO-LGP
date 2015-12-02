@@ -14,7 +14,7 @@ struct Build_mesh_process:public Process{
   void close();
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "build_mesh_process.cpp"
 #endif
 

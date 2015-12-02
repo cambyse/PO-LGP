@@ -1,15 +1,15 @@
 struct StateVariable;
 struct Rule;
-typedef MT::Array<StateVariable*> StateVariableList;
-typedef MT::Array<Rule*> RuleList;
+typedef mlr::Array<StateVariable*> StateVariableList;
+typedef mlr::Array<Rule*> RuleList;
 
 StateVariableList globalVars;
 
 struct StateVariable {
   uint id;          ///< unique identifyer
   uint dim;         ///< cardinality of domain
-  MT::String name;  ///< up to you...
-  MT::Array<MT::String> valueNames;
+  mlr::String name;  ///< up to you...
+  mlr::Array<mlr::String> valueNames;
   
   StateVariable();
   StateVariable(uint _dim, const char *_name);

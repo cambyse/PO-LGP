@@ -1,0 +1,74 @@
+# These predicate symbols are used to indicate the 'state' of activities
+Symbol conv
+Symbol triggered
+Symbol timeout
+Symbol contact
+Symbol quit
+
+# These are symbols (constants) that indicate specific activities
+# the control tasks of these activities are defined at the bottom of this file
+Action CoreTasks
+Action gazeAtHand
+Action sensorTest
+Action alignHand
+Action positionHand
+Action lowerHand
+Action controlForce
+Action homing
+Action SensorActivityABC
+
+
+# This is the initial state (just a propositional list of activities for now)
+STATE { (CoreTasks) (gazeAtHand) (alignHand) (positionHand) }
+
+# The following defined transition rules of the activity state
+# in the same format as our NID rules
+# so far, they're propositional; but the whole machinery works for FOL
+
+# When both, the positionHand and alignHand activities have converged, then activate 'lowerHand'
+Rule {
+  { (positionHand conv) (alignHand conv) }
+  { (lowerHand) (positionHand)! (positionHand conv)! }
+}
+
+#Rule {
+#  { (lowerHand) (lowerHand conv) }
+#  { (homing) (lowerHand)! (lowerHand conv)! (gazeAtHand)! (alignHand)! (alignHand conv)! }
+#}
+
+Rule {
+  { (lowerHand) (contact) }
+  { (controlForce) (lowerHand)! (lowerHand conv)! }
+}
+
+#Rule {
+#  { (lowerHand) (lowerHand conv) }
+#  { (controlForce) (lowerHand)! (lowerHand conv)! }
+#}
+
+Rule {
+  { (controlForce) (controlForce timeout) }
+  { (homing) (controlForce)! (controlForce timeout)! (gazeAtHand)! (gazeAtHand conv)! (alignHand)! (alignHand conv)! }
+}
+
+Rule{
+  { (homing) (homing conv) }
+  { (quit) (homing)! (homing conv)! }
+}
+
+# This is only a shortcut to run the code without robot attached:
+# it immediately flags the controlForce timeout
+#Rule {  (controlForce),  { (controlForce timeout) } }
+
+# These are just the parameter sets of the activities
+Tasks {
+  (gazeAtHand){ type="gazeAt", ref1="endeffHead", ref2="endeffL", PD=[.5 .9 .1 10.], prec=1. }
+  (alignHand){ type="vec", ref1="endeffL", vec1=[1 0 0], target=[0.7071, 0, -0.7071], PD=[.5, .9, .1, 10.] }
+  (positionHand){ type="pos", ref1="endeffL", target=[.7, .3, .7], PD=[.5, .9, .1, 10.] }
+  (lowerHand){ type="pos", ref1="endeffL", target=[.7, .3, .49], PD=[.5, .9, .1, 10.] }
+  (controlForce){ type="forceCtrl", ref1="endeffForceL", target=[0 0 -7], timeOut=5. }
+  (homing){ type="homing" }
+}
+
+# just for checking the FOL fwd chaining engine .. not used
+Terminal{ (homing conv) }

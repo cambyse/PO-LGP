@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
-#ifndef MT_schunk_h
-#define MT_schunk_h
+#ifndef MLR_schunk_h
+#define MLR_schunk_h
 
 #include <Core/array.h>
 #include <System/biros.h>
@@ -120,7 +120,7 @@ struct SchunkSkinModule:public Process {
   
   void report();
   void setFramerate(uint framerate);
-  void getFrame(MT::Array<short unsigned int>& x);
+  void getFrame(mlr::Array<short unsigned int>& x);
   void getImage(byteA& img);
   void getIntegrals(arr& y);
 };
@@ -128,7 +128,7 @@ struct SchunkSkinModule:public Process {
 void testPerformance(SchunkArmModule &schunk, int iMod);
 void testCube(SchunkArmModule &schunk, int iMod);
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "schunk.cpp"
 #endif
 

@@ -36,8 +36,8 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
   // post-process coupled joints
   for(Joint *j: G->joints)
     if(j->mimic){
-    MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
+    mlr::String jointName;
+    bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
     j->mimic = listFindByName(G->joints, jointName);
     if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");

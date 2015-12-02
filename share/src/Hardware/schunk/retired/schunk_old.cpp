@@ -200,7 +200,7 @@ void SchunkSkin::close() {
 // BELOW: the actual hardware implementations in sSchunk*
 //
 
-#ifdef MT_SCHUNK //NOTE THIS COMPILER FLAG!
+#ifdef MLR_SCHUNK //NOTE THIS COMPILER FLAG!
 
 #define NTCAN_CLEAN_NAMESPACE
 #include <sdh/sdh.h>
@@ -212,18 +212,18 @@ void SchunkSkin::close() {
 
 //--- emergency shutdown (call signal)
 struct shutdownFct { void *classP; void (*call)(void*); };
-static MT::Array<shutdownFct> shutdownFunctions; ///< list of shutdown functions
+static mlr::Array<shutdownFct> shutdownFunctions; ///< list of shutdown functions
 static void addShutdown(void *classP, void (*call)(void*)) { shutdownFunctions.memMove=true; shutdownFct f; f.classP=classP; f.call=call; shutdownFunctions.append(f); }
 bool schunkShutdown=false;
 void schunkEmergencyShutdown(int) {
-  MT_MSG("initiating smooth shutdown...");
+  MLR_MSG("initiating smooth shutdown...");
   schunkShutdown=true;
   for (uint i=shutdownFunctions.N; i--;) { shutdownFunctions(i).call(shutdownFunctions(i).classP); }
-  MT_MSG("...done");
+  MLR_MSG("...done");
 }
 
-void shutdownSDH(void* p) { MT_MSG("...");  sSchunkHand *sdh=(sSchunkHand*)p;  sdh->stop();  sdh->close(); }
-void shutdownDSA(void* p) { MT_MSG("...");  sSchunkSkin *dsa=(sSchunkSkin*)p;  dsa->close(); }
+void shutdownSDH(void* p) { MLR_MSG("...");  sSchunkHand *sdh=(sSchunkHand*)p;  sdh->stop();  sdh->close(); }
+void shutdownDSA(void* p) { MLR_MSG("...");  sSchunkSkin *dsa=(sSchunkSkin*)p;  dsa->close(); }
 
 
 //===========================================================================
@@ -258,9 +258,9 @@ void sSchunkArm::open() {
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|1);
   //MY DEFAULT 64 4 3
-  for (m=3; m<=9; m++) pDev->setC0(m, MT::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
-  for (m=3; m<=9; m++) pDev->setDamp(m, MT::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
-  for (m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
+  for (m=3; m<=9; m++) pDev->setC0(m, mlr::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
+  for (m=3; m<=9; m++) pDev->setDamp(m, mlr::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
+  for (m=3; m<=9; m++) pDev->setA0(m, mlr::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
   for (m=3; m<=9; m++) pDev->recalcPIDParams(m);
   for (m=3; m<=9; m++) pDev->setMaxVel(m, .1);
   for (m=3; m<=9; m++) pDev->setMaxAcc(m, .1);
@@ -387,7 +387,7 @@ void sSchunkArm::step() {
   logfil <<delta <<endl;
 #endif
   if (delta>maxStep) {
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
+    MLR_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
   } else if (isOpen && sendMotion) {
 #if 1 //don't read real positions from robot
     for (m=0; m<7; m++) { pDev->moveStep(m+3, q_reference(m), stepHorizon); }
@@ -401,7 +401,7 @@ void sSchunkArm::step() {
     }
 #endif
   } else {
-    MT::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(6)); //+rnd(2))); //randomized dummy duration
   }
   
 #if 0
@@ -409,7 +409,7 @@ void sSchunkArm::step() {
     var->writeAccess(this);
     for (m=0; m<7; m++) var->q_real(motorIndex(m)) = (float)q_real(m);
     var->deAccess(this);
-  } else MT_MSG("Variable pointer not set");
+  } else MLR_MSG("Variable pointer not set");
 #endif
 }
 
@@ -527,7 +527,7 @@ void sSchunkHand::setVelocities(const arr& v, double a) {
   CHECK(a>0., "always assume positive acceleration");
   uint i;
   std::vector<double> v_reference = hand->GetAxisReferenceVelocity(fingers);
-  std::vector<double> vel(7);  for (i=0; i<7; i++) vel[i]=v(i)/MT_PI*180.;
+  std::vector<double> vel(7);  for (i=0; i<7; i++) vel[i]=v(i)/MLR_PI*180.;
   std::vector<double> acc(7);  for (i=0; i<7; i++) acc[i]=a;
   try {
     hand->SetAxisTargetAcceleration(fingers, acc);
@@ -539,7 +539,7 @@ void sSchunkHand::setVelocities(const arr& v, double a) {
     cerr <<"\ncaught unknown exception, giving up\n";
   }
 #else
-  for (uint i=0; i<7; i++) setVelocity(i, v(i)/MT_PI*180., a);
+  for (uint i=0; i<7; i++) setVelocity(i, v(i)/MLR_PI*180., a);
 #endif
 }
 
@@ -552,13 +552,13 @@ void sSchunkHand::setZeroVelocities(double a) {
 void sSchunkHand::getPos(arr &q) {
   std::vector<double> handq = hand->GetAxisActualAngle(fingers);
   q.resize(7);
-  for (uint i=0; i<7; i++) q(i) = handq[i]/180.*MT_PI;
+  for (uint i=0; i<7; i++) q(i) = handq[i]/180.*MLR_PI;
 }
 
 void sSchunkHand::getVel(arr &v) {
   std::vector<double> handv = hand->GetAxisActualVelocity(fingers);
   v.resize(7);
-  for (uint i=0; i<7; i++) v(i) = handv[i]*MT_PI/180.;
+  for (uint i=0; i<7; i++) v(i) = handv[i]*MLR_PI/180.;
 }
 
 void sSchunkHand::step() {
@@ -567,7 +567,7 @@ void sSchunkHand::step() {
     getPos(q_real);
     getVel(v_real);
   } else {
-    MT::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
+    mlr::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
   }
   
 }
@@ -670,7 +670,7 @@ void sSchunkSkin::getFrame(uint16A& x) {
       f = ts->UpdateFrame().texel;
     } catch (SDH::cSDHLibraryException* e) {
       //HALT("schunk exception: " <<e->what());
-      MT_MSG("* * * schunk exception: " <<e->what());
+      MLR_MSG("* * * schunk exception: " <<e->what());
       delete e;
       return;
     }
@@ -731,7 +731,7 @@ void testPerformance(sSchunkArm &schunk, int iMod) {
   int iRetVal = 0;
   
   cout <<"\n Performing 1000 getPos & moveStep..." <<endl;
-  double time=MT::realTime();
+  double time=mlr::realTime();
   uint i;
   iRetVal = schunk.pDev->getPos(iMod, &fPos);
   if (iRetVal != 0) printf("Error fetching pos: %d\n", iRetVal);
@@ -745,7 +745,7 @@ void testPerformance(sSchunkArm &schunk, int iMod) {
 //       iRetVal = schunk.pDev->moveStepExtended(iMod, fPos, 100., &uiState, &uiDio, &fPos2 );
 //       if( iRetVal != 0 ) printf( "Error move step: %d\n", iRetVal );
   }
-  cout <<"-> state+pos time = " <<(MT::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
+  cout <<"-> state+pos time = " <<(mlr::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
 }
 
 void testCube(sSchunkArm &schunk, int iMod) {
@@ -822,7 +822,7 @@ void testCube(sSchunkArm &schunk, int iMod) {
 }
 
 
-#else //ndef MT_SCHUNK
+#else //ndef MLR_SCHUNK
 
 bool schunkShutdown=false;
 sSchunkArm::sSchunkArm() {}

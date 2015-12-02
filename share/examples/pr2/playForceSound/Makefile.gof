@@ -1,0 +1,9 @@
+BASE = ../../..
+
+
+OBJS = main.o
+PLIB = 1
+ROS = 1
+DEPEND = Core pr2 Actions Hardware_gamepad
+
+include $(BASE)/gofMake/generic.mk

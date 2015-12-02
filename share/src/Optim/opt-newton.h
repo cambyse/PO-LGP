@@ -25,7 +25,7 @@ int optNewton(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT);
 
 struct OptNewton{
   arr& x;
-  const ScalarFunction& f;
+  ScalarFunction f;
   OptOptions o;
   arr *additionalRegularizer;
 
@@ -35,7 +35,6 @@ struct OptNewton{
   double alpha, beta;
   uint it, evals;
   StopCriterion stopCriterion;
-//  bool x_changed;
   ofstream fil;
 
   OptNewton(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);

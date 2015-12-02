@@ -51,14 +51,14 @@ tactile_arr_t::update_shapes(){
 void
 tactile_arr_t::add_sensor_shapes(ors::KinematicWorld &G){
   ors::Shape *s1,*s2;
-  MT::String *n,*a; 
+  mlr::String *n,*a; 
   uint i,j;
   FOR2D(tr,i,j){
-    MT::String s; s<<tr(i,j);
+    mlr::String s; s<<tr(i,j);
 
     s1 =  new ors::Shape(G, b);
     s1->reset();
-    a = new MT::String("a"); *a<<i<<" "<<j;
+    a = new mlr::String("a"); *a<<i<<" "<<j;
     s1->name = a->p;
     s1->type=ors::boxST;
     s1->rel.setText(s.p);
@@ -68,7 +68,7 @@ tactile_arr_t::add_sensor_shapes(ors::KinematicWorld &G){
 
     s2 =  new ors::Shape(G, b);
     s2->reset();
-    n = new MT::String("n"); *a<<i<<" "<<j;
+    n = new mlr::String("n"); *a<<i<<" "<<j;
     s2->name = n->p;
     s2->type=ors::cylinderST;
     s2->rel.setText(s.p);

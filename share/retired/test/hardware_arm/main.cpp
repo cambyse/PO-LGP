@@ -39,7 +39,7 @@ void drawBase(void*){
 
 void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../configurations/schunk.ors"){
   char *path,*name,cwd[200];
-  MT::decomposeFilename(path,name,file);
+  mlr::decomposeFilename(path,name,file);
   getcwd(cwd,200);
   chdir(path);
   
@@ -76,7 +76,7 @@ void TEST(Schunk){
 //   sys.setq(q);
 //   gl.watch("configurations home position");
   
-//   bool openArm = MT::getParameter<bool>("openArm");
+//   bool openArm = mlr::getParameter<bool>("openArm");
 //   //q_currentReferenceVar schunkVar;
 //   SchunkArm schunk; //(&schunkVar);
 //   if(openArm) schunk.open();
@@ -108,7 +108,7 @@ void TEST(Schunk){
 //   ofstream log("LOG");
 //   double time0,time1,dt;
 //   for(t=0;t<5000 && !schunkShutdown;t++){
-//     time0=MT::realTime();
+//     time0=mlr::realTime();
     
 //     //-- compute new motion
 //     TV_eff.y_target(2) = mean + .1*sin(double(t)/200.);
@@ -118,7 +118,7 @@ void TEST(Schunk){
 //     sys.setq(q);
 
 //     //-- send to schunk
-//     time1=MT::realTime();
+//     time1=mlr::realTime();
 //     unsigned long uiState;
 //     unsigned char uiDio;
 //     if(openArm) for(uint m=0;m<7;m++){
@@ -131,7 +131,7 @@ void TEST(Schunk){
 //       //                              &uiState, &uiDio, &qm(motorIndex(m)) );
 //       //if(m>=4) schunk.pDev->moveVel(m+3, 100.*dq(motorIndex(m))); //EXPERIMENTAL!!!
 //     }
-//     log <<MT::realTime()-time1;
+//     log <<mlr::realTime()-time1;
     
 //     //if(openArm) schunk.getPos(qm);
 //     cout <<" dt=" <<std::setprecision(5) <<dt <<endl;
@@ -142,23 +142,23 @@ void TEST(Schunk){
 //     //if(!(t%10)) gl.update();
     
 //     //-- total loop time
-//     dt=MT::realTime()-time0;
+//     dt=mlr::realTime()-time0;
 //     log <<' ' <<dt;
-//     MT::wait(.01-dt);
-//     log <<' ' <<MT::realTime()-time0 <<endl;
+//     mlr::wait(.01-dt);
+//     log <<' ' <<mlr::realTime()-time0 <<endl;
 //   }
 //   if(openArm && schunk.isOpen) schunk.close();
 //   log.close();
 // }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   signal(SIGINT,schunkEmergencyShutdown);
 
-  //setRRscheduling(MT::getParameter<uint>("priority"));
+  //setRRscheduling(mlr::getParameter<uint>("priority"));
 
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
     case 1:  testSchunk();   break;
       //case 2:  testControl();  break;

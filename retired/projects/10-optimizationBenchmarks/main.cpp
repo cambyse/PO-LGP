@@ -12,7 +12,7 @@ void problem1(){
   //setup the system
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);
   
   //setup the task
@@ -39,7 +39,7 @@ void problem1(){
   AICO solver;
 
   cout <<"\n== second test: T step planning ==\n" <<endl;
-  T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   sys.setTimeInterval(3.,T);
   sys.setTox0();
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,10*1e4);
@@ -57,7 +57,7 @@ void problem2(){
   //setup the system
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   
   //setup the task
@@ -65,10 +65,10 @@ void problem2(){
   sys.setTaskVariables({pos});
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,
-                                           MT::getParameter<double>("reachPlanMidPrec"),
-                                           MT::getParameter<double>("reachPlanEndPrec"),
+                                           mlr::getParameter<double>("reachPlanMidPrec"),
+                                           mlr::getParameter<double>("reachPlanEndPrec"),
                                            0.,
-                                           MT::getParameter<double>("reachPlanEndVelPrec"));
+                                           mlr::getParameter<double>("reachPlanEndVelPrec"));
 
   arr xt;
   sys.getx0(xt);
@@ -101,7 +101,7 @@ void problem3(){
   //setup the problem
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   
   createStandardRobotTaskVariables(sys);
@@ -134,9 +134,9 @@ void problem3(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 1:  problem1();  break;
   case 2:  problem2();  break;

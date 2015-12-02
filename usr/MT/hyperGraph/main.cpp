@@ -12,7 +12,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   H.writeDot();
 
   GraphView gv(H);
-  //MT::wait(2.);
+  //mlr::wait(2.);
   gv.watch();
 }
 
@@ -36,9 +36,9 @@ void TEST(Basic){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   
-  int mode = MT::getParameter<int>("mode",1);
+  int mode = mlr::getParameter<int>("mode",1);
   switch(mode){
     case 0:  testBasic();  break;
     case 1:  if(argc>1) testRead(argv[1]); else testRead();  break;

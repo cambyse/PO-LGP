@@ -1,4 +1,4 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 
 #include <Core/util.h>
 #include <MT/gauss.h>
@@ -22,7 +22,7 @@ void TEST(UT){
   for(uint i=0;i<100;i++){
     if(!(i%10)) plotCovariance(a.c,a.C);
     unscentedTransform(a,a,fun);
-    MT::IOraw=false;
+    mlr::IOraw=false;
     std::cout <<a;
   }
   plot();

@@ -1,7 +1,7 @@
 PROJECT_NAME           = "RL Software Suite"
 INPUT		       = doc
 OUTPUT_DIRECTORY       = doc
-GENERATE_TAGFILE       = doc/doxy.tag
+# GENERATE_TAGFILE       = doc/doxy.tag
 EXAMPLE_PATH           = ActiveOnlineSearch/doc \
 			 batchworker/doc \
 			 ButtonWorld/doc \
@@ -26,7 +26,6 @@ EXTRACT_STATIC         = YES
 GENERATE_LATEX         = NO
 HAVE_DOT               = YES
 UML_LOOK               = YES
-TAGFILES	       = \
-		       	 representation/doc/doxy.tag=../../representation/doc/html \
-		       	 ActiveOnlineSearch/doc/doxy.tag=../../ActiveOnlineSearch/doc/html
+# TAGFILES	       = representation/doc/doxy.tag=../../representation/doc/html \
+# 		       	 ActiveOnlineSearch/doc/doxy.tag=../../ActiveOnlineSearch/doc/html
 PROJECT_LOGO	       = ./doc/img/icon.gif

@@ -21,8 +21,8 @@
 
 #define RNDM_FUNC_SCALE 0.6
 
-#define cfgenv(type,name)    MT::getParameter< type >( name )
-#define cfgenvd(type,name,defult)   MT::getParameter< type >( name , defult )
+#define cfgenv(type,name)    mlr::getParameter< type >( name )
+#define cfgenvd(type,name,defult)   mlr::getParameter< type >( name , defult )
 
 // ugly GLOBAL vars
 MeshObject      *o_tru = NULL;
@@ -190,7 +190,7 @@ test_random_object_learning(uint obs=30){
     }
   }
 
-  oe.m.writeTriFile(cfgenv(MT::String,"finalbelieffile"));
+  oe.m.writeTriFile(cfgenv(mlr::String,"finalbelieffile"));
 
   //gl_auto=false;
   show(NULL,0,STRING("True shape. Similarity or total norm loss: "<<s));
@@ -238,7 +238,7 @@ test_ISF_object_learning(uint obs=30){
     }
   }
 
-  oe.m.writeTriFile(cfgenv(MT::String,"finalbelieffile"));
+  oe.m.writeTriFile(cfgenv(mlr::String,"finalbelieffile"));
 
   gl_auto=false;
   show(NULL,0,STRING("True shape. Similarity or total norm loss: "<<s));
@@ -277,8 +277,8 @@ test_mesh_object_learning(uint obs=30){
   uint i;
   double s=0;
 
-  MeshObject      ot(cfgenv(MT::String,"meshfile"), cfgenv(arr,"center"), cfgenv(double,"objsize"));
-  GraspObject_GP  oe( ARR(0,0,0), MT::getParameter<double>("gp_size"));
+  MeshObject      ot(cfgenv(mlr::String,"meshfile"), cfgenv(arr,"center"), cfgenv(double,"objsize"));
+  GraspObject_GP  oe( ARR(0,0,0), mlr::getParameter<double>("gp_size"));
   o_tru=&ot; o_est=&oe;
 
   //ot.m.readFile("../../../../share/data/3dmodels/benchmarks/offs/m483.off");
@@ -300,7 +300,7 @@ test_mesh_object_learning(uint obs=30){
     }
   }
 
-  oe.m.writeTriFile(cfgenv(MT::String,"finalbelieffile"));
+  oe.m.writeTriFile(cfgenv(mlr::String,"finalbelieffile"));
   
   gl_auto=false;
   show(NULL,0,STRING("True shape. Similarity or total norm loss: "<<s));
@@ -313,11 +313,11 @@ test_intersec(){
   ors::Vector a,b,c,lp,lv;
   ors::Vector pi;
 
-  a = MT::Parameter<ors::Vector>("tri_a");
-  b = MT::Parameter<ors::Vector>("tri_b");
-  c = MT::Parameter<ors::Vector>("tri_c");
-  lp = MT::Parameter<ors::Vector>("line_p");
-  lv = MT::Parameter<ors::Vector>("line_v");
+  a = mlr::Parameter<ors::Vector>("tri_a");
+  b = mlr::Parameter<ors::Vector>("tri_b");
+  c = mlr::Parameter<ors::Vector>("tri_c");
+  lp = mlr::Parameter<ors::Vector>("line_p");
+  lv = mlr::Parameter<ors::Vector>("line_v");
 
   int res = intersect3d_tri_line(pi,a,b,c,lp,lv);
 
@@ -328,8 +328,8 @@ test_intersec(){
 void
 init_gl_globals(){
 
-  with_GL = MT::getParameter<int>("with_GL");
-  gl_auto = MT::getParameter<int>("gl_auto");
+  with_GL = mlr::getParameter<int>("with_GL");
+  gl_auto = mlr::getParameter<int>("gl_auto");
   SD_INF("GL settings: with_GL="<<with_GL<<";  gl_auto="<<gl_auto);
 
 }
@@ -356,7 +356,7 @@ SD_INF("NOTE: You can put the params one per line in 'param = value' format in M
 
 int
 main (int argc, char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   usage(argv[0]);
 
@@ -366,7 +366,7 @@ main (int argc, char **argv){
   //test_intersec();
 
   /* tests */
-  int  demo = MT::getParameter<uint>("demo"); 
+  int  demo = mlr::getParameter<uint>("demo"); 
   SD_INF("DEMO: " << demo) ;
   switch(demo){
     case 1: test_random_object_learning(

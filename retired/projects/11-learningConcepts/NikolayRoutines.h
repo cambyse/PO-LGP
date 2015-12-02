@@ -41,8 +41,8 @@ void ResetObjects(ors::KinematicWorld * C,const uintA & objects){
 
 //print objects sorting by object acted on
 void PrintData(const uintA & objs, const uint & nTarget, ors::KinematicWorld * C, ofstream & f, ofstream & f2){
-	MT::IOraw = true;
-	MT::Array< arr > objects_data;
+	mlr::IOraw = true;
+	mlr::Array< arr > objects_data;
 	relational::getFeatureVectors(objects_data, *C, objs);
 	for(uint i = 0; i < objects_data.N; i++){
 		arr oneobj = objects_data(i);
@@ -57,15 +57,15 @@ void PrintData(const uintA & objs, const uint & nTarget, ors::KinematicWorld * C
 	f2 << endl;
 }
 
-MT::Array< arr > tracedata;
+mlr::Array< arr > tracedata;
 arr rewards;
 
-MT::Array< arr > tracedata0;
+mlr::Array< arr > tracedata0;
 arr rewards0;
 
 int nDescr;//lenght of descriptor
 int nObj;//cosntant how many objects
-MT::String str;
+mlr::String str;
 uintA idxes;//permutes to irig data...
 
 uintA RandPerm(int N){
@@ -133,7 +133,7 @@ double ExpDifference(const arr & a, const arr & b){
 }
 
 void EnhanceDataset(){
-	MT::Array< arr > tracedata2(0);
+	mlr::Array< arr > tracedata2(0);
 	arr rewards2;
 	int nS = 7000;//how many samples and also how far back to look
 	for(uint i =0; i < tracedata.N; i++){
@@ -170,7 +170,7 @@ void EnhanceDataset(){
 }
 
 TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
-	if (tracedata.N == 0 || str != MT::String(file)){
+	if (tracedata.N == 0 || str != mlr::String(file)){
 		double gamma = 0.8;
 		tracedata =  init_getVector__for_the_nikolay(file);
 		nDescr = tracedata(0).N;
@@ -178,7 +178,7 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 			nObj = 10;//constant for now !!!
 		if(nDescr == 59)
 			nObj = 7;
-		str = MT::String(file);
+		str = mlr::String(file);
 		rewards = arr(tracedata.N);
 		for(uint i =0 ; i < tracedata.N; i++){
 			cout << i << tracedata(i) << endl;
@@ -224,8 +224,8 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 	if(idx+2 < tracedata0.N)
 		cout << tracedata0(idx+2) << endl << rewards0(idx+2)<< endl;;
 	uintA args;  args.append(besttarg);
-	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(MT::String("grab"));
-	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(MT::String("puton"));
+	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(mlr::String("grab"));
+	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(mlr::String("puton"));
 	TL::Atom* action = NULL;
 	if (bestact == 0) {
 		action = TL::logicObjectManager::getAtom(p_GRAB, args);
@@ -237,12 +237,12 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 
 void NikGenerateData(){
 	//	GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0;
-	MT::String sim_file;
+	mlr::String sim_file;
 	bool bSphere = true;
 	if(!bSphere)
-		sim_file = MT::String("situationNik.ors");
+		sim_file = mlr::String("situationNik.ors");
 	else
-		sim_file =MT::String("situationNikSphere.ors");
+		sim_file =mlr::String("situationNikSphere.ors");
 
 	initSimulator(sim_file, false);
 	sim.simulate(50);
@@ -269,8 +269,8 @@ void NikGenerateData(){
 	uint target_object = -4;
 	uint k;
 	TL::Predicate* p_action;
-	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(MT::String("grab"));
-	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(MT::String("puton"));
+	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(mlr::String("grab"));
+	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(mlr::String("puton"));
 	uintA sa;
 	sa.resize(1);
 	for (k=0; k<num_actions; k++) {

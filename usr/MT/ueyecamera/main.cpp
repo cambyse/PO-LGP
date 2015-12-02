@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -10,27 +10,27 @@
 void lib_hardware_ueyecamera();
 void lib_Perception();
 
-struct UEyeSystem: System {
+struct UEyeSystem {
   ACCESS(byteA, ueye_rgb_1);
   //ACCESS(byteA, ueye_rgb_3);
   //ACCESS(byteA, ueye_rgb_4);
 
   UEyeSystem(){
-    //addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, /*Module::loopWithBeat,*/ 0.005);
     addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module::loopFull);
-    addModule("VideoEncoderX264", "ENCODER_1", {"ueye_rgb_1"}, Module::listenFirst);
-    addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"}, Module::listenFirst);
+    addModule("VideoEncoderX264", "ENCODER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
+    addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
 
-    //addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, /*Module::loopWithBeat,*/ 0.005);
     //addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module::loopFull);
-    //addModule("VideoEncoder", "ENCODER_3", {"ueye_rgb_3"}, Module::listenFirst);
-    //addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"}, Module::listenFirst);
+    //addModule("VideoEncoder", "ENCODER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
+    //addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
 
-    //addModule("UEyePoller", "POLLER_5", {"ueye_rgb_5"}, Module::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_5", {"ueye_rgb_5"}, /*Module::loopWithBeat,*/ 0.005);
     //addModule("UEyePoller", "POLLER_4", {"ueye_rgb_4"}, Module::loopFull);
-    //addModule("VideoEncoder", "ENCODER_4", {"ueye_rgb_4"}, Module::listenFirst);
-    //addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"}, Module::listenFirst);
-    connect();
+    //addModule("VideoEncoder", "ENCODER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
+    //addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
+    //connect();
   }
 };
 void threadedRun() {
@@ -45,15 +45,15 @@ void threadedRun() {
   byteA rgbImg;
   timeval time;
 
-  /*engine().enableAccessLog();
+  /*//engine().enableAccessLog();
   engine().dumpAccessLog();*/
-  engine().open(S);
-  engine().shutdown.waitForSignal();
+  threadOpenModules(true);
+  moduleShutdown().waitForValueGreaterThan(0);
 
 
   /*
   for(t=0; ; t++){
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
     S.ueye_rgb.var->waitForNextRevision();
     rgbImg = S.ueye_rgb.get();
     if(rgbImg.N>0) {
@@ -61,15 +61,15 @@ void threadedRun() {
       gl.update();
     }
   }
-  cout <<"fps = " << t/MT::timerRead() <<endl;
+  cout <<"fps = " << t/mlr::timerRead() <<endl;
   */
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   threadedRun();
   return 0;

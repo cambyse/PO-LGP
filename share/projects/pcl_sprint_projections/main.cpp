@@ -7,7 +7,7 @@
 #include <Ors/ors.h>
 
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
@@ -26,25 +26,28 @@ struct MySystem:System{
   ACCESS(byteA, rgb_rightArm)
 
   MySystem(){
-    addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_KinectSync>(NULL, Module::loopWithBeat, 1.);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
-//      addModule<RosCom_CamsSync>(NULL, Module::loopWithBeat, 1.);
-//      addModule<RosCom_ArmCamsSync>(NULL, Module::loopWithBeat, 1.);
+    new GamepadInterface;
+    if(mlr::getParameter<bool>("useRos", true)){
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
+      addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
+//      addModule<RosCom_CamsSync>(NULL, /*Module::loopWithBeat,*/ 1.);
+//      addModule<RosCom_ArmCamsSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-//    addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftArm"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightArm"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_leftEye"}, Module::listenFirst);
-//    addModule<ImageViewer>("ImageViewer_rgb", {"rgb_rightEye"}, Module::listenFirst);
-    addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-    addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-    connect();
+//    addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+//    new ImageViewer("kinect_rgb");
+//    new ImageViewer("kinect_depthRgb");
+//    new ImageViewer("rgb_leftArm");
+//    new ImageViewer("rgb_rightArm");
+//    new ImageViewer("rgb_leftEye");
+//    new ImageViewer("rgb_rightEye");
+    new Kinect2PointCloud;
+    new PointCloudViewer("kinect_points", "kinect_pointColors");
+    //connect();
   }
 };
 
@@ -67,12 +70,12 @@ void TEST(Projections){
   primitives.P.append(new ArrCloudView(S.kinect_points, S.kinect_pointColors));
   gl.lock.unlock();
 
-  engine().open(S);
+  threadOpenModules(true);
 
   for(uint t=0;;t++){
     arr gamepadState = S.gamepadState.get();
-    if(t>10 && stopButtons(gamepadState)) engine().shutdown.incrementValue();
-    if(engine().shutdown.getValue()>0) break;
+    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
+    if(moduleShutdown().getValue()>0) break;
     S.gamepadState.var->waitForNextRevision();
 
     // joint state
@@ -93,13 +96,13 @@ void TEST(Projections){
 
   }
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   testProjections();
 
   return 0;

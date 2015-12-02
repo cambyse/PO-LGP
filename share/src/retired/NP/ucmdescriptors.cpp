@@ -9,7 +9,7 @@
 
 namespace np {
 template <class S>
-inline void enforce_sum_one(MT::Array<S>& d)
+inline void enforce_sum_one(mlr::Array<S>& d)
 {
   S d_sum = sum(d);
   if (d_sum>0.)
@@ -33,13 +33,13 @@ inline void enforce_sum_one(MT::Array<S>& d)
  *  @return cf. parameter d
  */
 template <class S>
-void np::ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef)
+void np::ucm_descriptors_efd(mlr::Array<S>& d, const UcmTree& tree, uint num_coef)
 {
   uint num_nodes = tree.nodes_.N;
   uint num_patches = num_nodes;
   UcmNode *node_cur;
   uint length_perimeter;
-  MT::Array<S> d_cur;
+  mlr::Array<S> d_cur;
 //   S d_norm;
   uintA contour;
   uint x,y,w=tree.pyramid_(0)->map.d1;
@@ -70,8 +70,8 @@ void np::ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef
     enforce_sum_one(d_cur);
   }
 }
-template void np::ucm_descriptors_efd(MT::Array<float>& d, const np::UcmTree& tree, uint num_coef);
-template void np::ucm_descriptors_efd(MT::Array<double>& d, const np::UcmTree& tree, uint num_coef);
+template void np::ucm_descriptors_efd(mlr::Array<float>& d, const np::UcmTree& tree, uint num_coef);
+template void np::ucm_descriptors_efd(mlr::Array<double>& d, const np::UcmTree& tree, uint num_coef);
 
 /** @brief HSV volor descriptors for patches in an UCM tree
  *
@@ -91,7 +91,7 @@ template void np::ucm_descriptors_efd(MT::Array<double>& d, const np::UcmTree& t
 template <class S>
 void np::ucm_descriptors_hsv
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
  unsigned char h, unsigned char s, unsigned char v
@@ -109,7 +109,7 @@ void np::ucm_descriptors_hsv
   uint num_nodes = tree.nodes_.N, start_hs, start_v, bin_hs, bin_v, p;
   d.clear();
   d.resize(num_nodes, num_dim);
-  MT::Array<S> d_hs, d_v;
+  mlr::Array<S> d_hs, d_v;
   for (uint i=0; i<num_nodes; i++)
   {
     // refer to memory in d, where output for current node will be written to
@@ -138,15 +138,15 @@ void np::ucm_descriptors_hsv
     d_v  *= (S) 0.5; // so that it sums up to 0.5 --> 0.5+0.5=1.
   }
 };
-template void np::ucm_descriptors_hsv(MT::Array<float>&, const byteA&, const np::UcmTree&, unsigned char, unsigned char, unsigned char);
-template void np::ucm_descriptors_hsv(MT::Array<double>&, const byteA&, const np::UcmTree&, unsigned char, unsigned char, unsigned char);
+template void np::ucm_descriptors_hsv(mlr::Array<float>&, const byteA&, const np::UcmTree&, unsigned char, unsigned char, unsigned char);
+template void np::ucm_descriptors_hsv(mlr::Array<double>&, const byteA&, const np::UcmTree&, unsigned char, unsigned char, unsigned char);
 
 namespace np {
 template <class S>
 inline void ucm_gabor_binning
 (
- MT::Array<S>& d,
- const MT::Array<S>& intensities,
+ mlr::Array<S>& d,
+ const mlr::Array<S>& intensities,
  const uintA& region,
  np::SimpleBinning<S, S>& sb
 )
@@ -186,7 +186,7 @@ inline void ucm_gabor_binning
 template <class S>
 void np::ucm_descriptors_gabor
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
  uint num_scales,
@@ -206,14 +206,14 @@ void np::ucm_descriptors_gabor
   uint num_dim = num_bin*num_scales*num_orient;
 
   // compute the responses of the Gabor wavelets
-  MT::Array<MT::Array<S> > intensities;
+  mlr::Array<mlr::Array<S> > intensities;
   np::gabor_wavelet(intensities, image, num_orient, num_scales, sigma, freq, CV_GABOR_MAG);
 
   // apply simple binning to wavelet output
   uint num_nodes = tree.nodes_.N, start;
   d.clear();
   d.resize(num_nodes, num_dim);
-  MT::Array<S> d_current;
+  mlr::Array<S> d_current;
   for (uint i=0; i<num_nodes; i++)
   {
     const UcmNode *node = tree.nodes_.p[i];
@@ -229,14 +229,14 @@ void np::ucm_descriptors_gabor
   S inv = 1./(num_scales*num_orient);
   d *= inv;
 };
-template void np::ucm_descriptors_gabor(MT::Array<float>&, const byteA&, const np::UcmTree&, uint, uint, float, float, uint);
-template void np::ucm_descriptors_gabor(MT::Array<double>&, const byteA&, const np::UcmTree&, uint, uint, double, double, uint);
+template void np::ucm_descriptors_gabor(mlr::Array<float>&, const byteA&, const np::UcmTree&, uint, uint, float, float, uint);
+template void np::ucm_descriptors_gabor(mlr::Array<double>&, const byteA&, const np::UcmTree&, uint, uint, double, double, uint);
 
 
 namespace np
 {
 template <class S, class T>
-void ucm_surf_region(MT::Array<S>& d, const uintA& region, const MT::Array<T>& quantized, const uintA& grid_1D)
+void ucm_surf_region(mlr::Array<S>& d, const uintA& region, const mlr::Array<T>& quantized, const uintA& grid_1D)
 {
   uint num_region=region.N, num_grid = grid_1D.N;
   for (uint i=0, j=0; i<num_region && j<num_grid;)
@@ -284,10 +284,10 @@ void ucm_surf_region(MT::Array<S>& d, const uintA& region, const MT::Array<T>& q
 template <class S>
 void np::ucm_descriptors_surf
 (
- MT::Array<S>& d,
+ mlr::Array<S>& d,
  const byteA& image,
  const UcmTree& tree,
- const MT::Array<S>& codebook,
+ const mlr::Array<S>& codebook,
  uint aperture,
  uint num_scales,
  uint surf_scale=2
@@ -307,17 +307,17 @@ void np::ucm_descriptors_surf
   uint num_dim = num_scales * num_codewords;
 
   // build KD-tree
-  MT::Array<S> codebook_temp;
+  mlr::Array<S> codebook_temp;
   array2array(codebook_temp, codebook);
   flann kd(codebook_temp);
 
   // compute SURF descriptors and replace them by index of the corresponding visual word
-  MT::Array<S> d_surf;
-  MT::Array<intA> quantized(num_scales);
+  mlr::Array<S> d_surf;
+  mlr::Array<intA> quantized(num_scales);
   np::SURF surf;
   floatA dists;
-  MT::Array<uintA> grid(num_scales);
-  MT::Array<uintA> grid_1D(num_scales);
+  mlr::Array<uintA> grid(num_scales);
+  mlr::Array<uintA> grid_1D(num_scales);
   int knn=1;
   uint max_leafs=codebook.d0/10;
   for (uint i=0; i<num_scales; i++)
@@ -361,7 +361,7 @@ void np::ucm_descriptors_surf
   }
 
   uint num_nodes = tree.nodes_.N;
-  MT::Array<S> d_node, d_scale;
+  mlr::Array<S> d_node, d_scale;
   d.resize(num_nodes, num_dim);
   for (uint i=0; i<num_nodes; i++)
   {
@@ -390,5 +390,5 @@ void np::ucm_descriptors_surf
     enforce_sum_one(d_node);
   }
 };
-template void np::ucm_descriptors_surf(MT::Array<float>&, const byteA&, const np::UcmTree&, const MT::Array<float>&, uint, uint, uint);
-template void np::ucm_descriptors_surf(MT::Array<double>&, const byteA&, const np::UcmTree&, const MT::Array<double>&, uint, uint, uint);
+template void np::ucm_descriptors_surf(mlr::Array<float>&, const byteA&, const np::UcmTree&, const mlr::Array<float>&, uint, uint, uint);
+template void np::ucm_descriptors_surf(mlr::Array<double>&, const byteA&, const np::UcmTree&, const mlr::Array<double>&, uint, uint, uint);

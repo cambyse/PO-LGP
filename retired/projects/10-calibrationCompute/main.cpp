@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 #include <MT/ors.h>
 #include <MT/optimization.h>
 #include <MT/calibration.h>
@@ -7,7 +7,7 @@
 void loadCalibData(arr& viewData, arr& qData, uint n, const char *filename){
   arr v(4),q(n);
   ifstream fil;
-  MT::open(fil,filename);
+  mlr::open(fil,filename);
   for(;;){
     fil >>"LEDcenters= ";
     if(!fil.good()) break;

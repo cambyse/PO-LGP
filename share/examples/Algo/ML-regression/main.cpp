@@ -33,7 +33,7 @@ void testLinReg(const char *datafile=NULL) {
   X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
   Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
-  arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+MT::sqr(sigma)*/);
+  arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+mlr::sqr(sigma)*/);
 
   if(X.d1==1){
     plotGnuplot();
@@ -45,7 +45,67 @@ void testLinReg(const char *datafile=NULL) {
   FILE("z.model") <<~y_grid;
 
   //-- gnuplot
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
+//  if(X.d1==1){
+//    FILE("z.model") <<catCol(X_grid, y_grid);
+//    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
+//  }
+  if(X.d1==2){
+    FILE("z.model") <<y_grid.reshape(31,31);
+    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
+                   'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+  }
+}
+
+//===========================================================================
+
+void testRobustRegression(const char *datafile=NULL) {
+  if(!datafile){ //store artificial data to a file
+    datafile="z.train";
+    arr X,y;
+    artificialData(X, y);
+    FILE(datafile) <<catCol(X,y);
+  }
+
+  //-- load data from a file
+  arr X,y;
+  X <<FILE(datafile);
+  y = (~X)[X.d1-1];    //last row of transposed X
+  X.delColumns(X.d1-1);
+
+  //-- generate features
+  arr Phi = makeFeatures(X);
+
+  //-- compute optimal parameters
+  arr Sigma;
+  arr beta = ridgeRegression(Phi, y, -1., Sigma);
+  cout <<"estimated beta = "<< beta <<endl;
+  if(beta.N==beta_true.N) cout <<"max-norm beta-beta_true = " <<maxDiff(beta, beta_true) <<endl; //beta_true is global and generated during artificialData
+  double sigma = sqrt(sumOfSqr(Phi*beta-y)/(X.d0-1));
+  cout <<"Mean error (sdv) = " <<sigma <<endl;
+
+  //-- evaluate model on a grid
+  arr X_grid,y_grid;
+  X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
+  Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
+  y_grid = Phi*beta;
+  arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+mlr::sqr(sigma)*/);
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    //plotFunction(X_grid, y_grid);
+    plotPoints(X,y);
+    plot(true);
+  }
+  FILE("z.model") <<~y_grid;
+
+  //-- gnuplot
+  mlr::arrayBrackets="  ";
 //  if(X.d1==1){
 //    FILE("z.model") <<catCol(X_grid, y_grid);
 //    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
@@ -97,7 +157,7 @@ void testKernelReg(const char *datafile=NULL) {
   FILE("z.model") <<~y_grid;
 
   //-- gnuplot
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 //  if(X.d1==1){
 //    FILE("z.model") <<catCol(X_grid, y_grid);
 //    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
@@ -132,7 +192,7 @@ void test2Class() {
   Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
   arr y_grid = Phi*beta;
   arr s_grid = evaluateBayesianRidgeRegressionSigma(Phi, Sigma);
-  arr ybay_grid = y_grid/ sqrt(1.+s_grid*MT_PI/8.); //bayesian logistic regression: downscale discriminative function
+  arr ybay_grid = y_grid/ sqrt(1.+s_grid*MLR_PI/8.); //bayesian logistic regression: downscale discriminative function
   s_grid=sqrt(s_grid);
 
   arr p_grid=exp(y_grid); p_grid /= p_grid+1.;
@@ -148,7 +208,7 @@ void test2Class() {
     plot(true);
   }
 
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
 //  if(X.d1==1){
 //    FILE("z.train") <<catCol(X, y);
 //    FILE("z.model") <<catCol(X_grid, p_grid);
@@ -186,13 +246,13 @@ void TEST(KernelLogReg){
     plot(true);
   }
   if(X.d1==2){
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     FILE("z.train") <<catCol(X, y);
     FILE("z.model") <<p_grid.reshape(51,51);
     gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
   }
-  MT::wait();
+  mlr::wait();
 }
 
 //===========================================================================
@@ -213,7 +273,7 @@ void TEST(MultiClass){
     p_pred[i]() /= sum(p_pred[i]);
     label(i) = y[i].maxIndex();
   }
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.train") <<catCol(X, label, y, p_pred);
   
   arr X_grid,p_grid;
@@ -257,7 +317,7 @@ void TEST(CV){
   arr Phi = makeFeatures(X);
   FILE("z.train") <<catCol(X, y);
 
-  uint k_fold = MT::getParameter<uint>("k_fold",10);
+  uint k_fold = mlr::getParameter<uint>("k_fold",10);
   cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), k_fold, false);
   cv.plot();
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
@@ -287,7 +347,7 @@ void exercise1() {
   y_grid = Phi*beta;
 
   //save and plot
-  MT::arrayBrackets="  ";
+  mlr::arrayBrackets="  ";
   FILE("z.train") <<catCol(X, y);
   if(X.d1==1) {
     FILE("z.model") <<catCol(X_grid, y_grid);
@@ -337,21 +397,22 @@ void exercise2() {
 //===========================================================================
 
 int main(int argc, char *argv[]) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  MT::arrayBrackets="[]";
+  mlr::arrayBrackets="[]";
 
-  uint seed = MT::getParameter<uint>("seed", 0);
+  uint seed = mlr::getParameter<uint>("seed", 0);
   if(!seed)  rnd.clockSeed();
   else rnd.seed(seed);
 
-  switch(MT::getParameter<uint>("mode",1)) {
+  switch(mlr::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;
     case 2:  test2Class();  break;
     case 3:  testMultiClass();  break;
     case 4:  testCV();  break;
     case 5:  testKernelReg();  break;
     case 6:  testKernelLogReg();  break;
+    case 7:  testRobustRegression();  break;
       break;
   }
   

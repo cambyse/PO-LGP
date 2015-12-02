@@ -107,8 +107,8 @@ arr IKTrajWithInit(const arr & qRef){
 }
 
 arr planTrajectoryWithInit(arr & qInit){
-	int mode=MT::getParameter<int>("planmode");
-	int iter=MT::getParameter<int>("planiter");int iter2 = iter;
+	int mode=mlr::getParameter<int>("planmode");
+	int iter=mlr::getParameter<int>("planiter");int iter2 = iter;
 	arr ans;
 	soc::LQG lqg;
 	lqg.init(sys, .8, 4, 0);
@@ -158,8 +158,8 @@ arr planTrajectoryWithInit(arr & qInit){
 }
 
 arr planTrajectoryWithCondition(arr & qInit){
-	int mode=MT::getParameter<int>("planmode");
-	int iter=MT::getParameter<int>("planiter");int iter2 = iter;
+	int mode=mlr::getParameter<int>("planmode");
+	int iter=mlr::getParameter<int>("planiter");int iter2 = iter;
 	arr ans;
 	soc::LQG lqg;
 	lqg.init(sys, .8, 4, 0);
@@ -167,7 +167,7 @@ arr planTrajectoryWithCondition(arr & qInit){
 	soc::AICO aico;
 	aico.init(sys,.8,.0,.0,4,0);
 	aico.damping = 0.5;
-	double fConditionDamp = MT::getParameter<double>("conditiondamp");//how to decrease condition variable inportrance
+	double fConditionDamp = mlr::getParameter<double>("conditiondamp");//how to decrease condition variable inportrance
 	///plan with corresponding method
 	switch(mode){
 	case 1:
@@ -223,8 +223,8 @@ void init(){
 	gl->camera.focus(-0.1, -1.2, 1);
 	gl->update();
 	Clusters <<FILE("qD.dat");
-	T = MT::getParameter<int>("Tplan");
-	double timeReal= MT::getParameter<int>("timereal");
+	T = mlr::getParameter<int>("Tplan");
+	double timeReal= mlr::getParameter<int>("timereal");
 	sys.initBasics(NULL,NULL,gl,T,timeReal,true,NULL);
 	sys.os = &cout;
 
@@ -232,7 +232,7 @@ void init(){
 	TaskVariable * TV_fNew   = new TaskVariable("posNew",*sys.ors,posTVT,"m9","<t( -.0000031   .000002 -.357)>",0,0,0);
 	TV_fNew->targetType=directTT;
 	//now add standard stuff - qlimit, collision, qitself
-	double margin; MT::getParameter(margin,"swiftMargin");
+	double margin; mlr::getParameter(margin,"swiftMargin");
 	TaskVariable *  TV_col  = new TaskVariable("collision", *sys.ors, collTVT,0,0,0,0,ARR(margin));
 	arr limits;
 	limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
@@ -241,10 +241,10 @@ void init(){
 	TaskVariable * TV_q    = new TaskVariable("qitself", *sys.ors, qItselfTVT,0,0,0,0,0);
 	sys.setTaskVariables(TUPLE(TV_fNew, TV_col,TV_lim,TV_q));
 
-	MT::getParameter(midPrec, "reachPlanMidPrec");
-	MT::getParameter(endPrec, "reachPlanEndPrec"); //load here to avoid tthread problems with CFG file
-	MT::getParameter(limPrec, "reachPlanLimPrec");
-	MT::getParameter(colPrec, "reachPlanColPrec");
-	MT::getParameter(protoPrec, "reachPlanProtoPrec");
+	mlr::getParameter(midPrec, "reachPlanMidPrec");
+	mlr::getParameter(endPrec, "reachPlanEndPrec"); //load here to avoid tthread problems with CFG file
+	mlr::getParameter(limPrec, "reachPlanLimPrec");
+	mlr::getParameter(colPrec, "reachPlanColPrec");
+	mlr::getParameter(protoPrec, "reachPlanProtoPrec");
 
 }

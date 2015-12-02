@@ -114,7 +114,7 @@ void RTTplan(){
   uint i;
   for(i=0;i<100000;i++){
     //let rrt0 grow
-    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MLR_2PI,MLR_2PI,false);
     else rrtT.getRandomNode(q);
     rrt0.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -132,7 +132,7 @@ void RTTplan(){
     }
 
     //let rrtT grow
-    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MLR_2PI,MLR_2PI,false);
     else rrt0.getRandomNode(q);
     rrtT.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -241,15 +241,15 @@ void optim(){
   //display
   plotEffTraj(S, x);
   for(;;){
-    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  MT::wait(.02); }
+    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  mlr::wait(.02); }
     S.watch();
   }
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode", 1)){
+  switch(mlr::getParameter<int>("mode", 1)){
   case 0: RTTplan(); //break;
   case 1: optim(); break;
   }

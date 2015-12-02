@@ -99,7 +99,7 @@ ConceptLearner::ConceptLearner(double rl_alpha_PEN, double rl_p_min, uint rl_par
 
 
     
-void ConceptLearner::addData(MT::Array< TL::Trial* >& data1) {
+void ConceptLearner::addData(mlr::Array< TL::Trial* >& data1) {
     this->data.append(data1);
 }
 
@@ -144,7 +144,7 @@ double ConceptLearner::learnLanguage(PredL& actions, PredL& predicates_prim, Pre
     PredL ps_d_best;
     
     PredL ps_discarded;
-    MT::Array< TL::Function* > fs_discarded;
+    mlr::Array< TL::Function* > fs_discarded;
     
     double bestScore = -1e10;
     double score;
@@ -334,7 +334,7 @@ double ConceptLearner::learnLanguage(PredL& actions, PredL& predicates_prim, Pre
         }
         
         // prepare its own copy of the data
-        MT::Array< TL::Trial* > data_copy;
+        mlr::Array< TL::Trial* > data_copy;
         FOR1D(data, i) {
           NIY;
 //             data_copy.append(data(i)->deep_copy());
@@ -343,13 +343,13 @@ double ConceptLearner::learnLanguage(PredL& actions, PredL& predicates_prim, Pre
         }
 
         // RULE LEARNING
-        MT_MSG("Using the same noise outcome successor state probability for both normal and noisy-default rule!!");
+        MLR_MSG("Using the same noise outcome successor state probability for both normal and noisy-default rule!!");
         RuleLearner rl(&le, rl_alpha_PEN, rl_p_min, rl_p_min, rl_param_opt_type, rl_weight_c1, rl_weight_c2, rl_so_choice_type);
         FOR1D(data_copy, i) {
             rl.addExamples(data_copy(i)->states, data_copy(i)->actions);
         }
         TL::RuleSetContainer rulesC;
-        MT::String logfile_name;
+        mlr::String logfile_name;
         logfile_name << "rl." << round << ".log";
         rl.learn_rules(rulesC, logfile_name);
         TL::RuleSet ruleSet = rulesC.rules;
@@ -371,11 +371,11 @@ double ConceptLearner::learnLanguage(PredL& actions, PredL& predicates_prim, Pre
             cout<<endl;
         }
         
-        MT::String rule_file_name;
+        mlr::String rule_file_name;
         rule_file_name<< "rules."<<round<<".dat";
         writeRules(ruleSet, rule_file_name);
         
-        MT::String rule_file_nice_name;
+        mlr::String rule_file_nice_name;
         rule_file_nice_name<<"rules."<<round<<".nice.dat";
         ofstream ruleset_nice;
         ruleset_nice.open(rule_file_nice_name);
@@ -482,7 +482,7 @@ double ConceptLearner::learnLanguage(PredL& actions, PredL& predicates_prim, Pre
 TL::ConjunctionPredicate* generate_single_SCP_twoBases(uint arity, uintA& basePreds_mapVars2conjunction, TL::Predicate* p1, TL::Predicate* p2, bool true1, bool true2, bool freeAllQuantified, const char* prefix) {
     TL::ConjunctionPredicate* scp  = new TL::ConjunctionPredicate;
     scp->d = arity;
-    MT::String new_name;
+    mlr::String new_name;
     new_name << prefix;
     new_name << "[";
     if (!true1)
@@ -563,7 +563,7 @@ void generateSCP_twoBases(PredL& ps_invented, uint arity, uint arity1, uint arit
 
 
 void Combine_0_0::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-    MT::String prefix("comb_0_0__");
+    mlr::String prefix("comb_0_0__");
     uintA baseArgs(2);
     baseArgs(0) = 0;
     baseArgs(1) = 0;
@@ -572,7 +572,7 @@ void Combine_0_0::invent(const PredL& predicates, const FuncL& functions, PredL&
 
 
 void Combine_0_01::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-    MT::String prefix("comb_0_01__");
+    mlr::String prefix("comb_0_01__");
     uintA baseArgs(3);
     baseArgs(0) = 0;
     baseArgs(1) = 0;
@@ -582,7 +582,7 @@ void Combine_0_01::invent(const PredL& predicates, const FuncL& functions, PredL
 
 
 void Combine_0_10::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-    MT::String prefix("comb_0_10__");
+    mlr::String prefix("comb_0_10__");
     uintA baseArgs(3);
     baseArgs(0) = 0;
     baseArgs(1) = 1;
@@ -591,7 +591,7 @@ void Combine_0_10::invent(const PredL& predicates, const FuncL& functions, PredL
 }
 
 void Combine_01_01::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-  MT::String prefix("comb_01_01__");
+  mlr::String prefix("comb_01_01__");
     uintA baseArgs(4);
     baseArgs(0) = 0;
     baseArgs(1) = 1;
@@ -601,7 +601,7 @@ void Combine_01_01::invent(const PredL& predicates, const FuncL& functions, Pred
 }
 
 void Combine_01_10::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-  MT::String prefix("comb_01_10__");
+  mlr::String prefix("comb_01_10__");
     uintA baseArgs(4);
     baseArgs(0) = 0;
     baseArgs(1) = 1;
@@ -611,7 +611,7 @@ void Combine_01_10::invent(const PredL& predicates, const FuncL& functions, Pred
 }
 
 void Combine_01_00::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-    MT::String prefix("comb_01_00__");
+    mlr::String prefix("comb_01_00__");
     uintA baseArgs(4);
     baseArgs(0) = 0;
     baseArgs(1) = 1;
@@ -621,7 +621,7 @@ void Combine_01_00::invent(const PredL& predicates, const FuncL& functions, Pred
 }
 
 void Combine_01_11::invent(const PredL& predicates, const FuncL& functions, PredL& inventedPredicates) {
-    MT::String prefix("comb_01_11__");
+    mlr::String prefix("comb_01_11__");
     uintA baseArgs(4);
     baseArgs(0) = 0;
     baseArgs(1) = 1;
@@ -672,7 +672,7 @@ void generateColleaguePredicates(PredL& ps_invented, uint arity, uintA baseArgs,
     // setting names
     FOR1D(ps_invented, i) {
         TL::ConjunctionPredicate* p = dynamic_cast<TL::ConjunctionPredicate*>(ps_invented(i));
-        MT::String name;
+        mlr::String name;
         name << prefix << "_";
         if (p->freeVarsAllQuantified) name<<"all_";
         else name<<"ex_";
@@ -717,7 +717,7 @@ void BuildTransitiveClosure::invent(const PredL& predicates, const FuncL& functi
         TL::TransClosurePredicate* p = new TL::TransClosurePredicate;
         p->d = 2;
         p->basePred = predicates(i);
-        MT::String name;
+        mlr::String name;
         name << prefix << "_" << p->basePred->name;
         p->name = name;
         inventedPredicates.append(p);
@@ -735,7 +735,7 @@ void BuildCountFunction::invent(const PredL& predicates, const FuncL& functions,
             continue;
         uintA elements;
         for (k=0;k<predicates(i)->d;k++) elements.append(k);
-        MT::Array< uintA > countedIDs_sets;
+        mlr::Array< uintA > countedIDs_sets;
         TL::allSubsets(countedIDs_sets, elements, true);
         // for all subsets
         FOR1D(countedIDs_sets, k) {
@@ -753,7 +753,7 @@ void BuildCountFunction::invent(const PredL& predicates, const FuncL& functions,
                     f->countedPred_mapVars2derived(l) = addID++;
             }
 //             PRINT(f->countedPred_mapVars2derived)
-            MT::String name;
+            mlr::String name;
             name << prefix << "_" << f->countedPred->name;
             for (l=0; l<predicates(i)->d; l++) {
                 if (countedIDs_sets(k).findValue(l)>=0)

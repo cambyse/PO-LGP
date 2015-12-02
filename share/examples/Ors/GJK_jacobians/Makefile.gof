@@ -1,0 +1,9 @@
+BASE = ../../..
+
+LIBS += -lglut -lGL -lqhull
+
+GJK=1
+
+DEPEND = Core Gui Geo Ors Motion
+
+include $(BASE)/gofMake/generic.mk
