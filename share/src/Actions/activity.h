@@ -8,6 +8,10 @@
  * Activities are "things" that change the state of the KB.
  *
  * Activity (an ABC) defines the interface for each concrete activity.
+ *
+ * There are
+ * - ControlActivities for motion control and
+ * - SensorActivities that trigger on sensor events
  */
 struct Activity {
   MT::String name;     ///< name, just for reporting

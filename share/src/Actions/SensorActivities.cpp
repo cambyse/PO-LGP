@@ -1,11 +1,16 @@
 #include "SensorActivities.h"
-#include "TaskControllerModule.h"
+#include "ControlActivityManager.h"
 #include "pr2/roscom.h"
 
+
+extern ControlActivityManager *controlActivityManager();
 
 // ============================================================================
 void SensorActivity::configure(Node *fact) {
   Activity::configure(fact);
+
+  cam = controlActivityManager();
+  CHECK(cam, "controlActivityManager() did not return anything. Why?");
 
   Graph* specs = getSpecsFromFact(fact);
   configureSensor(*specs);
@@ -22,7 +27,7 @@ void SensorActivity::step(double dt) {
     cout << "I was isTriggered(): " << endl;
 
     if (!_isTriggered) {
-      effects.set()() << STRING("(triggered SensorActivity), ");
+      cam->effects.set()() << STRING("(triggered SensorActivity), ");
     }
     _isTriggered = true;
   }
@@ -43,7 +48,7 @@ void SensorActivity::stepSensor() {
 }
 
 bool SensorActivity::isTriggered() {
-  CtrlMsg obs = ctrl_obs.get();
+  CtrlMsg obs = cam->ctrl_obs.get();
   // cout << "Left:  " << obs.fL << endl;
   // cout << "Right: " << obs.fR << endl;
   return (sum(obs.fL)) > _threshold;

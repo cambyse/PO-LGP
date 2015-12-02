@@ -1,14 +1,14 @@
-#include "TaskControllerModule.h"
+#include "ControlActivityManager.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
-TaskControllerModule *globalTaskControllerModule=NULL;
-TaskControllerModule *taskControllerModule(){
-  return globalTaskControllerModule;
+ControlActivityManager *globalControlActivityManager=NULL;
+ControlActivityManager *controlActivityManager(){
+  return globalControlActivityManager;
 }
 
-TaskControllerModule::TaskControllerModule()
-    : Module("TaskControllerModule")
+ControlActivityManager::ControlActivityManager()
+    : Module("ControlActivityManager")
     , realWorld("model.kvg")
     , feedbackController(NULL)
     , q0(realWorld.q)
@@ -18,10 +18,10 @@ TaskControllerModule::TaskControllerModule()
   modelWorld.linkToVariable(new Variable<ors::KinematicWorld>());
   modelWorld.set() = realWorld;
   feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
-  globalTaskControllerModule=this;
+  globalControlActivityManager=this;
 }
 
-TaskControllerModule::~TaskControllerModule(){
+ControlActivityManager::~ControlActivityManager(){
   delete feedbackController;
 }
 
@@ -42,14 +42,14 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
 }
 #endif
 
-void TaskControllerModule::open(){
+void ControlActivityManager::open(){
   modelWorld.get()->getJointState(q_model, qdot_model);
 
   feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(.0,10.);
 
-  MT::open(fil,"z.TaskControllerModule");
+  MT::open(fil,"z.ControlActivityManager");
 
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
@@ -61,7 +61,7 @@ void TaskControllerModule::open(){
   if(useRos) syncModelStateWithRos=true;
 }
 
-void TaskControllerModule::step(){
+void ControlActivityManager::step(){
   static uint t=0;
   t++;
   if(syncModelStateWithRos){
@@ -195,6 +195,6 @@ void TaskControllerModule::step(){
   ctrl_ref.set() = refs;
 }
 
-void TaskControllerModule::close(){
+void ControlActivityManager::close(){
   fil.close();
 }

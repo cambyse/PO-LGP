@@ -1,7 +1,7 @@
 #include "swig.h"
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include "TaskControllerModule.h"
+#include "ControlActivityManager.h"
 #include "ActivitySpinnerModule.h"
 #include "RelationalMachineModule.h"
 #include <Hardware/gamepad/gamepad.h>
@@ -32,10 +32,10 @@ struct SwigSystem : System{
   ACCESS(int, stopWaiting);
   ACCESS(int, waiters);
 
-  TaskControllerModule *tcm;
+  ControlActivityManager *tcm;
   SwigSystem() {
 
-    tcm = addModule<TaskControllerModule>(NULL, Module::loopWithBeat, .01);
+    tcm = addModule<ControlActivityManager>(NULL, Module::loopWithBeat, .01);
     modelWorld.linkToVariable(tcm->modelWorld.v);
 
     addModule<ActivitySpinnerModule>(NULL, Module::loopWithBeat, .01);

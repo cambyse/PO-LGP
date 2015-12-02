@@ -9,11 +9,11 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #endif
 
-extern struct TaskControllerModule *taskControllerModule();
+extern struct ControlActivityManager *controlActivityManager();
 
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
-struct TaskControllerModule : Module {
+struct ControlActivityManager : Module {
   //protected access points
   ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
   ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
@@ -39,8 +39,8 @@ struct TaskControllerModule : Module {
   bool verbose;
 
 public:
-  TaskControllerModule();
-  ~TaskControllerModule();
+  ControlActivityManager();
+  ~ControlActivityManager();
 
   /// @name module implementations
   void open();

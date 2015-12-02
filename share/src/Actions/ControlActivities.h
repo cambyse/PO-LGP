@@ -6,14 +6,14 @@
 // ============================================================================
 /// A typical 'control activity' that adds a CtrlTask to the task list of the task controller.
 /// Der
-struct TaskCtrlActivity : Activity{
-  struct TaskControllerModule *taskController;
+struct ControlActivity : Activity{
+  struct ControlActivityManager *controlManager;
   struct TaskMap *map;
   struct CtrlTask* task;
   double stopTolerance;
   bool conv;
 
-  virtual ~TaskCtrlActivity();
+  virtual ~ControlActivity();
 
   // Implement base class methods: modify KB
   virtual void configure(Node *fact); ///< calls configureControl and registers
@@ -26,7 +26,7 @@ struct TaskCtrlActivity : Activity{
 };
 
 //===========================================================================
-struct FollowReferenceActivity : TaskCtrlActivity {
+struct FollowReferenceActivity : ControlActivity {
   arr ref;
   arr old_y;
   uint stuck_count;
@@ -40,7 +40,7 @@ struct FollowReferenceActivity : TaskCtrlActivity {
 };
 
 //===========================================================================
-struct HomingActivity : TaskCtrlActivity {
+struct HomingActivity : ControlActivity {
   double stopTolerance;
   ors::Joint *wheeljoint;
 

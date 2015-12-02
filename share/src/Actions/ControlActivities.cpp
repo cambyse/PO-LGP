@@ -1,32 +1,32 @@
 #include <Motion/feedbackControl.h>
-#include "TaskControllerModule.h"
+#include "ControlActivities.h"
 #include "SensorActivities.h"
+#include "ControlActivityManager.h"
 
-#include "taskCtrlActivities.h"
 
-extern TaskControllerModule *taskControllerModule();
+extern ControlActivityManager *controlActivityManager();
 
 //===========================================================================
-void TaskCtrlActivity::configure(Node *fact) {
+void ControlActivity::configure(Node *fact) {
   Activity::configure(fact);
 
-  // TaskCtrlActivity specific stuff
-  taskController = taskControllerModule();
-  CHECK(taskController, "taskControllerModule() did not return anything. Why?");
+  // ControlActivity specific stuff
+  controlManager = controlActivityManager();
+  CHECK(controlManager, "controlActivityManager() did not return anything. Why?");
 
   Graph *specs = getSpecsFromFact(fact);
-  configureControl(name, *specs, taskController->modelWorld.set());
-  taskController->ctrlTasks.set()->append(task);
+  configureControl(name, *specs, controlManager->modelWorld.set());
+  controlManager->ctrlTasks.set()->append(task);
   conv=false;
 }
 
-TaskCtrlActivity::~TaskCtrlActivity(){
-  taskController->ctrlTasks.set()->removeValue(task);
+ControlActivity::~ControlActivity(){
+  controlManager->ctrlTasks.set()->removeValue(task);
   delete task;
   delete map;
 }
 
-void TaskCtrlActivity::step(double dt){
+void ControlActivity::step(double dt){
   activityTime += dt;
 
   stepControl(dt);
@@ -38,12 +38,12 @@ void TaskCtrlActivity::step(double dt){
   convStr <<")";
   if(isConv()){
     if(!conv){
-      if(fact) taskController->effects.set()() <<convStr <<", ";
+      if(fact) controlManager->effects.set()() <<convStr <<", ";
       conv=true;
     }
   }else{
     if(conv){
-      if(fact) taskController->effects.set()() <<convStr <<"!, ";
+      if(fact) controlManager->effects.set()() <<convStr <<"!, ";
       conv=false;
     }
   }
@@ -81,7 +81,7 @@ void FollowReferenceActivity::stepControl(double dt){
 }
 
 bool FollowReferenceActivity::isConv(){
-  bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
+  bool stuck = (task->y.N == old_y.N) and (maxDiff(old_y, task->y) < stopTolerance);
   stuck_count = stuck ? stuck_count + 1 : 0;
   old_y = task->y;
 
@@ -89,9 +89,7 @@ bool FollowReferenceActivity::isConv(){
            && task->y.N == task->y_ref.N
            && maxDiff(task->y, task->y_ref) < stopTolerance
            && maxDiff(task->v, task->v_ref) < stopTolerance)
-          or
-          (task->y_ref.nd==2
-           && activityTime>=trajectoryDuration)
+          or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }
 
@@ -99,7 +97,7 @@ bool FollowReferenceActivity::isConv(){
 void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
-  task->y_ref=taskController->q0;
+  task->y_ref=controlManager->q0;
 
   Node *it;
   if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
