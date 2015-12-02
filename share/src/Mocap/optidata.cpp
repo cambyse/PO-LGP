@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Core/graph.h>
 #include <Core/registry.h>
 #include <sys/stat.h>
@@ -29,12 +29,12 @@ void OptiRec::load(const char *recdir) {
   Json::Value root, scene;
   Json::Reader reader;
 
-  MT::open(datafin, STRING(recdir << "../scene.json"));
+  mlr::open(datafin, STRING(recdir << "../scene.json"));
   CHECK(reader.parse(datafin, root), "Failed to parse configuration: " << reader.getFormattedErrorMessages());
   datafin.close();
 
   // TODO do stuff
-  MT::open(datafin, STRING(recdir << "dataset.json"));
+  mlr::open(datafin, STRING(recdir << "dataset.json"));
   CHECK(reader.parse(datafin, root), "Failed to parse configuration: " << reader.getFormattedErrorMessages());
   datafin.close();
 
@@ -48,7 +48,7 @@ void OptiRec::load(const char *recdir) {
   // double currtstamp;
   arr data, tstamp, observed;
   boolA missing;
-  MT::Array<intA> missingno(nsensors), missingf(nsensors);
+  mlr::Array<intA> missingno(nsensors), missingf(nsensors);
 
   const StringA &sensors = mid.sensors();
   // scene["objects"].getMemberNames();

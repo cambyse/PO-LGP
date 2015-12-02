@@ -18,7 +18,7 @@ struct sMocapGui: OpenGL::GLKeyCall, OpenGL::GLClickCall {
   MocapRec &rec;
 
   sMocapGui(MocapRec &rec): OpenGL::GLKeyCall(), vid(nullptr), rec(rec) {}
-  ~sMocapGui() { if(kw) delete kw; }
+  virtual ~sMocapGui() { if(kw) delete kw; }
 
   void initKW(bool keycall, bool clickcall);
 
@@ -80,7 +80,7 @@ void sMocapGui::set_target(Target target) {
       objectsensors.append(rec.id().sensorsof(obj));
     uint nobjectsensors = objectsensors.N;
 
-    MT::Array<StringA> agentshapes(nagents);
+    mlr::Array<StringA> agentshapes(nagents);
     for(uint ai = 0; ai < nagents; ai++)
       for(const String &agentsensor: rec.id().sensorsof(agents(ai)))
         agentshapes(ai).append(STRING("sh" << agentsensor));
@@ -175,7 +175,7 @@ void sMocapGui::set_target(Target target) {
 void sMocapGui::update_step() {
   if(screen) {
     String fname;
-    fname << "screenshot." << MT::getNowString() << ".png";
+    fname << "screenshot." << mlr::getNowString() << ".png";
     kw->gl().saveEPS(fname);
     // byteA img = kw->gl().captureImage;
     // flip_image(img);
@@ -186,7 +186,7 @@ void sMocapGui::update_step() {
   if(record) {
     // if(play) {
       if(vid == nullptr)
-        vid = new VideoEncoder_x264_simple(STRING("z.output." << MT::getNowString() << ".264"), 120, 0, true);
+        vid = new VideoEncoder_x264_simple(STRING("z.output." << mlr::getNowString() << ".264"), 120, 0, true);
       flip_image(kw->gl().captureImage);
       vid->addFrame(kw->gl().captureImage);
     // }
@@ -248,21 +248,21 @@ void sMocapGui::update_poses() {
         sensor_quat.referTo(rec.query("quat", sensor, f));
         quat = ors::Quaternion(sensor_quat);
 
-        kw->kinematicsPos(y, J, sh->body, &sh->rel.pos);
+        kw->kinematicsPos(y, J, sh->body, sh->rel.pos);
         Phi.append((y - sensor_pos) / PREC_POS);
         PhiJ.append(J / PREC_POS);
           
-        kw->kinematicsVec(y, J, sh->body, &vec_x);
+        kw->kinematicsVec(y, J, sh->body, vec_x);
         y_target.setCarray((quat * vec_x).p(), 3);
         Phi.append((y - y_target) / PREC_ORI);
         PhiJ.append(J / PREC_ORI);
 
-        kw->kinematicsVec(y, J, sh->body, &vec_y);
+        kw->kinematicsVec(y, J, sh->body, vec_y);
         y_target.setCarray((quat * vec_y).p(), 3);
         Phi.append((y - y_target) / PREC_ORI);
         PhiJ.append(J / PREC_ORI);
 
-        kw->kinematicsVec(y, J, sh->body, &vec_z);
+        kw->kinematicsVec(y, J, sh->body, vec_z);
         y_target.setCarray((quat * vec_z).p(), 3);
         Phi.append((y - y_target) / PREC_ORI);
         PhiJ.append(J / PREC_ORI);

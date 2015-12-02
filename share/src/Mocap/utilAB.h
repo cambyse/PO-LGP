@@ -96,7 +96,7 @@ struct ProgressBar {
 };
 // }}}
 template<class T>
-void split(MT::Array<MT::Array<T*> > &trainlist, MT::Array<MT::Array<T*> > &testlist, const MT::Array<T*> &list, uint nsplits);
+void split(mlr::Array<mlr::Array<T*> > &trainlist, mlr::Array<mlr::Array<T*> > &testlist, const mlr::Array<T*> &list, uint nsplits);
 
 // namespace watch {{{
 namespace watch {

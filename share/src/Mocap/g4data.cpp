@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Core/graph.h>
 #include <Core/registry.h>
 #include <sys/stat.h>
@@ -24,7 +24,7 @@ void G4Rec::load(const char *recdir) {
   mid.load(STRING(recdir << "meta.kvg"));
 
   ifstream datafin, tstampfin;
-  MT::open(datafin, STRING(recdir << "poses.dat"));
+  mlr::open(datafin, STRING(recdir << "poses.dat"));
   tstampfin.open(STRING(recdir << "poses.dat.times"));
   arr dataframe;
 
@@ -38,7 +38,7 @@ void G4Rec::load(const char *recdir) {
   double currtstamp, inittstamp = -1;
   arr data, tstamp, observed;
   boolA missing;
-  MT::Array<intA> missingno(nsensors), missingf(nsensors);
+  mlr::Array<intA> missingno(nsensors), missingf(nsensors);
   for(nframes = 0;; nframes++) {
     datafin >> dataframe;
     tstampfin >> currfnum >> currtstamp;

@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Core/graph.h>
 #include <Core/registry.h>
 #include <sys/stat.h>
@@ -29,7 +29,7 @@ void JsonRec::load(const char *recdir) {
   mid.load_json(STRING(dir << "../scene.json"));
 
   ifstream datafin;
-  MT::open(datafin, STRING(dir << "dataset.json"));
+  mlr::open(datafin, STRING(dir << "dataset.json"));
 
   Json::Reader reader;
   Json::Value root;
@@ -50,7 +50,7 @@ void JsonRec::load(const char *recdir) {
   // double currtstamp;
   arr data, tstamp, observed;
   boolA missing;
-  MT::Array<intA> missingno(nsensors), missingf(nsensors);
+  mlr::Array<intA> missingno(nsensors), missingf(nsensors);
 
   ors::Transformation T;
   data.resize(nframes, nsensors, 7);

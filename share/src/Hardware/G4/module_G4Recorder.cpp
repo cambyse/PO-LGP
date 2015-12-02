@@ -19,7 +19,7 @@ void G4Recorder::close() {
 void G4Recorder::step() {
   uint rev = poses.readAccess();
   floatA data = poses();
-  double tstamp = poses.tstamp();
+  double tstamp = poses.dataTime();
   poses.deAccess();
 
   uint tstampsec = tstamp;

@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <Core/graph.h>
 #include <Core/registry.h>
 #include <json/json.h>
@@ -27,7 +27,7 @@ struct MocapID::sMocapID {
           objects, sensors_struct, sensors_unstruct, object_parts;
   StringA sensor_type, sensor_mesh;
   StringA sensor_rn; // eventually removed
-  MT::Array<ors::Transformation> sensor_meshtr;
+  mlr::Array<ors::Transformation> sensor_meshtr;
   boolA sensor_hastype, sensor_hasmesh, sensor_hasmeshtr;
 
   String root; // eventually removed
@@ -295,7 +295,7 @@ void MocapID::load_json(const char *json) {
   Json::Value root;
 
   ifstream scenefin;
-  MT::open(scenefin, STRING(json));
+  mlr::open(scenefin, STRING(json));
   CHECK(reader.parse(scenefin, root), "Failed to parse configuration: " << reader.getFormattedErrorMessages());
 
   if(root["agents"].isNull())
@@ -400,9 +400,9 @@ MocapRec::~MocapRec() { }
 void MocapRec::setDefaultParams() {
   params.clear();
 
-  String interpolate = MT::getParameter<String>("interpolate", STRING("true"));
-  uint wlen = MT::getParameter<double>("wlen", 120);
-  uint thinning = MT::getParameter<double>("thinning", 12);
+  String interpolate = mlr::getParameter<String>("interpolate", STRING("true"));
+  uint wlen = mlr::getParameter<double>("wlen", 120);
+  uint thinning = mlr::getParameter<double>("thinning", 12);
 
   params.set("interpolate", interpolate);
   params.set("wlen", wlen);
@@ -446,9 +446,9 @@ void MocapRec::save() {
   for(const String &sensor: id().object_parts()) {
     // cout << "SENSOR NAME: " << kw.getShapeByName(STRING("sh"<<sensor))->name << endl;
     // cout << "SENSOR ATS: " << kw.getShapeByName(STRING("sh"<<sensor))->ats << endl;
-    // cout << "SENSOR MESH: " << kw.getShapeByName(STRING("sh"<<sensor))->ats.getValue<MT::FileToken>("mesh")->name << endl;
+    // cout << "SENSOR MESH: " << kw.getShapeByName(STRING("sh"<<sensor))->ats.getValue<mlr::FileToken>("mesh")->name << endl;
 
-    String mesh = kw.getShapeByName(STRING("sh"<<sensor))->ats.getValue<MT::FileToken>("mesh")->name;
+    String mesh = kw.getShapeByName(STRING("sh"<<sensor))->ats.getValue<mlr::FileToken>("mesh")->name;
 
     ors::Transformation TI;
     TI.setInverse(kw.getShapeByName(STRING("sh"<<sensor))->rel);
@@ -491,7 +491,7 @@ void MocapRec::save() {
   if(id().root().N)
     root["root"] = (const char *)id().root();
 
-  MT::open(fout, STRING(dir << "../scene.json"));
+  mlr::open(fout, STRING(dir << "../scene.json"));
   fout << root;
   fout.close();
 
@@ -584,7 +584,7 @@ void MocapRec::save() {
     }
   }
 
-  MT::open(fout, STRING(dir << "dataset.json"));
+  mlr::open(fout, STRING(dir << "dataset.json"));
   Json::FastWriter writer;
   // fout << root;
   fout << writer.write(root);
@@ -629,7 +629,7 @@ void MocapRec::appendBam(const char *bam, const arr &data) {
   Node *i = kvg.getNode("bam", bam);
 
   if(!i)
-    kvg.append("bam", bam, new arr(data));
+    kvg.append<arr>({"bam", bam}, {}, new arr(data), true);
   // else
   //   *i->getValue<arr>() = data; // replacing
   else
@@ -1130,7 +1130,7 @@ void MocapRec::computeVarFuture(const char *type, const char *sensor) {
   M = S = 0;
   for(uint f_thin = nframes_thin-1; f_thin != -1u; f_thin--) {
     uint f = (f_thin + 1) * thinning - 1;
-    for(uint ff = f; ff < MT::MIN(f+thinning, nframes); ff++) {
+    for(uint ff = f; ff < mlr::MIN(f+thinning, nframes); ff++) {
       // if(bamObsis(nframes-ff)) {
       if(bamObsis(ff)) {
         S += scalarProduct(bamis[ff], bamis[ff]);
@@ -1153,7 +1153,7 @@ void MocapRec::computeVarFuture(const char *type, const char *sensor) {
   for(uint f_thin = nframes_thin-1; f_thin != -1u; f_thin--) {
     uint f = (f_thin + 1) * thinning - 1;
     N = nframes - f;
-    for(uint ff = f; ff < MT::MIN(f+thinning, nframes); ff++) {
+    for(uint ff = f; ff < mlr::MIN(f+thinning, nframes); ff++) {
       S += scalarProduct(bamis[ff], bamis[ff]);
       M += bamis[ff];
     }
@@ -1213,7 +1213,7 @@ void MocapRec::computeLinCoeffFuture(const char *type, const char *sensor) {
     uint f = (f_thin + 1) * thinning - 1;
     if(f >= nframes - 1)
       continue;
-    for(uint ff = MT::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
+    for(uint ff = mlr::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
       if(bamObsis(ff)) {
       // if(bamObsis(nframes-ff)) {
         // phi_ff = ARR(1, ff);
@@ -1238,7 +1238,7 @@ void MocapRec::computeLinCoeffFuture(const char *type, const char *sensor) {
     uint f = (f_thin + 1) * thinning - 1;
     if(f >= nframes - 1)
       continue;
-    for(uint ff = MT::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
+    for(uint ff = mlr::MIN(f+thinning, nframes-2); ff != f-1u; ff--) {
       phi_ff = {1., (double)(nframes-ff)};
       TTT += (phi_ff ^ phi_ff);
       TTw += (phi_ff ^ bamis[ff]);

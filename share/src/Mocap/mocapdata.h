@@ -19,8 +19,8 @@ struct MocapSeq;
 
 typedef Graph MocapLabel; 
 
-typedef MT::Array<MocapRec*> MocapRecL;
-typedef MT::Array<MocapSeq*> MocapSeqL;
+typedef mlr::Array<MocapRec*> MocapRecL;
+typedef mlr::Array<MocapSeq*> MocapSeqL;
 
 // =============================================================================
 // MocapID
@@ -62,9 +62,9 @@ struct MocapID {
   const StringA& object_parts() const;
 
   template <class T>
-  MT::Array<T> query(const MT::Array<T> &data, const String &sensor);
+  mlr::Array<T> query(const mlr::Array<T> &data, const String &sensor);
   template <class T>
-  MT::Array<T> query(const MT::Array<T> &data, const StringA &sensors);
+  mlr::Array<T> query(const mlr::Array<T> &data, const StringA &sensors);
 
   void write(std::ostream &os = std::cout) const;
 };

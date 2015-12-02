@@ -173,7 +173,7 @@ void G4MoveRecon::maketest()
       { cout<<"___________________________________________"<<endl;
 
         cout<<"------------------Succsess-----------------"<<endl;
-       // MT::wait(1);
+       // mlr::wait(1);
         //initphase=false;
         rec_succ=true;
         sample.clear();

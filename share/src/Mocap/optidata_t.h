@@ -1,11 +1,11 @@
 template <class T>
-MT::Array<T> OptiID::query(const MT::Array<T> &data, const String &sensor) {
+mlr::Array<T> OptiID::query(const mlr::Array<T> &data, const String &sensor) {
   return data[sensor_rn(sensor)];
 }
 
 template <class T>
-MT::Array<T> OptiID::query(const MT::Array<T>  &data, const StringA &sensors) {
-  MT::Array<T> x;
+mlr::Array<T> OptiID::query(const mlr::Array<T>  &data, const StringA &sensors) {
+  mlr::Array<T> x;
   for(const String &sensor: sensors) {
     x.append(data[sensor_rn(sensor)]);
   }

@@ -287,8 +287,8 @@ void G4HutoRoMap::calcparameters(floatA tempData)
 
 
 G4HutoRoMap::G4HutoRoMap()
-{
-}
+  : Module("G4HutoRoMap", .05){}
+
 void G4HutoRoMap::open()
 {
     calisaysokay.set()=false;

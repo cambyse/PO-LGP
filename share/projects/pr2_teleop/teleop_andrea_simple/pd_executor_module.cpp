@@ -17,13 +17,13 @@ PDExecutor::PDExecutor()
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2., 5.);
 
-  if(MT::getParameter<bool>("useLimits", false)) {
+  if(mlr::getParameter<bool>("useLimits", false)) {
     limits = fmc.addPDTask("limits", .2, .8, new TaskMap_qLimits());
     // limits = fmc.addPDTask("limits", .2, .8, new TaskMap_qLimits);
     // limits->y_ref.setZero();
   }
 
-  if(MT::getParameter<bool>("useCollisions", false)) {
+  if(mlr::getParameter<bool>("useCollisions", false)) {
     collisions = fmc.addPDTask("collisions", .5, 1.5, new ProxyTaskMap(allPTMT, {0u}, .1));
     // collisions->y_ref.setZero();
     // collisions->v_ref.setZero();
@@ -31,43 +31,43 @@ PDExecutor::PDExecutor()
     // collisions->maxAcc = -1;
   }
 
-  if(MT::getParameter<bool>("usePositionR", false)) {
+  if(mlr::getParameter<bool>("usePositionR", false)) {
     effPosR = fmc.addPDTask("MoveEffTo_endeffR", .5, 1.5, posTMT, "endeffR");
     effPosR->y_ref = {.4, .4, 1.2};
   }
 
-  if(MT::getParameter<bool>("usePositionL", false)) {
+  if(mlr::getParameter<bool>("usePositionL", false)) {
     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .5, 1.5, posTMT, "endeffL");
     effPosL->y_ref = {-.4, .4, 1.2};
   }
 
-  if(MT::getParameter<bool>("useGripperR", false)) {
+  if(mlr::getParameter<bool>("useGripperR", false)) {
     int jointID = world.getJointByName("r_gripper_joint")->qIndex;
     gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperR->setTarget({.08});  // open gripper 8cm
     // gripperR->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useGripperL", false)) {
+  if(mlr::getParameter<bool>("useGripperL", false)) {
     int jointID = world.getJointByName("l_gripper_joint")->qIndex;
     gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperL->setTarget({.08});  // open gripper 8cm
     // gripperL->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useOrientationR", false)) {
+  if(mlr::getParameter<bool>("useOrientationR", false)) {
     effOrientationR = fmc.addPDTask("orientationR", .5, 1.5, quatTMT, "endeffR", {0, 0, 0});
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
   }
 
-  if(MT::getParameter<bool>("useOrientationL", false)) {
+  if(mlr::getParameter<bool>("useOrientationL", false)) {
     effOrientationL = fmc.addPDTask("orientationL", .5, 1.5, quatTMT, "endeffL", {0, 0, 0});
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
   }
 
-  if(MT::getParameter<bool>("useHead", false)) {
+  if(mlr::getParameter<bool>("useHead", false)) {
     effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x, "base_footprint"));
     // effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x));
     effHead_ref = nullptr;
@@ -421,7 +421,7 @@ void PDExecutor::initRos() {
 }
 
 void PDExecutor::open() {
-  useros = MT::getParameter<bool>("useRos", false);
+  useros = mlr::getParameter<bool>("useRos", false);
 }
 
 void PDExecutor::close() {

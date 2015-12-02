@@ -15,7 +15,7 @@ struct PR2G4Control:System {
     addModule<PDExecutor>("PDExecutor", Module::loopWithBeat, .01);
 
     // ROS
-    if(MT::getParameter<bool>("useRos", false)) {
+    if(mlr::getParameter<bool>("useRos", false)) {
       addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
       addModule<RosCom_ControllerSync>(NULL, Module::loopWithBeat, .001);
     }
@@ -25,7 +25,7 @@ struct PR2G4Control:System {
 
 // ============================================================================
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   PR2G4Control system;
   engine().open(system);

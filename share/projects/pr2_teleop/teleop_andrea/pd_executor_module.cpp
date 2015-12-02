@@ -16,46 +16,46 @@ PDExecutor::PDExecutor()
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(.3, 10.);
 
-  if(MT::getParameter<bool>("useLimits", false)) {
+  if(mlr::getParameter<bool>("useLimits", false)) {
     limits = fmc.addPDTask("limits", 1., .8, new TaskMap_qLimits);
     limits->y_ref.setZero();
   }
 
-  if(MT::getParameter<bool>("useCollisions", false)) {
+  if(mlr::getParameter<bool>("useCollisions", false)) {
     collisions = fmc.addPDTask("collisions", 2., .8, new ProxyTaskMap(allPTMT, {0u}, .1));
     collisions->y_ref.setZero();
     collisions->v_ref.setZero();
   }
 
-  if(MT::getParameter<bool>("usePositionR", false)) {
+  if(mlr::getParameter<bool>("usePositionR", false)) {
     effPosR = fmc.addPDTask("MoveEffTo_endeffR", 1., .8, posTMT, "endeffR");
     effPosR->y_ref = {.4, .4, 1.2};
   }
 
-  if(MT::getParameter<bool>("usePositionL", false)) {
+  if(mlr::getParameter<bool>("usePositionL", false)) {
     effPosL = fmc.addPDTask("MoveEffTo_endeffL", 1., .8, posTMT, "endeffL");
     effPosL->y_ref = {-.4, .4, 1.2};
   }
 
-  if(MT::getParameter<bool>("useGripperR", false)) {
+  if(mlr::getParameter<bool>("useGripperR", false)) {
     int jointID = world.getJointByName("r_gripper_joint")->qIndex;
     gripperR = fmc.addPDTask("gripperR", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperR->y_ref = .08;  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useGripperL", false)) {
+  if(mlr::getParameter<bool>("useGripperL", false)) {
     int jointID = world.getJointByName("l_gripper_joint")->qIndex;
     gripperL = fmc.addPDTask("gripperL", .3, .8, new TaskMap_qItself(jointID, world.q.N));
     gripperL->y_ref = .08;  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useOrientationR", false)) {
+  if(mlr::getParameter<bool>("useOrientationR", false)) {
     effOrientationR = fmc.addPDTask("orientationR", 1., .8, quatTMT, "endeffR", {0, 0, 0});
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
   }
 
-  if(MT::getParameter<bool>("useOrientationL", false)) {
+  if(mlr::getParameter<bool>("useOrientationL", false)) {
     effOrientationL = fmc.addPDTask("orientationL", 1., .8, quatTMT, "endeffL", {0, 0, 0});
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
@@ -229,7 +229,7 @@ void PDExecutor::initRos() {
 }
 
 void PDExecutor::open() {
-  useros = MT::getParameter<bool>("useRos", false);
+  useros = mlr::getParameter<bool>("useRos", false);
 }
 
 void PDExecutor::close() {

@@ -10,7 +10,7 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : world("model.kvg"),worldreal("model.kvg"), fmc(world, true), useros(false),
+    : Module("PDExecutor", .01), world("model.kvg"),worldreal("model.kvg"), fmc(world, true), useros(false),
       limits(nullptr), collision(nullptr),
       effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
       effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
@@ -27,29 +27,29 @@ PDExecutor::PDExecutor()
   //fmc.qitselfPD.maxAcc = 0.09;
   //fmc.qitseldPD.f_Igain = 1.;
 
-  if(MT::getParameter<bool>("useLimits", false)) {
+  if(mlr::getParameter<bool>("useLimits", false)) {
     limits = fmc.addPDTask("limits", 0.2, .8, new TaskMap_qLimits);
    // limits->y_ref.setZero();
 
   limits->prec = 0.1;
   }
 
-  if(MT::getParameter<bool>("useCollisions", false)) {
+  if(mlr::getParameter<bool>("useCollisions", false)) {
     collision = fmc.addPDTask("collision", 0.1, 5.8, new ProxyTaskMap(allPTMT, {0u}, .1));
   }
 
-  if(MT::getParameter<bool>("usePositionR", false)) {
+  if(mlr::getParameter<bool>("usePositionR", false)) {
 
      effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
      effPosR->y_ref = {0.8, -.5, 1.};
     //effPosR->maxVel = 0.004;
   }
 
-  if(MT::getParameter<bool>("usePositionL", false)) {
+  if(mlr::getParameter<bool>("usePositionL", false)) {
      effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
      effPosL->y_ref = {0.8, .5, 1.};
   }
-  if(MT::getParameter<bool>("fc", false)) {
+  if(mlr::getParameter<bool>("fc", false)) {
     fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
     fc->y_ref ={0.8,0.5,1.}; 
     fc->f_ref = {15.,15.,15.};
@@ -57,28 +57,28 @@ PDExecutor::PDExecutor()
     fc->active = true;
   }
 
-  if(MT::getParameter<bool>("useGripperR", false)) {
+  if(mlr::getParameter<bool>("useGripperR", false)) {
     int jointID = world.getJointByName("r_gripper_joint")->qIndex;
     gripperR = fmc.addPDTask("gripperR", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
     gripperR->setTarget({0.01});
     //gripperR->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useGripperL", false)) {
+  if(mlr::getParameter<bool>("useGripperL", false)) {
     int jointID = world.getJointByName("l_gripper_joint")->qIndex;
     gripperL = fmc.addPDTask("gripperL", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
     gripperL->setTarget({0.01});
     //gripperL->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useOrientationR", false)) {
+  if(mlr::getParameter<bool>("useOrientationR", false)) {
      effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   }
 
-  if(MT::getParameter<bool>("useOrientationL", false)) {
+  if(mlr::getParameter<bool>("useOrientationL", false)) {
     effOrientationL = fmc.addPDTask("orientationL", .2,1.8,new DefaultTaskMap(quatTMT,world, "endeffL"));
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
@@ -86,7 +86,7 @@ PDExecutor::PDExecutor()
   }
 
 
-  if(MT::getParameter<bool>("base", false)) {
+  if(mlr::getParameter<bool>("base", false)) {
     base = fmc.addPDTask("basepos", .2,.8,new TaskMap_qItself(world, "worldTranslationRotation"));
     base->y_ref={0.,0.,0.};
     base->active =false;
@@ -122,7 +122,7 @@ void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
-  q(qIndex+2) = MT::sign(rotvec(2)) * angle;
+  q(qIndex+2) = mlr::sign(rotvec(2)) * angle;
 //  cout<<q<<endl;
 
 }
@@ -164,8 +164,8 @@ void PDExecutor::step()
 
             worldreal.setJointState(obs.q,obs.qdot);
             arr Jft, J;
-            worldreal.kinematicsPos(NoArr,J,ftL_shape->body,&ftL_shape->rel.pos);
-            worldreal.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body,&ftL_shape->rel.pos,worldreal.getShapeByName("l_ft_sensor"));
+            worldreal.kinematicsPos(NoArr,J,ftL_shape->body, ftL_shape->rel.pos);
+            worldreal.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body, ftL_shape->rel.pos,worldreal.getShapeByName("l_ft_sensor"));
             Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
             J = inverse_SymPosDef(J*~J)*J;
              fLobs = Jft*fLobs;
@@ -450,7 +450,7 @@ void PDExecutor::initRos()
 void PDExecutor::open()
 {
 
-  useros = MT::getParameter<bool>("useRos", false);
+  useros = mlr::getParameter<bool>("useRos", false);
   error = zeros(3);
 
 }

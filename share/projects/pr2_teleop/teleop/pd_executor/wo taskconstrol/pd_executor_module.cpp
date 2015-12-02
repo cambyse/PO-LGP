@@ -26,58 +26,58 @@ PDExecutor::PDExecutor()
   //fmc.qitselfPD.maxAcc = 0.09;
   //fmc.qitseldPD.f_Igain = 1.;
 
-  if(MT::getParameter<bool>("useLimits", false)) {
+  if(mlr::getParameter<bool>("useLimits", false)) {
     limits = fmc.addPDTask("limits", 0.2, .8, new TaskMap_qLimits);
    // limits->y_ref.setZero();
 
   limits->prec = 0.1;
   }
 
-  if(MT::getParameter<bool>("useCollisions", false)) {
+  if(mlr::getParameter<bool>("useCollisions", false)) {
     collision = fmc.addPDTask("collision", 0.1, 5.8, new ProxyTaskMap(allPTMT, {0u}, .1));
   }
 
-  if(MT::getParameter<bool>("usePositionR", false)) {
+  if(mlr::getParameter<bool>("usePositionR", false)) {
     effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8, posTMT, "endeffR");
     effPosR->y_ref = {0.8, -.5, 1.};
     //effPosR->maxVel = 0.004;
   }
 
-  if(MT::getParameter<bool>("usePositionL", false)) {
+  if(mlr::getParameter<bool>("usePositionL", false)) {
     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8, posTMT, "endeffL");
     effPosL->y_ref = {0.8, .5, 1.};
     //effPosL->maxVel = 0.004;
   }
 
-  if(MT::getParameter<bool>("useGripperR", false)) {
+  if(mlr::getParameter<bool>("useGripperR", false)) {
     int jointID = world.getJointByName("r_gripper_joint")->qIndex;
     gripperR = fmc.addPDTask("gripperR", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
     gripperR->setTarget({0.01});
     //gripperR->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useGripperL", false)) {
+  if(mlr::getParameter<bool>("useGripperL", false)) {
     int jointID = world.getJointByName("l_gripper_joint")->qIndex;
     gripperL = fmc.addPDTask("gripperL", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
     gripperL->setTarget({0.01});
     //gripperL->y_ref = {.08};  // open gripper 8cm
   }
 
-  if(MT::getParameter<bool>("useOrientationR", false)) {
+  if(mlr::getParameter<bool>("useOrientationR", false)) {
     effOrientationR = fmc.addPDTask("orientationR", .2, 1.8, quatTMT, "endeffR", {0, 0, 0});
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   }
 
-  if(MT::getParameter<bool>("useOrientationL", false)) {
+  if(mlr::getParameter<bool>("useOrientationL", false)) {
     effOrientationL = fmc.addPDTask("orientationL", .2,1.8, quatTMT, "endeffL", {0, 0, 0});
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
 
   }
 
-  if(MT::getParameter<bool>("fc", false)) {
+  if(mlr::getParameter<bool>("fc", false)) {
     fc = fmc.addConstraintForceTask("test", new PairCollisionConstraint(world,"endeffForceR","r_ft_sensor"));
   
     //fc->desiredApproach.f_ref = {1.,0.,0.,0.,0.,0.};
@@ -311,7 +311,7 @@ void PDExecutor::initRos()
 
 void PDExecutor::open()
 {
-  useros = MT::getParameter<bool>("useRos", false);
+  useros = mlr::getParameter<bool>("useRos", false);
 }
 
 void PDExecutor::close()

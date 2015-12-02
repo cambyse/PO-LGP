@@ -1,7 +1,6 @@
 #pragma once
-#include <Core/thread.h>
+#include <Core/module.h>
 #include <Motion/feedbackControl.h>
-#include <System/engine.h>
 // #include <pr2/actionMachine.h>
 // #include <pr2/actions.h>
 #include <Mocap/mocapdata.h>
