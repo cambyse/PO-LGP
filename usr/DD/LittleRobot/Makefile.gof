@@ -1,0 +1,9 @@
+BASE = ../../../share
+
+DEPEND = Ors Core Gui extern_SWIFT Geo
+
+GL = 1
+PHYSX = 1
+
+include $(BASE)/gofMake/generic.mk
+

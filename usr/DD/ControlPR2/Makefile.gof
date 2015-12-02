@@ -1,0 +1,7 @@
+BASE = ../../../share
+
+ROS = 0
+
+DEPEND = Core Hardware_gamepad Motion Ors Gui pr2 Optim Geo
+
+include $(BASE)/gofMake/generic.mk

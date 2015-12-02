@@ -1,0 +1,6 @@
+BASE = ../../../share
+
+DEPEND = Ors Core Gui Geo
+
+include $(BASE)/gofMake/generic.mk
+
