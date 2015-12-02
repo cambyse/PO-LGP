@@ -1,6 +1,6 @@
 #include "rosalvar.h"
 
-#ifdef MT_ROS
+#ifdef MT_ROS_ALVAR
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
