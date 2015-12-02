@@ -25,6 +25,7 @@ struct Teleop2Tasks{
   CtrlTask *base, *fc;
   Teleop2Tasks(FeedbackMotionControl& _MP);
   mlr::Array<CtrlTask*> getTasks();
+  void deactivateTasks();
   void updateTasks( floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive);
 };
 

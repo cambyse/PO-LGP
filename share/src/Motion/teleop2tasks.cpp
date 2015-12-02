@@ -57,10 +57,31 @@ Teleop2Tasks::Teleop2Tasks(FeedbackMotionControl& _MP):fmc(_MP){
 }
 
 mlr::Array<CtrlTask*> Teleop2Tasks::getTasks(){
-  return { effPosR, gripperR, effOrientationR, effPosL, gripperL, effOrientationL, base, fc };
+  return { effPosR, gripperR, effOrientationR, effPosL, gripperL, effOrientationL, base }; //, fc
+}
+
+void Teleop2Tasks::deactivateTasks(){
+  effPosR->active = false;
+  effPosL->active = false;
+  effOrientationR->active = false;
+  effOrientationL->active = false;
+  gripperL->active = false;
+  gripperR->active = false;
+  fc->active = false;
+  base->active =false;
+
 }
 
 void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive){
+
+  effPosR->active = true;
+  effPosL->active = true;
+  effOrientationR->active = true;
+  effOrientationL->active = true;
+  gripperL->active = true;
+  gripperR->active = true;
+  fc->active = false;
+  base->active =true;
 
   // set hand position
   arr pos, quat;

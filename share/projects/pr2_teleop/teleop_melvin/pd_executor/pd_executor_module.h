@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Motion/feedbackControl.h>
-//#include <Motion/teleop2tasks.h>
+#include <Motion/teleop2tasks.h>
 
 //#ifdef WITH_ROS
 //  #include <Actions/actions.h>
@@ -34,7 +34,7 @@ struct PDExecutor: Module {
   ors::KinematicWorld world;
   ors::KinematicWorld worldreal;
   FeedbackMotionControl fmc;
-//  Teleop2Tasks tele2tasks;
+  Teleop2Tasks tele2tasks;
   arr q, qdot ;
 
   bool inited, useros;
@@ -42,24 +42,6 @@ struct PDExecutor: Module {
 
 
   // Tasks
-  CtrlTask* limits;
-  CtrlTask* collision;
-
-  CtrlTask* effPosR;
-  CtrlTask* gripperR;
-  CtrlTask* effOrientationR;
-  // CtrlTask* effOrientationRX;
-  // CtrlTask* effOrientationRY;
-  // CtrlTask* effOrientationRZ;
-
-  CtrlTask* effPosL;
-  CtrlTask* gripperL;
-  CtrlTask* effOrientationL;
-  // CtrlTask* effOrientationLX;
-  // CtrlTask* effOrientationLY;
-  // CtrlTask* effOrientationLZ;
-  CtrlTask* base;
-  CtrlTask* fc; 
 
   PDExecutor();
 

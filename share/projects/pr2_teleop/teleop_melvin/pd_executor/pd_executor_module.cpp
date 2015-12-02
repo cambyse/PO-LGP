@@ -10,10 +10,7 @@
 // ############################################################################
 // Executor
 PDExecutor::PDExecutor()
-    : Module("PDExecutor", .01), world("model.kvg"),worldreal("model.kvg"), fmc(world, true), useros(false),
-      limits(nullptr), collision(nullptr),
-      effPosR(nullptr), gripperR(nullptr), effOrientationR(nullptr),
-      effPosL(nullptr), gripperL(nullptr), effOrientationL(nullptr)
+    : Module("PDExecutor", .01), world("model.kvg"),worldreal("model.kvg"), fmc(world, true), tele2tasks(fmc), useros(false)
 {
 
   // fmc setup
@@ -26,73 +23,6 @@ PDExecutor::PDExecutor()
   //fmc.qitselfPD.maxVel = 0.008;
   //fmc.qitselfPD.maxAcc = 0.09;
   //fmc.qitseldPD.f_Igain = 1.;
-
-  if(mlr::getParameter<bool>("useLimits", false)) {
-    limits = fmc.addPDTask("limits", 0.2, .8, new TaskMap_qLimits);
-   // limits->y_ref.setZero();
-
-  limits->prec = 0.1;
-  }
-
-  if(mlr::getParameter<bool>("useCollisions", false)) {
-    collision = fmc.addPDTask("collision", 0.1, 5.8, new ProxyTaskMap(allPTMT, {0u}, .1));
-  }
-
-  if(mlr::getParameter<bool>("usePositionR", false)) {
-
-     effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
-     effPosR->y_ref = {0.8, -.5, 1.};
-    //effPosR->maxVel = 0.004;
-  }
-
-  if(mlr::getParameter<bool>("usePositionL", false)) {
-     effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
-     effPosL->y_ref = {0.8, .5, 1.};
-  }
-  if(mlr::getParameter<bool>("fc", false)) {
-    fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
-    fc->y_ref ={0.8,0.5,1.}; 
-    fc->f_ref = {15.,15.,15.};
-    fc->f_Igain = .075;
-    fc->active = true;
-  }
-
-  if(mlr::getParameter<bool>("useGripperR", false)) {
-    int jointID = world.getJointByName("r_gripper_joint")->qIndex;
-    gripperR = fmc.addPDTask("gripperR", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
-    gripperR->setTarget({0.01});
-    //gripperR->y_ref = {.08};  // open gripper 8cm
-  }
-
-  if(mlr::getParameter<bool>("useGripperL", false)) {
-    int jointID = world.getJointByName("l_gripper_joint")->qIndex;
-    gripperL = fmc.addPDTask("gripperL", .3, 1.8, new TaskMap_qItself(jointID, world.q.N));
-    gripperL->setTarget({0.01});
-    //gripperL->y_ref = {.08};  // open gripper 8cm
-  }
-
-  if(mlr::getParameter<bool>("useOrientationR", false)) {
-     effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
-    effOrientationR->y_ref = {1., 0., 0., 0.};
-    effOrientationR->flipTargetSignOnNegScalarProduct = true;
-
-  }
-
-  if(mlr::getParameter<bool>("useOrientationL", false)) {
-    effOrientationL = fmc.addPDTask("orientationL", .2,1.8,new DefaultTaskMap(quatTMT,world, "endeffL"));
-    effOrientationL->y_ref = {1., 0., 0., 0.};
-    effOrientationL->flipTargetSignOnNegScalarProduct = true;
-
-  }
-
-
-  if(mlr::getParameter<bool>("base", false)) {
-    base = fmc.addPDTask("basepos", .2,.8,new TaskMap_qItself(world, "worldTranslationRotation"));
-    base->y_ref={0.,0.,0.};
-    base->active =false;
-
-  }
-
 }
 
 
@@ -129,113 +59,26 @@ void PDExecutor::step()
     worldreal.watch(false);
     
     ors::Joint *trans= world.getJointByName("worldTranslationRotation");
-    arr fLobs;
-    arr uobs;
 
 
 
 
-    floatA cal_pose_rh = calibrated_pose_rh.get();
-    floatA cal_pose_lh = calibrated_pose_lh.get();
+
     //if(length(cal_pose_lh)==0||length(cal_pose_rh)==0) return;
     bool init;
     init = initmapper.get();
-    if(init)
-    {
-        effPosR->active = false;
-        effPosL->active = false;
-        effOrientationR->active = false;
-        effOrientationL->active = false;
-        gripperL->active = false;
-        gripperR->active = false;
-        fc->active = false;
-        base->active =false;
-    }
-    else
-    {
-        {
-            effPosR->active = true;
-            effPosL->active = true;
-            effOrientationR->active = true;
-            effOrientationL->active = true;
-            gripperL->active = true;
-            gripperR->active = true;
-            fc->active = true;
-            base->active =true;
-        }
-    }
 
 
     if(!init)
     {
-        // set hand position
-        arr pos, quat;
-    
-        ors::Quaternion orsquats;
-        orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.}); 
-        ors::Quaternion orsquatsacc;
-
-        // right hand
-        copy(pos, cal_pose_rh.sub(0,2));
-        pos += ARR(0.6, 0., 1.);
-        if(effPosR) effPosR->setTarget(pos);
-
-        // orientation
-        orsquatsacc.set(
-            (double)cal_pose_rh(3),
-            (double)cal_pose_rh(4),
-            (double)cal_pose_rh(5),
-            (double)cal_pose_rh(6));
-        quat = conv_quat2arr(orsquats * orsquatsacc);
-        if(effOrientationR) effOrientationR->setTarget(quat);
-
-        //left hand
-        copy(pos, cal_pose_lh.sub(0,2));
-        pos += ARR(0.6, 0., 1.);
-        if(effPosL) effPosL->setTarget(pos);
-       
-        // orientation
-        orsquatsacc.set(
-            (double)cal_pose_lh(3),
-            (double)cal_pose_lh(4),
-            (double)cal_pose_lh(5),
-            (double)cal_pose_lh(6));
-        quat = conv_quat2arr(orsquats * orsquatsacc);
-        if(effOrientationL) effOrientationL->setTarget(quat);
-
-        //gripper
-        double cal_gripper;
-        cal_gripper =  calibrated_gripper_rh.get();
-        if(gripperR) gripperR->setTarget({cal_gripper});
-        cal_gripper =  calibrated_gripper_lh.get();
-        if(gripperL) gripperL->setTarget({cal_gripper});
-
-        //base movement
-        arr drive_des;
-        double y_c,x_c,phi_c;
-        x_c = base->y_ref(trans->qIndex+0);
-        y_c = base->y_ref(trans->qIndex+1);
-        phi_c = base->y_ref(trans->qIndex+2);
-
-        if(false) //drive indicator
-        {
-            drive_des = drive.get();
-            x_c += drive_des(0)*cos(phi_c) - drive_des(1)*sin(phi_c);
-            y_c += drive_des(0)*sin(phi_c) + drive_des(1)*cos(phi_c);
-            phi_c += drive_des(2);
-        }
-
-
-        base->setTarget({x_c,y_c,phi_c});
-        fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
-        fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
-        fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
-
+      tele2tasks.updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get());
+    }else{
+      tele2tasks.deactivateTasks();
     }
+
     double tau = 0.001;
 
-    for (uint t = 0; t < 20 ; t++)
-    {
+    for (uint t = 0; t < 20 ; t++)    {
         arr a = fmc.operationalSpaceControl();
         q += tau * qdot;
         qdot += tau * a;
@@ -243,9 +86,7 @@ void PDExecutor::step()
         fmc.setState(q, qdot);
   
     }
- //   cout<<    q(trans->qIndex+0)<<endl
- //       <<    q(trans->qIndex+1)<<endl
- //       <<    q(trans->qIndex+2)<<endl<<trans->qIndex<<endl;
+
     // set state
     CtrlMsg ref;
     ref.q = q;
@@ -270,6 +111,7 @@ void PDExecutor::step()
         ref.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
    }
 
+    /*  FORCE CONTROL
     if(useros)
     {
         uint count=0;
@@ -305,7 +147,7 @@ void PDExecutor::step()
        // cout<<"error"<<error<<endl;
        // ctrl_ref.set() = ref;
     }
-  
+  */
   ctrl_ref.set() = ref;
 
 }

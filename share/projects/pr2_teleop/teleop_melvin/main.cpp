@@ -12,13 +12,31 @@
 #include "g4taprecon/taprecon.h"
 #include "pd_executor/pd_executor_module.h"
 
+#include <Actions/teleopControl.h>
+#include <Actions/TaskControllerModule.h>
+
+#include <pr2/roscom.h>
+#include <Perception/perception.h>
+
 // ============================================================================
 
 struct PR2G4Control {
   GamepadInterface gpi;
   G4Poller g4poller;
   G4HutoRoMap hutoro;
-  PDExecutor exec;
+//  PDExecutor exec;
+
+//  RosCom_Spinner spinner;
+  TaskControllerModule tcm;
+  TeleopControlActivity teleop;
+  OrsViewer orsviewer;
+
+//  GamepadInterface gamepad;
+//  GamepadControlActivity gpc;
+//  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub_ctrl_obs("/marc_rt_controller/jointState", ctrl_obs);
+//  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub_ctrl_ref("/marc_rt_controller/jointReference", ctrl_ref);
+//  SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub_pr2_odom("/robot_pose_ekf/odom_combined", pr2_odom);
+
 
   PR2G4Control() {
 
