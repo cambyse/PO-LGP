@@ -14,7 +14,7 @@ struct sG4Display {
   sG4Display(): mid(nullptr) {}
 };
 
-G4Display::G4Display():Module("G4Display"){
+G4Display::G4Display():Module("G4Display", .01){
   s = new sG4Display;
 }
 

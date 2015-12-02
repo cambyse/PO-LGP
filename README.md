@@ -74,6 +74,9 @@ Everything else is equal to ubuntu.
   Open 'Debugger Log' window
   write gdb commands:
   handle SIGINT pass
+  handle SIGINT noprint
+  handle SIGINT nostop
+  handle SIGINT ignore
 
 * append source directory to all "*.includes" files:
 echo "echo '/home/mtoussai/git/mlr/share/src' >> \$1" > nogit_append_path

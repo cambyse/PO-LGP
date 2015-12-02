@@ -15,11 +15,12 @@ void miniTest(){
 }
 
 
-struct G4System:System{
-  ACCESS(floatA, currentPoses);
+struct G4System {
+  ACCESS(floatA, poses);
+
+  G4Poller poller;
+  G4Display display;
   G4System(){
-    addModule<G4Poller>("G4Poller", Module::loopWithBeat, .001);
-    G4Display &display = *addModule<G4Display>("G4Display", Module::loopWithBeat, .001);
 
     // display.mid().load("./g4mapping.kvg");
     // display.kw().init("./world.ors");
@@ -31,13 +32,13 @@ struct G4System:System{
 void serialRun(){
   G4System S;
 
-  S.openAll();
-  for(uint i=0;i<100;i){
-    S.stepAll();
+  openModules();
+  for(uint i=0;i<100;i++){
+    stepModules();
     mlr::wait(.01, false);
-    cout <<i <<' ' <<S.currentPoses.get()() <<endl;
+    cout <<i <<' ' <<S.poses.get()() <<endl;
   }
-  S.closeAll();
+  closeModules();
 }
 
 
@@ -45,18 +46,21 @@ void threadedRun(){
   G4System S;
 
   threadOpenModules(true);
-  for(uint i=0;i<10;i++){
-    S.currentPoses.var->waitForNextRevision();
-    cout <<i <<' ' <<S.currentPoses.get()() <<endl;
+
+  for(;;){
+    S.poses.var->waitForNextRevision();
+    cout <<S.poses.get()() <<endl;
+    if(moduleShutdown().getValue()>0) break;
   }
+
   threadCloseModules();
 }
 
 int main(int argc, char **argv) {
 
- // miniTest();
- serialRun();
-  // threadedRun();
+  // miniTest();
+  serialRun();
+//  threadedRun();
   return 0;
 }
 
