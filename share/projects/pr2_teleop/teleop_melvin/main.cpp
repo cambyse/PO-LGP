@@ -18,20 +18,9 @@ struct PR2G4Control {
   GamepadInterface gpi;
   G4Poller g4poller;
   G4HutoRoMap hutoro;
-  G4MoveRecon g4moverecon;
   PDExecutor exec;
 
   PR2G4Control() {
-//    addModule<GamepadInterface>(NULL, .05);
-//    addModule<G4Poller>(NULL, .05);
-  //  addModule<G4Display>(NULL,Module::loopWithBeat,0.05);
-//    addModule<G4HutoRoMap>("G4HuToRoMap", .05);
-//    addModule<G4MoveRecon>("G4MoveRecon", .05);
-    // auto g4debug = addModule<G4Debugger>(NULL, Module::listenFirst);
-    // g4debug->id().load("g4mapping.kvg");
-    //auto pd_executor = addModule<PDExecutor>(NULL, .05);
-//   addModule<PDExecutor>("PDExecutor", .01);
-
 
     // ROS
     if(mlr::getParameter<bool>("useRos", false)) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Motion/feedbackControl.h>
+//#include <Motion/teleop2tasks.h>
 
 //#ifdef WITH_ROS
 //  #include <Actions/actions.h>
@@ -12,43 +13,33 @@
 // ============================================================================
 struct PDExecutor: Module {
   // calibrated_pose is pos + orientation (quaternion)
-  ACCESS(floatA, calibrated_pose_rh);
-  ACCESS(floatA, calibrated_pose_lh);
+  ACCESS(floatA, calibrated_pose_rh)
+  ACCESS(floatA, calibrated_pose_lh)
+
   // distance of the two finger tips
-  ACCESS(float, calibrated_gripper_rh);
-  ACCESS(float, calibrated_gripper_lh);
+  ACCESS(float, calibrated_gripper_rh)
+  ACCESS(float, calibrated_gripper_lh)
+
   // Msgs that are send to ROS
-// #ifdef WITH_ROS
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-// #endif
-//#ifdef MT_ROS
-  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom);
-//#endif
-  ACCESS(bool, fixBase);
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
+  ACCESS(bool, fixBase)
 
-
-  ACCESS(floatA, poses_rh);
-  ACCESS(floatA, poses_lh);
-
-  ACCESS(bool, initmapper);  
+  ACCESS(bool, initmapper)
   // FeedbackMotionControl stuff
-  ACCESS(arr, drive);
-  ACCESS(bool,calisaysokay);
-  ACCESS(bool,taped);
+  ACCESS(arr, drive)
+
 
   ors::KinematicWorld world;
   ors::KinematicWorld worldreal;
   FeedbackMotionControl fmc;
+//  Teleop2Tasks tele2tasks;
   arr q, qdot ;
 
   bool inited, useros;
   arr error;
 
-  // ros stuff
-// #ifdef WITH_ROS
-  // RosCom_ControllerSync* roscom;
-// #endif
 
   // Tasks
   CtrlTask* limits;
@@ -76,7 +67,6 @@ struct PDExecutor: Module {
   void open();
   void close();
 
-  void visualizeSensors();
   void initRos();
   void sendRosCtrlMsg();
 };

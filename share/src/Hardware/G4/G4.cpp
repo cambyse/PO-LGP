@@ -263,11 +263,11 @@ void G4Poller::step(){
   s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   //cout << "poses: " << s->poses << endl;
   //cout << "currentPoses: " << currentPoses.get() << endl;
-  poses.writeAccess();
-  poses() = s->poses;
+  g4_poses.writeAccess();
+  g4_poses() = s->poses;
   // modulo today
-  poses.dataTime() = s->tstamp.tv_sec % 86400 + s->tstamp.tv_nsec / 1000000000.;
-  poses.deAccess();
+  g4_poses.dataTime() = s->tstamp.tv_sec % 86400 + s->tstamp.tv_nsec / 1000000000.;
+  g4_poses.deAccess();
   //cout << "currentPoses: " << currentPoses.get() << endl;
 }
 

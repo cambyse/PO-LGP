@@ -7,7 +7,7 @@
 #include <Mocap/mocapdata.h>
 
 struct G4Display: Module{
-  ACCESS(floatA, poses)
+  ACCESS(floatA, g4_poses)
 
   G4Display();
 

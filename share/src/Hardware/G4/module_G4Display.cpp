@@ -76,9 +76,9 @@ void G4Display::open(){
 void G4Display::close(){}
 
 void G4Display::step(){
-  uint t = poses.readAccess();
-  floatA p = poses();
-  poses.deAccess();
+  uint t = g4_poses.readAccess();
+  floatA p = g4_poses();
+  g4_poses.deAccess();
 
   if(!t) return; //no revision yet -> nothing to display
 

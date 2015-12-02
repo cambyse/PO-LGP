@@ -95,22 +95,6 @@ PDExecutor::PDExecutor()
 
 }
 
-void PDExecutor::visualizeSensors()
-{
-
-  floatA rh = poses_rh.get();
-  if(rh.N) {
-    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
-  }
-  floatA lh = poses_lh.get();
-  if(lh.N) {
-    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
-  }
-
-}
-
 
 void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
 
@@ -147,31 +131,6 @@ void PDExecutor::step()
     ors::Joint *trans= world.getJointByName("worldTranslationRotation");
     arr fLobs;
     arr uobs;
-    if(useros)
-    {
-       // ctrl_obs.waitForNextRevision();
-       // pr2_odom.waitForRevisionGreaterThan(0);
-        ors::Shape *ftL_shape = worldreal.getShapeByName("endeffForceL");
-        CtrlMsg obs = ctrl_obs.get();
-        fLobs = obs.fL;
-        //cout<<fLobs<<endl;
-        uobs =  obs.u_bias;
-        //cout<<uobs<<endl;
-        if(fLobs.N && uobs.N)
-        {
-
-            setOdom(obs.q,trans->qIndex,pr2_odom.get());
-
-            worldreal.setJointState(obs.q,obs.qdot);
-            arr Jft, J;
-            worldreal.kinematicsPos(NoArr,J,ftL_shape->body, ftL_shape->rel.pos);
-            worldreal.kinematicsPos_wrtFrame(NoArr,Jft,ftL_shape->body, ftL_shape->rel.pos,worldreal.getShapeByName("l_ft_sensor"));
-            Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
-            J = inverse_SymPosDef(J*~J)*J;
-             fLobs = Jft*fLobs;
-           //  cout <<zeros(3) <<' ' << fLobs << " " << J*uobs << endl;
-        }
-    }     
 
 
 
@@ -179,10 +138,6 @@ void PDExecutor::step()
     floatA cal_pose_rh = calibrated_pose_rh.get();
     floatA cal_pose_lh = calibrated_pose_lh.get();
     //if(length(cal_pose_lh)==0||length(cal_pose_rh)==0) return;
-    bool driveind;
-         driveind= calisaysokay.get();
-         bool tapedd;
-              tapedd= taped.get();
     bool init;
     init = initmapper.get();
     if(init)
@@ -198,18 +153,6 @@ void PDExecutor::step()
     }
     else
     {
-        if(tapedd)
-        {
-            effPosR->active = false;
-            effPosL->active = true;
-            effOrientationR->active = false;
-            effOrientationL->active = true;
-            gripperL->active = true;
-            gripperR->active = false;
-            fc->active = true;
-            base->active =true;
-        }
-        else
         {
             effPosR->active = true;
             effPosL->active = true;
@@ -225,18 +168,16 @@ void PDExecutor::step()
 
     if(!init)
     {
-        // set arm poses
-        double x, y, z;
+        // set hand position
         arr pos, quat;
     
         ors::Quaternion orsquats;
         orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.}); 
         ors::Quaternion orsquatsacc;
 
-        x = cal_pose_rh(0) * 1;
-        y = cal_pose_rh(1) * 1;
-        z = cal_pose_rh(2) * 1;
-        pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
+        // right hand
+        copy(pos, cal_pose_rh.sub(0,2));
+        pos += ARR(0.6, 0., 1.);
         if(effPosR) effPosR->setTarget(pos);
 
         // orientation
@@ -245,20 +186,12 @@ void PDExecutor::step()
             (double)cal_pose_rh(4),
             (double)cal_pose_rh(5),
             (double)cal_pose_rh(6));
-        orsquatsacc =orsquats * orsquatsacc ;
-        quat = {
-            orsquatsacc.w,
-            orsquatsacc.x,
-            orsquatsacc.y,
-            orsquatsacc.z
-          };
+        quat = conv_quat2arr(orsquats * orsquatsacc);
         if(effOrientationR) effOrientationR->setTarget(quat);
 
-
-        x = cal_pose_lh(0) * 1;
-        y = cal_pose_lh(1) * 1;
-        z = cal_pose_lh(2) * 1;
-        pos = ARR(x, y, z) + ARR(0.6, 0., 1.);
+        //left hand
+        copy(pos, cal_pose_lh.sub(0,2));
+        pos += ARR(0.6, 0., 1.);
         if(effPosL) effPosL->setTarget(pos);
        
         // orientation
@@ -267,37 +200,29 @@ void PDExecutor::step()
             (double)cal_pose_lh(4),
             (double)cal_pose_lh(5),
             (double)cal_pose_lh(6));
-        orsquatsacc =orsquats * orsquatsacc;
-        quat = {
-            orsquatsacc.w,
-            orsquatsacc.x,
-            orsquatsacc.y,
-            orsquatsacc.z
-          };
+        quat = conv_quat2arr(orsquats * orsquatsacc);
         if(effOrientationL) effOrientationL->setTarget(quat);
 
-
+        //gripper
         double cal_gripper;
         cal_gripper =  calibrated_gripper_rh.get();
         if(gripperR) gripperR->setTarget({cal_gripper});
         cal_gripper =  calibrated_gripper_lh.get();
         if(gripperL) gripperL->setTarget({cal_gripper});
 
-
-
-
-         arr drive_des;
+        //base movement
+        arr drive_des;
         double y_c,x_c,phi_c;
-        x_c= base->y_ref(trans->qIndex+0);
+        x_c = base->y_ref(trans->qIndex+0);
         y_c = base->y_ref(trans->qIndex+1);
         phi_c = base->y_ref(trans->qIndex+2);
 
-        if(driveind)
+        if(false) //drive indicator
         {
             drive_des = drive.get();
-            x_c=x_c+ drive_des(0)*cos(phi_c)-drive_des(1)*sin(phi_c);
-            y_c=y_c+ drive_des(0)*sin(phi_c)+drive_des(1)*cos(phi_c);
-            phi_c = drive_des(2) + phi_c;
+            x_c += drive_des(0)*cos(phi_c) - drive_des(1)*sin(phi_c);
+            y_c += drive_des(0)*sin(phi_c) + drive_des(1)*cos(phi_c);
+            phi_c += drive_des(2);
         }
 
 
