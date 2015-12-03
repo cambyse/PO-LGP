@@ -1,5 +1,6 @@
 BASE = ../../..
 
 G4 = 1
+PTHREAD = 1
 
 include $(BASE)/gofMake/generic.mk
