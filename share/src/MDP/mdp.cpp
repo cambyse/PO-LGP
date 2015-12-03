@@ -631,9 +631,9 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
   byteA maze;
   switch(problem){
     case mdp::tinyMaze:
-      maze <<"[\
+      STRING("[\
           2 1;\
-          0 3]";
+          0 3]") >>maze;
       maze-=(byte)'0';
       
       mazeToP(maze, Px, Pxax, Pyxa, Rax, false);
@@ -642,10 +642,10 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //addActionNoise(Pxax, .1);
       break;
     case mdp::miniMaze:
-      maze <<"[\
+      STRING("[\
           0 0 0;\
           0 1 0;\
-          2 1 3]";
+          2 1 3]") >>maze;
       maze-=(byte)'0';
       
       mazeToP(maze, Px, Pxax, Pyxa, Rax, false);
@@ -656,19 +656,19 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //mdp::addActionNoise(Pxax, .1);
       break;
     case mdp::simpleMaze:
-      maze <<"[\
+      STRING("[\
           2 1 0 0 0 1 0 0 0;\
           0 1 0 1 0 1 0 1 0;\
           0 1 0 1 0 1 0 1 0;\
           0 1 0 1 0 1 0 1 0;\
-          0 0 0 1 0 0 0 1 3]";
+          0 0 0 1 0 0 0 1 3]") >>maze;
 
-      /*maze <<"[\
+      /*STRING("[\
       1 1 1 1 1 1 1;\
       1 3 0 0 0 0 1;\
       1 1 1 1 1 0 1;\
       1 2 0 0 0 0 1;\
-      1 1 1 1 1 1 1]";*/
+      1 1 1 1 1 1 1]") >>maze;*/
       maze-=(byte)'0';
       
       mazeToP(maze, Px, Pxax, Pyxa, Rax, false);
@@ -677,10 +677,10 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //addActionNoise(Pxax, .1);
       break;
     case mdp::heavenAndHell:
-      maze <<"[\
+      STRING("[\
           3 0 4 1 4 0 3 ;\
           1 2 1 1 1 2 1 ;\
-          0 0 1 1 1 0 0 ]";
+          0 0 1 1 1 0 0 ]") >>maze;
       maze-=(byte)'0';
       
       mazeToP(maze, Px, Pxax, Pyxa, Rax, false);

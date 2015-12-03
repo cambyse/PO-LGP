@@ -43,6 +43,10 @@ void GamepadInterface::step(){
   gamepadState().resize(n+1);
   gamepadState()(0)=B;
   for(uint i=0; i<n; i++) gamepadState()(i+1)=(double)A(i)/(1<<15);
+  if(step_count>20 && stopButtons(gamepadState())){
+    LOG(1) <<"*** STOP button pressed";
+    moduleShutdown().incrementValue();
+  }
   gamepadState.deAccess();
 }
 

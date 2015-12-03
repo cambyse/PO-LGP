@@ -12,17 +12,11 @@ struct MySystem {
   ACCESS(CtrlMsg, ctrl_obs)
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
-#if 1
+      rosCheckInit();
       new RosCom_Spinner();
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-#else
-      new RosCom_Spinner();
-      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
-      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-#endif
     }
-    //connect();
   }
 };
 

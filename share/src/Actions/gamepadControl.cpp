@@ -1,5 +1,5 @@
 #include "gamepadControl.h"
-#include <pr2/TaskControllerModule.h>
+#include <Actions/TaskControllerModule.h>
 #include <Motion/gamepad2tasks.h>
 
 //===========================================================================
@@ -31,7 +31,7 @@ void GamepadControlActivity::step(){
   }
   arr gamepad = gamepadState.get();
   bool gamepad_shutdown = g2t->updateTasks(gamepad);
-  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
+//  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }
 
 //===========================================================================

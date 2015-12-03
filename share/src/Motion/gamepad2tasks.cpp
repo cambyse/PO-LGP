@@ -33,6 +33,10 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
 }
 
+mlr::Array<CtrlTask*> Gamepad2Tasks::getTasks(){
+  return { endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR };
+}
+
 double gamepadSignalMap(double x){
   return mlr::sign(x)*(exp(mlr::sqr(x))-1.);
 }

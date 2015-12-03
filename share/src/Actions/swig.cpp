@@ -2,7 +2,7 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <pr2/TaskControllerModule.h>
+#include <Actions/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
@@ -38,13 +38,16 @@ struct SwigSystem {
   ACCESSname(ors::Transformation, kinect_frame)
 
   ACCESSname(arr, wrenchL)
+  ACCESSname(arr, wrenchR)
 
   ACCESSname(byteA, modelCameraView)
   ACCESSname(byteA, modelDepthView)
 
+  ACCESSname(arr, gamepadState)
+
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-//  OrsViewer orsviewer;
+  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
@@ -76,7 +79,10 @@ struct SwigSystem {
       new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
       new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
 
-      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
+//      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/l_ft_compensated", wrenchL);
+//      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
+      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
+      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
     }
 
     // make the base movable

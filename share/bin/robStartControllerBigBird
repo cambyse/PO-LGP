@@ -1,6 +1,6 @@
-rosrun pr2_controller_manager pr2_controller_manager list
-rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller l_arm_controller head_traj_controller r_gripper_controller l_gripper_controller torso_controller
+#rosrun pr2_controller_manager pr2_controller_manager list
 roslaunch gravity_compensation bigbird_left_arm.launch 2> /dev/null &
 roslaunch gravity_compensation bigbird_right_arm.launch 2> /dev/null &
 #cd ~/git/mlr/share/src/pr2/marc_controller_pkg
 roslaunch marc_controller_pkg marc_rt_controller.launch &
+rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller l_arm_controller head_traj_controller r_gripper_controller l_gripper_controller torso_controller
