@@ -18,14 +18,21 @@ struct Activity {
 
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
+
+  //-- 'callbacks' that are called from the RelationalMachine if something changes
   void associateToExistingFact(Node *fact);
-  void createFactRepresentative(Graph& state);
+  //void createFactRepresentative(Graph& state); this is never used
 
   /// configure yourself from the 'symbols' and 'params'
   virtual void configure(){}
+
   /// the activity spinner runs with 100Hz and calls this for all activities -- use only for
   /// non-computational heavy quick updates. Computationally heavy things should be threaded!
   virtual void activitySpinnerStep(double dt){ activityTime += dt; }
+
+  //-- 'responses' of activities
+  void setEffect(const char* effect);
+  void terminate();
 
   void write(ostream& os) const { os <<"Activity (" <<symbols <<"){" <<params <<"} (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
 };
@@ -44,6 +51,7 @@ template<class T> void registerActivity(const char* key){
 Activity* newActivity(Node *fact);
 
 /// create/launch a new activity based on the type, symbols and params; adds a fact to relationalState
+/* This is never used. Also: implement this by first creating the fact, then calling newActivity(fact) and checking the type
 template<class T>
 void newActivity(Graph& relationalState, const StringA& symbols, const Graph& params){
   Activity *act = dynamic_cast<Activity*>(new T);
@@ -59,6 +67,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
   act->createFactRepresentative(relationalState);
   registry().getValue<Variable<ActivityL> >("A") -> set()->append(act);
 }
+*/
 
 //===========================================================================
 
