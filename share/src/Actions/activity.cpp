@@ -11,12 +11,14 @@ void Activity::associateToExistingFact(Node* fact){
 
 //===========================================================================
 
+/* This is never used. Perhaps require that a fact always exists first.
 void Activity::createFactRepresentative(Graph& state){
   CHECK(symbols.N>0,"need symbols to create a Fact that represents this activity");
   if(!params.N) MLR_MSG("Are you sure to create a fact without params?");
   this->fact = new Node_typed<Graph>(state, {}, state.getNodes(symbols), &params, false);
   configure();
 }
+*/
 
 //===========================================================================
 
