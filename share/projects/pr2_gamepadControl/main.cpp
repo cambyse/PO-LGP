@@ -8,31 +8,28 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 
-struct MySystem {
-  ACCESSname(CtrlMsg, ctrl_ref)
-  ACCESSname(CtrlMsg, ctrl_obs)
-  ACCESSname(arr, gamepadState)
-  ACCESSname(arr, pr2_odom)
-  MySystem(){
-    new GamepadInterface();
-    if(mlr::getParameter<bool>("useRos", false)){
-      new RosCom_Spinner();
-      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
-      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-      new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
-
-//      new RosCom_ForceSensorSync(); //NULL, Module::loopWithBeat, 1.);
-    }
-    cout <<"SYSTEM=" <<registry() <<endl;
-  }
-};
 
 void changeColor(void*){  orsDrawAlpha = .5; glColor(.5,.0,.0); }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
 void TEST(Gamepad){
-  MySystem S;
+  bool useRos = mlr::getParameter<bool>("useRos", false);
+  bool fixBase = mlr::getParameter<bool>("fixBase", false);
 
+  //-- setup the system (modules and accesses)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
+  ACCESSname(arr, gamepadState)
+  ACCESSname(arr, pr2_odom)
+
+  GamepadInterface mod_gamepad;
+  RosCom_Spinner mod_rosSpinner;
+  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub_ctrl_obs("/marc_rt_controller/jointState", ctrl_obs);
+  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub_ctrl_ref("/marc_rt_controller/jointReference", ctrl_ref);
+  SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub_pr2_odom("/robot_pose_ekf/odom_combined", pr2_odom);
+//  RosCom_ForceSensorSync(); //NULL, Module::loopWithBeat, 1.);
+
+  //-- open modules
   threadOpenModules(true);
 
   ors::KinematicWorld world("model.kvg");
@@ -44,27 +41,26 @@ void TEST(Gamepad){
 
   ors::KinematicWorld world_pr2 = world;
   world.gl().add(changeColor);
-  world.gl().add(ors::glDrawGraph, &world_pr2);
+  world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
 
   FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
+  MP.tasks = j2t.getTasks();
 
-  bool useRos = mlr::getParameter<bool>("useRos", false);
-  bool fixBase = mlr::getParameter<bool>("fixBase", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     uint trials=0;
     for(;useRos;){
-      S.ctrl_obs.var->waitForNextRevision();
-      cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
+      ctrl_obs.var->waitForNextRevision();
+      cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<MP.world.q.N <<endl;
 
-      if(S.ctrl_obs.get()->q.N==MP.world.q.N
-         && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
+      if(ctrl_obs.get()->q.N==MP.world.q.N
+         && ctrl_obs.get()->qdot.N==MP.world.q.N)
         break;
 
       trials++;
@@ -75,8 +71,8 @@ void TEST(Gamepad){
 
     //-- wait for first odometry observation!
     for(trials=0;useRos;){
-      S.pr2_odom.var->waitForNextRevision();
-      if(S.pr2_odom.get()->N==3) break;
+      pr2_odom.var->waitForNextRevision();
+      if(pr2_odom.get()->N==3) break;
 
       trials++;
       if(trials>20){
@@ -86,10 +82,10 @@ void TEST(Gamepad){
 
     //-- set current state
     cout <<"** GO!" <<endl;
-    q = S.ctrl_obs.get()->q;
-    qdot = S.ctrl_obs.get()->qdot;
-    q.subRange(trans->qIndex, trans->qIndex+2) = S.pr2_odom.get();
-    //arr fL_base = S.fL_obs.get();
+    q = ctrl_obs.get()->q;
+    qdot = ctrl_obs.get()->qdot;
+    q.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    //arr fL_base = fL_obs.get();
     MP.setState(q, qdot);
   }
   arr zero_qdot(qdot.N);
@@ -101,27 +97,26 @@ void TEST(Gamepad){
   mlr::arrayBrackets="  ";
 
   for(uint t=0;;t++){
-    S.gamepadState.var->waitForNextRevision();
-    arr gamepadState = S.gamepadState.get();
-    bool gamepad_shutdown = j2t.updateTasks(gamepadState);
-    if(t>10 && gamepad_shutdown) shutdown().incrementValue();
+    gamepadState.var->waitForNextRevision();
+    arr gamepad = gamepadState.get();
+    bool gamepad_shutdown = j2t.updateTasks(gamepad);
+//    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 
 
-    // joint state
+    //get joint state
     if(useRos){
-      arr q_real =S.ctrl_obs.get()->q;
-      q_real.subRange(trans->qIndex, trans->qIndex+2) = S.pr2_odom.get();
+      arr q_real =ctrl_obs.get()->q;
+      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
 
-      world_pr2.setJointState(q_real, S.ctrl_obs.get()->qdot);
-      fLobs = S.ctrl_obs.get()->fL;
-      uobs = S.ctrl_obs.get()->u_bias;
+      world_pr2.setJointState(q_real, ctrl_obs.get()->qdot);
+      fLobs = ctrl_obs.get()->fL;
+      uobs = ctrl_obs.get()->u_bias;
     }
 
     //compute control
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
-//    cout <<t <<endl;
     MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
@@ -130,7 +125,7 @@ void TEST(Gamepad){
 
     //-- force task
     uint mode = 0;
-    if(gamepadState.N) mode = uint(gamepadState(0));
+    if(gamepad.N) mode = uint(gamepad(0));
     if(mode==2){
       cout <<"FORCE TASK" <<endl;
 #if 0 // set a feew fwd force task
@@ -210,10 +205,12 @@ void TEST(Gamepad){
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
     refs.intLimitRatio = 0.3;
-//    cout <<"ratios:" <<refs.velLimitRatio <<' ' <<refs.effLimitRatio <<endl;
-    S.ctrl_ref.set() = refs;
 
-    if(shutdown().getValue()/* || !rosOk()*/) break;
+    if(useRos){
+      ctrl_ref.set() = refs;
+    }
+
+    if(moduleShutdown().getValue()/* || !rosOk()*/) break;
   }
 
   threadCloseModules();

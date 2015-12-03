@@ -88,7 +88,7 @@ struct PhaseOneProblem{
 // Solvers
 //
 
-uint optConstrainedMix(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
+uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
 
 struct OptConstrained{
   UnconstrainedProblem UCP;

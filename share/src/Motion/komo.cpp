@@ -13,7 +13,9 @@ KOMO::KOMO(const Graph& specs){
   CHECK(x.N,"");
 }
 
-void KOMO::init(const Graph& specs){
+void KOMO::init(const Graph& _specs){
+  specs = _specs;
+
   Graph &glob = specs.get<Graph>("KOMO");
   uint timeSteps=glob.get<double>("T");
   double duration=glob.get<double>("duration");
@@ -26,13 +28,18 @@ void KOMO::init(const Graph& specs){
   }else{
     world.init(specs);
   }
-  world.meldFixedJoints();
-  world.removeUselessBodies();
-  makeConvexHulls(world.shapes);
-  if(glob["activateAllContacts"]){
-    for(ors::Shape *s:world.shapes) s->cont=true;
-    //    LOG(0) <<"Shape without contact: '" <<s->name <<"'";
+
+  if(glob["meldFixedJoints"]){
+    world.meldFixedJoints();
+    world.removeUselessBodies();
   }
+
+  if(glob["makeConvexHulls"])
+    makeConvexHulls(world.shapes);
+
+  if(glob["activateAllContacts"])
+    for(ors::Shape *s:world.shapes) s->cont=true;
+
   world.swift().initActivations(world);
   FILE("z.komo.model") <<world;
 
@@ -96,6 +103,11 @@ void KOMO::init(const Graph& specs){
 #endif
 }
 
+void KOMO::setFact(const char* fact){
+  specs.readNode(STRING(fact));
+  MP->parseTask(specs.last());
+}
+
 void KOMO::reset(){
   if(MP->T){
     x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
@@ -113,9 +125,9 @@ void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
   cout <<x;
   if(MP->T){
-    optConstrainedMix(x, dual, Convert(*MPF), OPT(verbose=2));
+    optConstrained(x, dual, Convert(*MPF), OPT(verbose=2));
   }else{
-    optConstrainedMix(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+    optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
   cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
@@ -135,9 +147,9 @@ void KOMO::checkGradients(){
   }
 }
 
-void KOMO::displayTrajectory(bool wait){
+void KOMO::displayTrajectory(double delay){
   if(MP->T){
-    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", 0.01);
+    ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
   //  orsDrawProxies=true;
   // for(uint t=0;t<x.d0;t++){
   //   MP->setState(x[t]);
@@ -183,7 +195,7 @@ arr moveTo(ors::KinematicWorld& world,
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));

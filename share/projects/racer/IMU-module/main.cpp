@@ -26,11 +26,11 @@ void TEST(IMU){
     arr x = S.stateEstimate.get();
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
-    if(shutdown().getValue()) break;
+    if(moduleShutdown().getValue()) break;
 //    if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    shutdown().waitForValueGreaterThan(0);
+  //    moduleShutdown().waitForValueGreaterThan(0);
 
   threadCloseModules();
 
@@ -107,7 +107,7 @@ void TEST(Balance){
 
     S.controls.set() = ARR(motor_vel, motor_vel, 10.);
 
-    if(shutdown().getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
   threadCloseModules();

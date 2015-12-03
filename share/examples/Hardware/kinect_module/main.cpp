@@ -29,7 +29,7 @@ void TEST(KinectModules) {
   FILE("z.kinect_depth") <<kin.kinect_depth.get()();
   FILE("z.kinect_rgb") <<kin.kinect_rgb.get()();
 
-//  shutdown().waitForValueGreaterThan(0);
+//  moduleShutdown().waitForValueGreaterThan(0);
 
   S.close();
   cout <<"bye bye" <<endl;

@@ -19,7 +19,7 @@ void TEST(Gamepad){
     S.gamepadState.var->waitForNextRevision();
     arr J = S.gamepadState.get();
     cout <<"\r gamepad=" <<J <<std::flush;
-    if(shutdown().getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
   threadCloseModules();
@@ -80,7 +80,7 @@ void run(){
       break;
     }
 
-    if(shutdown().getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
   threadCloseModules();

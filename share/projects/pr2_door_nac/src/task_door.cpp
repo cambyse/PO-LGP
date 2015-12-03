@@ -128,7 +128,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   Xn = Xdemo;
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
-  optConstrainedMix(Xn, NoArr, Convert(MPF), o);
+  optConstrained(Xn, NoArr, Convert(MPF), o);
 
   // augment gripper joints
   for (uint t=0;t<Xn.d0;t++) {

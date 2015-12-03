@@ -21,6 +21,8 @@ void TEST(OrsEditor) {
 
   ors::KinematicWorld G(file);
 
+  //G.setAgent(99);
+
   G.checkConsistency();
   G >>FILE("z.ors");
   //some optional manipulations
@@ -32,8 +34,11 @@ void TEST(OrsEditor) {
   G >>FILE("z.ors");
   G.removeUselessBodies();
   G >>FILE("z.ors");
+  G.checkConsistency();
   G.topSort();
+  G.checkConsistency();
   G.makeLinkTree();
+  G.checkConsistency();
   G.calc_q_from_Q();
   G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");

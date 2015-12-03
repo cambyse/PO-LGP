@@ -5,7 +5,7 @@
 // Normal Thread struct
 struct MyThread: Thread{
   uint n;
-  MyThread(uint n):Thread(STRING("MyThread_"<<n)), n(n){}
+  MyThread(uint n, double beatIntervalSec=0.):Thread(STRING("MyThread_"<<n), beatIntervalSec), n(n){}
   void open(){}
   void close(){}
   void step(){
@@ -14,10 +14,10 @@ struct MyThread: Thread{
 };
 
 void TEST(Logging){
-  MyThread t1(1), t2(2);
+  MyThread t1(1, .5), t2(2, .25);
 
-  t1.threadLoopWithBeat(.5);
-  t2.threadLoopWithBeat(.25);
+  t1.threadLoop();
+  t2.threadLoop();
 
   LOG(0) <<"starting to wait";
   mlr::wait(3.);

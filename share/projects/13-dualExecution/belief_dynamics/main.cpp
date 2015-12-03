@@ -137,7 +137,7 @@ void optim(){
   x=1.;
   arr dual;
   if(P.dim_g(0)>0){
-    optConstrainedMix(x, dual, Convert(P));
+    optConstrained(x, dual, Convert(P));
   }else{
     optNewton(x, Convert(P), OPT(verbose=2, stopTolerance=1e-3, constrainedMethod=augmentedLag));
   }

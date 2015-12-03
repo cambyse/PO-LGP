@@ -1,9 +1,11 @@
 #include "relationalMachine.h"
 
-RelationalMachine::RelationalMachine():state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
+RelationalMachine::RelationalMachine()
+  : state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
 }
 
-RelationalMachine::RelationalMachine(const char* filename):state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
+RelationalMachine::RelationalMachine(const char* filename)
+  : state(NULL), tmp(NULL), _log("RelationalMachine", 1, 0){
   init(filename);
 }
 
@@ -69,10 +71,8 @@ NodeL RelationalMachine::fwdChainRules(){
   return *tmp;
 }
 
-Node *readNode(Graph& containingGraph, std::istream& is, bool verbose, bool parseInfo, mlr::String prefixedKey=mlr::String());
-
 Node* RelationalMachine::declareNewSymbol(mlr::String symbolStr){
-  Node *it = readNode(KB, symbolStr, false, false);
+  Node *it = KB.readNode(symbolStr, false, false);
   return it;
 }
 

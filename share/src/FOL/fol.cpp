@@ -80,6 +80,7 @@ bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance){
 /// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
   if(!tuplesAreEqual(fact0->parents,fact1->parents)) return false;
+  if(fact0->keys!=fact1->keys) return false;
   if(checkAlsoValue) return valuesAreEqual(fact0, fact1, true);
   return true;
 }
@@ -87,6 +88,7 @@ bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
 /// check match, where all variables of literal are replaced by subst(var->index)
 bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
   if(fact->parents.N!=literal->parents.N) return false;
+  if(fact->keys!=literal->keys) return false;
   for(uint i=0;i<fact->parents.N;i++){
     Node *fact_arg = fact->parents.elem(i);
     Node *lit_arg = literal->parents.elem(i);
@@ -268,16 +270,17 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
       if(&changes) newNode->newClone(changes);
     }else{
       for(Node *m:matches){
+#if 0
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
           *m->getValue<double>() += *literal->getValue<double>();
           hasEffects=true;
           if(&changes) m->newClone(changes);
-        }else{
-          if(!m->hasEqualValue(literal)){
-            m->copyValue(literal);
-            hasEffects=true;
-            if(&changes) m->newClone(changes);
-          }
+        }else
+        #endif
+        if(!m->hasEqualValue(literal)){
+          m->copyValue(literal);
+          hasEffects=true;
+          if(&changes) m->newClone(changes);
         }
       }
     }

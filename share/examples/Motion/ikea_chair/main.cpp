@@ -353,7 +353,7 @@ for (uint i=0;i<5;i++)  {
       if (i>3) orientation.set(0,0.7,0.7,0);
 
       c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
-      c->setCostSpecs(MP.T, MP.T, conv_vec2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
+      c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
     //
       //initialize trajectory
       for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;

@@ -15,7 +15,7 @@
 struct MySystem{
     ACCESS(SoftHandMsg,sh_ref)
   MySystem(){
-    addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
+    new RosCom_Spinner();
     addModule<RosCom_SoftHandSync>(NULL, Module::loopWithBeat,.1);
     //connect();
   }
@@ -54,7 +54,7 @@ int main(int argc, char** argv){
 t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
 t->setCostSpecs(MP.T, MP.T, {0.}, 1e2);
 
-optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
+optConstrained(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
 
 displayTrajectory(x,MP.T,world,"traj");
 

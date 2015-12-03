@@ -127,17 +127,13 @@ struct SubscriberConv {
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConvNoHeader {
   Access_typed<var_type>& access;
-  ros::NodeHandle *nh;
+  ros::NodeHandle nh;
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
-    nh = new ros::NodeHandle;
-    sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+    sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
   }
-  ~SubscriberConvNoHeader(){
-    nh->shutdown();
-    delete nh;
-  }
+  ~SubscriberConvNoHeader(){}
   void callback(const typename msg_type::ConstPtr& msg) {
     access.set() = conv(*msg);
   }
@@ -170,7 +166,7 @@ struct PublisherConv : Module{
     pub.publish(conv(access.get()));
   }
   void close(){
-    nh->shutdown();
+    // nh->shutdown(); //why does this throw an error???
     delete nh;
   }
 };
@@ -274,15 +270,15 @@ void initialSyncJointStateWithROS(ors::KinematicWorld& world, Access_typed<CtrlM
 void syncJointStateWitROS(ors::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
 
 //===========================================================================
-/// Sync the FT sensor
-//BEGIN_MODULE(RosCom_ForceSensorSync)
-//  ACCESS(arr, wrenchL)
-//  ACCESS(arr, wrenchR)
-//END_MODULE()
 
-//===========================================================================
-/// This module syncs the soft hand
-//BEGIN_MODULE(RosCom_SoftHandSync)
-//  ACCESS(SoftHandMsg, sh_ref)
-//END_MODULE()
-
+struct PerceptionObjects2Ors : Module{
+  Access_typed<visualization_msgs::MarkerArray> perceptionObjects;
+  Access_typed<ors::KinematicWorld> modelWorld;
+  PerceptionObjects2Ors()
+    : Module("PerceptionObjects2Ors"),
+    perceptionObjects(this, "perceptionObjects", true),
+    modelWorld(this, "modelWorld"){}
+  void open(){}
+  void step();
+  void close(){}
+};

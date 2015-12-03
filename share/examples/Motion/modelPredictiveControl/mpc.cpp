@@ -42,16 +42,16 @@ void MPC::replan(arr &_goal, arr &_q) {
 
   Task *c2;
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c2, MotionProblem::finalOnly, _goal, 1e4);
+  c2->setCostSpecs(P.T, P.T, _goal, 1e4);
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
   c2->map.order=1;
-  P.setInterpolatingCosts(c2, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  c2->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   c2 = P.addTask("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c2, MotionProblem::finalOnly, {1.,0.,0.}, 1e4);
+  c2->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
   c2 = P.addTask("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
   c2->map.order=1;
-  P.setInterpolatingCosts(c2,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  c2->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   x = x.rows(1,x.d0);
   MotionProblemFunction F(P);

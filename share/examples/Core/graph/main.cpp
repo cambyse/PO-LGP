@@ -37,6 +37,11 @@ void TEST(Init){
   Graph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", mlr::String("BLA")} };
   cout <<G <<endl;
   G.checkConsistency();
+
+  Graph B;
+
+  B <<"x" <<"b" <<Nod("a", 3.) <<Nod("b", {"x"}, ARR(1.,2.,3.));
+  cout <<B <<endl;
 }
 
 //===========================================================================
@@ -90,6 +95,8 @@ void rndModify(Graph& G){
   }
 }
 
+//===========================================================================
+
 void TEST(Random){
   Graph A,B;
 
@@ -133,6 +140,7 @@ struct Something{
 void operator<<(ostream& os, Something& s){ os <<s.x; }
 //the following 2 lines are optional: they enable naming the type and typed reading from file
 void operator>>(istream& is, Something& s){ is >>s.x; }
+bool operator==(const Something&, const Something&){ return false; }
 REGISTER_TYPE(Something)
 
 void TEST(Manual){
@@ -150,8 +158,8 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
 //  testRandom();
-  testRead();
-//  testInit();
+//  testRead();
+  testInit();
 //  testDot();
 
 //  if(!filename) testManual();

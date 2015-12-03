@@ -6,6 +6,7 @@ struct NewType{
   void read(std::istream& is){ is >>x; }
 };
 stdPipes(NewType);
+bool operator==(const NewType&, const NewType&){ return false; }
 
 struct Derived:NewType{
   double y;

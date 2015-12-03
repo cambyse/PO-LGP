@@ -80,7 +80,7 @@ void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& phys
   
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
-    *(gl.camera.X) = glCamera->X;
+    gl.camera.X = glCamera->X;
   } else {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);

@@ -51,8 +51,8 @@ void TEST(PR2reach){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
-    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
-//    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+//    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
 #endif
 
     cout <<"** optimization time=" <<mlr::timerRead()
@@ -115,7 +115,7 @@ void TEST(Basics){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, damping=.1));
 #else
-    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
     cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();

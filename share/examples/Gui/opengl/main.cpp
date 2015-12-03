@@ -225,7 +225,7 @@ void draw5(void*){
   glDisable(GL_TEXTURE_2D);
 
   glColor(1,0,0);
-  glutSolidTeapot(1.);
+//  glutSolidTeapot(1.);
 
 }
 
@@ -294,17 +294,19 @@ void TEST(Image) {
 
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
-
-  testTeapot();
-  testOfflineRendering();
-  testGrab();
-  testMultipleViews();
-  testTeapot();
+  if(false){
+    glutInit(&argc,argv);
+    testTeapot();
+    testOfflineRendering();
+    testGrab();
+    testMultipleViews();
+    testUI();
+    testSelect();
+  }
   testObj();
   testMesh();
-  testUI();
   testTexture();
-  testMenu();
+//  testMenu();
   testImage();
 
   return 0;

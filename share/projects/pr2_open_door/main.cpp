@@ -15,8 +15,9 @@ struct MySystem{
   ACCESS(arr, marker_pose);
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
       addModule<RosCom_ARMarkerSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
     //connect();
@@ -92,7 +93,7 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<endl;
   arr lambda(T+1,1); lambda.setZero();
   x = repmat(~MP.x0,T+1,1);
-  optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=1,stopTolerance=1e-4));
 
   displayTrajectory(x,MP.T,MP.world,"world");
   displayTrajectory(x,MP.T,MP.world,"world");

@@ -54,9 +54,9 @@ void ijcaiExperiment(){
 
     mlr::timerRead(true);
     PathProblem pathProblem(towers.world_root, best->effKinematics, best->fol.KB, 20, 0);
-    best->pathCosts = pathProblem.optimize(best->path);
+    best->pathCost = pathProblem.optimize(best->path);
     lev2_time = mlr::timerRead(true);
-    cout <<"f_path=" <<best->pathCosts <<endl;
+    cout <<"f_path=" <<best->pathCost <<endl;
 
     fil <<k <<' ' <<towers.nObjects <<' ' <<MCTS_time/repeat <<' ' <<lev1_time/repeat <<' ' <<best->effPoseReward <<' ' <<lev2_time <<endl;
   }

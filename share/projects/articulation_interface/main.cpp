@@ -113,7 +113,7 @@ int main(int argc, char** argv){
   arr X = MP.getInitialization();
   arr lambda;
 
-  optConstrainedMix(X, lambda, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+  optConstrained(X, lambda, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
   cout << lambda << endl;
   MP.costReport();

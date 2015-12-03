@@ -28,9 +28,12 @@ struct MySystem{
   MySystem(){
     new GamepadInterface;
     if(mlr::getParameter<bool>("useRos", true)){
-      addModule<RosCom_Spinner>(NULL, /*Module::loopWithBeat,*/ .001);
-      addModule<RosCom_KinectSync>(NULL, /*Module::loopWithBeat,*/ 1.);
-      addModule<RosCom_ControllerSync>(NULL /*,Module::listenFirst*/ );
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
       addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
 //      addModule<RosCom_CamsSync>(NULL, /*Module::loopWithBeat,*/ 1.);
 //      addModule<RosCom_ArmCamsSync>(NULL, /*Module::loopWithBeat,*/ 1.);
@@ -71,8 +74,8 @@ void TEST(Projections){
 
   for(uint t=0;;t++){
     arr gamepadState = S.gamepadState.get();
-    if(t>10 && stopButtons(gamepadState)) shutdown.incrementValue();
-    if(shutdown().getValue()>0) break;
+    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
+    if(moduleShutdown().getValue()>0) break;
     S.gamepadState.var->waitForNextRevision();
 
     // joint state
