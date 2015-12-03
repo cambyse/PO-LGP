@@ -303,7 +303,7 @@ void controlOperationalSpace() {
   arr yDDotDes;
 
   arr Kp = eye(6)*10.0;
-  Kp(2,2) = 0.0;
+  Kp(2,2) = 10.0;
   Kp(3,3) = 2.0;
   Kp(4,4) = 2.0;
   Kp(5,5) = 2.0;
@@ -327,12 +327,13 @@ void controlOperationalSpace() {
     for(uint t = 0; t < 50; t++) {
       world.equationOfMotion(M,F);
       world.kinematicsPos(x, J, world.getBodyByName("l_gripper_l_finger_link"));
-      world.kinematicsVec(xAngle, JAngle, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,0.0,0.0));
+      world.kinematicsVec(xAngle, JAngle, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,.0,.0));
+      world.jacobianR(JAngle,world.getBodyByName("l_gripper_l_finger_link"));
       world.getJointState(q, qDot);
 
       world.setJointState(qRef,qDotRef);
       world.kinematicsPos(xRef, NoArr, world.getBodyByName("l_gripper_l_finger_link"));
-      world.kinematicsVec(xAngleRef, NoArr, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,0.0,0.0));
+      world.kinematicsVec(xAngleRef, NoArr, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,.0,.0));
       world.setJointState(q,qDot);
 
       xRef = makeVec(xRef,xAngleRef);
@@ -348,21 +349,21 @@ void controlOperationalSpace() {
       arr x0Pos,x0Angle;
       world.setJointState(qRef,zeros(q.d0));
       world.kinematicsPos(x0Pos, NoArr, world.getBodyByName("l_gripper_l_finger_link"));
-      world.kinematicsVec(x0Angle, NoArr, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,0.0,0.0));
+      world.kinematicsVec(x0Angle, NoArr, world.getBodyByName("l_gripper_l_finger_link"),ors::Vector(-1.0,.0,.0));
       world.setJointState(q,qDot);
       arr x0 = makeVec(x0Pos,x0Angle);
 
-      arr k = Kp*(x0);
-      //arr k = zeros(6);
+      //arr k = Kp*(x0);
+      arr k = zeros(6);
       //cout << k << endl;
       arr A = ~J*C*J + ~M*H*M;
       //u = M*(inverse(A)*(~M*H*(M*(eye(q.d0)*3.0*(qRef-q)+eye(q.d0)*1.0*(qDotRef-qDot))+F-F)+~J*C*(Kp*J*(qRef-q)+k)) + Kd*(qDotRef-qDot))+F;// + M*(eye(q.d0)*3.0*(qRef-q)+eye(q.d0)*1.0*(qDotRef-qDot));
       //u = TSharp*(yDDotDes + T*F) +  M*(eye(q.d0)*3.0*(qRef-q)+eye(q.d0)*1.0*(qDotRef-qDot));
-      u = M*(inverse(A)*(~M*H*(M*(eye(q.d0)*3.0*(qRef-q)+eye(q.d0)*1.0*(qDotRef-qDot))+F-F)+~J*C*(Kp*J*(qRef-q)+k)) + Kd*(qDotRef-qDot))+F;
+      u = M*(inverse(A)*(~M*H*(M*(eye(q.d0)*0.0*(qRef-q)+eye(q.d0)*0.0*(qDotRef-qDot))+F-F)+~J*C*(Kp*(x0-x)+k)) + Kd*(qDotRef-qDot))+F;
 
       if(i > 30 && i < 40) {
         arr force = ARR(-0.0,0.0,10.0,0.0,0.0,0.0);
-        u += ~J*force;
+        //u += ~J*force;
         cout << "force" << endl;
       }
 
