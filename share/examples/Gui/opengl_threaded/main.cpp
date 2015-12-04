@@ -10,7 +10,7 @@ void draw1(void*){
 
 struct Proc:public Thread{
   OpenGL *gl;
-  Proc(const char* name):Thread(name, 0.01){};
+  Proc(const char* name):Thread(name, 0.01){}
   void open(){
     gl = new OpenGL(name);
     gl->add(draw1);
@@ -20,15 +20,14 @@ struct Proc:public Thread{
     delete gl;
   }
   void step(){
-    HALT("you're never here, because theyr' not looped?")
-    gl->update();
+    gl->processEvents();
   }
 };
 
 void TEST(ThreadedOpenGL) {
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
-  gl1.threadOpen();
-  gl2.threadOpen();
+  gl1.threadLoop();
+  gl2.threadLoop();
   mlr::wait(2.);
   gl1.threadClose();
   gl2.threadClose();
@@ -39,7 +38,7 @@ void TEST(ThreadedOpenGL) {
   for (int i=0; i<20; ++i){
     names.append(STRING("many_"<<i));
     gli = new Proc(names(i));
-    gli->threadOpen();
+    gli->threadLoop();
     procs.append(gli);
   }
   mlr::wait(5.);
