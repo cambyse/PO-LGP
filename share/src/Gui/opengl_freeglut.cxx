@@ -70,6 +70,35 @@ struct SFG_Display_dummy {
 
 extern SFG_Display_dummy fgDisplay;
 
+static void sleepForEvents(void) {
+  if (!XPending(fgDisplay.Display)) {
+    fd_set fdset;
+    struct timeval wait;
+
+    int socket = ConnectionNumber(fgDisplay.Display);
+    FD_ZERO(&fdset);
+    FD_SET(socket, &fdset);
+    wait.tv_sec = 10000 / 1000;
+    wait.tv_usec = (10000 % 1000) * 1000;
+    int err = select(socket+1, &fdset, NULL, NULL, &wait);
+
+    if(-1 == err){
+#if HAVE_ERRNO
+      if(errno != EINTR)
+        fgWarning("freeglut select() error: %d", errno);
+#else
+      MLR_MSG("freeglut select() error");
+#endif
+    }
+  }
+}
+
+#elif defined MLR_MSVC
+
+static void sleepForEvents(void) {
+  MsgWaitForMultipleObjects(0, NULL, FALSE, 10/*msec*/, QS_ALLINPUT);
+}
+
 #endif
 
 
@@ -160,6 +189,7 @@ void OpenGL::closeWindow(){
 void OpenGL::postRedrawEvent(bool fromWithinCallback) { s->accessWindow(); glutPostRedisplay(); s->deaccessWindow(); }
 
 void OpenGL::processEvents() { s->accessOpengl(); glutMainLoopEvent(); s->deaccessOpengl(); }
+void OpenGL::sleepForEvents() { ::sleepForEvents(); }
 
 void OpenGL::resize(int w,int h) {
   s->accessWindow();

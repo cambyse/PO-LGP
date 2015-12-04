@@ -14,7 +14,7 @@
 #include <Actions/swig.h>
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   ActionSwigInterface interface;
 
   pr2System::Ptr system(new pr2System(interface));
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     hybrid_automaton->step(.01);
     //std::cout << "JC active: " << bigger->isActive() << std::endl;
     //std::cout << "Sensor value: " << bigger->getSensor()->getCurrentValue() << std::endl;
-    MT::wait(.01);
+    mlr::wait(.01);
   }
 
   hybrid_automaton->terminate();

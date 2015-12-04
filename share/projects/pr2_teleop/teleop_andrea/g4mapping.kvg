@@ -1,0 +1,6 @@
+agents {
+  /human/rh/thumb = { type = "digit", rn = 0, hid = 0, sid = 0 }
+  /human/rh/index = { type = "digit", rn = 1, hid = 0, sid = 1 }
+  /human/lh/thumb = { type = "digit", rn = 3, hid = 1, sid = 0 }
+  /human/lh/index = { type = "digit", rn = 4, hid = 1, sid = 1 }
+}

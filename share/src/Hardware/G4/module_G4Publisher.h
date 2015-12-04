@@ -4,7 +4,7 @@
 
 class G4Publisher : public Module{
 public:
-	ACCESS(floatA, poses);
+	ACCESS(floatA, g4_poses);
 
 	G4Publisher();
 

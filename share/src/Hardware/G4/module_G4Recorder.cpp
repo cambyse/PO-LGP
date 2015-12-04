@@ -6,7 +6,7 @@ G4Recorder::G4Recorder(): Module("G4Recorder") {
 }
 
 void G4Recorder::open() {
-  String fname = STRING("z." << poses.name << '.' << mlr::getNowString() << ".dat");
+  String fname = STRING("z." << g4_poses.name << '.' << mlr::getNowString() << ".dat");
   mlr::open(datafile, fname);
   mlr::open(tstampfile, STRING(fname << ".times"));
 }
@@ -17,10 +17,10 @@ void G4Recorder::close() {
 }
 
 void G4Recorder::step() {
-  uint rev = poses.readAccess();
-  floatA data = poses();
-  double tstamp = poses.tstamp();
-  poses.deAccess();
+  uint rev = g4_poses.readAccess();
+  floatA data = g4_poses();
+  double tstamp = g4_poses.dataTime();
+  g4_poses.deAccess();
 
   uint tstampsec = tstamp;
   uint tstampusec = (tstamp-tstampsec)*1e6;

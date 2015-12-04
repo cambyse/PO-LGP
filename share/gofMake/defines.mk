@@ -349,6 +349,14 @@ CXXFLAGS += -DG4_INSTALLED
 LIBS += -lG4Track -lusb-1.0
 endif
 
+ifeq ($(PTHREAD),1)
+LIBS += -lpthread
+endif
+
+ifeq ($(X264),1)
+CXXFLAGS += -DX264_INSTALLED
+endif
+
 ifeq ($(ROS),1)
 CXXFLAGS  += -DMLR_ROS
 ROSP=pr2_mechanism/pr2_controller_interface\

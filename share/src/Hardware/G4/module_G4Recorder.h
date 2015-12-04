@@ -4,7 +4,7 @@
 #include "G4.h"
 
 struct G4Recorder: Module {
-  ACCESS(floatA, poses);
+  ACCESS(floatA, g4_poses);
 
   G4Recorder();
 

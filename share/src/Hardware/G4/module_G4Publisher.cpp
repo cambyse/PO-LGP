@@ -57,10 +57,10 @@ void G4Publisher::close(){
 
 void G4Publisher::step(){
 #ifdef HAVE_ROS_G4
-  poses.readAccess();
-  floatA p = poses();
-  double tstamp = poses.tstamp();
-  poses.deAccess();
+  g4_poses.readAccess();
+  floatA p = g4_poses();
+  double tstamp = g4_poses.tstamp();
+  g4_poses.deAccess();
 
   ros::Time timestamp = ros::Time(tstamp + s->time_offset);
 

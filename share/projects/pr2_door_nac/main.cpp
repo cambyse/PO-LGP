@@ -89,7 +89,7 @@ int main(int argc,char **argv){
   uint kernel_type = 0;// 0 is RBF Kernel
 <<<<<<< HEAD
   mdp::RKHSPol rkhs1(world,useRos,duration,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
-  MT::rnd.clockSeed();
+  mlr::rnd.clockSeed();
 =======
   mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   mlr::rnd.clockSeed();
