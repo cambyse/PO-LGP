@@ -113,7 +113,7 @@ Known issues
 
 - `source ~/catkin_ws/devel/setup.sh` overwrites the `ROS_PACKAGE_PATH`
 
-- `cmake .` in `marc_controller_pkg` fails: remove all old cmake artifacts.
+- `cmake .` in `marc_controller_pkg` fails: remove all old cmake artifacts. (catkin, catkin_generated, CMakeCache.txt and CMakeFiles)
 
 - If `cmake .` is not successful and you are using Ubuntu 14.04 & indigo:
   The `kdl` dependency is now called `orocos-kdl` -> change `kdl` to

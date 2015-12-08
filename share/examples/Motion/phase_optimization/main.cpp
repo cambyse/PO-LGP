@@ -1,16 +1,9 @@
-#include <Core/util.h>
-#include <Gui/opengl.h>
-#include <Optim/optimization.h>
 #include <Motion/taskMaps.h>
-#include <Gui/plot.h>
-#include <Ors/ors.h>
 #include <Motion/motion.h>
-#include <Optim/opt-constrained.h>
-
-#include <Ors/ors_swift.h>
 #include <Motion/phase_optimization.h>
-
-//===========================================================================
+#include <Optim/opt-constrained.h>
+#include <Optim/optimization.h>
+#include <Ors/ors.h>
 
 void TEST(PhaseOptimization){
   /// create reference motion
@@ -38,7 +31,7 @@ void TEST(PhaseOptimization){
   PhaseOptimization P(X,k);
   arr sOpt = P.getInitialization();
   checkJacobianCP(Convert(P),sOpt,1e-3);
-  optConstrained(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=1e-4));
+  optNewton(sOpt, Convert(P),OPT(verbose=2,stopTolerance=1e-4));
   arr Xres;
   P.getSolution(Xres,sOpt);
 
@@ -50,25 +43,18 @@ void TEST(PhaseOptimization){
   getVel(V,X,1);
   getVel(Vopt,Xres,1);
 
-  cout << "Acc costs before phaseOpt: " << sumOfSqr(A) << endl;
+  cout << "\nAcc costs before phaseOpt: " << sumOfSqr(A) << endl;
   cout << "Acc costs after phaseOpt: " << sumOfSqr(Aopt) << endl;
 
-  cout << "Vel costs before phaseOpt: " << sumOfSqr(V) << endl;
+  cout << "\nVel costs before phaseOpt: " << sumOfSqr(V) << endl;
   cout << "Vel costs after phaseOpt: " << sumOfSqr(Vopt) << endl;
 
   displayTrajectory(X,MP.T,world,"reference traj");
   displayTrajectory(Xres,MP.T,world,"optimized traj");
 }
 
-
-//===========================================================================
-
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
-
   testPhaseOptimization();
-  
   return 0;
 }
-
-
