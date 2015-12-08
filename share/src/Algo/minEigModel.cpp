@@ -130,7 +130,7 @@ void MinEigModel::glDraw(){
 
 void MinEigModel::report(ostream& os, bool mini){
   if(mini){
-    os <<pts.N <<' ' <<density <<' '<<mean <<"  " <<eig.lambda_lo <<' ' <<eig.x_lo <<"  " <<label <<endl;
+    os <<pts.N <<' ' <<density <<' ' <<coveredData() <<' '  <<mean <<"  " <<eig.lambda_lo <<' ' <<eig.x_lo <<"  " <<label <<endl;
   }else{
     os <<"model-report" <<endl;
     os <<"  #pts=" <<pts.N <<" #fringe=" <<fringe.N <<endl;

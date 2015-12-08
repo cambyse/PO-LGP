@@ -12,18 +12,13 @@ struct CostFct_PlanePoints{
   const arr& m;
   const arr& X;
   const arr& transform;
-  arr R, y;
-  ors::Quaternion quat;
+  arr y;
+  ors::Quaternion r;
+
   CostFct_PlanePoints(const arr& n, const arr& m, const arr& X, const arr& transform);
-  double f(){ return sumOfSqr(y); }
+
+  double f();
   arr df_transform();
 
-  ScalarFunction f_transform(){
-    return [this](arr& g, arr& H, const arr& x) -> double {
-      CostFct_PlanePoints fx(n,m,X,x);
-      if(&g) g=fx.df_transform();
-      return fx.f();
-    };
-  }
-
+  ScalarFunction f_transform();
 };

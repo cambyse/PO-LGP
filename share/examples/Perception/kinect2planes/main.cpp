@@ -15,8 +15,8 @@ struct PointCloud2DataNeighbored:Module{
   Access_typed<DataNeighbored> data;
 
   PointCloud2DataNeighbored()
-    : Module("PointCloud2DataNeighbored", -1.),
-      kinect_points(this, "kinect_points", true),
+    : Module("PointCloud2DataNeighbored", 1.),
+      kinect_points(this, "kinect_points"),
       data(this, "data"){}
 
   void open(){}
@@ -81,17 +81,20 @@ void TEST(Kinect2Planes){
   ACCESSname(uint16A, kinect_depth);
   ACCESSname(ors::Transformation, kinect_frame)
 
-  if(mlr::getParameter<bool>("useRos", true)){
+  uint kinectSource = mlr::getParameter<uint>("kinectSource", 0);
+  if(kinectSource==0){
+    new KinectThread;
+  }else if(kinectSource==1){
     new RosCom_Spinner();
     new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
     new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
-  }else{
+  }else if(kinectSource==2){
     if(mlr::getParameter<bool>("useFile", false)){
       new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
     }else{
       new KinectThread;
     }
-  }
+  } else HALT("");
 
   ImageViewer iv("kinect_rgb");
   Kinect2PointCloud k2pcl;
@@ -102,14 +105,14 @@ void TEST(Kinect2Planes){
 
   threadOpenModules(true);
 
-#if 1
+#if 0
   for(uint t=0;t<100;t++){
     if(moduleShutdown().getValue()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
   }
 #else
-  mlr::wait(3.);
+  mlr::wait(20.);
 #endif
 
   threadCloseModules();

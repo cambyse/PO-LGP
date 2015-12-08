@@ -10,20 +10,18 @@
 
 void TEST(KinectModules) {
 
-  System S;
-  KinectThread kin(S);
-  S.addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+  KinectThread kin;
+  new KinectDepthPacking;
   new ImageViewer("kinect_rgb");
   new ImageViewer("kinect_depthRgb");
-  S.new Kinect2PointCloud;
+  new Kinect2PointCloud;
   new PointCloudViewer("kinect_points", "kinect_pointColors");
 //      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
 //      m_enc->set_rgb(true);
 //      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
   //S.connect();
-  cout <<S <<endl;
 
-  S.run();
+  threadOpenModules(false);
 
   kin.kinect_depth.waitForRevisionGreaterThan(100);
   FILE("z.kinect_depth") <<kin.kinect_depth.get()();
@@ -31,7 +29,7 @@ void TEST(KinectModules) {
 
 //  moduleShutdown().waitForValueGreaterThan(0);
 
-  S.close();
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 
@@ -41,7 +39,6 @@ void TEST(KinectRaw) {
   OpenGL gl("KINECT",640,480);
   KinectThread kin;
   kin.verbose=1;
-  kin.createVariables();
 
   kin.open();
   for(uint t=0;t<100;t++){

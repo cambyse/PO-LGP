@@ -138,7 +138,7 @@ struct sOpenGL {
   
   static void accessOpengl() { SingleOpengl().lock.lock(); }
   static void deaccessOpengl() { SingleOpengl().lock.unlock(); }
-  void accessWindow() { accessOpengl(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
+  void accessWindow() { accessOpengl(); CHECK(windowID>=0,"window is not created");  glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
   void deaccessWindow() {
 #ifndef MLR_MSVC
     glXMakeCurrent(fgDisplay.Display, None, NULL);
@@ -192,6 +192,7 @@ void OpenGL::processEvents() { s->accessOpengl(); glutMainLoopEvent(); s->deacce
 void OpenGL::sleepForEvents() { ::sleepForEvents(); }
 
 void OpenGL::resize(int w,int h) {
+  openWindow();
   s->accessWindow();
   glutReshapeWindow(w,h);
   s->deaccessWindow();

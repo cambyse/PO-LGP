@@ -7,7 +7,6 @@ void testKinect(){
 
   KinectThread kin;
   kin.verbose=1;
-  kin.createVariables();
   kin.threadLoop();
 
   for(uint t=0;t<50;t++){
