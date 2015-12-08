@@ -1,5 +1,6 @@
 #include "plane.h"
-
+#include <Geo/mesh.h>
+#include <Gui/opengl.h>
 
 CostFct_PlanePoints::CostFct_PlanePoints(const arr& n, const arr& m, const arr& X, const arr& transform)
   : n(n), m(m), X(X), transform(transform), r(transform.sub(3,6)){
@@ -25,3 +26,28 @@ ScalarFunction CostFct_PlanePoints::f_transform(){
     return fx.f();
   };
 }
+
+
+void glDrawPlanes(const PlaneA& planes){
+  ors::Mesh tmp;
+  for(const Plane& p:planes){
+    glColor(p.label);
+    tmp.V.referTo(p.borderPoints);
+    tmp.T.referTo(p.borderTris);
+    glLineWidth(5);
+    tmp.glDraw();
+    glPushMatrix();
+    ors::Transformation t;
+    t.pos.set(p.mean.p);
+    t.rot.setDiff(Vector_x, ors::Vector(p.normal));
+    double GLmatrix[16];
+    t.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawAxis();
+    glPopMatrix();
+    glLineWidth(1);
+
+  }
+}
+
+void glDrawPlanes(void* p) { glDrawPlanes(*((const PlaneA*)p)); }

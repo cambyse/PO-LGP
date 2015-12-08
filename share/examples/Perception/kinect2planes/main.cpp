@@ -1,6 +1,7 @@
 #include <Gui/opengl.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>
+#include <Perception/plane.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Algo/dataNeighbored.h>
 #include <Perception/modelEnsemble.h>
@@ -15,8 +16,8 @@ struct PointCloud2DataNeighbored:Module{
   Access_typed<DataNeighbored> data;
 
   PointCloud2DataNeighbored()
-    : Module("PointCloud2DataNeighbored", 1.),
-      kinect_points(this, "kinect_points"),
+    : Module("PointCloud2DataNeighbored"),
+      kinect_points(this, "kinect_points", true),
       data(this, "data"){}
 
   void open(){}
@@ -24,6 +25,7 @@ struct PointCloud2DataNeighbored:Module{
   void step(){
     data.writeAccess();
     data->setData(kinect_points.get());
+    if(data->X.d0!=480*640){ data.deAccess(); return; }
     data->setGridNeighborhood(480, 640);
     arr costs = data->X.col(2).reshape(data->X.d0);
     for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
@@ -41,35 +43,41 @@ struct PlaneFitter:Module{
   Access_typed<DataNeighbored> data;
   Access_typed<arr> kinect_points;
   Access_typed<arr> kinect_pointColors;
+  Access_typed<PlaneA> planes_now;
   ModelEnsemble M;
-  OpenGL gl;
-  arr pts;
-  arr cols;
 
   PlaneFitter()
     : Module("PlaneFitter", -1.),
       data(this, "data", true),
       kinect_points(this, "kinect_points"),
       kinect_pointColors(this, "kinect_pointColors"),
-      gl("planefitter",640,480){}
+      planes_now(this, "planes_now"){}
 
-  void open(){
-    gl.add(glDrawPointCloud, &pts);
-    gl.addDrawer(&M);
-    gl.camera.setKinect();
-  }
-
+  void open(){}
   void close(){}
+
   void step(){
-    pts = kinect_points.get();
-    cols = kinect_pointColors.get();
+    if(data.get()->X.d0!=640*480) return;
     M.addNewRegionGrowingModel(data.set());
 //    M.models.last()->colorPixelsWithWeights(cols);
     M.reoptimizeModels(data.set());
 //    M.reestimateVert();
     M.report();
-    gl.update();
+//    gl.update();
     cout <<"#models=" <<M.models.N <<endl;
+    planes_now.writeAccess();
+    planes_now().clear();
+    for(MinEigModel* m:M.models){
+      Plane &p=planes_now().append();
+      p.mean = m->mean;
+      p.normal = m->eig.x_lo;
+      p.borderPoints = m->convexHull.V;
+      p.borderTris = m->convexHull.T;
+      p.inlierPoints = m->getInliers();
+      p.label = m->label;
+    }
+    planes_now.deAccess();
+
   }
 
 };
@@ -101,7 +109,7 @@ void TEST(Kinect2Planes){
   PointCloudViewer pclv;
   PointCloud2DataNeighbored pts2data;
   PlaneFitter planeFitter;
-
+  AllViewer view;
 
   threadOpenModules(true);
 
@@ -112,7 +120,7 @@ void TEST(Kinect2Planes){
     cout <<'.' <<endl;
   }
 #else
-  mlr::wait(20.);
+  mlr::wait(300.);
 #endif
 
   threadCloseModules();

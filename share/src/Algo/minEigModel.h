@@ -39,7 +39,9 @@ struct MinEigModel{
   void calc(bool update);    ///< compute the model (calc the eigenvalue/vector) incremental/update or exact
   void expand(uint steps=1); ///< add all neighbors of the fringe
   void reweightWithError(uintA& pts, double margin=0.01);
+  arr getInliers();
   void computeConvexHull();
+  void computeConvexHull2();
   double coveredData(bool novelDataOnly=true);
   void calcDensity();
   void colorPixelsWithWeights(arr& cols);
