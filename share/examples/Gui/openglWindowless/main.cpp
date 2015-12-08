@@ -13,7 +13,7 @@ void draw1(void*){
 
 int main(int argc, const char* argv[]){
 
-  {
+  if(false){
     int argc=1;
     char **argv = new char*[1];
     argv[0] = (char*)"x.exe";
@@ -21,10 +21,13 @@ int main(int argc, const char* argv[]){
   }
 
   OpenGL gl("bla",800,600);
+  gl.camera.setKinect();
+  gl.camera.X = s->X;
   gl.add(draw1,0);
-  gl.renderInBack();
+  gl.watch();
+  gl.renderInBack(false, true);
 
-  write_ppm(gl.captureImage, "z.ppm", true);
+  write_ppm(gl.captureDepth, "z.ppm", true);
 
 //  gl.watch(); //if this is commented, never ever glut/gtk is initalized
 
