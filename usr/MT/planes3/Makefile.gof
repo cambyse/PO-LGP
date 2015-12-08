@@ -1,0 +1,5 @@
+BASE = ../../../share
+
+DEPEND = Core Gui Perception Geo
+
+include $(BASE)/gofMake/generic.mk
