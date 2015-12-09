@@ -2,7 +2,6 @@
 
 #include <libfreenect.h>
 
-
 struct sKinectThread{
   KinectThread* kin;
   freenect_context *f_ctx;
@@ -166,13 +165,12 @@ void KinectThread::open(){
     HALT("Could not open device\n");
   }
 
-
   freenect_set_tilt_degs(s->f_dev, 0);
   freenect_set_led(s->f_dev,LED_RED);
   freenect_set_depth_callback(s->f_dev, s->depth_cb);
   freenect_set_video_callback(s->f_dev, s->rgb_cb);
   freenect_set_video_mode(s->f_dev, freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, s->current_format));
-  freenect_set_depth_mode(s->f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_11BIT));
+  freenect_set_depth_mode(s->f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED)); //FREENECT_DEPTH_11BIT));
   freenect_set_video_buffer(s->f_dev, s->rgb_buffer.p);
   freenect_set_depth_buffer(s->f_dev, s->depth_buffer.p);
 

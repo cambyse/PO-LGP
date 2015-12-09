@@ -97,11 +97,7 @@ void TEST(Kinect2Planes){
     new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
     new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
   }else if(kinectSource==2){
-    if(mlr::getParameter<bool>("useFile", false)){
-      new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
-    }else{
-      new KinectThread;
-    }
+    new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
   } else HALT("");
 
   ImageViewer iv("kinect_rgb");
