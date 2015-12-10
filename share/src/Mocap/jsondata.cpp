@@ -42,7 +42,7 @@ void JsonRec::load(const char *recdir) {
   nframes_thin = nframes / thinning;
 
 
-  bool m;
+  //bool m;
   boolA pm(nsensors);
   pm.setZero(false);
   // uint currfnum;

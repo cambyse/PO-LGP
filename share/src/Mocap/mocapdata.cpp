@@ -1018,7 +1018,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
   String typeLinCoeffPastObs = STRING(typeLinCoeffPast << "Obs");
   
   arr bam, bamObs, bamLinCoeffPast, bamLinCoeffPastObs, window;
-  uint ndim, wlen, thinning, nframes, nframes_thin;
+  uint ndim, wlen, thinning, /*nframes,*/ nframes_thin;
   
   wlen = *params.get<uint>("wlen");
   thinning = *params.get<uint>("thinning");
