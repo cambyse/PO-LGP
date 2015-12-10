@@ -57,7 +57,9 @@ void MinEigModel::calc(bool update){
   eig.A = stat_xx/stat_n - (mean^mean);
   if(bias_xx.N) eig.A += bias_xx;
   if(!update){
-    eig.computeExact();
+    try{
+      eig.computeExact();
+    }catch(...){}
   }else{
     eig.stepPowerMethod(3);
   }
@@ -66,27 +68,34 @@ void MinEigModel::calc(bool update){
 void MinEigModel::expand(uint steps){
   for(uint s=0;s<steps;s++){
     data.expandFringe(fringe, pts, included);
-    reweightWithError(fringe, 0.01);
+    reweightWithError(fringe);
   }
 }
 
-void MinEigModel::reweightWithError(uintA& pts, double margin){
-  addStatistics(pts, true);
-  if(margin<0.) margin = ::sqrt(eig.lambda_lo);
+void MinEigModel::reweightWithError(uintA& pts){
+  if(&pts==&this->pts){
+    setWeightsToZero();
+  }else{
+    addStatistics(pts, true); //subtract the current points
+  }
   arr Xi;
   for(uint j=pts.N;j--;){
     uint i=pts(j);
     Xi = data.X[i];
     Xi -= mean;
+#if 1
     double coeff = -.1 * mlr::sqr(scalarProduct(Xi, eig.x_lo)/margin);
     weights(i) = ::exp(coeff);
-    if(coeff<-5. || weights(i)<.1){
+#else
+    weights(i) = fabs(scalarProduct(Xi, eig.x_lo))<margin ? 1. : 0.;
+#endif
+    if(weights(i)<.1){
       pts.remove(j);
       included(j)=false;
       weights(i)=0.;
     }
   }
-  addStatistics(pts, false);
+  addStatistics(pts);
 }
 
 arr MinEigModel::getInliers(){
@@ -102,6 +111,9 @@ void MinEigModel::computeConvexHull(){
 }
 
 void MinEigModel::computeConvexHull2(){
+  convexHull.V.clear();
+  convexHull.T.clear();
+  if(!eig.x_lo.N) return;
   arr b0, b1;
   if(eig.x_lo.maxIndex()==0) b0 = ARR(0,1,0) - eig.x_lo*eig.x_lo(1);
   else                       b0 = ARR(1,0,0) - eig.x_lo*eig.x_lo(0);
@@ -116,13 +128,11 @@ void MinEigModel::computeConvexHull2(){
     hull.append( scalarProduct(b0,Xi) );
     hull.append( scalarProduct(b1,Xi) );
   }
-  if(hull.N<5){
-    convexHull.V.clear();
-    convexHull.T.clear();
-    return;
-  }
+  if(hull.N<5) return;
   hull.reshape(hull.N/2,2);
-  getTriangulatedHull(convexHull.T, hull);
+  try{
+    getTriangulatedHull(convexHull.T, hull);
+  }catch(...){ return; }
   convexHull.V.resize(hull.d0,3);
   for(uint i=0;i<hull.d0;i++){
     convexHull.V[i] = mean + b0*hull(i,0) + b1*hull(i,1);
@@ -134,7 +144,7 @@ double MinEigModel::coveredData(bool novelDataOnly){
   if(!novelDataOnly)
     for(uint i:pts) coveredData += weights(i)*data.costs(i);
   else
-    for(uint i:pts) coveredData += weights(i)*data.costs(i)*(1.-data.weights(i));
+    for(uint i:pts) coveredData += weights(i)*data.costs(i)*(1.-data.isModelledWeights(i));
   return coveredData;
 }
 
@@ -167,7 +177,7 @@ void MinEigModel::glDraw(){
 
 void MinEigModel::report(ostream& os, bool mini){
   if(mini){
-    os <<pts.N <<' ' <<density <<' ' <<coveredData() <<' '  <<mean <<"  " <<eig.lambda_lo <<' ' <<eig.x_lo <<"  " <<label <<endl;
+    os <<"#p " <<pts.N <<" dy " <<density <<" lm " <<::sqrt(eig.lambda_lo) <<" lM " <<::sqrt(eig.lambda_hi) <<"  " <<label <<endl;
   }else{
     os <<"model-report" <<endl;
     os <<"  #pts=" <<pts.N <<" #fringe=" <<fringe.N <<endl;
@@ -180,6 +190,6 @@ void MinEigModel::report(ostream& os, bool mini){
 void MinEigModel::colorPixelsWithWeights(arr& cols){
   for(uint i:pts){
     cols(data.idx2pixel(i), 0) = weights(i);
-    cols(data.idx2pixel(i), 2) = data.weights(i);
+    cols(data.idx2pixel(i), 2) = data.isModelledWeights(i);
   }
 }

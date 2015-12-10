@@ -1658,9 +1658,7 @@ OpenGL& ors::KinematicWorld::gl(){
     s->gl = new OpenGL;
     s->gl->add(glStandardScene, 0);
     s->gl->addDrawer(this);
-    s->gl->camera.setPosition(10., -15., 8.);
-    s->gl->camera.focus(0, 0, 1.);
-    s->gl->camera.upright();
+    s->gl->camera.setDefault();
   }
   return *s->gl;
 }

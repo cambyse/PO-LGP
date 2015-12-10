@@ -39,7 +39,7 @@ void TEST(KinectModules) {
 void TEST(KinectRaw) {
   OpenGL gl("KINECT",640,480);
   KinectThread kin;
-  kin.verbose=1;
+  //kin.verbose=1;
 
   kin.open();
   for(uint t=0;t<100;t++){

@@ -26,7 +26,9 @@ struct PointCloud2DataNeighbored:Module{
     data.writeAccess();
     data->setData(kinect_points.get());
     if(data->X.d0!=480*640){ data.deAccess(); return; }
-    data->setGridNeighborhood(480, 640);
+    if(!data->N.N){
+      data->setGridNeighborhood(480, 640, false);
+    }
     arr costs = data->X.col(2).reshape(data->X.d0);
     for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
     costs *= costs;
@@ -58,12 +60,10 @@ struct PlaneFitter:Module{
 
   void step(){
     if(data.get()->X.d0!=640*480) return;
-    M.addNewRegionGrowingModel(data.set());
-//    M.models.last()->colorPixelsWithWeights(cols);
+    listDelete(M.models);
+    for(uint k=0;k<10;k++) M.addNewRegionGrowingModel(data.set());
     M.reoptimizeModels(data.set());
-//    M.reestimateVert();
     M.report();
-//    gl.update();
     cout <<"#models=" <<M.models.N <<endl;
     planes_now.writeAccess();
     planes_now().clear();
@@ -100,7 +100,7 @@ void TEST(Kinect2Planes){
     new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
   } else HALT("");
 
-  ImageViewer iv("kinect_rgb");
+//  ImageViewer iv("kinect_rgb");
   Kinect2PointCloud k2pcl;
   PointCloudViewer pclv;
   PointCloud2DataNeighbored pts2data;
@@ -116,7 +116,7 @@ void TEST(Kinect2Planes){
     cout <<'.' <<endl;
   }
 #else
-  mlr::wait(300.);
+  moduleShutdown().waitForValueGreaterThan(0);
 #endif
 
   threadCloseModules();
