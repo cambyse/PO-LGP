@@ -5,14 +5,11 @@
 void TEST(ModuleVision) {
   cout <<registry() <<endl;
 
-  System S;
-  S.addModule<OpencvCamera>(NULL, Module::loopFull);
-  S.addModule<Patcher>(NULL, {"rgb", "patches"});
+  new OpencvCamera;
+  addModule<Patcher>(NULL, {"rgb", "patches"});
   new ImageViewer("rgb");
-  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
+  addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
   //S.connect();
-
-  cout <<S <<endl;
 
   threadOpenModules(true);
   moduleShutdown().waitForValueGreaterThan(0);

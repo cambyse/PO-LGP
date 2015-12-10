@@ -717,7 +717,7 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 
   setState(x);
   getPhi(y, J, tt, 0, {&world}, tau);
-  H.clear();
+  if(&H) H.clear();
 //  double h=1./sqrt(tau);
 //  y.append(h*(x-x0));
 //  if(&J) J.append(h*eye(x.N));

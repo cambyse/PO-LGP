@@ -21,8 +21,6 @@ int main(int argc, const char* argv[]){
   }
 
   OpenGL gl("bla",800,600);
-  gl.camera.setKinect();
-  gl.camera.X = s->X;
   gl.add(draw1,0);
   gl.watch();
   gl.renderInBack(false, true);
