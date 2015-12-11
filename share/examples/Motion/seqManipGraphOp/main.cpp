@@ -77,16 +77,14 @@ void TEST(PickAndPlace){
   t->setCostSpecs(MP.T, MP.T, ARR(1.,0.,0.,0.), 1e3);
 
   // zero grasp joint motion during holding
-  if(MP.z0.N==0){
-    ors::Joint *j_grasp = MP.world.getJointByName("graspJoint");
-    arr M(j_grasp->qDim(), MP.world.getJointStateDimension());
-    M.setZero();
-    for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
-    t = MP.addTask("_MinSumOfSqr_qItself_graspJoint", new TaskMap_qItself(M));
-    t->map.order=1;
-    t->prec.resize(MP.T+1).setZero();
-    for(uint time=pickTime+1;time<placeTime;time++) t->prec(time)=1e3;
-  }
+  ors::Joint *j_grasp = MP.world.getJointByName("graspJoint");
+  arr M(j_grasp->qDim(), MP.world.getJointStateDimension());
+  M.setZero();
+  for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
+  t = MP.addTask("_MinSumOfSqr_qItself_graspJoint", new TaskMap_qItself(M));
+  t->map.order=1;
+  t->prec.resize(MP.T+1).setZero();
+  for(uint time=pickTime+1;time<placeTime;time++) t->prec(time)=1e3;
 
 
 ////  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .05));

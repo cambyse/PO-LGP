@@ -109,6 +109,9 @@ struct MotionProblem {
   arr postfix; ///< fixing the set of statex x[T-k]...x[T] //TODO: remove?
   //TODO: add methods to properly set the prefix given x0,v0?
 
+  //-- stationary parameters
+  arr z0; ///< an initialization of the stationary parameters of the motion problem
+
   //-- return values of an optimizer
   arrA phiMatrix;
   arr dualMatrix;
@@ -184,6 +187,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return MP.k_order; }
   virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_z() { return MP.z0.N; }
   virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
   virtual uint dim_h(uint t){ return MP.dim_h(MP.world, t); }
@@ -191,6 +195,23 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();
 };
+
+
+//===========================================================================
+//
+// transforming a motion problem description into an end-pose optimization problem only
+//
+
+struct MotionProblem_EndPoseFunction{
+  MotionProblem& MP;
+
+  MotionProblem_EndPoseFunction(MotionProblem& _MP);
+
+  //VectorFunction definitions
+  void Phi(arr& phi, arr& J, TermTypeA& tt, const arr& x);
+  virtual void fv(arr& phi, arr& J, const arr& x);
+};
+
 
 //===========================================================================
 //

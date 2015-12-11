@@ -745,13 +745,15 @@ arr MotionProblemFunction::get_postfix() {
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar) {
-  uint T=get_T(), n=dim_x(), k=get_k();
+  uint T=get_T(), n=dim_x()+dim_z(), k=get_k();
 
   //assert some dimensions
   CHECK_EQ(x_bar.d0,k+1,"");
   CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
 
+#define NEWCODE
+#ifdef NEWCODE
   MP.setupConfigurations();
 
   //set states
@@ -763,23 +765,122 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
     }
     if(t+i>=k) MP.temporallyAlignKinematicSwitchesInConfiguration(t+i-k);
   }
+#else // old way: have only k+1 configurations and 'move' them on the fly
+  //-- manage configurations and set x_bar states
+  if(configurations.N!=k+1 || (MP.switches.N && t==0)){
+    listDelete(configurations);
+    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
+  }
+#if 0
+  //find matches
+  if(!MP.switches.N){ //this efficiency gain only works without switches yet...
+    uintA match(k+1); match=UINT_MAX;
+    boolA used(k+1); used=false;
+    uintA unused;
+    for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
+      if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
+        match(i)=j;
+        used(j)=true;
+        j=k;
+      }
+    }
+    for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
+    for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
+    configurations.permute(match);
+  }
+#endif
+  //apply potential graph switches
+  for(ors::KinematicSwitch *sw:MP.switches){
+    for(uint i=0;i<=k;i++){
+      if(t+i>=k && sw->timeOfApplication==t-k+i){
+        sw->apply(*configurations(i));
+        if(MP.useSwift) configurations(i)->swift().initActivations(*configurations(i));
+      }
+    }
+  }
+  //set states
+  for(uint i=0;i<=k;i++){
+    if(x_bar[i]!=configurations(i)->q){
+      configurations(i)->setJointState(x_bar[i]);
+      if(MP.useSwift) configurations(i)->stepSwift();
+    }
+  }
+#endif
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
   TermTypeA _tt;
+#ifdef NEWCODE
   MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRange(t,t+k), MP.tau);
+#else
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations, MP.tau);
+#endif
   phi.append(_phi);
   if(&tt) tt.append(_tt);
   if(&J)  J.append(_J);
+//  if(&J_z){
+//    for(auto& c:configurations) c->setAgent(1);
+//    MP.getTaskCosts2(_phi, J_z, t, configurations, MP.tau);
+//    for(auto& c:configurations) c->setAgent(0);
+//  }
 
   if(&tt) CHECK_EQ(tt.N, phi.N,"");
   if(&J) CHECK_EQ(J.d0, phi.N,"");
+//  if(&J_z) CHECK_EQ(J.d0,phi.N,"");
 
 }
 
 StringA MotionProblemFunction::getPhiNames(uint t){
   return MP.getPhiNames(*MP.configurations.last(), t);
 }
+
+//===========================================================================
+
+void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
+  //-- transition costs
+  NIY;
+//  arr h = MP.H_rate_diag;
+//  if(MP.transitionType==MotionProblem::kinematic){
+//    h *= MP.tau/double(MP.T);
+//    h=sqrt(h);
+//  } else {
+//    double D = MP.tau*MP.T;
+//    h *= 16./D/D/D;
+//    h=sqrt(h);
+//  }
+//  phi = h%(x-MP.x0);
+//  if(&J) J.setDiag(h);
+
+  //-- task costs
+  arr _phi, J_x;
+  MP.setState(x, zeros(x.N));
+  MP.getPhi(_phi, J_x, NoTermTypeA, MP.T, LIST(MP.world), MP.tau);
+  phi.append(_phi);
+  if(&J && _phi.N) {
+    J.append(J_x);
+  }
+
+  if(absMax(phi)>1e10){
+    MLR_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
+    MP.setState(x, NoArr);
+    MP.getPhi(_phi, J_x, NoTermTypeA, MP.T, LIST(MP.world), MP.tau);
+  }
+
+  if(&J) CHECK_EQ(J.d0,phi.N,"");
+
+  //store in CostMatrix
+  MP.phiMatrix = phi;
+}
+
+//===========================================================================
+
+MotionProblem_EndPoseFunction::MotionProblem_EndPoseFunction(MotionProblem& _MP)
+  : MP(_MP){
+//  ConstrainedProblem::operator=( [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+//    this->Phi(phi, J, H, tt, x);
+//  } );
+}
+
 
 //===========================================================================
 
