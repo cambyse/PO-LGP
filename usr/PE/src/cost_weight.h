@@ -2,6 +2,7 @@
 #define COSTWEIGHT_H
 
 #include <Core/array.h>
+#include <Gui/plot.h>
 
 struct CostWeight {
   enum WeightType {Transition=0,Block=1,Constant=2,Gaussian=3,RBF=4};

@@ -54,7 +54,6 @@ InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
       phi_perm.append(int(Dpdp(i)));
     }
 
-
     numLambda = 0;
     // initialize cost functions for demonstrations
     for (uint i=0;i<scenario.scenes.d0;i++) {
@@ -63,7 +62,6 @@ InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
         numLambda += scenario.scenes(i).lambdaDem.N;
       }
     }
-
 }
 
 void InverseMotionProblem::compWeights(arr &w, arr &dw, arr &Hw, const arr &param){
@@ -113,7 +111,6 @@ void InverseMotionProblem::compWeights(arr &w, arr &dw, arr &Hw, const arr &para
             tmp = catCol(tmp,Hi.subRange(m,m+m-1),zeros(m,nP-nPi),Hi.subRange(2*m,2*m+m-1),zeros(m,(nP+1)*(nP-nPi-c)));
             Hw.append(tmp);
           }
-
           if (nPi==2) {
             Hw.append(catCol(zeros(m,nP*c+c),Hi.subRange(0,m-1),zeros(m,nP-nPi),Hi.subRange(m,m+m-1),zeros(m,(nP+1)*(nP-nPi-c))));
           }

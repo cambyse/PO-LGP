@@ -1,10 +1,6 @@
 #include "motion_factory.h"
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include "../src/cost_weight.h"
-#include <iomanip>
-#include <iostream>
-
+#include "cost_weight.h"
+#include <Gui/opengl.h>
 
 void MotionFactory::execMotion(Scene &s, arr &x, arr &lambda, arr &_x0, uint vis, uint _verbose, mlr::String name) {
   s.MP->prefix.clear();
@@ -36,6 +32,8 @@ void MotionFactory::execMotion(Scene &s, arr &x, arr &lambda, arr &_x0, uint vis
   }
 
   /// visualize
+  s.world->watch();
+  s.world->gl().resize(800,800);
   if (vis==1) {
     displayTrajectory(xx,s.MP->T,s.MP->world,"world"); mlr::wait(1.5);
   }else if (vis==2) {
@@ -117,6 +115,7 @@ void MotionFactory::loadScenarioTest(Scenario &scenario, bool useConstraints) {
 
     arr x,lambda;
     execMotion(s,x,lambda,NoArr,mlr::getParameter<bool>("IMP/visDemo"));
+    cout << "lambda: " << lambda << endl;
 
     scenario.scenes.last().xDem = x;
     scenario.scenes.last().lambdaDem = lambda;
@@ -477,7 +476,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
     t->setCostSpecs(conT, finT, ARR(0.), 1.);
     s.optConstraintsParam = true;
 
-//    s.optConstraintsParam = false;
+    //    s.optConstraintsParam = false;
     scenario.scenes.append(s);
     scenario.paramGT = param;
     scenario.setParam(param);
@@ -570,7 +569,7 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
   } else if (type==2) { // nonlinear gaussian
     param = ARR(1e-1,1e2);
 
-//    param = param/sum(param)*scenario.costScale;
+    //    param = param/sum(param)*scenario.costScale;
 
     // transition costs
     Task *t;
@@ -600,4 +599,84 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
   scenario.scenes.last().xDem = x;
   scenario.scenes.last().lambdaDem = lambda;
   scenario.setParam(ones(param.d0),true); // reset parameters
+}
+
+
+void MotionFactory::loadScenarioButton(Scenario &scenario) {
+  arr x,lambda;
+  Scene s;
+  /// create world and motion problem
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
+  double duration = mlr::getParameter<double>("duration");
+
+  s.world = new ors::KinematicWorld(STRING(folder<<"modelaug.kvg"));
+  s.MP = new MotionProblem(*s.world,false);
+
+  /// load demo from file
+  s.xDem = FILE(STRING(folder<<"Xaug.dat"));
+
+  s.MP->T = s.xDem.d0-1;
+  s.MP->tau = duration/s.MP->T;
+
+  s.x0 = s.xDem[0];
+
+  /// compute lambda
+  // TODO
+
+  arr param = ARR(1e0,1e2,1e2,1e0);
+  // transition costs
+  Task *t;
+  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+  t->map.order = 2;
+  t->target = ARR(0.);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension(),ARR(0.1,1e5)));
+
+  s.optConstraintsParam = true;
+  uint b2_b1_idx = s.world->getJointByName("b2_b1")->qIndex;
+  uint contactT = s.MP->T/2.;
+
+  arr tmp1,tmp2,tmp3,tmp4,tmp5;
+
+  s.world->setJointState(s.xDem[contactT]);
+  s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
+  tmp1 += 1e-1*randn(3);
+  tmp1 = tmp1/length(tmp1);
+  t =s.MP->addTask("vec1", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp1)) );
+  t->target = ARR(1.);
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(contactT,contactT),1,1));
+
+  s.world->setJointState(s.xDem[s.MP->T]);
+  s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
+  tmp2 += 1e-1*randn(3);
+  tmp2 = tmp2/length(tmp2);
+  t = s.MP->addTask("vec2", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp2)) );
+  t->target = ARR(1.);
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T,s.MP->T),1,1));
+
+  uint preconT = contactT-10;
+  s.world->setJointState(s.xDem[preconT]);
+  s.world->kinematicsPos(tmp3,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
+  t =s.MP->addTask("pos", new DefaultTaskMap(posTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.)) );
+  t->target = conv_vec2arr(tmp3+1e-3*randn(3));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(preconT,preconT),1,3));
+
+  s.world->setJointState(s.xDem[0]);
+
+  // add constraint
+  t = s.MP->addTask("dof_target", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
+  t->setCostSpecs(s.MP->T, s.MP->T, ARR(s.xDem(s.xDem.d0-1,b2_b1_idx)), 1.);
+  t = s.MP->addTask("dof_fix", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
+  t->setCostSpecs(0, contactT, ARR(s.xDem(0,b2_b1_idx)), 1.);
+  t = s.MP->addTask("contact", new PointEqualityConstraint(*s.world, "endeffL",NoVector, "b1_shape",NoVector));
+  t->setCostSpecs(contactT+1, s.MP->T, ARR(0), 1.);
+
+  scenario.scenes.append(s);
+  scenario.paramGT = param;
+  scenario.setParam(param);
+  execMotion(s,x,lambda,NoArr,mlr::getParameter<bool>("IMP/visDemo"));
+
+  scenario.setParam(ones(param.d0)); // reset parameters
+
+  param = param/sum(param)*scenario.costScale;
 }

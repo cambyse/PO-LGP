@@ -43,6 +43,7 @@ int main(int argc,char **argv){
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
     count = 0;
 
+
 //    Xdemo << FILE(STRING(folder<<"/mfX4.dat"));
 //    Fdemo << FILE(STRING(folder<<"/mfFLact4.dat"));
 //    Mdemo << FILE(STRING(folder<<"/mfMact4.dat"));
@@ -57,19 +58,12 @@ int main(int argc,char **argv){
     mi->gotoPosition(Xdemo[0]);
     mi->executeTrajectory(Xdemo,duration,true);
 
-    Xdemo = mi->logXact;
-    Fdemo = mi->logFLact;
-    Mdemo = mi->logMact;
-
-    write(LIST<arr>(Xdemo),STRING(folder<<"/Xdemo.dat"));
-    write(LIST<arr>(Fdemo),STRING(folder<<"/Fdemo.dat"));
-    write(LIST<arr>(Mdemo),STRING(folder<<"/Mdemo.dat"));
+    Xdemo = mi->logXact;  Fdemo = mi->logFLact; Mdemo = mi->logMact;
+    write(LIST<arr>(Xdemo),STRING(folder<<"/Xdemo.dat")); write(LIST<arr>(Fdemo),STRING(folder<<"/Fdemo.dat")); write(LIST<arr>(Mdemo),STRING(folder<<"/Mdemo.dat"));
 
     count = 0;
-
     if (useRos) {Xreverse = Xdemo; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
   }
-
 
   /// compute contact phase
   task->computeConstraintTime(Fdemo,Xdemo);
@@ -122,7 +116,6 @@ int main(int argc,char **argv){
       write(LIST<arr>(X),STRING(folder<<"/mbX"<<count<<".dat"));
       result = true;
     }
-
     count++;
   }
   return 0;

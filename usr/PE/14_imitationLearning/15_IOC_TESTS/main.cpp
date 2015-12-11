@@ -1,4 +1,3 @@
-#include <Core/util_t.h>
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
@@ -35,7 +34,7 @@ void run() {
   cout << "parameter initialization: " << param << endl;
 
   cout << "ikmo start" << endl;
-  IKMO ikmo(trainScenes,weights,param.d0,mf->costScale);
+  InverseMotionProblem ikmo(trainScenes,weights,param.d0,mf->costScale);
   cout << "ikmo initializied" << endl;
   checkAllGradients(ikmo,param,1e-2);
 

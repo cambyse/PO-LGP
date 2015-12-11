@@ -2,12 +2,11 @@
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 
-#include "../src/motion_factory.h"
-#include "../src/cost_weight.h"
-#include "../src/inverse_motion.h"
+#include "../../src/motion_factory.h"
+#include "../../src/cost_weight.h"
+#include "../../src/inverse_motion.h"
 
 void testBasics() {
-
   MotionFactory* mf = new MotionFactory();
   Scenario scenario;
   scenario.costScale = 1e2;

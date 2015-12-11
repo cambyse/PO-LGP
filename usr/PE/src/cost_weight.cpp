@@ -1,6 +1,4 @@
 #include "cost_weight.h"
-#include <Gui/plot.h>
-
 
 CostWeight::CostWeight(WeightType _type, uint _numParam, arr _fixedParam, uint _T, uint _nY, arr _limits) {
   type=_type;

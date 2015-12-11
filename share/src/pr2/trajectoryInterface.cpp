@@ -65,7 +65,7 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logTact.clear(); logXdes.clear(); logXact.clear(); logFLact.clear(); logUact.clear(); logMact.clear();}
+  if (recordData) {logX = X; logT.clear(); logXdes.clear(); logXact.clear(); logFL.clear(); logU.clear(); logM.clear();}
 
   ors::Joint *trans = world->getJointByName("worldTranslationRotation");
   ors::Joint *torso = world->getJointByName("torso_lift_joint");
@@ -110,11 +110,11 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
 
     /// logging
     if (recordData) {
-        logTact.append(ARR(t));
+        logT.append(ARR(t));
         logXdes.append(~refs.q);
         logXact.append(~S.ctrl_obs.get()->q);
-        logFLact.append(~S.ctrl_obs.get()->fL);
-        logUact.append(~S.ctrl_obs.get()->u_bias);
+        logFL.append(~S.ctrl_obs.get()->fL);
+        logU.append(~S.ctrl_obs.get()->u_bias);
     }
   }
 }
@@ -235,9 +235,12 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 void TrajectoryInterface::logging(mlr::String folder, uint id) {
   write(LIST<arr>(logXact),STRING(folder<<"Xact"<<id<<".dat"));
   write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
-  write(LIST<arr>(logTact),STRING(folder<<"Tdes"<<id<<".dat"));
 
-  if (logFLact.N>0) write(LIST<arr>(logFLact),STRING(folder<<"FLact"<<id<<".dat"));
-  if (logMact.N>0) write(LIST<arr>(logMact),STRING(folder<<"Mact"<<id<<".dat"));
-  if (logUact.N>0) write(LIST<arr>(logUact),STRING(folder<<"Uact"<<id<<".dat"));
+  write(LIST<arr>(logT),STRING(folder<<"T"<<id<<".dat"));
+  write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
+  write(LIST<arr>(logX),STRING(folder<<"X.dat"));
+
+  if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
+  if (logM.N>0) write(LIST<arr>(logM),STRING(folder<<"M"<<id<<".dat"));
+  if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
 }

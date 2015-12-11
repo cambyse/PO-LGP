@@ -2,7 +2,7 @@
 #define INVERSE_MOTION_H
 
 #include <Optim/optimization.h>
-#include "../src/scene.h"
+#include "scene.h"
 
 struct InverseMotionProblem:ConstrainedProblem {
   Scenario scenario;
