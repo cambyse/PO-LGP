@@ -1,19 +1,23 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/rosalvar.h>
 
 // =================================================================================================
-struct MySystem:System {
+struct MySystem {
   // Access Variables
-  ACCESS(CtrlMsg, ctrl_obs)
-  ACCESS(AlvarMarkers, ar_pose_marker)
+  ACCESSname(CtrlMsg, ctrl_obs)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(AlvarMarkers, ar_pose_markers)
 
   MySystem() {
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-    addModule<ROSSUB_ar_pose_marker>(NULL, Module::listenFirst);
-    connect();
+    new RosCom_Spinner();
+    new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+    new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+    //addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+
+    //connect();
   }
 };
 
@@ -22,17 +26,18 @@ struct MySystem:System {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
+  rosCheckInit("nodeName");
   bool useRos = true;
 
   ors::KinematicWorld world("model.kvg");
   MySystem system;
-  engine().open(system);
+  threadOpenModules(true);
 
   initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
   for (int i = 0; true; i++) {
     syncJointStateWitROS(world, system.ctrl_obs, useRos);
 
-    AlvarMarkers markers = system.ar_pose_marker.get();
+    AlvarMarkers markers = system.ar_pose_markers.get();
     syncMarkers(world, markers);
 
     // world.calc_fwdPropagateFrames();
@@ -42,7 +47,7 @@ int main(int argc, char** argv){
     mlr::wait(0.01);
   }
 
-  engine().close(system);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
   return 0;
 }

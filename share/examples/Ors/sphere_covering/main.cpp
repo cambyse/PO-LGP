@@ -92,7 +92,7 @@ void TEST(CoveringSphere){
   cout <<"point = " <<x <<endl;
   cout <<"cr_init=" <<cr <<endl;
   checkJacobianCP(F, cr, 1e-4);
-  optConstrainedMix(cr, NoArr, F);
+  optConstrained(cr, NoArr, F);
   cout <<"cr_opt=" <<cr <<endl;
 
 

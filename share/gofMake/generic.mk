@@ -171,9 +171,6 @@ cleanLocks: force
 
 depend: generate_Makefile.dep
 
-#%/config.mk: %/config.mk.default
-#	cp $< $@
-
 info: force
 	@echo; echo ----------------------------------------
 	@echo "     " "environment configuration (see make-generic file)";

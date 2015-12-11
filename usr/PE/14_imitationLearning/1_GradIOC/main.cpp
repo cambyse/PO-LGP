@@ -160,7 +160,7 @@ void simpleMotion(){
   TaskCost *c;
 
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 25);
+  c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -184,9 +184,9 @@ void simpleMotion(){
 
   arr wOpt;
   wOpt.append(MP.H_rate_diag);
-  wOpt.append(MP.taskCosts(0)->prec(T));
+  wOpt.append(MP.tasks(0)->prec(T));
 
-  MP.taskCosts(0)->prec(T) = 1;
+  MP.tasks(0)->prec(T) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
 
   arr go,Ho,PHIo,Jo;

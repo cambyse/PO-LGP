@@ -16,7 +16,7 @@ void testConstraint2(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr
   if(&x_start) x=x_start;
   rnd.seed(0);
 
-  optConstrainedMix(x, NoArr, p);
+  optConstrained(x, NoArr, p);
 
   if(&x_start) x_start = x;
 }
@@ -55,7 +55,7 @@ void TEST(CoveringSphere){
   cout <<"point = " <<x <<endl;
   cout <<"cr_init=" <<cr <<endl;
   checkJacobianCP(F, cr, 1e-4);
-  optConstrainedMix(cr, NoArr, F);
+  optConstrained(cr, NoArr, F);
   cout <<"cr_opt=" <<cr <<endl;
 }
 

@@ -670,7 +670,7 @@ void UEyePoller::close() {
   tout(this) << "closed successfully" << endl;
 }
 
-namespace MLR {
+namespace mlr {
 	Mutex start_lock;
 
 	UEyeInterface::UEyeInterface(int cameraID) : s(new ::sUEyeInterface(cameraID)), streaming(false) {

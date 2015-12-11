@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 //#include <Gui/opengl.h>
 #include <signal.h>
 #include <thread>
@@ -18,7 +18,7 @@
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/flycap/flycap.h>
 
-using namespace MLR;
+using namespace mlr;
 using namespace std;
 using namespace std::placeholders;
 
@@ -61,8 +61,8 @@ protected:
 
 public:
 	VideoSave(const char* name, const mlr::String& created, const bool& terminated) :
-		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
+		enc(STRING("z." << name << "." << created << ".264"), 60, 0, mlr::PIXEL_FORMAT_RGB8),
+		times(enc.name()), start_time(ULONG_MAX), pub(name, name, mlr::PIXEL_FORMAT_RGB8),
 		name(name), terminated(terminated), ready(false), gl(name) {
 	}
 
@@ -96,7 +96,7 @@ private:
 public:
 	FlycapGrabAndSave(int id, const char* name, const mlr::String& created, const bool& terminated) :
 		VideoSave(name, created, terminated),
-		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8) {
+		cam(id, mlr::PIXEL_FORMAT_RAW8, mlr::PIXEL_FORMAT_RGB8) {
 	}
 	virtual ~FlycapGrabAndSave() {
 

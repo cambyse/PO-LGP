@@ -2,34 +2,34 @@
 #include <Perception/kinect2pointCloud.h>
 #include <Gui/opengl.h>
 #include <Core/module.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>
 
 void glDrawAxes(void*);
 
 void TEST(Kinect2Surfels){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(byteA, kinect_rgb)
     ACCESS(uint16A, kinect_depth)
     ACCESS(arr, kinect_points)
     ACCESS(arr, kinect_pointColors)
     MySystem(){
-      addModule<KinectPoller>(NULL, Module::loopWithBeat, .1); //this is callback driven...
-//      addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-      addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-//      addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-      addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
+      new KinectThread; //this is callback driven...
+//      addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+      new ImageViewer("kinect_rgb");
+//      new ImageViewer("kinect_depthRgb");
+      new Kinect2PointCloud;
+      new PointCloudViewer("kinect_points", "kinect_pointColors");
+//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
 //      m_enc->set_rgb(true);
-//      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
-      connect();
+//      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
+      //connect();
     }
   } Sys;
 
 
-  engine().open(Sys);
+  threadOpenModules(true);
 
 
   Surfels S;
@@ -37,8 +37,7 @@ void TEST(Kinect2Surfels){
   OpenGL gl("indexing",640,480);
   OpenGL gl2("watching",640,480);
   OpenGL gl3("mask",640,480);
-  initKinectCam();
-  gl.camera=kinectCam;
+  gl.camera.setKinect();
   gl.add(glDrawSurfels, &S);
 
   gl2.add(glDrawAxes, NULL);
@@ -48,7 +47,7 @@ void TEST(Kinect2Surfels){
   for(uint i=0;i<10;i++) Sys.kinect_points.var->waitForNextRevision();
 
   for(uint k=0;;k++){
-    if(engine().shutdown.getValue()>0) break;
+    if(moduleShutdown().getValue()>0) break;
 //    if(k>20) break;
 
     Sys.kinect_points.var->waitForNextRevision();
@@ -64,7 +63,7 @@ void TEST(Kinect2Surfels){
     gl2.update();
   }
 
-  engine().close(Sys);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 
   cout <<S.pos <<endl;

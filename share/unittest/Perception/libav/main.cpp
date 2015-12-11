@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-using namespace MLR;
+using namespace mlr;
 
 GTEST_TEST(mt_guess_format, test_std_formats) {
     register_libav();

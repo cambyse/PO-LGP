@@ -147,10 +147,10 @@ int main(int argn, char ** args) {
     PCL_ModuleSystem S; // for kinect
     if(input_arg.getValue()=="kinect") {
         // start
-        engine().open(S);
+        threadOpenModules(true);
         // define get method
         get_input_cloud = [&](){
-            if(engine().shutdown.getValue()>0) {
+            if(moduleShutdown().getValue()>0) {
                 cout << "Error: no input method defined" << endl;
                 input_cloud->clear();
             } else {
@@ -335,7 +335,7 @@ int main(int argn, char ** args) {
     //  clean up  //
     //------------//
     if(input_arg.getValue()=="kinect") {
-        engine().close(S);
+        threadCloseModules();
     }
 
     return 0;

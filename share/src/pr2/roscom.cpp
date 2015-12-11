@@ -205,6 +205,32 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
 
 #ifdef MLR_ROS
 
+void PerceptionObjects2Ors::step(){
+  perceptionObjects.readAccess();
+  modelWorld.readAccess();
+
+  for(visualization_msgs::Marker& marker : perceptionObjects().markers){
+    mlr::String name;
+    name <<"obj" <<marker.id;
+    ors::Shape *s = modelWorld->getShapeByName(name);
+    if(!s){
+      s = new ors::Shape(modelWorld(), NoBody);
+      if(marker.type==marker.CYLINDER){
+        s->type = ors::cylinderST;
+        s->size[3] = .5*(marker.scale.x+marker.scale.y);
+        s->size[2] = marker.scale.z;
+      }else if(marker.type==marker.POINTS){
+        s->type = ors::meshST;
+        s->mesh.V = conv_points2arr(marker.points);
+        s->mesh.C = conv_colors2arr(marker.colors);
+      }else NIY;
+    }
+  }
+
+  perceptionObjects.deAccess();
+  modelWorld.deAccess();
+}
+
 //===========================================================================
 // RosCom_Spinner
 //struct sRosCom_Spinner{

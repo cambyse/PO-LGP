@@ -6,7 +6,7 @@
 #include <vector>
 #include <Perception/pixel_format.h>
 
-namespace MLR {
+namespace mlr {
 
 struct sFlycapInterface;
 
@@ -22,7 +22,7 @@ public:
 	 * WARNING: Grabbing raw and asking for YUV as output DOES NOT WORK. It seems to be a missing feature in
 	 * the flycapture library. If you grab RAW, either use the raw image directly, or convert to RGB/BGR.
 	 */
-	FlycapInterface(int cameraID, MLR::PixelFormat capture_format = MLR::PIXEL_FORMAT_RAW8, MLR::PixelFormat output_fmt = MLR::PIXEL_FORMAT_BGR8);
+	FlycapInterface(int cameraID, mlr::PixelFormat capture_format = mlr::PIXEL_FORMAT_RAW8, mlr::PixelFormat output_fmt = mlr::PIXEL_FORMAT_BGR8);
 	~FlycapInterface();
 
 	void startStreaming();
@@ -45,7 +45,7 @@ std::vector<uint32_t> get_flycap_ids();
 } // MLR
 
 struct FlycapPoller: Module {
-  struct MLR::sFlycapInterface *s;
+  struct mlr::sFlycapInterface *s;
 
   ACCESS(byteA, image);
 

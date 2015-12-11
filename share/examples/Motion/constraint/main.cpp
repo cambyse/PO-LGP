@@ -60,7 +60,7 @@ void TEST(Stickiness){
 
   Convert CP(MF);
   for(uint k=0;k<1;k++){
-    optConstrainedMix(x, MP.dualMatrix, CP);
+    optConstrained(x, MP.dualMatrix, CP);
     MP.costReport();
     for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
   }
@@ -97,7 +97,7 @@ void TEST(EqualityConstraints){
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
   cout << x << endl;
-  optConstrainedMix(x, MP.dualMatrix, Convert(MF));
+  optConstrained(x, MP.dualMatrix, Convert(MF));
   MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
 }
@@ -136,7 +136,7 @@ void TEST(ClosedKinematicChain){
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
-  optConstrainedMix(x, MP.dualMatrix, Convert(MF),OPT(stopTolerance=1e-5));
+  optConstrained(x, MP.dualMatrix, Convert(MF),OPT(stopTolerance=1e-5));
   MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
 }
@@ -188,7 +188,7 @@ void TEST(ContactConstraint){
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
   arr lambda = zeros(x.d0,2);
-  optConstrainedMix(x, lambda, Convert(MF));
+  optConstrained(x, lambda, Convert(MF));
   cout << lambda << endl;
   MP.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
@@ -235,7 +235,7 @@ void TEST(VelConstraint){
   arr lambda = zeros(x.d0,2);
 
 
-  optConstrainedMix(x, lambda, Convert(MF));
+  optConstrained(x, lambda, Convert(MF));
   checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;
@@ -274,7 +274,7 @@ void TEST(qItselfConstraint){
   arr lambda = zeros(x.d0,2);
 
 
-  optConstrainedMix(x, lambda, Convert(MF));
+  optConstrained(x, lambda, Convert(MF));
   checkGradient(Convert(MF),x,1e-3);
 
 //  cout << lambda << endl;

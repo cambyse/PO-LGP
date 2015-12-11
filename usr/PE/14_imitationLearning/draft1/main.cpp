@@ -24,7 +24,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
 
     Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
+    c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
     c->map.order=1;
@@ -72,9 +72,9 @@ arr execRun(arr param, arr q0, arr refGoal) {
   world.getBodyByName("goalRef")->X.pos = refGoal;
   Task *c;
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, param(0));
+  c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
   c = MP.addTask("vel_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(0.,1.,0.), param(1));
+  c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
   c = MP.addTask("final_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
   c->map.order=1;

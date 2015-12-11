@@ -339,6 +339,8 @@ endif
 
 ifeq ($(PORTAUDIO),1)
 CXXFLAGS  += -DMLR_PORTAUDIO
+LPATHS += $(HOME)/opt/portaudio/lib/.libs
+CPATHS += $(HOME)/opt/portaudio/include
 LIBS += -lportaudio
 endif
 
@@ -356,8 +358,11 @@ ros_control/hardware_interface\
 ros_control/controller_interface
 
 CPATHS += /opt/ros/$(ROS_VERSION)/include $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/include)
-
 LPATHS += /opt/ros/$(ROS_VERSION)/lib $(ROSP:%=/opt/ros/$(ROS_VERSION)/stacks/%/lib)
+
+ifndef ROS_VERSION
+  ROS_VERSION:=indigo
+endif
 
 ifeq ($(ROS_VERSION),groovy)
 CXXFLAGS  += -DMLR_ROS_GROOVY

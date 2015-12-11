@@ -39,16 +39,17 @@ struct Access;
 struct Module;
 typedef mlr::Array<Access*> AccessL;
 typedef mlr::Array<Module*> ModuleL;
-extern Singleton<ConditionVariable> shutdown;
+extern Singleton<ConditionVariable> moduleShutdown;
 
 //===========================================================================
 
 Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
+RevisionedAccessGatedClassL getVariables();
 void openModules();
 void stepModules();
 void closeModules();
-void threadOpenModules(bool waitForOpened);
+void threadOpenModules(bool waitForOpened, bool setSignalHandler=true);
 void threadCloseModules();
 void threadCancelModules();
 void modulesReportCycleTimes();
@@ -63,29 +64,12 @@ void modulesReportCycleTimes();
     necessary */
 
 struct Module : Thread{
-
-  /** DON'T open drivers/devices/files or so here in the constructor,
-      but in open(). Sometimes a module might be created only to see
-      which accesses it needs. The default constructure should really
-      do nothing */
   Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
     new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
   }
   virtual ~Module(){}
-
-  /** The most important method of all of this: step does the actual
-      computation of the module. Modules should be state less. Access
-      the variables by calling the x.get(), x.set() or
-      x.[read|write|de]Access(), where ACCESS(TYPE, x) was
-      declared. */
   virtual void step(){ HALT("you should not run a virtual module"); }
-
-  /** use this to open drivers/devices/files and initialize
-      parameters; this is called within the thread */
   virtual void open(){}
-
-  /** use this to close drivers/devices/files; this is called within
-      the thread */
   virtual void close(){}
 };
 
@@ -125,6 +109,7 @@ struct Access_typed:Access{
 
 //  Access_typed(const Access_typed<T>& acc) = delete;
 
+  /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
   Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
     : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = registry().getNode("Variable", name);
@@ -140,6 +125,7 @@ struct Access_typed:Access{
     }
   }
 
+  /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
     Node *vnode = registry().getNode("Variable", name);
@@ -171,10 +157,25 @@ inline bool operator==(const Access&,const Access&){ return false; }
 
 //===========================================================================
 //
-// dealing with the globally registrated (in moduleSystem) modules
+// old method
 //
 
+template<class T> T* addModule(const char *name, double beat){
+  T *m = new T(name, beat);
+  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
+  return m;
+}
 
+template<class T> T* addModule(){
+  T *m = new T;
+  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
+  return m;
+}
+
+template<class T> T* addModule(const char *name, const StringA& accessConnectRules, double beat=0.){
+  NIY;
+  return new T;
+}
 
 
 //===========================================================================

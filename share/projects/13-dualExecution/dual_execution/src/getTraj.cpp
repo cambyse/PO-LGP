@@ -16,7 +16,7 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
   Task *pos =
       P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
+  pos->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 

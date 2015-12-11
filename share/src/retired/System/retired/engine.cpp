@@ -256,7 +256,7 @@ void System::connect(){
 }
 
 void System::run(bool waitForOpened){
-  connect();
+  //connect();
 
   signal(SIGINT, signalhandler);
 
@@ -325,7 +325,7 @@ OrsEngine::~OrsEngine(){
 void OrsEngine::open(System& S, bool waitForOpened){
   system = &S;
 
-  S.connect();
+  //S.connect();
 
   signal(SIGINT, signalhandler);
 

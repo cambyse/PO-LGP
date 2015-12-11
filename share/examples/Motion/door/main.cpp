@@ -136,7 +136,7 @@ void TEST(Door){
     arr x = MP.getInitialization();
     arr lambda = zeros(x.d0,2);
 
-    optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
     MP.costReport();
     displayTrajectory(x, 1, G, "planned trajectory");

@@ -468,6 +468,7 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
     }
   }
   C.setJointState(x0);
+  C.gl().update("", false, false, true);
 }
 
 
@@ -639,7 +640,7 @@ void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
 #else ///MLR_GL
 #ifndef MLR_ORS_ONLY_BASICS
 void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
-void ors::KinematicWorld::glDraw() { NICO }
+void ors::KinematicWorld::glDraw(OpenGL&) { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
 void editConfiguration(const char* orsfile, ors::KinematicWorld& C) { NICO }
 void animateConfiguration(ors::KinematicWorld& C, Inotify*) { NICO }

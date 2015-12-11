@@ -8,7 +8,7 @@ Mutex m;
 struct MyThread: Thread{
   Variable<double>& x;
   uint n;
-  MyThread(Variable<double>& x, uint n):Thread(STRING("MyThread_"<<n)), x(x), n(n){}
+  MyThread(Variable<double>& x, uint n, double beat):Thread(STRING("MyThread_"<<n), beat), x(x), n(n){}
   void open(){}
   void close(){}
   void step(){
@@ -18,10 +18,10 @@ struct MyThread: Thread{
 };
 
 void TEST(Thread){
-  Variable<double> x(0.);
-  MyThread t1(x, 1), t2(x, 2);
+  Variable<double> x(0., "doubleVariable");
+  MyThread t1(x, 1, .5), t2(x, 2, .5);
 
-  t1.threadLoopWithBeat(.5);
+  t1.threadLoop();
   t2.listenTo(x); //whenever t1 modifies x, t2 is stepped
   
   mlr::wait(3.);
@@ -37,7 +37,7 @@ void TEST(Thread){
 // Thread struct with throut
 struct MyOtherThread: Thread {
   uint n, i;
-  MyOtherThread(uint _n):Thread(STRING("MyOtherThread_"<<n)), n(_n), i(0) {
+  MyOtherThread(uint _n, double beat):Thread(STRING("MyOtherThread_"<<n), beat), n(_n), i(0) {
     tout.reg(this) << "MyOtherThread(" << n << "): ";
   }
   ~MyOtherThread() {
@@ -56,10 +56,10 @@ void TEST(Throut){
   MyOtherThread *tp[nThreads];
 
   for(int i = 0; i < nThreads; i++)
-    tp[i] = new MyOtherThread(i);
+    tp[i] = new MyOtherThread(i, .01);
 
   for(int i = 0; i < nThreads; i++)
-    tp[i]->threadLoopWithBeat(.01);
+    tp[i]->threadLoop();
 
   mlr::wait(1.);
 

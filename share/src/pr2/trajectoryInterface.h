@@ -12,6 +12,7 @@ struct MySystem {
   ACCESS(CtrlMsg, ctrl_obs)
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
+      rosCheckInit();
       new RosCom_Spinner();
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
@@ -28,16 +29,16 @@ struct TrajectoryInterface {
   CtrlMsg refs;
 
   /// logging variables
-  arr logX,logXdes,logXact,logFL,logT,logU,logM;
+  arr logXdes,logXact,logFLact,logFRact,logTact,logUact,logMact;
 
   TrajectoryInterface(ors::KinematicWorld &world_);
-  ~TrajectoryInterface(){ threadCloseModules(); } //engine().close(S); }
+  ~TrajectoryInterface(){ threadCloseModules(); } //threadCloseModules(); }
 
   /// execute trajectory X in T seconds
   void executeTrajectory(arr &X, double T, bool recordData = false);
 
   /// go to robot configuration s
-  void gotoPosition(arr x, double T=5.);
+  void gotoPosition(arr x, double T=5., bool recordData = false);
 
   /// send zero gains and record trajectory of T seconds
   void recordDemonstration(arr &X, double T, double dt=0.05, double T_start=2.);

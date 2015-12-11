@@ -62,7 +62,7 @@ void testSliding() {
 
 
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"table","obj1",0.01));
-  MP.setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+  c->setCostSpecs(0, MP.T,ARR(0.),1e0);
 
   TaskMap *tm_contact = new PairCollisionConstraint(MP.world,"obj1","table",0.01);
   TaskCost *c4 = MP.addTask("contact_endeff",tm_contact);

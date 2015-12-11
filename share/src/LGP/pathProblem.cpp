@@ -173,7 +173,8 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   for(uint i=0;i<actions.N;i++){
     //pick at time 2*i+1
     ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
-    op_pick->symbol = ors::KinematicSwitch::addRigid;
+    op_pick->symbol = ors::KinematicSwitch::addJointZero;
+    op_pick->jointType = ors::JT_fixed;
     op_pick->timeOfApplication = tPick(i)+1;
     op_pick->fromId = world.shapes(endeff_index)->index;
     op_pick->toId = world.shapes(idObject(i))->index;

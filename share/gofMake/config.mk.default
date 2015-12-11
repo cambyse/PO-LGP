@@ -6,6 +6,9 @@
 # etc
 #
 
+#OPTIM=fast
 ODE = 0
 PHYSX = 0
 ROS_VERSION=indigo
+G4 = 0
+PCL = 0

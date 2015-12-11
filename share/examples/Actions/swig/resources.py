@@ -15,7 +15,7 @@ import swig
 
 
 
-interface = swig.ActionSwigInterface()
+interface = swig.ActionSwigInterface(False)
 
 # new convenient symbols
 for symb in ["rot", "qItself", "pos", "front", "gazeAt", "gripper", "align", "wheels", "vecDiff", "vec"]:
@@ -35,10 +35,11 @@ def shapes(name=None):
 def joints(name=None):
     return interface.getJointByName(name) if name else interface.getJointList()
 
-
 def bodies(name=None):
     return interface.getBodyByName(name) if name else interface.getBodyList()
 
+def symbols():
+    return interface.getSymbols()
 
 def facts():
     return interface.getFacts()

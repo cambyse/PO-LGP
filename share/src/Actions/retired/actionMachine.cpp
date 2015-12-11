@@ -126,7 +126,7 @@ void ActionMachine::step(){
     Node *quitSymbol = KB()["quit"];
     KB().getNode("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
-//    engine().shutdown.incrementValue();
+//    moduleShutdown().incrementValue();
   }
 
   //-- get access to the list of actions

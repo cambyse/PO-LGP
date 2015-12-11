@@ -33,7 +33,7 @@ int main(int argc,char** argv){
 
 //  c = MP.addTask("q_vel", new TaskMap_qItself());
 //  c->map.order=1; //make this a velocity variable!
-//  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+//  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);

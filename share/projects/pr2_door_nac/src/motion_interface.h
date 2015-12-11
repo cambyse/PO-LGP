@@ -3,7 +3,7 @@
 
 #include <Core/array.h>
 #include <Ors/ors.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Actions/actionMachine.h>
 #include <Actions/actions.h>
 #include <pr2/roscom.h>
@@ -12,20 +12,20 @@
 
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)
 
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(geometry_msgs::PoseWithCovarianceStamped, pr2_odom)
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<ROSSUB_ar_pose_marker>(NULL, Module::listenFirst);
-      addModule<ROSSUB_pr2_odom>(NULL, Module::loopWithBeat, 0.02);
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+      addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
+      addModule<ROSSUB_pr2_odom>(NULL, /*Module::loopWithBeat,*/ 0.02);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -40,7 +40,7 @@ struct Motion_Interface
   arr Xdes,Xact,FLact,Tact,Uact,Mact,Xref;
 
   Motion_Interface(ors::KinematicWorld &world_);
-  ~Motion_Interface(){engine().close(S);}
+  ~Motion_Interface(){threadCloseModules();}
   void executeTrajectory(arr &X, double T, bool recordData = false);
   void gotoPosition(arr x);
   void recordDemonstration(arr &X, double T);

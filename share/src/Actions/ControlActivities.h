@@ -16,7 +16,7 @@ struct ControlActivity : Activity{
   ControlActivity():taskController(NULL), map(NULL), task(NULL), stopTolerance(1e-2), conv(false){}
   virtual ~ControlActivity();
   virtual void configure(); ///< calls configure2 and registers
-  virtual void step(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
+  virtual void activitySpinnerStep(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
   virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) = 0;
   virtual void stepControl(double dt){}
@@ -37,6 +37,15 @@ struct FollowReferenceActivity : ControlActivity {
   virtual void stepControl(double dt);
   virtual bool isConv();
 };
+
+//===========================================================================
+
+//struct PushForce : ControlActivity {
+//  arr forceVec;
+//  PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double timeOut=-1.);
+//  virtual void step(ActionMachine& M);
+//  virtual bool finishedSuccess(ActionMachine& M);
+//};
 
 //===========================================================================
 

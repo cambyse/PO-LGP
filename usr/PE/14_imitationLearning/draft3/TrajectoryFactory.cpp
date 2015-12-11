@@ -19,7 +19,7 @@ void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
 
     Task *c;
     c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
+    c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
     c->map.order=1;

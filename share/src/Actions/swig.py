@@ -297,8 +297,8 @@ class ActionSwigInterface(_object):
     __swig_setmethods__["S"] = _swig.ActionSwigInterface_S_set
     __swig_getmethods__["S"] = _swig.ActionSwigInterface_S_get
     if _newclass:S = _swig_property(_swig.ActionSwigInterface_S_get, _swig.ActionSwigInterface_S_set)
-    def __init__(self): 
-        this = _swig.new_ActionSwigInterface()
+    def __init__(self, setSignalHandler=True): 
+        this = _swig.new_ActionSwigInterface(setSignalHandler)
         try: self.this.append(this)
         except: self.this = this
     __swig_destroy__ = _swig.delete_ActionSwigInterface

@@ -134,16 +134,16 @@ void executeTrajectoryWholeBody(String scene){
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
+  c->setCostSpecs(P.T, P.T, Rgoal, 1e5);
   c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e2);
 
   c = P.addTask("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Lgoal, 1e5);
+  c->setCostSpecs(P.T, P.T, Lgoal, 1e5);
   c = P.addTask("position_left_hand_vel", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e2);
 
   //  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
@@ -373,7 +373,7 @@ void executeTrajectoryRightArm(String scene){
 
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
+  c->setCostSpecs(P.T, P.T, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));

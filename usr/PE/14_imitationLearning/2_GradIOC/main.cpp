@@ -135,12 +135,12 @@ struct IOC:ConstrainedProblem {
       Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
 
       // add task cost elements
-      for (uint c=0;c<demos(0)->MP.taskCosts.d0;c++) {
-        if ( (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active) {
-          arr tmp = zeros(demos(0)->MP.taskCosts(c)->target.d1,n);
-          tmp = catCol(tmp,zeros(demos(0)->MP.taskCosts(c)->target.d1,c));
-          tmp = catCol(tmp,ones(demos(0)->MP.taskCosts(c)->target.d1,1));
-          tmp = catCol(tmp,zeros(demos(0)->MP.taskCosts(c)->target.d1,numParam-tmp.d1));
+      for (uint c=0;c<demos(0)->MP.tasks.d0;c++) {
+        if ( (demos(0)->MP.tasks(c)->prec(t) > 0) && demos(0)->MP.tasks(c)->active) {
+          arr tmp = zeros(demos(0)->MP.tasks(c)->target.d1,n);
+          tmp = catCol(tmp,zeros(demos(0)->MP.tasks(c)->target.d1,c));
+          tmp = catCol(tmp,ones(demos(0)->MP.tasks(c)->target.d1,1));
+          tmp = catCol(tmp,zeros(demos(0)->MP.tasks(c)->target.d1,numParam-tmp.d1));
           Dwdx.append(tmp);
         }
       }
@@ -208,14 +208,14 @@ void simpleMotion(){
   arr refGoal = ARR(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 25);
+  c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecAlignTMT,world,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(1.), 25);
+  c->setCostSpecs(MP.T, MP.T, ARR(1.), 25);
   c = MP.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, zeros(MP.world.getJointStateDimension(),1), 1);
+  c->setCostSpecs(MP.T, MP.T, zeros(MP.world.getJointStateDimension(),1), 1);
   c->map.order=1;
   c = MP.addTask("position_right_hand2", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, refGoal, 0);
+  c->setCostSpecs(0, MP.T, refGoal, 0);
 
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
@@ -228,15 +228,15 @@ void simpleMotion(){
   // save optimal solution for evaluation
   arr wOpt;
   wOpt.append(MP.H_rate_diag);
-  wOpt.append(MP.taskCosts(0)->prec(T));
-  wOpt.append(MP.taskCosts(1)->prec(T));
-  wOpt.append(MP.taskCosts(2)->prec(T));
+  wOpt.append(MP.tasks(0)->prec(T));
+  wOpt.append(MP.tasks(1)->prec(T));
+  wOpt.append(MP.tasks(2)->prec(T));
 
 
-  MP.taskCosts(0)->prec(T) = 1;
-  MP.taskCosts(1)->prec(T) = 1;
-  MP.taskCosts(2)->prec(T) = 1;
-  MP.taskCosts(3)->prec(round(T*0.5)) = 1;
+  MP.tasks(0)->prec(T) = 1;
+  MP.tasks(1)->prec(T) = 1;
+  MP.tasks(2)->prec(T) = 1;
+  MP.tasks(3)->prec(round(T*0.5)) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
 
   Demonstration* d = new Demonstration(MP);
@@ -271,10 +271,10 @@ void simpleMotion(){
   optNewton(x2,Convert(MPF2),OPT(verbose=0,stopTolerance=1e-4, maxStep=1.));
 //  displayTrajectory(x2,T,world2,"optTraj");
 
-  MP2.taskCosts(0)->prec(T) = 1;
-  MP2.taskCosts(1)->prec(T) = 1;
-  MP2.taskCosts(2)->prec(T) = 1;
-  MP2.taskCosts(3)->prec(round(T*0.5)) = 1;
+  MP2.tasks(0)->prec(T) = 1;
+  MP2.tasks(1)->prec(T) = 1;
+  MP2.tasks(2)->prec(T) = 1;
+  MP2.tasks(3)->prec(round(T*0.5)) = 1;
 
   MP2.H_rate_diag = MP2.H_rate_diag/MP2.H_rate_diag;
 

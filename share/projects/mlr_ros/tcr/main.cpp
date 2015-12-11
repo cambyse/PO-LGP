@@ -27,10 +27,10 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = mlr::getParameter<uintA>("agent_shapes");
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, col_prec);
+  c->setCostSpecs(0, P.T, {0.}, col_prec);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(P.world.getBodyByName("target")->X.pos), pos_prec);
+  c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), pos_prec);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
   keyframeOptimizer(start, P, true, 2);
@@ -48,7 +48,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = mlr::getParameter<uintA>("agent_shapes");
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
+  c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
@@ -69,10 +69,10 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
+  c->setCostSpecs(0, P.T, {0.}, 1e1);
 
   c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
+  c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
   MotionProblemFunction MF(P);

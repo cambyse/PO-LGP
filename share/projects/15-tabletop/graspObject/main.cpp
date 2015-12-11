@@ -3,7 +3,7 @@
 #include <pr2/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
@@ -48,7 +48,7 @@ int main(int argc, char** argv){
   S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
   S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
 #else
-  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "endeffHead", "testObject"}, { NO(type, mlr::String("gazeAt")), NO(PD, ARR(.5, .9, .5, 10.))});
+  newActivity<FollowReferenceActivity>(S.getState(), {"FollowReferenceActivity", "endeffHead", "testObject"}, { Nod("type", mlr::String("gazeAt")), Nod("PD", ARR(.5, .9, .5, 10.))});
   S.waitForCondition("(conv FollowReferenceActivity endeffHead testObject)");
   S.setFact("(FollowReferenceActivity endeffHead testObject)!, (conv FollowReferenceActivity endeffHead testObject)!");
 #endif

@@ -7,7 +7,7 @@
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Motion/pr2_heuristics.h>
 #include "src/plotUtil.h"
 #include "src/traj_factory.h"

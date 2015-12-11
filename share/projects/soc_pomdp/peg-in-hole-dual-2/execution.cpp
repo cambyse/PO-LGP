@@ -36,28 +36,28 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem 
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 2e5);
+  pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 2e5);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   //see taskmap_default.cpp;
   Task *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",{0.,0.,1.}));
-  //P.setInterpolatingCosts(vec, MotionProblem::finalOnly, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
+  //vec->setCostSpecs(P.T, P.T, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
 
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, world.getBodyByName("hole")->X.pos.z + 0.5)));//0.2 is table width  //0.05 above table surface to avoid slippery
-  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1e2);
+  cons->setCostSpecs(0, P.T, {0.}, 1e2);
 
 
 #if 1  //CONSTRAINT
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.05));
-  P.setInterpolatingCosts(collision, MotionProblem::constant, {0.}, 1.);
+  collision->setCostSpecs(0, P.T, {0.}, 1.);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
+  c->setCostSpecs(0, P.T, {0.}, 1e1);
 #endif
 
 

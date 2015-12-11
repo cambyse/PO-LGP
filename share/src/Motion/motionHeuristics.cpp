@@ -214,7 +214,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   CHECK_EQ(T,MP.T, "");
 
   //delete all previous variables
-  MP.taskCosts.clear();
+  MP.tasks.clear();
 
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
@@ -286,7 +286,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   c = MP.addTask("otherCollisions",
                  new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, colPrec);
+  c->setCostSpecs(0, MP.T, NoArr, colPrec);
 //  arr initial;
   c->map.phi(initial, NoArr, MP.world);
   if(initial(0)>0.) { //we are in collision/proximity -> depart slowly

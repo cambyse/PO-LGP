@@ -7,7 +7,7 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
   world = new ors::KinematicWorld(world_);
   world->q = world_.q;
 
-  threadOpenModules(true); //engine().open(S);
+  threadOpenModules(true);
 
   useRos = mlr::getParameter<bool>("useRos");
   fixBase = mlr::getParameter<bool>("fixBase",true);
@@ -38,8 +38,8 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
     refs.KiFT.clear();
     refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kp = ARR(2.);
-    refs.Kd = ARR(1.);
+    refs.Kp = ARR(1.0);
+    refs.Kd = ARR(2.5);
     refs.Ki = ARR(0.5);
     refs.gamma = 1.;
     refs.velLimitRatio = .1;
@@ -65,7 +65,7 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logX = X; logT.clear(); logXdes.clear(); logXact.clear(); logFL.clear(); logU.clear(); logM.clear();}
+  if (recordData) {logTact.clear(); logXdes.clear(); logXact.clear(); logFLact.clear(); logUact.clear(); logMact.clear();}
 
   ors::Joint *trans = world->getJointByName("worldTranslationRotation");
   ors::Joint *torso = world->getJointByName("torso_lift_joint");
@@ -102,7 +102,6 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
     /// set controller parameter
     if (useRos) { S.ctrl_ref.set() = refs;}
 
-    mlr::wait(0.01);
     t = t + mlr::timerRead(true);
 
     world->setJointState(refs.q);
@@ -110,17 +109,18 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
 
     /// logging
     if (recordData) {
-        logT.append(ARR(t));
+        logTact.append(ARR(t));
         logXdes.append(~refs.q);
         logXact.append(~S.ctrl_obs.get()->q);
-        logFL.append(~S.ctrl_obs.get()->fL);
-        logU.append(~S.ctrl_obs.get()->u_bias);
+        logFLact.append(~S.ctrl_obs.get()->fL);
+        logFRact.append(~S.ctrl_obs.get()->fR);
+        logUact.append(~S.ctrl_obs.get()->u_bias);
     }
   }
 }
 
 
-void TrajectoryInterface::gotoPosition(arr x, double T) {
+void TrajectoryInterface::gotoPosition(arr x, double T, bool recordData) {
   MotionProblem MP(*world,false);
   MP.T = 100;
   MP.tau = 0.05;
@@ -143,9 +143,9 @@ void TrajectoryInterface::gotoPosition(arr x, double T) {
   arr X = MP.getInitialization();
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrainedMix(X, NoArr, Convert(MPF), o);
+  optConstrained(X, NoArr, Convert(MPF), o);
 
-  executeTrajectory(X,T);
+  executeTrajectory(X,T,recordData);
 }
 
 
@@ -235,12 +235,10 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 void TrajectoryInterface::logging(mlr::String folder, uint id) {
   write(LIST<arr>(logXact),STRING(folder<<"Xact"<<id<<".dat"));
   write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
+  write(LIST<arr>(logTact),STRING(folder<<"Tdes"<<id<<".dat"));
 
-  write(LIST<arr>(logT),STRING(folder<<"T"<<id<<".dat"));
-  write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
-  write(LIST<arr>(logX),STRING(folder<<"X.dat"));
-
-  if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
-  if (logM.N>0) write(LIST<arr>(logM),STRING(folder<<"M"<<id<<".dat"));
-  if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
+  if (logFLact.N>0) write(LIST<arr>(logFLact),STRING(folder<<"FLact"<<id<<".dat"));
+  if (logFRact.N>0) write(LIST<arr>(logFRact),STRING(folder<<"FRact"<<id<<".dat"));
+  if (logMact.N>0) write(LIST<arr>(logMact),STRING(folder<<"Mact"<<id<<".dat"));
+  if (logUact.N>0) write(LIST<arr>(logUact),STRING(folder<<"Uact"<<id<<".dat"));
 }

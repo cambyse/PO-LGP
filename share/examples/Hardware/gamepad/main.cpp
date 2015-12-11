@@ -1,29 +1,27 @@
-#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
 
 void threadedRun() {
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, gamepadState);
+    GamepadInterface gamepad;
     MySystem(){
-      addModule<GamepadInterface>(NULL, Module::loopWithBeat, .01);
-      connect();
     }
   } S;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   for(;;){
     S.gamepadState.var->waitForNextRevision();
     cout <<"\r" <<S.gamepadState.get()() <<std::flush;
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 }
 
 //void rawTest(){
-//  KinectPoller kin;
+//  KinectThread kin;
 //  kin.open();
 //  kin.close();
 //}

@@ -196,14 +196,14 @@ struct IOC:ConstrainedProblem {
       Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
 
       // add task cost elements
-      for (uint c=0;c<demos(0)->MP.taskCosts.N;c++) {
-        if ( demos(0)->MP.taskCosts(c)->prec.N >t && (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active && !demos(0)->MP.taskCosts(c)->map.constraint) {
+      for (uint c=0;c<demos(0)->MP.tasks.N;c++) {
+        if ( demos(0)->MP.tasks(c)->prec.N >t && (demos(0)->MP.tasks(c)->prec(t) > 0) && demos(0)->MP.tasks(c)->active && !demos(0)->MP.tasks(c)->map.constraint) {
 
           uint m;
-          if ((demos(0)->MP.taskCosts(c)->target.N-1) == T) {
-            m = demos(0)->MP.taskCosts(c)->target.d1;
+          if ((demos(0)->MP.tasks(c)->target.N-1) == T) {
+            m = demos(0)->MP.tasks(c)->target.d1;
           } else {
-            m = demos(0)->MP.taskCosts(c)->target.N;
+            m = demos(0)->MP.tasks(c)->target.N;
           }
 
           arr tmp = zeros(m,n);
@@ -323,10 +323,10 @@ void simpleMotion(){
   c->setCostSpecs(140,140,refGoal2,1e4);
 
   c = MP.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, zeros(MP.world.getJointStateDimension(),1), 1e3);
+  c->setCostSpecs(MP.T, MP.T, zeros(MP.world.getJointStateDimension(),1), 1e3);
   c->map.order=1;
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.0));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
+  c->setCostSpecs(0, MP.T, {0.}, 1.);
   MP.x0 = {0.,0.,0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -434,7 +434,7 @@ void simpleMotion(){
     MP2.H_rate_diag(i) = w(i);
   }
   for (uint i = MP2.H_rate_diag.d0;i<w.d0;i++) {
-    MP2.taskCosts(i-MP2.H_rate_diag.d0)->prec *= w(i);
+    MP2.tasks(i-MP2.H_rate_diag.d0)->prec *= w(i);
   }
 
   arr x2(T+1,n); x2.setZero();arr lambda2(T+1); lambda2.setZero();
