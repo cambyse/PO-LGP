@@ -380,7 +380,7 @@ uint MotionProblem::dim_h(const ors::KinematicWorld &G, uint t) {
   return m;
 }
 
-void MotionProblem::setupConfigurations(){
+void MotionProblem::setConfigurationStates(){
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
   if(configurations.N!=k_order+T+1){
@@ -754,7 +754,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
 
 #define NEWCODE
 #ifdef NEWCODE
-  MP.setupConfigurations();
+  MP.setConfigurationStates();
 
   //set states
   for(uint i=0;i<=k;i++){

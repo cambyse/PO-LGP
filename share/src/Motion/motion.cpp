@@ -218,8 +218,7 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
     makeConvexHulls(world.shapes);
     world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
   }
-  world.getJointState(x0, v0);
-  if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
+  x0 = world.getJointState();
   setTiming(mlr::getParameter<uint>("timeSteps", 50), mlr::getParameter<double>("duration", 5.));
 }
 
@@ -231,7 +230,6 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   tau = other.tau;
   k_order = other.k_order;
   x0 = other.x0;
-  v0 = other.v0;
   prefix = other.prefix;
   phiMatrix = other.phiMatrix;
   dualMatrix = other.dualMatrix;
@@ -356,47 +354,72 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 }
 
 
-uint MotionProblem::dim_phi(const ors::KinematicWorld &G, uint t) {
+uint MotionProblem::dim_phi(uint t) {
   uint m=0;
+  ors::KinematicWorld *w=&world;
+  if(configurations.N) w=configurations(t);
   for(Task *c: tasks) {
-    if(c->active && c->prec.N>t && c->prec(t)) m += c->dim_phi(G, t); //counts also constraints
+    if(c->active && c->prec.N>t && c->prec(t))
+      m += c->dim_phi(*w, t); //counts also constraints
   }
   return m;
 }
 
-uint MotionProblem::dim_g(const ors::KinematicWorld &G, uint t) {
+uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t))  m += c->map.dim_phi(G);
+    if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t))
+      m += c->map.dim_phi(*configurations(t));
   }
   return m;
 }
 
-uint MotionProblem::dim_h(const ors::KinematicWorld &G, uint t) {
+uint MotionProblem::dim_h(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t))  m += c->map.dim_phi(G);
+    if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t))
+      m += c->map.dim_phi(*configurations(t));
   }
   return m;
 }
 
-void MotionProblem::setupConfigurations(){
+arr MotionProblem::setupConfigurations(){
+  arr x;
+
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
-  if(configurations.N!=k_order+T+1){
-    listDelete(configurations);
-    configurations.append(new ors::KinematicWorld())->copy(world, true);
-    for(uint t=1;t<=k_order+T;t++){
-      configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
-      CHECK(configurations(t)==configurations.last(), "");
-      //apply potential graph switches
-      for(ors::KinematicSwitch *sw:switches){
-        if(sw->timeOfApplication==t-k_order){
-          sw->apply(*configurations(t));
-//          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
-        }
+  CHECK(!configurations.N,"why setup again?");
+//    listDelete(configurations);
+
+  configurations.append(new ors::KinematicWorld())->copy(world, true);
+  x.append(configurations(0)->getJointState());
+  for(uint t=1;t<=k_order+T;t++){
+    configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
+    CHECK(configurations(t)==configurations.last(), "");
+    //apply potential graph switches
+    for(ors::KinematicSwitch *sw:switches){
+      if(sw->timeOfApplication==t-k_order){
+        sw->apply(*configurations(t));
+        //          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
       }
     }
+    x.append(configurations(t)->getJointState());
+  }
+  return x;
+}
+
+void MotionProblem::setConfigurationStates(const arr& x){
+  CHECK_EQ(configurations.N, k_order+T+1, "configurations are not setup yet");
+
+  //-- set the configurations' states
+  uint x_count=0;
+  for(uint t=0;t<=T;t++){
+    uint c = t+k_order;
+    uint x_dim = configurations(t)->getJointStateDimension();
+    configurations(c)->setJointState(x.subRange(x_count, x_count+x_dim-1));
+    if(useSwift) configurations(c)->stepSwift();
+    temporallyAlignKinematicSwitchesInConfiguration(t);
+    x_count += x_dim;
   }
 }
 
@@ -439,21 +462,22 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
     c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
     //linear transform (target shift)
-    if(true){
-      if(c->target.N==1) y -= c->target.elem(0);
-      else if(c->target.nd==1) y -= c->target;
-      else if(c->target.nd==2) y -= c->target[t];
-      y *= sqrt(c->prec(t));
-      if(&J) Jy *= sqrt(c->prec(t));
-    }
+    if(c->target.N==1) y -= c->target.elem(0);
+    else if(c->target.nd==1) y -= c->target;
+    else if(c->target.nd==2) y -= c->target[t];
+    y *= sqrt(c->prec(t));
+    if(&J) Jy *= sqrt(c->prec(t));
     phi.append(y);
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->map.type);
     if(&J) J.append(Jy);
     if(c->map.type==ineqTT && max(y)>0.) ineqHold=false;
   }
-  if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
+  if(&J){
+    J.reshape(phi.N, J.N/phi.N);
+    if(t<k_order) J.delColumns(0,(k_order-t)*x0.N); //delete the columns that correspond to the prefix!!
+  }
 
-  CHECK_EQ(phi.N, dim_phi(*G.last(), t), "");
+  CHECK_EQ(phi.N, dim_phi(t), "");
 
   //memorize for report
   if(!phiMatrix.N) phiMatrix.resize(T+1);
@@ -466,12 +490,12 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
   return ineqHold;
 }
 
-StringA MotionProblem::getPhiNames(const ors::KinematicWorld& G, uint t){
-  StringA names(dim_phi(G, t));
+StringA MotionProblem::getPhiNames(uint t){
+  StringA names(dim_phi(t));
   uint m=0;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.type==sumOfSqrTT) {
-      uint d = c->dim_phi(G, t); //counts also constraints
+      uint d = c->dim_phi(*configurations(t), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_f" <<i;
@@ -481,7 +505,7 @@ StringA MotionProblem::getPhiNames(const ors::KinematicWorld& G, uint t){
   }
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.type==ineqTT) {
-      uint d = c->dim_phi(G, t); //counts also constraints
+      uint d = c->dim_phi(*configurations(t), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_g" <<i;
@@ -505,7 +529,6 @@ void MotionProblem::reportFull(bool brief) {
   cout <<"  tau=" <<tau <<endl;
   cout <<"  k_order=" <<k_order <<endl;
   cout <<"  x0=" <<x0 <<endl;
-  cout <<"  v0=" <<v0 <<endl;
   cout <<"  prefix=" <<prefix <<endl;
   cout <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
 
@@ -707,7 +730,7 @@ Graph MotionProblem::getReport() {
 }
 
 arr MotionProblem::getInitialization(){
-  return replicate(x0, T+1);
+  return setupConfigurations();
 }
 
 void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x){
@@ -729,40 +752,26 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 
 //===========================================================================
 
-arr MotionProblemFunction::get_prefix() {
-  if(!MP.prefix.N){
-    MP.prefix.resize(get_k(), dim_x());
-    for(uint i=0; i<MP.prefix.d0; i++) MP.prefix[i]() = MP.x0;
-  }
-  CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
-  return MP.prefix;
-}
+//arr MotionProblemFunction::get_prefix() {
+//  if(!MP.prefix.N){
+//    MP.prefix.resize(get_k(), dim_x());
+//    for(uint i=0; i<MP.prefix.d0; i++) MP.prefix[i]() = MP.x0;
+//  }
+//  CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
+//  return MP.prefix;
+//}
 
-arr MotionProblemFunction::get_postfix() {
-  if(!MP.postfix.N) return arr();
-  CHECK(MP.postfix.d0==get_k() && MP.postfix.d1==dim_x(), "the postfix you set has wrong dimension");
-  return MP.postfix;
-}
+//arr MotionProblemFunction::get_postfix() {
+//  if(!MP.postfix.N) return arr();
+//  CHECK(MP.postfix.d0==get_k() && MP.postfix.d1==dim_x(), "the postfix you set has wrong dimension");
+//  return MP.postfix;
+//}
 
-void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar) {
-  uint T=get_T(), n=dim_x(), k=get_k();
+void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
+  uint T=get_T(), k=get_k();
 
   //assert some dimensions
-  CHECK_EQ(x_bar.d0,k+1,"");
-  CHECK_EQ(x_bar.d1,n,"");
   CHECK(t<=T,"");
-
-  MP.setupConfigurations();
-
-  //set states
-  for(uint i=0;i<=k;i++){
-    if(x_bar[i]!=MP.configurations(t+i)->q){
-//    if(configurations(t+i)->q.N!=x_bar.d1 || maxDiff(x_bar[i],configurations(t+i)->q)>1e-6){
-      MP.configurations(t+i)->setJointState(x_bar[i]);
-      if(MP.useSwift) MP.configurations(t+i)->stepSwift();
-    }
-    if(t+i>=k) MP.temporallyAlignKinematicSwitchesInConfiguration(t+i-k);
-  }
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
@@ -778,7 +787,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
 }
 
 StringA MotionProblemFunction::getPhiNames(uint t){
-  return MP.getPhiNames(*MP.configurations.last(), t);
+  return MP.getPhiNames(t);
 }
 
 //===========================================================================

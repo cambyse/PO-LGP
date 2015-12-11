@@ -104,8 +104,8 @@ struct MotionProblem {
   uint k_order; ///< determine the order of the KOMO problem (default 2)
   
   //-- start constraints
-  arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
-  arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  arr x0;      ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
+  arr prefix;  ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
   arr postfix; ///< fixing the set of statex x[T-k]...x[T] //TODO: remove?
   //TODO: add methods to properly set the prefix given x0,v0?
 
@@ -133,10 +133,10 @@ struct MotionProblem {
 
   //-- cost infos
   bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
-  uint dim_phi(const ors::KinematicWorld& G, uint t);
-  uint dim_g(const ors::KinematicWorld& G, uint t);
-  uint dim_h(const ors::KinematicWorld& G, uint t);
-  StringA getPhiNames(const ors::KinematicWorld& G, uint t);
+  uint dim_phi(uint t);
+  uint dim_g(uint t);
+  uint dim_h(uint t);
+  StringA getPhiNames(uint t);
   void reportFull(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
@@ -147,7 +147,8 @@ struct MotionProblem {
   //-- helpers
   arr getH_rate_diag();
   arr getInitialization();
-  void setupConfigurations();
+  void setConfigurationStates(const arr& x);
+  arr setupConfigurations();
   void temporallyAlignKinematicSwitchesInConfiguration(uint t);
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
@@ -179,17 +180,17 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   uint dim_g_h(){ uint d=0; for(uint t=0;t<=MP.T;t++) d += dim_g(t) + dim_h(t); return d; }
 
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  virtual void set_x(const arr& x){ MP.setConfigurationStates(x); }
+  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return MP.k_order; }
-  virtual uint dim_x() { return MP.x0.N; }
-  virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
-  virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
-  virtual uint dim_h(uint t){ return MP.dim_h(MP.world, t); }
+  virtual uint dim_x() { uint d=0; for(uint t=0; t<=MP.T; t++) d+=dim_x(t); return d; }
+  virtual uint dim_x(uint t) { return MP.configurations(t)->getJointStateDimension(); }
+  virtual uint dim_phi(uint t){ return MP.dim_phi(t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_g(uint t){ return MP.dim_g(t); }
+  virtual uint dim_h(uint t){ return MP.dim_h(t); }
   virtual StringA getPhiNames(uint t);
-  virtual arr get_prefix(); //the history states x(-k),..,x(-1)
-  virtual arr get_postfix();
 };
 
 //===========================================================================

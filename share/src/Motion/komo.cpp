@@ -110,7 +110,7 @@ void KOMO::setFact(const char* fact){
 
 void KOMO::reset(){
   if(MP->T){
-    x = replicate(MP->x0, MP->T+1); //we initialize with a constant trajectory!
+    x = MP->setupConfigurations();
   }else{
     x=MP->x0;
   }
@@ -186,7 +186,7 @@ arr moveTo(ors::KinematicWorld& world,
   setTasks(MP, endeff, target, whichAxesToAlign, iterate, timeSteps, duration);
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  arr x = replicate(MP.x0, MP.T+1); //we initialize with a constant trajectory!
+  arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize
