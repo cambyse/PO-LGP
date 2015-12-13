@@ -57,7 +57,7 @@ void detectDOFdoor() {
   arr X = MP.getInitialization();
   arr lambda;
 
-  optConstrainedMix(X, lambda, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+  optConstrained(X, lambda, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
   cout << lambda << endl;
   MP.costReport();
@@ -245,10 +245,6 @@ void detectDOFtrans() {
 
 void detectDOFstruct() {
   ArticulatedObjectMsg msg_request,msg_response;
-  ModelMsg model_msg;
-  model_msg.name = "prismatic";
-  model_msg.track.header.stamp = ros::Time();
-  model_msg.track.header.frame_id = "/";
 
   /// define parameter prior
   ParamMsg sigma_param;
@@ -257,29 +253,43 @@ void detectDOFstruct() {
   sigma_param.type = ParamMsg::PRIOR;
   double noise = 0.;
   uint n = 100;
-  TrackMsg msg_track;
-  TrackMsg msg_track2;
+
+  TrackMsg msg_track0, msg_track1, msg_track2;
 
   for (uint i = 0; i < n; i++) {
-    geometry_msgs::Pose pose;
-    pose.position.x = i/double(n) + randn(1)*noise; pose.position.y = 2.*i/double(n) + randn(1)*noise; pose.position.z = 0.1 + randn(1)*noise;
-    pose.orientation.x = 0; pose.orientation.y = 0; pose.orientation.z = 0; pose.orientation.w = 1;
-    msg_track.pose.push_back(pose);
+    geometry_msgs::Pose pose12;
+    double s = M_PI*i/double(n);
+    pose12.position.x = cos(s) + randn(1)*noise; pose12.position.y = sin(s) + randn(1)*noise; pose12.position.z = 0.0 + randn(1)*noise;
+    pose12.orientation.x = 0; pose12.orientation.y = 0; pose12.orientation.z = 0; pose12.orientation.w = 1;
+    msg_track1.pose.push_back(pose12);
+    msg_track2.pose.push_back(pose12);
+    geometry_msgs::Pose pose0;
+    pose0.position.x = 0.; pose0.position.y = 0.; pose0.position.z = 0.;
+    pose0.orientation.x = 0; pose0.orientation.y = 0; pose0.orientation.z = 0; pose0.orientation.w = 1;
+    msg_track0.pose.push_back(pose0);
+  }
+  for (uint i = 0; i < n; i++) {
+    geometry_msgs::Pose pose1;
+    pose1.position.x = -1. + randn(1)*noise; pose1.position.y = randn(1)*noise; pose1.position.z = randn(1)*noise;
+    pose1.orientation.x = 0; pose1.orientation.y = 0; pose1.orientation.z = 0; pose1.orientation.w = 1;
+    msg_track1.pose.push_back(pose1);
     geometry_msgs::Pose pose2;
-    pose2.position.x = randn(1)*noise; pose2.position.y = randn(1)*noise; pose2.position.z = randn(1)*noise;
+    double s = M_PI*i/double(n);
+    pose2.position.x = -1. + randn(1)*noise; pose2.position.y = cos(s)-1. + randn(1)*noise; pose2.position.z = sin(s) + randn(1)*noise;
     pose2.orientation.x = 0; pose2.orientation.y = 0; pose2.orientation.z = 0; pose2.orientation.w = 1;
     msg_track2.pose.push_back(pose2);
+    geometry_msgs::Pose pose0;
+    pose0.position.x = 0.; pose0.position.y = 0.; pose0.position.z = 0.;
+    pose0.orientation.x = 0; pose0.orientation.y = 0; pose0.orientation.z = 0; pose0.orientation.w = 1;
+    msg_track0.pose.push_back(pose0);
   }
-  model_msg.track = msg_track;
-  model_msg.params.push_back(sigma_param);
+
   msg_request.header.stamp = ros::Time();
 
-  msg_request.models.push_back(model_msg);
-  msg_request.parts.push_back(msg_track);
-  msg_request.params.push_back(sigma_param);
-
+  msg_request.parts.push_back(msg_track0);
+  msg_request.parts.push_back(msg_track1);
   msg_request.parts.push_back(msg_track2);
-
+  msg_request.params.push_back(sigma_param);
 
   ros::NodeHandle nh;
   ros::ServiceClient client = nh.serviceClient<ArticulatedObjectSrv>("/fit_models",true);
@@ -297,10 +307,15 @@ void detectDOFstruct() {
 
   msg_response = srv.response.object;
 
-//  ModelMsg model_result = msg_response.models.back();
-
-  cout << msg_response.models.size() << endl;
-  cout << "test " << endl;
+  ModelMsg model_msg;
+  for (uint i =0;i<msg_response.models.size();i++) {
+    model_msg = msg_response.models[i];
+    cout << model_msg.name << endl;
+    for (uint j=0;j<model_msg.params.size();j++) {
+      cout <<  model_msg.params[j].name << ": " << model_msg.params[j].value << endl;
+    }
+    cout << "##########################################" << endl;
+  }
 }
 
 
@@ -310,8 +325,8 @@ int main(int argc, char** argv){
 
 //  detectDOFrot();
 //  detectDOFtrans();
-//  detectDOFdoor();
-  detectDOFstruct();
+  detectDOFdoor();
+//  detectDOFstruct();
 
   return 0;
 }
