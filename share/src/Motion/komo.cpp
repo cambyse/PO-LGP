@@ -9,8 +9,8 @@
 
 KOMO::KOMO(const Graph& specs){
   init(specs);
-  reset();
-  CHECK(x.N,"");
+//  reset();
+//  CHECK(x.N,"");
 }
 
 void KOMO::init(const Graph& _specs){
@@ -110,7 +110,7 @@ void KOMO::setFact(const char* fact){
 
 void KOMO::reset(){
   if(MP->T){
-    x = MP->setupConfigurations();
+    x = MP->getInitialization();
   }else{
     x=MP->x0;
   }

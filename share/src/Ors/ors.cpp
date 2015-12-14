@@ -566,11 +566,6 @@ void ors::KinematicWorld::clear() {
 
 void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
   clear();
-  q = G.q;
-  qdot = G.qdot;
-  qdim = G.qdim;
-  q_agent = G.q_agent;
-  isLinkTree = G.isLinkTree;
 #if 1
   listCopy(proxies, G.proxies);
   for(Body *b:G.bodies) new Body(*this, b);
@@ -584,7 +579,17 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
     s->swift = G.s->swift;
     s->swiftIsReference=true;
   }
+  q = G.q;
+  qdot = G.qdot;
+  qdim = G.qdim;
+  q_agent = G.q_agent;
+  isLinkTree = G.isLinkTree;
 #else
+  q = G.q;
+  qdot = G.qdot;
+  qdim = G.qdim;
+  q_agent = G.q_agent;
+  isLinkTree = G.isLinkTree;
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   for(Joint *j: joints) if(j->mimic){

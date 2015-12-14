@@ -42,7 +42,7 @@ void TEST(PR2reach){
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x = replicate(MP.x0, MP.T+1);
+  arr x = MP.getInitialization(); //replicate(MP.x0, MP.T+1);
 
   //-- optimize
   for(uint k=0;k<5;k++){
@@ -97,7 +97,7 @@ void TEST(Basics){
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x = replicate(MP.x0, MP.T+1);
+  arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //gradient check: will fail in case of collisions
@@ -105,9 +105,6 @@ void TEST(Basics){
     checkJacobian(Convert(MF), x, 1e-4);
     rndUniform(x,-1.,1.);
   }
-
-  //initialize trajectory
-  for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
 
   //-- optimize
   for(uint k=0;k<5;k++){

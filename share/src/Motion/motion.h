@@ -148,7 +148,7 @@ struct MotionProblem {
   arr getH_rate_diag();
   arr getInitialization();
   void setConfigurationStates(const arr& x);
-  arr setupConfigurations();
+  void setupConfigurations();
   void temporallyAlignKinematicSwitchesInConfiguration(uint t);
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 

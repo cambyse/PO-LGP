@@ -240,6 +240,7 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
 void MotionProblem::setTiming(uint timeSteps, double duration){
   T = timeSteps;
   if(T) tau = duration/T; else tau=duration;
+//  setupConfigurations();
 }
 
 arr MotionProblem::getH_rate_diag() {
@@ -357,7 +358,7 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   ors::KinematicWorld *w=&world;
-  if(configurations.N) w=configurations(t);
+  if(configurations.N) w=configurations(t+k_order);
   for(Task *c: tasks) {
     if(c->active && c->prec.N>t && c->prec(t))
       m += c->dim_phi(*w, t); //counts also constraints
@@ -369,7 +370,7 @@ uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(*configurations(t));
+      m += c->map.dim_phi(*configurations(t+k_order));
   }
   return m;
 }
@@ -378,13 +379,12 @@ uint MotionProblem::dim_h(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(*configurations(t));
+      m += c->map.dim_phi(*configurations(t+k_order));
   }
   return m;
 }
 
-arr MotionProblem::setupConfigurations(){
-  arr x;
+void MotionProblem::setupConfigurations(){
 
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
@@ -392,35 +392,35 @@ arr MotionProblem::setupConfigurations(){
 //    listDelete(configurations);
 
   configurations.append(new ors::KinematicWorld())->copy(world, true);
-  x.append(configurations(0)->getJointState());
-  for(uint t=1;t<=k_order+T;t++){
-    configurations.append(new ors::KinematicWorld())->copy(*configurations(t-1), true);
-    CHECK(configurations(t)==configurations.last(), "");
+  for(uint s=1;s<=k_order+T;s++){
+    configurations.append(new ors::KinematicWorld())->copy(*configurations(s-1), true);
+    CHECK(configurations(s)==configurations.last(), "");
     //apply potential graph switches
     for(ors::KinematicSwitch *sw:switches){
-      if(sw->timeOfApplication==t-k_order){
-        sw->apply(*configurations(t));
+      if(sw->timeOfApplication+k_order==s){
+        sw->apply(*configurations(s));
         //          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
       }
     }
-    x.append(configurations(t)->getJointState());
   }
-  return x;
 }
 
 void MotionProblem::setConfigurationStates(const arr& x){
+  if(!configurations.N) setupConfigurations();
   CHECK_EQ(configurations.N, k_order+T+1, "configurations are not setup yet");
 
   //-- set the configurations' states
   uint x_count=0;
   for(uint t=0;t<=T;t++){
-    uint c = t+k_order;
-    uint x_dim = configurations(t)->getJointStateDimension();
-    configurations(c)->setJointState(x.subRange(x_count, x_count+x_dim-1));
-    if(useSwift) configurations(c)->stepSwift();
+    uint s = t+k_order;
+    uint x_dim = configurations(s)->getJointStateDimension();
+    if(x.nd==1) configurations(s)->setJointState(x.subRange(x_count, x_count+x_dim-1));
+    else        configurations(s)->setJointState(x[t]);
+    if(useSwift) configurations(s)->stepSwift();
     temporallyAlignKinematicSwitchesInConfiguration(t);
     x_count += x_dim;
   }
+  CHECK_EQ(x_count, x.N, "");
 }
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
@@ -495,7 +495,7 @@ StringA MotionProblem::getPhiNames(uint t){
   uint m=0;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.type==sumOfSqrTT) {
-      uint d = c->dim_phi(*configurations(t), t); //counts also constraints
+      uint d = c->dim_phi(*configurations(t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_f" <<i;
@@ -505,7 +505,7 @@ StringA MotionProblem::getPhiNames(uint t){
   }
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.type==ineqTT) {
-      uint d = c->dim_phi(*configurations(t), t); //counts also constraints
+      uint d = c->dim_phi(*configurations(t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_g" <<i;
@@ -730,7 +730,11 @@ Graph MotionProblem::getReport() {
 }
 
 arr MotionProblem::getInitialization(){
-  return setupConfigurations();
+  if(!configurations.N) setupConfigurations();
+  CHECK_EQ(configurations.N, k_order+T+1, "configurations are not setup yet");
+  arr x;
+  for(uint t=0;t<=T;t++) x.append(configurations(t+k_order)->getJointState());
+  return x;
 }
 
 void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x){
