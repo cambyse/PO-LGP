@@ -97,6 +97,8 @@ ActionSwigInterface::ActionSwigInterface(){
   createNewSymbol("timeout");
   createNewSymbol("stop");
   createNewSymbol("qItself");
+  createNewSymbol("OpSpaceRot");
+  createNewSymbol("OpSpacePos");
 //  new CoreTasks(*s->activity.machine);
 
 
