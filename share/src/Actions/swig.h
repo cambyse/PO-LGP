@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <Ors/ors.h>
 
 typedef std::vector<double> doubleV;
 typedef std::vector<int> intV;
@@ -86,5 +87,7 @@ struct ActionSwigInterface{
 
 //  defineNewTaskSpaceForceControlAction();
   class pr2System* pr2_system;
+
+  ors::Transformation getFramePose(const std::string& frame_id);
 
 };
