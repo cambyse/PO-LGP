@@ -46,7 +46,9 @@ DefaultTaskMap::DefaultTaskMap(Graph& params, const ors::KinematicWorld& G)
     if(Type=="pos") type=posTMT;
     if(Type=="vec") type=vecTMT;
     if(Type=="gazeAt") type=gazeAtTMT;
+    if(Type=="quat") type=quatTMT;
   }
+
   CHECK(type!=noTMT,"unknown type");
   if((it=params["ref1"])) i = G.getShapeByName(it->V<MT::String>())->index;
   if((it=params["ref2"])) j = G.getShapeByName(it->V<MT::String>())->index;
@@ -166,6 +168,13 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 
   if(type==gazeAtTMT){
+
+    // i    := index of shape to look with (i.e. the shape with the camera)
+    // ivec := where in the shape is the camera
+    // j    := index of shape to look at
+    // jvec := where in the target shape should we look. If jvec is not set,
+    //         this is a vector in world coordinates
+    
     ors::Vector vec_i = G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
     ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
