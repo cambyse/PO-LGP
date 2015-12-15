@@ -48,7 +48,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
     //-- transitions
     {
       Task *t;
-      t = MP.addTask("transitions", new TransitionTaskMap(world));
+      t = MP.addTask("transitions", new TransitionTaskMap(world), sumOfSqrTT);
       if(microSteps>3) t->map.order=2;
       else t->map.order=1;
       t->setCostSpecs(0, MP.T, {0.}, 1e-1);
@@ -57,7 +57,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
     //-- pose
     {
       Task *t;
-      t = MP.addTask("pose", new TaskMap_qItself());
+      t = MP.addTask("pose", new TaskMap_qItself(), sumOfSqrTT);
       t->map.order=0;
       t->setCostSpecs(0, MP.T, {0.}, 1e-5);
     }
@@ -67,7 +67,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       Task *t;
       DefaultTaskMap *m;
       //pick & place position
-      t = MP.addTask("pap_pos", m=new DefaultTaskMap(posDiffTMT));
+      t = MP.addTask("pap_pos", m=new DefaultTaskMap(posDiffTMT), sumOfSqrTT);
       m->referenceIds.resize(MP.T+1,2) = -1;
       t->prec.resize(MP.T+1).setZero();
       t->target.resize(MP.T+1,3).setZero();
@@ -85,7 +85,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       }
 
       //pick & place quaternion
-      t = MP.addTask("psp_quat", m=new DefaultTaskMap(quatDiffTMT));
+      t = MP.addTask("psp_quat", m=new DefaultTaskMap(quatDiffTMT), sumOfSqrTT);
       m->referenceIds.resize(MP.T+1,2) = -1;
       t->prec.resize(MP.T+1).setZero();
       t->target.resize(MP.T+1,4).setZero();
@@ -104,7 +104,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
 
       // zero position velocity
       if(microSteps>3){
-        t = MP.addTask("psp_zeroPosVel", m=new DefaultTaskMap(posTMT, endeff_index));
+        t = MP.addTask("psp_zeroPosVel", m=new DefaultTaskMap(posTMT, endeff_index), sumOfSqrTT);
         t->map.order=1;
         t->prec.resize(MP.T+1).setZero();
         for(uint i=0;i<actions.N;i++){
@@ -113,7 +113,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
         }
 
         // zero quaternion velocity
-        t = MP.addTask("pap_zeroQuatVel", new DefaultTaskMap(quatTMT, endeff_index));
+        t = MP.addTask("pap_zeroQuatVel", new DefaultTaskMap(quatTMT, endeff_index), sumOfSqrTT);
         t->map.order=1;
         t->prec.resize(MP.T+1).setZero();
         for(uint i=0;i<actions.N;i++){
@@ -128,7 +128,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       M.setZero();
       for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
       cout <<M <<endl;
-      t = MP.addTask("graspJoint", new TaskMap_qItself(M));
+      t = MP.addTask("graspJoint", new TaskMap_qItself(M), sumOfSqrTT);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -137,7 +137,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
 
       // up/down velocities after/before pick/place
       if(microSteps>3){
-        t = MP.addTask("pap_upDownPosVel", new DefaultTaskMap(posTMT, endeff_index));
+        t = MP.addTask("pap_upDownPosVel", new DefaultTaskMap(posTMT, endeff_index), sumOfSqrTT);
         t->map.order=1;
         t->prec.resize(MP.T+1).setZero();
         t->target.resize(MP.T+1,3).setZero();
@@ -158,7 +158,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
 
       //of the object itself
       if(microSteps>3){
-        t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true));
+        t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), ineqTT);
         m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
         t->prec.resize(MP.T+1).setZero();
         for(uint i=0;i<actions.N;i++){
@@ -170,7 +170,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       }
 
       //of the hand
-      t = MP.addTask("hand_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true));
+      t = MP.addTask("hand_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), ineqTT);
       m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
       t->prec.resize(MP.T+1).setZero();
       for(uint time=0;time<=MP.T; time++){

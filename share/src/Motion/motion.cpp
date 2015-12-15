@@ -25,43 +25,6 @@
 #include <climits>
 #include <iomanip>
 
-//===========================================================================
-
-void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
-  CHECK(G.N>=order+1,"I need at least " <<order+1 <<" configurations to evaluate");
-  uint k=order;
-  if(k==0){// basic case: order=0
-    arr J_bar;
-    phi(y, (&J?J_bar:NoArr), *G.last(), t);
-    if(&J){
-      J = zeros(G.N, y.N, J_bar.d1);
-      J[G.N-1]() = J_bar;
-      arr tmp(J);
-      tensorPermutation(J, tmp, TUP(1u,0u,2u));
-      J.reshape(y.N, G.N*J_bar.d1);
-    }
-    return;
-  }
-  arrA y_bar, J_bar;
-  double tau2=tau*tau, tau3=tau2*tau;
-  y_bar.resize(k+1);
-  J_bar.resize(k+1);
-  //-- read out the task variable from the k+1 configurations
-  for(uint i=0;i<=k;i++)
-    phi(y_bar(i), (&J?J_bar(i):NoArr), *G(G.N-1-i), t-i);
-  if(k==1)  y = (y_bar(0)-y_bar(1))/tau; //penalize velocity
-  if(k==2)  y = (y_bar(0)-2.*y_bar(1)+y_bar(2))/tau2; //penalize acceleration
-  if(k==3)  y = (y_bar(0)-3.*y_bar(1)+3.*y_bar(2)-y_bar(3))/tau3; //penalize jerk
-  if(&J) {
-    J = zeros(G.N, y.N, J_bar(0).d1);
-    if(k==1){ J[G.N-1-1]() = -J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau; }
-    if(k==2){ J[G.N-1-2]() =  J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
-    if(k==3){ J[G.N-1-3]() = -J_bar(3);  J[G.N-1-2]() =  3.*J_bar(2);  J[G.N-1-1]() = -3.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau3; }
-    arr tmp(J);
-    tensorPermutation(J, tmp, TUP(1u,0u,2u));
-    J.reshape(y.N, G.N*J_bar(0).d1);
-  }
-}
 
 //===========================================================================
 
@@ -75,78 +38,27 @@ void Task::setCostSpecs(uint fromTime,
   for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
 }
 
+
 //===========================================================================
 
-TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
-  if(specs->parents.N<2) return NULL;
+Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
+  if(specs->parents.N<2) return NULL; //these are not task specs
 
-  //-- get tags
-  mlr::String& tt=specs->parents(0)->keys.last();
-  mlr::String& type=specs->parents(1)->keys.last();
-  const char *ref1=NULL, *ref2=NULL;
-  if(specs->parents.N>2) ref1=specs->parents(2)->keys.last().p;
-  if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
-
-  //-- check the term type
+  //-- check the term type first
   TermType termType;
+  mlr::String& tt=specs->parents(0)->keys.last();
   if(tt=="MinSumOfSqr") termType=sumOfSqrTT;
   else if(tt=="LowerEqualZero") termType=ineqTT;
   else if(tt=="EqualZero") termType=eqTT;
   else return NULL;
 
-  //-- create a task map
-  TaskMap *map;
-  const Graph* params=specs->getValue<Graph>();
-//  mlr::String type = specs.V<mlr::String>("type", "pos");
-  if(type=="wheels"){
-    map = new TaskMap_qItself(world, "worldTranslationRotation");
-  }else if(type=="collisionIneq"){
-    map = new CollisionConstraint( (params?params->V<double>("margin", 0.1):0.1) );
-  }else if(type=="collisionPairs"){
-    uintA shapes;
-    for(uint i=2;i<specs->parents.N;i++){
-      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
-      CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
-      shapes.append(s->index);
-    }
-    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
-  }else if(type=="collisionExceptPairs"){
-    uintA shapes;
-    for(uint i=2;i<specs->parents.N;i++){
-      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
-      CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
-      shapes.append(s->index);
-    }
-    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
-  }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
-  }else if(type=="qItself"){
-    if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
-    else map = new TaskMap_qItself();
-  }else if(type=="GJK"){
-    map = new TaskMap_GJK(world, ref1, ref2, true);
-  }else{
-    map = new DefaultTaskMap(specs, world);
-  }
-  map->type=termType;
-
-  //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    map->order = params->V<double>("order", 0);
-  }
-  return map;
-}
-
-//===========================================================================
-
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
   //-- try to crate a map
   TaskMap *map = newTaskMap(specs, world);
   if(!map) return NULL;
+
   //-- create a task
-  Task *task = new Task(map);
+  Task *task = new Task(map, termType);
+
   //-- check for additional continuous parameters
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
@@ -254,8 +166,8 @@ arr MotionProblem::getH_rate_diag() {
   return mlr::getParameter<double>("Hrate", 1.)*W_diag;
 }
 
-Task* MotionProblem::addTask(const char* name, TaskMap *m){
-  Task *t = new Task(m);
+Task* MotionProblem::addTask(const char* name, TaskMap *m, const TermType& termType){
+  Task *t = new Task(m, termType);
   t->name=name;
   tasks.append(t);
   return t;
@@ -288,8 +200,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
   if(!T){
     TaskMap *map = new TaskMap_qItself();
     map->order = 0;
-    map->type=sumOfSqrTT;
-    Task *task = new Task(map);
+    Task *task = new Task(map, sumOfSqrTT);
     task->name="InvKinTransition";
     task->setCostSpecs(0, 0, x0, 1./(tau*tau));
     tasks.append(task);
@@ -357,11 +268,9 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
-  ors::KinematicWorld *w=&world;
-  if(configurations.N) w=configurations(t+k_order);
   for(Task *c: tasks) {
     if(c->active && c->prec.N>t && c->prec(t))
-      m += c->dim_phi(*w, t); //counts also constraints
+      m += c->map.dim_phi(configurations.subRange(t,t+k_order), t); //counts also constraints
   }
   return m;
 }
@@ -369,8 +278,8 @@ uint MotionProblem::dim_phi(uint t) {
 uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    if(c->map.type==ineqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(*configurations(t+k_order));
+    if(c->type==ineqTT && c->active && c->prec.N>t && c->prec(t))
+      m += c->map.dim_phi(configurations.subRange(t,t+k_order), t);
   }
   return m;
 }
@@ -378,8 +287,8 @@ uint MotionProblem::dim_g(uint t) {
 uint MotionProblem::dim_h(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    if(c->map.type==eqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(*configurations(t+k_order));
+    if(c->type==eqTT && c->active && c->prec.N>t && c->prec(t))
+      m += c->map.dim_phi(configurations.subRange(t,t+k_order), t);
   }
   return m;
 }
@@ -452,14 +361,14 @@ void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
     gl.watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
 }
 
-bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL &G, double tau) {
+bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
   phi.clear();
   if(&tt) tt.clear();
   if(&J) J.clear();
   arr y, Jy;
   bool ineqHold=true;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
-    c->map.phi(y, (&J?Jy:NoArr), G, tau, t);
+    c->map.phi(y, (&J?Jy:NoArr), configurations.subRange(t,t+k_order), tau, t);
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
     //linear transform (target shift)
     if(c->target.N==1) y -= c->target.elem(0);
@@ -468,16 +377,16 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL
     y *= sqrt(c->prec(t));
     if(&J) Jy *= sqrt(c->prec(t));
     phi.append(y);
-    if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->map.type);
+    if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->type);
     if(&J) J.append(Jy);
-    if(c->map.type==ineqTT && max(y)>0.) ineqHold=false;
+    if(c->type==ineqTT && max(y)>0.) ineqHold=false;
   }
   if(&J){
     J.reshape(phi.N, J.N/phi.N);
     if(t<k_order) J.delColumns(0,(k_order-t)*x0.N); //delete the columns that correspond to the prefix!!
   }
 
-  CHECK_EQ(phi.N, dim_phi(t), "");
+//  CHECK_EQ(phi.N, dim_phi(t), "");
 
   //memorize for report
   if(!phiMatrix.N) phiMatrix.resize(T+1);
@@ -494,8 +403,8 @@ StringA MotionProblem::getPhiNames(uint t){
   StringA names(dim_phi(t));
   uint m=0;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
-    if(c->map.type==sumOfSqrTT) {
-      uint d = c->dim_phi(*configurations(t+k_order), t); //counts also constraints
+    if(c->type==sumOfSqrTT) {
+      uint d = c->map.dim_phi(configurations.subRange(t,t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_f" <<i;
@@ -504,8 +413,8 @@ StringA MotionProblem::getPhiNames(uint t){
     }
   }
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
-    if(c->map.type==ineqTT) {
-      uint d = c->dim_phi(*configurations(t+k_order), t); //counts also constraints
+    if(c->type==ineqTT) {
+      uint d = c->map.dim_phi(configurations.subRange(t,t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_g" <<i;
@@ -532,17 +441,20 @@ void MotionProblem::reportFull(bool brief) {
   cout <<"  prefix=" <<prefix <<endl;
   cout <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
 
+  if(!configurations.N) setupConfigurations();
+
   //-- collect all task costs and constraints
   for(uint t=0; t<=T; t++){
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
-      uint d=c->dim_phi(world, t);
+      if(!c->isActive(t)) continue;
+      uint d=c->map.dim_phi(configurations.subRange(t,t+k_order), t);
       if(brief){
         if(d){
           cout <<"  " <<t <<' ' <<d
               <<' ' <<std::setw(10) <<c->name
-             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+             <<' ' <<c->map.order <<' ' <<c->type <<' ';
           cout <<"xx";
           cout <<' ' <<c->prec(t);
           if(ttMatrix.N){
@@ -555,7 +467,7 @@ void MotionProblem::reportFull(bool brief) {
         for(uint i=0;i<d;i++){
           cout <<"  " <<t <<' ' <<i
               <<' ' <<std::setw(10) <<c->name
-             <<' ' <<c->map.order <<' ' <<c->map.type <<' ';
+             <<' ' <<c->map.order <<' ' <<c->type <<' ';
           if(c->target.N==1) cout <<c->target.elem(0);
           else if(c->target.nd==1) cout <<c->target(i);
           else if(c->target.nd==2) cout <<c->target(t,i);
@@ -597,14 +509,15 @@ void MotionProblem::costReport(bool gnuplt) {
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
-      uint d=c->dim_phi(world, t);
-      if(ttMatrix.N) for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
+      if(!c->isActive(t)) continue;
+      uint d=c->map.dim_phi(configurations.subRange(t,t+k_order), t);
+      if(ttMatrix.N) for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
       if(d){
-        if(c->map.type==sumOfSqrTT){
+        if(c->type==sumOfSqrTT){
           taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
           plotData(t,i) = a;
         }
-        if(c->map.type==ineqTT){
+        if(c->type==ineqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double g=phiMatrix(t)(m+j);
@@ -614,7 +527,7 @@ void MotionProblem::costReport(bool gnuplt) {
           taskG(i) += gpos;
           plotData(t,i) = gall;
         }
-        if(c->map.type==eqTT){
+        if(c->type==eqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double h=phiMatrix(t)(m+j);
@@ -635,7 +548,7 @@ void MotionProblem::costReport(bool gnuplt) {
   double totalC=0., totalG=0.;
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
-    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" type=" <<c->map.type;
+    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" type=" <<c->type;
     cout <<" \tcosts=" <<taskC(i) <<" \tconstraints=" <<taskG(i) <<endl;
     totalC += taskC(i);
     totalG += taskG(i);
@@ -652,7 +565,7 @@ void MotionProblem::costReport(bool gnuplt) {
     fil <<c->name <<'[' <<d <<"] ";
   }
   for(auto c:tasks){
-    if(c->map.type==ineqTT && dualMatrix.N){
+    if(c->type==ineqTT && dualMatrix.N){
       fil <<c->name <<"_dual";
     }
   }
@@ -692,16 +605,16 @@ Graph MotionProblem::getReport() {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       uint d=c->dim_phi(world, t);
-      for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->map.type,"");
+      for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
       if(d){
-        if(c->map.type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
-        if(c->map.type==ineqTT){
+        if(c->type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
+        if(c->type==ineqTT){
           for(uint j=0;j<d;j++){
             double g=phiMatrix(t)(m+j);
             if(g>0.) taskG(i) += g;
           }
         }
-        if(c->map.type==eqTT){
+        if(c->type==eqTT){
           for(uint j=0;j<d;j++) taskG(i) += fabs(phiMatrix(t)(m+j));
         }
         m += d;
@@ -717,7 +630,7 @@ Graph MotionProblem::getReport() {
     Graph *g=new Graph();
     report.append<Graph>({c->name}, {}, g, true);
     g->append<double>({"order"}, {}, c->map.order);
-    g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
+    g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));
     g->append<double>({"constraints"}, {}, taskG(i));
     totalC += taskC(i);
@@ -742,8 +655,9 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 //  CHECK(!k_order,"");
 //  CHECK(!switches.N,"");
 
-  setState(x);
-  getPhi(y, J, tt, 0, {&world}, tau);
+//  setState(x);
+  setConfigurationStates(x);
+  getPhi(y, J, tt, 0);
   if(&H) H.clear();
 //  double h=1./sqrt(tau);
 //  y.append(h*(x-x0));
@@ -772,7 +686,7 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 //}
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
-  uint T=get_T(), k=get_k();
+  uint T=get_T();
 
   //assert some dimensions
   CHECK(t<=T,"");
@@ -780,7 +694,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
   TermTypeA _tt;
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRange(t,t+k), MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t);
   phi.append(_phi);
   if(&tt) tt.append(_tt);
   if(&J)  J.append(_J);

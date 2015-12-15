@@ -1625,7 +1625,7 @@ ors::Joint* ors::KinematicWorld::getJointByBodies(const Body* from, const Body* 
 ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
   Body *f = getBodyByName(from);
   Body *t = getBodyByName(to);
-  if(!f || !t) return 0;
+  if(!f || !t) return NULL;
   return graphGetEdge<Body, Joint>(f, t);
 }
 
@@ -2448,19 +2448,10 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     return;
   }
   if(symbol==addJointZero){
-//    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from->body, to->body);
-
-    // Keep Object Orientation
-    //    Transformation A = from->X;
-  //  Transformation B = to->X;
-    //A.pos *= 0.;
-   // B.pos *= 0.;
-   // j->A.setDifference(A, B);
     j->type=jointType;
     j->A = from->rel;
     j->B = -to->rel;
-//    j->agent=1;
     G.isLinkTree=false;
     G.calc_fwdPropagateFrames();
     return;

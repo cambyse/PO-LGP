@@ -119,7 +119,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   uint T=f.get_T();
   uint k=f.get_k();
   uint dim_phi=0;
-  for(uint t=0; t<=T; t++) dim_phi+=f.dim_phi(t);
+  for(uint t=0; t<=T; t++) dim_phi += f.dim_phi(t);
   uint dim_xmax = 0;
   for(uint t=0; t<=T; t++){ uint d=f.dim_x(t); if(d>dim_xmax) dim_xmax=d; }
 
@@ -136,9 +136,6 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   uint Jshift=0;
   uint M=0;
   for(uint t=0; t<=T; t++) {
-    uint dimphi_t = f.dim_phi(t);
-    if(!dimphi_t) continue;
-
     uint dimxbar = 0;
     for(int s=(int)t-k;s<=(int)t;s++) if(s>=0) dimxbar += f.dim_x(s);
 
@@ -146,22 +143,23 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
     arr phi_t, J_t;
     TermTypeA tt_t;
     f.phi_t(phi_t, (&J?J_t:NoArr), tt_t, t);
-    CHECK_EQ(phi_t.N, dimphi_t, "");
+    //    CHECK_EQ(phi_t.N, f.dim_phi(t), "");
+    if(!phi_t.N) continue;
     phi.setVectorBlock(phi_t, M);
     if(&tt) tt.setVectorBlock(tt_t, M);
     if(&J) {
-      CHECK(J_t.nd==2 && J_t.d0==dimphi_t && J_t.d1==dimxbar,"");
+      CHECK(J_t.nd==2 && J_t.d0==phi_t.N && J_t.d1==dimxbar,"");
       if(t>=k) {
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<dimphi_t; i++) Jaux->rowShift(M+i) = Jshift;
+        for(uint i=0; i<phi_t.N; i++) Jaux->rowShift(M+i) = Jshift;
         Jshift += f.dim_x(t-k);
       } else { //cut away the Jacobian w.r.t. the prefix
 //        J_t.delColumns(0,(k-t)*n); //nothing to cut
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<dimphi_t; i++) Jaux->rowShift(M+i) = 0;
+        for(uint i=0; i<phi_t.N; i++) Jaux->rowShift(M+i) = 0;
       }
     }
-    M += dimphi_t;
+    M += phi_t.N;
   }
 
   CHECK_EQ(M, dim_phi,"");

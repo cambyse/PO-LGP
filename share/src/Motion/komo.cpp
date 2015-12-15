@@ -198,7 +198,7 @@ arr moveTo(ors::KinematicWorld& world,
       optConstrained(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MF), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
+      optNewton(x, Convert(MF), OPT(verbose=2));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
@@ -235,7 +235,7 @@ void setTasks(MotionProblem& MP,
 
   Task *t;
 
-  t = MP.addTask("transitions", new TransitionTaskMap(MP.world));
+  t = MP.addTask("transitions", new TransitionTaskMap(MP.world), sumOfSqrTT);
   if(timeSteps!=0){
     t->map.order=2; //make this an acceleration task!
   }else{
@@ -244,20 +244,20 @@ void setTasks(MotionProblem& MP,
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   if(timeSteps!=0){
-    t = MP.addTask("final_vel", new TaskMap_qItself());
+    t = MP.addTask("final_vel", new TaskMap_qItself(), sumOfSqrTT);
     t->map.order=1; //make this a velocity task!
     t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
   }
 
   if(colPrec<0){ //interpreted as hard constraint (default)
-    t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
+    t = MP.addTask("collisionConstraints", new CollisionConstraint(margin), ineqTT);
     t->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{ //cost term
-    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, margin));
+    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, margin), sumOfSqrTT);
     t->setCostSpecs(0, MP.T, {0.}, colPrec);
   }
 
-  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
+  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector), sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
 
@@ -266,7 +266,8 @@ void setTasks(MotionProblem& MP,
     axis.setZero();
     axis(i)=1.;
     t = MP.addTask(STRING("endeff_align_"<<i),
-                   new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis));
+                   new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis),
+                   sumOfSqrTT);
     t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
   }
 }

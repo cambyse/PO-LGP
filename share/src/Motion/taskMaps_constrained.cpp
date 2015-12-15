@@ -34,7 +34,6 @@ ProxyConstraint::ProxyConstraint(PTMtype _type,
                                  bool _useCenterDist,
                                  bool _useDistNotCost)
   : proxyCosts(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
-  type=ineqTT;
 }
 
 void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
@@ -172,7 +171,6 @@ VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
   if(b) j=b->index;
   if(&_ivec) ivec=_ivec; else ivec.setZero();
   if(&_jvec) jvec=_jvec; else jvec.setZero();
-  type=ineqTT;
   order = 1;
   target = _target;
 }
