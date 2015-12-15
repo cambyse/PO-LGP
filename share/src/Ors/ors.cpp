@@ -370,6 +370,10 @@ void makeConvexHulls(ShapeL& shapes){
   for(ors::Shape *s: shapes) s->mesh.makeConvexHull();
 }
 
+void computeMeshNormals(ShapeL& shapes){
+  for(ors::Shape *s: shapes) if(!s->mesh.Vn.N) s->mesh.computeNormals();
+}
+
 
 //===========================================================================
 //
@@ -570,7 +574,7 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
   listCopy(proxies, G.proxies);
   for(Body *b:G.bodies) new Body(*this, b);
   for(Shape *s:G.shapes){
-    if(referenceMeshesAndSwiftOnCopy) s->mesh.computeNormals(); // the copy references these normals -> if they're not precomputed, you can never display the copy
+//    if(referenceMeshesAndSwiftOnCopy && !s->mesh.Vn.N) s->mesh.computeNormals(); // the copy references these normals -> if they're not precomputed, you can never display the copy
     new Shape(*this, (s->body?*bodies(s->body->index):NoBody), s, referenceMeshesAndSwiftOnCopy);
   }
   for(Joint *j:G.joints){

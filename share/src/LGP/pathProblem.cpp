@@ -10,7 +10,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
                          uint microSteps,
                          int verbose)
   : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
-  ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(MPF) );
+  ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(MPF) );
 
   double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
 //  double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);

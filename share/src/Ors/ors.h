@@ -405,6 +405,7 @@ uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes);
 
 void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
+void computeMeshNormals(ShapeL& shapes);
 double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
                                double distanceThreshold=0.01,
                                double mu=.5,     //friction coefficient

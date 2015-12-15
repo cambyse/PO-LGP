@@ -50,7 +50,6 @@ void KOMO::init(const Graph& _specs){
 
 #if 1
   MP->parseTasks(specs);
-  if(MP->T) MPF = new MotionProblemFunction(*MP);
 #else
   NodeL tasks = specs.getNodes("Task");
   for(Node *t:tasks){
@@ -110,11 +109,7 @@ void KOMO::setFact(const char* fact){
 }
 
 void KOMO::reset(){
-  if(MP->T){
-    x = MP->getInitialization();
-  }else{
-    x=MP->x0;
-  }
+  x = MP->getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 }
 
@@ -126,7 +121,7 @@ void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
   cout <<x;
   if(MP->T){
-    optConstrained(x, dual, Convert(*MPF), OPT(verbose=2));
+    optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
   }else{
     optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
@@ -142,7 +137,7 @@ Graph KOMO::getReport(){
 
 void KOMO::checkGradients(){
   if(MP->T){
-    checkJacobianCP(Convert(*MPF), x, 1e-4);
+    checkJacobianCP(Convert(*MP), x, 1e-4);
   }else{
     checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
   }
@@ -183,7 +178,6 @@ arr moveTo(ors::KinematicWorld& world,
            double duration){
 
   MotionProblem MP(world);
-  MotionProblemFunction MF(MP);
 
   setTasks(MP, endeff, target, whichAxesToAlign, iterate, timeSteps, duration);
 
@@ -197,10 +191,10 @@ arr moveTo(ors::KinematicWorld& world,
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrained(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MF), OPT(verbose=2));
+      optNewton(x, Convert(MP), OPT(verbose=2));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;

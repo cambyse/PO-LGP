@@ -26,7 +26,6 @@ struct KOMO{
   Graph specs;
   ors::KinematicWorld world;
   struct MotionProblem *MP;
-  struct MotionProblemFunction *MPF;
   arr x, dual;
 
   KOMO(const Graph& specs);

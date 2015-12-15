@@ -38,7 +38,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   
   //-- optimize ignoring hand -- testing different options for aligning with the object
   if (MP.world.shapes(shapeId)->type==ors::boxST) {
-    arr cost_side(3), x_side(3, MP.x0.N);
+    arr cost_side(3), x_side(3, MP.world.q.N);
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
       cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
@@ -480,7 +480,7 @@ double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint 
 
 //  MotionProblem_EndPoseFunction MF(MP);
 
-  if (!x_is_initialized) x=MP.x0;
+  if (!x_is_initialized) x=MP.world.q;
 
   double cost;
 

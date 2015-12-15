@@ -42,10 +42,10 @@ Convert::~Convert() {
 
 Convert::operator ScalarFunction() {
   if(!sf) {
-    if(cstyle_fs) sf = convert_cstylefs_ScalarFunction(cstyle_fs, data);
+    if(cstyle_fs) sf = conv_cstylefs2ScalarFunction(cstyle_fs, data);
     else {
       if(!vf) vf = this->operator VectorFunction();
-      if(vf)  sf = convert_VectorFunction_ScalarFunction(vf);
+      if(vf)  sf = conv_VectorFunction2ScalarFunction(vf);
     }
   }
   if(!sf) HALT("");
@@ -55,9 +55,9 @@ Convert::operator ScalarFunction() {
 Convert::operator VectorFunction() {
   if(!vf) {
     if(cstyle_fv)
-      vf = convert_cstylefv_VectorFunction(cstyle_fv, data);
+      vf = conv_cstylefv2VectorFunction(cstyle_fv, data);
     else {
-      if(kom) vf = convert_KOrderMarkovFunction_VectorFunction(*kom);
+      if(kom) vf = conv_KOrderMarkovFunction2VectorFunction(*kom);
     }
   }
   if(!vf) HALT("");
@@ -66,7 +66,7 @@ Convert::operator VectorFunction() {
 
 Convert::operator ConstrainedProblem() {
   if(!cpm) {
-    if(kom) cpm = convert_KOrderMarkovFunction_ConstrainedProblem(*kom);
+    if(kom) cpm = conv_KOrderMarkovFunction2ConstrainedProblem(*kom);
   }
   if(!cpm) HALT("");
   return cpm;
@@ -87,20 +87,20 @@ Convert::operator KOrderMarkovFunction&() {
 // actual convertion routines
 //
 
-ScalarFunction convert_cstylefs_ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data){
+ScalarFunction conv_cstylefs2ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data){
   return [&fs,data](arr& g, arr& H, const arr& x) -> double {
     if(&H) NIY;
     return fs(&g, x, data);
   };
 }
 
-VectorFunction convert_cstylefv_VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data){
+VectorFunction conv_cstylefv2VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data){
   return [&fv,data](arr& y, arr& J, const arr& x) -> void {
     fv(y, &J, x, data);
   };
 }
 
-ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f) {
+ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   return [&f](arr& g, arr& H, const arr& x) -> double {
     arr y,J;
     f(y, (&g?J:NoArr), x);
@@ -251,13 +251,13 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 #endif
 }
 
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f){
+ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f){
   return [&f](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
     conv_KOrderMarkovFunction_ConstrainedProblem(f, phi, J, H, tt, x);
   };
 }
 
-VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f) {
+VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f) {
   return [&f](arr& y, arr& J, const arr& x) -> void {
     conv_KOrderMarkovFunction_ConstrainedProblem(f, y, J, NoArr, NoTermTypeA, x);
   };

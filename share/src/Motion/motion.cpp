@@ -123,14 +123,14 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
 
 //===========================================================================
 
-MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
-    : world(_world) , useSwift(useSwift), T(0), tau(0.), k_order(2)
+MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
+    : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2)
 {
+  computeMeshNormals(world.shapes);
   if(useSwift) {
     makeConvexHulls(world.shapes);
     world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
   }
-  x0 = world.getJointState();
   setTiming(mlr::getParameter<uint>("timeSteps", 50), mlr::getParameter<double>("duration", 5.));
 }
 
@@ -145,10 +145,8 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   T = other.T;
   tau = other.tau;
   k_order = other.k_order;
-  x0 = other.x0;
-  prefix = other.prefix;
   phiMatrix = other.phiMatrix;
-  dualMatrix = other.dualMatrix;
+  dualSolution = other.dualSolution;
   ttMatrix = other.ttMatrix;
   return *this;
 }
@@ -206,7 +204,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
     map->order = 0;
     Task *task = new Task(map, sumOfSqrTT);
     task->name="InvKinTransition";
-    task->setCostSpecs(0, 0, x0, 1./(tau*tau));
+    task->setCostSpecs(0, 0, world.q, 1./(tau*tau));
     tasks.append(task);
   }
 }
@@ -318,7 +316,7 @@ void MotionProblem::setupConfigurations(){
   }
 }
 
-void MotionProblem::setConfigurationStates(const arr& x){
+void MotionProblem::set_x(const arr& x){
   if(!configurations.N) setupConfigurations();
   CHECK_EQ(configurations.N, k_order+T+1, "configurations are not setup yet");
 
@@ -365,11 +363,13 @@ void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
     gl.watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
 }
 
-bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
+void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
+#if 0
   phi.clear();
   if(&tt) tt.clear();
   if(&J) J.clear();
-  arr y, Jy;
+#endif
+  arr y, Jy, Jtmp;
   bool ineqHold=true;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     c->map.phi(y, (&J?Jy:NoArr), configurations.subRange(t,t+k_order), tau, t);
@@ -384,7 +384,7 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
 
     if(&J){
       Jy *= sqrt(c->prec(t));
-      J.append(Jy);
+      Jtmp.append(Jy);
     }
 
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->type);
@@ -392,11 +392,12 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
     if(c->type==ineqTT && max(y)>0.) ineqHold=false;
   }
   if(&J){
-    J.reshape(phi.N, J.N/phi.N);
-    if(t<k_order) J.delColumns(0,(k_order-t)*x0.N); //delete the columns that correspond to the prefix!!
+//    J.reshape(phi.N, J.N/phi.N);
+    if(t<k_order) Jtmp.delColumns(0,(k_order-t)*configurations(0)->q.N); //delete the columns that correspond to the prefix!!
+    J.append(Jtmp);
   }
 
-//  CHECK_EQ(phi.N, dim_phi(t), "");
+  CHECK_EQ(phi.N, dim_phi(t), "");
 
   //memorize for report
   if(!phiMatrix.N) phiMatrix.resize(T+1);
@@ -405,8 +406,6 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
     if(!ttMatrix.N) ttMatrix.resize(T+1);
     ttMatrix(t) = tt;
   }
-
-  return ineqHold;
 }
 
 StringA MotionProblem::getPhiNames(uint t){
@@ -436,10 +435,6 @@ StringA MotionProblem::getPhiNames(uint t){
   return names;
 }
 
-void MotionProblem::activateAllTaskCosts(bool active) {
-  for(Task *c: tasks) c->active=active;
-}
-
 void MotionProblem::reportFull(bool brief) {
   cout <<"*** MotionProblem -- FeatureReport " <<endl;
 
@@ -447,8 +442,6 @@ void MotionProblem::reportFull(bool brief) {
   cout <<"  T=" <<T <<endl;
   cout <<"  tau=" <<tau <<endl;
   cout <<"  k_order=" <<k_order <<endl;
-  cout <<"  x0=" <<x0 <<endl;
-  cout <<"  prefix=" <<prefix <<endl;
   cout <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
 
   if(!configurations.N) setupConfigurations();
@@ -575,17 +568,17 @@ void MotionProblem::costReport(bool gnuplt) {
     fil <<c->name <<'[' <<d <<"] ";
   }
   for(auto c:tasks){
-    if(c->type==ineqTT && dualMatrix.N){
+    if(c->type==ineqTT && dualSolution.N){
       fil <<c->name <<"_dual";
     }
   }
   fil <<endl;
   //rest: just the matrix?
-  if(!dualMatrix.N){
+  if(!dualSolution.N){
     plotData.write(fil,NULL,NULL,"  ");
   }else{
-    dualMatrix.reshape(T+1, dualMatrix.N/(T+1));
-    catCol(plotData, dualMatrix).write(fil,NULL,NULL,"  ");
+    dualSolution.reshape(T+1, dualSolution.N/(T+1));
+    catCol(plotData, dualSolution).write(fil,NULL,NULL,"  ");
   }
   fil.close();
 
@@ -594,7 +587,7 @@ void MotionProblem::costReport(bool gnuplt) {
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
   fil2 <<"plot 'z.costReport' \\" <<endl;
   for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l \\" <<endl;
-  if(dualMatrix.N) for(uint i=0;i<tasks.N;i++) fil2 <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
+  if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil2 <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
   fil2 <<endl;
   fil2.close();
 
@@ -667,8 +660,8 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 //  CHECK(!switches.N,"");
 
 //  setState(x);
-  setConfigurationStates(x);
-  getPhi(y, J, tt, 0);
+  set_x(x);
+  phi_t(y, J, tt, 0);
   if(&H) H.clear();
 //  double h=1./sqrt(tau);
 //  y.append(h*(x-x0));
@@ -696,6 +689,7 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 //  return MP.postfix;
 //}
 
+#if 0
 void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   uint T=get_T();
 
@@ -714,7 +708,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   if(&J) CHECK_EQ(J.d0, phi.N,"");
 
 }
-
+#endif
 
 //===========================================================================
 
