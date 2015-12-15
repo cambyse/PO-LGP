@@ -569,7 +569,10 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
 #if 1
   listCopy(proxies, G.proxies);
   for(Body *b:G.bodies) new Body(*this, b);
-  for(Shape *s:G.shapes) new Shape(*this, (s->body?*bodies(s->body->index):NoBody), s, referenceMeshesAndSwiftOnCopy);
+  for(Shape *s:G.shapes){
+    if(referenceMeshesAndSwiftOnCopy) s->mesh.computeNormals(); // the copy references these normals -> if they're not precomputed, you can never display the copy
+    new Shape(*this, (s->body?*bodies(s->body->index):NoBody), s, referenceMeshesAndSwiftOnCopy);
+  }
   for(Joint *j:G.joints){
     Joint *jj=
         new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);

@@ -41,9 +41,6 @@ struct Task {
   bool active;
   arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
 
-  uint dim_phi(const ors::KinematicWorld& G, uint t){ //TODO: delete, this is redundant with map::dim_phi
-    if(!isActive(t)) return 0; return map.dim_phi(G); }
-
   bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }
 
   Task(TaskMap* m, const TermType& type):map(*m), type(type), active(true){} //TODO: require type here!!
@@ -93,6 +90,7 @@ struct MotionProblem {
   mlr::Array<TermTypeA> ttMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
+  ~MotionProblem();
   
   MotionProblem& operator=(const MotionProblem& other);
 
@@ -119,7 +117,7 @@ struct MotionProblem {
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
-  void setState(const arr& x, const arr& v=NoArr);
+//  void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 
   //-- helpers
@@ -168,7 +166,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint dim_phi(uint t){ return MP.dim_phi(t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual uint dim_h(uint t){ return MP.dim_h(t); }
-  virtual StringA getPhiNames(uint t);
+  virtual StringA getPhiNames(uint t){ return MP.getPhiNames(t); }
 };
 
 //===========================================================================

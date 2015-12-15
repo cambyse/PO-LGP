@@ -134,6 +134,10 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
   setTiming(mlr::getParameter<uint>("timeSteps", 50), mlr::getParameter<double>("duration", 5.));
 }
 
+MotionProblem::~MotionProblem(){
+  listDelete(configurations);
+}
+
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   world = const_cast<ors::KinematicWorld&>(other.world);
   useSwift = other.useSwift;
@@ -260,10 +264,10 @@ void MotionProblem::setInterpolatingCosts(
 }
 #endif
 
-void MotionProblem::setState(const arr& q, const arr& v) {
-  world.setJointState(q, v);
-  if(useSwift) world.stepSwift();
-}
+//void MotionProblem::setState(const arr& q, const arr& v) {
+//  world.setJointState(q, v);
+//  if(useSwift) world.stepSwift();
+//}
 
 
 uint MotionProblem::dim_phi(uint t) {
@@ -370,15 +374,21 @@ bool MotionProblem::getPhi(arr& phi, arr& J, TermTypeA& tt, uint t) {
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     c->map.phi(y, (&J?Jy:NoArr), configurations.subRange(t,t+k_order), tau, t);
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
+
     //linear transform (target shift)
     if(c->target.N==1) y -= c->target.elem(0);
     else if(c->target.nd==1) y -= c->target;
     else if(c->target.nd==2) y -= c->target[t];
     y *= sqrt(c->prec(t));
-    if(&J) Jy *= sqrt(c->prec(t));
     phi.append(y);
+
+    if(&J){
+      Jy *= sqrt(c->prec(t));
+      J.append(Jy);
+    }
+
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->type);
-    if(&J) J.append(Jy);
+
     if(c->type==ineqTT && max(y)>0.) ineqHold=false;
   }
   if(&J){
@@ -604,7 +614,8 @@ Graph MotionProblem::getReport() {
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
-      uint d=c->dim_phi(world, t);
+      if(!c->isActive(t)) continue;
+      uint d=c->map.dim_phi(configurations.subRange(t,t+k_order), t);
       for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
       if(d){
         if(c->type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
@@ -704,9 +715,6 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
 
 }
 
-StringA MotionProblemFunction::getPhiNames(uint t){
-  return MP.getPhiNames(t);
-}
 
 //===========================================================================
 

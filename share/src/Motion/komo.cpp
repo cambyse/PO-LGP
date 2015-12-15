@@ -7,7 +7,7 @@
 
 //===========================================================================
 
-KOMO::KOMO(const Graph& specs){
+KOMO::KOMO(const Graph& specs) : MP(NULL){
   init(specs);
 //  reset();
 //  CHECK(x.N,"");
@@ -43,6 +43,7 @@ void KOMO::init(const Graph& _specs){
   world.swift().initActivations(world);
   FILE("z.komo.model") <<world;
 
+  if(MP) delete MP;
   MP = new MotionProblem(world);
   if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
   MP->k_order=k_order;
@@ -156,8 +157,9 @@ void KOMO::displayTrajectory(double delay){
   //   MP->world.gl().update(STRING("KOMO (time " <<std::setw(3) <<t <<'/' <<x.d0 <<')'));
   // }
   }else{
-    MP->setState(x);
-    MP->world.gl().watch("KOMO InvKin mode");
+    world.setJointState(x);
+    world.stepSwift();
+    world.gl().watch("KOMO InvKin mode");
   }
   // if(wait) MP->world.gl().watch();
 }

@@ -35,10 +35,10 @@ arr PR2EndPoseProblem::getInitialization(){
 
 void PR2EndPoseProblem::report(){
   s.MP.costReport();
-  s.MP.world.watch(true);
+  s.world.watch(true);
 }
 
 void PR2EndPoseProblem::setState(const arr& x){
-  s.MP.world.setJointState(x);
+  s.world.setJointState(x);
 }
 
