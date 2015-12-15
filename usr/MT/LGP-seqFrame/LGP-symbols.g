@@ -18,6 +18,7 @@ free
 touch
 eff
 holding
+supports
 
 Board
 Cylin
@@ -51,7 +52,7 @@ DecisionRule Pick {
 DecisionRule Release {
      Hand, Obj, Onto
      { (articulated Obj) (Object Obj) (holding Hand Obj) (Board Onto) }
-     { (articulated Obj)! (free Hand) (holding Hand Obj)! }
+     { (articulated Obj)! (free Hand) (holding Hand Obj)! (supports Onto Obj)}
 }
 
 # =============================================================================
@@ -97,6 +98,13 @@ SeqProblemRule {
     (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
     (MakeJoint delete Hand Obj){ time=1 }
     (MakeJoint transXYPhi Onto Obj){ time=1 }
+  }
+}
+
+SeqProblemRule {
+  Onto, Obj
+  { (supports Onto Obj) }
+  { (MinSumOfSqr qItself Onto Obj){ order=1 time=[0 1] scale=1e2 }
   }
 }
 

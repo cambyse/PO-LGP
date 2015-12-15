@@ -41,7 +41,7 @@ void Task::setCostSpecs(uint fromTime,
 
 //===========================================================================
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
+Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
   //-- check the term type first
@@ -53,7 +53,7 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
   else return NULL;
 
   //-- try to crate a map
-  TaskMap *map = newTaskMap(specs, world);
+  TaskMap *map = TaskMap::newTaskMap(specs, world);
   if(!map) return NULL;
 
   //-- create a task
@@ -178,7 +178,7 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m, const TermType& termT
 bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
   if(Tinterval==-1) Tinterval=T;
   //-- task?
-  Task *task = newTask(n, world, Tinterval, Tzero);
+  Task *task = Task::newTask(n, world, Tinterval, Tzero);
   if(task){
     if(n->keys.N) task->name=n->keys.last(); else{
       for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
@@ -208,65 +208,6 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
     tasks.append(task);
   }
 }
-
-#if 0
-void MotionProblem::setInterpolatingCosts(
-  Task *c,
-  TaskCostInterpolationType inType,
-  const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget, double y_midPrec, double earlyFraction) {
-  uint m=c->map.dim_phi(world);
-  setState(x0,v0);
-  arr y0;
-  c->map.phi(y0, NoArr, world);
-  arr midTarget=zeros(m),finTarget=zeros(m);
-  if(&y_finalTarget){ if(y_finalTarget.N==1) finTarget = y_finalTarget(0); else finTarget=y_finalTarget; }
-  if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
-  switch(inType) {
-    case constant: {
-      c->target = replicate(finTarget, T+1);
-      c->prec.resize(T+1) = y_finalPrec;
-    } break;
-    case finalOnly: {
-      c->target.resize(T+1, m).setZero();
-      c->target[T]() = finTarget;
-      c->prec.resize(T+1).setZero();
-      c->prec(T) = y_finalPrec;
-    } break;
-    case final_restConst: {
-      c->target = replicate(midTarget, T+1);
-      c->target[T]() = finTarget;
-      c->prec.resize(T+1) = y_midPrec<=0. ? 0. : y_midPrec;
-      c->prec(T) = y_finalPrec;
-    } break;
-    case final_restLinInterpolated: {
-      c->target.resize(T+1, m).setZero();
-      for(uint t=0; t<=T; t++) {
-        double a = (double)t/T;
-        c->target[t]() = ((double)1.-a)*y0 + a*finTarget;
-      }
-      c->prec.resize(T+1) = y_midPrec<0. ? y_finalPrec : y_midPrec;
-      c->prec(T) = y_finalPrec;
-    } break;
-  case early_restConst: {
-    uint t;
-    CHECK(earlyFraction>=0. && earlyFraction<=1.,"");
-    uint Tearly=earlyFraction*T;
-    c->target.resize(T+1, m).setZero();
-    for(t=0; t<Tearly; t++) c->target[t]() = midTarget;
-    for(t=Tearly; t<=T; t++) c->target[t]() = finTarget;
-    c->prec.resize(T+1).setZero();
-    for(t=0; t<Tearly; t++) c->prec(t) = y_midPrec<=0. ? 0. : y_midPrec;
-    for(t=Tearly; t<=T; t++) c->prec(t) = y_finalPrec;
-  } break;
-  }
-}
-#endif
-
-//void MotionProblem::setState(const arr& q, const arr& v) {
-//  world.setJointState(q, v);
-//  if(useSwift) world.stepSwift();
-//}
-
 
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
@@ -370,9 +311,11 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   if(&J) J.clear();
 #endif
   arr y, Jy, Jtmp;
-  bool ineqHold=true;
+  uint dimPhi_t=0;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     c->map.phi(y, (&J?Jy:NoArr), configurations.subRange(t,t+k_order), tau, t);
+    if(!y.N) continue;
+    dimPhi_t += y.N;
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 
     //linear transform (target shift)
@@ -388,16 +331,14 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
     }
 
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->type);
-
-    if(c->type==ineqTT && max(y)>0.) ineqHold=false;
   }
   if(&J){
-//    J.reshape(phi.N, J.N/phi.N);
+    Jtmp.reshape(dimPhi_t, Jtmp.N/dimPhi_t);
     if(t<k_order) Jtmp.delColumns(0,(k_order-t)*configurations(0)->q.N); //delete the columns that correspond to the prefix!!
     J.append(Jtmp);
   }
 
-  CHECK_EQ(phi.N, dim_phi(t), "");
+  CHECK_EQ(dimPhi_t, dim_phi(t), "");
 
   //memorize for report
   if(!phiMatrix.N) phiMatrix.resize(T+1);
@@ -656,59 +597,13 @@ arr MotionProblem::getInitialization(){
 
 void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x){
   CHECK(!T,"");
-//  CHECK(!k_order,"");
-//  CHECK(!switches.N,"");
-
-//  setState(x);
+  y.clear();
+  if(&J) J.clear();
+  if(&H) H.clear();
+  if(&tt) tt.clear();
   set_x(x);
   phi_t(y, J, tt, 0);
-  if(&H) H.clear();
-//  double h=1./sqrt(tau);
-//  y.append(h*(x-x0));
-//  if(&J) J.append(h*eye(x.N));
-//  if(&tt) tt.append(consts(sumOfSqrTT, x.N));
-
-//  phiMatrix(0).append(h*(x-x0));
-//  ttMatrix(0).append(consts(sumOfSqrTT, x.N));
 }
-
-//===========================================================================
-
-//arr MotionProblemFunction::get_prefix() {
-//  if(!MP.prefix.N){
-//    MP.prefix.resize(get_k(), dim_x());
-//    for(uint i=0; i<MP.prefix.d0; i++) MP.prefix[i]() = MP.x0;
-//  }
-//  CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
-//  return MP.prefix;
-//}
-
-//arr MotionProblemFunction::get_postfix() {
-//  if(!MP.postfix.N) return arr();
-//  CHECK(MP.postfix.d0==get_k() && MP.postfix.d1==dim_x(), "the postfix you set has wrong dimension");
-//  return MP.postfix;
-//}
-
-#if 0
-void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
-  uint T=get_T();
-
-  //assert some dimensions
-  CHECK(t<=T,"");
-
-  //-- task cost (which are taken w.r.t. x_bar[k])
-  arr _phi, _J;
-  TermTypeA _tt;
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t);
-  phi.append(_phi);
-  if(&tt) tt.append(_tt);
-  if(&J)  J.append(_J);
-
-  if(&tt) CHECK_EQ(tt.N, phi.N,"");
-  if(&J) CHECK_EQ(J.d0, phi.N,"");
-
-}
-#endif
 
 //===========================================================================
 

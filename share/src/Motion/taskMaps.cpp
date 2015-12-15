@@ -25,7 +25,7 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
 
 //===========================================================================
 
-TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
+TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
   //-- get tags
@@ -61,7 +61,11 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   }else if(type=="proxy"){
     map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
-    if(ref1) map = new TaskMap_qItself(world, ref1);
+    if(ref1 && ref2){
+      ors::Joint *j=world.getJointByBodyNames(ref1, ref2);
+      if(!j) return NULL;
+      map = new TaskMap_qItself(world, j);
+    }else if(ref1) map = new TaskMap_qItself(world, ref1);
     else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="GJK"){

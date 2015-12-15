@@ -24,12 +24,6 @@
 
 //===========================================================================
 
-/// creates a task map based on specs
-//TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world);
-TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world);
-
-//===========================================================================
-
 /// defines a transition cost vector, which is q.N-dimensional and captures
 /// accelerations or velocities over consecutive time steps
 struct TransitionTaskMap:TaskMap {
