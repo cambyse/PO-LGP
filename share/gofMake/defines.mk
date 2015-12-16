@@ -252,6 +252,11 @@ LPATH += /opt/ros/$(ROS_VERSION)/lib
 FREENECT = 1
 endif
 
+ifeq ($(EIGEN),1)
+CXXFLAGS  +=  -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+CPATH := $(CPATH):/usr/include/eigen3
+endif
+
 ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
 CPATH := $(CPATH):/usr/include/libusb-1.0
