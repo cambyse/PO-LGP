@@ -1,4 +1,5 @@
 #include "pr2System.h"
+#include "util.h"
 
 #include <Core/array.h>
 #include <Core/array-eigen.h>
