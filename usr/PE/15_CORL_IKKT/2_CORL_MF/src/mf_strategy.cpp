@@ -1,6 +1,6 @@
 #include "mf_strategy.h"
 
-MF_strategy::MF_strategy(uint nParam_,arr &paramLim_,mlr::String taskName):nParam(nParam_),paramLim(paramLim_)
+MF_strategy::MF_strategy(uint nParam_,arr &paramLimit_,mlr::String folder,mlr::String taskName):nParam(nParam_),paramLimit(paramLimit_)
 {
   if (!(ep = engOpen(""))) {
     fprintf(stderr, "\nCan't start MATLAB engine\n");
@@ -11,12 +11,14 @@ MF_strategy::MF_strategy(uint nParam_,arr &paramLim_,mlr::String taskName):nPara
   mxArray *nParam_M = mxCreateDoubleScalar(nParam);
   engPutVariable(ep, "nParam", nParam_M);
 
-  mxArray *paramLim_M = mxCreateDoubleMatrix(paramLim.d1, paramLim.d0, mxREAL);
-  memcpy((void *)mxGetPr(paramLim_M), (void *)paramLim.p, paramLim.d0*paramLim.d1*sizeof(double));
-  engPutVariable(ep, "paramLim", paramLim_M);
-  engEvalString(ep, "paramLim = paramLim'");
+  mxArray *paramLim_M = mxCreateDoubleMatrix(paramLimit.d1, paramLimit.d0, mxREAL);
+  memcpy((void *)mxGetPr(paramLim_M), (void *)paramLimit.p, paramLimit.d0*paramLimit.d1*sizeof(double));
+  engPutVariable(ep, "paramLimit", paramLim_M);
+  engEvalString(ep, "paramLimit = paramLimit'");
 
-  engEvalString(ep,STRING("run matlab_interface/"<<taskName<<"Defs.m"));
+  write(LIST<arr>(paramLimit),STRING(folder<<"Limit.dat"));
+
+  engEvalString(ep,STRING("run matlab_interface/" << taskName << "Defs.m"));
   printf("%s", buffer);
 }
 

@@ -24,28 +24,6 @@
 using namespace articulation_models;
 using namespace articulation_msgs;
 
-void detectArticulatedObject() {
-
-  ArticulatedObjectMsg msg_request,msg_response;
-
-  ros::NodeHandle n;
-  ros::ServiceClient client = n.serviceClient<ArticulatedObjectSrv>("/fit_models");
-  ArticulatedObjectSrv srv;
-  srv.request.object = msg_request;
-//  srv.request = msg;
-  client.call(srv);
-
-  msg_response = srv.response.object;
-
-  //  artobj_msg.models.push_back(model_msg);
-//  ros::NodeHandle* nh_local;
-//  ArticulatedObject artobj(artobj_msg);
-//  artobj.SetObjectModel(artobj_msg,nh_local);
-//  artobj.FitModels();
-//  artobj.saveEval();
-
-}
-
 
 void detectDOFrot(arr &X, ors::Transformation &T) {
   ModelMsg model_msg;
@@ -174,21 +152,19 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   ros::init(argc, argv, "DOFE");
 
-  detectArticulatedObject();
-  return 0;
-
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
+  bool useMarker = mlr::getParameter<bool>("useMarker",false);
 
   /// init task
-  ors::KinematicWorld G(STRING(folder<<"model.kvg"));
+  ors::KinematicWorld world(STRING(folder<<"model.kvg"));
   TaskManager *task;
   if (taskName == "door") {
-    task = new DoorTask(G);
+    task = new DoorTask(world);
   } else if (taskName == "grasp") {
-    task = new GraspTask(G);
+    task = new GraspTask(world);
   } else if (taskName == "button") {
-    task = new ButtonTask(G);
+    task = new ButtonTask(world);
   }
 
   /// load demo from file
@@ -201,63 +177,66 @@ int main(int argc, char** argv){
   CHECK(mfYS(i)==1,"");
 
   arr Xbase,FLbase,Mbase;
-  Xbase << FILE(STRING(folder<<"/mbX"<<i<<".dat"));
-  FLbase << FILE(STRING(folder<<"/mbFL"<<i<<".dat"));
-  Mbase << FILE(STRING(folder<<"/mbM"<<i<<".dat"));
+  Xbase << FILE(STRING(folder<<"/mfXref"<<i<<".dat"));
+  FLbase << FILE(STRING(folder<<"/FLbase.dat"));
+  if (useMarker) Mbase << FILE(STRING(folder<<"/mbM"<<i<<".dat"));
 
   /// extract contact point trajectory
-  G.gl().update(); G.gl().resize(800,800);
+  world.gl().update(); world.gl().resize(800,800);
   task->computeConstraintTime(FLbase,Xbase);
-  task->updateVisualization(G,Xbase);
+  task->updateVisualization(world,Xbase);
 
   TrajFactory tf;
   arr yL;
-  tf.compFeatTraj(Xbase,yL,G,new DefaultTaskMap(posTMT,G,"endeffL"));
-  arr Xcp = yL.rows(task->constraintCP(0),task->constraintCP(1));
+  tf.compFeatTraj(Xbase,yL,world,new DefaultTaskMap(posTMT,world,"endeffL"));
+  arr Xcp = yL.rows(task->conStart(0),task->conEnd(0));
 
   /// add DOF to kinematic world
   ors::Vector prismatic_dir;
   arr Q;
-  detectDOFtrans(Xcp,prismatic_dir,Q);
+//  detectDOFtrans(Xcp,prismatic_dir,Q);
+  prismatic_dir = ors::Vector(0.,0.,1.);
+  Q = Xcp.col(2); Q.flatten();
+  Q = Q - Q(0);
 
   ors::Quaternion rot;
   rot.setDiff(Vector_z,prismatic_dir);
 
-  ors::Body *b1 = new ors::Body(G);
+  ors::Body *b1 = new ors::Body(world);
   b1->name = "b1";
   b1->type = ors::BodyType::dynamicBT;
   b1->X.pos = Xcp[0];
   b1->X.rot = rot;
-  ors::Shape *b1_shape = new ors::Shape(G,*b1);
+  ors::Shape *b1_shape = new ors::Shape(world,*b1);
   b1_shape->type = ors::ShapeType::boxST;
   b1_shape->name = "b1_shape";
-  arr size = ARRAY(0.1, 0.1, 0.005, 0.);
+  arr size = ARRAY(0.1, 0.1, 0.001, 0.);
   memmove(b1_shape->size, size.p, 4*sizeof(double));
   arr color = ARRAY(0., 0., 1.);
   memmove(b1_shape->color, color.p, 3*sizeof(double));
 
-  ors::Body *b2 = new ors::Body(G);
+  ors::Body *b2 = new ors::Body(world);
   b2->name = "b2";
   b2->type = ors::BodyType::dynamicBT;
-  b2->X.pos = Xcp[0]+prismatic_dir*0.2;
+  b2->X.pos = Xcp[0];
   b2->X.rot = rot;
-  ors::Shape *b2_shape = new ors::Shape(G,*b2);
+  ors::Shape *b2_shape = new ors::Shape(world,*b2);
   b2_shape->type = ors::ShapeType::boxST;
   b2_shape->name = "b2_shape";
-  size = ARRAY(0.1,0.1, 0.005, 0.);
+  size = ARRAY(0.1,0.1, 0.001, 0.);
   memmove(b2_shape->size, size.p, 4*sizeof(double));
   color = ARRAY(0.,1.,0.);
   memmove(b2_shape->color, color.p, 3*sizeof(double));
-  G.calc_fwdPropagateFrames();
+  world.calc_fwdPropagateFrames();
 
-  ors::Joint *b2_b1 = new ors::Joint(G,b2,b1);
+  ors::Joint *b2_b1 = new ors::Joint(world,b2,b1);
   b2_b1->name = "b2_b1";
   b2_b1->A.pos = ARR(0, 0, .0);
-  b2_b1->B.pos = prismatic_dir*0.2;
+  b2_b1->B.pos = ARR(0, 0, .0);
   b2_b1->type = ors::JointType::JT_transZ;
-  b2_b1->qIndex = G.getJointStateDimension()-1;
+  b2_b1->qIndex = world.getJointStateDimension()-1;
 
-  G.calc_fwdPropagateFrames();
+  world.calc_fwdPropagateFrames();
 
   /// augment trajectory with DOF
   arr Q2;
@@ -268,20 +247,21 @@ int main(int argc, char** argv){
   Xbase.append(Q2);
   Xbase = ~Xbase;
 
-  /// save kinematic world
-//  G>>FILE(STRING(folder<<"modelaug.ors"));
 
-  ors::KinematicWorld G2(STRING(folder<<"modelaug.kvg"));
+  /// save kinematic world
+//  world>>FILE(STRING(folder<<"modelaug.ors"));
+
+  ors::KinematicWorld worldaug(STRING(folder<<"modelaug.kvg"));
   /// convert trajectory between two kinematic worlds
   arr X2;
-//  transferQbetweenTwoWorlds(X2,Xbase,G2,G);
+  transferQbetweenTwoWorlds(X2,Xbase,worldaug,world);
 
   write(LIST(X2),STRING(folder<<"Xaug.dat"));
-  write(LIST(FLbase),STRING(folder<<"Maug.dat"));
-  write(LIST(Mbase),STRING(folder<<"FLaug.dat"));
+  write(LIST(FLbase),STRING(folder<<"FLaug.dat"));
+  if (useMarker) write(LIST(Mbase),STRING(folder<<"Maug.dat"));
 
   task->~TaskManager();
-  for(;;) {displayTrajectory(X2, 1, G2, "planned trajectory");}
+  for(;;) {displayTrajectory(X2, 1, worldaug, "planned trajectory");}
 
   // TODO:
   // copmute external joint value more general with contact times

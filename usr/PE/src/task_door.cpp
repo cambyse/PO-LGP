@@ -51,6 +51,13 @@ bool DoorTask::success(const arr &X, const arr &Y) {
   return length(X[X.d0-1] - Y[Y.d0-1])<0.03;
 }
 
+void DoorTask::getParamLimit(arr& paramLimit)
+{
+  paramLimit.clear();
+  paramLimit.append(~ARR(-0.06,0.06)); // hand opening
+  paramLimit.append(~ARR(-0.06,0.06)); // hand position
+}
+
 bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
@@ -143,7 +150,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   Xn = Xdemo;
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
-  optConstrainedMix(Xn, NoArr, Convert(MPF), o);
+  optConstrained(Xn, NoArr, Convert(MPF), o);
 
   // augment gripper joints
   for (uint t=0;t<Xn.d0;t++) {

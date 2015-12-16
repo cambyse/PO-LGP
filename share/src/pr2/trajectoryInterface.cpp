@@ -38,23 +38,17 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
     refs.KiFT.clear();
     refs.J_ft_inv.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kp = ARR(1.0);
-    refs.Kd = ARR(2.5);
-    refs.Ki = ARR(0.5);
+    refs.Kp = ARR(mlr::getParameter<double>("controller/Kp",1.5));
+    refs.Kd = ARR(mlr::getParameter<double>("controller/Kd",2.5));
+    refs.Ki = ARR(mlr::getParameter<double>("controller/Ki",0.));
     refs.gamma = 1.;
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
-    refs.intLimitRatio = 0.8;
+    refs.intLimitRatio = 0.9;
   }
 }
 
-
-void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
-{
-  world->watch(true,"Press Enter to display trajectory");
-  displayTrajectory(X,100,*world,"X");
-  world->watch(true,"Press Enter to execute trajectory");
-
+void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData) {
   /// compute spline for trajectory execution
   double dt = T/double(X.d0);
   cout <<"dt: " << dt << endl;
@@ -65,7 +59,7 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logTact.clear(); logXdes.clear(); logXact.clear(); logFLact.clear(); logUact.clear(); logMact.clear();}
+  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logXref = X;}
 
   ors::Joint *trans = world->getJointByName("worldTranslationRotation");
   ors::Joint *torso = world->getJointByName("torso_lift_joint");
@@ -80,9 +74,12 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
   mlr::timerStart(true);
   double t = 0.;
 
-  while(t<T) {
+  double dtLog = 0.05;
+  double tPrev = -dtLog;
+  while(t<T*1.5) {
     double s = t/T;
-    if (s>1. || s<0.) { break;}
+    if (s>1.) { s=1.;}
+    if (s<0.) { break;}
     /// set next target
     refs.q = XS.eval(s);
     refs.qdot = XdotS.eval(s);
@@ -105,16 +102,17 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
     t = t + mlr::timerRead(true);
 
     world->setJointState(refs.q);
-    world->gl().update();
+//    world->gl().update();
 
     /// logging
-    if (recordData) {
-        logTact.append(ARR(t));
-        logXdes.append(~refs.q);
-        logXact.append(~S.ctrl_obs.get()->q);
-        logFLact.append(~S.ctrl_obs.get()->fL);
-        logFRact.append(~S.ctrl_obs.get()->fR);
-        logUact.append(~S.ctrl_obs.get()->u_bias);
+    if (recordData && (s<1.) && ((t-tPrev)>=dtLog)) {
+      tPrev = t;
+      logT.append(ARR(t));
+      logXdes.append(~refs.q);
+      logX.append(~S.ctrl_obs.get()->q);
+      logFL.append(~S.ctrl_obs.get()->fL);
+      logFR.append(~S.ctrl_obs.get()->fR);
+      logU.append(~S.ctrl_obs.get()->u_bias);
     }
   }
 }
@@ -233,12 +231,13 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 
 
 void TrajectoryInterface::logging(mlr::String folder, uint id) {
-  write(LIST<arr>(logXact),STRING(folder<<"Xact"<<id<<".dat"));
+  write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
   write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
-  write(LIST<arr>(logTact),STRING(folder<<"Tdes"<<id<<".dat"));
+  write(LIST<arr>(logXref),STRING(folder<<"Xref"<<id<<".dat"));
+  write(LIST<arr>(logT),STRING(folder<<"T"<<id<<".dat"));
 
-  if (logFLact.N>0) write(LIST<arr>(logFLact),STRING(folder<<"FLact"<<id<<".dat"));
-  if (logFRact.N>0) write(LIST<arr>(logFRact),STRING(folder<<"FRact"<<id<<".dat"));
-  if (logMact.N>0) write(LIST<arr>(logMact),STRING(folder<<"Mact"<<id<<".dat"));
-  if (logUact.N>0) write(LIST<arr>(logUact),STRING(folder<<"Uact"<<id<<".dat"));
+  if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
+  if (logFR.N>0) write(LIST<arr>(logFR),STRING(folder<<"FR"<<id<<".dat"));
+  if (logM.N>0) write(LIST<arr>(logM),STRING(folder<<"M"<<id<<".dat"));
+  if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
 }

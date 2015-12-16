@@ -13,7 +13,7 @@
 #include "../../src/task_manager.h"
 #include "../../src/plotUtil.h"
 
-enum MODE {MB_STEP=0,PHASE_STEP=1};
+enum MODE {TRAJ_OPT=0,PHASE_OPT=1};
 
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
@@ -22,11 +22,12 @@ int main(int argc,char **argv){
   MODE mode = MODE(mlr::getParameter<uint>("mode"));
   bool useRos = mlr::getParameter<bool>("useRos");
   bool visualize = mlr::getParameter<bool>("visualize");
+  bool execReverseMotion = mlr::getParameter<bool>("execReverseMotion",false);
+  bool useMarker = mlr::getParameter<bool>("useMarker",false);
   double duration = mlr::getParameter<double>("duration");
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   uint count = mlr::getParameter<uint>("count",0);
-
 
   /// init task
   ors::KinematicWorld world(STRING(folder<<"model.kvg"));
@@ -39,11 +40,19 @@ int main(int argc,char **argv){
     task = new ButtonTask(world);
   }
 
-  folder = STRING(folder<<"/mb");
+  mlr::String folderMode;
+  if (mode == TRAJ_OPT) {
+    folderMode = STRING(folder<<"/TO_");
+  } else if (mode == PHASE_OPT) {
+    folderMode = STRING(folder<<"/PO_");
+  }
 
   /// init trajectory interface
   TrajectoryInterface *mi;
-  if (useRos) mi = new TrajectoryInterface(world);
+  if (useRos) {
+    mi = new TrajectoryInterface(world);
+    mi->world->gl().update(); mi->world->gl().resize(400,400);
+  }
   world.gl().update(); world.gl().resize(800,800);
   arr Xreverse, Xbase, FLbase, Mbase;
 
@@ -51,20 +60,21 @@ int main(int argc,char **argv){
     /// record demonstration
     mi->recordDemonstration(Xbase,duration);
 
-    if (visualize) { world.watch(true,"Press Enter to play motion"); displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to continue"); }
+    if (visualize) { world.watch(true,"Press Enter to visualize motion"); displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to execute motion"); }
     mi->gotoPosition(Xbase[0]);
     mi->executeTrajectory(Xbase,duration,true);
 
-    Xbase = mi->logXact;  FLbase = mi->logFL; Mbase = mi->logM;
-    write(LIST<arr>(Xbase),STRING(folder<<"/Xbase.dat")); write(LIST<arr>(FLbase),STRING(folder<<"/Fbase.dat")); write(LIST<arr>(Mbase),STRING(folder<<"/Mbase.dat"));
-    mi->logging(folder,count);
+    Xbase = mi->logX;  FLbase = mi->logFL; Mbase = mi->logM;
+    write(LIST<arr>(Xbase),STRING(folder<<"Xbase.dat")); write(LIST<arr>(FLbase),STRING(folder<<"FLbase.dat"));
+    if (useMarker) write(LIST<arr>(Mbase),STRING(folder<<"Mbase.dat"));
+    mi->logging(folderMode,count);
     count++;
-    if (useRos) {Xreverse = Xbase; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+    if (useRos && execReverseMotion) {Xreverse = Xbase; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
   } else {
     /// load from file
-    Xbase << FILE(STRING(folder<<"X"<<count<<".dat"));
-    FLbase << FILE(STRING(folder<<"FL"<<count<<".dat"));
-    Mbase << FILE(STRING(folder<<"M"<<count<<".dat"));
+    Xbase << FILE(STRING(folder<<mlr::getParameter<mlr::String>("baseFile")<<".dat"));
+    FLbase << FILE(STRING(folder<<"FLbase.dat"));
+    if (useMarker) Mbase << FILE(STRING(folder<<"Mbase.dat"));
     count++;
   }
 
@@ -77,10 +87,7 @@ int main(int argc,char **argv){
 
   /// setup visualization
   task->updateVisualization(world,Xbase);
-  if (visualize) displayTrajectory(Xbase,-1,world,"demonstration ");
-  world.watch(true);
-
-
+  if (visualize) displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to start motion");
   MB_strategy mbs(Xbase,world,duration,*task);
 
   for(;;) {
@@ -90,20 +97,20 @@ int main(int argc,char **argv){
 
     /// search for next candidate
     switch (mode) {
-      case MB_STEP:
+      case TRAJ_OPT:
         mbs.evaluate(Xn);
         break;
-      case PHASE_STEP:
+      case PHASE_OPT:
         PhaseOptimization P(X,2);
         arr sOpt = P.getInitialization();
-        optConstrainedMix(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=mlr::getParameter<double>("phase_stopTolerance")));
+        optConstrained(sOpt, NoArr, Convert(P),OPT(verbose=1,stopTolerance=mlr::getParameter<double>("phase_stopTolerance")));
         P.getSolution(Xn,sOpt);
         break;
     }
 
     /// visualize trajectory candidate
     if (visualize) {
-      task->updateVisualization(world,Xn);
+      task->updateVisualization(world,Xn,X);
       world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
       world.watch(true,"press enter to execute trajectory");
@@ -120,14 +127,14 @@ int main(int argc,char **argv){
       /// logging
       if (result) {
         X = Xn;
-        mi->logging(folder,count);
-        if (useRos) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+        mi->logging(folderMode,count);
+        if (useRos && execReverseMotion) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
       } else { mi->pauseMotion(); }
     }else{
-      write(LIST<arr>(X),STRING(folder<<"X.dat"));
-      write(LIST<arr>(Xn),STRING(folder<<"X"<<count<<".dat"));
-      write(LIST<arr>(FLbase),STRING(folder<<"FL"<<count<<".dat"));
-      write(LIST<arr>(Mbase),STRING(folder<<"M"<<count<<".dat"));
+      write(LIST<arr>(Xn),STRING(folderMode<<"Xref"<<count<<".dat"));
+      write(LIST<arr>(Xn),STRING(folderMode<<"X"<<count<<".dat"));
+      write(LIST<arr>(FLbase),STRING(folderMode<<"FL"<<count<<".dat"));
+      if (useMarker) write(LIST<arr>(Mbase),STRING(folderMode<<"M"<<count<<".dat"));
 
       result = true;
     }

@@ -16,11 +16,11 @@ struct MF_strategy
   Engine *ep;
   arr X, Y, YS;
   uint nParam;
-  arr paramLim;
+  arr paramLimit;
   char buffer[BUFSIZE+1];
 
   double mu;
-  MF_strategy(uint nParam_, arr &paramLim_, mlr::String taskName);
+  MF_strategy(uint nParam_, arr &paramLimit_, mlr::String folder, mlr::String taskName);
   ~MF_strategy();
   void addDatapoint(arr x,arr y, arr ys);
   void evaluate(arr &x_exp);

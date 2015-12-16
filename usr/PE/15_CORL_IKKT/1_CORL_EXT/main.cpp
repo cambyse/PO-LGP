@@ -9,7 +9,7 @@
 #include <pr2/roscom.h>
 #include <pr2/trajectoryInterface.h>
 
-#include "src/mf_strategy.h"
+#include "../2_CORL_MF/src/mf_strategy.h"
 #include "../../src/plotUtil.h"
 #include "../../src/task_manager.h"
 #include "../../src/plotUtil.h"
@@ -28,47 +28,51 @@ int main(int argc,char **argv){
 
   /// init task
   ors::KinematicWorld world(STRING(folder<<"model.kvg"));
+  ors::KinematicWorld worldaug(STRING(folder<<"modelaug.kvg"));
   TaskManager *task;
   if (taskName == "door") {
-    task = new DoorTask(world);
+    task = new DoorTask(worldaug);
   } else if (taskName == "grasp") {
-    task = new GraspTask(world);
+    task = new GraspTask(worldaug);
   } else if (taskName == "button") {
-    task = new ButtonTask(world);
+    task = new ButtonTask(worldaug);
   }
 
   /// init trajectory interface
   TrajectoryInterface *mi;
   if (useRos) mi = new TrajectoryInterface(world);
-  world.gl().update(); world.gl().resize(800,800);
+  worldaug.gl().update(); worldaug.gl().resize(800,800);
 
   /// load base trajectory
   arr Xbase,FLbase,Mbase;
-  Xbase << FILE(STRING(folder<<"/PO_Xref"<<mlr::getParameter<uint>("count")<<".dat"));
-  FLbase << FILE(STRING(folder<<"/FLbase.dat"));
-  if (useMarker) Mbase << FILE(STRING(folder<<"/mbM"<<mlr::getParameter<uint>("count")<<".dat"));
+  Xbase << FILE(STRING(folder<<"Xaug.dat"));
+  FLbase << FILE(STRING(folder<<"FLbase.dat"));
+  if (useMarker) Mbase << FILE(STRING(folder<<"Maug.dat"));
 
-  folder = STRING(folder<<"/PE_");
-  taskName = STRING(taskName<<"PE");
+  folder = STRING(folder<<"/DE_");
+  taskName = STRING(taskName<<"DE");
 
   task->computeConstraintTime(FLbase,Xbase);
-  task->updateVisualization(world,Xbase);
-  if (visualize) displayTrajectory(Xbase,-1,world,"demonstration");
+  task->updateVisualization(worldaug,Xbase);
+  if (visualize) displayTrajectory(Xbase,-1,worldaug,"demonstration");
 
   /// initialize model free strategy
-  arr paramLimit;
-  task->getParamLimit(paramLimit);
-  MF_strategy *mfs = new MF_strategy(paramLimit.d0, paramLimit, folder, taskName);
+  arr dofLimit;
+  task->getDofLimit(dofLimit);
+  MF_strategy *mfs = new MF_strategy(dofLimit.d0, dofLimit, folder,taskName);
   arr x0;
-  arr Xreverse, x, Xn;
+  arr Xreverse, x, Xn, Xnaug;
   double y, ys;
 
   uint count = 0;
   if (mlr::getParameter<bool>("MF_restartLearning")) {
     /// restart learning
-    x = zeros(paramLimit.d0); x.flatten();
-    task->transformTrajectory(Xn,x,Xbase);
+    x = zeros(dofLimit.d0); x.flatten();
+
+    task->transformTrajectoryDof(Xnaug,x,Xbase);
+    transferQbetweenTwoWorlds(Xn,Xnaug,world,worldaug);
     x0 = Xn[0];
+
     if (useRos) {
       mi->gotoPosition(x0); mi->executeTrajectory(Xn,duration,true);
       y = task->reward(mi->logFL);
@@ -101,10 +105,12 @@ int main(int argc,char **argv){
 
     /// transform trajectory
     x.flatten();
-    bool result = task->transformTrajectory(Xn,x,Xbase);
+    Xnaug.clear(); Xn.clear();
+    bool result = task->transformTrajectoryDof(Xnaug,x,Xbase);
+    transferQbetweenTwoWorlds(Xn,Xnaug,world,worldaug);
 
     if (visualize) {
-      task->updateVisualization(world,Xn,Xbase);
+      task->updateVisualization(world,Xn);
       world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
       world.watch(true,"press enter to execute candidate");
@@ -125,7 +131,6 @@ int main(int argc,char **argv){
       y = task->reward(Xn);
       ys = (result) ?(1.):(-1.);
       write(LIST<arr>(Xn),STRING(folder<<"X"<<count<<".dat"));
-      write(LIST<arr>(Xn),STRING(folder<<"Xref"<<count<<".dat"));
       write(LIST<arr>(FLbase),STRING(folder<<"FL"<<count<<".dat"));
       if (useMarker) write(LIST<arr>(Mbase),STRING(folder<<"M"<<count<<".dat"));
     }

@@ -40,9 +40,9 @@ void TEST(Matrices) {
   cout << JJ*dq << endl;
   cout << "dy: " << dy << endl;
 
-//  cout << ~dy*R[0] << endl;
-//  cout << ~dy*R[1] << endl;
-//  cout << ~dy*R[2] << endl;
+  //  cout << ~dy*R[0] << endl;
+  //  cout << ~dy*R[1] << endl;
+  //  cout << ~dy*R[2] << endl;
 
   cout << R<< endl;
   R.reverseRows();
@@ -120,16 +120,16 @@ void TEST(Matlab) {
   uint nRow = A.d0;
   uint nCol = A.d1;
 
-//  T = mxCreateDoubleMatrix(nRow, nCol, mxREAL);
-//  memcpy((void *)mxGetPr(T), (void *)time, sizeof(time));
+  //  T = mxCreateDoubleMatrix(nRow, nCol, mxREAL);
+  //  memcpy((void *)mxGetPr(T), (void *)time, sizeof(time));
 
-//  double *xValues = mxGetPr(T);
+  //  double *xValues = mxGetPr(T);
 
-//  for(uint row = 0; row < nRow; row++) {
-//    for(uint col = 0; col < nCol; col++) {
-//      xValues[nRow * col + row] = A(row,col);
-//    }
-//  }
+  //  for(uint row = 0; row < nRow; row++) {
+  //    for(uint col = 0; col < nCol; col++) {
+  //      xValues[nRow * col + row] = A(row,col);
+  //    }
+  //  }
   T = mxCreateDoubleMatrix(nCol, nRow, mxREAL);
   memcpy((void *)mxGetPr(T), (void *)A.p, A.d0*A.d1*sizeof(double));
   engPutVariable(ep, "T", T);
@@ -152,7 +152,7 @@ void TEST(Matlab) {
 
   cout << B << endl;
 
-//  mxSetPr(T,A.p);
+  //  mxSetPr(T,A.p);
   /*
   engPutVariable(ep, "T", T);
 
@@ -176,7 +176,7 @@ void TEST(Matlab) {
       B(i,j) = rValues[j*B.d0+i];
     }
   }*/
-//  cout << B << endl;
+  //  cout << B << endl;
   /*
 
   for(uint row = 0; row < nRow; row++) {
@@ -187,7 +187,7 @@ void TEST(Matlab) {
       printf("\n");
   }*/
 
-//  printf("%s", buffer);
+  //  printf("%s", buffer);
 }
 
 void TEST(MatlabGP) {
@@ -224,12 +224,12 @@ void TEST(Transformation) {
 
   arr m = trans2->X.rot.getArr();
 
-//  ors::Vector v = trans2->X.pos + trans2->X.rot*marker.pos;
-//  ors::Quaternion r = trans2->X.rot*marker.rot;
+  //  ors::Vector v = trans2->X.pos + trans2->X.rot*marker.pos;
+  //  ors::Quaternion r = trans2->X.rot*marker.rot;
 
-//  world.getBodyByName("marker2")->X.pos = v;
-//  world.getBodyByName("marker2")->X.rot = r;
-//  world.getBodyByName("marker2")->X = trans2->X*marker;
+  //  world.getBodyByName("marker2")->X.pos = v;
+  //  world.getBodyByName("marker2")->X.rot = r;
+  //  world.getBodyByName("marker2")->X = trans2->X*marker;
 
   ors::Transformation T;
   T.setZero();
@@ -263,13 +263,29 @@ void TEST(PR2) {
 
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
-  testMatrices();
-//  testGradCheck();
-//  testMatlab();
-//  testMatlabGP();
-//  testTransformation();
-//  testPointCloud();
-//  testPR2();
+  //  testMatrices();
+  //  testGradCheck();
+  //  testMatlab();
+  //  testMatlabGP();
+  //  testTransformation();
+  //  testPointCloud();
+  //  testPR2();
+  arr A = {0.,0.,0.,1.,1.,1.,0.,0.,1.,1.,0.};
+  arr Ad; Ad.resizeAs(A); Ad.setZero();
+
+  /// compute contact changepoints
+  for(uint t=1; t<A.d0; t++)  Ad(t) = A(t) - A(t-1);
+
+  mlr::Array<uint> idxContactStart;
+  mlr::Array<uint> idxContactRelease;
+  Ad.findValues(idxContactStart,1.);
+  Ad.findValues(idxContactRelease,-1.);
+
+  cout << A << endl;
+  cout << Ad << endl;
+  cout << idxContactStart << endl;
+  cout << idxContactRelease << endl;
+
   return 0;
 }
 

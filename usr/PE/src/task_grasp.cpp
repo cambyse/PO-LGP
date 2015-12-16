@@ -52,6 +52,11 @@ bool GraspTask::success(const arr &X, const arr &Y) {
   return length(X[X.d0-1] - Y[Y.d0-1])<0.06;
 }
 
+void GraspTask::getParamLimit(arr& paramLimit)
+{
+
+}
+
 bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
@@ -140,7 +145,7 @@ bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   Xn = Xdemo;
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
-  optConstrainedMix(Xn, NoArr, Convert(MPF), o);
+  optConstrained(Xn, NoArr, Convert(MPF), o);
 
   // augment gripper joints
   for (uint t=0;t<Xn.d0;t++) {

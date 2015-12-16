@@ -20,6 +20,7 @@ arr PhaseOptimization::getInitialization(){
 }
 
 void PhaseOptimization::getSolution(arr &xOpt, arr &sOpt){
+  xOpt.clear();
   sOpt.prepend(0.); sOpt.append(1.); // add 0 and 1 to optimization variables
   for (uint i=0;i<sOpt.d0;i++) {
     xOpt.append(~p->eval(sOpt(i)));

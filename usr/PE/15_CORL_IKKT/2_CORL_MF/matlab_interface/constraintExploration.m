@@ -12,6 +12,7 @@ if trainHyperR && (size(X,1)>10)
 end
 [yr, sr2] = gp(gpr.hypR, @infExact, gpr.meanfuncR, gpr.covfuncR, gpr.likfuncR, X(YS==1,:), Y(YS==1), t);
 
+
 % find search region for next datapoint
 idxIR = find(fcmu>=0);
 [~,idxB] = sort(abs(fcmu));
@@ -35,6 +36,14 @@ a(idxIR) = a(idxIR) + PI(idxIR);
 [~,k] = max(a);
 
 x_exp = t(k,:);
+
+% evaluate best candidate so far
+Y0 = Y;
+Y0(YS==-1) = 0;
+[~,bestIdx] = max(Y0);
+x_best = X(bestIdx,:)
+y_best = Y(bestIdx,:)
+bestIdx = bestIdx-1
 
 % logging
 save('state.mat')

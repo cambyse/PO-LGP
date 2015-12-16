@@ -29,10 +29,10 @@ struct TrajectoryInterface {
   CtrlMsg refs;
 
   /// logging variables
-  arr logXdes,logXact,logFLact,logFRact,logTact,logUact,logMact;
+  arr logXdes,logXref,logX,logFL,logFR,logT,logU,logM;
 
   TrajectoryInterface(ors::KinematicWorld &world_);
-  ~TrajectoryInterface(){ threadCloseModules(); } //threadCloseModules(); }
+  ~TrajectoryInterface(){ threadCloseModules(); }
 
   /// execute trajectory X in T seconds
   void executeTrajectory(arr &X, double T, bool recordData = false);

@@ -35,5 +35,5 @@ void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, MotionPr
 
   MotionProblemFunction MPF(MP);
   x = xInit;
-  optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
+  optConstrained(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 }

@@ -1,21 +1,21 @@
 if (optPlot)
  if (size(t,2)==1)
-  %% plotting
+  %% 1d plot
   set(0,'DefaultFigureWindowStyle','docked')
   figure(1);clf;hold on;
   title('Function value');
   shadedErrorBar(t,yr,sr2);
-  plot(t,y_gt,'-');
+%   plot(t,y_gt,'-');
   plot(X(YS==1),Y(YS==1),'ko');
   plot(X(YS==-1),Y(YS==-1),'rx');
   plot(t,yr,'b-');
-  plot(x_exp,y_exp,'.r','MarkerSize',20)
+  plot(x_exp,yr(k),'.r','MarkerSize',20)
   axis tight;
   
   figure(2);clf;hold on;
   title('Safety region');
   shadedErrorBar(t,fcmu,sqrt(fcs2)/exp(gpc.hypC.cov(end)));
-  plot(t,yS_gt,'-');
+%   plot(t,yS_gt,'-');
   plot(X(YS==1),YS(YS==1),'ko');
   plot(X(YS==-1),YS(YS==-1),'rx');
   plot(t(abs(yc)<1e-1),yc(abs(yc)<1e-1),'r.','MarkerSize',15);
@@ -27,14 +27,12 @@ if (optPlot)
   plot(t,a,'g-');
   legend('PI','a');
  else
+  %% 2d plot
   figure(1);clf;hold on;
   title('Function value');
   tmp = reshape(yr,size(t1));
   s=surface(t1(1:plot_ss:end,1:plot_ss:end),t2(1:plot_ss:end,1:plot_ss:end),tmp(1:plot_ss:end,1:plot_ss:end));
   set(s,'FaceColor','flat','LineStyle','none');
-%   tmp = reshape(y_gt,size(t1));
-%   s=surface(t1(1:plot_ss:end,1:plot_ss:end),t2(1:plot_ss:end,1:plot_ss:end),tmp(1:plot_ss:end,1:plot_ss:end));
-%   set(s,'FaceColor','flat','LineStyle','none');
   plot3(X(YS==1,1),X(YS==1,2),Y(YS==1),'g.','MarkerSize',20);
   plot3(X(YS==-1,1),X(YS==-1,2),Y(YS==-1)*0+max(Y(YS==1)),'r.','MarkerSize',20);
   plot3(x_exp(1),x_exp(2),yr(k),'k.','MarkerSize',30);
@@ -44,6 +42,10 @@ if (optPlot)
   plot3(X_success(max_idx,1),X_success(max_idx,2),Y_success(max_idx),'m.','MarkerSize',40);
   view([-60,55]);
   grid on;
+  
+  [~,idx] = sort(abs(yc));
+  idx = idx(1:100);
+  plot3(t(idx,1),t(idx,2),yr(idx),'r.')
   
   figure(2);clf;hold on;
   title('Safety region');
