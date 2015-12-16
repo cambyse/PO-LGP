@@ -9,6 +9,7 @@ Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
 
 
 ## Install on Ubuntu
+
 Install the mlr system by executing:
 
 	./install/INSTALL_ALL_UBUNTU_PACKAGES.sh
@@ -25,7 +26,6 @@ Also,
 	cd share/gofMake; cp config.mk.default config.mk
 	
 and edit the latter to change the compile settings, e.g., (un)set dependencies.
-
 
 
 ## Install on Arch
@@ -60,6 +60,14 @@ You need to put
 in your gofMake/config.mk. This fixes the qhull change.
 
 Everything else is equal to ubuntu.
+
+
+## Install troubleshooting
+
+* If there is a segmentation fault in c_init (before main) in some
+  boost library, maybe this is caused by linking to PCL in the
+  src/Perception code. Fix: in share/gofMake/config.mk insert a line
+  'PCL=0', which disables linking to PCL.
 
 
 ## QtCreator tips
