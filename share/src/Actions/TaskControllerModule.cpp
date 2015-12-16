@@ -9,9 +9,10 @@ using namespace std;
 #  include <pr2/roscom.h>
 #endif
 
-TaskControllerModule::TaskControllerModule()
+TaskControllerModule::TaskControllerModule(const char* modelFile)
     : Module("TaskControllerModule", .01)
-    , realWorld("../../../data/pr2_model/pr2_model.ors")
+//    , realWorld("../../data/pr2_model/pr2_model.ors")
+    , realWorld(modelFile)
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
@@ -131,9 +132,9 @@ void TaskControllerModule::step(){
       qdot_model(trans->qIndex+0) = 0;
       qdot_model(trans->qIndex+1) = 0;
       qdot_model(trans->qIndex+2) = 0;
-      q_model(trans->qIndex+0) = 0;
-      q_model(trans->qIndex+1) = 0;
-      q_model(trans->qIndex+2) = 0;
+//      q_model(trans->qIndex+0) = 0;
+//      q_model(trans->qIndex+1) = 0;
+//      q_model(trans->qIndex+2) = 0;
     }
     feedbackController->setState(q_model, qdot_model);
   }

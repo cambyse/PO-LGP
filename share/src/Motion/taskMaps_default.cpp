@@ -205,6 +205,13 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(type==gazeAtTMT){
     CHECK(i>=0, "ref1 is not set!");
     if(ivec.length()<1e-10) ivec.set(0.,0.,-1.);
+
+    // i    := index of shape to look with (i.e. the shape with the camera)
+    // ivec := where in the shape is the camera
+    // j    := index of shape to look at
+    // jvec := where in the target shape should we look. If jvec is not set,
+    //         this is a vector in world coordinates
+
     ors::Vector vec_i = G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
     ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
