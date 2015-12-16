@@ -12,7 +12,6 @@
 
 // ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
-  ors::Transformation t;
   body.X.pos.x = marker.pose.pose.position.x;
   body.X.pos.y = marker.pose.pose.position.y;
   body.X.pos.z = marker.pose.pose.position.z ;

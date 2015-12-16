@@ -17,8 +17,8 @@ void OpSpaceController::initialize() {
 }
 
 void OpSpaceController::terminate() {
-  CONST_INTERFACE->stopFact("(FollowReferenceActivity OpSpacePos)");
-  CONST_INTERFACE->stopFact("(FollowReferenceActivity OpSpaceRot)");
+  CONST_INTERFACE->stopFact("(Control pos)");
+  CONST_INTERFACE->stopFact("(Control quat)");
   _running = false;
 }
 
@@ -32,8 +32,8 @@ void OpSpaceController::terminate() {
 
 void OpSpaceController::setGoal(const Eigen::MatrixXd& new_goal) {
   if(_running) {
-    CONST_INTERFACE->stopFact("(FollowReferenceActivity OpSpacePos)");
-    CONST_INTERFACE->stopFact("(FollowReferenceActivity OpSpaceRot)");
+    CONST_INTERFACE->stopFact("(Control pos)");
+    CONST_INTERFACE->stopFact("(Control quat)");
   }
 
   _goal = new_goal;
@@ -52,13 +52,13 @@ void OpSpaceController::_create_facts() {
 
 
   std::stringstream buf1;
-  buf1 << "(FollowReferenceActivity OpSpacePos)" <<
-         "{ type=pos ref1=" << _endeff << " target=[" << _goal.block<3, 1>(0, 3) << "]}";
+  buf1 << "(Control pos)" <<
+         "{ ref1=" << _endeff << " target=[" << _goal.block<3, 1>(0, 3) << "]}";
   _pos_fact = buf1.str();
 
   std::stringstream buf2;
-  buf2 << "(FollowReferenceActivity OpSpaceRot)" <<
-         "{ type=quat ref1=" << _endeff << " target=[" << ARRAY(trans.rot) << "]}";
+  buf2 << "(Control quat)" <<
+         "{ ref1=" << _endeff << " target=[" << ARRAY(trans.rot) << "]}";
   _rot_fact = buf2.str();
 }
 

@@ -2,8 +2,8 @@
 #include "util.h"
 
 #include <Core/array.h>
-#include <Core/array-eigen.h>
-#include <Core/geo.h>
+//#include <Core/array-eigen.h>
+#include <Geo/geo.h>
 
 pr2System::pr2System(ActionSwigInterface& interface) : ha::System(), interface(interface) {};
 

@@ -3,7 +3,6 @@
 #include <hybrid_automaton/System.h>
 #include <Eigen/Dense>
 #include <Ors/ors.h>
-#include <System/engine.h>
 #include <pr2/roscom.h>
 #include <Actions/swig.h>
 

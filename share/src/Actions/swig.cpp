@@ -491,7 +491,6 @@ void ActionSwigInterface::execScript(const char* filename){
 }
 
 ors::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
-  ors::Transformation frame = S->tcm->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
-  //ors::Transformation base = S->tcm->modelWorld.get()->getShapeByName("base_link_0")->X;
-  return frame; // /base
+  ors::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
+  return frame;
 }

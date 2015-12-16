@@ -484,7 +484,7 @@ void createSimpleHA(MLRFactory::Ptr mlr_factory,
 }
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   ActionSwigInterface interface;
   pr2System::Ptr system(new pr2System(interface));
@@ -521,7 +521,7 @@ int main(int argc, char** argv) {
     std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
     //std::cout << "JC active: " << bigger->isActive() << std::endl;
     //std::cout << "Sensor value: " << bigger->getSensor()->getCurrentValue() << std::endl;
-    MT::wait(.01);
+    mlr::wait(.01);
   }
 
   hybrid_automaton->terminate();
