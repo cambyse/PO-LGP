@@ -48,7 +48,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     ///
     ha::ControlMode::Ptr pregrasp_cm(new ha::ControlMode());
     ha::ControlSwitch::Ptr pregrasp_cs(new ha::ControlSwitch());
-    mlr_factory->CreateGraspCMAndCS(p, pregrasp_cm, pregrasp_cs, "Pregrasp", ha::GripperType::PR2_GRIPPER);
+    mlr_factory->CreateGraspCMAndCS(p, pregrasp_cm, pregrasp_cs, "Pregrasp");
     actuate_affordance_ha->addControlMode(pregrasp_cm);
     actuate_affordance_ha->setCurrentControlMode(pregrasp_cm->getName());
 
@@ -155,7 +155,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     //Grasp
     ha::ControlMode::Ptr grasp_cm(new ha::ControlMode());
     ha::ControlSwitch::Ptr grasp_cs(new ha::ControlSwitch());
-    mlr_factory->CreateGraspCMAndCS(p, grasp_cm, grasp_cs, "Grasp", ha::GripperType::PR2_GRIPPER);
+    mlr_factory->CreateGraspCMAndCS(p, grasp_cm, grasp_cs, "Grasp");
 
     //add controlmode and switch to HA
     actuate_affordance_ha->addControlSwitchAndMode(move_towards_target_cm->getName(), move_towards_target_convergence_cs, grasp_cm);
