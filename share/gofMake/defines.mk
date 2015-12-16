@@ -252,6 +252,17 @@ LPATH += /opt/ros/$(ROS_VERSION)/lib
 FREENECT = 1
 endif
 
+ifeq ($(EIGEN),1)
+CXXFLAGS += -DMT_EIGEN
+CPATH := $(CPATH):/usr/include/eigen3
+endif
+
+ifeq ($(HYBRID_AUTOMATON),1)
+CXXFLAGS += -DMT_HYBRID_AUTOMATON
+LIBS += -lhybrid_automaton -ltinyxml
+CPATH := $(CPATH):/home/johannes/src/rswin/hybrid_automaton/include
+endif
+
 ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
 CPATH := $(CPATH):/usr/include/libusb-1.0
