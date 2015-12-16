@@ -1,4 +1,5 @@
 #include "pr2System.h"
+#include "util.h"
 
 #include <Core/array.h>
 #include <Core/array-eigen.h>
@@ -53,8 +54,8 @@ int pr2System::getDof() const {
 
 
 ::Eigen::MatrixXd pr2System::getFramePose(const std::string& frame_id) const {
-  //ors::Transformation frame = const_cast<pr2System*>(this)->modelWorld.get()->getBodyByName(frame_id.c_str())->X;
-  //ors::Transformation base = const_cast<pr2System*>(this)->modelWorld.get()->getBodyByName("base_link")->X;
-  //ors::Transformation relative = frame/base;
-  //return conv_arr2eigen(relative.getAffineMatrix());
+    std::string frame = frame_id;
+    if(frame == "EE") frame = "endeffR";
+    ors::Transformation relative = const_cast<pr2System*>(this)->interface.getFramePose(frame);
+    return mt2eigen(relative.getAffineMatrix());
 }

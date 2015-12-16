@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <Ors/ors.h>
 
 typedef std::vector<double> doubleV;
 typedef std::vector<int> intV;
@@ -69,4 +70,5 @@ struct ActionSwigInterface{
 
   //-- testing...
   void execScript(const char* filename);
+  ors::Transformation getFramePose(const std::string& frame_id);
 };
