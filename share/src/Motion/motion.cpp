@@ -157,17 +157,6 @@ void MotionProblem::setTiming(uint timeSteps, double duration){
 //  setupConfigurations();
 }
 
-arr MotionProblem::getH_rate_diag() {
-  //transition cost metric
-  arr W_diag;
-  if(mlr::checkParameter<arr>("Wdiag")) {
-    W_diag = mlr::getParameter<arr>("Wdiag");
-  } else {
-    W_diag = world.naturalQmetric();
-  }
-  return mlr::getParameter<double>("Hrate", 1.)*W_diag;
-}
-
 Task* MotionProblem::addTask(const char* name, TaskMap *m, const TermType& termType){
   Task *t = new Task(m, termType);
   t->name=name;
@@ -606,6 +595,18 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
 }
 
 //===========================================================================
+
+arr getH_rate_diag(ors::KinematicWorld& world) {
+  //transition cost metric
+  arr W_diag;
+  if(mlr::checkParameter<arr>("Wdiag")) {
+    W_diag = mlr::getParameter<arr>("Wdiag");
+  } else {
+    W_diag = world.naturalQmetric();
+  }
+  return mlr::getParameter<double>("Hrate", 1.)*W_diag;
+}
+
 
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);

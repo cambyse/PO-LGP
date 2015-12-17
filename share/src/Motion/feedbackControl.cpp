@@ -17,6 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "feedbackControl.h"
+#include <Ors/ors_swift.h>
 
 //===========================================================================
 
@@ -177,9 +178,14 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
-  : MotionProblem(_world, useSwift), qitselfPD(NULL) {
-  H_rate_diag = getH_rate_diag();
+FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift)
+  : world(_world), qitselfPD(NULL), useSwift(_useSwift) {
+  computeMeshNormals(world.shapes);
+  if(useSwift) {
+    makeConvexHulls(world.shapes);
+    world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
+  }
+  H_rate_diag = getH_rate_diag(world);
   qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,100.);
   qitselfPD.prec=1.;
@@ -225,6 +231,11 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
 
 void FeedbackMotionControl::reportCurrentState(){
   for(CtrlTask* t: tasks) t->reportState(cout);
+}
+
+void FeedbackMotionControl::setState(const arr& q, const arr& qdot){
+  world.setJointState(q, qdot);
+  if(useSwift) world.stepSwift();
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){

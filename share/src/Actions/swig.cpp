@@ -52,10 +52,10 @@ struct SwigSystem {
   GamepadInterface gamepad;
 
 
-  PerceptionObjects2Ors percObjs;
+//  PerceptionObjects2Ors percObjs;
   ImageViewer camview;
-  Kinect2PointCloud k2pcl;
-  PointCloudViewer pclv;
+//  Kinect2PointCloud k2pcl;
+//  PointCloudViewer pclv;
 
   Log _log;
 

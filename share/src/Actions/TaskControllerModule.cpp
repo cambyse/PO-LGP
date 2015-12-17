@@ -11,8 +11,7 @@ using namespace std;
 
 TaskControllerModule::TaskControllerModule(const char* modelFile)
     : Module("TaskControllerModule", .01)
-//    , realWorld("../../data/pr2_model/pr2_model.ors")
-    , realWorld(modelFile)
+    , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
@@ -96,7 +95,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 

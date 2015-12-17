@@ -35,7 +35,7 @@ struct TaskControllerModule : Module {
   bool verbose;
 
 public:
-  TaskControllerModule(const char* modelFile="../../../data/pr2_model/pr2_model.ors");
+  TaskControllerModule(const char* modelFile=NULL);
   ~TaskControllerModule();
 
   void open();

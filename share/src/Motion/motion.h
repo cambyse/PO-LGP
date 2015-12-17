@@ -113,7 +113,6 @@ struct MotionProblem : KOrderMarkovFunction{
   Graph getReport();
 
   //-- helpers
-  arr getH_rate_diag();
   void temporallyAlignKinematicSwitchesInConfiguration(uint t);
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
@@ -133,6 +132,7 @@ struct MotionProblem : KOrderMarkovFunction{
 // basic helpers
 //
 
+arr getH_rate_diag(ors::KinematicWorld& world);
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
 arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);
