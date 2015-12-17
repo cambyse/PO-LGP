@@ -278,17 +278,17 @@ void ors::Shape::parseAts() {
     case ors::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       break;
-    case ors::sscST:
+    case ors::ssCvxST:
       CHECK(size[3]>1e-10,"");
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       sscCore=mesh;
-      mesh.setSSC(sscCore, size[3]);
+      mesh.setSSCvx(sscCore, size[3]);
       break;
     case ors::ssBoxST:
       CHECK(size[3]>1e-10,"");
       sscCore.setBox();
       sscCore.scale(size[0], size[1], size[2]);
-      mesh.setSSC(sscCore, size[3]);
+      mesh.setSSCvx(sscCore, size[3]);
       break;
     default: NIY;
   }

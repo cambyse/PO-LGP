@@ -138,16 +138,16 @@ void glDrawShape(ors::Shape *s) {
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
         s->mesh.glDraw();
         break;
-      case ors::sscST:
+      case ors::ssCvxST:
         CHECK(s->sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
-        if(!s->mesh.V.N) s->mesh.setSSC(s->sscCore, s->size[3]);
+        if(!s->mesh.V.N) s->mesh.setSSCvx(s->sscCore, s->size[3]);
         s->mesh.glDraw();
         break;
       case ors::ssBoxST:
         if(!s->mesh.V.N || !s->sscCore.V.N){
           s->sscCore.setBox();
           s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
-          s->mesh.setSSC(s->sscCore, s->size[3]);
+          s->mesh.setSSCvx(s->sscCore, s->size[3]);
         }
         s->mesh.glDraw();
         break;

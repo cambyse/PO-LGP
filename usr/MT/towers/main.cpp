@@ -92,7 +92,7 @@ void optTowers() {
     j->Q.setRandom();
     ors::Shape *s = new ors::Shape(W, *b);
     s->name <<k;
-    s->type = ors::sscST;
+    s->type = ors::ssCvxST;
     s->size[3] = .1;
     s->sscCore.setRandom();
     s->sscCore.scale(rnd.uni(.1,.3), rnd.uni(.1,.3), rnd.uni(.1,.3));
