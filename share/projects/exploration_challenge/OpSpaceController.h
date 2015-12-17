@@ -5,11 +5,11 @@
 class pr2System;
 
 
-class qItselfController : public ha::Controller {
+class OpSpaceController : public ha::Controller {
   public:
-    typedef boost::shared_ptr<qItselfController> Ptr;
-    typedef boost::shared_ptr<const qItselfController> ConstPtr;
-    qItselfController();
+    typedef boost::shared_ptr<OpSpaceController> Ptr;
+    typedef boost::shared_ptr<const OpSpaceController> ConstPtr;
+    OpSpaceController();
     /**
      * @brief Activate the controller for execution. Is called automatically from the ControlSet
      */
@@ -40,17 +40,16 @@ class qItselfController : public ha::Controller {
 
     virtual void setGoal(const Eigen::MatrixXd& new_goal);
 
-    virtual void setEndeff(const std::string& endeff);
-
-    virtual void setIndices(const Eigen::MatrixXd& index_vec) {
-       _index_vec = index_vec;
+    virtual void setEndeff(const std::string& endeff) {
+      _endeff = endeff;  
     }
 
   private:
-    std::string _fact;
+    std::string _pos_fact;
+    std::string _rot_fact;
 
-    std::string _create_fact() const;
+    void _create_facts();
 
-    Eigen::MatrixXd _index_vec;
+    std::string _endeff;
     bool _running;
 };

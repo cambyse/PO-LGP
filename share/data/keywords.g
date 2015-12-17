@@ -9,6 +9,7 @@ posDiff
 vec
 vecDiff
 vecAlign
+quat
 quatDiff
 qItself
 GJK
@@ -23,4 +24,9 @@ rigid
 rigidZero
 free
 transXYPhi
+
+# from Johannes
+OpSpacePos
+OpSpaceRot
+
 
