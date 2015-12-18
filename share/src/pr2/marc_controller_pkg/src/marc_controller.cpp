@@ -165,7 +165,17 @@ void TreeControllerClass::update() {
 #else
       err *= gamma;
       arr f_obs = J_ft_inv*fL_obs;
-      for(uint i=0;i<f_obs.N;i++) if(f_obs(i) > fL_ref(i)) err(i) += fL_ref(i)-f_obs(i);
+      for(uint i=0;i<f_obs.N;i++) {
+        if(fL_ref(i) < 0) {
+          if(f_obs(i) < fL_ref(i)) {
+            err(i) += fL_ref(i) - f_obs(i);
+          }
+        } else {
+          if(f_obs(i) > fL_ref(i)) {
+            err(i) += fL_ref(i) - f_obs(i);
+          }
+        }
+      }
 #endif
       u += KiFT * err;
     }
