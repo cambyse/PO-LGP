@@ -527,7 +527,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::RBF,20,ARR(20,70.,s.MP->T,0.05),s.MP->T,3,ARR(1e0,1e2)));
-  weights.last().compWeights(w,NoArr,NoArr,param.subRange(pC,pC+19),true);
+  weights.last().compWeights(w,NoArr,NoArr,param.subRef(pC,pC+19),true);
   c->prec = w;
   cout << w << endl;
   pC=pC+20;
@@ -614,7 +614,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
   c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
 //  c->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
-  c->prec.subRange(param(pC+1),param(pC+1)+3)=param(pC);
+  c->prec.subRef(param(pC+1),param(pC+1)+3)=param(pC);
   weights.append(CostWeight(CostWeight::Gaussian,3,ARR(0),s.MP->T,3));
   pC=pC+3;
 
@@ -761,7 +761,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   arr param = ARR(s.MP->H_rate_diag(0));
   param.append(ARR(1e2,1e2,1e0,1e0,1e0,1e0,1e0,1e0));
   param = param/sqrt(sumOfSqr(param))*1e4;
-  s.MP->H_rate_diag = param(0);//param.subRange(0,s.MP->H_rate_diag.d0-1);
+  s.MP->H_rate_diag = param(0);//param.subRef(0,s.MP->H_rate_diag.d0-1);
   cout << "Parameter: " << param << endl;
   uint N = 1;//s.world->getJointStateDimension();
 
@@ -855,7 +855,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   }
 
   arr lambda(2*(T+1));lambda.setZero();
-//  lambda.subRange(2*contactIdxDem(0,0),lambda.d0-1) = 0.01;
+//  lambda.subRef(2*contactIdxDem(0,0),lambda.d0-1) = 0.01;
 
   arr aDem;
   getAcc(aDem,xDem,dt);

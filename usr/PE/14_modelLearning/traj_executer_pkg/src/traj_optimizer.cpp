@@ -202,7 +202,7 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
   c = MP.addTask("pos", new DefaultTaskMap(posTMT,world,"endeffR"));
   c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->target = traj; // set traj
-  c->prec.subRange(0,20)=0.;
+  c->prec.subRef(0,20)=0.;
 
   c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
   c->setCostSpecs(0, MP.T, ARR(0.), 1e4);

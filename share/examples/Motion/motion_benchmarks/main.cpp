@@ -67,7 +67,7 @@ void circle_BM(){
   //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
-  c->prec.subRange(0,20)=0.;
+  c->prec.subRef(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
 //  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
@@ -171,7 +171,7 @@ void star_BM(){
 //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.subRange(0,20)=0.;
+//  c->prec.subRef(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
 //  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
@@ -276,7 +276,7 @@ void eight_BM(){
 //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.subRange(0,20)=0.;
+//  c->prec.subRef(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
 //  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);

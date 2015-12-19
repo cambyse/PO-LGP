@@ -264,7 +264,7 @@ void executeTrajectory(String scene, ControlType cType){
       arr yNext, ydNext;
       switch (cType) {
       case(CT_DMP):
-        dmp->goal.subRange(0,2) = goalMO.position;
+        dmp->goal.subRef(0,2) = goalMO.position;
         dmp->iterate();
 
         yNext = dmp->Y;
@@ -289,10 +289,10 @@ void executeTrajectory(String scene, ControlType cType){
       }
 
       if (cType == CT_DMP || cType == CT_PFC) {
-        taskPos->y_ref = yNext.subRange(0,2);
-        taskPos->v_ref = ydNext.subRange(0,2);
-        taskVec->y_ref = yNext.subRange(3,5);
-        taskVec->v_ref = ydNext.subRange(3,5);
+        taskPos->y_ref = yNext.subRef(0,2);
+        taskPos->v_ref = ydNext.subRef(0,2);
+        taskVec->y_ref = yNext.subRef(3,5);
+        taskVec->v_ref = ydNext.subRef(3,5);
 #if VISUALIZE
         world.watch(false, STRING(t));
 #endif

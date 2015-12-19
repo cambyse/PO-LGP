@@ -239,7 +239,7 @@ void scenario3() {
     y_target = d.Y;
 
     // task 1: POSITION
-    yPos_target = y_target.subRange(0,2);
+    yPos_target = y_target.subRef(0,2);
     costs = (yPos - yPos_target)/ fPos_deviation;
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
@@ -378,14 +378,14 @@ void scenario4() {
     y_target.append(d_vec.Y);
 
     // task 1: POSITION
-    yPos_target = y_target.subRange(0,2);
+    yPos_target = y_target.subRef(0,2);
     costs = (yPos - yPos_target)/ fPos_deviation;
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
 
     // task  2: ORIENTATION
     if (useOrientation) {
-      yVec_target = y_target.subRange(3,5);
+      yVec_target = y_target.subRef(3,5);
       costs = (yVec - yVec_target)/ fVec_deviation;
       Phi.append(costs);
       PhiJ.append(JVec / fVec_deviation);

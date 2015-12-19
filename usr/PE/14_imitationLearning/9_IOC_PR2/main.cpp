@@ -58,7 +58,7 @@ void run() {
   /// 3. Evaluate code on test scenarios
   w = fabs(w);
   if (!mlr::getParameter<bool>("learnTransitionCost")) {
-    w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.01;
+    w(0) = sumOfAbs(w.subRef(1,w.d0-1))*0.01;
   }
 
   /// 4. Save Parameter into file

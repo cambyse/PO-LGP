@@ -335,7 +335,7 @@ double Scene::compCosts(arr &df, arr &Hf, arr &g, arr &Jg, const arr &w, const a
     h = 8.*(PHI%J_G_Jt_PHIw);
     df = ~h*dw ;
     df.flatten();
-    //    df = 2.*~w.subRange(0,1);
+    //    df = 2.*~w.subRef(0,1);
   }
   if (&Hf) {
     if (optNonlinearParam) {
@@ -412,7 +412,7 @@ IKMO::IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP
       if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT) {
         uint m;
         m = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
-        double b = (c==0)?0.:sum(cost_counts.subRange(0,c-1));
+        double b = (c==0)?0.:sum(cost_counts.subRef(0,c-1));
         arr tmp = linspace(counts(c),counts(c)+m-1,m-1);
         if (tmp.N==1) {tmp = 0.;}
         Dpdp.append(b + tmp);
@@ -446,7 +446,7 @@ void IKMO::compWeights(arr &w, arr &dw, arr &Hw, const arr &param){
     uint nPi = weights(i).numParam;
 
     // compute weight vector; R(O)
-    weights(i).compWeights(wi,(&dw)?gi:NoArr,(&Hw)?Hi:NoArr,param.subRange(c,c+nPi-1) );
+    weights(i).compWeights(wi,(&dw)?gi:NoArr,(&Hw)?Hi:NoArr,param.subRef(c,c+nPi-1) );
     w.append(wi);
 
     uint m = gi.N/double(nPi);
@@ -461,15 +461,15 @@ void IKMO::compWeights(arr &w, arr &dw, arr &Hw, const arr &param){
           dw.append(catCol(zeros(m,dw.d1-nPi),gi));
         } if (nPi==2) {
           dw = catCol(dw,zeros(dw.d0,nPi));
-          dw.append(catCol(zeros(m,dw.d1-nPi),gi.subRange(0,m-1),gi.subRange(m,m+m-1)));
+          dw.append(catCol(zeros(m,dw.d1-nPi),gi.subRef(0,m-1),gi.subRef(m,m+m-1)));
         } if (nPi==3) {
           dw = catCol(dw,zeros(dw.d0,nPi));
-          dw.append(catCol(zeros(m,dw.d1-nPi),gi.subRange(0,m-1),gi.subRange(m,m+m-1),gi.subRange(2*m,2*m+m-1)));
+          dw.append(catCol(zeros(m,dw.d1-nPi),gi.subRef(0,m-1),gi.subRef(m,m+m-1),gi.subRef(2*m,2*m+m-1)));
         }if (nPi>3) {
           dw = catCol(dw,zeros(dw.d0,nPi));
           arr tmp = zeros(m,dw.d1-nPi);
           for (uint i=0;i<nPi;i++){
-            tmp=catCol(tmp,gi.subRange(i*m,i*m+m-1));
+            tmp=catCol(tmp,gi.subRef(i*m,i*m+m-1));
           }
           dw.append(tmp);
         }
@@ -481,13 +481,13 @@ void IKMO::compWeights(arr &w, arr &dw, arr &Hw, const arr &param){
           Hw = catCol(Hi,zeros(Hi.d0,nP*nP-1));
         } else {
           if (nPi==3) {
-            arr tmp = catCol(zeros(m,nP*c+c),Hi.subRange(0,m-1),zeros(m,nP-nPi));
-            tmp = catCol(tmp,Hi.subRange(m,m+m-1),zeros(m,nP-nPi),Hi.subRange(2*m,2*m+m-1),zeros(m,(nP+1)*(nP-nPi-c)));
+            arr tmp = catCol(zeros(m,nP*c+c),Hi.subRef(0,m-1),zeros(m,nP-nPi));
+            tmp = catCol(tmp,Hi.subRef(m,m+m-1),zeros(m,nP-nPi),Hi.subRef(2*m,2*m+m-1),zeros(m,(nP+1)*(nP-nPi-c)));
             Hw.append(tmp);
           }
 
           if (nPi==2) {
-            Hw.append(catCol(zeros(m,nP*c+c),Hi.subRange(0,m-1),zeros(m,nP-nPi),Hi.subRange(m,m+m-1),zeros(m,(nP+1)*(nP-nPi-c))));
+            Hw.append(catCol(zeros(m,nP*c+c),Hi.subRef(0,m-1),zeros(m,nP-nPi),Hi.subRef(m,m+m-1),zeros(m,(nP+1)*(nP-nPi-c))));
           }
           if (nPi==1) {
             Hw.append(catCol(zeros(Hi.d0,param.d0*c+c),Hi,zeros(Hi.d0,param.d0*(param.d0-c)-c-1)));
@@ -513,7 +513,7 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
   for (uint i =0;i<weights.d0;i++) {
     arr gLi,gUi,JgLi,JgUi,gSi,JgSi;
     uint nPi = weights(i).numParam;
-    weights(i).compConstraints(gLi,gUi,gSi, &Jg?JgLi:NoArr, &Jg?JgUi:NoArr,&Jg?JgSi:NoArr, param.subRange(c,c+nPi-1));
+    weights(i).compConstraints(gLi,gUi,gSi, &Jg?JgLi:NoArr, &Jg?JgUi:NoArr,&Jg?JgSi:NoArr, param.subRef(c,c+nPi-1));
     gL.append(gLi);
     gU.append(gUi);
     gS.append(gSi);
@@ -542,7 +542,7 @@ void IKMO::setParam(MotionProblem &MP, const arr &param)
   for (uint c=0;c<MP.tasks.N;c++) {
     if (MP.tasks(c)->map.type == sumOfSqrTT) {
       arr w;
-      weights(c).compWeights(w,NoArr,NoArr,param.subRange(c,c+weights(c).numParam - 1),true);
+      weights(c).compWeights(w,NoArr,NoArr,param.subRef(c,c+weights(c).numParam - 1),true);
       if (weights(c).type==CostWeight::Dirac){
         MP.tasks(c)->prec(weights(c).fixedParam(0)) = fabs(w(0));
       }else {
@@ -576,7 +576,7 @@ void IKMO::costReport(arr param,arr param0) {
   for (uint i=0;i<scenes(0).MP->taskCosts.N;i++) {
     if (scenes(0).MP->taskCosts(i)->map.type==sumOfSqrTT) {
       if (weights(i).numParam>1){
-        //        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramNorm.subRange(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRange(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRange(c,c+weights(i).numParam-1) << endl;
+        //        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramNorm.subRef(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRef(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRef(c,c+weights(i).numParam-1) << endl;
       }else {
         cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramRefNorm(c) <<  " | " << paramNorm(c) << " | " <<  param(c) << " | " <<  param0(c) << endl;
       }
@@ -597,7 +597,7 @@ void IKMO::costReport(arr param,arr param0) {
         w = zeros(t.d0);
         w(weights(i).fixedParam(0)) = param(c);
       } else {
-        weights(i).compWeights(w,NoArr,NoArr,param.subRange(c,c+weights(i).numParam-1),true);
+        weights(i).compWeights(w,NoArr,NoArr,param.subRef(c,c+weights(i).numParam-1),true);
       }
       plotFunctionPoints(t,log(w),scenes(0).MP->taskCosts(i)->name);
       c = c+weights(i).numParam;

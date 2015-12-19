@@ -86,7 +86,7 @@ void G4Rec::load(const char *recdir) {
   dataquatprev = data[0].sub(0, -1, 3, -1);
   for(uint f = 1; f < data.d0; f++) {
     for(uint i = 0; i < data.d1; i++) {
-      dataquat.referToSubRange(data.subDim(f, i)(), 3, -1);
+      dataquat.referToSub(data.subDim(f, i)(), 3, -1);
       if(sum(dataquat % dataquatprev[i]) < 0)
         dataquat *= -1.;
       if(!length(dataquatprev[i]) || length(dataquat))
@@ -186,7 +186,7 @@ void G4Rec::load(const char *recdir) {
     for(Node *lock: *pair->getValue<Graph>()) {
       from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
       to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-      ann->subRange(from, to) = 1;
+      ann->subRef(from, to) = 1;
     }
     // pair->getValue<Graph>()->append("ann", ann);
     mlabel.append(pair->keys, {}, ann, false);

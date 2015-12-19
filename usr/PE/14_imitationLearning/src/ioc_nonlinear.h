@@ -133,7 +133,7 @@ struct CostWeight {
       uint np = weights(i)->numParam;
 
       // compute weight vector; R(O)
-      weights(i)->getWeight(wi,gi,Hi,param.subRange(c,c+np-1) );
+      weights(i)->getWeight(wi,gi,Hi,param.subRef(c,c+np-1) );
       w.append(wi);
 
       // compute gradient; R(O x np)
@@ -142,7 +142,7 @@ struct CostWeight {
       } else {
         g = catCol(g,zeros(g.d0,np));
         for (uint j=0;j<np;j++){
-          g.append(catCol(zeros(gi.N/double(np),g.d1-np+j),gi.subRange(j*np,j*np+gi.N/double(np)-1),zeros(gi.N/double(np),np-1-j)));
+          g.append(catCol(zeros(gi.N/double(np),g.d1-np+j),gi.subRef(j*np,j*np+gi.N/double(np)-1),zeros(gi.N/double(np),np-1-j)));
         }
       }
 
@@ -151,13 +151,13 @@ struct CostWeight {
         H = catCol(Hi,zeros(Hi.d0,param.d0*param.d0-1));
       } else {
         if (np==3) {
-          H.append(catCol(zeros(Hi.d0/double(np),param.d0*c+c),Hi.subRange(0,Hi.d0/double(np)-1),zeros(Hi.d0/double(np),param.d0*(param.d0-c-1))));
-          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+1)+c),Hi.subRange(Hi.d0/double(np),Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-2))));
-          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+2)+c),Hi.subRange(2.*Hi.d0/double(np),2*Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-3))));
+          H.append(catCol(zeros(Hi.d0/double(np),param.d0*c+c),Hi.subRef(0,Hi.d0/double(np)-1),zeros(Hi.d0/double(np),param.d0*(param.d0-c-1))));
+          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+1)+c),Hi.subRef(Hi.d0/double(np),Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-2))));
+          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+2)+c),Hi.subRef(2.*Hi.d0/double(np),2*Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-3))));
         }
         if (np==2) {
-          H.append(catCol(zeros(Hi.d0/double(np),param.d0*c+c),Hi.subRange(0,Hi.d0/double(np)-1),zeros(Hi.d0/double(np),param.d0*(param.d0-c-1))));
-          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+1)+c),Hi.subRange(Hi.d0/double(np),Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-2))));
+          H.append(catCol(zeros(Hi.d0/double(np),param.d0*c+c),Hi.subRef(0,Hi.d0/double(np)-1),zeros(Hi.d0/double(np),param.d0*(param.d0-c-1))));
+          H.append(catCol(zeros(Hi.d0/double(np),param.d0*(c+1)+c),Hi.subRef(Hi.d0/double(np),Hi.d0/double(np)+Hi.d0/double(np)-1),zeros(Hi.d0/double(np),(param.d0)*(param.d0-c-2))));
         }
         if (np==1) {
           H.append(catCol(zeros(Hi.d0,param.d0*c+c),Hi,zeros(Hi.d0,param.d0*(param.d0-c)-c-1)));
@@ -425,7 +425,7 @@ struct IOC:ConstrainedProblem {
         if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && !scenes(0).MP->taskCosts(c)->map.constraint) {
           uint m;
           m = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
-          double b = sum(cost_counts.subRange(0,c));
+          double b = sum(cost_counts.subRef(0,c));
           Dpdp.append(b + linspace(counts(c+1),counts(c+1)+m-1,m-1));
           counts(c+1) += m;
           arr tmp = zeros(m,1);
@@ -470,8 +470,8 @@ struct IOC:ConstrainedProblem {
       if (normalizeParam) g.append((sumOfSqr(x)-1e0)*(sumOfSqr(x)-1e0)); // ||w|| = 1
 
       g.append(-x); // w > 0
-      //      g.append(-x.subRange(0,6)+1e-2); // w_trans > 2
-      //      g.append(-x.subRange(7,x.d0-1)+1e-2); // w_trans > 2
+      //      g.append(-x.subRef(0,6)+1e-2); // w_trans > 2
+      //      g.append(-x.subRef(7,x.d0-1)+1e-2); // w_trans > 2
     }
     if (&Jg) {
       Jg.clear();

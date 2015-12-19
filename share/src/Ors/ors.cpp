@@ -1232,7 +1232,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
             axis.set(e.x, e.y, e.z);
             axis = j->X.rot*axis;
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+            axis /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
             tmp = axis ^ (pos_world-(j->X.pos+j->X.rot*j->Q.pos));
             J(0, j_idx+offset+i) += tmp.x;
             J(1, j_idx+offset+i) += tmp.y;
@@ -1241,7 +1241,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
 #else
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
           Jrot = crossProduct(Jrot, conv_vec2arr(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
-          Jrot /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
 #endif
         }
@@ -1429,7 +1429,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
             e = e / j->Q.rot;
             axis.set(e.x, e.y, e.z);
             axis *= -2.;
-            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+            axis /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
             axis = j->X.rot*axis;
             J(0, j_idx+offset+i) += axis.x;
             J(1, j_idx+offset+i) += axis.y;
@@ -1437,7 +1437,7 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
           }
 #else
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
-          Jrot /= sqrt(sumOfSqr(q.subRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
 #endif
         }

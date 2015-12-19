@@ -285,8 +285,8 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
   }
   arr x,z;
   if(dim_z){
-    x.referToSubRange(_x,0,-dim_z-1);
-    z.referToSubRange(_x,-dim_z,-1);
+    x.referToSub(_x,0,-dim_z-1);
+    z.referToSub(_x,-dim_z,-1);
   }else{
     x.referTo(_x);
   }

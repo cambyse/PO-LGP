@@ -44,7 +44,7 @@ void run() {
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-7));
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-9));
 
-  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
+  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRef(1,w.d0-1))*0.1;
   ioc.costReport(w);
 
   /// 3. Evaluate code on test scenarios

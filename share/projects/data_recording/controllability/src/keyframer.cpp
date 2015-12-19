@@ -176,7 +176,7 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   for(uint i = 0; i < x.d0; i++) {
     for(uint fi = ff; fi < ft; fi++) {
       uint wi = fi - ff;
-      win.referToSubRange(x[i], wi, wi + wlen - 1);
+      win.referToSub(x[i], wi, wi + wlen - 1);
       m = sum(win, 0) / (double)wlen;
       m = ~repmat(m, 1, wlen);
       y(i, fi) = sumOfSqr(win - m);
@@ -4152,7 +4152,7 @@ void KeyFramer::load_ann(const String &dir) {
           for(Node *lock: *pair->getValue<Graph>()) {
             from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
             to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-            ann_ref.subRange(from, to) = 1;
+            ann_ref.subRef(from, to) = 1;
           }
         }
       }

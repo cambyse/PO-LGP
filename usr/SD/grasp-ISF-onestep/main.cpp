@@ -393,7 +393,7 @@ void problem5(){
 //                         bool verbose, bool b_is_initialized);
     
     /* open fingers */
-    b.subRange(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
+    b.subRef(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
     sys.setx(b);
     sys.gl->watch("Belief after 1st phase, with open fings");
     MLR_MSG( "Post belief1 :" << b); //MLR_MSG( "time:" << tm);

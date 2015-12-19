@@ -14,9 +14,9 @@ void TEST(SCBoxFit){
   rndUniform(X, 2., 3.);
 
   arr x(11);
-  rndUniform(x.subRange(0,3)(), 20., 20.);
-  rndGauss(x.subRange(4,-1)());
-  x.subRange(7,-1)() /= length(x.subRange(7,-1));
+  rndUniform(x.subRef(0,3)(), 20., 20.);
+  rndGauss(x.subRef(4,-1)());
+  x.subRef(7,-1)() /= length(x.subRef(7,-1));
 
   ConstrainedProblem F=[&X](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x){
     phi.resize(5+X.d0);
@@ -66,8 +66,8 @@ void TEST(SCBoxFit){
       y=X[i];
       y.append(x);
       phi(i+5) = DistanceFunction_SSBox(Jy, NoArr, y);
-//      Jy.subRange(3,5)() *= -1.;
-      if(&J) J[i+5] = Jy.subRange(3,-1);
+//      Jy.subRef(3,5)() *= -1.;
+      if(&J) J[i+5] = Jy.subRef(3,-1);
     }
   };
 
@@ -82,8 +82,8 @@ void TEST(SCBoxFit){
   arr phi;
   F(phi, NoArr, NoArr, NoTermTypeA, x);
   cout <<"x=" <<x
-        <<"\nsize = " <<x.subRange(0,3)
-       <<"\ntransf = " <<x.subRange(4,-1)
+        <<"\nsize = " <<x.subRef(0,3)
+       <<"\ntransf = " <<x.subRef(4,-1)
 
       <<"\nphi=" <<phi <<endl;
 
@@ -91,8 +91,8 @@ void TEST(SCBoxFit){
   points.V = X;
   box.setSSBox(2.*x(0), 2.*x(1), 2.*x(2), x(3));
   ors::Transformation t;
-  t.pos.set( x.subRange(4,6) );
-  t.rot.set( x.subRange(7,-1) );
+  t.pos.set( x.subRef(4,6) );
+  t.rot.set( x.subRef(7,-1) );
   t.rot.normalize();
   t.applyOnPointArray(box.V);
 

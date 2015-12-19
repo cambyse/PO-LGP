@@ -47,6 +47,12 @@ void TEST(Basics){
   CHECK_EQ(a(2,1),7.,"");
   CHECK_EQ(a[1],a[2],"");
 
+  //access (copy and reference) of subarrays
+  cout <<"\nsubRef(2,4) =\n" <<a.subRef(2,4) <<endl;
+  a.subRef(2,4)() *= 10.;
+  cout <<"\nrows manipulated:\n" <<a <<endl;
+
+
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to mlr::Array<double>({ ... })
   cout <<"\nset by hand:\n" <<a <<endl;

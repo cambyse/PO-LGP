@@ -580,9 +580,9 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
   for(i=0, n=0; i<N; i++) {
     d_i=robot.dof(i);
     if(d_i) {
-      qd_i(i) .referToSubRange(qd , n, n+d_i-1);
-      qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
-      tau_i(i).referToSubRange(tau, n, n+d_i-1);
+      qd_i(i) .referToSub(qd , n, n+d_i-1);
+      qdd_i(i).referToSub(qdd, n, n+d_i-1);
+      tau_i(i).referToSub(tau, n, n+d_i-1);
     } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
@@ -678,9 +678,9 @@ void Featherstone::fwdDynamics_old(arr& qdd,
     //for general multi-dimensional joints, pick the sub-arrays
     d_i=robot.dof(i);
     if(d_i) {
-      qd_i(i) .referToSubRange(qd , n, n+d_i-1);
-      qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
-      tau_i(i).referToSubRange(tau, n, n+d_i-1);
+      qd_i(i) .referToSub(qd , n, n+d_i-1);
+      qdd_i(i).referToSub(qdd, n, n+d_i-1);
+      tau_i(i).referToSub(tau, n, n+d_i-1);
     } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
@@ -761,9 +761,9 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
   for(i=0, n=0; i<N; i++) {
     d_i=tree(i).dof();
     if(d_i) {
-      qd_i(i) .referToSubRange(qd , n, n+d_i-1);
-      qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
-      tau_i(i).referToSubRange(tau, n, n+d_i-1);
+      qd_i(i) .referToSub(qd , n, n+d_i-1);
+      qdd_i(i).referToSub(qdd, n, n+d_i-1);
+      tau_i(i).referToSub(tau, n, n+d_i-1);
     } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
@@ -901,9 +901,9 @@ void ors::invDynamics(arr& tau,
   for(i=0, n=0; i<N; i++) {
     d_i=tree(i).dof();
     if(d_i) {
-      qd_i(i) .referToSubRange(qd , n, n+d_i-1);
-      qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
-      tau_i(i).referToSubRange(tau, n, n+d_i-1);
+      qd_i(i) .referToSub(qd , n, n+d_i-1);
+      qdd_i(i).referToSub(qdd, n, n+d_i-1);
+      tau_i(i).referToSub(tau, n, n+d_i-1);
     } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);

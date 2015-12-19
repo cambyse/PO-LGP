@@ -261,7 +261,7 @@ void MocapID::clear() {
 //   if(hsi >= hsitoi.N) {
 //     hsitoiN = hsitoi.N;
 //     hsitoi.resizeCopy(hsi+1);
-//     // hsitoi.subRange(hsitoiN, hsi)() = -1;
+//     // hsitoi.subRef(hsitoiN, hsi)() = -1;
 //   }
 //   hsitoi(hsi) = ind;
 //   itohsi.append(hsi);
@@ -1062,7 +1062,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
       obs += O(t, t);
     }
     if(obs >= TODO) {
-      beta = inverse(TT * O * T) * TT * O * bamis.subRange(f-wlen+1, f);
+      beta = inverse(TT * O * T) * TT * O * bamis.subRef(f-wlen+1, f);
       bamLinCoeffPastis[f_thin]() = beta[1];
       bamLinCoeffPastObsis(f_thin) = 1;
     }
@@ -1076,7 +1076,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
   for(uint f_thin = 0; f_thin < nframes_thin; f_thin++) {
     uint f = (f_thin + 1) * thinning - 1;
     if(f < wlen-1) continue;
-    beta = TTTITT * bamis.subRange(f-wlen+1, f);
+    beta = TTTITT * bamis.subRef(f-wlen+1, f);
     bamLinCoeffPastis[f_thin]() = beta[1];
   }
 #endif

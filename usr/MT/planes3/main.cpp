@@ -6,7 +6,7 @@ void testGradients(){
   arr m = randn(3);
   arr X = randn(ndata,3);
   arr transform = randn(7);
-  transform.subRange(3,6)() /= length(transform.sub(3,6));
+  transform.subRef(3,6)() /= length(transform.sub(3,6));
 
   CostFct_PlanePoints f(n, m, X, transform);
 

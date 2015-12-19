@@ -41,7 +41,7 @@ ors::Transformation conv_pose2transformation(const geometry_msgs::Pose &pose){
 }
 
 void conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped& pose){
-  q.subRange(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
+  q.subRef(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
 }
 
 arr conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped& pose){
