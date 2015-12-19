@@ -31,14 +31,14 @@ void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
 }
 
 void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
-  constraintTime = zeros(F.d0); constraintTime.flatten();
+  constraintTime = zeros(F.d0); constraintTime.reshapeFlat();
   for (uint t=0;t<F.d0;t++){
     if(fabs(F(t,5))> mlr::getParameter<double>("contact_threshold")) {
 //      constraintTime(t) = 1.;
       constraintTime.subRef(t-5,t) = 1.;
     }
   }
-  constraintCP = ARR(constraintTime.findValue(1.),F.d0); constraintCP.flatten();
+  constraintCP = ARR(constraintTime.findValue(1.),F.d0); constraintCP.reshapeFlat();
 
 
   cout << "constraintTime: " << constraintTime << endl;

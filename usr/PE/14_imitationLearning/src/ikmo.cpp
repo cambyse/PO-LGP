@@ -19,8 +19,8 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
       if (&dw){
         dw = ARR(1.);
         Hw = ARR(0.);
-        dw = repmat(dw,1,D); dw.flatten();
-        Hw = repmat(Hw,1,D);Hw.flatten();
+        dw = repmat(dw,1,D); dw.reshapeFlat();
+        Hw = repmat(Hw,1,D);Hw.reshapeFlat();
       }
       break;
     case Constant: case Transition: {
@@ -29,8 +29,8 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
       if (&dw) {
         dw = ones(T,1);
         Hw = zeros(T,1);
-        dw = repmat(dw,1,D); dw.flatten();
-        Hw = repmat(Hw,1,D);Hw.flatten();
+        dw = repmat(dw,1,D); dw.reshapeFlat();
+        Hw = repmat(Hw,1,D);Hw.reshapeFlat();
       }
       break;
     }
@@ -45,8 +45,8 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
         gc.f(t,w);
         if(&dw){
           gc.dfdw(t,dw,Hw);
-          dw = repmat(dw,1,D); dw.flatten();
-          Hw = repmat(Hw,1,D); Hw.flatten();
+          dw = repmat(dw,1,D); dw.reshapeFlat();
+          Hw = repmat(Hw,1,D); Hw.reshapeFlat();
         }
       }else if (numParam==2){
         gc.w = param(0);
@@ -60,12 +60,12 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
           gc.dfdmu(t,g_mu,H_mu);
           dw.append(g_w);
           dw.append(g_mu);
-          dw = repmat(dw,1,D); dw.flatten();
+          dw = repmat(dw,1,D); dw.reshapeFlat();
           //Hessian
           gc.dfdwdmu(t,H_w_mu);
-          H_w = repmat(H_w,1,D); H_w.flatten();
-          H_mu = repmat(H_mu,1,D); H_mu.flatten();
-          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.flatten();
+          H_w = repmat(H_w,1,D); H_w.reshapeFlat();
+          H_mu = repmat(H_mu,1,D); H_mu.reshapeFlat();
+          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.reshapeFlat();
           Hw.append(catCol(H_w,H_w_mu));
           Hw.append(catCol(H_w_mu,H_mu));
         }
@@ -86,14 +86,14 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
           dw.append(g_w);
           dw.append(g_mu);
           dw.append(g_std);
-          dw = repmat(dw,1,D); dw.flatten();
+          dw = repmat(dw,1,D); dw.reshapeFlat();
           //Hessian
-          H_w = repmat(H_w,1,D); H_w.flatten();
-          H_mu = repmat(H_mu,1,D); H_mu.flatten();
-          H_std = repmat(H_std,1,D); H_std.flatten();
-          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.flatten();
-          H_w_std = repmat(H_w_std,1,D); H_w_std.flatten();
-          H_mu_std = repmat(H_mu_std,1,D); H_mu_std.flatten();
+          H_w = repmat(H_w,1,D); H_w.reshapeFlat();
+          H_mu = repmat(H_mu,1,D); H_mu.reshapeFlat();
+          H_std = repmat(H_std,1,D); H_std.reshapeFlat();
+          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.reshapeFlat();
+          H_w_std = repmat(H_w_std,1,D); H_w_std.reshapeFlat();
+          H_mu_std = repmat(H_mu_std,1,D); H_mu_std.reshapeFlat();
           Hw.append(catCol(H_w,H_w_mu,H_w_std));
           Hw.append(catCol(H_w_mu,H_mu,H_mu_std));
           Hw.append(catCol(H_w_std,H_mu_std,H_std));
@@ -105,20 +105,20 @@ void CostWeight::compWeights(arr &w, arr &dw, arr &Hw, const arr &param, bool op
       RBFCosts rc;
       rc.W = param;
       rc.nB = fixedParam(0);
-      //      rc.M = linspace(0.,T,rc.nB-1); rc.M.flatten();
-      rc.M = linspace(fixedParam(1),fixedParam(2),rc.nB-1); rc.M.flatten();
-      rc.C = repmat(ARR(fixedParam(3)),rc.nB,1); rc.C.flatten();
+      //      rc.M = linspace(0.,T,rc.nB-1); rc.M.reshapeFlat();
+      rc.M = linspace(fixedParam(1),fixedParam(2),rc.nB-1); rc.M.reshapeFlat();
+      rc.C = repmat(ARR(fixedParam(3)),rc.nB,1); rc.C.reshapeFlat();
       arr t = linspace(0,T-1,T-1);
       rc.f(t,w);
       if (&dw) {
         rc.dfdM(t,dw,Hw);
-        dw = repmat(dw,1,D); dw.flatten();
-        Hw = repmat(Hw,1,D); Hw.flatten();
+        dw = repmat(dw,1,D); dw.reshapeFlat();
+        Hw = repmat(Hw,1,D); Hw.reshapeFlat();
       }
       break;
   }
 
-  w = repmat(w,1,D); w.flatten();
+  w = repmat(w,1,D); w.reshapeFlat();
 }
 
 void CostWeight::compConstraints(arr &gL, arr &gU, arr &gS, arr &JgL, arr &JgU, arr &JgS, const arr &param) {
@@ -334,7 +334,7 @@ double Scene::compCosts(arr &df, arr &Hf, arr &g, arr &Jg, const arr &w, const a
   if (&df) {
     h = 8.*(PHI%J_G_Jt_PHIw);
     df = ~h*dw ;
-    df.flatten();
+    df.reshapeFlat();
     //    df = 2.*~w.subRef(0,1);
   }
   if (&Hf) {
@@ -422,7 +422,7 @@ IKMO::IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP
   }
 
   // copy into uint array
-  Dpdp.flatten();
+  Dpdp.reshapeFlat();
   for (uint i=0;i<Dpdp.d0;i++){
     phi_perm.append(int(Dpdp(i)));
   }

@@ -45,7 +45,7 @@ struct CostWeight {
         g[fixedParam(0)] = 1;
         H = zeros(T,1);
         H = repmat(H,1,D);
-        H.flatten();
+        H.reshapeFlat();
         break;
       case Constant:
         // param: [weight]
@@ -53,7 +53,7 @@ struct CostWeight {
         g = ones(T,1);
         H = zeros(T,1);
         H = repmat(H,1,D);
-        H.flatten();
+        H.reshapeFlat();
         break;
       case Gaussian:
         // param: [weight,mean,std] (mean and std can be fixed if numParam is 1 or 2)
@@ -79,9 +79,9 @@ struct CostWeight {
           g.append(g_mu);
           //Hessian
           gc.dfdwdmu(t,H_w_mu);
-          H_w = repmat(H_w,1,D); H_w.flatten();
-          H_mu = repmat(H_mu,1,D); H_mu.flatten();
-          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.flatten();
+          H_w = repmat(H_w,1,D); H_w.reshapeFlat();
+          H_mu = repmat(H_mu,1,D); H_mu.reshapeFlat();
+          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.reshapeFlat();
           H.append(catCol(H_w,H_w_mu));
           H.append(catCol(H_w_mu,H_mu));
         }else if (numParam==3){
@@ -101,12 +101,12 @@ struct CostWeight {
           g.append(g_mu);
           g.append(g_std);
           //Hessian
-          H_w = repmat(H_w,1,D); H_w.flatten();
-          H_mu = repmat(H_mu,1,D); H_mu.flatten();
-          H_std = repmat(H_std,1,D); H_std.flatten();
-          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.flatten();
-          H_w_std = repmat(H_w_std,1,D); H_w_std.flatten();
-          H_mu_std = repmat(H_mu_std,1,D); H_mu_std.flatten();
+          H_w = repmat(H_w,1,D); H_w.reshapeFlat();
+          H_mu = repmat(H_mu,1,D); H_mu.reshapeFlat();
+          H_std = repmat(H_std,1,D); H_std.reshapeFlat();
+          H_w_mu = repmat(H_w_mu,1,D); H_w_mu.reshapeFlat();
+          H_w_std = repmat(H_w_std,1,D); H_w_std.reshapeFlat();
+          H_mu_std = repmat(H_mu_std,1,D); H_mu_std.reshapeFlat();
           H.append(catCol(H_w,H_w_mu,H_w_std));
           H.append(catCol(H_w_mu,H_mu,H_mu_std));
           H.append(catCol(H_w_std,H_mu_std,H_std));
@@ -115,8 +115,8 @@ struct CostWeight {
     }
     w = repmat(w,1,D);
     g = repmat(g,1,D);
-    w.flatten();
-    g.flatten();
+    w.reshapeFlat();
+    g.reshapeFlat();
   }
 };
 
@@ -263,7 +263,7 @@ struct IOC_DemoCost {
   void compute_weights(arr& w,arr& dwdx, arr& dwdxdx,const arr& x){
     w=ones(T*x0.d1,1)*x(0);
 
-    w.flatten();
+    w.reshapeFlat();
 
     //    cout << w << endl;
     GaussianCosts gc;
@@ -275,7 +275,7 @@ struct IOC_DemoCost {
     gc.f(t,y);
 
     y = repmat(y,1,3);
-    y.flatten();
+    y.reshapeFlat();
     //    cout << "y" << y << endl;
     w.append(y);
     //    cout << "w " << w << endl;
@@ -283,9 +283,9 @@ struct IOC_DemoCost {
     arr dy,Hy;
     gc.dfdstd(t,dy,Hy);
     dy = repmat(dy,1,3);
-    dy.flatten();
+    dy.reshapeFlat();
     Hy = repmat(Hy,1,3);
-    Hy.flatten();
+    Hy.reshapeFlat();
     //    cout << dy << endl;
 
 
@@ -333,7 +333,7 @@ struct IOC_DemoCost {
     if (&df) {
       h = 8.*(PHI%J_G_Jt_PHIw);
       df = ~h*dwdx ;
-      df.flatten();
+      df.reshapeFlat();
     }
     if (&Hf) {
       Hf = 8.*~dwdx*dPHI_J_Jt_dPHI*dwdx;
@@ -438,7 +438,7 @@ struct IOC:ConstrainedProblem {
     }
 
     // copy into uint array
-    Dpdp.flatten();
+    Dpdp.reshapeFlat();
     for (uint i=0;i<Dpdp.d0;i++){
       phi_perm.append(int(Dpdp(i)));
     }

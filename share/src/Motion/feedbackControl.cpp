@@ -79,8 +79,8 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
   if(makeTargetModulo2PI) for(uint i=0;i<y.N;i++){
-      while(y_ref(i) < y-MLR_PI) y_ref(i)+=MLR_2PI;
-      while(y_ref(i) > y+MLR_PI) y_ref(i)-=MLR_2PI;
+      while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
+      while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
   }
   //compute diffs
   arr y_diff(y);

@@ -22,11 +22,11 @@ void calculate(GaussianProcess &gp,doubleA &X,doubleA &Y){
   gp.X=&X; gp.Y=&Y;
   uint i,j,N=Y.N;
   doubleA gram(N,N),xi,xj;
-  for(i=0;i<N;i++){ xi.referToSubDim(X,i); gram(i,i) = gp.kernel(xi,xi); }
+  for(i=0;i<N;i++){ xi.referToDim(X,i); gram(i,i) = gp.kernel(xi,xi); }
   for(i=1;i<N;i++){
-    xi.referToSubDim(X,i);
+    xi.referToDim(X,i);
     for(j=0;j<i;j++){
-      xj.referToSubDim(X,j);
+      xj.referToDim(X,j);
       gram(i,j) = gram(j,i) = gp.kernel(xi,xj);
     }
   }

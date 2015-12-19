@@ -129,7 +129,7 @@ struct IOC_DemoCost {
     if (&df) {
       arr h = 8.*(PHI%J_G_Jt_PHIw);
       df = ~h*Dwdx ;
-      df.flatten();
+      df.reshapeFlat();
 //      df.subRef(0,6) = 0.;
       //      cout << "df: " << df << endl;
     }

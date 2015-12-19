@@ -154,7 +154,7 @@ void TaskControllerModule::step(){
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
-  refs.intLimitRatio = ARR(0.7);
+  refs.intLimitRatio = 0.7;
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {

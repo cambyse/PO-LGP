@@ -470,8 +470,8 @@ void TaskVariable::updateChange(int t, double tau) {
   CHECK(y.N, "variable needs to be updated before!");
   arr yt, vt;
   if(t!=-1) {
-    yt.referToSubDim(y_trajectory, t);
-    vt.referToSubDim(v_trajectory, t);
+    yt.referToDim(y_trajectory, t);
+    vt.referToDim(v_trajectory, t);
     //y_prec     = y_prec_trajectory(t);
   } else {
     yt.referTo(y_target);

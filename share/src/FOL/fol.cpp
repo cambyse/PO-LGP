@@ -125,18 +125,18 @@ bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
   return false;
 }
 
-/// try to find a fact within 'facts' that is exactly equal to 'literal'
-bool getEqualFactInKB(Graph& facts, NodeL& fact, bool checkAlsoValue){
-  //first find the section of all facts that derive from the same symbols
-  NodeL candidates=fact(0)->parentOf;
-//  for(uint p=1;p<fact.N;p++)
-//    candidates = setSection(candidates, fact->parents(p)->parentOf);
-  //now check only these candidates
-  for(Node *fact1:candidates) if(&fact1->container==&facts){
-    if(factsAreEqual(fact1, fact, checkAlsoValue)) return true;
-  }
-  return false;
-}
+///// try to find a fact within 'facts' that is exactly equal to 'literal'
+//bool getEqualFactInKB(Graph& facts, NodeL& fact, bool checkAlsoValue){
+//  //first find the section of all facts that derive from the same symbols
+//  NodeL candidates=fact(0)->parentOf;
+////  for(uint p=1;p<fact.N;p++)
+////    candidates = setSection(candidates, fact->parents(p)->parentOf);
+//  //now check only these candidates
+//  for(Node *fact1:candidates) if(&fact1->container==&facts){
+//    if(factsAreEqual(fact1, fact, checkAlsoValue)) return true;
+//  }
+//  return false;
+//}
 
 /// check if subst is a feasible substitution for a literal (by checking with all facts that have same predicate)
 bool getEqualFactInKB(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue){

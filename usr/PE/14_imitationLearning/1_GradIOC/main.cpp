@@ -54,7 +54,7 @@ struct Dfdw:ConstrainedProblem {
     // compute w vector
     arr w=repmat(x.subRef(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
-    w.flatten();
+    w.reshapeFlat();
 
     // compute matrix dWdx
     if (Dwdx.d0<1.) {
@@ -112,7 +112,7 @@ struct Dfdw:ConstrainedProblem {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
 
     if (&Hf) {

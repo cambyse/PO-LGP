@@ -171,7 +171,7 @@ void MotionFactory::createScene0(Scene &s, mlr::Array<CostWeight> &weights, uint
     s.MP->setInterpolatingCosts(c2, MotionProblem::constant,ARR(0.),1e0);
   }
 
-  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.reshapeFlat();
   s.MP->x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(*s.MP);
@@ -434,7 +434,7 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
   c->prec = w;
   pC++;
 
-  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.reshapeFlat();
   s.MP->x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(*s.MP);
@@ -534,7 +534,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
 
 
 
-  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.reshapeFlat();
   s.MP->x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(*s.MP);
@@ -618,7 +618,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
   weights.append(CostWeight(CostWeight::Gaussian,3,ARR(0),s.MP->T,3));
   pC=pC+3;
 
-  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.reshapeFlat();
   s.MP->x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(*s.MP);
@@ -807,7 +807,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
 
 
-  //  /*arr costGrid = linspace(50.,double(xDem.d0-1),5); costGrid.flatten();
+  //  /*arr costGrid = linspace(50.,double(xDem.d0-1),5); costGrid.reshapeFlat();
   //  cout << "costGrid"<<costGrid << endl;
   //  c =s.MP->addTask("posC", new DefaultTaskMap(posTMT, grasp->index) );
   //  c->setCostSpecs(contactTime,contactTime+3, objPosT, param(N++));
@@ -911,7 +911,7 @@ void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint
   //  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, conv_vec2arr(tar->X.pos), param(N));
 //  c->prec(s.MP->T*0.5) = param(N);
 
-  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.flatten();
+  s.MP->x0 = zeros(s.world->getJointStateDimension(),1);s.MP->x0.reshapeFlat();
   s.MP->x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(*s.MP);

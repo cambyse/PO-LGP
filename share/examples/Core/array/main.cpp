@@ -41,16 +41,17 @@ void TEST(Basics){
   //access:
   cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
   a[2](1)=7.; //same as a(2,1)=7 (but much slower)
-  a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
-  a[1]()=a[2];
+  a[3] += 1.; //use operator() to get a non-const &-version of the []-subarray
+  a[1] = a[2];
   cout <<"\nrows manipulated:\n" <<a <<endl;
   CHECK_EQ(a(2,1),7.,"");
   CHECK_EQ(a[1],a[2],"");
 
   //access (copy and reference) of subarrays
   cout <<"\nsubRef(2,4) =\n" <<a.subRef(2,4) <<endl;
-  a.subRef(2,4)() *= 10.;
+  a.subRef(2,4) *= 10.;
   cout <<"\nrows manipulated:\n" <<a <<endl;
+  exit(0);
 
 
   //setting arrays ``by hand''
