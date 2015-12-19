@@ -12,8 +12,8 @@ void draw(void*){
   glDisable(GL_DEPTH_TEST);
 
   glColor(.8, .8, .8, .8);
-  glTransform(t1);  glDrawMesh(&m1);
-  glTransform(t2);  glDrawMesh(&m2);
+  glTransform(t1);  m1.glDraw(NoOpenGL);
+  glTransform(t2);  m2.glDraw(NoOpenGL);
   glLoadIdentity();
 
   glColor(1., 0., 0., .9);
@@ -79,7 +79,7 @@ void TEST(DistanceFunctions) {
   ors::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
-  gl.add(glDrawMesh,&m);
+  gl.add(m);
 
   mlr::Array<ScalarFunction*> fcts = {
     new DistanceFunction_Sphere(t, 1.),
@@ -112,7 +112,7 @@ void TEST(DistanceFunctions) {
 
 void TEST(DistanceFunctions2) {
   //-- check hessian and gradient
-  for(uint i=0;i<1;i++){
+  for(uint i=0;i<1000;i++){
     arr x(14);
     rndUniform(x, -5., 5.);
 
@@ -121,7 +121,7 @@ void TEST(DistanceFunctions2) {
 //    suc &= checkHessian(DistanceFunction_SSBox, x, 1e-6);
     if(!suc){
       arr g,H;
-      DistanceFunction_SSBox(g,H,x); //set breakpoint here;
+      cout <<"f=" <<DistanceFunction_SSBox(g,H,x); //set breakpoint here;
       HALT("x=" <<x);
     }
   }

@@ -44,7 +44,7 @@ UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, Constrai
     case squaredPenalty: mu=muInit;  break;
     case augmentedLag:   mu=muInit;  break;
     case anyTimeAula:    mu=muInit;  break;
-    case logBarrier:     muLB=.1;  break;
+    case logBarrier:     muLB=muInit;  break;
     case noMethod: HALT("need to set method before");  break;
   }
 

@@ -61,9 +61,10 @@ OptNewton::StopCriterion OptNewton::step(){
   double fy;
   arr y, gy, Hy, Delta;
 //  x_changed=false;
+  bool betaChanged=false;
 
   it++;
-  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tbeta=" <</*std::setprecision(3) <<*/beta <<flush;
+  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(4) <<it << " \tbeta=" <<std::setw(8) <<beta <<flush;
 
   if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
 
@@ -75,19 +76,25 @@ OptNewton::StopCriterion OptNewton::step(){
   }
   if(additionalRegularizer) {
     if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
-    //      cout <<*addRegularizer <<R <<endl;
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
     try {
       Delta = lapack_Ainv_b_sym(R, -gx);
     }catch(...){
-      if(o.verbose>0) cout <<endl <<"** hessian inversion failed ... increasing damping **" <<endl;
-      beta *= 10.;
-      return stopCriterion=stopStepFailed;
+      arr sig, eig;
+      lapack_EigenDecomp(R, sig, eig);
+      if(o.verbose>0){
+        cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
+      }
+      double sigmin = sig.min();
+      CHECK(sigmin<0,"");
+      beta = 2.*beta - sigmin;
+      betaChanged=true;
+      return stopCriterion=stopNone;
     }
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
-  if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
+  if(o.verbose>1) cout <<" \t|Delta|=" <<std::setw(11) <<absMax(Delta) <<flush;
 
   //lazy stopping criterion: stop without any update
   if(absMax(Delta)<1e-1*o.stopTolerance){
@@ -95,13 +102,12 @@ OptNewton::StopCriterion OptNewton::step(){
     return stopCriterion=stopCrit1;
   }
 
-  for(;;) { //stepsize adaptation loop -- doesn't iterate for dampingInc (LV) option
+  for(;!betaChanged;) { //line search
     y = x + alpha*Delta;
     fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
-    if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  /*<<" \tf(y)-f(x)=" <<fy-fx */<<flush;
-    //CHECK_EQ(fy,fy, "cost seems to be NAN: ly=" <<fy);
+    if(o.verbose>1) cout <<" \tevals=" <<std::setw(4) <<evals <<" \talpha=" <<std::setw(11) <<alpha <<" \tf(y)=" <<fy <<flush;
     if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
@@ -110,21 +116,20 @@ OptNewton::StopCriterion OptNewton::step(){
       gx = gy;
       Hx = Hy;
       if(fy<=fx){
-        if(alpha>.9) beta *= o.dampingDec;
+        if(alpha>.9 && beta>o.damping){ beta *= o.dampingDec; betaChanged=true; }
         alpha *= o.stepInc;
         if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
-        beta *= o.dampingInc;
+        if(alpha<.01){ beta *= o.dampingInc; alpha*=10.; betaChanged=true; if(o.verbose>1) cout <<"(line search stopped)" <<endl;}
         alpha *= o.stepDec;
       }
       break;
     } else {
-      if(o.verbose>1) cout <<" - reject" <<std::endl <<"\t\t\t\t";
+      if(o.verbose>1) cout <<" - reject" <<endl <<"\t\t\t\t\t(line search)\t";
       //reject new points and adapte stepsize|damping
       if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      beta = beta*o.dampingInc;
-      alpha = alpha*o.stepDec;
-      if(o.dampingInc!=1.) break; //we need to recompute Delta
+      if(alpha<.01){ beta *= o.dampingInc; alpha*=10.; betaChanged=true; if(o.verbose>1) cout <<"(line search stopped)" <<endl;}
+      alpha *= o.stepDec;
     }
   }
 
