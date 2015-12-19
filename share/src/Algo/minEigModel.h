@@ -5,7 +5,7 @@
 #include <Geo/mesh.h>
 #include "dataNeighbored.h"
 
-struct MinEigModel{
+struct MinEigModel : GLDrawer{
   DataNeighbored& data;
   arr weights;
   double margin;
@@ -46,7 +46,7 @@ struct MinEigModel{
   double coveredData(bool novelDataOnly=true);
   void calcDensity();
   void colorPixelsWithWeights(arr& cols);
-  void glDraw();
+  void glDraw(OpenGL&);
   void report(ostream& os=std::cout, bool mini=false);
 
 private:

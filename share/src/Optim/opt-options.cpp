@@ -17,8 +17,9 @@ OptOptions::OptOptions() {
   damping   = mlr::getParameter<double>("opt/damping", 1.);
   stepInc   = mlr::getParameter<double>("opt/stepInc", 2.);
   stepDec   = mlr::getParameter<double>("opt/stepDec", .1);
-  dampingInc= mlr::getParameter<double>("opt/dampingInc", 1.);
-  dampingDec= mlr::getParameter<double>("opt/dampingDec", 1.);
+  dampingInc= mlr::getParameter<double>("opt/dampingInc", 2.);
+  dampingDec= mlr::getParameter<double>("opt/dampingDec", .5);
+  wolfe     = mlr::getParameter<double>("opt/wolfe", .01);
   nonStrictSteps= mlr::getParameter<uint>  ("opt/nonStrictSteps", 0);
   allowOverstep= mlr::getParameter<bool>  ("opt/allowOverstep", false);
   constrainedMethod = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod", augmentedLag);

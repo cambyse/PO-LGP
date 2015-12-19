@@ -18,6 +18,7 @@ struct OptOptions {
   double damping;
   double stepInc, stepDec;
   double dampingInc, dampingDec;
+  double wolfe;
   int nonStrictSteps; //# of non-strict iterations
   bool allowOverstep;
   ConstrainedMethodType constrainedMethod;

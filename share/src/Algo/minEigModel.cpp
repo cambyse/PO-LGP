@@ -156,7 +156,7 @@ void MinEigModel::calcDensity(){
   density = coveredData() / circum*circum;
 }
 
-void MinEigModel::glDraw(){
+void MinEigModel::glDraw(OpenGL& gl){
   if(eig.x_lo.N!=3) return;
   if(!convexHull.V.N){
     ors::Quaternion rot;
@@ -171,7 +171,7 @@ void MinEigModel::glDraw(){
     glEnd();
     glPopMatrix();
   }else{
-    convexHull.glDraw();
+    convexHull.glDraw(gl);
   }
 }
 

@@ -149,7 +149,7 @@ struct Joint {
 //===========================================================================
 
 /// a shape (geometric shape like cylinder/mesh or just marker, associated to a body)
-struct Shape {
+struct Shape : GLDrawer{
   KinematicWorld& world;
   uint index;
   Body *body;
@@ -166,12 +166,13 @@ struct Shape {
   Graph ats;   ///< list of any-type attributes
   
   Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
-  ~Shape();
+  virtual ~Shape();
   void copy(const Shape& s, bool referenceMeshOnCopy=false);
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void glDraw(OpenGL&);
 };
 
 //===========================================================================

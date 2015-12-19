@@ -103,32 +103,44 @@ OptNewton::StopCriterion OptNewton::step(){
   }
 
   for(;!betaChanged;) { //line search
+    if(!o.allowOverstep) if(alpha>1.) alpha=1.;
     y = x + alpha*Delta;
     fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<std::setw(4) <<evals <<" \talpha=" <<std::setw(11) <<alpha <<" \tf(y)=" <<fy <<flush;
-    if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
+    bool wolfe = (fy <= fx + o.wolfe*alpha*scalarProduct(Delta,gx) );
+    if(fy==fy && (wolfe || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
+      //accept new point
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
-      //adopt new point and adapt stepsize|damping
       x = y;
       fx = fy;
       gx = gy;
       Hx = Hy;
-      if(fy<=fx){
+      if(wolfe){
         if(alpha>.9 && beta>o.damping){ beta *= o.dampingDec; betaChanged=true; }
         alpha *= o.stepInc;
-        if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
-        if(alpha<.01){ beta *= o.dampingInc; alpha*=10.; betaChanged=true; if(o.verbose>1) cout <<"(line search stopped)" <<endl;}
+        //this is the nonStrict case... weird, but well
+        if(alpha<.01){
+          beta*=o.dampingInc;
+          alpha*=o.dampingInc*o.dampingInc;
+          betaChanged=true;
+          if(o.verbose>1) cout <<"(line search stopped)" <<endl;
+        }
         alpha *= o.stepDec;
       }
       break;
     } else {
+      //reject new point
       if(o.verbose>1) cout <<" - reject" <<endl <<"\t\t\t\t\t(line search)\t";
-      //reject new points and adapte stepsize|damping
       if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      if(alpha<.01){ beta *= o.dampingInc; alpha*=10.; betaChanged=true; if(o.verbose>1) cout <<"(line search stopped)" <<endl;}
+      if(alpha<.01){
+        beta*=o.dampingInc;
+        alpha*=o.dampingInc*o.dampingInc;
+        betaChanged=true;
+        if(o.verbose>1) cout <<"(line search stopped)" <<endl;
+      }
       alpha *= o.stepDec;
     }
   }
@@ -140,7 +152,7 @@ OptNewton::StopCriterion OptNewton::step(){
   //stopping criteria
 #define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return stopCriterion=ret; }
   STOPIF(absMax(Delta)<o.stopTolerance, stopCrit1);
-  STOPIF(alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
+//  STOPIF(alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
   STOPIF(evals>=o.stopEvals, stopCritEvals);
   STOPIF(it>=o.stopIters, stopCritEvals);
 #undef STOPIF
