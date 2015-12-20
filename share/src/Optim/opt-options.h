@@ -10,6 +10,7 @@ struct OptOptions {
   uint verbose;
   double *fmin_return;
   double stopTolerance;
+  double stopFTolerance;
   uint   stopEvals;
   uint   stopIters;
   double initStep;
@@ -22,6 +23,7 @@ struct OptOptions {
   int nonStrictSteps; //# of non-strict iterations
   bool allowOverstep;
   ConstrainedMethodType constrainedMethod;
+  double muInit, muLBInit;
   double aulaMuInc;
   OptOptions();
   void write(std::ostream& os) const;

@@ -33,13 +33,13 @@ struct OptNewton{
   double fx;
   arr gx, Hx;
   double alpha, beta;
-  uint it, evals;
+  uint it, evals, numTinySteps;
   StopCriterion stopCriterion;
   ofstream fil;
 
   OptNewton(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);
   ~OptNewton();
   StopCriterion step();
-  StopCriterion run();
+  StopCriterion run(uint maxIt = 1000);
   void reinit();
 };

@@ -35,11 +35,9 @@ int optNewton(arr& x, const ScalarFunction& f,  OptOptions o) {
 //
 
 OptNewton::OptNewton(arr& _x, const ScalarFunction& _f,  OptOptions _o):
-  x(_x), f(_f), o(_o){
+  x(_x), f(_f), o(_o), it(0), evals(0), numTinySteps(0){
   alpha = o.initStep;
   beta = o.damping;
-  it=0;
-  evals=0;
   additionalRegularizer=NULL;
   reinit();
 }
@@ -93,8 +91,10 @@ OptNewton::StopCriterion OptNewton::step(){
       return stopCriterion=stopNone;
     }
   }
-  if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
-  if(o.verbose>1) cout <<" \t|Delta|=" <<std::setw(11) <<absMax(Delta) <<flush;
+  double maxDelta = absMax(Delta);
+  if(o.maxStep>0. && maxDelta>o.maxStep){  Delta *= o.maxStep/maxDelta; maxDelta = o.maxStep; }
+  double alphaLimit = o.maxStep/maxDelta;
+  if(o.verbose>1) cout <<" \t|Delta|=" <<std::setw(11) <<maxDelta <<flush;
 
   //lazy stopping criterion: stop without any update
   if(absMax(Delta)<1e-1*o.stopTolerance){
@@ -104,6 +104,7 @@ OptNewton::StopCriterion OptNewton::step(){
 
   for(;!betaChanged;) { //line search
     if(!o.allowOverstep) if(alpha>1.) alpha=1.;
+    if(alphaLimit>0. && alpha>alphaLimit) alpha=alphaLimit;
     y = x + alpha*Delta;
     fy = f(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
@@ -113,12 +114,17 @@ OptNewton::StopCriterion OptNewton::step(){
     if(fy==fy && (wolfe || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       //accept new point
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
+      if(fx-fy<o.stopFTolerance) numTinySteps++; else numTinySteps=0;
       x = y;
       fx = fy;
       gx = gy;
       Hx = Hy;
       if(wolfe){
-        if(alpha>.9 && beta>o.damping){ beta *= o.dampingDec; betaChanged=true; }
+        if(alpha>.9 && beta>o.damping){
+          beta *= o.dampingDec;
+          if(alpha>1.) alpha=1.;
+          betaChanged=true;
+        }
         alpha *= o.stepInc;
       }else{
         //this is the nonStrict case... weird, but well
@@ -150,11 +156,12 @@ OptNewton::StopCriterion OptNewton::step(){
   if(o.verbose>0) fil <<endl;
 
   //stopping criteria
-#define STOPIF(expr, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; return stopCriterion=ret; }
-  STOPIF(absMax(Delta)<o.stopTolerance, stopCrit1);
+#define STOPIF(expr, code, ret) if(expr){ if(o.verbose>1) cout <<"\t\t\t\t\t\t--- stopping criterion='" <<#expr <<"'" <<endl; code; return stopCriterion=ret; }
+  STOPIF(absMax(Delta)<o.stopTolerance, , stopCrit1);
+  STOPIF(numTinySteps>10, numTinySteps=0, stopCrit2);
 //  STOPIF(alpha*absMax(Delta)<1e-3*o.stopTolerance, stopCrit2);
-  STOPIF(evals>=o.stopEvals, stopCritEvals);
-  STOPIF(it>=o.stopIters, stopCritEvals);
+  STOPIF(evals>=o.stopEvals, , stopCritEvals);
+  STOPIF(it>=o.stopIters, , stopCritEvals);
 #undef STOPIF
 
   return stopCriterion=stopNone;
@@ -171,8 +178,9 @@ OptNewton::~OptNewton(){
 }
 
 
-OptNewton::StopCriterion OptNewton::run(){
-  for(;;){
+OptNewton::StopCriterion OptNewton::run(uint maxIt){
+  numTinySteps=0;
+  for(uint i=0;i<maxIt;i++){
     step();
     if(stopCriterion==stopStepFailed) continue;
     if(stopCriterion>=stopCrit1) break;
