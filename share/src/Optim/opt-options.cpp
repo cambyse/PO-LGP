@@ -10,6 +10,7 @@ OptOptions::OptOptions() {
   fmin_return=NULL;
   stopTolerance= mlr::getParameter<double>("opt/stopTolerance", 1e-2);
   stopFTolerance= mlr::getParameter<double>("opt/stopFTolerance", 1e-1);
+  stopGTolerance= mlr::getParameter<double>("opt/stopGTolerance", -1.);
   stopEvals = mlr::getParameter<uint>  ("opt/stopEvals", 1000);
   stopIters = mlr::getParameter<uint>  ("opt/stopIters", 1000);
   initStep  = mlr::getParameter<double>("opt/initStep", 1.);

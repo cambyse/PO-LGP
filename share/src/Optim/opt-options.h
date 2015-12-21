@@ -11,6 +11,7 @@ struct OptOptions {
   double *fmin_return;
   double stopTolerance;
   double stopFTolerance;
+  double stopGTolerance;
   uint   stopEvals;
   uint   stopIters;
   double initStep;

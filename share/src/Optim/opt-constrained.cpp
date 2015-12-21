@@ -365,7 +365,11 @@ bool OptConstrained::step(){
   if(its>=2 && absMax(x_old-newton.x)<opt.stopTolerance){
     if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
     if(earlyPhase) earlyPhase=false;
-    else return true;
+    else{
+      if(opt.stopGTolerance<0.
+         || UCP.get_sumOfGviolations() + UCP.get_sumOfHviolations() < opt.stopGTolerance)
+        return true;
+     }
   }
 
   //upate unconstraint problem parameters
