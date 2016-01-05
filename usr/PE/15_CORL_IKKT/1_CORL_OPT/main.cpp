@@ -51,7 +51,7 @@ int main(int argc,char **argv){
   TrajectoryInterface *mi;
   if (useRos) {
     mi = new TrajectoryInterface(world);
-    mi->world->gl().update(); mi->world->gl().resize(400,400);
+    mi->world_pr2->gl().update(); mi->world_pr2->gl().resize(400,400);
   }
   world.gl().update(); world.gl().resize(800,800);
   arr Xreverse, Xbase, FLbase, Mbase;
@@ -110,7 +110,7 @@ int main(int argc,char **argv){
 
     /// visualize trajectory candidate
     if (visualize) {
-      task->updateVisualization(world,Xn,X);
+      task->updateVisualization(world,Xn,Xbase);
       world.watch(true,"press enter to visualize trajectory");
       displayTrajectory(Xn,Xn.d0,world,"");
       world.watch(true,"press enter to execute trajectory");

@@ -26,7 +26,7 @@ void MotionFactory::execMotion(Scene &s, arr &x, arr &lambda, arr &_x0, uint vis
     xx = repmat(~s.MP->x0,s.MP->T+1,1);
     OptOptions o; o.verbose=_verbose; o.stopTolerance=mlr::getParameter<double>("MP/stopTolerance"); o.stopIters=100; o.aulaMuInc=1.1; o.maxStep=1.;
 
-    optConstrainedMix(xx, ll, Convert(MPF), o);
+    optConstrained(xx, ll, Convert(MPF), o);
     s.MP->costReport(false);
     writeDemoToFile(name,xx,ll);
   }
@@ -267,7 +267,7 @@ void MotionFactory::loadDemonstration(arr &x,arr &lambda, MotionProblem &MP) {
   t->setCostSpecs(50.,50.,conv_vec2arr(b.world.getBodyByName("t8")->X.pos),1e2);
   x = repmat(~b.x0,b.T+1,1);
   MotionProblemFunction MPF(b);
-  optConstrainedMix(x, lambda, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stopTolerance = 1e-5));
+  optConstrained(x, lambda, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stopTolerance = 1e-5));
   displayTrajectory(x,b.T,b.world,"world");
 }
 
@@ -614,16 +614,23 @@ void MotionFactory::loadScenarioButton(Scenario &scenario) {
 
   /// load demo from file
   s.xDem = FILE(STRING(folder<<"Xaug.dat"));
-
   s.MP->T = s.xDem.d0-1;
   s.MP->tau = duration/s.MP->T;
-
   s.x0 = s.xDem[0];
 
-  /// compute lambda
-  // TODO
+  arr conTime = FILE(STRING(folder<<"constraintTime.dat")); conTime.flatten();
+  arr conTime_inv = -1.*(conTime-1.);
 
-  arr param = ARR(1e0,1e2,1e2,1e0);
+  uint b2_b1_idx = s.world->getJointByName("b2_b1")->qIndex;
+  arr tmp = s.xDem.col(b2_b1_idx); tmp.flatten();
+  double b2_b1Min = tmp.min();
+  uint mIdx = tmp.minIndex();
+
+  mlr::Array<uint> conStart;
+  conStart << FILE(STRING(folder<<"conStart.dat"));
+  mlr::Array<uint> conEnd = FILE(STRING(folder<<"conEnd.dat"));
+
+  arr param = ARR(1e0,1e1,1e1,1e1);
   // transition costs
   Task *t;
   t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
@@ -633,28 +640,24 @@ void MotionFactory::loadScenarioButton(Scenario &scenario) {
   scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension(),ARR(0.1,1e5)));
 
   s.optConstraintsParam = true;
-  uint b2_b1_idx = s.world->getJointByName("b2_b1")->qIndex;
-  uint contactT = s.MP->T/2.;
-
-  arr tmp1,tmp2,tmp3,tmp4,tmp5;
-
-  s.world->setJointState(s.xDem[contactT]);
+  arr tmp1,tmp2,tmp3;
+  s.world->setJointState(s.xDem[conStart(0)]);
   s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
   tmp1 += 1e-1*randn(3);
   tmp1 = tmp1/length(tmp1);
   t =s.MP->addTask("vec1", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp1)) );
   t->target = ARR(1.);
-  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(contactT,contactT),1,1));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conStart(0),conStart(0)),1,1));
 
-  s.world->setJointState(s.xDem[s.MP->T]);
+  s.world->setJointState(s.xDem[conEnd(0)]);
   s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
   tmp2 += 1e-1*randn(3);
   tmp2 = tmp2/length(tmp2);
   t = s.MP->addTask("vec2", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp2)) );
   t->target = ARR(1.);
-  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T,s.MP->T),1,1));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conEnd(0),conEnd(0)),1,1));
 
-  uint preconT = contactT-10;
+  uint preconT = conStart(0)-10;
   s.world->setJointState(s.xDem[preconT]);
   s.world->kinematicsPos(tmp3,NoArr,s.world->getShapeByName("endeffL")->body,ors::Vector(1.,0.,0.));
   t =s.MP->addTask("pos", new DefaultTaskMap(posTMT, *s.world,"endeffL",ors::Vector(1.,0.,0.)) );
@@ -665,11 +668,23 @@ void MotionFactory::loadScenarioButton(Scenario &scenario) {
 
   // add constraint
   t = s.MP->addTask("dof_target", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
-  t->setCostSpecs(s.MP->T, s.MP->T, ARR(s.xDem(s.xDem.d0-1,b2_b1_idx)), 1.);
-  t = s.MP->addTask("dof_fix", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
-  t->setCostSpecs(0, contactT, ARR(s.xDem(0,b2_b1_idx)), 1.);
+  t->setCostSpecs(mIdx,mIdx, ARR(b2_b1Min), 1.);
+  t = s.MP->addTask("dof_fixation", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
+  t->setCostSpecs(0,conStart(0), ARR(s.xDem(0,b2_b1_idx)), 1.);
+  t->target = ARR(s.xDem(0,b2_b1_idx));
+  t->prec = conTime_inv;
   t = s.MP->addTask("contact", new PointEqualityConstraint(*s.world, "endeffL",NoVector, "b1_shape",NoVector));
-  t->setCostSpecs(contactT+1, s.MP->T, ARR(0), 1.);
+  t->setCostSpecs(conStart(0),conEnd(0), ARR(s.xDem(0,b2_b1_idx)), 1.);
+  t->target = ARR(0.);
+  t->prec = conTime;
+
+  s.world->setJointState(s.xDem[0]);
+
+//  scenario.scenes.append(s);
+//  scenario.paramGT = param;
+//  scenario.setParam(param);
+//  execMotion(s,x,lambda,NoArr,mlr::getParameter<bool>("IMP/visDemo"));
+//  cout << "lambda: " << lambda << endl;
 
   scenario.scenes.append(s);
   scenario.paramGT = param;

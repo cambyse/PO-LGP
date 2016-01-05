@@ -56,6 +56,9 @@ void ButtonTask::computeConstraintTime(const arr &F,const arr &X) {
   cout << "constraintTime: " << constraintTime << endl;
   cout << "constraintStart " << conStart << endl;
   cout << "constraintEnd " << conEnd << endl;
+  write(LIST<arr>(constraintTime),STRING(mlr::getParameter<mlr::String>("folder")<<"constraintTime.dat"));
+  write(LIST<arr>(ARR(conStart)),STRING(mlr::getParameter<mlr::String>("folder")<<"conStart.dat"));
+  write(LIST<arr>(ARR(conEnd)),STRING(mlr::getParameter<mlr::String>("folder")<<"conEnd.dat"));
 }
 
 

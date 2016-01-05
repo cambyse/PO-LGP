@@ -23,7 +23,8 @@ struct MySystem {
 struct TrajectoryInterface {
   MySystem S;
   arr q,qdot;
-  ors::KinematicWorld *world;
+  ors::KinematicWorld *world_pr2;
+  ors::KinematicWorld *world_plan;
   bool useRos, fixBase,fixTorso;
 
   CtrlMsg refs;
@@ -35,17 +36,20 @@ struct TrajectoryInterface {
   ~TrajectoryInterface(){ threadCloseModules(); }
 
   /// execute trajectory X in T seconds
-  void executeTrajectory(arr &X, double T, bool recordData = false);
+  void executeTrajectory(arr &X_plan, double T, bool recordData = false);
 
   /// go to robot configuration s
-  void gotoPosition(arr x, double T=5., bool recordData = false);
+  void gotoPosition(arr x_plan, double T=5., bool recordData = false);
 
   /// send zero gains and record trajectory of T seconds
-  void recordDemonstration(arr &X, double T, double dt=0.05, double T_start=2.);
+  void recordDemonstration(arr &X_plan, double T, double dt=0.05, double T_start=2.);
 
   /// stop the motion
   void pauseMotion(bool sendZeroGains = false);
 
   /// save last trajectory to file
   void logging(mlr::String folder, uint id=0);
+
+  /// get robot state
+  void getState(arr& q_plan);
 };

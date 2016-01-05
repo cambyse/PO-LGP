@@ -20,7 +20,7 @@ int main(int argc,char **argv){
   arr param = param0;
 
   checkJacobianCP(IMP,param0,1e-2);
-  optConstrainedMix(param,NoArr,IMP,OPT(verbose=1,stopTolerance=1e-5,stepInc=2,aulaMuInc=10,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
+  optConstrained(param,NoArr,IMP,OPT(verbose=1,stopTolerance=1e-5,stepInc=2,aulaMuInc=10,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
   IMP.costReport(param,param0);
   scenario.setParam(param);
 

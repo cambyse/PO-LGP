@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['../data/button3/'];
+folder = ['../data/button2/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -12,8 +12,8 @@ T = size(mbXbase,1);
 
 %% plot model based results over time
 varList = {
-%  'mbFL';...
- 'mbXref','mbX';...
+ 'mfFL';...
+%  'mbXref','mbX';...
 %  'mbFLact','mbUact';...
 %  'phaseXdes','phaseXact';...
 %  'mfUact';...
@@ -21,8 +21,8 @@ varList = {
 
 % evalFun = @(x) sum(sum(x(1:end,15).^2))/T;
 % evalFun = @(x) sum(sum(compVel(x,1).^2))/T;
-evalFun = @(x) sum(sum(compAcc(x,1).^2))/T;
-% evalFun = @(x) x(:,3);
+% evalFun = @(x) sum(sum(compAcc(x,1).^2))/T;
+evalFun = @(x) x(:,3);
 
 col = {'.r--','sg--','ob'};
 for v = 1:size(varList,1)
