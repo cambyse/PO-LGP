@@ -136,13 +136,17 @@ void TreeControllerClass::update() {
     }
 
     u = zeros(q.N);
-    if(Kp.N==1 && Kd.N==1){
+    /*if(Kp.N==1 && Kd.N==1){
       u += Kp_base % (Kp.scalar() * (q_ref - q));
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
       u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
-    }
+    } else */
+    if(Kp.d0 == q.N && Kp.d1 == q.N && Kd.d0 == q.N && Kd.d1 == q.N) {
+      u += Kp*(q_ref - q);
+      u += Kd*(qdot_ref -qd); //Danny
+    } 
 
     // add integral term
     if(Ki.N==1){
@@ -165,6 +169,7 @@ void TreeControllerClass::update() {
 #else
       err *= gamma;
       arr f_obs = J_ft_inv*fL_obs;
+      //Danny
       for(uint i=0;i<f_obs.N;i++) {
         if(fL_ref(i) < 0) {
           if(f_obs(i) < fL_ref(i)) {
