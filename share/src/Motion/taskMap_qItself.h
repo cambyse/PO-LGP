@@ -35,3 +35,16 @@ struct TaskMap_qItself:TaskMap {
 private:
   uintA dimPhi;
 };
+
+//===========================================================================
+
+struct TaskMap_qZeroVels:TaskMap {
+  TaskMap_qZeroVels(){}
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){NIY}
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
+  virtual uint dim_phi(const ors::KinematicWorld& G){NIY}
+  virtual uint dim_phi(const WorldL& G, int t);
+private:
+  uintA dimPhi;
+};

@@ -43,7 +43,7 @@ namespace ors {
 /// @addtogroup ors_basic_data_structures
 /// @{
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, ssCvxST, ssBoxST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /// @}
 
@@ -115,6 +115,7 @@ struct Joint {
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
+  bool constrainToZeroVel; ///< HACK yet: when creating new 'virtual' joints, constrain them to zero vel in paths
 
   JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
@@ -133,7 +134,7 @@ struct Joint {
   ~Joint();
   Joint(const Joint &j);
   void operator=(const Joint& j) {
-    qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent;
+    qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent; constrainToZeroVel=j.constrainToZeroVel;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
     locker=j.locker;
@@ -348,11 +349,14 @@ struct KinematicSwitch{
   JointType jointType;
   uint timeOfApplication;
   uint fromId, toId;
+  ors::Transformation jA,jB;
   KinematicSwitch();
-  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
+//  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
-  void temporallyAlign(const KinematicWorld& Gprevious,KinematicWorld& G);
+  void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool existsInPrevious);
   void write(std::ostream& os) const;
+  static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
+
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace

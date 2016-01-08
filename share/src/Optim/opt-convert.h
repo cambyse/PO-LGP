@@ -24,6 +24,7 @@
 ScalarFunction     conv_cstylefs2ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
 VectorFunction     conv_cstylefv2VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
 ScalarFunction     conv_VectorFunction2ScalarFunction(const VectorFunction& f);
+ScalarFunction     conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f);
 VectorFunction     conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f);
 ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f);
 

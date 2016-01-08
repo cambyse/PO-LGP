@@ -183,7 +183,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       //pick at time 2*i+1
       ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
       op_pick->symbol = ors::KinematicSwitch::addJointZero;
-      op_pick->jointType = ors::JT_fixed;
+      op_pick->jointType = ors::JT_rigid;
       op_pick->timeOfApplication = tPick(i)+1;
       op_pick->fromId = world.shapes(endeff_index)->index;
       op_pick->toId = world.shapes(idObject(i))->index;

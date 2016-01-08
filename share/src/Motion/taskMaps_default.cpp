@@ -261,10 +261,10 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
       G.kinematicsQuat(y2, J2, body_j);
       if(scalarProduct(y,y2)>=0.){
         y -= y2;
-        J -= J2;
+        if(&J) J -= J2;
       }else{
         y += y2;
-        J += J2;
+        if(&J) J += J2;
       }
     }
     return;

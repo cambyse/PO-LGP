@@ -12,6 +12,7 @@ vecAlign
 quat
 quatDiff
 qItself
+qZeroVels
 GJK
 collisionIneq
 collisionPairs
@@ -24,6 +25,7 @@ rigid
 rigidZero
 free
 transXYPhi
+transXYPhiZero
 
 # from Johannes
 OpSpacePos

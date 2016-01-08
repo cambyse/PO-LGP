@@ -3,6 +3,7 @@
 //===========================================================================
 
 TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
+  HALT("this is deprecated, yes?")
   TaskMap *map;
   mlr::String type = specs.V<mlr::String>("type", "pos");
   if(type=="wheels"){
@@ -15,6 +16,8 @@ TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
     if(specs["ref1"]) map = new TaskMap_qItself(world, specs["ref1"]->V<mlr::String>());
     else if(specs["Hmetric"]) map = new TaskMap_qItself(specs["Hmetric"]->V<double>()*world.getHmetric());
     else map = new TaskMap_qItself();
+  }else if(type=="qZeroVels"){
+    map = new TaskMap_qZeroVels();
   }else if(type=="GJK_vec"){
     map = new TaskMap_GJK(world, specs, false);
   }else{
@@ -68,6 +71,8 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
     }else if(ref1) map = new TaskMap_qItself(world, ref1);
     else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
+  }else if(type=="qZeroVels"){
+    map = new TaskMap_qZeroVels();
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
   }else{

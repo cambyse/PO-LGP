@@ -33,6 +33,18 @@ Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data):kom(NULL)
 #endif
 
 Convert::~Convert() {
+  int i=5;
+  i++;
+}
+
+void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x);
+double conv_VectorFunction_ScalarFunction(VectorFunction f, arr& g, arr& H, const arr& x){
+  arr y,J;
+  f(y, (&g?J:NoArr), x);
+  //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+  if(&g){ g = comp_At_x(J, y); g *= 2.; }
+  if(&H){ H = comp_At_A(J); H *= 2.; }
+  return sumOfSqr(y);
 }
 
 //===========================================================================
@@ -109,6 +121,14 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
     if(&H){ H = comp_At_A(J); H *= 2.; }
     return sumOfSqr(y);
   };
+}
+
+ScalarFunction conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f) {
+  return conv_VectorFunction2ScalarFunction(
+        [&f](arr& y, arr& J, const arr& x) -> void {
+    conv_KOrderMarkovFunction_ConstrainedProblem(f, y, J, NoArr, NoTermTypeA, x);
+  }
+  );
 }
 
 void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) {

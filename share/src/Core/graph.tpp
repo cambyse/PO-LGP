@@ -149,7 +149,7 @@ struct Node_typed : Node {
   }
 };
 
-template<class T> T *Node::getValue() {
+template<class T> T* Node::getValue() {
   Node_typed<T>* typed = dynamic_cast<Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
@@ -166,7 +166,7 @@ template<class T> T *Node::getValue() {
   return typed->value;
 }
 
-template<class T> const T *Node::getValue() const {
+template<class T> const T* Node::getValue() const {
   const Node_typed<T>* typed = dynamic_cast<const Node_typed<T>*>(this);
   if(!typed) {
     if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
@@ -182,14 +182,14 @@ template<class T> const T *Node::getValue() const {
 }
 
 template<class T> Nod::Nod(const char* key, const T& x){
-  it = new Node_typed<T>(G, new T(x), true);
-  it->keys.append(STRING(key));
+  n = new Node_typed<T>(G, new T(x), true);
+  n->keys.append(STRING(key));
 }
 
 template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  it = new Node_typed<T>(G, new T(x), true);
-  it->keys.append(STRING(key));
+  n = new Node_typed<T>(G, new T(x), true);
+  n->keys.append(STRING(key));
 }
 
 template<class T> Node* Graph::getTypedNode(const char *key) const {
@@ -199,39 +199,27 @@ template<class T> Node* Graph::getTypedNode(const char *key) const {
 }
 
 template<class T> T& Graph::get(const char *key) const {
-  Node *it = getNode(key);
-  if(!it) HALT("node '"<< key<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
-  T* val=it->getValue<T>();
-  if(!val) HALT("node " <<*it <<" does not have type '"<<typeid(T).name() <<"'");
+  Node *n = getNode(key);
+  if(!n) HALT("node '"<< key<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
+  T* val=n->getValue<T>();
+  if(!val) HALT("node " <<*n <<" does not have type '"<<typeid(T).name() <<"'");
   return *val;
 }
 
 template<class T> const T& Graph::get(const char *key, const T& defaultValue) const{
-  Node *it = getNode(key);
-  if(!it) return defaultValue;
-  T* val=it->getValue<T>();
+  Node *n = getNode(key);
+  if(!n) return defaultValue;
+  T* val=n->getValue<T>();
   if(!val) return defaultValue;
   return *val;
 }
 
-template<class T> T* Graph::getValue(const char *key) const {
-  Node *it = getNode(key);
-  if(!it) return NULL;
-  return it->getValue<T>();
-}
-
-template<class T> T* Graph::getValue(const StringA &keys) const {
-  Node *it = getNode(keys);
-  if(!it) return NULL;
-  return it->getValue<T>();
-}
-
 template<class T> mlr::Array<T*> Graph::getTypedValues(const char* key) {
   mlr::Array<T*> ret;
-  for(Node *it: (*this)) if(it->getValueType()==typeid(T)) {
-    if(!key) ret.append(it->getValue<T>());
-    else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-      ret.append(it->getValue<T>());
+  for(Node *n: (*this)) if(n->getValueType()==typeid(T)) {
+    if(!key) ret.append(n->getValue<T>());
+    else for(uint i=0; i<n->keys.N; i++) if(n->keys(i)==key) {
+      ret.append(n->getValue<T>());
       break;
     }
   }
@@ -256,9 +244,9 @@ template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents,
 
 template <class T> mlr::Array<T*> Graph::getDerivedValues() {
   mlr::Array<T*> ret;
-  for(Node *it: (*this)) {
-    if(it->is_derived_from_RootType()) {
-      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)it)->value);
+  for(Node *n: (*this)) {
+    if(n->is_derived_from_RootType()) {
+      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)n)->value);
       if(val) ret.append(val);
     }
   }
@@ -267,10 +255,10 @@ template <class T> mlr::Array<T*> Graph::getDerivedValues() {
 
 template <class T> NodeL Graph::getDerivedNodes() {
   NodeL ret;
-  for(Node *it: (*this)) {
-    if(it->is_derived_from_RootType()) {
-      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)it)->value);
-      if(val) ret.append(it);
+  for(Node *n: (*this)) {
+    if(n->is_derived_from_RootType()) {
+      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)n)->value);
+      if(val) ret.append(n);
     }
   }
   return ret;

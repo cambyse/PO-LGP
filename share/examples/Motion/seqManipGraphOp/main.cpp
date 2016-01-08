@@ -28,7 +28,7 @@ void TEST(PickAndPlace){
 
   ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
   op1->symbol = ors::KinematicSwitch::addJointZero;
-  op1->jointType = ors::JT_fixed;
+  op1->jointType = ors::JT_rigid;
   op1->timeOfApplication = pickTime;
   op1->fromId = G.getShapeByName("graspRef")->index;
   op1->toId = G.getShapeByName("obj1")->index;

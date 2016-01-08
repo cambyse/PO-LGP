@@ -70,56 +70,6 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
   return task;
 }
 
-//===========================================================================
-
-ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0){
-  if(specs->parents.N<2) return NULL;
-
-  //-- get tags
-  mlr::String& tt=specs->parents(0)->keys.last();
-  mlr::String& type=specs->parents(1)->keys.last();
-  const char *ref1=NULL, *ref2=NULL;
-  if(specs->parents.N>2) ref1=specs->parents(2)->keys.last().p;
-  if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
-
-  if(tt!="MakeJoint") return NULL;
-
-  //-- create switch
-  ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-  if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
-//  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
-  else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
-  else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
-  else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
-  else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
-  else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
-  else HALT("unknown type: "<< type);
-  sw->fromId = world.getShapeByName(ref1)->index;
-  if(!ref2){
-    CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
-    ors::Body *b = world.shapes(sw->fromId)->body;
-    if(b->inLinks.N==1){
-//      CHECK_EQ(b->outLinks.N, 0, "");
-      sw->toId = sw->fromId;
-      sw->fromId = b->inLinks(0)->from->shapes.first()->index;
-    }else if(b->outLinks.N==1){
-      CHECK_EQ(b->inLinks.N, 0, "");
-      sw->toId = b->outLinks(0)->from->shapes.first()->index;
-    }else if(b->inLinks.N==0 && b->outLinks.N==0){
-      MLR_MSG("No link to delete for shape '" <<ref1 <<"'");
-      delete sw;
-      return NULL;
-    }else HALT("that's ambiguous");
-  }else{
-    sw->toId = world.getShapeByName(ref2)->index;
-  }
-  sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
-  }
-  return sw;
-}
 
 //===========================================================================
 
@@ -176,7 +126,7 @@ bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
     return true;
   }
   //-- switch?
-  ors::KinematicSwitch *sw = newSwitch(n, world, Tinterval, Tzero);
+  ors::KinematicSwitch *sw = ors::KinematicSwitch::newSwitch(n, world, Tinterval, Tzero);
   if(sw){
     switches.append(sw);
     return true;
@@ -255,10 +205,10 @@ void MotionProblem::set_x(const arr& x){
   for(uint t=0;t<=T;t++){
     uint s = t+k_order;
     uint x_dim = configurations(s)->getJointStateDimension();
+    temporallyAlignKinematicSwitchesInConfiguration(t); //this breaks the jacobian check
     if(x.nd==1) configurations(s)->setJointState(x.subRef(x_count, x_count+x_dim-1));
     else        configurations(s)->setJointState(x[t]);
     if(useSwift) configurations(s)->stepSwift();
-    temporallyAlignKinematicSwitchesInConfiguration(t);
     x_count += x_dim;
   }
   CHECK_EQ(x_count, x.N, "");
@@ -266,12 +216,13 @@ void MotionProblem::set_x(const arr& x){
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
   for(ors::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
-    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order));
+    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication<t);
   }
 }
 
 void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
   OpenGL gl;
+  gl.camera.setDefault();
 
   uint num;
   if(steps==1 || steps==-1) num=T; else num=steps;
@@ -301,25 +252,25 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
 #endif
   arr y, Jy, Jtmp;
   uint dimPhi_t=0;
-  for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
-    c->map.phi(y, (&J?Jy:NoArr), configurations.subRef(t,t+k_order), tau, t);
+  for(Task *task: tasks) if(task->active && task->prec.N>t && task->prec(t)){
+    task->map.phi(y, (&J?Jy:NoArr), configurations.subRef(t,t+k_order), tau, t);
     if(!y.N) continue;
     dimPhi_t += y.N;
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 
     //linear transform (target shift)
-    if(c->target.N==1) y -= c->target.elem(0);
-    else if(c->target.nd==1) y -= c->target;
-    else if(c->target.nd==2) y -= c->target[t];
-    y *= sqrt(c->prec(t));
+    if(task->target.N==1) y -= task->target.elem(0);
+    else if(task->target.nd==1) y -= task->target;
+    else if(task->target.nd==2) y -= task->target[t];
+    y *= sqrt(task->prec(t));
     phi.append(y);
 
     if(&J){
-      Jy *= sqrt(c->prec(t));
+      Jy *= sqrt(task->prec(t));
       Jtmp.append(Jy);
     }
 
-    if(&tt) for(uint i=0;i<y.N;i++) tt.append(c->type);
+    if(&tt) for(uint i=0;i<y.N;i++) tt.append(task->type);
   }
   if(&J){
     Jtmp.reshape(dimPhi_t, Jtmp.N/dimPhi_t);
@@ -494,12 +445,12 @@ void MotionProblem::costReport(bool gnuplt) {
   ofstream fil("z.costReport");
   //first line: legend
   for(auto c:tasks){
-    uint d=c->map.dim_phi(world);
-    fil <<c->name <<'[' <<d <<"] ";
+//    uint d=c->map.dim_phi(world);
+    fil <<c->name <<' '; // <<'[' <<d <<"] ";
   }
   for(auto c:tasks){
     if(c->type==ineqTT && dualSolution.N){
-      fil <<c->name <<"_dual";
+      fil <<c->name <<"_dual ";
     }
   }
   fil <<endl;

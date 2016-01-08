@@ -340,7 +340,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       joints(jj->index) = desc;
     }
     break;
-    case ors::JT_fixed: {
+    case ors::JT_rigid: {
       // PxFixedJoint* desc =
       PxFixedJointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
