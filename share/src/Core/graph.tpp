@@ -151,33 +151,13 @@ struct Node_typed : Node {
 
 template<class T> T* Node::getValue() {
   Node_typed<T>* typed = dynamic_cast<Node_typed<T>*>(this);
-  if(!typed) {
-    if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
-      const Graph *graph = getValue<Graph>();
-      if(graph->N==1){ //only if it has size 1??
-        typed = dynamic_cast<Node_typed<T>*>(graph->elem(0));
-      }
-    }
-    if(!typed){
-      MLR_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
-      return NULL;
-    }
-  }
+  if(!typed) return NULL;
   return typed->value;
 }
 
 template<class T> const T* Node::getValue() const {
   const Node_typed<T>* typed = dynamic_cast<const Node_typed<T>*>(this);
-  if(!typed) {
-    if(getValueType() == typeid(Graph)){ //try to get the item from the key value graph
-      const Graph *graph = getValue<Graph>();
-      if(graph->N==1){ //only if it has size 1??
-        typed = dynamic_cast<const Node_typed<T>*>(graph->elem(0));
-      }
-    }
-    MLR_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
-    return NULL;
-  }
+  if(!typed) return NULL;
   return typed->value;
 }
 

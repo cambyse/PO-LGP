@@ -83,7 +83,7 @@ SeqProblemRule {
   Hand, Obj
   { (Pick Hand Obj) }
   { (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
-    (MinSumOfSqr qZeroVels){ order=1 scale=1e3 }
+    (MinSumOfSqr qZeroVels){ order=1 time=[0 1] scale=1e3 }
     (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MakeJoint delete Obj){ time=1 }
@@ -98,7 +98,7 @@ SeqProblemRule {
 #    (MakeJoint delete Hand Obj){ time=0 }
     (MakeJoint transXYPhiZero Onto Obj){ time=0 from=<T t(0 0 .3)> }
     (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
-    (MinSumOfSqr qZeroVels){ order=1 scale=1e3 }
+    (MinSumOfSqr qZeroVels){ order=1  time=[0 1] scale=1e3 }
     (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
 #    (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
