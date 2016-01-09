@@ -2432,7 +2432,7 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
 //===========================================================================
 
 ors::KinematicSwitch::KinematicSwitch()
-  : symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
+  : symbol(none), jointType(JT_none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
   jA.setZero();
   jB.setZero();
 }
