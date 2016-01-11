@@ -1,7 +1,7 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/joystick/joystick.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
@@ -35,20 +35,21 @@
 ///////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////
-struct MySystem:System{
+struct MySystem{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   ACCESS(arr, wrenchL)
   ACCESS(arr, wrenchR)
   MySystem(){
-    addModule<JoystickInterface>(NULL, Module::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false)){
-      addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-      addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-      addModule<RosCom_ForceSensorSync>(NULL, Module::loopWithBeat, 1.);
+    addModule<JoystickInterface>(NULL, /*Module::loopWithBeat,*/ .01);
+    if(mlr::getParameter<bool>("useRos", false)){
+      new RosCom_Spinner();
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+      addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
     }
-    connect();
+    //connect();
   }
 };
 
@@ -60,7 +61,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
  // ors::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
@@ -76,7 +77,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
 
-  bool useRos = MT::getParameter<bool>("useRos", false);
+  bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -160,7 +161,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   bool updated_edge = false;
   bool branching = false;
   for(uint t=0;t<x.d0 + 100;t++){
-      MT::wait(.1);
+      mlr::wait(.1);
 
       //cout<<"endeff->X.pos"<<endeff->X.pos <<endl;
 
@@ -316,7 +317,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -329,7 +330,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 }
 data.close();
 
-  engine().close(S);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
 
 
@@ -339,7 +340,7 @@ data.close();
 int main(int argc, char** argv)
 {
 
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   ActionSystem activity;
   activity.machine->add(new CoreTasks());
@@ -355,7 +356,7 @@ int main(int argc, char** argv)
   uint total = numSamples_height*numSamples_pos + numSamples_height; //each height we generate one pseudo-sample (that will help to find the best observation)
 
 
-  MT::timerStart(true);
+  mlr::timerStart(true);
   arr y0;
   double dual;
   //arr x0 = world.getJointState();
@@ -428,7 +429,7 @@ int main(int argc, char** argv)
   write_to_graphviz(fsc);
 
 
-  cout<<"Offline Computation Time = "<< MT::realTime() <<" (s)"<<endl;
+  cout<<"Offline Computation Time = "<< mlr::realTime() <<" (s)"<<endl;
 
 
   //TESTING: Online POMDP planning

@@ -39,7 +39,7 @@ double mdp::pomdpEM_structured(
   checkConsistent(mdp.facs);
   checkConsistent(fsc.facs);
   
-  MT::timerStart();
+  mlr::timerStart();
   
   uint i;
   //----- rescale rewards if necessary
@@ -50,7 +50,7 @@ double mdp::pomdpEM_structured(
   arr mdp_Rax = mdp_Rax_org;
   double Rmin=mdp_Rax.min(), Rmax=mdp_Rax.max();
   if(rescaleRewards || (mstepType!=MstepNoisyMax && Rmin<0.)){
-    //if(!rescaleRewards) MT_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
+    //if(!rescaleRewards) MLR_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
     for(i=0; i<mdp_Rax.N; i++) mdp_Rax.elem(i) = (mdp_Rax.elem(i)-Rmin)/(Rmax-Rmin);
   }else{
     Rmin=0.; Rmax=1.;
@@ -133,7 +133,7 @@ double mdp::pomdpEM_structured(
     for(uint i=0; i<temporary.N; i++) delete temporary(i);
   }
   
-  if(os)(*os) <<"E: " <<MT::timerRead(true) <<"sec, M: " <<std::flush;
+  if(os)(*os) <<"E: " <<mlr::timerRead(true) <<"sec, M: " <<std::flush;
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
@@ -190,7 +190,7 @@ double mdp::pomdpEM_structured(
   
   //----- rest is cosmetics
   //report
-  if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
+  if(os)(*os) <<mlr::timerRead() <<"sec, " <<std::flush;
   if(os)
     (*os) <<" P(r=1)=" <<PR
     <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)

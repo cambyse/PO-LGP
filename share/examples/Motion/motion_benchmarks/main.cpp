@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
@@ -64,12 +64,14 @@ void circle_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e4);
+  //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
+  c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
   c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -166,12 +168,14 @@ void star_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
-  c->target = traj;
+//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+  c->setCostSpecs(0, MP.T, traj, 1e5);
+//  c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -269,12 +273,14 @@ void eight_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(1.,1.,1.), 1e5);
-  c->target = traj;
+//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+  c->setCostSpecs(0, MP.T, traj, 1e5);
+//  c->target = traj;
 //  c->prec.subRange(0,20)=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -318,11 +324,11 @@ void eight_BM(){
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  circle_BM();
+//  circle_BM();
 //  star_BM();
-//  eight_BM();
+  eight_BM();
 
   return 0;
 }

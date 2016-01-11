@@ -40,9 +40,9 @@ void CognitionP::step() {
       cout << "Control        " << control       << endl;
 
       double Kp = 0.01;
-      control.x = MT::sign(control.x) * Kp;
-      control.y = MT::sign(control.y) * Kp;
-      control.z = 0 * MT::sign(control.z) * Kp;
+      control.x = mlr::sign(control.x) * Kp;
+      control.y = mlr::sign(control.y) * Kp;
+      control.z = 0 * mlr::sign(control.z) * Kp;
 
       cout << "Control scaled " << control       << endl;
       cout << endl;

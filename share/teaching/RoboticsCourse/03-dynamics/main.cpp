@@ -9,7 +9,7 @@ void TestPD(double xi, double waveLength){
   arr x(T+1,2);
   double u,a;
 
-  double lambda = waveLength/MT_2PI;
+  double lambda = waveLength/MLR_2PI;
   double Kp = 1./(lambda*lambda);
   double Kd = 2.*xi/lambda;
   
@@ -59,7 +59,7 @@ void holdSteady(){
       if(i > 500) control = 1;
     }else{
       //separate PDs in each joint separately:
-      double lambda = 1./MT_2PI; //corresponds to 1 second period
+      double lambda = 1./MLR_2PI; //corresponds to 1 second period
       double xi = .5;
       double Kp,Kd;
       Kp = 1./(lambda*lambda);
@@ -82,7 +82,7 @@ void holdSteady(){
 
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);
-  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MLR_PI*t/T)) * (qT-q0);
 }
 
 void getVel(arr& v, const arr& q, double tau){
@@ -139,7 +139,7 @@ void followReferenceTrajectory(){
     S.getDynamics(M,F);
 
     //PD parameters
-    double lambda = .2/MT_2PI; //corresponds to .2 second wavelength
+    double lambda = .2/MLR_2PI; //corresponds to .2 second wavelength
     double xi = .5; //oscillatory or critically damped
     double Kp,Kd;
     Kp = 1./(lambda*lambda);
@@ -165,9 +165,9 @@ void followReferenceTrajectory(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",1)){
+  switch(mlr::getParameter<int>("mode",1)){
     case 1:  TestPD(1., .5);  break;
     case 2:  TestPD(5., .5);  break;
     case 3:  TestPD(.1, .5);  break;

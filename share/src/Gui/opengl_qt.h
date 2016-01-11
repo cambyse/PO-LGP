@@ -17,11 +17,11 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_opengl_qt_h
-#define MT_opengl_qt_h
+#ifndef MLR_opengl_qt_h
+#define MLR_opengl_qt_h
 
 #include "opengl.h"
-#include <Core/geo.h>
+#include <Geo/geo.h>
 
 #include <GL/glut.h>
 #undef scroll
@@ -34,16 +34,16 @@
 // #  include <Qt/qobject.h>
 // #  include <Qt/qevent.h>
 #include <QtOpenGL/QtOpenGL>
-#if defined MT_Cygwin //|| defined MT_Linux
+#if defined MLR_Cygwin //|| defined MLR_Linux
 #    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #  else
 #    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #endif
-#define MT_GLUT
+#define MLR_GLUT
 
-#ifdef MT_MSVC
+#ifdef MLR_MSVC
 #  include<windows.h>
 #  undef min //I hate it that windows defines these macros!
 #  undef max

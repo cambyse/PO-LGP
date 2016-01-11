@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_perceptionModule_h
-#define MT_perceptionModule_h
+#ifndef MLR_perceptionModule_h
+#define MLR_perceptionModule_h
 
 #include "vision.h"
 #include <Ors/ors.h>
@@ -36,7 +36,7 @@ struct PerceptionModule:public Process {
   //PARAMETERS for camera projection 3d<->2d
   arr Pl, Pr;
   //AverageTrack avTrack;
-  MT::Array<Object> objs;
+  mlr::Array<Object> objs;
   
   PerceptionModule():Process("PerceptionModule"){ input=NULL; }
   
@@ -45,12 +45,12 @@ struct PerceptionModule:public Process {
   void close(){};
 };
 
-void realizeObjectsInOrs(ors::KinematicWorld& ors, const MT::Array<Object>& objects);
+void realizeObjectsInOrs(ors::KinematicWorld& ors, const mlr::Array<Object>& objects);
 
 //void copyShapeInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
 void copyBodyInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "perceptionModule.cpp"
 #endif
 

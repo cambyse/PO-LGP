@@ -1,4 +1,4 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 #include <MT/util.h>
 #include <biros/biros.h>
 //#include "process_monitor.h"
@@ -44,9 +44,9 @@ struct Maxxer:public Process{
 };
 
 void testMultiAccess(Gui& gui){
-  uint n=MT::getParameter<uint>("n",100);
-  MT::Array<IntVar> vars(n);
-  MT::Array<Maxxer> procs(2*n);
+  uint n=mlr::getParameter<uint>("n",100);
+  mlr::Array<IntVar> vars(n);
+  mlr::Array<Maxxer> procs(2*n);
 
   gui.add();
   app->processEvents();
@@ -57,7 +57,7 @@ void testMultiAccess(Gui& gui){
   }
 
   for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.001,.01));
-  MT::wait(1.);
+  mlr::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';

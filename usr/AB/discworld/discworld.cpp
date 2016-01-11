@@ -52,7 +52,7 @@ void DiscWorld::initBodies() {
     b->X.rot.setZero();
     b->X.pos = bodies(i);
     b->X.pos.z = HEIGHT/2;
-    names.append(new MT::String(b->name));
+    names.append(new mlr::String(b->name));
 
     s = new ors::Shape(*ors, b);
     s->type = ors::cylinderST;
@@ -136,7 +136,7 @@ void DiscWorld::resetBodies() {
     b->name << *names(i);
     b->type = ors::kinematicBT;
     b->X.rot.setZero();
-    names.append(new MT::String(b->name));
+    names.append(new mlr::String(b->name));
 
     s = new ors::Shape(*ors, b);
     s->type = ors::cylinderST;
@@ -175,7 +175,7 @@ void DiscWorld::replay() {
   kf.setAgent(0);
   kf.run();
 
-  MT::String cmd;
+  mlr::String cmd;
   int T = kf.getNFrames();
   cout << "Replay until t == " << T << endl;
   for(uint t = 0; t < T; t++) {
@@ -189,18 +189,18 @@ void DiscWorld::replay() {
 
     arr TEMP;
     // TODO try to re-move the plot outside
-    MT::String basename("z.pltX_b");
-    MT::String fname;
-    MT::IOraw = true;
-    MT::arrayBrackets = "\0\0";
+    mlr::String basename("z.pltX_b");
+    mlr::String fname;
+    mlr::IOraw = true;
+    mlr::arrayBrackets = "\0\0";
     for(int b = 0; b < kf.getNBodies(); b++) {
       fname.clear() << basename << b;
       TEMP = kf.getErr(b);
       TEMP.subRange(t-lwin, T-lwin-1).setZero();
       TEMP >>FILE(fname);
     }
-    MT::arrayBrackets = "[]";
-    MT::IOraw = false;
+    mlr::arrayBrackets = "[]";
+    mlr::IOraw = false;
 
     cmd.clear() << "set title ''; set key off; set multiplot layout " << N << ", 1; ";
     for(int b = 0; b < kf.getNBodies(); b++)

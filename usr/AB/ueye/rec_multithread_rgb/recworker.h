@@ -10,7 +10,7 @@
 class RecWorker: public QObject {
   Q_OBJECT
 
-  MT::Array<char *> frames;
+  mlr::Array<char *> frames;
   int nframes, pframes;
 
   QMutex frameMutex, quitMutex;

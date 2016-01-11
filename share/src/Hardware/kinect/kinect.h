@@ -6,12 +6,12 @@
 struct KinectThread:Module{
   struct sKinectThread *s;
 
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(uint16A, kinect_depth)
+  ACCESSnew(byteA, kinect_rgb)
+  ACCESSnew(uint16A, kinect_depth)
 
   int verbose;
 
-  KinectThread(ModuleL& system=NoModuleL);
+  KinectThread();
   ~KinectThread();
 
   void glViewKeys(char key);

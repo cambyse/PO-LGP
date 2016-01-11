@@ -208,10 +208,10 @@ int np::CameraCalibrator::display()
 };
 
 
-void get_pts3d(MT::Array<CvPoint3D32f> &pts3d, uint num_calibimg, uint x, uint y, double l)
+void get_pts3d(mlr::Array<CvPoint3D32f> &pts3d, uint num_calibimg, uint x, uint y, double l)
 {
   uint num_squares = x*y;
-  MT::Array<CvPoint3D32f> pts3d_temp(num_squares);
+  mlr::Array<CvPoint3D32f> pts3d_temp(num_squares);
   for (uint i = 0; i < x; i++)
     for (uint j = 0; j < y; j++)
     {
@@ -226,9 +226,9 @@ void get_pts3d(MT::Array<CvPoint3D32f> &pts3d, uint num_calibimg, uint x, uint y
 };
 
 void get_pts2d(
-               MT::Array<CvPoint2D32f> &pts2dL,
-               MT::Array<CvPoint2D32f> &pts2dR,
-               MT::Array<np::CalibrationImage*> ci,
+               mlr::Array<CvPoint2D32f> &pts2dL,
+               mlr::Array<CvPoint2D32f> &pts2dR,
+               mlr::Array<np::CalibrationImage*> ci,
                uint num_squares
               )
 {
@@ -258,13 +258,13 @@ inline double reprojection_error
   doubleA& dL,
   doubleA &dR,
   doubleA& F,
-  MT::Array<CvPoint2D32f> &pts2dL,
-  MT::Array<CvPoint2D32f> &pts2dR
+  mlr::Array<CvPoint2D32f> &pts2dL,
+  mlr::Array<CvPoint2D32f> &pts2dR
 )
 {
   double avg_err = 0., err = 0.;
   uint N = pts2dL.d0;
-  MT::Array<CvPoint3D32f> lines[2];
+  mlr::Array<CvPoint3D32f> lines[2];
   lines[0].resize(N);
   lines[1].resize(N);
   CvMat cvlinesL = cvMat(1, N, CV_32FC3, lines[0].p);
@@ -308,12 +308,12 @@ double np::CameraCalibrator::calibrate()
   uint width = calibration_images_.elem(0)->image_.d1;
   uint num_calibimg = calibration_images_.d0;
   uint num_squares = (size_[0])*(size_[1]);
-  MT::Array<CvPoint3D32f> pts3d;
+  mlr::Array<CvPoint3D32f> pts3d;
   std::cout << "edge_ = " << edge_ << std::endl;
   get_pts3d(pts3d, num_calibimg, size_[0], size_[1], edge_);
 
   // collect all 2D points
-  MT::Array<CvPoint2D32f> pts2dL, pts2dR;
+  mlr::Array<CvPoint2D32f> pts2dL, pts2dR;
   get_pts2d(pts2dL, pts2dR, calibration_images_, num_squares);
   intA num_pts(num_calibimg); num_pts = num_squares;
 

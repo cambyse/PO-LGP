@@ -6,4 +6,7 @@ object_detector.cpp
 object_detector.h
 plane.cpp
 plane.h
-../trackedClusters/main.cpp
+../../../src/Perception/object_detector.cpp
+../../../src/Perception/object_detector.h
+../../../src/Perception/plane.cpp
+../../../src/Perception/plane.h

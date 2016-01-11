@@ -1,35 +1,35 @@
 #include <Core/util.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 
 #include <Hardware/racer/modules.h>
 #include <Hardware/gamepad/gamepad.h>
 
 void TEST(Gamepad){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, gamepadState);
     MySystem(){
-      addModule<GamepadInterface>("GamepadInterface", Module::loopWithBeat, 0.01);
-      connect();
+      new GamepadInterface;
+      //connect();
     }
   } S;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   for(int i = 0;; ++i){
     S.gamepadState.var->waitForNextRevision();
     arr J = S.gamepadState.get();
     cout <<"\r gamepad=" <<J <<std::flush;
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 
 void run(){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate);
     ACCESS(arr, encoderData)
@@ -37,23 +37,23 @@ void run(){
     ACCESS(arr, gamepadState);
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      //addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      //addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
       addModule<Motors>("Motors", Module::loopFull);
-      addModule<GamepadInterface>("GamepadInterface", Module::loopWithBeat, 0.01);
-      connect();
+      new GamepadInterface;
+      //connect();
     }
   } S;
 
-  //double zeroTh=MT::getParameter<double>("zeroTh", 0.);
-  double k_th=MT::getParameter<double>("k_th", 0.);
-  double k_thDot=MT::getParameter<double>("k_thDot", 0.);
-  double k_acc=MT::getParameter<double>("k_acc", 0.);
-  double gamepad_gain = MT::getParameter<double>("gamepad_gain");
-  double gamepad_gain_vel = MT::getParameter<double>("gamepad_gain_vel");
+  //double zeroTh=mlr::getParameter<double>("zeroTh", 0.);
+  double k_th=mlr::getParameter<double>("k_th", 0.);
+  double k_thDot=mlr::getParameter<double>("k_thDot", 0.);
+  double k_acc=mlr::getParameter<double>("k_acc", 0.);
+  double gamepad_gain = mlr::getParameter<double>("gamepad_gain");
+  double gamepad_gain_vel = mlr::getParameter<double>("gamepad_gain_vel");
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
   double motor_vel=0.;
   double x_ref = 0.;
 
@@ -68,7 +68,7 @@ void run(){
 
     motor_vel += k_acc*u;
 //    cout <<"\r state = " <<x <<std::flush;
-//    cout <<"enc= " <<enc/MT_2PI <<std::endl;
+//    cout <<"enc= " <<enc/MLR_2PI <<std::endl;
 
     double turn = gamepad_gain_vel*J(1);
     S.controls.set()() = ARR(motor_vel+turn, motor_vel-turn, 10.);
@@ -80,17 +80,17 @@ void run(){
       break;
     }
 
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 
 }
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   //testGamepad();
 

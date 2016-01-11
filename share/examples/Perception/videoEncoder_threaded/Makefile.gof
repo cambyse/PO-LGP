@@ -1,7 +1,7 @@
 BASE = ../../..
 
 GL = 1
-DEPEND = Gui Perception Core System
+DEPEND = Gui Perception Core
 
 CLEAN = z.*
 

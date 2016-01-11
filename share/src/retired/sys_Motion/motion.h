@@ -1,5 +1,5 @@
-#ifndef MT_motion_h
-#define MT_motion_h
+#ifndef MLR_motion_h
+#define MLR_motion_h
 
 #include <System/biros.h>
 
@@ -121,8 +121,8 @@ struct MotionFuture:Variable {
   FIELD(uint, currentPrimitive);
   FIELD(uint, nextFreePrimitive);
   FIELD(bool, done);
-  FIELD(MT::Array<MotionPrimitive*>, motions);
-  FIELD(MT::Array<MotionPlanner*>, planners);
+  FIELD(mlr::Array<MotionPrimitive*>, motions);
+  FIELD(mlr::Array<MotionPlanner*>, planners);
   
   MotionFuture():Variable("MotionFuture"), currentPrimitive(0), nextFreePrimitive(0), done(true) {
     reg_currentPrimitive();  reg_nextFreePrimitive(); reg_motions();

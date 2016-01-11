@@ -96,7 +96,7 @@ const char* SearchOperator::getName() {
 
 // Algorithm of Figure 4 in Pasula et al. (2007)
 void SearchOperator::createRuleSets(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, 
-        MT::Array< RuleSetContainer >& set_of_new_rulesC) {
+        mlr::Array< RuleSetContainer >& set_of_new_rulesC) {
   uint DEBUG = 0;
   set_of_new_rulesC.clear();
   reset();
@@ -189,7 +189,7 @@ void ExplainExperiences::findRules(const RuleSetContainer& rulesC_old, const Sta
       if (DEBUG>2) {cout<<"Learned new rule without outcomes:"<<endl<<*newRule;}
       // Estimate new outcomes for r'
       CHECK(covered_experiences.N>0  &&  covered_experiences_ids.findValue(i)>=0, "At least the explained example should be covered."<<endl<<*newRule)
-      MT::Array< uintA > experiences_per_outcome;
+      mlr::Array< uintA > experiences_per_outcome;
       learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
       if (DEBUG>0) {cout<<"New Rule:"<<endl; newRule->write(cout);}
       if (DEBUG>0) {cout<<"#Covering experiences: "<<covered_experiences.N<<endl;}
@@ -268,7 +268,7 @@ void trim_hack(LitL& lits) {
   if (DEBUG>1) {cout << "trim_hack now: "<<lits<<endl;}
   
   // for X>__TABLE_OBJECT_ID: not table(X) [--> cares only about constants]
-  Symbol* s_TABLE = Symbol::get(MT::String("table"));
+  Symbol* s_TABLE = Symbol::get(mlr::String("table"));
   if (s_TABLE != NULL) {
     FOR1D_DOWN(lits, i) {
       if (lits(i)->s == s_TABLE) { // table
@@ -282,7 +282,7 @@ void trim_hack(LitL& lits) {
   }
   
   // if on(X,Y) then -on(Y,X) is redundant
-  Symbol* s_ON = Symbol::get(MT::String("on"));
+  Symbol* s_ON = Symbol::get(mlr::String("on"));
   if (s_ON != NULL) {
     FOR1D_DOWN(lits, i) {
       if (!lits(i)->value > 0.) {
@@ -740,7 +740,7 @@ void DropContextLiterals::findRules(const RuleSetContainer& rulesC_old, const St
               covered_experiences(k)->write(cout);
           }
         }
-        MT::Array< uintA > experiences_per_outcome;
+        mlr::Array< uintA > experiences_per_outcome;
         learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
         rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
         stop = true;
@@ -882,7 +882,7 @@ void DropContextLiterals_approximativeVersion::findRules(const RuleSetContainer&
           covered_experiences(k)->write(cout);
         }
       }
-      MT::Array< uintA > experiences_per_outcome;
+      mlr::Array< uintA > experiences_per_outcome;
       learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
       rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
     }
@@ -974,7 +974,7 @@ void DropReferences::findRules(const RuleSetContainer& rulesC_old, const StateTr
             covered_experiences(k)->write(cout);
           }
         }
-        MT::Array< uintA > experiences_per_outcome;
+        mlr::Array< uintA > experiences_per_outcome;
         learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
         rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
         stop = true;
@@ -1025,7 +1025,7 @@ DropRules::DropRules() : SearchOperator() {
     
 
 void DropRules::createRuleSets(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, 
-          MT::Array< RuleSetContainer >& one_rulesC_new) {
+          mlr::Array< RuleSetContainer >& one_rulesC_new) {
   uint DEBUG = 0;
   one_rulesC_new.clear();
   uint i, j;
@@ -1147,7 +1147,7 @@ void SplitOnLiterals::findRules(const RuleSetContainer& rulesC_old, const StateT
         learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule_pos, experiences);
         if (covered_experiences.N > 0) {
           if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
-          MT::Array< uintA > experiences_per_outcome;
+          mlr::Array< uintA > experiences_per_outcome;
           learn::learn_outcomes(newRule_pos, experiences_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule_pos, covered_experiences_ids, experiences_per_outcome);
         }
@@ -1199,7 +1199,7 @@ void SplitOnLiterals::findRules(const RuleSetContainer& rulesC_old, const StateT
               covered_experiences(k)->write(cout);
             }
           }
-          MT::Array< uintA > experiences_per_outcome;
+          mlr::Array< uintA > experiences_per_outcome;
           learn::learn_outcomes(newRule_neg, experiences_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule_neg, covered_experiences_ids, experiences_per_outcome);
         }
@@ -1311,7 +1311,7 @@ void AddLiterals::findRules(const RuleSetContainer& rulesC_old, const StateTrans
               covered_experiences(k)->write(cout);
             }
           }
-          MT::Array< uintA > experiences_per_outcome;
+          mlr::Array< uintA > experiences_per_outcome;
           learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
         }
@@ -1430,7 +1430,7 @@ void AddReferences::findRules(const RuleSetContainer& rulesC_old, const StateTra
             covered_experiences(k)->write(cout);
           }
         }
-        MT::Array< uintA > experiences_per_outcome;
+        mlr::Array< uintA > experiences_per_outcome;
         learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
         rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
       }
@@ -1538,7 +1538,7 @@ void GeneralizeEquality::findRules(const RuleSetContainer& rulesC_old, const Sta
               covered_experiences(k)->write(cout);
             }
           }
-          MT::Array< uintA > experiences_per_outcome;
+          mlr::Array< uintA > experiences_per_outcome;
           learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
           rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
           break;
@@ -1646,7 +1646,7 @@ void SplitOnEqualities::findRules(const RuleSetContainer& rulesC_old, const Stat
             learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
             if (covered_experiences.N > 0) {
               if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
-              MT::Array< uintA > experiences_per_outcome;
+              mlr::Array< uintA > experiences_per_outcome;
               learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
               rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             }
@@ -1760,7 +1760,7 @@ void SplitOnInequalities::findRules(const RuleSetContainer& rulesC_old, const St
             learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
             if (covered_experiences.N > 0) {
               if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
-              MT::Array< uintA > experiences_per_outcome;
+              mlr::Array< uintA > experiences_per_outcome;
               learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
               rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             }
@@ -1781,7 +1781,7 @@ void SplitOnInequalities::findRules(const RuleSetContainer& rulesC_old, const St
             learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
             if (covered_experiences.N > 0) {
               if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
-              MT::Array< uintA > experiences_per_outcome;
+              mlr::Array< uintA > experiences_per_outcome;
               learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
               rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             }
@@ -1892,7 +1892,7 @@ void AddAbstractEquality::findRules(const RuleSetContainer& rulesC_old, const St
           uintA covered_experiences_ids;
           learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {      
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             if (newRule->existsInOutcome(newLit->s, newLitArgs)) {    //check whether newLit was used to predict something in the outcome
               if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;                 
@@ -1997,7 +1997,7 @@ void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTrans
                 covered_experiences(k)->write(cout);
               }
             }
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             nextPossibleValue = v+1;
@@ -2128,7 +2128,7 @@ void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTran
                     covered_experiences(k)->write(cout);
                 }
             }
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             nextPossibleValue = v+1;
@@ -2207,7 +2207,7 @@ void CompareFunctionValues::findRules(const RuleSetContainer& rulesC_old, const 
         termCombos.clear();
         uintA terms;
         rulesC_old.rules.elem(r)->getArguments(terms);
-        MT::Array< uintA > termCombos_unfiltered;
+        mlr::Array< uintA > termCombos_unfiltered;
         TL::allPermutations(termCombos_unfiltered, terms, 2 * usedFunctions(f)->arity, false, true);
         // filter such that only terms are only combined once (i.e. [X,Y] and not also [Y,X]
         uint i,j;
@@ -2259,7 +2259,7 @@ void CompareFunctionValues::findRules(const RuleSetContainer& rulesC_old, const 
 //                 }
 //               }
             }
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids, alpha_PEN, p_min, pen_sum, pen_pos);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             break;
@@ -2362,7 +2362,7 @@ void SplitOnCompareFunctionValues::findRules(const RuleSetContainer& rulesC_old,
         termCombos.clear();
         uintA terms;
         rulesC_old.rules.elem(r)->getArguments(terms);
-        MT::Array< uintA > termCombos_unfiltered;
+        mlr::Array< uintA > termCombos_unfiltered;
         TL::allPermutations(termCombos_unfiltered, terms, 2 * usedFunctions(f)->arity, false, true);
         // filter such that only terms are only combined once (i.e. [X,Y] and not also [Y,X]
         uint i,j;
@@ -2408,7 +2408,7 @@ void SplitOnCompareFunctionValues::findRules(const RuleSetContainer& rulesC_old,
                 }
               }
             }
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids, alpha_PEN, p_min, pen_sum, pen_pos);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
           }
@@ -2495,7 +2495,7 @@ void AbstractEquality::findRules(const RuleSetContainer& rulesC_old, const State
           uintA covered_experiences_ids;
           learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
-            MT::Array< uintA > experiences_per_outcome;
+            mlr::Array< uintA > experiences_per_outcome;
             learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             if (newRule->existsInOutcome(varComp->s, varComp->args)) {
               if (DEBUG > 0) { cout << "Keep rule" << endl << *newRule << endl; }

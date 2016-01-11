@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 //#include <Gui/opengl.h>
 #include <signal.h>
 #include <thread>
@@ -15,7 +15,7 @@
 #include <Perception/videoEncoder.h>
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/ueyecamera/ueyecamera.h>
-using namespace MLR;
+using namespace mlr;
 using namespace std;
 using namespace std::placeholders;
 
@@ -29,7 +29,7 @@ private:
 	unsigned int sequence_num;
 
 public:
-	TimeTagFile(const MT::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
+	TimeTagFile(const mlr::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
 
 	}
 	void add_stamp(double timestamp) {
@@ -40,43 +40,43 @@ public:
 	}
 };
 
-struct TomsyRecorderSystem:System{
+struct TomsyRecorderSystem{
     ACCESS(byteA, ueye_rgb_1)
     ACCESS(byteA, ueye_rgb_3)
     ACCESS(byteA, ueye_rgb_4)
 
     TomsyRecorderSystem(){
-        addModule("KinectPoller", NULL, Module::loopWithBeat, .01); //this is callback driven...
-        addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-        addModule("ImageViewer", "ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-        addModule("ImageViewer", "ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-        //      addModule("Kinect2PointCloud", NULL, Module::loopWithBeat, .2);
-        //      addModule("PointCloudViewer", NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
+        addModule("KinectThread", NULL, /*Module::loopWithBeat,*/ .01); //this is callback driven...
+        addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+        addModule("ImageViewer", "ImageViewer_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
+        addModule("ImageViewer", "ImageViewer_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
+        //      addModule("Kinect2PointCloud", NULL, /*Module::loopWithBeat,*/ .2);
+        //      addModule("PointCloudViewer", NULL, {"kinect_points", "kinect_pointColors"} /*,Module::listenFirst*/ );
 
-        VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
+        VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
         m_enc->set_rgb(true);
         m_enc->set_fps(30);
-        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
+        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
         m_denc->set_fps(30);
 
         addModule("UEyePoller", "POLLER_1", {"ueye_rgb_1"}, Module::loopFull);
-        VideoEncoderX264 *enc1 = addModule<VideoEncoderX264>("ENCODER_1", {"ueye_rgb_1"}, Module::listenFirst);
+        VideoEncoderX264 *enc1 = addModule<VideoEncoderX264>("ENCODER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
         enc1->set_fps(60);
-        addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_1", {"ueye_rgb_1"} /*,Module::listenFirst*/ );
 
         addModule("UEyePoller", "POLLER_3", {"ueye_rgb_3"}, Module::loopFull);
-        VideoEncoderX264 *enc3 = addModule<VideoEncoderX264>("ENCODER_3", {"ueye_rgb_3"}, Module::listenFirst);
+        VideoEncoderX264 *enc3 = addModule<VideoEncoderX264>("ENCODER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
         enc3->set_fps(60);
-        addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_3", {"ueye_rgb_3"} /*,Module::listenFirst*/ );
 
         addModule("UEyePoller", "POLLER_4", {"ueye_rgb_4"}, Module::loopFull);
-        VideoEncoderX264 *enc4 = addModule<VideoEncoderX264>("ENCODER_4", {"ueye_rgb_4"}, Module::listenFirst);
+        VideoEncoderX264 *enc4 = addModule<VideoEncoderX264>("ENCODER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
         enc4->set_fps(60);
-        addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"}, Module::listenFirst);
+        addModule("ImageViewer", "VIEWER_4", {"ueye_rgb_4"} /*,Module::listenFirst*/ );
 
         addModule("AudioReader", "MIKE_1", Module::loopFull);
-        addModule("AudioWriter", "WAV_1", Module::listenFirst);
-        connect();
+        addModule("AudioWriter", "WAV_1" /*,Module::listenFirst*/ );
+        //connect();
     }
 };
 
@@ -89,12 +89,12 @@ void threadedRun() {
 
     //  cout <<S <<endl;
 
-    engine().enableAccessLog();
-    engine().open(S);
+    //engine().enableAccessLog();
+    threadOpenModules(true);
 
-    engine().shutdown.waitForSignal();
+    moduleShutdown().waitForValueGreaterThan(0);
 
-    engine().close(S);
+    threadCloseModules();
     cout <<"bye bye" <<endl;
 }
 
@@ -114,7 +114,7 @@ private:
 	const bool& terminated;
 	bool ready;
 	int id;
-	MT::String name;
+	mlr::String name;
 	UEyeInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
@@ -122,7 +122,7 @@ private:
 	double start_time;
 
 public:
-	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
+	GrabAndSave(int camID, const char* name, const mlr::String& created, const bool& terminated) :
 		terminated(terminated), ready(false), id(camID), name(name), cam(id), enc(STRING("z." << name << "." << created << ".264")),
 		times(enc.name()), start_time(ULONG_MAX) {
 	}
@@ -151,7 +151,7 @@ public:
 
 class RecordingSystem {
 private:
-	MT::String created;
+	mlr::String created;
 	GrabAndSave cam1, cam2, cam3;
 	VideoEncoder_x264_simple kinect_video, kinect_depth;
 	TimeTagFile kinect_video_times, kinect_depth_times;
@@ -190,7 +190,7 @@ protected:
 #pragma omp section
 			while(!terminated && !ready) {
 				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
-					start_time = MT::clockTime();
+					start_time = mlr::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
@@ -208,7 +208,7 @@ protected:
 	}
 	void kinect_depth_cb(const uint16A& depth, double timestamp) {
 		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
-			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
+			mlr::pack_kindepth2rgb(depth, kinect_depth_repack);
 			kinect_depth.addFrame(kinect_depth_repack);
 			kinect_depth_times.add_stamp(timestamp);
 		}
@@ -216,7 +216,7 @@ protected:
 
 public:
 	RecordingSystem(int id1, int id2, int id3) :
-		created(MT::getNowString()), cam1(id1, "ueye1", created, terminated),
+		created(mlr::getNowString()), cam1(id1, "ueye1", created, terminated),
 		cam2(id2, "ueye2", created, terminated), cam3(id3, "ueye3", created, terminated),
 		kinect_video(STRING("z.kinect_rgb." << created <<".264")),
 		kinect_depth(STRING("z.kinect_depthRgb." << created <<".264")),
@@ -266,9 +266,9 @@ int main(int argc,char **argv){
 	//test_openmp();
 
 	try {
-		RecordingSystem s(MT::getParameter<int>("POLLER_1_camID"),
-			MT::getParameter<int>("POLLER_3_camID"),
-			MT::getParameter<int>("POLLER_4_camID"));
+		RecordingSystem s(mlr::getParameter<int>("POLLER_1_camID"),
+			mlr::getParameter<int>("POLLER_3_camID"),
+			mlr::getParameter<int>("POLLER_4_camID"));
 		s.run();
 	} catch(const UEyeException& ex) {
 		cerr << ex.what() << endl;

@@ -1,6 +1,6 @@
 #include "fol.h"
 
-#define DEBUG(x)
+#define DEBUG(x) x
 
 /// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
 NodeL getLiteralsOfScope(Graph& KB){
@@ -80,6 +80,7 @@ bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance){
 /// check if these are literally equal (all arguments are identical, be they vars or consts)
 bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
   if(!tuplesAreEqual(fact0->parents,fact1->parents)) return false;
+  if(fact0->keys!=fact1->keys) return false;
   if(checkAlsoValue) return valuesAreEqual(fact0, fact1, true);
   return true;
 }
@@ -87,6 +88,7 @@ bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
 /// check match, where all variables of literal are replaced by subst(var->index)
 bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
   if(fact->parents.N!=literal->parents.N) return false;
+  if(fact->keys!=literal->keys) return false;
   for(uint i=0;i<fact->parents.N;i++){
     Node *fact_arg = fact->parents.elem(i);
     Node *lit_arg = literal->parents.elem(i);
@@ -268,16 +270,17 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
       if(&changes) newNode->newClone(changes);
     }else{
       for(Node *m:matches){
+#if 0
         if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
           *m->getValue<double>() += *literal->getValue<double>();
           hasEffects=true;
           if(&changes) m->newClone(changes);
-        }else{
-          if(!m->hasEqualValue(literal)){
-            m->copyValue(literal);
-            hasEffects=true;
-            if(&changes) m->newClone(changes);
-          }
+        }else
+        #endif
+        if(!m->hasEqualValue(literal)){
+          m->copyValue(literal);
+          hasEffects=true;
+          if(&changes) m->newClone(changes);
         }
       }
     }
@@ -352,9 +355,9 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
    if(!vars.N) return NodeL(1u,0u);
 
    //-- collect domains for each variable by checking (marginally) for potentially matching facts
-   MT::Array<NodeL> domainOf(vars.N);
-   MT::Array<bool > domainIsConstrained(vars.N);
-   MT::Array<NodeL> domainsForThisRel(vars.N);
+   mlr::Array<NodeL> domainOf(vars.N);
+   mlr::Array<bool > domainIsConstrained(vars.N);
+   mlr::Array<NodeL> domainsForThisRel(vars.N);
    if(vars.N) domainIsConstrained = false;
    for(Node *rel:relations) if(nFreeVars(rel->index)>0){ //first go through all (non-negated) relations...
      if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal (not negated boolean)
@@ -479,17 +482,21 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
  }
 
 
-bool forwardChaining_FOL(Graph& KB, Node* query, Graph& changes, int verbose, int *decisionObservation){
+bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *decisionObservation){
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
-  Graph& state = KB.getNode("STATE")->graph();
+  CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
+//  Graph& state = KB.getNode("STATE")->graph();
+  return forwardChaining_FOL(state, rules, query, changes, verbose, decisionObservation);
+}
+
+bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes, int verbose, int *decisionObservation){
 
   for(;;){
-    DEBUG(KB.checkConsistency();)
+    DEBUG(state.isNodeOfParentGraph->container.checkConsistency();)
     bool newFacts=false;
     for(Node *rule:rules){
       if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
-//      NodeL subs = getRuleSubstitutions(state, rule, constants, verbose);
       NodeL subs = getRuleSubstitutions2(state, rule, verbose);
       for(uint s=0;s<subs.d0;s++){
         Node *effect = rule->graph().last();

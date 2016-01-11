@@ -11,12 +11,12 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   Task *c;
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
+  c->setCostSpecs(P.T, P.T,
+                          conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
 c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e1);
 
   MotionProblemFunction MF(P);
   arr x = P.getInitialization();
@@ -28,9 +28,9 @@ c->map.order=1;
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x = getSimpleTrajectory(G);
   arr x2 = reverseTrajectory(x);

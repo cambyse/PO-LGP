@@ -10,11 +10,11 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
                          uint microSteps,
                          int verbose)
   : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
-  ConstrainedProblemMix::operator=( convert_KOrderMarkovFunction_ConstrainedProblemMix(MPF) );
+  ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(MPF) );
 
-  double posPrec = MT::getParameter<double>("LGP/precision", 1e3);
-//  double colPrec = MT::getParameter<double>("LGP/collisionPrecision", -1e0);
-  double margin = MT::getParameter<double>("LGP/collisionMargin", .05);
+  double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
+//  double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);
+  double margin = mlr::getParameter<double>("LGP/collisionMargin", .05);
 
   //get the actions!
   Node *actionSequence=symbolicState["actionSequence"];
@@ -66,12 +66,12 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       m->referenceIds(tPick(i),0) = endeff_index;
       m->referenceIds(tPick(i),1) = idObject(i);
       t->prec(tPick(i))=posPrec;
-      //      t->target[tPick(i)]=ARRAY( world_initial.shapes(idObject(i))->X.pos );
+      //      t->target[tPick(i)]=conv_vec2arr( world_initial.shapes(idObject(i))->X.pos );
 
       //place
       m->referenceIds(tPlace(i),0) = idObject(i);
       t->prec(tPlace(i))=posPrec;
-      t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.pos );
+      t->target[tPlace(i)]=conv_vec2arr( world_final.shapes(idObject(i))->X.pos );
     }
 
     //pick & place quaternion
@@ -84,12 +84,12 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       m->referenceIds(tPick(i),0) = endeff_index;
       m->referenceIds(tPick(i),1) = idObject(i);
       t->prec(tPick(i))=posPrec;
-      //      t->target[tPlace(i)]=ARRAY( world_initial.shapes(idObject(i))->X.rot );
+      //      t->target[tPlace(i)]=conv_quat2arr( world_initial.shapes(idObject(i))->X.rot );
 
       //place
       m->referenceIds(tPlace(i),0) = idObject(i);
       t->prec(tPlace(i))=posPrec;
-      t->target[tPlace(i)]=ARRAY( world_final.shapes(idObject(i))->X.rot );
+      t->target[tPlace(i)]=conv_quat2arr( world_final.shapes(idObject(i))->X.rot );
     }
 
     // zero position velocity
@@ -173,7 +173,8 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   for(uint i=0;i<actions.N;i++){
     //pick at time 2*i+1
     ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
-    op_pick->symbol = ors::KinematicSwitch::addRigid;
+    op_pick->symbol = ors::KinematicSwitch::addJointZero;
+    op_pick->jointType = ors::JT_fixed;
     op_pick->timeOfApplication = tPick(i)+1;
     op_pick->fromId = world.shapes(endeff_index)->index;
     op_pick->toId = world.shapes(idObject(i))->index;

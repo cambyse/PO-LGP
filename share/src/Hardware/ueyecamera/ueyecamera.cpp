@@ -102,7 +102,7 @@ struct sUEyeInterface {
 };
 
 sUEyeInterface::sUEyeInterface(int cameraID): camID(cameraID), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
-	//camID = MT::getParameter<int>(STRING(m->name << "_camID"));
+	//camID = mlr::getParameter<int>(STRING(m->name << "_camID"));
 	tout.reg(this) << "UEyeCamera(" << camID << "): ";
 }
 
@@ -338,7 +338,7 @@ void sUEyeInterface::updateTimestamp() {
   cout << "tm: " << b << endl;
   */
 
-  tstamp = MT::toTime(tmp)
+  tstamp = mlr::toTime(tmp)
           + imgInfo.TimestampSystem.wMilliseconds / 1000.;
 }
 
@@ -648,7 +648,7 @@ UEyePoller::~UEyePoller() {
 void UEyePoller::open() {
   tout(this) << "opening" << endl;
 
-  s = new sUEyeInterface(MT::getParameter<int>(STRING(name << "_camID")));
+  s = new sUEyeInterface(mlr::getParameter<int>(STRING(name << "_camID")));
 
   s->camSetup();
   s->camInit();
@@ -670,7 +670,7 @@ void UEyePoller::close() {
   tout(this) << "closed successfully" << endl;
 }
 
-namespace MLR {
+namespace mlr {
 	Mutex start_lock;
 
 	UEyeInterface::UEyeInterface(int cameraID) : s(new ::sUEyeInterface(cameraID)), streaming(false) {

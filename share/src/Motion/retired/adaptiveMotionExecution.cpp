@@ -42,8 +42,8 @@ AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, ar
 
   lastGoal = goalRef+(x0-_trajRef[0]);
 
-  trajWrap = new MT::Path(_trajRef);
-  trajRef = new MT::Path(_trajRef);
+  trajWrap = new mlr::Path(_trajRef);
+  trajRef = new mlr::Path(_trajRef);
 }
 
 void AdaptiveMotionExecution::getNextState(arr& _state, arr& _dstate) {

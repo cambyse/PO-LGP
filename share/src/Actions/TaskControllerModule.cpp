@@ -1,26 +1,22 @@
 #include "TaskControllerModule.h"
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
 
-#ifdef MT_ROS
-#  include <pr2/rosutil.h>
+#ifdef MLR_ROS
+#  include <pr2/roscom.h>
 #endif
 
-TaskControllerModule *globalTaskControllerModule=NULL;
-TaskControllerModule *taskControllerModule(){
-  return globalTaskControllerModule;
-}
-
-TaskControllerModule::TaskControllerModule(ModuleL& system)
-    : Module("TaskControllerModule", system, Module::loopWithBeat, .01)
-    , realWorld("model.kvg")
+TaskControllerModule::TaskControllerModule()
+    : Module("TaskControllerModule", .01)
+    , realWorld("../../../data/pr2_model/pr2_model.ors")
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
-//  modelWorld.linkToVariable(new Variable<ors::KinematicWorld>("KinematicWorld"));
-  globalTaskControllerModule=this;
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -35,11 +31,11 @@ void TaskControllerModule::open(){
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->H_rate_diag = MT::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
   feedbackController->qitselfPD.y_ref = q0;
-  feedbackController->qitselfPD.setGains(.0,10.);
+  feedbackController->qitselfPD.setGains(0., 10.);
 
-//  MT::open(fil,"z.TaskControllerModule");
+//  mlr::open(fil,"z.TaskControllerModule");
 
 #if 1
   modelWorld.writeAccess();
@@ -49,9 +45,10 @@ void TaskControllerModule::open(){
   modelWorld.deAccess();
 #endif
 
-  useRos = MT::getParameter<bool>("useRos",false);
+  useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
 }
+
 
 void TaskControllerModule::step(){
   static uint t=0;
@@ -70,45 +67,40 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-#ifdef MT_ROS
-      cvrt_pose2transXYPhi(q_real, trans->qIndex, pr2_odom.get());
-#endif
+      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
         cout <<"** GO!" <<endl;
+        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
+        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
         syncModelStateWithRos = false;
       }
     }else{
       if(t>20){
-        HALT("sync'ing real PR2 with simulated failed - using useRos=false")
+        HALT("sync'ing real PR2 with simulated failed")
       }
     }
-  }
-  if(syncModelStateWithRos){
-    cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
-    cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
   }
 
   //-- sync the model world with the AlvarMarkers
   modelWorld.writeAccess();
   AlvarMarkers alvarMarkers = ar_pose_marker.get();
   syncMarkers(modelWorld(), alvarMarkers);
-//  syncMarkers(__modelWorld__, alvarMarkers); //TODO: I think this is redundant with the above (mt)
   syncMarkers(realWorld, alvarMarkers);
   modelWorld.deAccess();
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
   //-- code to output force signals
-  if(true){
+  if(false){
     ors::Shape *ftL_shape = realWorld.getShapeByName("endeffForceL");
     arr fLobs = ctrl_obs.get()->fL;
     arr uobs =  ctrl_obs.get()->u_bias;
@@ -118,13 +110,13 @@ void TaskControllerModule::step(){
       realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-//      MT::arrayBrackets="  ";
+//      mlr::arrayBrackets="  ";
 //      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
-//      MT::arrayBrackets="[]";
+//      mlr::arrayBrackets="[]";
     }
   }
 
-  //-- copy the task to the local controller
+  //-- copy the tasks to the local controller
   ctrlTasks.readAccess();
   modelWorld.writeAccess();
   feedbackController->tasks = ctrlTasks();
@@ -156,12 +148,13 @@ void TaskControllerModule::step(){
   refs.gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.);
+  refs.Ki = ARR(0.2);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
+  refs.intLimitRatio = ARR(0.7);
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {

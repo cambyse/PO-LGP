@@ -12,6 +12,6 @@ SWIFT	= 1
 QHULL	= 1
 # REVEL = 1
 
-CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
+CXXFLAGS += -fPIC -DMLR_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 
 include $(BASE)/gofMake/generic.mk

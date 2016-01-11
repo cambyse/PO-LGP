@@ -29,7 +29,7 @@ class ZICKZACK_PRADA : public PRADA_Planner {
   void sampleGoalState(NID_DBN& net, uintA& usedComponents, const SymbolicState& s);
   void createBetas(arr& betas_p, arr& betas_f, NID_DBN& backward_net, uintA& usedComponents, uint horizon, uint num_plan_samples);
   void combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const arr& betas_p, const arr& betas_f, double discount);
-//   void combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const MT::Array< arr > & all_betas_p, const MT::Array< arr > & all_betas_f, double discount);
+//   void combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const mlr::Array< arr > & all_betas_p, const mlr::Array< arr > & all_betas_f, double discount);
 //   void combine_alpha_beta(double& max_value, uint& max_d_forward, uint& max_d_backward, const NID_DBN& net, uint horizon_forward, const arr& betas_p, const arr& betas_f, double discount);
 
   

@@ -1,11 +1,10 @@
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <pr2/roscom.h>
-#include <Core/array-vector.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
@@ -13,25 +12,25 @@
 #include <pr2/rosmacro.h>
 
 
-struct MySystem:System{
+struct MySystem{
     ACCESS(SoftHandMsg,sh_ref)
   MySystem(){
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
+    new RosCom_Spinner();
     addModule<RosCom_SoftHandSync>(NULL, Module::loopWithBeat,.1);
-    connect();
+    //connect();
   }
 };
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   MySystem S;
-  engine().open(S);
+  threadOpenModules(true);
 
   SoftHandMsg grasp("medium wrap");
   SoftHandMsg deflate("deflate");
 
   S.sh_ref.set() = grasp;
-  MT::wait(5.);
+  mlr::wait(5.);
   S.sh_ref.set() = deflate;
 
   return 0;
@@ -55,7 +54,7 @@ int main(int argc, char** argv){
 t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
 t->setCostSpecs(MP.T, MP.T, {0.}, 1e2);
 
-optConstrainedMix(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
+optConstrained(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));
 
 displayTrajectory(x,MP.T,world,"traj");
 

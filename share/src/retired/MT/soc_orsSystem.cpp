@@ -40,7 +40,7 @@
 struct sOrsSystem {
   ors::KinematicWorld *ors;
   SwiftInterface *swift;
-  MT::Array<TaskVariable*> vars;
+  mlr::Array<TaskVariable*> vars;
   arr x, x0;
   arr v_act, H_rate, Q_rate;
   arr q_external;
@@ -114,8 +114,8 @@ OrsSystem* OrsSystem::newClone(bool deep) const {
 
 void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                                     uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
-  if(_ors)   s->ors   = _ors;   else { s->ors=new ors::KinematicWorld;        s->ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
-  if(_swift) s->swift = _swift; else { s->swift=new SwiftInterface;  s->swift->init(*s->ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
+  if(_ors)   s->ors   = _ors;   else { s->ors=new ors::KinematicWorld;        s->ors  ->init(mlr::getParameter<mlr::String>("orsFile")); } // ors->makeLinkTree(); }
+  if(_swift) s->swift = _swift; else { s->swift=new SwiftInterface;  s->swift->init(*s->ors, 2.*mlr::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
   if(gl && !_ors){
     gl->add(glStandardScene);
@@ -132,7 +132,7 @@ void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, Op
   arr W_rate;
   if(W){
     if(W->nd==1){
-      if(W->N > get_qDim()){ W->resizeCopy(get_qDim()); MT_MSG("truncating W diagonal..."); }
+      if(W->N > get_qDim()){ W->resizeCopy(get_qDim()); MLR_MSG("truncating W diagonal..."); }
       CHECK_EQ(W->N,get_qDim(), "");
       W_rate.setDiag(*W);
     } else NIY;
@@ -141,20 +141,20 @@ void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, Op
     //cout <<"automatic W initialization =" <<s->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
-  static MT::Parameter<double> hr("Hrate");
-  static MT::Parameter<double> qr("Qrate", 1e-10);
+  static mlr::Parameter<double> hr("Hrate");
+  static mlr::Parameter<double> qr("Qrate", 1e-10);
   s->H_rate = hr()*W_rate;     //u-metric for torque control
   s->Q_rate.setDiag(qr, get_xDim());  //covariance \dot q-update
   if(s->dynamic) s->pseudoDynamic=true;
 }
 
 void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
-  if(!T) T = MT::getParameter<uint>("trajectoryLength");
+  if(!T) T = mlr::getParameter<uint>("trajectoryLength");
 
   initBasics(NULL, NULL, NULL, T, 3., _dynamic, NULL);
   os=&std::cout;
 
-  if(MT::getParameter<bool>("standOnFoot")){
+  if(mlr::getParameter<bool>("standOnFoot")){
     s->ors->reconfigureRoot(s->ors->getBodyByName("rfoot"));
     s->ors->calcBodyFramesFromJoints();
   }
@@ -169,22 +169,22 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
 
   //standard task variables and problem definition
 
-  MT::String endeffShapeName= MT::getParameter<MT::String>("endeffShapeName");
-  double endPrec=MT::getParameter<double>("endPrec");
-  double midPrec=MT::getParameter<double>("midPrec");
-  double colPrec=MT::getParameter<double>("colPrec");
-  double balPrec=MT::getParameter<double>("balPrec");
-  double margin =MT::getParameter<double>("margin");
+  mlr::String endeffShapeName= mlr::getParameter<mlr::String>("endeffShapeName");
+  double endPrec=mlr::getParameter<double>("endPrec");
+  double midPrec=mlr::getParameter<double>("midPrec");
+  double colPrec=mlr::getParameter<double>("colPrec");
+  double balPrec=mlr::getParameter<double>("balPrec");
+  double margin =mlr::getParameter<double>("margin");
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position" , *s->ors, posTVT, endeffShapeName, 0, ARR());
   TaskVariable *col;
-  if(!MT::getParameter<bool>("useTruncation"))
+  if(!mlr::getParameter<bool>("useTruncation"))
     col = new DefaultTaskVariable("collision", *s->ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *com = new DefaultTaskVariable("balance", *s->ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables({pos, col, com});
 
-  pos->y_target = ARRAY(s->ors->getShapeByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(s->ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -198,15 +198,15 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
 }
 
 void OrsSystem::initStandardBenchmark(uint rand_seed){
-  uint K = MT::getParameter<uint>("segments");
-  uint T = MT::getParameter<uint>("trajectoryLength");
-  s->dynamic = MT::getParameter<bool>("isDynamic");
-  double margin = MT::getParameter<double>("margin");
-  bool useTruncation = MT::getParameter<bool>("useTruncation");
+  uint K = mlr::getParameter<uint>("segments");
+  uint T = mlr::getParameter<uint>("trajectoryLength");
+  s->dynamic = mlr::getParameter<bool>("isDynamic");
+  double margin = mlr::getParameter<double>("margin");
+  bool useTruncation = mlr::getParameter<bool>("useTruncation");
 
   //generate the configuration
   ors::Body *b, *target, *endeff;  ors::Shape *sh;  ors::Joint *j;
-  MT::String str;
+  mlr::String str;
   s->ors=new ors::KinematicWorld;
   //the links
   for(uint k=0; k<=K; k++){
@@ -255,12 +255,12 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
     //target->X.p(2) += .05*rnd.gauss();
   }
 
-  initBasics(s->ors, NULL, NULL, T, 3., MT::getParameter<bool>("isDynamic"), NULL);
+  initBasics(s->ors, NULL, NULL, T, 3., mlr::getParameter<bool>("isDynamic"), NULL);
   os=&std::cout;
 
-  double endPrec=MT::getParameter<double>("endPrec");
-  double midPrec=MT::getParameter<double>("midPrec");
-  double colPrec=MT::getParameter<double>("colPrec");
+  double endPrec=mlr::getParameter<double>("endPrec");
+  double midPrec=mlr::getParameter<double>("midPrec");
+  double colPrec=mlr::getParameter<double>("colPrec");
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position" , *s->ors, posTVT, endeff->name, STRING("<t(0 0 " <<.5/K <<")>"), 0, 0, ARR());
   TaskVariable *col;
@@ -268,7 +268,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   else               col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables({pos, col});
 
-  pos->y_target = ARRAY(s->ors->getBodyByName("target")->X.pos);
+  pos->y_target = conv_vec2arr(s->ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -459,7 +459,7 @@ void OrsSystem::setx(const arr& x){
 void sOrsSystem::getCurrentStateFromOrs(){
   arr q0,v0;
   ors->getJointState(q0, v0);
-  v0.setZero(); //MT_MSG("evil speed v0=0 hack"); //TODO
+  v0.setZero(); //MLR_MSG("evil speed v0=0 hack"); //TODO
   x.setBlockVector(q0, v0);
 }
 
@@ -554,7 +554,7 @@ void sOrsSystem::getTargetV(arr& v_target, double& v_prec, uint i, uint t){
   v_prec   = v->v_prec_trajectory(t);
 }
 
-void OrsSystem::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t){
+void OrsSystem::getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t){
   uint i, m=s->vars.N;
   dims.clear();
   names.clear();
@@ -568,6 +568,6 @@ ors::KinematicWorld& OrsSystem::getOrs(){ return *s->ors; }
 
 SwiftInterface& OrsSystem::getSwift(){ return *s->swift; }
 
-MT::Array<TaskVariable*>& OrsSystem::vars(){ return s->vars; }
+mlr::Array<TaskVariable*>& OrsSystem::vars(){ return s->vars; }
 
 /** @} */

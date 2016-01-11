@@ -9,7 +9,7 @@ OPTIM  = debug
 
 LAPACK = 0
 
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
+CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 
 OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS += $(shell find ../MT/ -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )

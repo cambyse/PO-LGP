@@ -6,10 +6,10 @@ struct CopyStruct{
   static void copy(Planner::Edge& nn,const EdgeNG& n){}
 };
 void makeMazeGraph(){
-  Parameter<MT::Array<int> > maze("maze");
+  Parameter<mlr::Array<int> > maze("maze");
   Parameter<uint> mazeN("mazeN"),growtime("growtime");;
   NeuralGas ng;
-  MT::Array<double> s; s.resize(2);
+  mlr::Array<double> s; s.resize(2);
   Planner p;
   OpenGL gl; gl.add(ng);
   OpenGL gl2; gl2.add(p.G);
@@ -54,7 +54,7 @@ void imageToGraph(char* filename,Graph<Planner::Node,Planner::Edge>& G){
   read_ppm(img0,filename);
   img=img0;
   make_grey(img);
-  //img.display(10.f); MT::wait();
+  //img.display(10.f); mlr::wait();
   G.clear();
   Graph<Planner::Node,Planner::Edge>::node n,ns;
   Graph<Planner::Node,Planner::Edge>::edge e; //,e2;

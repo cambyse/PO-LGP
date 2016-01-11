@@ -1,24 +1,24 @@
 #include <Core/util.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 
 #include <Hardware/racer/modules.h>
 
 void TEST(IMU){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData);
     ACCESS(arr, stateEstimate);
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
-      connect();
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
+      //connect();
     }
   } S;
 
   cout <<S <<endl;
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
 
 
   for(;;){
@@ -26,70 +26,70 @@ void TEST(IMU){
     arr x = S.stateEstimate.get();
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
 //    if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    engine().shutdown.waitForSignal();
+  //    moduleShutdown().waitForValueGreaterThan(0);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 void TEST(Motors){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, controls)
     MySystem(){
       addModule<Motors>("Motors", Module::loopFull);
-      connect();
+      //connect();
     }
   } S;
 
   cout <<S <<endl;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   S.controls.set() = ARR(5.,5.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(128.,128.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,10.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(128.,128.,1.);
-  MT::wait(3);
+  mlr::wait(3);
   S.controls.set() = ARR(0.,0.,1.);
-  MT::wait(3);
+  mlr::wait(3);
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 void TEST(Balance){
-  struct MySystem:System{
+  struct MySystem{
     ACCESS(arr, imuData)
     ACCESS(arr, stateEstimate);
     ACCESS(arr, encoderData)
     ACCESS(arr, controls)
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", Module::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", Module::listenFirst);
-      //      addModule<RacerDisplay>("RacerDisplay", Module::loopWithBeat, 0.1);
+      addModule<KalmanFilter>("KalmanFilter" /*,Module::listenFirst*/ );
+      //      addModule<RacerDisplay>("RacerDisplay", /*Module::loopWithBeat,*/ 0.1);
       addModule<Motors>("Motors", Module::loopFull);
-      connect();
+      //connect();
     }
   } S;
 
   cout <<S <<endl;
 
-  double zeroTh=MT::getParameter<double>("zeroTh", 0.);
-  double k_th=MT::getParameter<double>("k_th", 0.);
-  double k_thDot=MT::getParameter<double>("k_thDot", 0.);
-  double k_acc=MT::getParameter<double>("k_acc", 0.);
+  double zeroTh=mlr::getParameter<double>("zeroTh", 0.);
+  double k_th=mlr::getParameter<double>("k_th", 0.);
+  double k_thDot=mlr::getParameter<double>("k_thDot", 0.);
+  double k_acc=mlr::getParameter<double>("k_acc", 0.);
 
-  //    engine().enableAccessLog();
-  engine().open(S);
+  //    //engine().enableAccessLog();
+  threadOpenModules(true);
   double motor_vel=0.;
 
   for(int i = 0;; ++i){
@@ -103,21 +103,21 @@ void TEST(Balance){
 
     motor_vel += k_acc*u;
 //    cout <<"\r state = " <<x <<std::flush;
-//    cout <<"enc= " <<enc/MT_2PI <<std::endl;
+//    cout <<"enc= " <<enc/MLR_2PI <<std::endl;
 
     S.controls.set() = ARR(motor_vel, motor_vel, 10.);
 
-    if(engine().shutdown.getValue()) break;
+    if(moduleShutdown().getValue()) break;
   }
 
-  engine().close(S);
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 
 }
 
 int main(int argc, char **argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
 //  testIMU();
 //  testMotors();

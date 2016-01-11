@@ -19,8 +19,8 @@ Monitor::Monitor(){
 }
 
 void Monitor::open(){
-#ifdef MT_QT
-  app = new QApplication(MT::argc,MT::argv);
+#ifdef MLR_QT
+  app = new QApplication(mlr::argc,mlr::argv);
   app->processEvents();
   
   ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
@@ -28,9 +28,9 @@ void Monitor::open(){
   
   //-- ors
  //-- ors
-  if(MT::checkParameter<MT::String>("orsFile")){
+  if(mlr::checkParameter<mlr::String>("orsFile")){
 	String sfile;
-        MT::getParameter<MT::String>(sfile,"orsFile");
+        mlr::getParameter<mlr::String>(sfile,"orsFile");
 	ors <<FILE(sfile);
 }
 else
@@ -38,7 +38,7 @@ else
 
   ors.calcNodeFramesFromEdges();
 
-#ifdef MT_QT
+#ifdef MLR_QT
   gl = new OpenGL(ui->glparent,"hallo",401,401,0,0);
 #else
   gl = new OpenGL();
@@ -71,7 +71,7 @@ void Monitor::step(){
     'z.plotData' us 1:8 notitle");
   }*/
 
-#ifdef MT_QT
+#ifdef MLR_QT
     if(ctrl->loopCounter){
       ui->time->setText(FORMAT(ctrl->lastTime));
       ui->cycleTime->setText(FORMATPM(ctrl->cycleTime));
@@ -132,13 +132,13 @@ void Monitor::step(){
 #endif
   }
   catch(const char *msg){
-    MT_MSG("exception caught: "<<msg);
+    MLR_MSG("exception caught: "<<msg);
   }
 }
 
 void Monitor::close(){
   delete gl;
-#ifdef MT_QT
+#ifdef MLR_QT
   delete app;
   //TOTO!!ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
 #endif

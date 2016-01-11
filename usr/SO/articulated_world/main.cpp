@@ -75,7 +75,7 @@ void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& phys
 
 /*----------------------------------------------------------------------------*/
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   // Load ORS into a varbiable
   GeometricState geometricState;

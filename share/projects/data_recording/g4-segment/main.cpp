@@ -4,22 +4,22 @@
 #include <fstream>
 
 int main(int argc, char ** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   String in, out;
   int ff, ft;
-  MT::getParameter(in, "i");
-  MT::getParameter(out, "o");
-  MT::getParameter(ff, "f");
-  MT::getParameter(ft, "t");
+  mlr::getParameter(in, "i");
+  mlr::getParameter(out, "o");
+  mlr::getParameter(ff, "f");
+  mlr::getParameter(ft, "t");
 
   ifstream datafin, tstampfin;
-  MT::open(datafin, in);
-  MT::open(tstampfin, STRING(in << ".times"));
+  mlr::open(datafin, in);
+  mlr::open(tstampfin, STRING(in << ".times"));
 
   ofstream datafout, tstampfout;
-  MT::open(datafout, out);
-  MT::open(tstampfout, STRING(out << ".times"));
+  mlr::open(datafout, out);
+  mlr::open(tstampfout, STRING(out << ".times"));
 
   uint fnum;
   int first_fnum = -1;

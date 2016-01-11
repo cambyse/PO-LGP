@@ -37,7 +37,7 @@ template<class S>
 class ParallelJobs
 {
   public:
-                        ParallelJobs(const MT::Array<S*>& jobs);
+                        ParallelJobs(const mlr::Array<S*>& jobs);
                         ~ParallelJobs();
 
     void                run
@@ -52,11 +52,11 @@ class ParallelJobs
     uint                current_index;
     uint                num_running_threads;
     pthread_mutex_t     jobs_mutex_;
-    MT::Array<S*>       jobs_;
+    mlr::Array<S*>       jobs_;
 };
 } // namespace np
 
-#if defined NP_IMPLEMENT_TEMPLATES | MT_IMPLEMENT_TEMPLATES
+#if defined NP_IMPLEMENT_TEMPLATES | MLR_IMPLEMENT_TEMPLATES
 #include "paralleljobs_t.cpp"
 #endif
 

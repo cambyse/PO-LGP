@@ -2,15 +2,15 @@
 #include <libfreenect.hpp>
 #include <Core/util.h>
 
-void lib_hardware_kinect(){ MT_MSG("loading"); }
+void lib_hardware_kinect(){ MLR_MSG("loading"); }
 
-REGISTER_MODULE(KinectPoller)
+REGISTER_MODULE(KinectThread)
 
 const unsigned int image_width = 640; //kinect resolution
 const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
 
-namespace MLR {
+namespace mlr {
   Freenect::Freenect receiver_freenect;
 
   class sKinectCallbackReceiver : public Freenect::FreenectDevice {
@@ -53,14 +53,14 @@ namespace MLR {
     void DepthCallback(void *depth, uint32_t ) {
       uint16A depth_buf((uint16_t*)depth, depth_size);
       depth_buf.reshape(image_height, image_width);
-      double timestamp = MT::clockTime();// - .12;
+      double timestamp = mlr::clockTime();// - .12;
       if(depth_cb != nullptr)
         depth_cb(depth_buf, timestamp);
     }
     void VideoCallback(void *rgb, uint32_t ) {
       byteA video_buf((byte*)rgb, depth_size*3);
       video_buf.reshape(image_height, image_width, 3);
-      double timestamp = MT::clockTime(); // - .12;
+      double timestamp = mlr::clockTime(); // - .12;
       if(video_cb != nullptr)
         video_cb(video_buf, timestamp);
     }
@@ -89,22 +89,22 @@ namespace MLR {
 // C++ interface to kinect: overloading callbacks that directly access the variables
 //
 
-struct sKinectPoller : Freenect::FreenectDevice {
-  KinectPoller *module;
+struct sKinectThread : Freenect::FreenectDevice {
+  KinectThread *module;
 
-  sKinectPoller(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
+  sKinectThread(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
   }
 
   void DepthCallback(void *depth, uint32_t timestamp) {
     memmove(module->kinect_depth.set()->p, depth, 2*image_width*image_height);
     // use receive time, and subtract processing and communication delay of 120ms (experimentally determined)
-    module->kinect_depth.dataTime() = MT::clockTime() - .12;
+    module->kinect_depth.dataTime() = mlr::clockTime() - .12;
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
     memmove(module->kinect_rgb.set()->p, rgb, 3*image_width*image_height);
     // see above
-    module->kinect_rgb.dataTime() = MT::clockTime() - .12;
+    module->kinect_rgb.dataTime() = mlr::clockTime() - .12;
   }
 };
 
@@ -116,19 +116,19 @@ struct sKinectPoller : Freenect::FreenectDevice {
 
 Freenect::Freenect *freenect = NULL;
 
-KinectPoller::KinectPoller() : Module("KinectPoller"), s(NULL){
+KinectThread::KinectThread() : Module("KinectThread"), s(NULL){
 }
 
-KinectPoller::~KinectPoller() {
+KinectThread::~KinectThread() {
 }
 
-void KinectPoller::open() {
-  cout <<"KinectPoller opening..." <<endl;
+void KinectThread::open() {
+  cout <<"KinectThread opening..." <<endl;
   kinect_rgb.set()->resize(image_height, image_width, 3);
   kinect_depth.set()->resize(image_height, image_width);
 
   if(!freenect) freenect = new Freenect::Freenect;
-  s = &(freenect->createDevice<sKinectPoller>(0));
+  s = &(freenect->createDevice<sKinectThread>(0));
   s->module = this;
 
   s->startVideo();
@@ -136,11 +136,11 @@ void KinectPoller::open() {
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration
 }
 
-void KinectPoller::step() {
+void KinectThread::step() {
   //s->updateState(); //actually I think this step routine is redundant because the callback access the variable and fire its revision
 }
 
-void KinectPoller::close() {
+void KinectThread::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);

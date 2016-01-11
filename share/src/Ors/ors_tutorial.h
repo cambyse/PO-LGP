@@ -22,8 +22,8 @@
 /// @addtogroup group_ors
 /// @{
 
-#ifndef MT_tutorial_h
-#define MT_tutorial_h
+#ifndef MLR_tutorial_h
+#define MLR_tutorial_h
 
 #include <Core/array.h>
 

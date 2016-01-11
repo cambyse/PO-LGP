@@ -18,7 +18,7 @@ void test_learn() {
   //  PARAMETERS
   // -------------------------------------
   // Regularizer
-  double alpha_pen = MT::getParameter<double>("alpha", 0.5);
+  double alpha_pen = mlr::getParameter<double>("alpha", 0.5);
   // Lower bounds for probabilities of states in case of noise outcome
   double prob_state_given_NoisyOutcome = 1e-10; // p_min
   // ... same, only for noisy default rule
@@ -28,7 +28,7 @@ void test_learn() {
   PRINT(alpha_pen);
   PRINT(prob_state_given_NoisyOutcome);
 
-  MT::String logfile("learn.log");
+  mlr::String logfile("learn.log");
 	
   // Symbols
   relational::SymL symbols;
@@ -58,7 +58,7 @@ void test_learn() {
 
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   cout.precision(2);
   test_learn();
   

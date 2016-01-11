@@ -47,7 +47,7 @@ void randomGP_on_random_points(GaussianProcess &gp, const arr &c=ARR(0,0,0), dou
 
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef MLR_IMPLEMENTATION
 #include "ISF_GP.cpp"
 #endif
 

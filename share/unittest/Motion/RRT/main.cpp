@@ -35,7 +35,7 @@ RRTPlannerTest::RRTPlannerTest() {
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = {P.world.getBodyByName("endeff")->shapes(0)->index};
   Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
+  c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
@@ -47,7 +47,7 @@ RRTPlannerTest::RRTPlannerTest() {
   start = G.getJointState();
   std::cout << "q = " << start << std::endl;
 
-  target = ARRAY(G.getBodyByName("target")->X.pos);
+  target = conv_vec2arr(G.getBodyByName("target")->X.pos);
   std::cout << "target = " << target << std::endl;
 
   //OpenGL gl;

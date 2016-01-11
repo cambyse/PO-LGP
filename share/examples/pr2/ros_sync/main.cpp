@@ -1,39 +1,33 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
 
-// =================================================================================================
-struct MySystem:System {
-  ACCESS(CtrlMsg, ctrl_obs)
-
-  MySystem() {
-    addModule<RosCom_Spinner>(NULL, Module::loopWithBeat, .001);
-    addModule<RosCom_ControllerSync>(NULL, Module::listenFirst);
-    connect();
-  }
-};
-
 
 // =================================================================================================
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
-  MySystem system;
-  engine().open(system);
+  rosCheckInit("ros_sync");
+
+  ACCESSname(CtrlMsg, ctrl_obs)
+  RosCom_Spinner spinner;
+  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub_ctrl_obs("/marc_rt_controller/jointState", ctrl_obs);
+
+  threadOpenModules(true);
 
   ors::KinematicWorld world("model.kvg");
 
   bool useRos = true;
-  initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
+  initialSyncJointStateWithROS(world, ctrl_obs, useRos);
 
-  for (int i = 0; true; i++) {
-    syncJointStateWitROS(world, system.ctrl_obs, useRos);
+  for (int i = 0; i<200; i++) {
+    syncJointStateWitROS(world, ctrl_obs, useRos);
     world.gl().update(STRING("frame " << i), false, false, false);
-    MT::wait(0.01);
+    mlr::wait(0.01);
   }
 
-  engine().close(system);
+  threadCloseModules();
   cout <<"bye bye" <<endl;
   return 0;
 }

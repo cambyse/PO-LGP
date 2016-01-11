@@ -22,8 +22,8 @@ const unsigned int c_flycap_bypp = c_flycap_bpp / 8;
 const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_bypp;
 
 using namespace FlyCapture2;
-using namespace MLR;
-using namespace MT;
+using namespace mlr;
+using namespace mlr;
 using namespace std;
 
 SET_LOG(flycap, LogLevel::INFO)
@@ -42,19 +42,19 @@ namespace {
 
 	}
 
-	FlyCapture2::PixelFormat mlr2fc(MLR::PixelFormat format) {
+	FlyCapture2::PixelFormat mlr2fc(mlr::PixelFormat format) {
 		switch(format) {
-		case MLR::PIXEL_FORMAT_RAW8:
+		case mlr::PIXEL_FORMAT_RAW8:
 			return FlyCapture2::PIXEL_FORMAT_RAW8;
-		case MLR::PIXEL_FORMAT_BGR8:
+		case mlr::PIXEL_FORMAT_BGR8:
 			return FlyCapture2::PIXEL_FORMAT_BGR;
-		case MLR::PIXEL_FORMAT_RGB8:
+		case mlr::PIXEL_FORMAT_RGB8:
 			return FlyCapture2::PIXEL_FORMAT_RGB8;
-		case MLR::PIXEL_FORMAT_YUV444_8:
+		case mlr::PIXEL_FORMAT_YUV444_8:
 			throw FlycapException("Pixel format yuv444_8 not natively supported by Flycap 2");
-		case MLR::PIXEL_FORMAT_UYV444:
+		case mlr::PIXEL_FORMAT_UYV444:
 			return FlyCapture2::PIXEL_FORMAT_444YUV8;
-		case MLR::PIXEL_FORMAT_UYV422:
+		case mlr::PIXEL_FORMAT_UYV422:
 			return FlyCapture2::PIXEL_FORMAT_422YUV8;
 		default:
 			throw FlycapException("Specified pixel format not supported (no equivalent in flycap?)");
@@ -69,7 +69,7 @@ namespace {
 	};
 }
 
-namespace MLR {
+namespace mlr {
 
 void image_callback(Image *pImage, const void* callbackData);
 
@@ -85,7 +85,7 @@ struct sFlycapInterface {
 	double first_capture_time, last_capture_time, capture_diffs;
 	int count;
 
-	sFlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) : id(cameraID),
+	sFlycapInterface(int cameraID, mlr::PixelFormat capture_fmt, mlr::PixelFormat output_fmt) : id(cameraID),
 			started(false), first_capture_time(-1), last_capture_time(0), capture_diffs(0), count(0) {
 		BusManager bm;
 		PGRGuid id;
@@ -240,7 +240,7 @@ vector<uint32_t> get_flycap_ids() {
 
 Mutex start_lock;
 
-FlycapInterface::FlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) :
+FlycapInterface::FlycapInterface(int cameraID, mlr::PixelFormat capture_fmt, mlr::PixelFormat output_fmt) :
 		s(new sFlycapInterface(cameraID, capture_fmt, output_fmt)), streaming(false) {
 
 }

@@ -36,12 +36,12 @@ struct MiniBeliefProblem:KOrderMarkovFunction {
   double margin, alpha, stickyPrec, beliefDynPrec, beliefGoalPrec, posGoalPrec;
 
   MiniBeliefProblem(){
-    margin = MT::getParameter<double>("margin", .01);
-    alpha = MT::getParameter<double>("alpha", 10.);
-    stickyPrec =  MT::getParameter<double>("stickyPrec", .01);
-    beliefDynPrec =  MT::getParameter<double>("belDynPrec", 10.);
-    beliefGoalPrec =  MT::getParameter<double>("belGoalPrec", 10.);
-    posGoalPrec =  MT::getParameter<double>("posGoalPrec", 10.);
+    margin = mlr::getParameter<double>("margin", .01);
+    alpha = mlr::getParameter<double>("alpha", 10.);
+    stickyPrec =  mlr::getParameter<double>("stickyPrec", .01);
+    beliefDynPrec =  mlr::getParameter<double>("belDynPrec", 10.);
+    beliefGoalPrec =  mlr::getParameter<double>("belGoalPrec", 10.);
+    posGoalPrec =  mlr::getParameter<double>("posGoalPrec", 10.);
   }
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
@@ -73,7 +73,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   phi.append(H*(x_bar(0,0)-2.*x_bar(1,0)+x_bar(2,0))); //penalize acceleration
 
   //-- belief transition costs
-  double xi = MT::sigmoid(-x_bar(1,0)/margin+1);
+  double xi = mlr::sigmoid(-x_bar(1,0)/margin+1);
   phi.append(beliefDynPrec*(x_bar(2,1) - (1.-tau*alpha*xi)*x_bar(1,1) - tau*b0)); //penalize acceleration
 //  phi.append(0.);
 
@@ -120,7 +120,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
 void optim(){
 
   MiniBeliefProblem P;
-  P.mode = (MiniBeliefProblem::BeliefRewardModel)MT::getParameter<int>("mode",1);
+  P.mode = (MiniBeliefProblem::BeliefRewardModel)mlr::getParameter<int>("mode",1);
   P.tau=.01;
   uint T=P.get_T();
   uint n=P.dim_x();
@@ -137,7 +137,7 @@ void optim(){
   x=1.;
   arr dual;
   if(P.dim_g(0)>0){
-    optConstrainedMix(x, dual, Convert(P));
+    optConstrained(x, dual, Convert(P));
   }else{
     optNewton(x, Convert(P), OPT(verbose=2, stopTolerance=1e-3, constrainedMethod=augmentedLag));
   }
@@ -153,7 +153,7 @@ void optim(){
 //===========================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
 //  integrate();
   optim();

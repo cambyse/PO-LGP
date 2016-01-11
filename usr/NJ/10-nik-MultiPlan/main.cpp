@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <signal.h>
 #include <MT/ors.h>
@@ -37,7 +37,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
   robotProcesses=_master;
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
-  MT::IOraw = true;
+  mlr::IOraw = true;
   started_track = false;
   arr p2;
   p2 <<FILE("../../src/NJ/regparams");
@@ -68,13 +68,13 @@ void MultiPlan::init(RobotProcessGroup *_master){
   Kal1.Init();
   Kal2.Init();
 
-  MT::getParameter(nMod,"mod");
+  mlr::getParameter(nMod,"mod");
   if(nMod == 1)
     bFirstSense =false;
   else
     bFirstSense =true;;//to see when sensing started
 
-   MT::getParameter(colPrec,"TV_col_yprec");
+   mlr::getParameter(colPrec,"TV_col_yprec");
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
@@ -84,13 +84,13 @@ void MultiPlan::initTaskVariables(ControllerModule *ctrl){
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it
   TaskAbstraction::initTaskVariables(ctrl);
   double margin;
-  MT::getParameter(margin,"swiftMargin");
-  MT::getParameter(goodCost,"goodCost");
+  mlr::getParameter(margin,"swiftMargin");
+  mlr::getParameter(goodCost,"goodCost");
   TV_col->params=ARR(margin); //change the margin for the collision variable
 }
 
 void MultiPlan::findObstacle(){
-  double time = MT::realTime();
+  double time = mlr::realTime();
   if(visStep != robotProcesses->evis.timer.steps ){//should manuallz remove 0 observations vision.min = 0
     visStep = robotProcesses->evis.timer.steps;
     arr vision1(4),vision2(4);
@@ -126,7 +126,7 @@ void MultiPlan::findObstacle(){
 
 void MultiPlan::findTarget(){
 
-  double time = MT::realTime();
+  double time = mlr::realTime();
   if(visStep != robotProcesses->evis.timer.steps &&perc->objects.N > 0 && perc->objects(0)->visionCenter.N == 4){//should manuallz remove 0 observations vision.min = 0
     visStep = robotProcesses->evis.timer.steps;
     arr vision1 = perc->objects(0)->visionCenter;
@@ -269,8 +269,8 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
 
 
 int main(int argc,char** argv){
-  MT::IOraw = true;
-  MT::initCmdLine(argc,argv);
+  mlr::IOraw = true;
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MultiPlan demo;
@@ -298,7 +298,7 @@ int main(int argc,char** argv){
   demo.obstV2 = robotProcesses.gui.ors2->getBodyByName("obstacle");
   demo.obstV2->shapes(0)->mesh.clear();
   demo.future = robotProcesses.gui.ors->getBodyByName("obstacleF");
-  arr atarget; MT::getParameter(atarget,"target");
+  arr atarget; mlr::getParameter(atarget,"target");
   ors::Vector itarget =  ors::Vector(atarget(0),atarget(1),atarget(2));
   if(demo.nMod == 4)
     itarget = ors::Vector(0.28,-0.84,1);
@@ -310,7 +310,7 @@ int main(int argc,char** argv){
   robotProcesses.gui.ors2->getBodyByName("target")->X.p = robotProcesses.ctrl.ors.getBodyByName("target")->X.p;//even worse design - 2 guis with their ors graphs
   demo.target = robotProcesses.ctrl.ors.getBodyByName("target");
 
-  demo.recho.init(robotProcesses.ctrl.sys,&demo,"ST1",1,MT::getParameter<int>("Tplan"));//after objects on correct place !!
+  demo.recho.init(robotProcesses.ctrl.sys,&demo,"ST1",1,mlr::getParameter<int>("Tplan"));//after objects on correct place !!
   demo.recho.threadOpen();
 
   for(;!robotProcesses.signalStop;){ //catches the ^C key

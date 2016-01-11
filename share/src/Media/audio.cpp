@@ -1,33 +1,49 @@
-#ifdef MT_PORTAUDIO
-
-#include <portaudio.h>
 #include "audio.h"
+
+Singleton<Sound> sound;
 
 SineSound::SineSound(float _sampleRate):sampleRate(_sampleRate){
   SIN.resize(1024);
-  for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MT_2PI*i)/SIN.N);
+  for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MLR_2PI*i)/SIN.N);
 }
 
-void SineSound::addNote(float freq, float a, float decay){
+void SineSound::addNote(int noteRelToC, float a, float decay){
+  addFreq(440.*pow(2.,double(noteRelToC)/12.), a, decay);
+}
+
+void SineSound::addFreq(float freq, float a, float decay){
   floatA note = { float(SIN.N*freq/sampleRate), a, 0., decay };
+  mutex.lock();
   notes.append( note );
   notes.reshape(notes.N/4, 4);
+  mutex.unlock();
 }
 
-void SineSound::changeFreq(uint i,float freq){
+void SineSound::changeFreq(uint i, float freq){
+  mutex.lock();
   notes(i,0) = float(SIN.N*freq/sampleRate);
+  mutex.unlock();
+}
+
+void SineSound::changeAmp(uint i, float amp){
+  mutex.lock();
+  notes(i,1) = amp;
+  mutex.unlock();
 }
 
 void SineSound::reset(){ notes.clear(); }
 
 void SineSound::clean(){
+  mutex.lock();
   for(uint i=notes.d0;i--;){
     if(notes(i,1)<1e-4) notes.delRows(i);
   }
+  mutex.unlock();
 }
 
 float SineSound::get(){
   double x=0.;
+  mutex.lock();
   for(uint i=0;i<notes.d0; i++){
     float &a=notes(i, 1);
     float &t=notes(i, 2);
@@ -38,14 +54,16 @@ float SineSound::get(){
     if(a>0.05) a *= 1.-10.*decay;
     else a *= 1.-decay;
   }
+  mutex.unlock();
   return x;
 }
 
 //===========================================================================
 
-struct sAudio{
-  PaStream *stream;
-};
+#ifdef MLR_PORTAUDIO
+
+#include <portaudio.h>
+
 
 void err(PaError e){
   if(!e) return;
@@ -58,7 +76,7 @@ static int PortAudioCallback( const void *inputBuffer, void *outputBuffer,
                             const PaStreamCallbackTimeInfo* timeInfo,
                             PaStreamCallbackFlags statusFlags,
                             void *userData ){
-  SineSound &s = *((SineSound*)userData);
+  SineSound &S = *((SineSound*)userData);
   float *out = (float*)outputBuffer;
   unsigned long i;
 
@@ -66,22 +84,15 @@ static int PortAudioCallback( const void *inputBuffer, void *outputBuffer,
   (void) statusFlags;
   (void) inputBuffer;
 
-  s.clean();
-  for( i=0; i<framesPerBuffer; i++ ) *out++ = s.get();
+  S.clean();
+  for( i=0; i<framesPerBuffer; i++ ) *out++ = S.get();
 
   return paContinue;
 }
 
-Audio::Audio():s(NULL){
-  s = new sAudio;
-}
 
-Audio::~Audio(){
-  delete s;
-  s=NULL;
-}
 
-void Audio::open(SineSound& S){
+Audio::Audio(SineSound& S){
   err( Pa_Initialize() );
 
   PaStreamParameters outputParameters;
@@ -93,21 +104,21 @@ void Audio::open(SineSound& S){
   outputParameters.hostApiSpecificStreamInfo = NULL;
 
   err( Pa_OpenStream(
-         &s->stream,
+         &stream,
          NULL, /* no input */
          &outputParameters,
-         SAMPLE_RATE,
+         S.sampleRate,
          64, //frames per buffer
          0,
          PortAudioCallback,
          &S ) );
 
-  err( Pa_StartStream( s->stream ) );
+  err( Pa_StartStream( stream ) );
 }
 
-void Audio::close(){
-  err( Pa_StopStream( s->stream ) );
-  err( Pa_CloseStream( s->stream ) );
+Audio::~Audio(){
+  err( Pa_StopStream( stream ) );
+  err( Pa_CloseStream( stream ) );
   err( Pa_Terminate() );
 }
 

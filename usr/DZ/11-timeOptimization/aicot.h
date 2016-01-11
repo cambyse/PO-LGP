@@ -16,11 +16,11 @@
 struct AICOT : public AICO {
     public:
         AICOT(){
-            MaxEMIter   = MT::Parameter<int>("EMiter",10);
+            MaxEMIter   = mlr::Parameter<int>("EMiter",10);
             tauCostRate = 1;
         }
         AICOT(soc::SocSystemAbstraction &sys){
-            MaxEMIter   = MT::Parameter<int>("EMiter",10);
+            MaxEMIter   = mlr::Parameter<int>("EMiter",10);
             init(sys);
         }
 

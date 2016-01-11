@@ -2,7 +2,7 @@
 #include "pomdp.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <vector>
 
 
@@ -38,31 +38,31 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem 
 
   //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
-  //P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 2e5);
+  //pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 2e5);
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,ARRAY(target->X.pos), 2e5);
+  pos->setCostSpecs(P.T, P.T,conv_vec2arr(target->X.pos), 2e5);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   /*/
   //see taskmap_default.cpp;
   Task *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",{0.,0.,1.}));
-  //P.setInterpolatingCosts(vec, MotionProblem::finalOnly, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
+  //vec->setCostSpecs(P.T, P.T, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
   /*/
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeffR", ARR(0,0,-1, world.getBodyByName("table")->X.pos.z + 0.02)));//0.2 is table width  //0.05 above table surface to avoid slippery
-  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1e2);
+  cons->setCostSpecs(0, P.T, {0.}, 1e2);
 
 
 #if 1  //CONSTRAINT
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.01));
-  P.setInterpolatingCosts(collision, MotionProblem::constant, {0.}, 1.);
+  collision->setCostSpecs(0, P.T, {0.}, 1.);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
+  c->setCostSpecs(0, P.T, {0.}, 1e1);
 #endif
 
 
@@ -191,7 +191,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     world.setJointState(x[0]);
 
     for(uint t=0;t<x.d0 + 100;t++){
-        //MT::wait(.1);
+        //mlr::wait(.1);
 
 
       MC.setState(q, qdot);
@@ -305,7 +305,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
       //    vid->addFrame(world.gl().captureImage);
 
       //write data
-      MT::arrayBrackets="  ";
+      mlr::arrayBrackets="  ";
       data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
           <<table->X.pos.z <<' '
          <<endeffR->X.pos.z <<' '
@@ -316,7 +316,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     }
     data.close();
 
-    FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeffR->X.pos);
+    FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeffR->X.pos);
   }
 
 

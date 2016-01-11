@@ -1,7 +1,6 @@
 #include <Core/util.h>
 #include <pr2/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <Core/array-vector.h>
 
 #include <tf/transform_listener.h>
 #include <object_recognition_msgs/TableArray.h>
@@ -344,7 +343,7 @@ struct ClusterFilter{
 
 
 void doit(){
-    ros::init(MT::argc, MT::argv, "cluster_fitter", ros::init_options::NoSigintHandler);
+    ros::init(mlr::argc, mlr::argv, "cluster_fitter", ros::init_options::NoSigintHandler);
 
     ClusterFilter fitter;
 
@@ -355,7 +354,7 @@ void doit(){
 
 
 int main(int argc, char** argv){
-    MT::initCmdLine(argc, argv);
+    mlr::initCmdLine(argc, argv);
     doit();
     return 0;
 }

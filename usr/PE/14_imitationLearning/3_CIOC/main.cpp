@@ -38,7 +38,7 @@ struct IOC_DemoCost {
     v.fc(NoArr,NoArr,g,JgP,_x0);
 
     // reduce Jg to only active part (lambda !=0)
-    MT::Array<uint> idx;
+    mlr::Array<uint> idx;
     lambda0.findValues(idx,0.);
     lambda0.removeAllValues(0.);
     Jg = unpack(JgP);
@@ -158,7 +158,7 @@ struct Demonstration {
 };
 
 struct IOC:ConstrainedProblem {
-  MT::Array<Demonstration*> &demos;
+  mlr::Array<Demonstration*> &demos;
   arr xOpt;
   uint numParam;
   uint numLambda;
@@ -169,7 +169,7 @@ struct IOC:ConstrainedProblem {
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+numLambda+1;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
+  IOC(mlr::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
     T = demos(0)->MP.T;
 
@@ -179,12 +179,12 @@ struct IOC:ConstrainedProblem {
       Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
 
       // add task cost elements
-      for (uint c=0;c<demos(0)->MP.taskCosts.d0;c++) {
-        if ( (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active && !demos(0)->MP.taskCosts(c)->map.constraint) {
-          arr tmp = zeros(demos(0)->MP.taskCosts(c)->target.d1,n);
-          tmp = catCol(tmp,zeros(demos(0)->MP.taskCosts(c)->target.d1,c));
-          tmp = catCol(tmp,ones(demos(0)->MP.taskCosts(c)->target.d1,1));
-          tmp = catCol(tmp,zeros(demos(0)->MP.taskCosts(c)->target.d1,numParam-tmp.d1));
+      for (uint c=0;c<demos(0)->MP.tasks.d0;c++) {
+        if ( (demos(0)->MP.tasks(c)->prec(t) > 0) && demos(0)->MP.tasks(c)->active && !demos(0)->MP.tasks(c)->map.constraint) {
+          arr tmp = zeros(demos(0)->MP.tasks(c)->target.d1,n);
+          tmp = catCol(tmp,zeros(demos(0)->MP.tasks(c)->target.d1,c));
+          tmp = catCol(tmp,ones(demos(0)->MP.tasks(c)->target.d1,1));
+          tmp = catCol(tmp,zeros(demos(0)->MP.tasks(c)->target.d1,numParam-tmp.d1));
           Dwdx.append(tmp);
         }
       }
@@ -262,7 +262,7 @@ struct IOC:ConstrainedProblem {
 
 
 void simpleMotion(){
-  MT::Array<Demonstration*> demos;
+  mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
   ors::KinematicWorld world("scene");
@@ -272,12 +272,12 @@ void simpleMotion(){
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
 
-  arr refGoal = ARRAY(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e4);
+  c->setCostSpecs(MP.T, MP.T, refGoal, 1e4);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","obstacle",0.1));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
+  c->setCostSpecs(0, MP.T, {0.}, 1.);
 
   MP.x0 = {0.,0.,0.};
 
@@ -292,9 +292,9 @@ void simpleMotion(){
   // save optimal solution for evaluation
   arr wGT;
   wGT.append(MP.H_rate_diag);
-  wGT.append(MP.taskCosts(0)->prec(T));
+  wGT.append(MP.tasks(0)->prec(T));
 
-  MP.taskCosts(0)->prec(T) = 1;
+  MP.tasks(0)->prec(T) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
   Demonstration* d = new Demonstration(MP);
   d->x = x;
@@ -312,7 +312,7 @@ void simpleMotion(){
 
   MP2.makeContactsAttractive=false;
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.,0.1);
-  arr refGoal2 = ARRAY(MP2.world.getBodyByName("goal")->X.pos);
+  arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
   c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);
@@ -326,7 +326,7 @@ void simpleMotion(){
 //  displayTrajectory(x2,T,world2,"optTraj");
   cout << "lambda2: "<< lambda2 << endl;
 
-  MP2.taskCosts(0)->prec(T) = 1;
+  MP2.tasks(0)->prec(T) = 1;
   MP2.H_rate_diag = MP2.H_rate_diag/MP2.H_rate_diag;
 
   Demonstration* d2 = new Demonstration(MP2);
@@ -353,7 +353,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   simpleMotion();
 
   return 0;

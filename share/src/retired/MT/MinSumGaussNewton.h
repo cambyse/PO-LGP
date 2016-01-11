@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_MinSumGaussNewton_h
-#define MT_MinSumGaussNewton_h
+#ifndef MLR_MinSumGaussNewton_h
+#define MLR_MinSumGaussNewton_h
 
 #include <fstream>
 #include <Core/array.h>
@@ -41,9 +41,9 @@ struct MinSumGaussNewton {
      in the backward message (update equation) and once for usage in the forward update equation.
      Why this redundant computation and storage? Because it simplifies the code.
      */
-  MT::Array<uintA> del; //in-neighbors
-  MT::Array<Fij> fij;
-  MT::Array<Mu>  mu;
+  mlr::Array<uintA> del; //in-neighbors
+  mlr::Array<Fij> fij;
+  mlr::Array<Mu>  mu;
   boolA clamped;
   std::ofstream fil;
 
@@ -63,7 +63,7 @@ struct MinSumGaussNewton {
   double updateNode(uint i);
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "MinSumGaussNewton.cpp"
 #endif
 

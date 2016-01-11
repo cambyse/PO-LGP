@@ -29,7 +29,7 @@
  */
 
 
-#ifdef MT_PHYSX
+#ifdef MLR_PHYSX
 
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <physx/PxPhysicsAPI.h>
@@ -73,14 +73,14 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
 //  physx.create(graph);
   
-  MT_MSG("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
+  MLR_MSG("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
   gl.add(glStandardScene, NULL);
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);
   
   ors::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
-    *(gl.camera.X) = glCamera->X;
+    gl.camera.X = glCamera->X;
   } else {
     gl.camera.setPosition(10., -15., 8.);
     gl.camera.focus(0, 0, 1.);
@@ -142,8 +142,8 @@ PxTriangleMesh* createTriangleMesh32(PxPhysics& physics, PxCooking& cooking, con
 
 struct sPhysXInterface {
   PxScene* gScene;
-  MT::Array<PxRigidActor*> actors;
-  MT::Array<PxD6Joint*> joints;
+  mlr::Array<PxRigidActor*> actors;
+  mlr::Array<PxD6Joint*> joints;
 
   debugger::comm::PvdConnection* connection;
   
@@ -220,7 +220,7 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   for(ors::Joint *jj : world.joints) s->addJoint(jj);
 
   /// save data for the PVD
-  if(MT::getParameter<bool>("physx_debugger", false)) {
+  if(mlr::getParameter<bool>("physx_debugger", false)) {
     const char* filename = "pvd_capture.pxd2";
     PxVisualDebuggerConnectionFlags connectionFlags = PxVisualDebuggerExt::getAllConnectionFlags();
 
@@ -241,7 +241,7 @@ void PhysXInterface::step(double tau) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
 
-  MT::Array<PxTransform> goal_poses(world.joints.N);
+  mlr::Array<PxTransform> goal_poses(world.joints.N);
   for_list(ors::Joint, j, world.joints) {
     PxD6Joint *px_joint = s->joints(j_COUNT);
     if(j->locker and j->locker->lock()) {
@@ -586,7 +586,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
       } break;
       
       default:
-        MT_MSG("can't draw this type");
+        MLR_MSG("can't draw this type");
     }
   }
   delete [] shapes;
@@ -617,7 +617,7 @@ void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-#else //MT_PHYSX
+#else //MLR_PHYSX
 
 #include "ors_physx.h"
 PhysXInterface::PhysXInterface(ors::KinematicWorld& _world) : world(_world), s(NULL) { NICO }

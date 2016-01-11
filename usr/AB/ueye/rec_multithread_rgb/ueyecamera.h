@@ -19,7 +19,7 @@ class UEyeCamera: public QObject {
     int getWidth();
     int getHeight();
     int getFPS();
-    MT::String getName();
+    mlr::String getName();
     bool getErrFlag();
 
     void camInit();
@@ -44,7 +44,7 @@ class UEyeCamera: public QObject {
     SENSORINFO camInfo;
 
     int width, height, fps;
-    MT::String name;
+    mlr::String name;
 
     bool quit_flag, err_flag;
 
@@ -109,7 +109,7 @@ class UEyeCamera: public QObject {
     void handleCamStatus();
     void handleCaptStatus();
     void msg(const char *m);
-    void msg(const MT::String &m);
+    void msg(const mlr::String &m);
 
     CycleTimer ct;
 

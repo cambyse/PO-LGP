@@ -3,6 +3,6 @@
 
 #include <Core/array.h>
 
-void flatten(arr& out, const MT::Array<arr>& in);
+void flatten(arr& out, const mlr::Array<arr>& in);
 
 #endif

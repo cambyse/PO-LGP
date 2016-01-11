@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 //#include <Gui/opengl.h>
 #include <signal.h>
 #include <thread>
@@ -18,7 +18,7 @@
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/flycap/flycap.h>
 
-using namespace MLR;
+using namespace mlr;
 using namespace std;
 using namespace std::placeholders;
 
@@ -28,7 +28,7 @@ private:
 	unsigned int sequence_num;
 
 public:
-	TimeTagFile(const MT::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
+	TimeTagFile(const mlr::String& filename) : timeTagFile(STRING(filename << ".times")), sequence_num(0) {
 
 	}
 	void add_stamp(double timestamp) {
@@ -54,16 +54,16 @@ private:
 	ImagePublisher pub;
 
 protected:
-	MT::String name;
+	mlr::String name;
 	const bool& terminated;
 	bool ready;
 	byteA buffer;
 	bool do_encode;
 
 public:
-	VideoSave(const char* name, const MT::String& created, const bool& terminated) :
-		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX), pub(name, name, MLR::PIXEL_FORMAT_RGB8),
+	VideoSave(const char* name, const mlr::String& created, const bool& terminated) :
+		enc(STRING("z." << name << "." << created << ".264"), 60, 0, mlr::PIXEL_FORMAT_RGB8),
+		times(enc.name()), start_time(ULONG_MAX), pub(name, name, mlr::PIXEL_FORMAT_RGB8),
 		name(name), terminated(terminated), ready(false), do_encode(true) {
 	}
 
@@ -92,9 +92,9 @@ private:
 	FlycapInterface cam;
 
 public:
-	FlycapGrabAndSave(int id, const char* name, const MT::String& created, const bool& terminated) :
+	FlycapGrabAndSave(int id, const char* name, const mlr::String& created, const bool& terminated) :
 		VideoSave(name, created, terminated),
-		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8) {
+		cam(id, mlr::PIXEL_FORMAT_RAW8, mlr::PIXEL_FORMAT_RGB8) {
 	}
 	virtual ~FlycapGrabAndSave() {
 
@@ -121,12 +121,12 @@ protected:
 	}
 
 	void kinect_depth_cb(const uint16A& depth, double timestamp) {
-		MLR::pack_kindepth2rgb(depth, depth_image);
+		mlr::pack_kindepth2rgb(depth, depth_image);
 		vs_depth.add_frame(depth_image, timestamp, true);
 	}
 
 public:
-	KinectGrabAndSave(int id, const char* name, const MT::String& created, const bool& terminated) :
+	KinectGrabAndSave(int id, const char* name, const mlr::String& created, const bool& terminated) :
 		kinect(std::bind(&KinectGrabAndSave::kinect_depth_cb, this, _1, _2),
 			   std::bind(&KinectGrabAndSave::kinect_video_cb, this, _1, _2), id),
 	    vs_rgb(STRING(name << "_rgb").p, created, terminated),
@@ -147,7 +147,7 @@ public:
 
 class RecordingSystem {
 private:
-	MT::String created;
+	mlr::String created;
 	FlycapGrabAndSave cam1, cam2, cam3, cam4;
 	KinectGrabAndSave front_kinect/*, side_kinect*/;
 	AudioWriter_libav audio_writer;
@@ -187,7 +187,7 @@ protected:
 #pragma omp section
 			while(!terminated && !ready) {
 				if(cam1.isReady() && cam2.isReady() && cam3.isReady() && cam4.isReady()) {
-					start_time = MT::clockTime();
+					start_time = mlr::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
 					cam3.setActiveTime(start_time);
@@ -205,7 +205,7 @@ protected:
 
 public:
 	RecordingSystem(int id1, int id2, int id3, int id4, int kinID1, int kinID2) :
-		created(MT::getNowString()),
+		created(mlr::getNowString()),
 		cam1(id1, STRING("pg_cam_" << id1).p, created, terminated),
 		cam2(id2, STRING("pg_cam_" << id2).p, created, terminated),
 		cam3(id3, STRING("pg_cam_" << id3).p, created, terminated),
@@ -267,13 +267,13 @@ int main(int argc,char **argv){
 
 
 	try {
-		RecordingSystem s(MT::getParameter<int>("camID1"),
-			MT::getParameter<int>("camID2"),
-			MT::getParameter<int>("camID3"),
-			MT::getParameter<int>("camID4"),
-			MT::getParameter<int>("kinectID1"),
-			MT::getParameter<int>("kinectID2"));
-		s.setDoEncode(MT::getParameter<bool>("encode", true));
+		RecordingSystem s(mlr::getParameter<int>("camID1"),
+			mlr::getParameter<int>("camID2"),
+			mlr::getParameter<int>("camID3"),
+			mlr::getParameter<int>("camID4"),
+			mlr::getParameter<int>("kinectID1"),
+			mlr::getParameter<int>("kinectID2"));
+		s.setDoEncode(mlr::getParameter<bool>("encode", true));
 		s.run();
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;

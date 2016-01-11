@@ -56,7 +56,7 @@ void TEST(KOrderMarkov) {
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
   if(P.isConstrained()){
-    optConstrainedMix(x, NoArr, Convert(P) );
+    optConstrained(x, NoArr, Convert(P) );
   }else{
     Convert sf(P);
     OptNewton opt(x, sf);
@@ -69,7 +69,7 @@ void TEST(KOrderMarkov) {
 }
   
 int MAIN(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   testKOrderMarkov();
 
   return 0;

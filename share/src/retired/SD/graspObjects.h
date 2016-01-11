@@ -1,6 +1,6 @@
 
-#ifndef MT_graspObjects_h
-#define MT_graspObjects_h
+#ifndef MLR_graspObjects_h
+#define MLR_graspObjects_h
 
 #include <Ors/ors.h>
 #include "ISF_GP.h"
@@ -35,7 +35,7 @@ struct PotentialField : public MeshObject
   void getNormGrad(arr& grad,const arr& x){
     psi(&grad,NULL,x);
     double d=length(grad);
-    if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
+    if(d>1e-200) grad/=d; else MLR_MSG("gradient too small!");
   }
   void buildMesh();
   void saveMesh(const char *filename);
@@ -142,7 +142,7 @@ struct offset_param_t {
   offset_param_t(arr _off, void *_p){p=_p; off=_off;};
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "graspObjects.cpp"
 #endif
 

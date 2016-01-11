@@ -37,13 +37,13 @@ struct sAICO{
   int sweepMode;
 
   //log/info
-  MT::String filename;
+  mlr::String filename;
   std::ostream *os;
   uint iterations_till_convergence;
   
   //messages
   arr s, Sinv, v, Vinv, r, R, rhat; ///< fwd, bwd, and task messages
-  MT::Array<arr> phiBar, JBar;      ///< all task cost terms
+  mlr::Array<arr> phiBar, JBar;      ///< all task cost terms
   arr Psi;                          ///< all transition cost terms
   arr b, Binv;                      ///< beliefs
   arr xhat;                         ///< point of linearization
@@ -110,16 +110,16 @@ double AICO::tolerance(){ return self->tolerance; }
 void sAICO::init(ControlledSystem& _sys){
   sys = &_sys;
   
-  MT::getParameter(sweepMode, "aico_sweepMode");
-  MT::getParameter(max_iterations, "aico_max_iterations");
-  MT::getParameter(maxStepSize, "aico_maxStepSize");
-  MT::getParameter(tolerance, "aico_tolerance");
-  MT::getParameter(display, "aico_display");
-  MT::getParameter(damping, "aico_damping");
-  MT::getParameter(advanceBeliefBeyondXhat,"aico_advanceBeliefBeyondXhat");
+  mlr::getParameter(sweepMode, "aico_sweepMode");
+  mlr::getParameter(max_iterations, "aico_max_iterations");
+  mlr::getParameter(maxStepSize, "aico_maxStepSize");
+  mlr::getParameter(tolerance, "aico_tolerance");
+  mlr::getParameter(display, "aico_display");
+  mlr::getParameter(damping, "aico_damping");
+  mlr::getParameter(advanceBeliefBeyondXhat,"aico_advanceBeliefBeyondXhat");
   
-  if(MT::checkParameter<MT::String>("aico_filename")){
-    MT::getParameter(filename, "aico_filename");
+  if(mlr::checkParameter<mlr::String>("aico_filename")){
+    mlr::getParameter(filename, "aico_filename");
     cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
@@ -136,7 +136,7 @@ void sAICO::init(ControlledSystem& _sys){
 
 void AICO::prepare_for_changed_task(){
   self->cost=-1;
-  MT::getParameter(self->damping, "aico_damping");
+  mlr::getParameter(self->damping, "aico_damping");
 //  self->damping /= 10.;
 }
 
@@ -229,7 +229,7 @@ void sAICO::init_trajectory(const arr& x_init){
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
   cost = analyzeTrajectory(*sys, b, display>0, &cout); //TODO: !! evaluateTrajectory(b, display>0);
-MT_MSG("TODO!");
+MLR_MSG("TODO!");
   displayCurrentSolution();
   rememberOldState();
 }
@@ -262,7 +262,7 @@ void AICO_multiScaleSolver(ControlledSystem& sys,
                            uint scalePowers){
 NIY
 #if 0
-  MT::Array<AICO> aicos(scalePowers);
+  mlr::Array<AICO> aicos(scalePowers);
   for(uint i=0; i<aicos.N; i++){
     sys.scalePower=i;
     sys.stepScale=i;
@@ -299,7 +299,7 @@ NIY
   }
   if(!sys->isKinematic())  soc::getPositionTrajectory(q, b);  else  q=b;
   if(sys->os){
-    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
+    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -611,11 +611,11 @@ void sAICO::perhapsUndoStep(){
 }
 
 void sAICO::displayCurrentSolution(){
-  MT::timerPause();
+  mlr::timerPause();
   if(sys->gl){
     displayTrajectory(*sys, b, NULL, display, STRING("AICO - iteration " <<sweep));
   }
-  MT::timerResume();
+  mlr::timerResume();
 }
 
 double sAICO::step(){
@@ -666,7 +666,7 @@ double sAICO::step(){
   //for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8, 1.); //relocate once on fwd & bwd sweep
   
   if(sys->os){
-    *sys->os <<"AICO(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping <<std::flush;
+    *sys->os <<"AICO(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<mlr::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping <<std::flush;
   }
 
   //if(cost_old>0 && cost>cost_old)

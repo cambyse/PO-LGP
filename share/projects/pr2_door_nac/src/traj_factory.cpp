@@ -23,7 +23,7 @@ void TrajFactory::compFeatTraj(const arr &x, arr &y, ors::KinematicWorld &world,
 
 /// transform a trajectory from feature space into joint space
 void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, MotionProblem &MP, TaskMap *tm) {
-  MP.taskCosts.clear();
+  MP.tasks.clear();
   MP.setState(xInit[0]);
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(MP.world));
@@ -35,5 +35,5 @@ void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, MotionPr
 
   MotionProblemFunction MPF(MP);
   x = xInit;
-  optConstrainedMix(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
+  optConstrained(x, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 }

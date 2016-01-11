@@ -37,7 +37,7 @@ namespace np {
 template <class S>
 void gabor_wavelet
 (
- MT::Array<MT::Array<S> >& output,
+ mlr::Array<mlr::Array<S> >& output,
  const byteA& gray_image,
  int num_orientations,
  int num_scales,

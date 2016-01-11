@@ -2,7 +2,7 @@
 #undef MIN
 #undef MAX
 
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 
 #include <signal.h>
 

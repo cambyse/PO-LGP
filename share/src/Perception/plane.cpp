@@ -1,9 +1,12 @@
+#ifdef MLR_PCL
+
 #include "plane.h"
 
 void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointIndices::Ptr> &outInliers , uint numPlanes)
 {
   pcl::PointCloud<PointT>::Ptr cloud_be(inCloud);
   for (uint i = 0;i<numPlanes;i++) {
+
     pcl::ModelCoefficients::Ptr coefficients_plane (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices);
     planeDetector(cloud_be,coefficients_plane,inliers_plane);
@@ -13,10 +16,45 @@ void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>
     outInliers.push_back(inliers_plane);
 
     cloud_be = outCloud;
+
   }
   //cout << "Number of points after normal extraction: " << outCloud->size() << endl;
 }
+/*/
+void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointCloud<PointT>::Ptr> &outInliers , uint numPlanes)
+{
+    pcl::PointCloud<PointT>::Ptr cloud_be(inCloud);
+    for (uint i = 0;i<numPlanes;i++) {
+        cout<< "plane at: " <<i<<endl;
+      pcl::ModelCoefficients::Ptr coefficients_plane (new pcl::ModelCoefficients);
+      pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices);
+      pcl::PointCloud<PointT>::Ptr _plane (new  pcl::PointCloud<PointT>);
+      planeDetector(cloud_be,coefficients_plane,inliers_plane);
 
+
+      pcl::PointCloud<PointT>::Ptr temp_clound(cloud_be);
+      pcl::ExtractIndices<PointT> extract;
+      extract.setInputCloud (temp_clound);
+      extract.setIndices (inliers_plane);
+      extract.setNegative (false);
+      extract.filter (*_plane);
+
+
+      cout<< cloud_be->size() << endl;
+      cout<< inliers_plane->indices.size() << endl;
+
+
+      substractPlane(cloud_be,inliers_plane,outCloud);
+
+      outCoefficients.push_back(coefficients_plane);
+      outInliers.push_back(_plane);
+
+      cloud_be = outCloud;
+
+
+    }
+}
+/*/
 
 void passthroughFilter(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, double minLimit, double maxLimit)
 {
@@ -50,7 +88,7 @@ void planeDetector(pcl::PointCloud<PointT>::Ptr inCloud, pcl::ModelCoefficients:
   seg.setModelType (pcl::SACMODEL_PLANE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (200);
-  seg.setDistanceThreshold (0.05);
+  seg.setDistanceThreshold (0.01);
   seg.setInputCloud (inCloud);
   // Obtain the plane inliers and coefficients
   seg.segment (*outInliersPlane, *outCoefficients);
@@ -83,3 +121,5 @@ void substractPlane(pcl::PointCloud<PointT>::Ptr inCloud,pcl::PointIndices::Ptr 
   extract.setNegative (true);
   extract.filter (*outCloud);
 }
+
+#endif

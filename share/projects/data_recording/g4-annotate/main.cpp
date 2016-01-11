@@ -5,16 +5,16 @@
 #include <fstream>
 
 int main(int argc, char ** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   String dir;
   ifstream ann_g4;
   Graph kvg, *subkvg, *lock;
   Node *item;
 
-  MT::getParameter(dir, "dir");
+  mlr::getParameter(dir, "dir");
 
-  MT::open(ann_g4, STRING(dir << "/ann_g4.txt"));
+  mlr::open(ann_g4, STRING(dir << "/ann_g4.txt"));
   /* system(STRING("./g4-convert " << dir)); */
 
   char o1[101], o2[101];

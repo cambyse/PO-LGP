@@ -21,18 +21,20 @@
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false){
+  : map(*map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-  : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false){
+  : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->V<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
+  } else {
+    setGainsAsNatural(3., .7);
   }
   if((it=params["prec"])) prec = it->V<double>();
   if((it=params["target"])) y_ref = it->V<arr>();
@@ -63,7 +65,7 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  this->Pgain = MT::sqr(1./lambda);
+  this->Pgain = mlr::sqr(1./lambda);
   this->Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
@@ -75,6 +77,10 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   this->v = ydot;
   if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
+  if(makeTargetModulo2PI) for(uint i=0;i<y.N;i++){
+      while(y_ref(i) < y-MLR_PI) y_ref(i)+=MLR_2PI;
+      while(y_ref(i) > y+MLR_PI) y_ref(i)-=MLR_2PI;
+  }
   //compute diffs
   arr y_diff(y);
   if(y_ref.N==1) {
@@ -104,9 +110,9 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
 void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
   //-- get necessary Jacobians
   DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(&map);
-  CHECK(m,"this only works for the default position/ori task map");
-  CHECK(m->type==posTMT,"this only works for the default position/ori task map");
-  CHECK(m->i>=0,"this only works for the default position/ori task map");
+  CHECK(m,"this only works for the default position task map");
+  CHECK(m->type==posTMT,"this only works for the default positioni task map");
+  CHECK(m->i>=0,"this only works for the default position task map");
   ors::Body *body = world.shapes(m->i)->body;
   ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
   ors::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");
@@ -264,5 +270,5 @@ arr FeedbackMotionControl::operationalSpaceControl(){
 }
 
 RUN_ON_INIT_BEGIN(CtrlTask)
-MT::Array<CtrlTask*>::memMove=true;
+mlr::Array<CtrlTask*>::memMove=true;
 RUN_ON_INIT_END(CtrlTask)

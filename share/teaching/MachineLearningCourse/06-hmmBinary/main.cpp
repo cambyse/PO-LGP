@@ -14,13 +14,13 @@ void computeEvidences(arr& rho, const arr& y, const arr& mu, double sigma){
   uint T=y.d0,K=mu.N,t,k;
   rho.resize(T,K);
   for(t=0;t<T;t++){
-    for(k=0;k<K;k++) rho(t,k)=::exp(-.5 * MT::sqr(y(t)-mu(k)) / (sigma*sigma) );
+    for(k=0;k<K;k++) rho(t,k)=::exp(-.5 * mlr::sqr(y(t)-mu(k)) / (sigma*sigma) );
   }
   
   if(plot){
     rho >>FILE("z.rho");
     gnuplot("plot 'z.y' w p title 'data', 'z.rho' us 0:2 w l title 'evidences'", false, true, "z.pdf");
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -44,7 +44,7 @@ void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho){
     a >>FILE("z.alpha");
     b >>FILE("z.beta");
     gnuplot("plot 'z.y' w p title 'data', 'z.alpha' us 0:2 w l title 'filtering', 'z.beta' us 0:2 w l title 'betas', 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -67,7 +67,7 @@ void EstepQ(arr& q, arr& q_pair, const arr& P0, const arr& P, const arr& rho){
   if(plot){
     q >>FILE("z.q");
     gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -108,9 +108,9 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
   y.reshape(T,1);  y >>FILE("z.y");  y.reshape(T);
   if(plot){
     gnuplot("plot 'z.y' w p title 'data'", false, true, "z.pdf");
-    MT::wait();
+    mlr::wait();
     gnuplot("plot 'z.y' w p title 'data', 'z.x' w l title 'true state' lw 4", false, true, "z.pdf");
-    MT::wait();
+    mlr::wait();
   }
 }
 
@@ -121,13 +121,13 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
 //
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
-  MT::arrayBrackets="  ";
+  mlr::initCmdLine(argc,argv);
+  mlr::arrayBrackets="  ";
 
   //-- build transition and observation matrices
   uint T=1000,K=2;
-  double eps=MT::getParameter<double>("eps",.01);
-  double sigma=MT::getParameter<double>("sigma",1.);
+  double eps=mlr::getParameter<double>("eps",.01);
+  double sigma=mlr::getParameter<double>("sigma",1.);
   arr P0(K),P(K,K),mu(K);
   P0=1./K;
   P=eps;  for(uint i=0;i<K;i++) P(i,i) = 1.-(K-1)*eps;

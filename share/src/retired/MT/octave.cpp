@@ -19,7 +19,7 @@
 
 #include "octave.h"
 
-#ifdef MT_OCTAVE
+#ifdef MLR_OCTAVE
 
 //#include <octave/toplev.h> /* do_octave_atexit */
 #include <octave/octave.h>

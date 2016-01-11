@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Core Ors Motion
+DEPEND = Core Geo Ors Motion
 
 include $(BASE)/gofMake/generic.mk

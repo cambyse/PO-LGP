@@ -53,7 +53,7 @@ void sample(){
     m->state.expandReachable();
     cout <<"new state=\n" <<*m <<endl;
 
-    MT::wait();
+    mlr::wait();
 
 //      if(checkGoalIsFeasible(s)){
 //        goal = T.last();

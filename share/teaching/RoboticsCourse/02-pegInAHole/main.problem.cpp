@@ -41,7 +41,7 @@ void peg_in_a_hole(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   peg_in_a_hole();
 

@@ -4,7 +4,7 @@
 
 struct ExampleFunction:public VectorFunction{
   double q;
-  ExampleFunction(){ q = MT::getParameter<double>("q",10.); }
+  ExampleFunction(){ q = mlr::getParameter<double>("q",10.); }
   void fv(arr& phi, arr& J,const arr& x){
     CHECK_EQ(x.N,1,"");
     phi.resize(1);
@@ -33,8 +33,8 @@ void TEST(GaussNewton){
 }
 
 int main(int argc, char *argv[]){
-  MT::initCmdLine(argc,argv);
-  MT::verboseLevel=2;
+  mlr::initCmdLine(argc,argv);
+  mlr::verboseLevel=2;
   
   testGaussNewton();
   return 0;

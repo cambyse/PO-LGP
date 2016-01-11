@@ -21,25 +21,25 @@
 #include <iomanip>
 
 void mdp::EMSolver::getParameters(){
-  MT::getParameter(problemFile, "problemFile", MT::String("paint.95.POMDP.arr"));
-  MT::getParameter(fscFile, "fscFile", MT::String("z.fsc"));
-  MT::getParameter(outputPrefix, "outputPrefix", MT::String("data/test"));
-  MT::getParameter(seed, "seed", (uint)0);
-  MT::getParameter(EMiterations, "EMiterations", (uint)200);
-  MT::getParameter(evaluationCheckHorizon, "evaluationCheckHorizon", (uint)0);
+  mlr::getParameter(problemFile, "problemFile", mlr::String("paint.95.POMDP.arr"));
+  mlr::getParameter(fscFile, "fscFile", mlr::String("z.fsc"));
+  mlr::getParameter(outputPrefix, "outputPrefix", mlr::String("data/test"));
+  mlr::getParameter(seed, "seed", (uint)0);
+  mlr::getParameter(EMiterations, "EMiterations", (uint)200);
+  mlr::getParameter(evaluationCheckHorizon, "evaluationCheckHorizon", (uint)0);
   
-  MT::getParameter((int&)fscType, "fscType", 0);
-  MT::getParameter(levels, "levels", TUP(10));
+  mlr::getParameter((int&)fscType, "fscType", 0);
+  mlr::getParameter(levels, "levels", TUP(10));
   
-  MT::getParameter((int&)mstepType, "mstepType", 0);
-  MT::getParameter(mstepRate, "mstepRate", .3);
-  MT::getParameter(mstepNoise, "mstepNoise", 1e-5);
+  mlr::getParameter((int&)mstepType, "mstepType", 0);
+  mlr::getParameter(mstepRate, "mstepRate", .3);
+  mlr::getParameter(mstepNoise, "mstepNoise", 1e-5);
   
-  MT::getParameter(estepHorizon, "estepHorizon", (uint)200);
-  MT::getParameter(estepStructured, "estepStructured", true);
-  MT::getParameter(estepIncremental, "estepIncremental", true);
+  mlr::getParameter(estepHorizon, "estepHorizon", (uint)200);
+  mlr::getParameter(estepStructured, "estepStructured", true);
+  mlr::getParameter(estepIncremental, "estepIncremental", true);
   
-  MT::getParameter(obsolete_forceLevel1, "forceLevel1", false);;
+  mlr::getParameter(obsolete_forceLevel1, "forceLevel1", false);;
 }
 
 void mdp::EMSolver::reportParameters(std::ostream& os){
@@ -69,13 +69,13 @@ void mdp::EMSolver::reportParameters(std::ostream& os){
 
 void mdp::EMSolver::initProblem(){
   outfilename.clear() <<outputPrefix;
-  //MT::IOraw=true;
+  //mlr::IOraw=true;
   //levels.write(outfilename, "-");
-  //MT::IOraw=false;
+  //mlr::IOraw=false;
   outfilename <<"." <<seed;
   cout <<"output filename = " <<outfilename <<endl;
   outfile.close();
-  MT::open(outfile, outfilename);
+  mlr::open(outfile, outfilename);
   
   readMDP(mdps, problemFile);
 }
@@ -105,7 +105,7 @@ void mdp::EMSolver::initFsc(){
 }
 
 void mdp::EMSolver::resetTimer(){
-  tic=MT::cpuTime();
+  tic=mlr::cpuTime();
 }
 
 void mdp::EMSolver::step(){
@@ -116,7 +116,7 @@ void mdp::EMSolver::step(){
                        estepHorizon, estepStructured, alpha.N>0 && estepIncremental,
                        mstepType, mstepRate, mstepNoise,
                        false, &alpha, &beta, &cout);
-  outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
+  outfile <<k <<' ' <<mlr::timerRead(false, tic) <<' ' <<R <<endl;
   if(false && evaluationCheckHorizon){ //NIY...
     uint horizon=evaluationCheckHorizon;
     if(horizon==1) horizon=2*estepHorizon;
@@ -130,14 +130,14 @@ void mdp::EMSolver::step(){
 }
 
 void mdp::EMSolver::loop(){
-  tic=MT::cpuTime();
+  tic=mlr::cpuTime();
   for(; k<EMiterations;) step();
-  //cout <<"final R = " <<R <<"\ntotal time = " <<MT::timerRead(false, tic) <<endl;
-  cout <<"total time = " <<MT::timerRead(false, tic) <<endl;
+  //cout <<"final R = " <<R <<"\ntotal time = " <<mlr::timerRead(false, tic) <<endl;
+  cout <<"total time = " <<mlr::timerRead(false, tic) <<endl;
 }
 
 void mdp::EMSolver::gnuplot(bool byTime){
-  MT::String cmd;
+  mlr::String cmd;
   if(byTime) cmd <<"plot '" <<outfilename <<"' us 2:3";
   else       cmd <<"plot '" <<outfilename <<"' us 1:3";
   cout <<"gnuplot command: " <<cmd <<endl;
@@ -164,7 +164,7 @@ void mdp::EMSolver::obsolete_loop_lev12(){
   
   //iterate EM
   double R=0.;
-  tic=MT::cpuTime();
+  tic=mlr::cpuTime();
   if(levels.N==1 || obsolete_forceLevel1){ //use specialized flat controller optimization
     if(levels.N==2) collapse2levelFSC(fsc1, fsc2);
     for(uint k=0; k<EMiterations; k++){
@@ -178,7 +178,7 @@ void mdp::EMSolver::obsolete_loop_lev12(){
       R=pomdpEM_lev1(mdp, fsc1, estepHorizon, estepStructured, alpha.N>0 && estepIncremental,
                      (MstepType)mstepType, mstepRate, mstepNoise,
                      false, &alpha, &beta, &cout);
-      outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
+      outfile <<k <<' ' <<mlr::timerRead(false, tic) <<' ' <<R <<endl;
     }
   }else{
     for(uint k=0; k<EMiterations; k++){
@@ -190,8 +190,8 @@ void mdp::EMSolver::obsolete_loop_lev12(){
       }
       cout <<k <<' ';
       R=pomdpEM_lev2(mdp, fsc2, estepHorizon, estepStructured, (MstepType)mstepType, false, &cout);
-      outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
+      outfile <<k <<' ' <<mlr::timerRead(false, tic) <<' ' <<R <<endl;
     }
   }
-  cout <<"final R = " <<R <<"\ntotal time = " <<MT::timerRead(false, tic) <<endl;
+  cout <<"final R = " <<R <<"\ntotal time = " <<mlr::timerRead(false, tic) <<endl;
 }

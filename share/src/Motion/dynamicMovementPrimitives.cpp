@@ -175,7 +175,7 @@ void DynamicMovementPrimitives::plotDMP() {
   gnuplot("set term wxt 5 title 'traj'");
   gnuplot("plot 'out/y_ref.output'using 1 with points pointtype 7 pointsize 0.5");
   gnuplot("replot 'out/y_bk.output'using 1 with points pointtype 7 pointsize 0.5");
-  MT::String n;
+  mlr::String n;
   for(uint i = 2; i<=y_ref.d1; i++) {
     n.clear();
     n<<"replot 'out/y_ref.output'using "<<i<<" with points pointtype 7 pointsize 0.5";

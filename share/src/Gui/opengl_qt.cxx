@@ -143,9 +143,9 @@ void OpenGL::createOffscreen(int width, int height){
   }
   if(!s->osContext){
     s->osPixmap=new QPixmap(width, height);
-    if(!s->osPixmap) MT_MSG("can't create off-screen Pixmap");
+    if(!s->osPixmap) MLR_MSG("can't create off-screen Pixmap");
     s->osContext=new QGLContext(QGLFormat(GLosformat), s->osPixmap);
-    if(!s->osContext->create()) MT_MSG("can't create off-screen OpenGL context");
+    if(!s->osContext->create()) MLR_MSG("can't create off-screen OpenGL context");
   }
 }
 

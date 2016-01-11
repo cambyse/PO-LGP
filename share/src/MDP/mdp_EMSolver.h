@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_solver_h
-#define MT_solver_h
+#ifndef MLR_solver_h
+#define MLR_solver_h
 
 #include <Core/util.h>
 #include "mdp.h"
@@ -30,9 +30,9 @@ enum FscType { FscPlain, FscHierarchical, FscReactive };
 struct EMSolver {
   //----- public options of the solver
   //general
-  MT::String problemFile;    ///< file name of the problem
-  MT::String fscFile;        ///< file name for the controller
-  MT::String outputPrefix;   ///< path-prefix for the outputfile
+  mlr::String problemFile;    ///< file name of the problem
+  mlr::String fscFile;        ///< file name for the controller
+  mlr::String outputPrefix;   ///< path-prefix for the outputfile
   uint seed;                 ///< random seed
   uint EMiterations;         ///< #iterations when loop() is called
   uint evaluationCheckHorizon;  ///< use a (flat) policy evaluation in each iteration to check the reward
@@ -51,7 +51,7 @@ struct EMSolver {
   bool obsolete_forceLevel1;
   
   //----- internal variables
-  MT::String outfilename;
+  mlr::String outfilename;
   ofstream outfile;
   arr alpha, beta;
   double tic;
@@ -77,7 +77,7 @@ struct EMSolver {
 
 }//end of namespace mdp
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #include "mdp_EMSolver.cpp"
 #endif
 

@@ -1,6 +1,6 @@
 #include "ors_ibds.h"
 
-#ifdef MT_IBDS
+#ifdef MLR_IBDS
 
 #include <DynamicSimulation/Simulation.h>
 #include <DynamicSimulation/RigidBody.h>
@@ -332,13 +332,13 @@ void drawEnv(void*) {
 #endif
 
 
-#else //MT_IBDS
+#else //MLR_IBDS
 
 void IbdsModule::create(ors::KinematicWorld& C) { NICO }
 void IbdsModule::step(){ NICO }
 
-#include <Core/array_t.h>
-template MT::Array<IBDS::RigidBody*>::Array();
-template MT::Array<IBDS::RigidBody*>::~Array();
+#include <Core/array.tpp>
+template mlr::Array<IBDS::RigidBody*>::Array();
+template mlr::Array<IBDS::RigidBody*>::~Array();
 
 #endif

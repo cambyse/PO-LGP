@@ -1,4 +1,4 @@
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Gui/opengl.h>
 
 #include <Hardware/kinect/kinect.h>
@@ -12,15 +12,15 @@ void TEST(KinectModules) {
 
   System S;
   KinectThread kin(S);
-  S.addModule<KinectDepthPacking>("KinectDepthPacking", Module::listenFirst);
-  S.addModule<ImageViewer>("ImageViewer_rgb", {"kinect_rgb"}, Module::listenFirst);
-  S.addModule<ImageViewer>("ImageViewer_depth", {"kinect_depthRgb"}, Module::listenFirst);
-  S.addModule<Kinect2PointCloud>(NULL, Module::loopWithBeat, .1);
-  S.addModule<PointCloudViewer>(NULL, {"kinect_points", "kinect_pointColors"}, Module::listenFirst);
-//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"}, Module::listenFirst);
+  S.addModule<KinectDepthPacking>("KinectDepthPacking" /*,Module::listenFirst*/ );
+  new ImageViewer("kinect_rgb");
+  new ImageViewer("kinect_depthRgb");
+  S.new Kinect2PointCloud;
+  new PointCloudViewer("kinect_points", "kinect_pointColors");
+//      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", {"kinect_rgb"} /*,Module::listenFirst*/ );
 //      m_enc->set_rgb(true);
-//      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"}, Module::listenFirst);
-  S.connect();
+//      addModule("VideoEncoderX264", "VideoEncoder_depth", {"kinect_depthRgb"} /*,Module::listenFirst*/ );
+  //S.connect();
   cout <<S <<endl;
 
   S.run();
@@ -29,7 +29,7 @@ void TEST(KinectModules) {
   FILE("z.kinect_depth") <<kin.kinect_depth.get()();
   FILE("z.kinect_rgb") <<kin.kinect_rgb.get()();
 
-//  engine().shutdown.waitForSignal();
+//  moduleShutdown().waitForValueGreaterThan(0);
 
   S.close();
   cout <<"bye bye" <<endl;

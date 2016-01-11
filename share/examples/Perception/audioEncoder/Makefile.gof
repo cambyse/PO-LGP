@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Core System Perception Gui
+DEPEND = Core Perception Gui
 
 include $(BASE)/gofMake/generic.mk

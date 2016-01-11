@@ -27,16 +27,21 @@ void TEST(Read){
   cout <<*G["k"] <<endl;
   cout <<G["k"]->graph() <<endl;
   cout <<G["val"]->V<double>() <<endl;
-  cout <<G["k"]->graph()["z"]->V<MT::String>() <<endl;
+  cout <<G["k"]->graph()["z"]->V<mlr::String>() <<endl;
   cout <<"DONE" <<endl;
 }
 
 //===========================================================================
 
 void TEST(Init){
-  Graph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", MT::String("BLA")} };
+  Graph G = {"x", "b", {"a", 3.}, {"b", {"x"}, 5.}, {"c", mlr::String("BLA")} };
   cout <<G <<endl;
   G.checkConsistency();
+
+  Graph B;
+
+  B <<"x" <<"b" <<Nod("a", 3.) <<Nod("b", {"x"}, ARR(1.,2.,3.));
+  cout <<B <<endl;
 }
 
 //===========================================================================
@@ -75,10 +80,10 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new bool(true), true);
+      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new bool(true), true);
       break;
     case 1://add Subgraph item
-      new Node_typed<Graph>(G, {MT::String().setRandom(), MT::String().setRandom()}, rndParents(G), new Graph(), true);
+      new Node_typed<Graph>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new Graph(), true);
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();
@@ -89,6 +94,8 @@ void rndModify(Graph& G){
     default:HALT("");
   }
 }
+
+//===========================================================================
 
 void TEST(Random){
   Graph A,B;
@@ -133,6 +140,7 @@ struct Something{
 void operator<<(ostream& os, Something& s){ os <<s.x; }
 //the following 2 lines are optional: they enable naming the type and typed reading from file
 void operator>>(istream& is, Something& s){ is >>s.x; }
+bool operator==(const Something&, const Something&){ return false; }
 REGISTER_TYPE(Something)
 
 void TEST(Manual){
@@ -150,8 +158,8 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
 //  testRandom();
-  testRead();
-//  testInit();
+//  testRead();
+  testInit();
 //  testDot();
 
 //  if(!filename) testManual();

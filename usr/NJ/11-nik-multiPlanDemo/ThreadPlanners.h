@@ -153,11 +153,11 @@ struct SecKinPlanner:public StepThread{
 			Clusters <<FILE("qD.dat");
 			xdesc <<FILE("xD.dat");
 		}
-		MT::getParameter(midPrec, "reachPlanMidPrec");
-		MT::getParameter(endPrec, "reachPlanEndPrec"); //load here to avoid tthread problems with CFG file
-		MT::getParameter(limPrec, "reachPlanLimPrec");
-		MT::getParameter(colPrec, "reachPlanColPrec");
-		MT::getParameter(protoPrec, "reachPlanProtoPrec");
+		mlr::getParameter(midPrec, "reachPlanMidPrec");
+		mlr::getParameter(endPrec, "reachPlanEndPrec"); //load here to avoid tthread problems with CFG file
+		mlr::getParameter(limPrec, "reachPlanLimPrec");
+		mlr::getParameter(colPrec, "reachPlanColPrec");
+		mlr::getParameter(protoPrec, "reachPlanProtoPrec");
 		nMod = nmod;
 		target = name;
 		showTrajectory = true;
@@ -497,7 +497,7 @@ struct ThreadPlanner:public StepThread{
 	int nPlan;//how many pklanners totally
 	uint nBest;//best sub planner
 
-	MT::Array<SecKinPlanner*> helpers;
+	mlr::Array<SecKinPlanner*> helpers;
 	double lastCost;//judge planners progress and whether costs worsening ,diffCost
 	// bool bStop;
 
@@ -524,7 +524,7 @@ struct ThreadPlanner:public StepThread{
 
 	void UnsetInit(){
 		cout << " unsetinit " << endl << endl;file  << " unsetinit " << endl << endl;costfile << endl;
-		MT::IOraw = true;
+		mlr::IOraw = true;
 		if(bDATAMODE){
 			for(uint i = 0; i < helpers.N; i++){
 				if(helpers(i)->aico.q.N>0 && helpers(i)->aico.cost < 0.4){ //save data
@@ -583,9 +583,9 @@ struct ThreadPlanner:public StepThread{
 
 	void init(const soc::SocSystem_Ors& _sys,TaskAbstraction *_task, char * name, int nMod, uint _T){
 		T = _T;
-		MT::getParameter(nPlan,"nPlan");
+		mlr::getParameter(nPlan,"nPlan");
 		for(int i = 0; i < nPlan; i++){
-			MT::String name = MT::String("plan") + i;
+			mlr::String name = mlr::String("plan") + i;
 			helpers.append(new SecKinPlanner(name,T));
 		}
 		for(uint i = 0; i < helpers.N; i++)

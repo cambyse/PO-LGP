@@ -39,7 +39,7 @@ struct IOC_DemoCost {
     cout << g << endl;
 
     // reduce Jg to only active part (lambda !=0)
-    MT::Array<uint> idx;
+    mlr::Array<uint> idx;
     lambda0.findValues(idx,0.);
     lambda0.removeAllValues(0.);
     Jg = unpack(JgP);
@@ -159,7 +159,7 @@ struct Demonstration {
 };
 
 struct IOC:ConstrainedProblem {
-  MT::Array<Demonstration*> &demos;
+  mlr::Array<Demonstration*> &demos;
   arr xOpt;
   uint numParam;
   uint numLambda;
@@ -170,7 +170,7 @@ struct IOC:ConstrainedProblem {
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+numLambda+1;}
 
-  IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
+  IOC(mlr::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
     T = demos(0)->MP.T;
 
@@ -180,9 +180,9 @@ struct IOC:ConstrainedProblem {
       Dwdx.append(catCol(eye(n),zeros(n,numParam-n)));
 
       // add task cost elements
-      for (uint c=0;c<demos(0)->MP.taskCosts.N;c++) {
-        if ( demos(0)->MP.taskCosts(c)->prec.N >t && (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active && !demos(0)->MP.taskCosts(c)->map.constraint) {
-          uint m = demos(0)->MP.taskCosts(c)->target.N;
+      for (uint c=0;c<demos(0)->MP.tasks.N;c++) {
+        if ( demos(0)->MP.tasks(c)->prec.N >t && (demos(0)->MP.tasks(c)->prec(t) > 0) && demos(0)->MP.tasks(c)->active && !demos(0)->MP.tasks(c)->map.constraint) {
+          uint m = demos(0)->MP.tasks(c)->target.N;
           arr tmp = zeros(m,n);
           tmp = catCol(tmp,zeros(m,c));
           tmp = catCol(tmp,ones(m,1));
@@ -264,7 +264,7 @@ struct IOC:ConstrainedProblem {
 
 
 void simpleMotion(){
-  MT::Array<Demonstration*> demos;
+  mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
   ors::KinematicWorld world("scene");
@@ -273,15 +273,15 @@ void simpleMotion(){
   MotionProblem MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
-  arr refGoal1 = ARRAY(MP.world.getBodyByName("goal1")->X.pos);
-  arr refGoal2 = ARRAY(MP.world.getBodyByName("goal2")->X.pos);
+  arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
+  arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);
   c = MP.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(120,120,refGoal2,1e3);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.1));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1.);
+  c->setCostSpecs(0, MP.T, {0.}, 1.);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -293,8 +293,8 @@ void simpleMotion(){
   displayTrajectory(x,T,world,"optTraj");
   arr wGT;
   wGT.append(MP.H_rate_diag);
-  wGT.append(MP.taskCosts(0)->prec(200));
-  wGT.append(MP.taskCosts(1)->prec(120));
+  wGT.append(MP.tasks(0)->prec(200));
+  wGT.append(MP.tasks(1)->prec(120));
 
 
 
@@ -368,7 +368,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   simpleMotion();
 
   return 0;

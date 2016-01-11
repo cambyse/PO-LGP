@@ -7,7 +7,7 @@
 
 #include "image_pub.h"
 
-#ifdef MT_ROS
+#ifdef MLR_ROS
 
 #include <ros/ros.h>
 
@@ -26,7 +26,7 @@ using namespace camera_info_manager;
 #include <sstream>
 #include <time.h>
 
-namespace MLR {
+namespace mlr {
 
   struct sImagePublisher {
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
@@ -109,7 +109,7 @@ namespace MLR {
     delete s;
   }
 
-  void ImagePublisher::publish(const MT::Array<unsigned char>& image, double timestamp) {
+  void ImagePublisher::publish(const mlr::Array<unsigned char>& image, double timestamp) {
     s->publish(image, timestamp);
   }
 
@@ -136,6 +136,6 @@ namespace MLR {
   }
 }
 
-#else //MT_ROS
+#else //MLR_ROS
 
 #endif

@@ -39,7 +39,7 @@ void testAula(ConstrainedProblem& p){
 
   UCP.mu=1.;
 
-  uint d=MT::getParameter<uint>("dim", 2);
+  uint d=mlr::getParameter<uint>("dim", 2);
   arr x(d);
   //rndUniform(x, -1., 1.);
   x.setZero();
@@ -83,7 +83,7 @@ void testAula(ConstrainedProblem& p){
 //==============================================================================
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   ChoiceConstraintFunction F;
   testAula(F);

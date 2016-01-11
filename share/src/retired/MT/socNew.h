@@ -15,8 +15,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#ifndef MT_socNew_h
-#define MT_socNew_h
+#ifndef MLR_socNew_h
+#define MLR_socNew_h
 /**
  * @file
  * @ingroup group_soc
@@ -64,7 +64,7 @@ struct ControlledSystem {
 
   /// @name display and info
   virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false) = 0;
-  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t) = 0;
+  virtual void getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, uint t) = 0;
 
   std::ostream *os;
   struct OpenGL *gl;

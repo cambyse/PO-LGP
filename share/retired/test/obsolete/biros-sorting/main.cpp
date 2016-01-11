@@ -18,7 +18,7 @@ Process *newPairSorter(Integer& a, Integer& b);
 int main(int argc, char **argv) {
   uint N=20;
 
-  MT::Array<Integer> ints(N);
+  mlr::Array<Integer> ints(N);
 
   cout <<"*** Before sorting:";
   for(uint i=0; i<ints.N; i++)  cout <<ints(i).x <<' ';
@@ -28,18 +28,18 @@ int main(int argc, char **argv) {
 
   biros().dump();
   new InsideOut;
-  MT::wait(1.);
+  mlr::wait(1.);
   
   //run
   //loopSerialized(P);
   step(biros().processes);
   
 #if 1
-  MT::wait(1.);
+  mlr::wait(1.);
   close(biros().processes);
 #else
   if(!logService.getReplay()) {
-    MT::wait(1.);
+    mlr::wait(1.);
     close(P);
   }else{
     Process *p;
@@ -47,13 +47,13 @@ int main(int argc, char **argv) {
     uint step = 0;
     bool allClosed = false;
     while(!allClosed) {
-      MT::wait(1.);
+      mlr::wait(1.);
       allClosed = true;
       for_list(Type,  p,  P)  if(!p->isClosed())
           allClosed = false;
       cout << step << endl;
       step++;
-      MT::wait(1.);
+      mlr::wait(1.);
     }
   }
 #endif
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
   //b::updateInsideOut();
   
-  MT::wait();
+  mlr::wait();
 
   return 0;
 }
@@ -133,7 +133,7 @@ struct PairSorter:public Process {
   void open() {}
   void close() {}
   void step() {
-    if(delay)  MT::wait(delay);
+    if(delay)  mlr::wait(delay);
     int xa = a.get().x;
     int xb = b.get().x;//->get_x(this);
     if(xa>xb){  //swap numbers

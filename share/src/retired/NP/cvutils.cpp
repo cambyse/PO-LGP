@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#ifdef MT_OPENCV
+#ifdef MLR_OPENCV
 
 #include <Core/array.h>
 #include <Core/util.h>
@@ -221,7 +221,7 @@ int np::kmeans
   CvMat samples_cv = cvMat(samples.d0, samples.d1, CV_32FC1, samples.p);
 
   // use initially randomized labels for kmeans
-  MT::rnd.clockSeed();
+  mlr::rnd.clockSeed();
   labels.resize(num_samples);
   rndUniform(labels,0,num_clusters,false);
   CvMat labels_cv = cvMat(labels.d0, 1, CV_32SC1, labels.p);

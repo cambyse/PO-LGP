@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_robot_variables_h
-#define MT_robot_variables_h
+#ifndef MLR_robot_variables_h
+#define MLR_robot_variables_h
 
 #include <Core/array.h>
 #include <system/module.h>
@@ -44,7 +44,7 @@ struct Object {
   Object(){ found=0; }
 };
 
-typedef MT::Array<Object*> ObjectList;
+typedef mlr::Array<Object*> ObjectList;
 
 
 
@@ -83,7 +83,7 @@ struct SkinPressureVar:public Variable {
 
 /** The list of current proxies (=near-to-collisions) */
 struct currentProxiesVar:public Variable {
-  MT::Array<ors::Proxy*> proxies;
+  mlr::Array<ors::Proxy*> proxies;
   
   currentProxiesVar():Variable("proxies"){}
 };
@@ -104,7 +104,7 @@ struct EarlyVisionOutput:public Variable {
 
 /** The Object List output of perception */
 struct PerceptionOutput:public Variable {
-  MT::Array<Object> objects;
+  mlr::Array<Object> objects;
   byteA disp;
   
   PerceptionOutput():Variable("PerceptionOutput"){};

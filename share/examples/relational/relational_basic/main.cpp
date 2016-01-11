@@ -9,9 +9,9 @@ void test_basics() {
   
   // ----------------------------------
   // SOME SYMBOLS
-  relational::Symbol* s_incity = relational::Symbol::get(MT::String("incity"), 1);
-  relational::Symbol* s_cruiseto = relational::Symbol::get(MT::String("cruiseto"), 1, relational::Symbol::action);
-  relational::Symbol* s_gas = relational::Symbol::get(MT::String("gas"), 0, relational::Symbol::primitive, relational::Symbol::integer_set);
+  relational::Symbol* s_incity = relational::Symbol::get(mlr::String("incity"), 1);
+  relational::Symbol* s_cruiseto = relational::Symbol::get(mlr::String("cruiseto"), 1, relational::Symbol::action);
+  relational::Symbol* s_gas = relational::Symbol::get(mlr::String("gas"), 0, relational::Symbol::primitive, relational::Symbol::integer_set);
   uintA gas_values;  gas_values.append(0);  gas_values.append(1);  gas_values.append(2);  gas_values.append(3);  gas_values.append(4);
   s_gas->range = gas_values;
 
@@ -135,7 +135,7 @@ void test_basics() {
   cout<<"SAMPLE SUCESSOR STATE"<<endl;
   cout<<"Current state: "<<state<<endl;
   // 	relational::Literal* ground_action = relational::Literal::get("cruiseto(21)");
-  MT::String name__ground_action;  name__ground_action<<"cruiseto("<<constants(0)<<")";
+  mlr::String name__ground_action;  name__ground_action<<"cruiseto("<<constants(0)<<")";
   relational::Literal* ground_action = relational::Literal::get(name__ground_action);
   cout<<"Ground action: "<<*ground_action<<endl;
     

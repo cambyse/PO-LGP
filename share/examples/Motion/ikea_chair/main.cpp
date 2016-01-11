@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
@@ -7,9 +7,9 @@
 #include <Ors/ors_swift.h>
 
 void pickandplace(arr finalpos){
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   for(ors::Shape*s: G.shapes) s->cont = true;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back_main","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back_main","chair_sitting"};
   const char* actuator = "l_wrist_roll_link";
   uint current =5;
 
@@ -80,14 +80,14 @@ finalpos(0) -= 0.2 * i;
   c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
  c = MP2.addTask("position", new DefaultTaskMap(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
- MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
+ c->setCostSpecs(MP2.T, MP2.T, finalpos, 1e3);
 
  //c = MP2.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(current), ors::Vector(0, 0, 0)));
- //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getBodyByName("reference")->X.rot), 1e2);
+ //c->setCostSpecs(MP2.T, MP2.T, conv_quat2arr(G.getBodyByName("reference")->X.rot), 1e2);
 
 
 // ors::Quaternion my_quat; my_quat.set(0, 0, 0, 1);
-// MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(my_quat), 1e3);
+// c->setCostSpecs(MP2.T, MP2.T, conv_quat2arr(my_quat), 1e3);
 
 
 ors::Vector orient;  orient.set(0, 0, 1) ;
@@ -95,18 +95,18 @@ if (current<5) orient.set(0,1,0);
 
 //  c = MP2.addTask("upAlign", new DefaultTaskMap(vecAlignTMT, G, targets(current), ors::Vector(1, 0, 0),"reference", orient ,NoArr));
  
-//if (current<5) MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
- // MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(-1.), 1e3);
+//if (current<5) c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
+ // c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
   //c = MP2.addTask("orientation", new DefaultTaskMap(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
-  //MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,1.}, 1e3);
+  //c->setCostSpecs(MP2.T, MP2.T, {0.,0.,1.}, 1e3);
 /*
   c = MP2.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP2.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP2.T, MP2.T, NoArr, 1e1);
 */
  //   c = MP2.addTask("collision",
  //                  new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
- //   MP2.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
+ //   c->setCostSpecs(0, MP2.T, {0.}, 1e-0);
  
 cout << "TEST\n";
    MotionProblemFunction MF2(MP2);
@@ -141,7 +141,7 @@ void testPickAndPlace(const char* target,arr finalpos){
   positions.resize(5,7);
    ifstream out3("constraints.txt"); positions.readRaw(out3); out3.close();
   //setup the problem
-  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
 //for(ors::Shape *s: G.shapes)
@@ -152,11 +152,11 @@ void testPickAndPlace(const char* target,arr finalpos){
 
 
   arr x, xT;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
 
 for (uint i=0;i<5;i++)  {
    // finalpos = {0.0,-1.0,0.8};
-//    finalpos = ARRAY(G.getBodyByName("chair_sitting")->X.pos);
+//    finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X.pos);
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName(targets(i))->index, 2);
 
@@ -178,18 +178,18 @@ for (uint i=0;i<5;i++)  {
 
   //-- setup new motion problem
   MP.prefix.clear();
-  listDelete(MP.taskCosts);
+  listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
   ors::Vector current; current.set(positions(i,0),positions(i,1),positions(i,2));
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
 
-//  arr relativ; relativ =ARRAY(G.getBodyByName("chair_sitting")->X*current);
+//  arr relativ; relativ = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
 //  relativ.reshape(relativ.N);
 //   for (uint j=0;j<3;j++)
 //    finalpos(j)+=relativ(j);//positions(i,j);
- // finalpos = ARRAY(G.getBodyByName("chair_sitting")->X*current);
-  finalpos = ARRAY(G.getBodyByName("chair_sitting")->X*current);
+ // finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
+  finalpos = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
 cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< endl;
 
 
@@ -200,20 +200,20 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 
   double shift; if (i>3) shift=0; else shift =  -0.18;
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
+  c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
  // c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
- // MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
+ // c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
   if (i>3) G.getBodyByName("reference")->X.rot.set(0,0.7,0.7,0);
 
   c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
+  c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
 //
   //initialize trajectory
   for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
@@ -232,19 +232,19 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 
   //-- setup new motion problem
   MP.prefix.clear();
-  listDelete(MP.taskCosts);
+  listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 }
 /*
   c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target2")->X.pos), 1e3);
+  c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
   c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-0);
+  c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory
   for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
@@ -262,7 +262,7 @@ void test_Loading_submeshes()
     ors::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
     OpenGL gl;
-    gl.add(ors::glDrawMesh, &mesh);
+    gl.add(glDrawMesh, &mesh);
     gl.watch();
 }
 
@@ -285,7 +285,7 @@ void AssembleChair(){
 
 
   arr x, xT;
-  MT::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
+  mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
   arr finalpos; ors::Vector current; ors::Quaternion original; ors::Quaternion orientation;
    original.set(sqrt(0.5),-sqrt(0.5),0,0);
   //original.set(0,0,0,1);
@@ -297,7 +297,7 @@ void AssembleChair(){
       if (i<4) current.set(positions(i,0),positions(i,1)-0.16,positions(i,2));
        else current.set(positions(i,0),positions(i,1)+0.1,positions(i,2));
 
-      finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X*(original*current));
+      finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X*(original*current));
       G.getShapeByName(targets(i))->X.pos = finalpos;
       orientation.set(0,0,0,1);
        if (i>3) orientation.set(0,0.7,0.7,0);
@@ -322,7 +322,7 @@ for (uint i=0;i<5;i++)  {
 
       //-- setup new motion problem
       MP.prefix.clear();
-      listDelete(MP.taskCosts);
+      listDelete(MP.tasks);
       MP.x0 = x[MP.T-1];
 
       if (i<4) current.set(positions(i,0),positions(i,1)-0.16,positions(i,2));//! strange offset
@@ -330,8 +330,8 @@ for (uint i=0;i<5;i++)  {
 
     // current.set(positions(i,0),positions(i,1),positions(i,2));
 
-      finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X*(original*current));
-     // finalpos = ARRAY(G.getShapeByName("chair_sitting_main")->X.pos);
+      finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X*(original*current));
+     // finalpos = conv_vec2arr(G.getShapeByName("chair_sitting_main")->X.pos);
          cout << "POS = "<< finalpos<< endl;
 
       Task *c;
@@ -340,20 +340,20 @@ for (uint i=0;i<5;i++)  {
       c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
       c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,0)));
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, finalpos, 1e3);
+      c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
       c = MP.addTask("q_vel", new TaskMap_qItself());
       c->map.order=1; //make this a velocity variable!
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+      c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
       //c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
-      //MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, 1e-2);
+      //c->setCostSpecs(0, MP.T, NoArr, 1e-2);
 
      orientation.set(0,0,0,1);
       if (i>3) orientation.set(0,0.7,0.7,0);
 
       c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
+      c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
     //
       //initialize trajectory
       for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
@@ -372,17 +372,17 @@ for (uint i=0;i<5;i++)  {
 
       //-- setup new motion problem
       MP.prefix.clear();
-      listDelete(MP.taskCosts);
+      listDelete(MP.tasks);
       MP.x0 = x[MP.T-1];
       //! go to intermediate state
 
       c = MP.addTask("q_vel", new TaskMap_qItself());
       c->map.order=1; //make this a velocity variable!
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+      c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
       c = MP.addTask("q_itself", new TaskMap_qItself());
      // c->map.order=1; //make this a velocity variable!
-      MP.setInterpolatingCosts(c, MotionProblem::finalOnly,initial, 1e1);
+      c->setCostSpecs(MP.T, MP.T,initial, 1e1);
 
 
       //initialize trajectory
@@ -394,7 +394,7 @@ for (uint i=0;i<5;i++)  {
 
       displayTrajectory(x, show_steps, G, "planned trajectory", .001);
       MP.prefix.clear();
-      listDelete(MP.taskCosts);
+      listDelete(MP.tasks);
       MP.x0 = x[MP.T-1];
 
 }
@@ -403,7 +403,7 @@ for (uint i=0;i<5;i++)  {
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
 
   //initialize trajectory
@@ -420,7 +420,7 @@ for (uint i=0;i<5;i++)  {
 //===========================================================================
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
  testPickAndPlace("leg4",{0.0,-1.0,0.8});
 //  AssembleChair();

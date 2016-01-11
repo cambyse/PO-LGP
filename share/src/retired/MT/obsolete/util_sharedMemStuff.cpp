@@ -1,9 +1,9 @@
-#ifndef MT_MSVC
+#ifndef MLR_MSVC
 #  include <sys/ipc.h>
 #  include <sys/shm.h>
 #endif
 
-#ifdef MT_MSVC
+#ifdef MLR_MSVC
 struct SHM {
   HANDLE systemId;
   void *p;
@@ -47,7 +47,7 @@ void destroySharedMemory(SHM& shm){
 }
 
 #else
-#ifdef MT_PTHREAD
+#ifdef MLR_PTHREAD
 void SHM::open(const char *name, uint size, bool directDestroy){
   key_t key=ftok(name, 0);
   systemId=shmget(key, size, 0666);

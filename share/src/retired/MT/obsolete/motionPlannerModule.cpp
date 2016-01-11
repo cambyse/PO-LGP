@@ -12,7 +12,7 @@ void ReceedingHorizonProcess::open(){
   
   sys=sys_parent->newClone(true);
   sys->os = &cout;
-  sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
+  sys->setTimeInterval(4., mlr::getParameter<uint>("reachPlanTrajectoryLength"));
   NIY //planner.init(*sys); CHANGE THIS BACK as soon as socNew is finished
 }
 

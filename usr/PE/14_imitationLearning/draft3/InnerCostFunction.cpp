@@ -25,7 +25,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
     taskCosts(0)->prec.resize(T+1).setZero();
     taskCosts(0)->prec(T) = pow(10,param(0));
     taskCosts(0)->target.resize(T+1,3).setZero();
-    taskCosts(0)->target[T]() = ARRAY(world.getBodyByName("goalRef")->X.pos);
+    taskCosts(0)->target[T]() = conv_vec2arr(world.getBodyByName("goalRef")->X.pos);
     // vec right hand task
     taskCosts(1)->prec.resize(T+1).setZero();
     taskCosts(1)->prec(T) = pow(10,param(1));
@@ -49,9 +49,9 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 //    }
 //    //  Task *c;
 //    //  c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-//    //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, param(0));
+//    //  c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
 //    //  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
-//    //  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(0.,1.,0.), param(1));
+//    //  c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
 //    //  c = MP.addTask("final_vel", new TaskMap_qItself());
 //    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
 //    //  c->map.order=1;

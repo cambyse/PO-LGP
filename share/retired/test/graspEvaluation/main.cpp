@@ -1,4 +1,4 @@
-#define MT_IMPLEMENT_TEMPLATES
+#define MLR_IMPLEMENT_TEMPLATES
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
 #include <Ors/ors_physx.h>

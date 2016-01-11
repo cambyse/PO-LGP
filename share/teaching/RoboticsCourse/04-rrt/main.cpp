@@ -11,7 +11,8 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   Simulator *S;
   uint T;
   arr x0, xT;
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
+  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+
 
   uint get_T(){ return T; }
   uint get_k(){ return 2; }
@@ -114,7 +115,7 @@ void RTTplan(){
   uint i;
   for(i=0;i<100000;i++){
     //let rrt0 grow
-    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MLR_2PI,MLR_2PI,false);
     else rrtT.getRandomNode(q);
     rrt0.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -132,7 +133,7 @@ void RTTplan(){
     }
 
     //let rrtT grow
-    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MLR_2PI,MLR_2PI,false);
     else rrt0.getRandomNode(q);
     rrtT.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -197,22 +198,12 @@ void RTTplan(){
   q >>FILE("q.rrt");
 }
 
-int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode", 1)){
-  case 0: RTTplan(); //break;
-    //  case 1: optim(); break;
-  }
 
-  return 0;
-}
-
-/*
 void optim(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
-  
+
   arr x;
   x <<FILE("q.rrt");
   uint T=x.d0-1;
@@ -253,14 +244,26 @@ void optim(){
   //display
   plotEffTraj(S, x);
   for(;;){
-    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  MT::wait(.02); }
+    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  mlr::wait(.02); }
     S.watch();
   }
 }
 
 
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
+
+int main(int argc,char **argv){
+  mlr::initCmdLine(argc,argv);
+
+  switch(mlr::getParameter<int>("mode", 1)){
+  case 0: RTTplan();break;
+  case 1: optim(); break;
+  }
+
+  return 0;
+}
+
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar){//phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;
@@ -316,4 +319,4 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
     }
   }
 }
-*/
+

@@ -28,10 +28,10 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
   soci.setTaskVariables({x0,x1});
 
   double midPrec,endPrec,balPrec,colPrec;
-  MT::getParameter(midPrec,"midPrec");
-  MT::getParameter(endPrec,"endPrec");
-  MT::getParameter(balPrec,"balPrec");
-  MT::getParameter(colPrec,"colPrec");
+  mlr::getParameter(midPrec,"midPrec");
+  mlr::getParameter(endPrec,"endPrec");
+  mlr::getParameter(balPrec,"balPrec");
+  mlr::getParameter(colPrec,"colPrec");
 
   x0->y_target.setCarray(ors.getBodyByName("target")->X.pos.p,3);
   x0->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
@@ -169,10 +169,10 @@ void TEST(Plan){
 
   uint T=200;
   double midPrec,endPrec,balPrec,colPrec;
-  MT::getParameter(midPrec,"midPrec");
-  MT::getParameter(endPrec,"endPrec");
-  MT::getParameter(balPrec,"balPrec");
-  MT::getParameter(colPrec,"colPrec");
+  mlr::getParameter(midPrec,"midPrec");
+  mlr::getParameter(endPrec,"endPrec");
+  mlr::getParameter(balPrec,"balPrec");
+  mlr::getParameter(colPrec,"colPrec");
   
   TaskVariable *n1 = new TaskVariable("normal1",ors,zoriTVT,"finga2","<d(-90 1 0 0)>","fingb2","<d( 90 1 0 0)>",0);
   TaskVariable *n2 = new TaskVariable("normal2",ors,zoriTVT,"fingb2","<d( 90 1 0 0)>",0,0,0);
@@ -214,9 +214,9 @@ void TEST(Plan){
 }
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  uint mode=MT::getParameter<uint>("mode",(uint)2);
+  uint mode=mlr::getParameter<uint>("mode",(uint)2);
   switch(mode){
     case 0:  testSoc();  break;
     case 1:  testGradients();  break;

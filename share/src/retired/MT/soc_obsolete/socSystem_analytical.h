@@ -1,5 +1,5 @@
-#ifndef MT_socSystem_analytical_h
-#define MT_socSystem_analytical_h
+#ifndef MLR_socSystem_analytical_h
+#define MLR_socSystem_analytical_h
 
 #include "soc.h"
 

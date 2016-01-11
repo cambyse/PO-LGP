@@ -148,8 +148,8 @@ void UEyeCamera::camExit() {
 void UEyeCamera::startRec() {
   recMutex.lock();
   if(!recflag && recworker == NULL) {
-    MT::String nowStr, nameStr;
-    MT::getNowString(nowStr);
+    mlr::String nowStr, nameStr;
+    mlr::getNowString(nowStr);
     nameStr << "z." << nowStr << "." << name << ".avi";
     recworker = new RecWorker(nameStr, width, height, fps);
     recflag = true;
@@ -206,7 +206,7 @@ void UEyeCamera::grab() {
   msg(STRING(s));
 
   /*
-  MT::String m << "got " << imageBuffNum;
+  mlr::String m << "got " << imageBuffNum;
   if(imageBuffNum != (curr_frame%numBuff+1)) {
     m << " instead of " << (curr_frame%numBuff+1);
     nskipped_frames++;
@@ -577,7 +577,7 @@ void UEyeCamera::msg(const char *m) {
   UEyeCamera::msgMutex.unlock();
 }
 
-void UEyeCamera::msg(const MT::String &m) {
+void UEyeCamera::msg(const mlr::String &m) {
   if(m.N == 0) {
     msg("no message");
     return;
@@ -599,7 +599,7 @@ int UEyeCamera::getFPS() {
   return fps;
 }
 
-MT::String UEyeCamera::getName() {
+mlr::String UEyeCamera::getName() {
   return name;
 }
 

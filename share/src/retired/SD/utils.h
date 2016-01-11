@@ -20,7 +20,7 @@
 
 // loop over NULL terminated C array
 #define FORCstrArr(i,a) for(i=0; (a)[i] != NULL; ++i)
-// loop over MT::Array<char *> lists
+// loop over mlr::Array<char *> lists
 #define FORStringList(i,l) for(i=0; i < l.N; ++i)
 
 #define SD_MAX(a,b) ((a)<(b)?(b):(a))

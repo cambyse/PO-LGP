@@ -26,7 +26,7 @@ struct Percept_ISF_process:public Process{
 
 };
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #  include "percept_ISF_process.cpp"
 #endif
 

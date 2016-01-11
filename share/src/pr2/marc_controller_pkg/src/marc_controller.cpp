@@ -1,6 +1,5 @@
 #include "marc_controller_pkg/marc_controller.h"
 #include <pluginlib/class_list_macros.h>
-#include <Core/array-vector.h>
 #include <iomanip>
 #include <geometry_msgs/Twist.h>
 
@@ -200,11 +199,11 @@ void TreeControllerClass::update() {
   mutex.unlock();
 
   //-- publish joint state
-  jointStateMsg.q = VECTOR(q);
-  jointStateMsg.qdot = VECTOR(qd);
-  jointStateMsg.fL = VECTOR(fL_obs);
-  jointStateMsg.fR = VECTOR(fR_obs);
-  jointStateMsg.u_bias = VECTOR(u);
+  jointStateMsg.q = conv_arr2stdvec(q);
+  jointStateMsg.qdot = conv_arr2stdvec(qd);
+  jointStateMsg.fL = conv_arr2stdvec(fL_obs);
+  jointStateMsg.fR = conv_arr2stdvec(fR_obs);
+  jointStateMsg.u_bias = conv_arr2stdvec(u);
 
   jointState_publisher.publish(jointStateMsg);
 
@@ -216,18 +215,18 @@ void TreeControllerClass::stopping() {}
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
   mutex.lock();
   iterationsSinceLastMsg=0;
-  q_ref = ARRAY(msg->q);
-  qdot_ref = ARRAY(msg->qdot);
-  u_bias = ARRAY(msg->u_bias);
-  fL_ref = ARRAY(msg->fL);
-  fR_ref = ARRAY(msg->fR);
-  J_ft_inv = ARRAY(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
-#define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
+  q_ref = conv_stdvec2arr(msg->q);
+  qdot_ref = conv_stdvec2arr(msg->qdot);
+  u_bias = conv_stdvec2arr(msg->u_bias);
+  fL_ref = conv_stdvec2arr(msg->fL);
+  fR_ref = conv_stdvec2arr(msg->fR);
+  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
+#define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kp);
   CP(Kd);
 #undef CP
-  Ki = ARRAY(msg->Ki);
-  KiFT = ARRAY(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
+  Ki = conv_stdvec2arr(msg->Ki);
+  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   intLimitRatio = msg->intLimitRatio;

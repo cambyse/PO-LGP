@@ -3,7 +3,7 @@
 // a shared memory
 //
 
-namespace MT {
+namespace mlr {
 
 #define maxShmGuests 20
 #define shmMaxBlocks 20
@@ -76,7 +76,7 @@ template<class T> struct Shared {
 };
 }
 
-template<class T> T* MT::SHM::newBlock(const char* objName, uint *_i){
+template<class T> T* mlr::SHM::newBlock(const char* objName, uint *_i){
   if(!opened) open("shmPageName", 1000);
   uint i;
   for(i=0; i<shmMaxBlocks; i++) if(!strcmp(objName, info->blockNames[i])) break;

@@ -1,5 +1,5 @@
-//#define MT_IMPLEMENTATION
-#define MT_BUMBLE
+//#define MLR_IMPLEMENTATION
+#define MLR_BUMBLE
 #include <signal.h>
 #define REALCAMERA
 
@@ -16,7 +16,7 @@ void shutdown(int) {
 }
 
 int main(int argc,char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
   
   ors::KinematicWorld G;
@@ -54,7 +54,7 @@ int main(int argc,char** argv) {
   evis.threadLoop();
   perc.threadLoop();
   gui .threadLoop();
-  bool bSave = MT::Parameter<bool>("saveImage");
+  bool bSave = mlr::Parameter<bool>("saveImage");
   for(uint i=0; !STOP && i<1000; i++) {
     if(bSave == 1) {
       evis.output->readAccess(NULL);
@@ -76,7 +76,7 @@ int main(int argc,char** argv) {
       write_ppm(hsvInt,"hsvTheta.ppm");
       evis.output->deAccess(NULL);
     }
-    MT::wait(.1);
+    mlr::wait(.1);
     cout <<"\r" <<i <<flush;
   }
   

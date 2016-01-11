@@ -50,12 +50,12 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
   static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    mlr::getParameter(midPrec, "reachPlanMidPrec");
+    mlr::getParameter(endPrec, "reachPlanEndPrec");
+    mlr::getParameter(palmPrec, "reachPlanPalmPrec");
+    mlr::getParameter(colPrec, "reachPlanColPrec");
+    mlr::getParameter(limPrec, "reachPlanLimPrec");
+    mlr::getParameter(endVelPrec, "reachPlanEndVelPrec");
   } 
     
   //set the time horizon
@@ -103,7 +103,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
   //col lim and relax
   V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, colPrec, 0.);
  // V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, limPrec, 0.);
-  V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, MT::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, mlr::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, mlr::getParameter<double>("reachPlanEndVelPrec"));
 }
                                       
   
@@ -140,15 +140,15 @@ void problem7(){
   cout <<"\n=Kuka ring task, severe problems with control=\n" <<endl;
   soc::SocSystem_Ors sys;  
   ors::KinematicWorld ors;
-  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("kuka.ors")));
+  ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("kuka.ors")));
   OpenGL gl;                       
   arr p,q0;       
                    
   arr x0,r,R,bopt ;       
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
                                                          
-  double alpha=MT::getParameter<double>("alpha");
-  bool usebwd=MT::getParameter<double>("usebwd") ; 
+  double alpha=mlr::getParameter<double>("alpha");
+  bool usebwd=mlr::getParameter<double>("usebwd") ; 
   double time=4.0;//0.5; // For now - empirical time
   char* obj = "target";    
   // soc for optimization     
@@ -176,7 +176,7 @@ void problem7(){
  // wr->y_target=zeros(wrsize,wrsize);  
 // for (int tp=0;tp< wrsize;tp++)  wr->y_target(1,tp)=1.0;   
  wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);     
-  MT::Array<TaskVariable*> Tlist;      
+  mlr::Array<TaskVariable*> Tlist;      
  //  Tlist.append(wr);
  // Tlist.append(reach);
 
@@ -208,7 +208,7 @@ void problem1(){
   cout <<"Grasping test"<<endl;
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
 
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   
@@ -226,7 +226,7 @@ void problem2(){
   cout <<"Ring test with writhe"<<endl;
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");
   arr rope2,rope1,yy;
   uint segments=5;
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
@@ -264,7 +264,7 @@ void problem2(){
     wr->y_target=y_trajectory[0]() ;*/
   //!
   
-  MT::Array<TaskVariable*> Tlist;      
+  mlr::Array<TaskVariable*> Tlist;      
  
  Tlist.append(wr);
 // Tlist.append(sys.vars);   
@@ -291,9 +291,9 @@ void problem2(){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv); 
+  mlr::initCmdLine(argc,argv); 
  
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
 
   case 7:  problem7();  break;

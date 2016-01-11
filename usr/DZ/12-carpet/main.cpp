@@ -225,7 +225,7 @@ void problem3(){
   //! Bezier Control Points from file
   uint N = 16;
   arr bcp = zeros(N,3);
-  MT::Array<char*> names;
+  mlr::Array<char*> names;
   
   names.append("palm");  names.append("palm");   names.append("palm");   names.append("palm");
   
@@ -272,9 +272,9 @@ void problem3(){
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  int mode=MT::getParameter<int>("mode");
+  int mode=mlr::getParameter<int>("mode");
   switch(mode){
   case 1:  problem1();  break;
   case 2:  problem2();  break;

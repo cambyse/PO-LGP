@@ -54,7 +54,7 @@ struct TaskVariable {
   bool active;          ///< active?
   TVtype type;          ///< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
   TargetType targetType;///< what target type
-  MT::String name;      ///< its name
+  mlr::String name;      ///< its name
   
   arr y, y_old, v, v_old, y_target, v_target; ///< current state and final target of this variable
   arr J, Jt;                                  ///< current Jacobian and its transpose
@@ -223,7 +223,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
  * @name task variable lists
  * @{
  */
-typedef MT::Array<TaskVariable*> TaskVariableList;
+typedef mlr::Array<TaskVariable*> TaskVariableList;
 
 void reportAll(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void reportState(TaskVariableList& CS, ostream& os, bool onlyActives=true);

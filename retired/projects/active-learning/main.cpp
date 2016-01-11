@@ -28,18 +28,18 @@ void shutdown(int) {
   exit(0);
 }
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
 
-  double seed = MT::getParameter<double>("seed", time(NULL));
+  double seed = mlr::getParameter<double>("seed", time(NULL));
   srand(seed);
 
-  int n_steps = MT::getParameter<int>("steps", 20);
-  MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
-  bool gaussproc = MT::getParameter<bool>("gauss", true);
-  bool guistart= MT::getParameter<bool>("gui", true);
-  bool pause = MT::getParameter<bool>("pause", false);
-  MT::String problem_name = MT::getParameter<MT::String>("problem", MT::String("tray"));
+  int n_steps = mlr::getParameter<int>("steps", 20);
+  mlr::String filename =  mlr::getParameter<mlr::String>("dataFile", mlr::String("classification.data"));
+  bool gaussproc = mlr::getParameter<bool>("gauss", true);
+  bool guistart= mlr::getParameter<bool>("gui", true);
+  bool pause = mlr::getParameter<bool>("pause", false);
+  mlr::String problem_name = mlr::getParameter<mlr::String>("problem", mlr::String("tray"));
 
   ActiveLearningProblem prob;
   if(problem_name == "tray") {
@@ -74,16 +74,16 @@ int main(int argc, char** argv) {
   }
   
 
-  //Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
+  //Gui gui(mlr::getParameter<mlr::String>("orsFile", mlr::String("schunk-armani.ors")));
   //GuiDataV guiData;
   //gui.guiData = &guiData;
 
   TrainingsDataV train;
 
   // VERSION 1: Read from file
-  //MT::Array<arr> sample;
+  //mlr::Array<arr> sample;
   //ifstream is("samples.data");
-  //for (int i=0; i<MT::getParameter<int>("sample_number"); ++i) {
+  //for (int i=0; i<mlr::getParameter<int>("sample_number"); ++i) {
   //  is >> sample;  
   //}
   //train.data = sample;

@@ -77,7 +77,7 @@ class RuleExplorer {
   LitL fixedActions;
   boolA learners_uptodate;
   uintA actions__covering_rules;
-  MT::Array< uintA > actions__covering_rules__all;
+  mlr::Array< uintA > actions__covering_rules__all;
   arr actions__confidences;
   arr actions__dissimilarity_to_previous_experiences__local;  // TODO NEU berechnet Konfidenzen entsprechend der Zustaende in den Erfahrungen (ohne auf Regeln zu schauen)
   boolA action__has_interesting_argument;
@@ -91,11 +91,11 @@ class RuleExplorer {
   bool current_state_is_known_partially;
   
   // Experiences
-  MT::Array< uintA > experiences_per_modeledAction;
+  mlr::Array< uintA > experiences_per_modeledAction;
   StateTransitionL all_experiences;
   arr experience_weights;
   boolA is_major_experience;
-  MT::Array<SymbolicState*> visited_pre_states;
+  mlr::Array<SymbolicState*> visited_pre_states;
   LitL visited_actions;
   
   // Relevant objects
@@ -118,7 +118,7 @@ class RuleExplorer {
   LitL last_exploit_plan;
   
   // only for presentation
-  MT::String message;
+  mlr::String message;
   
   virtual uint action_to_learner_id(Literal* action) = 0;
   
@@ -170,13 +170,13 @@ class RuleExplorer {
 class AbstractRuleExplorer : public RuleExplorer {
 public:
   RuleSetContainer rulesC;
-  MT::Array<RuleLearner*> learners;
+  mlr::Array<RuleLearner*> learners;
   
   arr rule_experiences_entropies;
   
   // For more sophisticated density estimators
   RelationalStateGraph* current_graph;
-  MT::Array< RelationalStateGraph* > graphs;
+  mlr::Array< RelationalStateGraph* > graphs;
   
   uint density_estimation_type;
   
@@ -203,7 +203,7 @@ public:
 
 class FactoredRuleExplorer : public RuleExplorer {
   RuleSetContainer_ground rulesC;
-  MT::Array<RuleLearner_ground*> learners;
+  mlr::Array<RuleLearner_ground*> learners;
   
   public:
     FactoredRuleExplorer(double complexity_penalty_coeff, double p_lower_bound__noise_outcome, double p_lower_bound__noise_outcome_in_default_rule,
@@ -225,14 +225,14 @@ class FactoredRuleExplorer : public RuleExplorer {
 
 
 class FlatExplorer : public RuleExplorer {
-  MT::Array< RuleSet > rules_hierarchy;  // dim 0: actions;  dim 1: states
-  MT::Array< MT::Array< uintA > > experiences_per_rule__hierarchy;
-  MT::Array< uintA > rule_confidences__hierarchy;
+  mlr::Array< RuleSet > rules_hierarchy;  // dim 0: actions;  dim 1: states
+  mlr::Array< mlr::Array< uintA > > experiences_per_rule__hierarchy;
+  mlr::Array< uintA > rule_confidences__hierarchy;
   // --> default rule:  hier ganz hinten
   
   // redundant rule-container
   RuleSet rules_flat;
-  MT::Array< uintA > experiences_per_rule__flat;
+  mlr::Array< uintA > experiences_per_rule__flat;
   // --> default rule:  hier ganz vorne
   
   RuleSet fixed_rules_memory;
@@ -264,11 +264,11 @@ struct RelationalStateGraph {
   uintA constants;
   
   LitL lits_zeroary;
-  MT::Array< LitL > lits_unary;
-  MT::Array< LitL > lits_binary; // 2-dim
+  mlr::Array< LitL > lits_unary;
+  mlr::Array< LitL > lits_binary; // 2-dim
   boolA lits_binary_matrix;  // adjacency_matrix(a,b)  iff  a-->b  iff predicate(a,b)
   FuncVL fvs_zeroary;
-  MT::Array< FuncVL > fvs_unary;
+  mlr::Array< FuncVL > fvs_unary;
   
   RelationalStateGraph(const SymbolicState& state);
   ~RelationalStateGraph();
@@ -287,13 +287,13 @@ struct RelationalStateGraph {
   static double distance(const RelationalStateGraph& g1, const Literal& a1,
                          const RelationalStateGraph& g2, const Literal& a2);
   
-  static double entropy(const LitL& actions, const MT::Array< RelationalStateGraph* >& graphs);
+  static double entropy(const LitL& actions, const mlr::Array< RelationalStateGraph* >& graphs);
   
 //   RelationalStateGraph* createGraph(const Literal& action, const SymbolicState& state, const Rule& rule, uint depth);
   static RelationalStateGraph* createSubgraph(const Literal& action, const RelationalStateGraph& full_graph, const Rule& rule, uint depth);
   
   static double getMinDistance(const RelationalStateGraph& graph, const Literal& action,
-                               const MT::Array< RelationalStateGraph* > other_graphs, const LitL& other_actions);
+                               const mlr::Array< RelationalStateGraph* > other_graphs, const LitL& other_actions);
   
 };
 #endif

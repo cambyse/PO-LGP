@@ -1,7 +1,7 @@
 #include "execution.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
-#include <Core/geo.h>
+#include <Geo/geo.h>
 #include <vector>
 
 
@@ -31,28 +31,28 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   Task *c;
 
   Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,{0.,0.,0.}, 2e5);
+  pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 2e5);
 
   Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
   vel->map.order=1;
-  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   //see taskmap_default.cpp;
   Task *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",{0.,0.,1.}));
-  //P.setInterpolatingCosts(vec, MotionProblem::finalOnly, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
+  //vec->setCostSpecs(P.T, P.T, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
 
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.5)));//0.3 is peg's end_eff 0.2 is table width  //0.05 above table surface to avoid slippery
-  P.setInterpolatingCosts(cons, MotionProblem::constant, {0.}, 1e2);
+  cons->setCostSpecs(0, P.T, {0.}, 1e2);
 
 
 #if 1  //CONSTRAINT
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.05));
-  P.setInterpolatingCosts(collision, MotionProblem::constant, {0.}, 1.);
+  collision->setCostSpecs(0, P.T, {0.}, 1.);
 #else
   c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
-  P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
+  c->setCostSpecs(0, P.T, {0.}, 1e1);
 #endif
 
 
@@ -122,7 +122,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   ors::Body *table = world.getBodyByName("hole");
   double mean_table_height = table->X.pos.z;
 
-  double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
+  double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
   MC.qitselfPD.active=false;
@@ -197,7 +197,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
     //    vid->addFrame(world.gl().captureImage);
 
     //write data
-    MT::arrayBrackets="  ";
+    mlr::arrayBrackets="  ";
     data <<t <<' ' <<(t<dual.N?dual(t):0.) <<' '
         <<table->X.pos.z <<' '
        <<endeff->X.pos.z <<' '
@@ -208,6 +208,6 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
   }
   data.close();
 
-  FILE(STRING("data-"<<num<<"-err.dat")) << ARRAY(true_target->X.pos)- ARRAY(endeff->X.pos);
+  FILE(STRING("data-"<<num<<"-err.dat")) << conv_vec2arr(true_target->X.pos)- conv_vec2arr(endeff->X.pos);
 }
 

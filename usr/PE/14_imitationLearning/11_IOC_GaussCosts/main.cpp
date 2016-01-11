@@ -1,4 +1,4 @@
-#include <Core/util_t.h>
+#include <Core/util.tpp>
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
@@ -16,7 +16,7 @@
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   GaussianCosts gc;
   gc.mu = 0.;
@@ -52,7 +52,7 @@ int main(int argc,char **argv){
 
 //  plotFunctionPoints(x,H4);
 //  plot();
-//  MT::wait();
+//  mlr::wait();
 
   RBFCosts rc;
   rc.nB = 20;
@@ -65,15 +65,15 @@ int main(int argc,char **argv){
   rc.f(t,z);
   rc.dfdM(t,dz,Hz);
 
-  plotFunctionPoints(x,y,MT::String("t1"));
-  plotFunctionPoints(t,z,MT::String("t2"));
+  plotFunctionPoints(x,y,mlr::String("t1"));
+  plotFunctionPoints(t,z,mlr::String("t2"));
 
 //  gnuplot("set term wxt 1 title 'position 1'");
 //  FILE("z.pltX") <<catCol(t,z);
 //  FILE("z.pltX") <<catCol(x,y);
 //  gnuplot("plot 'z.pltX' us 1:2 title 'RBF', 'z2.pltX' us 1:2 title 'RBF2'");
   plot();
-  MT::wait();
+  mlr::wait();
 
 
   return 0;

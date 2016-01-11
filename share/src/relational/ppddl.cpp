@@ -8,21 +8,21 @@ namespace PRADA {
 
 const uint CONSTANTS_START = 11;
 
-Literal* buildLiteral(MT::String& text, const MT::Array<MT::String> string_objects) {
+Literal* buildLiteral(mlr::String& text, const mlr::Array<mlr::String> string_objects) {
   uint DEBUG = 0;
-  MT::skip(text, "(");
+  mlr::skip(text, "(");
   bool is_true = true;
-  if (MT::peerNextChar(text) == '-') {
+  if (mlr::peerNextChar(text) == '-') {
     text >> "-";
     is_true = false;
   }
-  MT::String predicate_name;
+  mlr::String predicate_name;
   predicate_name.read(text, NULL, " ");
   if (DEBUG>0) {PRINT(predicate_name);}
   
-  MT::Array< MT::String > string_arguments;
-  while (MT::skip(text) != -1) {
-    MT::String obj;
+  mlr::Array< mlr::String > string_arguments;
+  while (mlr::skip(text) != -1) {
+    mlr::String obj;
     obj.read(text, NULL, " ");
     if (DEBUG>0) {PRINT(obj);}
     string_arguments.append(obj);
@@ -50,17 +50,17 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
   
   // (1) OBJECTS
   // Assumption thus far: only one type
-  MT::String line_objects;
+  mlr::String line_objects;
   do {
-    MT::skip(in);
+    mlr::skip(in);
     in >> line_objects;
     if (DEBUG>1) {PRINT(line_objects);}
   } while (line_objects(2) != 'o');
   
-  MT::Array< MT::String > string_objects;
-  MT::skipUntil(line_objects, " "); // skipping "(:objects"
-  while (MT::peerNextChar(line_objects) != '-') {
-    MT::String obj;
+  mlr::Array< mlr::String > string_objects;
+  mlr::skipUntil(line_objects, " "); // skipping "(:objects"
+  while (mlr::peerNextChar(line_objects) != '-') {
+    mlr::String obj;
     obj.read(line_objects, NULL, " ");
     string_objects.append(obj);
     if (DEBUG>1) {PRINT(obj);}
@@ -81,24 +81,24 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
   
   
   // (2) INITIAL STATE
-  MT::skip(in);
-  MT::String line_state;
+  mlr::skip(in);
+  mlr::String line_state;
   in >> line_state;
   if (DEBUG>1) {PRINT(line_state);}
   CHECK_EQ(line_state(2) , 'i', "");
-  MT::skipUntil(line_state, " ");
-  while (MT::peerNextChar(line_state) != ')') {
-//     MT::skip(in);
-    MT::String string_predicate;
+  mlr::skipUntil(line_state, " ");
+  while (mlr::peerNextChar(line_state) != ')') {
+//     mlr::skip(in);
+    mlr::String string_predicate;
     string_predicate.read(line_state, NULL, ")");
     if (DEBUG>1) {PRINT(string_predicate);}
     start_state.lits_prim.append(buildLiteral(string_predicate, string_objects));
     if (DEBUG>2) {cout<<" ->  "<<*start_state.lits_prim.last()<<endl;}
-    MT::skip(line_state);
-    if (MT::peerNextChar(line_state) != '('  &&  MT::peerNextChar(line_state) != ')') {
+    mlr::skip(line_state);
+    if (mlr::peerNextChar(line_state) != '('  &&  mlr::peerNextChar(line_state) != ')') {
       in >> line_state;
       if (DEBUG>1) {PRINT(line_state);}
-      MT::skip(line_state);
+      mlr::skip(line_state);
     }
 //     HALT("");
   }
@@ -108,41 +108,41 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
   }
   
   
-  MT::skip(in);
+  mlr::skip(in);
   
   // (3) GOAL
   if (reward.reward_type == Reward::reward_literalList) {
     LiteralListReward* cast_reward = (LiteralListReward*) &reward;
-    MT::String line_reward;
+    mlr::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
     CHECK_EQ(line_reward(2) , 'g', "");
-    MT::skipUntil(line_reward, " "); // skipping "(:reward"
+    mlr::skipUntil(line_reward, " "); // skipping "(:reward"
     cast_reward->lits.clear();
-    while (MT::peerNextChar(line_reward) != ')') {
-      MT::skip(line_reward);
-      MT::String string_predicate;
+    while (mlr::peerNextChar(line_reward) != ')') {
+      mlr::skip(line_reward);
+      mlr::String string_predicate;
       string_predicate.read(line_reward, NULL, ")");
       if (DEBUG>1) {PRINT(string_predicate);}
       // skipping (and if necessary
       if (string_predicate(1) == 'a'  &&  string_predicate(2) == 'n'  &&  string_predicate(3) == 'd') {
-        MT::skipUntil(string_predicate, " ");
+        mlr::skipUntil(string_predicate, " ");
       }
       cast_reward->lits.append(buildLiteral(string_predicate, string_objects));
   //     HALT("");
     }
   }
   else if (reward.reward_type == Reward::reward_maximize_function) {
-    MT::String line_reward;
+    mlr::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
     CHECK_EQ(line_reward(2) , 'g', "");
-    MT::skipUntil(line_reward, " "); // skipping "(:reward"
+    mlr::skipUntil(line_reward, " "); // skipping "(:reward"
     // CountFunction
-    if (MT::peerNextChar(line_reward) == 'C') {
+    if (mlr::peerNextChar(line_reward) == 'C') {
       line_reward >> "C";
-      MT::skip(line_reward);
-      MT::String string_function;
+      mlr::skip(line_reward);
+      mlr::String string_function;
       string_function.read(line_reward, NULL, "(");
 //       PRINT(string_function);
       uint q;
@@ -154,7 +154,7 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
           break;
         }
       }
-      MT::skip(line_reward, ") ");
+      mlr::skip(line_reward, ") ");
       line_reward >> f->max_value;
       CHECK(f!=NULL, "");
       uintA empty;
@@ -163,37 +163,37 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
       cast_reward->fa = logicObjectManager::getFA(f, empty);
       
       // reward-reward
-      MT::skipUntil(in, "(");
-      MT::String line_rewardReward;
+      mlr::skipUntil(in, "(");
+      mlr::String line_rewardReward;
       in >> line_rewardReward;
       if (DEBUG>1) {PRINT(line_rewardReward);}
       CHECK(line_rewardReward(1) == 'g' && line_rewardReward(6) == 'r', "Strange line: "<<line_rewardReward);
-      MT::skipUntil(line_rewardReward, " "); // skipping "(:reward-reward"
+      mlr::skipUntil(line_rewardReward, " "); // skipping "(:reward-reward"
       double rewardReward;
       line_rewardReward >> rewardReward;
       f->reward_for_max_value = rewardReward;
     }
     else {
       LitL reward_lits;
-      while (MT::peerNextChar(line_reward) != ')') {
-        MT::skip(line_reward);
-        MT::String string_predicate;
+      while (mlr::peerNextChar(line_reward) != ')') {
+        mlr::skip(line_reward);
+        mlr::String string_predicate;
         string_predicate.read(line_reward, NULL, ")");
         if (DEBUG>1) {PRINT(string_predicate);}
         // skipping (and if necessary
         if (string_predicate(1) == 'a'  &&  string_predicate(2) == 'n'  &&  string_predicate(3) == 'd') {
-          MT::skipUntil(string_predicate, " ");
+          mlr::skipUntil(string_predicate, " ");
         }
         reward_lits.append(buildLiteral(string_predicate, string_objects));
     //     HALT("");
       }
       // reward-reward
-      MT::skipUntil(in, "(");
-      MT::String line_rewardReward;
+      mlr::skipUntil(in, "(");
+      mlr::String line_rewardReward;
       in >> line_rewardReward;
       if (DEBUG>1) {PRINT(line_rewardReward);}
       CHECK(line_rewardReward(1) == 'g' && line_rewardReward(6) == 'r', "Strange line: "<<line_rewardReward);
-      MT::skipUntil(line_rewardReward, " "); // skipping "(:reward-reward"
+      mlr::skipUntil(line_rewardReward, " "); // skipping "(:reward-reward"
       double rewardReward;
       line_rewardReward >> rewardReward;
       if (DEBUG>1) {PRINT(rewardReward);}
@@ -244,7 +244,7 @@ void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * fi
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
-MT::Array< char > vars;
+mlr::Array< char > vars;
 
 
 void lit2ppddl(Literal& lit, ostream& out) {
@@ -346,7 +346,7 @@ void writeRulesAsPPDDL(const RuleSet& rules, bool all_outcome, ostream& out) {
     }
     
     // explicitely set all objects to be not out
-    Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
+    Predicate* p_OUT = logicObjectManager::getPredicate(mlr::String("out"));
     FOR1D(terms, k) {
       uintA args(1);  args(0) = terms(k);
       Literal* lit = logicObjectManager::getLiteral(p_OUT, false, args);
@@ -372,7 +372,7 @@ void writeRulesAsPPDDL(const RuleSet& rules, bool all_outcome, ostream& out) {
       }
     }
     else {
-      MT_MSG("Single outcome determinization");
+      MLR_MSG("Single outcome determinization");
       arr probs = rule->probs;
       probs.remove(probs.N-1);
       uint max_id = probs.maxIndex();
@@ -412,11 +412,11 @@ void writePPDDL_description(const RuleSet& rules,
     out<<"\t(:requirements :probabilistic-effects :equality :fluents :negative-preconditions  :rewards)"<<endl;
   }
   out<<"\t(:predicates  (block ?x)  (ball ?x)  (table ?x)  (on ?x ?y)  (inhand ?x)  (upright ?x)  (out ?x)";
-  if (logicObjectManager::getPredicate(MT::String("clear")) != NULL)
+  if (logicObjectManager::getPredicate(mlr::String("clear")) != NULL)
     out << "  (clear ?x)";
-  if (logicObjectManager::getPredicate(MT::String("homies")) != NULL)
+  if (logicObjectManager::getPredicate(mlr::String("homies")) != NULL)
     out << "  (homies ?x ?y)";
-  if (logicObjectManager::getPredicate(MT::String("inhandNil")) != NULL)
+  if (logicObjectManager::getPredicate(mlr::String("inhandNil")) != NULL)
     out << "  (inhandNil)";
   out << "  )" << endl;
   if (use_functions) {out<<"\t(:functions  (size ?x) )"<<endl;}

@@ -3,7 +3,7 @@
 
 #include <Ors/ors.h>
 
-typedef MT::Array<ors::Shape*> ShapeList;
+typedef mlr::Array<ors::Shape*> ShapeList;
 
 struct zOpposeTaskVariable:public DefaultTaskVariable{
   ShapeList refs;
@@ -23,7 +23,7 @@ struct zFocusTargetTaskVariable:public DefaultTaskVariable{
 };
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef  MLR_IMPLEMENTATION
 #include "miscTaskVariables.cpp"
 #endif
 

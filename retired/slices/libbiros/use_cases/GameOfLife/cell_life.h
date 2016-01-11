@@ -15,7 +15,7 @@ class CellLife : public Process {
 		void close();
 
 		Cell *own;
-		MT::Array<Cell*> neighbours;
+		mlr::Array<Cell*> neighbours;
 };
 
 

@@ -20,15 +20,15 @@ G4Display::G4Display():Module("G4Display"){
 #define WITH_SHAPES
 void G4Display::open(){
 #ifdef WITH_SHAPES
-  String g4_meta = MT::getParameter<String>("g4_meta");
-  String g4_world = MT::getParameter<String>("g4_world");
+  String g4_meta = mlr::getParameter<String>("g4_meta");
+  String g4_world = mlr::getParameter<String>("g4_world");
 
   s->g4id.load(g4_meta);
   s->ors.init(g4_world);
 
   s->sensors = s->g4id.sensors().N;
 #else
-  s->sensors = 3 * MT::getParameter<uint>("g4_numHubs"); // assumes hubs are full..
+  s->sensors = 3 * mlr::getParameter<uint>("g4_numHubs"); // assumes hubs are full..
 #endif
 
   bindOrsToOpenGL(s->ors, s->gl);

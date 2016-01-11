@@ -9,8 +9,8 @@
 struct Action;
 struct CtrlTask;
 struct ActionMachine;
-typedef MT::Array<Action*> ActionL;
-typedef MT::Array<CtrlTask*> CtrlTaskL;
+typedef mlr::Array<Action*> ActionL;
+typedef mlr::Array<CtrlTask*> CtrlTaskL;
 
 
 //===========================================================================
@@ -32,7 +32,7 @@ const char* getActionStateString(ActionState actionState);
  * action state.
  */
 struct Action {
-  MT::String name;
+  mlr::String name;
   bool active;
   Node *symbol;
   double actionTime, timeOut;

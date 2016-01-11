@@ -17,8 +17,8 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef MT_libcolorseg_h
-#define MT_libcolorseg_h
+#ifndef MLR_libcolorseg_h
+#define MLR_libcolorseg_h
 
 #include <Core/array.h>
 
@@ -49,7 +49,7 @@ uint get_single_color_segmentation_rgb(uintA& segmentation,  // segmented image
 
 void colorize_patches(byteA& coloration, const uintA& patches, const arr& stats);
 
-typedef MT::Array<uintA> MultiSegmentations;
+typedef mlr::Array<uintA> MultiSegmentations;
 void get_multiple_color_segmentations(MultiSegmentations& segmentations,  // scale-hierarchy of segmented input
 				      const byteA& image,                 // input image
 				      const arr& sigma,

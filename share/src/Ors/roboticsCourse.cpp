@@ -53,7 +53,7 @@ void Simulator::anchorKinematicChainIn(const char* bodyName){
 //    s->G.swift().setCutoff(.5);
 //  }
   
-//#ifdef MT_ODE
+//#ifdef MLR_ODE
 //  if(s->ode.isOpen){
 //    s->ode.clear();
 //    s->ode.createOde(s->G);
@@ -204,7 +204,7 @@ void Simulator::stepDynamics(const arr& Bu, double tau){
 }
 
 void Simulator::stepOde(const arr& qdot, double tau){
-#ifdef MT_ODE
+#ifdef MLR_ODE
   s->G.ode().setMotorVel(qdot, 100.);
   s->G.ode().step(tau);
   s->G.ode().importStateFromOde();
@@ -262,7 +262,7 @@ void VisionSimulator::getRandomWorldPoints(arr& X, uint N){
 }
 
 arr VisionSimulator::getCameraTranslation(){
-  return ARRAY(s->gl.camera.X->pos);
+  return conv_vec2arr(s->gl.camera.X.pos);
 }
 
 void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel){
@@ -288,7 +288,7 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   s->P /= s->P(0, 0);
   cout <<"VisionSimulator:"
        <<"\n  projection matrix used: " <<s->P
-       <<"\n  camera position and quaternion: " <<s->gl.camera.X->pos <<"  " <<s->gl.camera.X->rot
+       <<"\n  camera position and quaternion: " <<s->gl.camera.X.pos <<"  " <<s->gl.camera.X.rot
        <<"\n  camera f=" <<.5*view(2) <<" x0=" <<view(0)+.5*view(2) <<" y0=" <<view(1)+.5*view(2)
        <<endl;
   for(uint i=0; i<N; i++){
@@ -432,5 +432,5 @@ void glDrawCarSimulator(void *classP){
 #endif
 }
 
-#include <Core/array_t.h>
-template MT::Array<CarSimulator::Gaussian>& MT::Array<CarSimulator::Gaussian>::resize(uint);
+#include <Core/array.tpp>
+template mlr::Array<CarSimulator::Gaussian>& mlr::Array<CarSimulator::Gaussian>::resize(uint);

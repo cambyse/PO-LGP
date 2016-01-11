@@ -12,12 +12,12 @@
 
 Controller::Controller(ros::NodeHandle& n, const char* endeff) : 
         n(n), 
-        G(MT::getParameter<MT::String>("orsFile")),
+        G(mlr::getParameter<mlr::String>("orsFile")),
         endeff(endeff),
         integrate(0, 0, 0) { 
-  Kp = MT::getParameter<double>("Kp");
-  Kd = MT::getParameter<double>("Kd");
-  Ki = MT::getParameter<double>("Ki");
+  Kp = mlr::getParameter<double>("Kp");
+  Kd = mlr::getParameter<double>("Kd");
+  Ki = mlr::getParameter<double>("Ki");
 
   bindOrsToOpenGL(G, gl);
   G.physx();
@@ -58,7 +58,7 @@ void Controller::run() {
     
 }
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   ros::init(argc, argv, "Controller");
 
   ros::NodeHandle n;

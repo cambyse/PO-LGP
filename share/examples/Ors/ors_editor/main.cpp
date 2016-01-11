@@ -15,11 +15,13 @@ Use the number keys 1 2 3 4 5 to toggle display options.\n\
 void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
-  MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
+  mlr::String file=mlr::getParameter<mlr::String>("file",STRING("test.ors"));
+  if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::KinematicWorld G(file);
+
+  //G.setAgent(99);
 
   G.checkConsistency();
   G >>FILE("z.ors");
@@ -32,19 +34,22 @@ void TEST(OrsEditor) {
   G >>FILE("z.ors");
   G.removeUselessBodies();
   G >>FILE("z.ors");
+  G.checkConsistency();
   G.topSort();
+  G.checkConsistency();
   G.makeLinkTree();
+  G.checkConsistency();
   G.calc_q_from_Q();
   G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");
 
-  if(MT::checkParameter<bool>("cleanOnly")) return;
+  if(mlr::checkParameter<bool>("cleanOnly")) return;
 
   editConfiguration(file, G);
 }
 
 int MAIN(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   testOrsEditor();
 

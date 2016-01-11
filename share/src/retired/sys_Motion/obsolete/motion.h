@@ -39,7 +39,7 @@ struct PoseViewer:Process {
     var->deAccess(this);
     if (q.nd==1) {
       if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
-      if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
+      if (q.N!=n){ MLR_MSG("pose view on wrong dimension");  return; }
       geo().ors.setJointState(q);
       gl->text.clear() <<"pose view";
       gl->update();

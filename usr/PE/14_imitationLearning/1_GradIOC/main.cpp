@@ -50,7 +50,7 @@ struct Dfdw:ConstrainedProblem {
   }
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
-//    MT::timerStart(true);
+//    mlr::timerStart(true);
     // compute w vector
     arr w=repmat(x.subRange(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
@@ -140,7 +140,7 @@ struct Dfdw:ConstrainedProblem {
       Jg.resize(dim_g(),dim_x());Jg.setZero();
       Jg=4.*~x*(sumOfSqr(x)-1.);
     }
-//    cout << "4: "  << MT::timerRead(true) << endl;
+//    cout << "4: "  << mlr::timerRead(true) << endl;
 
     return y;
   }
@@ -156,11 +156,11 @@ void simpleMotion(){
   MP.useSwift = false;
   MP.loadTransitionParameters();
 
-  arr refGoal = ARRAY(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
 
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 25);
+  c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
@@ -184,9 +184,9 @@ void simpleMotion(){
 
   arr wOpt;
   wOpt.append(MP.H_rate_diag);
-  wOpt.append(MP.taskCosts(0)->prec(T));
+  wOpt.append(MP.tasks(0)->prec(T));
 
-  MP.taskCosts(0)->prec(T) = 1;
+  MP.tasks(0)->prec(T) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
 
   arr go,Ho,PHIo,Jo;
@@ -218,7 +218,7 @@ void simpleMotion(){
 
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   //    gradCheckExample();
   simpleMotion();
 

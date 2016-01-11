@@ -23,7 +23,7 @@ struct MyTask:FeedbackControlTaskAbstraction{
 };
 
 int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   // variables
   GeometricState geometricState;
@@ -44,19 +44,19 @@ int main(int argc, char** argv){
   motionPrimitive.forceColLimTVs = false;
   motionPrimitive.deAccess(NULL);
 
-  uint mode=MT::getParameter<uint>("mode", 1);
+  uint mode=mlr::getParameter<uint>("mode", 1);
   if(mode==0){ //non-threaded
     ctrl->open();
 //  view.open();
     for(;;){
       ctrl->step();
 //    view.step(); the view is automatially opened as thread and stepsOnListen...
-      MT::wait();
+      mlr::wait();
     }
   }
   if(mode==1){
     ctrl->threadLoopWithBeat(.01);
-    MT::wait(30.);
+    mlr::wait(30.);
   }
 
   close(biros().processes);

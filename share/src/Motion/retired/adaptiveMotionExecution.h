@@ -21,7 +21,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 #include <Ors/ors.h>
 #include <Core/util.h>
 #include <stdlib.h>
@@ -70,10 +70,10 @@ struct AdaptiveMotionExecution{
     arr colCosts;
 
     // Wrapped Trajectory
-    MT::Path *trajWrap;
+    mlr::Path *trajWrap;
 
     // Reference Trajectory
-    MT::Path *trajRef;
+    mlr::Path *trajRef;
     arr dtrajRef;
     arr goalRef;
     arr sRef;

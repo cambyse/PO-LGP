@@ -29,8 +29,8 @@ void shutdown(int) {
 }
 
 void init_grounded_symbol(AL_GroundedSymbol& gs) {
-  bool gaussproc = MT::getParameter<bool>("gauss", true);
-  int n_steps = MT::getParameter<int>("steps", 20);
+  bool gaussproc = mlr::getParameter<bool>("gauss", true);
+  int n_steps = mlr::getParameter<int>("steps", 20);
 
   ActiveLearningProblem problem;
 	//problem.sampler   = new BlocksWorldSampler;
@@ -67,43 +67,43 @@ void init_grounded_symbol(AL_GroundedSymbol& gs) {
 }
 
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
 
-  double seed = MT::getParameter<double>("seed", time(NULL));
+  double seed = mlr::getParameter<double>("seed", time(NULL));
 	srand(seed);
   
   
   double discountFactor;
-  MT::getParameter(discountFactor, "discountFactor");
+  mlr::getParameter(discountFactor, "discountFactor");
   PRINT(discountFactor);
 
   uint horizon;
-  MT::getParameter(horizon, "PRADA_horizon");
+  mlr::getParameter(horizon, "PRADA_horizon");
   PRINT(horizon);
   
   uint PRADA_num_samples;
-  MT::getParameter(PRADA_num_samples, "PRADA_num_samples");
+  mlr::getParameter(PRADA_num_samples, "PRADA_num_samples");
   PRINT(PRADA_num_samples);
   
   double PRADA_noise_softener;
-  MT::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
+  mlr::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
   PRINT(PRADA_noise_softener);
   
-  MT::String rulesFile_name;
-  MT::getParameter(rulesFile_name, "file_rules");
+  mlr::String rulesFile_name;
+  mlr::getParameter(rulesFile_name, "file_rules");
   
-  MT::String stateFile_name;
-  MT::getParameter(stateFile_name, "file_state");
+  mlr::String stateFile_name;
+  mlr::getParameter(stateFile_name, "file_state");
   PRINT(stateFile_name);
   
-  MT::String symbolsFile_name;
-  MT::getParameter(symbolsFile_name, "file_symbols");
+  mlr::String symbolsFile_name;
+  mlr::getParameter(symbolsFile_name, "file_symbols");
   PRINT(symbolsFile_name);
 
   RobotManipulationSimulator sim;
   sim.shutdownAll();
-  sim.loadConfiguration(MT::getParameter<MT::String>("orsFile"));
+  sim.loadConfiguration(mlr::getParameter<mlr::String>("orsFile"));
   sim.startOde();
   sim.startSwift();
   sim.simulate(150);
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
   //  SET UP GROUNDED SYMBOL
   //  -----------------------------------
 
-  MT::String relation("inside");
+  mlr::String relation("inside");
   relational::GroundedSymbol *ogs;
   ActiveLearningProblem problem;
   problem.sampler   = new TraySampler;
@@ -126,9 +126,9 @@ int main(int argc, char** argv) {
   AL_GroundedSymbol *ags = new AL_GroundedSymbol(relation, 2, false);
   init_grounded_symbol(*ags);
   
-  MT::Array<relational::GroundedSymbol*> sgs;
+  mlr::Array<relational::GroundedSymbol*> sgs;
   sgs.append(ags);
-  MT::Array<relational::GroundedSymbol*> osgs;
+  mlr::Array<relational::GroundedSymbol*> osgs;
   osgs.append(ogs);
   relational::LitL lits;
   relational::calculateSymbols(lits, sgs, sim.C);
@@ -224,8 +224,8 @@ int main(int argc, char** argv) {
   //((relational::PRADA_Planner* ) planner)->setThresholdReward(0.00);
   relational::Literal* action; 
 
-  MT::String dir = MT::getParameter<MT::String>("directory");
-  int run = MT::getParameter<int>("run");
+  mlr::String dir = mlr::getParameter<mlr::String>("directory");
+  int run = mlr::getParameter<int>("run");
 
   std::stringstream filename;
   filename << dir <<"/rewards-"<< run <<".data";

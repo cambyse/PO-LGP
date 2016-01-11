@@ -8,7 +8,7 @@ else
     if mkdir Make.lock 2> /dev/null
     then    # lock did not exist and was created successfully
 	tput sgr0 && echo "       *** Make     " $1
-	MAKEFLAGS='-j4 -k' make --no-print-directory -f makefile $2
+	MAKEFLAGS='-j4 -k' make  -f makefile $2
 	if [ $? -eq 0 ] ; then # success
 	    date +'%y-%m-%d-%T' > .lastMake
 	else # fail

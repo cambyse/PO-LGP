@@ -8,7 +8,7 @@
 #include <Gui/plot.h>
 #include <GL/gl.h>
 #include <Core/module.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 
 #include "ros_module.h"
 
@@ -90,20 +90,20 @@ REGISTER_MODULE(SetupWorld);
 void run() {
   System S;
 
-  S.addModule<SetupWorld>("SetupWorld", Module::loopWithBeat, .03); // ~30 Hz
-  S.addModule<RosTf>("RosTf", Module::loopWithBeat, .03);
-  S.addModule<PhysicsMenu>("PhysicsMenu", Module::loopWithBeat, .03);
-  S.connect();
+  S.addModule<SetupWorld>("SetupWorld", /*Module::loopWithBeat,*/ .03); // ~30 Hz
+  S.addModule<RosTf>("RosTf", /*Module::loopWithBeat,*/ .03);
+  S.addModule<PhysicsMenu>("PhysicsMenu", /*Module::loopWithBeat,*/ .03);
+  //S.connect();
   cout << S << endl; // get some info
 
   S.getAccess<bool>("do_physics")->set() = true;
 
   // run it
-  engine().open(S);
-  engine().shutdown.waitForSignal();
+  threadOpenModules(true);
+  moduleShutdown().waitForValueGreaterThan(0);
 
   cout << "bye bye" << endl;
-  engine().close(S);
+  threadCloseModules();
 
 }
 

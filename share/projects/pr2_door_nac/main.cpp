@@ -7,7 +7,7 @@
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <System/engine.h>
+//#include <System/engine.h>
 #include <Motion/pr2_heuristics.h>
 #include "src/plotUtil.h"
 #include "src/traj_factory.h"
@@ -18,14 +18,14 @@
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   /// load parameters
-  bool loadFunctionalFile = MT::getParameter<bool>("loadFunctionalFile");
-  bool useRos = MT::getParameter<bool>("useRos");
-  bool visualize = MT::getParameter<bool>("visualize");
-  double duration = MT::getParameter<double>("duration");
-  MT::String folder = MT::getParameter<MT::String>("folder");
+  bool loadFunctionalFile = mlr::getParameter<bool>("loadFunctionalFile");
+  bool useRos = mlr::getParameter<bool>("useRos");
+  bool visualize = mlr::getParameter<bool>("visualize");
+  double duration = mlr::getParameter<double>("duration");
+  mlr::String folder = mlr::getParameter<mlr::String>("folder");
 
 
   ors::KinematicWorld world(STRING("model.kvg"));
@@ -37,7 +37,7 @@ int main(int argc,char **argv){
   arr Xdemo,Fdemo,Mdemo;
 
   /// load demonstration from file or record from demonstration
-  if (MT::getParameter<bool>("loadDemoFromFile")) {
+  if (mlr::getParameter<bool>("loadDemoFromFile")) {
     Xdemo << FILE(STRING(folder<<"/Xdemo.dat"));
     Fdemo << FILE(STRING(folder<<"/Fdemo.dat"));
     Mdemo << FILE(STRING(folder<<"/Mdemo.dat"));
@@ -85,10 +85,15 @@ int main(int argc,char **argv){
   int H = 1; //horizon
   int numCentres = 1;
   //int numRuns = 10; // runs for averaging performance
-  int numIterations = 30; //number of gradient updates
+  int numIterations = 10; //number of gradient updates
   uint kernel_type = 0;// 0 is RBF Kernel
-  mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
+<<<<<<< HEAD
+  mdp::RKHSPol rkhs1(world,useRos,duration,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   MT::rnd.clockSeed();
+=======
+  mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
+  mlr::rnd.clockSeed();
+>>>>>>> e5b902ea7c8c13055c4c9b80e7577f3431c01a24
   arr rewards;
   rkhs1.dim_A = 2;
 
@@ -102,6 +107,12 @@ int main(int argc,char **argv){
 
 
   if(loadFunctionalFile) rkhs1.loadOldFuncPolicy();
+
+  //world.watch(true);
+  rkhs1.prior1 = 0.035; //0.035
+  rkhs1.prior2 = 0.01; //0.01
+
+
   rewards = rkhs1.run();
 
   if(rkhs1.Algorithm==0)

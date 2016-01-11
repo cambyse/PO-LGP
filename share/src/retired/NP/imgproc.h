@@ -55,7 +55,7 @@ const int nids[8][2] = {{ 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, { 0,-1},
  *           implemented.
  */
 template <class S>
-inline void tracer(int& t, int& tn, int s, int sn, const MT::Array<S>& binimg, bool internal)
+inline void tracer(int& t, int& tn, int s, int sn, const mlr::Array<S>& binimg, bool internal)
 {
   int sn_prev, start;
   S v = binimg.p[s];                                 // pixel value at point s
@@ -130,7 +130,7 @@ inline void tracer(int& t, int& tn, int s, int sn, const MT::Array<S>& binimg, b
  *  @see mkbinary(), cclabel()
  */
 template <class S>
-void ctrace(MT::Array<S>& contour, const MT::Array<S>& binimg, int s, bool internal=true);
+void ctrace(mlr::Array<S>& contour, const mlr::Array<S>& binimg, int s, bool internal=true);
 
 /** @brief Connected component labeling of a binary image
  *
@@ -179,7 +179,7 @@ void mkbinary(byteA& bw, const byteA& img, int t = 0);
 template<class S>
 void regular_grid
 (
- MT::Array<S>& points,
+ mlr::Array<S>& points,
  S width,
  S height,
  S step,
@@ -295,7 +295,7 @@ void rgb2rgba(byteA& rgba, const byteA& rgb, unsigned char a);
 
 
 template <class S, class T>
-inline void pixel_intensities(MT::Array<S>& intensities, const MT::Array<T>& map, S min_value=1)
+inline void pixel_intensities(mlr::Array<S>& intensities, const mlr::Array<T>& map, S min_value=1)
 {
   if (map.N==0 || map.nd!=2)
     return;
@@ -328,9 +328,9 @@ inline void pixel_intensities(MT::Array<S>& intensities, const MT::Array<T>& map
 template <class S>
 inline void pixel_lists
 (
- MT::Array<MT::Array<S> >& lists,
- const MT::Array<S>& map,
- const MT::Array<S>& pixel_values,
+ mlr::Array<mlr::Array<S> >& lists,
+ const mlr::Array<S>& map,
+ const mlr::Array<S>& pixel_values,
  S min_value = 1
 )
 {
@@ -363,7 +363,7 @@ class ImagePyramid
 {
 public:
   ImagePyramid(const byteA&, uint scales);
-  MT::Array<byteA>        layers_;
+  mlr::Array<byteA>        layers_;
 };
 
 } // namespace np

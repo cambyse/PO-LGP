@@ -81,25 +81,25 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
+  c->setCostSpecs(P.T, P.T,
+                          conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
   c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+  c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
     c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
-    P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+    c->setCostSpecs(P.T, P.T,
                             {0.,0.,1.}, 1e4,
                             {0.,0.,0.}, 1e-3);
   }
 
   if (useCollAvoid) {
 //    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-//    P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e0);
+//    c->setCostSpecs(0, P.T, {0.}, 1e0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -146,11 +146,11 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   //------------------------------------------------//
   // Create obstacles and goals
   //------------------------------------------------//
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0015, dir);
+  MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0015, dir);
 
   std::vector<MObject*> mobjects;
 
-  mobjects.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.003, dir));
+  mobjects.push_back(new MObject(&world, mlr::String("obstacle"), MObject::OBSTACLE , 0.003, dir));
 //  gl.add(drawEnv,mobjects.at(0));
 
 
@@ -237,7 +237,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
     world.gl().update();
-    MT::wait(dtAmex);
+    mlr::wait(dtAmex);
     //    world.gl().watch();
   }
 
@@ -253,7 +253,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
   runAMEX(String("scenes/scene1"),true,true,false);
 //    runAMEX(String("model.kvg"),true,false,false);
 //  runAMEX(String("scenes/apollo_right_ref"),true,true,false);

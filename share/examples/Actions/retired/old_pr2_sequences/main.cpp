@@ -9,12 +9,12 @@
 //===========================================================================
 void TEST(Push) {
   ActionSystem activity;
-  engine().open(activity);
+  threadOpenModules(true);
   
   new CoreTasks(*activity.machine);
 
   activity.machine->waitForQuitSymbol();
-  engine().close(activity);
+  threadCloseModules();
 }
 
 // ============================================================================
@@ -51,7 +51,7 @@ void rewriteGraph(){
     for(Node* prec:Rule) if(prec->parents.N){
       Node *pit=nice[prec->parents(0)->keys(1)];
       if(pit){
-        MT::String label/*("pre")*/;
+        mlr::String label/*("pre")*/;
         if(prec->parents.N>1) label <<prec->parents(1)->keys(1);
         nice.append<bool>({label}, {pit, rit}, NULL, false);
       }
@@ -60,7 +60,7 @@ void rewriteGraph(){
     for(Node* eff:effect){
       Node *pit=nice[eff->parents(0)->keys(1)];
       if(pit){
-        MT::String label/*("eff")*/;
+        mlr::String label/*("eff")*/;
         if(eff->parents.N>1) label <<eff->parents(1)->keys(1);
         if(eff->getValueType()==typeid(bool) && eff->V<bool>()==false) label <<'!';
         nice.append<bool>({label}, {rit, pit}, NULL, false);
@@ -76,7 +76,7 @@ void rewriteGraph(){
 
 // ============================================================================
 int main(int argc, char** argv) {
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
   
   testPush();
 //  testFol();

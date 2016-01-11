@@ -1,6 +1,6 @@
 #include <MT/soc.h>
 #include <Core/array.h>
-#include <Core/array_t.h>
+#include <Core/array.tpp>
 #include <Gui/opengl.h>
 #include <aico_key_frames.h>
 
@@ -149,7 +149,7 @@ double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
       b = lapack_Ainv_b_sym(Binv,  sumAinv*suma  + r);
       b = b_old + alpha*(b-b_old);
 
-      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
+      cout <<MLR_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
       if ((!restore) && (k>1) && ((fabs(alpha)<eps_alpha) || ((old_r - sys.taskCost(NULL, T, -1) - sum(~(b-x0)*sumAinv*(b-x0)) )<task_eps))) break;
       
       old_r = sys.taskCost(NULL, T, -1, verbose) + sum(~(b-x0)*sumAinv*(b-x0)); // task+control costs

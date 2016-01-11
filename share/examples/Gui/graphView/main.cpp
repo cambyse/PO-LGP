@@ -2,7 +2,7 @@
 #include <Gui/graphview.h>
 
 void TEST(Dot){
-  const char* filename = (MT::argc>=2 && MT::argv[1][0]!='-')?MT::argv[1]:NULL;
+  const char* filename = (mlr::argc>=2 && mlr::argv[1][0]!='-')?mlr::argv[1]:NULL;
   if(!filename) filename="coffee_shop.fg";
   Graph G;
   G <<FILE(filename);
@@ -14,7 +14,7 @@ void TEST(Dot){
 }
 
 int MAIN(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
+  mlr::initCmdLine(argc, argv);
 
   testDot();
 

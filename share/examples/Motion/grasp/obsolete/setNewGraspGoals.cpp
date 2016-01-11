@@ -7,12 +7,12 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    mlr::getParameter(midPrec, "reachPlanMidPrec");
+    mlr::getParameter(endPrec, "reachPlanEndPrec");
+    mlr::getParameter(palmPrec, "reachPlanPalmPrec");
+    mlr::getParameter(colPrec, "reachPlanColPrec");
+    mlr::getParameter(limPrec, "reachPlanLimPrec");
+    mlr::getParameter(endVelPrec, "reachPlanEndVelPrec");
   }
   
   //set the time horizon
@@ -99,12 +99,12 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   V=listFindByName(sys.vars, "oppose12");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
 
-  MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
+  MLR_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
   
   //col lim and relax
   V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
   V=listFindByName(sys.vars, "qitself");
-  V->y_prec=MT::getParameter<double>("reachPlanHomeComfort");
-  V->v_prec=MT::getParameter<double>("reachPlanEndVelPrec");
+  V->y_prec=mlr::getParameter<double>("reachPlanHomeComfort");
+  V->v_prec=mlr::getParameter<double>("reachPlanEndVelPrec");
   V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, V->y_prec, V->y_prec, midPrec, V->v_prec);
 }

@@ -2,7 +2,7 @@
 
 
 int main(int argc,char** argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   RobotActionInterface R;
 
@@ -15,9 +15,9 @@ int main(int argc,char** argv) {
 
 //  if(R.getProcessGroup()->openBumble){
 //    perc.threadLoop();
-//    MT_MSG("Bumble successfully started.");
+//    MLR_MSG("Bumble successfully started.");
 //  }else{
-//    MT_MSG("Could not open bumble.");
+//    MLR_MSG("Could not open bumble.");
 //  }
 
 R.wait();

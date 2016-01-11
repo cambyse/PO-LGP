@@ -1,12 +1,8 @@
-#include <System/engine.h>
 #include <Gui/graphview.h>
 #include <Perception/perception.h>
 
-//NOTE: no actual perception code is included - only system!
-void lib_Perception(); //this is enough to ensure the linking and loading of registry entries
-
+#if 0
 void TEST(ModuleVision) {
-  lib_Perception();
   cout <<registry() <<endl;
 
   System S;
@@ -26,37 +22,65 @@ void TEST(ModuleVision) {
 //  S.addModule<GenericDisplayViewer<Patching> >(NULL, {"patches"});
 //  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, {"features"});
 
-  //  S.addModule("VideoEncoder", NULL, {"rgb"}, Module::listenFirst);
-  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"}, Module::listenFirst);
+  //  S.addModule("VideoEncoder", NULL, {"rgb"} /*,Module::listenFirst*/ );
+  //  S.addModule("VideoEncoder", "MyMotionWriter", {"motion"} /*,Module::listenFirst*/ );
 
-  S.connect();
+  //S.connect();
 
   cout <<S <<endl;
 
-  engine().enableAccessLog();
-//  engine().mode=Engine::serial;
-  engine().mode=Engine::threaded;
+  //engine().enableAccessLog();
+//  //engine().mode=Engine::serial;
+  //engine().mode=Engine::threaded;
 
-  engine().open(S);
+  threadOpenModules(true);
 
   Graph g = S.graph();
 //  GraphView gv(g); gv.update();
 
-  if(engine().mode==Engine::serial){
+  if(//engine().mode==Engine::serial){
     for(uint i=0;i<100;i++){ engine().step(S); }
   }else{
-    MT::wait(60.);
+    mlr::wait(60.);
   }
 
-  engine().close(S);
+  threadCloseModules();
+
+  cout <<"bye bye" <<endl;
+}
+#endif
+
+void TEST(ModuleVision2) {
+  cout <<registry() <<endl;
+
+  OpencvCamera cam;
+  CvtGray cvtGray;
+  MotionFilter mofi;
+  DifferenceFilter difi("rgb", "ground", "diffImage");
+  CannyFilter canniFi("gray", "canny");
+
+  ImageViewer iv1("rgb");
+  ImageViewer iv2("gray");
+  ImageViewer iv3("motion");
+  ImageViewer iv4("diffImage");
+  ImageViewer iv5("canny");
+
+  cout <<registry() <<endl;
+
+  threadOpenModules(true);
+  for(uint i=0;i<30;i++){
+    mlr::wait(1.);
+    modulesReportCycleTimes();
+  }
+  threadCloseModules();
 
   cout <<"bye bye" <<endl;
 }
 
 int main(int argc,char **argv) {
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  testModuleVision();
+  testModuleVision2();
 
   return 0;
 }

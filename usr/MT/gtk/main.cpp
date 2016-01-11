@@ -674,7 +674,7 @@ int main(int argc, char **argv) {
   B.threadLoop();
 
  
-  MT::wait(10.);
+  mlr::wait(10.);
 
   A.threadClose();
   B.threadClose();

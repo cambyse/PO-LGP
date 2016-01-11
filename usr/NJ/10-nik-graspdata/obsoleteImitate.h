@@ -12,7 +12,7 @@
 #endif /* OBSOLETEIMITATE_H_ */
 
 
-arr GetDynFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastF,const arr & lastQ,ors::KinematicWorld * G,arr & grad){
+arr GetDynFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastF,const arr & lastQ,ors::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 
@@ -122,7 +122,7 @@ double MLPMix(const arr & feat,arr & grad){
 	return scalarProduct(l0,policy);
 }
 
-MT::Array<ors::Shape*> GetLandmarksOLD(ors::KinematicWorld * g){
+mlr::Array<ors::Shape*> GetLandmarksOLD(ors::KinematicWorld * g){
 	ors::Shape * oM = g->getBodyByName("m9")->shapes(0);
 	ors::Shape * s1 = g->getShapeByName("tipNormal1");
 	ors::Shape * s2 = g->getShapeByName("tipNormal2");
@@ -131,7 +131,7 @@ MT::Array<ors::Shape*> GetLandmarksOLD(ors::KinematicWorld * g){
 	ors::Shape * s5 = g->getBodyByName("tip2")->shapes(0);
 	ors::Shape * s6 = g->getBodyByName("tip3")->shapes(0);
 	ors::Shape * o1 = g->getBodyByName("o1")->shapes(0);
-	MT::Array<ors::Shape*> landmarks(8);
+	mlr::Array<ors::Shape*> landmarks(8);
 	landmarks(0) = oM;
 	landmarks(1) = s1;landmarks(2) = s2;landmarks(3) = s3;
 	landmarks(4) = s4;landmarks(5) = s5;landmarks(6) = s6;
@@ -139,7 +139,7 @@ MT::Array<ors::Shape*> GetLandmarksOLD(ors::KinematicWorld * g){
 	return landmarks;
 }
 
-arr GetRawJacobianOLD(const MT::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G){
+arr GetRawJacobianOLD(const mlr::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G){
 	arr ans(landmarks.N*3,G->getJointStateDimension());
 	for(uint i = 0; i < landmarks.N; i++){
 		arr J;
@@ -151,7 +151,7 @@ arr GetRawJacobianOLD(const MT::Array<ors::Shape*> & landmarks,ors::KinematicWor
 	return ansT;
 }
 
-arr GetRawFeaturesOLD(const MT::Array<ors::Shape*> & landmarks){
+arr GetRawFeaturesOLD(const mlr::Array<ors::Shape*> & landmarks){
 	arr ans(landmarks.N*3);
 	for(uint j = 0; j < landmarks.N; j++){
 		ors::Transformation f = landmarks(j)->X;
@@ -163,7 +163,7 @@ arr GetRawFeaturesOLD(const MT::Array<ors::Shape*> & landmarks){
 }
 
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks, const arr & q,ors::KinematicWorld * G,arr & grad){
+arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks, const arr & q,ors::KinematicWorld * G,arr & grad){
 	arr raw = GetRawFeaturesOLD(landmarks);
 	arr gradQ = GetRawJacobianOLD(landmarks,G);
 	arr gradQ2(gradQ.d0,gradQ.d1 + q.N);gradQ2= 0;//remember converntion, d0 is inputs, d1 - outputs
@@ -216,12 +216,12 @@ arr GetFeatures(const MT::Array<ors::Shape*> & landmarks, const arr & q,ors::Kin
 	return TD2;
 }
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks, const arr & q,ors::KinematicWorld * G){
+arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks, const arr & q,ors::KinematicWorld * G){
 	arr a;
 	return GetFeatures(landmarks,q,G,a);
 }
 
-/*arr GetTaskFeatures(const MT::Array<ors::Shape*> & landmarks, const arr & q){
+/*arr GetTaskFeatures(const mlr::Array<ors::Shape*> & landmarks, const arr & q){
 	arr raw = GetRawFeatures(landmarks);
 
 	//translated distances

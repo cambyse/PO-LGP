@@ -1,47 +1,58 @@
 cleanAll
 
 Script {
-  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
-  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffR) }
+  (Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }
+  (Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv Control wheels)  (conv Control pos endeffR base_footprint) }
   (cleanAll)
   (cleanAll)!
 
-  (FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}
-  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffL) }
+  (Control wheels){ target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffR base_footprint){ target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffL base_footprint){ target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}
+  { (conv Control wheels)  (conv Control pos endeffL base_footprint) }
   (cleanAll)
   (cleanAll)!
 
-  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
-  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
-  { (conv MyTask endeffL) }
+  (PlayFunnySound)
+
+  (Control wheels){ target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffR base_footprint){ target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (Control pos endeffL base_footprint){ target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv Control pos endeffL base_footprint) }
   (cleanAll)
   (cleanAll)!
 
-  (FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}
+  (PlayFunnySound)!
+
+  (Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}
   (HomingActivity)
-  { (conv HomingActivity) (conv FollowReferenceActivity wheels) }
+  { (conv HomingActivity) (conv Control wheels) }
 }
 
 
 Rule {
-    X, Y, 
-    { (cleanAll) (conv X Y) }
-    { (conv X Y)! }
+    X, Y, Z,
+    { (cleanAll) (conv Control X Y Z) }
+    { (conv Control X Y Z)! }
+}
+
+Rule {
+    X,
+    { (cleanAll) (conv Control X) }
+    { (conv Control X)! }
+}
+
+Rule {
+    X, Y, Z,
+    { (cleanAll) (Control X Y Z) }
+    { (Control X Y Z)! }
 }
 
 Rule {
     X, 
-    { (cleanAll) (MyTask X) }
-    { (MyTask X)! }
-}
-
-Rule {
-    X, 
-    { (cleanAll) (FollowReferenceActivity X) }
-    { (FollowReferenceActivity X)! }
+    { (cleanAll) (Control X) }
+    { (Control X)! }
 }

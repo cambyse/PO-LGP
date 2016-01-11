@@ -31,4 +31,4 @@ joint (table obj1) { from=<T t(-.1 .2 0)> to=<T t(0 0 .1)> type=10 }
 #joint (table obj6) { from=<T t(-.1 .3 0)> to=<T t(0 0 .1)> type=10 }
 
 body graspRef { type=5 size=[.1 0 0 0] }
-joint (arm7 graspRef){ A=<T t(0 0 .5)> type=11 }
+joint graspJoint(arm7 graspRef){ A=<T t(0 0 .5)> type=11 }

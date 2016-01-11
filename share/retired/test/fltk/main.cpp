@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MLR_IMPLEMENTATION
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -100,8 +100,8 @@ struct Img:public Fl_Window{
 
 
 int main(int argc, char **argv){
-  MT::initCmdLine(argc,argv);
-  int mode = MT::getParameter<int>("mode",3);
+  mlr::initCmdLine(argc,argv);
+  int mode = mlr::getParameter<int>("mode",3);
   
   //Fl::lock();
   
@@ -140,7 +140,7 @@ int main(int argc, char **argv){
       gl2.threadLoop();
       gl3.threadLoop();
       //win.threadLoop();
-      MT::wait(10.);
+      mlr::wait(10.);
       gl1.threadClose();
       gl2.threadClose();
       gl3.threadClose();

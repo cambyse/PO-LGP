@@ -155,9 +155,9 @@ void multiTask(){
 }
 
 int main(int argc,char **argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",4)){
+  switch(mlr::getParameter<int>("mode",4)){
   case 0:  simpleArrayOperations();  break;
   case 1:  openingSimulator();  break;
   case 2:  reach();  break;
