@@ -36,7 +36,7 @@ Activity* newActivity(Node *fact){
   }
 
   LOG(3) <<"creating new activity of symbol '" <<*activitySymbol <<"' and specs '" <<*activityParams <<"'";
-  Node *activityType = registry().getNode("Activity", activitySymbol->keys.last());
+  Node *activityType = registry().getNode({"Activity", activitySymbol->keys.last()});
   if(!activityType){
     LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*activitySymbol <<", specs=" <<*activityParams <<")";
     return NULL;

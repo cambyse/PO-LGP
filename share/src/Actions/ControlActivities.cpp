@@ -4,7 +4,7 @@
 #include "ControlActivities.h"
 
 void ControlActivity::configure() {
-  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
+  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode({"Module","TaskControllerModule"})->V<Module>());
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);

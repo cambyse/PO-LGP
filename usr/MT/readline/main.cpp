@@ -58,7 +58,7 @@ const Graph& rndContainer(const Graph& G){
 Graph& rndSubgraph(Graph& G){
   Graph *g=&G;
   while(rnd.uni()<.8){
-    NodeL subgraphs = g->getTypedNodes<Graph>(NULL);
+    NodeL subgraphs = g->getNodesOfType<Graph>(NULL);
     if(!subgraphs.N) break;
     Node *subgraph=subgraphs.rndElem();
     if(!subgraph->getValue<Graph>()) break;

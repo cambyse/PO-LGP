@@ -5,13 +5,13 @@
 TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world){
   HALT("this is deprecated, yes?")
   TaskMap *map;
-  mlr::String type = specs.V<mlr::String>("type", "pos");
+  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
-    map = new CollisionConstraint(specs.V<double>("margin", 0.1) );
+    map = new CollisionConstraint(specs.get<double>("margin", 0.1) );
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, specs.V<double>("margin", 0.1) );
+    map = new ProxyTaskMap(allPTMT, {0u}, specs.get<double>("margin", 0.1) );
   }else if(type=="qItself"){
     if(specs["ref1"]) map = new TaskMap_qItself(world, specs["ref1"]->V<mlr::String>());
     else if(specs["Hmetric"]) map = new TaskMap_qItself(specs["Hmetric"]->V<double>()*world.getHmetric());
@@ -40,11 +40,11 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   //-- create a task map
   TaskMap *map;
   const Graph* params=specs->getValue<Graph>();
-//  mlr::String type = specs.V<mlr::String>("type", "pos");
+//  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
-    map = new CollisionConstraint( (params?params->V<double>("margin", 0.1):0.1) );
+    map = new CollisionConstraint( (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="collisionPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -52,7 +52,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="collisionExceptPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -60,9 +60,9 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
+    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1 && ref2){
       ors::Joint *j=world.getJointByBodyNames(ref1, ref2);
@@ -82,7 +82,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   //-- check additional real-valued parameters: order
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
-    map->order = params->V<double>("order", 0);
+    map->order = params->get<double>("order", 0);
   }
   return map;
 }

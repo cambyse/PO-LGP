@@ -26,9 +26,11 @@ void TEST(Read){
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
   cout <<G["k"]->graph() <<endl;
-  cout <<G["val"]->V<double>() <<endl;
+//  cout <<G["val"]->graph()(0)->V<double>() <<endl;
   cout <<G["k"]->graph()["z"]->V<mlr::String>() <<endl;
   cout <<"DONE" <<endl;
+
+  G.writeHtml(FILE("z.html"), FILE("example.kvg"));
 }
 
 //===========================================================================
@@ -58,7 +60,7 @@ const Graph& rndContainer(const Graph& G){
 Graph& rndSubgraph(Graph& G){
   Graph *g=&G;
   while(rnd.uni()<.8){
-    NodeL subgraphs = g->getTypedNodes<Graph>(NULL);
+    NodeL subgraphs = g->getNodesOfType<Graph>(NULL);
     if(!subgraphs.N) break;
     Node *subgraph=subgraphs.rndElem();
     if(!subgraph->getValue<Graph>()) break;
@@ -158,8 +160,8 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
 //  testRandom();
-//  testRead();
-  testInit();
+  testRead();
+//  testInit();
 //  testDot();
 
 //  if(!filename) testManual();

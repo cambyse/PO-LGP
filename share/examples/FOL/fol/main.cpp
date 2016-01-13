@@ -191,7 +191,7 @@ void testMonteCarlo(){
           //-- for all these activities call the terminate operator
           for(Node *act:activities){
             Node *predicate = act->parents(0);
-            Node *rule = KB.getChild(Terminate_keyword, predicate);
+            Node *rule = KB.getEdge(Terminate_keyword, predicate);
             if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
             Node *effect = rule->graph().last();
             NodeL vars = getSymbolsOfScope(rule->graph());

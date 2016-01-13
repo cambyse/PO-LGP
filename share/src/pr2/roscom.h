@@ -125,36 +125,36 @@ struct SubscriberConv {
 // subscribing a message into an MLR-type-Access via a conv_* function
 //
 
-template<class msg_type, class var_type, var_type conv(const msg_type&)>
-struct SubscriberConvThreaded : Thread {
-  Access_typed<var_type>& access;
-  Access_typed<ors::Transformation> *frame;
-  ros::NodeHandle *nh;
-  ros::Subscriber sub;
-  tf::TransformListener listener;
-  SubscriberConvThreaded(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
-    : Thread(STRING("Subscriber_"<<_access.name <<"->" <<_topic_name), .05),
-      access(_access), frame(_frame) {
-  }
-  ~SubscriberConvThreaded(){}
-  void open(){
-    nh = new ros::NodeHandle;
-    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
-    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-    cout <<"done" <<endl;
-  }
-  void close(){
-    delete nh;
-  }
-  void step(){}
-  void callback(const typename msg_type::ConstPtr& msg) {
-    double time=conv_time2double(msg->header.stamp);
-    access.set( time ) = conv(*msg);
-    if(frame){
-      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
-    }
-  }
-};
+//template<class msg_type, class var_type, var_type conv(const msg_type&)>
+//struct SubscriberConvThreaded : Thread {
+//  Access_typed<var_type>& access;
+//  Access_typed<ors::Transformation> *frame;
+//  ros::NodeHandle *nh;
+//  ros::Subscriber sub;
+//  tf::TransformListener listener;
+//  SubscriberConvThreaded(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
+//    : Thread(STRING("Subscriber_"<<_access.name <<"->" <<_topic_name), .05),
+//      access(_access), frame(_frame) {
+//  }
+//  ~SubscriberConvThreaded(){}
+//  void open(){
+//    nh = new ros::NodeHandle;
+//    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+//    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+//    cout <<"done" <<endl;
+//  }
+//  void close(){
+//    delete nh;
+//  }
+//  void step(){}
+//  void callback(const typename msg_type::ConstPtr& msg) {
+//    double time=conv_time2double(msg->header.stamp);
+//    access.set( time ) = conv(*msg);
+//    if(frame){
+//      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
+//    }
+//  }
+//};
 
 
 //===========================================================================

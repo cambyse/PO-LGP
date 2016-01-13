@@ -97,7 +97,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   //-- create a task map
   TaskMap *map;
   const Graph* params=specs->getValue<Graph>();
-//  mlr::String type = specs.V<mlr::String>("type", "pos");
+//  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){

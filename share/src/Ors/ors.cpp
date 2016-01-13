@@ -111,22 +111,22 @@ void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
   mlr::String str;
-  ats.getValue<Transformation>(X, "X");
-  ats.getValue<Transformation>(X, "pose");
+  ats.get(X, "X");
+  ats.get(X, "pose");
   
   //mass properties
   double d;
-  if(ats.getValue<double>(d, "mass")) {
+  if(ats.get(d, "mass")) {
     mass=d;
     inertia.setId();
     inertia *= .2*d;
   }
 
   type=dynamicBT;
-  if(ats.getValue<bool>("fixed"))       type=staticBT;
-  if(ats.getValue<bool>("static"))      type=staticBT;
-  if(ats.getValue<bool>("kinematic"))   type=kinematicBT;
-  if(ats.getValue<double>(d,"dyntype")) type=(BodyType)d;
+  if(ats["fixed"])       type=staticBT;
+  if(ats["static"])      type=staticBT;
+  if(ats["kinematic"])   type=kinematicBT;
+  if(ats.get(d,"dyntype")) type=(BodyType)d;
 
   // SHAPE handling
   Node* item;
@@ -240,14 +240,14 @@ void ors::Shape::parseAts() {
   double d;
   arr x;
   mlr::String str;
-  mlr::FileToken *fil;
-  ats.getValue<Transformation>(rel, "rel");
-  if(ats.getValue<arr>(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.getValue<arr>(x, "color"))         { CHECK_EQ(x.N,3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
-  if(ats.getValue<double>(d, "type"))       { type=(ShapeType)(int)d;}
-  if(ats.getValue<bool>("contact"))         { cont=true; }
-  fil=ats.getValue<mlr::FileToken>("mesh");  if(fil) { mesh.read(fil->getIs(), fil->name.getLastN(3).p); }
-  if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
+  mlr::FileToken fil;
+  ats.get(rel, "rel");
+  if(ats.get(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.get(x, "color"))         { CHECK_EQ(x.N,3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.get(d, "type"))       { type=(ShapeType)(int)d;}
+  if(ats["contact"])           { cont=true; }
+  if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p); }
+  if(ats.get(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes
   switch(type) {
@@ -296,7 +296,7 @@ void ors::Shape::parseAts() {
   //center the mesh:
   if(mesh.V.N){
     Vector c = mesh.center();
-    if(!ats.getValue<bool>("rel_includes_mesh_center")){
+    if(!ats["rel_includes_mesh_center"]){
       rel.addRelativeTranslation(c);
       ats.append<bool>({"rel_includes_mesh_center"}, {}, new bool(true), true);
     }
@@ -415,26 +415,26 @@ void ors::Joint::reset() {
 void ors::Joint::parseAts() {
   //interpret some of the attributes
   double d=0.;
-  ats.getValue<Transformation>(A, "A");
-  ats.getValue<Transformation>(A, "from");
-  if(ats.getValue<bool>("BinvA")) B.setInverse(A);
-  ats.getValue<Transformation>(B, "B");
-  ats.getValue<Transformation>(B, "to");
-  ats.getValue<Transformation>(Q, "Q");
-  ats.getValue<Transformation>(X, "X");
-  ats.getValue<double>(H, "ctrl_H");
-  if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
+  ats.get(A, "A");
+  ats.get(A, "from");
+  if(ats["BinvA"]) B.setInverse(A);
+  ats.get(B, "B");
+  ats.get(B, "to");
+  ats.get(Q, "Q");
+  ats.get(X, "X");
+  ats.get(H, "ctrl_H");
+  if(ats.get(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
   if(type==JT_rigid && !Q.isZero()){ A.appendTransformation(Q); Q.setZero(); }
-  if(ats.getValue<double>(d, "q")){
+  if(ats.get(d, "q")){
     if(type==JT_hingeX) Q.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_rigid)  A.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
   }
-  if(ats.getValue<double>(d, "agent")) agent=(uint)d;
-  if(ats.getValue<bool>("fixed")) agent=UINT_MAX;
+  if(ats.get(d, "agent")) agent=(uint)d;
+  if(ats["fixed"]) agent=UINT_MAX;
   //axis
   arr axis;
-  ats.getValue<arr>(axis, "axis");
+  ats.get(axis, "axis");
   if(axis.N) {
     CHECK_EQ(axis.N,3,"");
     Vector ax(axis);
@@ -446,18 +446,18 @@ void ors::Joint::parseAts() {
   }
   //limit
   arr ctrl_limits;
-  ats.getValue<arr>(limits, "limits");
+  ats.get(limits, "limits");
   if(limits.N && type!=JT_rigid){
     CHECK_EQ(limits.N,2*qDim(), "parsed limits have wrong dimension");
   }
-  ats.getValue<arr>(ctrl_limits, "ctrl_limits");
+  ats.get(ctrl_limits, "ctrl_limits");
   if(ctrl_limits.N && type!=JT_rigid){
     if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
     CHECK_EQ(3,ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
     limits.append(ctrl_limits);
   }
   //coupled to another joint requires post-processing by the Graph::read!!
-  if(ats.getValue<mlr::String>("mimic")) mimic=(Joint*)1;
+  if(ats["mimic"]) mimic=(Joint*)1;
 }
 
 uint ors::Joint::qDim() {
@@ -1864,7 +1864,7 @@ void ors::KinematicWorld::init(const Graph& G) {
   if(nCoupledJoints){
     for(Joint *j: joints) if(j->mimic){
       mlr::String jointName;
-      bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
+      bool good = j->ats.get(jointName, "mimic");
       CHECK(good, "something is wrong");
       j->mimic = listFindByName(joints, jointName);
       if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
@@ -2560,9 +2560,9 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   sw->timeOfApplication = Tzero + Tinterval + 1;
   if(specs->getValueType()==typeid(Graph)){
     const Graph* params=specs->getValue<Graph>();
-    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
-    params->getValue<Transformation>(sw->jA, "from");
-    params->getValue<Transformation>(sw->jB, "to");
+    sw->timeOfApplication = Tzero + params->get<double>("time",1.)*Tinterval + 1;
+    params->get(sw->jA, "from");
+    params->get(sw->jB, "to");
   }
   return sw;
 }

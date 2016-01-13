@@ -122,17 +122,17 @@ template<class V, class E> void makeGridGraph(Graph& G, uint h, uint w){
 
 double cost(Graph& S){
   double E=0.;
-  for(Node *s:S.getTypedNodes<Segment>()){
+  for(Node *s:S.getNodesOfType<Segment>()){
     E += s->V<Segment>().beta_len;
   }
-  for(Node *e:S.getTypedNodes<uint>()){
+  for(Node *e:S.getNodesOfType<uint>()){
     E += lambda*e->V<uint>();
   }
   return E;
 }
 
 void fuse(Graph& S, Node *ita, Node *itb){
-//  Node *e=S.getChild(ita,itb);
+//  Node *e=S.getEdge(ita,itb);
   Segment &a=ita->V<Segment>();
   Segment &b=itb->V<Segment>();
   a.X += b.X;
@@ -141,8 +141,8 @@ void fuse(Graph& S, Node *ita, Node *itb){
   a.pix.append(b.pix);
   a.comBeta();
   for(Node *itc:neighbors(itb)) if(itc!=ita){
-    uint nbc = S.getChild(itb,itc)->V<uint>();
-    Node *ea=S.getChild(ita,itc);
+    uint nbc = S.getEdge(itb,itc)->V<uint>();
+    Node *ea=S.getEdge(ita,itc);
     if(ea) ea->V<uint>() += nbc;
     else new Node_typed<uint>(S, {}, {ita, itc}, new uint(nbc), true);
   }
@@ -167,7 +167,7 @@ void planes(){
   S.writeDot(FILE("z.dot"), false, true);
 
   for(uint i=0;i<X.d0;i++) S(i)->V<Segment>().pix.append(i);
-  for(uint *e:S.getTypedValues<uint>()) *e=1;
+  for(uint *e:S.getValuesOfType<uint>()) *e=1;
 
   arr Phi;
   for(uint i=0;i<X.d0;i++){
@@ -178,26 +178,26 @@ void planes(){
   }
   Phi.reshape(X.d0 , Phi.N/X.d0);
 
-  for(Segment *s:S.getTypedValues<Segment>()){ s->collect(Phi); s->comBeta(); }
+  for(Segment *s:S.getValuesOfType<Segment>()){ s->collect(Phi); s->comBeta(); }
   cout <<"E=" <<cost(S) <<endl;
 
 
   for(uint k=0;k<10000;k++){
     double Eold = cost(S);
-    Node *e = S.getTypedNodes<uint>().rndElem();
+    Node *e = S.getNodesOfType<uint>().rndElem();
     double deltaE = delta_E_fuse(e->parents(0)->V<Segment>(), e->parents(1)->V<Segment>());
     deltaE -= lambda*e->V<uint>();
     if(deltaE<0.){
       fuse(S, e->parents(0), e->parents(1));
       double Enew = cost(S);
       cout <<"fuse: dE=" <<deltaE <<" err=" <<Eold+deltaE-Enew <<endl;
-      for(Segment *s:S.getTypedValues<Segment>()){ s->collect(Phi); s->comBeta(); }
+      for(Segment *s:S.getValuesOfType<Segment>()){ s->collect(Phi); s->comBeta(); }
       cout <<"E=" <<cost(S) <<endl;
     }
 
     arr img(X.d0);  img=-1.;
     uintA seg(X.d0);
-    for(Node *sit:S.getTypedNodes<Segment>()){
+    for(Node *sit:S.getNodesOfType<Segment>()){
       Segment *s = sit->getValue<Segment>();
       for(uint p:s->pix){
         img(p) = s->f(Phi[p]);

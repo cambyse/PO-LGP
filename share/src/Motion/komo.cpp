@@ -56,14 +56,14 @@ void KOMO::init(const Graph& _specs){
     Graph &T = t->graph();
     TaskMap *map = newTaskMap( T["map"]->graph(), world);
     Task *task = MP->addTask(t->keys.last(), map);
-    map->order = T.V<double>("order", 0);
-    mlr::String type = T.V<mlr::String>("type", STRING("sumOfSqr"));
+    map->order = T.get<double>("order", 0);
+    mlr::String type = T.get<mlr::String>("type", STRING("sumOfSqr"));
     if(type=="sumOfSqr") map->type=sumOfSqrTT;
     else if(type=="inequal") map->type=ineqTT;
     else if(type=="equal") map->type=eqTT;
     else HALT("Task type must be sumOfSqr|ineq|eq");
-    arr time = T.V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.V<arr>("target", {0.}), T.V<double>("scale", {100.}));
+    arr time = T.get<arr>("time",{0.,1.});
+    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.get<arr>("target", {0.}), T.get<double>("scale", {100.}));
   }
 
   NodeL switches = specs.getNodes("KinematicSwitch");

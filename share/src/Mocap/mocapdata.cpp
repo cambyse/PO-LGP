@@ -626,7 +626,7 @@ uint MocapRec::numFrames(Thickness thickness) const {
 uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(StringA({"bam", bam}))->d2; }
 
 void MocapRec::appendBam(const char *bam, const arr &data) {
-  Node *i = kvg.getNode("bam", bam);
+  Node *i = kvg.getNode({"bam", bam});
 
   if(!i)
     kvg.append<arr>({"bam", bam}, {}, new arr(data), true);

@@ -172,7 +172,7 @@ template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   n->keys.append(STRING(key));
 }
 
-template<class T> Node* Graph::getTypedNode(const char *key) const {
+template<class T> Node* Graph::getNodeOfType(const char *key) const {
   NodeL nodes = getNodes(key);
   for(Node* n:nodes) if(n->getValueType()==typeid(T)) return n;
   return NULL;
@@ -194,7 +194,7 @@ template<class T> const T& Graph::get(const char *key, const T& defaultValue) co
   return *val;
 }
 
-template<class T> mlr::Array<T*> Graph::getTypedValues(const char* key) {
+template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   mlr::Array<T*> ret;
   for(Node *n: (*this)) if(n->getValueType()==typeid(T)) {
     if(!key) ret.append(n->getValue<T>());
