@@ -25,6 +25,10 @@ struct G4HutoRoMap:Module{
   ACCESS(floatA, ftdata)
 
   /////////////////////INIT////////////////////
+  bool teleop = false;
+  int counter = 0;
+
+  bool initialised = false;
   bool initphase = true;
   floatA  poselhthumbmaxopen  , poselhindexmaxopen, poselhthumbminopen  , poselhindexminopen;
   float distlhmaxopen = 0.1;

@@ -72,43 +72,105 @@ void Teleop2Tasks::deactivateTasks(){
 
 }
 
-void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive){
+
+void Teleop2Tasks::updateMovement(floatA& cal_pose, arr& old_pos, arr& old_effpos, CtrlTask *effPos){
+  arr pos, pos_div;
+
+  //get positiondata
+  copy(pos, cal_pose.sub(0,2));
+  pos += ARR(0.6, 0., 1.);
+
+
+  //calculate difference in position
+  copy(pos_div,pos);
+  pos_div -= old_pos;
+
+  //reset positions if no movement on the axis allowed
+  if(!move_x){
+    pos_div += ARR(-pos_div(0),0,0);
+  }
+  if(!move_y){
+    pos_div += ARR(0,-pos_div(1),0);
+  }
+  if(!move_z){
+    pos_div += ARR(0,0,-pos_div(2));
+  }
+  old_effpos +=pos_div;
+
+  if(effPos) effPos->setTarget(old_effpos);
+  copy(old_pos, pos);
+}
+
+
+void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive, int button){
 
   effPosR->active = true;
-  effPosL->active = true;
+  effPosL->active = false;
   effOrientationR->active = true;
-  effOrientationL->active = true;
-  gripperL->active = true;
+  effOrientationL->active = false;
+  gripperL->active = false;
   gripperR->active = true;
-  fc->active = false;
-  base->active =true;
+  fc->active = true;
+  base->active =false;
+
+
+
+  //check if button has changed
+  if(button != old_button){
+    //toggle movement restrictions
+    if(button & BTN_Y){
+      move_y = !move_y;
+      printf("Move along Y-Axis: %s\n", move_y ? "allowed" : "not allowed");
+    }else if(button & BTN_B){
+      move_x = !move_x;
+      printf("Move along X-Axis: %s\n", move_x ? "allowed" : "not allowed");
+    }else if(button & BTN_A){
+      move_z = !move_z;
+      printf("Move along Z-Axis: %s\n", move_z ? "allowed" : "not allowed");
+    }else if(button & BTN_X){
+      rotate = !rotate;
+      printf("Hand rotation: %s\n", rotate ? "allowed" : "not allowed");
+    }
+   old_button=button;
+  }
 
   // set hand position
-  arr pos, quat;
+  arr pos, quat, pos_div;
+
+  //set an inital value to all of the old_* variables
+  if(!initialised){
+    copy(old_pos_rh, cal_pose_rh.sub(0,2));
+    copy(old_pos_lh, cal_pose_lh.sub(0,2));
+    old_pos_rh += ARR(0.6, 0., 1.);
+    old_pos_lh += ARR(0.6, 0., 1.);
+    copy(old_effpos_r, old_pos_rh);
+    copy(old_effpos_l, old_pos_lh);
+    initialised = true;
+  }
 
   ors::Quaternion orsquats = fmc.world.getShapeByName("endeffBase") -> X.rot;
 //  ors::Joint *trans = fmc.world.getJointByName("worldTranslationRotation");
 //  orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.} );
   ors::Quaternion orsquatsacc;
 
-  // right hand
-  copy(pos, cal_pose_rh.sub(0,2));
-  pos += ARR(0.6, 0., 1.);
-  if(effPosR) effPosR->setTarget(pos);
+  //update the movement of the right Hand
+  updateMovement(cal_pose_rh, old_pos_rh, old_effpos_r, effPosR);
 
-  // orientation
+  //orientation
   orsquatsacc.set(
       (double)cal_pose_rh(3),
       (double)cal_pose_rh(4),
       (double)cal_pose_rh(5),
       (double)cal_pose_rh(6));
   quat = conv_quat2arr(orsquats * orsquatsacc);
-  if(effOrientationR) effOrientationR->setTarget(quat);
+  if(rotate){
+    if(effOrientationR) effOrientationR->setTarget(quat);
+  }
 
-  //left hand
-  copy(pos, cal_pose_lh.sub(0,2));
-  pos += ARR(0.6, 0., 1.);
-  if(effPosL) effPosL->setTarget(pos);
+
+
+  //update the movement of the left Hand
+  updateMovement(cal_pose_lh, old_pos_lh, old_effpos_l, effPosL);
 
   // orientation
   orsquatsacc.set(

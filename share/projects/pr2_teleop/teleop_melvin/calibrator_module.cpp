@@ -7,105 +7,6 @@
 //////////////////////INIT THREAD/////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////Andrea CALI method////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
-/*void G4HutoRoMap::doinitandrea(tmpPoses,button)
-{
-  if (calibration_phase) {
-    if (button & BTN_B)
-    {
-      cout << "calibrating side" << endl;
-      posesSideR = mid.query(tmpPoses, STRING("/human/rh/index")).subRange(0, 2)-centerpos;
-      posesSideL = mid.query(tmpPoses, STRING("/human/lh/index")).subRange(0, 2)-centerpos;
-
-    }
-    else if (button & BTN_A)
-    {
-      cout << "calibrating open gripper" << endl;
-      posesOpen = tmpPoses;
-    }
-    else if (button & BTN_X)
-    {
-      cout << "calibrating closed gripper" << endl;
-      posesClosed = tmpPoses;
-    }
-    else if (button & BTN_Y)
-    {
-      cout <<"calibrating front gripper"<<endl;
-      posesFrontR = mid.query(tmpPoses, STRING("/human/rh/index")).subRange(0, 2)-centerpos;
-      posesFrontL = mid.query(tmpPoses, STRING("/human/lh/index")).subRange(0, 2)-centerpos;
-    }
-    else if (button & BTN_BACK
-             && posesSideR.N != 0
-             && posesSideL.N != 0
-             && posesFrontR.N != 0
-             && posesFrontL.N != 0
-             && posesOpen.N != 0
-             && posesClosed.N != 0)
-    {
-      cout << "calibrating done" << endl;
-      caliandrea();
-      calibration_phase = false;
-    }
-    else
-    {
-        cout<<"calibration is not done!"<<endl;
-    }
-  }
-  else {
-    // cout << "raw" << tmpPoses << endl;
-
-    if(button & BTN_START) {
-      cout << "calibrating start" << endl;
-      calibration_phase = true;
-      posesSideR.resize(0);
-      posesSideL.resize(0);
-      posesFrontR.resize(0);
-      posesFrontL.resize(0);
-      posesOpen.resize(0);
-      posesClosed.resize(0);
-    }
-  }
-}
-void G4HutoRoMap::caliandrea();
-{
-
-  arrf p_side_rh, p_side_lh;
-  arrf p_open, p_closed;
-  float dist_open, dist_closed;
-
-
-
-  shoulderR =
-  shoulderL =
-  radiusR_andrea = .5f * length(p_side_rh - p_side_lh);
-  radiusL_andrea = .5f * length(p_side_rh - p_side_lh);
-
-  // RIGHT GRIPPER
-  // ===========================================================================
-  p_open = mid.query(posesOpen, {"/human/rh/thumb", "/human/rh/index"}).cols(0, 3);
-  p_closed = mid.query(posesClosed, {"/human/rh/thumb", "/human/rh/index"}).cols(0, 3);
-  dist_open = length(p_open[0] - p_open[1]);
-  dist_closed = length(p_closed[0] - p_closed[1]);
-  m_rh_andrea  = 1 / (dist_open - dist_closed);
-  q_rh_andrea  = - dist_closed * m_rh;
-
-  // LEFT GRIPPER
-  // ===========================================================================
-  p_open = mid.query(posesOpen, {"/human/lh/thumb", "/human/lh/index"}).cols(0, 3);
-  p_closed = mid.query(posesClosed, {"/human/lh/thumb", "/human/lh/index"}).cols(0, 3);
-  dist_open = length(p_open[0] - p_open[1]);
-  dist_closed = length(p_closed[0] - p_closed[1]);
-  m_lh_andrea  = 1 / (dist_open - dist_closed);
-  q_lh_andrea  = - dist_closed * m_lh;
-
-}
-void G4HutoRoMap::transform_andrea()
-{
-
-}
-*/
 /////////////////////////////////////////////////////////////////////////////////////////
 void G4HutoRoMap::doinitpresaved(int button)
 {
@@ -135,6 +36,7 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
   return {(float)PosToRobot.x,(float)PosToRobot.y,(float)PosToRobot.z,(float)OrToRobot.w,
         (float)OrToRobot.x,(float)OrToRobot.y,(float)OrToRobot.z};
 }
+
 floatA transcenter(const floatA& tempData,const floatA& ref )
 {
   floatA TtempData(tempData);
@@ -294,8 +196,10 @@ void G4HutoRoMap::step(){
 
   //////////////////////////////////InPut Check////////////////////////////
   arr gpstate = gamepadState.get();
+
   CHECK(gpstate.N, "ERROR: No GamePad found");
   int button = gpstate(0);
+
   floatA tempData = g4_poses.get();
   floatA temp;
 
@@ -326,13 +230,15 @@ void G4HutoRoMap::step(){
 
   ///////////////////////////////////////////////////////////////////////
 
-  if(button & BTN_X)
+  if(button & BTN_X && !initialised)
+  //if(!teleop && counter>20)
   {
+    teleop=true;
     initphase = false;
     cout<<"---------TELEOP IS LIVE--------------"<<endl;
     initmapper.set() = initphase;
+    initialised = true;
   }
-
   decayed =true;
 
   doinitsendROS(tempData);
