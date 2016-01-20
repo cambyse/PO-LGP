@@ -197,7 +197,7 @@ void qDotRefInConstraint() {
   pr2->startInterface();
 
   //Go from actual position to the start position of the trajectory
-  arr trajStart = ARR(0.7,0.0,0.7);
+  arr trajStart = ARR(0.7,0.0,0.55);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
   TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
@@ -273,14 +273,17 @@ void qDotRefInConstraint() {
 
   controller->taskSpaceAccLaws.clear();
   controller->addLinTaskSpaceAccLaw(posLaw);
-  //controller->addLinTaskSpaceAccLaw(orientationLaw);
+  controller->addLinTaskSpaceAccLaw(orientationLaw);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
   controller->addLinTaskSpaceAccLaw(velLaw);
 
   controller->generateTaskSpaceSplines();
 
-  pr2->executeTrajectory(20.0);
+  pr2->executeTrajectory(10.0);
+  mlr::wait(0.5);
+  pr2->logState = false;
+  pr2->logStateSave("touchdown_6");
   modelWorld->watch(true, "Press to stop");
 
   pr2->~PR2Interface();
