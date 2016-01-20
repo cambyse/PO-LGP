@@ -42,11 +42,11 @@ void PhaseOptimization::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr
   //-- transition costs of phase: append to phi
   if (t<T) { phi.append( (x_bar(2,0) - 2.*x_bar(1,0) + x_bar(0,0))*w ); }
 
-  if(&tt) tt.append(sumOfSqrTT, n);
+  if(&tt) tt.append(sumOfSqrTT, phi.N);
 
   uint m=phi.N;
   CHECK_EQ(m,dim_phi(t),"");
-//  if(&tt) CHECK_EQ(m,tt.N,"");
+  if(&tt) CHECK_EQ(m,tt.N,"");
 
   if(&J){ //we also need to return the Jacobian
     J.resize(m,k+1,n).setZero();

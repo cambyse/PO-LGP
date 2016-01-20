@@ -490,3 +490,7 @@ void ActionSwigInterface::execScript(const char* filename){
   }
 }
 
+ors::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
+  ors::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
+  return frame;
+}

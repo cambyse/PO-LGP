@@ -4,10 +4,10 @@ OUTPUT := $(BASE)/lib/$(NAME).so
 
 ROS = 1
 <<<<<<< HEAD
-ROS_VERSION = groovy
+DEPEND = Core Hardware Hardware_gamepad Motion Ors Gui
 =======
->>>>>>> master
-DEPEND = Core System Hardware Hardware_gamepad Motion Ors Gui System
+DEPEND = Core Hardware Hardware_gamepad Motion Ors Gui System
+>>>>>>> PRcocka2
 
 #CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'
 

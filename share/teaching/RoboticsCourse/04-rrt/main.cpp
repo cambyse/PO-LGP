@@ -11,7 +11,8 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   Simulator *S;
   uint T;
   arr x0, xT;
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
+  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+
 
   uint get_T(){ return T; }
   uint get_k(){ return 2; }
@@ -197,22 +198,12 @@ void RTTplan(){
   q >>FILE("q.rrt");
 }
 
-int main(int argc,char **argv){
-  mlr::initCmdLine(argc,argv);
 
-  switch(mlr::getParameter<int>("mode", 1)){
-  case 0: RTTplan(); //break;
-    //  case 1: optim(); break;
-  }
 
-  return 0;
-}
-
-/*
 void optim(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
-  
+
   arr x;
   x <<FILE("q.rrt");
   uint T=x.d0-1;
@@ -260,7 +251,19 @@ void optim(){
 
 
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
+
+int main(int argc,char **argv){
+  mlr::initCmdLine(argc,argv);
+
+  switch(mlr::getParameter<int>("mode", 1)){
+  case 0: RTTplan();break;
+  case 1: optim(); break;
+  }
+
+  return 0;
+}
+
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar){//phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;
@@ -316,4 +319,4 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
     }
   }
 }
-*/
+
