@@ -110,7 +110,7 @@ void followTrajectory() {
   TaskMap* qDamping = new TaskMap_qItself();
   LinTaskSpaceAccLaw* qDampingLaw = new LinTaskSpaceAccLaw(qDamping, modelWorld);
   qDampingLaw->setC(eye(qDampingLaw->getPhiDim())*10.0);
-  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*5.0);
+  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
   controller->taskSpaceAccLaws.clear();
@@ -123,7 +123,7 @@ void followTrajectory() {
 
   pr2->executeTrajectory(30.0);
   mlr::wait(1.0);
-  pr2->logStateSave();
+  //pr2->logStateSave();
   modelWorld->watch(true, "Press to stop");
 
   pr2->~PR2Interface();
@@ -197,7 +197,7 @@ void qDotRefInConstraint() {
   pr2->startInterface();
 
   //Go from actual position to the start position of the trajectory
-  arr trajStart = ARR(0.7,0.0,0.7);
+  arr trajStart = ARR(0.7,0.0,0.55);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
   TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
@@ -235,7 +235,9 @@ void qDotRefInConstraint() {
   posLaw->setC(eye(3)*1000.0);
   arr Kp = eye(3)*10.0;
   Kp(2,2) = 0.0;
-  posLaw->setGains(Kp,eye(3)*5.0);
+  arr Kd = eye(3)*5.0;
+  Kd(2,2) = 0.0;
+  posLaw->setGains(Kp,Kd);
 
   TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
@@ -256,15 +258,17 @@ void qDotRefInConstraint() {
   TaskMap* qDamping = new TaskMap_qItself();
   LinTaskSpaceAccLaw* qDampingLaw = new LinTaskSpaceAccLaw(qDamping, modelWorld);
   qDampingLaw->setC(eye(qDampingLaw->getPhiDim())*10.0);
-  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*5.0);
+  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
   TaskMap* velMap = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* velLaw = new LinTaskSpaceAccLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(3)*1000.0);
-  velLaw->setGains(eye(3)*0.0, eye(3)*20.0);
+  arr KdVel = zeros(3,3);
+  KdVel(2,2) = 40.0;
+  velLaw->setGains(eye(3)*0.0, KdVel);
 
-  arr velTraj = repmat(~ARR(0.0,0.0,-.1), 3, 1);
+  arr velTraj = repmat(~ARR(0.0,0.0,-.05), 3, 1);
   velLaw->setTrajectory(3, NoArr, velTraj);
 
   controller->taskSpaceAccLaws.clear();
@@ -276,7 +280,10 @@ void qDotRefInConstraint() {
 
   controller->generateTaskSpaceSplines();
 
-  pr2->executeTrajectory(20.0);
+  pr2->executeTrajectory(10.0);
+  mlr::wait(0.5);
+  pr2->logState = false;
+  pr2->logStateSave("touchdown_6");
   modelWorld->watch(true, "Press to stop");
 
   pr2->~PR2Interface();
@@ -285,7 +292,7 @@ void qDotRefInConstraint() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  followTrajectory();
-  //qDotRefInConstraint();
+  //followTrajectory();
+  qDotRefInConstraint();
   return 0;
 }

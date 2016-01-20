@@ -35,6 +35,8 @@ void PR2Interface::step() {
   this->controller->calcOptimalControlProjected(Kp,Kd,u0); // TODO: what happens when changing the LAWs?
   this->sendCommand(u0, Kp, Kd);
 
+  cout << actMsg.fL(2) << endl;
+
   if(this->logState) {
     this->logQObs.append(~qRealWorld);
     this->logQDotObs.append(~qDotRealWorld);
@@ -202,7 +204,7 @@ void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double execut
     TaskMap* qTask = new TaskMap_qItself();
     LinTaskSpaceAccLaw* qLaw = new LinTaskSpaceAccLaw(qTask, this->modelWorld, "qLaw");
     qLaw->setC(eye(this->modelWorld->getJointStateDimension())*1000.0);
-    qLaw->setGains(eye(this->modelWorld->getJointStateDimension())*10.0, eye(this->modelWorld->getJointStateDimension())*5.0);
+    qLaw->setGains(eye(this->modelWorld->getJointStateDimension())*15.0, eye(this->modelWorld->getJointStateDimension())*5.0);
     qLaw->setTrajectory(traj.d0, traj);
 
     this->controller->taskSpaceAccLaws.clear();
@@ -309,8 +311,8 @@ void PR2Interface::logStateSave(mlr::String name, mlr::String folder) {
   if(this->logU0.N)write(LIST<arr>(this->logU0), STRING(folder << "u0" << "_" << name << ".dat"));
   if(this->logKp.N)write(LIST<arr>(this->logKp), STRING(folder << "Kp" << "_" << name << ".dat"));
   if(this->logKd.N)write(LIST<arr>(this->logKd), STRING(folder << "Kd" << "_" << name << ".dat"));
-  if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "FL" << "_" << name << ".dat"));
-  if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "FR" << "_" << name << ".dat"));
+  if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "FLObs" << "_" << name << ".dat"));
+  if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "FRObs" << "_" << name << ".dat"));
 
   for(auto m : this->logMap) {
     write(LIST<arr>(m.second), STRING(folder << m.first << "_" << name << ".dat"));
