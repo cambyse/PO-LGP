@@ -90,7 +90,7 @@ void TreeControllerClass::starting(){
   err = zeros(3);
   int_error = zeros(q.N);
   q_filt = 0.;
-  qd_filt = 0.95;
+  qd_filt = 0.97;
   gamma = 1.;
   velLimitRatio = effLimitRatio = 1.;
 }
