@@ -1,4 +1,0 @@
-## HEAD
-Merge head_pan_joint {  type=10 }
-Merge head_tilt_joint { type=10 }
-Merge laser_tilt_mount_joint { type=10 }
