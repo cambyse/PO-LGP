@@ -62,6 +62,7 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
   this->controller = controller;
 
   this->modelWorld = modelWorld;
+  this->modelWorld->meldFixedJoints();
   this->modelWorld->gl().title = "Model World";
   this->modelWorld->watch(false);
 
