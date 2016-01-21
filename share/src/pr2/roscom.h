@@ -40,8 +40,10 @@ void rosCheckInit(const char* module_name="pr2_module");
 bool rosOk();
 
 //-- ROS -> MLR
-ors::Transformation conv_pose2transformation(const tf::Transform&);
+ors::Transformation conv_transform2transformation(const tf::Transform&);
 ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
+ors::Vector         conv_point2vector(const geometry_msgs::Point& p);
+ors::Quaternion     conv_quaternion2quaternion(const geometry_msgs::Quaternion& q);
 void                conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);
 arr                 conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped &pose);
 double              conv_time2double(const ros::Time& time);

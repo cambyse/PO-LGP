@@ -20,7 +20,7 @@ void rosCheckInit(const char* module_name){
 }
 
 
-ors::Transformation conv_pose2transformation(const tf::Transform &trans){
+ors::Transformation conv_transform2transformation(const tf::Transform &trans){
   ors::Transformation X;
   X.setZero();
   tf::Quaternion q = trans.getRotation();
@@ -38,6 +38,14 @@ ors::Transformation conv_pose2transformation(const geometry_msgs::Pose &pose){
   X.rot.set(q.w, q.x, q.y, q.z);
   X.pos.set(t.x, t.y, t.z);
   return X;
+}
+
+ors::Vector conv_point2vector(const geometry_msgs::Point& p){
+  return ors::Vector(p.x, p.y, p.z);
+}
+
+ors::Quaternion conv_quaternion2quaternion(const geometry_msgs::Quaternion& q){
+  return ors::Quaternion(q.w, q.x, q.y, q.z);
 }
 
 void conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped& pose){
@@ -70,7 +78,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std::string&
   try{
     tf::StampedTransform transform;
     listener.lookupTransform(from, to, ros::Time(0), transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -86,7 +94,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
     tf::StampedTransform transform;
     listener.waitForTransform(from, to.frame_id, to.stamp, ros::Duration(0.05));
     listener.lookupTransform(from, to.frame_id, to.stamp, transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -94,7 +102,6 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
   }
   return X;
 }
-
 
 arr conv_points2arr(const std::vector<geometry_msgs::Point>& pts){
   uint n=pts.size();

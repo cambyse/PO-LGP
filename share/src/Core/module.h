@@ -90,6 +90,7 @@ struct Access{
   RevisionedAccessGatedClass *var;   ///< which variable does it access
   Access(const char* _name, Type *_type, Module *_module, RevisionedAccessGatedClass *_var):name(_name), type(_type), module(_module), var(_var){}
   virtual ~Access(){}
+  bool hasNewRevision(){ CHECK(var,"This Access has not been associated to any Variable"); return var->hasNewRevision(); }
   int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module); }
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }

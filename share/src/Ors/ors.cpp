@@ -777,7 +777,6 @@ void ors::KinematicWorld::analyzeJointStateDimensions() {
   qdim.resize(maxagent+1);
   qdim.setZero();
   for(Joint *j: joints) {
-    //CHECK(j->type!=JT_none,"joint type is uninitialized");
     if(!j->mimic){
       j->qIndex = qdim(j->agent);
       qdim(j->agent) += j->qDim();
