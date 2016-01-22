@@ -119,6 +119,23 @@ double LinTaskSpaceAccLaw::getCosts() {
 
 
 
+void ConstrainedTaskLaw::setForce(arr force) {
+  this->force = force;
+}
+
+arr ConstrainedTaskLaw::getForce() {
+  return this->force;
+}
+
+void ConstrainedTaskLaw::setAlpha(arr alpha) {
+  this->alpha = alpha;
+}
+
+arr ConstrainedTaskLaw::getAlpha() {
+  return this->alpha;
+}
+
+
 
 void TaskSpaceController::addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law) {
   this->taskSpaceAccLaws.append(law);
@@ -157,6 +174,26 @@ void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0)
   Kp = M*invA*Kp;
   Kd = M*invA*Kd;
   u0 = M*invA*u0 + F;
+}
+
+
+void TaskSpaceController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef) {
+  if(this->constrainedTaskLaw) {
+    DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(this->constrainedTaskLaw->map);
+    ors::Body* body = this->world->shapes(m->i)->body;
+    ors::Vector vec = this->world->shapes(m->i)->rel.pos;
+    ors::Shape* lFtSensor = this->world->getShapeByName("l_ft_sensor");
+    arr y, J, J_ft;
+    this->constrainedTaskLaw->getPhi(y, J);
+    this->world->kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
+    J_ft_inv = ~conv_vec2arr(m->ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+    K_ft = ~J*this->constrainedTaskLaw->getAlpha();
+    fRef = this->constrainedTaskLaw->getForce();
+  } else {
+    K_ft = zeros(this->world->getJointStateDimension());
+    fRef = ARR(0.0);
+    J_ft_inv = zeros(1,6);
+  }
 }
 
 

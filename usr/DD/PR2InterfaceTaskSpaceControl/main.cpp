@@ -371,7 +371,7 @@ void qDotRefInConstraintAndSlide() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  /*TaskMap* velMap = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* velLaw = new LinTaskSpaceAccLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(3)*1000.0);
   arr KdVel = zeros(3,3);
@@ -379,14 +379,25 @@ void qDotRefInConstraintAndSlide() {
   velLaw->setGains(eye(3)*0.0, KdVel);
 
   arr velTraj = repmat(~ARR(0.0,0.0,-.05), 3, 1);
+  */
+
+  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,1.0));
+  ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
+  velLaw->setC(eye(1)*1000.0);
+  velLaw->setGains(eye(1)*0.0, eye(1)*20.0);
+  velLaw->setForce(ARR(-2.0));
+  velLaw->setAlpha(ARR(0.0));
+  controller->constrainedTaskLaw = velLaw;
+  arr velTraj = repmat(ARR(-.1), 3, 1);
+
   velLaw->setTrajectory(3, NoArr, velTraj);
 
-  TaskMap* gazeAtMap = new DefaultTaskMap(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
+ /* TaskMap* gazeAtMap = new DefaultTaskMap(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
   LinTaskSpaceAccLaw* gazeAtLaw = new LinTaskSpaceAccLaw(gazeAtMap, modelWorld);
   gazeAtLaw->setC(eye(2)*1000.0);
   gazeAtLaw->setGains(eye(2)*10.0,eye(2)*5.0);
   gazeAtLaw->setTrajectory(3, zeros(3,2));
-
+*/
   controller->taskSpaceAccLaws.clear();
   controller->addLinTaskSpaceAccLaw(posLaw);
   controller->addLinTaskSpaceAccLaw(orientationLaw);

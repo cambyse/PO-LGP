@@ -74,17 +74,32 @@ struct LinTaskSpaceAccLaw {
 };
 
 
+struct ConstrainedTaskLaw : LinTaskSpaceAccLaw {
+
+  arr force;
+  arr alpha;
+  ConstrainedTaskLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "") : LinTaskSpaceAccLaw(map, world, name) {}
+  void setForce(arr force);
+  arr getForce();
+  void setAlpha(arr alpha);
+  arr getAlpha();
+
+};
+
 struct TaskSpaceController {
   mlr::Array<LinTaskSpaceAccLaw*> taskSpaceAccLaws;
   ors::KinematicWorld* world;
 
   bool gravity = false;
 
+  ConstrainedTaskLaw* constrainedTaskLaw = NULL;
+
   TaskSpaceController(ors::KinematicWorld* world) : world(world) {}
   ~TaskSpaceController() {}
 
   void addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law);
   void calcOptimalControlProjected(arr& Kp, arr& Kd, arr& u0);
+  void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef);
   void generateTaskSpaceTrajectoryFromJointSpace(const arr& jointSpaceTrajectory, const arr& jointSpaceTrajectoryDot = NoArr, const arr& jointSpaceDDotTrajectory = NoArr);
   void generateTaskSpaceSplines();
 

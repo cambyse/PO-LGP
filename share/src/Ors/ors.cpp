@@ -2697,6 +2697,37 @@ void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::Kinemat
 }
 
 
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  uint numberOfColumns = KI_ft_From.d1;
+  if(KI_ft_From.d1 == 0) {
+    numberOfColumns = 1;
+    KI_ft_To = zeros(to.getJointStateDimension());
+  } else {
+    KI_ft_To = zeros(to.getJointStateDimension(), KI_ft_From.d1);
+  }
+
+  intA match(KI_ft_From.d0);
+  match = -1;
+  for(ors::Joint* jfrom : from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) {
+    for(uint j=0;j < numberOfColumns;j++){
+      if(numberOfColumns > 1) {
+        KI_ft_To(match(i), j) = KI_ft_From(i,j);
+      } else {
+        KI_ft_To(match(i)) = KI_ft_From(i);
+      }
+    }
+  }
+}
+
 //===========================================================================
 //-- template instantiations
 

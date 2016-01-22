@@ -22,7 +22,7 @@ struct PR2Interface : Module {
   CtrlMsg ctrlMsg;
 
   bool logState = true;
-  arr logQRef, logQObs, logQDotRef, logQDotObs, logU0, logKp, logKd, logFLObs, logFRObs;
+  arr logQRef, logQObs, logQDotRef, logQDotObs, logU0, logKp, logKd, logFLObs, logFRObs, logKiFt, logJ_ft_inv, logFRef;
   std::map<mlr::String, arr> logMap;
 
   bool useROS = false;
@@ -34,7 +34,7 @@ struct PR2Interface : Module {
   void initialize(ors::KinematicWorld* realWorld, ors::KinematicWorld* realWorldSimulation, ors::KinematicWorld* modelWorld, TaskSpaceController* controller = NULL);
   void initialize(ors::KinematicWorld* realWorld, ors::KinematicWorld* modelWorld, TaskSpaceController* controller = NULL);
   void startInterface();
-  void sendCommand(arr u0, arr Kp, arr Kd);
+  void sendCommand(const arr& u0, const arr& Kp, const arr& Kd, const arr& K_ft, const arr& J_ft_inv, const arr& fRef);
   void goToPosition(arr pos, double executionTime = 10.0);
   void goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double executionTime = 10.0, bool useMotionPlanner = true);
   void goToTask(TaskMap* map, arr ref, double executionTime = 10.0);

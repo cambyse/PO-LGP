@@ -1,5 +1,5 @@
-#ifndef DYNAMICSIMULATION_H
-#define DYNAMICSIMULATION_H
+#ifndef PR2DYNAMICSIMULATION_H
+#define PR2DYNAMICSIMULATION_H
 
 #include <Core/array.h>
 #include <Core/module.h>
@@ -17,6 +17,8 @@ struct DynamicSimulation : Module {
 
   bool gravity;
 
+  arr ftErrInt;
+
   void initializeSimulation(ors::KinematicWorld* world, bool gravity = false);
   void startSimulation(bool start = true);
 
@@ -25,4 +27,4 @@ struct DynamicSimulation : Module {
   void setQ();
 };
 
-#endif // DYNAMICSIMULATION_H
+#endif // PR2DYNAMICSIMULATION_H

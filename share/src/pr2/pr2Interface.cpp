@@ -33,7 +33,11 @@ void PR2Interface::step() {
   //TODO if there is no law, maybe a jointSpace law should be there with low gains?
   arr u0, Kp, Kd;
   this->controller->calcOptimalControlProjected(Kp,Kd,u0); // TODO: what happens when changing the LAWs?
-  this->sendCommand(u0, Kp, Kd);
+
+  arr K_ft, J_ft_inv, fRef;
+  this->controller->calcForceControl(K_ft, J_ft_inv, fRef);
+
+  this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef);
 
   cout << actMsg.fL(2) << endl;
 
@@ -91,7 +95,7 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
 
     //TODO initMsg should contain gains?
     CtrlMsg initMsg;
-    initMsg.fL = zeros(6);
+    initMsg.fL = zeros(1);
     initMsg.KiFT.clear();
     initMsg.J_ft_inv.clear();
     initMsg.u_bias = zeros(this->realWorld->getJointStateDimension());
@@ -115,6 +119,29 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
     this->realWorld->gl().title = "Real World Simulated";
     this->dynamicSimulation = new DynamicSimulation();
     threadOpenModules(true);
+
+
+    CtrlMsg initMsg;
+    initMsg.fL = zeros(1);
+    initMsg.KiFT.clear();
+    initMsg.J_ft_inv.clear();
+    initMsg.u_bias = zeros(this->realWorld->getJointStateDimension());
+    initMsg.Kp = ARR(0.0);
+    initMsg.Kd = ARR(0.0);
+    initMsg.Ki = ARR(0.0);
+    initMsg.gamma = 1.;
+    initMsg.velLimitRatio = .1;
+    initMsg.effLimitRatio = 1.;
+    initMsg.intLimitRatio = 0.8;
+
+    initMsg.q = this->realWorld->getJointState();
+    initMsg.qdot = zeros(this->realWorld->getJointStateDimension());
+
+    this->ctrlMsg = initMsg;
+
+    this->ctrl_ref.set() = ctrlMsg;
+
+
     this->dynamicSimulation->initializeSimulation(new ors::KinematicWorld(*this->realWorld));
     this->dynamicSimulation->startSimulation();
   }
@@ -139,13 +166,21 @@ void PR2Interface::startInterface() {
   cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
 }
 
-void PR2Interface::sendCommand(arr u0, arr Kp, arr Kd) {
+void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, const arr& K_ft, const arr& J_ft_inv, const arr& fRef) {
   arr u0RealWorld, KpRealWorld, KdRealWorld, qRefRealWorld, qDotRefRealWorld;
   transferU0BetweenTwoWorlds(u0RealWorld, u0, *this->realWorld, *this->modelWorld);
   transferKpBetweenTwoWorlds(KpRealWorld, Kp, *this->realWorld, *this->modelWorld);
   transferKdBetweenTwoWorlds(KdRealWorld, Kd, *this->realWorld, *this->modelWorld);
   transferQbetweenTwoWorlds(qRefRealWorld, zeros(modelWorld->getJointStateDimension()), *this->realWorld, *this->modelWorld);
   transferQDotbetweenTwoWorlds(qDotRefRealWorld, zeros(modelWorld->getJointStateDimension()), *this->realWorld, *this->modelWorld);
+
+  arr KiFtRealWorld;
+  if(&K_ft && &J_ft_inv && &fRef) {
+    transferKI_ft_BetweenTwoWorlds(KiFtRealWorld, K_ft, *this->realWorld, *this->modelWorld);
+    this->ctrlMsg.KiFT = KiFtRealWorld;
+    this->ctrlMsg.J_ft_inv = J_ft_inv;
+    this->ctrlMsg.fL = fRef;
+  }
 
   this->ctrlMsg.u_bias = u0RealWorld;
   this->ctrlMsg.Kp = KpRealWorld;
@@ -159,10 +194,13 @@ void PR2Interface::sendCommand(arr u0, arr Kp, arr Kd) {
 
   if(logState) {
     this->logU0.append(~u0RealWorld);
-    this->logKp.append(~KpRealWorld);
-    this->logKd.append(~KdRealWorld);
+    this->logKp.append(KpRealWorld);
+    this->logKd.append(KdRealWorld);
+    this->logKiFt.append(~KiFtRealWorld); //TODO what if matrix is not 1xqDim dimensional?
     this->logQRef.append(~qRefRealWorld);
     this->logQDotRef.append(~qDotRefRealWorld);
+    this->logJ_ft_inv.append(J_ft_inv);
+    this->logFRef.append(~fRef);
   }
 }
 
@@ -175,7 +213,7 @@ void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double execut
     ors::KinematicWorld copiedWorld(*this->modelWorld);
     MotionProblem MP(copiedWorld);
 
-    MP.x0 = modelWorld->getJointState();
+    MP.x0 = modelWorld->getJointState(); //TODO nix modelWorld, copiedWorld?
 
     Task *t;
     t = MP.addTask("transitions", new TransitionTaskMap(MP.world));
@@ -312,6 +350,9 @@ void PR2Interface::logStateSave(mlr::String name, mlr::String folder) {
   if(this->logU0.N)write(LIST<arr>(this->logU0), STRING(folder << "u0" << "_" << name << ".dat"));
   if(this->logKp.N)write(LIST<arr>(this->logKp), STRING(folder << "Kp" << "_" << name << ".dat"));
   if(this->logKd.N)write(LIST<arr>(this->logKd), STRING(folder << "Kd" << "_" << name << ".dat"));
+  if(this->logKiFt.N)write(LIST<arr>(this->logKiFt), STRING(folder << "KiFt" << "_" << name << ".dat"));
+  if(this->logJ_ft_inv.N)write(LIST<arr>(this->logJ_ft_inv), STRING(folder << "J_ft_inv" << "_" << name << ".dat"));
+  if(this->logFRef.N)write(LIST<arr>(this->logFRef), STRING(folder << "fRef" << "_" << name << ".dat"));
   if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "FLObs" << "_" << name << ".dat"));
   if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "FRObs" << "_" << name << ".dat"));
 
@@ -329,6 +370,9 @@ void PR2Interface::clearLog() {
   this->logU0.clear();
   this->logKp.clear();
   this->logKd.clear();
+  this->logKiFt.clear();
+  this->logJ_ft_inv.clear();
+  this->logFRef.clear();
   this->logFLObs.clear();
   this->logFRObs.clear();
   logMap.clear();

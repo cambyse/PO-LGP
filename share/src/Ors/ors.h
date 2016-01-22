@@ -415,6 +415,7 @@ void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::K
 void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
 void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
 void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
 
 //===========================================================================
 // routines using external interfaces.
