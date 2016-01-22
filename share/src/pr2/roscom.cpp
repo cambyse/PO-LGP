@@ -19,6 +19,15 @@ void rosCheckInit(const char* module_name){
   mutex.unlock();
 }
 
+std_msgs::String conv_string2string(const mlr::String& str){
+  std_msgs::String msg;
+  if(str.N) msg.data = str.p;
+  return msg;
+}
+
+mlr::String conv_string2string(const std_msgs::String& msg){
+  return mlr::String(msg.data);
+}
 
 ors::Transformation conv_transform2transformation(const tf::Transform &trans){
   ors::Transformation X;
@@ -508,5 +517,4 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
-
 

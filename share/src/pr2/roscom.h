@@ -39,7 +39,9 @@ struct CtrlMsg{
 void rosCheckInit(const char* module_name="pr2_module");
 bool rosOk();
 
-//-- ROS -> MLR
+//-- ROS <--> MLR
+std_msgs::String    conv_string2string(const mlr::String&);
+mlr::String         conv_string2string(const std_msgs::String&);
 ors::Transformation conv_transform2transformation(const tf::Transform&);
 ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
 ors::Vector         conv_point2vector(const geometry_msgs::Point& p);
@@ -200,7 +202,7 @@ struct PublisherConv : Module{
   }
   void open(){
     nh = new ros::NodeHandle;
-    pub = nh->advertise<marc_controller_pkg::JointState>(topic_name, 1);
+    pub = nh->advertise<msg_type>(topic_name, 1);
   }
   void step(){
     pub.publish(conv(access.get()));

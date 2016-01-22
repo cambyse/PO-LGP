@@ -47,7 +47,7 @@ struct SwigSystem {
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-  OrsViewer orsviewer;
+//  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 

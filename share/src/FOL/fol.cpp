@@ -250,6 +250,11 @@ Node* createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subs
 }
 
 bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Graph* subst_scope, Graph& changes){
+  if(!literal->parents.N){
+    LOG(-1) <<"trying to apply () literal. aborting" <<endl;
+    return false;
+  }
+
   bool trueValue=true; //check if the literal is negated
   if(literal->getValueType()==typeid(bool)){
     if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
