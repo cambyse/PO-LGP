@@ -6,8 +6,8 @@
 #include <Core/util.h>
 #include <Gui/plot.h>
 
-#include "PR2Interface.h"
-#include "Controller.h"
+#include <pr2/pr2Interface.h>
+#include <Control/taskSpaceController.h>
 
 void changeAlpha(void*){  orsDrawAlpha = 1.; }
 

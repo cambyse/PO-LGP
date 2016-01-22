@@ -1,4 +1,4 @@
-#include "DynamicSimulation.h"
+#include "pr2DynamicSimulation.h"
 
 void DynamicSimulation::setWorld(ors::KinematicWorld *world) {
   this->world = world;

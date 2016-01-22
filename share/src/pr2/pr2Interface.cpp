@@ -1,4 +1,4 @@
-#include "PR2Interface.h"
+#include "pr2Interface.h"
 
 #include <stdlib.h>
 #include <pr2/roscom.h>

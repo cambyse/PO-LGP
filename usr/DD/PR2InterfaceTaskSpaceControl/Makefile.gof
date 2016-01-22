@@ -2,8 +2,8 @@ BASE = ../../../share
 
 ROS = 1
 
-OBJS = main.o DynamicSimulation.o Controller.o PR2Interface.o
+#OBJS = main.o DynamicSimulation.o Controller.o PR2Interface.o
 
-DEPEND = Core Hardware_gamepad Motion Ors Gui pr2 Optim Geo Algo
+DEPEND = Core Hardware_gamepad Motion Ors Gui pr2 Optim Geo Algo Control
 
 include $(BASE)/gofMake/generic.mk

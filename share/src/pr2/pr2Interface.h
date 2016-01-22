@@ -5,9 +5,8 @@
 #include <Core/array.h>
 #include <pr2/roscom.h>
 #include <Ors/ors.h>
-
-#include "DynamicSimulation.h"
-#include "Controller.h"
+#include <pr2/pr2DynamicSimulation.h>
+#include <Control/taskSpaceController.h>
 
 struct PR2Interface : Module {
   ACCESS(CtrlMsg, ctrl_ref)
