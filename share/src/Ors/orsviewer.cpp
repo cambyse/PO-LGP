@@ -29,13 +29,15 @@ void OrsViewer::step(){
 //===========================================================================
 
 void OrsPathViewer::step(){
-  gl.lock.writeLock();
-  if(q.hasNewRevision() || switches.hasNewRevision()){
-    if(model.hasNewRevision()) copy = model.get();
-
-  }
-
-  gl.lock.unlock();
+  copy.gl().lock.writeLock();
+  configurations.readAccess();
+  uint T=configurations().N;
+  if(t>=T) t=0;
+  if(T) copy.copy(*configurations()(t), true);
+  t++;
+  configurations.deAccess();
+  copy.gl().lock.unlock();
+  if(T) copy.gl().update(STRING(" (time " <<t <<'/' <<T <<')').p, false, false, true);
 }
 
 //===========================================================================

@@ -30,20 +30,21 @@ struct OrsViewer : Module{
 //===========================================================================
 
 struct OrsPathViewer : Module{
-  Access_typed<ors::KinematicWorld> model;
-  Access_typed<arr> q;
-  Access_typed<KinematicSwitchL> switches;
+  Access_typed<WorldL> configurations;
   //-- internal (private)
-  OpenGL gl;
   ors::KinematicWorld copy;
-  WorldL configurations;
   uint t;
+
+  void setConfigurations(const WorldL& cs){
+    configurations.writeAccess();
+    listResize(configurations(), cs.N);
+    for(uint i=0;i<cs.N;i++) configurations()(i)->copy(*cs(i), true);
+    configurations.deAccess();
+  }
 
   OrsPathViewer()
     : Module("OrsPathViewer", .2),
-      model(this, "path_model", true),
-      q(this, "path_q", true),
-      switches(this, "path_switches", true){}
+      configurations(this, "path_configurations", true){}
   ~OrsPathViewer(){}
   void open() {}
   void step();

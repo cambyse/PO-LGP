@@ -62,7 +62,7 @@ EffectiveKinematicsRule {
      { (Pick Hand Obj) }
      { (EqualZero GJK Hand Obj){ scale=100 }
        (MakeJoint delete Obj)
-       (MakeJoint rigid Hand Obj)
+       (MakeJoint rigidZero Hand Obj)
      }
 }
 
@@ -72,7 +72,7 @@ EffectiveKinematicsRule {
      { (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
        (MinSumOfSqr posDiff Obj Onto){ target=[0 0 .5] scale=10 }
        (MakeJoint delete Hand Obj)
-       (MakeJoint transXYPhi Onto Obj)
+       (MakeJoint transXYPhiZero Onto Obj)
        (MinSumOfSqr vec Obj){ vec1=[0 0 1] target=[0 0 1] scale=100}
      }
 }
@@ -106,19 +106,6 @@ SeqProblemRule {
 #    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
   }
 }
-
-#SeqProblemRule {
-#  Hand, Obj, Onto
-#  { (Release Hand Obj Onto) }
-#  { (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
-#    (MinSumOfSqr qZeroVels){ order=1 scale=1e2 }
-##    (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
-#    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1 } #1/2 metre above the thing
-#    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
-#    (MakeJoint delete Hand Obj){ time=1 }
-#    (MakeJoint transXYPhi Onto Obj){ time=1 }
-#  }
-#}
 
 # =============================================================================
 

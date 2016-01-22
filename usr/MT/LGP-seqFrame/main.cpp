@@ -23,10 +23,11 @@ void LGPexample(){
 
   uintA decisions = {0u,3,2,4};
 
+  node->expand();
   for(uint s=0;s<decisions.N;s++){
-    node->expand();
 
     node = node->children(decisions(s));
+    node->expand();
     node->solvePoseProblem();
 
     display=node->effKinematics;
@@ -53,35 +54,42 @@ void LGPplayer(){
   system("evince z.pdf &");
 
   OrsViewer poseView;
-  OrsViewer seqView;
+  OrsPathViewer seqView;
   threadOpenModules(true);
 
-  for(bool go=true;go;){
+  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
+  bool interactive=true;
+
+  bool go=true;
+  for(uint s=0;go;s++){
     //-- display stuff
     if(node->poseProblem.configurations.N)
-      poseView.modelWorld.set()=*node->poseProblem.configurations(0);
-    if(node->seqProblem.configurations.N)
-      seqView.modelWorld.set()=*node->poseProblem.configurations(0);
+      poseView.modelWorld.set() = *node->poseProblem.configurations(0);
+    if(node->seqProblem.configurations.N){
+      seqView.setConfigurations(node->seqProblem.configurations);
+    }
     root.getGraph().writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
     system("dot -Tpdf z.dot > z.pdf");
 
     //-- query UI
-    cout <<"********************" <<endl;
-    cout <<"NODE: " <<*node <<endl;
-    cout <<"--------------------" <<endl;
-    cout <<"\nCHOICES:" <<endl;
-    cout <<"(q) quit" <<endl;
-    cout <<"(u) up" <<endl;
-    cout <<"(p) pose problem" <<endl;
-    cout <<"(s) sequence problem" <<endl;
-    cout <<"(x) path problem" <<endl;
-    uint c=0;
-    for(ManipulationTree_Node* a:node->children){
-      cout <<"(" <<c++ <<") DECISION: " <<*a->folDecision <<endl;
+    if(interactive){
+      cout <<"********************" <<endl;
+      cout <<"NODE:\n" <<*node <<endl;
+      cout <<"--------------------" <<endl;
+      cout <<"\nCHOICES:" <<endl;
+      cout <<"(q) quit" <<endl;
+      cout <<"(u) up" <<endl;
+      cout <<"(p) pose problem" <<endl;
+      cout <<"(s) sequence problem" <<endl;
+      cout <<"(x) path problem" <<endl;
+      uint c=0;
+      for(ManipulationTree_Node* a:node->children){
+        cout <<"(" <<c++ <<") DECISION: " <<*a->folDecision <<endl;
+      }
     }
 
-    char cmd='u';
-    std::cin >>cmd;
+    char cmd='q';
+    if(interactive) std::cin >>cmd; else cmd=cmds(s);
     cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
     if(cmd>='0' && cmd<='9'){
@@ -108,8 +116,10 @@ int main(int argc,char **argv){
 //  rnd.clockSeed();
   rnd.seed(mlr::getParameter<int>("seed",0));
 
-//  LGPexample();
-  LGPplayer();
+  switch(mlr::getParameter<int>("mode",1)){
+    case 0: LGPexample(); break;
+    case 1: LGPplayer(); break;
+  }
 
   return 0;
 }
