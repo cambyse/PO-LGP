@@ -87,7 +87,7 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
-  err = zeros(3);
+  err = zeros(1);
   int_error = zeros(q.N);
   q_filt = 0.;
   qd_filt = 0.97;
@@ -235,13 +235,13 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   u_bias = conv_stdvec2arr(msg->u_bias);
   fL_ref = conv_stdvec2arr(msg->fL);
   fR_ref = conv_stdvec2arr(msg->fR);
-  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
+  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(fL_ref.d0,6);
 #define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kp);
   CP(Kd);
 #undef CP
   Ki = conv_stdvec2arr(msg->Ki);
-  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
+  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, fL_ref.d0);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   intLimitRatio = msg->intLimitRatio;
