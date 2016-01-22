@@ -32,6 +32,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   KiFT.clear();
   Ki.clear();
   limits.resize(world.q.N,5).setZero();
+ // J_ft_inv.clear();
 
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
