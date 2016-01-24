@@ -16,8 +16,6 @@ struct RelationalMachineNode{
   ros::Subscriber sub_newEffect;
 
   RelationalMachineNode():RM("machine.fol"){
-    //RM.verbose=true;
-
     pub_state     = nh.advertise<std_msgs::String>("/RelationalMachine/state", 10, true);
     pub_command   = nh.advertise<std_msgs::String>("/RelationalMachine/command", 10, true);
     pub_symbols   = nh.advertise<std_msgs::String>("/RelationalMachine/symbols", 10, true);
@@ -59,20 +57,17 @@ struct RelationalMachineNode{
     publishState();
   }
 
-  void cb_newEffect(const std_msgs::String::ConstPtr& msg);
+  void cb_newEffect(const std_msgs::String::ConstPtr& msg){
+    mlr::String effect = msg->data.c_str();
+    cout <<"received new effect '" <<effect <<"'" <<endl;
+    if(!effect.N) return;
+    RM_lock.writeLock();
+    RM.applyEffect(effect);
+    RM_lock.unlock();
+    fwdChainRules();
+  }
 
 };
-
-//===========================================================================
-
-void RelationalMachineNode::cb_newEffect(const std_msgs::String::ConstPtr& msg){
-  mlr::String effect = msg->data.c_str();
-  if(!effect.N) return;
-  RM_lock.writeLock();
-  RM.applyEffect(effect);
-  RM_lock.unlock();
-  fwdChainRules();
-}
 
 //===========================================================================
 

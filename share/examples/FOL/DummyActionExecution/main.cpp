@@ -31,18 +31,19 @@ void DummyActionExecutionNode::cb_newSymbols(const std_msgs::String::ConstPtr &m
 int main(int argc, char** argv) {
   ros::init(argc, argv, "DummyActionExecutionNode");
 
-  Access_typed<mlr::String> effects(NULL, "effects", false);
-  DummyActionExecutionNode AEnode;
   RosCom_Spinner spinner;
-  PublisherConv<std_msgs::String, mlr::String, &conv_string2string> pub("/RelationalMachine/effect", effects);
+
+  ros::NodeHandle nh;
+  ros::Publisher pub_effect = nh.advertise<std_msgs::String>("/RelationalMachine/effect", 1);
 
   threadOpenModules(true);
 
   mlr::wait(1);
 
-  effects.set() = "(alignHand conv) (positionHand conv)";
-  mlr::wait(1);
-  effects.set() = "(lowerHand conv)";
+  pub_effect.publish(conv_string2string("(alignHand conv) (positionHand conv)"));
+//  effects.set() = "(alignHand conv) (positionHand conv)";
+//  mlr::wait(1);
+//  effects.set() = "(lowerHand conv)";
   //    case 3: effect.data = "(controlForce timeout)";  break;
   //    case 4: effect.data = "(homing conv)";  break;
   //    case 5: effect.data = "(undefined)";  break;
