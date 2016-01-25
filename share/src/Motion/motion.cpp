@@ -29,9 +29,9 @@
 //===========================================================================
 
 void Task::setCostSpecs(uint fromTime,
-                            uint toTime,
-                            const arr& _target,
-                            double _prec){
+                        uint toTime,
+                        const arr& _target,
+                        double _prec){
   if(&_target) target = _target; else target = {0.};
   CHECK(toTime>=fromTime,"");
   prec.resize(toTime+1).setZero();

@@ -60,8 +60,8 @@ void LGPplayer(){
   threadOpenModules(true);
 
 //  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
-  charA cmds={ '2', 'p', '4', 'p', 's', 'q' };
-  bool interactive=true;
+  charA cmds={ '1', '4', 'x', 'q' };
+  bool interactive=false;
 
   bool go=true;
   for(uint s=0;go;s++){
@@ -105,7 +105,7 @@ void LGPplayer(){
       case 'u': if(node->parent) node = node->parent; break;
       case 'p': node->solvePoseProblem(); break;
       case 's': node->solveSeqProblem(); break;
-      case 'x': node->solvePathProblem(10); break;
+      case 'x': node->solvePathProblem(20); break;
       default: LOG(-1) <<"command '" <<cmd <<"' not known";
     }
   }
