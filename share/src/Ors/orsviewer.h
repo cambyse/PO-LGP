@@ -42,11 +42,11 @@ struct OrsPathViewer : Module{
     configurations.deAccess();
   }
 
-  OrsPathViewer()
+  OrsPathViewer(const char* varname)
     : Module("OrsPathViewer", .2),
-      configurations(this, "path_configurations", true){}
+      configurations(this, varname, true){}
   ~OrsPathViewer(){}
-  void open() {}
+  void open();
   void step();
   void close() {}
 };

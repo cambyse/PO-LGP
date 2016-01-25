@@ -1654,9 +1654,9 @@ void ors::KinematicWorld::prefixNames() {
 }
 
 /// return a OpenGL extension
-OpenGL& ors::KinematicWorld::gl(){
+OpenGL& ors::KinematicWorld::gl(const char* window_title){
   if(!s->gl){
-    s->gl = new OpenGL;
+    s->gl = new OpenGL(window_title);
     s->gl->add(glStandardScene, 0);
     s->gl->addDrawer(this);
     s->gl->camera.setDefault();

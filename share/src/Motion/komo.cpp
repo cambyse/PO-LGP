@@ -144,6 +144,9 @@ void KOMO::checkGradients(){
 }
 
 void KOMO::displayTrajectory(double delay){
+#if 1
+  MP->displayTrajectory(1, "KOMO planned trajectory", delay);
+#else
   if(MP->T){
     ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
   //  orsDrawProxies=true;
@@ -157,6 +160,7 @@ void KOMO::displayTrajectory(double delay){
     world.gl().watch("KOMO InvKin mode");
   }
   // if(wait) MP->world.gl().watch();
+#endif
 }
 
 //===========================================================================

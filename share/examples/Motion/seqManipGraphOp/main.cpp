@@ -20,8 +20,7 @@ void TEST(PickAndPlace){
   G.setJointState(G.q);
 
   MotionProblem MP(G);
-  MotionProblemFunction MF(MP);
-  arr x = replicate(MP.x0, MP.T+1);
+  arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   uint pickTime=MP.T/2, placeTime=MP.T;
@@ -116,7 +115,7 @@ void TEST(PickAndPlace){
 
   //-- optimize
   for(uint k=0;k<1;k++){
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
+    optNewton(x, Convert(MP), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
 //    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopEvals=200, maxStep=.1, stepInc=1.1, stepDec=0.7 , aulaMuInc=1.2, damping=1., allowOverstep=true));
   }
   MP.costReport();
@@ -132,11 +131,12 @@ void TEST(PickAndPlace){
 void komoVersion(){
   Graph specs("specs.g");
   KOMO komo(specs);
-  komo.MP->x0 += .3;
-  komo.MP->world.setJointState(komo.MP->x0);
+  arr q=komo.MP->world.getJointState();
+  q += .3;
+  komo.MP->world.setJointState(q);
   komo.reset();
   komo.MP->reportFull(true);
-  optNewton(komo.x, Convert(*komo.MPF), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
+  optNewton(komo.x, Convert(*komo.MP), OPT(verbose=2, stopIters=100, maxStep=.1, stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
 //  komo.run();
   komo.MP->costReport(true);
   for(;;)

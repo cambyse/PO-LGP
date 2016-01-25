@@ -60,7 +60,10 @@ DecisionRule Release {
 EffectiveKinematicsRule {
      Hand, Obj
      { (Pick Hand Obj) }
-     { (EqualZero GJK Hand Obj){ scale=100 }
+     {
+#       (EqualZero GJK Hand Obj){ scale=100 } #this describes touch, nice, but not consistent with others
+       (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
+       (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
        (MakeJoint delete Obj)
        (MakeJoint rigidZero Hand Obj)
      }
@@ -83,7 +86,7 @@ SeqProblemRule {
   Hand, Obj
   { (Pick Hand Obj) }
   { (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
-    (MinSumOfSqr qZeroVels){ order=1 time=[0 1] scale=1e3 }
+#    (MinSumOfSqr qZeroVels){ order=1 time=[0 1] scale=1e3 }
     (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MakeJoint delete Obj){ time=1 }

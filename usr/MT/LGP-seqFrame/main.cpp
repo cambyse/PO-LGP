@@ -34,10 +34,11 @@ void LGPexample(){
     display.watch(false);
   }
 
-  node->solveSeqProblem();
+  node->solveSeqProblem(2);
+//  node->solvePathProblem(20);
 
   root.getGraph().writeDot(FILE("z.dot"));
-  system("dot -Tpdf z.dot > z.pdf; evince z.pdf;");
+  system("dot -Tpdf z.dot > z.pdf; evince z.pdf &");
   cout <<"BYE BYE" <<endl;
 }
 
@@ -54,10 +55,12 @@ void LGPplayer(){
   system("evince z.pdf &");
 
   OrsViewer poseView;
-  OrsPathViewer seqView;
+  OrsPathViewer seqView("sequence");
+  OrsPathViewer pathView("path");
   threadOpenModules(true);
 
-  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
+//  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
+  charA cmds={ '2', 'p', '4', 'p', 's', 'q' };
   bool interactive=true;
 
   bool go=true;
@@ -65,9 +68,11 @@ void LGPplayer(){
     //-- display stuff
     if(node->poseProblem.configurations.N)
       poseView.modelWorld.set() = *node->poseProblem.configurations(0);
-    if(node->seqProblem.configurations.N){
+    if(node->seqProblem.configurations.N)
       seqView.setConfigurations(node->seqProblem.configurations);
-    }
+    if(node->pathProblem.configurations.N)
+      pathView.setConfigurations(node->pathProblem.configurations);
+
     root.getGraph().writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
     system("dot -Tpdf z.dot > z.pdf");
 
@@ -105,6 +110,7 @@ void LGPplayer(){
     }
   }
 
+  mlr::wait();
   threadCloseModules();
   cout <<"BYE BYE" <<endl;
 }

@@ -28,6 +28,10 @@ void OrsViewer::step(){
 
 //===========================================================================
 
+void OrsPathViewer::open(){
+  copy.gl(configurations.name);
+}
+
 void OrsPathViewer::step(){
   copy.gl().lock.writeLock();
   configurations.readAccess();

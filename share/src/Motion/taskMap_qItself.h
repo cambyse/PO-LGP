@@ -1,6 +1,6 @@
 #pragma once
 
-#include "motion.h"
+#include "taskMap.h"
 
 struct TaskMap_qItself:TaskMap {
   arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
@@ -39,7 +39,7 @@ private:
 //===========================================================================
 
 struct TaskMap_qZeroVels:TaskMap {
-  TaskMap_qZeroVels(){}
+  TaskMap_qZeroVels(){ }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){NIY}
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t);

@@ -5,7 +5,7 @@ void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
   if(M.N){
     if(M.nd==1){
-      q=M%q; if(&J) J.setDiag(M);
+      q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
     }else{
       q=M*q; if(&J) J=M;
     }
@@ -24,8 +24,9 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   //-- read out the task variable from the k+1 configurations
   uint offset = G.N-1-k; //G.N might contain more configurations than the order of THIS particular task -> the front ones are not used
   for(uint i=0;i<=k;i++){
-    q_bar(i) = G(offset+i)->q;
-    J_bar(i).setId(q_bar(i).N);
+    phi(q_bar(i), J_bar(i), *G(offset+i), t-k+i);
+//    q_bar(i) = G(offset+i)->q;
+//    J_bar(i).setId(q_bar(i).N);
   }
   bool handleSwitches=false;
   uint qN=q_bar(0).N;
@@ -53,8 +54,10 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
         for(uint i=0;i<=k;i++){
           qidx=jointMatchLists(i,j_idx)->qIndex;
           qdim=jointMatchLists(i,j_idx)->qDim();
-          q_bar_mapped(i).append(q_bar(i).subRef(qidx, qidx+qdim-1));
-          J_bar_mapped(i).append(J_bar(i).subRef(qidx, qidx+qdim-1));
+          if(qdim){
+            q_bar_mapped(i).append(q_bar(i).subRef(qidx, qidx+qdim-1));
+            J_bar_mapped(i).append(J_bar(i).subRef(qidx, qidx+qdim-1));
+          }
         }
       }
     }

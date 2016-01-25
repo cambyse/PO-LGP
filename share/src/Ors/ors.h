@@ -319,7 +319,7 @@ struct KinematicWorld : GLDrawer{
   void frictionToForces(double coeff);
   
   /// @name extensions on demand
-  OpenGL& gl();
+  OpenGL& gl(const char* window_title=NULL);
   SwiftInterface& swift();
   void swiftDelete();
   PhysXInterface& physx();
