@@ -1,7 +1,7 @@
-body table{ type=0, X=<T t(0.7 0.0 0.5)>, size=[0.7 1.5 .1 .0], color=[.8 .0 .0] fixed}
+#body table{ type=0, X=<T t(0.7 0.0 0.5)>, size=[0.7 1.5 .1 .0], color=[.8 .0 .0] fixed}
 
-shape startShape(table) {type=5 color=[0 1 0] rel=<T t(0.0 -0.3 0.06)>  size=[0.05 0.03 0.03 0]}
-shape endShape(table) {type=5 color=[0 0 1] rel=<T t(0.0 0.3 0.06)>  size=[0.05 0.03 0.03 0]}
+#shape startShape(table) {type=5 color=[0 1 0] rel=<T t(0.0 -0.3 0.06)>  size=[0.05 0.03 0.03 0]}
+#shape endShape(table) {type=5 color=[0 0 1] rel=<T t(0.0 0.3 0.06)>  size=[0.05 0.03 0.03 0]}
 
 
 body base_footprint { mass=145.746  }
@@ -179,4 +179,9 @@ Merge l_gripper_l_finger_joint { q=.1 }
 Merge r_gripper_joint {  gains=[1000 1] q=.01 }
 Merge l_gripper_joint {  gains=[1000 1] q=.01 }
 
-
+#body marker3 {}
+#body marker2 {}
+#body marker1 {}
+#shape marker3(marker3){ type=5 rel=<T t(.90 0.2 0.7)> color=[1 0 0] size=[0.1 0 0 0]}
+#shape marker2(marker2){ type=5 rel=<T t(.70 0.2 0.7)> color=[0 1 0] size=[0.1 0 0 0]}
+#shape marker1(marker1){ type=5 rel=<T t(.90 0.2 0.7)> color=[0 0 1] size=[0.1 0 0 0]}

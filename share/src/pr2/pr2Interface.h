@@ -7,10 +7,12 @@
 #include <Ors/ors.h>
 #include <pr2/pr2DynamicSimulation.h>
 #include <Control/taskSpaceController.h>
+#include <pr2/rosalvar.h>
 
 struct PR2Interface : Module {
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(AlvarMarkers, ar_pose_markers)
 
   ors::KinematicWorld* realWorld;
   ors::KinematicWorld* modelWorld;
@@ -24,6 +26,8 @@ struct PR2Interface : Module {
   bool logState = true;
   arr logQRef, logQObs, logQDotRef, logQDotObs, logU0, logKp, logKd, logFLObs, logFRObs, logKiFt, logJ_ft_inv, logFRef;
   std::map<mlr::String, arr> logMap;
+
+  arr lGripperRef, rGripperRef, torsoLiftRef;
 
   bool useROS = false;
 
@@ -40,6 +44,9 @@ struct PR2Interface : Module {
   void goToTask(TaskMap* map, arr ref, double executionTime = 10.0);
   void goToJointState(arr jointState, double executionTime = 10.0);
   void executeTrajectory(double executionTime);
+  void moveTorsoLift(arr torsoLiftRef);
+  void moveLGripper(arr lGripperRef);
+  void moveRGripper(arr rGripperRef);
   void logStateSave(mlr::String name = "", mlr::String folder = "data/");
   void clearLog();
 };

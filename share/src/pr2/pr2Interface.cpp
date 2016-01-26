@@ -19,6 +19,10 @@ void PR2Interface::step() {
   qRealWorld = actMsg.q;
   qDotRealWorld = actMsg.qdot;
 
+  AlvarMarkers alvarMarkers = this->ar_pose_markers.get();
+  syncMarkers(*this->modelWorld, alvarMarkers);
+  syncMarkers(*this->realWorld, alvarMarkers);
+
   this->realWorld->setJointState(qRealWorld, qDotRealWorld);
   this->realWorld->watch(false);
 
@@ -79,6 +83,7 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
     new RosCom_Spinner();
     new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
     new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
     threadOpenModules(true);
 
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
@@ -174,6 +179,14 @@ void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, cons
   transferQbetweenTwoWorlds(qRefRealWorld, zeros(modelWorld->getJointStateDimension()), *this->realWorld, *this->modelWorld);
   transferQDotbetweenTwoWorlds(qDotRefRealWorld, zeros(modelWorld->getJointStateDimension()), *this->realWorld, *this->modelWorld);
 
+  if(this->torsoLiftRef.N == 1) {
+    qRefRealWorld(this->realWorld->getJointByName("torso_lift_joint")->qIndex) = this->torsoLiftRef(0);
+  }
+
+  if(this->lGripperRef.N == 1) {
+    qRefRealWorld(this->realWorld->getJointByName("l_gripper_joint")->qIndex) = this->lGripperRef(0);
+  }
+
   arr KiFtRealWorld;
   if(&K_ft && &J_ft_inv && &fRef) {
     transferKI_ft_BetweenTwoWorlds(KiFtRealWorld, K_ft, *this->realWorld, *this->modelWorld);
@@ -243,13 +256,14 @@ void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double execut
     TaskMap* qTask = new TaskMap_qItself();
     LinTaskSpaceAccLaw* qLaw = new LinTaskSpaceAccLaw(qTask, this->modelWorld, "qLaw");
     qLaw->setC(eye(this->modelWorld->getJointStateDimension())*1000.0);
-    qLaw->setGains(eye(this->modelWorld->getJointStateDimension())*15.0, eye(this->modelWorld->getJointStateDimension())*5.0);
+    qLaw->setGains(eye(this->modelWorld->getJointStateDimension())*25.0, eye(this->modelWorld->getJointStateDimension())*5.0);
     qLaw->setTrajectory(traj.d0, traj);
 
     this->controller->taskSpaceAccLaws.clear();
     controller->addLinTaskSpaceAccLaw(qLaw);
     controller->generateTaskSpaceSplines();
     this->executeTrajectory(executionTime);
+    mlr::wait(0.5);
   } else {
     NIY;
   }
@@ -339,6 +353,18 @@ void PR2Interface::executeTrajectory(double executionTime) {
     n++;
     time += mlr::timerRead(true);
   }
+}
+
+void PR2Interface::moveTorsoLift(arr torsoLiftRef) {
+  this->torsoLiftRef = torsoLiftRef;
+}
+
+void PR2Interface::moveLGripper(arr lGripperRef) {
+  this->lGripperRef = lGripperRef;
+}
+
+void PR2Interface::moveRGripper(arr rGripperRef) {
+  this->rGripperRef = rGripperRef;
 }
 
 void PR2Interface::logStateSave(mlr::String name, mlr::String folder) {
