@@ -1,0 +1,9 @@
+BASE = ../../../..
+
+PLIB = 1
+ROS = 1
+
+OBJS = main.o 
+DEPEND = Core Geo Mocap Hardware_gamepad Hardware_G4 Motion Ors Perception pr2 Actions
+
+include $(BASE)/gofMake/generic.mk

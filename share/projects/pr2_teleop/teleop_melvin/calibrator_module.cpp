@@ -200,13 +200,15 @@ void G4HutoRoMap::step(){
   CHECK(gpstate.N, "ERROR: No GamePad found");
   int button = gpstate(0);
 
-  floatA tempData = g4_poses.get();
+//  floatA tempData = g4_data.get();
+  floatA data = g4_data.get();
+  floatA tempData = data.resizeCopy(6,7);
   floatA temp;
 
 
-  if(tempData.N == 0)
+  if(tempData.N == 0){
     return;
-
+  }
   // discard lost frames
   if (length(tempData.row(0)) == 0 || length(tempData.row(1)) == 0 ||
       length(tempData.row(3)) == 0 || length(tempData.row(4)) == 0 ||
@@ -302,7 +304,7 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index,b
 
   return {(float)quat.w, (float)quat.x, (float)quat.y, (float)quat.z};
 }
-
+/*
 void G4HutoRoMap::transform(const floatA& poses_raw){
 
   floatA cal_pose_rh, cal_pose_lh;
@@ -338,7 +340,7 @@ void G4HutoRoMap::transform(const floatA& poses_raw){
   calibrated_pose_rh.set() = cal_pose_rh;
   calibrated_pose_lh.set() = cal_pose_lh;
 }
-
+*/
 void G4HutoRoMap::doinitsendROS( floatA poses_raw)
 {
   floatA cal_pose_rh, cal_pose_lh;

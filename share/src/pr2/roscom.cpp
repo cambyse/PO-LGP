@@ -196,6 +196,19 @@ ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
   return world;
 }
 
+std_msgs::Float32MultiArray conv_floatA2Float32Array(const floatA &x){
+  std_msgs::Float32MultiArray msg;
+  msg.data = conv_arr2stdvec<float>(x);
+  return msg;
+}
+
+
+floatA conv_Float32Array2FloatA(const std_msgs::Float32MultiArray &msg){
+  floatA x;
+  x = conv_stdvec2arr<float>(msg.data);
+  return x;
+
+}
 
 //===========================================================================
 //
@@ -501,5 +514,7 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
+
+
 
 
