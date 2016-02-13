@@ -42,6 +42,7 @@ bool rosOk();
 //-- ROS <--> MLR
 std_msgs::String    conv_string2string(const mlr::String&);
 mlr::String         conv_string2string(const std_msgs::String&);
+std_msgs::String    conv_stringA2string(const StringA& strs);
 ors::Transformation conv_transform2transformation(const tf::Transform&);
 ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
 ors::Vector         conv_point2vector(const geometry_msgs::Point& p);

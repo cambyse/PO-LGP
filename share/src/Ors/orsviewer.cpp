@@ -2,6 +2,10 @@
 
 //===========================================================================
 
+void OrsViewer::open(){
+  copy.gl(modelWorld.name);
+}
+
 void OrsViewer::step(){
   copy.gl().lock.writeLock();
   copy = modelWorld.get();

@@ -21,10 +21,10 @@ collisionExceptPairs
 #joint types
 MakeJoint
 delete
-rigid
+rigidAtTo
 rigidZero
-free
-transXYPhi
+freeAtTo
+transXYPhiAtFrom
 transXYPhiZero
 
 # from Johannes

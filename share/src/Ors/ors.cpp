@@ -2530,11 +2530,11 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   ors::KinematicSwitch *sw= new ors::KinematicSwitch();
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
 //  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
-  else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
+  else if(type=="rigidAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
   else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
-  else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
+  else if(type=="transXYPhiAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="transXYPhiZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_transXYPhi; }
-  else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
+  else if(type=="freeAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
   sw->fromId = world.getShapeByName(ref1)->index;

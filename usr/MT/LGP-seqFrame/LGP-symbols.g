@@ -57,7 +57,7 @@ DecisionRule Release {
 
 # =============================================================================
 
-EffectiveKinematicsRule {
+PoseProblemRule {
      Hand, Obj
      { (Pick Hand Obj) }
      {
@@ -69,13 +69,13 @@ EffectiveKinematicsRule {
      }
 }
 
-EffectiveKinematicsRule {
+PoseProblemRule {
      Hand, Obj, Onto
      { (Release Hand Obj Onto) }
      { (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
        (MinSumOfSqr posDiff Obj Onto){ target=[0 0 .5] scale=10 }
        (MakeJoint delete Hand Obj)
-       (MakeJoint transXYPhiZero Onto Obj)
+       (MakeJoint transXYPhiAtFrom Onto Obj)
        (MinSumOfSqr vec Obj){ vec1=[0 0 1] target=[0 0 1] scale=100}
      }
 }
@@ -137,12 +137,12 @@ PathProblemRule {
     (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
 
     (MakeJoint delete Hand Obj){ time=1 }
-    (MakeJoint rigid Onto Obj){ time=1 }
+    (MakeJoint rigidAtTo Onto Obj){ time=1 }
   }
 }
 
 # =============================================================================
-#EffectiveKinematicsRule {
+#PoseProblemRule {
 #     X, Y
 #     { (touch X Y) }
 #     { (EqualZero GJK X Y) }

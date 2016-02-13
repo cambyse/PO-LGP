@@ -29,6 +29,13 @@ mlr::String conv_string2string(const std_msgs::String& msg){
   return mlr::String(msg.data);
 }
 
+std_msgs::String conv_stringA2string(const StringA& strs){
+  std_msgs::String msg;
+  for(const mlr::String& str:strs)
+    if(str.N){ msg.data += ", ";  msg.data += str.p; }
+  return msg;
+}
+
 ors::Transformation conv_transform2transformation(const tf::Transform &trans){
   ors::Transformation X;
   X.setZero();

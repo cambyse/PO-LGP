@@ -4,12 +4,19 @@
 
 //===========================================================================
 
+int printState(){
+  cout <<"state = " <<std::endl;
+  return 0;
+}
 
 //===========================================================================
 
-void sendTheTopic(mlr::String& effect){
+int sendFact(mlr::String& effect){
+  cout <<"sending '" <<effect <<"'" <<std::flush;
+
+  ros::init(mlr::argc, mlr::argv, "RAPshell");
   ros::NodeHandle nh;
-  ros::Publisher pub_effect = nh.advertise<std_msgs::String>("/RelationalMachine/effect", 1, true);
+  ros::Publisher pub_effect = nh.advertise<std_msgs::String>("/RAP/effect", 1, true);
 
   if(ros::ok()){
     for(uint i=0;i<50;i++){ //wait until a subscriber has subscribed
@@ -26,6 +33,10 @@ void sendTheTopic(mlr::String& effect){
     ros::spinOnce();
     mlr::wait(.05); //this is necessary to ensure that the subscriber has spinned once before the publisher is killed
   }
+
+  cout <<" -- done" <<endl;
+
+  return 0;
 }
 
 //===========================================================================
@@ -38,14 +49,14 @@ struct GetSymbols{
 
   GetSymbols(){
     hasSymbols.setValue(0);
-    sub_symbols = nh.subscribe("/RelationalMachine/symbols", 1, &GetSymbols::cb_symbols, this);
+    sub_symbols = nh.subscribe("/RAP/symbols", 1, &GetSymbols::cb_symbols, this);
     for(uint i=0;i<50;i++){ //wait until a publisher is found
       if(sub_symbols.getNumPublishers()>0) break;
       mlr::wait(.02);
       ros::spinOnce();
     }
     if(!sub_symbols.getNumPublishers()){
-      cout <<"there is no publisher of symbols -- won't have any effect if I send it.." <<endl;
+      cout <<"there is no publisher of symbols -- won't have any effect if subscribe it.." <<endl;
     }
     if(!hasSymbols.waitForValueEq(1, false, 1.0)){
       cout <<"waiting for the topic timed out" <<endl;
@@ -59,30 +70,34 @@ struct GetSymbols{
 
 };
 
+int printSymbols(){
+  cout <<"symbols=" <<endl;
+  ros::init(mlr::argc, mlr::argv, "RAPshell");
+  GetSymbols S;
+  cout <<S.symbols <<endl;
+  return 0;
+}
 
 
 //===========================================================================
 
 
 int main(int argc, char** argv) {
+  setLogLevels(0,0);
   mlr::initCmdLine(argc, argv);
-  ros::init(mlr::argc, mlr::argv, "RelationalMachineCommandLine");
 
-//  GetSymbols sym;
-//  cout <<"Symbols = " <<sym.symbols <<endl;
+  if(argc<2) return printState();
 
-  if(argc<2) return 0;
+  if(!strcmp(argv[1],"st")) return printState();
 
-  mlr::String effect;
-  effect <<"( ";
-  for(int i=1;i<argc;i++) effect <<argv[i] <<' ';
-  effect <<")";
+  if(!strcmp(argv[1],"sy")) return printSymbols();
 
-  cout <<"sending effect '" <<effect <<"'" <<endl;
-
-  sendTheTopic(effect);
-
-  cout <<"BYE BYE" <<endl;
+  //-- send a fact
+  mlr::String fact;
+  fact <<"( ";
+  for(int i=1;i<argc;i++) fact <<argv[i] <<' ';
+  fact <<")";
+  return sendFact(fact);
 
   return 0;
 }

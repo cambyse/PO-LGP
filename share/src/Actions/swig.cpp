@@ -12,6 +12,7 @@
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
+#include <Ors/orsviewer.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -47,9 +48,11 @@ struct SwigSystem {
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-//  OrsViewer orsviewer;
+  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
+
+
 
 
 //  PerceptionObjects2Ors percObjs;
@@ -83,6 +86,10 @@ struct SwigSystem {
 //      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
+
+    }else{
+      rosCheckInit("SwigSystem");
+      new RAP_roscom(rmm);
     }
 
     // make the base movable

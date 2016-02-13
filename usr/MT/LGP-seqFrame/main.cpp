@@ -54,20 +54,22 @@ void LGPplayer(){
 
   system("evince z.pdf &");
 
-  OrsViewer poseView;
+  OrsViewer poseView("pose");
   OrsPathViewer seqView("sequence");
   OrsPathViewer pathView("path");
   threadOpenModules(true);
 
-//  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
-  charA cmds={ '1', '4', 'x', 'q' };
-  bool interactive=false;
+  charA cmds={ 'p', '0', '3', '1'};//, 'p', '4', 'p', 's', 'q' };
+//  charA cmds={ '1', '4', 'x', 'q' };
+  bool interactive=true;
+  bool autoCompute=true;
 
   bool go=true;
   for(uint s=0;go;s++){
     //-- display stuff
-    if(node->poseProblem.configurations.N)
-      poseView.modelWorld.set() = *node->poseProblem.configurations(0);
+//    if(node->poseProblem.configurations.N)
+//      poseView.modelWorld.set() = *node->poseProblem.configurations(0);
+    poseView.modelWorld.set() = node->effKinematics;
     if(node->seqProblem.configurations.N)
       seqView.setConfigurations(node->seqProblem.configurations);
     if(node->pathProblem.configurations.N)
@@ -99,7 +101,14 @@ void LGPplayer(){
 
     if(cmd>='0' && cmd<='9'){
       node = node->children(int(cmd-'0'));
-      if(!node->isExpanded) node->expand();
+      if(!node->isExpanded){
+        node->expand();
+        if(autoCompute){
+          node->solvePoseProblem();
+          node->solveSeqProblem();
+//          node->solvePathProblem(20);
+        }
+      }
     }else switch(cmd){
       case 'q': go=false; break;
       case 'u': if(node->parent) node = node->parent; break;

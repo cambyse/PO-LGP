@@ -11,7 +11,7 @@ NodeL getLiteralsOfScope(Graph& KB){
 }
 
 /// return all variables (defined by degree=0)
-NodeL getSymbolsOfScope(Graph& KB){
+NodeL getSymbolsOfScope(const Graph& KB){
   NodeL vars;
   vars.anticipateMEM(KB.N);
   for(Node *i:KB) if(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) vars.append(i);

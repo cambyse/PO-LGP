@@ -186,6 +186,14 @@ template<class T> T& Graph::get(const char *key) const {
   return *val;
 }
 
+template<class T> T& Graph::get(const StringA& keys) const {
+  Node *n = getNode(keys);
+  if(!n) HALT("node '"<< keys<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
+  T* val=n->getValue<T>();
+  if(!val) HALT("node " <<*n <<" does not have type '"<<typeid(T).name() <<"'");
+  return *val;
+}
+
 template<class T> const T& Graph::get(const char *key, const T& defaultValue) const{
   Node *n = getNode(key);
   if(!n) return defaultValue;

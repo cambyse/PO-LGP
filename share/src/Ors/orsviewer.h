@@ -15,14 +15,14 @@ struct OrsViewer : Module{
   ors::KinematicWorld copy;
   bool computeCameraView;
 
-  OrsViewer(bool computeCameraView=false)
+  OrsViewer(const char* varname="modelWorld", bool computeCameraView=false)
     : Module("OrsViewer", .2),
-      modelWorld(this, "modelWorld", false),
+      modelWorld(this, varname, false),
       modelCameraView(this, "modelCameraView"),
       modelDepthView(this, "modelDepthView"),
       computeCameraView(computeCameraView){}
   ~OrsViewer(){}
-  void open() {}
+  void open();
   void step();
   void close() {}
 };
