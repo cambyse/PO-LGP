@@ -333,6 +333,7 @@ class ActionSwigInterface(_object):
     def defineNewTaskSpaceControlAction(self, *args): return _swig.ActionSwigInterface_defineNewTaskSpaceControlAction(self, *args)
     def getRM(self): return _swig.ActionSwigInterface_getRM(self)
     def execScript(self, *args): return _swig.ActionSwigInterface_execScript(self, *args)
+    def getFramePose(self, *args): return _swig.ActionSwigInterface_getFramePose(self, *args)
 ActionSwigInterface_swigregister = _swig.ActionSwigInterface_swigregister
 ActionSwigInterface_swigregister(ActionSwigInterface)
 
