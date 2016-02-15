@@ -3,6 +3,13 @@
 #include <Algo/spline.h>
 
 
+LinTaskSpaceAccLaw::LinTaskSpaceAccLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name) : map(map), world(world), name(name) {
+  this->setRef(); //TODO: is this the best way?
+  uint dim = this->getPhiDim();
+  this->setC(zeros(dim,dim));
+  this->setGains(zeros(dim,dim),zeros(dim,dim));
+}
+
 // TODO: enable to set ref and generate trajectory out of it
 
 void LinTaskSpaceAccLaw::setRef(const arr& yRef, const arr& yDotRef, const arr& yDDotRef) {
@@ -50,7 +57,7 @@ void LinTaskSpaceAccLaw::setTrajectory(uint trajLength, const arr& traj, const a
   if(&traj) {
     this->trajectory = traj;
   } else if(!this->trajectory.N) {
-    this->trajectory = zeros(trajLength, this->getPhiDim());
+    this->trajectory = zeros(trajLength, this->getPhiDim()); //TODO: same as setRef: getPhi
   }
   if(&trajDot) {
     this->trajectoryDot = trajDot;
@@ -135,6 +142,14 @@ arr ConstrainedTaskLaw::getAlpha() {
   return this->alpha;
 }
 
+void ConstrainedTaskLaw::setGamma(double gamma) {
+  this->gamma = gamma;
+}
+
+double ConstrainedTaskLaw::getGamma() {
+  return this->gamma;
+}
+
 
 
 void TaskSpaceController::addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law) {
@@ -148,9 +163,9 @@ void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0)
   arr q0, q, qDot;
   world->getJointState(q,qDot);
 
-  arr H = inverse(M); //TODO: Other metrics
+  arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
-  arr A = ~M*H*M;
+  arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it?
   arr a = zeros(this->world->getJointStateDimension());//M*eye(this->world->getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
   arr y, J;
@@ -177,7 +192,7 @@ void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0)
 }
 
 
-void TaskSpaceController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef) {
+void TaskSpaceController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {
   if(this->constrainedTaskLaw) {
     DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(this->constrainedTaskLaw->map);
     ors::Body* body = this->world->shapes(m->i)->body;
@@ -186,13 +201,15 @@ void TaskSpaceController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef) 
     arr y, J, J_ft;
     this->constrainedTaskLaw->getPhi(y, J);
     this->world->kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
-    J_ft_inv = ~conv_vec2arr(m->ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
-    K_ft = ~J*this->constrainedTaskLaw->getAlpha();
+    J_ft_inv = -~conv_vec2arr(m->ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+    K_ft = -~J*this->constrainedTaskLaw->getAlpha();
     fRef = this->constrainedTaskLaw->getForce();
+    gamma = this->constrainedTaskLaw->getGamma();
   } else {
     K_ft = zeros(this->world->getJointStateDimension());
     fRef = ARR(0.0);
     J_ft_inv = zeros(1,6);
+    gamma = 0.0;
   }
 }
 

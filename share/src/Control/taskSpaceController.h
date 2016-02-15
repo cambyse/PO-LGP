@@ -37,7 +37,7 @@ struct LinTaskSpaceAccLaw {
   bool trajectoryDotActive = false;
   bool trajectoryDDotActive = false;
 
-  LinTaskSpaceAccLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "") : map(map), world(world), name(name) {this->setRef();} // TODO is this the best Way
+  LinTaskSpaceAccLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "");
 
   void setRef(const arr& yRef = NoArr, const arr& yDotRef = NoArr, const arr& yDDotRef = NoArr);
 
@@ -78,11 +78,14 @@ struct ConstrainedTaskLaw : LinTaskSpaceAccLaw {
 
   arr force;
   arr alpha;
+  double gamma = 0.0;
   ConstrainedTaskLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "") : LinTaskSpaceAccLaw(map, world, name) {}
   void setForce(arr force);
   arr getForce();
   void setAlpha(arr alpha);
   arr getAlpha();
+  void setGamma(double gamma);
+  double getGamma();
 
 };
 
@@ -99,7 +102,7 @@ struct TaskSpaceController {
 
   void addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law);
   void calcOptimalControlProjected(arr& Kp, arr& Kd, arr& u0);
-  void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef);
+  void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma);
   void generateTaskSpaceTrajectoryFromJointSpace(const arr& jointSpaceTrajectory, const arr& jointSpaceTrajectoryDot = NoArr, const arr& jointSpaceDDotTrajectory = NoArr);
   void generateTaskSpaceSplines();
 

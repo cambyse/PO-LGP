@@ -168,6 +168,7 @@ void TreeControllerClass::update() {
 #if 0
       err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
 #else
+      //TODO: How to allow multiple Tasks? Upper AND Lower bounds simultaneously?
       err *= gamma;
       arr f_obs = J_ft_inv*fL_obs;
       //Danny

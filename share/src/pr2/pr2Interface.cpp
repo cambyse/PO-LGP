@@ -34,22 +34,34 @@ void PR2Interface::step() {
   this->modelWorld->setJointState(qModelWorld, qDotModelWorld);
   this->modelWorld->watch(false);
 
+  if(this->controller->taskSpaceAccLaws.N < 1) {
+    TaskMap* qItselfTask = new TaskMap_qItself();
+    LinTaskSpaceAccLaw* qItselfLaw = new LinTaskSpaceAccLaw(qItselfTask, this->modelWorld, "idle");
+    qItselfLaw->setC(eye(qItselfLaw->getPhiDim())*10.0);
+    qItselfLaw->setGains(eye(qItselfLaw->getPhiDim())*10.0, eye(qItselfLaw->getPhiDim())*1.0);
+    qItselfLaw->setRef(qItselfLaw->getPhi(), zeros(qItselfLaw->getPhiDim()));
+    this->controller->addLinTaskSpaceAccLaw(qItselfLaw);
+  }
+
   //TODO if there is no law, maybe a jointSpace law should be there with low gains?
   arr u0, Kp, Kd;
   this->controller->calcOptimalControlProjected(Kp,Kd,u0); // TODO: what happens when changing the LAWs?
 
   arr K_ft, J_ft_inv, fRef;
-  this->controller->calcForceControl(K_ft, J_ft_inv, fRef);
+  double gamma;
+  this->controller->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-  this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef);
+  this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
 
-  cout << actMsg.fL(2) << endl;
+  //cout << actMsg.fL(2) << endl;
 
   if(this->logState) {
+    this->logT.append(mlr::timerRead());
     this->logQObs.append(~qRealWorld);
     this->logQDotObs.append(~qDotRealWorld);
     this->logFLObs.append(~actMsg.fL);
     this->logFRObs.append(~actMsg.fR);
+    this->logUObs.append(~actMsg.u_bias);
     for(LinTaskSpaceAccLaw* law : this->controller->taskSpaceAccLaws) {
       arr y, J, yDot, q, qDot;
       law->world->getJointState(q, qDot);
@@ -59,6 +71,9 @@ void PR2Interface::step() {
       this->logMap[STRING(law->name << "Ref")].append(~law->getRef());
       this->logMap[STRING(law->name << "DotObs")].append(~yDot);
       this->logMap[STRING(law->name << "DotRef")].append(~law->getDotRef());
+      this->logMap[STRING(law->name << "Kp")].append(law->getKp());
+      this->logMap[STRING(law->name << "Kd")].append(law->getKd());
+      this->logMap[STRING(law->name << "C")].append(law->getC());
     }
   }
 }
@@ -104,6 +119,18 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
     initMsg.KiFT.clear();
     initMsg.J_ft_inv.clear();
     initMsg.u_bias = zeros(this->realWorld->getJointStateDimension());
+
+    /*arr Kp_base = zeros(this->realWorld->getJointStateDimension());
+    arr Kd_base = zeros(this->realWorld->getJointStateDimension());
+    for_list(ors::Joint, j, this->realWorld->joints) if(j->qDim()>0){
+      arr *info;
+      info = j->ats.getValue<arr>("gains");
+      if(info){
+        Kp_base(j->qIndex)=info->elem(0);
+        Kd_base(j->qIndex)=info->elem(1);
+      }
+    }*/
+
     initMsg.Kp = ARR(0.0);
     initMsg.Kd = ARR(0.0);
     initMsg.Ki = ARR(0.0);
@@ -163,7 +190,9 @@ void PR2Interface::initialize(ors::KinematicWorld* realWorld, ors::KinematicWorl
 void PR2Interface::startInterface() {
   this->realWorld->watch(true, "Press Enter to start everything :-) :-) :-)");
   this->realWorld->watch(false, "");
+
   this->threadLoop();
+  mlr::timerStart(true);
   mlr::wait(1.0);
   cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
   cout << "%        start PR2 interface             %" << endl;
@@ -171,7 +200,7 @@ void PR2Interface::startInterface() {
   cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
 }
 
-void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, const arr& K_ft, const arr& J_ft_inv, const arr& fRef) {
+void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, const arr& K_ft, const arr& J_ft_inv, const arr& fRef, const double& gamma) {
   arr u0RealWorld, KpRealWorld, KdRealWorld, qRefRealWorld, qDotRefRealWorld;
   transferU0BetweenTwoWorlds(u0RealWorld, u0, *this->realWorld, *this->modelWorld);
   transferKpBetweenTwoWorlds(KpRealWorld, Kp, *this->realWorld, *this->modelWorld);
@@ -187,12 +216,22 @@ void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, cons
     qRefRealWorld(this->realWorld->getJointByName("l_gripper_joint")->qIndex) = this->lGripperRef(0);
   }
 
+  if(this->rGripperRef.N == 1) {
+    qRefRealWorld(this->realWorld->getJointByName("r_gripper_joint")->qIndex) = this->rGripperRef(0);
+  }
+
   arr KiFtRealWorld;
   if(&K_ft && &J_ft_inv && &fRef) {
     transferKI_ft_BetweenTwoWorlds(KiFtRealWorld, K_ft, *this->realWorld, *this->modelWorld);
     this->ctrlMsg.KiFT = KiFtRealWorld;
     this->ctrlMsg.J_ft_inv = J_ft_inv;
     this->ctrlMsg.fL = fRef;
+  }
+
+  if(&gamma) {
+    this->ctrlMsg.gamma = gamma;
+  } else {
+    this->ctrlMsg.gamma = 0.0;
   }
 
   this->ctrlMsg.u_bias = u0RealWorld;
@@ -316,9 +355,11 @@ void PR2Interface::goToTask(TaskMap* map, arr ref, double executionTime) {
 
 void PR2Interface::executeTrajectory(double executionTime) {
   cout << "start executing trajectory" << endl;
-  mlr::timerStart(true);
+  //mlr::timerStart(true);
+  double startTime = mlr::timerRead();
   double time = 0.0;
   uint n = 0;
+
   while(true) {
     double s;
     if(time < executionTime) {
@@ -332,26 +373,9 @@ void PR2Interface::executeTrajectory(double executionTime) {
 
     for(LinTaskSpaceAccLaw* law : this->controller->taskSpaceAccLaws) {
       law->setTargetEvalSpline(s);
-      /*if(this->logState) {
-        arr y, J, yDot, q, qDot;
-        law->world->getJointState(q, qDot);
-        law->getPhi(y, J);
-        yDot = J*qDot;
-        this->logMap[STRING(law->name << "Obs")].append(~y);
-        this->logMap[STRING(law->name << "Ref")].append(~law->getRef());
-        this->logMap[STRING(law->name << "DotObs")].append(~yDot);
-        this->logMap[STRING(law->name << "DotRef")].append(~law->getDotRef());
-      }*/
     }
-
-    /*arr Kp,Kd,u0;
-    // TODO: Don't do this here, do it in the loop
-    this->ctrl_obs.waitForNextRevision(); // TODO: necesarry?
-    this->controller->calcOptimalControlProjected(Kp,Kd,u0);
-    this->sendCommand(u0, Kp, Kd);*/
-
     n++;
-    time += mlr::timerRead(true);
+    time = mlr::timerRead() - startTime;
   }
 }
 
@@ -369,30 +393,38 @@ void PR2Interface::moveRGripper(arr rGripperRef) {
 
 void PR2Interface::logStateSave(mlr::String name, mlr::String folder) {
   cout << "start saving log " << name << endl;
-  if(this->logQObs.N) write(LIST<arr>(this->logQObs), STRING(folder << "qObs" << "_" << name << ".dat"));
-  if(this->logQRef.N) write(LIST<arr>(this->logQRef), STRING(folder << "qRef" << "_" << name << ".dat"));
-  if(this->logQDotObs.N)write(LIST<arr>(this->logQDotObs), STRING(folder << "qDotObs" << "_" << name << ".dat"));
-  if(this->logQDotRef.N)write(LIST<arr>(this->logQDotRef), STRING(folder << "qDotRef" << "_" << name << ".dat"));
-  if(this->logU0.N)write(LIST<arr>(this->logU0), STRING(folder << "u0" << "_" << name << ".dat"));
-  if(this->logKp.N)write(LIST<arr>(this->logKp), STRING(folder << "Kp" << "_" << name << ".dat"));
-  if(this->logKd.N)write(LIST<arr>(this->logKd), STRING(folder << "Kd" << "_" << name << ".dat"));
-  if(this->logKiFt.N)write(LIST<arr>(this->logKiFt), STRING(folder << "KiFt" << "_" << name << ".dat"));
-  if(this->logJ_ft_inv.N)write(LIST<arr>(this->logJ_ft_inv), STRING(folder << "J_ft_inv" << "_" << name << ".dat"));
-  if(this->logFRef.N)write(LIST<arr>(this->logFRef), STRING(folder << "fRef" << "_" << name << ".dat"));
-  if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "FLObs" << "_" << name << ".dat"));
-  if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "FRObs" << "_" << name << ".dat"));
+  system(STRING("mkdir -p " << folder << "/" << name)); //linux specific :-)
+
+  if(this->logT.N) write(LIST<arr>(this->logT), STRING(folder << "/" << name << "/" << "T" << ".dat"));
+  if(this->logQObs.N) write(LIST<arr>(this->logQObs), STRING(folder << "/" << name << "/" << "qObs" << ".dat"));
+  if(this->logQRef.N) write(LIST<arr>(this->logQRef), STRING(folder << "/" << name << "/" << "qRef" << ".dat"));
+  if(this->logQDotObs.N)write(LIST<arr>(this->logQDotObs), STRING(folder << "/" << name << "/" << "qDotObs" << ".dat"));
+  if(this->logQDotRef.N)write(LIST<arr>(this->logQDotRef), STRING(folder << "/" << name << "/" << "qDotRef" << ".dat"));
+  if(this->logUObs.N)write(LIST<arr>(this->logUObs), STRING(folder << "/" << name << "/" << "uObs" << ".dat"));
+  if(this->logU0.N)write(LIST<arr>(this->logU0), STRING(folder << "/" << name << "/" << "u0" << ".dat"));
+  if(this->logKp.N)write(LIST<arr>(this->logKp), STRING(folder << "/" << name << "/" << "Kp" << ".dat"));
+  if(this->logKd.N)write(LIST<arr>(this->logKd), STRING(folder << "/" << name << "/" << "Kd" << ".dat"));
+  if(this->logKiFt.N)write(LIST<arr>(this->logKiFt), STRING(folder << "/" << name << "/" << "KiFt" << ".dat"));
+  if(this->logJ_ft_inv.N)write(LIST<arr>(this->logJ_ft_inv), STRING(folder << "/" << name << "/" << "J_ft_inv" << ".dat"));
+  if(this->logFRef.N)write(LIST<arr>(this->logFRef), STRING(folder << "/" << name << "/" << "fRef" << ".dat"));
+  if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "/" << name << "/" << "fLObs" << ".dat"));
+  if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "/" << name << "/" << "fRObs" << ".dat"));
+
+  //TODO: log gamma
 
   for(auto m : this->logMap) {
-    write(LIST<arr>(m.second), STRING(folder << m.first << "_" << name << ".dat"));
+    write(LIST<arr>(m.second), STRING(folder << "/" << name << "/" << m.first << ".dat"));
   }
   cout << "finished saving log " << name << endl;
 }
 
 void PR2Interface::clearLog() {
+  this->logT.clear();
   this->logQObs.clear();
   this->logQRef.clear();
   this->logQDotObs.clear();
   this->logQDotRef.clear();
+  this->logUObs.clear();
   this->logU0.clear();
   this->logKp.clear();
   this->logKd.clear();

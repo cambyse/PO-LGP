@@ -34,6 +34,7 @@ void DynamicSimulation::initializeSimulation(ors::KinematicWorld *world, bool gr
   this->ctrl_obs.set()->qdot = qDot;
   this->ctrl_obs.set()->fL = zeros(6);
   this->ctrl_obs.set()->fR = zeros(6);
+  this->ctrl_obs.set()->u_bias = zeros(q.d0);
 
   this->ctrl_ref.set()->Kp = zeros(world->getJointStateDimension(),world->getJointStateDimension());
   this->ctrl_ref.set()->Kd = zeros(world->getJointStateDimension(),world->getJointStateDimension());
@@ -127,6 +128,7 @@ void DynamicSimulation::step() {
   //this->ctrl_obs.writeAccess();
   this->ctrl_obs.set()->q = q;
   this->ctrl_obs.set()->qdot = qDot;
+  this->ctrl_obs.set()->u_bias = u;
   //this->ctrl_obs.deAccess();
 
   //world->watch(false);
