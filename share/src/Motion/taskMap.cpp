@@ -56,9 +56,6 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 
 //===========================================================================
 
-
-//===========================================================================
-
 TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
@@ -76,6 +73,8 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
     map = new CollisionConstraint( (params?params->get<double>("margin", 0.1):0.1) );
+  }else if(type=="limitIneq"){
+    map = new LimitsConstraint();
   }else if(type=="collisionPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -92,6 +91,19 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       shapes.append(s->index);
     }
     map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+  }else if(type=="collisionExcept"){
+    uintA shapes;
+    for(uint i=2;i<specs->parents.N;i++){
+      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
+      if(!s){
+        ors::Body *b = world.getBodyByName(specs->parents(i)->keys.last());
+        CHECK(b,"No shape or body '" <<specs->parents(i)->keys.last() <<"'");
+        for(ors::Shape *s:b->shapes) shapes.append(s->index);
+      }else{
+        shapes.append(s->index);
+      }
+    }
+    map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
     map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){

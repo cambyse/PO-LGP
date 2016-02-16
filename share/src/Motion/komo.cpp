@@ -37,6 +37,11 @@ void KOMO::init(const Graph& _specs){
   if(glob["makeConvexHulls"])
     makeConvexHulls(world.shapes);
 
+  if(glob["makeSCBoxes"]){
+    for(ors::Shape *s: world.shapes) s->mesh.makeSCBox(s->mesh.V);
+    world.gl().watch();
+  }
+
   if(glob["activateAllContacts"])
     for(ors::Shape *s:world.shapes) s->cont=true;
 
@@ -119,7 +124,7 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-  cout <<x;
+//  cout <<x;
   if(MP->T){
     optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
   }else{

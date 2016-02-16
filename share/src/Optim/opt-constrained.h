@@ -55,6 +55,7 @@ struct UnconstrainedProblem:ScalarFunction{
   double get_costs();            ///< info on the terms from last call
   double get_sumOfGviolations(); ///< info on the terms from last call
   double get_sumOfHviolations(); ///< info on the terms from last call
+  uint get_dimOfType(const TermType& tt); ///< info on the terms from last call
 
   void aulaUpdate(bool anyTimeVariant, double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
 };

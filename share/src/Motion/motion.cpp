@@ -221,7 +221,7 @@ void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
 }
 
 void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
-  OpenGL gl;
+  OpenGL gl("MotionProblem display");
   gl.camera.setDefault();
 
   uint num;
@@ -409,7 +409,7 @@ void MotionProblem::costReport(bool gnuplt) {
             gall += g;
           }
           taskG(i) += gpos;
-          plotData(t,i) = gall;
+          plotData(t,i) = gpos; //gall;
         }
         if(c->type==eqTT){
           double gpos=0.,gall=0.;
@@ -419,7 +419,7 @@ void MotionProblem::costReport(bool gnuplt) {
             gall += h;
           }
           taskG(i) += gpos;
-          plotData(t,i) = gall;
+          plotData(t,i) = gpos; //all;
         }
         m += d;
       }
@@ -467,7 +467,7 @@ void MotionProblem::costReport(bool gnuplt) {
   fil2 <<"set key autotitle columnheader" <<endl;
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
   fil2 <<"plot 'z.costReport' \\" <<endl;
-  for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l \\" <<endl;
+  for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l lw 3 lc " <<i <<" lt " <<1-((i/10)%2) <<" \\" <<endl;
   if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil2 <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
   fil2 <<endl;
   fil2.close();

@@ -11,11 +11,14 @@ vecDiff
 vecAlign
 quat
 quatDiff
+gazeAt
 qItself
 qZeroVels
 GJK
+limitIneq
 collisionIneq
 collisionPairs
+collisionExcept
 collisionExceptPairs
 
 #joint types
