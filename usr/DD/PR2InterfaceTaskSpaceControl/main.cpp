@@ -1232,6 +1232,95 @@ void tischTouchdown_1() {
   pr2->~PR2Interface();
 }
 
+void tischTouchdown_2() {
+  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
+  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+
+  modelWorld->gl().add(changeAlpha);
+  modelWorld->gl().add(glDrawPlot, &plotModule);
+
+  realWorld->gl().add(changeAlpha);
+  realWorldSimulation->gl().add(changeAlpha);
+
+  PR2Interface* pr2 = new PR2Interface();
+  TaskSpaceController* controller = new TaskSpaceController(modelWorld);
+
+  pr2->initialize(realWorld, realWorldSimulation, modelWorld, controller);
+  pr2->startInterface();
+
+  //Go from actual position to the start position of the trajectory
+  arr preTouchJointState;
+  preTouchJointState << FILE("demonstrationData/demonstration.dat");
+
+  pr2->goToJointState(preTouchJointState);
+
+  pr2->logState = false;
+  pr2->clearLog();
+  pr2->logState = true;
+  modelWorld->watch(true, "press enter for task space control");
+
+
+  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
+  posLaw->setC(eye(3)*1000.0);
+  arr Kp = eye(3)*10.0;
+  Kp(2,2) = 0.0;
+  arr Kd = eye(3)*5.0;
+  Kd(2,2) = 0.0;
+  posLaw->setGains(Kp,Kd);
+  posLaw->setRef();
+
+  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
+  orientationLaw->setC(eye(3)*1000.0);
+  orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
+  orientationLaw->setRef(ARR(0.0,0.0,-1.0));
+
+  TaskMap_qLimits* lmap = new TaskMap_qLimits();
+  LinTaskSpaceAccLaw* limitsLaw = new LinTaskSpaceAccLaw(lmap, modelWorld, "limits");
+  limitsLaw->setC(ARR(1000.0));
+  limitsLaw->setGains(ARR(10.0),ARR(5.0));
+  limitsLaw->setRef(ARR(0.0));
+
+  TaskMap* qDamping = new TaskMap_qItself();
+  LinTaskSpaceAccLaw* qDampingLaw = new LinTaskSpaceAccLaw(qDamping, modelWorld, "damping");
+  qDampingLaw->setC(eye(qDampingLaw->getPhiDim())*10.0);
+  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
+  qDampingLaw->setRef(zeros(qDampingLaw->getPhiDim()),zeros(qDampingLaw->getPhiDim()));
+
+  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
+  velLaw->setC(eye(1)*1000.0);
+  velLaw->setGains(eye(1)*0.0, eye(1)*20.0);
+  velLaw->setForce(ARR(-0.1));
+  //velLaw->setAlpha(ARR(0.001));
+  velLaw->setAlpha(ARR(0.0));
+  velLaw->gamma = 1.0;
+  controller->constrainedTaskLaw = velLaw;
+  velLaw->setRef(NoArr, ARR(0.1));
+
+  controller->taskSpaceAccLaws.clear();
+  controller->addLinTaskSpaceAccLaw(posLaw);
+  controller->addLinTaskSpaceAccLaw(orientationLaw);
+  controller->addLinTaskSpaceAccLaw(qDampingLaw);
+  controller->addLinTaskSpaceAccLaw(limitsLaw);
+  controller->addLinTaskSpaceAccLaw(velLaw);
+
+  mlr::wait(0.5);
+
+  modelWorld->watch(true, "Press to save log");
+
+  pr2->logState = false;
+  pr2->logStateSave("tischTouchdown_2_1","experiments/tischTouchdown_2");
+
+
+  modelWorld->watch(true, "Press to stop");
+  velLaw->gamma = 0.0;
+
+  pr2->~PR2Interface();
+}
+
 void tests() {
   ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
   ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
@@ -1339,6 +1428,7 @@ int main(int argc, char** argv){
   //openSchublade3();
   //controllerExample("nullSpace_2");
   //tischTouchdown_1();
-  tests();
+  tischTouchdown_2();
+  //tests();
   return 0;
 }

@@ -37,7 +37,7 @@ struct LinTaskSpaceAccLaw {
   bool trajectoryDotActive = false;
   bool trajectoryDDotActive = false;
 
-  LinTaskSpaceAccLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "");
+  LinTaskSpaceAccLaw(TaskMap* map, ors::KinematicWorld* world, mlr::String name = "nonameLaw");
 
   void setRef(const arr& yRef = NoArr, const arr& yDotRef = NoArr, const arr& yDDotRef = NoArr);
 
