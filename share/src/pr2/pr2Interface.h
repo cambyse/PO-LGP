@@ -39,10 +39,10 @@ struct PR2Interface : Module {
   void initialize(ors::KinematicWorld* realWorld, ors::KinematicWorld* modelWorld, TaskSpaceController* controller = NULL);
   void startInterface();
   void sendCommand(const arr& u0, const arr& Kp, const arr& Kd, const arr& K_ft, const arr& J_ft_inv, const arr& fRef, const double& gamma);
-  void goToPosition(arr pos, double executionTime = 10.0);
+  void goToPosition(arr pos, mlr::String shape, double executionTime = 10.0, bool useMotionPlaner = true, mlr::String name = "goToPosition");
   void goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double executionTime = 10.0, bool useMotionPlanner = true);
-  void goToTask(TaskMap* map, arr ref, double executionTime = 10.0);
-  void goToJointState(arr jointState, double executionTime = 10.0);
+  void goToTask(TaskMap* map, arr ref, double executionTime = 10.0, bool useMotionPlaner = true, mlr::String name = "goToTask");
+  void goToJointState(arr jointState, double executionTime = 10.0, bool useMotionPlaner = true, mlr::String name = "goToJointState");
   void executeTrajectory(double executionTime);
   void moveTorsoLift(arr torsoLiftRef);
   void moveLGripper(arr lGripperRef);

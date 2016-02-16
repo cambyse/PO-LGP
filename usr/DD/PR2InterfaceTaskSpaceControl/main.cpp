@@ -1253,6 +1253,8 @@ void tests() {
 
   arr preTouchPos = ARR(0.7,0.0,0.6);
 
+  pr2->goToPosition(preTouchPos, "endeffL");
+
   mlr::Array<LinTaskSpaceAccLaw*> laws;
   TaskMap* posTaskl = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1/sqrt(2),1/sqrt(2),0.0));
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
@@ -1318,7 +1320,7 @@ void tests() {
 
   modelWorld->watch(true, "press to stop");
   pr2->logState = false;
-  pr2->logStateSave("test_2","tests");
+  pr2->logStateSave("test_3","tests");
   pr2->~PR2Interface();
 }
 

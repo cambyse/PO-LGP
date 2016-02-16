@@ -47,6 +47,7 @@ void LinTaskSpaceAccLaw::setSpline(mlr::Spline *yS, mlr::Spline *yDotS, mlr::Spl
 
 
 void LinTaskSpaceAccLaw::setTargetEvalSpline(double s) {
+  //TODO: here I tried to use velocities and accerlerations of the spline to feed it into the controller.
   //this->setRef(this->trajectorySpline->eval(s), this->trajectorySpline->eval(s, 1),this->trajectorySpline->eval(s, 2));
   //this->setRef(this->trajectorySpline->eval(s), this->trajectoryDotSpline->eval(s));//, this->trajectorySpline->eval(s, 2)/20.0);
   //this->setRef(this->trajectorySpline->eval(s), this->trajectorySpline->eval(s,1)/10.0, this->trajectorySpline->eval(s,2)/10.0);
@@ -121,7 +122,7 @@ double LinTaskSpaceAccLaw::getCosts() {
   arr yAct;
   this->map->phi(yAct, NoArr, *this->world);
   NIY;
-  return ~yAct*this->C*yAct; //this is murks!!!!!!!!!!!!!!
+  return ~yAct*this->C*yAct; //this is murks!!!!!!!!!!!!!! TODO
 }
 
 
@@ -165,7 +166,7 @@ void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0)
 
   arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
-  arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it?
+  arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it? And also symmetric? Furthermore, if H = M^{-1}, this should be calculated more efficiently
   arr a = zeros(this->world->getJointStateDimension());//M*eye(this->world->getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
   arr y, J;

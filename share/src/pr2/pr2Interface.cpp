@@ -256,8 +256,9 @@ void PR2Interface::sendCommand(const arr& u0, const arr& Kp, const arr& Kd, cons
   }
 }
 
-void PR2Interface::goToPosition(arr pos, double executionTime) {
-  NIY;
+void PR2Interface::goToPosition(arr pos, mlr::String shape, double executionTime, bool useMotionPlaner, mlr::String name) {
+  TaskMap* posMap = new DefaultTaskMap(posTMT, *this->modelWorld, shape);
+  this->goToTask(posMap, pos, executionTime, useMotionPlaner, name);
 }
 
 void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double executionTime, bool useMotionPlanner) {
@@ -286,9 +287,13 @@ void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double execut
 
     arr traj = MP.getInitialization();
 
-    optConstrained(traj, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+    OptOptions o;
+    o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
 
-    //MP.costReport();
+    optConstrained(traj, NoArr, Convert(MF), o); //TODO: which options?
+    //OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2)
+
+    //MP.costReport(); //TODO: make this parameter
 
     showTrajectory(traj, *this->modelWorld);
 
@@ -308,49 +313,17 @@ void PR2Interface::goToTasks(mlr::Array<LinTaskSpaceAccLaw*> laws, double execut
   }
 }
 
-void PR2Interface::goToJointState(arr jointState, double executionTime) {
-  NIY;
+void PR2Interface::goToJointState(arr jointState, double executionTime, bool useMotionPlaner, mlr::String name) {
+  TaskMap* qTask = new TaskMap_qItself();
+  this->goToTask(qTask, jointState, executionTime, useMotionPlaner, name);
 }
 
-void PR2Interface::goToTask(TaskMap* map, arr ref, double executionTime) {
-  ors::KinematicWorld copiedWorld(*this->modelWorld);
-  MotionProblem MP(copiedWorld);
-
-  MP.x0 = modelWorld->getJointState();
-
-  cout <<  MP.tau << endl;
-
-  Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(MP.world));
-  t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, {0.}, 1e0);
-
-  t = MP.addTask("Map", map);
-  t->setCostSpecs(MP.T-5, MP.T, ref, 10.0);
-
-  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
-  t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint());
-  t->setCostSpecs(0., MP.T, {0.}, 1.);
-
-  MotionProblemFunction MF(MP);
-
-  arr traj = MP.getInitialization();
-
-  optConstrained(traj, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
-
-  //MP.costReport();
-
-  TaskMap* qTask = new TaskMap_qItself();
-  LinTaskSpaceAccLaw* qLaw = new LinTaskSpaceAccLaw(qTask, this->modelWorld);
-  qLaw->setC(eye(this->modelWorld->getJointStateDimension())*1000.0);
-  qLaw->setGains(eye(this->modelWorld->getJointStateDimension())*10.0, eye(this->modelWorld->getJointStateDimension())*5.0);
-  qLaw->setTrajectory(traj.d0, traj);
-
-  this->controller->taskSpaceAccLaws.clear();
-  controller->addLinTaskSpaceAccLaw(qLaw);
-  controller->generateTaskSpaceSplines();
-  this->executeTrajectory(executionTime);
+void PR2Interface::goToTask(TaskMap* map, arr ref, double executionTime, bool useMotionPlaner, mlr::String name) {
+  LinTaskSpaceAccLaw* law = new LinTaskSpaceAccLaw(map, this->modelWorld, name);
+  law->setRef(ref);
+  mlr::Array<LinTaskSpaceAccLaw*> laws;
+  laws.append(law);
+  this->goToTasks(laws, executionTime, useMotionPlaner);
 }
 
 void PR2Interface::executeTrajectory(double executionTime) {
@@ -410,7 +383,7 @@ void PR2Interface::logStateSave(mlr::String name, mlr::String folder) {
   if(this->logFLObs.N)write(LIST<arr>(this->logFLObs), STRING(folder << "/" << name << "/" << "fLObs" << ".dat"));
   if(this->logFRObs.N)write(LIST<arr>(this->logFRObs), STRING(folder << "/" << name << "/" << "fRObs" << ".dat"));
 
-  //TODO: log gamma
+  //TODO: log constrained law, log gamma, alpha etc.
 
   for(auto m : this->logMap) {
     write(LIST<arr>(m.second), STRING(folder << "/" << name << "/" << m.first << ".dat"));
