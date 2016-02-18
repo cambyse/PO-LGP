@@ -146,13 +146,13 @@ void TaskControllerModule::step(){
   CtrlMsg refs;
   refs.q =  q_model;
   refs.qdot = zeros(q_model.N);
-  refs.gamma = 1.;
+  refs.fL_gamma = 1.;
   refs.Kp = ARR(1.);
   refs.Kd = ARR(1.);
   refs.Ki = ARR(0.2);
   refs.fL = zeros(6);
   refs.fR = zeros(6);
-  refs.KiFT.clear();
+  refs.KiFTL.clear();
   refs.J_ft_invL.clear();
   refs.u_bias = zeros(q_model.N);
   refs.intLimitRatio = ARR(0.7);
@@ -176,7 +176,7 @@ void TaskControllerModule::step(){
     if(t->active && t->f_ref.N){
       count++;
       if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFT, refs.J_ft_invL, realWorld);
+      t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFTL, refs.J_ft_invL, realWorld);
     }
   }
   if(count==1) refs.Kp = .5;

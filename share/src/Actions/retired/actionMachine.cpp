@@ -208,7 +208,7 @@ void ActionMachine::step(){
   //-- send the computed movement to the robot
   s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
-  s->refs.gamma = 1.;
+  s->refs.fL_gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
 
