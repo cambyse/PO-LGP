@@ -24,7 +24,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
-  ACCESSname(AlvarMarker, ar_pose_markers)
+  ACCESSname(AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
@@ -56,6 +56,7 @@ struct SwigSystem {
   ImageViewer camview;
   Kinect2PointCloud k2pcl;
   PointCloudViewer pclv;
+  AlvarSyncer alvar_syncer;
 
   Log _log;
 

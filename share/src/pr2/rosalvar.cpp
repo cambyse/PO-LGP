@@ -22,13 +22,13 @@ void setBody(ors::Body& body, const AlvarMarker& marker) {
 }
 
 
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
+void syncMarkers(ors::KinematicWorld& world, const AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
   ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
 
-  for (AlvarMarker& marker : markers.markers) {
+  for (const AlvarMarker& marker : markers.markers) {
     mlr::String marker_name = STRING("marker" << marker.id);
 
     ors::Body *body = world.getBodyByName(marker_name);
