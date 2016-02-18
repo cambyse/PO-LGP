@@ -9,7 +9,7 @@
 
 //===========================================================================
 
-void TEST(SCBoxFit){
+void TEST(SSBoxFit){
   ors::Mesh org, box;
 
   struct Transparent:GLDrawer{
@@ -28,7 +28,7 @@ void TEST(SCBoxFit){
     org.setRandom();
     org.translate(0,0,1);
     org.makeConvexHull();
-    box.makeSCBox(org.V, 10, 3);
+    box.makeSSBox(org.V, 10, 3);
 
     gl.watch();
   }
@@ -39,6 +39,6 @@ void TEST(SCBoxFit){
 //===========================================================================
 
 int MAIN(int argc, char** argv){
-  testSCBoxFit();
+  testSSBoxFit();
   return 0;
 }

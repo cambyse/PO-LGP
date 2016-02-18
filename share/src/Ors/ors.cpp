@@ -370,6 +370,21 @@ void makeConvexHulls(ShapeL& shapes){
   for(ors::Shape *s: shapes) s->mesh.makeConvexHull();
 }
 
+void makeSSBoxApproximations(ShapeL& shapes){
+//  for(ors::Shape *s: shapes) s->mesh.makeSSBox(s->mesh.V);
+  for(uint i=0;i<shapes.N;i++){
+    ors::Shape *s=shapes(i);
+    if(!(s->type==ors::meshST && s->mesh.V.N)) continue;
+    ors::Transformation t;
+    arr x;
+    s->mesh.makeSSBox(x, t, s->mesh.V);
+    s->type = ors::ssBoxST;
+    s->size[0]=2.*x(0); s->size[1]=2.*x(1); s->size[2]=2.*x(2); s->size[3]=x(3);
+    s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
+    s->rel.appendTransformation(t);
+  }
+}
+
 void computeMeshNormals(ShapeL& shapes){
   for(ors::Shape *s: shapes) if(!s->mesh.Vn.N) s->mesh.computeNormals();
 }
@@ -2637,6 +2652,8 @@ template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
 template mlr::Array<ors::Joint*>::Array();
 #endif
 /** @} */
+
+
 
 
 

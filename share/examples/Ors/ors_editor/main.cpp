@@ -27,14 +27,16 @@ void TEST(OrsEditor) {
   G >>FILE("z.ors");
   //some optional manipulations
   G.checkConsistency();
-  G.setShapeNames();
-  G.checkConsistency();
   G.meldFixedJoints();
   G.checkConsistency();
   G >>FILE("z.ors");
   G.removeUselessBodies();
-  G >>FILE("z.ors");
   G.checkConsistency();
+  G >>FILE("z.ors");
+//  makeConvexHulls(G.shapes);
+//  makeSSBoxApproximations(G.shapes);
+  G >>FILE("z.ors");
+  G.watch(true);
   G.topSort();
   G.checkConsistency();
   G.makeLinkTree();
