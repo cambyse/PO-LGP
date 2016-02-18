@@ -390,7 +390,8 @@ void qDotRefInConstraintAndSlide() {
   velLaw->setForce(ARR(-2.0));
   velLaw->setAlpha(ARR(0.0005));
   //velLaw->setAlpha(ARR(0.0));
-  controller->constrainedTaskLaw = velLaw;
+
+  //controller->constrainedTaskLaw = velLaw;
   arr velTraj = repmat(ARR(.1), 3, 1);
 
   velLaw->setTrajectory(3, NoArr, velTraj);
@@ -406,7 +407,8 @@ void qDotRefInConstraintAndSlide() {
   controller->addLinTaskSpaceAccLaw(orientationLaw);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
-  controller->addLinTaskSpaceAccLaw(velLaw);
+  controller->addConstrainedTaskLaw(velLaw);
+  //controller->addLinTaskSpaceAccLaw(velLaw);
   //controller->addLinTaskSpaceAccLaw(gazeAtLaw);
 
   controller->generateTaskSpaceSplines();
@@ -684,7 +686,7 @@ void openSchublade2() {
   velLaw->setForce(ARR(-2.0));
   //velLaw->setAlpha(ARR(0.0005));
   velLaw->setAlpha(ARR(0.0));
-  controller->constrainedTaskLaw = velLaw;
+  //controller->constrainedTaskLaw = velLaw;
   arr velTraj = repmat(ARR(0.1), 3, 1);
 
   velLaw->setTrajectory(3, NoArr, velTraj);
@@ -695,7 +697,8 @@ void openSchublade2() {
   controller->addLinTaskSpaceAccLaw(orientationLaw2);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
-  controller->addLinTaskSpaceAccLaw(velLaw);
+  controller->addConstrainedTaskLaw(velLaw);
+  //controller->addLinTaskSpaceAccLaw(velLaw);
 
   controller->generateTaskSpaceSplines();
 
@@ -919,7 +922,8 @@ void openSchublade3() {
   velLaw->setAlpha(ARR(0.0008));
   //velLaw->setAlpha(ARR(0.0));
   velLaw->gamma = 1.0;
-  controller->constrainedTaskLaw = velLaw;
+
+  //controller->constrainedTaskLaw = velLaw;
   arr velTraj = repmat(ARR(0.1), 3, 1);
 
   velLaw->setTrajectory(3, NoArr, velTraj);
@@ -930,7 +934,8 @@ void openSchublade3() {
   controller->addLinTaskSpaceAccLaw(orientationLaw2);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
-  controller->addLinTaskSpaceAccLaw(velLaw);
+  controller->addConstrainedTaskLaw(velLaw);
+  //controller->addLinTaskSpaceAccLaw(velLaw);
 
   controller->generateTaskSpaceSplines();
 
@@ -1150,6 +1155,23 @@ void tischTouchdown_1() {
   pr2->initialize(realWorld, realWorldSimulation, modelWorld, controller);
   pr2->startInterface();
 
+  /*controller->taskSpaceAccLaws.clear();
+
+  TaskMap* qDampingl = new TaskMap_qItself();
+  LinTaskSpaceAccLaw* qDampingLawl = new LinTaskSpaceAccLaw(qDampingl, modelWorld);
+  qDampingLawl->setC(eye(qDampingLawl->getPhiDim())*10.0);
+  qDampingLawl->setGains(zeros(qDampingLawl->getPhiDim(),qDampingLawl->getPhiDim()), eye(qDampingLawl->getPhiDim())*1.0);
+  qDampingLawl->setRef(zeros(qDampingLawl->getPhiDim()), zeros(qDampingLawl->getPhiDim()));
+
+  controller->addLinTaskSpaceAccLaw(qDampingLawl);
+
+  modelWorld->watch(true, "press to save pretouch");
+
+  write(LIST<arr>(~modelWorld->getJointState()), STRING("demonstrationData/preTouchPos_4.dat"));
+
+  modelWorld->watch(true, "dont press");
+  */
+  /*
   //Go from actual position to the start position of the trajectory
   arr preTouchPos = ARR(0.7,0.0,0.6);
 
@@ -1165,6 +1187,12 @@ void tischTouchdown_1() {
   laws.append(orientationLawl);
 
   pr2->goToTasks(laws);
+  */
+
+  arr preTouchJointState;
+  preTouchJointState << FILE("demonstrationData/preTouchPos_4.dat");
+
+  pr2->goToJointState(preTouchJointState);
 
   pr2->logState = false;
   pr2->clearLog();
@@ -1180,7 +1208,7 @@ void tischTouchdown_1() {
   arr Kd = eye(3)*5.0;
   Kd(2,2) = 0.0;
   posLaw->setGains(Kp,Kd);
-  posLaw->setRef(preTouchPos);
+  posLaw->setRef();
 
   TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
@@ -1203,27 +1231,28 @@ void tischTouchdown_1() {
   TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
   velLaw->setC(eye(1)*1000.0);
-  velLaw->setGains(eye(1)*0.0, eye(1)*20.0);
+  velLaw->setGains(eye(1)*0.0, eye(1)*25.0);
   velLaw->setForce(ARR(-0.1));
-  //velLaw->setAlpha(ARR(0.001));
+  //velLaw->setAlpha(ARR(0.005));
   velLaw->setAlpha(ARR(0.0));
   velLaw->gamma = 1.0;
-  controller->constrainedTaskLaw = velLaw;
+  //controller->constrainedTaskLaw = velLaw;
   velLaw->setRef(NoArr, ARR(0.1));
 
   controller->taskSpaceAccLaws.clear();
+  controller->addConstrainedTaskLaw(velLaw);
   controller->addLinTaskSpaceAccLaw(posLaw);
   controller->addLinTaskSpaceAccLaw(orientationLaw);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
-  controller->addLinTaskSpaceAccLaw(velLaw);
+  //controller->addLinTaskSpaceAccLaw(velLaw);
 
   mlr::wait(0.5);
 
   modelWorld->watch(true, "Press to save log");
 
   pr2->logState = false;
-  pr2->logStateSave("tischTouchdown_1_7","experiments/tischTouchdown_1/");
+  pr2->logStateSave("tischTouchdown_4_9","experiments/tischTouchdown_4");
 
 
   modelWorld->watch(true, "Press to stop");
@@ -1297,15 +1326,19 @@ void tischTouchdown_2() {
   //velLaw->setAlpha(ARR(0.001));
   velLaw->setAlpha(ARR(0.0));
   velLaw->gamma = 1.0;
-  controller->constrainedTaskLaw = velLaw;
+
   velLaw->setRef(NoArr, ARR(0.1));
 
+  //controller->constrainedTaskLaw = velLaw;
+
+
   controller->taskSpaceAccLaws.clear();
+  controller->addConstrainedTaskLaw(velLaw);
   controller->addLinTaskSpaceAccLaw(posLaw);
   controller->addLinTaskSpaceAccLaw(orientationLaw);
   controller->addLinTaskSpaceAccLaw(qDampingLaw);
   controller->addLinTaskSpaceAccLaw(limitsLaw);
-  controller->addLinTaskSpaceAccLaw(velLaw);
+  //controller->addLinTaskSpaceAccLaw(velLaw);
 
   mlr::wait(0.5);
 
@@ -1413,6 +1446,89 @@ void tests() {
   pr2->~PR2Interface();
 }
 
+void testDifferentMetric() {
+  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
+  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+
+  modelWorld->gl().add(changeAlpha);
+  modelWorld->gl().add(glDrawPlot, &plotModule);
+
+  realWorld->gl().add(changeAlpha);
+  realWorldSimulation->gl().add(changeAlpha);
+
+  PR2Interface* pr2 = new PR2Interface();
+  TaskSpaceController* controller = new TaskSpaceController(modelWorld);
+
+  pr2->initialize(realWorld, realWorldSimulation, modelWorld, controller);
+  pr2->startInterface();
+
+  //pr2->logStateSave("bla","tests/bla/");
+
+  arr preTouchJoint;
+  preTouchJoint << FILE("demonstrationData/demonstration3.dat");
+
+  pr2->goToJointState(preTouchJoint);
+
+  modelWorld->watch(true, "press to start control");
+
+  //arr preTouchPos = ARR(0.65,0.0,0.56);
+
+  //pr2->goToPosition(preTouchPos, "endeffL");
+
+  //write(LIST<arr>(~modelWorld->getJointState()), STRING("demonstrationData/demonstration3.dat"));
+
+  mlr::Array<LinTaskSpaceAccLaw*> laws;
+
+  arr posTrajectory = generateBrezel();
+
+  mlr::Spline* spline = new mlr::Spline(posTrajectory.d0, posTrajectory);
+  arr sp;
+  uint n = 100;
+  for(uint i = 0; i <= n; i++) {
+    sp.append(spline->eval((double)i/n));
+  }
+  sp.reshape(n+1,3);
+  plotLine(sp);
+
+
+  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
+  posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
+  posLaw->setC(eye(3)*1000.0);
+  arr Kp = eye(3)*30.0;
+  posLaw->setGains(Kp,eye(3)*5.0);
+
+  laws.append(posLaw);
+
+
+  TaskMap_qLimits* lmap = new TaskMap_qLimits();
+  LinTaskSpaceAccLaw* limitsLaw = new LinTaskSpaceAccLaw(lmap, modelWorld, "limits");
+  limitsLaw->setC(ARR(1000.0));
+  limitsLaw->setGains(ARR(10.0),ARR(5.0));
+  limitsLaw->setTrajectory(3,zeros(3,1));
+  laws.append(limitsLaw);
+
+  TaskMap* qDamping = new TaskMap_qItself();
+  LinTaskSpaceAccLaw* qDampingLaw = new LinTaskSpaceAccLaw(qDamping, modelWorld, "damping");
+  qDampingLaw->setC(eye(qDampingLaw->getPhiDim())*10.0);
+  qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
+  qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
+
+  laws.append(qDampingLaw);
+
+
+  controller->taskSpaceAccLaws = laws;
+  controller->generateTaskSpaceSplines();
+  pr2->executeTrajectory(10.0);
+
+  modelWorld->watch(true, "press to save log");
+  pr2->logState = false;
+  pr2->logStateSave("testDifferentMetric_3","experiments/testDifferentMetric");
+  modelWorld->watch(true, "press to stop");
+  pr2->~PR2Interface();
+
+}
 
 
 int main(int argc, char** argv){
@@ -1426,9 +1542,10 @@ int main(int argc, char** argv){
   //openSchublade2();
   //testDemonstration();
   //openSchublade3();
-  //controllerExample("nullSpace_2");
-  //tischTouchdown_1();
-  tischTouchdown_2();
+  //controllerExample("differentTaskSpaceStiffness_1");
+  tischTouchdown_1();
+  //tischTouchdown_2();
   //tests();
+  //testDifferentMetric();
   return 0;
 }
