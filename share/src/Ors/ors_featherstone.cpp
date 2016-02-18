@@ -267,6 +267,11 @@ void FrameToMatrix(arr &X, const ors::Transformation& f) {
 void ors::Link::setFeatherstones() {
   switch(type) {
     case -1:     CHECK_EQ(parent,-1, ""); _h.clear();  break;
+    case JT_rigid:
+    case JT_transXYPhi:
+      qIndex=-1;
+      _h=zeros(6);
+      break;
     case JT_hingeX: _h.resize(6); _h.setZero(); _h(0)=1.; break;
     case JT_hingeY: _h.resize(6); _h.setZero(); _h(1)=1.; break;
     case JT_hingeZ: _h.resize(6); _h.setZero(); _h(2)=1.; break;
@@ -297,54 +302,46 @@ void ors::Link::updateFeatherstones() {
 void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   tree.resize(C.bodies.N);
   
-  uint i, iq;
-  ors::Body *p;
-  ors::Joint *e;
-  ors::Transformation f;
-  for(i=0; i<tree.N; i++) tree(i).parent=-1;
-  iq=0;
-  for_list(ors::Body,n,C.bodies) {
-    i=n_COUNT;
-    CHECK_EQ(i,n->index, "not properly indexed!");
-    if(n->inLinks.N) {
-      CHECK_EQ(n->inLinks.N,1, "this is not a tree");
-      e=n->inLinks(0);
-      p=e->from;
+  for(ors::Link& link:tree){ link.parent=-1; link.qIndex=-1; }
+
+  for(ors::Body* body:C.bodies) {
+    ors::Link& link=tree(body->index);
+    if(body->inLinks.N) { //is not a root
+      CHECK_EQ(body->inLinks.N,1, "this is not a tree");
+      ors::Joint *j=body->inLinks(0);
       
-      tree(i).type=e->type;
-      tree(i).index=iq;
-      tree(i).parent=p->index;
+      link.type   = j->type;
+      link.qIndex = j->qIndex;
+      link.parent = j->from->index;
       
-      tree(i).com=e->B*n->com;
+      link.com = j->B*body->com;
+
+      if(j->from->inLinks.N) link.A=j->from->inLinks(0)->B;
+      else link.A=j->from->X;
+      link.A.appendTransformation(j->A);
       
-      if(p->inLinks.N) f=p->inLinks(0)->B; else f=p->X;
-      f.appendTransformation(e->A);
-      tree(i).A=f;
+      link.X = j->from->X;
+      link.X.appendTransformation(j->A);
       
-      f = p->X;
-      f.appendTransformation(e->A);
-      tree(i).X=f;
-      
-      tree(i).Q=e->Q;
-      iq++;
+      link.Q=j->Q;
     } else {
-      CHECK_EQ(n->inLinks.N,0, "dammit");
+      CHECK_EQ(body->inLinks.N,0, "dammit");
       
-      tree(i).type=-1;
-      tree(i).index=-1;
-      tree(i).parent=-1;
-      tree(i).com=n->X*n->com;
-      tree(i).A.setZero();
-      tree(i).X.setZero();
-      tree(i).Q.setZero();
+      link.type=-1;
+      link.qIndex=-1;
+      link.parent=-1;
+      link.com=body->X*body->com;
+      link.A.setZero();
+      link.X.setZero();
+      link.Q.setZero();
     }
-    tree(i).mass=n->mass;
-    tree(i).inertia=n->inertia;
-    tree(i).force=n->force;
-    tree(i).torque=n->torque;
+    link.mass=body->mass;
+    link.inertia=body->inertia;
+    link.force=body->force;
+    link.torque=body->torque;
   }
-  CHECK_EQ(iq,C.getJointStateDimension(), "");
-  for(i=0; i<tree.N; i++) tree(i).setFeatherstones();
+
+  for(ors::Link& link:tree) link.setFeatherstones();
 }
 
 void updateGraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
@@ -836,7 +833,7 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
   
   //fwd: compute the velocities v[i] and external + Coriolis forces fA[i] of all bodies
   for(i=0; i<N; i++) {
-    iq = tree(i).index;
+    iq = tree(i).qIndex;
     par = tree(i).parent;
     Xup[i]() = tree(i)._Q * tree(i)._A; //the transformation from the i-th to the j-th
     if(par != -1) {
@@ -874,7 +871,7 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
   }
   
   for(i=0; i<N; i++) {
-    iq = tree(i).index;
+    iq = tree(i).qIndex;
     par= tree(i).parent;
     if(par != -1) {
       a[i] = Xup[i] * a[par] + dh_dq[i]; //[change from above]
@@ -963,7 +960,8 @@ void ors::equationOfMotion(arr& H, arr& C,
   */
   
   int par;
-  uint i, j, N=tree.N, iq, jq;
+  int iq, jq;
+  uint i, j, N=tree.N;
   //CHECK_EQ(N-1,qd.N,"vels don't have right dimension")
   arr h(N, 6);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IC(N, 6, 6), fvp(N, 6), avp(N, 6);
@@ -972,12 +970,16 @@ void ors::equationOfMotion(arr& H, arr& C,
   avp.setZero();
   
   for(i=0; i<N; i++) {
-    iq  = tree(i).index;
+    iq  = tree(i).qIndex;
     par = tree(i).parent;
     Xup[i]() = tree(i)._Q * tree(i)._A; //the transformation from the i-th to the j-th
-    if(par != -1) {
+    if(par!=-1) {
       h[i]() = tree(i)._h;
-      vJ = h[i] * qd(iq); //equation (2), vJ = relative vel across joint i
+      if(iq!=-1) {//is not a fixed joint
+        vJ = h[i] * qd(iq); //equation (2), vJ = relative vel across joint i
+      } else{
+        vJ = zeros(6);
+      }
       v[i]() = Xup[i] * v[par] + vJ;
       dh_dq[i]() = Featherstone::crossM(v[i]) * vJ;  //WHY??
       avp[i]() = Xup[i]*avp[par] + Featherstone::crossM(v[i])*vJ;
@@ -992,13 +994,13 @@ void ors::equationOfMotion(arr& H, arr& C,
     fvp[i] = tree(i)._I*avp[i] + Featherstone::crossF(v[i])*(tree(i)._I*v[i]) - tree(i)._f;
   }
   
-  C.resize(qd.N);
+  C = zeros(qd.N);
   
   for(i=N; i--;) {
-    iq  = tree(i).index;
+    iq  = tree(i).qIndex;
     par = tree(i).parent;
-    if((int) iq !=-1) {
-      C(iq) = scalarProduct(h[i], fvp[i]);
+    if(iq!=-1) {
+      C(iq) += scalarProduct(h[i], fvp[i]);
     }
     if(par!=-1) {
       fvp[par]() += ~Xup[i] * fvp[i];
@@ -1006,23 +1008,23 @@ void ors::equationOfMotion(arr& H, arr& C,
     }
   }
   
-  H.resize(qd.N, qd.N);
-  H.setZero();
+  H = zeros(qd.N, qd.N);
   
   for(i=0; i<N; i++) {
-    iq = tree(i).index;
+    iq = tree(i).qIndex;
     fh = IC[i] * h[i];
     if((int)iq!=-1) {
-      H(iq, iq) = scalarProduct(h[i], fh);
+      H(iq, iq) += scalarProduct(h[i], fh);
     }
     j = i;
     while(tree(j).parent!=-1) {
       fh = ~Xup[j] * fh;
       j  = tree(j).parent;
-      jq = tree(j).index;
-      if((int)jq!=-1) {
-        H(iq, jq) = scalarProduct(h[j], fh);
-        H(jq, iq) = H(iq, jq);
+      jq = tree(j).qIndex;
+      if(jq!=-1 && iq!=-1) {
+        double Hij = scalarProduct(h[j], fh);
+        H(iq, jq) += Hij;
+        H(jq, iq) += Hij;
       }
     }
   }

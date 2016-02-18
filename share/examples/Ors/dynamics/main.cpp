@@ -29,8 +29,8 @@
 void TEST(Dynamics){
 //  ors::KinematicWorld G("arm7.ors");
   ors::KinematicWorld G("mypr2.ors");
-  G.meldFixedJoints();
-  G.makeLinkTree();
+//  G.meldFixedJoints();
+//  G.makeLinkTree();
   cout <<G <<endl;
 
   arr u;

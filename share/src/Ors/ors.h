@@ -458,7 +458,7 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be 
 namespace ors {
 struct Link {
   int type;
-  int index;
+  int qIndex;
   int parent;
   ors::Transformation
   X, A, Q;
@@ -471,7 +471,7 @@ struct Link {
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
-    os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
+    os <<"*type=" <<type <<" index=" <<qIndex <<" parent=" <<parent <<endl
        <<" XAQ=" <<X <<A <<Q <<endl
        <<" cft=" <<com <<force <<torque <<endl
        <<" mass=" <<mass <<inertia <<endl;

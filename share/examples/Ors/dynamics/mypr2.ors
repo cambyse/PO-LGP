@@ -1,13 +1,5 @@
 Include = '../../../data/pr2_model/pr2_model.ors'
 
-Merge worldTranslationRotation { type=10 }
+#Merge worldTranslationRotation { type=10 }
 
-Merge r_gripper_r_finger_joint { type=10 mimic="" }
-Merge l_gripper_r_finger_joint {  type=10 mimic="" }
-Merge r_gripper_l_finger_tip_joint { type=10 mimic="" }
-Merge r_gripper_r_finger_tip_joint { type=10 mimic="" }
-Merge l_gripper_l_finger_tip_joint { type=10 mimic="" }
-Merge l_gripper_r_finger_tip_joint { type=10 mimic="" }
-Merge r_gripper_joint { type=10 }
-Merge l_gripper_joint { type=10 }
 Merge torso_lift_joint { type=10 }
