@@ -75,6 +75,12 @@ void PR2Interface::step() {
       this->logMap[STRING(law->name << "Kd")].append(law->getKd());
       this->logMap[STRING(law->name << "C")].append(law->getC());
     }
+    for(ConstrainedTaskLaw* law : this->controller->constrainedTaskLaws) {
+      this->logMap[STRING(law->name << "Alpha")].append(law->getAlpha());
+      this->logMap[STRING(law->name << "Force")].append(law->getForce());
+      this->logMap[STRING(law->name << "Gamma")].append(law->getGamma());
+      //TODO log FObs in TaskSpace
+    }
   }
 }
 

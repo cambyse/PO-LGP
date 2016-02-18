@@ -157,12 +157,21 @@ void TaskSpaceController::addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law) {
   this->taskSpaceAccLaws.append(law);
 }
 
+void TaskSpaceController::addConstrainedTaskLaw(ConstrainedTaskLaw* law) {
+  this->constrainedTaskLaws.append(law);
+  this->addLinTaskSpaceAccLaw(law);
+}
+
 void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0) {
   arr M, F;
   world->equationOfMotion(M, F, this->gravity);
 
   arr q0, q, qDot;
   world->getJointState(q,qDot);
+
+  //arr H = /*diag(this->world->getHmetric());//*/0.1*eye(this->world->getJointStateDimension());
+  //M = H;
+  //F = zeros(this->world->getJointStateDimension());
 
   arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
@@ -194,18 +203,21 @@ void TaskSpaceController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0)
 
 
 void TaskSpaceController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {
-  if(this->constrainedTaskLaw) {
-    DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(this->constrainedTaskLaw->map);
-    ors::Body* body = this->world->shapes(m->i)->body;
-    ors::Vector vec = this->world->shapes(m->i)->rel.pos;
-    ors::Shape* lFtSensor = this->world->getShapeByName("l_ft_sensor");
-    arr y, J, J_ft;
-    this->constrainedTaskLaw->getPhi(y, J);
-    this->world->kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
-    J_ft_inv = -~conv_vec2arr(m->ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
-    K_ft = -~J*this->constrainedTaskLaw->getAlpha();
-    fRef = this->constrainedTaskLaw->getForce();
-    gamma = this->constrainedTaskLaw->getGamma();
+  if(this->constrainedTaskLaws.N > 0) {
+    CHECK(this->constrainedTaskLaws.N == 1, "Multiple force laws not allowed at the moment");
+    for(ConstrainedTaskLaw* law : this->constrainedTaskLaws) {
+      DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(law->map);
+      ors::Body* body = this->world->shapes(m->i)->body;
+      ors::Vector vec = this->world->shapes(m->i)->rel.pos;
+      ors::Shape* lFtSensor = this->world->getShapeByName("l_ft_sensor");
+      arr y, J, J_ft;
+      law->getPhi(y, J);
+      this->world->kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
+      J_ft_inv = -~conv_vec2arr(m->ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+      K_ft = -~J*law->getAlpha();
+      fRef = law->getForce();
+      gamma = law->getGamma();
+    }
   } else {
     K_ft = zeros(this->world->getJointStateDimension());
     fRef = ARR(0.0);

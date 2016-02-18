@@ -95,12 +95,13 @@ struct TaskSpaceController {
 
   bool gravity = false;
 
-  ConstrainedTaskLaw* constrainedTaskLaw = NULL;
+  mlr::Array<ConstrainedTaskLaw*> constrainedTaskLaws;
 
   TaskSpaceController(ors::KinematicWorld* world) : world(world) {}
   ~TaskSpaceController() {}
 
   void addLinTaskSpaceAccLaw(LinTaskSpaceAccLaw* law);
+  void addConstrainedTaskLaw(ConstrainedTaskLaw* law);
   void calcOptimalControlProjected(arr& Kp, arr& Kd, arr& u0);
   void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma);
   void generateTaskSpaceTrajectoryFromJointSpace(const arr& jointSpaceTrajectory, const arr& jointSpaceTrajectoryDot = NoArr, const arr& jointSpaceDDotTrajectory = NoArr);
