@@ -38,7 +38,8 @@ void KOMO::init(const Graph& _specs){
     makeConvexHulls(world.shapes);
 
   if(glob["makeSSBoxes"]){
-    for(ors::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    NIY;
+    //for(ors::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
     world.gl().watch();
   }
 
